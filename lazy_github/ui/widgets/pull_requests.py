@@ -162,7 +162,7 @@ class PrOverviewTabPane(TabPane):
     }
     """
 
-    BINDINGS = [LazyGithubBindings.MERGE_PULL_REQUEST]
+    BINDINGS = [LazyGithubBindings.MERGE_PULL_REQUEST, LazyGithubBindings.EDIT_PULL_REQUEST]
 
     def __init__(self, pr: FullPullRequest) -> None:
         super().__init__("Overview", id="overview_pane")
@@ -209,6 +209,13 @@ class PrOverviewTabPane(TabPane):
             self.notify(
                 f"Pull request {self.pr.number} could not be merged", title="Error Merging PR", severity="error"
             )
+
+    @work
+    async def action_edit_pull_request(self) -> None:
+        if self.pr.merged_at:
+            self.notify("This PR has already been merged!", severity="warning")
+        else:
+            self.app.push_screen(CreateOrEditPullRequestModal(self.pr))
 
     def compose(self) -> ComposeResult:
         pr_link = f"[link={self.pr.html_url}](#{self.pr.number})[/link]"

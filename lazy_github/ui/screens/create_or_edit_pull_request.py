@@ -9,11 +9,16 @@ from textual.widgets.selection_list import Selection
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.branches import list_branches
-from lazy_github.lib.github.pull_requests import create_pull_request, list_requested_reviewers, request_reviews
+from lazy_github.lib.github.pull_requests import (
+    create_pull_request,
+    list_requested_reviewers,
+    request_reviews,
+    update_pull_request,
+)
 from lazy_github.lib.github.repositories import get_collaborators
 from lazy_github.lib.github.users import get_user_by_username
 from lazy_github.lib.logging import lg
-from lazy_github.lib.messages import BranchesLoaded, PullRequestCreated
+from lazy_github.lib.messages import BranchesLoaded, PullRequestCreatedOrUpdated
 from lazy_github.models.github import Branch, FullPullRequest
 
 
@@ -53,6 +58,7 @@ class BranchSelection(Horizontal):
             placeholder="Choose a base ref",
             value=base_ref_value,
             validators=[non_empty_validator],
+            disabled=bool(self.existing_pull_request),
         )
         yield Label(":left_arrow: [bold]Compare[/bold]")
         yield Input(
@@ -60,9 +66,14 @@ class BranchSelection(Horizontal):
             placeholder="Choose a head ref",
             validators=[non_empty_validator],
             value=head_ref_value,
+            disabled=bool(self.existing_pull_request),
         )
         yield Label("Draft")
-        yield Switch(id="pr_is_draft", value=self.existing_pull_request.draft if self.existing_pull_request else False)
+        yield Switch(
+            id="pr_is_draft",
+            value=self.existing_pull_request.draft if self.existing_pull_request else False,
+            disabled=bool(self.existing_pull_request),
+        )
 
     @property
     def _head_ref_input(self) -> Input:
@@ -282,7 +293,37 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
         self.app.pop_screen()
 
     async def _edit_pr(self) -> None:
-        pass
+        if not self.existing_pull_request or not LazyGithubContext.current_repo:
+            return
+
+        title_field = self.query_one("#pr_title", Input)
+        title_field.validate(title_field.value)
+        description_field = self.query_one("#pr_description", TextArea)
+
+        # Update pull request fields
+        try:
+            updated_pr = await update_pull_request(
+                LazyGithubContext.current_repo, self.existing_pull_request, title_field.value, description_field.text
+            )
+        except Exception:
+            lg.exception("Error while attempting to update pull request")
+            self.notify(
+                "Unexpected error while attempting to update PR",
+                title="Error updating pull request",
+                severity="error",
+            )
+            return
+
+        # Request any new reviewers
+        existing_reviewers = await list_requested_reviewers(self.existing_pull_request)
+        reviewer_container = self.query_one(ReviewerSelectionContainer)
+        reviewers = list(reviewer_container.reviewers)
+        if reviewers:
+            lg.info(f"Requesting PR reviews from: {', '.join(reviewers)}")
+            await request_reviews(updated_pr, [r for r in reviewers if r not in existing_reviewers])
+
+        self.notify("Successfully updated PR!")
+        self.post_message(PullRequestCreatedOrUpdated(updated_pr))
 
     async def _create_pr(self) -> None:
         assert LazyGithubContext.current_repo is not None, "Unexpectedly missing current repo in new PR modal"
@@ -324,7 +365,7 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
             await request_reviews(created_pr, reviewers)
 
         self.notify("Successfully created PR!")
-        self.post_message(PullRequestCreated(created_pr))
+        self.post_message(PullRequestCreatedOrUpdated(created_pr))
 
     async def action_submit(self) -> None:
         if self.existing_pull_request:
@@ -368,6 +409,6 @@ class CreateOrEditPullRequestModal(ModalScreen[FullPullRequest | None]):
     def action_close(self) -> None:
         self.dismiss(None)
 
-    @on(PullRequestCreated)
-    def on_pull_request_created(self, message: PullRequestCreated) -> None:
+    @on(PullRequestCreatedOrUpdated)
+    def on_pull_request_created(self, message: PullRequestCreatedOrUpdated) -> None:
         self.dismiss(message.pull_request)

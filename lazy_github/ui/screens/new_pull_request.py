@@ -8,7 +8,7 @@ from textual.widgets.selection_list import Selection
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.branches import list_branches
-from lazy_github.lib.github.pull_requests import create_pull_request
+from lazy_github.lib.github.pull_requests import create_pull_request, request_reviews
 from lazy_github.lib.github.repositories import get_collaborators
 from lazy_github.lib.github.users import get_user_by_username
 from lazy_github.lib.logging import lg
@@ -241,7 +241,6 @@ class NewPullRequestContainer(VerticalScroll):
             self.notify("Missing required fields!", title="Invalid PR!", severity="error")
             return
 
-        self.notify("Creating new pull request...")
         try:
             created_pr = await create_pull_request(
                 LazyGithubContext.current_repo,
@@ -258,9 +257,14 @@ class NewPullRequestContainer(VerticalScroll):
                 title="Error creating pull request",
                 severity="error",
             )
-        else:
-            self.notify("Successfully created PR!")
-            self.post_message(PullRequestCreated(created_pr))
+            return
+
+        reviewer_container = self.query_one(ReviewerSelectionContainer)
+        if reviewer_container.reviewers:
+            await request_reviews(created_pr, list(reviewer_container.reviewers))
+
+        self.notify("Successfully created PR!")
+        self.post_message(PullRequestCreated(created_pr))
 
     async def action_submit(self) -> None:
         await self._create_pr()

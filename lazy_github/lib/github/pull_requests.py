@@ -148,3 +148,10 @@ def reconstruct_review_conversation_hierarchy(reviews: list[Review]) -> dict[int
             comment_nodes_by_review_id[in_reply_to_id].children.append(review_node)
 
     return {r.comment.id: r for r in comment_nodes_by_review_id.values() if r.comment.in_reply_to_id is None}
+
+
+async def request_reviews(pr: FullPullRequest, reviewers: list[str]) -> bool:
+    body = {"reviewers": reviewers}
+    url = f"/repos/{pr.repo.full_name}/pulls/{pr.number}"
+    response = await LazyGithubContext.client.post(url, json=body)
+    return response.is_success()

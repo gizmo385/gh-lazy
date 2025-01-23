@@ -112,7 +112,7 @@ def build_command(
     method: str = "GET",
     headers: Headers | None = None,
     query_params: QueryParams | None = None,
-    body: dict[str, str] | None = None,
+    body: dict[str, Any] | None = None,
 ) -> list[str]:
     command = ["api", "-i", "-X", method]
 
@@ -150,7 +150,7 @@ class GithubCliBackend(GithubApiBackend):
         self,
         url: str,
         headers: Headers | None = None,
-        json: dict[str, str] | None = None,
+        json: dict[str, Any] | None = None,
     ) -> Any:
         command = build_command(url, headers=headers, body=json, method="POST")
         return await run_gh_cli_command(command)

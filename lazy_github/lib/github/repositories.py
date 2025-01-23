@@ -64,3 +64,12 @@ async def get_repository_by_name(full_name: str) -> Repository | None:
         return Repository(**response.json())
     except GithubApiRequestFailed:
         return None
+
+
+async def get_collaborators(full_name: str) -> list[str]:
+    """Returns collaborators for the specified repo"""
+    collaborators = []
+    response = await LazyGithubContext.client.get(f"/repos/{full_name}/collaborators")
+    if response.is_success():
+        collaborators.extend(u["login"] for u in response.json())
+    return collaborators

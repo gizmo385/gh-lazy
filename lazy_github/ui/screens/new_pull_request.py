@@ -3,11 +3,14 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Markdown, Rule, SelectionList, Switch, TextArea
+from textual.widgets.selection_list import Selection
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.branches import list_branches
-from lazy_github.lib.github.pull_requests import create_pull_request
+from lazy_github.lib.github.pull_requests import create_pull_request, request_reviews
+from lazy_github.lib.github.repositories import get_collaborators
+from lazy_github.lib.github.users import get_user_by_username
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import BranchesLoaded, PullRequestCreated
 from lazy_github.models.github import Branch, FullPullRequest
@@ -121,8 +124,11 @@ class ReviewerSelectionContainer(Vertical):
 
     def __init__(self) -> None:
         super().__init__()
+        self.reviewers: set[str] = set()
         self.new_reviewer = Input(id="new_reviewer", placeholder="Reviewer to add")
-        self.current_reviewers_label = Label("Current Reviewers", id="current_reviewers_label")
+        self.current_reviewers_label = Label(
+            "Current Reviewers - Click/Select them to remove", id="current_reviewers_label"
+        )
         self.current_reviewers_label.display = False
         self.reviewers_selection_list = SelectionList(id="current_reviewers")
         self.reviewers_selection_list.display = False
@@ -132,7 +138,52 @@ class ReviewerSelectionContainer(Vertical):
         yield self.new_reviewer
         yield self.current_reviewers_label
         yield self.reviewers_selection_list
-        return super().compose()
+
+    async def on_mount(self) -> None:
+        reviewer_suggester = suggester.SuggestFromList(
+            LazyGithubContext.config.pull_requests.additional_suggested_pr_reviewers
+        )
+        self.new_reviewer.suggester = reviewer_suggester
+        self._fetch_collaborators()
+
+    @work
+    async def _fetch_collaborators(self) -> None:
+        if LazyGithubContext.current_repo:
+            collaborators = await get_collaborators(LazyGithubContext.current_repo.full_name)
+            collaborators.extend(LazyGithubContext.config.pull_requests.additional_suggested_pr_reviewers)
+            reviewer_suggester = suggester.SuggestFromList(collaborators)
+            self.new_reviewer.suggester = reviewer_suggester
+
+    @work
+    async def _validate_new_reviewer(self, reviewer: str) -> None:
+        if reviewer in self.reviewers:
+            self.notify("Already a reviewer!", severity="error")
+        elif not await get_user_by_username(reviewer):
+            self.notify(f"Could not find user [yellow]{reviewer}[/yellow] - are you sure they exist?", severity="error")
+        else:
+            lg.info(f"Adding {self.new_reviewer.value} to PR reviewer list")
+            self.reviewers.add(reviewer)
+            self.reviewers_selection_list.add_option(Selection(reviewer, reviewer, id=reviewer, initial_state=True))
+            self.new_reviewer.value = ""
+            self.current_reviewers_label.display = True
+            self.reviewers_selection_list.display = True
+
+    @on(Input.Submitted)
+    async def handle_new_reviewer_submitted(self, _: Input.Submitted) -> None:
+        self._validate_new_reviewer(self.new_reviewer.value.strip().lower())
+
+    @on(SelectionList.SelectionToggled)
+    async def handle_reviewer_deselected(self, toggled: SelectionList.SelectionToggled) -> None:
+        reviewer_to_remove = toggled.selection.value
+        self.notify(f"Removing {reviewer_to_remove}")
+        self.reviewers.remove(reviewer_to_remove)
+        self.reviewers_selection_list.remove_option(reviewer_to_remove)
+
+        # If we've removed all of the reviewers, hide the display
+        if not self.reviewers:
+            self.new_reviewer.focus()
+            self.current_reviewers_label.display = False
+            self.reviewers_selection_list.display = False
 
 
 class NewPullRequestContainer(VerticalScroll):
@@ -171,6 +222,9 @@ class NewPullRequestContainer(VerticalScroll):
         yield ReviewerSelectionContainer()
         yield NewPullRequestButtons()
 
+    def on_mount(self) -> None:
+        self.query_one("#pr_title", Input).focus()
+
     @on(Button.Pressed, "#cancel_new_pr")
     def cancel_pull_request(self, _: Button.Pressed):
         self.app.pop_screen()
@@ -190,7 +244,6 @@ class NewPullRequestContainer(VerticalScroll):
             self.notify("Missing required fields!", title="Invalid PR!", severity="error")
             return
 
-        self.notify("Creating new pull request...")
         try:
             created_pr = await create_pull_request(
                 LazyGithubContext.current_repo,
@@ -207,9 +260,16 @@ class NewPullRequestContainer(VerticalScroll):
                 title="Error creating pull request",
                 severity="error",
             )
-        else:
-            self.notify("Successfully created PR!")
-            self.post_message(PullRequestCreated(created_pr))
+            return
+
+        reviewer_container = self.query_one(ReviewerSelectionContainer)
+        reviewers = list(reviewer_container.reviewers)
+        if reviewers:
+            lg.info(f"Requesting PR reviews from: {', '.join(reviewers)}")
+            await request_reviews(created_pr, reviewers)
+
+        self.notify("Successfully created PR!")
+        self.post_message(PullRequestCreated(created_pr))
 
     async def action_submit(self) -> None:
         await self._create_pr()

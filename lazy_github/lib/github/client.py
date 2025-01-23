@@ -37,7 +37,7 @@ class GithubClient(GithubApiBackend):
     async def get(self, url: str, headers: Headers | None = None, params: QueryParams | None = None) -> Any:
         return await self.backend.get(url, headers, params)
 
-    async def post(self, url: str, headers: Headers | None = None, json: dict[str, str] | None = None) -> Any:
+    async def post(self, url: str, headers: Headers | None = None, json: dict[str, Any] | None = None) -> Any:
         return await self.backend.post(url, headers, json)
 
     async def patch(self, url: str, headers: Headers | None = None, json: dict[str, str] | None = None) -> Any:

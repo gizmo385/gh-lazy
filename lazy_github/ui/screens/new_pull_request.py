@@ -1,8 +1,8 @@
 from textual import on, suggester, validation, work
 from textual.app import ComposeResult
-from textual.containers import Horizontal, VerticalScroll
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, Label, Markdown, Rule, Switch, TextArea
+from textual.widgets import Button, Input, Label, Markdown, Rule, SelectionList, Switch, TextArea
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
@@ -111,8 +111,35 @@ class NewPullRequestButtons(Horizontal):
         yield Button("Cancel", id="cancel_new_pr", variant="error")
 
 
+class ReviewerSelectionContainer(Vertical):
+    DEFAULT_CSS = """
+    ReviewerSelectionContainer {
+        height: auto;
+        width: 100%;
+    }
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.new_reviewer = Input(id="new_reviewer", placeholder="Reviewer to add")
+        self.current_reviewers_label = Label("Current Reviewers", id="current_reviewers_label")
+        self.current_reviewers_label.display = False
+        self.reviewers_selection_list = SelectionList(id="current_reviewers")
+        self.reviewers_selection_list.display = False
+
+    def compose(self) -> ComposeResult:
+        yield Label("[bold]Reviewers[/bold]")
+        yield self.new_reviewer
+        yield self.current_reviewers_label
+        yield self.reviewers_selection_list
+        return super().compose()
+
+
 class NewPullRequestContainer(VerticalScroll):
     DEFAULT_CSS = """
+    Markdown {
+        margin-bottom: 1;
+    }
     NewPullRequestContainer {
         padding: 1;
     }
@@ -136,10 +163,12 @@ class NewPullRequestContainer(VerticalScroll):
         yield Markdown("# New Pull Request")
         yield BranchSelection()
         yield Rule()
-        yield Label("[bold]Pull Request Title[/bold]")
+        yield Label("[bold]Title[/bold]")
         yield Input(id="pr_title", placeholder="Title", validators=[validation.Length(minimum=1)])
-        yield Label("[bold]Pull Request Description[/bold]")
-        yield TextArea.code_editor(id="pr_description", soft_wrap=True)
+        yield Label("[bold]Description[/bold]")
+        yield TextArea.code_editor(id="pr_description", soft_wrap=True, tab_behavior="focus")
+        yield Rule()
+        yield ReviewerSelectionContainer()
         yield NewPullRequestButtons()
 
     @on(Button.Pressed, "#cancel_new_pr")

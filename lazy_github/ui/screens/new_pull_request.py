@@ -222,6 +222,9 @@ class NewPullRequestContainer(VerticalScroll):
         yield ReviewerSelectionContainer()
         yield NewPullRequestButtons()
 
+    def on_mount(self) -> None:
+        self.query_one("#pr_title", Input).focus()
+
     @on(Button.Pressed, "#cancel_new_pr")
     def cancel_pull_request(self, _: Button.Pressed):
         self.app.pop_screen()

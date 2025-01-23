@@ -17,8 +17,7 @@ retrieved and displayed below it.
 ## Pull Requests
 
 You can interact with a PR by viewing its details, viewing the PR diff, and participating in any active conversations
-happening on the PR. You can also create a new PR for the currently selected repo. It doesn't currently support merging
-a PR from within LazyGithub.
+happening on the PR. You can also create a new PR for the currently selected repo.
 
 ## Issues
 
@@ -28,7 +27,8 @@ issue, and by editing the issue itself. This means that you can close an issue f
 ## Actions
 
 Github action and workflow support is pretty limited. It currently only supports listing the workflows and the most
-recent runs across all actions on the currently selected repo.
+recent runs across all actions on the currently selected repo, as well as kicking off a workflow that supports manual
+triggers.
 """.strip()
 
 

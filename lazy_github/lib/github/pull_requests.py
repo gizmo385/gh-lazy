@@ -2,8 +2,9 @@ from lazy_github.lib.config import MergeMethod
 from lazy_github.lib.constants import DIFF_CONTENT_ACCEPT_TYPE
 from lazy_github.lib.context import LazyGithubContext, github_headers
 from lazy_github.lib.github.backends.cli import run_gh_cli_command
-from lazy_github.lib.github.backends.protocol import BackendType
+from lazy_github.lib.github.backends.protocol import BackendType, GithubApiRequestFailed
 from lazy_github.lib.github.issues import list_issues
+from lazy_github.lib.logging import lg
 from lazy_github.models.github import (
     FullPullRequest,
     Issue,
@@ -152,6 +153,11 @@ def reconstruct_review_conversation_hierarchy(reviews: list[Review]) -> dict[int
 
 async def request_reviews(pr: FullPullRequest, reviewers: list[str]) -> bool:
     body = {"reviewers": reviewers}
-    url = f"/repos/{pr.repo.full_name}/pulls/{pr.number}"
+    url = f"/repos/{pr.repo.full_name}/pulls/{pr.number}/requested_reviewers"
     response = await LazyGithubContext.client.post(url, json=body)
-    return response.is_success()
+    try:
+        response.raise_for_status()
+        return True
+    except GithubApiRequestFailed:
+        lg.exception("Error creating review requests")
+        return False

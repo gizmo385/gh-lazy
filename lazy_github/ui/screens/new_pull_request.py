@@ -263,8 +263,10 @@ class NewPullRequestContainer(VerticalScroll):
             return
 
         reviewer_container = self.query_one(ReviewerSelectionContainer)
-        if reviewer_container.reviewers:
-            await request_reviews(created_pr, list(reviewer_container.reviewers))
+        reviewers = list(reviewer_container.reviewers)
+        if reviewers:
+            lg.info(f"Requesting PR reviews from: {', '.join(reviewers)}")
+            await request_reviews(created_pr, reviewers)
 
         self.notify("Successfully created PR!")
         self.post_message(PullRequestCreated(created_pr))

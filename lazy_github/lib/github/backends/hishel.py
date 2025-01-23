@@ -61,7 +61,7 @@ class HishelGithubApiBackend(GithubApiBackend):
         self,
         url: str,
         headers: Headers | None = None,
-        json: dict[str, str] | None = None,
+        json: dict[str, Any] | None = None,
     ) -> HishelApiResponse:
         response = await self.api_client.post(url, headers=headers, json=json)
         return HishelApiResponse(response)

@@ -41,7 +41,7 @@ class GithubApiBackend(Protocol):
         self,
         url: str,
         headers: Headers | None = None,
-        json: dict[str, str] | None = None,
+        json: dict[str, Any] | None = None,
     ) -> GithubApiResponse: ...
 
     async def patch(

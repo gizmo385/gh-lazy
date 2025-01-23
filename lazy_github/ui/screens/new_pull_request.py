@@ -8,6 +8,7 @@ from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.branches import list_branches
 from lazy_github.lib.github.pull_requests import create_pull_request
+from lazy_github.lib.github.users import get_user_by_username
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import BranchesLoaded, PullRequestCreated
 from lazy_github.models.github import Branch, FullPullRequest
@@ -121,6 +122,7 @@ class ReviewerSelectionContainer(Vertical):
 
     def __init__(self) -> None:
         super().__init__()
+        self.reviewers: set[str] = set()
         self.new_reviewer = Input(id="new_reviewer", placeholder="Reviewer to add")
         self.current_reviewers_label = Label("Current Reviewers", id="current_reviewers_label")
         self.current_reviewers_label.display = False
@@ -130,9 +132,31 @@ class ReviewerSelectionContainer(Vertical):
     def compose(self) -> ComposeResult:
         yield Label("[bold]Reviewers[/bold]")
         yield self.new_reviewer
-        yield self.current_reviewers_label
         yield self.reviewers_selection_list
         return super().compose()
+
+    @work
+    async def _validate_new_reviewer(self, reviewer: str) -> None:
+        if reviewer in self.reviewers:
+            self.notify("Already a reviewer!", severity="error")
+        elif not await get_user_by_username(reviewer):
+            self.notify(f"Could not find user {reviewer} - are you sure they exist?", severity="error")
+        else:
+            lg.info(f"Adding {self.new_reviewer.value} to PR reviewer list")
+            self.reviewers.add(reviewer)
+            self.reviewers_selection_list.add_option((reviewer, reviewer, True))
+            self.new_reviewer.value = ""
+            self.current_reviewers_label.display = True
+            self.reviewers_selection_list.display = True
+
+    @on(Input.Submitted)
+    async def handle_new_reviewer_submitted(self, _: Input.Submitted) -> None:
+        self._validate_new_reviewer(self.new_reviewer.value.strip().lower())
+
+    @on(SelectionList.SelectionToggled)
+    async def handle_reviewer_deselected(self, toggled: SelectionList.SelectionToggled) -> None:
+        self.notify(f"Toggled {toggled}")
+        pass
 
 
 class NewPullRequestContainer(VerticalScroll):

@@ -171,12 +171,10 @@ class ReviewerSelectionContainer(Vertical):
 
         existing_reviewers = await list_requested_reviewers(self.existing_pull_request)
         lg.debug(f"Found existing reviewers: {existing_reviewers}")
-        self.reviewers.update(u.login for u in existing_reviewers)
+        self.reviewers.update(u for u in existing_reviewers)
         for reviewer in existing_reviewers:
             try:
-                self.reviewers_selection_list.add_option(
-                    Selection(reviewer.login, reviewer, id=reviewer.login, initial_state=True)
-                )
+                self.reviewers_selection_list.add_option(Selection(reviewer, reviewer, id=reviewer, initial_state=True))
             except DuplicateID:
                 # Already exists, just keep going
                 continue

@@ -171,7 +171,7 @@ async def list_requested_reviewers(pr: FullPullRequest) -> list[User]:
     try:
         response.raise_for_status()
         response_body = response.json()
-        return [User(**u) for u in response_body["users"]]
+        return [u["login"] for u in response_body["users"]]
     except GithubApiRequestFailed:
         lg.exception("Error creating review requests")
         return []

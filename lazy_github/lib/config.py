@@ -17,6 +17,19 @@ ISSUE_STATE_FILTER = Literal["all"] | Literal["open"] | Literal["closed"]
 ISSUE_OWNER_FILTER = Literal["mine"] | Literal["all"]
 
 
+def _serialize_string_list(cls, string_list: str | list[str]) -> list[str]:
+    if isinstance(string_list, list):
+        return string_list
+    elif isinstance(string_list, str):
+        return list(set(s.strip() for s in string_list.split(",") if s.strip()))
+
+
+def _parse_string_list(cls, v) -> list[str]:
+    if isinstance(v, str):
+        return list(set(s.strip() for s in v.split(",") if s.strip()))
+    return v
+
+
 class AppearanceSettings(BaseModel):
     """Settings focused on altering the appearance of LazyGithub, including hiding or showing different sections."""
 
@@ -69,17 +82,12 @@ class RepositorySettings(BaseModel):
     @field_serializer("additional_repos_to_track", "favorites")
     @classmethod
     def serialize_string_list(cls, string_list: str | list[str]) -> list[str]:
-        if isinstance(string_list, list):
-            return string_list
-        elif isinstance(string_list, str):
-            return list(set(s.strip() for s in string_list.split(",") if s.strip()))
+        return _serialize_string_list(cls, string_list)
 
     @field_validator("additional_repos_to_track", "favorites", mode="before")
     @classmethod
     def parse_string_list(cls, v) -> list[str]:
-        if isinstance(v, str):
-            return list(set(s.strip() for s in v.split(",") if s.strip()))
-        return v
+        return _parse_string_list(cls, v)
 
     additional_repos_to_track: list[str] = []
     """Records repositories the user is not an owner of but would like to show in the UI and keep track of"""
@@ -99,6 +107,16 @@ class MergeMethod(StrEnum):
 class PullRequestSettings(BaseModel):
     """Changes how pull requests are retrieved from the Github API"""
 
+    @field_serializer("additional_suggested_pr_reviewers")
+    @classmethod
+    def serialize_string_list(cls, string_list: str | list[str]) -> list[str]:
+        return _serialize_string_list(cls, string_list)
+
+    @field_validator("additional_suggested_pr_reviewers", mode="before")
+    @classmethod
+    def parse_string_list(cls, v) -> list[str]:
+        return _parse_string_list(cls, v)
+
     state_filter: IssueStateFilter = IssueStateFilter.ALL
     """Controls if we're only listing pull requests in a particular state (ex: Open)"""
 
@@ -107,6 +125,9 @@ class PullRequestSettings(BaseModel):
 
     preferred_merge_method: MergeMethod = MergeMethod.SQUASH
     """How we will request that Github merge pull requests"""
+
+    additional_suggested_pr_reviewers: list[str] = []
+    """An list of additional usernames to suggest as reviewers on PRs"""
 
 
 class IssueSettings(BaseModel):

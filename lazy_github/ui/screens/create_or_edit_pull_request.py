@@ -2,13 +2,14 @@ from textual import on, suggester, validation, work
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
+from textual.types import DuplicateID
 from textual.widgets import Button, Input, Label, Markdown, Rule, SelectionList, Switch, TextArea
 from textual.widgets.selection_list import Selection
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.branches import list_branches
-from lazy_github.lib.github.pull_requests import create_pull_request, request_reviews
+from lazy_github.lib.github.pull_requests import create_pull_request, list_requested_reviewers, request_reviews
 from lazy_github.lib.github.repositories import get_collaborators
 from lazy_github.lib.github.users import get_user_by_username
 from lazy_github.lib.logging import lg
@@ -32,24 +33,36 @@ class BranchSelection(Horizontal):
     }
     """
 
-    def __init__(self) -> None:
+    def __init__(self, existing_pull_request: FullPullRequest | None) -> None:
         super().__init__()
+        self.existing_pull_request = existing_pull_request
         self.branches: dict[str, Branch] = {}
 
     def compose(self) -> ComposeResult:
         assert LazyGithubContext.current_repo is not None, "Unexpectedly missing current repo in new PR modal"
         non_empty_validator = validation.Length(minimum=1)
+        base_ref_value = (
+            self.existing_pull_request.base.ref
+            if self.existing_pull_request
+            else LazyGithubContext.current_repo.default_branch
+        )
+        head_ref_value = self.existing_pull_request.head.ref if self.existing_pull_request else None
         yield Label("[bold]Base[/bold]")
         yield Input(
             id="base_ref",
             placeholder="Choose a base ref",
-            value=LazyGithubContext.current_repo.default_branch,
+            value=base_ref_value,
             validators=[non_empty_validator],
         )
         yield Label(":left_arrow: [bold]Compare[/bold]")
-        yield Input(id="head_ref", placeholder="Choose a head ref", validators=[non_empty_validator])
+        yield Input(
+            id="head_ref",
+            placeholder="Choose a head ref",
+            validators=[non_empty_validator],
+            value=head_ref_value,
+        )
         yield Label("Draft")
-        yield Switch(id="pr_is_draft", value=False)
+        yield Switch(id="pr_is_draft", value=self.existing_pull_request.draft if self.existing_pull_request else False)
 
     @property
     def _head_ref_input(self) -> Input:
@@ -78,7 +91,8 @@ class BranchSelection(Horizontal):
 
     async def on_mount(self) -> None:
         self.fetch_branches()
-        self.set_default_branch_value()
+        if not self.existing_pull_request:
+            self.set_default_branch_value()
 
     @on(BranchesLoaded)
     def handle_loaded_branches(self, message: BranchesLoaded) -> None:
@@ -122,8 +136,9 @@ class ReviewerSelectionContainer(Vertical):
     }
     """
 
-    def __init__(self) -> None:
+    def __init__(self, existing_pull_request: FullPullRequest | None) -> None:
         super().__init__()
+        self.existing_pull_request = existing_pull_request
         self.reviewers: set[str] = set()
         self.new_reviewer = Input(id="new_reviewer", placeholder="Reviewer to add")
         self.current_reviewers_label = Label(
@@ -146,6 +161,30 @@ class ReviewerSelectionContainer(Vertical):
         self.new_reviewer.suggester = reviewer_suggester
         self._fetch_collaborators()
 
+        if self.existing_pull_request:
+            self._fetch_existing_review_requests()
+
+    @work
+    async def _fetch_existing_review_requests(self) -> None:
+        if not self.existing_pull_request:
+            return
+
+        existing_reviewers = await list_requested_reviewers(self.existing_pull_request)
+        lg.debug(f"Found existing reviewers: {existing_reviewers}")
+        self.reviewers.update(u.login for u in existing_reviewers)
+        for reviewer in existing_reviewers:
+            try:
+                self.reviewers_selection_list.add_option(
+                    Selection(reviewer.login, reviewer, id=reviewer.login, initial_state=True)
+                )
+            except DuplicateID:
+                # Already exists, just keep going
+                continue
+
+        if self.reviewers:
+            self.current_reviewers_label.display = True
+            self.reviewers_selection_list.display = True
+
     @work
     async def _fetch_collaborators(self) -> None:
         if LazyGithubContext.current_repo:
@@ -163,7 +202,10 @@ class ReviewerSelectionContainer(Vertical):
         else:
             lg.info(f"Adding {self.new_reviewer.value} to PR reviewer list")
             self.reviewers.add(reviewer)
-            self.reviewers_selection_list.add_option(Selection(reviewer, reviewer, id=reviewer, initial_state=True))
+            try:
+                self.reviewers_selection_list.add_option(Selection(reviewer, reviewer, id=reviewer, initial_state=True))
+            except DuplicateID:
+                pass
             self.new_reviewer.value = ""
             self.current_reviewers_label.display = True
             self.reviewers_selection_list.display = True
@@ -186,12 +228,12 @@ class ReviewerSelectionContainer(Vertical):
             self.reviewers_selection_list.display = False
 
 
-class NewPullRequestContainer(VerticalScroll):
+class CreateOrEditPullRequestContainer(VerticalScroll):
     DEFAULT_CSS = """
     Markdown {
         margin-bottom: 1;
     }
-    NewPullRequestContainer {
+    CreateOrEditPullRequestContainer {
         padding: 1;
     }
     Horizontal {
@@ -210,16 +252,28 @@ class NewPullRequestContainer(VerticalScroll):
     """
     BINDINGS = [LazyGithubBindings.SUBMIT_DIALOG]
 
+    def __init__(self, existing_pull_request: FullPullRequest | None) -> None:
+        super().__init__()
+        self.existing_pull_request = existing_pull_request
+
     def compose(self) -> ComposeResult:
-        yield Markdown("# New Pull Request")
-        yield BranchSelection()
+        pr_title = ""
+        pr_description = ""
+        modal_heading = "New Pull Request"
+        if self.existing_pull_request:
+            modal_heading = f"Editing PR {self.existing_pull_request.number}"
+            pr_title = self.existing_pull_request.title
+            pr_description = self.existing_pull_request.body or ""
+
+        yield Markdown(f"# {modal_heading}")
+        yield BranchSelection(self.existing_pull_request)
         yield Rule()
         yield Label("[bold]Title[/bold]")
-        yield Input(id="pr_title", placeholder="Title", validators=[validation.Length(minimum=1)])
+        yield Input(id="pr_title", placeholder="Title", validators=[validation.Length(minimum=1)], value=pr_title)
         yield Label("[bold]Description[/bold]")
-        yield TextArea.code_editor(id="pr_description", soft_wrap=True, tab_behavior="focus")
+        yield TextArea.code_editor(id="pr_description", soft_wrap=True, tab_behavior="focus", text=pr_description)
         yield Rule()
-        yield ReviewerSelectionContainer()
+        yield ReviewerSelectionContainer(self.existing_pull_request)
         yield NewPullRequestButtons()
 
     def on_mount(self) -> None:
@@ -228,6 +282,9 @@ class NewPullRequestContainer(VerticalScroll):
     @on(Button.Pressed, "#cancel_new_pr")
     def cancel_pull_request(self, _: Button.Pressed):
         self.app.pop_screen()
+
+    async def _edit_pr(self) -> None:
+        pass
 
     async def _create_pr(self) -> None:
         assert LazyGithubContext.current_repo is not None, "Unexpectedly missing current repo in new PR modal"
@@ -272,21 +329,27 @@ class NewPullRequestContainer(VerticalScroll):
         self.post_message(PullRequestCreated(created_pr))
 
     async def action_submit(self) -> None:
-        await self._create_pr()
+        if self.existing_pull_request:
+            await self._edit_pr()
+        else:
+            await self._create_pr()
 
     @on(Button.Pressed, "#submit_new_pr")
     async def submit_new_pr(self, _: Button.Pressed):
-        await self._create_pr()
+        if self.existing_pull_request:
+            await self._edit_pr()
+        else:
+            await self._create_pr()
 
 
-class NewPullRequestModal(ModalScreen[FullPullRequest | None]):
+class CreateOrEditPullRequestModal(ModalScreen[FullPullRequest | None]):
     DEFAULT_CSS = """
-    NewPullRequestModal {
+    CreateOrEditPullRequestModal {
         align: center middle;
         content-align: center middle;
     }
 
-    NewPullRequestContainer {
+    CreateOrEditPullRequestContainer {
         width: 100;
         height: auto;
         border: thick $background 80%;
@@ -295,10 +358,14 @@ class NewPullRequestModal(ModalScreen[FullPullRequest | None]):
     }
     """
 
+    def __init__(self, existing_pull_request: FullPullRequest | None = None) -> None:
+        super().__init__()
+        self.existing_pull_request = existing_pull_request
+
     BINDINGS = [LazyGithubBindings.CLOSE_DIALOG]
 
     def compose(self) -> ComposeResult:
-        yield NewPullRequestContainer()
+        yield CreateOrEditPullRequestContainer(self.existing_pull_request)
 
     def action_close(self) -> None:
         self.dismiss(None)

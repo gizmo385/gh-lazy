@@ -13,6 +13,7 @@ from lazy_github.models.github import (
     Repository,
     Review,
     ReviewComment,
+    User,
 )
 
 
@@ -152,6 +153,7 @@ def reconstruct_review_conversation_hierarchy(reviews: list[Review]) -> dict[int
 
 
 async def request_reviews(pr: FullPullRequest, reviewers: list[str]) -> bool:
+    """Requests reviews from the specified logins on a PR"""
     body = {"reviewers": reviewers}
     url = f"/repos/{pr.repo.full_name}/pulls/{pr.number}/requested_reviewers"
     response = await LazyGithubContext.client.post(url, json=body)
@@ -161,3 +163,15 @@ async def request_reviews(pr: FullPullRequest, reviewers: list[str]) -> bool:
     except GithubApiRequestFailed:
         lg.exception("Error creating review requests")
         return False
+
+
+async def list_requested_reviewers(pr: FullPullRequest) -> list[User]:
+    """Lists existing review requests on the specified pull request"""
+    response = await LazyGithubContext.client.get(f"/repos/{pr.repo.full_name}/pulls/{pr.number}/requested_reviewers")
+    try:
+        response.raise_for_status()
+        response_body = response.json()
+        return [User(**u) for u in response_body["users"]]
+    except GithubApiRequestFailed:
+        lg.exception("Error creating review requests")
+        return []

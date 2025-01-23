@@ -13,6 +13,7 @@ from lazy_github.lib.github.checks import combined_check_status_for_ref
 from lazy_github.lib.github.issues import get_comments, list_issues
 from lazy_github.lib.github.pull_requests import (
     get_diff,
+    get_full_pull_request,
     get_reviews,
     merge_pull_request,
     reconstruct_review_conversation_hierarchy,
@@ -26,6 +27,7 @@ from lazy_github.models.github import (
     PartialPullRequest,
     Repository,
 )
+from lazy_github.ui.screens.create_or_edit_pull_request import CreateOrEditPullRequestModal
 from lazy_github.ui.screens.lookup_pull_request import LookupPullRequestModal
 from lazy_github.ui.screens.new_comment import NewCommentModal
 from lazy_github.ui.widgets.common import (
@@ -45,7 +47,7 @@ class PullRequestsContainer(LazyGithubContainer):
     This container includes the primary datatable for viewing pull requests on the UI.
     """
 
-    BINDINGS = [LazyGithubBindings.LOOKUP_PULL_REQUEST]
+    BINDINGS = [LazyGithubBindings.LOOKUP_PULL_REQUEST, LazyGithubBindings.EDIT_PULL_REQUEST]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -68,6 +70,17 @@ class PullRequestsContainer(LazyGithubContainer):
     def compose(self) -> ComposeResult:
         self.border_title = "[2] Pull Requests"
         yield self._table
+
+    @work
+    async def action_edit_pull_request(self) -> None:
+        pr = await self.get_selected_pr()
+        full_pr = await get_full_pull_request(pr.repo, pr.number)
+        if full_pr.merged_at:
+            self.notify("This PR has already been merged!", severity="warning")
+            return
+
+        if updated_pr := await self.app.push_screen_wait(CreateOrEditPullRequestModal(full_pr)):
+            self.searchable_table.add_item(updated_pr)
 
     @work
     async def action_lookup_pull_request(self) -> None:

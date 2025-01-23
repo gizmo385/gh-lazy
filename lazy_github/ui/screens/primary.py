@@ -28,8 +28,8 @@ from lazy_github.lib.messages import (
     RepoSelected,
 )
 from lazy_github.models.github import Issue, PartialPullRequest, Repository
+from lazy_github.ui.screens.create_or_edit_pull_request import CreateOrEditPullRequestModal
 from lazy_github.ui.screens.new_issue import NewIssueModal
-from lazy_github.ui.screens.new_pull_request import NewPullRequestModal
 from lazy_github.ui.screens.notifications import NotificationsModal
 from lazy_github.ui.screens.settings import SettingsModal
 from lazy_github.ui.widgets.command_log import CommandLogSection
@@ -168,7 +168,7 @@ class SelectionsPane(Container):
             self.notify("Please select a repository first!", title="Cannot open new pull request", severity="error")
             return
 
-        if new_pr := await self.app.push_screen_wait(NewPullRequestModal()):
+        if new_pr := await self.app.push_screen_wait(CreateOrEditPullRequestModal()):
             self.pull_requests.searchable_table.add_item(new_pr)
 
     @property

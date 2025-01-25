@@ -19,7 +19,7 @@ from lazy_github.lib.github.repositories import get_collaborators
 from lazy_github.lib.github.users import get_user_by_username
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import BranchesLoaded, PullRequestCreatedOrUpdated
-from lazy_github.models.github import Branch, FullPullRequest
+from lazy_github.models.github import Branch, FullPullRequest, PartialPullRequest
 
 
 class BranchSelection(Horizontal):
@@ -134,8 +134,13 @@ class NewPullRequestButtons(Horizontal):
     }
     """
 
+    def __init__(self, existing_pull_request: PartialPullRequest | None) -> None:
+        super().__init__()
+        self.existing_pull_request = existing_pull_request
+
     def compose(self) -> ComposeResult:
-        yield Button("Create", id="submit_new_pr", variant="success")
+        submit_text = "Update" if self.existing_pull_request else "Create"
+        yield Button(submit_text, id="submit_new_pr", variant="success")
         yield Button("Cancel", id="cancel_new_pr", variant="error")
 
 
@@ -283,7 +288,7 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
         yield TextArea.code_editor(id="pr_description", soft_wrap=True, tab_behavior="focus", text=pr_description)
         yield Rule()
         yield ReviewerSelectionContainer(self.existing_pull_request)
-        yield NewPullRequestButtons()
+        yield NewPullRequestButtons(self.existing_pull_request)
 
     def on_mount(self) -> None:
         self.query_one("#pr_title", Input).focus()
@@ -302,6 +307,7 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
 
         # Update pull request fields
         try:
+            self.notify("Updating PR...")
             updated_pr = await update_pull_request(
                 LazyGithubContext.current_repo, self.existing_pull_request, title_field.value, description_field.text
             )
@@ -341,6 +347,7 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
             return
 
         try:
+            self.notify("Creating PR...")
             created_pr = await create_pull_request(
                 LazyGithubContext.current_repo,
                 title_field.value,

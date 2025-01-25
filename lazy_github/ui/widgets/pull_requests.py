@@ -77,10 +77,9 @@ class PullRequestsContainer(LazyGithubContainer):
         full_pr = await get_full_pull_request(pr.repo, pr.number)
         if full_pr.merged_at:
             self.notify("This PR has already been merged!", severity="warning")
-            return
-
-        if updated_pr := await self.app.push_screen_wait(CreateOrEditPullRequestModal(full_pr)):
+        elif updated_pr := await self.app.push_screen_wait(CreateOrEditPullRequestModal(full_pr)):
             self.searchable_table.add_item(updated_pr)
+            self.post_message(PullRequestSelected(updated_pr))
 
     @work
     async def action_lookup_pull_request(self) -> None:
@@ -214,8 +213,8 @@ class PrOverviewTabPane(TabPane):
     async def action_edit_pull_request(self) -> None:
         if self.pr.merged_at:
             self.notify("This PR has already been merged!", severity="warning")
-        else:
-            self.app.push_screen(CreateOrEditPullRequestModal(self.pr))
+        elif updated_pr := await self.app.push_screen_wait(CreateOrEditPullRequestModal(self.pr)):
+            self.post_message(PullRequestSelected(updated_pr))
 
     def compose(self) -> ComposeResult:
         pr_link = f"[link={self.pr.html_url}](#{self.pr.number})[/link]"

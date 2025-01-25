@@ -158,6 +158,7 @@ class SelectionsPane(Container):
 
         if new_issue := await self.app.push_screen_wait(NewIssueModal()):
             self.issues.searchable_table.add_item(new_issue)
+            self.post_message(IssueSelected(new_issue))
 
     async def action_open_pull_request(self) -> None:
         self.trigger_pr_creation_flow()
@@ -170,6 +171,7 @@ class SelectionsPane(Container):
 
         if new_pr := await self.app.push_screen_wait(CreateOrEditPullRequestModal()):
             self.pull_requests.searchable_table.add_item(new_pr)
+            self.post_message(PullRequestSelected(new_pr))
 
     @property
     def repositories(self) -> ReposContainer:

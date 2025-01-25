@@ -42,7 +42,7 @@ class NewIssueContainer(Container):
             yield Rule()
 
             yield Label("[bold]Description[/bold]")
-            yield TextArea.code_editor(id="new_issue_body", soft_wrap=True)
+            yield TextArea.code_editor(id="new_issue_body", soft_wrap=True, tab_behavior="focus")
 
         with Horizontal(id="button_holder"):
             yield Button("Save", id="save_new_issue", variant="success")

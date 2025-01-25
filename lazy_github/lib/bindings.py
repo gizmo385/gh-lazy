@@ -69,6 +69,10 @@ class LazyGithubBindings:
     CLOSE_DIALOG = Binding("q, ESC", "close", "Close", id="modal.close")
     SEARCH_DIALOG = Binding("/", "search", "Search", id="modal.search")
 
+    # Generic confirmation dialog
+    CONFIRM_YES = Binding("y", "confirm_yes", "Yes", id="confirm.yes")
+    CONFIRM_NO = Binding("n", "confirm_no", "No", id="confirm.no")
+
     # Focusing different UI elements
     FOCUS_REPOSITORY_TABLE = Binding(
         "1", "focus_section('#repos_table')", "Focus repos table", show=False, id="main.repos.focus"

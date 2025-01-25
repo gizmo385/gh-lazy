@@ -1,5 +1,5 @@
 import re
-from subprocess import DEVNULL, SubprocessError, check_output
+from subprocess import DEVNULL, SubprocessError, check_output, run
 
 # Regex designed to match git@github.com:gizmo385/lazy-github.git:
 # ".+:"         Match everything to the first colon
@@ -37,3 +37,11 @@ def current_local_commit() -> str | None:
         return check_output(["git", "rev-parse", "HEAD"], stderr=DEVNULL).decode().strip()
     except SubprocessError:
         return None
+
+
+def does_branch_have_configured_upstream(branch: str) -> bool:
+    """Checks to see if the specified branch is configured with an upstream"""
+    try:
+        return run(["git", "config", "--get", f"branch.{branch}.merge"]).returncode == 0
+    except SubprocessError:
+        return False

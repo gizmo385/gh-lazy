@@ -9,16 +9,19 @@ class LazyGithubBindings:
     OPEN_COMMAND_PALLETE = Binding("ctrl+p", "command_palette", "Commands", id="app.command_palette")
     MAXIMIZE_WIDGET = Binding("M", "maximize", "Maximize", id="app.maximize_widget")
 
-    # Triggering creation flows
-    OPEN_ISSUE = Binding("I", "open_issue", "New Issue", id="issue.new")
-    EDIT_ISSUE = Binding("E", "edit_issue", "Edit Issue", id="issue.edit")
+    # Conversation actions
     NEW_COMMENT = Binding("n", "new_comment", "New Comment", id="conversation.comment.new")
     REPLY_TO_REVIEW = Binding("r", "reply_to_review", "Reply to Review", id="conversation.review.reply")
     REPLY_TO_COMMENT = Binding("r", "reply_to_individual_comment", "Reply to Comment", id="conversation.comment.reply")
 
+    # Issue actions
+    OPEN_ISSUE = Binding("I", "open_issue", "New Issue", id="issue.new")
+    EDIT_ISSUE = Binding("E", "edit_issue", "Edit Issue", id="issue.edit")
+
     # Pull request actions
     OPEN_PULL_REQUEST = Binding("P", "open_pull_request", "New PR", id="pull_request.new")
     MERGE_PULL_REQUEST = Binding("ctrl+m", "merge_pull_request", "Merge PR", id="pull_request.merge")
+    EDIT_PULL_REQUEST = Binding("E", "edit_pull_request", "Edit PR", id="pull_request.edit")
     LOOKUP_PULL_REQUEST = Binding("O", "lookup_pull_request", "Lookup Pull Request", id="pull_request.lookup")
 
     # Repository actions

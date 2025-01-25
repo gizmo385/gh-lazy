@@ -70,7 +70,7 @@ class IssuesAndPullRequestsFetched(Message):
         ]
 
 
-class PullRequestCreated(Message):
+class PullRequestCreatedOrUpdated(Message):
     def __init__(self, pull_request: FullPullRequest) -> None:
         super().__init__()
         self.pull_request = pull_request

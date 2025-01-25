@@ -42,6 +42,21 @@ async def create_pull_request(
     return FullPullRequest(**response.json(), repo=repo)
 
 
+async def update_pull_request(
+    repo: Repository, existing_pr: FullPullRequest, updated_title: str, updated_body: str
+) -> FullPullRequest:
+    """Update the title or body of an existing PR"""
+    if existing_pr.title == updated_title and existing_pr.body == updated_body:
+        return existing_pr
+    body = {"title": updated_title, "body": updated_body, "base": existing_pr.base.ref}
+    url = f"/repos/{repo.full_name}/pulls/{existing_pr.number}"
+    response = await LazyGithubContext.client.patch(url, json=body)
+    response.raise_for_status()
+    existing_pr.title = updated_title
+    existing_pr.body = updated_body
+    return existing_pr
+
+
 async def get_full_pull_request(repo: Repository, pr_number: int) -> FullPullRequest:
     """Converts a partial pull request into a full pull request"""
     url = f"/repos/{repo.owner.login}/{repo.name}/pulls/{pr_number}"
@@ -152,6 +167,7 @@ def reconstruct_review_conversation_hierarchy(reviews: list[Review]) -> dict[int
 
 
 async def request_reviews(pr: FullPullRequest, reviewers: list[str]) -> bool:
+    """Requests reviews from the specified logins on a PR"""
     body = {"reviewers": reviewers}
     url = f"/repos/{pr.repo.full_name}/pulls/{pr.number}/requested_reviewers"
     response = await LazyGithubContext.client.post(url, json=body)
@@ -161,3 +177,15 @@ async def request_reviews(pr: FullPullRequest, reviewers: list[str]) -> bool:
     except GithubApiRequestFailed:
         lg.exception("Error creating review requests")
         return False
+
+
+async def list_requested_reviewers(pr: FullPullRequest) -> list[str]:
+    """Lists existing review requests on the specified pull request"""
+    response = await LazyGithubContext.client.get(f"/repos/{pr.repo.full_name}/pulls/{pr.number}/requested_reviewers")
+    try:
+        response.raise_for_status()
+        response_body = response.json()
+        return [u["login"] for u in response_body["users"]]
+    except GithubApiRequestFailed:
+        lg.exception("Error creating review requests")
+        return []

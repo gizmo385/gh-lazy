@@ -47,7 +47,9 @@ class EditIssueContainer(Container):
             yield Rule()
 
             yield Label("[bold]Description[/bold]")
-            yield TextArea.code_editor(self.issue.body or "", id="updated_issue_body", soft_wrap=True)
+            yield TextArea.code_editor(
+                self.issue.body or "", id="updated_issue_body", soft_wrap=True, tab_behavior="focus"
+            )
 
         with Horizontal(id="button_holder"):
             yield Button("Save", id="save_updated_issue", variant="success")

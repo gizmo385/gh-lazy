@@ -222,7 +222,6 @@ class SelectionsPane(Container):
                 and repo.default_branch is not None
                 and LazyGithubContext.current_directory_branch != repo.default_branch
             ):
-                lg.debug("Preloading PR for current commit")
                 self.pull_requests.load_pull_request_for_current_commit()
 
             # Fetch the live data

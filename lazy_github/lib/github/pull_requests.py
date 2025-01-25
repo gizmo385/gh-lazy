@@ -1,3 +1,5 @@
+from pydantic import ValidationError
+
 from lazy_github.lib.config import MergeMethod
 from lazy_github.lib.constants import DIFF_CONTENT_ACCEPT_TYPE
 from lazy_github.lib.context import LazyGithubContext, github_headers
@@ -188,4 +190,18 @@ async def list_requested_reviewers(pr: FullPullRequest) -> list[str]:
         return [u["login"] for u in response_body["users"]]
     except GithubApiRequestFailed:
         lg.exception("Error creating review requests")
+        return []
+
+
+async def list_pull_requests_for_commit(commit_sha: str) -> list[PartialPullRequest]:
+    """Given a commit sha, returns a list of pull requests associated with that commit sha"""
+    if not LazyGithubContext.current_repo:
+        return []
+    repo_full_name = LazyGithubContext.current_repo.full_name
+    response = await LazyGithubContext.client.get(f"/repos/{repo_full_name}/commits/{commit_sha}/pulls")
+    try:
+        response.raise_for_status()
+        return [PartialPullRequest(**p, repo=LazyGithubContext.current_repo) for p in response.json()]
+    except GithubApiRequestFailed:
+        lg.exception("Error loading PRs for current commit")
         return []

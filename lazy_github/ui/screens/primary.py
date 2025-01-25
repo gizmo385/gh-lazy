@@ -215,6 +215,9 @@ class SelectionsPane(Container):
             # Load things from the local file cache
             self.pull_requests.load_cached_pull_requests_for_repo(repo)
             self.issues.load_cached_issues_for_repo(repo)
+
+            if LazyGithubContext.config.pull_requests.preload_pull_request_for_current_commit:
+                self.pull_requests.load_pull_request_for_current_commit()
             # Fetch the live data
             self.fetch_issues_and_pull_requests(repo)
         if self.workflows.display:

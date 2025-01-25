@@ -29,3 +29,11 @@ def current_local_branch_name() -> str | None:
         return check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=DEVNULL).decode().strip()
     except SubprocessError:
         return None
+
+
+def current_local_commit() -> str | None:
+    """Returns the commit sha for the git repo in the current working directory"""
+    try:
+        return check_output(["git", "rev-parse", "HEAD"], stderr=DEVNULL).decode().strip()
+    except SubprocessError:
+        return None

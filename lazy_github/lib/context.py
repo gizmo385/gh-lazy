@@ -3,7 +3,7 @@ from typing import Optional
 
 from lazy_github.lib.config import Config
 from lazy_github.lib.constants import JSON_CONTENT_ACCEPT_TYPE
-from lazy_github.lib.git_cli import current_local_branch_name, current_local_repo_full_name
+from lazy_github.lib.git_cli import current_local_branch_name, current_local_commit, current_local_repo_full_name
 from lazy_github.lib.github.backends.protocol import BackendType
 from lazy_github.lib.github.client import GithubClient
 from lazy_github.lib.logging import LazyGithubLogFormatter, lg
@@ -18,6 +18,7 @@ class _LazyGithubContext:
     _client: GithubClient | None = None
     _current_directory_repo: str | None = None
     _current_directory_branch: str | None = None
+    _current_commit: str | None = None
 
     # Directly assigned attributes
     current_repo: Repository | None = None
@@ -76,6 +77,13 @@ class _LazyGithubContext:
         if not cls._current_directory_branch:
             cls._current_directory_branch = current_local_branch_name()
         return cls._current_directory_branch
+
+    @property
+    def current_local_commit(cls) -> str | None:
+        """The commit sha of the current local directory repo"""
+        if not cls._current_commit:
+            cls._current_commit = current_local_commit()
+        return cls._current_commit
 
 
 LazyGithubContext = _LazyGithubContext()

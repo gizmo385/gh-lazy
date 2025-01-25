@@ -129,6 +129,9 @@ class PullRequestSettings(BaseModel):
     additional_suggested_pr_reviewers: list[str] = []
     """An list of additional usernames to suggest as reviewers on PRs"""
 
+    preload_pull_request_for_current_commit: bool = False
+    """Attempts to identify the github PR associated with your commit git sha and display it on startup"""
+
 
 class IssueSettings(BaseModel):
     """Changes how issues are retrieved from the Github API"""

@@ -15,6 +15,7 @@ from lazy_github.lib.github.pull_requests import (
     get_diff,
     get_full_pull_request,
     get_reviews,
+    list_pull_requests_for_commit,
     merge_pull_request,
     reconstruct_review_conversation_hierarchy,
 )
@@ -133,6 +134,13 @@ class PullRequestsContainer(LazyGithubContainer):
         self.searchable_table.change_load_function(self.fetch_more_pull_requests)
         self.searchable_table.can_load_more = True
         self.searchable_table.current_batch = 1
+
+    @work
+    async def load_pull_request_for_current_commit(self) -> None:
+        if LazyGithubContext.current_local_commit:
+            associated_prs = await list_pull_requests_for_commit(LazyGithubContext.current_local_commit)
+            if len(associated_prs) == 1:
+                self.post_message(PullRequestSelected(associated_prs[0]))
 
     async def get_selected_pr(self) -> PartialPullRequest:
         pr_number_coord = Coordinate(self.table.cursor_row, self.number_column_index)

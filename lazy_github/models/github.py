@@ -38,7 +38,6 @@ class IssueState(StrEnum):
 class Issue(BaseModel):
     id: int
     number: int
-    comments: int
     locked: bool
     state: IssueState
     title: str

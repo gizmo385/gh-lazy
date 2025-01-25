@@ -1,4 +1,3 @@
-from pydantic import ValidationError
 
 from lazy_github.lib.config import MergeMethod
 from lazy_github.lib.constants import DIFF_CONTENT_ACCEPT_TYPE

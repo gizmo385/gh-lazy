@@ -216,8 +216,15 @@ class SelectionsPane(Container):
             self.pull_requests.load_cached_pull_requests_for_repo(repo)
             self.issues.load_cached_issues_for_repo(repo)
 
-            if LazyGithubContext.config.pull_requests.preload_pull_request_for_current_commit:
+            # Preload the PR for the current commit if we're on a branch
+            if (
+                LazyGithubContext.config.pull_requests.preload_pull_request_for_current_commit
+                and repo.default_branch is not None
+                and LazyGithubContext.current_directory_branch != repo.default_branch
+            ):
+                lg.debug("Preloading PR for current commit")
                 self.pull_requests.load_pull_request_for_current_commit()
+
             # Fetch the live data
             self.fetch_issues_and_pull_requests(repo)
         if self.workflows.display:

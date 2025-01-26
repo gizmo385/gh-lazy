@@ -1,5 +1,7 @@
 import re
-from subprocess import DEVNULL, SubprocessError, check_output, run
+from subprocess import DEVNULL, PIPE, SubprocessError, check_output, run
+
+from lazy_github.lib.logging import lg
 
 # Regex designed to match git@github.com:gizmo385/lazy-github.git:
 # ".+:"         Match everything to the first colon
@@ -39,9 +41,25 @@ def current_local_commit() -> str | None:
         return None
 
 
+def does_branch_exist_on_remote(branch: str, remote: str = "origin") -> bool:
+    try:
+        return bool(check_output(["git", "ls-remote", remote, branch]))
+    except SubprocessError:
+        return False
+
+
 def does_branch_have_configured_upstream(branch: str) -> bool:
     """Checks to see if the specified branch is configured with an upstream"""
     try:
         return run(["git", "config", "--get", f"branch.{branch}.merge"]).returncode == 0
     except SubprocessError:
+        return False
+
+
+def push_branch_to_remote(branch: str, remote: str = "origin") -> bool:
+    try:
+        result = run(["git", "push", "--set-upstream", remote, f"HEAD:{branch}"], stdout=PIPE, stderr=PIPE)
+        return result.returncode == 0
+    except SubprocessError:
+        lg.exception("Error pushing branch to remote")
         return False

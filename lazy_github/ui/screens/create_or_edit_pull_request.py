@@ -8,6 +8,11 @@ from textual.widgets.selection_list import Selection
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
+from lazy_github.lib.git_cli import (
+    does_branch_exist_on_remote,
+    does_branch_have_configured_upstream,
+    push_branch_to_remote,
+)
 from lazy_github.lib.github.branches import list_branches
 from lazy_github.lib.github.pull_requests import (
     create_pull_request,
@@ -20,6 +25,7 @@ from lazy_github.lib.github.users import get_user_by_username
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import BranchesLoaded, PullRequestCreatedOrUpdated
 from lazy_github.models.github import Branch, FullPullRequest, PartialPullRequest
+from lazy_github.ui.screens.confirm import ConfirmDialog
 
 
 class BranchSelection(Horizontal):
@@ -263,12 +269,23 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
     #pr_title {
         margin-bottom: 1;
     }
+
+    #branch_missing {
+        align: center middle;
+        content-align: center middle;
+        width: 100%;
+        margin-bottom: 1;
+    }
     """
     BINDINGS = [LazyGithubBindings.SUBMIT_DIALOG]
 
     def __init__(self, existing_pull_request: FullPullRequest | None) -> None:
         super().__init__()
         self.existing_pull_request = existing_pull_request
+        self.branch_missing_label = Label(
+            "[yellow]Warning:[/yellow] Current local branch has no configured upstream", id="branch_missing"
+        )
+        self.branch_missing_label.display = False
 
     def compose(self) -> ComposeResult:
         pr_title = ""
@@ -280,6 +297,7 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
             pr_description = self.existing_pull_request.body or ""
 
         yield Markdown(f"# {modal_heading}")
+        yield self.branch_missing_label
         yield BranchSelection(self.existing_pull_request)
         yield Rule()
         yield Label("[bold]Title[/bold]")
@@ -290,8 +308,30 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
         yield ReviewerSelectionContainer(self.existing_pull_request)
         yield NewPullRequestButtons(self.existing_pull_request)
 
-    def on_mount(self) -> None:
+    @work
+    async def check_for_branch_creation(self, branch) -> None:
+        branch_warning = f"[yellow]Warning:[/yellow] Branch [yellow]{branch}[/yellow] may not exist on remote. Do you want to create it?"
+        if await self.app.push_screen_wait(ConfirmDialog(branch_warning)):
+            if push_branch_to_remote(branch):
+                self.notify(f"Pushed branch [green]{branch}[/green] to remote")
+            else:
+                self.notify(f"Error while pushing branch [red]{branch}[/red] to remote", severity="error")
+
+    @work
+    async def ensure_branch_exists_on_remote(self, branch: str) -> None:
+        if not does_branch_exist_on_remote(branch):
+            self.check_for_branch_creation(branch)
+
+    @work
+    async def ensure_directory_branch_has_configured_upstream(self) -> None:
+        if not LazyGithubContext.current_directory_branch:
+            return
+        if not does_branch_have_configured_upstream(LazyGithubContext.current_directory_branch):
+            self.branch_missing_label.display = True
+
+    async def on_mount(self) -> None:
         self.query_one("#pr_title", Input).focus()
+        self.ensure_directory_branch_has_configured_upstream()
 
     @on(Button.Pressed, "#cancel_new_pr")
     def cancel_pull_request(self, _: Button.Pressed):
@@ -363,6 +403,7 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
                 title="Error creating pull request",
                 severity="error",
             )
+            self.ensure_branch_exists_on_remote(head_ref_field.value)
             return
 
         reviewer_container = self.query_one(ReviewerSelectionContainer)

@@ -6,8 +6,9 @@ from lazy_github.lib.context import LazyGithubContext
 class LazyGithubBindings:
     # Global App Bindings
     QUIT_APP = Binding("q", "quit", "Quit", id="app.quit")
-    OPEN_COMMAND_PALLETE = Binding("ctrl+p", "command_palette", "Commands", id="app.command_palette")
+    OPEN_COMMAND_PALLETE = Binding("ctrl+p", "command_palette", "Command Pallete", id="app.command_palette")
     MAXIMIZE_WIDGET = Binding("M", "maximize", "Maximize", id="app.maximize_widget")
+    OPEN_HELP = Binding("?", "open_help", "Keybindings", key_display="?", id="app.open_help")
 
     # Conversation actions
     NEW_COMMENT = Binding("n", "new_comment", "New Comment", id="conversation.comment.new")
@@ -43,8 +44,12 @@ class LazyGithubBindings:
     TABLE_SCROLL_BOTTOM = Binding(
         "G", "scroll_bottom", "Table scroll to bottom", show=False, id="common.table.scroll_bottom"
     )
-    TABLE_PAGE_LEFT = Binding("^", "page_left", "Table page left", show=False, id="common.table.page_left")
-    TABLE_PAGE_RIGHT = Binding("$", "page_right", "Table page right", show=False, id="common.table.page_right")
+    TABLE_PAGE_LEFT = Binding(
+        "^", "page_left", "Table page left", key_display="^", show=False, id="common.table.page_left"
+    )
+    TABLE_PAGE_RIGHT = Binding(
+        "$", "page_right", "Table page right", key_display="$", show=False, id="common.table.page_right"
+    )
 
     # Workflows
     TRIGGER_WORKFLOW = Binding("T", "trigger_workflow", "Trigger Workflow", show=True, id="workflows.trigger")

@@ -3,9 +3,10 @@ from datetime import datetime
 from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal
+from textual.css.query import NoMatches
 from textual.screen import Screen
 from textual.theme import Theme
-from textual.widgets import Button, Markdown, RadioButton, RadioSet
+from textual.widgets import Button, HelpPanel, Markdown, RadioButton, RadioSet
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
@@ -60,6 +61,7 @@ class LazyGithub(App):
         LazyGithubBindings.QUIT_APP,
         LazyGithubBindings.OPEN_COMMAND_PALLETE,
         LazyGithubBindings.MAXIMIZE_WIDGET,
+        LazyGithubBindings.OPEN_HELP,
     ]
 
     has_shown_maximize_toast: bool = False
@@ -114,6 +116,13 @@ class LazyGithub(App):
     def on_mount(self) -> None:
         self.theme = LazyGithubContext.config.appearance.theme.name
         self.set_keymap(LazyGithubContext.config.bindings.overrides)
+
+    def action_open_help(self) -> None:
+        try:
+            _ = self.query_one(HelpPanel)
+            self.action_hide_help_panel()
+        except NoMatches:
+            self.action_show_help_panel()
 
     def action_maximize(self) -> None:
         if self.screen.is_maximized:

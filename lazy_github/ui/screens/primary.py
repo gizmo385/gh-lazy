@@ -287,15 +287,16 @@ class MainViewPane(Container):
     async def load_repository(self, repo: Repository) -> None:
         await self.selections.load_repository(repo)
 
-    async def load_pull_request(self, pull_request: PartialPullRequest) -> None:
+    async def load_pull_request(self, pull_request: PartialPullRequest, focus_pr_details: bool = True) -> None:
         full_pr = await get_full_pull_request(pull_request.repo, pull_request.number)
         tabbed_content = self.query_one("#selection_detail_tabs", TabbedContent)
         await tabbed_content.clear_panes()
         await tabbed_content.add_pane(PrOverviewTabPane(full_pr))
         await tabbed_content.add_pane(PrDiffTabPane(full_pr))
         await tabbed_content.add_pane(PrConversationTabPane(full_pr))
-        tabbed_content.children[0].focus()
         self.details.border_title = f"[5] PR #{full_pr.number} Details"
+        if focus_pr_details:
+            tabbed_content.children[0].focus()
 
     async def load_issue(self, issue: Issue) -> None:
         tabbed_content = self.query_one("#selection_detail_tabs", TabbedContent)
@@ -307,7 +308,7 @@ class MainViewPane(Container):
 
     @on(PullRequestSelected)
     async def handle_pull_request_selection(self, message: PullRequestSelected) -> None:
-        await self.load_pull_request(message.pr)
+        await self.load_pull_request(message.pr, message.focus_pr_details)
 
     @on(IssueSelected)
     async def handle_issue_selection(self, message: IssueSelected) -> None:

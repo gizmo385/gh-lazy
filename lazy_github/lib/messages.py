@@ -31,9 +31,10 @@ class PullRequestSelected(Message):
     A message indicating that the user is looking for additional information on a particular pull request.
     """
 
-    def __init__(self, pr: PartialPullRequest) -> None:
-        self.pr = pr
+    def __init__(self, pr: PartialPullRequest, focus_pr_details: bool = True) -> None:
         super().__init__()
+        self.pr = pr
+        self.focus_pr_details = focus_pr_details
 
 
 class IssueSelected(Message):

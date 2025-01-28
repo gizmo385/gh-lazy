@@ -141,7 +141,7 @@ class PullRequestsContainer(LazyGithubContainer):
             associated_prs = await list_pull_requests_for_commit(LazyGithubContext.current_local_commit)
             if len(associated_prs) == 1:
                 lg.info("Loading PR for your current commit")
-                self.post_message(PullRequestSelected(associated_prs[0]))
+                self.post_message(PullRequestSelected(associated_prs[0], False))
 
     async def get_selected_pr(self) -> PartialPullRequest:
         pr_number_coord = Coordinate(self.table.cursor_row, self.number_column_index)

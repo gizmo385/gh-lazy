@@ -105,7 +105,6 @@ class NewCommentContainer(Container):
 class NewCommentModal(ModalScreen[IssueComment | None]):
     DEFAULT_CSS = """
     NewCommentModal {
-        border: ascii green;
         align: center middle;
         content-align: center middle;
     }

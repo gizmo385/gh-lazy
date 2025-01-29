@@ -10,6 +10,11 @@ from lazy_github.lib.logging import lg
 # "([^.]+)"     Match everything until the period, which should be the repo name
 # ".git"        Match the .git suffix
 _SSH_GIT_REMOTE_REGEX = re.compile(r".+:([^\/]+)\/([^.]+)(?:.git)?")
+
+# Regex designed to match something like "https://github.com/gizmo385/gh-lazy.git"
+# "^https:\/\/[^.]+[^\/]+"  Match the base URL until the first non-prefix slash (eg: https://github.com)
+# "([^\/]+)"                Match the username (eg: gizmo385)
+# "([^\/]+)$"               Match the end of the URL (eg: gh-lazy.git)
 _HTTPS_GIT_REMOTE_REGEX = re.compile(r"^https:\/\/[^.]+[^\/]+\/([^\/]+)\/([^\/]+)$")
 
 

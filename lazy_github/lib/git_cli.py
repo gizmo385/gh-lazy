@@ -1,7 +1,6 @@
 import re
 from subprocess import DEVNULL, PIPE, SubprocessError, check_output, run
 
-from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.logging import lg
 
 # Regex designed to match git@github.com:gizmo385/lazy-github.git:
@@ -28,6 +27,8 @@ def current_local_repo_full_name(remote: str = "origin") -> str | None:
 
 def current_local_repo_matches_selected_repo(remote: str = "origin") -> bool:
     """Checks to see if the current repo and the repo selected in LazyGithub are the same"""
+    from lazy_github.lib.context import LazyGithubContext
+
     if local_repo := current_local_repo_full_name(remote):
         return bool(LazyGithubContext.current_repo) and local_repo == LazyGithubContext.current_repo.full_name
     else:

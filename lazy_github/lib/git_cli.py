@@ -1,6 +1,7 @@
 import re
 from subprocess import DEVNULL, PIPE, SubprocessError, check_output, run
 
+from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.logging import lg
 
 # Regex designed to match git@github.com:gizmo385/lazy-github.git:
@@ -23,6 +24,14 @@ def current_local_repo_full_name(remote: str = "origin") -> str | None:
     if matches := re.match(_SSH_GIT_REMOTE_REGEX, output) or re.match(_HTTPS_GIT_REMOTE_REGEX, output):
         owner, name = matches.groups()
         return f"{owner}/{name}"
+
+
+def current_local_repo_matches_selected_repo(remote: str = "origin") -> bool:
+    """Checks to see if the current repo and the repo selected in LazyGithub are the same"""
+    if local_repo := current_local_repo_full_name(remote):
+        return bool(LazyGithubContext.current_repo) and local_repo == LazyGithubContext.current_repo.full_name
+    else:
+        return False
 
 
 def current_local_branch_name() -> str | None:
@@ -57,6 +66,13 @@ def does_branch_have_configured_upstream(branch: str) -> bool:
 
 
 def push_branch_to_remote(branch: str, remote: str = "origin") -> bool:
+    """
+    If the current local repo and the selected repo are the same, pushes the current branch to the remote and sets
+    the branches upstream to track the new remote
+    """
+    if not current_local_repo_matches_selected_repo(remote):
+        return False
+
     try:
         result = run(["git", "push", "--set-upstream", remote, f"HEAD:{branch}"], stdout=PIPE, stderr=PIPE)
         return result.returncode == 0

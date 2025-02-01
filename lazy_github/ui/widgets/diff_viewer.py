@@ -82,7 +82,14 @@ class DiffHunkViewer(TextArea):
     ]
 
     def __init__(self, hunk: Hunk, id: str | None = None) -> None:
-        super().__init__(id=id, read_only=True, show_line_numbers=True, text=example_patch)
+        super().__init__(
+            id=id,
+            read_only=True,
+            show_line_numbers=True,
+            line_number_start=hunk.source_start - 1,
+            soft_wrap=False,
+            text=example_patch,
+        )
         self.text = str(hunk)
         self.hunk = hunk
 
@@ -114,9 +121,14 @@ class DiffHunkViewer(TextArea):
     def action_add_comment(self) -> None:
         start_position = self.selection.start[0] + self.hunk.source_start - 1
         end_position = self.selection.end[0] + self.hunk.source_start - 1
-        if start_position < self.hunk.source_start:
+        if self.selection.start == self.selection.end and start_position < self.hunk.source_start:
+            # This means we've only selected the metadata line
             return
-        self.notify(f"Commenting from {start_position} -> {end_position}")
+        self.notify(
+            f"Commenting from {max(start_position, self.hunk.source_start)} -> {
+                min(end_position, self.hunk.source_start + self.hunk.source_length)
+            }"
+        )
 
 
 class DiffViewerContainer(VerticalScroll):

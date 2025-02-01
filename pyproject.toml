@@ -26,6 +26,7 @@ dependencies = [
 	"pydantic",
 	"textual<2",
 	"click>=8.1.7",
+	"unidiff>=0.7.5",
 ]
 
 [project.scripts]

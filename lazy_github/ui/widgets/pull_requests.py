@@ -306,11 +306,11 @@ class PrDiffTabPane(TabPane):
             diff = await get_diff(self.pr)
         except HTTPStatusError as hse:
             if hse.response.status_code == 404:
-                self.view_container.mount(Label("No diff contents found"))
+                await self.view_container.mount(Label("No diff contents found"))
             else:
                 raise
         else:
-            self.view_container.mount(DiffViewerContainer(diff))
+            await self.view_container.mount(DiffViewerContainer(diff))
         self.loading = False
 
     async def on_mount(self) -> None:

@@ -241,7 +241,11 @@ class DiffViewerContainer(VerticalScroll):
         except UnidiffParseError:
             yield Label("Error parsing diff - please view on Github")
         else:
+            files_handled = set()
             for patch_file in diff:
+                if patch_file.path in files_handled:
+                    continue
+                files_handled.add(patch_file.path)
                 with Collapsible(title=patch_file.path, collapsed=False):
                     for hunk in patch_file:
                         with Container() as c:

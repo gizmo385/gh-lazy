@@ -70,7 +70,7 @@ async def get_diff(pr: FullPullRequest) -> str:
     """Fetches the raw diff for an individual pull request"""
     match LazyGithubContext.client_type:
         case BackendType.GITHUB_CLI:
-            response = await run_gh_cli_command(["pr", "diff", "-R", pr.repo.full_name, str(pr.number)])
+            response = await run_gh_cli_command(["pr", "diff", "--patch", "-R", pr.repo.full_name, str(pr.number)])
         case BackendType.RAW_HTTP:
             headers = github_headers(DIFF_CONTENT_ACCEPT_TYPE)
             response = await LazyGithubContext.client.get(pr.diff_url, headers=headers)

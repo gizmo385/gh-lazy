@@ -1,10 +1,13 @@
+from textual import on
 from textual.app import App, ComposeResult
-from textual.containers import VerticalScroll
-from textual.widgets import Collapsible, Rule, TextArea
+from textual.containers import Container, Vertical, VerticalScroll
+from textual.message import Message
+from textual.widgets import Button, Collapsible, Label, Rule, Select, TextArea
 from textual.widgets.text_area import Selection
-from unidiff import Hunk, PatchSet
+from unidiff import Hunk, PatchSet, UnidiffParseError
 
 from lazy_github.lib.bindings import LazyGithubBindings
+from lazy_github.models.github import ReviewState
 
 example_patch = r"""
 diff --git a/lazy_github/lib/messages.py b/lazy_github/lib/messages.py
@@ -72,6 +75,56 @@ index 43f7c63..2c39abe 100644
 """
 
 
+class AddCommentContainer(Vertical):
+    DEFAULT_CSS = """
+    AddCommentContainer {
+        border: $secondary dashed;
+        width: 100%;
+        content-align: center middle;
+        height: auto;
+    }
+    TextArea {
+        height: auto;
+    }
+    Horizontal {
+        height: 5;
+    }
+    Button {
+        margin: 1;
+        content-align: center middle;
+    }
+    """
+
+    def __init__(self, diff_to_comment_on: str) -> None:
+        super().__init__()
+        self.diff_to_comment_on = diff_to_comment_on
+
+    def compose(self) -> ComposeResult:
+        yield Label("Commenting on:")
+        responding_to = TextArea(self.diff_to_comment_on, read_only=True)
+        responding_to.can_focus = False
+        yield responding_to
+        yield Label("Pending comment")
+        yield TextArea(id="new_comment")
+        yield Button("Remove comment", variant="warning", id="remove_comment")
+
+    @property
+    def new_comment(self) -> TextArea:
+        return self.query_one("#new_comment", TextArea)
+
+    @on(Button.Pressed, "#remove_comment")
+    async def remove_comment(self, _: Button.Pressed) -> None:
+        await self.remove()
+
+
+class TriggerNewComment(Message):
+    def __init__(self, hunk: Hunk, selection_start: int, selection_end: int) -> None:
+        super().__init__()
+        self.hunk = hunk
+        self.selection_start = selection_start
+        self.selection_end = selection_end
+
+
 class DiffHunkViewer(TextArea):
     BINDINGS = [
         LazyGithubBindings.DIFF_SELECT_LINE,
@@ -90,7 +143,8 @@ class DiffHunkViewer(TextArea):
             soft_wrap=False,
             text=example_patch,
         )
-        self.text = str(hunk)
+        self.theme = "vscode_dark"
+        self.text = "".join([str(s) for s in hunk])
         self.hunk = hunk
 
     def action_cursor_left(self, select: bool = False) -> None:
@@ -119,22 +173,42 @@ class DiffHunkViewer(TextArea):
         self.selection = Selection.cursor(self.cursor_location)
 
     def action_add_comment(self) -> None:
-        start_position = self.selection.start[0] + self.hunk.source_start - 1
-        end_position = self.selection.end[0] + self.hunk.source_start - 1
-        if self.selection.start == self.selection.end and start_position < self.hunk.source_start:
-            # This means we've only selected the metadata line
-            return
-        self.notify(
-            f"Commenting from {max(start_position, self.hunk.source_start)} -> {
-                min(end_position, self.hunk.source_start + self.hunk.source_length)
-            }"
-        )
+        self.post_message(TriggerNewComment(self.hunk, self.selection.start[0], self.selection.end[0]))
+
+
+class SubmitReview(Container):
+    DEFAULT_CSS = """
+    Button {
+        margin: 1;
+        content-align: center middle;
+    }
+    """
+
+    def __init__(self, can_only_comment: bool = False) -> None:
+        super().__init__()
+        self.can_only_comment = can_only_comment
+
+    def compose(self) -> ComposeResult:
+        yield Label("Review Status:")
+        if not self.can_only_comment:
+            yield Select(
+                options=[(s.title().replace("_", " "), s) for s in ReviewState if s != ReviewState.DISMISSED],
+                id="review_status",
+                value=ReviewState.COMMENTED,
+            )
+        yield Button("Submit Review", id="submit_review", variant="success")
 
 
 class DiffViewerContainer(VerticalScroll):
     DEFAULT_CSS = """
     DiffHunkViewer {
         height: auto;
+    }
+    Container {
+        height: auto;
+    }
+    Label {
+        margin-left: 1;
     }
     """
 
@@ -143,7 +217,7 @@ class DiffViewerContainer(VerticalScroll):
     def __init__(self, diff: str, id: str | None = None) -> None:
         super().__init__(id=id)
         self._raw_diff = diff
-        self.diff = PatchSet(diff)
+        self._hunk_container_map: dict[str, Container] = {}
 
     def action_previous_hunk(self) -> None:
         self.screen.focus_previous()
@@ -151,12 +225,32 @@ class DiffViewerContainer(VerticalScroll):
     def action_next_hunk(self) -> None:
         self.screen.focus_next()
 
+    @on(TriggerNewComment)
+    async def show_comment_for_hunk(self, message: TriggerNewComment) -> None:
+        # Create a new inline container for commenting on the selected diff.
+        text = "".join([str(s) for s in message.hunk][message.selection_start : message.selection_end + 1])
+        hunk_container = self._hunk_container_map[str(message.hunk)]
+        new_comment_container = AddCommentContainer(text)
+        await hunk_container.mount(new_comment_container)
+        new_comment_container.new_comment.focus()
+        hunk_container.scroll_to_center(new_comment_container)
+
     def compose(self) -> ComposeResult:
-        for f in self.diff:
-            with Collapsible(title=f.path, collapsed=False):
-                for hunk in f:
-                    yield DiffHunkViewer(hunk)
-            yield Rule()
+        try:
+            diff = PatchSet(self._raw_diff)
+        except UnidiffParseError:
+            yield Label("Error parsing diff - please view on Github")
+        else:
+            for patch_file in diff:
+                with Collapsible(title=patch_file.path, collapsed=False):
+                    for hunk in patch_file:
+                        with Container() as c:
+                            yield Label(str(hunk).splitlines()[0])
+                            yield DiffHunkViewer(hunk)
+                            # Add the container for this hunk to a map that can be used to add inline comments later
+                            self._hunk_container_map[str(hunk)] = c
+                yield Rule()
+            yield SubmitReview()
 
 
 if __name__ == "__main__":

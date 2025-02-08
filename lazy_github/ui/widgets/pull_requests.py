@@ -310,7 +310,9 @@ class PrDiffTabPane(TabPane):
             else:
                 raise
         else:
-            await self.view_container.mount(DiffViewerContainer(diff))
+            current_user = await LazyGithubContext.client.user()
+            reviewer_is_author = self.pr.user.login == current_user.login
+            await self.view_container.mount(DiffViewerContainer(self.pr, reviewer_is_author, diff))
         self.loading = False
 
     async def on_mount(self) -> None:

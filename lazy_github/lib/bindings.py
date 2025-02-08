@@ -98,7 +98,6 @@ class LazyGithubBindings:
 
     # Diff Viewer
     DIFF_ADD_COMMENT = Binding("a", "add_comment", "Add Comment", show=True, id="diff.add_comment")
-    DIFF_SELECT_LINE = Binding("V,v", "select_line", "Select Line", show=True, id="diff.select_line")
     DIFF_CURSOR_DOWN = Binding("j", "cursor_down", show=False, id="diff.cursor_down")
     DIFF_CURSOR_UP = Binding("k", "cursor_up", show=False, id="diff.cursor_up")
     DIFF_CLEAR_SELECTION = Binding("escape", "clear_selection", "Clear Selection", show=True, id="diff.clear_selection")

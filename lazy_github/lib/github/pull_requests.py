@@ -206,3 +206,37 @@ async def list_pull_requests_for_commit(commit_sha: str) -> list[PartialPullRequ
     except GithubApiRequestFailed:
         lg.exception("Error loading PRs for current commit")
         return []
+
+
+async def create_new_review(
+    pull_request: PartialPullRequest,
+    event: ReviewState,
+    body: str,
+    comments: list[dict[str, str | int]] | None = None,
+) -> Review | None:
+    """Creates a new Github review for the provided pull request"""
+    match event:
+        case ReviewState.APPROVED:
+            review_event = "APPROVE"
+        case ReviewState.COMMENTED:
+            review_event = "COMMENT"
+        case ReviewState.CHANGES_REQUESTED:
+            review_event = "REQUEST_CHANGES"
+        case ReviewState.DISMISSED:
+            lg.error("Cannot create a review with state DISMISSED")
+            return None
+
+    review_request = {"event": review_event, "body": body, "comments": comments}
+    lg.debug(f"New review request: {review_request}")
+    repo_full_name = pull_request.repo.full_name
+    response = await LazyGithubContext.client.post(
+        f"/repos/{repo_full_name}/pulls/{pull_request.number}/reviews", json=review_request
+    )
+    try:
+        response.raise_for_status()
+        response_body = response.json()
+        lg.debug(f"Create review response: {response_body}")
+        return Review(**response_body)
+    except GithubApiRequestFailed:
+        lg.exception("Error loading PRs for current commit")
+        return None

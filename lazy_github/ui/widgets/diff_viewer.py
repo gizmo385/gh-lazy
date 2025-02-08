@@ -1,3 +1,6 @@
+from enum import Enum
+from logging import disable
+
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Vertical, VerticalScroll
@@ -14,19 +17,24 @@ from lazy_github.lib.logging import lg
 from lazy_github.models.github import PartialPullRequest, ReviewState
 
 
+class HunkSide(Enum):
+    BEFORE = "source"
+    AFTER = "target"
+
+
 class AddCommentContainer(Vertical):
     DEFAULT_CSS = """
     AddCommentContainer {
         border: $secondary dashed;
         width: 100%;
-        content-align: center middle;
         height: auto;
     }
     TextArea {
         height: auto;
+        width: 100%;
     }
-    Horizontal {
-        height: 5;
+    #new_comment {
+        height: auto;
     }
     Button {
         margin: 1;
@@ -35,21 +43,26 @@ class AddCommentContainer(Vertical):
     """
 
     def __init__(
-        self, hunk: Hunk, filename: str, selection_start: int, selection_end: int, diff_to_comment_on: str
+        self,
+        hunk: Hunk,
+        side: HunkSide,
+        filename: str,
+        selection_start: int,
+        diff_to_comment_on: str,
     ) -> None:
         super().__init__()
         # This field is displayed the user knows what they're commenting on
         self.diff_to_comment_on = diff_to_comment_on
+        self.side = side
         # These fields are used for constructing the API request body later
         self.hunk = hunk
         self.filename = filename
         self.selection_start = selection_start
-        self.selection_end = selection_end
         self.new_comment = TextArea(id="new_comment")
 
     def compose(self) -> ComposeResult:
         yield Label("Commenting on:")
-        responding_to = TextArea(self.diff_to_comment_on, read_only=True)
+        responding_to = Input(self.diff_to_comment_on, disabled=True)
         responding_to.can_focus = False
         yield responding_to
         yield Label("Pending comment")
@@ -69,12 +82,12 @@ class AddCommentContainer(Vertical):
 class TriggerNewComment(Message):
     """Message sent to trigger the addition of a new comment block into the UI"""
 
-    def __init__(self, hunk: Hunk, filename: str, selection_start: int, selection_end: int) -> None:
+    def __init__(self, hunk: Hunk, side: HunkSide, filename: str, selection_start: int) -> None:
         super().__init__()
         self.hunk = hunk
+        self.side = side
         self.filename = filename
         self.selection_start = selection_start
-        self.selection_end = selection_end
 
 
 class TriggerReviewSubmission(Message):
@@ -93,26 +106,28 @@ class CommentRemoved(Message):
 
 class DiffHunkViewer(TextArea):
     BINDINGS = [
-        LazyGithubBindings.DIFF_SELECT_LINE,
         LazyGithubBindings.DIFF_CURSOR_DOWN,
         LazyGithubBindings.DIFF_CURSOR_UP,
         LazyGithubBindings.DIFF_CLEAR_SELECTION,
         LazyGithubBindings.DIFF_ADD_COMMENT,
     ]
 
-    def __init__(self, hunk: Hunk, filename: str, id: str | None = None) -> None:
+    def __init__(self, hunk: Hunk, side: HunkSide, filename: str, id: str | None = None) -> None:
         super().__init__(
             id=id,
             read_only=True,
             show_line_numbers=True,
-            line_number_start=hunk.source_start,
+            line_number_start=hunk.source_start if side == HunkSide.BEFORE else hunk.target_start,
             soft_wrap=False,
             text="",
         )
         self.theme = "vscode_dark"
-        self.text = "".join([str(s) for s in hunk.source_lines()])
+        self.side = side
         self.filename = filename
         self.hunk = hunk
+
+        lines = hunk.source_lines() if self.side == HunkSide.BEFORE else hunk.target_lines()
+        self.text = "".join([str(s) for s in lines])
 
     def action_cursor_left(self, select: bool = False) -> None:
         # We don't want to move the cursor left/right
@@ -136,11 +151,29 @@ class DiffHunkViewer(TextArea):
     def action_cursor_up(self, select: bool = False) -> None:
         return super().action_cursor_up(select or self.selection.start != self.selection.end)
 
-    def action_clear_selection(self) -> None:
-        self.selection = Selection.cursor(self.cursor_location)
-
     def action_add_comment(self) -> None:
-        self.post_message(TriggerNewComment(self.hunk, self.filename, self.selection.start[0], self.selection.end[0]))
+        self.post_message(TriggerNewComment(self.hunk, self.side, self.filename, self.cursor_location[0]))
+
+
+class SplitHunkViewer(Container, can_focus=False, can_focus_children=True):
+    DEFAULT_CSS = """
+    DiffHunkViewer { 
+        height: auto;
+    }
+    """
+
+    def __init__(self, hunk: Hunk, filename: str) -> None:
+        super().__init__()
+        self.hunk = hunk
+        self.filename = filename
+
+    def compose(self) -> ComposeResult:
+        source_diff = DiffHunkViewer(self.hunk, HunkSide.BEFORE, self.filename)
+        source_diff.border_title = "Before"
+        target_diff = DiffHunkViewer(self.hunk, HunkSide.AFTER, self.filename)
+        target_diff.border_title = "After"
+        yield source_diff
+        yield target_diff
 
 
 class SubmitReview(Container):
@@ -193,7 +226,7 @@ class DiffViewerContainer(VerticalScroll):
         self.pr = pr
         self.reviewer_is_author = reviewer_is_author
         self._raw_diff = diff
-        self._hunk_container_map: dict[str, Container] = {}
+        self._hunk_container_map: dict[str, Collapsible] = {}
         self._added_review_comments: list[AddCommentContainer] = []
 
     def action_previous_hunk(self) -> None:
@@ -225,15 +258,22 @@ class DiffViewerContainer(VerticalScroll):
         for comment_field in self._added_review_comments:
             if not comment_field.text or not comment_field.is_mounted:
                 continue
-
+            match comment_field.side:
+                case HunkSide.BEFORE:
+                    side = "LEFT"
+                    position = comment_field.hunk.source_start + comment_field.selection_start + 1
+                case HunkSide.AFTER:
+                    side = "RIGHT"
+                    position = comment_field.hunk.target_start + comment_field.selection_start + 1
             comments.append(
                 {
                     "path": comment_field.filename,
                     "body": comment_field.text,
-                    # The comment positions are one-indexed
-                    "position": comment_field.hunk.source_start + comment_field.selection_start + 1,
+                    "position": position,
+                    "side": side,
                 }
             )
+
         new_review = await create_new_review(self.pr, review_state, review_body, comments)
         if new_review is not None:
             lg.debug(f"New review: {new_review}")
@@ -242,10 +282,16 @@ class DiffViewerContainer(VerticalScroll):
     @on(TriggerNewComment)
     async def show_comment_for_hunk(self, message: TriggerNewComment) -> None:
         # Create a new inline container for commenting on the selected diff.
-        text = "".join([str(s) for s in message.hunk][message.selection_start : message.selection_end + 1])
+        # TODO: Get the correct text for the diff based on the side
+        lines = list(message.hunk.source_lines() if message.side == HunkSide.BEFORE else message.hunk.target_lines())
+        if lines:
+            text = str(lines[message.selection_start]).strip().replace("\n", "")
+        else:
+            text = ""
+        lg.debug(f"Adding comment for '{text}'")
         hunk_container = self._hunk_container_map[str(message.hunk)]
         new_comment_container = AddCommentContainer(
-            message.hunk, message.filename, message.selection_start, message.selection_end, text
+            message.hunk, message.side, message.filename, message.selection_start, text
         )
         await hunk_container.mount(new_comment_container)
         new_comment_container.new_comment.focus()
@@ -259,22 +305,23 @@ class DiffViewerContainer(VerticalScroll):
             diff = PatchSet(self._raw_diff)
         except UnidiffParseError:
             yield Label("Error parsing diff - please view on Github")
-        else:
-            files_handled = set()
-            for patch_file in diff:
-                if patch_file.path in files_handled:
-                    continue
+            return
 
-                files_handled.add(patch_file.path)
-                with Collapsible(title=patch_file.path, collapsed=False):
-                    if patch_file.is_binary_file:
-                        yield Label("Cannot display binary files")
-                    else:
-                        for hunk in patch_file:
-                            with Container() as c:
-                                yield Label(str(hunk).splitlines()[0])
-                                yield DiffHunkViewer(hunk, patch_file.path)
-                                # Add the container for this hunk to a map that can be used to add inline comments later
-                                self._hunk_container_map[str(hunk)] = c
-                yield Rule()
-            yield SubmitReview(can_only_comment=self.reviewer_is_author)
+        files_handled = set()
+        for patch_file in diff:
+            if patch_file.path in files_handled:
+                continue
+
+            files_handled.add(patch_file.path)
+            with Collapsible(title=patch_file.path, collapsed=False):
+                if patch_file.is_binary_file:
+                    yield Label("Cannot display binary files")
+                else:
+                    for hunk in patch_file:
+                        with Collapsible(title=str(hunk).splitlines()[0]) as c:
+                            # yield Label(str(hunk).splitlines()[0])
+                            yield SplitHunkViewer(hunk, patch_file.path)
+                            # Add the container for this hunk to a map that can be used to add inline comments later
+                            self._hunk_container_map[str(hunk)] = c
+            yield Rule()
+        yield SubmitReview(can_only_comment=self.reviewer_is_author)

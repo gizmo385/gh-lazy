@@ -69,7 +69,7 @@ class PullRequestsContainer(LazyGithubContainer):
         )
 
     def compose(self) -> ComposeResult:
-        self.border_title = "[2] Pull Requests"
+        self.border_title = "(2) Pull Requests"
         yield self._table
 
     @work

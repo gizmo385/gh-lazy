@@ -36,5 +36,5 @@ class CommandLogSection(LazyGithubContainer):
     """
 
     def compose(self) -> ComposeResult:
-        self.border_title = "[6] Command Log"
+        self.border_title = "(6) Command Log"
         yield LazyGithubCommandLog()

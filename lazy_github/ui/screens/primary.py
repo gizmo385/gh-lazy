@@ -110,7 +110,7 @@ class SelectionDetailsContainer(LazyGithubContainer):
         self.tabs = TabbedContent(id="selection_detail_tabs")
 
     def compose(self) -> ComposeResult:
-        self.border_title = "(5) Details"
+        self.border_title = "[5] Details"
         yield self.tabs
 
     def on_mount(self) -> None:
@@ -294,7 +294,7 @@ class MainViewPane(Container):
         await tabbed_content.add_pane(PrOverviewTabPane(full_pr))
         await tabbed_content.add_pane(PrDiffTabPane(full_pr))
         await tabbed_content.add_pane(PrConversationTabPane(full_pr))
-        self.details.border_title = f"(5) PR #{full_pr.number} Details"
+        self.details.border_title = f"[5] PR #{full_pr.number} Details"
         if focus_pr_details:
             tabbed_content.children[0].focus()
 
@@ -304,7 +304,7 @@ class MainViewPane(Container):
         await tabbed_content.add_pane(IssueOverviewTabPane(issue))
         await tabbed_content.add_pane(IssueConversationTabPane(issue))
         tabbed_content.children[0].focus()
-        self.details.border_title = f"(5) Issue #{issue.number} Details"
+        self.details.border_title = f"[5] Issue #{issue.number} Details"
 
     @on(PullRequestSelected)
     async def handle_pull_request_selection(self, message: PullRequestSelected) -> None:

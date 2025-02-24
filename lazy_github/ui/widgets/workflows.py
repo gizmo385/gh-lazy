@@ -134,7 +134,7 @@ class WorkflowRunsContainer(Container):
 
 class WorkflowsContainer(LazyGithubContainer):
     def compose(self) -> ComposeResult:
-        self.border_title = "(4) Workflows"
+        self.border_title = "[4] Workflows"
         with TabbedContent(id="workflow_tabs"):
             with TabPane("Runs", id="runs_tab"):
                 yield WorkflowRunsContainer(id="workflow_runs")

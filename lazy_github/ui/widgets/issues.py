@@ -32,7 +32,7 @@ class IssuesContainer(LazyGithubContainer):
     title_column_index = -1
 
     def compose(self) -> ComposeResult:
-        self.border_title = "(3) Issues"
+        self.border_title = "[3] Issues"
         yield LazilyLoadedDataTable(
             id="searchable_issues_table",
             table_id="issues_table",

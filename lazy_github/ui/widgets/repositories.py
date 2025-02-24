@@ -48,7 +48,7 @@ class ReposContainer(LazyGithubContainer):
         )
 
     def compose(self) -> ComposeResult:
-        self.border_title = "(1) Repositories"
+        self.border_title = "[1] Repositories"
         yield self._table
 
     @property

@@ -1,4 +1,3 @@
-
 from lazy_github.lib.config import MergeMethod
 from lazy_github.lib.constants import DIFF_CONTENT_ACCEPT_TYPE
 from lazy_github.lib.context import LazyGithubContext, github_headers
@@ -14,6 +13,7 @@ from lazy_github.models.github import (
     Repository,
     Review,
     ReviewComment,
+    ReviewState,
 )
 
 
@@ -99,13 +99,15 @@ async def get_review_comments(pr: FullPullRequest, review: Review) -> list[Revie
     return [ReviewComment(**c) for c in response.json()]
 
 
-async def get_reviews(pr: FullPullRequest, with_comments: bool = True) -> list[Review]:
+async def get_reviews(pr: FullPullRequest, with_comments: bool = True, with_pending: bool = False) -> list[Review]:
     url = url = f"/repos/{pr.repo.owner.login}/{pr.repo.name}/pulls/{pr.number}/reviews"
     response = await LazyGithubContext.client.get(url, headers=github_headers())
     response.raise_for_status()
     reviews: list[Review] = []
     for raw_review in response.json():
         review = Review(**raw_review)
+        if review.state == ReviewState.PENDING and not with_pending:
+            continue
         if with_comments:
             review.comments = await get_review_comments(pr, review)
         reviews.append(review)

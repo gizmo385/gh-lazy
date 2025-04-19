@@ -23,8 +23,10 @@ class ReplyingToContainer(Container):
     def compose(self) -> ComposeResult:
         if isinstance(self.reply_to, (ReviewComment, IssueComment)):
             comment_time = self.reply_to.created_at.strftime("%c")
-        else:
+        elif self.reply_to.submitted_at:
             comment_time = self.reply_to.submitted_at.strftime("%c")
+        else:
+            return
 
         author = self.reply_to.user.login if self.reply_to.user else "Unknown"
         yield Label(f"Replying to comment from {author} at {comment_time}")

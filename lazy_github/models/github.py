@@ -115,6 +115,7 @@ class ReviewState(StrEnum):
     CHANGES_REQUESTED = "CHANGES_REQUESTED"
     COMMENTED = "COMMENTED"
     DISMISSED = "DISMISSED"
+    PENDING = "PENDING"
 
 
 class ReviewComment(IssueComment):
@@ -132,7 +133,7 @@ class Review(BaseModel):
     body: str
     state: ReviewState
     comments: list[ReviewComment] = []
-    submitted_at: datetime
+    submitted_at: datetime | None = None
 
 
 class Commit(BaseModel):

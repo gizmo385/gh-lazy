@@ -12,6 +12,7 @@ from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.diff_parser import Hunk, InvalidDiffFormat, parse_diff_from_str
 from lazy_github.lib.github.pull_requests import create_new_review
 from lazy_github.lib.logging import lg
+from lazy_github.lib.messages import PullRequestSelected
 from lazy_github.models.github import PartialPullRequest, ReviewState
 
 
@@ -243,6 +244,7 @@ class DiffViewerContainer(VerticalScroll):
         if new_review is not None:
             lg.debug(f"New review: {new_review}")
             self.notify("New review created!")
+            self.post_message(PullRequestSelected(self.pr))
 
     @on(TriggerNewComment)
     async def show_comment_for_hunk(self, message: TriggerNewComment) -> None:

@@ -278,7 +278,9 @@ class DiffViewerContainer(VerticalScroll):
                 continue
 
             files_handled.add(path)
-            with Collapsible(title=path, collapsed=False):
+            collapsed_by_default = changed_file.deleted
+            changed_file_header = f"[red]File Deleted:[/red] {path}" if changed_file.deleted else path
+            with Collapsible(title=changed_file_header, collapsed=collapsed_by_default):
                 for hunk in changed_file.hunks:
                     with Collapsible(title=hunk.header) as c:
                         yield DiffHunkViewer(hunk, path)

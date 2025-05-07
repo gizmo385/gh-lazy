@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+FILE_DELETED_SENTINEL = "dev/null"
+
 
 class InvalidDiffFormat(Exception):
     """An exception which is raised when we were unable to parse a supplied diff"""
@@ -28,6 +30,8 @@ class ChangedFile:
     """
 
     path: str
+    old_path: str
+    deleted: bool
     hunks: list[Hunk]
     diff_header: str
     index_header: str
@@ -99,7 +103,9 @@ def _parse_file_from_diff(lines: list[str], starting_line: int) -> _ChangedFileP
                 "Unexpected line encounterd while parsing from/to file headers",
                 diff_header,
             )
-    filename = to_files[0] if from_files else from_files[0]
+    old_filename = from_files[0]
+    file_deleted = to_files[0] == FILE_DELETED_SENTINEL
+    filename = to_files[0] if not file_deleted else old_filename
 
     # After the from/to file headers, we have the hunk header, which looks like:
     # @@@ <from-file-range> <from-file-range> <to-file-range> @@@
@@ -154,6 +160,8 @@ def _parse_file_from_diff(lines: list[str], starting_line: int) -> _ChangedFileP
         updated_starting_line=starting_line + offset,
         changed_file=ChangedFile(
             path=filename,
+            old_path=old_filename,
+            deleted=file_deleted,
             hunks=hunks,
             diff_header=diff_header,
             index_header=index_header,

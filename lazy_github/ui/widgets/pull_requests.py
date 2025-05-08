@@ -1,9 +1,9 @@
 from httpx import HTTPStatusError
 from textual import on, work
 from textual.app import ComposeResult
-from textual.containers import ScrollableContainer, VerticalScroll
+from textual.containers import Container, ScrollableContainer, VerticalScroll
 from textual.coordinate import Coordinate
-from textual.widgets import Collapsible, DataTable, Label, ListItem, ListView, Markdown, RichLog, Rule, TabPane
+from textual.widgets import Collapsible, DataTable, Label, ListItem, ListView, Markdown, Rule, TabPane
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.constants import CHECKMARK, X_MARK
@@ -37,6 +37,7 @@ from lazy_github.ui.widgets.common import (
     TableRow,
 )
 from lazy_github.ui.widgets.conversations import IssueCommentContainer, ReviewContainer
+from lazy_github.ui.widgets.diff_viewer import DiffViewerContainer
 
 
 def pull_request_to_cell(pr: PartialPullRequest) -> TableRow:
@@ -294,28 +295,29 @@ class PrDiffTabPane(TabPane):
     def __init__(self, pr: FullPullRequest) -> None:
         super().__init__("Diff", id="diff_pane")
         self.pr = pr
+        self.view_container = Container()
 
     def compose(self) -> ComposeResult:
-        with ScrollableContainer():
-            yield RichLog(id="diff_contents", highlight=True)
+        yield self.view_container
 
     @work
     async def fetch_diff(self) -> None:
-        diff_contents = self.query_one("#diff_contents", RichLog)
         try:
             diff = await get_diff(self.pr)
         except HTTPStatusError as hse:
             if hse.response.status_code == 404:
-                diff_contents.write("No diff contents found")
+                await self.view_container.mount(Label("No diff contents found"))
             else:
                 raise
         else:
-            diff_contents.write(diff)
+            current_user = await LazyGithubContext.client.user()
+            reviewer_is_author = self.pr.user.login == current_user.login
+            await self.view_container.mount(DiffViewerContainer(self.pr, reviewer_is_author, diff))
         self.loading = False
 
     async def on_mount(self) -> None:
         self.loading = True
-        _ = self.fetch_diff()
+        self.fetch_diff()
 
 
 class PrConversationTabPane(TabPane):

@@ -170,6 +170,10 @@ def _parse_file_from_diff(lines: list[str], starting_line: int) -> _ChangedFileP
 
 
 def parse_diff_from_str(diff: str) -> Diff:
+    """
+    Given a string containing the contents of a Github API diff, parses the diff and returns a
+    representation of that diff that can be traversed more programatically
+    """
     lines = diff.splitlines()
     current_line = 1
     line_count = len(lines)
@@ -185,20 +189,3 @@ def parse_diff_from_str(diff: str) -> Diff:
 
 def parse_diff_from_file(file: Path) -> Diff:
     return parse_diff_from_str(file.read_text())
-
-
-if __name__ == "__main__":
-    import sys
-
-    for path_string in sys.argv[1:]:
-        path = Path(path_string)
-        if not path.exists():
-            print(f"Could not find file: {path} - skipping")
-            continue
-
-        print(f"Parsing diff {path_string}")
-        diff = parse_diff_from_file(Path(path_string))
-        for file, changes in diff.files.items():
-            print(f"\t{file}: {len(changes.hunks)} hunks")
-            for hunk in changes.hunks:
-                print(f"\t\tHunk starting @ {hunk.diff_position}: {hunk.header}")

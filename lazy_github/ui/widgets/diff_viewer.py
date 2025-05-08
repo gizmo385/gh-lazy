@@ -11,7 +11,6 @@ from textual.widgets import Button, Collapsible, Input, Label, Rule, Select, Tex
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.diff_parser import Hunk, InvalidDiffFormat, parse_diff_from_str
 from lazy_github.lib.github.pull_requests import create_new_review
-from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import PullRequestSelected
 from lazy_github.models.github import PartialPullRequest, ReviewState
 
@@ -244,20 +243,17 @@ class DiffViewerContainer(VerticalScroll):
 
         new_review = await create_new_review(self.pr, review_state, review_body, comments)
         if new_review is not None:
-            lg.debug(f"New review: {new_review}")
             self.notify("New review created!")
             self.post_message(PullRequestSelected(self.pr))
 
     @on(TriggerNewComment)
     async def show_comment_for_hunk(self, message: TriggerNewComment) -> None:
         # Create a new inline container for commenting on the selected diff.
-        # TODO: Get the correct text for the diff based on the side
         lines = message.hunk.lines
         if lines:
             text = str(lines[message.selection_start]).strip().replace("\n", "")
         else:
             text = ""
-        lg.debug(f"Adding comment for '{text}' on line {message.hunk.diff_position + message.selection_start}")
         hunk_container = self._hunk_container_map[str(message.hunk)]
         new_comment_container = AddCommentContainer(message.hunk, message.filename, message.selection_start, text)
         await hunk_container.mount(new_comment_container)

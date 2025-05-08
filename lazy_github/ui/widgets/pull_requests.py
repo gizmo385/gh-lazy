@@ -3,7 +3,7 @@ from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Container, ScrollableContainer, VerticalScroll
 from textual.coordinate import Coordinate
-from textual.widgets import Collapsible, DataTable, Label, ListItem, ListView, Markdown, RichLog, Rule, TabPane
+from textual.widgets import Collapsible, DataTable, Label, ListItem, ListView, Markdown, Rule, TabPane
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.constants import CHECKMARK, X_MARK

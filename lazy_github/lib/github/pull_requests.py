@@ -222,7 +222,7 @@ async def create_new_review(
             review_event = "COMMENT"
         case ReviewState.CHANGES_REQUESTED:
             review_event = "REQUEST_CHANGES"
-        case ReviewState.DISMISSED:
+        case ReviewState.DISMISSED | ReviewState.PENDING:
             lg.error("Cannot create a review with state DISMISSED")
             return None
 

@@ -15,6 +15,8 @@ from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import PullRequestSelected
 from lazy_github.models.github import PartialPullRequest, ReviewState
 
+DISALLOWED_REVIEW_STATES = [ReviewState.DISMISSED, ReviewState.PENDING]
+
 
 class HunkSide(Enum):
     BEFORE = "source"
@@ -166,7 +168,7 @@ class SubmitReview(Container):
         if not self.can_only_comment:
             yield Label("Review Status:")
             yield Select(
-                options=[(s.title().replace("_", " "), s) for s in ReviewState if s != ReviewState.DISMISSED],
+                options=[(s.title().replace("_", " "), s) for s in ReviewState if s not in DISALLOWED_REVIEW_STATES],
                 id="review_status",
                 value=ReviewState.COMMENTED,
             )

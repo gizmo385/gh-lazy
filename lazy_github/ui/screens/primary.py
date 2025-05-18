@@ -5,6 +5,7 @@ from textual import on, work
 from textual.app import ComposeResult
 from textual.command import Hit, Hits, Provider
 from textual.containers import Container, Horizontal
+from textual.content import Content
 from textual.reactive import reactive
 from textual.screen import Screen
 from textual.timer import Timer
@@ -51,7 +52,7 @@ class CurrentlySelectedRepo(Widget):
 
     def render(self):
         if self.current_repo_name:
-            return f"Current repo: [green]{self.current_repo_name}[/green]"
+            return Content.from_markup(f"Current repo: [green]{self.current_repo_name}[/green]")
         else:
             return "No repository selected"
 
@@ -63,10 +64,10 @@ class UnreadNotifications(Widget):
         if self.notification_count is None:
             return ""
         elif self.notification_count == 0:
-            return "[green]No unread notifications[/green]"
+            return Content.from_markup("[green]No unread notifications[/green]")
         else:
             count = f"{self.notification_count}+" if self.notification_count >= 30 else str(self.notification_count)
-            return f"[red]• Unread Notifications: {count}[/red]"
+            return Content.from_markup(f"[red]• Unread Notifications: {count}[/red]")
 
 
 class LazyGithubStatusSummary(Container):
@@ -110,7 +111,7 @@ class SelectionDetailsContainer(LazyGithubContainer):
         self.tabs = TabbedContent(id="selection_detail_tabs")
 
     def compose(self) -> ComposeResult:
-        self.border_title = "[5] Details"
+        self.border_title = Content.from_markup("\\[5] Details")
         yield self.tabs
 
     def on_mount(self) -> None:
@@ -294,7 +295,7 @@ class MainViewPane(Container):
         await tabbed_content.add_pane(PrOverviewTabPane(full_pr))
         await tabbed_content.add_pane(PrDiffTabPane(full_pr))
         await tabbed_content.add_pane(PrConversationTabPane(full_pr))
-        self.details.border_title = f"[5] PR #{full_pr.number} Details"
+        self.details.border_title = Content.from_markup(f"\\[5] PR #{full_pr.number} Details")
         if focus_pr_details:
             tabbed_content.children[0].focus()
 
@@ -304,7 +305,7 @@ class MainViewPane(Container):
         await tabbed_content.add_pane(IssueOverviewTabPane(issue))
         await tabbed_content.add_pane(IssueConversationTabPane(issue))
         tabbed_content.children[0].focus()
-        self.details.border_title = f"[5] Issue #{issue.number} Details"
+        self.details.border_title = Content.from_markup(f"\\[5] Issue #{issue.number} Details")
 
     @on(PullRequestSelected)
     async def handle_pull_request_selection(self, message: PullRequestSelected) -> None:

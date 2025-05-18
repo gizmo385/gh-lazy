@@ -1,6 +1,7 @@
 from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Container, ScrollableContainer
+from textual.content import Content
 from textual.coordinate import Coordinate
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Markdown, TabbedContent, TabPane
@@ -76,14 +77,14 @@ class _NotificationsTableTabPane(TabPane):
 
 class ReadNotificationTabPane(_NotificationsTableTabPane):
     def __init__(self) -> None:
-        super().__init__(id="read", prefix="read", title=f"[green]{CHECKMARK}Read[/green]")
+        super().__init__(id="read", prefix="read", title=Content.from_markup(f"[green]{CHECKMARK}Read[/green]"))
 
 
 class UnreadNotificationTabPane(_NotificationsTableTabPane):
     BINDINGS = [LazyGithubBindings.MARK_NOTIFICATION_READ, LazyGithubBindings.MARK_ALL_NOTIFICATIONS_AS_READ]
 
     def __init__(self) -> None:
-        super().__init__(id="unread", prefix="unread", title=f"[red]{BULLET_POINT}Unread[/red]")
+        super().__init__(id="unread", prefix="unread", title=Content.from_markup(f"[red]{BULLET_POINT}Unread[/red]"))
 
     async def action_mark_read(self) -> None:
         current_row = self.searchable_table.table.cursor_row

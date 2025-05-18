@@ -1,6 +1,7 @@
 from textual import on, suggester, validation, work
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.content import Content
 from textual.screen import ModalScreen
 from textual.types import DuplicateID
 from textual.widgets import Button, Input, Label, Markdown, Rule, SelectionList, Switch, TextArea
@@ -58,7 +59,7 @@ class BranchSelection(Horizontal):
             else LazyGithubContext.current_repo.default_branch
         )
         head_ref_value = self.existing_pull_request.head.ref if self.existing_pull_request else None
-        yield Label("[bold]Base[/bold]")
+        yield Label(Content.from_markup("[bold]Base[/bold]"))
         yield Input(
             id="base_ref",
             placeholder="Choose a base ref",
@@ -66,7 +67,7 @@ class BranchSelection(Horizontal):
             validators=[non_empty_validator],
             disabled=bool(self.existing_pull_request),
         )
-        yield Label(":left_arrow: [bold]Compare[/bold]")
+        yield Label(Content.from_markup(":left_arrow: [bold]Compare[/bold]"))
         yield Input(
             id="head_ref",
             placeholder="Choose a head ref",
@@ -171,7 +172,7 @@ class ReviewerSelectionContainer(Vertical):
         self.reviewers_selection_list.display = False
 
     def compose(self) -> ComposeResult:
-        yield Label("[bold]Reviewers[/bold]")
+        yield Label(Content.from_markup("[bold]Reviewers[/bold]"))
         yield self.new_reviewer
         yield self.current_reviewers_label
         yield self.reviewers_selection_list
@@ -300,9 +301,9 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
         yield self.branch_missing_label
         yield BranchSelection(self.existing_pull_request)
         yield Rule()
-        yield Label("[bold]Title[/bold]")
+        yield Label(Content.from_markup("[bold]Title[/bold]"))
         yield Input(id="pr_title", placeholder="Title", validators=[validation.Length(minimum=1)], value=pr_title)
-        yield Label("[bold]Description[/bold]")
+        yield Label(Content.from_markup("[bold]Description[/bold]"))
         yield TextArea.code_editor(id="pr_description", soft_wrap=True, tab_behavior="focus", text=pr_description)
         yield Rule()
         yield ReviewerSelectionContainer(self.existing_pull_request)

@@ -1,6 +1,7 @@
 from textual import work
 from textual.app import ComposeResult
 from textual.containers import Container
+from textual.content import Content
 from textual.widgets import Collapsible, Label, Markdown
 
 from lazy_github.lib.bindings import LazyGithubBindings
@@ -111,7 +112,7 @@ class ReviewContainer(Collapsible, can_focus=True):
         else:
             review_state_text = self.review.state.title()
 
-        yield Label(f"Review from {self.review.user.login} ({review_state_text})")
+        yield Label(Content.from_markup(f"Review from {self.review.user.login} ({review_state_text})"))
 
         if self.review.body:
             yield Markdown(self.review.body)

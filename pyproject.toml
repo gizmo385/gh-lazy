@@ -24,7 +24,7 @@ dependencies = [
 	"httpx",
 	"hishel",
 	"pydantic",
-	"textual<2",
+	"textual",
 	"click>=8.1.7",
 ]
 

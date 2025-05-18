@@ -3,6 +3,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal
 from textual.screen import ModalScreen
 from textual.validation import Regex
+from textual.content import Content
 from textual.widgets import Button, Input, Label, Markdown, Rule, Switch
 
 from lazy_github.lib.bindings import LazyGithubBindings
@@ -38,7 +39,7 @@ class LookupRepositoryContainer(Container):
 
     def compose(self) -> ComposeResult:
         yield Markdown("# Search for a repository by name:")
-        yield Label("[bold]Repository (owner/name):[/bold]")
+        yield Label(Content.from_markup("[bold]Repository (owner/name):[/bold]"))
         yield Input(
             id="repo_to_lookup",
             placeholder="Repository name",

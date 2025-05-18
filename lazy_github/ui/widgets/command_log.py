@@ -3,6 +3,7 @@ from logging import Handler, LogRecord
 from typing import Optional
 
 from textual.app import ComposeResult
+from textual.content import Content
 from textual.widgets import Log
 
 from lazy_github.lib.logging import LazyGithubLogFormatter, lg
@@ -36,5 +37,5 @@ class CommandLogSection(LazyGithubContainer):
     """
 
     def compose(self) -> ComposeResult:
-        self.border_title = "[6] Command Log"
+        self.border_title = Content.from_markup("\\[6] Command Log")
         yield LazyGithubCommandLog()

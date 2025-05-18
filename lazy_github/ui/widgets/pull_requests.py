@@ -2,6 +2,7 @@ from httpx import HTTPStatusError
 from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Container, ScrollableContainer, VerticalScroll
+from textual.content import Content
 from textual.coordinate import Coordinate
 from textual.widgets import Collapsible, DataTable, Label, ListItem, ListView, Markdown, Rule, TabPane
 
@@ -70,7 +71,7 @@ class PullRequestsContainer(LazyGithubContainer):
         )
 
     def compose(self) -> ComposeResult:
-        self.border_title = "[2] Pull Requests"
+        self.border_title = Content.from_markup("\\[2] Pull Requests")
         yield self._table
 
     @work
@@ -177,7 +178,7 @@ class PrOverviewTabPane(TabPane):
         super().__init__("Overview", id="overview_pane")
         self.pr = pr
 
-    def _status_check_to_label(self, status: CheckStatus) -> str:
+    def _status_check_to_label(self, status: CheckStatus) -> Content:
         match status.state:
             case CheckStatusState.SUCCESS:
                 status_summary = f"[green]{CHECKMARK} Passed[/green]"
@@ -188,7 +189,7 @@ class PrOverviewTabPane(TabPane):
             case CheckStatusState.ERROR:
                 status_summary = f"[red]{X_MARK} Errored[/red]"
 
-        return f"{status_summary} {status.context} - {status.description}"
+        return Content.from_markup(f"{status_summary} {status.context} - {status.description}")
 
     async def action_merge_pull_request(self) -> None:
         if self.pr.merged_at is not None:
@@ -227,8 +228,8 @@ class PrOverviewTabPane(TabPane):
             self.post_message(PullRequestSelected(updated_pr))
 
     def compose(self) -> ComposeResult:
-        pr_link = f"[link={self.pr.html_url}](#{self.pr.number})[/link]"
-        user_link = f"[link={self.pr.user.html_url}]{self.pr.user.login}[/link]"
+        pr_link = f'[link="{self.pr.html_url}"](#{self.pr.number})[/link]'
+        user_link = f'[link="{self.pr.user.html_url}"]{self.pr.user.login}[/link]'
         merge_from = None
         if self.pr.head:
             merge_from = f"[bold]{self.pr.head.user.login}:{self.pr.head.ref}[/bold]"
@@ -254,8 +255,8 @@ class PrOverviewTabPane(TabPane):
             merge_status = "[frame green]Open[/frame green]"
 
         with ScrollableContainer():
-            yield Label(f"{merge_status} [b]{self.pr.title}[b] {pr_link} by {user_link}")
-            yield Label(change_summary)
+            yield Label(Content.from_markup(f"{merge_status} [b]{self.pr.title}[b] {pr_link} by {user_link}"))
+            yield Label(Content.from_markup(change_summary))
 
             if self.pr.merged_at:
                 date = self.pr.merged_at.strftime("%c")

@@ -2,6 +2,7 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal
 from textual.screen import ModalScreen
+from textual.content import Content
 from textual.widgets import Button, Input, Label, Markdown, Rule
 
 from lazy_github.lib.bindings import LazyGithubBindings
@@ -38,7 +39,7 @@ class LookupPullRequestContainer(Container):
 
     def compose(self) -> ComposeResult:
         yield Markdown("# Search for a pull request by number:")
-        yield Label("[bold]Pull Request Number:[/bold]")
+        yield Label(Content.from_markup("[bold]Pull Request Number:[/bold]"))
         yield Input(
             id="pull_request_number",
             placeholder="Pull request number",

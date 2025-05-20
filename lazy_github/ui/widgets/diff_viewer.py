@@ -3,6 +3,7 @@ from enum import Enum
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Vertical, VerticalScroll
+from textual.content import Content
 from textual.css.query import NoMatches
 from textual.message import Message
 from textual.types import NoSelection
@@ -274,13 +275,16 @@ class DiffViewerContainer(VerticalScroll):
         for path, changed_file in diff.files.items():
             if path in files_handled:
                 continue
-
             files_handled.add(path)
-            collapsed_by_default = changed_file.deleted
-            changed_file_header = f"[red]File Deleted:[/red] {path}" if changed_file.deleted else path
-            with Collapsible(title=changed_file_header, collapsed=collapsed_by_default):
+
+            # These Content types don't properly type check but are necessary to actually use markup in the Collapsible
+            # widgets being used for diffs
+            changed_file_header = Content.from_markup(
+                f"[red]File Deleted:[/red] {path}" if changed_file.deleted else path
+            )
+            with Collapsible(title=changed_file_header, collapsed=changed_file.deleted):  # type: ignore
                 for hunk in changed_file.hunks:
-                    with Collapsible(title=hunk.header) as c:
+                    with Collapsible(title=Content.from_text(hunk.header, markup=False)) as c:  # type: ignore
                         yield DiffHunkViewer(hunk, path)
                         # Add the container for this hunk to a map that can be used to add inline comments later
                         self._hunk_container_map[str(hunk)] = c

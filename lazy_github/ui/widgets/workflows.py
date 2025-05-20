@@ -3,6 +3,7 @@ from functools import partial
 from textual import work
 from textual.app import ComposeResult
 from textual.containers import Container
+from textual.content import Content
 from textual.coordinate import Coordinate
 from textual.widgets import DataTable, TabbedContent, TabPane
 
@@ -134,7 +135,7 @@ class WorkflowRunsContainer(Container):
 
 class WorkflowsContainer(LazyGithubContainer):
     def compose(self) -> ComposeResult:
-        self.border_title = "[4] Workflows"
+        self.border_title = Content.from_markup("\\[4] Workflows")
         with TabbedContent(id="workflow_tabs"):
             with TabPane("Runs", id="runs_tab"):
                 yield WorkflowRunsContainer(id="workflow_runs")

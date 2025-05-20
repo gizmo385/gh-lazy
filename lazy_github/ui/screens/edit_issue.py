@@ -1,6 +1,7 @@
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, ScrollableContainer
+from textual.content import Content
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Rule, Select, TextArea
 
@@ -36,17 +37,17 @@ class EditIssueContainer(Container):
 
     def compose(self) -> ComposeResult:
         with ScrollableContainer():
-            yield Label("[bold]Title[/bold]")
+            yield Label(Content.from_markup("[bold]Title[/bold]"))
             yield Input(self.issue.title, id="updated_issue_title")
 
             yield Rule()
 
-            yield Label("[bold]Status[/bold]")
+            yield Label(Content.from_markup("[bold]Status[/bold]"))
             yield Select(options=[(s.title(), s) for s in IssueState], id="updated_issue_state", value=self.issue.state)
 
             yield Rule()
 
-            yield Label("[bold]Description[/bold]")
+            yield Label(Content.from_markup("[bold]Description[/bold]"))
             yield TextArea.code_editor(
                 self.issue.body or "", id="updated_issue_body", soft_wrap=True, tab_behavior="focus"
             )

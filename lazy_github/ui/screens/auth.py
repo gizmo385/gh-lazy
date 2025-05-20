@@ -3,6 +3,7 @@ from functools import partial
 from textual import work
 from textual.app import ComposeResult
 from textual.containers import Container
+from textual.content import Content
 from textual.reactive import reactive
 from textual.screen import ModalScreen
 from textual.widget import Widget
@@ -23,11 +24,13 @@ class UserTokenDisplay(Widget):
 
     def render(self):
         if self.user_code:
-            return "\n".join(
-                [
-                    "Please verify at: https://github.com/login/device\n",
-                    f"Your verification code is [green]{self.user_code}[/green]",
-                ]
+            return Content.from_markup(
+                "\n".join(
+                    [
+                        "Please verify at: https://github.com/login/device\n",
+                        f"Your verification code is [green]{self.user_code}[/green]",
+                    ]
+                )
             )
         else:
             return "Loading your device code..."
@@ -41,7 +44,7 @@ class GithubCliAuthInstructions(Container):
     """
 
     def compose(self) -> ComposeResult:
-        yield Static("To proceed, please log into the Github CLI via [green]gh auth login[/green]")
+        yield Static(Content.from_markup("To proceed, please log into the Github CLI via [green]gh auth login[/green]"))
 
 
 class AuthenticationModal(ModalScreen):

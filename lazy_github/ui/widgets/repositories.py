@@ -2,6 +2,7 @@ import asyncio
 
 from textual import on, work
 from textual.app import ComposeResult
+from textual.content import Content
 from textual.coordinate import Coordinate
 from textual.widgets import DataTable
 
@@ -48,7 +49,7 @@ class ReposContainer(LazyGithubContainer):
         )
 
     def compose(self) -> ComposeResult:
-        self.border_title = "[1] Repositories"
+        self.border_title = Content.from_markup("\\[1] Repositories")
         yield self._table
 
     @property

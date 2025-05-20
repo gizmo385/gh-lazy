@@ -3,6 +3,7 @@ from typing import Dict
 from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import ScrollableContainer, VerticalScroll
+from textual.content import Content
 from textual.coordinate import Coordinate
 from textual.widgets import DataTable, Label, Markdown, Rule, TabPane
 from textual.widgets.data_table import CellDoesNotExist
@@ -32,7 +33,7 @@ class IssuesContainer(LazyGithubContainer):
     title_column_index = -1
 
     def compose(self) -> ComposeResult:
-        self.border_title = "[3] Issues"
+        self.border_title = Content.from_markup("\\[3] Issues")
         yield LazilyLoadedDataTable(
             id="searchable_issues_table",
             table_id="issues_table",
@@ -128,8 +129,8 @@ class IssueOverviewTabPane(TabPane):
         self.issue = issue
 
     def compose(self) -> ComposeResult:
-        issue_link = f"[link={self.issue.html_url}](#{self.issue.number})[/link]"
-        user_link = f"[link={self.issue.user.html_url}]{self.issue.user.login}[/link]"
+        issue_link = f'[link="{self.issue.html_url}"](#{self.issue.number})[/link]'
+        user_link = f'[link="{self.issue.user.html_url}"]{self.issue.user.login}[/link]'
 
         if self.issue.state == IssueState.OPEN:
             issue_status = "[frame green]Open[/frame green]"
@@ -137,7 +138,7 @@ class IssueOverviewTabPane(TabPane):
             issue_status = "[frame purple]Closed[/frame purple]"
 
         with ScrollableContainer():
-            yield Label(f"{issue_status} [b]{self.issue.title}[b] {issue_link} by {user_link}")
+            yield Label(Content.from_markup(f"{issue_status} [b]{self.issue.title}[b] {issue_link} by {user_link}"))
 
             yield Rule()
             yield Markdown(self.issue.body)

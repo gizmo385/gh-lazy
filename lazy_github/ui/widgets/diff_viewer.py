@@ -208,6 +208,7 @@ class DiffViewerContainer(VerticalScroll):
     def action_next_hunk(self) -> None:
         self.screen.focus_next()
 
+    @on(CommentRemoved)
     async def handle_comment_removed(self, message: CommentRemoved) -> None:
         if message.comment in self._added_review_comments:
             self._added_review_comments.remove(message.comment)

@@ -77,7 +77,7 @@ class _NotificationsTableTabPane(TabPane):
 
 class ReadNotificationTabPane(_NotificationsTableTabPane):
     def __init__(self) -> None:
-        super().__init__(id="read", prefix="read", title=Content.from_markup(f"[green]{CHECKMARK}Read[/green]"))
+        super().__init__(id="read", prefix="read", title=Content.from_markup(f"[red]{CHECKMARK}Read[/]"))
 
 
 class UnreadNotificationTabPane(_NotificationsTableTabPane):

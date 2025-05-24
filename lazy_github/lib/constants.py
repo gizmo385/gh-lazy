@@ -10,7 +10,7 @@ LAZY_GITHUB_CLIENT_ID = "Iv23limdG8Bl3Cu5FOcT"
 DEVICE_CODE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:device_code"
 
 # Symbols used in various UI tables
-IS_FAVORITED = "[green]★[/green]"
+IS_FAVORITED = "[green]★[/]"
 IS_NOT_FAVORITED = "☆"
 CHECKMARK = "✓"
 X_MARK = "✘"

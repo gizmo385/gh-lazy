@@ -1,8 +1,8 @@
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal
-from textual.screen import ModalScreen
 from textual.content import Content
+from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Markdown, Rule
 
 from lazy_github.lib.bindings import LazyGithubBindings

@@ -106,7 +106,7 @@ class ReviewContainer(Collapsible, can_focus=True):
 
     def compose(self) -> ComposeResult:
         if self.review.state == ReviewState.APPROVED:
-            review_state_text = "[green]Approved[/green]"
+            review_state_text = "[greenyellow]Approved[/]"
         elif self.review.state == ReviewState.CHANGES_REQUESTED:
             review_state_text = "[red]Changes Requested[/red]"
         else:

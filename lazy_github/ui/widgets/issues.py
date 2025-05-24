@@ -133,9 +133,9 @@ class IssueOverviewTabPane(TabPane):
         user_link = f'[link="{self.issue.user.html_url}"]{self.issue.user.login}[/link]'
 
         if self.issue.state == IssueState.OPEN:
-            issue_status = "[frame green]Open[/frame green]"
+            issue_status = "[greenyellow]Open[/frame]"
         else:
-            issue_status = "[frame purple]Closed[/frame purple]"
+            issue_status = "[orchid]Closed[/]"
 
         with ScrollableContainer():
             yield Label(Content.from_markup(f"{issue_status} [b]{self.issue.title}[b] {issue_link} by {user_link}"))

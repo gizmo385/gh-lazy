@@ -28,7 +28,7 @@ class UserTokenDisplay(Widget):
                 "\n".join(
                     [
                         "Please verify at: https://github.com/login/device\n",
-                        f"Your verification code is [green]{self.user_code}[/green]",
+                        f"Your verification code is [greenyellow]{self.user_code}[/]",
                     ]
                 )
             )

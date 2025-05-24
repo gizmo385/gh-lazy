@@ -52,7 +52,7 @@ class CurrentlySelectedRepo(Widget):
 
     def render(self):
         if self.current_repo_name:
-            return Content.from_markup(f"Current repo: [green]{self.current_repo_name}[/green]")
+            return Content.from_markup(f"Current repo: [greenyellow]{self.current_repo_name}[/]")
         else:
             return "No repository selected"
 
@@ -64,7 +64,7 @@ class UnreadNotifications(Widget):
         if self.notification_count is None:
             return ""
         elif self.notification_count == 0:
-            return Content.from_markup("[green]No unread notifications[/green]")
+            return Content.from_markup("[greenyellow]No unread notifications[/]")
         else:
             count = f"{self.notification_count}+" if self.notification_count >= 30 else str(self.notification_count)
             return Content.from_markup(f"[red]• Unread Notifications: {count}[/red]")

@@ -314,7 +314,7 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
         branch_warning = f"[yellow]Warning:[/yellow] Branch [yellow]{branch}[/yellow] may not exist on remote. Do you want to create it?"
         if await self.app.push_screen_wait(ConfirmDialog(branch_warning)):
             if push_branch_to_remote(branch):
-                self.notify(f"Pushed branch [green]{branch}[/green] to remote")
+                self.notify(f"Pushed branch [greenyellow]{branch}[/] to remote")
             else:
                 self.notify(f"Error while pushing branch [red]{branch}[/red] to remote", severity="error")
 

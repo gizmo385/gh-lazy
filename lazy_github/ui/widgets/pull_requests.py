@@ -178,10 +178,10 @@ class PrOverviewTabPane(TabPane):
         super().__init__("Overview", id="overview_pane")
         self.pr = pr
 
-    def _status_check_to_label(self, status: CheckStatus) -> Content:
+    def _status_check_to_label(self, status: CheckStatus) -> str:
         match status.state:
             case CheckStatusState.SUCCESS:
-                status_summary = f"[green]{CHECKMARK} Passed[/green]"
+                status_summary = f"[greenyellow]{CHECKMARK} Passed[/]"
             case CheckStatusState.PENDING:
                 status_summary = "[yellow]... Pending[/yellow]"
             case CheckStatusState.FAILURE:
@@ -189,7 +189,7 @@ class PrOverviewTabPane(TabPane):
             case CheckStatusState.ERROR:
                 status_summary = f"[red]{X_MARK} Errored[/red]"
 
-        return Content.from_markup(f"{status_summary} {status.context} - {status.description}")
+        return f"{status_summary} {status.context} - {status.description}"
 
     async def action_merge_pull_request(self) -> None:
         if self.pr.merged_at is not None:
@@ -241,26 +241,30 @@ class PrOverviewTabPane(TabPane):
             [
                 "1 commit" if self.pr.commits == 1 else f"{self.pr.commits} commits",
                 "1 file changed" if self.pr.changed_files == 1 else f"{self.pr.changed_files} files changed",
-                f"[green]+{self.pr.additions}[/green]",
-                f"[red]-{self.pr.deletions}[/red]",
+                f"[greenyellow]+{self.pr.additions}[/]",
+                f"[red]-{self.pr.deletions}[/]",
                 f"{merge_from} :right_arrow:  {merge_to}",
             ]
         )
 
         if self.pr.merged_at:
-            merge_status = "[frame purple]Merged[/frame purple]"
+            merge_status = "[orchid]Merged[/]"
         elif self.pr.closed_at:
-            merge_status = "[frame red]closed[/frame red]"
+            merge_status = "[red]closed[/]"
         else:
-            merge_status = "[frame green]Open[/frame green]"
+            merge_status = "[greenyellow]Open[/]"
 
         with ScrollableContainer():
             yield Label(Content.from_markup(f"{merge_status} [b]{self.pr.title}[b] {pr_link} by {user_link}"))
             yield Label(Content.from_markup(change_summary))
 
+            created_date = self.pr.created_at.strftime("%c")
+            date_text = f"\nOpened on {created_date}"
+
             if self.pr.merged_at:
-                date = self.pr.merged_at.strftime("%c")
-                yield Label(f"\nMerged on {date}")
+                merged_date = self.pr.merged_at.strftime("%c")
+                date_text += f" • Merged on {merged_date}"
+            yield Label(Content.from_markup(date_text))
             yield Rule()
 
             # This is where we'll store information about the status checks being run on the PR
@@ -281,7 +285,9 @@ class PrOverviewTabPane(TabPane):
         collapse_container = self.query_one("#collapsible_status_checks", Collapsible)
         if statuses := combined_check_status.statuses:
             status_labels = sorted(self._status_check_to_label(c) for c in statuses)
-            status_checks_list.extend(ListItem(Label(status_label)) for status_label in status_labels)
+            status_checks_list.extend(
+                ListItem(Label(Content.from_markup(status_label))) for status_label in status_labels
+            )
             collapse_container.title = f"Status checks: {combined_check_status.state.value.title()}"
         else:
             collapse_container.title = "No status checks on PR"

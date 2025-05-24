@@ -13,7 +13,7 @@ from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.diff_parser import Hunk, InvalidDiffFormat, parse_diff_from_str
 from lazy_github.lib.github.pull_requests import create_new_review
 from lazy_github.lib.messages import PullRequestSelected
-from lazy_github.models.github import PartialPullRequest, ReviewState
+from lazy_github.models.github import FullPullRequest, PartialPullRequest, ReviewState
 
 DISALLOWED_REVIEW_STATES = [ReviewState.DISMISSED, ReviewState.PENDING]
 
@@ -194,7 +194,7 @@ class DiffViewerContainer(VerticalScroll):
 
     BINDINGS = [LazyGithubBindings.DIFF_NEXT_HUNK, LazyGithubBindings.DIFF_PREVIOUS_HUNK]
 
-    def __init__(self, pr: PartialPullRequest, reviewer_is_author: bool, diff: str, id: str | None = None) -> None:
+    def __init__(self, pr: FullPullRequest, reviewer_is_author: bool, diff: str, id: str | None = None) -> None:
         super().__init__(id=id)
         self.pr = pr
         self.reviewer_is_author = reviewer_is_author

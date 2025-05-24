@@ -103,6 +103,11 @@ class CommentRemoved(Message):
 
 
 class DiffHunkViewer(TextArea):
+    DEFAULT_CSS = """
+    DiffHunkViewer {
+        max-height: 25;
+    }
+    """
     BINDINGS = [
         LazyGithubBindings.DIFF_CURSOR_DOWN,
         LazyGithubBindings.DIFF_CURSOR_UP,
@@ -117,6 +122,7 @@ class DiffHunkViewer(TextArea):
             show_line_numbers=True,
             line_number_start=hunk.file_start_line,
             soft_wrap=False,
+            compact=True,
             text="",
         )
         self.theme = "vscode_dark"
@@ -124,14 +130,6 @@ class DiffHunkViewer(TextArea):
         self.hunk = hunk
 
         self.text = "\n".join(hunk.lines)
-
-    def action_cursor_left(self, select: bool = False) -> None:
-        # We don't want to move the cursor left/right
-        return
-
-    def action_cursor_right(self, select: bool = False) -> None:
-        # We don't want to move the cursor left/right
-        return
 
     def action_cursor_line_start(self, select: bool = False) -> None:
         # We don't want to move the cursor left/right

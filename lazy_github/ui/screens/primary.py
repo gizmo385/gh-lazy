@@ -253,7 +253,9 @@ class MainViewPane(Container):
     ]
 
     def action_focus_section(self, selector: str) -> None:
-        self.query_one(selector).focus()
+        target = self.query_one(selector)
+        if target.visible:
+            target.focus()
 
     def action_focus_workflow_tabs(self) -> None:
         tabbed_content = self.query_one("#workflow_tabs", TabbedContent)
@@ -437,6 +439,7 @@ class LazyGithubMainScreen(Screen):
     async def action_toggle_ui(self, ui_to_hide: str):
         widget = self.query_one(f"#{ui_to_hide}", Widget)
         widget.display = not widget.display
+        widget.visible = not widget.visible
 
     async def action_show_settings_modal(self) -> None:
         self.app.push_screen(SettingsModal())

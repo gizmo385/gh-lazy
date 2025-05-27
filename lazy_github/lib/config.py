@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Generator, Literal, Optional
+from typing import Any, Generator, Optional
 
 from pydantic import BaseModel, field_serializer, field_validator
 from textual.theme import BUILTIN_THEMES, Theme
@@ -12,9 +12,6 @@ from lazy_github.lib.constants import CONFIG_FOLDER, IssueOwnerFilter, IssueStat
 from lazy_github.lib.github.backends.protocol import BackendType
 
 _CONFIG_FILE_LOCATION = CONFIG_FOLDER / "config.json"
-
-ISSUE_STATE_FILTER = Literal["all"] | Literal["open"] | Literal["closed"]
-ISSUE_OWNER_FILTER = Literal["mine"] | Literal["all"]
 
 
 def _serialize_string_list(cls, string_list: str | list[str]) -> list[str]:

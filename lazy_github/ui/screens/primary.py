@@ -239,6 +239,7 @@ class SelectionDetailsPane(Container):
         yield SelectionDetailsContainer(id="selection_details")
         command_log_section = CommandLogSection(id="command_log")
         command_log_section.display = LazyGithubContext.config.appearance.show_command_log
+        command_log_section.visible = LazyGithubContext.config.appearance.show_command_log
         yield command_log_section
 
 

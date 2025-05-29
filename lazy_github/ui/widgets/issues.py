@@ -133,7 +133,7 @@ class IssueOverviewTabPane(TabPane):
         user_link = f'[link="{self.issue.user.html_url}"]{self.issue.user.login}[/link]'
 
         if self.issue.state == IssueState.OPEN:
-            issue_status = "[greenyellow]Open[/frame]"
+            issue_status = "[greenyellow]Open[/]"
         else:
             issue_status = "[orchid]Closed[/]"
 

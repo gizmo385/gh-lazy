@@ -129,6 +129,9 @@ class PullRequestSettings(BaseModel):
     preload_pull_request_for_current_commit: bool = False
     """Attempts to identify the github PR associated with your commit git sha and display it on startup"""
 
+    pull_request_template: Path | None = None
+    """The path to a file that is used as the default template for new pull requests"""
+
 
 class IssueSettings(BaseModel):
     """Changes how issues are retrieved from the Github API"""

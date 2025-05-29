@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from textual import on, suggester, validation, work
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
@@ -289,6 +291,7 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
         self.branch_missing_label.display = False
 
     def compose(self) -> ComposeResult:
+        pr_template = LazyGithubContext.config.pull_requests.pull_request_template
         pr_title = ""
         pr_description = ""
         modal_heading = "New Pull Request"
@@ -296,6 +299,8 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
             modal_heading = f"Editing PR {self.existing_pull_request.number}"
             pr_title = self.existing_pull_request.title
             pr_description = self.existing_pull_request.body or ""
+        elif isinstance(pr_template, Path) and pr_template.exists():
+            pr_description = pr_template.read_text()
 
         yield Markdown(f"# {modal_heading}")
         yield self.branch_missing_label

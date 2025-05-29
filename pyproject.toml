@@ -23,9 +23,10 @@ requires-python = ">=3.11"
 dependencies = [
 	"httpx",
 	"hishel",
-	"pydantic",
+	"pydantic<3",
 	"textual",
 	"click>=8.1.7",
+	"textual-fspicker>=0.4.1",
 ]
 
 [project.scripts]

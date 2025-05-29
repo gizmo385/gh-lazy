@@ -36,8 +36,8 @@ class FirstStartScreen(Screen[BackendType | None]):
     def compose(self) -> ComposeResult:
         yield Markdown("# Welcome to LazyGithub! How would you like to authenticate with the Github API?")
         with RadioSet(id="auth-select"):
-            yield RadioButton("Directly via HTTPS", value=True, id=str(BackendType.RAW_HTTP))
             yield RadioButton("Via the Github CLI", id=str(BackendType.GITHUB_CLI))
+            yield RadioButton("Directly via HTTPS", value=True, id=str(BackendType.RAW_HTTP))
         with Horizontal():
             yield Button("Continue", id="continue", variant="success")
             yield Button("Cancel", id="cancel", variant="error")

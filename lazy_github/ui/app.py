@@ -65,6 +65,7 @@ class LazyGithub(App):
     ]
 
     has_shown_maximize_toast: bool = False
+    main_screen: LazyGithubMainScreen | None = None
 
     async def authenticate_with_github(self):
         current_time = datetime.now()
@@ -73,7 +74,8 @@ class LazyGithub(App):
 
         if auth_last_checked and (current_time - auth_last_checked).total_seconds() < auth_cache_duration:
             lg.debug("Triggering auth with github")
-            self.push_screen(LazyGithubMainScreen(id="main-screen"))
+            self.main_screen = LazyGithubMainScreen(id="main-screen")
+            self.push_screen(self.main_screen)
         else:
             try:
                 # We pull the user here to validate auth
@@ -81,7 +83,8 @@ class LazyGithub(App):
                 with LazyGithubContext.config.to_edit() as config:
                     config.cache.auth_last_checked = current_time
 
-                self.push_screen(LazyGithubMainScreen(id="main-screen"))
+                self.main_screen = LazyGithubMainScreen(id="main-screen")
+                self.push_screen(self.main_screen)
             except GithubAuthenticationRequired:
                 lg.debug("Triggering auth with github")
                 self.push_screen(AuthenticationModal(id="auth-modal"))
@@ -111,7 +114,9 @@ class LazyGithub(App):
 
         self.set_keymap(LazyGithubContext.config.bindings.overrides)
 
-        self.query_one("#main-screen", LazyGithubMainScreen).handle_settings_update()
+        if not self.main_screen:
+            raise ValueError("Error: main screen missing!")
+        self.main_screen.handle_settings_update()
 
     def on_mount(self) -> None:
         self.theme = LazyGithubContext.config.appearance.theme.name

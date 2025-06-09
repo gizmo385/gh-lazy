@@ -243,7 +243,7 @@ class PrOverviewTabPane(TabPane):
                 "1 file changed" if self.pr.changed_files == 1 else f"{self.pr.changed_files} files changed",
                 f"[greenyellow]+{self.pr.additions}[/]",
                 f"[red]-{self.pr.deletions}[/]",
-                f"{merge_from} :right_arrow:  {merge_to}",
+                f"{merge_from} → {merge_to}",
             ]
         )
 

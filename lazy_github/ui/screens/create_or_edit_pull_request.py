@@ -69,7 +69,7 @@ class BranchSelection(Horizontal):
             validators=[non_empty_validator],
             disabled=bool(self.existing_pull_request),
         )
-        yield Label(Content.from_markup(":left_arrow: [bold]Compare[/bold]"))
+        yield Label(Content.from_markup("← [bold]Compare[/bold]"))
         yield Input(
             id="head_ref",
             placeholder="Choose a head ref",

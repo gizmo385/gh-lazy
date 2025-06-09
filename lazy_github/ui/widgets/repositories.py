@@ -111,6 +111,7 @@ class ReposContainer(LazyGithubContainer):
             repos = await repos_api.list_all()
         except GithubApiRequestFailed:
             lg.exception("Error fetching repositories from Github API")
+            return
 
         # Loading any additionally tracked repos
         additional_repos_to_fetch = LazyGithubContext.config.repositories.additional_repos_to_track

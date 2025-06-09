@@ -218,12 +218,16 @@ class SelectionsPane(Container):
         """
         state_filter = LazyGithubContext.config.issues.state_filter
         owner_filter = LazyGithubContext.config.issues.owner_filter
+        issue_and_pr_message = IssuesAndPullRequestsFetched(repo, [])
         try:
             issues_and_pull_requests = await list_issues(repo, state_filter, owner_filter)
-        except GithubApiRequestFailed:
-            lg.exception("Error fetching issues and PRs from Github API")
-        else:
             issue_and_pr_message = IssuesAndPullRequestsFetched(repo, issues_and_pull_requests)
+        except GithubApiRequestFailed:
+            lg.exception("API Error fetching issues and PRs from Github API")
+            issue_and_pr_message = IssuesAndPullRequestsFetched(repo, [])
+        except Exception:
+            lg.exception("Unexpected error fetching issues and PRs from Github API")
+        finally:
             self.pull_requests.post_message(issue_and_pr_message)
             self.issues.post_message(issue_and_pr_message)
 
@@ -309,7 +313,13 @@ class MainViewPane(Container):
         await self.selections.load_repository(repo)
 
     async def load_pull_request(self, pull_request: PartialPullRequest, focus_pr_details: bool = True) -> None:
-        full_pr = await get_full_pull_request(pull_request.repo, pull_request.number)
+        try:
+            full_pr = await get_full_pull_request(pull_request.repo, pull_request.number)
+        except GithubApiRequestFailed:
+            lg.error("API error loading PR!")
+            self.notify("Error fetching pull request!", severity="error", title="API Error")
+            return
+
         tabbed_content = self.query_one("#selection_detail_tabs", TabbedContent)
         await tabbed_content.clear_panes()
         await tabbed_content.add_pane(PrOverviewTabPane(full_pr))

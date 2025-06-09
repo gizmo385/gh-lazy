@@ -14,7 +14,7 @@ from textual.widget import Widget
 from textual.widgets import TabbedContent, Tabs
 
 from lazy_github.lib.bindings import LazyGithubBindings
-from lazy_github.lib.constants import NOTIFICATION_REFRESH_INTERVAL, CONNECTION_CHECK_INTERVAL
+from lazy_github.lib.constants import NOTIFICATION_REFRESH_INTERVAL
 from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.auth import is_logged_in_to_cli
 from lazy_github.lib.github.backends.protocol import GithubApiRequestFailed
@@ -57,16 +57,6 @@ class CurrentlySelectedRepo(Widget):
             return "No repository selected"
 
 
-class OfflineMode(Widget):
-    online: reactive[bool] = reactive(True)
-
-    def render(self):
-        if not self.online:
-            return Content.from_markup("[yellow]Potential Connection Issues[/]")
-        else:
-            return ""
-
-
 class UnreadNotifications(Widget):
     notification_count: reactive[int | None] = reactive(None)
 
@@ -96,12 +86,6 @@ class LazyGithubStatusSummary(Container):
         content-align: left middle;
     }
 
-    OfflineMode {
-        max-width: 50%;
-        height: 100%;
-        content-align: center middle;
-    }
-
     UnreadNotifications {
         height: 100%;
         max-width: 50%;
@@ -112,7 +96,6 @@ class LazyGithubStatusSummary(Container):
     def compose(self):
         with Horizontal():
             yield CurrentlySelectedRepo(id="currently_selected_repo")
-            yield OfflineMode(id="offline_mode")
             yield UnreadNotifications(id="unread_notifications")
 
 
@@ -402,7 +385,6 @@ class LazyGithubMainScreen(Screen):
     BINDINGS = [LazyGithubBindings.OPEN_NOTIFICATIONS_MODAL]
     COMMANDS = {MainScreenCommandProvider}
     notification_refresh_timer: Timer | None = None
-    connection_check_timer: Timer | None = None
 
     def compose(self):
         with Container():
@@ -445,21 +427,6 @@ class LazyGithubMainScreen(Screen):
                 self.notification_refresh_timer = self.set_interval(
                     NOTIFICATION_REFRESH_INTERVAL, self.refresh_notification_count
                 )
-
-        if self.connection_check_timer is None:
-            self.check_connection()
-            self.connection_check_timer = self.set_interval(CONNECTION_CHECK_INTERVAL, self.check_connection)
-
-    @work(thread=True)
-    async def check_connection(self) -> None:
-        widget = self.query_one("#offline_mode", OfflineMode)
-        try:
-            response = await LazyGithubContext.client.get("/")
-        except Exception:
-            lg.error("Potential API connection issues detected")
-            widget.online = False
-        else:
-            widget.online = response.is_success()
 
     @work(thread=True)
     async def refresh_notification_count(self) -> None:

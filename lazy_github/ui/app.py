@@ -122,12 +122,13 @@ class LazyGithub(App):
         self.theme = LazyGithubContext.config.appearance.theme.name
         self.set_keymap(LazyGithubContext.config.bindings.overrides)
 
-    def action_open_help(self) -> None:
+    async def action_open_help(self) -> None:
         try:
-            _ = self.query_one(HelpPanel)
-            self.action_hide_help_panel()
+            help_panel = self.screen.query_one(HelpPanel)
         except NoMatches:
             self.action_show_help_panel()
+        else:
+            help_panel.remove()
 
     def action_maximize(self) -> None:
         if self.screen.is_maximized:

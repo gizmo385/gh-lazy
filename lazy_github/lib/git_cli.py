@@ -1,3 +1,4 @@
+import os
 import re
 from subprocess import DEVNULL, PIPE, SubprocessError, check_output, run
 
@@ -21,7 +22,13 @@ _HTTPS_GIT_REMOTE_REGEX = re.compile(r"^https:\/\/[^.]+[^\/]+\/([^\/]+)\/([^\/]+
 def current_local_repo_full_name(remote: str = "origin") -> str | None:
     """Returns the owner/name associated with the remote of the git repo in the current working directory."""
     try:
-        output = check_output(["git", "remote", "get-url", remote], stderr=DEVNULL).decode().strip()
+        # Check if we have an original working directory from GitHub CLI extension
+        original_pwd = os.environ.get("LAZY_GITHUB_ORIGINAL_PWD")
+        cmd = ["git", "remote", "get-url", remote]
+        if original_pwd:
+            cmd = ["git", "-C", original_pwd, "remote", "get-url", remote]
+        
+        output = check_output(cmd, stderr=DEVNULL).decode().strip()
     except SubprocessError:
         return None
 
@@ -43,7 +50,13 @@ def current_local_repo_matches_selected_repo(remote: str = "origin") -> bool:
 def current_local_branch_name() -> str | None:
     """Returns the name of the current branch for the git repo in the current working directory."""
     try:
-        return check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=DEVNULL).decode().strip()
+        # Check if we have an original working directory from GitHub CLI extension
+        original_pwd = os.environ.get("LAZY_GITHUB_ORIGINAL_PWD")
+        cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
+        if original_pwd:
+            cmd = ["git", "-C", original_pwd, "rev-parse", "--abbrev-ref", "HEAD"]
+        
+        return check_output(cmd, stderr=DEVNULL).decode().strip()
     except SubprocessError:
         return None
 
@@ -51,7 +64,13 @@ def current_local_branch_name() -> str | None:
 def current_local_commit() -> str | None:
     """Returns the commit sha for the git repo in the current working directory"""
     try:
-        return check_output(["git", "rev-parse", "HEAD"], stderr=DEVNULL).decode().strip()
+        # Check if we have an original working directory from GitHub CLI extension
+        original_pwd = os.environ.get("LAZY_GITHUB_ORIGINAL_PWD")
+        cmd = ["git", "rev-parse", "HEAD"]
+        if original_pwd:
+            cmd = ["git", "-C", original_pwd, "rev-parse", "HEAD"]
+        
+        return check_output(cmd, stderr=DEVNULL).decode().strip()
     except SubprocessError:
         return None
 

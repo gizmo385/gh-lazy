@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
+export LAZY_GITHUB_ORIGINAL_PWD="$PWD"
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-cd "$SCRIPT_DIR"
-exec "${SCRIPT_DIR}/start.sh"
+exec "${SCRIPT_DIR}/start.sh" "$@"

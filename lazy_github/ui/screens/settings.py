@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
-from textual import on, work
+from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, ScrollableContainer, Vertical
@@ -16,8 +16,6 @@ from textual.theme import BUILTIN_THEMES, Theme
 from textual.validation import ValidationResult, Validator
 from textual.widget import Widget
 from textual.widgets import Button, Collapsible, Input, Label, Markdown, RichLog, Rule, Select, Static, Switch
-from textual_fspicker import FileOpen
-from textual_fspicker.path_filters import Filters
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
@@ -41,59 +39,12 @@ class ListOfStringValidator(Validator):
         return self.success()
 
 
-class FileSelector(Vertical):
-    DEFAULT_CSS = """
-    FileSelector {
-        height: 10;
-    }
-
-    Input {
-        width: 70;
-    }
-    """
+class PathInput(Input):
+    """Simple input field for file paths"""
 
     def __init__(self, field_name: str, field: FieldInfo, selected_file: Path | None) -> None:
-        super().__init__()
-        self.field_name = field_name
-        self.field = field
-        self.selected_file: Path | None = selected_file
-
-        self.input_id = _id_for_field_input(self.field_name)
-        self.submit_button = Button("Select File")
-        self.remove_button = Button("Remove File")
-        self.remove_button.visible = self.selected_file is not None
-        self.remove_button.display = self.selected_file is not None
-
-    def compose(self) -> ComposeResult:
-        current_filename = str(self.selected_file) if self.selected_file else ""
-        yield Input(current_filename, disabled=True, id=self.input_id, placeholder="No file selected")
-        yield self.submit_button
-        yield self.remove_button
-
-    @work
-    async def select_file(self) -> None:
-        markdown_filter = Filters(("Markdown", lambda p: p.suffix.lower() == ".md"))
-        file_picker = FileOpen(
-            open_button="Select",
-            default_file=self.selected_file,
-            must_exist=True,
-            filters=markdown_filter,
-        )
-        if new_selected_file := await self.app.push_screen_wait(file_picker):
-            self.selected_file = new_selected_file
-            self.query_one(f"#{self.input_id}", Input).value = str(new_selected_file)
-
-    @on(Button.Pressed)
-    async def handle_select_file_pressed(self, press: Button.Pressed) -> None:
-        if press.button is self.submit_button:
-            self.select_file()
-            self.remove_button.visible = True
-            self.remove_button.display = True
-        elif press.button is self.remove_button:
-            self.query_one(f"#{self.input_id}", Input).value = ""
-            self.selected_file = None
-            self.remove_button.visible = False
-            self.remove_button.display = False
+        current_filename = str(selected_file) if selected_file else ""
+        super().__init__(value=current_filename, id=_id_for_field_input(field_name), placeholder="Enter file path...")
 
 
 class FieldSetting(Container):
@@ -126,7 +77,7 @@ class FieldSetting(Container):
         elif self.field.annotation == list[str]:
             return Input(value=str(", ".join(self.value)), id=id, validators=[ListOfStringValidator()])
         elif self.field.annotation == Optional[Path]:
-            return FileSelector(self.field_name, self.field, self.value)
+            return PathInput(self.field_name, self.field, self.value)
         else:
             # If no other input mechanism fits, then we'll fallback to just a raw string input field
             return Input(value=str(self.value), id=id)
@@ -342,8 +293,8 @@ class SettingsContainer(Container):
 
                     # We want to handle paths specially
                     new_value = updated_value_input.value
-                    if field_info.annotation == Path | None:
-                        new_value = Path(str(new_value)) if new_value else None
+                    if field_info.annotation == Optional[Path]:
+                        new_value = Path(str(new_value).strip()) if new_value and str(new_value).strip() else None
 
                     setattr(model, field_name, new_value)
 

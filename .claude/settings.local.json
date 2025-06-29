@@ -3,7 +3,12 @@
     "allow": [
       "Bash(find:*)",
       "Bash(ls:*)",
-      "Bash(./start.sh:*)"
+      "Bash(./start.sh:*)",
+      "Bash(nix flake check:*)",
+      "Bash(nix-prefetch-url:*)",
+      "Bash(nix-prefetch-github:*)",
+      "Bash(nix search:*)",
+      "Bash(nix build:*)"
     ],
     "deny": []
   }

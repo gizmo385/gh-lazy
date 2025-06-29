@@ -358,7 +358,6 @@ dependencies = [
     { name = "httpx" },
     { name = "pydantic" },
     { name = "textual" },
-    { name = "textual-fspicker" },
 ]
 
 [package.dev-dependencies]
@@ -376,7 +375,6 @@ requires-dist = [
     { name = "httpx" },
     { name = "pydantic", specifier = "<3" },
     { name = "textual" },
-    { name = "textual-fspicker", specifier = ">=0.4.1" },
 ]
 
 [package.metadata.requires-dev]
@@ -927,18 +925,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a1/d3/ed0b20f6de0af1b7062c402d59d256029c0daa055ad9e04c27471b450cdd/textual_dev-1.7.0.tar.gz", hash = "sha256:bf1a50eaaff4cd6a863535dd53f06dbbd62617c371604f66f56de3908220ccd5", size = 25935, upload-time = "2024-11-18T16:59:47.924Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/50/4b/3c1eb9cbc39f2f28d27e10ef2fe42bfe0cf3c2f8445a454c124948d6169b/textual_dev-1.7.0-py3-none-any.whl", hash = "sha256:a93a846aeb6a06edb7808504d9c301565f7f4bf2e7046d56583ed755af356c8d", size = 27221, upload-time = "2024-11-18T16:59:46.833Z" },
-]
-
-[[package]]
-name = "textual-fspicker"
-version = "0.4.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "textual" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a4/b0/5f895b15562064ef473bc1e882b6dfb1df4c29fd3259ba09aae481e289a6/textual_fspicker-0.4.1.tar.gz", hash = "sha256:94815262c12d38b69ccba85804d334b998f90ebda7c43d362e9665e59d72cb87", size = 356376, upload-time = "2025-02-28T10:12:05.511Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/17/6787a44e5516901f81ebd1ad65e28f8b46260a38be38b5136242b7ed08d7/textual_fspicker-0.4.1-py3-none-any.whl", hash = "sha256:c143f126c8664ba3bfe844d853d26caf0832c7d1b0f16d69e4a8654e8b2fb3d3", size = 21033, upload-time = "2025-02-28T10:12:03.517Z" },
 ]
 
 [[package]]

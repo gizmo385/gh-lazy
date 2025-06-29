@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
-from textual import on, work
+from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, ScrollableContainer, Vertical

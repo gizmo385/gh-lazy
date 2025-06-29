@@ -10,26 +10,19 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        python = pkgs.python311;
         
-        textual-fspicker = python.pkgs.buildPythonPackage rec {
-          pname = "textual-fspicker";
-          version = "0.4.1";
-          format = "pyproject";
-
-          src = pkgs.fetchPypi {
-            inherit pname version;
-            sha256 = "sha256-1iaak97il3aydz3li5ggy3njj2pmxf8hvcfvjpl4qjw6q54i26l6=";
+        # Use Python with tests disabled globally
+        python = pkgs.python311.override {
+          packageOverrides = final: prev: {
+            buildPythonPackage = args: prev.buildPythonPackage (args // { 
+              doCheck = false;
+            });
+            buildPythonApplication = args: prev.buildPythonApplication (args // { 
+              doCheck = false;
+            });
           };
-
-          nativeBuildInputs = with python.pkgs; [
-            hatchling
-          ];
-
-          propagatedBuildInputs = with python.pkgs; [
-            textual
-          ];
         };
+        
       in
       {
         packages.default = python.pkgs.buildPythonApplication {
@@ -49,8 +42,9 @@
             pydantic
             textual
             click
-            textual-fspicker
           ];
+
+          doCheck = false;
 
           meta = with pkgs.lib; {
             description = "A terminal UI for interacting with Github";

@@ -6,28 +6,44 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        
+
         # Use Python with tests disabled globally
         python = pkgs.python311.override {
           packageOverrides = final: prev: {
-            buildPythonPackage = args: prev.buildPythonPackage (args // { 
-              doCheck = false;
-            });
-            buildPythonApplication = args: prev.buildPythonApplication (args // { 
-              doCheck = false;
-            });
+            buildPythonPackage =
+              args:
+              prev.buildPythonPackage (
+                args
+                // {
+                  doCheck = false;
+                }
+              );
+            buildPythonApplication =
+              args:
+              prev.buildPythonApplication (
+                args
+                // {
+                  doCheck = false;
+                }
+              );
           };
         };
-        
+
       in
       {
         packages.default = python.pkgs.buildPythonApplication {
           pname = "lazy-github";
-          version = "0.1.0";
+          version = builtins.replaceStrings ["\n" "\"" " " "VERSION" "="] ["" "" "" "" ""] (builtins.readFile ./lazy_github/version.py);
           format = "pyproject";
 
           src = ./.;
@@ -56,11 +72,13 @@
 
         # Development shell
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
+          buildInputs = [
             python
             python.pkgs.pip
             python.pkgs.uv
           ];
         };
-      });
+      }
+    );
 }
+

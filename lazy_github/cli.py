@@ -1,3 +1,4 @@
+import os
 import shutil
 
 import click
@@ -14,6 +15,10 @@ _CLI_CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 @click.pass_context
 def cli(ctx: click.Context) -> None:
     """A Terminal UI for interacting with Github"""
+    # Set LAZY_GITHUB_ORIGINAL_PWD if not already set (fixes repo detection when installed via flake)
+    if "LAZY_GITHUB_ORIGINAL_PWD" not in os.environ:
+        os.environ["LAZY_GITHUB_ORIGINAL_PWD"] = os.getcwd()
+    
     if ctx.invoked_subcommand is None:
         ctx.invoke(run)
 

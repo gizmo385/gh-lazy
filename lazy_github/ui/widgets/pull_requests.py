@@ -255,7 +255,9 @@ class PrOverviewTabPane(TabPane):
             merge_status = "[greenyellow]Open[/]"
 
         with ScrollableContainer():
-            yield Label(Content.from_markup(f"{merge_status} [b]{self.pr.title}[b] {pr_link} by {user_link}"))
+            yield Label(
+                Content.from_markup(f"{merge_status} [b]$title[/] {pr_link} by {user_link}", title=self.pr.title)
+            )
             yield Label(Content.from_markup(change_summary))
 
             created_date = self.pr.created_at.strftime("%c")

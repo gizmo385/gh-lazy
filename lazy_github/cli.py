@@ -5,6 +5,7 @@ import click
 import rich
 
 from lazy_github.lib.config import _CONFIG_FILE_LOCATION, Config
+from lazy_github.lib.debug import collect_debug_info
 from lazy_github.lib.github.backends.protocol import BackendType
 from lazy_github.ui.app import app
 
@@ -18,7 +19,7 @@ def cli(ctx: click.Context) -> None:
     # Set LAZY_GITHUB_ORIGINAL_PWD if not already set (fixes repo detection when installed via flake)
     if "LAZY_GITHUB_ORIGINAL_PWD" not in os.environ:
         os.environ["LAZY_GITHUB_ORIGINAL_PWD"] = os.getcwd()
-    
+
     if ctx.invoked_subcommand is None:
         ctx.invoke(run)
 
@@ -73,3 +74,9 @@ def clear_cache(no_confirm: bool):
         print("Cache cleared")
     else:
         print("Canceling cache deletion")
+
+
+@cli.command
+def debug():
+    """Outputs LazyGithub debug info"""
+    print(collect_debug_info())

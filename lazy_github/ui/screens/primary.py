@@ -30,6 +30,7 @@ from lazy_github.lib.messages import (
 )
 from lazy_github.models.github import Issue, PartialPullRequest, Repository
 from lazy_github.ui.screens.create_or_edit_pull_request import CreateOrEditPullRequestModal
+from lazy_github.ui.screens.debug import DebugModal
 from lazy_github.ui.screens.new_issue import NewIssueModal
 from lazy_github.ui.screens.notifications import NotificationsModal
 from lazy_github.ui.screens.settings import SettingsModal
@@ -356,6 +357,7 @@ class MainScreenCommandProvider(Provider):
                 "Toggle showing or hiding repo pull requests",
             ),
             LazyGithubCommand("Change Settings", self.screen.action_show_settings_modal, "Adjust LazyGithub settings"),
+            LazyGithubCommand("Debug Info", self.screen.action_show_debug_info, "View Debug Information"),
         ]
 
         if LazyGithubContext.config.notifications.enabled:
@@ -455,6 +457,9 @@ class LazyGithubMainScreen(Screen):
 
     async def action_show_settings_modal(self) -> None:
         self.app.push_screen(SettingsModal())
+
+    async def action_show_debug_info(self) -> None:
+        self.app.push_screen(DebugModal())
 
     def handle_settings_update(self) -> None:
         self.query_one("#selections_pane", SelectionsPane).update_displayed_sections()

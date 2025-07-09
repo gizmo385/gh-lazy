@@ -449,8 +449,9 @@ class LazyGithubMainScreen(Screen):
 
     async def action_toggle_ui(self, ui_to_hide: str):
         widget = self.query_one(f"#{ui_to_hide}", Widget)
-        widget.display = not widget.display
-        widget.visible = not widget.visible
+        new_value = not widget.visible
+        widget.display = not new_value
+        widget.visible = not new_value
 
     async def action_show_settings_modal(self) -> None:
         self.app.push_screen(SettingsModal())

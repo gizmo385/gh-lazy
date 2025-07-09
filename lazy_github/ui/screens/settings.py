@@ -8,6 +8,7 @@ from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, ScrollableContainer, Vertical
+from textual.content import Content
 from textual.css.query import NoMatches
 from textual.events import Key
 from textual.fuzzy import Matcher
@@ -15,7 +16,19 @@ from textual.screen import ModalScreen
 from textual.theme import BUILTIN_THEMES, Theme
 from textual.validation import ValidationResult, Validator
 from textual.widget import Widget
-from textual.widgets import Button, Collapsible, Input, Label, Markdown, RichLog, Rule, Select, Static, Switch
+from textual.widgets import (
+    Button,
+    Input,
+    Label,
+    Markdown,
+    RichLog,
+    Rule,
+    Select,
+    Static,
+    Switch,
+    TabbedContent,
+    TabPane,
+)
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
@@ -98,10 +111,12 @@ class SettingsSection(Vertical):
     SettingsSection {
         border: blank white;
         height: auto;
+        padding: 1 0;
     }
 
-    Static {
-        margin-bottom: 1;
+    .section-description {
+        margin-bottom: 2;
+        padding: 0 1;
     }
     """
 
@@ -114,28 +129,26 @@ class SettingsSection(Vertical):
         self.field_settings_widgets: list[FieldSetting] = []
 
     def filter_field_settings(self, matcher: Matcher | None) -> None:
-        at_least_one_displayed = False
         for field_setting in self.field_settings_widgets:
             if matcher is None or matcher.match(field_setting.field_name):
-                at_least_one_displayed = True
                 field_setting.display = True
             else:
                 field_setting.display = False
 
-        self.query_one(Collapsible).collapsed = not at_least_one_displayed
-
     def compose(self) -> ComposeResult:
         setting_description = self.model.__doc__ or ""
-        field_name = f"[bold]{_field_name_to_readable_name(self.parent_field_name)}[/bold]"
-        with Collapsible(collapsed=False, title=field_name):
-            yield Static(f"{setting_description}".strip())
-            for field_name, field_info in self.fields.items():
-                if field_info.exclude:
-                    continue
-                current_value = getattr(self.model, field_name)
-                new_field_setting = FieldSetting(field_name, field_info, current_value)
-                self.field_settings_widgets.append(new_field_setting)
-                yield new_field_setting
+
+        # Add section description if it exists
+        if setting_description.strip():
+            yield Static(f"[dim]{setting_description.strip()}[/dim]", classes="section-description")
+
+        for field_name, field_info in self.fields.items():
+            if field_info.exclude:
+                continue
+            current_value = getattr(self.model, field_name)
+            new_field_setting = FieldSetting(field_name, field_info, current_value)
+            self.field_settings_widgets.append(new_field_setting)
+            yield new_field_setting
 
 
 class KeySelectionInput(Container):
@@ -165,7 +178,7 @@ class KeySelectionInput(Container):
 
     def compose(self) -> ComposeResult:
         with Horizontal():
-            yield Label(f"[bold]{self.binding.description or self.binding.id}[/bold]: ")
+            yield Label(Content.from_markup(f"[bold]{self.binding.description or self.binding.id}:[/] "))
             yield self.key_input
 
     async def on_key(self, key_event: Key) -> None:
@@ -183,7 +196,6 @@ class BindingsSettingsSection(SettingsSection):
 
     def filter_field_settings(self, matcher: Matcher | None) -> None:
         """Overridden filter handler for the bindings settings"""
-        at_least_one_displayed = False
         key_selection_inputs = self.query(KeySelectionInput)
         for ksi in key_selection_inputs:
             if (
@@ -192,21 +204,17 @@ class BindingsSettingsSection(SettingsSection):
                 or (ksi.binding.description and matcher.match(ksi.binding.description))
                 or (ksi.binding.id and matcher.match(ksi.binding.id))
             ):
-                at_least_one_displayed = True
                 ksi.display = True
             else:
                 ksi.display = False
 
-        self.query_one(Collapsible).collapsed = not at_least_one_displayed
-
     def compose(self) -> ComposeResult:
-        with Collapsible(collapsed=False, title="[bold]Keybinding Overrides[/bold]"):
-            if LazyGithubContext.config.bindings.__doc__:
-                yield Static(LazyGithubContext.config.bindings.__doc__)
-            bindings_by_id = LazyGithubBindings.all_by_id()
-            sorted_binding_keys = sorted(bindings_by_id.keys())
-            for key in sorted_binding_keys:
-                yield KeySelectionInput(bindings_by_id[key])
+        if LazyGithubContext.config.bindings.__doc__:
+            yield Static(f"[dim]{LazyGithubContext.config.bindings.__doc__}[/dim]", classes="section-description")
+        bindings_by_id = LazyGithubBindings.all_by_id()
+        sorted_binding_keys = sorted(bindings_by_id.keys())
+        for key in sorted_binding_keys:
+            yield KeySelectionInput(bindings_by_id[key])
 
 
 class SettingsContainer(Container):
@@ -223,7 +231,9 @@ class SettingsContainer(Container):
 
     #settings_buttons {
         width: auto;
+        dock: bottom;
         height: auto;
+        margin-top: 7;
         padding-left: 35;
     }
     """
@@ -241,14 +251,25 @@ class SettingsContainer(Container):
     def compose(self) -> ComposeResult:
         yield Markdown("# LazyGithub Settings")
         yield self.search_input
-        with ScrollableContainer():
-            for field, value in LazyGithubContext.config:
+
+        with TabbedContent():
+            # Create individual tabs for each settings section
+            config_items = list(LazyGithubContext.config)
+
+            for field, value in config_items:
                 if field == "bindings":
-                    yield BindingsSettingsSection()
+                    # Special handling for bindings
+                    with TabPane("Key Bindings", id="bindings_tab"):
+                        with ScrollableContainer():
+                            yield BindingsSettingsSection()
                 else:
-                    new_section = SettingsSection(field, value)
-                    self.settings_sections.append(new_section)
-                    yield new_section
+                    # Create a tab for each settings section
+                    tab_name = _field_name_to_readable_name(field)
+                    with TabPane(tab_name, id=f"{field}_tab"):
+                        with ScrollableContainer():
+                            new_section = SettingsSection(field, value)
+                            self.settings_sections.append(new_section)
+                            yield new_section
 
         yield Rule()
 
@@ -326,6 +347,9 @@ class SettingsContainer(Container):
 
 
 class SettingsModal(ModalScreen):
+    def __init__(self) -> None:
+        super().__init__()
+
     DEFAULT_CSS = """
     SettingsModal {
         height: 80%;

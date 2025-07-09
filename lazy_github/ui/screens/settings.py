@@ -295,6 +295,8 @@ class SettingsContainer(Container):
                     new_value = updated_value_input.value
                     if field_info.annotation == Optional[Path]:
                         new_value = Path(str(new_value).strip()) if new_value and str(new_value).strip() else None
+                    elif field_info.annotation == Path:
+                        new_value = Path(str(new_value).strip())
 
                     setattr(model, field_name, new_value)
 

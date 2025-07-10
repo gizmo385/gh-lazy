@@ -26,6 +26,14 @@ Currently, it supports the following:
 - Listing the details, diff, and reviews on any of those pull requests
 - Detailed issue and pull request views, including conversation participation
 
+### Reporting Bugs
+
+If you run into any bugs while using LazyGithub, please let me know! You can do this by creating a
+new [bug report](https://github.com/gizmo385/gh-lazy/issues/new?template=bug_report.md) or search
+for `Open Bug Report` in the command pallete from inside LazyGithub.
+
+[![In-App Bug Reporter](https://asciinema.org/a/JiTZqOWyEjPzG4v1marSyTqUV.svg)](https://asciinema.org/a/JiTZqOWyEjPzG4v1marSyTqUV)
+
 ### Running Locally
 
 If you wish to run it from a local clone of the repository, you can do so by running the `./start.sh` located in the root of the repo.

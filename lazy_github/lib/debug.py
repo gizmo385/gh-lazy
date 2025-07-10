@@ -21,3 +21,24 @@ def collect_debug_info() -> str:
     debug_info += f"```json\n{Config.load_config().model_dump_json(indent=4)}\n```"
 
     return textwrap.dedent(debug_info.strip())
+
+
+_BUG_REPORT_TEMPLATE = """
+**Describe the bug**
+
+**To Reproduce**
+
+**Expected behavior**
+
+**Installation Mechanism:** [Github CLI, nix, PyPi, etc]
+
+**Debug Info:**
+{debug_info}
+
+**Additional context**
+""".strip()
+
+
+def get_bug_report_template() -> str:
+    """Generates a LazyGithub bug report that is prefilled with debug information"""
+    return _BUG_REPORT_TEMPLATE.format(debug_info=collect_debug_info())

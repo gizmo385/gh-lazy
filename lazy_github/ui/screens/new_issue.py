@@ -34,6 +34,10 @@ class NewIssueContainer(Container):
     }
     """
 
+    def __init__(self, prefilled_body: str | None) -> None:
+        super().__init__()
+        self.prefilled_body = prefilled_body or ""
+
     def compose(self) -> ComposeResult:
         assert LazyGithubContext.current_repo is not None, "Unexpectedly missing current repo in new PR modal"
         with ScrollableContainer():
@@ -43,7 +47,12 @@ class NewIssueContainer(Container):
             yield Rule()
 
             yield Label(Content.from_markup("[bold]Description[/bold]"))
-            yield TextArea.code_editor(id="new_issue_body", soft_wrap=True, tab_behavior="focus")
+            yield TextArea.code_editor(
+                id="new_issue_body",
+                soft_wrap=True,
+                tab_behavior="focus",
+                text=self.prefilled_body,
+            )
 
         with Horizontal(id="button_holder"):
             yield Button("Save", id="save_new_issue", variant="success")
@@ -88,15 +97,19 @@ class NewIssueModal(ModalScreen[Issue | None]):
 
     NewIssueContainer {
         align: center middle;
-        height: 30;
+        height: 80%;
         width: 100;
         border: thick $background 80%;
         background: $surface-lighten-3;
     }
     """
 
+    def __init__(self, prefilled_body: str | None = None) -> None:
+        super().__init__()
+        self.prefilled_body = prefilled_body
+
     def compose(self) -> ComposeResult:
-        yield NewIssueContainer()
+        yield NewIssueContainer(self.prefilled_body)
         yield LazyGithubFooter()
 
     def action_close(self) -> None:

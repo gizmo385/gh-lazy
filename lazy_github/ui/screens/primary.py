@@ -16,11 +16,13 @@ from textual.widgets import TabbedContent, Tabs
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.constants import NOTIFICATION_REFRESH_INTERVAL
 from lazy_github.lib.context import LazyGithubContext
+from lazy_github.lib.debug import get_bug_report_template
 from lazy_github.lib.github.auth import is_logged_in_to_cli
 from lazy_github.lib.github.backends.protocol import GithubApiRequestFailed
 from lazy_github.lib.github.issues import list_issues
 from lazy_github.lib.github.notifications import extract_notification_subject, unread_notification_count
 from lazy_github.lib.github.pull_requests import get_full_pull_request
+from lazy_github.lib.github.repositories import get_repository_by_name
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import (
     IssuesAndPullRequestsFetched,
@@ -153,12 +155,12 @@ class SelectionsPane(Container):
         self.trigger_issue_creation_flow()
 
     @work
-    async def trigger_issue_creation_flow(self) -> None:
+    async def trigger_issue_creation_flow(self, prefilled_body: str | None = None) -> None:
         if LazyGithubContext.current_repo is None:
             self.notify("Please select a repository first!", title="Cannot open new pull request", severity="error")
             return
 
-        if new_issue := await self.app.push_screen_wait(NewIssueModal()):
+        if new_issue := await self.app.push_screen_wait(NewIssueModal(prefilled_body=prefilled_body)):
             self.issues.searchable_table.add_item(new_issue)
             self.post_message(IssueSelected(new_issue))
 
@@ -358,6 +360,7 @@ class MainScreenCommandProvider(Provider):
             ),
             LazyGithubCommand("Change Settings", self.screen.action_show_settings_modal, "Adjust LazyGithub settings"),
             LazyGithubCommand("Debug Info", self.screen.action_show_debug_info, "View Debug Information"),
+            LazyGithubCommand("Open Bug Report", self.screen.action_open_bug_report, "Open Bug Report"),
         ]
 
         if LazyGithubContext.config.notifications.enabled:
@@ -398,6 +401,10 @@ class LazyGithubMainScreen(Screen):
     def main_view_pane(self) -> MainViewPane:
         return self.query_one("#main-view-pane", MainViewPane)
 
+    async def set_repository(self, repo: Repository) -> None:
+        self.set_currently_loaded_repo(repo)
+        await self.main_view_pane.load_repository(repo)
+
     @work
     async def action_view_notifications(self) -> None:
         notification = await self.app.push_screen_wait(NotificationsModal())
@@ -407,8 +414,7 @@ class LazyGithubMainScreen(Screen):
             return
 
         # The thing we'll do most immediately is swap over to the repo associated with the notification
-        self.set_currently_loaded_repo(notification.repository)
-        await self.main_view_pane.load_repository(notification.repository)
+        await self.set_repository(notification.repository)
 
         # Try to determine the source of the notification more specifically than just the repo. If we can, then we'll
         # load that more-specific subject (such as the pull request), otherwise we will settle for the already loaded
@@ -461,8 +467,23 @@ class LazyGithubMainScreen(Screen):
     async def action_show_debug_info(self) -> None:
         self.app.push_screen(DebugModal())
 
+    def _notify_bug_report_failure(self) -> None:
+        self.notify(
+            "Could not load LazyGithub repo! Please open the bug report on Github",
+            title="Error opening bug report",
+            severity="error",
+        )
+
+    async def action_open_bug_report(self) -> None:
+        repo = await get_repository_by_name("gizmo385/gh-lazy")
+        if not repo:
+            return self._notify_bug_report_failure()
+        await self.set_repository(repo)
+        bug_report_template = get_bug_report_template()
+        self.main_view_pane.selections.trigger_issue_creation_flow(prefilled_body=bug_report_template)
+
     def handle_settings_update(self) -> None:
-        self.query_one("#selections_pane", SelectionsPane).update_displayed_sections()
+        self.main_view_pane.selections.update_displayed_sections()
 
         self.refresh_notification_count()
         if self.notification_refresh_timer is None:

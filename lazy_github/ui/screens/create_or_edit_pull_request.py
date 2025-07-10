@@ -264,7 +264,7 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
     }
 
     #pr_description {
-        height: 10;
+        height: 30;
         width: 100%;
         margin-bottom: 1;
     }
@@ -444,7 +444,7 @@ class CreateOrEditPullRequestModal(ModalScreen[FullPullRequest | None]):
 
     CreateOrEditPullRequestContainer {
         width: 100;
-        height: auto;
+        height: 80%;
         border: thick $background 80%;
         background: $surface-lighten-3;
         margin: 1;

@@ -30,7 +30,7 @@ class NewIssueContainer(Container):
     }
 
     #new_issue_body {
-        height: 15;
+        height: 75%;
     }
     """
 

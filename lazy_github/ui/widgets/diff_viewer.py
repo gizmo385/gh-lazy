@@ -14,6 +14,7 @@ from lazy_github.lib.diff_parser import Hunk, InvalidDiffFormat, parse_diff_from
 from lazy_github.lib.github.pull_requests import create_new_review
 from lazy_github.lib.messages import PullRequestSelected
 from lazy_github.models.github import FullPullRequest, ReviewState
+from lazy_github.ui.widgets.split_diff_viewer import SplitDiffViewer
 
 DISALLOWED_REVIEW_STATES = [ReviewState.DISMISSED, ReviewState.PENDING]
 
@@ -194,11 +195,19 @@ class DiffViewerContainer(VerticalScroll):
 
     BINDINGS = [LazyGithubBindings.DIFF_NEXT_HUNK, LazyGithubBindings.DIFF_PREVIOUS_HUNK]
 
-    def __init__(self, pr: FullPullRequest, reviewer_is_author: bool, diff: str, id: str | None = None) -> None:
+    def __init__(
+        self,
+        pr: FullPullRequest,
+        reviewer_is_author: bool,
+        diff: str,
+        id: str | None = None,
+        use_split_view: bool = True,
+    ) -> None:
         super().__init__(id=id)
         self.pr = pr
         self.reviewer_is_author = reviewer_is_author
         self._raw_diff = diff
+        self._use_split_view = use_split_view
         self._hunk_container_map: dict[str, Collapsible] = {}
         self._added_review_comments: list[AddCommentContainer] = []
 
@@ -264,6 +273,13 @@ class DiffViewerContainer(VerticalScroll):
         self._added_review_comments.append(new_comment_container)
 
     def compose(self) -> ComposeResult:
+        # use new split view if enabled
+        if self._use_split_view:
+            yield SplitDiffViewer(self._raw_diff)
+            yield SubmitReview(can_only_comment=self.reviewer_is_author)
+            return
+
+        # otherwise use old collapsible view
         try:
             diff = parse_diff_from_str(self._raw_diff)
         except InvalidDiffFormat:

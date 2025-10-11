@@ -63,7 +63,8 @@ class UnifiedDiffPane(Widget):
     DEFAULT_CSS = """
     UnifiedDiffPane {
         width: 100%;
-        height: 25;
+        height: auto;
+        max-height: 25;
         border: solid $primary-lighten-1;
         overflow-y: auto;
     }
@@ -239,6 +240,13 @@ class UnifiedDiffPane(Widget):
         # re-render to show new current line highlight
         self._render_lines()
 
+    def watch_scroll_y(self, old_value: float, new_value: float) -> None:
+        """update current line when user scrolls manually"""
+        # estimate which line is at top of viewport (roughly 1 unit per line)
+        estimated_line = int(new_value)
+        if 0 <= estimated_line < len(self.lines):
+            self.current_line = estimated_line
+
     def action_line_down(self) -> None:
         """move to next line"""
         if self.current_line < len(self.lines) - 1:
@@ -355,7 +363,7 @@ class AddCommentModal(ModalScreen):
     AddCommentModal Horizontal {
         width: 100%;
         height: auto;
-        align-horizontal: right;
+        align-horizontal: center;
     }
 
     AddCommentModal Button {
@@ -386,8 +394,8 @@ class AddCommentModal(ModalScreen):
             yield Label("Comment:")
             yield TextArea(id="comment_input")
             with Horizontal():
-                yield Button("Cancel", variant="default", id="cancel")
                 yield Button("Add Comment", variant="success", id="add_comment")
+                yield Button("Cancel", variant="default", id="cancel")
 
     @on(Button.Pressed, "#cancel")
     def cancel_comment(self, _: Button.Pressed) -> None:

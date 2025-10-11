@@ -1,16 +1,9 @@
-from collections import defaultdict
-from difflib import SequenceMatcher
-from typing import Dict, List, Optional, Set, Tuple
-
-from rich.color import Color, blend_rgb
-from rich.color_triplet import ColorTriplet
 from rich.segment import Segment
-from rich.style import Style
 from rich.syntax import Syntax
 from rich.text import Text
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.containers import Container, Horizontal, Vertical
 from textual.content import Content
 from textual.css.query import NoMatches
 from textual.message import Message
@@ -21,7 +14,7 @@ from textual.widget import Widget
 from textual.widgets import Button, Collapsible, Input, Label, RichLog, Select, Static, TextArea
 
 from lazy_github.lib.bindings import LazyGithubBindings
-from lazy_github.lib.diff_parser import ChangedFile, Hunk, InvalidDiffFormat, parse_diff_from_str
+from lazy_github.lib.diff_parser import Hunk, InvalidDiffFormat, parse_diff_from_str
 from lazy_github.lib.github.pull_requests import create_new_review
 from lazy_github.lib.messages import PullRequestSelected
 from lazy_github.models.github import FullPullRequest, ReviewState
@@ -33,12 +26,6 @@ class TriggerReviewSubmission(Message):
     """message sent to trigger review submission"""
 
     pass
-
-
-# color constants from dunk
-MONOKAI_BACKGROUND = Color.from_rgb(red=39, green=40, blue=34)
-DUNK_BG_HEX = "#0d0f0b"
-MONOKAI_BG_HEX = MONOKAI_BACKGROUND.triplet.hex
 
 
 class ScrollSync(Message):
@@ -211,7 +198,7 @@ class UnifiedDiffPane(Widget):
 
                 self._rich_log.write(final_text)
 
-        except Exception as e:
+        except Exception:
             # fallback to simple coloring if syntax highlighting fails
             for idx, line in enumerate(self.lines):
                 line_num = self.hunk.file_start_line + idx
@@ -332,6 +319,8 @@ class CommentDeleted(Message):
 class AddCommentModal(ModalScreen):
     """modal screen for adding comment with preview"""
 
+    BINDINGS = [LazyGithubBindings.SUBMIT_DIALOG, LazyGithubBindings.CLOSE_DIALOG]
+
     DEFAULT_CSS = """
     AddCommentModal {
         align: center middle;
@@ -397,12 +386,8 @@ class AddCommentModal(ModalScreen):
                 yield Button("Add Comment", variant="success", id="add_comment")
                 yield Button("Cancel", variant="default", id="cancel")
 
-    @on(Button.Pressed, "#cancel")
-    def cancel_comment(self, _: Button.Pressed) -> None:
-        self.dismiss(None)
-
-    @on(Button.Pressed, "#add_comment")
-    def add_comment(self, _: Button.Pressed) -> None:
+    def _submit_comment(self) -> None:
+        """shared logic for submitting comment"""
         comment_text = self.query_one("#comment_input", TextArea).text
         if not comment_text.strip():
             self.notify("Comment cannot be empty!", severity="warning")
@@ -416,6 +401,22 @@ class AddCommentModal(ModalScreen):
             comment_text,
         )
         self.dismiss(comment)
+
+    @on(Button.Pressed, "#cancel")
+    def cancel_comment(self, _: Button.Pressed) -> None:
+        self.dismiss(None)
+
+    @on(Button.Pressed, "#add_comment")
+    def add_comment(self, _: Button.Pressed) -> None:
+        self._submit_comment()
+
+    def action_submit(self) -> None:
+        """handle shift+enter to submit comment"""
+        self._submit_comment()
+
+    def action_close(self) -> None:
+        """handle q/ESC to close modal without adding comment"""
+        self.dismiss(None)
 
 
 class SplitDiffHunk(Widget):
@@ -618,7 +619,7 @@ class SplitDiffViewer(Vertical):
 
         # find currently focused hunk
         focused = self.screen.focused
-        if focused in hunks:
+        if focused in hunks and isinstance(focused, SplitDiffHunk):
             current_idx = hunks.index(focused)
             if current_idx > 0:
                 hunks[current_idx - 1].focus()
@@ -630,14 +631,12 @@ class SplitDiffViewer(Vertical):
 
     def action_next_hunk(self) -> None:
         """jump to next hunk (K key)"""
-        # get all hunk widgets
         hunks = list(self.query(SplitDiffHunk))
         if not hunks:
             return
 
-        # find currently focused hunk
         focused = self.screen.focused
-        if focused in hunks:
+        if focused in hunks and isinstance(focused, SplitDiffHunk):
             current_idx = hunks.index(focused)
             if current_idx < len(hunks) - 1:
                 hunks[current_idx + 1].focus()

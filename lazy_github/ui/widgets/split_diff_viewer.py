@@ -82,24 +82,19 @@ def _format_hunk_header(hunk: Hunk) -> Text:
     if not match:
         return Text(hunk.header)  # fallback to original if parsing fails
 
-    old_start, old_count, new_start, new_count, context = match.groups()
+    _, old_count, new_start, new_count, context = match.groups()
 
-    # calculate line ranges
     old_count = int(old_count) if old_count else 1
     new_count = int(new_count) if new_count else 1
     new_start = int(new_start)
     new_end = new_start + new_count - 1
 
-    # build readable description
     if new_count == 1:
         location = f"Line {new_start}"
     else:
         location = f"Lines {new_start}-{new_end}"
 
-    # count actual additions/deletions
     additions, deletions = _count_changes_in_hunk(hunk)
-
-    # build result with colored change counts
     result = Text(location)
 
     if additions > 0 or deletions > 0:
@@ -112,7 +107,6 @@ def _format_hunk_header(hunk: Hunk) -> Text:
             result.append(f"-{deletions}", style="red")
         result.append(")")
 
-    # add context if available (function/class name)
     if context.strip():
         result.append(f" • {context.strip()}")
 
@@ -123,14 +117,6 @@ class TriggerReviewSubmission(Message):
     """message sent to trigger review submission"""
 
     pass
-
-
-class ScrollSync(Message):
-    """message to sync scroll between panes"""
-
-    def __init__(self, scroll_y: float) -> None:
-        super().__init__()
-        self.scroll_y = scroll_y
 
 
 class UnifiedDiffPane(Widget):
@@ -185,6 +171,8 @@ class UnifiedDiffPane(Widget):
         self.lines = hunk.lines  # original diff lines with +/- prefixes
         self._line_indicator: Static | None = None
         self._rich_log: RichLog | None = None
+        self._syntax_lines: list[Text] = []  # cache syntax highlighted lines
+        self._syntax_computed = False
 
     def compose(self) -> ComposeResult:
         # create RichLog for displaying diff
@@ -199,15 +187,13 @@ class UnifiedDiffPane(Widget):
 
     def on_mount(self) -> None:
         """render initial content when mounted"""
+        self._compute_syntax_highlighting()
         self._render_lines()
 
-    def _render_lines(self) -> None:
-        """render all lines with current line highlighted"""
-        if not self._rich_log:
+    def _compute_syntax_highlighting(self) -> None:
+        """compute syntax highlighting once and cache it"""
+        if self._syntax_computed:
             return
-
-        # clear and rebuild
-        self._rich_log.clear()
 
         # try to get syntax highlighting
         try:
@@ -258,92 +244,111 @@ class UnifiedDiffPane(Widget):
             if current_line_segments:
                 syntax_lines.append(current_line_segments)
 
-            # now write lines with custom backgrounds
+            # convert to Text objects and cache
             for idx, line in enumerate(self.lines):
-                line_num = self.hunk.file_start_line + idx
-                is_current = idx == self.current_line
-
-                # get syntax highlighted text for this line
                 if idx < len(syntax_lines):
                     syntax_text = Text.assemble(*[(seg.text, seg.style) for seg in syntax_lines[idx]])
                 else:
                     syntax_text = Text(clean_lines[idx] if idx < len(clean_lines) else "")
-
-                # determine background color
-                if is_current:
-                    if line.startswith("-"):
-                        bg_color = "#8b0000"  # dark red
-                    elif line.startswith("+"):
-                        bg_color = "#006400"  # dark green
-                    else:
-                        bg_color = "yellow"
-                else:
-                    if line.startswith("-"):
-                        bg_color = "#3a0a0a"  # subtle dark red
-                    elif line.startswith("+"):
-                        bg_color = "#0a3a0a"  # subtle dark green
-                    else:
-                        bg_color = None
-
-                # apply background to syntax highlighted text
-                if bg_color:
-                    syntax_text.stylize(f"on {bg_color}")
-
-                # add prefix and line number
-                prefix = "► " if is_current else "  "
-                final_text = Text(f"{prefix}{line_num:4d} │ ") + syntax_text
-
-                self._rich_log.write(final_text)
+                self._syntax_lines.append(syntax_text)
 
         except Exception:
-            # fallback to simple coloring if syntax highlighting fails
-            for idx, line in enumerate(self.lines):
-                line_num = self.hunk.file_start_line + idx
-                is_current = idx == self.current_line
-                line_text = f"{line_num:4d} │ {line}"
+            # fallback to plain text if syntax highlighting fails
+            for line in self.lines:
+                # remove +/- prefix
+                clean = line[1:] if line.startswith(("+", "-", " ")) else line
+                self._syntax_lines.append(Text(clean))
 
-                if is_current:
-                    if line.startswith("-"):
-                        self._rich_log.write(Text(f"► {line_text}", style="bold white on #8b0000"))
-                    elif line.startswith("+"):
-                        self._rich_log.write(Text(f"► {line_text}", style="bold white on #006400"))
-                    else:
-                        self._rich_log.write(Text(f"► {line_text}", style="bold black on yellow"))
+        self._syntax_computed = True
+
+    def _render_lines(self) -> None:
+        """render all lines with current line highlighted (uses cached syntax)"""
+        if not self._rich_log:
+            return
+
+        # clear and rebuild
+        self._rich_log.clear()
+
+        for idx, line in enumerate(self.lines):
+            line_num = self.hunk.file_start_line + idx
+            is_current = idx == self.current_line
+
+            # get cached syntax highlighted text and make copy so we don't mutate cache
+            if idx < len(self._syntax_lines):
+                syntax_text = self._syntax_lines[idx].copy()
+            else:
+                syntax_text = Text(line)
+
+            # determine background color
+            if is_current:
+                if line.startswith("-"):
+                    bg_color = "#8b0000"  # dark red
+                elif line.startswith("+"):
+                    bg_color = "#006400"  # dark green
                 else:
-                    if line.startswith("-"):
-                        self._rich_log.write(Text(f"  {line_text}", style="red on #3a0a0a"))
-                    elif line.startswith("+"):
-                        self._rich_log.write(Text(f"  {line_text}", style="green on #0a3a0a"))
-                    else:
-                        self._rich_log.write(Text(f"  {line_text}"))
+                    bg_color = "yellow"
+            else:
+                if line.startswith("-"):
+                    bg_color = "#3a0a0a"  # subtle dark red
+                elif line.startswith("+"):
+                    bg_color = "#0a3a0a"  # subtle dark green
+                else:
+                    bg_color = None
+
+            # apply background to syntax highlighted text
+            if bg_color:
+                syntax_text.stylize(f"on {bg_color}")
+
+            # add prefix and line number
+            prefix = "► " if is_current else "  "
+            final_text = Text(f"{prefix}{line_num:4d} │ ") + syntax_text
+
+            self._rich_log.write(final_text)
 
     def watch_current_line(self, old_value: int, new_value: int) -> None:
         """update display when current line changes"""
         if self._line_indicator:
             self._line_indicator.update(f"Line: {new_value + 1}/{len(self.lines)}")
-        # re-render to show new current line highlight
+        # re-render to show new current line highlight (fast now with cached syntax)
         self._render_lines()
-
-    def watch_scroll_y(self, old_value: float, new_value: float) -> None:
-        """update current line when user scrolls manually"""
-        # estimate which line is at top of viewport (roughly 1 unit per line)
-        estimated_line = int(new_value)
-        if 0 <= estimated_line < len(self.lines):
-            self.current_line = estimated_line
 
     def action_line_down(self) -> None:
         """move to next line"""
         if self.current_line < len(self.lines) - 1:
             self.current_line += 1
-            # scroll down one line if at bottom of visible area
-            self.scroll_relative(y=1, animate=False)
+            # only scroll if getting close to bottom of visible area
+            self._scroll_to_current_if_needed()
 
     def action_line_up(self) -> None:
         """move to previous line"""
         if self.current_line > 0:
             self.current_line -= 1
-            # scroll up one line if at top of visible area
-            self.scroll_relative(y=-1, animate=False)
+            # only scroll if getting close to top of visible area
+            self._scroll_to_current_if_needed()
+
+    def _scroll_to_current_if_needed(self) -> None:
+        """scroll to keep current line visible, but only if near edge"""
+        if not self._rich_log:
+            return
+
+        # get visible region info
+        visible_height = self.size.height - 1  # subtract 1 for line indicator
+        scroll_y = self.scroll_y
+
+        # estimate which lines are visible (roughly 1 line per scroll unit)
+        # add some padding so we scroll before line actually leaves view
+        scroll_margin = 3  # lines of padding before we scroll
+
+        visible_top = int(scroll_y)
+        visible_bottom = int(scroll_y + visible_height)
+
+        # check if current line is getting close to edges
+        if self.current_line < visible_top + scroll_margin:
+            # too close to top, scroll up
+            self.scroll_to(y=max(0, self.current_line - scroll_margin), animate=False)
+        elif self.current_line > visible_bottom - scroll_margin:
+            # too close to bottom, scroll down
+            self.scroll_to(y=self.current_line - visible_height + scroll_margin, animate=False)
 
     def action_add_comment(self) -> None:
         """trigger adding comment on current line"""

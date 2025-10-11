@@ -1,31 +1,29 @@
-from difflib import SequenceMatcher
-from typing import Dict, List, Set, Tuple, Optional
 from collections import defaultdict
+from difflib import SequenceMatcher
+from typing import Dict, List, Optional, Set, Tuple
 
-from rich.color import blend_rgb, Color
+from rich.color import Color, blend_rgb
 from rich.color_triplet import ColorTriplet
 from rich.segment import Segment
 from rich.style import Style
 from rich.syntax import Syntax
 from rich.text import Text
+from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.content import Content
-from textual.screen import ModalScreen
-from textual.widget import Widget
-from textual.widgets import Static, RichLog, Collapsible, TextArea, Button, Input, Label
+from textual.css.query import NoMatches
 from textual.message import Message
 from textual.reactive import reactive
-from textual import on
-
-from textual.css.query import NoMatches
+from textual.screen import ModalScreen
 from textual.types import NoSelection
-from textual.widgets import Select
+from textual.widget import Widget
+from textual.widgets import Button, Collapsible, Input, Label, RichLog, Select, Static, TextArea
 
 from lazy_github.lib.bindings import LazyGithubBindings
-from lazy_github.lib.diff_parser import Hunk, ChangedFile, parse_diff_from_str, InvalidDiffFormat
-from lazy_github.lib.messages import PullRequestSelected
+from lazy_github.lib.diff_parser import ChangedFile, Hunk, InvalidDiffFormat, parse_diff_from_str
 from lazy_github.lib.github.pull_requests import create_new_review
+from lazy_github.lib.messages import PullRequestSelected
 from lazy_github.models.github import FullPullRequest, ReviewState
 
 DISALLOWED_REVIEW_STATES = [ReviewState.DISMISSED, ReviewState.PENDING]
@@ -33,6 +31,7 @@ DISALLOWED_REVIEW_STATES = [ReviewState.DISMISSED, ReviewState.PENDING]
 
 class TriggerReviewSubmission(Message):
     """message sent to trigger review submission"""
+
     pass
 
 
@@ -44,6 +43,7 @@ MONOKAI_BG_HEX = MONOKAI_BACKGROUND.triplet.hex
 
 class ScrollSync(Message):
     """message to sync scroll between panes"""
+
     def __init__(self, scroll_y: float) -> None:
         super().__init__()
         self.scroll_y = scroll_y
@@ -108,8 +108,7 @@ class UnifiedDiffPane(Widget):
 
         # add current line indicator
         self._line_indicator = Static(
-            f"Line: {self.current_line + 1}/{len(self.lines)}",
-            classes="current-line-indicator"
+            f"Line: {self.current_line + 1}/{len(self.lines)}", classes="current-line-indicator"
         )
         yield self._line_indicator
 
@@ -131,7 +130,7 @@ class UnifiedDiffPane(Widget):
             clean_lines = []
             for line in self.lines:
                 # remove +/- prefix for syntax highlighting
-                if line.startswith(('+', '-', ' ')):
+                if line.startswith(("+", "-", " ")):
                     clean_lines.append(line[1:])
                 else:
                     clean_lines.append(line)
@@ -149,7 +148,9 @@ class UnifiedDiffPane(Widget):
 
             # render to get highlighted text
             from io import StringIO
+
             from rich.console import Console as RenderConsole
+
             temp_console = RenderConsole(file=StringIO(), force_terminal=True, width=200, legacy_windows=False)
 
             # render syntax to segments
@@ -159,8 +160,8 @@ class UnifiedDiffPane(Widget):
             syntax_lines = []
             current_line_segments = []
             for segment in segments:
-                if '\n' in segment.text:
-                    parts = segment.text.split('\n')
+                if "\n" in segment.text:
+                    parts = segment.text.split("\n")
                     for i, part in enumerate(parts):
                         if i > 0:
                             syntax_lines.append(current_line_segments)
@@ -185,16 +186,16 @@ class UnifiedDiffPane(Widget):
 
                 # determine background color
                 if is_current:
-                    if line.startswith('-'):
+                    if line.startswith("-"):
                         bg_color = "#8b0000"  # dark red
-                    elif line.startswith('+'):
+                    elif line.startswith("+"):
                         bg_color = "#006400"  # dark green
                     else:
                         bg_color = "yellow"
                 else:
-                    if line.startswith('-'):
+                    if line.startswith("-"):
                         bg_color = "#3a0a0a"  # subtle dark red
-                    elif line.startswith('+'):
+                    elif line.startswith("+"):
                         bg_color = "#0a3a0a"  # subtle dark green
                     else:
                         bg_color = None
@@ -217,16 +218,16 @@ class UnifiedDiffPane(Widget):
                 line_text = f"{line_num:4d} │ {line}"
 
                 if is_current:
-                    if line.startswith('-'):
+                    if line.startswith("-"):
                         self._rich_log.write(Text(f"► {line_text}", style="bold white on #8b0000"))
-                    elif line.startswith('+'):
+                    elif line.startswith("+"):
                         self._rich_log.write(Text(f"► {line_text}", style="bold white on #006400"))
                     else:
                         self._rich_log.write(Text(f"► {line_text}", style="bold black on yellow"))
                 else:
-                    if line.startswith('-'):
+                    if line.startswith("-"):
                         self._rich_log.write(Text(f"  {line_text}", style="red on #3a0a0a"))
-                    elif line.startswith('+'):
+                    elif line.startswith("+"):
                         self._rich_log.write(Text(f"  {line_text}", style="green on #0a3a0a"))
                     else:
                         self._rich_log.write(Text(f"  {line_text}"))
@@ -271,6 +272,7 @@ class UnifiedDiffPane(Widget):
 
 class CommentData:
     """data class to hold comment information"""
+
     def __init__(
         self,
         hunk: Hunk,
@@ -288,6 +290,7 @@ class CommentData:
 
 class TriggerAddComment(Message):
     """message sent when user wants to add comment via modal"""
+
     def __init__(
         self,
         hunk: Hunk,
@@ -304,6 +307,7 @@ class TriggerAddComment(Message):
 
 class CommentCreated(Message):
     """message sent when comment is created from modal"""
+
     def __init__(self, comment: CommentData) -> None:
         super().__init__()
         self.comment = comment
@@ -311,6 +315,7 @@ class CommentCreated(Message):
 
 class CommentDeleted(Message):
     """message sent when comment is deleted from preview area"""
+
     def __init__(self, comment: CommentData) -> None:
         super().__init__()
         self.comment = comment
@@ -446,11 +451,13 @@ class CommentPreview(Vertical):
         margin: 1 0;
         width: 100%;
         height: auto;
+        min-height: 5;
     }
 
     CommentPreview .comment-line {
         color: $text-muted;
         margin-bottom: 1;
+        height: auto;
     }
 
     CommentPreview .comment-body {
@@ -458,10 +465,12 @@ class CommentPreview(Vertical):
         margin-bottom: 1;
         padding: 1;
         background: $panel;
+        height: auto;
     }
 
     CommentPreview Button {
         width: auto;
+        height: auto;
     }
     """
 
@@ -553,6 +562,23 @@ class SplitDiffViewer(Vertical):
         color: $text-muted;
         margin: 1 0;
     }
+
+    SplitDiffViewer .pending-comments-header {
+        background: $accent;
+        color: $text;
+        text-style: bold;
+        text-align: center;
+        width: 100%;
+        height: 3;
+        margin: 2 0 1 0;
+    }
+
+    SplitDiffViewer .pending-comments-container {
+        width: 100%;
+        height: auto;
+        border: solid $accent;
+        padding: 1;
+    }
     """
 
     BINDINGS = [
@@ -573,6 +599,7 @@ class SplitDiffViewer(Vertical):
         self.reviewer_is_author = reviewer_is_author
         self._pending_comments: list[CommentData] = []
         self._comments_container: Vertical | None = None
+        self._comments_header: Label | None = None
 
     def action_previous_hunk(self) -> None:
         """jump to previous hunk (J key)"""
@@ -617,20 +644,27 @@ class SplitDiffViewer(Vertical):
         message.stop()
 
         # show modal and wait for result
-        result = await self.app.push_screen_wait(
+        if result := await self.app.push_screen_wait(
             AddCommentModal(
                 message.hunk,
                 message.filename,
                 message.line_number,
                 message.line_text,
             )
-        )
-
-        # if user added comment, show it in preview
-        if result:
+        ):
+            # show comments section if first comment
             self._pending_comments.append(result)
+            if len(self._pending_comments) == 1:
+                if self._comments_header:
+                    self._comments_header.display = True
+                if self._comments_container:
+                    self._comments_container.display = True
+
             if self._comments_container:
-                await self._comments_container.mount(CommentPreview(result))
+                if self._comments_container.is_mounted:
+                    preview = CommentPreview(result)
+                    await self._comments_container.mount(preview)
+                    self.notify("New comment added")
 
     async def on_comment_deleted(self, message: CommentDeleted) -> None:
         """handle comment deletion from preview"""
@@ -645,38 +679,59 @@ class SplitDiffViewer(Vertical):
                 await preview.remove()
                 break
 
+        # hide comments section if no more comments
+        if len(self._pending_comments) == 0:
+            if self._comments_header:
+                self._comments_header.display = False
+            if self._comments_container:
+                self._comments_container.display = False
+
     async def on_trigger_review_submission(self, _: TriggerReviewSubmission) -> None:
         """handle review submission"""
-        # get review state
+        # find and disable submit button to prevent duplicate submissions
         try:
-            review_state: ReviewState | NoSelection = self.query_one("#review_status", Select).value
+            submit_button = self.query_one("#submit_review", Button)
+            if submit_button.disabled:
+                # already submitting, ignore
+                return
+            submit_button.disabled = True
         except NoMatches:
-            review_state = ReviewState.COMMENTED
+            submit_button = None
 
-        if isinstance(review_state, NoSelection):
-            self.notify("Please select a status for the new review!", severity="error")
-            return
+        try:
+            try:
+                review_state: ReviewState | NoSelection = self.query_one("#review_status", Select).value
+            except NoMatches:
+                review_state = ReviewState.COMMENTED
 
-        # get review body
-        review_body = self.query_one("#review_summary", Input).value
+            if isinstance(review_state, NoSelection):
+                self.notify("Please select a status for the new review!", severity="error")
+                return
 
-        # use pending comments
-        comments: list[dict[str, str | int]] = []
-        for comment_data in self._pending_comments:
-            # calculate position in diff
-            position = comment_data.hunk.diff_position + comment_data.line_number + 1
+            # Find all the comments
+            comments: list[dict[str, str | int]] = []
+            for comment_data in self._pending_comments:
+                # calculate position in diff
+                position = comment_data.hunk.diff_position + comment_data.line_number + 1
 
-            comments.append({
-                "path": comment_data.filename,
-                "body": comment_data.comment_text,
-                "position": position,
-            })
+                comments.append(
+                    {
+                        "path": comment_data.filename,
+                        "body": comment_data.comment_text,
+                        "position": position,
+                    }
+                )
 
-        # submit review
-        new_review = await create_new_review(self.pr, review_state, review_body, comments)
-        if new_review is not None:
-            self.notify("New review created!")
-            self.post_message(PullRequestSelected(self.pr))
+            # Submit review
+            review_body = self.query_one("#review_summary", Input).value
+            new_review = await create_new_review(self.pr, review_state, review_body, comments)
+            if new_review is not None:
+                self.notify("New review created!")
+                self.post_message(PullRequestSelected(self.pr))
+        finally:
+            # re-enable button when done (success or failure)
+            if submit_button:
+                submit_button.disabled = False
 
     def compose(self) -> ComposeResult:
         """parse diff and create split view widgets"""
@@ -708,9 +763,13 @@ class SplitDiffViewer(Vertical):
                         except Exception as e:
                             yield Static(f"error rendering hunk: {e}", markup=False)
 
-        # add pending comments preview section
-        yield Label("Pending Comments:")
-        self._comments_container = Vertical()
+        # add pending comments preview section (hidden by default)
+        self._comments_header = Label("Pending Comments:", classes="pending-comments-header")
+        self._comments_header.display = False
+        yield self._comments_header
+
+        self._comments_container = Vertical(classes="pending-comments-container")
+        self._comments_container.display = False
         yield self._comments_container
 
         # add submit review button at bottom

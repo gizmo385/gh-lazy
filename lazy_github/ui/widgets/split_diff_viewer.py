@@ -7,8 +7,8 @@ from rich.text import Text
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
-from textual.content import Content
 from textual.css.query import NoMatches
+from textual.events import Key
 from textual.message import Message
 from textual.reactive import reactive
 from textual.screen import ModalScreen
@@ -23,6 +23,17 @@ from lazy_github.lib.messages import PullRequestSelected
 from lazy_github.models.github import FullPullRequest, ReviewState
 
 DISALLOWED_REVIEW_STATES = [ReviewState.DISMISSED, ReviewState.PENDING]
+
+
+class FileFilterInput(Input):
+    """custom input that clears on ESC"""
+
+    def on_key(self, event: Key) -> None:
+        """handle ESC to clear and blur"""
+        if event.key == "escape":
+            self.value = ""
+            self.blur()
+            event.stop()
 
 
 def _count_changes_in_hunk(hunk: Hunk) -> tuple[int, int]:
@@ -695,6 +706,7 @@ class SplitDiffViewer(Vertical):
     BINDINGS = [
         LazyGithubBindings.DIFF_NEXT_HUNK,
         LazyGithubBindings.DIFF_PREVIOUS_HUNK,
+        LazyGithubBindings.DIFF_FILTER_FILES,
     ]
 
     def __init__(
@@ -711,6 +723,8 @@ class SplitDiffViewer(Vertical):
         self._pending_comments: list[CommentData] = []
         self._comments_container: Vertical | None = None
         self._comments_header: Label | None = None
+        self._file_filter_input: Input | None = None
+        self._file_collapsibles: dict[str, Collapsible] = {}  # filename -> collapsible
 
     def action_previous_hunk(self) -> None:
         """jump to previous hunk (J key)"""
@@ -747,6 +761,34 @@ class SplitDiffViewer(Vertical):
             # nothing focused, focus first hunk
             hunks[0].focus()
             hunks[0].scroll_visible()
+
+    def action_focus_file_filter(self) -> None:
+        """focus file filter input (/ key)"""
+        if self._file_filter_input:
+            self._file_filter_input.focus()
+
+    @on(Input.Changed, "#file_filter")
+    def filter_files(self, event: Input.Changed) -> None:
+        """filter files based on input"""
+        filter_text = event.value.lower()
+
+        for filepath, collapsible in self._file_collapsibles.items():
+            # check if filepath matches filter
+            if not filter_text or filter_text in filepath.lower():
+                collapsible.display = True
+            else:
+                collapsible.display = False
+
+    @on(Input.Submitted, "#file_filter")
+    def on_filter_submitted(self, event: Input.Submitted) -> None:
+        """handle enter key - just blur the filter input"""
+        if self._file_filter_input:
+            self._file_filter_input.blur()
+            # focus first visible hunk
+            for pane in self.query(UnifiedDiffPane):
+                if pane.display:
+                    pane.focus()
+                    break
 
     async def on_trigger_add_comment(self, message: TriggerAddComment) -> None:
         """show modal to add comment"""
@@ -844,6 +886,14 @@ class SplitDiffViewer(Vertical):
 
     def compose(self) -> ComposeResult:
         """parse diff and create split view widgets"""
+        # add file filter input at top - get key from binding
+        filter_key = LazyGithubBindings.DIFF_FILTER_FILES.key
+        self._file_filter_input = FileFilterInput(
+            placeholder=f"Filter files (press '{filter_key}' to focus, ESC to clear)",
+            id="file_filter"
+        )
+        yield self._file_filter_input
+
         try:
             diff = parse_diff_from_str(self._raw_diff)
         except InvalidDiffFormat as e:
@@ -857,7 +907,10 @@ class SplitDiffViewer(Vertical):
             # create file-level collapsible with formatted header (colored)
             file_title = _format_file_header(path, changed_file.deleted, changed_file.hunks)
 
-            with Collapsible(title=file_title, collapsed=changed_file.deleted):  # type: ignore
+            with Collapsible(title=file_title, collapsed=changed_file.deleted) as file_collapsible:  # type: ignore
+                # track this collapsible for filtering
+                self._file_collapsibles[path] = file_collapsible
+
                 if changed_file.deleted:
                     yield Static("file was removed", classes="deleted-file", markup=False)
                     continue

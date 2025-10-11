@@ -103,6 +103,7 @@ class LazyGithubBindings:
     DIFF_CLEAR_SELECTION = Binding("escape", "clear_selection", "Clear Selection", show=True, id="diff.clear_selection")
     DIFF_NEXT_HUNK = Binding("J", "next_hunk", "Next Hunk", show=True, id="diff.next_hunk")
     DIFF_PREVIOUS_HUNK = Binding("K", "previous_hunk", "Previous Hunk", show=True, id="diff.previous_hunk")
+    DIFF_FILTER_FILES = Binding("/", "focus_file_filter", "Filter Files", show=True, id="diff.filter_files")
 
     # Notifications
     OPEN_NOTIFICATIONS_MODAL = Binding(

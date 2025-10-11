@@ -1,3 +1,6 @@
+import re
+from pathlib import Path
+
 from rich.segment import Segment
 from rich.syntax import Syntax
 from rich.text import Text
@@ -20,6 +23,100 @@ from lazy_github.lib.messages import PullRequestSelected
 from lazy_github.models.github import FullPullRequest, ReviewState
 
 DISALLOWED_REVIEW_STATES = [ReviewState.DISMISSED, ReviewState.PENDING]
+
+
+def _count_changes_in_hunk(hunk: Hunk) -> tuple[int, int]:
+    """count additions and deletions in a hunk
+
+    returns (additions, deletions)
+    """
+    additions = 0
+    deletions = 0
+    for line in hunk.lines:
+        if line.startswith("+"):
+            additions += 1
+        elif line.startswith("-"):
+            deletions += 1
+    return additions, deletions
+
+
+def _format_file_header(filepath: str, deleted: bool, hunks: list[Hunk]) -> Text:
+    """format file path into readable header with colored change counts"""
+    path = Path(filepath)
+
+    if deleted:
+        return Text(f"🗑️  {path.name} (deleted)")
+
+    # count total additions/deletions across all hunks
+    total_additions = 0
+    total_deletions = 0
+    for hunk in hunks:
+        adds, dels = _count_changes_in_hunk(hunk)
+        total_additions += adds
+        total_deletions += dels
+
+    # build header with colored counts
+    result = Text(f"📄 {path.name}")
+
+    if total_additions > 0 or total_deletions > 0:
+        result.append(" (")
+        if total_additions > 0:
+            result.append(f"+{total_additions}", style="green")
+        if total_additions > 0 and total_deletions > 0:
+            result.append(" ")
+        if total_deletions > 0:
+            result.append(f"-{total_deletions}", style="red")
+        result.append(")")
+
+    return result
+
+
+def _format_hunk_header(hunk: Hunk) -> Text:
+    """format hunk header into readable description with colored change counts
+
+    converts "@@ -10,5 +12,7 @@ function_name" into something like:
+    "Lines 12-19 (+3 -2) • function_name"
+    """
+    # parse hunk header - format is: @@ -old_start,old_count +new_start,new_count @@ context
+    match = re.match(r"@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@\s*(.*)", hunk.header)
+    if not match:
+        return Text(hunk.header)  # fallback to original if parsing fails
+
+    old_start, old_count, new_start, new_count, context = match.groups()
+
+    # calculate line ranges
+    old_count = int(old_count) if old_count else 1
+    new_count = int(new_count) if new_count else 1
+    new_start = int(new_start)
+    new_end = new_start + new_count - 1
+
+    # build readable description
+    if new_count == 1:
+        location = f"Line {new_start}"
+    else:
+        location = f"Lines {new_start}-{new_end}"
+
+    # count actual additions/deletions
+    additions, deletions = _count_changes_in_hunk(hunk)
+
+    # build result with colored change counts
+    result = Text(location)
+
+    if additions > 0 or deletions > 0:
+        result.append(" (")
+        if additions > 0:
+            result.append(f"+{additions}", style="green")
+        if additions > 0 and deletions > 0:
+            result.append(" ")
+        if deletions > 0:
+            result.append(f"-{deletions}", style="red")
+        result.append(")")
+
+    # add context if available (function/class name)
+    if context.strip():
+        result.append(f" • {context.strip()}")
+
+    return result
 
 
 class TriggerReviewSubmission(Message):
@@ -752,19 +849,18 @@ class SplitDiffViewer(Vertical):
             return
 
         for path, changed_file in diff.files.items():
-            # create file-level collapsible - use Content to avoid markup parsing
-            file_title = f"{path} (deleted)" if changed_file.deleted else path
-            file_content = Content.from_text(file_title, markup=False)
+            # create file-level collapsible with formatted header (colored)
+            file_title = _format_file_header(path, changed_file.deleted, changed_file.hunks)
 
-            with Collapsible(title=file_content, collapsed=changed_file.deleted):  # type: ignore
+            with Collapsible(title=file_title, collapsed=changed_file.deleted):  # type: ignore
                 if changed_file.deleted:
                     yield Static("file was removed", classes="deleted-file", markup=False)
                     continue
 
-                # create collapsible for each hunk - use Content to avoid markup parsing
+                # create collapsible for each hunk with formatted header (colored)
                 for hunk in changed_file.hunks:
-                    hunk_content = Content.from_text(hunk.header, markup=False)
-                    with Collapsible(title=hunk_content, collapsed=False):  # type: ignore
+                    hunk_title = _format_hunk_header(hunk)
+                    with Collapsible(title=hunk_title, collapsed=True):  # type: ignore
                         try:
                             yield SplitDiffHunk(hunk, path)
                         except Exception as e:

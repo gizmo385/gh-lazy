@@ -11,13 +11,29 @@ from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.content import Content
+from textual.screen import ModalScreen
 from textual.widget import Widget
-from textual.widgets import Static, RichLog, Collapsible
+from textual.widgets import Static, RichLog, Collapsible, TextArea, Button, Input, Label
 from textual.message import Message
 from textual.reactive import reactive
+from textual import on
+
+from textual.css.query import NoMatches
+from textual.types import NoSelection
+from textual.widgets import Select
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.diff_parser import Hunk, ChangedFile, parse_diff_from_str, InvalidDiffFormat
+from lazy_github.lib.messages import PullRequestSelected
+from lazy_github.lib.github.pull_requests import create_new_review
+from lazy_github.models.github import FullPullRequest, ReviewState
+
+DISALLOWED_REVIEW_STATES = [ReviewState.DISMISSED, ReviewState.PENDING]
+
+
+class TriggerReviewSubmission(Message):
+    """message sent to trigger review submission"""
+    pass
 
 
 # color constants from dunk
@@ -33,113 +49,373 @@ class ScrollSync(Message):
         self.scroll_y = scroll_y
 
 
-class SyncedScrollPane(VerticalScroll):
-    """scrollable pane that can sync vertical scroll with sibling"""
+class UnifiedDiffPane(Widget):
+    """unified diff pane showing all lines with +/- prefixes"""
+
+    can_focus = True
+
+    BINDINGS = [
+        ("j", "line_down", "Line down"),
+        ("k", "line_up", "Line up"),
+        ("c", "add_comment", "Add comment"),
+    ]
 
     DEFAULT_CSS = """
-    SyncedScrollPane {
-        width: 1fr;
-        height: auto;
-        max-height: 30;
+    UnifiedDiffPane {
+        width: 100%;
+        height: 25;
         border: solid $primary-lighten-1;
         overflow-y: auto;
-        overflow-x: auto;
     }
 
-    SyncedScrollPane > Static {
-        width: auto;
+    UnifiedDiffPane:focus {
+        border: solid $accent;
+    }
+
+    UnifiedDiffPane > RichLog {
+        width: 100%;
+        height: auto;
+    }
+
+    UnifiedDiffPane > .current-line-indicator {
+        dock: bottom;
+        background: $accent;
+        color: $text;
+        text-align: right;
+        padding: 0 1;
+        height: 1;
     }
     """
 
-    _syncing = False  # prevent scroll loop
+    current_line = reactive(0)
 
-    def __init__(self, content: Text, classes: str | None = None) -> None:
-        super().__init__(classes=classes)
-        self.content = content
+    def __init__(
+        self,
+        hunk: Hunk,
+        filename: str,
+    ) -> None:
+        super().__init__()
+        self.hunk = hunk
+        self.filename = filename
+        self.lines = hunk.lines  # original diff lines with +/- prefixes
+        self._line_indicator: Static | None = None
+        self._rich_log: RichLog | None = None
 
     def compose(self) -> ComposeResult:
-        # create static with shrink=False so it doesn't wrap
-        static = Static(self.content, markup=False, shrink=False)
-        yield static
+        # create RichLog for displaying diff
+        self._rich_log = RichLog(wrap=False, markup=True)
+        yield self._rich_log
+
+        # add current line indicator
+        self._line_indicator = Static(
+            f"Line: {self.current_line + 1}/{len(self.lines)}",
+            classes="current-line-indicator"
+        )
+        yield self._line_indicator
 
     def on_mount(self) -> None:
-        """watch scroll position after mount"""
-        self.watch(self, "scroll_y", self._on_scroll_y_change)
+        """render initial content when mounted"""
+        self._render_lines()
 
-    def _on_scroll_y_change(self, old_value: float, new_value: float) -> None:
-        """when scroll changes, tell sibling to sync"""
-        if not self._syncing and old_value != new_value:
-            self.post_message(ScrollSync(new_value))
+    def _render_lines(self) -> None:
+        """render all lines with current line highlighted"""
+        if not self._rich_log:
+            return
 
-    def sync_scroll(self, scroll_y: float) -> None:
-        """sync scroll from sibling without triggering another sync"""
-        self._syncing = True
-        self.scroll_y = scroll_y
-        self._syncing = False
+        # clear and rebuild
+        self._rich_log.clear()
+
+        # try to get syntax highlighting
+        try:
+            # build full text for syntax highlighting
+            clean_lines = []
+            for line in self.lines:
+                # remove +/- prefix for syntax highlighting
+                if line.startswith(('+', '-', ' ')):
+                    clean_lines.append(line[1:])
+                else:
+                    clean_lines.append(line)
+
+            full_text = "\n".join(clean_lines)
+
+            # create syntax object
+            syntax = Syntax(
+                full_text,
+                lexer=Syntax.guess_lexer(self.filename),
+                line_numbers=False,
+                theme="monokai",
+                word_wrap=False,
+            )
+
+            # render to get highlighted text
+            from io import StringIO
+            from rich.console import Console as RenderConsole
+            temp_console = RenderConsole(file=StringIO(), force_terminal=True, width=200, legacy_windows=False)
+
+            # render syntax to segments
+            segments = list(temp_console.render(syntax))
+
+            # split into lines
+            syntax_lines = []
+            current_line_segments = []
+            for segment in segments:
+                if '\n' in segment.text:
+                    parts = segment.text.split('\n')
+                    for i, part in enumerate(parts):
+                        if i > 0:
+                            syntax_lines.append(current_line_segments)
+                            current_line_segments = []
+                        if part:
+                            current_line_segments.append(Segment(part, segment.style))
+                else:
+                    current_line_segments.append(segment)
+            if current_line_segments:
+                syntax_lines.append(current_line_segments)
+
+            # now write lines with custom backgrounds
+            for idx, line in enumerate(self.lines):
+                line_num = self.hunk.file_start_line + idx
+                is_current = idx == self.current_line
+
+                # get syntax highlighted text for this line
+                if idx < len(syntax_lines):
+                    syntax_text = Text.assemble(*[(seg.text, seg.style) for seg in syntax_lines[idx]])
+                else:
+                    syntax_text = Text(clean_lines[idx] if idx < len(clean_lines) else "")
+
+                # determine background color
+                if is_current:
+                    if line.startswith('-'):
+                        bg_color = "#8b0000"  # dark red
+                    elif line.startswith('+'):
+                        bg_color = "#006400"  # dark green
+                    else:
+                        bg_color = "yellow"
+                else:
+                    if line.startswith('-'):
+                        bg_color = "#3a0a0a"  # subtle dark red
+                    elif line.startswith('+'):
+                        bg_color = "#0a3a0a"  # subtle dark green
+                    else:
+                        bg_color = None
+
+                # apply background to syntax highlighted text
+                if bg_color:
+                    syntax_text.stylize(f"on {bg_color}")
+
+                # add prefix and line number
+                prefix = "► " if is_current else "  "
+                final_text = Text(f"{prefix}{line_num:4d} │ ") + syntax_text
+
+                self._rich_log.write(final_text)
+
+        except Exception as e:
+            # fallback to simple coloring if syntax highlighting fails
+            for idx, line in enumerate(self.lines):
+                line_num = self.hunk.file_start_line + idx
+                is_current = idx == self.current_line
+                line_text = f"{line_num:4d} │ {line}"
+
+                if is_current:
+                    if line.startswith('-'):
+                        self._rich_log.write(Text(f"► {line_text}", style="bold white on #8b0000"))
+                    elif line.startswith('+'):
+                        self._rich_log.write(Text(f"► {line_text}", style="bold white on #006400"))
+                    else:
+                        self._rich_log.write(Text(f"► {line_text}", style="bold black on yellow"))
+                else:
+                    if line.startswith('-'):
+                        self._rich_log.write(Text(f"  {line_text}", style="red on #3a0a0a"))
+                    elif line.startswith('+'):
+                        self._rich_log.write(Text(f"  {line_text}", style="green on #0a3a0a"))
+                    else:
+                        self._rich_log.write(Text(f"  {line_text}"))
+
+    def watch_current_line(self, old_value: int, new_value: int) -> None:
+        """update display when current line changes"""
+        if self._line_indicator:
+            self._line_indicator.update(f"Line: {new_value + 1}/{len(self.lines)}")
+        # re-render to show new current line highlight
+        self._render_lines()
+
+    def action_line_down(self) -> None:
+        """move to next line"""
+        if self.current_line < len(self.lines) - 1:
+            self.current_line += 1
+            # scroll down one line if at bottom of visible area
+            self.scroll_relative(y=1, animate=False)
+
+    def action_line_up(self) -> None:
+        """move to previous line"""
+        if self.current_line > 0:
+            self.current_line -= 1
+            # scroll up one line if at top of visible area
+            self.scroll_relative(y=-1, animate=False)
+
+    def action_add_comment(self) -> None:
+        """trigger adding comment on current line"""
+        line_text = self.lines[self.current_line].strip() if self.current_line < len(self.lines) else ""
+        self.post_message(
+            TriggerAddComment(
+                self.hunk,
+                self.filename,
+                self.current_line,
+                line_text,
+            )
+        )
+
+    def get_current_line_index(self) -> int:
+        """get the current line index"""
+        return self.current_line
+
+
+class CommentData:
+    """data class to hold comment information"""
+    def __init__(
+        self,
+        hunk: Hunk,
+        filename: str,
+        line_number: int,
+        line_text: str,
+        comment_text: str,
+    ) -> None:
+        self.hunk = hunk
+        self.filename = filename
+        self.line_number = line_number
+        self.line_text = line_text
+        self.comment_text = comment_text
+
+
+class TriggerAddComment(Message):
+    """message sent when user wants to add comment via modal"""
+    def __init__(
+        self,
+        hunk: Hunk,
+        filename: str,
+        line_number: int,
+        line_text: str,
+    ) -> None:
+        super().__init__()
+        self.hunk = hunk
+        self.filename = filename
+        self.line_number = line_number
+        self.line_text = line_text
+
+
+class CommentCreated(Message):
+    """message sent when comment is created from modal"""
+    def __init__(self, comment: CommentData) -> None:
+        super().__init__()
+        self.comment = comment
+
+
+class CommentDeleted(Message):
+    """message sent when comment is deleted from preview area"""
+    def __init__(self, comment: CommentData) -> None:
+        super().__init__()
+        self.comment = comment
+
+
+class AddCommentModal(ModalScreen):
+    """modal screen for adding comment with preview"""
+
+    DEFAULT_CSS = """
+    AddCommentModal {
+        align: center middle;
+    }
+
+    AddCommentModal > Vertical {
+        width: 80;
+        height: auto;
+        border: thick $accent;
+        background: $surface;
+        padding: 1;
+    }
+
+    AddCommentModal Label {
+        margin: 1 0;
+        color: $text;
+        text-style: bold;
+    }
+
+    AddCommentModal Input {
+        margin: 0 0 1 0;
+    }
+
+    AddCommentModal TextArea {
+        height: 10;
+        margin: 0 0 1 0;
+    }
+
+    AddCommentModal Horizontal {
+        width: 100%;
+        height: auto;
+        align-horizontal: right;
+    }
+
+    AddCommentModal Button {
+        margin: 0 1;
+    }
+    """
+
+    def __init__(
+        self,
+        hunk: Hunk,
+        filename: str,
+        line_number: int,
+        line_text: str,
+    ) -> None:
+        super().__init__()
+        self.hunk = hunk
+        self.filename = filename
+        self.line_number = line_number
+        self.line_text = line_text
+
+    def compose(self) -> ComposeResult:
+        with Vertical():
+            yield Label("Add Comment")
+            yield Label("Commenting on:")
+            line_preview = Input(self.line_text, disabled=True)
+            line_preview.can_focus = False
+            yield line_preview
+            yield Label("Comment:")
+            yield TextArea(id="comment_input")
+            with Horizontal():
+                yield Button("Cancel", variant="default", id="cancel")
+                yield Button("Add Comment", variant="success", id="add_comment")
+
+    @on(Button.Pressed, "#cancel")
+    def cancel_comment(self, _: Button.Pressed) -> None:
+        self.dismiss(None)
+
+    @on(Button.Pressed, "#add_comment")
+    def add_comment(self, _: Button.Pressed) -> None:
+        comment_text = self.query_one("#comment_input", TextArea).text
+        if not comment_text.strip():
+            self.notify("Comment cannot be empty!", severity="warning")
+            return
+
+        comment = CommentData(
+            self.hunk,
+            self.filename,
+            self.line_number,
+            self.line_text,
+            comment_text,
+        )
+        self.dismiss(comment)
 
 
 class SplitDiffHunk(Widget):
-    """widget that show single hunk in side-by-side split view with syntax highlighting"""
+    """widget that shows single hunk in unified diff view"""
 
-    # make it focusable so we can tab/navigate to it
-    can_focus = True
+    # don't make this focusable - let the pane inside be focusable instead
+    can_focus = False
 
     DEFAULT_CSS = """
     SplitDiffHunk {
         width: 100%;
         height: auto;
         margin: 1 0;
-        border: solid transparent;
-    }
-
-    SplitDiffHunk:focus-within {
-        border: thick $accent;
-        background: $boost;
-    }
-
-    SplitDiffHunk .header-row {
-        width: 100%;
-        height: auto;
-    }
-
-    SplitDiffHunk .column-header {
-        width: 1fr;
-        height: 1;
-        text-align: center;
-        text-style: bold;
-    }
-
-    SplitDiffHunk .removed-header {
-        background: $error 30%;
-        color: $error;
-    }
-
-    SplitDiffHunk .added-header {
-        background: $success 30%;
-        color: $success;
-    }
-
-    SplitDiffHunk:focus-within .removed-header {
-        background: $error 50%;
-        text-style: bold;
-    }
-
-    SplitDiffHunk:focus-within .added-header {
-        background: $success 50%;
-        text-style: bold;
-    }
-
-    SplitDiffHunk .removed-side {
-        border: solid $error;
-    }
-
-    SplitDiffHunk .added-side {
-        border: solid $success;
-    }
-
-    SplitDiffHunk Horizontal {
-        width: 100%;
-        height: auto;
     }
     """
 
@@ -151,107 +427,98 @@ class SplitDiffHunk(Widget):
         super().__init__()
         self.hunk = hunk
         self.filename = filename
+        self.diff_pane: UnifiedDiffPane | None = None
 
     def compose(self) -> ComposeResult:
-        """create side-by-side diff view with syntax highlighting"""
-        # parse hunk lines to separate source (removed/context) and target (added/context)
-        # track which lines are actually changed vs context
-        source_lines = []
-        target_lines = []
-        source_removed_indices = set()
-        target_added_indices = set()
+        """create unified diff view"""
+        # just create single unified diff pane - much simpler!
+        self.diff_pane = UnifiedDiffPane(self.hunk, self.filename)
+        yield self.diff_pane
 
-        source_idx = 0
-        target_idx = 0
 
-        for line in self.hunk.lines:
-            if line.startswith('-'):
-                # removed line - only in source
-                source_lines.append(line[1:])
-                source_removed_indices.add(source_idx)
-                source_idx += 1
-            elif line.startswith('+'):
-                # added line - only in target
-                target_lines.append(line[1:])
-                target_added_indices.add(target_idx)
-                target_idx += 1
-            else:
-                # context line - in both
-                clean_line = line[1:] if line.startswith(' ') else line
-                source_lines.append(clean_line)
-                target_lines.append(clean_line)
-                source_idx += 1
-                target_idx += 1
+class CommentPreview(Vertical):
+    """widget to show preview of single comment that will be submitted"""
 
-        # create syntax highlighted text with diff highlighting
-        from rich.console import Console
-        from rich.table import Table
+    DEFAULT_CSS = """
+    CommentPreview {
+        border: solid $secondary;
+        padding: 1;
+        margin: 1 0;
+        width: 100%;
+        height: auto;
+    }
 
-        lexer = Syntax.guess_lexer(self.filename)
+    CommentPreview .comment-line {
+        color: $text-muted;
+        margin-bottom: 1;
+    }
 
-        # pad shorter side with empty lines so both same height
-        max_lines = max(len(source_lines), len(target_lines))
-        while len(source_lines) < max_lines:
-            source_lines.append("")
-        while len(target_lines) < max_lines:
-            target_lines.append("")
+    CommentPreview .comment-body {
+        color: $text;
+        margin-bottom: 1;
+        padding: 1;
+        background: $panel;
+    }
 
-        # build source side with red background on removed lines
-        source_text = Text()
-        for idx, line in enumerate(source_lines):
-            if idx in source_removed_indices:
-                # highlight removed line with red background
-                source_text.append(f"{self.hunk.file_start_line + idx:4d} ", style="dim")
-                source_text.append(line, style="on #3a0a0a")  # dark red background
-            else:
-                # context line or padding
-                if line:  # only show line number if not padding
-                    source_text.append(f"{self.hunk.file_start_line + idx:4d} ", style="dim")
-                    source_text.append(line)
-                else:
-                    # empty padding line
-                    source_text.append("     ", style="dim")
-            source_text.append("\n")
+    CommentPreview Button {
+        width: auto;
+    }
+    """
 
-        # build target side with green background on added lines
-        target_text = Text()
-        for idx, line in enumerate(target_lines):
-            if idx in target_added_indices:
-                # highlight added line with green background
-                target_text.append(f"{self.hunk.file_start_line + idx:4d} ", style="dim")
-                target_text.append(line, style="on #0a3a0a")  # dark green background
-            else:
-                # context line or padding
-                if line:  # only show line number if not padding
-                    target_text.append(f"{self.hunk.file_start_line + idx:4d} ", style="dim")
-                    target_text.append(line)
-                else:
-                    # empty padding line
-                    target_text.append("     ", style="dim")
-            target_text.append("\n")
+    def __init__(self, comment: CommentData) -> None:
+        super().__init__()
+        self.comment = comment
 
-        # show headers with proper width
-        with Horizontal(classes="header-row"):
-            yield Static("─ BEFORE", classes="column-header removed-header", markup=False)
-            yield Static("+ AFTER", classes="column-header added-header", markup=False)
+    def compose(self) -> ComposeResult:
+        yield Static(
+            f"{self.comment.filename}:{self.comment.line_number} - {self.comment.line_text}",
+            classes="comment-line",
+            markup=False,
+        )
+        yield Static(self.comment.comment_text, classes="comment-body", markup=False)
+        yield Button("Remove", variant="warning", id="remove_comment")
 
-        # create two synced scroll panes side by side
-        with Horizontal():
-            self.source_pane = SyncedScrollPane(source_text, classes="removed-side")
-            yield self.source_pane
+    @on(Button.Pressed, "#remove_comment")
+    def remove_comment(self, _: Button.Pressed) -> None:
+        self.post_message(CommentDeleted(self.comment))
 
-            self.target_pane = SyncedScrollPane(target_text, classes="added-side")
-            yield self.target_pane
 
-    def on_scroll_sync(self, message: ScrollSync) -> None:
-        """handle scroll sync message from one pane and apply to other"""
-        message.stop()  # don't bubble up
+class SubmitReview(Container):
+    """widget for submitting review with comments"""
 
-        # sync to the pane that didn't send the message
-        if message.control == self.source_pane:
-            self.target_pane.sync_scroll(message.scroll_y)
-        elif message.control == self.target_pane:
-            self.source_pane.sync_scroll(message.scroll_y)
+    DEFAULT_CSS = """
+    SubmitReview {
+        width: 100%;
+        height: auto;
+        margin: 2 0;
+    }
+
+    SubmitReview Button {
+        margin: 1;
+        content-align: center middle;
+    }
+    """
+
+    def __init__(self, can_only_comment: bool = False) -> None:
+        super().__init__()
+        self.can_only_comment = can_only_comment
+
+    def compose(self) -> ComposeResult:
+        submit_review_label = "Add Comments"
+        if not self.can_only_comment:
+            yield Label("Review Status:")
+            yield Select(
+                options=[(s.title().replace("_", " "), s) for s in ReviewState if s not in DISALLOWED_REVIEW_STATES],
+                id="review_status",
+                value=ReviewState.COMMENTED,
+            )
+            submit_review_label = "Submit Review"
+        yield Input(placeholder="Review summary", id="review_summary")
+        yield Button(submit_review_label, id="submit_review", variant="success")
+
+    @on(Button.Pressed, "#submit_review")
+    def trigger_review_submission(self, _: Button.Pressed) -> None:
+        self.post_message(TriggerReviewSubmission())
 
 
 class SplitDiffViewer(Vertical):
@@ -260,6 +527,14 @@ class SplitDiffViewer(Vertical):
     DEFAULT_CSS = """
     SplitDiffViewer {
         width: 100%;
+        height: auto;
+    }
+
+    SplitDiffViewer Collapsible {
+        height: auto;
+    }
+
+    SplitDiffViewer Collapsible > Contents {
         height: auto;
     }
 
@@ -285,9 +560,19 @@ class SplitDiffViewer(Vertical):
         LazyGithubBindings.DIFF_PREVIOUS_HUNK,
     ]
 
-    def __init__(self, diff: str, id: str | None = None) -> None:
+    def __init__(
+        self,
+        diff: str,
+        pr: FullPullRequest,
+        reviewer_is_author: bool,
+        id: str | None = None,
+    ) -> None:
         super().__init__(id=id)
         self._raw_diff = diff
+        self.pr = pr
+        self.reviewer_is_author = reviewer_is_author
+        self._pending_comments: list[CommentData] = []
+        self._comments_container: Vertical | None = None
 
     def action_previous_hunk(self) -> None:
         """jump to previous hunk (J key)"""
@@ -327,6 +612,72 @@ class SplitDiffViewer(Vertical):
             hunks[0].focus()
             hunks[0].scroll_visible()
 
+    async def on_trigger_add_comment(self, message: TriggerAddComment) -> None:
+        """show modal to add comment"""
+        message.stop()
+
+        # show modal and wait for result
+        result = await self.app.push_screen_wait(
+            AddCommentModal(
+                message.hunk,
+                message.filename,
+                message.line_number,
+                message.line_text,
+            )
+        )
+
+        # if user added comment, show it in preview
+        if result:
+            self._pending_comments.append(result)
+            if self._comments_container:
+                await self._comments_container.mount(CommentPreview(result))
+
+    async def on_comment_deleted(self, message: CommentDeleted) -> None:
+        """handle comment deletion from preview"""
+        message.stop()
+
+        if message.comment in self._pending_comments:
+            self._pending_comments.remove(message.comment)
+
+        # remove the preview widget
+        for preview in self.query(CommentPreview):
+            if preview.comment == message.comment:
+                await preview.remove()
+                break
+
+    async def on_trigger_review_submission(self, _: TriggerReviewSubmission) -> None:
+        """handle review submission"""
+        # get review state
+        try:
+            review_state: ReviewState | NoSelection = self.query_one("#review_status", Select).value
+        except NoMatches:
+            review_state = ReviewState.COMMENTED
+
+        if isinstance(review_state, NoSelection):
+            self.notify("Please select a status for the new review!", severity="error")
+            return
+
+        # get review body
+        review_body = self.query_one("#review_summary", Input).value
+
+        # use pending comments
+        comments: list[dict[str, str | int]] = []
+        for comment_data in self._pending_comments:
+            # calculate position in diff
+            position = comment_data.hunk.diff_position + comment_data.line_number + 1
+
+            comments.append({
+                "path": comment_data.filename,
+                "body": comment_data.comment_text,
+                "position": position,
+            })
+
+        # submit review
+        new_review = await create_new_review(self.pr, review_state, review_body, comments)
+        if new_review is not None:
+            self.notify("New review created!")
+            self.post_message(PullRequestSelected(self.pr))
+
     def compose(self) -> ComposeResult:
         """parse diff and create split view widgets"""
         try:
@@ -356,3 +707,11 @@ class SplitDiffViewer(Vertical):
                             yield SplitDiffHunk(hunk, path)
                         except Exception as e:
                             yield Static(f"error rendering hunk: {e}", markup=False)
+
+        # add pending comments preview section
+        yield Label("Pending Comments:")
+        self._comments_container = Vertical()
+        yield self._comments_container
+
+        # add submit review button at bottom
+        yield SubmitReview(can_only_comment=self.reviewer_is_author)

@@ -275,8 +275,7 @@ class DiffViewerContainer(VerticalScroll):
     def compose(self) -> ComposeResult:
         # use new split view if enabled
         if self._use_split_view:
-            yield SplitDiffViewer(self._raw_diff)
-            yield SubmitReview(can_only_comment=self.reviewer_is_author)
+            yield SplitDiffViewer(self._raw_diff, self.pr, self.reviewer_is_author)
             return
 
         # otherwise use old collapsible view

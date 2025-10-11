@@ -44,7 +44,7 @@ class UnifiedDiffPane(Widget):
     BINDINGS = [
         ("j", "line_down", "Line down"),
         ("k", "line_up", "Line up"),
-        ("c", "add_comment", "Add comment"),
+        LazyGithubBindings.DIFF_ADD_COMMENT,
     ]
 
     DEFAULT_CSS = """

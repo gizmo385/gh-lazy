@@ -277,11 +277,7 @@ class MainViewPane(Container):
     def action_focus_tabs(self) -> None:
         tabbed_content = self.query_one("#selection_detail_tabs", TabbedContent)
         if tabbed_content.children and tabbed_content.tab_count > 0:
-            if tabbed_content.has_focus_within:
-                tabs = tabbed_content.query_one(Tabs)
-                tabs.action_next_tab()
-            else:
-                tabbed_content.children[0].focus()
+            tabbed_content.children[0].focus()
 
     def compose(self) -> ComposeResult:
         yield SelectionsPane(id="selections_pane")

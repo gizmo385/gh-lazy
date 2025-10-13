@@ -33,7 +33,7 @@ def cli(ctx: click.Context) -> None:
 )
 def run(auth_backend: BackendType | None):
     """Run LazyGithub"""
-    if auth_backend:
+    if isinstance(auth_backend, BackendType):
         with Config.to_edit() as config:
             config.api.client_type = auth_backend
     app.run()

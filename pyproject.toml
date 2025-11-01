@@ -47,6 +47,10 @@ include = ["lazy_github*"]
 [tool.ruff]
 line-length = 120
 
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
 [dependency-groups]
 dev = [
     "pyright",

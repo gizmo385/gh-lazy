@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
 uv sync
-.venv/bin/ruff check --select I --fix
-.venv/bin/ruff check --fix
-.venv/bin/pyright
+uv run ruff check --select I --fix
+uv run ruff check --fix
+uv run pyright

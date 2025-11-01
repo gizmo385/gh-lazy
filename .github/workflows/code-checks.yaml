@@ -21,7 +21,10 @@ jobs:
         python-version: "3.11"
     - uses: yezz123/setup-uv@v4
     - run: uv sync
-    - run: .venv/bin/ruff check
+    - name: Run linter
+      run: ./lint.sh
+    - name: Run tests
+      run: uv run pytest tests/ -v
 
   notify-on-failure:
     name: Notify on Code Quality Failures

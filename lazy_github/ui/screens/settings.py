@@ -88,7 +88,13 @@ class FieldSetting(Container):
             else:
                 return Select(options=theme_options, value=self.value, id=id)
         elif self.field.annotation == list[str]:
-            return Input(value=str(", ".join(self.value)), id=id, validators=[ListOfStringValidator()])
+            # Handle both list and string values (string might happen due to validation bugs)
+            if isinstance(self.value, list):
+                display_value = ", ".join(self.value)
+            else:
+                # If it's a string (shouldn't happen but defensive programming), display as-is
+                display_value = str(self.value)
+            return Input(value=display_value, id=id, validators=[ListOfStringValidator()])
         elif self.field.annotation == Optional[Path]:
             return PathInput(self.field_name, self.field, self.value)
         else:

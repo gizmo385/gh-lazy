@@ -47,10 +47,11 @@ include = ["lazy_github*"]
 [tool.ruff]
 line-length = 120
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pyright",
     "ruff",
-	"pre-commit",
-	"textual-dev",
+    "pre-commit",
+    "textual-dev",
+    "pytest>=8.4.2",
 ]

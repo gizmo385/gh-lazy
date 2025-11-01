@@ -3,9 +3,10 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Generator, Optional
+from typing import TYPE_CHECKING, Annotated, Any, Generator, Optional
 
-from pydantic import BaseModel, field_serializer, field_validator
+from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
+from pydantic.functional_validators import BeforeValidator
 from textual.theme import BUILTIN_THEMES, Theme
 
 from lazy_github.lib.constants import CONFIG_FOLDER, IssueOwnerFilter, IssueStateFilter
@@ -25,6 +26,22 @@ def _parse_string_list(cls, v) -> list[str]:
     if isinstance(v, str):
         return list(set(s.strip() for s in v.split(",") if s.strip()))
     return v
+
+
+def _validate_string_list(v: str | list[str]) -> list[str]:
+    """Validator that accepts both string and list inputs, returning a list."""
+    if isinstance(v, str):
+        return list(set(s.strip() for s in v.split(",") if s.strip()))
+    return v
+
+
+# Type that accepts str or list[str] as input but always stores as list[str]
+# For type checking, treat as list[str] since validators ensure it's always converted
+# For runtime, allow both types to pass through Pydantic validation
+if TYPE_CHECKING:
+    StringList = list[str]
+else:
+    StringList = Annotated[str | list[str], BeforeValidator(_validate_string_list)]
 
 
 class AppearanceSettings(BaseModel):
@@ -76,20 +93,17 @@ class BindingsSettings(BaseModel):
 class RepositorySettings(BaseModel):
     """Repository-specific settings"""
 
+    model_config = ConfigDict(validate_assignment=True)
+
     @field_serializer("additional_repos_to_track", "favorites")
     @classmethod
     def serialize_string_list(cls, string_list: str | list[str]) -> list[str]:
         return _serialize_string_list(cls, string_list)
 
-    @field_validator("additional_repos_to_track", "favorites", mode="before")
-    @classmethod
-    def parse_string_list(cls, v) -> list[str]:
-        return _parse_string_list(cls, v)
-
-    additional_repos_to_track: list[str] = []
+    additional_repos_to_track: StringList = []
     """Records repositories the user is not an owner of but would like to show in the UI and keep track of"""
 
-    favorites: list[str] = []
+    favorites: StringList = []
     """Records the repositories the user would like pinned at the top of the repositories table"""
 
 
@@ -104,15 +118,12 @@ class MergeMethod(StrEnum):
 class PullRequestSettings(BaseModel):
     """Changes how pull requests are retrieved from the Github API"""
 
+    model_config = ConfigDict(validate_assignment=True)
+
     @field_serializer("additional_suggested_pr_reviewers")
     @classmethod
     def serialize_string_list(cls, string_list: str | list[str]) -> list[str]:
         return _serialize_string_list(cls, string_list)
-
-    @field_validator("additional_suggested_pr_reviewers", mode="before")
-    @classmethod
-    def parse_string_list(cls, v) -> list[str]:
-        return _parse_string_list(cls, v)
 
     state_filter: IssueStateFilter = IssueStateFilter.ALL
     """Controls if we're only listing pull requests in a particular state (ex: Open)"""
@@ -123,7 +134,7 @@ class PullRequestSettings(BaseModel):
     preferred_merge_method: MergeMethod = MergeMethod.SQUASH
     """How we will request that Github merge pull requests"""
 
-    additional_suggested_pr_reviewers: list[str] = []
+    additional_suggested_pr_reviewers: StringList = []
     """An list of additional usernames to suggest as reviewers on PRs"""
 
     preload_pull_request_for_current_commit: bool = False

@@ -3,6 +3,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from lazy_github.lib.constants import CHECKMARK, X_MARK
+
 
 class User(BaseModel):
     login: str
@@ -117,6 +119,15 @@ class ReviewState(StrEnum):
     DISMISSED = "DISMISSED"
     PENDING = "PENDING"
 
+    def to_display(self) -> str:
+        match self:
+            case ReviewState.APPROVED:
+                return f"[greenyellow]{CHECKMARK} Approved[/]"
+            case ReviewState.CHANGES_REQUESTED:
+                return f"[red]{X_MARK} Changes Requested[/red]"
+            case _:
+                return self.title()
+
 
 class ReviewComment(IssueComment):
     pull_request_review_id: int
@@ -203,6 +214,17 @@ class CheckStatusState(StrEnum):
     PENDING = "pending"
     ERROR = "error"
     FAILURE = "failure"
+
+    def to_display(self) -> str:
+        match self:
+            case CheckStatusState.SUCCESS:
+                return f"[greenyellow]{CHECKMARK} Passed[/]"
+            case CheckStatusState.PENDING:
+                return "[yellow]... Pending[/yellow]"
+            case CheckStatusState.FAILURE:
+                return f"[red]{X_MARK} Failed[/red]"
+            case CheckStatusState.ERROR:
+                return f"[red]{X_MARK} Errored[/red]"
 
 
 class CheckStatus(BaseModel):

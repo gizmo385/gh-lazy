@@ -10,7 +10,16 @@ from lazy_github.models.github import (
     Notification,
     PartialPullRequest,
     Repository,
+    Review,
 )
+
+
+class ReviewsLoaded(Message):
+    """A message sent when reviews for a pull request have been loaded"""
+
+    def __init__(self, reviews: list[Review]) -> None:
+        super().__init__()
+        self.reviews = reviews
 
 
 class RepoSelected(Message):

@@ -7,7 +7,6 @@ from textual.coordinate import Coordinate
 from textual.widgets import Collapsible, DataTable, Label, ListItem, ListView, Markdown, Rule, TabPane
 
 from lazy_github.lib.bindings import LazyGithubBindings
-from lazy_github.lib.constants import CHECKMARK, X_MARK
 from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.backends.protocol import GithubApiRequestFailed
 from lazy_github.lib.github.checks import combined_check_status_for_ref
@@ -21,13 +20,14 @@ from lazy_github.lib.github.pull_requests import (
     reconstruct_review_conversation_hierarchy,
 )
 from lazy_github.lib.logging import lg
-from lazy_github.lib.messages import IssuesAndPullRequestsFetched, PullRequestSelected
+from lazy_github.lib.messages import IssuesAndPullRequestsFetched, PullRequestSelected, ReviewsLoaded
 from lazy_github.models.github import (
     CheckStatus,
-    CheckStatusState,
     FullPullRequest,
     PartialPullRequest,
     Repository,
+    Review,
+    ReviewState,
 )
 from lazy_github.ui.screens.create_or_edit_pull_request import CreateOrEditPullRequestModal
 from lazy_github.ui.screens.lookup_pull_request import LookupPullRequestModal
@@ -179,17 +179,11 @@ class PrOverviewTabPane(TabPane):
         self.pr = pr
 
     def _status_check_to_label(self, status: CheckStatus) -> str:
-        match status.state:
-            case CheckStatusState.SUCCESS:
-                status_summary = f"[greenyellow]{CHECKMARK} Passed[/]"
-            case CheckStatusState.PENDING:
-                status_summary = "[yellow]... Pending[/yellow]"
-            case CheckStatusState.FAILURE:
-                status_summary = f"[red]{X_MARK} Failed[/red]"
-            case CheckStatusState.ERROR:
-                status_summary = f"[red]{X_MARK} Errored[/red]"
-
+        status_summary = status.state.to_display()
         return f"{status_summary} {status.context} - {status.description}"
+
+    def _review_to_label(self, review: Review) -> str:
+        return f"{review.user.login}: {review.state.to_display()}"
 
     async def action_merge_pull_request(self) -> None:
         if self.pr.merged_at is not None:
@@ -270,13 +264,49 @@ class PrOverviewTabPane(TabPane):
             yield Rule()
 
             # This is where we'll store information about the status checks being run on the PR
-            with Collapsible(title="Status Checks: ...", id="collapsible_status_checks") as c:
-                c.loading = True
-                # TODO: We should probably make this a table? That would allow follow-up actions to be performed as well
+            with Collapsible(title="Status Checks: ...", id="collapsible_status_checks") as status_checks:
+                status_checks.loading = True
                 yield ListView(id="status_checks_list")
+
+            # This is where we'll store information about the PR reviews
+            with Collapsible(title="Reviews: ...", id="collapsible_reviews") as reviews:
+                reviews.loading = True
+                yield ListView(id="reviews_list")
 
             yield Rule()
             yield Markdown(self.pr.body)
+
+    @work
+    async def add_reviews(self, reviews: list[Review]) -> None:
+        reviews_collapsible_container = self.query_one("#collapsible_reviews", Collapsible)
+        if not reviews:
+            reviews_collapsible_container.title = "No reviews"
+            reviews_collapsible_container.loading = False
+            return
+
+        reviews_list = self.query_one("#reviews_list", ListView)
+        latest_reviews_by_author: dict[str, Review] = {}
+        for review in reviews:
+            if not review.submitted_at:
+                continue
+
+            author = review.user.login
+            if existing_review := latest_reviews_by_author.get(author):
+                if existing_review.submitted_at is None or review.submitted_at > existing_review.submitted_at:
+                    latest_reviews_by_author[author] = review
+            else:
+                latest_reviews_by_author[author] = review
+
+        latest_reviews = latest_reviews_by_author.values()
+        reviews_list.extend(ListItem(Label(Content.from_markup(self._review_to_label(r)))) for r in latest_reviews)
+
+        if all(r.state == ReviewState.APPROVED for r in latest_reviews):
+            reviews_collapsible_container.title = f"PR Reviews: {ReviewState.APPROVED.to_display()}"
+        elif any(r.state == ReviewState.CHANGES_REQUESTED for r in latest_reviews):
+            reviews_collapsible_container.title = f"PR Reviews: {ReviewState.CHANGES_REQUESTED.to_display()}"
+        else:
+            reviews_collapsible_container.title = "PR Reviews Summary"
+        reviews_collapsible_container.loading = False
 
     @work
     async def load_checks(self) -> None:
@@ -290,7 +320,8 @@ class PrOverviewTabPane(TabPane):
             status_checks_list.extend(
                 ListItem(Label(Content.from_markup(status_label))) for status_label in status_labels
             )
-            collapse_container.title = f"Status checks: {combined_check_status.state.value.title()}"
+
+            collapse_container.title = f"Status checks: {combined_check_status.state.to_display()}"
         else:
             collapse_container.title = "No status checks on PR"
 
@@ -343,15 +374,14 @@ class PrConversationTabPane(TabPane):
     def comments_and_reviews(self) -> VerticalScroll:
         return self.query_one("#pr_comments_and_reviews", VerticalScroll)
 
-    @work
-    async def fetch_conversation(self) -> None:
-        reviews = await get_reviews(self.pr)
-        review_hierarchy = reconstruct_review_conversation_hierarchy(reviews)
+    @on(ReviewsLoaded)
+    async def handle_reviews_loaded(self, message: ReviewsLoaded) -> None:
+        review_hierarchy = reconstruct_review_conversation_hierarchy(message.reviews)
         comments = await get_comments(self.pr)
         self.comments_and_reviews.remove_children()
 
         handled_comment_node_ids: list[int] = []
-        for review in reviews:
+        for review in message.reviews:
             if review.body:
                 handled_comment_node_ids.extend([c.id for c in review.comments])
             review_container = ReviewContainer(self.pr, review, review_hierarchy)
@@ -366,6 +396,11 @@ class PrConversationTabPane(TabPane):
             self.comments_and_reviews.mount(Label("No reviews or comments available"))
 
         self.loading = False
+
+    @work
+    async def fetch_conversation(self) -> None:
+        reviews = await get_reviews(self.pr)
+        self.post_message(ReviewsLoaded(reviews))
 
     def on_mount(self) -> None:
         self.loading = True

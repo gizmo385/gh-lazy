@@ -6,6 +6,7 @@ from textual.app import ComposeResult
 from textual.command import Hit, Hits, Provider
 from textual.containers import Container, Horizontal
 from textual.content import Content
+from textual.css.query import NoMatches, WrongType
 from textual.reactive import reactive
 from textual.screen import Screen
 from textual.timer import Timer
@@ -29,6 +30,7 @@ from lazy_github.lib.messages import (
     IssueSelected,
     PullRequestSelected,
     RepoSelected,
+    ReviewsLoaded,
 )
 from lazy_github.models.github import Issue, PartialPullRequest, Repository
 from lazy_github.ui.screens.create_or_edit_pull_request import CreateOrEditPullRequestModal
@@ -318,6 +320,15 @@ class MainViewPane(Container):
         await tabbed_content.add_pane(IssueConversationTabPane(issue))
         tabbed_content.children[0].focus()
         self.details.border_title = Content.from_markup(f"\\[5] Issue #{issue.number} Details")
+
+    @on(ReviewsLoaded)
+    async def handle_reviews_loaded(self, message: ReviewsLoaded) -> None:
+        try:
+            overview_pane = self.query_one(PrOverviewTabPane)
+        except WrongType | NoMatches:
+            pass
+        else:
+            overview_pane.add_reviews(message.reviews)
 
     @on(PullRequestSelected)
     async def handle_pull_request_selection(self, message: PullRequestSelected) -> None:

@@ -27,7 +27,7 @@ def current_local_repo_full_name(remote: str = "origin") -> str | None:
         cmd = ["git", "remote", "get-url", remote]
         if original_pwd:
             cmd = ["git", "-C", original_pwd, "remote", "get-url", remote]
-        
+
         output = check_output(cmd, stderr=DEVNULL).decode().strip()
     except SubprocessError:
         return None
@@ -55,7 +55,7 @@ def current_local_branch_name() -> str | None:
         cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
         if original_pwd:
             cmd = ["git", "-C", original_pwd, "rev-parse", "--abbrev-ref", "HEAD"]
-        
+
         return check_output(cmd, stderr=DEVNULL).decode().strip()
     except SubprocessError:
         return None
@@ -69,7 +69,7 @@ def current_local_commit() -> str | None:
         cmd = ["git", "rev-parse", "HEAD"]
         if original_pwd:
             cmd = ["git", "-C", original_pwd, "rev-parse", "HEAD"]
-        
+
         return check_output(cmd, stderr=DEVNULL).decode().strip()
     except SubprocessError:
         return None

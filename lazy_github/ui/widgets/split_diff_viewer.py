@@ -889,8 +889,7 @@ class SplitDiffViewer(Vertical):
         # add file filter input at top - get key from binding
         filter_key = LazyGithubBindings.DIFF_FILTER_FILES.key
         self._file_filter_input = FileFilterInput(
-            placeholder=f"Filter files (press '{filter_key}' to focus, ESC to clear)",
-            id="file_filter"
+            placeholder=f"Filter files (press '{filter_key}' to focus, ESC to clear)", id="file_filter"
         )
         yield self._file_filter_input
 

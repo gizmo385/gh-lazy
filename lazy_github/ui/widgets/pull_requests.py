@@ -4,7 +4,16 @@ from textual.app import ComposeResult
 from textual.containers import Container, ScrollableContainer, VerticalScroll
 from textual.content import Content
 from textual.coordinate import Coordinate
-from textual.widgets import Collapsible, DataTable, Label, ListItem, ListView, Markdown, Rule, TabPane
+from textual.widgets import (
+    Collapsible,
+    DataTable,
+    Label,
+    ListItem,
+    ListView,
+    Markdown,
+    Rule,
+    TabPane,
+)
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
@@ -20,7 +29,11 @@ from lazy_github.lib.github.pull_requests import (
     reconstruct_review_conversation_hierarchy,
 )
 from lazy_github.lib.logging import lg
-from lazy_github.lib.messages import IssuesAndPullRequestsFetched, PullRequestSelected, ReviewsLoaded
+from lazy_github.lib.messages import (
+    IssuesAndPullRequestsFetched,
+    PullRequestSelected,
+    ReviewsLoaded,
+)
 from lazy_github.models.github import (
     CheckStatus,
     FullPullRequest,
@@ -29,7 +42,9 @@ from lazy_github.models.github import (
     Review,
     ReviewState,
 )
-from lazy_github.ui.screens.create_or_edit_pull_request import CreateOrEditPullRequestModal
+from lazy_github.ui.screens.create_or_edit_pull_request import (
+    CreateOrEditPullRequestModal,
+)
 from lazy_github.ui.screens.lookup_pull_request import LookupPullRequestModal
 from lazy_github.ui.screens.new_comment import NewCommentModal
 from lazy_github.ui.widgets.common import (

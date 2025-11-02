@@ -161,3 +161,7 @@ cython_debug/
 
 # nix stuff
 result
+
+# AI stuff
+.claude
+AGENTS.md

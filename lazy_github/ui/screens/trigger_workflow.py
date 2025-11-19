@@ -3,14 +3,13 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal
 from textual.screen import ModalScreen
 from textual.validation import Length
-from textual.widgets import Button, Input, Label, Markdown
+from textual.widgets import Button, Input, Label, Markdown, Select
 
 from lazy_github.lib.bindings import LazyGithubBindings
-from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.branches import list_branches
 from lazy_github.lib.github.workflows import create_dispatch_event
 from lazy_github.lib.messages import BranchesLoaded
-from lazy_github.models.github import Workflow
+from lazy_github.models.github import Repository, Workflow
 from lazy_github.ui.widgets.common import LazyGithubFooter
 
 
@@ -38,19 +37,29 @@ class TriggerWorkflowContainer(Container):
     }
     """
 
-    def __init__(self, workflow: Workflow) -> None:
+    def __init__(self, workflows: list[Workflow], repo: Repository) -> None:
         super().__init__()
-        self.workflow = workflow
+        self.workflows = workflows
+        self.repo = repo
+        # Create a mapping from workflow ID to workflow object
+        self.workflows_by_id = {w.id: w for w in workflows}
 
     def compose(self) -> ComposeResult:
-        assert LazyGithubContext.current_repo is not None, "Unexpectedly missing current repo in trigger workflow modal"
-        yield Markdown(f"# Triggering workflow: {self.workflow.name}")
+        yield Markdown("# Trigger Workflow")
+        yield Label("[bold]Workflow[/bold]")
+        # Create options for the Select widget using workflow ID as the value (hashable)
+        workflow_options = [(w.name, w.id) for w in self.workflows]
+        yield Select(
+            options=workflow_options,
+            id="workflow_select",
+            prompt="Select a workflow",
+        )
         yield Label("[bold]Branch[/bold]")
         yield Input(
             id="branch_to_build",
             placeholder="Choose a branch",
             validators=Length(minimum=1),
-            value=LazyGithubContext.current_repo.default_branch,
+            value=self.repo.default_branch or "main",
         )
         yield TriggerWorkflowButtons()
 
@@ -62,11 +71,7 @@ class TriggerWorkflowContainer(Container):
 
     @work
     async def fetch_branches(self) -> None:
-        # This shouldn't happen since the current repo needs to be set to open this modal, but we'll validate it to
-        # make sure
-        assert LazyGithubContext.current_repo is not None, "Current repo unexpectedly missing in new PR modal"
-
-        branches = await list_branches(LazyGithubContext.current_repo)
+        branches = await list_branches(self.repo)
         self.post_message(BranchesLoaded(branches))
 
     async def on_mount(self) -> None:
@@ -82,7 +87,7 @@ class TriggerWorkflowModal(ModalScreen[bool]):
 
     TriggerWorkflowContainer {
         width: 60;
-        max-height: 20;
+        max-height: 25;
         border: thick $background 80%;
         background: $surface-lighten-3;
     }
@@ -90,30 +95,46 @@ class TriggerWorkflowModal(ModalScreen[bool]):
 
     BINDINGS = [LazyGithubBindings.SUBMIT_DIALOG, LazyGithubBindings.CLOSE_DIALOG]
 
-    def __init__(self, workflow: Workflow) -> None:
+    def __init__(self, workflows: list[Workflow], repo: Repository) -> None:
         super().__init__()
-        self.workflow = workflow
+        self.workflows = workflows
+        self.repo = repo
 
     def compose(self) -> ComposeResult:
-        yield TriggerWorkflowContainer(self.workflow)
+        yield TriggerWorkflowContainer(self.workflows, self.repo)
         yield LazyGithubFooter()
 
     @on(Button.Pressed, "#trigger")
     async def action_submit(self) -> None:
-        assert LazyGithubContext.current_repo is not None, "Unexpectedly missing current repo!"
+        container = self.query_one(TriggerWorkflowContainer)
+        workflow_select = self.query_one("#workflow_select", Select)
         branch_input = self.query_one("#branch_to_build", Input)
+
+        # Validate workflow is selected
+        if workflow_select.value == Select.BLANK:
+            self.notify("You must select a workflow!", title="Validation Error", severity="error")
+            return
+
+        # Validate branch input
         branch_input.validate(branch_input.value)
-        if branch_input.is_valid:
-            if await create_dispatch_event(LazyGithubContext.current_repo, self.workflow, branch_input.value):
-                self.dismiss(True)
-            else:
-                self.notify(
-                    "Could not trigger build - are you sure this workflow supports dispatch events?",
-                    title="Error Triggering Build",
-                    severity="error",
-                )
-        else:
+        if not branch_input.is_valid:
             self.notify("You must enter a branch!", title="Validation Error", severity="error")
+            return
+
+        # Look up the workflow from the selected ID
+        workflow_id = workflow_select.value
+        # Type guard: we already checked it's not BLANK above
+        assert isinstance(workflow_id, int), "Workflow ID should be an int"
+        selected_workflow = container.workflows_by_id[workflow_id]
+
+        if await create_dispatch_event(self.repo, selected_workflow, branch_input.value):
+            self.dismiss(True)
+        else:
+            self.notify(
+                "Could not trigger build - are you sure this workflow supports dispatch events?",
+                title="Error Triggering Build",
+                severity="error",
+            )
 
     @on(Button.Pressed, "#cancel")
     async def action_close(self) -> None:

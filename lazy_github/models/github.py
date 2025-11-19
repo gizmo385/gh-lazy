@@ -177,11 +177,14 @@ class Workflow(BaseModel):
 
 
 class WorkflowRun(BaseModel):
+    id: int
     name: str
     display_title: str
     path: str
     run_number: int
+    run_attempt: int | None = None
     head_branch: str
+    head_sha: str
     status: str
     conclusion: str | None = None
     event: str
@@ -190,6 +193,66 @@ class WorkflowRun(BaseModel):
     repository: Repository
     created_at: datetime
     updated_at: datetime
+    html_url: str
+    jobs_url: str
+    logs_url: str
+    run_started_at: datetime | None = None
+
+
+class WorkflowStepStatus(StrEnum):
+    QUEUED = "queued"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+
+
+class WorkflowStepConclusion(StrEnum):
+    SUCCESS = "success"
+    FAILURE = "failure"
+    CANCELLED = "cancelled"
+    SKIPPED = "skipped"
+    NEUTRAL = "neutral"
+    ACTION_REQUIRED = "action_required"
+    TIMED_OUT = "timed_out"
+
+
+class WorkflowStep(BaseModel):
+    name: str
+    status: WorkflowStepStatus
+    conclusion: WorkflowStepConclusion | None = None
+    number: int
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
+
+class WorkflowJobStatus(StrEnum):
+    QUEUED = "queued"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    WAITING = "waiting"
+
+
+class WorkflowJobConclusion(StrEnum):
+    SUCCESS = "success"
+    FAILURE = "failure"
+    CANCELLED = "cancelled"
+    SKIPPED = "skipped"
+    NEUTRAL = "neutral"
+    ACTION_REQUIRED = "action_required"
+    TIMED_OUT = "timed_out"
+
+
+class WorkflowJob(BaseModel):
+    id: int
+    run_id: int
+    run_attempt: int | None = None
+    name: str
+    status: WorkflowJobStatus
+    conclusion: WorkflowJobConclusion | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    steps: list[WorkflowStep] = []
+    html_url: str
+    labels: list[str] = []
 
 
 class NotificationSubject(BaseModel):

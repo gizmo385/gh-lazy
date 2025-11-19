@@ -12,7 +12,7 @@ from textual.screen import Screen
 from textual.timer import Timer
 from textual.types import IgnoreReturnCallbackType
 from textual.widget import Widget
-from textual.widgets import TabbedContent, Tabs
+from textual.widgets import DataTable, TabbedContent
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.constants import NOTIFICATION_REFRESH_INTERVAL
@@ -31,8 +31,9 @@ from lazy_github.lib.messages import (
     PullRequestSelected,
     RepoSelected,
     ReviewsLoaded,
+    WorkflowRunSelected,
 )
-from lazy_github.models.github import Issue, PartialPullRequest, Repository
+from lazy_github.models.github import Issue, PartialPullRequest, Repository, WorkflowRun
 from lazy_github.ui.screens.create_or_edit_pull_request import CreateOrEditPullRequestModal
 from lazy_github.ui.screens.debug import DebugModal
 from lazy_github.ui.screens.new_issue import NewIssueModal
@@ -49,6 +50,11 @@ from lazy_github.ui.widgets.pull_requests import (
     PullRequestsContainer,
 )
 from lazy_github.ui.widgets.repositories import ReposContainer
+from lazy_github.ui.widgets.workflow_run_details import (
+    WorkflowRunJobsTabPane,
+    WorkflowRunLogsTabPane,
+    WorkflowRunOverviewTabPane,
+)
 from lazy_github.ui.widgets.workflows import WorkflowsContainer
 
 
@@ -268,13 +274,9 @@ class MainViewPane(Container):
             target.focus()
 
     def action_focus_workflow_tabs(self) -> None:
-        tabbed_content = self.query_one("#workflow_tabs", TabbedContent)
-        if tabbed_content.children and tabbed_content.tab_count > 0:
-            if tabbed_content.has_focus_within:
-                tabs = tabbed_content.query_one(Tabs)
-                tabs.action_next_tab()
-            else:
-                tabbed_content.children[0].focus()
+        # Focus the workflow runs table directly (no more tabs)
+        workflow_table = self.query_one("#workflow_runs_table", DataTable)
+        workflow_table.focus()
 
     def action_focus_tabs(self) -> None:
         tabbed_content = self.query_one("#selection_detail_tabs", TabbedContent)
@@ -321,6 +323,16 @@ class MainViewPane(Container):
         tabbed_content.children[0].focus()
         self.details.border_title = Content.from_markup(f"\\[5] Issue #{issue.number} Details")
 
+    async def load_workflow_run(self, workflow_run: WorkflowRun, focus_run_details: bool = True) -> None:
+        tabbed_content = self.query_one("#selection_detail_tabs", TabbedContent)
+        await tabbed_content.clear_panes()
+        await tabbed_content.add_pane(WorkflowRunOverviewTabPane(workflow_run))
+        await tabbed_content.add_pane(WorkflowRunJobsTabPane(workflow_run))
+        await tabbed_content.add_pane(WorkflowRunLogsTabPane(workflow_run))
+        self.details.border_title = Content.from_markup(f"\\[5] Workflow Run #{workflow_run.run_number} Details")
+        if focus_run_details:
+            tabbed_content.children[0].focus()
+
     @on(ReviewsLoaded)
     async def handle_reviews_loaded(self, message: ReviewsLoaded) -> None:
         try:
@@ -337,6 +349,10 @@ class MainViewPane(Container):
     @on(IssueSelected)
     async def handle_issue_selection(self, message: IssueSelected) -> None:
         await self.load_issue(message.issue)
+
+    @on(WorkflowRunSelected)
+    async def handle_workflow_run_selection(self, message: WorkflowRunSelected) -> None:
+        await self.load_workflow_run(message.workflow_run, message.focus_run_details)
 
 
 class LazyGithubCommand(NamedTuple):

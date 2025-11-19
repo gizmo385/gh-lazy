@@ -95,6 +95,10 @@ class LazyGithubBindings:
 
     # Workflows
     TRIGGER_WORKFLOW = Binding("T", "trigger_workflow", "Trigger Workflow", show=True, id="workflows.trigger")
+    VIEW_WORKFLOW_RUN = Binding(
+        "enter", "select_cursor", "View Run Details", show=True, id="workflows.view_run_details"
+    )
+    VIEW_JOB_LOGS = Binding("l", "view_logs", "View Job Logs", show=True, id="workflows.view_job_logs")
 
     # Diff Viewer
     DIFF_ADD_COMMENT = Binding("c", "add_comment", "Add Comment", show=True, id="diff.add_comment")

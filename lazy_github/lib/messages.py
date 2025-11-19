@@ -11,6 +11,7 @@ from lazy_github.models.github import (
     PartialPullRequest,
     Repository,
     Review,
+    WorkflowRun,
 )
 
 
@@ -130,3 +131,14 @@ class IssueUpdated(Message):
     def __init__(self, issue: Issue) -> None:
         super().__init__()
         self.issue = issue
+
+
+class WorkflowRunSelected(Message):
+    """
+    A message indicating that the user is looking for additional information on a particular workflow run.
+    """
+
+    def __init__(self, workflow_run: WorkflowRun, focus_run_details: bool = True) -> None:
+        super().__init__()
+        self.workflow_run = workflow_run
+        self.focus_run_details = focus_run_details

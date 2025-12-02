@@ -14,7 +14,6 @@ from textual.events import Key
 from textual.fuzzy import Matcher
 from textual.screen import ModalScreen
 from textual.theme import BUILTIN_THEMES, Theme
-from textual.validation import ValidationResult, Validator
 from textual.widget import Widget
 from textual.widgets import (
     Button,
@@ -24,6 +23,7 @@ from textual.widgets import (
     RichLog,
     Rule,
     Select,
+    SelectionList,
     Static,
     Switch,
     TabbedContent,
@@ -44,14 +44,6 @@ def _id_for_field_input(field_name: str) -> str:
     return f"adjust_{field_name}_input"
 
 
-class ListOfStringValidator(Validator):
-    def validate(self, value: str) -> ValidationResult:
-        stripped_value = value.strip()
-        if stripped_value.endswith(",") or stripped_value.startswith(","):
-            return self.failure("No trailing or preceeding commas")
-        return self.success()
-
-
 class PathInput(Input):
     """Simple input field for file paths"""
 
@@ -60,12 +52,62 @@ class PathInput(Input):
         super().__init__(value=current_filename, id=_id_for_field_input(field_name), placeholder="Enter file path...")
 
 
+class ListSettingWidget(Vertical):
+    """Widget for managing list settings with Input + SelectionList"""
+
+    DEFAULT_CSS = """
+    ListSettingWidget {
+        height: auto;
+        width: 70;
+    }
+
+    ListSettingWidget Input {
+        width: 100%;
+    }
+
+    ListSettingWidget SelectionList {
+        height: auto;
+        max-height: 10;
+        border: solid $primary;
+        margin-top: 1;
+    }
+    """
+
+    def __init__(self, field_name: str, items: list[str]) -> None:
+        super().__init__(id=_id_for_field_input(field_name))
+        self.field_name = field_name
+        self.items = items.copy()
+        self.new_item_input = Input(placeholder="Add new item...", id=f"{field_name}_new_item_input")
+        self.selection_list = SelectionList[str](
+            *[(item, item, True) for item in self.items], id=f"{field_name}_selection_list"
+        )
+
+    def compose(self) -> ComposeResult:
+        yield self.new_item_input
+        yield self.selection_list
+
+    @on(Input.Submitted)
+    async def submit_new_item(self, event: Input.Submitted) -> None:
+        if event.input.id == f"{self.field_name}_new_item_input":
+            new_item = event.input.value.strip()
+            if new_item and new_item not in self.items:
+                self.items.append(new_item)
+                self.selection_list.add_option((new_item, new_item, True))
+                event.input.value = ""
+
+    @property
+    def value(self) -> list[str]:
+        """Return only the selected items from the SelectionList"""
+        return list(self.selection_list.selected)
+
+
 class FieldSetting(Container):
     DEFAULT_CSS = """
     FieldSetting {
         layout: grid;
         grid-size: 2;
         height: auto;
+        margin-bottom: 2;
     }
 
     Input {
@@ -88,13 +130,7 @@ class FieldSetting(Container):
             else:
                 return Select(options=theme_options, value=self.value, id=id)
         elif self.field.annotation == list[str]:
-            # Handle both list and string values (string might happen due to validation bugs)
-            if isinstance(self.value, list):
-                display_value = ", ".join(self.value)
-            else:
-                # If it's a string (shouldn't happen but defensive programming), display as-is
-                display_value = str(self.value)
-            return Input(value=display_value, id=id, validators=[ListOfStringValidator()])
+            return ListSettingWidget(self.field_name, self.value)
         elif self.field.annotation == Optional[Path]:
             return PathInput(self.field_name, self.field, self.value)
         else:
@@ -313,7 +349,7 @@ class SettingsContainer(Container):
                         # If there isn't a way to adjust this setting, skip it
                         continue
 
-                    if not isinstance(updated_value_input, (Switch, Input, Select)):
+                    if not isinstance(updated_value_input, (Switch, Input, Select, ListSettingWidget)):
                         raise TypeError(
                             f"Unexpected value input type: {type(updated_value_input)}. Please file an issue"
                         )

@@ -189,7 +189,7 @@ class TestListSerializationDeserialization:
         """Test that PR reviewers deserialize correctly from JSON arrays"""
         json_data = {"additional_suggested_pr_reviewers": ["reviewer1", "reviewer2", "reviewer3"]}
 
-        pr_settings = PullRequestSettings(**json_data)
+        pr_settings = PullRequestSettings.model_validate(json_data)
 
         assert isinstance(pr_settings.additional_suggested_pr_reviewers, list)
         assert pr_settings.additional_suggested_pr_reviewers == ["reviewer1", "reviewer2", "reviewer3"]

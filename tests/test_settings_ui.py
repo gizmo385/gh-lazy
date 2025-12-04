@@ -82,35 +82,44 @@ class TestListToStringConversion:
         assert fixed_display_value == "gizmo385/dotfiles"
 
 
-class TestInputValueParsing:
-    """Test how input values are parsed back into the config"""
+class TestListSettingBehavior:
+    """Test how list settings work with the new ListSettingWidget approach"""
 
-    def test_comma_separated_input_is_parsed_correctly(self):
-        """Test that user input with commas is parsed into a list"""
-        # Simulate user entering comma-separated values
-        user_input = "repo1, repo2, repo3"
+    def test_config_accepts_list_values(self):
+        """Test that config accepts proper list values"""
+        # With the new approach, the UI (ListSettingWidget) handles string input
+        # and the config only receives proper lists
+        repos = ["repo1", "repo2", "repo3"]
 
-        # Create a RepositorySettings instance with the string
-        # The validator should convert it to a list
-        settings = RepositorySettings(favorites=user_input)  # type: ignore[arg-type]
+        settings = RepositorySettings(favorites=repos)
 
         assert isinstance(settings.favorites, list)
-        assert set(settings.favorites) == {"repo1", "repo2", "repo3"}
+        assert settings.favorites == ["repo1", "repo2", "repo3"]
 
-    def test_single_value_input_is_parsed_correctly(self):
-        """Test that a single value without commas becomes a single-item list"""
-        user_input = "single-repo"
+    def test_config_accepts_single_item_list(self):
+        """Test that a single-item list works correctly"""
+        repos = ["single-repo"]
 
-        settings = RepositorySettings(favorites=user_input)  # type: ignore[arg-type]
+        settings = RepositorySettings(favorites=repos)
 
         assert isinstance(settings.favorites, list)
         assert settings.favorites == ["single-repo"]
 
-    def test_empty_input_is_parsed_correctly(self):
-        """Test that an empty string becomes an empty list"""
-        user_input = ""
+    def test_config_accepts_empty_list(self):
+        """Test that an empty list works correctly"""
+        repos = []
 
-        settings = RepositorySettings(favorites=user_input)  # type: ignore[arg-type]
+        settings = RepositorySettings(favorites=repos)
 
         assert isinstance(settings.favorites, list)
         assert settings.favorites == []
+
+    def test_config_rejects_string_values(self):
+        """Test that string values are properly rejected (no auto-conversion)"""
+        import pytest
+        from pydantic import ValidationError
+
+        # The new design doesn't do string-to-list conversion
+        # This prevents the serialization bug we were fixing
+        with pytest.raises(ValidationError):
+            RepositorySettings(favorites="repo1, repo2")  # type: ignore[arg-type]

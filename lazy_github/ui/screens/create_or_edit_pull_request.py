@@ -5,6 +5,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.content import Content
 from textual.screen import ModalScreen
+from textual.timer import Timer
 from textual.types import DuplicateID
 from textual.widgets import Button, Input, Label, Markdown, Rule, SelectionList, Switch, TextArea
 from textual.widgets.selection_list import Selection
@@ -17,6 +18,7 @@ from lazy_github.lib.git_cli import (
     push_branch_to_remote,
 )
 from lazy_github.lib.github.branches import list_branches
+from lazy_github.lib.pr_drafts import PullRequestDraft, clear_pr_draft, load_pr_draft, save_pr_draft
 from lazy_github.lib.github.pull_requests import (
     create_pull_request,
     list_requested_reviewers,
@@ -289,6 +291,7 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
             "[yellow]Warning:[/yellow] Current local branch has no configured upstream", id="branch_missing"
         )
         self.branch_missing_label.display = False
+        self._draft_save_timer: Timer | None = None
 
     def compose(self) -> ComposeResult:
         pr_template = LazyGithubContext.config.pull_requests.pull_request_template
@@ -335,12 +338,96 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
         if not does_branch_have_configured_upstream(LazyGithubContext.current_directory_branch):
             self.branch_missing_label.display = True
 
+    def _save_draft_state(self) -> None:
+        """Save the current form state as a draft, or clear if empty."""
+        if self.existing_pull_request or not LazyGithubContext.current_repo:
+            return
+
+        title = self.query_one("#pr_title", Input).value.strip()
+        description = self.query_one("#pr_description", TextArea).text.strip()
+        base_ref = self.query_one("#base_ref", Input).value
+        head_ref = self.query_one("#head_ref", Input).value
+        is_draft = self.query_one("#pr_is_draft", Switch).value
+        reviewers = list(self.query_one(ReviewerSelectionContainer).reviewers)
+
+        # If there's no meaningful content, clear any existing draft
+        if not title and not description and not reviewers:
+            clear_pr_draft(LazyGithubContext.current_repo.full_name)
+            return
+
+        draft = PullRequestDraft(
+            repo_full_name=LazyGithubContext.current_repo.full_name,
+            title=title,
+            description=description,
+            base_ref=base_ref,
+            head_ref=head_ref,
+            is_draft=is_draft,
+            reviewers=reviewers,
+        )
+        save_pr_draft(draft)
+
+    def _restore_draft_state(self) -> None:
+        """Restore form state from a saved draft if one exists."""
+        if self.existing_pull_request or not LazyGithubContext.current_repo:
+            return
+
+        draft = load_pr_draft(LazyGithubContext.current_repo.full_name)
+        if not draft:
+            return
+
+        # Check if draft has meaningful content
+        has_content = draft.title.strip() or draft.description.strip() or draft.reviewers
+
+        self.query_one("#pr_title", Input).value = draft.title
+        self.query_one("#pr_description", TextArea).text = draft.description
+        self.query_one("#base_ref", Input).value = draft.base_ref
+        self.query_one("#head_ref", Input).value = draft.head_ref
+        self.query_one("#pr_is_draft", Switch).value = draft.is_draft
+
+        reviewer_container = self.query_one(ReviewerSelectionContainer)
+        for reviewer in draft.reviewers:
+            reviewer_container.reviewers.add(reviewer)
+            try:
+                reviewer_container.reviewers_selection_list.add_option(
+                    Selection(reviewer, reviewer, id=reviewer, initial_state=True)
+                )
+            except DuplicateID:
+                pass
+        if draft.reviewers:
+            reviewer_container.current_reviewers_label.display = True
+            reviewer_container.reviewers_selection_list.display = True
+
+        if has_content:
+            self.notify("Restored saved PR draft")
+
     async def on_mount(self) -> None:
         self.query_one("#pr_title", Input).focus()
         self.ensure_directory_branch_has_configured_upstream()
+        if not self.existing_pull_request:
+            self._restore_draft_state()
+
+    def _schedule_draft_save(self) -> None:
+        """Schedule a debounced draft save after 2 seconds of inactivity."""
+        if self.existing_pull_request:
+            return
+        if self._draft_save_timer is not None:
+            self._draft_save_timer.stop()
+        self._draft_save_timer = self.set_timer(2, self._save_draft_state)
+
+    @on(Input.Changed, "#pr_title")
+    @on(Input.Changed, "#base_ref")
+    @on(Input.Changed, "#head_ref")
+    def _on_input_changed(self, _: Input.Changed) -> None:
+        self._schedule_draft_save()
+
+    @on(TextArea.Changed, "#pr_description")
+    def _on_description_changed(self, _: TextArea.Changed) -> None:
+        self._schedule_draft_save()
 
     @on(Button.Pressed, "#cancel_new_pr")
     def cancel_pull_request(self, _: Button.Pressed):
+        if not self.existing_pull_request:
+            self._save_draft_state()
         self.app.pop_screen()
 
     async def _edit_pr(self) -> None:
@@ -418,6 +505,7 @@ class CreateOrEditPullRequestContainer(VerticalScroll):
             lg.info(f"Requesting PR reviews from: {', '.join(reviewers)}")
             await request_reviews(created_pr, reviewers)
 
+        clear_pr_draft(LazyGithubContext.current_repo.full_name)
         self.notify("Successfully created PR!")
         self.post_message(PullRequestCreatedOrUpdated(created_pr))
 
@@ -461,6 +549,9 @@ class CreateOrEditPullRequestModal(ModalScreen[FullPullRequest | None]):
         yield CreateOrEditPullRequestContainer(self.existing_pull_request)
 
     def action_close(self) -> None:
+        if not self.existing_pull_request:
+            container = self.query_one(CreateOrEditPullRequestContainer)
+            container._save_draft_state()
         self.dismiss(None)
 
     @on(PullRequestCreatedOrUpdated)

@@ -480,9 +480,19 @@ class LazyGithubMainScreen(Screen):
 
     async def action_toggle_ui(self, ui_to_hide: str):
         widget = self.query_one(f"#{ui_to_hide}", Widget)
-        new_value = not widget.visible
-        widget.display = not new_value
-        widget.visible = not new_value
+        new_value = not widget.display
+        widget.display = new_value
+        widget.visible = new_value
+
+        # If showing a section and we have a repo loaded, refresh its data
+        if new_value and LazyGithubContext.current_repo:
+            repo = LazyGithubContext.current_repo
+            selections = self.main_view_pane.selections
+            if ui_to_hide == "workflows":
+                selections.workflows.initialize_tables_from_cache(repo)
+                selections.workflows.load_repo(repo)
+            elif ui_to_hide in ("issues", "pull_requests"):
+                selections.fetch_issues_and_pull_requests(repo)
 
     async def action_show_settings_modal(self) -> None:
         self.app.push_screen(SettingsModal())

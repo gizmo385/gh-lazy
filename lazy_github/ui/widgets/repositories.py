@@ -73,6 +73,7 @@ class ReposContainer(LazyGithubContainer):
         self.name_column_index = self.table.get_column_index("name")
         self.private_column_index = self.table.get_column_index("private")
 
+        self.searchable_table.loading = True
         self.load_repos()
 
     async def get_selected_repo(self) -> Repository:
@@ -111,6 +112,7 @@ class ReposContainer(LazyGithubContainer):
             repos = await repos_api.list_all()
         except GithubApiRequestFailed:
             lg.exception("Error fetching repositories from Github API")
+            self.searchable_table.loading = False
             return
 
         # Loading any additionally tracked repos
@@ -121,6 +123,7 @@ class ReposContainer(LazyGithubContainer):
         repos.extend(filter(None, additional_repos))
         self.set_repositories(repos)
         self.check_current_directory_repo()
+        self.searchable_table.loading = False
 
     async def action_toggle_favorite_repo(self):
         repo = await self.get_selected_repo()

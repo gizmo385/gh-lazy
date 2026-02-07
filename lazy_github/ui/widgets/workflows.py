@@ -17,7 +17,13 @@ from lazy_github.ui.widgets.common import LazilyLoadedDataTable, LazyGithubConta
 
 
 def workflow_run_to_cell(run: WorkflowRun) -> TableRow:
-    return (run.created_at.strftime("%Y-%m-%d %H:%M"), run.conclusion or run.status, run.name, run.display_title, run.run_number)
+    return (
+        run.created_at.strftime("%Y-%m-%d %H:%M"),
+        run.conclusion or run.status,
+        run.name,
+        run.display_title,
+        run.run_number,
+    )
 
 
 class WorkflowRunsContainer(Container):
@@ -53,7 +59,10 @@ class WorkflowRunsContainer(Container):
 
         self.run_number_column_id = self.table.get_column_index("run_number")
 
+        self.searchable_table.loading = True
+
     def load_cached_workflow_runs(self, repo: Repository) -> None:
+        self.searchable_table.loading = True
         self.searchable_table.initialize_from_cache(repo, WorkflowRun)
 
     async def fetch_more_workflow_runs(
@@ -69,6 +78,7 @@ class WorkflowRunsContainer(Container):
         self.searchable_table.change_load_function(partial(self.fetch_more_workflow_runs, repo))
         self.searchable_table.can_load_more = True
         self.searchable_table.current_batch = 1
+        self.searchable_table.loading = False
 
     def get_selected_workflow_run(self) -> WorkflowRun:
         """Get the currently selected workflow run from the table."""
@@ -125,7 +135,6 @@ class WorkflowsContainer(LazyGithubContainer):
         if not self.workflows:
             self.notify("No workflows found in this repository", severity="warning")
             return
-
 
         if await self.app.push_screen_wait(TriggerWorkflowModal(self.workflows, self.current_repo)):
             self.notify("Successfully triggered workflow")

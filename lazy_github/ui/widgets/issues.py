@@ -80,7 +80,10 @@ class IssuesContainer(LazyGithubContainer):
         self.number_column_index = self.table.get_column_index("number")
         self.title_column_index = self.table.get_column_index("title")
 
+        self.searchable_table.loading = True
+
     def load_cached_issues_for_repo(self, repo: Repository) -> None:
+        self.searchable_table.loading = True
         self.searchable_table.initialize_from_cache(repo, Issue)
 
     async def on_issues_and_pull_requests_fetched(self, message: IssuesAndPullRequestsFetched) -> None:
@@ -90,6 +93,7 @@ class IssuesContainer(LazyGithubContainer):
         self.searchable_table.change_load_function(self.fetch_more_issues)
         self.searchable_table.can_load_more = True
         self.searchable_table.current_batch = 1
+        self.searchable_table.loading = False
 
     async def get_selected_issue(self) -> Issue:
         pr_number_coord = Coordinate(self.table.cursor_row, self.number_column_index)

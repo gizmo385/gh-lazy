@@ -123,6 +123,7 @@ class PullRequestsContainer(LazyGithubContainer):
         return [i for i in next_page if isinstance(i, PartialPullRequest)]
 
     def load_cached_pull_requests_for_repo(self, repo: Repository) -> None:
+        self.searchable_table.loading = True
         self.searchable_table.initialize_from_cache(repo, PartialPullRequest)
 
     @property
@@ -144,6 +145,8 @@ class PullRequestsContainer(LazyGithubContainer):
         self.number_column_index = self.table.get_column_index("number")
         self.title_column_index = self.table.get_column_index("title")
 
+        self.searchable_table.loading = True
+
     async def on_issues_and_pull_requests_fetched(self, message: IssuesAndPullRequestsFetched) -> None:
         message.stop()
 
@@ -151,6 +154,7 @@ class PullRequestsContainer(LazyGithubContainer):
         self.searchable_table.change_load_function(self.fetch_more_pull_requests)
         self.searchable_table.can_load_more = True
         self.searchable_table.current_batch = 1
+        self.searchable_table.loading = False
 
     @work
     async def load_pull_request_for_current_commit(self) -> None:
@@ -279,17 +283,20 @@ class PrOverviewTabPane(TabPane):
             yield Rule()
 
             # This is where we'll store information about the status checks being run on the PR
-            with Collapsible(title="Status Checks: ...", id="collapsible_status_checks") as status_checks:
-                status_checks.loading = True
+            with Collapsible(title="Status Checks: ...", id="collapsible_status_checks"):
                 yield ListView(id="status_checks_list")
 
             # This is where we'll store information about the PR reviews
-            with Collapsible(title="Reviews: ...", id="collapsible_reviews") as reviews:
-                reviews.loading = True
+            with Collapsible(title="Reviews: ...", id="collapsible_reviews"):
                 yield ListView(id="reviews_list")
 
             yield Rule()
             yield Markdown(self.pr.body)
+
+    def on_mount(self) -> None:
+        self.query_one("#collapsible_status_checks", Collapsible).loading = True
+        self.query_one("#collapsible_reviews", Collapsible).loading = True
+        self.load_checks()
 
     @work
     async def add_reviews(self, reviews: list[Review]) -> None:
@@ -341,9 +348,6 @@ class PrOverviewTabPane(TabPane):
             collapse_container.title = "No status checks on PR"
 
         collapse_container.loading = False
-
-    async def on_mount(self) -> None:
-        _ = self.load_checks()
 
 
 class PrDiffTabPane(TabPane):

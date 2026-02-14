@@ -7,6 +7,14 @@ from lazy_github.models.github import Issue, IssueComment, PartialPullRequest, R
 DEFAULT_PAGE_SIZE = 30
 
 
+async def get_issue_by_number(repo: Repository, issue_number: int) -> Issue:
+    """Looks up a single issue by number in the given repository"""
+    url = f"/repos/{repo.owner.login}/{repo.name}/issues/{issue_number}"
+    response = await LazyGithubContext.client.get(url, headers=github_headers())
+    response.raise_for_status()
+    return Issue(**response.json(), repo=repo)
+
+
 class UpdateIssuePayload(TypedDict):
     title: str | None
     body: str | None

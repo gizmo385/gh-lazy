@@ -38,6 +38,13 @@ class LazyGithubBindings:
         "I", "open_issue", "New Issue", id="issue.new", tooltip="Open a new issue in the current repository"
     )
     EDIT_ISSUE = Binding("E", "edit_issue", "Edit Issue", id="issue.edit", tooltip="Edit the selected issue")
+    LOOKUP_ISSUE = Binding(
+        "O",
+        "lookup_issue",
+        "Lookup Issue",
+        id="issue.lookup",
+        tooltip="Lookup an issue in the current repository",
+    )
 
     # Pull request actions
     OPEN_PULL_REQUEST = Binding(

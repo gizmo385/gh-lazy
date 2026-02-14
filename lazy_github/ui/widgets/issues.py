@@ -15,6 +15,7 @@ from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import IssuesAndPullRequestsFetched, IssueSelected, NewCommentCreated
 from lazy_github.models.github import Issue, IssueState, PartialPullRequest, Repository
 from lazy_github.ui.screens.edit_issue import EditIssueModal
+from lazy_github.ui.screens.lookup_issue import LookupIssueModal
 from lazy_github.ui.screens.new_comment import NewCommentModal
 from lazy_github.ui.widgets.common import LazilyLoadedDataTable, LazyGithubContainer, TableRow
 from lazy_github.ui.widgets.conversations import IssueCommentContainer
@@ -25,7 +26,7 @@ def issue_to_cell(issue: Issue) -> TableRow:
 
 
 class IssuesContainer(LazyGithubContainer):
-    BINDINGS = [LazyGithubBindings.EDIT_ISSUE]
+    BINDINGS = [LazyGithubBindings.LOOKUP_ISSUE, LazyGithubBindings.EDIT_ISSUE]
 
     issues: Dict[int, Issue] = {}
     status_column_index = -1
@@ -111,6 +112,15 @@ class IssuesContainer(LazyGithubContainer):
 
     async def action_edit_issue(self) -> None:
         self.trigger_edit_issue_flow()
+
+    @work
+    async def action_lookup_issue(self) -> None:
+        if issue := await self.app.push_screen_wait(LookupIssueModal()):
+            if not self.searchable_table.item_in_table(issue):
+                self.searchable_table.add_item(issue)
+
+            self.post_message(IssueSelected(issue))
+            lg.info(f"Looked up Issue #{issue.number}")
 
     @on(DataTable.RowSelected, "#issues_table")
     async def issue_selected(self) -> None:

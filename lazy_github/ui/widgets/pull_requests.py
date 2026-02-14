@@ -145,8 +145,6 @@ class PullRequestsContainer(LazyGithubContainer):
         self.number_column_index = self.table.get_column_index("number")
         self.title_column_index = self.table.get_column_index("title")
 
-        self.searchable_table.loading = True
-
     async def on_issues_and_pull_requests_fetched(self, message: IssuesAndPullRequestsFetched) -> None:
         message.stop()
 

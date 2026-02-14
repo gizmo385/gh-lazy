@@ -81,8 +81,6 @@ class IssuesContainer(LazyGithubContainer):
         self.number_column_index = self.table.get_column_index("number")
         self.title_column_index = self.table.get_column_index("title")
 
-        self.searchable_table.loading = True
-
     def load_cached_issues_for_repo(self, repo: Repository) -> None:
         self.searchable_table.loading = True
         self.searchable_table.initialize_from_cache(repo, Issue)

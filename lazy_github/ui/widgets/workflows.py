@@ -59,8 +59,6 @@ class WorkflowRunsContainer(Container):
 
         self.run_number_column_id = self.table.get_column_index("run_number")
 
-        self.searchable_table.loading = True
-
     def load_cached_workflow_runs(self, repo: Repository) -> None:
         self.searchable_table.loading = True
         self.searchable_table.initialize_from_cache(repo, WorkflowRun)

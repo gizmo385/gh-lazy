@@ -28,6 +28,7 @@ from lazy_github.lib.github.pull_requests import (
     merge_pull_request,
     reconstruct_review_conversation_hierarchy,
 )
+from lazy_github.lib.github.reactions import list_reactions_on_issue
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import (
     IssuesAndPullRequestsFetched,
@@ -195,6 +196,25 @@ class PrOverviewTabPane(TabPane):
         super().__init__("Overview", id="overview_pane")
         self.pr = pr
 
+    @property
+    def collapsible_status_checks(self) -> Collapsible:
+        return self.query_one("#collapsible_status_checks", Collapsible)
+
+    @property
+    def collapsible_reviews(self) -> Collapsible:
+        return self.query_one("#collapsible_reviews", Collapsible)
+
+    @property
+    def collapsible_reactions(self) -> Collapsible:
+        return self.query_one("#collapsible_reactions", Collapsible)
+
+    def on_mount(self) -> None:
+        self.collapsible_status_checks.loading = True
+        self.collapsible_reviews.loading = True
+        self.collapsible_reactions.loading = True
+        self.load_checks()
+        self.load_reactions()
+
     def _status_check_to_label(self, status: CheckStatus) -> str:
         status_summary = status.state.to_display()
         return f"{status_summary} {status.context} - {status.description}"
@@ -278,30 +298,25 @@ class PrOverviewTabPane(TabPane):
                 merged_date = self.pr.merged_at.strftime("%c")
                 date_text += f" • Merged on {merged_date}"
             yield Label(Content.from_markup(date_text))
-            yield Rule()
 
-            # This is where we'll store information about the status checks being run on the PR
+            with Collapsible(title="Reactions: ...", id="collapsible_reactions"):
+                yield ListView(id="reactions_list")
+
             with Collapsible(title="Status Checks: ...", id="collapsible_status_checks"):
                 yield ListView(id="status_checks_list")
 
-            # This is where we'll store information about the PR reviews
             with Collapsible(title="Reviews: ...", id="collapsible_reviews"):
                 yield ListView(id="reviews_list")
 
             yield Rule()
             yield Markdown(self.pr.body)
 
-    def on_mount(self) -> None:
-        self.query_one("#collapsible_status_checks", Collapsible).loading = True
-        self.query_one("#collapsible_reviews", Collapsible).loading = True
-        self.load_checks()
-
     @work
     async def add_reviews(self, reviews: list[Review]) -> None:
-        reviews_collapsible_container = self.query_one("#collapsible_reviews", Collapsible)
         if not reviews:
-            reviews_collapsible_container.title = "No reviews"
-            reviews_collapsible_container.loading = False
+            self.collapsible_reviews.title = "No reviews"
+            self.collapsible_reviews.display = False
+            self.collapsible_reviews.loading = False
             return
 
         reviews_list = self.query_one("#reviews_list", ListView)
@@ -321,12 +336,37 @@ class PrOverviewTabPane(TabPane):
         reviews_list.extend(ListItem(Label(Content.from_markup(self._review_to_label(r)))) for r in latest_reviews)
 
         if all(r.state == ReviewState.APPROVED for r in latest_reviews):
-            reviews_collapsible_container.title = f"PR Reviews: {ReviewState.APPROVED.to_display()}"
+            self.collapsible_reviews.title = f"PR Reviews: {ReviewState.APPROVED.to_display()}"
         elif any(r.state == ReviewState.CHANGES_REQUESTED for r in latest_reviews):
-            reviews_collapsible_container.title = f"PR Reviews: {ReviewState.CHANGES_REQUESTED.to_display()}"
+            self.collapsible_reviews.title = f"PR Reviews: {ReviewState.CHANGES_REQUESTED.to_display()}"
         else:
-            reviews_collapsible_container.title = "PR Reviews Summary"
-        reviews_collapsible_container.loading = False
+            self.collapsible_reviews.title = "PR Reviews Summary"
+        self.collapsible_reviews.loading = False
+        self.collapsible_reviews.display = True
+
+    @work
+    async def load_reactions(self) -> None:
+        try:
+            reactions = await list_reactions_on_issue(self.pr.repo, self.pr)
+            summary_strings = [f"{rt.emoji} {count}" for rt, count in reactions.reaction_counts.items() if count]
+
+            reactions_list = self.query_one("#reactions_list", ListView)
+            for reaction_type, users in reactions.reaction_users.items():
+                if not users:
+                    continue
+                elif len(users) > 3:
+                    users_string = f"{users[0].login}, {users[1].login}, {users[2].login}, and {len(users) - 3} more"
+                else:
+                    users_string = ", ".join(u.login for u in users)
+
+                reaction_label = f"{reaction_type.emoji}: {users_string}"
+                reactions_list.append(ListItem(Label(Content.from_markup(reaction_label))))
+
+            self.collapsible_reactions.loading = False
+            self.collapsible_reactions.title = " | ".join(summary_strings)
+            self.collapsible_reactions.display = bool(summary_strings)
+        except Exception as e:
+            lg.exception(f"Error loading reactions data: {e}")
 
     @work
     async def load_checks(self) -> None:
@@ -334,18 +374,19 @@ class PrOverviewTabPane(TabPane):
         # of those
         combined_check_status = await combined_check_status_for_ref(self.pr.repo, self.pr.head.sha)
         status_checks_list = self.query_one("#status_checks_list", ListView)
-        collapse_container = self.query_one("#collapsible_status_checks", Collapsible)
         if statuses := combined_check_status.statuses:
             status_labels = sorted(self._status_check_to_label(c) for c in statuses)
             status_checks_list.extend(
                 ListItem(Label(Content.from_markup(status_label))) for status_label in status_labels
             )
 
-            collapse_container.title = f"Status checks: {combined_check_status.state.to_display()}"
+            self.collapsible_status_checks.title = f"Status checks: {combined_check_status.state.to_display()}"
+            self.collapsible_status_checks.display = True
         else:
-            collapse_container.title = "No status checks on PR"
+            self.collapsible_status_checks.title = "No status checks on PR"
+            self.collapsible_status_checks.display = False
 
-        collapse_container.loading = False
+        self.collapsible_status_checks.loading = False
 
 
 class PrDiffTabPane(TabPane):
@@ -411,6 +452,9 @@ class PrConversationTabPane(TabPane):
 
         if len(self.comments_and_reviews.children) == 0:
             self.comments_and_reviews.mount(Label("No reviews or comments available"))
+            self.comments_and_reviews.display = False
+        else:
+            self.comments_and_reviews.display = True
 
         self.loading = False
 

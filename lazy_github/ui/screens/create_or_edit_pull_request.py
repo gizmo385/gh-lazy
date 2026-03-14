@@ -18,7 +18,6 @@ from lazy_github.lib.git_cli import (
     push_branch_to_remote,
 )
 from lazy_github.lib.github.branches import list_branches
-from lazy_github.lib.pr_drafts import PullRequestDraft, clear_pr_draft, load_pr_draft, save_pr_draft
 from lazy_github.lib.github.pull_requests import (
     create_pull_request,
     list_requested_reviewers,
@@ -29,6 +28,7 @@ from lazy_github.lib.github.repositories import get_collaborators
 from lazy_github.lib.github.users import get_user_by_username
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import BranchesLoaded, PullRequestCreatedOrUpdated
+from lazy_github.lib.pr_drafts import PullRequestDraft, clear_pr_draft, load_pr_draft, save_pr_draft
 from lazy_github.models.github import Branch, FullPullRequest, PartialPullRequest
 from lazy_github.ui.screens.confirm import ConfirmDialog
 

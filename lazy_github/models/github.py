@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import StrEnum
+from enum import Enum, StrEnum
 
 from pydantic import BaseModel, Field
 
@@ -302,3 +302,29 @@ class CheckStatus(BaseModel):
 class CombinedCheckStatus(BaseModel):
     state: CheckStatusState
     statuses: list[CheckStatus]
+
+
+class ReactionType(Enum):
+    def __init__(self, value: str, emoji: str) -> None:
+        super().__init__()
+        self._value = value
+        self.emoji = emoji
+
+    THUMBS_UP = ("+1", "👍")
+    THUMBS_DOWN = ("-1", "👎")
+    LAUGH = ("laugh", "😄")
+    CONFUSED = ("confused", "😕")
+    HEART = ("heart", "❤️")
+    HOORAY = ("hooray", "🎉")
+    ROCKET = ("rocket", "🚀")
+    EYES = ("eyes", "👀")
+
+
+class Reaction(BaseModel):
+    reaction_type: ReactionType
+    user: User
+
+
+class ReactionSet(BaseModel):
+    reaction_users: dict[ReactionType, list[User]]
+    reaction_counts: dict[ReactionType, int]

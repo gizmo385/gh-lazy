@@ -101,7 +101,7 @@ def _create_request_body_tempfile(body: bytes) -> tempfile._TemporaryFileWrapper
     _TEMPORARY_JSON_BODY_DIRECTORY.mkdir(parents=True, exist_ok=True)
     if sys.version_info.minor > 11:
         # delete_on_close parameter added in Python 3.12
-        temp = tempfile.NamedTemporaryFile(delete=False, delete_on_close=False, dir=_TEMPORARY_JSON_BODY_DIRECTORY)  # type: ignore[call-arg]
+        temp = tempfile.NamedTemporaryFile(delete=False, delete_on_close=False, dir=_TEMPORARY_JSON_BODY_DIRECTORY)
     else:
         temp = tempfile.NamedTemporaryFile(delete=False, dir=_TEMPORARY_JSON_BODY_DIRECTORY)
     temp.write(body)

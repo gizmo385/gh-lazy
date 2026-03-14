@@ -337,7 +337,7 @@ class MainViewPane(Container):
     async def handle_reviews_loaded(self, message: ReviewsLoaded) -> None:
         try:
             overview_pane = self.query_one(PrOverviewTabPane)
-        except WrongType | NoMatches:
+        except (WrongType, NoMatches):
             pass
         else:
             overview_pane.add_reviews(message.reviews)

@@ -80,3 +80,11 @@ def clear_cache(no_confirm: bool):
 def debug():
     """Outputs LazyGithub debug info"""
     print(collect_debug_info())
+
+
+@cli.command
+def version():
+    """Prints the current version"""
+    from lazy_github.version import VERSION
+
+    print(f"LazyGithub version {VERSION}")

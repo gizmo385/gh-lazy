@@ -456,9 +456,12 @@ class PrConversationTabPane(TabPane):
 
     @on(CommentReactionsLoaded)
     async def handle_comment_reactions_loaded(self, message: CommentReactionsLoaded) -> None:
+        tasks: list[Coroutine[Any, Any, None]] = []
         for comment_id, reactions in message.reactions.items():
             if comment := self.comment_containers.get(str(comment_id)):
-                comment.add_reaction_display(reactions)
+                tasks.append(comment.add_reaction_display(reactions))
+
+        await asyncio.gather(*tasks)
 
     @work
     async def fetch_reactions(self, repo: Repository, reviews: list[Review], comments: list[IssueComment]) -> None:

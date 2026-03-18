@@ -86,9 +86,13 @@ class ReviewConversation(Container):
             yield IssueCommentContainer(self.pr, comment)
 
 
-class ReviewContainer(Collapsible, can_focus=True):
+class ReviewContainer(Container):
     DEFAULT_CSS = """
     ReviewContainer {
+        height: auto;
+    }
+
+    Collapsible {
         height: auto;
     }
 
@@ -111,15 +115,19 @@ class ReviewContainer(Collapsible, can_focus=True):
             review_state_text = "[red]Changes Requested[/red]"
         else:
             review_state_text = self.review.state.title()
+        review_summary = f"Review from {self.review.user.login} ({review_state_text})"
 
-        yield Label(Content.from_markup(f"Review from {self.review.user.login} ({review_state_text})"))
+        if self.review.body or self.review.comments:
+            with Collapsible(title=review_summary, collapsed=self.review.state == ReviewState.DISMISSED):
+                if self.review.body:
+                    yield Markdown(self.review.body)
 
-        if self.review.body:
-            yield Markdown(self.review.body)
-
-        for comment in self.review.comments:
-            if comment_node := self.hierarchy.get(comment.id):
-                yield ReviewConversation(self.pr, comment_node)
+                for comment in self.review.comments:
+                    if comment_node := self.hierarchy.get(comment.id):
+                        yield ReviewConversation(self.pr, comment_node)
+        else:
+            with Collapsible(title=review_summary, collapsed=True):
+                yield Static("No additional review content")
 
     def action_reply_to_review(self) -> None:
         self.app.push_screen(NewCommentModal(self.pr.repo, self.pr, self.review))

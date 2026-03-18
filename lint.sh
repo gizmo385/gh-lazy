@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-uv sync
-uvx ruff check --select I --fix
-uvx ruff check --fix
-uvx ty check
+uv sync --quiet
+uvx ruff check --select I --fix --quiet
+uvx ruff check --fix --quiet
+uvx ty check --quiet

@@ -55,10 +55,14 @@ def clear_auth():
 
 
 @cli.command
-def clear_config():
+@click.option("--no-confirm", is_flag=True, default=False, help="Don't ask for confirmation")
+def clear_config(no_confirm: bool):
     """Reset the user's settings"""
-    _CONFIG_FILE_LOCATION.unlink(missing_ok=True)
-    print("Your settings have been cleared")
+    if no_confirm or click.confirm("Confirm deletion your LazyGithub settings"):
+        _CONFIG_FILE_LOCATION.unlink(missing_ok=True)
+        print("Your settings have been cleared")
+    else:
+        print("Canceling")
 
 
 @cli.command

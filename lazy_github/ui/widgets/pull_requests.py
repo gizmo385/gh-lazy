@@ -1,3 +1,6 @@
+import asyncio
+from typing import Any, Coroutine
+
 from httpx import HTTPStatusError
 from textual import on, work
 from textual.app import ComposeResult
@@ -28,17 +31,20 @@ from lazy_github.lib.github.pull_requests import (
     merge_pull_request,
     reconstruct_review_conversation_hierarchy,
 )
-from lazy_github.lib.github.reactions import list_reactions_on_issue
+from lazy_github.lib.github.reactions import list_reactions_on_comment, list_reactions_on_issue
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import (
+    CommentReactionsLoaded,
     IssuesAndPullRequestsFetched,
     PullRequestSelected,
-    ReviewsLoaded,
+    ReviewsAndCommentsLoaded,
 )
 from lazy_github.models.github import (
     CheckStatus,
     FullPullRequest,
+    IssueComment,
     PartialPullRequest,
+    ReactionSet,
     Repository,
     Review,
     ReviewState,
@@ -53,7 +59,7 @@ from lazy_github.ui.widgets.common import (
     LazyGithubContainer,
     TableRow,
 )
-from lazy_github.ui.widgets.conversations import IssueCommentContainer, ReviewContainer
+from lazy_github.ui.widgets.conversations import IssueCommentContainer, ReactionsDisplay, ReviewContainer
 from lazy_github.ui.widgets.diff_viewer import DiffViewerContainer
 
 
@@ -205,13 +211,12 @@ class PrOverviewTabPane(TabPane):
         return self.query_one("#collapsible_reviews", Collapsible)
 
     @property
-    def collapsible_reactions(self) -> Collapsible:
-        return self.query_one("#collapsible_reactions", Collapsible)
+    def pr_reactions(self) -> ReactionsDisplay:
+        return self.query_one("#pr_reactions", ReactionsDisplay)
 
     def on_mount(self) -> None:
         self.collapsible_status_checks.loading = True
         self.collapsible_reviews.loading = True
-        self.collapsible_reactions.loading = True
         self.load_checks()
         self.load_reactions()
 
@@ -299,8 +304,7 @@ class PrOverviewTabPane(TabPane):
                 date_text += f" • Merged on {merged_date}"
             yield Label(Content.from_markup(date_text))
 
-            with Collapsible(title="Reactions: ...", id="collapsible_reactions"):
-                yield ListView(id="reactions_list")
+            yield ReactionsDisplay(self.pr.id, id="pr_reactions")
 
             with Collapsible(title="Status Checks: ...", id="collapsible_status_checks"):
                 yield ListView(id="status_checks_list")
@@ -348,23 +352,7 @@ class PrOverviewTabPane(TabPane):
     async def load_reactions(self) -> None:
         try:
             reactions = await list_reactions_on_issue(self.pr.repo, self.pr)
-            summary_strings = [f"{rt.emoji} {count}" for rt, count in reactions.reaction_counts.items() if count]
-
-            reactions_list = self.query_one("#reactions_list", ListView)
-            for reaction_type, users in reactions.reaction_users.items():
-                if not users:
-                    continue
-                elif len(users) > 3:
-                    users_string = f"{users[0].login}, {users[1].login}, {users[2].login}, and {len(users) - 3} more"
-                else:
-                    users_string = ", ".join(u.login for u in users)
-
-                reaction_label = f"{reaction_type.emoji}: {users_string}"
-                reactions_list.append(ListItem(Label(Content.from_markup(reaction_label))))
-
-            self.collapsible_reactions.loading = False
-            self.collapsible_reactions.title = " | ".join(summary_strings)
-            self.collapsible_reactions.display = bool(summary_strings)
+            await self.pr_reactions.set_reactions(reactions)
         except Exception as e:
             lg.exception(f"Error loading reactions data: {e}")
 
@@ -424,6 +412,7 @@ class PrConversationTabPane(TabPane):
     def __init__(self, pr: FullPullRequest) -> None:
         super().__init__("Conversation", id="conversation_pane")
         self.pr = pr
+        self.comment_containers: dict[str, IssueCommentContainer] = {}
 
     def compose(self) -> ComposeResult:
         yield VerticalScroll(id="pr_comments_and_reviews")
@@ -432,20 +421,21 @@ class PrConversationTabPane(TabPane):
     def comments_and_reviews(self) -> VerticalScroll:
         return self.query_one("#pr_comments_and_reviews", VerticalScroll)
 
-    @on(ReviewsLoaded)
-    async def handle_reviews_loaded(self, message: ReviewsLoaded) -> None:
+    @on(ReviewsAndCommentsLoaded)
+    async def handle_reviews_loaded(self, message: ReviewsAndCommentsLoaded) -> None:
         review_hierarchy = reconstruct_review_conversation_hierarchy(message.reviews)
-        comments = await get_comments(self.pr)
         self.comments_and_reviews.remove_children()
 
         handled_comment_node_ids: list[int] = []
         for review in message.reviews:
+            if not review.body and review.state == ReviewState.COMMENTED:
+                continue
             if review.body:
                 handled_comment_node_ids.extend([c.id for c in review.comments])
             review_container = ReviewContainer(self.pr, review, review_hierarchy)
             self.comments_and_reviews.mount(review_container)
 
-        for comment in comments:
+        for comment in message.comments:
             if comment.body and comment.id not in handled_comment_node_ids:
                 comment_container = IssueCommentContainer(self.pr, comment)
                 self.comments_and_reviews.mount(comment_container)
@@ -456,12 +446,53 @@ class PrConversationTabPane(TabPane):
         else:
             self.comments_and_reviews.display = True
 
+        self.comment_containers: dict[str, IssueCommentContainer] = {}
+        for container in self.query(IssueCommentContainer):
+            self.comment_containers[str(container.comment.id)] = container
+
+        self.fetch_reactions(self.pr.repo, message.reviews, message.comments)
+
         self.loading = False
+
+    @on(CommentReactionsLoaded)
+    async def handle_comment_reactions_loaded(self, message: CommentReactionsLoaded) -> None:
+        for comment_id, reactions in message.reactions.items():
+            if comment := self.comment_containers.get(str(comment_id)):
+                comment.add_reaction_display(reactions)
+
+    @work
+    async def fetch_reactions(self, repo: Repository, reviews: list[Review], comments: list[IssueComment]) -> None:
+        """
+        Loads any reactions on the specified comments or on comments within the specified reviews. Posts a
+        `CommentReactionsLoaded` message after completion.
+        """
+        comment_reactions: dict[int, ReactionSet] = {}
+
+        async def _get_comment_reactions(comment: IssueComment) -> None:
+            try:
+                comment_reactions[comment.id] = await list_reactions_on_comment(repo, comment)
+            except GithubApiRequestFailed:
+                lg.debug(f"Could not find comment with ID {comment.id}")
+
+        tasks: list[Coroutine[Any, Any, None]] = []
+        tasks.extend(_get_comment_reactions(comment) for comment in comments)
+        for review in reviews:
+            tasks.extend(_get_comment_reactions(comment) for comment in review.comments)
+
+        await asyncio.gather(*tasks)
+        self.post_message(CommentReactionsLoaded(comment_reactions))
 
     @work
     async def fetch_conversation(self) -> None:
-        reviews = await get_reviews(self.pr)
-        self.post_message(ReviewsLoaded(reviews))
+        reviews_coro = get_reviews(self.pr)
+        comments_coro = get_comments(self.pr)
+
+        try:
+            reviews, comments = await reviews_coro, await comments_coro
+        except GithubApiRequestFailed:
+            lg.error("Error retrieving PR reviews or comments")
+        else:
+            self.post_message(ReviewsAndCommentsLoaded(reviews, comments))
 
     def on_mount(self) -> None:
         self.loading = True

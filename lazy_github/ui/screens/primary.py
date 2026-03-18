@@ -30,7 +30,7 @@ from lazy_github.lib.messages import (
     IssueSelected,
     PullRequestSelected,
     RepoSelected,
-    ReviewsLoaded,
+    ReviewsAndCommentsLoaded,
     WorkflowRunSelected,
 )
 from lazy_github.models.github import Issue, PartialPullRequest, Repository, WorkflowRun
@@ -333,8 +333,8 @@ class MainViewPane(Container):
         if focus_run_details:
             tabbed_content.children[0].focus()
 
-    @on(ReviewsLoaded)
-    async def handle_reviews_loaded(self, message: ReviewsLoaded) -> None:
+    @on(ReviewsAndCommentsLoaded)
+    async def handle_reviews_loaded(self, message: ReviewsAndCommentsLoaded) -> None:
         try:
             overview_pane = self.query_one(PrOverviewTabPane)
         except (WrongType, NoMatches):

@@ -310,6 +310,18 @@ class ReactionType(Enum):
         self._value = value
         self.emoji = emoji
 
+    @classmethod
+    def from_github(cls, github_content: str) -> "ReactionType":
+        try:
+            return cls[github_content.upper()]
+        except KeyError:
+            if github_content == "+1":
+                return ReactionType.THUMBS_UP
+            elif github_content == "-1":
+                return ReactionType.THUMBS_DOWN
+            else:
+                raise ValueError(f"Invalid reaction string: {github_content}")
+
     THUMBS_UP = ("+1", "👍")
     THUMBS_DOWN = ("-1", "👎")
     LAUGH = ("laugh", "😄")
@@ -328,3 +340,6 @@ class Reaction(BaseModel):
 class ReactionSet(BaseModel):
     reaction_users: dict[ReactionType, list[User]]
     reaction_counts: dict[ReactionType, int]
+
+    def __bool__(self) -> bool:
+        return bool(self.reaction_counts) or bool(self.reaction_users)

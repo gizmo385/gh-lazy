@@ -2,13 +2,75 @@ from textual import work
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.content import Content
-from textual.widgets import Collapsible, Label, Markdown
+from textual.widgets import Collapsible, Label, ListItem, ListView, Markdown, Static
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.github.pull_requests import ReviewCommentNode
 from lazy_github.lib.messages import NewCommentCreated
-from lazy_github.models.github import FullPullRequest, Issue, IssueComment, Review, ReviewComment, ReviewState
+from lazy_github.models.github import (
+    FullPullRequest,
+    Issue,
+    IssueComment,
+    ReactionSet,
+    Review,
+    ReviewComment,
+    ReviewState,
+)
 from lazy_github.ui.screens.new_comment import NewCommentModal
+
+
+class ReactionsDisplay(Container):
+    DEFAULT_CSS = """
+    ReactionsDisplay {
+        height: auto;
+    }
+    Collapsible {
+        height: auto;
+    }
+
+    ListView {
+        height: auto;
+    }
+    """
+
+    def __init__(self, item_id: str | int, id: str | None = None) -> None:
+        super().__init__(id=id)
+        self.item_id = item_id
+
+    @property
+    def reactions_list(self) -> ListView:
+        return self.query_one(f"#reactions_list_{self.item_id}", ListView)
+
+    @property
+    def collapsible_reactions(self) -> Collapsible:
+        return self.query_one(f"#collapsible_reactions_{self.item_id}", Collapsible)
+
+    def compose(self) -> ComposeResult:
+        with Collapsible(title="Reactions...", id=f"collapsible_reactions_{self.item_id}", collapsed=True):
+            yield ListView(id=f"reactions_list_{self.item_id}")
+
+    def on_mount(self) -> None:
+        self.loading = True
+
+    async def set_reactions(self, reactions: ReactionSet) -> None:
+        self.loading = True
+        await self.reactions_list.clear()
+        summary_strings = [f"{rt.emoji} {count}" for rt, count in reactions.reaction_counts.items() if count]
+
+        for reaction_type, users in reactions.reaction_users.items():
+            if not users:
+                continue
+            elif len(users) > 3:
+                users_string = f"{users[0].login}, {users[1].login}, {users[2].login}, and {len(users) - 3} more"
+            else:
+                users_string = ", ".join(u.login for u in users)
+
+            reaction_label = f"{reaction_type.emoji}: {users_string}"
+            self.reactions_list.append(ListItem(Label(Content.from_markup(reaction_label))))
+
+        self.loading = False
+        self.collapsible_reactions.title = " | ".join(summary_strings)
+        self.collapsible_reactions.display = bool(summary_strings)
 
 
 class IssueCommentContainer(Container, can_focus=True):
@@ -59,6 +121,15 @@ class IssueCommentContainer(Container, can_focus=True):
 
     def action_reply_to_individual_comment(self) -> None:
         self.reply_to_comment_flow()
+
+    async def add_reaction_display(self, reactions: ReactionSet) -> None:
+        # Add the reactions to the bottom of each comment display
+        if not reactions:
+            return
+
+        rd = ReactionsDisplay(self.comment.id)
+        await self.children[-1].mount(rd)
+        await rd.set_reactions(reactions)
 
 
 class ReviewConversation(Container):

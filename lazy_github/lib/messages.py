@@ -9,18 +9,26 @@ from lazy_github.models.github import (
     IssueComment,
     Notification,
     PartialPullRequest,
+    ReactionSet,
     Repository,
     Review,
     WorkflowRun,
 )
 
 
-class ReviewsLoaded(Message):
-    """A message sent when reviews for a pull request have been loaded"""
+class ReviewsAndCommentsLoaded(Message):
+    """A message sent when reviews and comments for a pull request have been loaded"""
 
-    def __init__(self, reviews: list[Review]) -> None:
+    def __init__(self, reviews: list[Review], comments: list[IssueComment]) -> None:
         super().__init__()
         self.reviews = reviews
+        self.comments = comments
+
+
+class CommentReactionsLoaded(Message):
+    def __init__(self, reactions: dict[int, ReactionSet]) -> None:
+        super().__init__()
+        self.reactions = reactions
 
 
 class RepoSelected(Message):

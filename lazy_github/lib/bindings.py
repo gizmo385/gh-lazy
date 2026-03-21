@@ -158,7 +158,7 @@ class LazyGithubBindings:
         id="modal.submit",
         tooltip="Submit whatever is being created in the current dialog",
     )
-    CLOSE_DIALOG = Binding("q, ESC", "close", "Close", id="modal.close", tooltip="Close the current dialog")
+    CLOSE_DIALOG = Binding("q, escape", "close", "Close", id="modal.close", tooltip="Close the current dialog")
     SEARCH_DIALOG = Binding("/", "search", "Search", id="modal.search", tooltip="Search within a dialog window")
 
     # Generic confirmation dialog

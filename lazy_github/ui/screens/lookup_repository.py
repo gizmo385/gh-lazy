@@ -1,6 +1,6 @@
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal
+from textual.containers import Container
 from textual.content import Content
 from textual.screen import ModalScreen
 from textual.validation import Regex
@@ -10,24 +10,7 @@ from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.repositories import get_repository_by_name
 from lazy_github.models.github import Repository
-from lazy_github.ui.widgets.common import LazyGithubFooter
-
-
-class LookupRepositoryButtons(Horizontal):
-    DEFAULT_CSS = """
-    LookupRepositoryButtons {
-        align: center middle;
-        height: auto;
-        width: 100%;
-    }
-    Button {
-        margin: 1;
-    }
-    """
-
-    def compose(self) -> ComposeResult:
-        yield Button("Open", id="lookup", variant="success")
-        yield Button("Cancel", id="cancel", variant="error")
+from lazy_github.ui.widgets.common import LazyGithubFooter, ModalDialogButtons
 
 
 class LookupRepositoryContainer(Container):
@@ -49,7 +32,7 @@ class LookupRepositoryContainer(Container):
         yield Label("Continue tracking this repo?")
         yield Switch(id="continue_tracking")
         yield Rule()
-        yield LookupRepositoryButtons()
+        yield ModalDialogButtons(submit_text="Lookup")
 
 
 class LookupRepositoryModal(ModalScreen[Repository | None]):
@@ -79,7 +62,7 @@ class LookupRepositoryModal(ModalScreen[Repository | None]):
                 # If we haven't tracked this repo already, we will do so
                 config.repositories.additional_repos_to_track.append(repo_name)
 
-    @on(Button.Pressed, "#lookup")
+    @on(Button.Pressed, "#submit")
     async def action_submit(self) -> None:
         repo_input = self.query_one("#repo_to_lookup", Input)
         continue_tracking_input = self.query_one("#continue_tracking", Switch)

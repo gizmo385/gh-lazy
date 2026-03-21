@@ -1,6 +1,6 @@
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal
+from textual.containers import Container
 from textual.content import Content
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Markdown, Rule
@@ -10,24 +10,7 @@ from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.backends.protocol import GithubApiRequestFailed
 from lazy_github.lib.github.pull_requests import get_full_pull_request
 from lazy_github.models.github import FullPullRequest
-from lazy_github.ui.widgets.common import LazyGithubFooter
-
-
-class LookupPullRequestButtons(Horizontal):
-    DEFAULT_CSS = """
-    LookupPullRequestButtons {
-        align: center middle;
-        height: auto;
-        width: 100%;
-    }
-    Button {
-        margin: 1;
-    }
-    """
-
-    def compose(self) -> ComposeResult:
-        yield Button("Open", id="lookup", variant="success")
-        yield Button("Cancel", id="cancel", variant="error")
+from lazy_github.ui.widgets.common import LazyGithubFooter, ModalDialogButtons
 
 
 class LookupPullRequestContainer(Container):
@@ -46,7 +29,7 @@ class LookupPullRequestContainer(Container):
             type="number",
         )
         yield Rule()
-        yield LookupPullRequestButtons()
+        yield ModalDialogButtons(submit_text="Lookup")
 
 
 class LookupPullRequestModal(ModalScreen[FullPullRequest | None]):
@@ -70,7 +53,7 @@ class LookupPullRequestModal(ModalScreen[FullPullRequest | None]):
         yield LookupPullRequestContainer()
         yield LazyGithubFooter()
 
-    @on(Button.Pressed, "#lookup")
+    @on(Button.Pressed, "#submit")
     async def action_submit(self) -> None:
         assert LazyGithubContext.current_repo is not None, "Current repo is missing!"
 

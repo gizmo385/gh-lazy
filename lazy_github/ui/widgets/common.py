@@ -5,9 +5,9 @@ from typing import Awaitable, Callable, Generic, TypeVar
 from pydantic import BaseModel
 from textual import on, work
 from textual.app import ComposeResult
-from textual.containers import Container, Vertical
+from textual.containers import Container, Horizontal, Vertical
 from textual.events import Blur
-from textual.widgets import DataTable, Footer, Input
+from textual.widgets import Button, DataTable, Footer, Input
 from textual.widgets.data_table import RowDoesNotExist
 
 from lazy_github.lib.bindings import LazyGithubBindings
@@ -265,3 +265,25 @@ class LazyGithubContainer(Container):
         border: solid $success;
     }
     """
+
+
+class ModalDialogButtons(Horizontal):
+    DEFAULT_CSS = """
+    ModalDialogButtons {
+        align: center middle;
+        height: auto;
+        width: 100%;
+    }
+    Button {
+        margin: 1;
+    }
+    """
+
+    def __init__(self, submit_text: str = "Submit", cancel_text="Cancel") -> None:
+        super().__init__()
+        self.submit_text = submit_text
+        self.cancel_text = cancel_text
+
+    def compose(self) -> ComposeResult:
+        yield Button(self.submit_text, id="submit", variant="success")
+        yield Button(self.cancel_text, id="cancel", variant="error")

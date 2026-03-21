@@ -456,6 +456,7 @@ class PrConversationTabPane(TabPane):
 
     @on(CommentReactionsLoaded)
     async def handle_comment_reactions_loaded(self, message: CommentReactionsLoaded) -> None:
+        """Adds any reactions on comments to the comment widgets that they're associated with"""
         tasks: list[Coroutine[Any, Any, None]] = []
         for comment_id, reactions in message.reactions.items():
             if comment := self.comment_containers.get(str(comment_id)):

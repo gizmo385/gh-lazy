@@ -123,12 +123,11 @@ class IssueCommentContainer(Container, can_focus=True):
         self.reply_to_comment_flow()
 
     async def add_reaction_display(self, reactions: ReactionSet) -> None:
-        # Add the reactions to the bottom of each comment display
         if not reactions:
             return
 
         rd = ReactionsDisplay(self.comment.id)
-        await self.children[-1].mount(rd)
+        await self.mount(rd, after=len(self.children) - 1)
         await rd.set_reactions(reactions)
 
 

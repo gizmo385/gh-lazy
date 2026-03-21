@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum, StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -11,6 +12,12 @@ class User(BaseModel):
     id: int
     name: str | None = None
     html_url: str
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, User):
+            return other.id == self.id
+        else:
+            return False
 
 
 class RepositoryPermission(BaseModel):

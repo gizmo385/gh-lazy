@@ -49,7 +49,8 @@ class ReposContainer(LazyGithubContainer):
         )
 
     def compose(self) -> ComposeResult:
-        self.border_title = Content.from_markup("\\[1] Repositories")
+        key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_REPOSITORY_TABLE)
+        self.border_title = Content.from_markup(f"\\[{key}] Repositories")
         yield self._table
 
     @property

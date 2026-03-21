@@ -8,6 +8,7 @@ from textual.coordinate import Coordinate
 from textual.widgets import DataTable
 
 from lazy_github.lib.bindings import LazyGithubBindings
+from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.workflows import list_workflow_runs, list_workflows
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import WorkflowRunSelected
@@ -101,7 +102,8 @@ class WorkflowsContainer(LazyGithubContainer):
         self.workflows: list[Workflow] = []
 
     def compose(self) -> ComposeResult:
-        self.border_title = Content.from_markup("\\[4] Workflows")
+        key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_WORKFLOW_TABS)
+        self.border_title = Content.from_markup(f"\\[{key}] Workflows")
         yield WorkflowRunsContainer(id="workflow_runs")
 
     @property

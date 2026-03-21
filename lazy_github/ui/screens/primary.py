@@ -122,7 +122,8 @@ class SelectionDetailsContainer(LazyGithubContainer):
         self.tabs = TabbedContent(id="selection_detail_tabs")
 
     def compose(self) -> ComposeResult:
-        self.border_title = Content.from_markup("\\[5] Details")
+        key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_DETAIL_TABS)
+        self.border_title = Content.from_markup(f"\\[{key}] Details")
         yield self.tabs
 
     def on_mount(self) -> None:
@@ -311,7 +312,8 @@ class MainViewPane(Container):
         await tabbed_content.add_pane(PrOverviewTabPane(full_pr))
         await tabbed_content.add_pane(PrDiffTabPane(full_pr))
         await tabbed_content.add_pane(PrConversationTabPane(full_pr))
-        self.details.border_title = Content.from_markup(f"\\[5] PR #{full_pr.number} Details")
+        key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_DETAIL_TABS)
+        self.details.border_title = Content.from_markup(f"\\[{key}] PR #{full_pr.number} Details")
         if focus_pr_details:
             tabbed_content.children[0].focus()
 
@@ -321,7 +323,8 @@ class MainViewPane(Container):
         await tabbed_content.add_pane(IssueOverviewTabPane(issue))
         await tabbed_content.add_pane(IssueConversationTabPane(issue))
         tabbed_content.children[0].focus()
-        self.details.border_title = Content.from_markup(f"\\[5] Issue #{issue.number} Details")
+        key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_DETAIL_TABS)
+        self.details.border_title = Content.from_markup(f"\\[{key}] Issue #{issue.number} Details")
 
     async def load_workflow_run(self, workflow_run: WorkflowRun, focus_run_details: bool = True) -> None:
         tabbed_content = self.query_one("#selection_detail_tabs", TabbedContent)
@@ -329,7 +332,8 @@ class MainViewPane(Container):
         await tabbed_content.add_pane(WorkflowRunOverviewTabPane(workflow_run))
         await tabbed_content.add_pane(WorkflowRunJobsTabPane(workflow_run))
         await tabbed_content.add_pane(WorkflowRunLogsTabPane(workflow_run))
-        self.details.border_title = Content.from_markup(f"\\[5] Workflow Run #{workflow_run.run_number} Details")
+        key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_DETAIL_TABS)
+        self.details.border_title = Content.from_markup(f"\\[{key}] Workflow Run #{workflow_run.run_number} Details")
         if focus_run_details:
             tabbed_content.children[0].focus()
 

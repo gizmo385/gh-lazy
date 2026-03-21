@@ -34,7 +34,8 @@ class IssuesContainer(LazyGithubContainer):
     title_column_index = -1
 
     def compose(self) -> ComposeResult:
-        self.border_title = Content.from_markup("\\[3] Issues")
+        key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_ISSUE_TABLE)
+        self.border_title = Content.from_markup(f"\\[{key}] Issues")
         yield LazilyLoadedDataTable(
             id="searchable_issues_table",
             table_id="issues_table",

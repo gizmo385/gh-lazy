@@ -4,8 +4,11 @@ from typing import Optional
 
 from textual.app import ComposeResult
 from textual.content import Content
+from textual.lazy import Lazy
 from textual.widgets import Log
 
+from lazy_github.lib.bindings import LazyGithubBindings
+from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.logging import LazyGithubLogFormatter, lg
 from lazy_github.ui.widgets.common import LazyGithubContainer
 
@@ -37,5 +40,6 @@ class CommandLogSection(LazyGithubContainer):
     """
 
     def compose(self) -> ComposeResult:
-        self.border_title = Content.from_markup("\\[6] Command Log")
+        key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_COMMAND_LOG)
+        self.border_title = Content.from_markup(f"\\[{key}] Command Log")
         yield LazyGithubCommandLog()

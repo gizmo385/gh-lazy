@@ -93,7 +93,8 @@ class PullRequestsContainer(LazyGithubContainer):
         )
 
     def compose(self) -> ComposeResult:
-        self.border_title = Content.from_markup("\\[2] Pull Requests")
+        key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_PULL_REQUEST_TABLE)
+        self.border_title = Content.from_markup(f"\\[{key}] Pull Requests")
         yield self._table
 
     @work

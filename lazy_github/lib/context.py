@@ -1,6 +1,8 @@
 from logging.handlers import RotatingFileHandler
 from typing import Optional
 
+from textual.binding import Binding
+
 from lazy_github.lib.config import Config
 from lazy_github.lib.constants import JSON_CONTENT_ACCEPT_TYPE
 from lazy_github.lib.git_cli import current_local_branch_name, current_local_commit, current_local_repo_full_name
@@ -84,6 +86,9 @@ class _LazyGithubContext:
         if not cls._current_commit:
             cls._current_commit = current_local_commit()
         return cls._current_commit
+
+    def get_key(cls, binding: Binding) -> str:
+        return cls.config.bindings.overrides.get(str(binding.id), binding.key)
 
 
 LazyGithubContext = _LazyGithubContext()

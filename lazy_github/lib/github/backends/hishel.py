@@ -23,7 +23,7 @@ class HishelApiResponse(GithubApiResponse):
         try:
             self.api_response.raise_for_status()
         except HTTPStatusError as e:
-            raise GithubApiRequestFailed(e)
+            raise GithubApiRequestFailed(str(e), e.response.status_code)
 
     def is_success(self) -> bool:
         return self.api_response.is_success

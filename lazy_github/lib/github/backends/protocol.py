@@ -14,7 +14,10 @@ class BackendType(StrEnum):
 
 
 class GithubApiRequestFailed(Exception):
-    pass
+    def __init__(self, error: str, http_status: int) -> None:
+        super().__init__()
+        self.error = error
+        self.http_status = http_status
 
 
 class GithubApiResponse(Protocol):

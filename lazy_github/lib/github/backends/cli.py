@@ -35,7 +35,7 @@ class CliApiResponse(GithubApiResponse):
 
     def raise_for_status(self) -> None:
         if not self.is_success():
-            raise GithubApiRequestFailed({"error": self.stderr, "http_status": self.http_status})
+            raise GithubApiRequestFailed(self.stderr, self.http_status)
 
     def json(self) -> Any:
         return json.loads(self.stdout)

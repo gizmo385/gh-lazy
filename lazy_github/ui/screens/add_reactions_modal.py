@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container
-from textual.reactive import Initialize
 from textual.screen import ModalScreen
 from textual.widgets import Button, Markdown, SelectionList
 from textual.widgets.selection_list import Selection
@@ -39,10 +38,10 @@ class AddReactionsModal(ModalScreen[ReactionDelta]):
     BINDINGS = [LazyGithubBindings.CLOSE_DIALOG]
 
     DEFAULT_CSS = """
-    EditReactionsModal {
+    AddReactionsModal {
         align: center middle;
     }
-    EditReactionsContainer {
+    AddReactionsContainer {
         align: center middle;
         height: 20;
         width: 50;

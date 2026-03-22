@@ -1,7 +1,6 @@
 from textual.binding import Binding
 
 from lazy_github.lib.context import LazyGithubContext
-from lazy_github.models.github import ReactionType
 
 
 class LazyGithubBindings:

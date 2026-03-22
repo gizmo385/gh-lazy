@@ -278,8 +278,6 @@ class PrOverviewTabPane(TabPane):
                 current_user_reactions.append(reaction_type)
 
         if delta := await self.app.push_screen_wait(AddReactionsModal(current_user_reactions)):
-            lg.info(f"Reaction delta: {delta}")
-
             for reaction in delta.added:
                 try:
                     if await add_reaction_on_issue(self.pr.repo, self.pr, reaction):
@@ -477,7 +475,6 @@ class PrConversationTabPane(TabPane):
 
         if len(self.comments_and_reviews.children) == 0:
             self.comments_and_reviews.mount(Label("No reviews or comments available"))
-            self.comments_and_reviews.display = False
         else:
             self.comments_and_reviews.display = True
 

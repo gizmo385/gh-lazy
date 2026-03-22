@@ -61,7 +61,8 @@ class ReactionsDisplay(Container):
             if not users:
                 continue
             elif len(users) > 3:
-                users_string = f"{users[0].login}, {users[1].login}, {users[2].login}, and {len(users) - 3} more"
+                ul = list(users)
+                users_string = f"{ul[0].login}, {ul[1].login}, {ul[2].login}, and {len(users) - 3} more"
             else:
                 users_string = ", ".join(u.login for u in users)
 

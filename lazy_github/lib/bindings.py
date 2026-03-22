@@ -1,6 +1,7 @@
 from textual.binding import Binding
 
 from lazy_github.lib.context import LazyGithubContext
+from lazy_github.models.github import ReactionType
 
 
 class LazyGithubBindings:
@@ -164,6 +165,9 @@ class LazyGithubBindings:
     # Generic confirmation dialog
     CONFIRM_YES = Binding("y", "confirm_yes", "Yes", id="confirm.yes")
     CONFIRM_NO = Binding("n", "confirm_no", "No", id="confirm.no")
+
+    # Reaction Bindings
+    ADD_NEW_REACTION = Binding("R", "add_reaction", "Add reaction", id="react.add")
 
     # Focusing different UI elements
     FOCUS_REPOSITORY_TABLE = Binding(

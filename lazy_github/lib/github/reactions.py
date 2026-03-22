@@ -6,28 +6,35 @@ from lazy_github.models.github import Issue, IssueComment, Reaction, ReactionSet
 
 def _build_reaction_set(response: Any) -> ReactionSet:
     response.raise_for_status()
-    reaction_users: dict[ReactionType, list[User]] = {}
-    reaction_counts: dict[ReactionType, int] = {}
+    users_by_reaction_type: dict[ReactionType, set[User]] = {}
 
     for raw_reaction in response.json():
         reaction_type = ReactionType.from_github(raw_reaction["content"])
-        reaction_users.setdefault(reaction_type, [])
-        reaction_counts.setdefault(reaction_type, 0)
+        users_by_reaction_type.setdefault(reaction_type, set())
 
         user = User(**raw_reaction["user"])
-        reaction_users[reaction_type].append(user)
-        reaction_counts[reaction_type] += 1
+        users_by_reaction_type[reaction_type].add(user)
 
-    return ReactionSet(reaction_users=reaction_users, reaction_counts=reaction_counts)
+    return ReactionSet(users_by_reaction_type=users_by_reaction_type)
 
 
-async def list_reactions_on_comment(repo: Repository, comment: IssueComment) -> ReactionSet:
+async def list_reactions_on_comment(
+    repo: Repository, comment: IssueComment, per_page: int = 100, page: int = 1
+) -> ReactionSet:
     url = f"/repos/{repo.full_name}/issues/comments/{comment.id}/reactions"
+    params = {"page": page, "per_page": per_page}
+    response = await LazyGithubContext.client.get(url, headers=github_headers(), params=params)
+    return _build_reaction_set(response)
+
+
+async def list_reactions_on_issue(repo: Repository, issue: Issue) -> ReactionSet:
+    url = f"/repos/{repo.full_name}/issues/{issue.number}/reactions"
     response = await LazyGithubContext.client.get(url, headers=github_headers())
     return _build_reaction_set(response)
 
 
 async def add_reaction_on_comment(repo: Repository, comment: IssueComment, reaction: ReactionType) -> Reaction:
+    """Adds a reaction to an issue comment. Returns the number of reactions created."""
     url = f"/repos/{repo.full_name}/issues/comments/{comment.id}/reactions"
     body = {"content": reaction.name.lower()}
     response = await LazyGithubContext.client.post(url, headers=github_headers(), json=body)
@@ -35,7 +42,11 @@ async def add_reaction_on_comment(repo: Repository, comment: IssueComment, react
     return Reaction(**response.json())
 
 
-async def list_reactions_on_issue(repo: Repository, issue: Issue) -> ReactionSet:
+async def add_reaction_on_issue(repo: Repository, issue: Issue, reaction: ReactionType) -> int:
+    """Adds a reaction to an issue. Returns the number of reactions created."""
     url = f"/repos/{repo.full_name}/issues/{issue.number}/reactions"
-    response = await LazyGithubContext.client.get(url, headers=github_headers())
-    return _build_reaction_set(response)
+    body = {"content": reaction.github_value}
+
+    response = await LazyGithubContext.client.post(url, json=body, headers=github_headers())
+    response.raise_for_status()
+    return 1 if response.http_status == 201 else 0

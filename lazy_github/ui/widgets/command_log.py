@@ -4,7 +4,6 @@ from typing import Optional
 
 from textual.app import ComposeResult
 from textual.content import Content
-from textual.lazy import Lazy
 from textual.widgets import Log
 
 from lazy_github.lib.bindings import LazyGithubBindings

@@ -19,6 +19,9 @@ class User(BaseModel):
         else:
             return False
 
+    def __hash__(self) -> int:
+        return self.id
+
 
 class RepositoryPermission(BaseModel):
     admin: bool
@@ -315,6 +318,7 @@ class ReactionType(Enum):
     def __init__(self, value: str, emoji: str) -> None:
         super().__init__()
         self._value = value
+        self.github_value = value
         self.emoji = emoji
 
     @classmethod
@@ -345,8 +349,17 @@ class Reaction(BaseModel):
 
 
 class ReactionSet(BaseModel):
-    reaction_users: dict[ReactionType, list[User]]
-    reaction_counts: dict[ReactionType, int]
+    users_by_reaction_type: dict[ReactionType, set[User]]
 
     def __bool__(self) -> bool:
-        return bool(self.reaction_counts) or bool(self.reaction_users)
+        return bool(self.users_by_reaction_type)
+
+    @property
+    def reaction_counts(self) -> dict[ReactionType, int]:
+        return {reaction: len(users) for reaction, users in self.users_by_reaction_type.items()}
+
+    def add_reaction(self, reaction: ReactionType, user: User) -> None:
+        if reaction not in self.users_by_reaction_type:
+            self.users_by_reaction_type[reaction] = set()
+        elif user not in self.users_by_reaction_type[reaction]:
+            self.users_by_reaction_type[reaction].add(user)

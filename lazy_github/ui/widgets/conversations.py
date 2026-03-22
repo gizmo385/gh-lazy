@@ -57,7 +57,7 @@ class ReactionsDisplay(Container):
         await self.reactions_list.clear()
         summary_strings = [f"{rt.emoji} {count}" for rt, count in reactions.reaction_counts.items() if count]
 
-        for reaction_type, users in reactions.reaction_users.items():
+        for reaction_type, users in reactions.users_by_reaction_type.items():
             if not users:
                 continue
             elif len(users) > 3:

@@ -1,7 +1,6 @@
 import asyncio
 from typing import Any, Coroutine
 
-from httpx import HTTPStatusError
 from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Container, ScrollableContainer, VerticalScroll
@@ -31,7 +30,7 @@ from lazy_github.lib.github.pull_requests import (
     merge_pull_request,
     reconstruct_review_conversation_hierarchy,
 )
-from lazy_github.lib.github.reactions import list_reactions_on_comment, list_reactions_on_issue
+from lazy_github.lib.github.reactions import add_reaction_on_issue, list_reactions_on_comment, list_reactions_on_issue
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import (
     CommentReactionsLoaded,
@@ -45,10 +44,12 @@ from lazy_github.models.github import (
     IssueComment,
     PartialPullRequest,
     ReactionSet,
+    ReactionType,
     Repository,
     Review,
     ReviewState,
 )
+from lazy_github.ui.screens.add_reactions_modal import AddReactionsModal
 from lazy_github.ui.screens.create_or_edit_pull_request import (
     CreateOrEditPullRequestModal,
 )
@@ -197,11 +198,16 @@ class PrOverviewTabPane(TabPane):
     }
     """
 
-    BINDINGS = [LazyGithubBindings.MERGE_PULL_REQUEST, LazyGithubBindings.EDIT_PULL_REQUEST]
+    BINDINGS = [
+        LazyGithubBindings.MERGE_PULL_REQUEST,
+        LazyGithubBindings.EDIT_PULL_REQUEST,
+        LazyGithubBindings.ADD_NEW_REACTION,
+    ]
 
     def __init__(self, pr: FullPullRequest) -> None:
         super().__init__("Overview", id="overview_pane")
         self.pr = pr
+        self.reactions: ReactionSet | None = None
 
     @property
     def collapsible_status_checks(self) -> Collapsible:
@@ -227,6 +233,9 @@ class PrOverviewTabPane(TabPane):
 
     def _review_to_label(self, review: Review) -> str:
         return f"{review.user.login}: {review.state.to_display()}"
+
+    async def action_add_reaction(self) -> None:
+        self.trigger_reactions_modal()
 
     async def action_merge_pull_request(self) -> None:
         if self.pr.merged_at is not None:
@@ -256,6 +265,29 @@ class PrOverviewTabPane(TabPane):
             self.notify(
                 f"Pull request {self.pr.number} could not be merged", title="Error Merging PR", severity="error"
             )
+
+    @work
+    async def trigger_reactions_modal(self) -> None:
+        current_user_reactions: list[ReactionType] = []
+        if not self.reactions:
+            self.reactions = ReactionSet(users_by_reaction_type={})
+
+        current_user = await LazyGithubContext.client.user()
+        for reaction_type, users in self.reactions.users_by_reaction_type.items():
+            if current_user in users:
+                current_user_reactions.append(reaction_type)
+
+        if delta := await self.app.push_screen_wait(AddReactionsModal(current_user_reactions)):
+            lg.info(f"Reaction delta: {delta}")
+
+            for reaction in delta.added:
+                try:
+                    if await add_reaction_on_issue(self.pr.repo, self.pr, reaction):
+                        self.reactions.add_reaction(reaction, current_user)
+                except GithubApiRequestFailed as garf:
+                    lg.error(f"Error adding reaction {reaction} - {garf.http_status}")
+
+        await self.pr_reactions.set_reactions(self.reactions)
 
     @work
     async def action_edit_pull_request(self) -> None:
@@ -352,8 +384,8 @@ class PrOverviewTabPane(TabPane):
     @work
     async def load_reactions(self) -> None:
         try:
-            reactions = await list_reactions_on_issue(self.pr.repo, self.pr)
-            await self.pr_reactions.set_reactions(reactions)
+            self.reactions = await list_reactions_on_issue(self.pr.repo, self.pr)
+            await self.pr_reactions.set_reactions(self.reactions)
         except Exception as e:
             lg.exception(f"Error loading reactions data: {e}")
 
@@ -391,11 +423,13 @@ class PrDiffTabPane(TabPane):
     async def fetch_diff(self) -> None:
         try:
             diff = await get_diff(self.pr)
-        except HTTPStatusError as hse:
-            if hse.response.status_code == 404:
+        except GithubApiRequestFailed as garf:
+            if garf.http_status == 404:
                 await self.view_container.mount(Label("No diff contents found"))
+            elif garf.http_status == 406:
+                await self.view_container.mount(Label("Diff too large"))
             else:
-                raise
+                await self.view_container.mount(Label(f"Error fetching diff ({garf.http_status})"))
         else:
             current_user = await LazyGithubContext.client.user()
             reviewer_is_author = self.pr.user.login == current_user.login
@@ -493,7 +527,8 @@ class PrConversationTabPane(TabPane):
         comments_coro = get_comments(self.pr)
 
         try:
-            reviews, comments = await reviews_coro, await comments_coro
+            reviews = await reviews_coro
+            comments = await comments_coro
         except GithubApiRequestFailed:
             lg.error("Error retrieving PR reviews or comments")
         else:

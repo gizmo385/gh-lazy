@@ -1,6 +1,10 @@
 name: Publish the package to pypi
 
-on: workflow_dispatch
+on: 
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [lazy_github/version.py]
 
 jobs:
   pypi-publish:

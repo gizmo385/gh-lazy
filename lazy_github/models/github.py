@@ -212,6 +212,7 @@ class WorkflowRun(BaseModel):
 class WorkflowStepStatus(StrEnum):
     QUEUED = "queued"
     IN_PROGRESS = "in_progress"
+    PENDING = "pending"
     COMPLETED = "completed"
 
 
@@ -237,6 +238,7 @@ class WorkflowStep(BaseModel):
 class WorkflowJobStatus(StrEnum):
     QUEUED = "queued"
     IN_PROGRESS = "in_progress"
+    PENDING = "pending"
     COMPLETED = "completed"
     WAITING = "waiting"
 

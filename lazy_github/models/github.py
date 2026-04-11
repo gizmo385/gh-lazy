@@ -316,6 +316,56 @@ class CombinedCheckStatus(BaseModel):
     statuses: list[CheckStatus]
 
 
+class CheckRunConclusion(StrEnum):
+    SUCCESS = "success"
+    FAILURE = "failure"
+    NEUTRAL = "neutral"
+    CANCELLED = "cancelled"
+    SKIPPED = "skipped"
+    TIMED_OUT = "timed_out"
+    ACTION_REQUIRED = "action_required"
+    STALE = "stale"
+    STARTUP_FAILURE = "startup_failure"
+
+    def to_check_status_state(self) -> CheckStatusState:
+        match self:
+            case CheckRunConclusion.SUCCESS | CheckRunConclusion.NEUTRAL | CheckRunConclusion.SKIPPED:
+                return CheckStatusState.SUCCESS
+            case _:
+                return CheckStatusState.FAILURE
+
+
+class CheckRunStatus(StrEnum):
+    QUEUED = "queued"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    WAITING = "waiting"
+    REQUESTED = "requested"
+    PENDING = "pending"
+
+
+class CheckRun(BaseModel):
+    id: int
+    name: str
+    status: CheckRunStatus
+    conclusion: CheckRunConclusion | None
+    html_url: str | None
+    started_at: datetime | None
+    completed_at: datetime | None
+
+    def to_check_status_state(self) -> CheckStatusState:
+        if self.status != CheckRunStatus.COMPLETED:
+            return CheckStatusState.PENDING
+        if self.conclusion is not None:
+            return self.conclusion.to_check_status_state()
+        return CheckStatusState.PENDING
+
+
+class CheckRunList(BaseModel):
+    total_count: int
+    check_runs: list[CheckRun]
+
+
 class ReactionType(Enum):
     def __init__(self, value: str, emoji: str) -> None:
         super().__init__()

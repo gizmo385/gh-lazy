@@ -20,7 +20,7 @@ from textual.widgets import (
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.backends.protocol import GithubApiRequestFailed
-from lazy_github.lib.github.checks import combined_check_status_for_ref
+from lazy_github.lib.github.checks import check_runs_for_ref, combined_check_status_for_ref
 from lazy_github.lib.github.issues import get_comments, list_issues
 from lazy_github.lib.github.pull_requests import (
     get_diff,
@@ -39,7 +39,12 @@ from lazy_github.lib.messages import (
     ReviewsAndCommentsLoaded,
 )
 from lazy_github.models.github import (
+    CheckRun,
+    CheckRunConclusion,
+    CheckRunList,
     CheckStatus,
+    CheckStatusState,
+    CombinedCheckStatus,
     FullPullRequest,
     IssueComment,
     PartialPullRequest,
@@ -229,7 +234,29 @@ class PrOverviewTabPane(TabPane):
 
     def _status_check_to_label(self, status: CheckStatus) -> str:
         status_summary = status.state.to_display()
-        return f"{status_summary} {status.context} - {status.description}"
+        label = f"{status_summary} {status.context} - {status.description}"
+        if status.target_url:
+            label = f'[link="{status.target_url}"]{label}[/link]'
+        return label
+
+    def _check_run_to_label(self, check_run: CheckRun) -> str:
+        status_summary = check_run.to_check_status_state().to_display()
+        label = f"{status_summary} {check_run.name}"
+        if check_run.html_url:
+            label = f'[link="{check_run.html_url}"]{label}[/link]'
+        return label
+
+    def _overall_pr_status(self, combined_status: CombinedCheckStatus, check_runs: CheckRunList) -> str:
+        all_states: list[CheckStatusState] = []
+        if combined_status.statuses:
+            all_states.append(combined_status.state)
+        all_states.extend(run.to_check_status_state() for run in check_runs.check_runs)
+
+        if CheckStatusState.FAILURE in all_states or CheckStatusState.ERROR in all_states:
+            return CheckStatusState.FAILURE.to_display()
+        if CheckStatusState.PENDING in all_states:
+            return CheckStatusState.PENDING.to_display()
+        return CheckStatusState.SUCCESS.to_display()
 
     def _review_to_label(self, review: Review) -> str:
         return f"{review.user.login}: {review.state.to_display()}"
@@ -389,17 +416,23 @@ class PrOverviewTabPane(TabPane):
 
     @work
     async def load_checks(self) -> None:
-        # TODO: This should probably check normal check runs as well? Unsure if the combined check status includes all
-        # of those
-        combined_check_status = await combined_check_status_for_ref(self.pr.repo, self.pr.head.sha)
+        combined_check_status, check_runs = await asyncio.gather(
+            combined_check_status_for_ref(self.pr.repo, self.pr.head.sha),
+            check_runs_for_ref(self.pr.repo, self.pr.head.sha),
+        )
+
         status_checks_list = self.query_one("#status_checks_list", ListView)
-        if statuses := combined_check_status.statuses:
-            status_labels = sorted(self._status_check_to_label(c) for c in statuses)
+        if combined_check_status.statuses or check_runs.check_runs:
+            status_labels = [self._status_check_to_label(c) for c in combined_check_status.statuses]
+            status_labels.extend(self._check_run_to_label(r) for r in check_runs.check_runs)
+            status_labels = sorted(status_labels, reverse=True)
+
             status_checks_list.extend(
                 ListItem(Label(Content.from_markup(status_label))) for status_label in status_labels
             )
 
-            self.collapsible_status_checks.title = f"Status checks: {combined_check_status.state.to_display()}"
+            overall_status = self._overall_pr_status(combined_check_status, check_runs)
+            self.collapsible_status_checks.title = f"Status checks: {overall_status}"
             self.collapsible_status_checks.display = True
         else:
             self.collapsible_status_checks.title = "No status checks on PR"
@@ -420,7 +453,7 @@ class PrDiffTabPane(TabPane):
     @work
     async def fetch_diff(self) -> None:
         try:
-            diff = await get_diff(self.pr)
+            diff, current_user = await asyncio.gather(get_diff(self.pr), LazyGithubContext.client.user())
         except GithubApiRequestFailed as garf:
             if garf.http_status == 404:
                 await self.view_container.mount(Label("No diff contents found"))
@@ -429,7 +462,6 @@ class PrDiffTabPane(TabPane):
             else:
                 await self.view_container.mount(Label(f"Error fetching diff ({garf.http_status})"))
         else:
-            current_user = await LazyGithubContext.client.user()
             reviewer_is_author = self.pr.user.login == current_user.login
             await self.view_container.mount(DiffViewerContainer(self.pr, reviewer_is_author, diff))
         self.loading = False

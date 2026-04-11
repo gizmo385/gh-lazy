@@ -1,3 +1,4 @@
+import asyncio
 from functools import partial
 
 from textual import on, work
@@ -117,9 +118,8 @@ class WorkflowsContainer(LazyGithubContainer):
     @work
     async def load_repo(self, repo: Repository) -> None:
         self.current_repo = repo
-        # Load workflows in the background for the trigger modal
-        self.workflows = await list_workflows(repo)
-        await self.workflow_runs.load_repo(repo)
+        # Load workflows and workflow runs concurrently
+        self.workflows, _ = await asyncio.gather(list_workflows(repo), self.workflow_runs.load_repo(repo))
 
     @work
     async def action_trigger_workflow(self) -> None:

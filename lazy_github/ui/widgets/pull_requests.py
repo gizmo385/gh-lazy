@@ -40,7 +40,6 @@ from lazy_github.lib.messages import (
 )
 from lazy_github.models.github import (
     CheckRun,
-    CheckRunConclusion,
     CheckRunList,
     CheckStatus,
     CheckStatusState,

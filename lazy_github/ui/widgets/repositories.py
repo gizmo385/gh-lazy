@@ -110,17 +110,17 @@ class ReposContainer(LazyGithubContainer):
         self.searchable_table.initialize_from_cache(None, Repository)
         self.check_current_directory_repo()
         try:
-            additional_repos_to_fetch = LazyGithubContext.config.repositories.additional_repos_to_track
-            repos_result, *additional_repos = await asyncio.gather(
-                repos_api.list_all(),
-                *[repos_api.get_repository_by_name(full_repo_name) for full_repo_name in additional_repos_to_fetch],
-            )
+            repos = await repos_api.list_all()
         except GithubApiRequestFailed:
             lg.exception("Error fetching repositories from Github API")
             self.searchable_table.loading = False
             return
 
-        repos = list(repos_result)
+        # Loading any additionally tracked repos
+        additional_repos_to_fetch = LazyGithubContext.config.repositories.additional_repos_to_track
+        additional_repos = await asyncio.gather(
+            *[repos_api.get_repository_by_name(full_repo_name) for full_repo_name in additional_repos_to_fetch]
+        )
         repos.extend(filter(None, additional_repos))
         self.set_repositories(repos)
         self.check_current_directory_repo()

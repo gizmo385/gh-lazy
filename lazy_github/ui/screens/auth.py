@@ -85,7 +85,7 @@ class AuthenticationModal(ModalScreen):
                 self.check_access_timer.stop()
                 self.check_access_timer = self.set_interval(
                     device_code.polling_interval + 5,
-                    partial(self.check_access_token, device_code),
+                    lambda: self.check_access_token(device_code),
                 )
             case "expired_token":
                 lg.warning("your device code is expired :(")
@@ -108,7 +108,7 @@ class AuthenticationModal(ModalScreen):
 
         # We want to check that the user has added the
         self.check_access_timer = self.set_interval(
-            device_code.polling_interval, partial(self.check_access_token, device_code)
+            device_code.polling_interval, lambda: self.check_access_token(device_code)
         )
 
     @work
@@ -122,7 +122,7 @@ class AuthenticationModal(ModalScreen):
 
     @work
     async def verify_github_cli_access(self) -> None:
-        self.check_access_timer = self.set_interval(5, partial(self.check_github_cli_access))
+        self.check_access_timer = self.set_interval(5, lambda: self.check_github_cli_access())
 
     async def on_mount(self):
         # Once this screen starts, we need to start the auth flow. This begins by

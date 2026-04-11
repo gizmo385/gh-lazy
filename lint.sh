@@ -3,4 +3,4 @@
 uv sync --quiet
 uvx ruff check --select I --fix
 uvx ruff check --fix
-uvx ty check
+uvx pyrefly check

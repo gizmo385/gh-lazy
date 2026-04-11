@@ -33,9 +33,10 @@ from lazy_github.lib.messages import (
     ReviewsAndCommentsLoaded,
     WorkflowRunSelected,
 )
-from lazy_github.models.github import Issue, PartialPullRequest, Repository, WorkflowRun
+from lazy_github.models.github import FullPullRequest, Issue, PartialPullRequest, Repository, WorkflowRun
 from lazy_github.ui.screens.create_or_edit_pull_request import CreateOrEditPullRequestModal
 from lazy_github.ui.screens.debug import DebugModal
+from lazy_github.ui.screens.link_paste import PasteLinkModal
 from lazy_github.ui.screens.new_issue import NewIssueModal
 from lazy_github.ui.screens.notifications import NotificationsModal
 from lazy_github.ui.screens.settings import SettingsModal
@@ -300,12 +301,15 @@ class MainViewPane(Container):
         await self.selections.load_repository(repo)
 
     async def load_pull_request(self, pull_request: PartialPullRequest, focus_pr_details: bool = True) -> None:
-        try:
-            full_pr = await get_full_pull_request(pull_request.repo, pull_request.number)
-        except GithubApiRequestFailed:
-            lg.error("API error loading PR!")
-            self.notify("Error fetching pull request!", severity="error", title="API Error")
-            return
+        if isinstance(pull_request, FullPullRequest):
+            full_pr = pull_request
+        else:
+            try:
+                full_pr = await get_full_pull_request(pull_request.repo, pull_request.number)
+            except GithubApiRequestFailed:
+                lg.error("API error loading PR!")
+                self.notify("Error fetching pull request!", severity="error", title="API Error")
+                return
 
         tabbed_content = self.query_one("#selection_detail_tabs", TabbedContent)
         await tabbed_content.clear_panes()
@@ -414,7 +418,7 @@ class MainScreenCommandProvider(Provider):
 
 
 class LazyGithubMainScreen(Screen):
-    BINDINGS = [LazyGithubBindings.OPEN_NOTIFICATIONS_MODAL]
+    BINDINGS = [LazyGithubBindings.OPEN_NOTIFICATIONS_MODAL, LazyGithubBindings.OPEN_PASTE_LINK_MODAL]
     COMMANDS = {MainScreenCommandProvider}
     notification_refresh_timer: Timer | None = None
 
@@ -431,6 +435,25 @@ class LazyGithubMainScreen(Screen):
     async def set_repository(self, repo: Repository) -> None:
         self.set_currently_loaded_repo(repo)
         await self.main_view_pane.load_repository(repo)
+
+    @work
+    async def action_open_link_paste_modal(self) -> None:
+        link_subject = await self.app.push_screen_wait(PasteLinkModal())
+        match link_subject:
+            case FullPullRequest():
+                await self.set_repository(link_subject.repo)
+                await self.main_view_pane.load_pull_request(link_subject)
+                self.notify("Opening pull request for link")
+                return
+            case Issue():
+                await self.set_repository(link_subject.repo)
+                await self.main_view_pane.load_issue(link_subject)
+                self.notify("Opening issue for link")
+                return
+            case Repository():
+                await self.set_repository(link_subject)
+                self.notify("Opening repository for link")
+                return
 
     @work
     async def action_view_notifications(self) -> None:

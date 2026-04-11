@@ -168,6 +168,9 @@ class LazyGithubBindings:
     # Reaction Bindings
     ADD_NEW_REACTION = Binding("R", "add_reaction", "Add reaction", id="react.add")
 
+    # Paste link modal
+    OPEN_PASTE_LINK_MODAL = Binding("ctrl+v", "open_link_paste_modal", "Paste link", id="link.paste")
+
     # Focusing different UI elements
     FOCUS_REPOSITORY_TABLE = Binding(
         "1",

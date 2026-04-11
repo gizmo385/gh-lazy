@@ -1,4 +1,3 @@
-from functools import partial
 
 from textual import work
 from textual.app import ComposeResult

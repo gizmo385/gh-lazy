@@ -99,7 +99,8 @@ class PullRequestsContainer(LazyGithubContainer):
 
     def compose(self) -> ComposeResult:
         key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_PULL_REQUEST_TABLE)
-        self.border_title = Content.from_markup(f"\\[{key}] Pull Requests")
+        self._base_border_title = Content.from_markup(f"\\[{key}] Pull Requests")
+        self.border_title = self._base_border_title
         yield self._table
 
     @work
@@ -166,6 +167,7 @@ class PullRequestsContainer(LazyGithubContainer):
         self.searchable_table.can_load_more = True
         self.searchable_table.current_batch = 1
         self.searchable_table.loading = False
+        self.set_compact(len(self.searchable_table.items) == 0, self._base_border_title)
 
     @work
     async def load_pull_request_for_current_commit(self) -> None:

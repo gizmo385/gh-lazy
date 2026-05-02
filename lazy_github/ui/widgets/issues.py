@@ -35,7 +35,8 @@ class IssuesContainer(LazyGithubContainer):
 
     def compose(self) -> ComposeResult:
         key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_ISSUE_TABLE)
-        self.border_title = Content.from_markup(f"\\[{key}] Issues")
+        self._base_border_title = Content.from_markup(f"\\[{key}] Issues")
+        self.border_title = self._base_border_title
         yield LazilyLoadedDataTable(
             id="searchable_issues_table",
             table_id="issues_table",
@@ -94,6 +95,7 @@ class IssuesContainer(LazyGithubContainer):
         self.searchable_table.can_load_more = True
         self.searchable_table.current_batch = 1
         self.searchable_table.loading = False
+        self.set_compact(len(self.searchable_table.items) == 0, self._base_border_title)
 
     async def get_selected_issue(self) -> Issue:
         pr_number_coord = Coordinate(self.table.cursor_row, self.number_column_index)

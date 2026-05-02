@@ -104,7 +104,8 @@ class WorkflowsContainer(LazyGithubContainer):
 
     def compose(self) -> ComposeResult:
         key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_WORKFLOW_TABS)
-        self.border_title = Content.from_markup(f"\\[{key}] Workflows")
+        self._base_border_title = Content.from_markup(f"\\[{key}] Workflows")
+        self.border_title = self._base_border_title
         yield WorkflowRunsContainer(id="workflow_runs")
 
     @property
@@ -120,6 +121,7 @@ class WorkflowsContainer(LazyGithubContainer):
         self.current_repo = repo
         # Load workflows and workflow runs concurrently
         self.workflows, _ = await asyncio.gather(list_workflows(repo), self.workflow_runs.load_repo(repo))
+        self.set_compact(len(self.workflow_runs.searchable_table.items) == 0, self._base_border_title)
 
     @work
     async def action_trigger_workflow(self) -> None:

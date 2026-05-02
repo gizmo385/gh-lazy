@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
+from textual.content import Content
 from textual.events import Blur
 from textual.widgets import Button, DataTable, Footer, Input
 from textual.widgets.data_table import RowDoesNotExist
@@ -260,11 +261,28 @@ class LazyGithubContainer(Container):
         border: solid $primary-lighten-3;
     }
 
+    LazyGithubContainer.compact {
+        height: 3;
+        min-height: 3;
+    }
+
     LazyGithubContainer:focus-within {
         min-height: 40%;
         border: solid $success;
     }
     """
+
+    def set_compact(self, compact: bool, base_title: Content | None = None) -> None:
+        """Toggle the compact CSS class so the container collapses to its title bar when empty.
+
+        When `base_title` is provided, the border title gets an "(empty)" suffix while compact.
+        """
+        self.set_class(compact, "compact")
+        if base_title is not None:
+            if compact:
+                self.border_title = base_title + Content.from_markup(" [dim](empty)[/dim]")
+            else:
+                self.border_title = base_title
 
 
 class ModalDialogButtons(Horizontal):

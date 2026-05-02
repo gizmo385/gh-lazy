@@ -15,6 +15,7 @@ from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import RepoSelected
 from lazy_github.models.github import Repository
 from lazy_github.ui.screens.lookup_repository import LookupRepositoryModal
+from lazy_github.ui.screens.user_profile import open_user_profile
 from lazy_github.ui.widgets.common import LazyGithubContainer, SearchableDataTable, TableRow
 
 
@@ -28,6 +29,7 @@ class ReposContainer(LazyGithubContainer):
     BINDINGS = [
         LazyGithubBindings.TOGGLE_FAVORITE_REPO,
         LazyGithubBindings.LOOKUP_REPOSITORY,
+        LazyGithubBindings.VIEW_USER_PROFILE,
     ]
 
     def __init__(self, *args, **kwargs) -> None:
@@ -83,6 +85,18 @@ class ReposContainer(LazyGithubContainer):
         repo_name = self.table.get_cell_at(Coordinate(current_row, self.name_column_index))
         full_name = f"{owner}/{repo_name}"
         return self.searchable_table.items[full_name]
+
+    @work
+    async def action_view_user_profile(self) -> None:
+        try:
+            repo = await self.get_selected_repo()
+        except Exception:
+            self.notify("No repository currently selected", severity="error")
+            return
+        if selected_repo := await open_user_profile(self.app, repo.owner.login):
+            if not self.searchable_table.item_in_table(selected_repo):
+                self.searchable_table.add_item(selected_repo)
+            self.post_message(RepoSelected(selected_repo))
 
     @work
     async def action_lookup_repository(self) -> None:

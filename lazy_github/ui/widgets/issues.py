@@ -12,11 +12,12 @@ from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.issues import get_comments, list_issues
 from lazy_github.lib.logging import lg
-from lazy_github.lib.messages import IssuesAndPullRequestsFetched, IssueSelected, NewCommentCreated
+from lazy_github.lib.messages import IssuesAndPullRequestsFetched, IssueSelected, NewCommentCreated, RepoSelected
 from lazy_github.models.github import Issue, IssueState, PartialPullRequest, Repository
 from lazy_github.ui.screens.edit_issue import EditIssueModal
 from lazy_github.ui.screens.lookup_issue import LookupIssueModal
 from lazy_github.ui.screens.new_comment import NewCommentModal
+from lazy_github.ui.screens.user_profile import open_user_profile
 from lazy_github.ui.widgets.common import LazilyLoadedDataTable, LazyGithubContainer, TableRow
 from lazy_github.ui.widgets.conversations import IssueCommentContainer
 
@@ -26,7 +27,11 @@ def issue_to_cell(issue: Issue) -> TableRow:
 
 
 class IssuesContainer(LazyGithubContainer):
-    BINDINGS = [LazyGithubBindings.LOOKUP_ISSUE, LazyGithubBindings.EDIT_ISSUE]
+    BINDINGS = [
+        LazyGithubBindings.LOOKUP_ISSUE,
+        LazyGithubBindings.EDIT_ISSUE,
+        LazyGithubBindings.VIEW_USER_PROFILE,
+    ]
 
     issues: Dict[int, Issue] = {}
     status_column_index = -1
@@ -113,6 +118,16 @@ class IssuesContainer(LazyGithubContainer):
 
     async def action_edit_issue(self) -> None:
         self.trigger_edit_issue_flow()
+
+    @work
+    async def action_view_user_profile(self) -> None:
+        try:
+            issue = await self.get_selected_issue()
+        except CellDoesNotExist:
+            self.notify("No issue currently selected", severity="error")
+            return
+        if selected_repo := await open_user_profile(self.app, issue.user.login):
+            self.post_message(RepoSelected(selected_repo))
 
     @work
     async def action_lookup_issue(self) -> None:

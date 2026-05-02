@@ -77,6 +77,13 @@ class LazyGithubBindings:
         tooltip="Mark/unmark a repository as favorited, which are displayed at the top of the repos table",
     )
     LOOKUP_REPOSITORY = Binding("O", "lookup_repository", "Lookup Repository", id="repositories.lookup")
+    VIEW_USER_PROFILE = Binding(
+        "u",
+        "view_user_profile",
+        "View User",
+        id="user.view_profile",
+        tooltip="Open the GitHub profile for the author/owner of the highlighted row",
+    )
 
     # Common widget bindings
     SELECT_ENTRY = Binding("enter,space", "select_cursor", "Select table entry", id="common.table.select", show=False)

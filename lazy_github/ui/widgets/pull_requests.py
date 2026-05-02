@@ -36,6 +36,7 @@ from lazy_github.lib.messages import (
     CommentReactionsLoaded,
     IssuesAndPullRequestsFetched,
     PullRequestSelected,
+    RepoSelected,
     ReviewsAndCommentsLoaded,
 )
 from lazy_github.models.github import (
@@ -59,6 +60,7 @@ from lazy_github.ui.screens.create_or_edit_pull_request import (
 )
 from lazy_github.ui.screens.lookup_pull_request import LookupPullRequestModal
 from lazy_github.ui.screens.new_comment import NewCommentModal
+from lazy_github.ui.screens.user_profile import open_user_profile
 from lazy_github.ui.widgets.common import (
     LazilyLoadedDataTable,
     LazyGithubContainer,
@@ -77,7 +79,11 @@ class PullRequestsContainer(LazyGithubContainer):
     This container includes the primary datatable for viewing pull requests on the UI.
     """
 
-    BINDINGS = [LazyGithubBindings.LOOKUP_PULL_REQUEST, LazyGithubBindings.EDIT_PULL_REQUEST]
+    BINDINGS = [
+        LazyGithubBindings.LOOKUP_PULL_REQUEST,
+        LazyGithubBindings.EDIT_PULL_REQUEST,
+        LazyGithubBindings.VIEW_USER_PROFILE,
+    ]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -112,6 +118,16 @@ class PullRequestsContainer(LazyGithubContainer):
         elif updated_pr := await self.app.push_screen_wait(CreateOrEditPullRequestModal(full_pr)):
             self.searchable_table.add_item(updated_pr)
             self.post_message(PullRequestSelected(updated_pr))
+
+    @work
+    async def action_view_user_profile(self) -> None:
+        try:
+            pr = await self.get_selected_pr()
+        except Exception:
+            self.notify("No pull request currently selected", severity="error")
+            return
+        if selected_repo := await open_user_profile(self.app, pr.user.login):
+            self.post_message(RepoSelected(selected_repo))
 
     @work
     async def action_lookup_pull_request(self) -> None:

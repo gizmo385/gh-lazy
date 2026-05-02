@@ -66,6 +66,25 @@ async def get_repository_by_name(full_name: str) -> Repository | None:
         return None
 
 
+async def list_repos_for_user(
+    username: str,
+    sort: RepositorySortKey = "updated",
+    direction: SortDirection = "desc",
+    per_page: int = 30,
+) -> list[Repository]:
+    """Lists the public repositories owned by a given user."""
+    headers = github_headers(cache_duration=LazyGithubContext.config.cache.list_repos_ttl)
+    query_params = {"sort": sort, "direction": direction, "per_page": per_page}
+    try:
+        response = await LazyGithubContext.client.get(
+            f"/users/{username}/repos", headers=headers, params=query_params
+        )
+        response.raise_for_status()
+    except GithubApiRequestFailed:
+        return []
+    return [Repository(**r) for r in response.json()]
+
+
 async def get_collaborators(full_name: str) -> list[str]:
     """Returns collaborators for the specified repo"""
     collaborators = []

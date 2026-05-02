@@ -23,6 +23,21 @@ class User(BaseModel):
         return self.id
 
 
+class FullUser(User):
+    bio: str | None = None
+    company: str | None = None
+    location: str | None = None
+    blog: str | None = None
+    email: str | None = None
+    twitter_username: str | None = None
+    public_repos: int = 0
+    public_gists: int = 0
+    followers: int = 0
+    following: int = 0
+    created_at: datetime | None = None
+    type: str | None = None
+
+
 class RepositoryPermission(BaseModel):
     admin: bool
     maintain: bool

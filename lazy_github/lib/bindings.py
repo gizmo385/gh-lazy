@@ -178,6 +178,11 @@ class LazyGithubBindings:
     # Paste link modal
     OPEN_PASTE_LINK_MODAL = Binding("ctrl+v", "open_link_paste_modal", "Paste link", id="link.paste")
 
+    # Hint-mode link follower
+    FOLLOW_LINK = Binding(
+        "f", "follow_link", "Follow link", id="link.follow", tooltip="Show hints on visible links and pick one"
+    )
+
     # Focusing different UI elements
     FOCUS_REPOSITORY_TABLE = Binding(
         "1",

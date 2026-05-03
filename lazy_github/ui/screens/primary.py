@@ -57,6 +57,7 @@ from lazy_github.ui.widgets.command_log import CommandLogSection
 from lazy_github.ui.widgets.common import LazyGithubContainer, LazyGithubFooter
 from lazy_github.ui.widgets.info import LazyGithubInfoTabPane
 from lazy_github.ui.widgets.issues import IssueConversationTabPane, IssueOverviewTabPane, IssuesContainer
+from lazy_github.ui.widgets.link_hints import follow_link
 from lazy_github.ui.widgets.pull_requests import (
     PrConversationTabPane,
     PrDiffTabPane,
@@ -431,7 +432,11 @@ class MainScreenCommandProvider(Provider):
 
 
 class LazyGithubMainScreen(Screen):
-    BINDINGS = [LazyGithubBindings.OPEN_NOTIFICATIONS_MODAL, LazyGithubBindings.OPEN_PASTE_LINK_MODAL]
+    BINDINGS = [
+        LazyGithubBindings.OPEN_NOTIFICATIONS_MODAL,
+        LazyGithubBindings.OPEN_PASTE_LINK_MODAL,
+        LazyGithubBindings.FOLLOW_LINK,
+    ]
     COMMANDS = {MainScreenCommandProvider}
     notification_refresh_timer: Timer | None = None
 
@@ -496,6 +501,10 @@ class LazyGithubMainScreen(Screen):
         event.prevent_default()
         event.stop()
         self.action_open_gh_link(event.href)
+
+    @work
+    async def action_follow_link(self) -> None:
+        await follow_link(self)
 
     @work
     async def action_view_notifications(self) -> None:

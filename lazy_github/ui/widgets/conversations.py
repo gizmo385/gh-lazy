@@ -111,7 +111,7 @@ class IssueCommentContainer(Container, can_focus=True):
     def compose(self) -> ComposeResult:
         comment_time = self.comment.created_at.strftime("%c")
         author = self.comment.user.login if self.comment.user else "Unknown"
-        yield Markdown(self.comment.body)
+        yield Markdown(self.comment.body, open_links=False)
         yield Label(f"{author} • {comment_time}", classes="comment-author")
 
     @work
@@ -191,7 +191,7 @@ class ReviewContainer(Container):
         if self.review.body or self.review.comments:
             with Collapsible(title=review_summary, collapsed=self.review.state == ReviewState.DISMISSED):
                 if self.review.body:
-                    yield Markdown(self.review.body)
+                    yield Markdown(self.review.body, open_links=False)
 
                 for comment in self.review.comments:
                     if comment_node := self.hierarchy.get(comment.id):

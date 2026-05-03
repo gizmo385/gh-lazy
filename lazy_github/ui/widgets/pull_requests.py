@@ -253,14 +253,14 @@ class PrOverviewTabPane(TabPane):
         status_summary = status.state.to_display()
         label = f"{status_summary} {status.context} - {status.description}"
         if status.target_url:
-            label = f'[link="{status.target_url}"]{label}[/link]'
+            label = f"[@click=screen.open_gh_link('{status.target_url}')]{label}[/]"
         return label
 
     def _check_run_to_label(self, check_run: CheckRun) -> str:
         status_summary = check_run.to_check_status_state().to_display()
         label = f"{status_summary} {check_run.name}"
         if check_run.html_url:
-            label = f'[link="{check_run.html_url}"]{label}[/link]'
+            label = f"[@click=screen.open_gh_link('{check_run.html_url}')]{label}[/]"
         return label
 
     def _overall_pr_status(self, combined_status: CombinedCheckStatus, check_runs: CheckRunList) -> str:
@@ -339,8 +339,8 @@ class PrOverviewTabPane(TabPane):
             self.post_message(PullRequestSelected(updated_pr))
 
     def compose(self) -> ComposeResult:
-        pr_link = f'[link="{self.pr.html_url}"](#{self.pr.number})[/link]'
-        user_link = f'[link="{self.pr.user.html_url}"]{self.pr.user.login}[/link]'
+        pr_link = f"[@click=screen.open_gh_link('{self.pr.html_url}')](#{self.pr.number})[/]"
+        user_link = f"[@click=screen.open_gh_link('{self.pr.user.html_url}')]{self.pr.user.login}[/]"
         merge_from = None
         if self.pr.head:
             merge_from = f"[bold]{self.pr.head.user.login}:{self.pr.head.ref}[/bold]"
@@ -388,7 +388,7 @@ class PrOverviewTabPane(TabPane):
                 yield ListView(id="reviews_list")
 
             yield Rule()
-            yield Markdown(self.pr.body)
+            yield Markdown(self.pr.body, open_links=False)
 
     @work
     async def add_reviews(self, reviews: list[Review]) -> None:

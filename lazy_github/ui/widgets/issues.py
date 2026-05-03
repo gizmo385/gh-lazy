@@ -159,8 +159,8 @@ class IssueOverviewTabPane(TabPane):
         self.issue = issue
 
     def compose(self) -> ComposeResult:
-        issue_link = f'[link="{self.issue.html_url}"](#{self.issue.number})[/link]'
-        user_link = f'[link="{self.issue.user.html_url}"]{self.issue.user.login}[/link]'
+        issue_link = f"[@click=screen.open_gh_link('{self.issue.html_url}')](#{self.issue.number})[/]"
+        user_link = f"[@click=screen.open_gh_link('{self.issue.user.html_url}')]{self.issue.user.login}[/]"
 
         if self.issue.state == IssueState.OPEN:
             issue_status = "[greenyellow]Open[/]"
@@ -171,7 +171,7 @@ class IssueOverviewTabPane(TabPane):
             yield Label(Content.from_markup(f"{issue_status} [b]{self.issue.title}[b] {issue_link} by {user_link}"))
 
             yield Rule()
-            yield Markdown(self.issue.body)
+            yield Markdown(self.issue.body, open_links=False)
 
     def action_edit_issue(self) -> None:
         self.app.push_screen(EditIssueModal(self.issue))

@@ -85,6 +85,19 @@ async def list_repos_for_user(
     return [Repository(**r) for r in response.json()]
 
 
+async def get_repo_readme(repo: Repository) -> str | None:
+    """Fetch a repo's README as raw Markdown, or None if there isn't one."""
+    try:
+        response = await LazyGithubContext.client.get(
+            f"/repos/{repo.full_name}/readme",
+            headers=github_headers(accept="application/vnd.github.raw"),
+        )
+        response.raise_for_status()
+    except GithubApiRequestFailed:
+        return None
+    return response.text
+
+
 async def get_collaborators(full_name: str) -> list[str]:
     """Returns collaborators for the specified repo"""
     collaborators = []

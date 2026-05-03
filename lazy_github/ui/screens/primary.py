@@ -65,6 +65,7 @@ from lazy_github.ui.widgets.pull_requests import (
     PullRequestsContainer,
 )
 from lazy_github.ui.widgets.repositories import ReposContainer
+from lazy_github.ui.widgets.repository_details import RepoOverviewTabPane
 from lazy_github.ui.widgets.workflow_run_details import (
     WorkflowRunJobsTabPane,
     WorkflowRunLogsTabPane,
@@ -313,6 +314,14 @@ class MainViewPane(Container):
 
     async def load_repository(self, repo: Repository) -> None:
         await self.selections.load_repository(repo)
+        await self.load_repository_details(repo)
+
+    async def load_repository_details(self, repo: Repository) -> None:
+        tabbed_content = self.query_one("#selection_detail_tabs", TabbedContent)
+        await tabbed_content.clear_panes()
+        await tabbed_content.add_pane(RepoOverviewTabPane(repo))
+        key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_DETAIL_TABS)
+        self.details.border_title = Content.from_markup(f"\\[{key}] {repo.full_name} Details")
 
     async def load_pull_request(self, pull_request: PartialPullRequest, focus_pr_details: bool = True) -> None:
         if isinstance(pull_request, FullPullRequest):
@@ -611,4 +620,4 @@ class LazyGithubMainScreen(Screen):
     async def handle_repo_selection(self, message: RepoSelected) -> None:
         self.set_currently_loaded_repo(message.repo)
         assert LazyGithubContext.current_repo == message.repo
-        await self.main_view_pane.selections.load_repository(message.repo)
+        await self.main_view_pane.load_repository(message.repo)

@@ -1,10 +1,11 @@
-"""Expand GitHub-flavored issue/PR references in Markdown bodies into real links.
+"""Expand GitHub-flavored references in Markdown bodies into real links.
 
-GitHub auto-links references like `#123`, `owner/repo#123`, and
-`https://github.com/owner/repo/pull/123` in rendered issue/PR/comment bodies.
-The raw Markdown source does not contain those links, so the Textual Markdown
-widget never sees them as clickable. We pre-process the body to replace bare
-references with proper Markdown links so the LinkClicked handler can intercept.
+GitHub auto-links references like `#123`, `owner/repo#123`, and `@username`
+in rendered issue/PR/comment bodies. The raw Markdown source does not contain
+those links, so the Textual Markdown widget never sees them as clickable. We
+pre-process the body to replace bare references with proper Markdown links so
+the LinkClicked handler can intercept and route them through the in-app
+resolver.
 """
 
 import re
@@ -20,11 +21,19 @@ _REFERENCE_RE = re.compile(
     r"#(?P<number>\d+)\b"
 )
 
+# Matches `@username`. Negative lookbehind on `\w`, `@`, and `/` keeps us
+# from matching email addresses (`user@example.com`), `@@chains`, or paths.
+_MENTION_RE = re.compile(
+    r"(?<![\w@/])"
+    r"@(?P<username>[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)"
+    r"\b"
+)
+
 _FENCE_RE = re.compile(r"^\s*(```|~~~)")
 
 
 def _expand_segment(segment: str, owner: str, repo: str) -> str:
-    def repl(match: re.Match[str]) -> str:
+    def issue_repl(match: re.Match[str]) -> str:
         ref_owner = match.group("owner") or owner
         ref_repo = match.group("repo") or repo
         number = match.group("number")
@@ -32,11 +41,17 @@ def _expand_segment(segment: str, owner: str, repo: str) -> str:
         text = match.group(0)
         return f"[{text}]({url})"
 
-    return _REFERENCE_RE.sub(repl, segment)
+    def mention_repl(match: re.Match[str]) -> str:
+        username = match.group("username")
+        return f"[@{username}](https://github.com/{username})"
+
+    segment = _MENTION_RE.sub(mention_repl, segment)
+    segment = _REFERENCE_RE.sub(issue_repl, segment)
+    return segment
 
 
-def expand_issue_references(body: str | None, repo: Repository) -> str:
-    """Rewrite `#N` and `owner/repo#N` references into Markdown links.
+def expand_github_references(body: str | None, repo: Repository) -> str:
+    """Rewrite `#N`, `owner/repo#N`, and `@username` references into Markdown links.
 
     Skips fenced code blocks and inline backtick spans so we don't munge code.
     """

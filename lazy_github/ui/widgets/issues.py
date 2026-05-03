@@ -11,7 +11,7 @@ from textual.widgets.data_table import CellDoesNotExist
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.issues import get_comments, list_issues
-from lazy_github.lib.github.references import expand_issue_references
+from lazy_github.lib.github.references import expand_github_references
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import IssuesAndPullRequestsFetched, IssueSelected, NewCommentCreated, RepoSelected
 from lazy_github.models.github import Issue, IssueState, PartialPullRequest, Repository
@@ -172,7 +172,7 @@ class IssueOverviewTabPane(TabPane):
             yield Label(Content.from_markup(f"{issue_status} [b]{self.issue.title}[b] {issue_link} by {user_link}"))
 
             yield Rule()
-            yield Markdown(expand_issue_references(self.issue.body, self.issue.repo), open_links=False)
+            yield Markdown(expand_github_references(self.issue.body, self.issue.repo), open_links=False)
 
     def action_edit_issue(self) -> None:
         self.app.push_screen(EditIssueModal(self.issue))

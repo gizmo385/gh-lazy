@@ -445,6 +445,7 @@ class LazyGithubMainScreen(Screen):
         LazyGithubBindings.OPEN_NOTIFICATIONS_MODAL,
         LazyGithubBindings.OPEN_PASTE_LINK_MODAL,
         LazyGithubBindings.FOLLOW_LINK,
+        LazyGithubBindings.FOLLOW_LINK_EXTERNAL,
     ]
     COMMANDS = {MainScreenCommandProvider}
     notification_refresh_timer: Timer | None = None
@@ -514,6 +515,10 @@ class LazyGithubMainScreen(Screen):
     @work
     async def action_follow_link(self) -> None:
         await follow_link(self)
+
+    @work
+    async def action_follow_link_external(self) -> None:
+        await follow_link(self, external=True)
 
     @work
     async def action_view_notifications(self) -> None:

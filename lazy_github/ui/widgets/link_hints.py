@@ -223,8 +223,13 @@ class LinkHintScreen(ModalScreen[_LinkHit | None]):
             self.dismiss(None)
 
 
-async def follow_link(screen: "LazyGithubMainScreen") -> None:
-    """Entry point: collect links on the main screen, show hints, dispatch the pick."""
+async def follow_link(screen: "LazyGithubMainScreen", *, external: bool = False) -> None:
+    """Entry point: collect links on the main screen, show hints, dispatch the pick.
+
+    With `external=True`, picked URLs open in the system browser instead of
+    being routed through the in-app resolver. Non-URL action hits still run
+    in-app since "open externally" has no meaning for them.
+    """
     hits = collect_link_hits(screen)
     if not hits:
         screen.notify("No links visible", severity="information")
@@ -234,6 +239,10 @@ async def follow_link(screen: "LazyGithubMainScreen") -> None:
     if pick is None:
         return
     if pick.href is not None:
-        screen.action_open_gh_link(pick.href)
+        if external:
+            screen.app.open_url(pick.href)
+            screen.notify(f"Opening {pick.href} externally")
+        else:
+            screen.action_open_gh_link(pick.href)
     elif pick.action is not None:
         await screen.run_action(pick.action)  # pragma: no cover - no current callers

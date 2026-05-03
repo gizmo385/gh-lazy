@@ -182,6 +182,13 @@ class LazyGithubBindings:
     FOLLOW_LINK = Binding(
         "f", "follow_link", "Follow link", id="link.follow", tooltip="Show hints on visible links and pick one"
     )
+    FOLLOW_LINK_EXTERNAL = Binding(
+        "F",
+        "follow_link_external",
+        "Follow link (browser)",
+        id="link.follow_external",
+        tooltip="Show hints on visible links and open the pick in the system browser",
+    )
 
     # Focusing different UI elements
     FOCUS_REPOSITORY_TABLE = Binding(

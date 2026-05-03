@@ -11,12 +11,14 @@ from textual.widgets.data_table import CellDoesNotExist
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.context import LazyGithubContext
 from lazy_github.lib.github.issues import get_comments, list_issues
+from lazy_github.lib.github.references import expand_github_references
 from lazy_github.lib.logging import lg
-from lazy_github.lib.messages import IssuesAndPullRequestsFetched, IssueSelected, NewCommentCreated
+from lazy_github.lib.messages import IssuesAndPullRequestsFetched, IssueSelected, NewCommentCreated, RepoSelected
 from lazy_github.models.github import Issue, IssueState, PartialPullRequest, Repository
 from lazy_github.ui.screens.edit_issue import EditIssueModal
 from lazy_github.ui.screens.lookup_issue import LookupIssueModal
 from lazy_github.ui.screens.new_comment import NewCommentModal
+from lazy_github.ui.screens.user_profile import open_user_profile
 from lazy_github.ui.widgets.common import LazilyLoadedDataTable, LazyGithubContainer, TableRow
 from lazy_github.ui.widgets.conversations import IssueCommentContainer
 
@@ -26,7 +28,11 @@ def issue_to_cell(issue: Issue) -> TableRow:
 
 
 class IssuesContainer(LazyGithubContainer):
-    BINDINGS = [LazyGithubBindings.LOOKUP_ISSUE, LazyGithubBindings.EDIT_ISSUE]
+    BINDINGS = [
+        LazyGithubBindings.LOOKUP_ISSUE,
+        LazyGithubBindings.EDIT_ISSUE,
+        LazyGithubBindings.VIEW_USER_PROFILE,
+    ]
 
     issues: Dict[int, Issue] = {}
     status_column_index = -1
@@ -115,6 +121,16 @@ class IssuesContainer(LazyGithubContainer):
         self.trigger_edit_issue_flow()
 
     @work
+    async def action_view_user_profile(self) -> None:
+        try:
+            issue = await self.get_selected_issue()
+        except CellDoesNotExist:
+            self.notify("No issue currently selected", severity="error")
+            return
+        if selected_repo := await open_user_profile(self.app, issue.user.login):
+            self.post_message(RepoSelected(selected_repo))
+
+    @work
     async def action_lookup_issue(self) -> None:
         if issue := await self.app.push_screen_wait(LookupIssueModal()):
             if not self.searchable_table.item_in_table(issue):
@@ -144,8 +160,8 @@ class IssueOverviewTabPane(TabPane):
         self.issue = issue
 
     def compose(self) -> ComposeResult:
-        issue_link = f'[link="{self.issue.html_url}"](#{self.issue.number})[/link]'
-        user_link = f'[link="{self.issue.user.html_url}"]{self.issue.user.login}[/link]'
+        issue_link = f"[@click=screen.open_gh_link('{self.issue.html_url}')](#{self.issue.number})[/]"
+        user_link = f"[@click=screen.open_gh_link('{self.issue.user.html_url}')]{self.issue.user.login}[/]"
 
         if self.issue.state == IssueState.OPEN:
             issue_status = "[greenyellow]Open[/]"
@@ -156,7 +172,7 @@ class IssueOverviewTabPane(TabPane):
             yield Label(Content.from_markup(f"{issue_status} [b]{self.issue.title}[b] {issue_link} by {user_link}"))
 
             yield Rule()
-            yield Markdown(self.issue.body)
+            yield Markdown(expand_github_references(self.issue.body, self.issue.repo), open_links=False)
 
     def action_edit_issue(self) -> None:
         self.app.push_screen(EditIssueModal(self.issue))

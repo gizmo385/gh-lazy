@@ -31,11 +31,13 @@ from lazy_github.lib.github.pull_requests import (
     reconstruct_review_conversation_hierarchy,
 )
 from lazy_github.lib.github.reactions import add_reaction_on_issue, list_reactions_on_comment, list_reactions_on_issue
+from lazy_github.lib.github.references import expand_github_references
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import (
     CommentReactionsLoaded,
     IssuesAndPullRequestsFetched,
     PullRequestSelected,
+    RepoSelected,
     ReviewsAndCommentsLoaded,
 )
 from lazy_github.models.github import (
@@ -59,6 +61,7 @@ from lazy_github.ui.screens.create_or_edit_pull_request import (
 )
 from lazy_github.ui.screens.lookup_pull_request import LookupPullRequestModal
 from lazy_github.ui.screens.new_comment import NewCommentModal
+from lazy_github.ui.screens.user_profile import open_user_profile
 from lazy_github.ui.widgets.common import (
     LazilyLoadedDataTable,
     LazyGithubContainer,
@@ -77,7 +80,11 @@ class PullRequestsContainer(LazyGithubContainer):
     This container includes the primary datatable for viewing pull requests on the UI.
     """
 
-    BINDINGS = [LazyGithubBindings.LOOKUP_PULL_REQUEST, LazyGithubBindings.EDIT_PULL_REQUEST]
+    BINDINGS = [
+        LazyGithubBindings.LOOKUP_PULL_REQUEST,
+        LazyGithubBindings.EDIT_PULL_REQUEST,
+        LazyGithubBindings.VIEW_USER_PROFILE,
+    ]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -112,6 +119,16 @@ class PullRequestsContainer(LazyGithubContainer):
         elif updated_pr := await self.app.push_screen_wait(CreateOrEditPullRequestModal(full_pr)):
             self.searchable_table.add_item(updated_pr)
             self.post_message(PullRequestSelected(updated_pr))
+
+    @work
+    async def action_view_user_profile(self) -> None:
+        try:
+            pr = await self.get_selected_pr()
+        except Exception:
+            self.notify("No pull request currently selected", severity="error")
+            return
+        if selected_repo := await open_user_profile(self.app, pr.user.login):
+            self.post_message(RepoSelected(selected_repo))
 
     @work
     async def action_lookup_pull_request(self) -> None:
@@ -237,14 +254,14 @@ class PrOverviewTabPane(TabPane):
         status_summary = status.state.to_display()
         label = f"{status_summary} {status.context} - {status.description}"
         if status.target_url:
-            label = f'[link="{status.target_url}"]{label}[/link]'
+            label = f"[@click=screen.open_gh_link('{status.target_url}')]{label}[/]"
         return label
 
     def _check_run_to_label(self, check_run: CheckRun) -> str:
         status_summary = check_run.to_check_status_state().to_display()
         label = f"{status_summary} {check_run.name}"
         if check_run.html_url:
-            label = f'[link="{check_run.html_url}"]{label}[/link]'
+            label = f"[@click=screen.open_gh_link('{check_run.html_url}')]{label}[/]"
         return label
 
     def _overall_pr_status(self, combined_status: CombinedCheckStatus, check_runs: CheckRunList) -> str:
@@ -323,8 +340,8 @@ class PrOverviewTabPane(TabPane):
             self.post_message(PullRequestSelected(updated_pr))
 
     def compose(self) -> ComposeResult:
-        pr_link = f'[link="{self.pr.html_url}"](#{self.pr.number})[/link]'
-        user_link = f'[link="{self.pr.user.html_url}"]{self.pr.user.login}[/link]'
+        pr_link = f"[@click=screen.open_gh_link('{self.pr.html_url}')](#{self.pr.number})[/]"
+        user_link = f"[@click=screen.open_gh_link('{self.pr.user.html_url}')]{self.pr.user.login}[/]"
         merge_from = None
         if self.pr.head:
             merge_from = f"[bold]{self.pr.head.user.login}:{self.pr.head.ref}[/bold]"
@@ -372,7 +389,7 @@ class PrOverviewTabPane(TabPane):
                 yield ListView(id="reviews_list")
 
             yield Rule()
-            yield Markdown(self.pr.body)
+            yield Markdown(expand_github_references(self.pr.body, self.pr.repo), open_links=False)
 
     @work
     async def add_reviews(self, reviews: list[Review]) -> None:

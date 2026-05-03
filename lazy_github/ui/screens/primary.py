@@ -1,3 +1,4 @@
+import webbrowser
 from functools import partial
 from typing import NamedTuple
 
@@ -12,7 +13,7 @@ from textual.screen import Screen
 from textual.timer import Timer
 from textual.types import IgnoreReturnCallbackType
 from textual.widget import Widget
-from textual.widgets import DataTable, TabbedContent
+from textual.widgets import DataTable, Markdown, TabbedContent
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.constants import NOTIFICATION_REFRESH_INTERVAL
@@ -33,17 +34,30 @@ from lazy_github.lib.messages import (
     ReviewsAndCommentsLoaded,
     WorkflowRunSelected,
 )
-from lazy_github.models.github import FullPullRequest, Issue, PartialPullRequest, Repository, WorkflowRun
+from lazy_github.models.github import (
+    FullPullRequest,
+    FullUser,
+    Issue,
+    PartialPullRequest,
+    Repository,
+    WorkflowRun,
+)
 from lazy_github.ui.screens.create_or_edit_pull_request import CreateOrEditPullRequestModal
 from lazy_github.ui.screens.debug import DebugModal
-from lazy_github.ui.screens.link_paste import PasteLinkModal
+from lazy_github.ui.screens.link_paste import (
+    PasteLinkModal,
+    UnknownGithubLink,
+    resolve_github_url,
+)
 from lazy_github.ui.screens.new_issue import NewIssueModal
 from lazy_github.ui.screens.notifications import NotificationsModal
 from lazy_github.ui.screens.settings import SettingsModal
+from lazy_github.ui.screens.user_profile import open_user_profile
 from lazy_github.ui.widgets.command_log import CommandLogSection
 from lazy_github.ui.widgets.common import LazyGithubContainer, LazyGithubFooter
 from lazy_github.ui.widgets.info import LazyGithubInfoTabPane
 from lazy_github.ui.widgets.issues import IssueConversationTabPane, IssueOverviewTabPane, IssuesContainer
+from lazy_github.ui.widgets.link_hints import follow_link
 from lazy_github.ui.widgets.pull_requests import (
     PrConversationTabPane,
     PrDiffTabPane,
@@ -51,6 +65,7 @@ from lazy_github.ui.widgets.pull_requests import (
     PullRequestsContainer,
 )
 from lazy_github.ui.widgets.repositories import ReposContainer
+from lazy_github.ui.widgets.repository_details import RepoOverviewTabPane
 from lazy_github.ui.widgets.workflow_run_details import (
     WorkflowRunJobsTabPane,
     WorkflowRunLogsTabPane,
@@ -299,6 +314,14 @@ class MainViewPane(Container):
 
     async def load_repository(self, repo: Repository) -> None:
         await self.selections.load_repository(repo)
+        await self.load_repository_details(repo)
+
+    async def load_repository_details(self, repo: Repository) -> None:
+        tabbed_content = self.query_one("#selection_detail_tabs", TabbedContent)
+        await tabbed_content.clear_panes()
+        await tabbed_content.add_pane(RepoOverviewTabPane(repo))
+        key = LazyGithubContext.get_key(LazyGithubBindings.FOCUS_DETAIL_TABS)
+        self.details.border_title = Content.from_markup(f"\\[{key}] {repo.full_name} Details")
 
     async def load_pull_request(self, pull_request: PartialPullRequest, focus_pr_details: bool = True) -> None:
         if isinstance(pull_request, FullPullRequest):
@@ -418,7 +441,12 @@ class MainScreenCommandProvider(Provider):
 
 
 class LazyGithubMainScreen(Screen):
-    BINDINGS = [LazyGithubBindings.OPEN_NOTIFICATIONS_MODAL, LazyGithubBindings.OPEN_PASTE_LINK_MODAL]
+    BINDINGS = [
+        LazyGithubBindings.OPEN_NOTIFICATIONS_MODAL,
+        LazyGithubBindings.OPEN_PASTE_LINK_MODAL,
+        LazyGithubBindings.FOLLOW_LINK,
+        LazyGithubBindings.FOLLOW_LINK_EXTERNAL,
+    ]
     COMMANDS = {MainScreenCommandProvider}
     notification_refresh_timer: Timer | None = None
 
@@ -436,24 +464,61 @@ class LazyGithubMainScreen(Screen):
         self.set_currently_loaded_repo(repo)
         await self.main_view_pane.load_repository(repo)
 
-    @work
-    async def action_open_link_paste_modal(self) -> None:
-        link_subject = await self.app.push_screen_wait(PasteLinkModal())
+    async def _open_link_subject(self, link_subject: object) -> None:
         match link_subject:
             case FullPullRequest():
                 await self.set_repository(link_subject.repo)
                 await self.main_view_pane.load_pull_request(link_subject)
                 self.notify("Opening pull request for link")
-                return
             case Issue():
                 await self.set_repository(link_subject.repo)
                 await self.main_view_pane.load_issue(link_subject)
                 self.notify("Opening issue for link")
-                return
             case Repository():
                 await self.set_repository(link_subject)
                 self.notify("Opening repository for link")
-                return
+            case FullUser():
+                selected_repo = await open_user_profile(self.app, link_subject.login)
+                if selected_repo is not None:
+                    await self.set_repository(selected_repo)
+
+    @work
+    async def action_open_link_paste_modal(self) -> None:
+        link_subject = await self.app.push_screen_wait(PasteLinkModal())
+        if link_subject is not None:
+            await self._open_link_subject(link_subject)
+
+    @work
+    async def action_open_gh_link(self, url: str) -> None:
+        """Try to open a GitHub URL inside the app; fall back to the system browser.
+
+        We intercept PR/issue URLs (load in-app) and plain user URLs (open the
+        user profile modal). Plain repo URLs and other paths (actions runs,
+        blobs, etc.) are more useful in the browser.
+        """
+        try:
+            subject = await resolve_github_url(url, accept_repo=False)
+        except UnknownGithubLink:
+            webbrowser.open(url)
+            return
+        if subject is None:
+            webbrowser.open(url)
+            return
+        await self._open_link_subject(subject)
+
+    @on(Markdown.LinkClicked)
+    def handle_markdown_link_clicked(self, event: Markdown.LinkClicked) -> None:
+        event.prevent_default()
+        event.stop()
+        self.action_open_gh_link(event.href)
+
+    @work
+    async def action_follow_link(self) -> None:
+        await follow_link(self)
+
+    @work
+    async def action_follow_link_external(self) -> None:
+        await follow_link(self, external=True)
 
     @work
     async def action_view_notifications(self) -> None:
@@ -560,4 +625,4 @@ class LazyGithubMainScreen(Screen):
     async def handle_repo_selection(self, message: RepoSelected) -> None:
         self.set_currently_loaded_repo(message.repo)
         assert LazyGithubContext.current_repo == message.repo
-        await self.main_view_pane.selections.load_repository(message.repo)
+        await self.main_view_pane.load_repository(message.repo)

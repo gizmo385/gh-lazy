@@ -77,6 +77,13 @@ class LazyGithubBindings:
         tooltip="Mark/unmark a repository as favorited, which are displayed at the top of the repos table",
     )
     LOOKUP_REPOSITORY = Binding("O", "lookup_repository", "Lookup Repository", id="repositories.lookup")
+    VIEW_USER_PROFILE = Binding(
+        "u",
+        "view_user_profile",
+        "View User",
+        id="user.view_profile",
+        tooltip="Open the GitHub profile for the author/owner of the highlighted row",
+    )
 
     # Common widget bindings
     SELECT_ENTRY = Binding("enter,space", "select_cursor", "Select table entry", id="common.table.select", show=False)
@@ -170,6 +177,18 @@ class LazyGithubBindings:
 
     # Paste link modal
     OPEN_PASTE_LINK_MODAL = Binding("ctrl+v", "open_link_paste_modal", "Paste link", id="link.paste")
+
+    # Hint-mode link follower
+    FOLLOW_LINK = Binding(
+        "f", "follow_link", "Follow link", id="link.follow", tooltip="Show hints on visible links and pick one"
+    )
+    FOLLOW_LINK_EXTERNAL = Binding(
+        "F",
+        "follow_link_external",
+        "Follow link (browser)",
+        id="link.follow_external",
+        tooltip="Show hints on visible links and open the pick in the system browser",
+    )
 
     # Focusing different UI elements
     FOCUS_REPOSITORY_TABLE = Binding(

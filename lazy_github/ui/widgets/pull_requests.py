@@ -31,6 +31,7 @@ from lazy_github.lib.github.pull_requests import (
     reconstruct_review_conversation_hierarchy,
 )
 from lazy_github.lib.github.reactions import add_reaction_on_issue, list_reactions_on_comment, list_reactions_on_issue
+from lazy_github.lib.github.references import expand_issue_references
 from lazy_github.lib.logging import lg
 from lazy_github.lib.messages import (
     CommentReactionsLoaded,
@@ -388,7 +389,7 @@ class PrOverviewTabPane(TabPane):
                 yield ListView(id="reviews_list")
 
             yield Rule()
-            yield Markdown(self.pr.body, open_links=False)
+            yield Markdown(expand_issue_references(self.pr.body, self.pr.repo), open_links=False)
 
     @work
     async def add_reviews(self, reviews: list[Review]) -> None:

@@ -6,6 +6,7 @@ from textual.widgets import Collapsible, Label, ListItem, ListView, Markdown, St
 
 from lazy_github.lib.bindings import LazyGithubBindings
 from lazy_github.lib.github.pull_requests import ReviewCommentNode
+from lazy_github.lib.github.references import expand_issue_references
 from lazy_github.lib.messages import NewCommentCreated
 from lazy_github.models.github import (
     FullPullRequest,
@@ -111,7 +112,7 @@ class IssueCommentContainer(Container, can_focus=True):
     def compose(self) -> ComposeResult:
         comment_time = self.comment.created_at.strftime("%c")
         author = self.comment.user.login if self.comment.user else "Unknown"
-        yield Markdown(self.comment.body, open_links=False)
+        yield Markdown(expand_issue_references(self.comment.body, self.issue.repo), open_links=False)
         yield Label(f"{author} • {comment_time}", classes="comment-author")
 
     @work
@@ -191,7 +192,7 @@ class ReviewContainer(Container):
         if self.review.body or self.review.comments:
             with Collapsible(title=review_summary, collapsed=self.review.state == ReviewState.DISMISSED):
                 if self.review.body:
-                    yield Markdown(self.review.body, open_links=False)
+                    yield Markdown(expand_issue_references(self.review.body, self.pr.repo), open_links=False)
 
                 for comment in self.review.comments:
                     if comment_node := self.hierarchy.get(comment.id):

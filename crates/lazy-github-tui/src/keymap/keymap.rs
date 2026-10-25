@@ -81,33 +81,53 @@ impl Keymap {
     /// How the help panel shows `id`'s keys, all of them in order. A binding's `key_display` replaces each default
     /// key's display, until the binding is overridden.
     pub fn key_displays(&self, id: BindingId) -> Vec<String> {
-        let key_display = id.def().key_display.filter(|_| !self.is_overridden(id));
         self.keys(id)
             .iter()
-            .map(|(token, _)| key_display.map_or_else(|| KeySpec::display(token), str::to_owned))
+            .map(|(token, _)| self.key_display(id, token))
             .collect()
     }
 
-    /// The keys that fire each binding of one component's list `ids`, in Textual's order after a keymap: the keys
-    /// left at their defaults in list order, then the overridden bindings' keys in list order.
+    /// How one of `id`'s keys, `token` as written, is shown: the binding's `key_display` until it's overridden, or
+    /// the key's own display (Textual's `App.get_key_display`).
+    pub fn key_display(&self, id: BindingId, token: &str) -> String {
+        match id.def().key_display.filter(|_| !self.is_overridden(id)) {
+            Some(display) => display.to_owned(),
+            None => KeySpec::display(token),
+        }
+    }
+
+    /// The keys of each binding of one component's list `ids`, in Textual's order after a keymap: the keys left at
+    /// their defaults in list order, then the overridden bindings' keys in list order. Each comes with its token as
+    /// written.
     ///
     /// This is Textual's per-component clash rule: a default key that an overridden binding in the same list claims
-    /// is gone. Unknown tokens have no chord and are left out.
-    pub fn effective_keys(&self, ids: &[BindingId]) -> Vec<(BindingId, KeyChord)> {
-        let chords = |id: BindingId| {
-            self.keys(id).iter().filter_map(move |(_, spec)| match spec {
-                KeySpec::Chord(chord) => Some((id, *chord)),
-                KeySpec::Unknown(_) => None,
-            })
+    /// is gone. Unknown tokens are kept, as Textual keeps any key string: they never match a press, but the footer
+    /// shows them.
+    pub fn effective_specs(&self, ids: &[BindingId]) -> Vec<(BindingId, &str, &KeySpec)> {
+        let specs = |id: BindingId| {
+            self.keys(id)
+                .iter()
+                .map(move |(token, spec)| (id, token.as_str(), spec))
         };
         let (overridden, defaults): (Vec<BindingId>, Vec<BindingId>) =
             ids.iter().copied().partition(|&id| self.is_overridden(id));
-        let claimed: Vec<(BindingId, KeyChord)> = overridden.iter().flat_map(|&id| chords(id)).collect();
+        let claimed: Vec<_> = overridden.iter().flat_map(|&id| specs(id)).collect();
         defaults
             .iter()
-            .flat_map(|&id| chords(id))
-            .filter(|(_, chord)| !claimed.iter().any(|(_, claimed)| claimed == chord))
+            .flat_map(|&id| specs(id))
+            .filter(|(_, _, spec)| !claimed.iter().any(|(_, _, claimed)| claimed == spec))
             .chain(claimed.iter().copied())
+            .collect()
+    }
+
+    /// [`Self::effective_specs`] without the unknown tokens: the chords that fire each binding of `ids`.
+    pub fn effective_keys(&self, ids: &[BindingId]) -> Vec<(BindingId, KeyChord)> {
+        self.effective_specs(ids)
+            .into_iter()
+            .filter_map(|(id, _, spec)| match spec {
+                KeySpec::Chord(chord) => Some((id, *chord)),
+                KeySpec::Unknown(_) => None,
+            })
             .collect()
     }
 

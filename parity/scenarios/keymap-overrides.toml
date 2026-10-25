@@ -1,8 +1,7 @@
 version = 1
 description = "bindings.overrides: rebound pane focus keys in titles and dispatch, a punctuation name and an unknown key in the footer"
-# Flipped to true by #107's PR.
-gate = false
-parity_rows = ["keybindings.all-ids", "config.bindings-overrides", "main-layout.section-titles"]
+gate = true
+parity_rows = ["keybindings.all-ids", "config.bindings-overrides", "main-layout.section-titles", "main-layout.footer"]
 sizes = [[160, 48]]
 
 [env]
@@ -24,12 +23,15 @@ checks = ["titles", "focus", "footer"]
 [[step]]
 keys = ["x"]
 
+# With PRs focused, the footer shows "^p Command Palle" at 160 columns: Python's "Pallete" against Rust's "Palette"
+# (Py bug B14, fixed on purpose). `start` checks the footer.
 [[step]]
 capture = "after-x"
-checks = ["titles", "focus", "footer"]
+checks = ["titles", "focus"]
 
 # Every box title in pre-order by (row, col), as #93 compares them: Details shares the Repositories row.
 [expect.start]
+footer = ["? Search", "^f Toggle Favorite", "O Lookup Repository", "u View User", "I New Issue", "P New PR", "^v Paste link", "f Follow link", "F Follow link (browser)", "q Quit", "^p Command Palette", "bogus Maximize"]  # `?` went to the search binding
 pane_titles = ["", "[9] Repositories", "[5] Details", "[x, ctrl+t] Pull Requests", "[3] Issues", "[4] Workflows"]
 
 [expect.after-x]

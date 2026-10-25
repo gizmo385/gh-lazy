@@ -1,0 +1,5 @@
+---
+source: crates/lazy-github-tui/src/components/footer/tests.rs
+expression: "footer_row(&[\"5\"], 100, 30)"
+---
+ ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  ? Ke

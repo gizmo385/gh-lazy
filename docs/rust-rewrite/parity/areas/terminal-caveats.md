@@ -12,5 +12,5 @@ this file.
 | `terminal-caveats.punctuation-key-names` | Punctuation keys are saved by the Python Settings modal as Textual names (`question_mark`, `slash`, `dollar_sign`, `circumflex_accent`, …). | `bindings.overrides` | Keymap parser accepts Textual key names and literal characters (#73). |
 | `terminal-caveats.escape-ambiguity` | `escape` is ambiguous with Alt-prefixed sequences; crossterm handles the timeout. | `modal.close`, maximize restore, link hints | No action beyond crossterm defaults. |
 | `terminal-caveats.q-in-inputs` | `q` closes modals and quits the app, but must type a `q` inside text inputs. | `app.quit`, `modal.close` | Text inputs get first refusal on printable keys. |
-| `terminal-caveats.footer-key-labels` | Footer key labels: Textual shows `^p` for `ctrl+p`. | footer, help panel | Decide in #76. |
+| `terminal-caveats.footer-key-labels` | Footer key labels: Textual shows `^p` for `ctrl+p`. | footer, help panel | decided: Textual notation (`^p`) |
 | `terminal-caveats.terminal-hyperlinks` | Terminal hyperlinks (`[link=…]`) are used for a few links (run number, profile login); others are in-app links. | Run Overview, User profile | Render as OSC 8 where supported; treat as hint targets only if the spec says so. |

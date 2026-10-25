@@ -105,8 +105,10 @@ pub enum Owner {
     SelectionsPane,
     /// A selection section's container, with the section's actions.
     Section(SectionId),
-    /// A section's table. #78 adds its bindings.
+    /// A section's table: Textual's `DataTable` and `_VimLikeDataTable` bindings.
     Table(SectionId),
+    /// The `SearchableDataTable` around a section's table: `/` search.
+    SearchableTable(SectionId),
     /// The details tab strip.
     DetailsTabs,
     /// The content of the active details tab.

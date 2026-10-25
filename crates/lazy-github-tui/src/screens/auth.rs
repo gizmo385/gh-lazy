@@ -7,7 +7,7 @@ use std::time::Duration;
 use lazy_github_core::gh::GhError;
 use ratatui::Frame;
 use ratatui::layout::Rect;
-use ratatui::style::{Modifier, Style};
+use ratatui::style::Style;
 use ratatui::symbols::border;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Paragraph};
@@ -16,7 +16,7 @@ use crate::action::Action;
 use crate::component::{Component, Cx, RenderCx};
 use crate::components::info::InfoView;
 use crate::effect::{Effect, GithubRequest, RequestId, TimerId};
-use crate::keymap::{BindingId, Keymap};
+use crate::keymap::BindingId;
 use crate::theme::{Accent, Theme};
 
 /// How often `gh auth status` is re-run, as Python's `set_interval(5, …)`.
@@ -138,21 +138,19 @@ impl Component for AuthScreen {
         let theme = cx.theme;
         // Python's literal CSS `red`, not a theme slot (#77 may change this).
         let border_style = Style::new().fg(theme.accent(Accent::Red));
-        let block = Block::bordered()
-            .border_set(ASCII_BORDER)
-            .border_style(border_style)
-            .title(Line::from(vec![
-                Span::styled("-", border_style),
-                Span::styled(" GitHub Authentication ", border_style),
-            ]));
+        let block = Self::block(border_style).title(Line::from(vec![
+            Span::styled("-", border_style),
+            Span::styled(" GitHub Authentication ", border_style),
+        ]));
         let inner = block.inner(area);
         frame.render_widget(block, area);
-        if inner.is_empty() {
+        // The content stops above the row `App` draws the footer on.
+        let Some(footer) = Self::footer_area(area) else {
             return;
-        }
+        };
 
         let message = self.message_lines(usize::from(inner.width), theme);
-        let footer_y = inner.bottom() - 1;
+        let footer_y = footer.y;
         let row = |y: u16, height: u16| Rect {
             y,
             height: height.min(footer_y.saturating_sub(y)),
@@ -171,19 +169,26 @@ impl Component for AuthScreen {
         let info_y = rule_y.saturating_add(2);
         self.info
             .render_clipped(frame, row(info_y, footer_y.saturating_sub(info_y)), theme);
-
-        frame.render_widget(
-            footer(cx.keymap, theme),
-            Rect {
-                y: footer_y,
-                height: 1,
-                ..inner
-            },
-        );
+        // `App` draws the shared footer on the last row, `Self::footer_area`.
     }
 }
 
 impl AuthScreen {
+    fn block(border_style: Style) -> Block<'static> {
+        Block::bordered().border_set(ASCII_BORDER).border_style(border_style)
+    }
+
+    /// The footer row for the screen drawn in `area`: the last row inside the border, where Textual docks the
+    /// screen's `Footer`. `None` when the border leaves no room.
+    pub fn footer_area(area: Rect) -> Option<Rect> {
+        let inner = Self::block(Style::new()).inner(area);
+        (!inner.is_empty()).then(|| Rect {
+            y: inner.bottom() - 1,
+            height: 1,
+            ..inner
+        })
+    }
+
     /// The message, word-wrapped to `width` as Textual's `Static` does.
     fn message_lines(&self, width: usize, theme: &Theme) -> Vec<Line<'static>> {
         let plain = Style::new().fg(theme.color(theme.palette.foreground, theme.background()));
@@ -245,29 +250,6 @@ fn wrap_words(words: &[(String, Style)], width: usize) -> Vec<Line<'static>> {
         lines.push(Line::from(spans));
     }
     lines
-}
-
-/// The footer row with the quit binding, in Textual's `FooterKey` style: `" {key} "` then `"{description} "`. The
-/// shared footer (#107) replaces this once it lands.
-fn footer(keymap: &Keymap, theme: &Theme) -> Paragraph<'static> {
-    let palette = theme.palette;
-    let bar = palette.footer_background.over(theme.background());
-    let item = palette.footer_item_background.over(bar);
-    let key_bg = palette.footer_key_background.over(item);
-    let description_bg = palette.footer_description_background.over(item);
-    let key_style = Style::new()
-        .fg(theme.color(palette.footer_key_foreground, key_bg))
-        .bg(theme.paint(key_bg))
-        .add_modifier(Modifier::BOLD);
-    let description_style = Style::new()
-        .fg(theme.color(palette.footer_description_foreground, description_bg))
-        .bg(theme.paint(description_bg));
-    let id = BindingId::AppQuit;
-    Paragraph::new(Line::from(vec![
-        Span::styled(format!(" {} ", keymap.first_key_display(id)), key_style),
-        Span::styled(format!("{} ", id.def().description), description_style),
-    ]))
-    .style(Style::new().bg(theme.paint(bar)))
 }
 
 #[cfg(test)]

@@ -183,7 +183,7 @@ fn a_section_hidden_by_config_still_takes_focus() {
     assert!(!any_focused_border(&mut app, 100, 30));
     // Its section's bindings are active (Py bug B31).
     let owners: Vec<Owner> = app.app().binding_chain().iter().map(|link| link.owner).collect();
-    assert_eq!(owners[1], Owner::Section(SectionId::PullRequests));
+    assert_eq!(owners[2], Owner::Section(SectionId::PullRequests));
     app.press(&["tab"]);
     assert_eq!(focus(&app), REPOS);
     app.press(&["2", "shift+tab"]);
@@ -349,6 +349,7 @@ fn the_chain_follows_focus() {
     let tail = [Owner::MainView, Owner::Screen(ScreenKind::Main), Owner::App];
     let table = [
         Owner::Table(SectionId::Repos),
+        Owner::SearchableTable(SectionId::Repos),
         Owner::Section(SectionId::Repos),
         Owner::SelectionsPane,
     ];

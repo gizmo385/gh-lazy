@@ -1,0 +1,15 @@
+---
+source: crates/lazy-github-tui/src/components/footer/tests.rs
+expression: terminal.backend().buffer()
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 12, height: 1 },
+    content: [
+        " q Quit     ",
+    ],
+    styles: [
+        x: 0, y: 0, fg: Rgb(255, 166, 43), bg: Rgb(36, 47, 56), underline: Reset, modifier: BOLD,
+        x: 3, y: 0, fg: Rgb(224, 224, 224), bg: Rgb(36, 47, 56), underline: Reset, modifier: NONE,
+        x: 8, y: 0, fg: Reset, bg: Rgb(36, 47, 56), underline: Reset, modifier: NONE,
+    ]
+}

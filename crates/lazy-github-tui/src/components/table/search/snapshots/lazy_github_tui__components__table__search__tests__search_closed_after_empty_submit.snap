@@ -1,0 +1,27 @@
+---
+source: crates/lazy-github-tui/src/components/table/search/tests.rs
+expression: buffer
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 40, height: 12 },
+    content: [
+        " ★  Owner       Name                    ",
+        " ★  parity-bot  dotfiles                ",
+        " ★  parity-org  lazygit                 ",
+        " ☆  parity-bot  lazy-github             ",
+        " ☆  octo        gh-cli                  ",
+        " ☆  octo        LazyVim                 ",
+        " ☆  parity-org  gh-dash                 ",
+        " ☆  octo        spoon-knife             ",
+        " ☆  parity-bot  notes                   ",
+        "                                        ",
+        "                                        ",
+        "                                        ",
+    ],
+    styles: [
+        x: 0, y: 0, fg: Rgb(224, 224, 224), bg: Rgb(45, 55, 64), underline: Reset, modifier: BOLD,
+        x: 0, y: 1, fg: Rgb(221, 237, 249), bg: Rgb(1, 120, 212), underline: Reset, modifier: BOLD,
+        x: 0, y: 2, fg: Rgb(224, 224, 224), bg: Rgb(39, 39, 39), underline: Reset, modifier: NONE,
+        x: 0, y: 9, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+    ]
+}

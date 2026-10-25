@@ -20,6 +20,8 @@ indexmap = { workspace = true }
 jiff = { workspace = true }
 lazy-github-core = { workspace = true }
 ratatui = { workspace = true }
+# Python's `str.isprintable` by general category, for the table search's `repr` of a row (#101).
+regex = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt", "signal", "sync", "time"] }
 tracing = { workspace = true }
 

@@ -8,7 +8,8 @@ use ratatui::style::Color;
 
 use super::color::{AnsiColor, Paint, Rgb};
 
-/// How many colors the terminal can show: Rich's `ColorSystem`, without its legacy Windows console mode.
+/// How many colors the terminal can show: Rich's `ColorSystem`, without its legacy Windows console mode. Rich's
+/// "no color" never reaches the screen in Textual (see [`ColorDepth::detect`]), so it has no variant here.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub enum ColorDepth {
     /// 24-bit RGB.
@@ -18,18 +19,18 @@ pub enum ColorDepth {
     EightBit,
     /// The 16 ANSI colors.
     Standard,
-    /// No colors at all (`TERM=dumb`): everything is the terminal's default color.
-    None,
 }
 
 impl ColorDepth {
     /// The depth Textual would use, from the environment `env` reads.
     ///
     /// `TEXTUAL_COLOR_SYSTEM` (`truecolor`, `256`, `standard` or `auto`, the default) picks one outright, as in
-    /// Textual. Otherwise Rich's `Console._detect_color_system`: `TERM` of `dumb` or `unknown` means no color,
-    /// `COLORTERM` of `truecolor` or `24bit` means truecolor, and failing that the part of `TERM` after its last `-`
-    /// decides (`256color` and `kitty` are 8-bit); anything else is the 16 standard colors. Textual always tells Rich
-    /// it's writing to a terminal, so there is no "not a terminal" case.
+    /// Textual. Otherwise Rich's `Console._detect_color_system`: `COLORTERM` of `truecolor` or `24bit` means
+    /// truecolor, and failing that the part of `TERM` after its last `-` decides (`256color` and `kitty` are 8-bit);
+    /// anything else is the 16 standard colors. `TERM` of `dumb` or `unknown` is truecolor: Rich detects no color
+    /// there, but Textual's `Strip.render` (textual 8.2.5 `strip.py` line 718,
+    /// `console._color_system or ColorSystem.TRUECOLOR`) then renders in truecolor. Textual always tells Rich it's
+    /// writing to a terminal, so there is no "not a terminal" case.
     ///
     /// Windows is treated as truecolor rather than probing the console as Rich does; Windows is a stretch goal.
     pub fn detect(env: &impl Fn(&str) -> Option<String>) -> Self {
@@ -47,11 +48,9 @@ impl ColorDepth {
         }
 
         let term = env("TERM").unwrap_or_default();
-        // Rich doesn't strip `TERM` for this check, only for the one below.
-        if matches!(term.to_lowercase().as_str(), "dumb" | "unknown") {
-            return ColorDepth::None;
-        }
-        if windows {
+        // Rich detects no color here, which Textual's `Strip.render` turns into truecolor. Rich doesn't strip `TERM`
+        // for this check, only for the one below.
+        if windows || matches!(term.to_lowercase().as_str(), "dumb" | "unknown") {
             return ColorDepth::TrueColor;
         }
         let color_term = env("COLORTERM").unwrap_or_default().trim().to_lowercase();
@@ -93,12 +92,15 @@ impl ColorMode {
 
     /// The terminal color for a composited paint in this mode.
     ///
-    /// The terminal's own colors pass through at every depth, except that `NO_COLOR` or a colorless terminal turns
-    /// them into the default color, as Textual's `NoColor` filter does under the ANSI themes.
+    /// The terminal's own colors pass through at every depth. Under `NO_COLOR` they become the terminal's default
+    /// color, which is a deliberate deviation from the Python app. Textual chooses its `NO_COLOR` filter in
+    /// `App.__init__`, before LazyGithub applies the configured theme in `on_mount`, so Python always gets
+    /// `Monochrome`, even under an ANSI theme. That filter has no RGB for an ANSI color and paints it `#000000`,
+    /// which makes the ANSI themes black on black. `Reset` is what Textual's own `NoColor` filter would give.
     pub fn paint(self, paint: Paint) -> Color {
         match paint {
             Paint::Rgb(c) => downsample(c, self),
-            Paint::Ansi(_) if self.no_color || self.depth == ColorDepth::None => Color::Reset,
+            Paint::Ansi(_) if self.no_color => Color::Reset,
             Paint::Ansi(c) => c.into(),
         }
     }
@@ -112,7 +114,6 @@ pub fn downsample(rgb: Rgb, mode: ColorMode) -> Color {
         ColorDepth::TrueColor => Color::Rgb(rgb.r, rgb.g, rgb.b),
         ColorDepth::EightBit => Color::Indexed(eight_bit(rgb)),
         ColorDepth::Standard => STANDARD_PALETTE[standard(rgb)].0.into(),
-        ColorDepth::None => Color::Reset,
     }
 }
 
@@ -227,9 +228,10 @@ mod tests {
     #[case(&[("TERM", "screen")], ColorDepth::Standard)]
     #[case(&[("COLORTERM", "yes"), ("TERM", "xterm")], ColorDepth::Standard)]
     #[case(&[], ColorDepth::Standard)]
-    #[case(&[("TERM", "dumb")], ColorDepth::None)]
-    #[case(&[("TERM", "unknown"), ("COLORTERM", "truecolor")], ColorDepth::None)]
-    fn detect_follows_rich(#[case] vars: &[(&str, &str)], #[case] want: ColorDepth) {
+    // Rich says no color; Textual's `Strip.render` falls back to truecolor.
+    #[case(&[("TERM", "dumb")], ColorDepth::TrueColor)]
+    #[case(&[("TERM", "Unknown"), ("COLORTERM", "yes")], ColorDepth::TrueColor)]
+    fn detect_follows_rich_and_textual(#[case] vars: &[(&str, &str)], #[case] want: ColorDepth) {
         assert_eq!(detect(vars), want);
     }
 
@@ -242,21 +244,21 @@ mod tests {
     fn textual_color_system_overrides_detection(#[case] system: &str, #[case] want: ColorDepth) {
         assert_eq!(detect(&[("TEXTUAL_COLOR_SYSTEM", system), ("TERM", "xterm")]), want);
         // An override wins even over a dumb terminal, as Rich skips detection entirely.
-        if system == "256" {
-            assert_eq!(
-                detect(&[("TEXTUAL_COLOR_SYSTEM", system), ("TERM", "dumb")]),
-                ColorDepth::EightBit
-            );
+        if system != "bogus" && system != "auto" {
+            assert_eq!(detect(&[("TEXTUAL_COLOR_SYSTEM", system), ("TERM", "dumb")]), want);
         }
     }
 
     #[test]
-    fn windows_is_truecolor_unless_dumb_or_overridden() {
+    fn windows_is_truecolor_unless_overridden() {
         assert_eq!(
             ColorDepth::detect_on(&env(&[("TERM", "xterm")]), true),
             ColorDepth::TrueColor
         );
-        assert_eq!(ColorDepth::detect_on(&env(&[("TERM", "dumb")]), true), ColorDepth::None);
+        assert_eq!(
+            ColorDepth::detect_on(&env(&[("TERM", "xterm-256color")]), true),
+            ColorDepth::TrueColor
+        );
         assert_eq!(
             ColorDepth::detect_on(&env(&[("TEXTUAL_COLOR_SYSTEM", "standard")]), true),
             ColorDepth::Standard
@@ -298,14 +300,12 @@ mod tests {
     }
 
     #[test]
-    fn ansi_paint_passes_through_unless_colors_are_off() {
+    fn ansi_paint_passes_through_except_under_no_color() {
         let blue = Paint::Ansi(AnsiColor::Blue);
         for depth in [ColorDepth::TrueColor, ColorDepth::EightBit, ColorDepth::Standard] {
             assert_eq!(mode(depth, false).paint(blue), Color::Blue);
             assert_eq!(mode(depth, true).paint(blue), Color::Reset);
         }
-        assert_eq!(mode(ColorDepth::None, false).paint(blue), Color::Reset);
-        assert_eq!(mode(ColorDepth::None, false).paint(Paint::Rgb(PRIMARY)), Color::Reset);
     }
 
     #[rstest]

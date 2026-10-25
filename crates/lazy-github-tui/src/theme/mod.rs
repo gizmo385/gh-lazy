@@ -38,8 +38,8 @@ pub struct Theme {
     pub ansi: bool,
     /// Its colors and text styles.
     pub palette: &'static Palette,
-    /// What the terminal shows, which every color is reduced to. Truecolor unless set with
-    /// [`Theme::with_color_mode`].
+    /// What the terminal shows, which every color is reduced to. Set by [`Theme::from_config`]; truecolor for
+    /// [`Theme::by_name`], [`Theme::all`] and [`Theme::default`].
     mode: ColorMode,
 }
 
@@ -54,7 +54,8 @@ impl Theme {
         }
     }
 
-    /// This theme, with its colors reduced to `mode`.
+    /// This theme, with its colors reduced to `mode`. The mode belongs to the terminal, not the theme: switching
+    /// themes at runtime must carry it over, which [`Theme::from_config`] makes explicit.
     #[must_use]
     pub fn with_color_mode(self, mode: ColorMode) -> Self {
         Self { mode, ..self }
@@ -70,12 +71,16 @@ impl Theme {
         BUILTIN.iter().find(|def| def.name == name).map(Self::from_def)
     }
 
-    /// The theme for `appearance.theme`: an unknown name renders as `textual-dark`, silently, as in Python.
-    pub fn from_config(name: &str) -> Theme {
-        Self::by_name(name).unwrap_or_else(|| {
-            tracing::debug!("unknown theme {name:?}, using {DEFAULT}");
-            Self::default()
-        })
+    /// The theme for `appearance.theme`, reduced to the terminal's color `mode`: an unknown name renders as
+    /// `textual-dark`, silently, as in Python. To switch themes at runtime, pass the current theme's
+    /// [`Theme::color_mode`].
+    pub fn from_config(name: &str, mode: ColorMode) -> Theme {
+        Self::by_name(name)
+            .unwrap_or_else(|| {
+                tracing::debug!("unknown theme {name:?}, using {DEFAULT}");
+                Self::default()
+            })
+            .with_color_mode(mode)
     }
 
     /// Every built-in theme, in Textual's order.
@@ -229,7 +234,7 @@ mod tests {
     fn by_name_finds_every_builtin_theme() {
         for name in NAMES {
             assert_eq!(Theme::by_name(name).map(|t| t.name), Some(name));
-            assert_eq!(Theme::from_config(name).name, name);
+            assert_eq!(Theme::from_config(name, ColorMode::default()).name, name);
         }
     }
 
@@ -239,7 +244,12 @@ mod tests {
     #[case("no-such-theme")]
     fn unknown_names_render_as_textual_dark(#[case] name: &str) {
         assert_eq!(Theme::by_name(name), None);
-        assert_eq!(Theme::from_config(name), theme("textual-dark"));
+        assert_eq!(Theme::from_config(name, ColorMode::default()), theme("textual-dark"));
+        let mode = ColorMode {
+            depth: ColorDepth::Standard,
+            no_color: true,
+        };
+        assert_eq!(Theme::from_config(name, mode).color_mode(), mode);
     }
 
     #[test]

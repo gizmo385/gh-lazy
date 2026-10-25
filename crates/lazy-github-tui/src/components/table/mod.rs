@@ -4,8 +4,9 @@
 //! The table is pure state: keys, clicks and inserts change it synchronously and it never emits effects. What a key
 //! means for the owning pane comes back as a [`TableEvent`]; the pane turns it into its own action. This module has
 //! the rows, sorting, cursor, scrolling, rendering and the loading overlay; `search` has the `/` search box and its
-//! filter (#101). Lazy loading (#102) builds on it.
+//! filter (#101), and [`lazy`] asks for more pages (#102).
 
+mod lazy;
 mod model;
 mod py_repr;
 mod render;
@@ -20,6 +21,7 @@ use ratatui::Frame;
 use ratatui::layout::{Position as CellPosition, Rect};
 use tokio::time::Instant;
 
+pub use lazy::{LOAD_MORE_BUFFER, LazyLoad, PageLoaded};
 pub use model::{Body, CannotScroll, Cell, CellValue, Column, Horizontal, Position, SortSpec, TableItem};
 pub use py_repr::{is_printable, py_repr_row, py_repr_str};
 pub use search::TableFocus;
@@ -79,6 +81,16 @@ const WHEEL_COLUMNS: isize = 4;
 pub enum TableEvent<K> {
     /// `common.table.select`, or a second click on the cell under the cursor: the row with this key was chosen.
     Selected(K),
+    /// A lazy table's cursor got near the end of the loaded items: fetch `page` with `per_page` items, and hand the
+    /// result to [`SearchableTable::page_loaded`] with `generation`.
+    LoadMore {
+        /// The table's [`SearchableTable::generation`] when it asked.
+        generation: u64,
+        /// The page to fetch, from 1.
+        page: u32,
+        /// Items per page.
+        per_page: u32,
+    },
 }
 
 /// Whether the table took an input.
@@ -166,6 +178,8 @@ pub struct SearchableTable<T: TableItem> {
     loading_since: Option<Instant>,
     animations: bool,
     generation: u64,
+    /// Paging, once the owner turns lazy loading on.
+    lazy: Option<LazyLoad>,
     /// The area of the last render, which paging and scrolling measure against.
     area: Rect,
 }
@@ -190,6 +204,7 @@ impl<T: TableItem> SearchableTable<T> {
             loading_since: None,
             animations: true,
             generation: 0,
+            lazy: None,
             area: Rect::default(),
         }
     }
@@ -209,18 +224,28 @@ impl<T: TableItem> SearchableTable<T> {
     /// the end of its tie group. Removing it first clamps the cursor, as Textual's `remove_row` does: replacing the
     /// last row while the cursor is on it moves the cursor up one. Otherwise the cursor stays at its index, so the
     /// item under it can change.
-    pub fn insert(&mut self, item: T, cx: &T::Ctx) {
-        self.insert_unsorted(item, cx);
-        sort_rows(&mut self.rows, self.sort);
+    ///
+    /// The first row of an empty table highlights row 0, as Textual's `add_row` does, which runs a lazy table's
+    /// check: the result is its [`TableEvent::LoadMore`].
+    #[must_use = "a lazy table's first rows may ask for the next page"]
+    pub fn insert(&mut self, item: T, cx: &T::Ctx) -> Option<TableEvent<T::Key>> {
+        self.insert_many([item], cx)
     }
 
     /// [`Self::insert`] for each item in turn.
-    pub fn insert_many(&mut self, items: impl IntoIterator<Item = T>, cx: &T::Ctx) {
+    #[must_use = "a lazy table's first rows may ask for the next page"]
+    pub fn insert_many(&mut self, items: impl IntoIterator<Item = T>, cx: &T::Ctx) -> Option<TableEvent<T::Key>> {
+        let was_empty = self.rows.is_empty();
         for item in items {
             self.insert_unsorted(item, cx);
         }
         // Sorting is a total order on (value, insertion), so sorting once gives what sorting after each insert does.
         sort_rows(&mut self.rows, self.sort);
+        if was_empty && !self.rows.is_empty() {
+            self.check_load_more(self.pos.cursor)
+        } else {
+            None
+        }
     }
 
     fn insert_unsorted(&mut self, item: T, cx: &T::Ctx) {
@@ -259,9 +284,11 @@ impl<T: TableItem> SearchableTable<T> {
         }
     }
 
-    /// Removes everything: the cursor and both scroll offsets go back to 0, and [`Self::generation`] moves on. The
-    /// search box and its text stay, as Python's `clear_rows` leaves the input alone.
+    /// Removes everything: the cursor and both scroll offsets go back to 0, [`Self::generation`] moves on, and lazy
+    /// loading turns off, as Python's `clear_rows` drops the load function. The search box and its text stay, as
+    /// `clear_rows` leaves the input alone.
     pub fn clear(&mut self) {
+        self.lazy = None;
         self.items.clear();
         self.rows.clear();
         self.hidden.clear();
@@ -275,7 +302,8 @@ impl<T: TableItem> SearchableTable<T> {
     /// [`Self::clear`], then [`Self::insert_many`]: Python's `clear_rows` followed by `add_items`.
     pub fn replace_all(&mut self, items: impl IntoIterator<Item = T>, cx: &T::Ctx) {
         self.clear();
-        self.insert_many(items, cx);
+        // Lazy loading is off after a clear, so the first rows run no check.
+        let _ = self.insert_many(items, cx);
     }
 
     /// Recomputes every row's cells, for example after a favorite toggle, then re-sorts. Rows keep their insertion
@@ -329,7 +357,7 @@ impl<T: TableItem> SearchableTable<T> {
         (self.pos.scroll_y, self.scroll_x)
     }
 
-    /// Bumped by every [`Self::clear`], so a page that arrives for an older generation can be dropped (#102).
+    /// Bumped by every [`Self::clear`], so a page that arrives for an older generation is dropped.
     pub fn generation(&self) -> u64 {
         self.generation
     }
@@ -420,8 +448,17 @@ impl<T: TableItem> SearchableTable<T> {
     }
 
     fn move_to(&mut self, pos: Position) -> Handled<TableEvent<T::Key>> {
+        let moved = pos.cursor != self.pos.cursor;
         self.pos = pos;
-        Handled::Consumed
+        self.after_cursor_move(moved)
+    }
+
+    /// Textual posts `RowHighlighted` only when the cursor index changes; a lazy table checks for more then.
+    fn after_cursor_move(&mut self, moved: bool) -> Handled<TableEvent<T::Key>> {
+        match moved.then(|| self.check_load_more(self.pos.cursor)).flatten() {
+            Some(event) => Handled::Event(event),
+            None => Handled::Consumed,
+        }
     }
 
     fn scroll_x_to(&mut self, x: Result<usize, CannotScroll>) -> Handled<TableEvent<T::Key>> {
@@ -512,6 +549,7 @@ impl<T: TableItem> SearchableTable<T> {
     fn click(&mut self, layout: Layout, row: usize, x: u16) -> Handled<TableEvent<T::Key>> {
         let column = self.column_at(usize::from(x - layout.table.x) + self.scroll_x);
         let same_cell = row == self.pos.cursor && column == self.cursor_column;
+        let before = self.pos.cursor;
         self.cursor_column = column;
         self.pos = Body {
             rows: self.rows.len(),
@@ -524,7 +562,7 @@ impl<T: TableItem> SearchableTable<T> {
         self.hover = Some(row);
         match self.rows.get(row) {
             Some(entry) if same_cell => Handled::Event(TableEvent::Selected(entry.key.clone())),
-            _ => Handled::Consumed,
+            _ => self.after_cursor_move(self.pos.cursor != before),
         }
     }
 
@@ -644,10 +682,10 @@ impl<T: TableItem> SearchableTable<T> {
     fn search_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Handled<TableEvent<T::Key>> {
         match self.search.input.handle_key(key, keymap) {
             InputOutcome::Changed => Handled::Consumed,
-            InputOutcome::Submitted => {
-                self.apply_search();
-                Handled::Consumed
-            }
+            InputOutcome::Submitted => match self.apply_search() {
+                Some(event) => Handled::Event(event),
+                None => Handled::Consumed,
+            },
             // A search key the box doesn't type, once rebound, still applies inside the component: it focuses the
             // box, which already has focus.
             InputOutcome::Ignored if keymap.match_in(SEARCHABLE_BINDINGS, key).is_some() => Handled::Consumed,
@@ -658,7 +696,11 @@ impl<T: TableItem> SearchableTable<T> {
     /// `handle_submitted_search`: every item is put back in [`Self::items`] order and those that don't match are
     /// hidden, so ties go back to `items` order. As Textual's `clear` does, the cursor and the scroll go back to 0.
     /// Then focus moves to the table.
-    fn apply_search(&mut self) {
+    ///
+    /// When any row is left, the first one is highlighted, as the first `add_row` into Textual's cleared table does,
+    /// and a lazy table runs its load check for row 0. That check counts every item, the hidden ones too, as Python's
+    /// `len(self.items)` does. A search that matches nothing adds no row and runs no check.
+    fn apply_search(&mut self) -> Option<TableEvent<T::Key>> {
         let query = self.search.query();
         let mut cells: HashMap<T::Key, Vec<Cell>> = self
             .rows
@@ -687,6 +729,11 @@ impl<T: TableItem> SearchableTable<T> {
         self.scroll_x = 0;
         self.hover = None;
         self.focus_table();
+        if self.rows.is_empty() {
+            None
+        } else {
+            self.check_load_more(0)
+        }
     }
 
     /// Where the search box is drawn in `area`, the component's area, while it's shown.

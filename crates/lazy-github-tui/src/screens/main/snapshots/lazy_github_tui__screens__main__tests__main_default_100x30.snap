@@ -31,3 +31,4 @@ expression: "screen(Config::default(), 100, 30)"
 │                                      ││  create a new PR for the currently selected repo.        │
 │                                      ││                                                          │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste lin

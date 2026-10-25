@@ -1,0 +1,24 @@
+version = 1
+description = "With notifications.enabled, the footer lists ^n Notifications after P New PR"
+gate = true
+parity_rows = ["main-layout.footer", "keybindings.notifications-open"]
+sizes = [[260, 40]]
+
+[env]
+fixtures = ["base"]
+
+[env.config_overrides.notifications]
+enabled = true
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+# The whole footer fits at 260 columns, so `^p Command Pallete` (Python) and `^p Command Palette` (Rust) both show
+# in full: Py bug B14, fixed on purpose. The footer is checked with `contains` instead of the footer check.
+[[step]]
+capture = "start"
+checks = ["titles", "focus"]
+
+[expect.start]
+focused = ["[1] Repositories"]
+contains = [" / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^n Notifications  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pal", "  M Maximize  ? Keybindings"]

@@ -86,7 +86,7 @@ fn columns() -> Vec<Column> {
 /// 12 rows sorted by the favorite column, ids 1 to 12 with 4 and 9 favorited, as in a repos table.
 fn twelve() -> SearchableTable<Item> {
     let mut table = SearchableTable::new(columns(), SortSpec::ascending(0));
-    table.insert_many((1..=12).map(|id| item(id, id == 4 || id == 9)), &CX);
+    let _ = table.insert_many((1..=12).map(|id| item(id, id == 4 || id == 9)), &CX);
     table
 }
 
@@ -160,7 +160,7 @@ fn favorites_sort_first_and_ties_keep_insertion_order() {
 #[test]
 fn a_descending_sort_keeps_ties_in_insertion_order() {
     let mut table = SearchableTable::new(columns(), SortSpec::descending(0));
-    table.insert_many((1..=5).map(|id| item(id, id == 2)), &CX);
+    let _ = table.insert_many((1..=5).map(|id| item(id, id == 2)), &CX);
     // `☆` is above `[green]★[/]`, so the favorite goes last; the other four stay in insertion order.
     assert_eq!(ids(&table), [1, 3, 4, 5, 2]);
 }
@@ -170,7 +170,7 @@ fn a_reinserted_key_goes_to_the_end_of_its_tie_group_and_keeps_its_item_slot() {
     let mut table = twelve();
     let mut changed = item(1, false);
     changed.title = "Renamed".into();
-    table.insert(changed, &CX);
+    let _ = table.insert(changed, &CX);
     assert_eq!(ids(&table), [4, 9, 2, 3, 5, 6, 7, 8, 10, 11, 12, 1]);
     let items: Vec<i64> = table.items().map(|i| i.id).collect();
     assert_eq!(items, (1..=12).collect::<Vec<_>>());
@@ -179,8 +179,8 @@ fn a_reinserted_key_goes_to_the_end_of_its_tie_group_and_keeps_its_item_slot() {
 
     // Descending, the same: the end of its tie group.
     let mut table = SearchableTable::new(columns(), SortSpec::descending(0));
-    table.insert_many((1..=4).map(|id| item(id, false)), &CX);
-    table.insert(item(2, false), &CX);
+    let _ = table.insert_many((1..=4).map(|id| item(id, false)), &CX);
+    let _ = table.insert(item(2, false), &CX);
     assert_eq!(ids(&table), [1, 3, 4, 2]);
 }
 
@@ -201,7 +201,7 @@ fn refresh_rows_recomputes_cells_and_resorts() {
         }
     }
     let mut table = SearchableTable::new(vec![Column::new("★"), Column::new("#")], SortSpec::ascending(0));
-    table.insert_many((1..=4).map(Repo), &Favs(vec![]));
+    let _ = table.insert_many((1..=4).map(Repo), &Favs(vec![]));
     table.refresh_rows(&Favs(vec![3]));
     assert_eq!(table.row_keys().copied().collect::<Vec<_>>(), [3, 1, 2, 4]);
     table.refresh_rows(&Favs(vec![]));
@@ -214,14 +214,14 @@ fn refresh_rows_recomputes_cells_and_resorts() {
 fn the_cursor_stays_at_its_index_through_inserts_and_sorts() {
     let keymap = Keymap::defaults();
     let mut table = by_id();
-    table.insert_many([5, 7, 9].map(|id| item(id, false)), &CX);
+    let _ = table.insert_many([5, 7, 9].map(|id| item(id, false)), &CX);
     snap(&mut table, true);
     let _ = press(&mut table, &keymap, "j");
     assert_eq!((table.cursor(), table.selected().map(|i| i.id)), (1, Some(7)));
     // A row sorted in above the cursor shifts the items, not the cursor.
-    table.insert(item(1, false), &CX);
+    let _ = table.insert(item(1, false), &CX);
     assert_eq!((table.cursor(), table.selected().map(|i| i.id)), (1, Some(5)));
-    table.insert(item(8, false), &CX);
+    let _ = table.insert(item(8, false), &CX);
     assert_eq!(table.cursor(), 1);
 }
 
@@ -229,7 +229,7 @@ fn the_cursor_stays_at_its_index_through_inserts_and_sorts() {
 fn removals_clamp_the_cursor() {
     let keymap = Keymap::defaults();
     let mut table = by_id();
-    table.insert_many((1..=4).map(|id| item(id, false)), &CX);
+    let _ = table.insert_many((1..=4).map(|id| item(id, false)), &CX);
     snap(&mut table, true);
     let _ = press(&mut table, &keymap, "G");
     assert_eq!(table.cursor(), 3);
@@ -249,10 +249,10 @@ fn replacing_the_last_row_under_the_cursor_moves_the_cursor_up() {
     // Textual's `remove_row` clamps the cursor before the new row is appended.
     let keymap = Keymap::defaults();
     let mut table = by_id();
-    table.insert_many((1..=3).map(|id| item(id, false)), &CX);
+    let _ = table.insert_many((1..=3).map(|id| item(id, false)), &CX);
     snap(&mut table, true);
     let _ = press(&mut table, &keymap, "G");
-    table.insert(item(3, false), &CX);
+    let _ = table.insert(item(3, false), &CX);
     assert_eq!(table.cursor(), 1);
 }
 
@@ -377,7 +377,7 @@ fn select_on_an_empty_table_reports_nothing() {
 fn one_column_scrolls_fall_through_when_the_columns_fit() {
     let keymap = Keymap::defaults();
     let mut table = by_id();
-    table.insert_many([1, 2].map(|id| item(id, false)), &CX);
+    let _ = table.insert_many([1, 2].map(|id| item(id, false)), &CX);
     snap(&mut table, true);
     // Textual's `scroll_left`/`scroll_right` raise `SkipAction` without a horizontal scrollbar.
     for key in ["l", "h", "right", "left"] {
@@ -470,7 +470,7 @@ fn the_wheel_scrolls_without_moving_the_cursor() {
 
     // A table that fits doesn't take the wheel.
     let mut short = by_id();
-    short.insert(item(1, false), &CX);
+    let _ = short.insert(item(1, false), &CX);
     snap(&mut short, true);
     assert_eq!(
         short.handle_mouse(mouse(MouseEventKind::ScrollDown, 5, 1), AREA),
@@ -609,7 +609,7 @@ fn colors_match_the_python_repos_table() {
 #[test]
 fn a_short_table_is_only_as_tall_as_its_rows() {
     let mut table = by_id();
-    table.insert_many([1, 2].map(|id| item(id, false)), &CX);
+    let _ = table.insert_many([1, 2].map(|id| item(id, false)), &CX);
     let buffer = draw(&mut table, true, 30, 6);
     assert_eq!(
         buffer_to_string(&buffer),

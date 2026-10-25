@@ -63,7 +63,7 @@ fn table() -> SearchableTable<Repo> {
         vec![Column::new("★"), Column::new("Owner"), Column::new("Name")],
         SortSpec::ascending(0),
     );
-    table.insert_many((1..=REPOS.len()).map(repo), &());
+    assert_eq!(table.insert_many((1..=REPOS.len()).map(repo), &()), None);
     table
 }
 
@@ -297,7 +297,7 @@ fn a_submit_resets_the_cursor_and_the_scroll() {
 fn a_submit_puts_ties_back_in_items_order() {
     let mut table = table();
     // Re-adding 2 sends its row to the end of its tie group, but `items` keeps it second.
-    table.insert(repo(2), &());
+    assert_eq!(table.insert(repo(2), &()), None);
     assert_eq!(ids(&table), [3, 7, 1, 4, 5, 6, 8, 2]);
     search(&mut table, "");
     assert_eq!(ids(&table), [3, 7, 1, 2, 4, 5, 6, 8]);
@@ -309,10 +309,10 @@ fn rows_inserted_after_a_filter_show_even_when_they_dont_match() {
     search(&mut table, "lazy");
     let mut extra = repo(8);
     extra.id = 9;
-    table.insert(extra, &());
+    assert_eq!(table.insert(extra, &()), None);
     assert_eq!(ids(&table), [7, 1, 4, 9]);
     // A hidden key that's re-added shows again.
-    table.insert(repo(6), &());
+    assert_eq!(table.insert(repo(6), &()), None);
     assert_eq!(ids(&table), [7, 1, 4, 9, 6]);
     // And the next search sees every item again.
     search(&mut table, "notes");
@@ -336,7 +336,7 @@ fn clear_empties_the_items_but_keeps_the_box() {
     assert_eq!(table.row_count(), 0);
     assert!(table.search_visible());
     assert_eq!(table.search_text(), "lazy");
-    table.insert_many((1..=3).map(repo), &());
+    assert_eq!(table.insert_many((1..=3).map(repo), &()), None);
     assert_eq!(ids(&table), [3, 1, 2], "the old filter doesn't apply to new items");
 }
 
@@ -361,6 +361,61 @@ fn clicks_move_focus_between_the_box_and_the_table() {
     // The table's first row is below the box, its margin and the header.
     let _ = table.handle_mouse(click(5), area);
     assert_eq!(table.focus(), TableFocus::Table);
+}
+
+// Lazy loading (#102).
+
+/// `/`, the query, `enter`, returning what `enter` did.
+fn submit(table: &mut SearchableTable<Repo>, query: &str) -> Handled<TableEvent<i64>> {
+    let _ = press(table, "slash");
+    let _ = press(table, "backspace");
+    type_text(table, query);
+    press(table, "enter")
+}
+
+#[test]
+fn a_submit_runs_the_lazy_check_for_the_first_row() {
+    // Four items: row 0 is within 5 of the end, so a lazy table asks for the next page.
+    let mut table = SearchableTable::new(
+        vec![Column::new("★"), Column::new("Owner"), Column::new("Name")],
+        SortSpec::ascending(0),
+    );
+    assert_eq!(table.insert_many((1..=4).map(repo), &()), None);
+    table.enable_lazy_load(30, 1);
+    let generation = table.generation();
+    assert_eq!(
+        submit(&mut table, "lazy"),
+        Handled::Event(TableEvent::LoadMore {
+            generation,
+            page: 2,
+            per_page: 30,
+        })
+    );
+    assert_eq!(ids(&table), [1, 4]);
+    assert_eq!(table.lazy_load().and_then(LazyLoad::in_flight), Some(2));
+}
+
+#[test]
+fn a_submit_that_matches_nothing_runs_no_lazy_check() {
+    let mut table = SearchableTable::new(
+        vec![Column::new("★"), Column::new("Owner"), Column::new("Name")],
+        SortSpec::ascending(0),
+    );
+    assert_eq!(table.insert_many((1..=4).map(repo), &()), None);
+    table.enable_lazy_load(30, 1);
+    assert_eq!(submit(&mut table, "nothing matches this"), Handled::Consumed);
+    assert_eq!(table.row_count(), 0);
+    assert_eq!(table.lazy_load().and_then(LazyLoad::in_flight), None);
+}
+
+#[test]
+fn the_lazy_check_after_a_submit_counts_hidden_items() {
+    // Three rows are left, but all eight items count, as Python's `len(self.items)` does: 8 - 0 > 5.
+    let mut table = table();
+    table.enable_lazy_load(30, 1);
+    assert_eq!(submit(&mut table, "lazy"), Handled::Consumed);
+    assert_eq!(ids(&table), [7, 1, 4]);
+    assert_eq!(table.lazy_load().and_then(LazyLoad::in_flight), None);
 }
 
 // Snapshots, 40x12 in textual-dark.

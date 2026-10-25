@@ -13,9 +13,10 @@ use tokio::time::Instant;
 use crate::action::Action;
 use crate::clock::Clock;
 use crate::component::{BindingState, ChainLink, Component, Cx, Outbox, Owner, RenderCx, ScreenKind, Shared};
+use crate::components::footer::{Footer, FooterHit};
 use crate::effect::{Effect, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
-use crate::keymap::{BindingId, KeyChord, Keymap};
+use crate::keymap::{ActiveGroup, BindingId, KeyChord, Keymap, active_bindings};
 use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
 use crate::screens::main::{FocusTarget, MainScreen};
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
@@ -57,6 +58,8 @@ pub struct App {
     maximized: Option<Maximized>,
     /// The maximize toast shows once per session. Never saved.
     has_shown_maximize_toast: bool,
+    /// The footer items drawn in the last frame, for clicks.
+    footer_hits: Vec<FooterHit>,
     should_quit: bool,
 }
 
@@ -71,6 +74,7 @@ impl App {
             toasts: Toasts::default(),
             maximized: None,
             has_shown_maximize_toast: false,
+            footer_hits: Vec::new(),
             should_quit: false,
         }
     }
@@ -164,8 +168,17 @@ impl App {
         None
     }
 
-    /// A left click focuses the target under the pointer, as of the last frame, and the wheel scrolls it.
-    fn action_for_mouse(&self, mouse: MouseEvent) -> Option<Action> {
+    /// A left click on a footer item runs its binding, as Textual's `FooterKey` does; elsewhere it focuses the
+    /// target under the pointer, and the wheel scrolls it. All as of the last frame.
+    fn action_for_mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
+        if mouse.kind == MouseEventKind::Down(MouseButton::Left) {
+            let position = ratatui::layout::Position::new(mouse.column, mouse.row);
+            if let Some(hit) = self.footer_hits.iter().find(|hit| hit.rect.contains(position)).copied() {
+                // Textual rings the bell for a disabled item instead. There's no bell yet, and nothing is disabled in
+                // M1.
+                return hit.enabled.then(|| self.route_binding(hit.owner, hit.id)).flatten();
+            }
+        }
         let BaseScreen::Main(main) = &self.base else {
             return None;
         };
@@ -219,6 +232,24 @@ impl App {
             (BaseScreen::Auth(auth), Owner::Screen(ScreenKind::Auth)) => auth.binding_state(id, &cx),
             _ => BindingState::Enabled,
         }
+    }
+
+    /// The bindings active for the current focus, for the footer and help panel, read fresh each frame.
+    pub fn active_bindings(&mut self) -> Vec<ActiveGroup> {
+        let chain = self.binding_chain();
+        let mut states = Vec::new();
+        for link in &chain {
+            for &id in link.bindings {
+                states.push((link.owner, id, self.binding_state(link.owner, id)));
+            }
+        }
+        let state = |owner: Owner, id: BindingId| {
+            states
+                .iter()
+                .find(|&&(o, i, _)| o == owner && i == id)
+                .map_or(BindingState::Enabled, |&(_, _, state)| state)
+        };
+        active_bindings(&chain, &self.shared.keymap, state)
     }
 
     /// Asks the owner of a matched binding what it means right now.
@@ -402,6 +433,7 @@ impl App {
     /// The base screen and (later) modals.
     fn render_screens(&mut self, frame: &mut Frame<'_>) {
         let area = frame.area();
+        let groups = self.active_bindings();
         let theme = &self.shared.theme;
         // Textual's `Screen`: `background: $background; color: $foreground`.
         let screen = theme.background();
@@ -421,12 +453,30 @@ impl App {
             focus_within: true,
         };
         // While maximized, the widget replaces the whole screen, footer and help panel included.
-        match (&mut self.base, self.maximized) {
-            (BaseScreen::Startup(_), _) => {}
-            (BaseScreen::Auth(auth), _) => auth.render(frame, area, &cx),
-            (BaseScreen::Main(main), Some(maximized)) => main.render_maximized(frame, area, maximized.target, &cx),
-            (BaseScreen::Main(main), None) => main.render(frame, area, &cx),
-        }
+        let footer_area = match (&mut self.base, self.maximized) {
+            (BaseScreen::Startup(_), _) => None,
+            (BaseScreen::Auth(auth), _) => {
+                auth.render(frame, area, &cx);
+                AuthScreen::footer_area(area)
+            }
+            (BaseScreen::Main(main), Some(maximized)) => {
+                main.render_maximized(frame, area, maximized.target, &cx);
+                None
+            }
+            (BaseScreen::Main(main), None) => {
+                main.render(frame, area, &cx);
+                Some(main.footer_area(area))
+            }
+        };
+        self.footer_hits = match footer_area {
+            Some(footer_area) => {
+                let footer = Footer { groups: &groups, theme };
+                let hits = footer.hits(footer_area);
+                frame.render_widget(footer, footer_area);
+                hits
+            }
+            None => Vec::new(),
+        };
     }
 
     /// The main screen, while it's the base screen.

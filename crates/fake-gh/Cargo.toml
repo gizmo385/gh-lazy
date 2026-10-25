@@ -1,0 +1,13 @@
+[package]
+name = "fake-gh"
+description = "Test double for the gh CLI that replays recorded fixtures"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

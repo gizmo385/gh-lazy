@@ -1,0 +1,64 @@
+[workspace]
+resolver = "2"
+members = ["crates/*", "xtask"]
+# Plain `cargo run` / `cargo build` target the app; CI uses `--workspace`.
+default-members = ["crates/lazy-github"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/gizmo385/gh-lazy"
+publish = false
+
+# Shared versions for the crates chosen in docs/rust-rewrite/PLAN.md §4. Declaring a dependency here doesn't build
+# it; each crate opts in with `foo = { workspace = true }` only for what it uses.
+[workspace.dependencies]
+# Internal crates
+lazy-github-core = { path = "crates/lazy-github-core" }
+lazy-github-tui = { path = "crates/lazy-github-tui" }
+
+# TUI
+ratatui = "0.30"
+crossterm = "0.29"
+# Text input (`tui-textarea`) is not declared yet: its latest release (0.7.0) requires ratatui 0.29, which conflicts
+# with ratatui 0.30 above. Tracked in a follow-up issue linked from the #62 PR.
+pulldown-cmark = "0.13"
+syntect = "5.3"
+nucleo-matcher = "0.3"
+
+# Runtime, serialization, CLI, errors
+tokio = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+clap = { version = "4.6", features = ["derive"] }
+thiserror = "2"
+color-eyre = "0.6"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+tracing-appender = "0.2"
+
+# Platform integration
+etcetera = "0.11"
+open = "5"
+arboard = "3"
+jiff = "0.2"
+
+# Testing and the parity harness
+insta = "1"
+rstest = "0.28"
+assert_cmd = "2"
+portable-pty = "0.9"
+vt100 = "0.18"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+# Pedantic lints that cost more than they catch in an application workspace.
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"

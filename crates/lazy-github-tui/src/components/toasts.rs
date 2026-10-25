@@ -77,8 +77,9 @@ impl Placement {
 
 impl Toasts {
     /// Raises `toast`. Its timeout starts at the next [`Self::stamp`], which `App` calls at the end of the update that
-    /// raised it, so the clock reads the same as it would have here.
-    pub fn push(&mut self, toast: Toast) {
+    /// raised it, so the clock reads the same as it would have here. Crate-private, since a toast that is never
+    /// stamped never expires; [`Self::push_at`] is the public way in.
+    pub(crate) fn push(&mut self, toast: Toast) {
         self.live.push_back(Live { toast, expires: None });
     }
 

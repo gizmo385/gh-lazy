@@ -133,9 +133,19 @@ impl InfoView {
 
     /// Draws the view, with a scrollbar in the last two columns when the text overflows.
     pub fn render(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme) {
+        self.draw(frame, area, theme, true);
+    }
+
+    /// Draws the view without a scrollbar, cutting off what doesn't fit: Textual's `Markdown` outside a scrolling
+    /// container, as on the authentication screen.
+    pub fn render_clipped(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme) {
+        self.draw(frame, area, theme, false);
+    }
+
+    fn draw(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, scrollbar: bool) {
         let window = usize::from(area.height);
         let mut lines = intro_lines(area.width, theme);
-        let overflows = lines.len() > window;
+        let overflows = scrollbar && lines.len() > window;
         let text_area = if overflows {
             lines = intro_lines(area.width.saturating_sub(SCROLLBAR_WIDTH), theme);
             Rect {
@@ -399,6 +409,23 @@ mod tests {
         assert_eq!(view.offset(), 0);
         assert_eq!(Scroll::from_binding(BindingId::TextualScrollEnd), Some(Scroll::End));
         assert_eq!(Scroll::from_binding(BindingId::AppQuit), None);
+    }
+
+    #[test]
+    fn clipped_text_wraps_at_the_full_width() {
+        let mut view = InfoView::default();
+        let mut terminal = Terminal::new(TestBackend::new(98, 10)).unwrap();
+        terminal
+            .draw(|frame| view.render_clipped(frame, frame.area(), &Theme::default()))
+            .unwrap();
+        let screen = buffer_to_string(terminal.backend().buffer());
+        let rows: Vec<&str> = screen.lines().collect();
+        assert_eq!(
+            rows[4],
+            "  LazyGithub is a terminal UI for interacting with GitHub. You can get started by selecting one"
+        );
+        // Without a scrollbar the text wraps at the full 94 columns, so "one" stays on this row.
+        assert_eq!(rows.len(), 10);
     }
 
     #[test]

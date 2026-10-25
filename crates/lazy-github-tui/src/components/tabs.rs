@@ -1,5 +1,5 @@
 //! A tab strip drawn like Textual's `Tabs`: a label row, and under it an underline bar with the active tab's segment
-//! highlighted. M2 adds switching tabs and the focused style.
+//! highlighted. Focused, the active label takes the block cursor and the bar brightens. M2 adds switching tabs.
 
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
@@ -34,23 +34,46 @@ impl TabStrip {
         self.active
     }
 
-    /// Draws the label row and the bar into the first two rows of `area`.
-    pub fn render(&self, frame: &mut Frame<'_>, area: Rect, theme: &Theme) {
+    /// Whether there are no tabs, so the strip can't take focus.
+    pub fn is_empty(&self) -> bool {
+        self.names.is_empty()
+    }
+
+    /// Draws the label row and the bar into the first two rows of `area`, in the focused style when `focused`.
+    pub fn render(&self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool) {
         let under = theme.background();
         let palette = theme.palette;
-        // Textual's `Tab`: `padding: 0 1`, `$foreground 50%`, and `$foreground` when active.
-        let active_label = Style::new().fg(theme.color(palette.foreground, under));
+        // Textual's `Tab`: `padding: 0 1`, `$foreground 50%`, and `$foreground` when active. In a focused `Tabs`,
+        // the active tab is `$block-cursor-foreground` on `$block-cursor-background` with its text style, padding
+        // included.
+        let (active_label, active_padding) = if focused {
+            let style = palette.block_cursor_text_style.apply(theme.fg_on(
+                palette.block_cursor_foreground,
+                palette.block_cursor_background,
+                under,
+            ));
+            let padding = Style::new().bg(theme.color(palette.block_cursor_background, under));
+            (style, padding)
+        } else {
+            (Style::new().fg(theme.color(palette.foreground, under)), Style::new())
+        };
         let label = Style::new().fg(theme.color(palette.foreground.multiply_alpha(0.5), under));
         let mut spans = Vec::new();
         let mut highlight = (0, 0);
         let mut x = 0;
         for (i, name) in self.names.iter().enumerate() {
             let width = u16::try_from(Span::raw(name.as_str()).width()).unwrap_or(u16::MAX);
-            let style = if i == self.active { active_label } else { label };
-            if i == self.active {
+            let (style, padding) = if i == self.active {
                 highlight = (x + 1, x + 1 + width);
-            }
-            spans.extend([Span::raw(" "), Span::styled(name.as_str(), style), Span::raw(" ")]);
+                (active_label, active_padding)
+            } else {
+                (label, Style::new())
+            };
+            spans.extend([
+                Span::styled(" ", padding),
+                Span::styled(name.as_str(), style),
+                Span::styled(" ", padding),
+            ]);
             x = x.saturating_add(width + 2);
         }
         let labels = Rect {
@@ -60,11 +83,12 @@ impl TabStrip {
         frame.render_widget(Paragraph::new(Line::from(spans)), labels);
 
         if area.height >= TAB_STRIP_HEIGHT {
+            // Textual's `Underline`: `$block-cursor-background` on a `$foreground 10%` bar, `30%` when focused.
+            let bar_alpha = if focused { 0.3 } else { 0.1 };
             let bar = UnderlineBar {
                 highlight,
-                // Textual's `Underline`: `$block-cursor-background` on a `$foreground 10%` bar.
                 highlight_style: Style::new().fg(theme.color(palette.block_cursor_background, under)),
-                style: Style::new().fg(theme.color(palette.foreground.multiply_alpha(0.1), under)),
+                style: Style::new().fg(theme.color(palette.foreground.multiply_alpha(bar_alpha), under)),
             };
             frame.render_widget(
                 bar,
@@ -115,11 +139,39 @@ mod tests {
     use crate::test_util::buffer_to_string;
 
     fn draw(strip: &TabStrip, width: u16) -> Buffer {
+        draw_focused(strip, width, false)
+    }
+
+    fn draw_focused(strip: &TabStrip, width: u16, focused: bool) -> Buffer {
         let mut terminal = Terminal::new(TestBackend::new(width, 2)).unwrap();
         terminal
-            .draw(|frame| strip.render(frame, frame.area(), &Theme::default()))
+            .draw(|frame| strip.render(frame, frame.area(), &Theme::default(), focused))
             .unwrap();
         terminal.backend().buffer().clone()
+    }
+
+    #[test]
+    fn focused_matches_textual() {
+        // Python's focused Details tabs at 160x48: the active tab in the block cursor, the bar at `$foreground 30%`.
+        let buffer = draw_focused(&TabStrip::new(["Introduction"]), 20, true);
+        assert_eq!(buffer_to_string(&buffer), " Introduction\n╸━━━━━━━━━━━━╺━━━━━━\n");
+        let cursor = ratatui::style::Color::Rgb(0x01, 0x78, 0xd4);
+        let text = &buffer[(1, 0)];
+        assert_eq!(
+            (text.fg, text.bg, text.modifier),
+            (
+                ratatui::style::Color::Rgb(0xdd, 0xed, 0xf9),
+                cursor,
+                ratatui::style::Modifier::BOLD
+            )
+        );
+        assert_eq!([buffer[(0, 0)].bg, buffer[(13, 0)].bg], [cursor, cursor]);
+        assert_eq!(buffer[(14, 0)].bg, ratatui::style::Color::Reset);
+        let bar = ratatui::style::Color::Rgb(0x4f, 0x4f, 0x4f);
+        assert_eq!(
+            [buffer[(0, 1)].fg, buffer[(1, 1)].fg, buffer[(13, 1)].fg],
+            [bar, cursor, bar]
+        );
     }
 
     #[test]

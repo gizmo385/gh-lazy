@@ -1,7 +1,6 @@
 version = 1
 description = "The View Maximized toast: raised by M, drawn bottom-right over the maximized widget, gone after its 5 s timeout"
-# The Rust side needs maximize (#75). Whichever of #75 and #79 merges second flips this to true.
-gate = false
+gate = true
 parity_rows = ["main-layout.toasts", "toasts.view-maximized"]
 sizes = [[160, 48], [100, 30]]
 

@@ -5,15 +5,18 @@ on:
     branches:
     - rust-main
   pull_request:
+    # `rust/**` gives stacked PRs (a work branch based on another work branch) CI before their base merges.
     branches:
     - rust-main
+    - 'rust/**'
 
 permissions:
   contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Cancel superseded PR runs, but let every push to rust-main finish so each merge gets a result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   CARGO_TERM_COLOR: always
@@ -29,15 +32,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v6
-    # rust-toolchain.toml sets the channel and components; rustup applies it to every cargo call below, so this step
-    # only makes sure rustup and that channel are installed.
-    - uses: dtolnay/rust-toolchain@stable
       with:
-        components: rustfmt, clippy
+        persist-credentials: false
+    # rust-toolchain.toml is the single source of truth for the toolchain version and components.
+    - name: Install toolchain
+      run: rustup toolchain install
     - uses: Swatinem/rust-cache@v2
     - name: Check formatting
       run: cargo fmt --all --check
     - name: Clippy
-      run: cargo clippy --workspace --all-targets -- -D warnings
+      run: cargo clippy --workspace --all-targets --locked -- -D warnings
     - name: Test
-      run: cargo test --workspace
+      run: cargo test --workspace --locked

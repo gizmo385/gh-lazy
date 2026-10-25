@@ -1,0 +1,31 @@
+---
+source: crates/lazy-github-tui/src/theme/mod.rs
+expression: themed_widget(&theme(name))
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 20, height: 8 },
+    content: [
+        "┌──────────────────┐",
+        "│text on panel     │",
+        "│                  │",
+        "└──────────────────┘",
+        "┌──────────────────┐",
+        "│blurred cursor    │",
+        "│                  │",
+        "└──────────────────┘",
+    ],
+    styles: [
+        x: 0, y: 0, fg: Rgb(163, 190, 140), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
+        x: 1, y: 1, fg: Rgb(230, 231, 234), bg: Rgb(67, 76, 94), underline: Reset, modifier: NONE,
+        x: 14, y: 1, fg: Rgb(216, 222, 233), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
+        x: 19, y: 1, fg: Rgb(163, 190, 140), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
+        x: 1, y: 2, fg: Rgb(216, 222, 233), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
+        x: 19, y: 2, fg: Rgb(163, 190, 140), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
+        x: 0, y: 4, fg: Rgb(198, 255, 255), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
+        x: 1, y: 5, fg: Rgb(216, 222, 233), bg: Rgb(81, 103, 119), underline: Reset, modifier: NONE,
+        x: 15, y: 5, fg: Rgb(216, 222, 233), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
+        x: 19, y: 5, fg: Rgb(198, 255, 255), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
+        x: 1, y: 6, fg: Rgb(216, 222, 233), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
+        x: 19, y: 6, fg: Rgb(198, 255, 255), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
+    ]
+}

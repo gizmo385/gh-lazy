@@ -217,8 +217,14 @@ impl App {
     pub fn render(&mut self, frame: &mut Frame<'_>) {
         let area = frame.area();
         let theme = &self.shared.theme;
+        // Textual's `Screen`: `background: $background; color: $foreground`.
+        let screen = theme.background();
         frame.render_widget(
-            Block::new().style(Style::new().fg(theme.foreground).bg(theme.background)),
+            Block::new().style(
+                Style::new()
+                    .fg(theme.color(theme.palette.foreground, screen))
+                    .bg(screen.into()),
+            ),
             area,
         );
         let cx = RenderCx {

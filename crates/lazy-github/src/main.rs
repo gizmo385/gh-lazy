@@ -78,7 +78,8 @@ fn run(original_pwd: Option<&Path>) -> ExitCode {
         .map_err(color_eyre::Report::from)
         .and_then(|runtime| {
             let gh = GhCli::new(GhCliOptions::from(&config));
-            let app = App::new(config, Keymap::defaults(), Theme::default(), SystemClock);
+            let theme = Theme::from_config(&config.appearance.theme);
+            let app = App::new(config, Keymap::defaults(), theme, SystemClock);
             runtime.block_on(lazy_github_tui::tui::run(app, gh, logging.command_log, paths))
         });
     match result {

@@ -1,0 +1,25 @@
+version = 1
+description = "Main screen layout with appearance.show_command_log: the command log docked under details"
+gate = true
+parity_rows = ["Main layout (status bar, selections pane 40%, details, command log, footer)"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+
+[env.config_overrides]
+appearance = { show_command_log = true }
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+capture = "start"
+checks = ["titles", "tabs", "focus"]
+
+# Pre-order by (row, col): the log's top row is below the Workflows title at both sizes.
+[expect.start]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows", "[6] Command Log"]
+focused = ["[1] Repositories"]
+tabs = { box = "Details", names = ["Introduction"], active = "Introduction" }
+not_contains = ["Traceback"]

@@ -1,0 +1,43 @@
+name: Rust checks
+
+on:
+  push:
+    branches:
+    - rust-main
+  pull_request:
+    branches:
+    - rust-main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: fmt, clippy, test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows joins in M5 (docs/rust-rewrite/PLAN.md §7).
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v6
+    # rust-toolchain.toml sets the channel and components; rustup applies it to every cargo call below, so this step
+    # only makes sure rustup and that channel are installed.
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+    - uses: Swatinem/rust-cache@v2
+    - name: Check formatting
+      run: cargo fmt --all --check
+    - name: Clippy
+      run: cargo clippy --workspace --all-targets -- -D warnings
+    - name: Test
+      run: cargo test --workspace

@@ -43,8 +43,10 @@ pub struct App {
 }
 
 impl App {
-    /// An app on the main screen. The clock is the only source of time for the app and its components.
-    pub fn new(config: Config, keymap: Keymap, theme: Theme, clock: impl Clock + 'static) -> Self {
+    /// An app on the main screen, with the keymap built from `config`'s `bindings.overrides`. The clock is the only
+    /// source of time for the app and its components.
+    pub fn new(config: Config, theme: Theme, clock: impl Clock + 'static) -> Self {
+        let keymap = Keymap::new(&config.bindings.overrides);
         Self {
             base: BaseScreen::Main(MainScreen),
             shared: Shared::new(config, keymap, theme, Arc::new(clock)),
@@ -143,6 +145,7 @@ impl App {
             Owner::App => match id {
                 BindingId::AppQuit | BindingId::TextualQuit => Some(Action::Quit),
                 BindingId::TextualHelpQuit => Some(Action::QuitHint),
+                other => Some(Action::Unimplemented(other)),
             },
             Owner::Screen(ScreenKind::Main) => {
                 let mut scratch = Outbox::default();
@@ -345,13 +348,20 @@ mod tests {
     }
 
     #[test]
+    fn the_keymap_comes_from_the_config_overrides() {
+        let mut config = Config::default();
+        config.bindings.overrides.insert("app.quit".into(), "x, ctrl+t".into());
+        let mut app = TestApp::new(config.clone());
+        app.press(&["q"]);
+        assert_eq!(app.effects(), []);
+        app.press(&["ctrl+t"]);
+        assert_eq!(app.effects(), [Effect::Quit]);
+        assert_eq!(app.app().config(), &config);
+    }
+
+    #[test]
     fn ctrl_c_explains_how_to_quit() {
-        let mut app = App::new(
-            Config::default(),
-            Keymap::defaults(),
-            Theme::default(),
-            FakeClock::new(),
-        );
+        let mut app = App::new(Config::default(), Theme::default(), FakeClock::new());
         assert!(matches!(
             app.action_for(Event::Key(key_event("ctrl+c"))),
             Some(Action::QuitHint)

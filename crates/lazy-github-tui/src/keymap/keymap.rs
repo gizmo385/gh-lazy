@@ -1,32 +1,134 @@
-//! The keymap: which keys fire which binding.
+//! The keymap: which keys fire which binding, after `bindings.overrides`.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-use crossterm::event::{KeyCode, KeyModifiers};
+use indexmap::IndexMap;
 
-use super::{BindingId, KeyChord};
+use super::{BindingId, KeyChord, KeySpec};
 
-/// The keys of every binding.
+/// The keys of every binding, with `bindings.overrides` applied as Textual's `App.set_keymap` applies them.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Keymap {
-    keys: HashMap<BindingId, Vec<KeyChord>>,
+    keys: HashMap<BindingId, Vec<(String, KeySpec)>>,
+    overridden: HashSet<BindingId>,
+    /// Override strings as written, including empty ones, for pane titles.
+    raw: HashMap<BindingId, String>,
 }
 
 impl Keymap {
-    /// Every binding on its default keys.
-    pub fn defaults() -> Self {
-        let keys = BindingId::ALL.iter().map(|&id| (id, default_keys(id))).collect();
-        Self { keys }
+    /// Every binding on its default keys, with `overrides` (`bindings.overrides`: id to key list) on top.
+    ///
+    /// - An overridden binding answers only to its override keys, and its `key_display` is dropped.
+    /// - An empty or blank override is ignored, so the binding keeps its defaults.
+    /// - An override for an id that doesn't exist is ignored. It stays in the config file.
+    /// - A token that isn't a key never matches, but it's displayed as written.
+    pub fn new(overrides: &IndexMap<String, String>) -> Self {
+        let mut keys: HashMap<_, _> = BindingId::ALL
+            .iter()
+            .map(|&id| (id, KeySpec::parse_list(id.def().default_keys)))
+            .collect();
+        let mut overridden = HashSet::new();
+        let mut raw = HashMap::new();
+        for (config_id, value) in overrides {
+            let Some(id) = BindingId::from_config_id(config_id) else {
+                tracing::debug!("Ignoring binding override for unknown id {config_id}");
+                continue;
+            };
+            raw.insert(id, value.clone());
+            let parsed = KeySpec::parse_list(value);
+            if parsed.is_empty() {
+                continue;
+            }
+            for (token, spec) in &parsed {
+                if matches!(spec, KeySpec::Unknown(_)) {
+                    tracing::warn!("Unknown key {token:?} in bindings.overrides for {config_id}");
+                }
+            }
+            keys.insert(id, parsed);
+            overridden.insert(id);
+        }
+        Self { keys, overridden, raw }
     }
 
-    /// The keys that fire `id`.
-    pub fn keys(&self, id: BindingId) -> &[KeyChord] {
+    /// Every binding on its default keys.
+    pub fn defaults() -> Self {
+        Self::new(&IndexMap::new())
+    }
+
+    /// The keys of `id`, each with its token as written: the override's, or the defaults.
+    pub fn keys(&self, id: BindingId) -> &[(String, KeySpec)] {
         self.keys.get(&id).map_or(&[], Vec::as_slice)
     }
 
-    /// The binding in one component's list `ids` that owns `chord`, if any. The first match in list order wins.
+    /// Whether `bindings.overrides` rebinds `id`. An ignored (empty) override doesn't count.
+    pub fn is_overridden(&self, id: BindingId) -> bool {
+        self.overridden.contains(&id)
+    }
+
+    /// The key text for a pane title such as `[1] Repositories`: the override string exactly as written, even when
+    /// it's empty, or the default keys. Python's `LazyGithubContext.get_key`.
+    pub fn title_key(&self, id: BindingId) -> &str {
+        self.raw.get(&id).map_or(id.def().default_keys, String::as_str)
+    }
+
+    /// How the footer shows `id`'s key: its first key.
+    pub fn first_key_display(&self, id: BindingId) -> String {
+        self.key_displays(id).into_iter().next().unwrap_or_default()
+    }
+
+    /// How the help panel shows `id`'s keys, all of them in order. A binding's `key_display` replaces each default
+    /// key's display, until the binding is overridden.
+    pub fn key_displays(&self, id: BindingId) -> Vec<String> {
+        let key_display = id.def().key_display.filter(|_| !self.is_overridden(id));
+        self.keys(id)
+            .iter()
+            .map(|(token, _)| key_display.map_or_else(|| KeySpec::display(token), str::to_owned))
+            .collect()
+    }
+
+    /// The keys that fire each binding of one component's list `ids`, in Textual's order after a keymap: the keys
+    /// left at their defaults in list order, then the overridden bindings' keys in list order.
+    ///
+    /// This is Textual's per-component clash rule: a default key that an overridden binding in the same list claims
+    /// is gone. Unknown tokens have no chord and are left out.
+    pub fn effective_keys(&self, ids: &[BindingId]) -> Vec<(BindingId, KeyChord)> {
+        let chords = |id: BindingId| {
+            self.keys(id).iter().filter_map(move |(_, spec)| match spec {
+                KeySpec::Chord(chord) => Some((id, *chord)),
+                KeySpec::Unknown(_) => None,
+            })
+        };
+        let (overridden, defaults): (Vec<BindingId>, Vec<BindingId>) =
+            ids.iter().copied().partition(|&id| self.is_overridden(id));
+        let claimed: Vec<(BindingId, KeyChord)> = overridden.iter().flat_map(|&id| chords(id)).collect();
+        defaults
+            .iter()
+            .flat_map(|&id| chords(id))
+            .filter(|(_, chord)| !claimed.iter().any(|(_, claimed)| claimed == chord))
+            .chain(claimed.iter().copied())
+            .collect()
+    }
+
+    /// The binding in one component's list `ids` that owns `chord`, if any, under [`Self::effective_keys`]'s rules:
+    /// an overridden binding wins over a default one, and otherwise the first in list order wins. A component nearer
+    /// the focus still wins over one further out: that's the caller walking the chain innermost first.
     pub fn match_in(&self, ids: &[BindingId], chord: &KeyChord) -> Option<BindingId> {
-        ids.iter().copied().find(|&id| self.keys(id).contains(chord))
+        let owns = |id: &BindingId| {
+            self.keys(*id)
+                .iter()
+                .any(|(_, spec)| matches!(spec, KeySpec::Chord(key) if key == chord))
+        };
+        // Same answer as searching `effective_keys`, without collecting it on every key press.
+        ids.iter()
+            .filter(|&&id| self.is_overridden(id))
+            .find(|id| owns(id))
+            .or_else(|| ids.iter().filter(|&&id| !self.is_overridden(id)).find(|id| owns(id)))
+            .copied()
+    }
+
+    /// The bindings checked before the focused component sees a key.
+    pub fn priority_ids(&self) -> impl Iterator<Item = BindingId> {
+        BindingId::ALL.iter().copied().filter(|id| id.is_priority())
     }
 }
 
@@ -36,27 +138,284 @@ impl Default for Keymap {
     }
 }
 
-fn default_keys(id: BindingId) -> Vec<KeyChord> {
-    let key = match id {
-        BindingId::AppQuit => KeyChord::new(KeyCode::Char('q'), KeyModifiers::NONE),
-        BindingId::TextualQuit => KeyChord::new(KeyCode::Char('q'), KeyModifiers::CONTROL),
-        BindingId::TextualHelpQuit => KeyChord::new(KeyCode::Char('c'), KeyModifiers::CONTROL),
-    };
-    vec![key]
-}
-
 #[cfg(test)]
 mod tests {
+    use std::sync::{Arc, Mutex};
+
+    use crossterm::event::{KeyCode, KeyModifiers};
+    use tracing::Level;
+
     use super::*;
 
+    fn key(token: &str) -> KeyChord {
+        match KeySpec::parse(token) {
+            KeySpec::Chord(chord) => chord,
+            KeySpec::Unknown(token) => panic!("{token:?} didn't parse"),
+        }
+    }
+
+    fn keymap(overrides: &[(&str, &str)]) -> Keymap {
+        Keymap::new(
+            &overrides
+                .iter()
+                .map(|&(id, keys)| (id.to_owned(), keys.to_owned()))
+                .collect(),
+        )
+    }
+
+    /// What `f` logs at `DEBUG` and above, as `LEVEL message` lines.
+    fn logs<R>(f: impl FnOnce() -> R) -> (R, String) {
+        #[derive(Clone, Default)]
+        struct Capture(Arc<Mutex<Vec<u8>>>);
+        impl std::io::Write for Capture {
+            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+                self.0.lock().unwrap().extend_from_slice(buf);
+                Ok(buf.len())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+        let capture = Capture::default();
+        let writer = capture.clone();
+        let subscriber = tracing_subscriber::fmt()
+            .with_max_level(Level::DEBUG)
+            .without_time()
+            .with_target(false)
+            .with_writer(move || writer.clone())
+            .finish();
+        let result = tracing::subscriber::with_default(subscriber, f);
+        let out = String::from_utf8(capture.0.lock().unwrap().clone()).unwrap();
+        let out = out
+            .lines()
+            .map(|line| line.split_whitespace().collect::<Vec<_>>().join(" ") + "\n")
+            .collect();
+        (result, out)
+    }
+
+    /// The overrides verified against the Python app in #73.
+    fn python_example() -> Keymap {
+        keymap(&[
+            ("main.repos.focus", "9"),
+            ("main.pull_requests.focus", "x, ctrl+t"),
+            ("common.table.search", "question_mark"),
+            ("app.open_help", "h"),
+            ("app.maximize_widget", "bogus"),
+        ])
+    }
+
+    const MAIN_FOCUS: &[BindingId] = &[
+        BindingId::MainReposFocus,
+        BindingId::MainPullRequestsFocus,
+        BindingId::MainIssuesFocus,
+        BindingId::MainWorkflowsFocus,
+        BindingId::MainDetailsFocus,
+        BindingId::MainCommandLogFocus,
+    ];
+
     #[test]
-    fn match_in_only_looks_at_the_listed_ids() {
-        let keymap = Keymap::defaults();
-        let q = KeyChord::new(KeyCode::Char('q'), KeyModifiers::NONE);
+    fn the_python_example_end_to_end() {
+        let keymap = python_example();
+        assert_eq!(keymap.match_in(MAIN_FOCUS, &key("9")), Some(BindingId::MainReposFocus));
+        assert_eq!(keymap.match_in(MAIN_FOCUS, &key("1")), None);
+        assert_eq!(keymap.match_in(MAIN_FOCUS, &key("2")), None);
         assert_eq!(
-            keymap.match_in(&[BindingId::TextualQuit, BindingId::AppQuit], &q),
-            Some(BindingId::AppQuit)
+            keymap.match_in(MAIN_FOCUS, &key("x")),
+            Some(BindingId::MainPullRequestsFocus)
         );
-        assert_eq!(keymap.match_in(&[BindingId::TextualQuit], &q), None);
+        assert_eq!(
+            keymap.match_in(MAIN_FOCUS, &key("ctrl+t")),
+            Some(BindingId::MainPullRequestsFocus)
+        );
+        assert_eq!(keymap.match_in(MAIN_FOCUS, &key("3")), Some(BindingId::MainIssuesFocus));
+
+        assert_eq!(keymap.title_key(BindingId::MainReposFocus), "9");
+        assert_eq!(keymap.title_key(BindingId::MainPullRequestsFocus), "x, ctrl+t");
+        assert_eq!(keymap.title_key(BindingId::MainIssuesFocus), "3");
+
+        assert_eq!(keymap.first_key_display(BindingId::TableSearch), "?");
+        assert_eq!(keymap.first_key_display(BindingId::AppMaximizeWidget), "bogus");
+        assert_eq!(keymap.first_key_display(BindingId::AppOpenHelp), "h");
+        assert_eq!(
+            keymap.match_in(&[BindingId::TableSearch], &key("?")),
+            Some(BindingId::TableSearch)
+        );
+        assert_eq!(keymap.match_in(&[BindingId::TableSearch], &key("/")), None);
+        assert_eq!(keymap.match_in(&[BindingId::AppMaximizeWidget], &key("M")), None);
+
+        // The focused table's own `h` comes first in the chain, so the help binding never sees it: "h Keybindings"
+        // is missing from Python's footer.
+        let chain: [&[BindingId]; 2] = [
+            &[BindingId::TableScrollLeft],
+            &[BindingId::AppQuit, BindingId::AppOpenHelp],
+        ];
+        let winner = chain.iter().find_map(|ids| keymap.match_in(ids, &key("h")));
+        assert_eq!(winner, Some(BindingId::TableScrollLeft));
+    }
+
+    #[test]
+    fn an_override_clashes_with_defaults_in_the_same_component() {
+        // `X` stands for any binding; `diff.add_comment` (default `c`).
+        let keymap = keymap(&[("diff.add_comment", "h")]);
+        let table = [BindingId::TableScrollLeft, BindingId::DiffAddComment];
+        assert_eq!(keymap.match_in(&table, &key("h")), Some(BindingId::DiffAddComment));
+        assert_eq!(keymap.match_in(&table, &key("c")), None);
+        assert_eq!(keymap.effective_keys(&table), [(BindingId::DiffAddComment, key("h"))]);
+
+        // A component nearer the focus that declares `h` still wins in chain order.
+        let chain: [&[BindingId]; 2] = [&[BindingId::TableScrollLeft], &[BindingId::DiffAddComment]];
+        let winner = chain.iter().find_map(|ids| keymap.match_in(ids, &key("h")));
+        assert_eq!(winner, Some(BindingId::TableScrollLeft));
+    }
+
+    #[test]
+    fn effective_keys_put_overrides_last() {
+        let keymap = keymap(&[("common.table.cursor_down", "n")]);
+        let ids = [
+            BindingId::TableSelect,
+            BindingId::TableCursorDown,
+            BindingId::TableCursorUp,
+        ];
+        assert_eq!(
+            keymap.effective_keys(&ids),
+            [
+                (BindingId::TableSelect, key("enter")),
+                (BindingId::TableSelect, key("space")),
+                (BindingId::TableCursorUp, key("k")),
+                (BindingId::TableCursorDown, key("n")),
+            ]
+        );
+        // Every chord `effective_keys` lists resolves to its binding, so dispatch and the footer agree.
+        for (id, chord) in keymap.effective_keys(&ids) {
+            assert_eq!(keymap.match_in(&ids, &chord), Some(id));
+        }
+    }
+
+    #[test]
+    fn same_default_keys_resolve_in_list_order() {
+        let keymap = Keymap::defaults();
+        let ids = [BindingId::ConversationReviewReply, BindingId::ConversationCommentReply];
+        assert_eq!(
+            keymap.match_in(&ids, &key("r")),
+            Some(BindingId::ConversationReviewReply)
+        );
+    }
+
+    #[test]
+    fn an_empty_override_keeps_the_default() {
+        for blank in ["", "  "] {
+            let keymap = keymap(&[("main.repos.focus", blank)]);
+            assert!(!keymap.is_overridden(BindingId::MainReposFocus));
+            assert_eq!(keymap.match_in(MAIN_FOCUS, &key("1")), Some(BindingId::MainReposFocus));
+            assert_eq!(keymap.title_key(BindingId::MainReposFocus), blank);
+        }
+    }
+
+    #[test]
+    fn an_unknown_id_is_ignored() {
+        let (keymap, out) = logs(|| keymap(&[("app.nope", "z"), ("textual.app.quit", "z")]));
+        assert_eq!(keymap, Keymap::defaults());
+        assert_eq!(
+            out,
+            "DEBUG Ignoring binding override for unknown id app.nope\n\
+             DEBUG Ignoring binding override for unknown id textual.app.quit\n"
+        );
+    }
+
+    #[test]
+    fn an_unknown_key_warns_once_and_never_matches() {
+        let (keymap, out) = logs(|| keymap(&[("app.maximize_widget", "bogus, Z")]));
+        assert_eq!(
+            out,
+            "WARN Unknown key \"bogus\" in bindings.overrides for app.maximize_widget\n"
+        );
+        let ids = [BindingId::AppMaximizeWidget];
+        assert_eq!(keymap.match_in(&ids, &key("M")), None);
+        assert_eq!(keymap.match_in(&ids, &key("Z")), Some(BindingId::AppMaximizeWidget));
+        assert_eq!(keymap.key_displays(BindingId::AppMaximizeWidget), ["bogus", "Z"]);
+        assert_eq!(keymap.effective_keys(&ids), [(BindingId::AppMaximizeWidget, key("Z"))]);
+    }
+
+    #[test]
+    fn overriding_drops_key_display() {
+        let keymap = keymap(&[("app.open_help", "h")]);
+        assert_eq!(keymap.first_key_display(BindingId::AppOpenHelp), "h");
+        assert_eq!(Keymap::defaults().first_key_display(BindingId::AppOpenHelp), "?");
+        let keymap = self::keymap(&[("common.table.page_right", "ctrl+right")]);
+        assert_eq!(keymap.first_key_display(BindingId::TablePageRight), "^→");
+    }
+
+    #[test]
+    fn default_displays_match_the_python_footer_and_help() {
+        let keymap = Keymap::defaults();
+        for (id, expected) in [
+            (BindingId::AppQuit, "q"),
+            (BindingId::AppCommandPalette, "^p"),
+            (BindingId::AppMaximizeWidget, "M"),
+            (BindingId::AppOpenHelp, "?"),
+            (BindingId::RepositoriesFavorite, "^f"),
+            (BindingId::LinkPaste, "^v"),
+            (BindingId::TablePageRight, "$"),
+            (BindingId::TablePageLeft, "^"),
+            (BindingId::TableSearch, "/"),
+            (BindingId::TableSelect, "⏎ space"),
+            (BindingId::ModalClose, "q esc"),
+            (BindingId::ModalSubmit, "shift+⏎"),
+            (BindingId::NotificationsOpen, "^n"),
+            (BindingId::NotificationsMarkAllAsRead, "^r"),
+            (BindingId::PullRequestMerge, "^m"),
+            (BindingId::DiffClearSelection, "esc"),
+            (BindingId::WorkflowsViewRunDetails, "⏎"),
+            (BindingId::MainReposFocus, "1"),
+            (BindingId::TextualQuit, "^q"),
+            (BindingId::TextualCopyText, "^c super+c"),
+            (BindingId::TextualTablePageLeft, "^pgup"),
+            (BindingId::TextualScrollDown, "↓"),
+        ] {
+            assert_eq!(keymap.key_displays(id).join(" "), expected, "{id:?}");
+        }
+    }
+
+    #[test]
+    fn python_written_configs_load() {
+        // What Python's Settings modal records: Textual key-event names.
+        let keymap = keymap(&[
+            ("app.open_help", "question_mark"),
+            ("common.table.search", "slash"),
+            ("common.table.page_right", "dollar_sign"),
+            ("main.repos.focus", "ctrl+1"),
+        ]);
+        for (id, pressed) in [
+            (
+                BindingId::AppOpenHelp,
+                KeyChord::new(KeyCode::Char('?'), KeyModifiers::SHIFT),
+            ),
+            (
+                BindingId::TableSearch,
+                KeyChord::new(KeyCode::Char('/'), KeyModifiers::NONE),
+            ),
+            (
+                BindingId::TablePageRight,
+                KeyChord::new(KeyCode::Char('$'), KeyModifiers::SHIFT),
+            ),
+            (
+                BindingId::MainReposFocus,
+                KeyChord::new(KeyCode::Char('1'), KeyModifiers::CONTROL),
+            ),
+        ] {
+            assert!(keymap.is_overridden(id));
+            assert_eq!(keymap.match_in(&[id], &pressed), Some(id), "{id:?}");
+        }
+        assert_eq!(keymap.first_key_display(BindingId::TablePageRight), "$");
+        assert_eq!(keymap.first_key_display(BindingId::MainReposFocus), "^1");
+        assert_eq!(keymap.match_in(MAIN_FOCUS, &key("1")), None);
+    }
+
+    #[test]
+    fn priority_ids_are_ctrl_q() {
+        assert_eq!(
+            Keymap::defaults().priority_ids().collect::<Vec<_>>(),
+            [BindingId::TextualQuit]
+        );
     }
 }

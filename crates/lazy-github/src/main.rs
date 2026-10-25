@@ -7,7 +7,6 @@ use lazy_github_core::github::{GhCli, GhCliOptions};
 use lazy_github_core::logging::{self, LoggingOptions};
 use lazy_github_tui::app::App;
 use lazy_github_tui::clock::SystemClock;
-use lazy_github_tui::keymap::Keymap;
 use lazy_github_tui::theme::Theme;
 
 /// The variable the git helpers read the user's working directory from. The `gh-lazy` extension script and Nix
@@ -78,7 +77,7 @@ fn run(original_pwd: Option<&Path>) -> ExitCode {
         .map_err(color_eyre::Report::from)
         .and_then(|runtime| {
             let gh = GhCli::new(GhCliOptions::from(&config));
-            let app = App::new(config, Keymap::defaults(), Theme::default(), SystemClock);
+            let app = App::new(config, Theme::default(), SystemClock);
             runtime.block_on(lazy_github_tui::tui::run(app, gh, logging.command_log, paths))
         });
     match result {

@@ -1,6 +1,6 @@
 version = 1
 description = "Main screen right after launch, no current-directory repo"
-gate = false
+gate = true
 parity_rows = ["Main layout (status bar, selections pane 40%, details, command log, footer)"]
 sizes = [[160, 48], [100, 30]]
 
@@ -16,7 +16,7 @@ capture = "main"
 # Taken from the Python capture. The footer is the full binding list: at 160 and 100 columns the screen cuts it off,
 # which the footer expectation allows (parity/README.md, "Checks").
 [expect.main]
-pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
+pane_titles = ["", "[1] Repositories", "[5] Overview", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
 focused = ["[1] Repositories"]
 footer = [
     "/ Search",

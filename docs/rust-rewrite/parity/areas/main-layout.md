@@ -5,7 +5,7 @@ this file.
 
 | Id | Item | Python reference | Milestone | Status | Issue | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| `main-layout.layout` | Main layout (status bar, selections pane 40%, details, command log, footer) | `ui/screens/primary.py` `LazyGithubMainScreen`, `MainViewPane`, `SelectionsPane`, `SelectionDetailsPane` | M1 | not started | #74 | Selections pane docked left at 40% width; details fill the rest. |
+| `main-layout.layout` | Main layout (status bar, selections pane 40%, details, command log, footer) | `ui/screens/primary.py` `LazyGithubMainScreen`, `MainViewPane`, `SelectionsPane`, `SelectionDetailsPane` | M1 | parity | #74 | Selections pane docked left at 40% width; details fill the rest. Footer content is #76; the command-log body is #80. |
 | `main-layout.section-order` | Section order in selections pane: Repositories, Pull Requests, Issues, Workflows | `ui/screens/primary.py` `SelectionsPane.compose` | M1 | not started | #74 | |
 | `main-layout.sections-hidden` | Sections hidden at startup per `appearance.show_pull_requests`, `show_issues`, `show_workflows`, `show_command_log` | `ui/screens/primary.py` `SelectionsPane.compose`, `SelectionDetailsPane.compose` | M1 | not started | #74 | |
 | `main-layout.section-titles` | Section border titles show their focus key: "[1] Repositories", "[2] Pull Requests", "[3] Issues", "[4] Workflows", "[5] Details", "[6] Command Log" | `ui/widgets/repositories.py`, `ui/widgets/pull_requests.py`, `ui/widgets/issues.py`, `ui/widgets/workflows.py`, `ui/widgets/command_log.py`, `ui/screens/primary.py` `SelectionDetailsContainer` | M1 | not started | #74, #73 | Key comes from `bindings.overrides`. Titles are not refreshed after rebinding in Settings until restart. |

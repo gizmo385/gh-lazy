@@ -484,8 +484,9 @@ version = 1
 description = "Main screen right after launch, no current-directory repo"
 gate = false                     # true = a Python/Rust structural mismatch fails CI (#70). Feature PRs flip it.
 apps = ["python", "rust"]        # default both
-parity_rows = ["Main layout (status bar, selections pane 40%, details, command log, footer)"]
-                                 # PARITY.md "Item" texts; informational, shown in the report
+parity_rows = ["main-layout.layout"]
+                                 # parity matrix row ids (docs/rust-rewrite/parity/areas/); checked by
+                                 # `cargo xtask parity-matrix`, shown in the report
 sizes = [[160, 48], [100, 30]]   # [cols, rows]; default [[160, 48]]
 timeout_ms = 30000               # whole run per app per size; default 30000
 key_delay_ms = 30                # pause after each key; default 30 (after "escape" always >= 100)
@@ -573,7 +574,7 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
   | `alt+<char>` | `ESC` + the char |
 
   `ctrl+m` and `shift+enter` are rejected: terminals can't send them distinctly without the kitty protocol, and that's
-  a keymap design question (PARITY.md, "Known terminal caveats").
+  a keymap design question (parity matrix, `docs/rust-rewrite/parity/areas/terminal-caveats.md`).
 - `[expect.<capture>]` keys must name a capture in the scenario. All of them are optional. `pane_titles` and `focused`
   are exact ordered lists. `footer` is an exact ordered list of `"<key> <label>"`.
 - `checks`, `ignore` and `[expect]` are evaluated by the structural check, below.

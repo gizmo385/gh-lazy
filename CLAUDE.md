@@ -7,7 +7,7 @@ Start with:
 
 - `docs/rust-rewrite/PLAN.md`: goals, stack, architecture, parity strategy, milestones.
 - `docs/rust-rewrite/PROCESS.md`: labels, issue lifecycle, spec format, rules for every agent.
-- `docs/rust-rewrite/PARITY.md`: the parity matrix.
+- `docs/rust-rewrite/parity/README.md`: the parity matrix (rules and index; rows in `parity/areas/`).
 - `.claude/agents/`: role definitions for triage, designer, implementer, code-reviewer and parity-reviewer.
 
 Hard rules:

@@ -34,8 +34,8 @@ A row's **Status** is one of:
 Every area table starts with **Id**. The other columns depend on the area (keybindings have Binding id, Default key,
 Description and Context; config has Section, Field and Default; and so on), and most end with these:
 
-- **Id**: `<area>.<name>`, kebab-case, unique across the matrix, e.g. `main-layout.status-current-repo`. The area prefix is the
-  area file's name. Ids are stable: never rename or reuse one, because scenarios' `parity_rows`, py-bug files and
+- **Id**: `<area>.<name>`, kebab-case, unique across the matrix, e.g. `main-layout.status-current-repo`. The area
+  prefix is the area file's name. Ids are stable: never rename or reuse one, because scenarios' `parity_rows`, py-bug files and
   decision files refer to them. If a row is split, keep the old id on one part and give the others new ids.
 - **Milestone**: where the row lands, per [PLAN.md §8](../PLAN.md#8-milestones). M0 is only used for infrastructure
   rows.

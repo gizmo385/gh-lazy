@@ -112,7 +112,7 @@ file names and JSON shape so switching implementations doesn't lose state.
 
 Parity is checked at three levels, from cheapest to most faithful.
 
-**6.1 The parity matrix (`docs/rust-rewrite/PARITY.md`).** One row per user-visible thing: every screen, pane, tab,
+**6.1 The parity matrix (`docs/rust-rewrite/parity/`, one file per area).** One row per user-visible thing: every screen, pane, tab,
 modal, table column, binding id, config field and CLI command in the Python app. Each row links to its issue and has a
 status (`not started`, `in progress`, `parity`, `intentional diff`). A milestone is done when all its rows are `parity`
 or an approved `intentional diff`. The design agent seeds it in M0 from the Python source.
@@ -155,7 +155,7 @@ parallel once their dependencies land.
 **M0 Foundations.** Cargo workspace and crate skeletons. CI workflow for `rust-main` (fmt, clippy `-D warnings`, test on
 Linux and macOS). `core` config load/save with compatibility tests against the Python test fixtures. `Github` trait and
 `GhCli` impl with auth check. tracing setup. `fake-gh` and fixture format. Parity harness skeleton running one trivial
-scenario against both apps. Seed `PARITY.md`.
+scenario against both apps. Seed the parity matrix.
 
 **M1 App shell.** Main layout: status summary bar (current repo, unread notification count), left selections pane,
 details pane with tabs, optional command log, footer. Focus switching with `1`–`6`. Keymap with overrides, help panel

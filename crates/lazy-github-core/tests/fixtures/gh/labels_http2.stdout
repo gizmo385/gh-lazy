@@ -1,0 +1,29 @@
+HTTP/2.0 200 OK
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset
+Cache-Control: private, max-age=60, s-maxage=60
+Content-Security-Policy: default-src 'none'
+Content-Type: application/json; charset=utf-8
+Date: Sun, 25 Oct 2026 03:00:00 GMT
+Etag: W/"0d6b6a1b7b9e0c2f4d8a3e5c7f9b1d3e5a7c9e1f3b5d7f9a1c3e5b7d9f1a3c5e"
+Last-Modified: Sat, 24 Oct 2026 12:00:00 GMT
+Link: <https://api.github.com/repositories/212613049/labels?per_page=1&page=2>; rel="next", <https://api.github.com/repositories/212613049/labels?per_page=1&page=60>; rel="last"
+Referrer-Policy: origin-when-cross-origin, strict-origin-when-cross-origin
+Server: github.com
+Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
+Vary: Accept-Encoding, Accept, X-Requested-With
+X-Accepted-Oauth-Scopes: repo
+X-Content-Type-Options: nosniff
+X-Frame-Options: deny
+X-Github-Api-Version-Selected: 2022-11-28
+X-Github-Media-Type: github.v3; format=json
+X-Github-Request-Id: SCRUBBED
+X-Oauth-Scopes: gist, read:org, repo, workflow
+X-Ratelimit-Limit: 5000
+X-Ratelimit-Remaining: 4999
+X-Ratelimit-Reset: 1792900800
+X-Ratelimit-Resource: core
+X-Ratelimit-Used: 1
+X-Xss-Protection: 0
+
+[{"id":1,"node_id":"MDU6TGFiZWwx","url":"https://api.github.com/repos/cli/cli/labels/bug","name":"bug","color":"d73a4a","default":true,"description":"Something isn't working"}]

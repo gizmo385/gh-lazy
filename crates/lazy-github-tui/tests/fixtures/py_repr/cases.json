@@ -1,0 +1,293 @@
+[
+  {
+    "name": "ints",
+    "cells": [
+      {
+        "int": 0
+      },
+      {
+        "int": 42
+      },
+      {
+        "int": -7
+      },
+      {
+        "int": 9007199254740993
+      }
+    ],
+    "repr": "(0, 42, -7, 9007199254740993)"
+  },
+  {
+    "name": "one_int",
+    "cells": [
+      {
+        "int": 5
+      }
+    ],
+    "repr": "(5,)"
+  },
+  {
+    "name": "ascii",
+    "cells": [
+      {
+        "str": "parity-bot"
+      },
+      {
+        "str": "gh-lazy"
+      }
+    ],
+    "repr": "('parity-bot', 'gh-lazy')"
+  },
+  {
+    "name": "single_quote",
+    "cells": [
+      {
+        "str": "it's"
+      }
+    ],
+    "repr": "(\"it's\",)"
+  },
+  {
+    "name": "double_quote",
+    "cells": [
+      {
+        "str": "say \"hi\""
+      }
+    ],
+    "repr": "('say \"hi\"',)"
+  },
+  {
+    "name": "both_quotes",
+    "cells": [
+      {
+        "str": "it's \"both\""
+      }
+    ],
+    "repr": "('it\\'s \"both\"',)"
+  },
+  {
+    "name": "backslash",
+    "cells": [
+      {
+        "str": "C:\\path\\to"
+      }
+    ],
+    "repr": "('C:\\\\path\\\\to',)"
+  },
+  {
+    "name": "newline_tab_cr",
+    "cells": [
+      {
+        "str": "line\nnext\tcol\rback"
+      }
+    ],
+    "repr": "('line\\nnext\\tcol\\rback',)"
+  },
+  {
+    "name": "del",
+    "cells": [
+      {
+        "str": "a\u007fb"
+      }
+    ],
+    "repr": "('a\\x7fb',)"
+  },
+  {
+    "name": "c0_and_c1",
+    "cells": [
+      {
+        "str": "\u0000\u001b\u0085\u00a0"
+      }
+    ],
+    "repr": "('\\x00\\x1b\\x85\\xa0',)"
+  },
+  {
+    "name": "zero_width_space",
+    "cells": [
+      {
+        "str": "zero\u200bwidth"
+      }
+    ],
+    "repr": "('zero\\u200bwidth',)"
+  },
+  {
+    "name": "emoji",
+    "cells": [
+      {
+        "str": "ship it \ud83d\ude80"
+      }
+    ],
+    "repr": "('ship it \ud83d\ude80',)"
+  },
+  {
+    "name": "cjk",
+    "cells": [
+      {
+        "str": "\u4fee\u590d\u4e2d\u6587\u6807\u9898"
+      }
+    ],
+    "repr": "('\u4fee\u590d\u4e2d\u6587\u6807\u9898',)"
+  },
+  {
+    "name": "favorite_markup",
+    "cells": [
+      {
+        "str": "[green]\u2605[/]"
+      },
+      {
+        "str": "parity-bot"
+      },
+      {
+        "str": "lazy-github"
+      },
+      {
+        "str": "\u2718"
+      }
+    ],
+    "repr": "('[green]\u2605[/]', 'parity-bot', 'lazy-github', '\u2718')"
+  },
+  {
+    "name": "not_favorite",
+    "cells": [
+      {
+        "str": "\u2606"
+      },
+      {
+        "str": "parity-org"
+      },
+      {
+        "str": "dotfiles"
+      },
+      {
+        "str": ""
+      }
+    ],
+    "repr": "('\u2606', 'parity-org', 'dotfiles', '')"
+  },
+  {
+    "name": "line_and_paragraph_separators",
+    "cells": [
+      {
+        "str": "a\u2028b\u2029c"
+      }
+    ],
+    "repr": "('a\\u2028b\\u2029c',)"
+  },
+  {
+    "name": "private_use_and_unassigned",
+    "cells": [
+      {
+        "str": "\ue000\u0378\udb40\udc01\udbff\udfff"
+      }
+    ],
+    "repr": "('\\ue000\\u0378\\U000e0001\\U0010ffff',)"
+  },
+  {
+    "name": "ideographic_space",
+    "cells": [
+      {
+        "str": "a\u3000b"
+      }
+    ],
+    "repr": "('a\\u3000b',)"
+  },
+  {
+    "name": "datetime_minutes",
+    "cells": [
+      {
+        "datetime": [
+          2026,
+          1,
+          5,
+          3,
+          4,
+          0,
+          0
+        ]
+      }
+    ],
+    "repr": "(datetime.datetime(2026, 1, 5, 3, 4),)"
+  },
+  {
+    "name": "datetime_seconds",
+    "cells": [
+      {
+        "datetime": [
+          2026,
+          10,
+          25,
+          23,
+          59,
+          7,
+          0
+        ]
+      }
+    ],
+    "repr": "(datetime.datetime(2026, 10, 25, 23, 59, 7),)"
+  },
+  {
+    "name": "datetime_microseconds",
+    "cells": [
+      {
+        "datetime": [
+          2026,
+          10,
+          25,
+          23,
+          59,
+          7,
+          120
+        ]
+      }
+    ],
+    "repr": "(datetime.datetime(2026, 10, 25, 23, 59, 7, 120),)"
+  },
+  {
+    "name": "datetime_zero_seconds_with_micros",
+    "cells": [
+      {
+        "datetime": [
+          2026,
+          2,
+          3,
+          0,
+          0,
+          0,
+          5
+        ]
+      }
+    ],
+    "repr": "(datetime.datetime(2026, 2, 3, 0, 0, 0, 5),)"
+  },
+  {
+    "name": "mixed_row",
+    "cells": [
+      {
+        "int": 1234
+      },
+      {
+        "str": "Fix the [bug] here"
+      },
+      {
+        "datetime": [
+          2025,
+          12,
+          31,
+          12,
+          0,
+          30,
+          0
+        ]
+      },
+      {
+        "str": "it's"
+      }
+    ],
+    "repr": "(1234, 'Fix the [bug] here', datetime.datetime(2025, 12, 31, 12, 0, 30), \"it's\")"
+  },
+  {
+    "name": "empty",
+    "cells": [],
+    "repr": "()"
+  }
+]

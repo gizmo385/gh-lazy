@@ -12,8 +12,8 @@ use crate::models::{Repository, User};
 
 /// A [`Github`] that returns canned results and records every call.
 ///
-/// By default `check_auth` succeeds, `list_repositories` returns no repositories, and `current_user` fails until
-/// [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
+/// 0, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -28,6 +28,8 @@ pub enum GithubCall {
     CurrentUser,
     /// [`Github::list_repositories`].
     ListRepositories(RepoListQuery),
+    /// [`Github::unread_notification_count`].
+    UnreadNotificationCount,
 }
 
 #[derive(Debug, Default)]
@@ -35,6 +37,7 @@ struct State {
     auth_error: Option<GhError>,
     user: Option<Result<User, GhError>>,
     repositories: Option<Result<Vec<Repository>, GhError>>,
+    unread_count: Option<Result<usize, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -71,6 +74,18 @@ impl FakeGithub {
     pub fn with_repositories_error(self, error: GhError) -> Self {
         self.lock().repositories = Some(Err(error));
         self
+    }
+
+    /// `unread_notification_count` returns `count`.
+    #[must_use]
+    pub fn with_unread_count(self, count: Result<usize, GhError>) -> Self {
+        self.set_unread_count(count);
+        self
+    }
+
+    /// From now on, `unread_notification_count` returns `count`. Clones see the change too.
+    pub fn set_unread_count(&self, count: Result<usize, GhError>) {
+        self.lock().unread_count = Some(count);
     }
 
     /// `check_auth` fails with `error`.
@@ -155,6 +170,15 @@ impl Github for FakeGithub {
         })
         .await
     }
+
+    async fn unread_notification_count(&self) -> Result<usize, GhError> {
+        self.respond(GithubCall::UnreadNotificationCount, |state| match &state.unread_count {
+            Some(Ok(count)) => Ok(*count),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Ok(0),
+        })
+        .await
+    }
 }
 
 /// A copy of `error`, so a canned error can be returned on every call. `GhError` isn't `Clone` because its
@@ -226,6 +250,15 @@ mod tests {
         let repos = clone.list_repositories(owned).await.unwrap();
         assert_eq!(repos, [repo("a"), repo("b")]);
         github.current_user().await.unwrap();
+        assert_eq!(
+            github
+                .clone()
+                .with_unread_count(Ok(7))
+                .unread_notification_count()
+                .await
+                .unwrap(),
+            7
+        );
 
         assert_eq!(
             github.calls(),
@@ -234,6 +267,7 @@ mod tests {
                 GithubCall::CurrentUser,
                 GithubCall::ListRepositories(owned),
                 GithubCall::CurrentUser,
+                GithubCall::UnreadNotificationCount,
             ]
         );
     }
@@ -243,6 +277,7 @@ mod tests {
         let github = FakeGithub::new();
         github.check_auth().await.unwrap();
         assert!(github.list_repositories(RepoListQuery::all()).await.unwrap().is_empty());
+        assert_eq!(github.unread_notification_count().await.unwrap(), 0);
         assert!(matches!(github.current_user().await, Err(GhError::Command { .. })));
     }
 
@@ -258,7 +293,8 @@ mod tests {
                 status: 502,
                 message: "Bad Gateway".into(),
                 body: Vec::new(),
-            });
+            })
+            .with_unread_count(Err(GhError::Parse("no status line".into())));
         for _ in 0..2 {
             assert!(matches!(
                 github.check_auth().await,
@@ -272,8 +308,12 @@ mod tests {
                 github.list_repositories(RepoListQuery::all()).await,
                 Err(GhError::Http { status: 502, .. })
             ));
+            assert!(matches!(
+                github.unread_notification_count().await,
+                Err(GhError::Parse(_))
+            ));
         }
-        assert_eq!(github.calls().len(), 6);
+        assert_eq!(github.calls().len(), 8);
     }
 
     #[test]

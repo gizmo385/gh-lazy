@@ -1,0 +1,8 @@
+---
+source: crates/lazy-github-tui/src/components/status_bar.rs
+assertion_line: 184
+expression: "screen(Some(&repo(\"parity-bot/lazy-fixture\")), UnreadState::Count(50))"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/lazy-fixture                                  • Unread Notifications: 50+│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘

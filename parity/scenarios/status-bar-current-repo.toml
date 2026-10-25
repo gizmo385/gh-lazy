@@ -1,0 +1,29 @@
+version = 1
+description = "Selecting a repo in the repos table: the bar shows Current repo: owner/name"
+# The Rust side needs M2's repos table and repo selection; the M2 repos-table issue flips this.
+# The spec's `git_remote` auto-select can't work on the Python side: the harness's remote is
+# `https://github.com/<owner>/<name>.git`, and Python keeps the `.git` (Py bug B5), so no repo matches. Selecting with
+# enter reaches the same `set_currently_loaded_repo`.
+gate = false
+parity_rows = ["main-layout.status-current-repo"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["repo-selected-empty", "base"]
+
+[[step]]
+wait = { text = "dotfiles", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/dotfiles", timeout_ms = 15000 }
+
+[[step]]
+capture = "selected"
+checks = ["titles"]
+
+[expect.selected]
+contains = ["Current repo: parity-bot/dotfiles"]
+not_contains = ["Traceback"]

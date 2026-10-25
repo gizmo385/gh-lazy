@@ -14,7 +14,7 @@ use std::time::Duration;
 use tokio::sync::OnceCell;
 
 use crate::config::{CacheSettings, Config};
-use crate::gh::{self, GhError, GhRequest};
+use crate::gh::{self, GhError, GhRequest, GhResponse};
 use crate::models::{Repository, User};
 
 #[cfg(any(test, feature = "test-util"))]
@@ -25,6 +25,10 @@ pub use fake::{FakeGithub, GithubCall};
 
 /// Page size for `/user/repos`. Kept at Python's 50 so both apps request the same pages and share fixtures.
 const REPOS_PER_PAGE: &str = "50";
+
+/// Page size for `/notifications`: Python's `NOTIFICATIONS_PAGE_COUNT`. Only the first page is counted, so this is
+/// also the most [`Github::unread_notification_count`] returns.
+pub const NOTIFICATIONS_PER_PAGE: usize = 50;
 
 /// GitHub as the app sees it.
 ///
@@ -42,6 +46,12 @@ pub trait Github: Clone + Send + Sync + 'static {
 
     /// Every repository matching `query` that the logged-in user can access, across all pages.
     fn list_repositories(&self, query: RepoListQuery) -> impl Future<Output = Result<Vec<Repository>, GhError>> + Send;
+
+    /// How many unread notifications are on the first page of `/notifications`, from 0 to
+    /// [`NOTIFICATIONS_PER_PAGE`]. A full page means there may be more. Never cached.
+    ///
+    /// Fails on an HTTP error status or a body that isn't a JSON array.
+    fn unread_notification_count(&self) -> impl Future<Output = Result<usize, GhError>> + Send;
 }
 
 /// Which repositories [`Github::list_repositories`] returns, by the user's relationship to them.
@@ -274,6 +284,22 @@ impl GhCli {
         request.cache = Some(self.inner.ttls.list_repos);
         request
     }
+
+    fn unread_notifications_request() -> GhRequest {
+        let mut request = GhRequest::get("/notifications");
+        // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
+        request.query = vec![
+            ("all".to_owned(), "false".to_owned()),
+            ("page".to_owned(), "1".to_owned()),
+            ("per_page".to_owned(), NOTIFICATIONS_PER_PAGE.to_string()),
+        ];
+        request
+    }
+}
+
+/// The number of items in a JSON array body, without decoding the items.
+fn count_items(response: &GhResponse) -> Result<usize, GhError> {
+    Ok(response.json::<Vec<serde::de::IgnoredAny>>()?.len())
 }
 
 impl Github for GhCli {
@@ -293,6 +319,11 @@ impl Github for GhCli {
 
     async fn list_repositories(&self, query: RepoListQuery) -> Result<Vec<Repository>, GhError> {
         self.inner.runner.paginate(self.list_repositories_request(query)).await
+    }
+
+    async fn unread_notification_count(&self) -> Result<usize, GhError> {
+        let response = self.inner.runner.request(Self::unread_notifications_request()).await?;
+        count_items(&response)
     }
 }
 
@@ -436,6 +467,59 @@ mod tests {
     }
 
     #[test]
+    fn unread_notification_count_argv() {
+        let gh = GhCli::default();
+        assert_eq!(
+            strings(GhCli::unread_notifications_request().argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/notifications?all=false&page=1&per_page=50"
+            ]
+        );
+        let ghe = GhCli::new(GhCliOptions {
+            hostname: Some("ghe.example.com".into()),
+            ..GhCliOptions::default()
+        });
+        assert_eq!(
+            strings(GhCli::unread_notifications_request().argv(ghe.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--hostname",
+                "ghe.example.com",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/notifications?all=false&page=1&per_page=50"
+            ]
+        );
+    }
+
+    #[test]
+    fn unread_count_is_the_array_length() {
+        let response = |body: &str| {
+            let stdout = format!("HTTP/2.0 200 OK\r\nContent-Type: application/json\r\n\r\n{body}");
+            gh::interpret(Some(0), stdout.as_bytes(), b"", false).unwrap()
+        };
+        assert_eq!(count_items(&response("[]")).unwrap(), 0);
+        assert_eq!(
+            count_items(&response(r#"[{"id":"1"},{"id":"2","x":[1,{}]},3]"#)).unwrap(),
+            3
+        );
+        assert!(matches!(
+            count_items(&response(r#"{"message":"hi"}"#)),
+            Err(GhError::Decode(_))
+        ));
+        assert!(matches!(count_items(&response("")), Err(GhError::Decode(_))));
+    }
+
+    #[test]
     fn repo_query_values() {
         assert_eq!(RepoListQuery::all(), RepoListQuery::default());
         assert_eq!(
@@ -550,6 +634,10 @@ mod tests {
         assert!(matches!(gh.current_user().await, Err(GhError::NotInstalled)));
         assert!(matches!(
             gh.list_repositories(RepoListQuery::all()).await,
+            Err(GhError::NotInstalled)
+        ));
+        assert!(matches!(
+            gh.unread_notification_count().await,
             Err(GhError::NotInstalled)
         ));
     }

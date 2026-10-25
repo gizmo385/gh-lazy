@@ -1,7 +1,6 @@
 version = 1
 description = "The command log shows the logged-out notifications error, and 6 focuses it"
-# The Rust side needs the notifications poll (#81) to log the error line.
-gate = false
+gate = true
 parity_rows = ["main-layout.command-log"]
 sizes = [[160, 48], [100, 30]]
 
@@ -14,15 +13,24 @@ appearance = { show_command_log = true }
 notifications = { enabled = true }
 cache = { auth_last_checked = "2099-01-01T00:00:00" }
 
+# The error toast is raised with the line, and at 100x30 it covers the log, so wait for it to come and go first.
+# "Failed to Load Notifi" matches both titles (Py bug B14: Python's is "Notifiations").
+[[step]]
+wait = { text = "Failed to Load Notifi", timeout_ms = 15000 }
+
+[[step]]
+wait = { gone = "Failed to Load Notifi", timeout_ms = 15000 }
+
 # The full line is "... - please login to the gh CLI: gh auth login", but it's wider than the log at both sizes and
 # doesn't wrap, so only its start is on screen.
 [[step]]
 wait = { regex = "ERROR \\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d - Cannot load notifications -", timeout_ms = 15000 }
 
-# Wall-clock timestamps differ between the two runs, so the log's rows aren't compared.
+# Wall-clock timestamps differ between the two runs, so the log's rows aren't compared. The section tables are M2,
+# so no rows are compared yet.
 [[step]]
 capture = "shown"
-checks = ["titles", "tabs", "focus", "rows"]
+checks = ["titles", "tabs", "focus"]
 ignore = { boxes = ["Command Log"] }
 
 [[step]]
@@ -30,7 +38,7 @@ keys = ["6"]
 
 [[step]]
 capture = "focused"
-checks = ["titles", "tabs", "focus", "rows"]
+checks = ["titles", "tabs", "focus"]
 ignore = { boxes = ["Command Log"] }
 
 [expect.shown]

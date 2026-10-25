@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
+use lazy_github_core::models::Repository;
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
@@ -16,9 +17,11 @@ use crate::clock::Clock;
 use crate::component::{BindingState, ChainLink, Component, Cx, Outbox, Owner, RenderCx, ScreenKind, Shared};
 use crate::components::footer::{Footer, FooterHit, footer_items};
 use crate::components::help_panel::{HelpPanel, help_sections, help_width};
+use crate::components::status_bar::{StatusBar, UnreadState};
 use crate::effect::{Effect, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
+use crate::notifications::NotificationPoll;
 use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
 use crate::screens::main::{FocusTarget, MainScreen};
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
@@ -64,6 +67,10 @@ pub struct App {
     help_open: bool,
     /// The footer items drawn in the last frame, for clicks.
     footer_hits: Vec<FooterHit>,
+    /// The repo the PR, issue and workflow sections show. Python's `LazyGithubContext.current_repo`.
+    current_repo: Option<Repository>,
+    /// The unread count in the status box.
+    notifications: NotificationPoll,
     should_quit: bool,
 }
 
@@ -80,6 +87,8 @@ impl App {
             has_shown_maximize_toast: false,
             help_open: false,
             footer_hits: Vec::new(),
+            current_repo: None,
+            notifications: NotificationPoll::default(),
             should_quit: false,
         }
     }
@@ -98,14 +107,22 @@ impl App {
         out.effects
     }
 
-    /// Shows the main screen without the startup check, for tests of everything after it.
+    /// Shows the main screen without the startup check, for tests of everything after it, and returns the effects
+    /// entering it emits.
     #[cfg(any(test, feature = "test-util"))]
-    pub(crate) fn skip_startup(&mut self) {
-        self.base = BaseScreen::Main(Box::new(self.new_main_screen()));
+    pub(crate) fn skip_startup(&mut self) -> Vec<Effect> {
+        self.update(Action::EnterMain)
     }
 
-    fn new_main_screen(&self) -> MainScreen {
-        MainScreen::new(&self.shared.config.appearance, &self.shared.keymap)
+    /// Replaces the base screen with a new main screen, unmaximized and focused on repos, and starts the
+    /// notifications poll, as Python's `on_mount` does.
+    fn enter_main(&mut self, out: &mut Outbox) {
+        self.maximized = None;
+        self.base = BaseScreen::Main(Box::new(MainScreen::new(
+            &self.shared.config.appearance,
+            &self.shared.keymap,
+        )));
+        self.notifications.start(&mut Cx::new(&mut self.shared, out));
     }
 
     /// Maps `event` to actions and applies them.
@@ -343,10 +360,9 @@ impl App {
                 if matches!(self.base, BaseScreen::Auth(_)) {
                     out.effects.push(Effect::CancelTimer(TimerId::AuthPoll));
                 }
-                // A new main screen starts unmaximized, focused on repos.
-                self.maximized = None;
-                self.base = BaseScreen::Main(Box::new(self.new_main_screen()));
+                self.enter_main(out);
             }
+            Action::RefreshNotifications => self.notifications.refresh(&mut Cx::new(&mut self.shared, out)),
             Action::Auth(action) => {
                 if let BaseScreen::Auth(auth) = &mut self.base {
                     auth.update(action, &mut Cx::new(&mut self.shared, out));
@@ -366,6 +382,7 @@ impl App {
             Action::Timer(TimerId::AuthPoll) if matches!(self.base, BaseScreen::Auth(_)) => {
                 out.actions.push_back(Action::Auth(AuthAction::Poll));
             }
+            Action::Timer(TimerId::Notifications) => out.actions.push_back(Action::RefreshNotifications),
             Action::Timer(id) => tracing::debug!("Ignoring timer {id:?}: nothing owns it"),
             // Python attaches the pane's handler when the main screen mounts, so lines from before it (startup and
             // auth) never show.
@@ -403,9 +420,37 @@ impl App {
         self.help_open
     }
 
+    /// Makes `repo` the current repo, shown in the status box. Python's `set_currently_loaded_repo`; M2's repo
+    /// selection and M4's bug report call it.
+    pub fn set_current_repo(&mut self, repo: Repository) {
+        tracing::info!("Selected repo {}", repo.full_name);
+        self.current_repo = Some(repo);
+    }
+
+    /// The current repo, if one is selected.
+    pub fn current_repo(&self) -> Option<&Repository> {
+        self.current_repo.as_ref()
+    }
+
+    /// The unread count the status box shows.
+    pub fn unread(&self) -> UnreadState {
+        self.notifications.unread()
+    }
+
+    /// Whether a notifications refresh is running.
+    pub fn notifications_refreshing(&self) -> bool {
+        self.notifications.is_refreshing()
+    }
+
     /// Hands a response to the screen waiting for it.
     fn route_response(&mut self, id: RequestId, response: GithubResponse, out: &mut Outbox) {
         // Screens and panes that make other requests (M2) claim their responses here by id.
+        let Some(response) = self
+            .notifications
+            .on_response(id, response, &mut Cx::new(&mut self.shared, out))
+        else {
+            return;
+        };
         let GithubResponse::CheckAuth(result) = response else {
             tracing::debug!("Dropping the response to request {id}: nothing is waiting for it");
             return;
@@ -501,6 +546,12 @@ impl App {
                     None
                 } else {
                     main.render(frame, area, &cx);
+                    let status = StatusBar {
+                        repo: self.current_repo.as_ref(),
+                        unread: self.notifications.unread(),
+                        theme,
+                    };
+                    frame.render_widget(status, main.status_area(area));
                     Some(main.footer_area(area))
                 }
             }
@@ -594,7 +645,6 @@ fn quit_hint() -> Toast {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Mutex;
     use std::time::Duration;
 
     use crossterm::event::{KeyCode, KeyEventKind, KeyModifiers};
@@ -607,7 +657,7 @@ mod tests {
     use crate::clock::FakeClock;
     use crate::effect::{GithubRequest, GithubResponse, TimerId};
     use crate::event::Signal;
-    use crate::test_util::{LatestWins, LatestWinsAction, TestApp, key_event};
+    use crate::test_util::{LatestWins, LatestWinsAction, TestApp, key_event, logs};
 
     fn test_app() -> TestApp {
         TestApp::new(Config::default())
@@ -620,35 +670,6 @@ mod tests {
             name: None,
             html_url: format!("https://github.com/{login}"),
         }
-    }
-
-    /// What `f` logs at `DEBUG` and above, as `LEVEL message` lines.
-    fn logs(f: impl FnOnce()) -> String {
-        #[derive(Clone, Default)]
-        struct Capture(Arc<Mutex<Vec<u8>>>);
-        impl std::io::Write for Capture {
-            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-                self.0.lock().unwrap().extend_from_slice(buf);
-                Ok(buf.len())
-            }
-            fn flush(&mut self) -> std::io::Result<()> {
-                Ok(())
-            }
-        }
-        let capture = Capture::default();
-        let writer = capture.clone();
-        let subscriber = tracing_subscriber::fmt()
-            .with_max_level(Level::DEBUG)
-            .without_time()
-            .with_target(false)
-            .with_writer(move || writer.clone())
-            .finish();
-        tracing::subscriber::with_default(subscriber, f);
-        let out = String::from_utf8(capture.0.lock().unwrap().clone()).unwrap();
-        // The fmt layer pads levels to five columns.
-        out.lines()
-            .map(|line| line.split_whitespace().collect::<Vec<_>>().join(" ") + "\n")
-            .collect()
     }
 
     #[test]
@@ -940,11 +961,11 @@ mod tests {
         let mut app = test_app();
         app.with_cx(|cx| {
             cx.effect(Effect::StartInterval {
-                id: TimerId::Notifications,
+                id: TimerId::AuthPoll,
                 every: Duration::from_secs(10),
             });
         });
         let out = logs(|| app.advance(Duration::from_secs(25)));
-        assert_eq!(out, "DEBUG Ignoring timer Notifications: nothing owns it\n".repeat(2));
+        assert_eq!(out, "DEBUG Ignoring timer AuthPoll: nothing owns it\n".repeat(2));
     }
 }

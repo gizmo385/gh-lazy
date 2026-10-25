@@ -34,6 +34,9 @@ pub enum Action {
     ToggleHelp,
     /// Replace the startup or authentication screen with the main screen.
     EnterMain,
+    /// Refresh the unread notification count now: the poll's timer, and in M4 the command palette, a Settings save
+    /// and closing the Notifications modal. Skipped while a refresh runs; blanks the count when notifications are off.
+    RefreshNotifications,
 
     // Screens.
     /// The authentication screen's own actions.

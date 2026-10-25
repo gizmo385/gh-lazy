@@ -4,7 +4,6 @@
 mod details;
 pub mod layout;
 mod sections;
-mod status;
 
 use crossterm::event::MouseEvent;
 use lazy_github_core::config::AppearanceSettings;
@@ -24,7 +23,6 @@ use crate::keymap::{BindingId, Keymap};
 use details::DetailsPane;
 use layout::{LayoutInput, layout};
 use sections::titled_box;
-use status::StatusBar;
 
 /// The four selection sections, top to bottom.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -203,7 +201,6 @@ pub struct MainScreen {
     section_titles: [String; 4],
     details_title: String,
     command_log_title: String,
-    status: StatusBar,
     details: DetailsPane,
     command_log: CommandLog,
     /// Where each focus target was drawn last, for clicks: the interiors of the boxes, not their borders.
@@ -242,7 +239,6 @@ impl MainScreen {
             section_titles: SectionId::ALL.map(|id| title(id.focus_binding(), id.label())),
             details_title: title(BindingId::MainDetailsFocus, "Details"),
             command_log_title: title(BindingId::MainCommandLogFocus, "Command Log"),
-            status: StatusBar::default(),
             details: DetailsPane::default(),
             command_log: CommandLog::new(appearance.show_command_log),
             hits: Vec::new(),
@@ -407,13 +403,21 @@ impl MainScreen {
 
     /// The footer row for a screen drawn in `area`: its last row, full width. There's none while maximized.
     pub fn footer_area(&self, area: Rect) -> Rect {
+        self.layout(area).footer
+    }
+
+    /// The status box for a screen drawn in `area`: its top three rows, full width. There's none while maximized.
+    pub fn status_area(&self, area: Rect) -> Rect {
+        self.layout(area).status
+    }
+
+    fn layout(&self, area: Rect) -> layout::MainLayout {
         layout(&LayoutInput {
             area,
             sections: self.sections,
             focus: Some(self.focus),
             command_log: self.command_log.is_visible(),
         })
-        .footer
     }
 
     /// Draws only the maximized widget for `maximized`, over the whole `area`, as Textual's `Screen.maximize`: at
@@ -501,16 +505,11 @@ impl Component for MainScreen {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let boxes = layout(&LayoutInput {
-            area,
-            sections: self.sections,
-            focus: Some(self.focus),
-            command_log: self.command_log.is_visible(),
-        });
+        let boxes = self.layout(area);
         self.hits.clear();
         let interior = |rect: Rect| rect.inner(Margin::new(1, 1));
 
-        self.status.render(frame, boxes.status, theme);
+        // `App` draws the status box into `Self::status_area`, from the current repo and unread count it holds.
         for ((id, rect), title) in SectionId::ALL.into_iter().zip(boxes.sections).zip(&self.section_titles) {
             if let Some(rect) = rect {
                 let focused = self.focus.section() == Some(id);

@@ -45,7 +45,8 @@ color-eyre = "0.6"
 
 # Logging
 tracing = "0.1"
-tracing-subscriber = "0.3"
+# `default-features = false` so crates opt into only the features they use (no `env-filter`, no `tracing-log`).
+tracing-subscriber = { version = "0.3", default-features = false }
 tracing-appender = "0.2"
 
 # Platform integration

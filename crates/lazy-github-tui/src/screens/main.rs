@@ -27,7 +27,7 @@ impl Component for MainScreen {
         let [body, _footer] = Layout::vertical([Constraint::Fill(1), Constraint::Length(1)]).areas(area);
         let block = Block::bordered()
             .title("LazyGithub")
-            .border_style(Style::new().fg(cx.theme.border));
+            .border_style(Style::new().fg(cx.theme.color(cx.theme.palette.primary, cx.theme.background())));
         frame.render_widget(block, body);
     }
 }

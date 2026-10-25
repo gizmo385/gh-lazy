@@ -1,0 +1,1097 @@
+{
+  "textual_version": "8.2.5",
+  "themes": {
+    "textual-dark": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#E0E0E0"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E1E1E1"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E2E3E5"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#E4E6E7"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#A5A5A5"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#929292"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#DDEDF9"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#153854"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#1B1B1B"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#272727"
+      }
+    ],
+    "textual-light": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#1D1D1D"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#1C1C1C"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#1B1B1B"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#1D1D1D"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#565656"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#696969"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#DDE6ED"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#97ACBB"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#E0E0E0"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#CECECE"
+      }
+    ],
+    "nord": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#E3E4E6"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E5E6E8"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E6E7EA"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#E8E9EC"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#B0B3B9"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#999FAC"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#2E3440"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#516777"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#2E3440"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#424959"
+      }
+    ],
+    "gruvbox": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#E3E3E3"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E5E5E4"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E8E7E6"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#EAE9E9"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#B1AFAE"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#AEA78D"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#FBF1C7"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#515853"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#282828"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#45413D"
+      }
+    ],
+    "catppuccin-mocha": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#E0E0E2"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E4E4E6"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E6E7E9"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#E9E9EB"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#ACADB4"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#8E94AD"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#1E1E2E"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#6B5C74"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#181825"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#383A4C"
+      }
+    ],
+    "dracula": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#E3E3E4"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E3E3E5"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E4E4E6"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#E6E6E8"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#AAABB0"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#A6A7A8"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#181320"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#564C73"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#282A36"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#353844"
+      }
+    ],
+    "tokyo-night": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#E1E1E2"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E2E3E5"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E6E7EB"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#E8E9ED"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#A7A9B0"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#737A98"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#181420"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#514973"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#1A1B26"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#2A2E42"
+      }
+    ],
+    "monokai": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#E2E3E2"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E3E3E3"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E5E5E4"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#E8E7E6"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#ABABAB"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#797979"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#161021"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#54466C"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#272822"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#363636"
+      }
+    ],
+    "flexoki": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#DFDFDF"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E1E1E1"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E3E2E2"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#E5E5E4"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#A4A3A3"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#A4A29A"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#E2EAF3"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#1D2E43"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#100F0F"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#272624"
+      }
+    ],
+    "catppuccin-latte": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#1F1F1F"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#1D1E1F"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#1A1B1C"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#1D1D1F"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#5C5D5F"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#898C9E"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#EFE5FC"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#C9B4EF"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#EFF1F5"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#DEE1E8"
+      }
+    ],
+    "catppuccin-frappe": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#E4E4E6"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E6E6E9"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E8E9EC"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#EAEBEE"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#B3B4BC"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#9098B6"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#292C3C"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#695F83"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#303446"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#474B60"
+      }
+    ],
+    "catppuccin-macchiato": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#E2E2E5"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E4E5E8"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E7E7EA"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#E9EAED"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#AEB0B8"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#8E95B2"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#1E2030"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#605880"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#24273A"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#3D4157"
+      }
+    ],
+    "solarized-light": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#201F1D"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#1E1E1B"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#1E1E1B"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#21201E"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#5F5C55"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#949E9B"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#E2EFF9"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#B2CCD4"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#FDF6E3"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#E6E1D0"
+      }
+    ],
+    "solarized-dark": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#DDE3E4"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#DEE4E6"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#DEE4E6"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#E1E6E8"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#9BAEB3"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#516E74"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#E2EFF9"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#104F6C"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#002B36"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#0D3A46"
+      }
+    ],
+    "rose-pine": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#E1E0E2"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E1E1E3"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E2E2E5"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#E4E4E7"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#A5A4AB"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#9290A4"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#191724"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#504665"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#191724"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#282637"
+      }
+    ],
+    "rose-pine-moon": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#E2E2E4"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E3E2E6"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E5E4E8"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#E7E6EA"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#A9A8B2"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#9794AB"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#232136"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#574D71"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#232136"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#333048"
+      }
+    ],
+    "rose-pine-dawn": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#201F1E"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#21201F"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#1F1E1D"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#21211F"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#666461"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#9A95A9"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#FAF4ED"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#DDD3DC"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#FAF4ED"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#F6F1EC"
+      }
+    ],
+    "atom-one-dark": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#E3E3E4"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#E5E6E7"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#E8E9EB"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#EAEBED"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#B0B3B7"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#7E8491"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#0C161F"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#46617D"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#282C34"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#404652"
+      }
+    ],
+    "atom-one-light": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "#202020"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "#1D1D1D"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "#1A1A1A"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "#1D1D1D"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "#595959"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "#7B7C81"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "#E6EDFD"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "#B0C1E5"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "#FAFAFA"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "#D7D7D8"
+      }
+    ],
+    "ansi-dark": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "ansi_black"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "ansi_default"
+      }
+    ],
+    "ansi-light": [
+      {
+        "fg": "$text",
+        "bg": "$background",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$text",
+        "bg": "$surface",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$text",
+        "bg": "$panel-lighten-1",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$text-muted",
+        "bg": "$surface",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$foreground-muted",
+        "bg": "$surface",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$block-cursor-foreground",
+        "bg": "$block-cursor-background",
+        "result": "ansi_bright_white"
+      },
+      {
+        "fg": "$block-cursor-blurred-background",
+        "bg": "$surface",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$boost",
+        "bg": "$background",
+        "result": "ansi_default"
+      },
+      {
+        "fg": "$foreground 5%",
+        "bg": "$surface",
+        "result": "ansi_default"
+      }
+    ]
+  }
+}

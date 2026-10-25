@@ -22,7 +22,7 @@ lazy-github-tui = { path = "crates/lazy-github-tui" }
 ratatui = "0.30"
 crossterm = "0.29"
 # Text input (`tui-textarea`) is not declared yet: its latest release (0.7.0) requires ratatui 0.29, which conflicts
-# with ratatui 0.30 above. Tracked in a follow-up issue linked from the #62 PR.
+# with ratatui 0.30 above. See https://github.com/gizmo385/gh-lazy/issues/85.
 pulldown-cmark = "0.13"
 syntect = "5.3"
 nucleo-matcher = "0.3"

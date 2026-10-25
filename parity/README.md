@@ -252,7 +252,7 @@ committed set (`crates/fake-gh/tests/lint_fixtures.rs`).
 User-scoped endpoints stay hand-written so recordings never leak a real account's private data.
 
 Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` repo by `cargo xtask record-fixtures
---set base`, from `parity/fixtures/base/recipe.toml` (the first recording is still to be committed; see #113). See
+--set base`, from `parity/fixtures/base/recipe.toml`. See
 [Recording fixtures](#recording-fixtures).
 
 ## Overlays
@@ -288,9 +288,12 @@ committed fixtures without writing anything (it exits 1 if any file differs). `-
 write would produce, so key order and formatting count, but it keeps the committed `note` (which holds the recording
 date), so a re-recording on another day isn't drift.
 
-Some recorded data depends on who records it. For example, the repo object's `permissions` (and, for admins,
-`security_and_analysis`) reflects the recorder's token. A re-recording from a differently scoped token shows up as
-drift in `--check`. Review such diffs, and don't commit them as if they were upstream changes.
+Some recorded data depends on who records it: a repo object's `permissions` reflects the recorder's token, and
+viewers with push or admin access also get keys such as `temp_clone_token`, the merge settings and
+`security_and_analysis`. The recorder pins every `permissions` object to `pull` only and drops those keys (the list is
+`VIEWER_ONLY_KEYS` in `xtask/src/fixtures/scrub.rs`), so a recording looks like what a signed-in user without push
+access gets, whoever makes it. `check-fixtures` doesn't flag either, since hand-written fixtures such as `/user/repos`
+model a user who owns their repos.
 
 ### The recipe
 

@@ -1,0 +1,19 @@
+# CLI
+
+Part of the [parity matrix](../README.md), which defines the columns, the status values and how to edit
+this file.
+
+`lazy-github` (and `gh lazy`) with no subcommand runs `run`. `-h`/`--help` on every command.
+
+| Id | Command | Python reference | Milestone | Status | Issue | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `cli.run` | `run [--auth-backend]` | `cli.py` | M1 | not started | | Bare launch in M1; `--auth-backend` (env `AUTH_BACKEND`) writes `api.client_type` to config, M4. |
+| `cli.dump-config` | `dump-config` | `cli.py` | M4 | not started | | Prints "Config file location: <path> (exists => True/False)" then the config as pretty JSON. |
+| `cli.clear-auth` | `clear-auth` | `cli.py` | M4 | intentional diff (defer to `gh auth logout`) | | Decision: [clear-auth-defers-to-gh](../decisions/clear-auth-defers-to-gh.md). |
+| `cli.clear-config` | `clear-config [--no-confirm]` | `cli.py` | M4 | not started | | Prompt "Confirm deletion your LazyGithub settings"; prints "Your settings have been cleared" or "Canceling". |
+| `cli.clear-cache` | `clear-cache [--no-confirm]` | `cli.py` | M4 | not started | | Prompt "Confirm deletion of everything in <dir>"; prints "Cache cleared" or "Canceling cache deletion". |
+| `cli.debug` | `debug` | `cli.py`, `lib/debug.py` | M4 | not started | | Prints the debug markdown. |
+| `cli.version` | `version` | `cli.py` | M4 | not started | | Prints "LazyGithub version <x>". |
+| `cli.help-version-no-side-effects` | `-h`/`--help` and `--version` have no side effects: no config dir, log file or cache is created | `cli.py` (Click runs `cli` setup first) | M1 | intentional diff | #72 | Python's `cli` group creates the config dir and logfile before printing help. Decision: [cli-help-no-side-effects](../decisions/cli-help-no-side-effects.md). |
+| `cli.broken-config-error` | A config file that fails to load prints a one-line error naming the file and suggesting `lazy-github clear-config`, then exits 1 | `lib/config.py` (pydantic `ValidationError` traceback) | M1 | intentional diff | #72 | Python crashes with a traceback. Decision: [broken-config-error](../decisions/broken-config-error.md). |
+| `cli.original-pwd` | `LAZY_GITHUB_ORIGINAL_PWD` set to the cwd if unset (the `gh-lazy` extension script sets it) | `cli.py` `cli`, `gh-lazy` | M1 | not started | | |

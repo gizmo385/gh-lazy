@@ -320,7 +320,7 @@ impl App {
             Block::new().style(
                 Style::new()
                     .fg(theme.color(theme.palette.foreground, screen))
-                    .bg(screen.into()),
+                    .bg(theme.paint(screen)),
             ),
             area,
         );

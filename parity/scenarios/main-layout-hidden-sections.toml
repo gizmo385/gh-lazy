@@ -1,7 +1,7 @@
 version = 1
 description = "Main screen layout with show_pull_requests and show_workflows off: the shown sections take the space"
 gate = true
-parity_rows = ["Main layout (status bar, selections pane 40%, details, command log, footer)"]
+parity_rows = ["main-layout.layout", "main-layout.sections-hidden"]
 sizes = [[160, 48], [100, 30]]
 
 [env]

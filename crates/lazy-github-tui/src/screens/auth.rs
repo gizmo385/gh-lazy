@@ -256,18 +256,18 @@ fn footer(keymap: &Keymap, theme: &Theme) -> Paragraph<'static> {
     let key_bg = palette.footer_key_background.over(item);
     let description_bg = palette.footer_description_background.over(item);
     let key_style = Style::new()
-        .fg(palette.footer_key_foreground.over(key_bg).into())
-        .bg(key_bg.into())
+        .fg(theme.color(palette.footer_key_foreground, key_bg))
+        .bg(theme.paint(key_bg))
         .add_modifier(Modifier::BOLD);
     let description_style = Style::new()
-        .fg(palette.footer_description_foreground.over(description_bg).into())
-        .bg(description_bg.into());
+        .fg(theme.color(palette.footer_description_foreground, description_bg))
+        .bg(theme.paint(description_bg));
     let id = BindingId::AppQuit;
     Paragraph::new(Line::from(vec![
         Span::styled(format!(" {} ", keymap.first_key_display(id)), key_style),
         Span::styled(format!("{} ", id.def().description), description_style),
     ]))
-    .style(Style::new().bg(bar.into()))
+    .style(Style::new().bg(theme.paint(bar)))
 }
 
 #[cfg(test)]

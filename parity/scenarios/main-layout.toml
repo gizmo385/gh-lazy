@@ -1,7 +1,13 @@
 version = 1
 description = "Main screen layout with the default config: status box, four sections, details with the Introduction tab"
 gate = true
-parity_rows = ["Main layout (status bar, selections pane 40%, details, command log, footer)"]
+parity_rows = [
+    "main-layout.layout",
+    "main-layout.section-order",
+    "main-layout.section-titles",
+    "repositories.introduction-tab",
+    "repositories.introduction-version",
+]
 sizes = [[160, 48], [100, 30]]
 
 [env]

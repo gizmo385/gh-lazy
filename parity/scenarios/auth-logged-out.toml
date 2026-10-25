@@ -1,7 +1,7 @@
 version = 1
 description = "Logged out of gh with no cached auth check: the GitHub Authentication screen"
 gate = true
-parity_rows = ["Not-logged-in screen: border \"GitHub Authentication\", \"To proceed, please log into the Github CLI via gh auth login\", intro text below, polls `gh auth status` every 5 s and switches to the main screen once logged in; `q` quits"]
+parity_rows = ["startup-auth.not-logged-in-screen"]
 sizes = [[160, 48], [100, 30]]
 
 # The spec's `config_overrides.cache.auth_last_checked = null` can't be written in TOML, which has no null. The default

@@ -48,7 +48,14 @@ impl TestApp {
 
     /// Like [`Self::new`], with requests answered by `gh`.
     pub fn with_github(config: Config, gh: FakeGithub) -> Self {
-        let mut test = Self::build(config, gh);
+        let mut test = Self::build(config, Theme::default(), gh);
+        test.app.skip_startup();
+        test
+    }
+
+    /// Like [`Self::new`], drawn with `theme` (for example one reduced to a 256-color terminal).
+    pub fn with_theme(config: Config, theme: Theme) -> Self {
+        let mut test = Self::build(config, theme, FakeGithub::new());
         test.app.skip_startup();
         test
     }
@@ -56,15 +63,15 @@ impl TestApp {
     /// An app as it launches: on the blank startup screen, with [`App::init`]'s effects performed. Requests it makes
     /// are answered by `gh` on [`Self::settle`].
     pub fn on_startup(config: Config, gh: FakeGithub) -> Self {
-        let mut test = Self::build(config, gh);
+        let mut test = Self::build(config, Theme::default(), gh);
         let init = test.app.init();
         test.perform(init);
         test
     }
 
-    fn build(config: Config, gh: FakeGithub) -> Self {
+    fn build(config: Config, theme: Theme, gh: FakeGithub) -> Self {
         let clock = FakeClock::new();
-        let app = App::new(config, Theme::default(), clock.clone());
+        let app = App::new(config, theme, clock.clone());
         Self {
             app,
             gh,

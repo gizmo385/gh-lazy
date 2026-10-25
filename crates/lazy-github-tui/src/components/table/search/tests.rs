@@ -188,6 +188,7 @@ fn blurring_a_blank_box_hides_it_and_one_with_text_stays() {
     assert!(!table.focus_search(), "a hidden box isn't a focus stop");
     assert_eq!(table.focus(), TableFocus::Table);
 
+    // Reopening selects the blank text, so typing replaces it.
     let _ = press(&mut table, "slash");
     type_text(&mut table, "lazy");
     table.focus_table();
@@ -195,7 +196,45 @@ fn blurring_a_blank_box_hides_it_and_one_with_text_stays() {
     // Typed but not submitted: nothing is filtered.
     assert_eq!(table.row_count(), 8);
     assert!(table.focus_search());
-    assert_eq!(table.search_text(), "  lazy", "reopening keeps the text");
+    assert_eq!(table.search_text(), "lazy", "refocusing keeps the text");
+}
+
+#[test]
+fn reopening_selects_the_text_so_typing_replaces_it() {
+    let mut table = table();
+    search(&mut table, "lazy");
+    assert_eq!(press(&mut table, "slash"), Handled::Consumed);
+    assert_eq!(table.search_text(), "lazy", "reopening keeps the text");
+    type_text(&mut table, "gh-");
+    assert_eq!(table.search_text(), "gh-");
+    assert_eq!(press(&mut table, "enter"), Handled::Consumed);
+    assert_eq!(ids(&table), [2, 5]);
+
+    // Shift+Tab back into the box selects it too, and a delete key removes the whole selection.
+    assert!(table.focus_search());
+    assert_eq!(press(&mut table, "ctrl+w"), Handled::Consumed);
+    assert_eq!(table.search_text(), "");
+
+    // `left` collapses the selection to its start, so typing goes in front.
+    table.focus_table();
+    let _ = press(&mut table, "slash");
+    type_text(&mut table, "dash");
+    table.focus_table();
+    assert!(table.focus_search());
+    let _ = press(&mut table, "left");
+    type_text(&mut table, "gh-");
+    assert_eq!(table.search_text(), "gh-dash");
+}
+
+#[test]
+fn a_box_that_has_focus_keeps_its_selection_state() {
+    let mut table = table();
+    let _ = press(&mut table, "slash");
+    type_text(&mut table, "lazy");
+    // Focusing the box again while it has focus selects nothing new.
+    assert!(table.focus_search());
+    type_text(&mut table, "git");
+    assert_eq!(table.search_text(), "lazygit");
 }
 
 // Filtering.
@@ -314,8 +353,11 @@ fn clicks_move_focus_between_the_box_and_the_table() {
     let mut table = table();
     search(&mut table, "lazy");
     assert_eq!(table.search_area(area), Some(Rect::new(0, 0, 40, 3)));
+    // Focusing selects everything, then the press puts the cursor under it: between `la` and `zy`.
     assert_eq!(table.handle_mouse(click(1), area), Handled::Consumed);
     assert_eq!(table.focus(), TableFocus::Search);
+    type_text(&mut table, "-");
+    assert_eq!(table.search_text(), "la-zy");
     // The table's first row is below the box, its margin and the header.
     let _ = table.handle_mouse(click(5), area);
     assert_eq!(table.focus(), TableFocus::Table);
@@ -336,6 +378,15 @@ fn search_typed() {
     let mut table = table();
     let _ = press(&mut table, "slash");
     type_text(&mut table, "lazy");
+    let buffer = draw(&mut table, true);
+    insta::assert_debug_snapshot!(buffer);
+}
+
+#[test]
+fn search_reopened_selected() {
+    let mut table = table();
+    search(&mut table, "lazy");
+    let _ = press(&mut table, "slash");
     let buffer = draw(&mut table, true);
     insta::assert_debug_snapshot!(buffer);
 }

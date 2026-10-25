@@ -453,10 +453,12 @@ impl<T: TableItem> SearchableTable<T> {
         // A press focuses what it lands on, as Textual focuses the widget under a mouse down.
         let press = matches!(event.kind, MouseEventKind::Down(MouseButton::Left));
         let (search, area) = self.search.split(area);
-        if search.is_some_and(|search| search.contains(at)) {
+        if let Some(search) = search.filter(|search| search.contains(at)) {
             self.hover = None;
             if press {
-                self.focus = TableFocus::Search;
+                // Textual focuses the box first, which selects everything, and then the press places the cursor.
+                self.focus_box();
+                self.search.input.press(search, at.x);
                 return Handled::Consumed;
             }
             return Handled::Ignored;
@@ -590,18 +592,29 @@ impl<T: TableItem> SearchableTable<T> {
     }
 
     /// `common.table.search`: shows the search box and focuses it, keeping any text already in it.
+    ///
+    /// Focusing the box selects all of its text, as Textual's `Input` does on focus, so typing replaces the last query.
     pub fn open_search(&mut self) {
         self.search.visible = true;
-        self.focus = TableFocus::Search;
+        self.focus_box();
         self.hover = None;
     }
 
     /// Focuses the search box, if it's shown (Shift+Tab from the table). Returns whether it took focus.
     pub fn focus_search(&mut self) -> bool {
         if self.search.visible {
-            self.focus = TableFocus::Search;
+            self.focus_box();
         }
         self.focus == TableFocus::Search
+    }
+
+    /// Focus moves onto the box, which selects all of its text. A box that already has focus keeps its selection, as
+    /// Textual only selects on a focus change.
+    fn focus_box(&mut self) {
+        if self.focus != TableFocus::Search {
+            self.focus = TableFocus::Search;
+            self.search.input.select_all();
+        }
     }
 
     /// Focus moves off the search box: to the table, or out of the component. The owner calls this on every focus
@@ -729,7 +742,9 @@ impl<T: TableItem> SearchableTable<T> {
         let (search, area) = self.search.split(area);
         if let Some(search) = search {
             let focused = cx.focused && self.focus == TableFocus::Search;
-            self.search.input.render(buf, search, cx.theme, focused);
+            self.search
+                .input
+                .render(buf, search, cx.theme, cx.theme.background(), focused);
         }
         let widths = self.widths();
         let layout = Layout::new(area, widths.iter().sum(), self.rows.len());

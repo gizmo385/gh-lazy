@@ -1,18 +1,28 @@
 //! A single-line text input: Textual's `Input` with its default look (a tall border, `padding: 0 2`) and its editing
-//! keys, minus selection and the clipboard.
+//! keys. Its only selection is select-on-focus (`select_all`); the selection keys and the clipboard come with the M3
+//! shared input.
 //!
 //! `tui-textarea` (PLAN §4) is for the multi-line editors. A one-line box is small enough to own, which lets it match
 //! Textual's styling and word rules exactly; the M3 lookup modals can reuse it.
+
+use std::sync::LazyLock;
 
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Widget};
+use regex::Regex;
 
 use crate::components::table::is_printable;
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::{AnsiColor, Paint, Theme};
+
+/// Python's `\w` in a `str` pattern: `str.isalnum()` (letters and every kind of number) and the underscore.
+static WORD: LazyLock<Regex> = LazyLock::new(|| {
+    // A fixed pattern that's covered by the tests, so it always compiles.
+    Regex::new(r"[\p{L}\p{N}_]").expect("valid pattern")
+});
 
 /// The input's bindings, in Textual's `Input.BINDINGS` order. Selection (`shift+…`, `ctrl+shift+a`) and the
 /// clipboard (`ctrl+x`, `ctrl+c`, `ctrl+v`) come with the M3 shared input.
@@ -50,12 +60,14 @@ pub enum InputOutcome {
     Ignored,
 }
 
-/// The input's text and cursor.
+/// The input's text, cursor and selection.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TextInput {
     value: String,
-    /// A char index into `value`, from 0 to its length.
+    /// A char index into `value`, from 0 to its length. It's the selection's end, as in Textual.
     cursor: usize,
+    /// Where the selection started, while there is one. Every key but `enter` clears it.
+    anchor: Option<usize>,
     placeholder: &'static str,
     /// The first text cell shown, which follows the cursor.
     scroll: usize,
@@ -67,6 +79,7 @@ impl TextInput {
         Self {
             value: String::new(),
             cursor: 0,
+            anchor: None,
             placeholder,
             scroll: 0,
         }
@@ -86,6 +99,20 @@ impl TextInput {
     pub fn set_value(&mut self, value: impl Into<String>) {
         self.value = value.into();
         self.cursor = self.len();
+        self.anchor = None;
+    }
+
+    /// Selects all the text, with the cursor at its end: what Textual's `Input` does on focus
+    /// (`select_on_focus`, on by default).
+    pub fn select_all(&mut self) {
+        self.anchor = Some(0);
+        self.cursor = self.len();
+    }
+
+    /// The selected chars as `(start, end)` with `start < end`, when anything is selected.
+    pub fn selection(&self) -> Option<(usize, usize)> {
+        let anchor = self.anchor?;
+        (anchor != self.cursor).then(|| (anchor.min(self.cursor), anchor.max(self.cursor)))
     }
 
     /// Whether the input takes `key` before any binding: printable characters, which Textual's `Input` consumes
@@ -98,7 +125,7 @@ impl TextInput {
     /// [`InputOutcome::Ignored`].
     pub fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap) -> InputOutcome {
         if let Some(c) = printable(key) {
-            self.insert(c.encode_utf8(&mut [0; 4]));
+            self.replace_selection(c.encode_utf8(&mut [0; 4]));
             return InputOutcome::Changed;
         }
         match keymap.match_in(INPUT_BINDINGS, key) {
@@ -110,8 +137,36 @@ impl TextInput {
     fn on_binding(&mut self, id: BindingId) -> InputOutcome {
         use BindingId as B;
         let len = self.len();
+        if id == B::TextualInputSubmit {
+            return InputOutcome::Submitted;
+        }
+        // Every other key ends the selection. With one, left and right collapse it to its start or end and the delete
+        // keys delete it; the other moves start from the cursor, which is the selection's end.
+        let selection = self.selection();
+        self.anchor = None;
+        if let Some((start, end)) = selection {
+            match id {
+                B::TextualInputCursorLeft => {
+                    self.cursor = start;
+                    return InputOutcome::Changed;
+                }
+                B::TextualInputCursorRight => {
+                    self.cursor = end;
+                    return InputOutcome::Changed;
+                }
+                B::TextualInputDeleteLeft
+                | B::TextualInputDeleteRight
+                | B::TextualInputDeleteLeftWord
+                | B::TextualInputDeleteRightWord
+                | B::TextualInputDeleteLeftAll
+                | B::TextualInputDeleteRightAll => {
+                    self.delete(start, end);
+                    return InputOutcome::Changed;
+                }
+                _ => {}
+            }
+        }
         match id {
-            B::TextualInputSubmit => return InputOutcome::Submitted,
             B::TextualInputCursorLeft => self.cursor = self.cursor.saturating_sub(1),
             B::TextualInputCursorRight => self.cursor = (self.cursor + 1).min(len),
             B::TextualInputCursorLeftWord => self.cursor = self.word_start_before(),
@@ -137,11 +192,32 @@ impl TextInput {
     /// A bracketed paste: only its first line goes in, as Textual's `Input._on_paste` does with `splitlines()[0]`.
     pub fn handle_paste(&mut self, text: &str) {
         let line = text.split(is_line_break).next().unwrap_or_default();
-        self.insert(line);
+        self.replace_selection(line);
     }
 
     fn len(&self) -> usize {
         self.value.chars().count()
+    }
+
+    /// A left press at `column` in an input drawn in `area`: the cursor goes to the char under it, or the nearest end,
+    /// and any selection ends (Textual's `_on_mouse_down`, which runs after the focus that selected everything).
+    pub fn press(&mut self, area: Rect, column: u16) {
+        // A press left of the text, on the border or the padding, goes to the start.
+        let target = column.checked_sub(area.x + 1 + PADDING).map_or(0, |offset| {
+            let offset = usize::from(offset);
+            let offset = offset + self.scroll;
+            let mut left = 0;
+            for (index, c) in self.value.chars().enumerate() {
+                let right = left + char_width(c);
+                if (left..right).contains(&offset) {
+                    return index;
+                }
+                left = right;
+            }
+            offset.min(self.len())
+        });
+        self.anchor = None;
+        self.cursor = target;
     }
 
     fn byte_at(&self, char_index: usize) -> usize {
@@ -151,7 +227,12 @@ impl TextInput {
             .map_or(self.value.len(), |(i, _)| i)
     }
 
-    fn insert(&mut self, text: &str) {
+    /// Types `text` over the selection, or at the cursor when there's none (Textual's `replace` and `insert`).
+    fn replace_selection(&mut self, text: &str) {
+        if let Some((start, end)) = self.selection() {
+            self.delete(start, end);
+        }
+        self.anchor = None;
         let at = self.byte_at(self.cursor);
         self.value.insert_str(at, text);
         self.cursor += text.chars().count();
@@ -180,11 +261,12 @@ impl TextInput {
         (self.cursor + 1..chars.len()).find(|&i| !is_word(chars[i - 1]) && is_word(chars[i]))
     }
 
-    /// Draws the input into the top [`HEIGHT`] rows of `area`, over `under` (what the parent painted).
+    /// Draws the input into the top [`HEIGHT`] rows of `area`. `under` is the parent's background, which shows in the
+    /// half-cell `▊`/`▎` edges.
     ///
-    /// The cursor is always drawn while focused: Textual blinks it, but the blink is a timer the snapshots and the
-    /// parity harness can't pin.
-    pub fn render(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, focused: bool) {
+    /// The cursor is always drawn while focused. Textual blinks it every 0.5 s and restarts the blink on each key;
+    /// that isn't reproduced yet.
+    pub fn render(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focused: bool) {
         let area = Rect {
             height: area.height.min(HEIGHT),
             ..area
@@ -192,7 +274,7 @@ impl TextInput {
         if area.is_empty() {
             return;
         }
-        let styles = Styles::new(theme, focused);
+        let styles = Styles::new(theme, under, focused);
         draw_tall_border(buf, area, &styles);
 
         // The text row, between the border and the padding.
@@ -219,6 +301,12 @@ impl TextInput {
         } else {
             cells.extend(self.value.chars().map(|c| (c, styles.text)));
             if focused {
+                // `stylize_before`: the cursor's style goes over the selection's.
+                if let Some((start, end)) = self.selection() {
+                    for cell in &mut cells[start..end] {
+                        cell.1 = styles.selection;
+                    }
+                }
                 if self.cursor == cells.len() {
                     cells.push((' ', styles.text));
                 }
@@ -257,9 +345,8 @@ fn printable(key: &KeyChord) -> Option<char> {
     }
 }
 
-/// Python's `\w` in a `str` pattern: alphanumerics and the underscore.
 fn is_word(c: char) -> bool {
-    c.is_alphanumeric() || c == '_'
+    WORD.is_match(c.encode_utf8(&mut [0; 4]))
 }
 
 /// The line boundaries Python's `str.splitlines` splits on (`\r\n` splits at its `\r` first, which is enough for
@@ -281,6 +368,8 @@ struct Styles {
     text: Style,
     placeholder: Style,
     cursor: Style,
+    /// `input--selection`: `$input-selection-foreground` on `$input-selection-background`.
+    selection: Style,
     /// `▊` on the left: the parent's background over the border color, reversed (Textual's border location 2).
     left: Style,
     /// `▔`, `▁` and the blank between: the border color over the input's background (location 0).
@@ -290,9 +379,14 @@ struct Styles {
 }
 
 impl Styles {
-    fn new(theme: &Theme, focused: bool) -> Self {
+    fn new(theme: &Theme, under: Paint, focused: bool) -> Self {
         let p = theme.palette;
-        let under = theme.background();
+        let selection = |bg: Paint| {
+            let selected = p.input_selection_background.over(bg);
+            Style::new()
+                .fg(theme.color(p.input_selection_foreground, selected))
+                .bg(theme.paint(selected))
+        };
         if theme.ansi {
             // `&:ansi`: the terminal's own colors.
             let default = theme.paint(Paint::Ansi(AnsiColor::Default));
@@ -304,6 +398,7 @@ impl Styles {
                 cursor: Style::new()
                     .fg(theme.paint(Paint::Ansi(AnsiColor::Black)))
                     .bg(theme.paint(Paint::Ansi(AnsiColor::White))),
+                selection: selection(Paint::Ansi(AnsiColor::Default)),
                 left: Style::new().fg(border).bg(default).add_modifier(Modifier::REVERSED),
                 inner: Style::new().fg(border).bg(default),
                 right: Style::new().fg(border).bg(default),
@@ -327,6 +422,7 @@ impl Styles {
             text,
             placeholder: text.fg(theme.color(p.text_disabled, bg)),
             cursor,
+            selection: selection(bg),
             left: Style::new()
                 .fg(border)
                 .bg(theme.paint(under))
@@ -509,5 +605,92 @@ mod tests {
         input.handle_paste(pasted);
         assert_eq!(input.value(), value);
         assert_eq!(input.cursor(), value.chars().count() - 1);
+    }
+
+    /// `foo-bar baz` with everything selected, as focusing the box leaves it.
+    fn selected() -> TextInput {
+        let mut input = input("foo-bar baz", 3);
+        input.select_all();
+        assert_eq!(input.selection(), Some((0, 11)));
+        assert_eq!(input.cursor(), 11);
+        input
+    }
+
+    #[test]
+    fn typing_and_pasting_replace_the_selection() {
+        let mut input = selected();
+        let _ = press(&mut input, "x");
+        assert_eq!((input.value(), input.cursor(), input.selection()), ("x", 1, None));
+        let mut input = selected();
+        input.handle_paste("lazy\ngit");
+        assert_eq!((input.value(), input.cursor(), input.selection()), ("lazy", 4, None));
+    }
+
+    #[rstest]
+    fn delete_keys_delete_the_selection(
+        #[values("backspace", "delete", "ctrl+d", "ctrl+w", "ctrl+f", "ctrl+u", "ctrl+k")] key: &str,
+    ) {
+        let mut input = selected();
+        assert_eq!(press(&mut input, key), InputOutcome::Changed);
+        assert_eq!((input.value(), input.cursor(), input.selection()), ("", 0, None));
+    }
+
+    #[rstest]
+    // left and right collapse the selection to its start or end.
+    #[case::left("left", 0)]
+    #[case::right("right", 11)]
+    // home and end just set the cursor.
+    #[case::home("home", 0)]
+    #[case::end("end", 11)]
+    // Word moves start from the cursor, the selection's end.
+    #[case::word_left("ctrl+left", 8)]
+    #[case::word_right("ctrl+right", 11)]
+    fn moves_end_the_selection(#[case] key: &str, #[case] cursor: usize) {
+        let mut input = selected();
+        assert_eq!(press(&mut input, key), InputOutcome::Changed);
+        assert_eq!(
+            (input.value(), input.cursor(), input.selection()),
+            ("foo-bar baz", cursor, None)
+        );
+        let _ = press(&mut input, "x");
+        assert_eq!(
+            input.value().chars().count(),
+            12,
+            "typing inserts once the selection is gone"
+        );
+    }
+
+    #[test]
+    fn enter_keeps_the_selection() {
+        let mut input = selected();
+        assert_eq!(press(&mut input, "enter"), InputOutcome::Submitted);
+        assert_eq!(input.selection(), Some((0, 11)));
+    }
+
+    #[test]
+    fn a_press_places_the_cursor_and_ends_the_selection() {
+        // The text starts 3 cells in: the left border and the padding.
+        let area = Rect::new(10, 0, 30, HEIGHT);
+        for (column, cursor) in [(13, 0), (16, 3), (11, 0), (35, 11)] {
+            let mut input = selected();
+            input.press(area, column);
+            assert_eq!((input.cursor(), input.selection()), (cursor, None), "column {column}");
+        }
+    }
+
+    #[test]
+    fn word_chars_follow_python() {
+        // Letters and numbers of every script, and the underscore.
+        for c in ['a', 'é', '中', '٣', '½', '_'] {
+            assert!(is_word(c), "{c:?}");
+        }
+        // Not combining marks, even the `Alphabetic` ones Rust's `is_alphanumeric` takes (a Devanagari vowel sign).
+        for c in ['-', ' ', '\u{93f}', '\u{345}', '\u{301}'] {
+            assert!(!is_word(c), "{c:?}");
+        }
+        // So `x` after the vowel sign starts a word, as in Python.
+        let mut input = input("किx", 3);
+        let _ = press(&mut input, "ctrl+left");
+        assert_eq!(input.cursor(), 2);
     }
 }

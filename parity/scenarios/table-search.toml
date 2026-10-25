@@ -38,9 +38,17 @@ keys = ["enter"]
 capture = "filtered"
 checks = ["rows", "cursor", "focus"]
 
+# Reopening selects the old query (Textual's `select_on_focus`).
+[[step]]
+keys = ["/"]
+
+[[step]]
+capture = "reopen"
+checks = ["rows", "cursor", "focus"]
+
 # `('☆', 'parity-bot', 'gh-golf-…', …)`: the end of the owner cell and the start of the name cell.
 [[step]]
-keys = ["/", "ctrl+u"]
+keys = ["ctrl+u"]
 
 [[step]]
 type = "', 'gh"
@@ -50,6 +58,20 @@ keys = ["enter"]
 
 [[step]]
 capture = "cross-cell"
+checks = ["rows", "cursor", "focus"]
+
+# Typed straight over the selected old query, with no ctrl+u: the new text replaces it.
+[[step]]
+keys = ["/"]
+
+[[step]]
+type = "gh-hotel"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+capture = "typed-over"
 checks = ["rows", "cursor", "focus"]
 
 [[step]]
@@ -67,9 +89,17 @@ not_contains = ["Traceback"]
 contains = ["india-lazy-service", "juliett-lazy-service", "lima-lazy-service"]
 not_contains = ["alpha-service", "Traceback"]
 
+[expect.reopen]
+contains = ["india-lazy-service"]
+not_contains = ["alpha-service", "Traceback"]
+
 [expect.cross-cell]
 contains = ["gh-golf-service", "gh-hotel-service"]
 not_contains = ["india-lazy-service", "Traceback"]
+
+[expect.typed-over]
+contains = ["gh-hotel-service"]
+not_contains = ["gh-golf-service", "', 'gh", "Traceback"]
 
 [expect.cleared]
 contains = ["alpha-service"]

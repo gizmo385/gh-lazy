@@ -16,6 +16,7 @@ use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Component, Cx, Owner, RenderCx, ScreenKind};
 use crate::components::hatch::Hatch;
 use crate::components::info::{INFO_BINDINGS, Scroll};
+use crate::components::table::TABLE_BINDINGS;
 use crate::keymap::{BindingId, Keymap};
 
 use details::DetailsPane;
@@ -164,35 +165,6 @@ const SCREEN_BINDINGS: &[BindingId] = &[
     BindingId::TextualFocusNext,
     BindingId::TextualFocusPrevious,
     BindingId::TextualCopyText,
-];
-
-/// A section table's bindings: Textual's `DataTable` ones, then `_VimLikeDataTable`'s, which replace `enter`. The
-/// same list as the table component's `TABLE_BINDINGS` (#100); the screen switches to that once the table is on
-/// screen (M2).
-const TABLE_BINDINGS: &[BindingId] = &[
-    BindingId::TextualTableCursorUp,
-    BindingId::TextualTableCursorDown,
-    BindingId::TextualTableCursorRight,
-    BindingId::TextualTableCursorLeft,
-    BindingId::TextualTablePageUp,
-    BindingId::TextualTablePageDown,
-    BindingId::TextualTableScrollTop,
-    BindingId::TextualTableScrollBottom,
-    BindingId::TextualTableScrollHome,
-    BindingId::TextualTableScrollEnd,
-    BindingId::TextualTablePageLeft,
-    BindingId::TextualTablePageRight,
-    BindingId::TableSelect,
-    BindingId::TableCursorDown,
-    BindingId::TablePageDown,
-    BindingId::TableCursorUp,
-    BindingId::TablePageUp,
-    BindingId::TableScrollRight,
-    BindingId::TablePageRight,
-    BindingId::TableScrollLeft,
-    BindingId::TablePageLeft,
-    BindingId::TableScrollTop,
-    BindingId::TableScrollBottom,
 ];
 
 /// `SearchableDataTable.BINDINGS`.

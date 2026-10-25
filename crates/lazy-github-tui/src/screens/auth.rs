@@ -144,12 +144,13 @@ impl Component for AuthScreen {
         ]));
         let inner = block.inner(area);
         frame.render_widget(block, area);
-        if inner.is_empty() {
+        // The content stops above the row `App` draws the footer on.
+        let Some(footer) = Self::footer_area(area) else {
             return;
-        }
+        };
 
         let message = self.message_lines(usize::from(inner.width), theme);
-        let footer_y = inner.bottom() - 1;
+        let footer_y = footer.y;
         let row = |y: u16, height: u16| Rect {
             y,
             height: height.min(footer_y.saturating_sub(y)),

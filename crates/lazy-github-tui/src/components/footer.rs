@@ -29,6 +29,8 @@ pub struct FooterHit {
     pub owner: Owner,
     /// The binding.
     pub id: BindingId,
+    /// False for a disabled item, which a click doesn't run.
+    pub enabled: bool,
 }
 
 /// The `(key, description)` of each footer item, in order.
@@ -68,6 +70,7 @@ impl Footer<'_> {
                 rect: Rect { x, width, ..area },
                 owner: group.owner,
                 id: group.id,
+                enabled: group.enabled,
             });
             x += width;
         }

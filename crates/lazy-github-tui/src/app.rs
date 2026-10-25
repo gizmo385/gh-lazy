@@ -183,7 +183,8 @@ impl App {
         }
         let position = ratatui::layout::Position::new(mouse.column, mouse.row);
         if let Some(hit) = self.footer_hits.iter().find(|hit| hit.rect.contains(position)).copied() {
-            return self.route_binding(hit.owner, hit.id);
+            // Textual rings the bell for a disabled item instead. There's no bell yet, and nothing is disabled in M1.
+            return hit.enabled.then(|| self.route_binding(hit.owner, hit.id)).flatten();
         }
         match &self.base {
             BaseScreen::Main(main) => main.hit(mouse.column, mouse.row).map(Action::Focus),

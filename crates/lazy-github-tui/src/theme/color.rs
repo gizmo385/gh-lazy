@@ -3,6 +3,9 @@
 use ratatui::style::{Color, Modifier, Style};
 
 /// An opaque 24-bit color.
+///
+/// There is deliberately no `From<Rgb> for Color` (nor for [`Paint`]): an exact-RGB conversion would skip the
+/// terminal's color depth. Turn colors into terminal colors with `Theme::paint` or `Theme::color`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Rgb {
     pub r: u8,
@@ -36,12 +39,6 @@ impl Rgb {
         #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
         let mix = |a: u8, b: u8| (f64::from(a) + (f64::from(b) - f64::from(a)) * factor) as u8;
         Rgb::new(mix(self.r, to.r), mix(self.g, to.g), mix(self.b, to.b))
-    }
-}
-
-impl From<Rgb> for Color {
-    fn from(c: Rgb) -> Self {
-        Color::Rgb(c.r, c.g, c.b)
     }
 }
 
@@ -138,15 +135,6 @@ impl Paint {
 impl From<Rgb> for Paint {
     fn from(c: Rgb) -> Self {
         Paint::Rgb(c)
-    }
-}
-
-impl From<Paint> for Color {
-    fn from(p: Paint) -> Self {
-        match p {
-            Paint::Rgb(c) => c.into(),
-            Paint::Ansi(c) => c.into(),
-        }
     }
 }
 

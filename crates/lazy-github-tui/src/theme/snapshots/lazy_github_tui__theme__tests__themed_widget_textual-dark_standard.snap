@@ -1,0 +1,31 @@
+---
+source: crates/lazy-github-tui/src/theme/mod.rs
+expression: themed_widget(&theme)
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 20, height: 8 },
+    content: [
+        "┌──────────────────┐",
+        "│text on panel     │",
+        "│                  │",
+        "└──────────────────┘",
+        "┌──────────────────┐",
+        "│blurred cursor    │",
+        "│                  │",
+        "└──────────────────┘",
+    ],
+    styles: [
+        x: 0, y: 0, fg: LightGreen, bg: Black, underline: Reset, modifier: NONE,
+        x: 1, y: 1, fg: White, bg: DarkGray, underline: Reset, modifier: NONE,
+        x: 14, y: 1, fg: White, bg: Black, underline: Reset, modifier: NONE,
+        x: 19, y: 1, fg: LightGreen, bg: Black, underline: Reset, modifier: NONE,
+        x: 1, y: 2, fg: White, bg: Black, underline: Reset, modifier: NONE,
+        x: 19, y: 2, fg: LightGreen, bg: Black, underline: Reset, modifier: NONE,
+        x: 0, y: 4, fg: LightCyan, bg: Black, underline: Reset, modifier: NONE,
+        x: 1, y: 5, fg: White, bg: DarkGray, underline: Reset, modifier: NONE,
+        x: 15, y: 5, fg: White, bg: Black, underline: Reset, modifier: NONE,
+        x: 19, y: 5, fg: LightCyan, bg: Black, underline: Reset, modifier: NONE,
+        x: 1, y: 6, fg: White, bg: Black, underline: Reset, modifier: NONE,
+        x: 19, y: 6, fg: LightCyan, bg: Black, underline: Reset, modifier: NONE,
+    ]
+}

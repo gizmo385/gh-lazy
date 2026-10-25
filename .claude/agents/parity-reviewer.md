@@ -19,9 +19,11 @@ Read `docs/rust-rewrite/PLAN.md` §6 and `docs/rust-rewrite/parity/README.md` fi
    - A difference the user would notice is blocking unless it's an approved `intentional diff`.
    - Differences that come from the rendering library (border glyphs, scrollbar style, sub-cell spacing) are fine;
      list them once per PR so they're visible.
-5. When you approve, move the PR's rows (the ids in its scenarios' `parity_rows`) to `parity` in their
-   `parity/areas/<area>.md` files, with a commit on a follow-up PR, or ask the implementer to include it. Touch
-   only those rows. An approved difference gets a new `parity/decisions/<slug>.md` and `intentional diff`.
+5. When you approve, move the rows the PR completes (normally the ids in its scenarios' `parity_rows`) to `parity`
+   in their `parity/areas/<area>.md` files, with a commit on a follow-up PR, or ask the implementer to include it.
+   Leave `intentional diff` rows alone (e.g. `repositories.introduction-version`), and leave rows a scenario only
+   covers in part (e.g. `main-layout.command-log` until #80 lands the log body). Touch only those rows. An approved difference gets a new
+   `parity/decisions/<slug>.md` and `intentional diff`.
 
 ## Audits
 

@@ -21,7 +21,8 @@ Open issues with `status: needs-triage`, or with no `python`/`rust` label.
      for the Rust app until parity, unless Chris has said otherwise.
 2. **Duplicates.** Search open and closed issues. If it duplicates one, comment with the link and close it as
    duplicate. If a `python` bug also applies to the Rust app's planned behavior, link it from the matching row in
-   parity matrix (`docs/rust-rewrite/parity/areas/`, by row id) via a comment on the rust issue that owns that row, rather than cloning the issue.
+   the parity matrix (`docs/rust-rewrite/parity/areas/`, by row id) via a comment on the rust issue that owns
+   that row, rather than cloning the issue.
 3. **Type.** Exactly one of `bug`, `enhancement`, `parity`, `parity-gap`, `infra`.
 4. **Area.** One or more `area: *` labels. Add `platform: *` when it only reproduces on one OS.
 5. **Milestone.** For `rust` issues, the `milestone: M<n>` label from PLAN.md §8, and add the issue to that

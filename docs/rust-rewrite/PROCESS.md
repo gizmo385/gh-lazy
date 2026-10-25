@@ -70,8 +70,8 @@ needs-triage ──► needs-design ──► ready ──► in-progress ──
    merges on its own once required checks pass and both reviews approve. Chris can also merge by hand. This relies on
    branch protection for `rust-main` that requires the CI checks and approving reviews; without it, GitHub would merge
    as soon as auto-merge is enabled. The parity reviewer
-   updates the rows in the
-   [parity matrix](./parity/README.md).
+   moves the rows the PR completes to `parity` in the [parity matrix](./parity/README.md): normally the ids in
+   its scenarios' `parity_rows`, but not `intentional diff` rows or rows a scenario only covers in part.
 
 Any role that hits a choice that changes scope, UX or a dependency choice sets `status: needs-decision`, writes the
 question with options and a recommendation as an issue comment, and stops work on that issue.

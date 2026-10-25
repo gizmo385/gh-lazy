@@ -35,8 +35,11 @@ Every area table starts with **Id**. The other columns depend on the area (keybi
 Description and Context; config has Section, Field and Default; and so on), and most end with these:
 
 - **Id**: `<area>.<name>`, kebab-case, unique across the matrix, e.g. `main-layout.status-current-repo`. The area
-  prefix is the area file's name. Ids are stable: never rename or reuse one, because scenarios' `parity_rows`, py-bug files and
-  decision files refer to them. If a row is split, keep the old id on one part and give the others new ids.
+  prefix is the area file's name. Ids are stable: never rename or reuse one, because scenarios' `parity_rows`,
+  py-bug files and decision files refer to them. If a row is split, keep the old id on one part and give the
+  others new ids. Since the prefix must match the file and the id never changes, a row never moves to another
+  area file. If a row really belongs elsewhere, add a new row there and change the old row's Notes to
+  "Moved to `<new id>`." (and repoint any `parity_rows`, py-bug or decision references to the new id).
 - **Milestone**: where the row lands, per [PLAN.md §8](../PLAN.md#8-milestones). M0 is only used for infrastructure
   rows.
 - **Status**: see above.
@@ -52,11 +55,16 @@ Wording in quotes is the exact text the Python app shows. Toast rows give severi
 
 ## Editing the matrix
 
-- A PR edits only the area file(s) that hold its rows. Keep each row on one line, so two PRs that change different
-  rows of the same file merge cleanly.
+- A PR edits only the area file(s) that hold its rows. Keep each row on one line. Two PRs that change different,
+  non-adjacent rows of the same file merge cleanly. Edits to adjacent rows, or two rows inserted at the same spot,
+  still conflict, because git merges neighbouring lines as one hunk; that conflict is a one-line resolve (keep
+  both rows).
 - The design agent adds rows, with a new id, the milestone and the issue link. Add a row next to the rows it relates
-  to rather than at the end of the table, to keep concurrent additions apart.
-- The parity reviewer moves rows to `parity`, and back from `parity` when a gap is found.
+  to rather than at the end of the table: appends from parallel PRs all land on the same spot and always
+  conflict, while inserts next to related rows usually land in different places.
+- The parity reviewer moves the rows a PR completes to `parity`, and back from `parity` when a gap is found. That is
+  usually, but not always, every id in the PR's scenarios' `parity_rows`: an `intentional diff` row stays one, and
+  a row the scenario only covers in part (e.g. `main-layout.command-log` before #80) stays where it is.
 - A new suspected Python bug is a new file `py-bugs/B<nn>.md` with the next free number (look at `rust-main` and open
   PRs). If another PR takes the number first, renumber yours. The file starts with a `# B<n>: <title>` heading and
   these lines, then the behavior as prose:

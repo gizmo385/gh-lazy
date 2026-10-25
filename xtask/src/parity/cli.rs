@@ -192,7 +192,10 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     let json = serde_json::to_string_pretty(&summary).expect("summary serializes");
     std::fs::write(out.join("summary.json"), json + "\n").context("writing summary.json")?;
     let meta = report::RunMeta::current(&repo, args.python_only, args.rust_only);
-    report::write_reports(&out, &summary, &meta)?;
+    // A reporting failure is printed but keeps the run's exit code, so it can never mask a gate result.
+    if let Err(e) = report::write_reports(&out, &summary, &meta) {
+        eprintln!("parity: writing the report: {e}");
+    }
 
     println!();
     for s in &summary.scenarios {

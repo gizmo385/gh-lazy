@@ -31,6 +31,10 @@ const LOG_TAIL_LINES: usize = 50;
 const SUMMARY_MISMATCHES: usize = 20;
 /// Mismatch values in `summary.md` are cut to this many characters.
 const SUMMARY_VALUE_CHARS: usize = 80;
+/// The `scenario/size/capture` and `check box` parts of a mismatch line are cut to this many characters.
+const SUMMARY_TARGET_CHARS: usize = 120;
+/// Ends the `summary.md` mismatch list when the next line would cross [`SUMMARY_MD_LIMIT`].
+const MORE_MISMATCHES: &str = "- …the rest are in index.html.\n";
 /// `summary.md` stays under this. GitHub allows 1 MiB per job summary; this leaves room for other steps.
 const SUMMARY_MD_LIMIT: usize = 64 * 1024;
 /// The size columns `summary.md` always has, in this order. Other sizes in the run are appended.
@@ -299,19 +303,24 @@ fn load_scenario<'a>(out: &Path, scenario: &'a ScenarioSummary) -> Result<Scenar
                     Ok(None)
                 }
             })?;
+            // #93's files never fail the report: any read or parse problem is shown on the page instead.
             let structures = Pair::try_from_fn(|app| {
                 Ok(if ran(app) {
-                    read_optional(&app_file(app, &format!("{name}.structure.json")))?.map(|t| pretty_json(&t))
+                    match read_optional(&app_file(app, &format!("{name}.structure.json"))) {
+                        Ok(text) => text.map(|t| pretty_json(&t)),
+                        Err(e) => Some(format!("structure.json couldn't be read: {e}")),
+                    }
                 } else {
                     None
                 })
             })?;
-            let check = match read_optional(&size_dir.join(format!("{name}.check.json")))? {
-                None => CheckState::Absent,
-                Some(text) => match serde_json::from_str::<CheckFile>(&text) {
+            let check = match read_optional(&size_dir.join(format!("{name}.check.json"))) {
+                Ok(None) => CheckState::Absent,
+                Ok(Some(text)) => match serde_json::from_str::<CheckFile>(&text) {
                     Ok(check) => CheckState::Loaded(check),
                     Err(e) => CheckState::Unreadable(e.to_string()),
                 },
+                Err(e) => CheckState::Unreadable(e.to_string()),
             };
             let diff = match (&grids.python, &grids.rust) {
                 (Some(py), Some(rs)) => {
@@ -954,6 +963,8 @@ fn cut(text: &str, max: usize) -> String {
 }
 
 fn render_summary_md(scenarios: &[ScenarioData<'_>]) -> String {
+    const CLOSE: &str = "\n</details>\n";
+
     let mut sizes: Vec<&str> = SUMMARY_SIZES.to_vec();
     for size in scenarios.iter().flat_map(|s| &s.sizes) {
         if !sizes.contains(&size.summary.size.as_str()) {
@@ -969,7 +980,7 @@ fn render_summary_md(scenarios: &[ScenarioData<'_>]) -> String {
     md.push_str(&" --- |".repeat(sizes.len() + 1));
     md.push('\n');
 
-    // The mismatch list is bounded (20 entries of at most ~250 bytes), so only the table needs a budget.
+    // The table stops 8 KiB short of the limit; the mismatch list below checks the limit before every line.
     let budget = SUMMARY_MD_LIMIT - 8 * 1024;
     let ordered = sorted(scenarios);
     for (i, data) in ordered.iter().enumerate() {
@@ -1012,8 +1023,8 @@ fn render_summary_md(scenarios: &[ScenarioData<'_>]) -> String {
                         let value = |v: &Value| md_escape(&cut(&mismatch_value(v), SUMMARY_VALUE_CHARS));
                         format!(
                             "- {}: {}: python={} rust={}",
-                            md_escape(&at),
-                            md_escape(&target),
+                            md_escape(&cut(&at, SUMMARY_TARGET_CHARS)),
+                            md_escape(&cut(&target, SUMMARY_TARGET_CHARS)),
                             value(&m.python),
                             value(&m.rust)
                         )
@@ -1030,10 +1041,14 @@ fn render_summary_md(scenarios: &[ScenarioData<'_>]) -> String {
             mismatches.len()
         );
         for line in &mismatches[..shown] {
+            if md.len() + line.len() + 1 + MORE_MISMATCHES.len() + CLOSE.len() > SUMMARY_MD_LIMIT {
+                md.push_str(MORE_MISMATCHES);
+                break;
+            }
             md.push_str(line);
             md.push('\n');
         }
-        md.push_str("\n</details>\n");
+        md.push_str(CLOSE);
     }
     md
 }
@@ -1220,6 +1235,88 @@ mod tests {
         let md = render_summary_md(&scenarios);
         assert!(md.len() < SUMMARY_MD_LIMIT);
         insta::assert_snapshot!(md);
+    }
+
+    #[test]
+    fn summary_md_never_exceeds_the_limit() {
+        // Thousands of scenarios with long names and mismatches whose every part is huge and needs escaping.
+        let huge = "<&|".repeat(2_000);
+        let names: Vec<String> = (0..3000).map(|i| format!("scenario-{i}-{}", "n".repeat(100))).collect();
+        let summaries: Vec<_> = names
+            .iter()
+            .map(|n| {
+                scenario(
+                    n,
+                    true,
+                    ScenarioResult::Fail,
+                    vec![size_summary("160x48", RunState::Ok, None)],
+                )
+            })
+            .collect();
+        let big = || {
+            CheckState::Loaded(CheckFile {
+                expect: Vec::new(),
+                cross: (0..30)
+                    .map(|_| Mismatch {
+                        check: huge.clone(),
+                        box_title: serde_json::json!({ "title": huge }),
+                        python: Value::String(huge.clone()),
+                        rust: serde_json::json!([huge]),
+                        message: huge.clone(),
+                    })
+                    .collect(),
+            })
+        };
+        // Two scenarios' worth of mismatches is already more than the list shows.
+        let scenarios: Vec<_> = summaries
+            .iter()
+            .enumerate()
+            .map(|(i, s)| data(s, vec![if i < 2 { big() } else { CheckState::Absent }]))
+            .collect();
+        let md = render_summary_md(&scenarios);
+        assert!(md.len() <= SUMMARY_MD_LIMIT, "{} bytes", md.len());
+        assert!(md.contains("more scenario(s); see index.html"));
+        assert!(md.contains(MORE_MISMATCHES), "the mismatch list was cut too");
+        assert!(md.trim_end().ends_with("</details>"));
+    }
+
+    #[test]
+    fn unreadable_check_and_structure_files_dont_fail_the_report() {
+        let out = tempfile::tempdir().unwrap();
+        let summary = scenario(
+            "startup",
+            false,
+            ScenarioResult::PythonOnly,
+            vec![size_summary("160x48", RunState::Ok, None)],
+        );
+        let dir = out.path().join("startup/160x48");
+        std::fs::create_dir_all(dir.join("python/main.structure.json")).unwrap(); // a directory: reading it fails
+        std::fs::write(dir.join("main.check.json"), "{\"cross\": [ not json").unwrap();
+
+        let loaded = load_scenario(out.path(), &summary).unwrap();
+        let capture = &loaded.sizes[0].captures[0];
+        assert!(
+            matches!(&capture.check, CheckState::Unreadable(_)),
+            "{:?}",
+            capture.check
+        );
+        let structure = capture.structures.python.as_deref().unwrap();
+        assert!(
+            structure.starts_with("structure.json couldn't be read: "),
+            "{structure}"
+        );
+
+        let html = render_scenario(&loaded, &meta());
+        assert!(
+            html.contains("<p class=\"reason\">check.json couldn't be read: "),
+            "{html}"
+        );
+        assert!(html.contains("structure.json couldn&#39;t be read: "), "{html}");
+
+        std::fs::remove_file(dir.join("main.check.json")).unwrap();
+        std::fs::create_dir(dir.join("main.check.json")).unwrap();
+        let loaded = load_scenario(out.path(), &summary).unwrap();
+        assert!(matches!(&loaded.sizes[0].captures[0].check, CheckState::Unreadable(_)));
     }
 
     #[test]

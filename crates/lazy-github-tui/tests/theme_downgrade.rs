@@ -67,7 +67,7 @@ fn downsampling_matches_rich_for_every_theme_color() {
             );
             assert_eq!(
                 downsample(color, mode(ColorDepth::TrueColor)),
-                Color::from(color),
+                Color::Rgb(color.r, color.g, color.b),
                 "{name}: ${var}"
             );
             checked += 1;

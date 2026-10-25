@@ -109,7 +109,7 @@ impl ColorMode {
 pub fn downsample(rgb: Rgb, mode: ColorMode) -> Color {
     let rgb = if mode.no_color { monochrome(rgb) } else { rgb };
     match mode.depth {
-        ColorDepth::TrueColor => rgb.into(),
+        ColorDepth::TrueColor => Color::Rgb(rgb.r, rgb.g, rgb.b),
         ColorDepth::EightBit => Color::Indexed(eight_bit(rgb)),
         ColorDepth::Standard => STANDARD_PALETTE[standard(rgb)].0.into(),
         ColorDepth::None => Color::Reset,

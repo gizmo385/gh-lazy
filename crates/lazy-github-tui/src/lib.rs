@@ -13,6 +13,7 @@ pub mod components;
 pub mod effect;
 pub mod event;
 pub mod keymap;
+pub mod options;
 pub mod runtime;
 pub mod screens;
 pub mod theme;

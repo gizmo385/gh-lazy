@@ -1,0 +1,81 @@
+version = 1
+description = "Searchable table: row cursor, paging, top and bottom, and horizontal paging on a 60-repo table that overflows its pane"
+# Flipped to true by the M2 repos-table issue, which puts the table on screen.
+gate = false
+parity_rows = [
+    "searchable-tables.vim-cursor",
+    "searchable-tables.sort-on-insert",
+    "keybindings.common-table-cursor-down",
+    "keybindings.common-table-page-down",
+    "keybindings.common-table-scroll-top",
+    "keybindings.common-table-scroll-bottom",
+    "keybindings.common-table-page-right",
+    "keybindings.common-table-page-left",
+]
+sizes = [[160, 48]]
+
+[env]
+fixtures = ["repos-60", "base"]
+
+# Two favorites, which the favorite sort puts first, in insertion (full_name) order.
+[env.config_overrides.repositories]
+favorites = [
+    "parity-org/kilo-service-with-a-deliberately-long-repository-name-10",
+    "parity-bot/mike-service-with-a-deliberately-long-repository-name-12",
+]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+# Python fetches every page before it fills the table, so the first favorite showing means all 60 rows are in.
+[[step]]
+wait = { text = "mike-service", timeout_ms = 15000 }
+
+[[step]]
+capture = "initial"
+checks = ["headers", "rows", "cursor"]
+
+[[step]]
+keys = ["1", "j", "j"]
+
+[[step]]
+capture = "down-2"
+checks = ["headers", "rows", "cursor"]
+
+[[step]]
+keys = ["J"]
+
+[[step]]
+capture = "page-down"
+checks = ["headers", "rows", "cursor"]
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+capture = "bottom"
+checks = ["headers", "rows", "cursor"]
+
+[[step]]
+keys = ["g"]
+
+[[step]]
+capture = "top"
+checks = ["headers", "rows", "cursor"]
+
+[[step]]
+keys = ["$"]
+
+[[step]]
+capture = "page-right"
+checks = ["headers", "rows", "cursor"]
+
+[[step]]
+keys = ["^"]
+
+[[step]]
+capture = "page-left"
+checks = ["headers", "rows", "cursor"]
+
+[expect.initial]
+not_contains = ["Traceback"]

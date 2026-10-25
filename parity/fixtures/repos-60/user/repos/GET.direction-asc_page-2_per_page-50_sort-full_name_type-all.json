@@ -1,0 +1,364 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/user/repos",
+    "query": {
+      "direction": "asc",
+      "page": "2",
+      "per_page": "50",
+      "sort": "full_name",
+      "type": "all"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "Link": "<https://api.github.com/user/repos?type=all&direction=asc&sort=full_name&per_page=50&page=1>; rel=\"prev\", <https://api.github.com/user/repos?type=all&direction=asc&sort=full_name&per_page=50&page=1>; rel=\"first\""
+    },
+    "body": [
+      {
+        "id": 3000047,
+        "node_id": "R_kgDOAC3000047",
+        "name": "quebec-service-with-a-deliberately-long-repository-name-16",
+        "full_name": "parity-org/quebec-service-with-a-deliberately-long-repository-name-16",
+        "private": false,
+        "owner": {
+          "login": "parity-org",
+          "id": 1000002,
+          "node_id": "U_kgDOAA9CQQ",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-org",
+          "html_url": "https://github.com/parity-org",
+          "type": "Organization",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-org/quebec-service-with-a-deliberately-long-repository-name-16",
+        "description": "Parity fixture repository 47 of 60",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-org/quebec-service-with-a-deliberately-long-repository-name-16",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-09-30T08:00:00Z",
+        "pushed_at": "2026-09-29T21:15:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": true,
+          "maintain": true,
+          "push": true,
+          "triage": true,
+          "pull": true
+        }
+      },
+      {
+        "id": 3000048,
+        "node_id": "R_kgDOAC3000048",
+        "name": "romeo-service-with-a-deliberately-long-repository-name-17",
+        "full_name": "parity-org/romeo-service-with-a-deliberately-long-repository-name-17",
+        "private": false,
+        "owner": {
+          "login": "parity-org",
+          "id": 1000002,
+          "node_id": "U_kgDOAA9CQQ",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-org",
+          "html_url": "https://github.com/parity-org",
+          "type": "Organization",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-org/romeo-service-with-a-deliberately-long-repository-name-17",
+        "description": "Parity fixture repository 48 of 60",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-org/romeo-service-with-a-deliberately-long-repository-name-17",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-09-30T08:00:00Z",
+        "pushed_at": "2026-09-29T21:15:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": true,
+          "maintain": true,
+          "push": true,
+          "triage": true,
+          "pull": true
+        }
+      },
+      {
+        "id": 3000049,
+        "node_id": "R_kgDOAC3000049",
+        "name": "sierra-service-with-a-deliberately-long-repository-name-18",
+        "full_name": "parity-org/sierra-service-with-a-deliberately-long-repository-name-18",
+        "private": false,
+        "owner": {
+          "login": "parity-org",
+          "id": 1000002,
+          "node_id": "U_kgDOAA9CQQ",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-org",
+          "html_url": "https://github.com/parity-org",
+          "type": "Organization",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-org/sierra-service-with-a-deliberately-long-repository-name-18",
+        "description": "Parity fixture repository 49 of 60",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-org/sierra-service-with-a-deliberately-long-repository-name-18",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-09-30T08:00:00Z",
+        "pushed_at": "2026-09-29T21:15:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": true,
+          "maintain": true,
+          "push": true,
+          "triage": true,
+          "pull": true
+        }
+      },
+      {
+        "id": 3000050,
+        "node_id": "R_kgDOAC3000050",
+        "name": "tango-service-with-a-deliberately-long-repository-name-19",
+        "full_name": "parity-org/tango-service-with-a-deliberately-long-repository-name-19",
+        "private": false,
+        "owner": {
+          "login": "parity-org",
+          "id": 1000002,
+          "node_id": "U_kgDOAA9CQQ",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-org",
+          "html_url": "https://github.com/parity-org",
+          "type": "Organization",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-org/tango-service-with-a-deliberately-long-repository-name-19",
+        "description": "Parity fixture repository 50 of 60",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-org/tango-service-with-a-deliberately-long-repository-name-19",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-09-30T08:00:00Z",
+        "pushed_at": "2026-09-29T21:15:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": true,
+          "maintain": true,
+          "push": true,
+          "triage": true,
+          "pull": true
+        }
+      },
+      {
+        "id": 3000051,
+        "node_id": "R_kgDOAC3000051",
+        "name": "uniform-service-with-a-deliberately-long-repository-name-20",
+        "full_name": "parity-org/uniform-service-with-a-deliberately-long-repository-name-20",
+        "private": false,
+        "owner": {
+          "login": "parity-org",
+          "id": 1000002,
+          "node_id": "U_kgDOAA9CQQ",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-org",
+          "html_url": "https://github.com/parity-org",
+          "type": "Organization",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-org/uniform-service-with-a-deliberately-long-repository-name-20",
+        "description": "Parity fixture repository 51 of 60",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-org/uniform-service-with-a-deliberately-long-repository-name-20",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-09-30T08:00:00Z",
+        "pushed_at": "2026-09-29T21:15:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": true,
+          "maintain": true,
+          "push": true,
+          "triage": true,
+          "pull": true
+        }
+      },
+      {
+        "id": 3000052,
+        "node_id": "R_kgDOAC3000052",
+        "name": "victor-service-with-a-deliberately-long-repository-name-21",
+        "full_name": "parity-org/victor-service-with-a-deliberately-long-repository-name-21",
+        "private": false,
+        "owner": {
+          "login": "parity-org",
+          "id": 1000002,
+          "node_id": "U_kgDOAA9CQQ",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-org",
+          "html_url": "https://github.com/parity-org",
+          "type": "Organization",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-org/victor-service-with-a-deliberately-long-repository-name-21",
+        "description": "Parity fixture repository 52 of 60",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-org/victor-service-with-a-deliberately-long-repository-name-21",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-09-30T08:00:00Z",
+        "pushed_at": "2026-09-29T21:15:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": true,
+          "maintain": true,
+          "push": true,
+          "triage": true,
+          "pull": true
+        }
+      },
+      {
+        "id": 3000053,
+        "node_id": "R_kgDOAC3000053",
+        "name": "whiskey-service-with-a-deliberately-long-repository-name-22",
+        "full_name": "parity-org/whiskey-service-with-a-deliberately-long-repository-name-22",
+        "private": false,
+        "owner": {
+          "login": "parity-org",
+          "id": 1000002,
+          "node_id": "U_kgDOAA9CQQ",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-org",
+          "html_url": "https://github.com/parity-org",
+          "type": "Organization",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-org/whiskey-service-with-a-deliberately-long-repository-name-22",
+        "description": "Parity fixture repository 53 of 60",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-org/whiskey-service-with-a-deliberately-long-repository-name-22",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-09-30T08:00:00Z",
+        "pushed_at": "2026-09-29T21:15:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": true,
+          "maintain": true,
+          "push": true,
+          "triage": true,
+          "pull": true
+        }
+      },
+      {
+        "id": 3000054,
+        "node_id": "R_kgDOAC3000054",
+        "name": "xray-service-with-a-deliberately-long-repository-name-23",
+        "full_name": "parity-org/xray-service-with-a-deliberately-long-repository-name-23",
+        "private": false,
+        "owner": {
+          "login": "parity-org",
+          "id": 1000002,
+          "node_id": "U_kgDOAA9CQQ",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-org",
+          "html_url": "https://github.com/parity-org",
+          "type": "Organization",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-org/xray-service-with-a-deliberately-long-repository-name-23",
+        "description": "Parity fixture repository 54 of 60",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-org/xray-service-with-a-deliberately-long-repository-name-23",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-09-30T08:00:00Z",
+        "pushed_at": "2026-09-29T21:15:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": true,
+          "maintain": true,
+          "push": true,
+          "triage": true,
+          "pull": true
+        }
+      },
+      {
+        "id": 3000055,
+        "node_id": "R_kgDOAC3000055",
+        "name": "yankee-service-with-a-deliberately-long-repository-name-24",
+        "full_name": "parity-org/yankee-service-with-a-deliberately-long-repository-name-24",
+        "private": false,
+        "owner": {
+          "login": "parity-org",
+          "id": 1000002,
+          "node_id": "U_kgDOAA9CQQ",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-org",
+          "html_url": "https://github.com/parity-org",
+          "type": "Organization",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-org/yankee-service-with-a-deliberately-long-repository-name-24",
+        "description": "Parity fixture repository 55 of 60",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-org/yankee-service-with-a-deliberately-long-repository-name-24",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-09-30T08:00:00Z",
+        "pushed_at": "2026-09-29T21:15:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": true,
+          "maintain": true,
+          "push": true,
+          "triage": true,
+          "pull": true
+        }
+      },
+      {
+        "id": 3000056,
+        "node_id": "R_kgDOAC3000056",
+        "name": "zulu-service-with-a-deliberately-long-repository-name-25",
+        "full_name": "parity-org/zulu-service-with-a-deliberately-long-repository-name-25",
+        "private": false,
+        "owner": {
+          "login": "parity-org",
+          "id": 1000002,
+          "node_id": "U_kgDOAA9CQQ",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-org",
+          "html_url": "https://github.com/parity-org",
+          "type": "Organization",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-org/zulu-service-with-a-deliberately-long-repository-name-25",
+        "description": "Parity fixture repository 56 of 60",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-org/zulu-service-with-a-deliberately-long-repository-name-25",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-09-30T08:00:00Z",
+        "pushed_at": "2026-09-29T21:15:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": true,
+          "maintain": true,
+          "push": true,
+          "triage": true,
+          "pull": true
+        }
+      }
+    ]
+  },
+  "note": "hand-written: page 2 of 2 (10 repos) of 60 repositories with long names"
+}

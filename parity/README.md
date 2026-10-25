@@ -259,6 +259,9 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
 
 - `repos-two-pages/`: base's three repos split over two `GET /user/repos` pages (two, then one) linked by
   `Link: rel="next"`. Listed before `base`, it exercises pagination; `crates/fake-gh/tests/rust_client.rs` uses it.
+- `repos-60/`: 60 public repos owned by `parity-bot` and `parity-org`, with names long enough that the repos table
+  overflows its pane, over two `GET /user/repos` pages (50, then 10). Listed before `base`, for the
+  `table-navigation` scenario. Hand-written: only the fields the apps read are kept.
 
 ## Recording fixtures
 

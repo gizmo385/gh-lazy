@@ -60,8 +60,7 @@ pub struct App {
     maximized: Option<Maximized>,
     /// The maximize toast shows once per session. Never saved.
     has_shown_maximize_toast: bool,
-    /// Whether the keybindings panel is open. It's drawn only on the main screen, and not while maximized. Never
-    /// saved.
+    /// Whether the keybindings panel is open. It's drawn only on the main screen, maximized or not. Never saved.
     help_open: bool,
     /// The footer items drawn in the last frame, for clicks.
     footer_hits: Vec<FooterHit>,
@@ -331,7 +330,10 @@ impl App {
             Action::Maximize => self.maximize(out),
             Action::Minimize => self.maximized = None,
             // Python's `action_open_help`: only this closes the panel, and it doesn't move focus.
-            Action::ToggleHelp => self.help_open = !self.help_open,
+            // Only the main screen has the panel: Python mounts it on the startup screen, which the main screen
+            // then covers.
+            Action::ToggleHelp if matches!(self.base, BaseScreen::Main(_)) => self.help_open = !self.help_open,
+            Action::ToggleHelp => {}
             Action::Main(action) => {
                 if let BaseScreen::Main(main) = &mut self.base {
                     main.update(action, &mut Cx::new(&mut self.shared, out));
@@ -396,7 +398,7 @@ impl App {
         self.maximized
     }
 
-    /// Whether the keybindings panel is open, even while a maximized widget hides it.
+    /// Whether the keybindings panel is open.
     pub fn help_open(&self) -> bool {
         self.help_open
     }
@@ -466,20 +468,15 @@ impl App {
             focused: true,
             focus_within: true,
         };
-        // While maximized, the widget replaces the whole screen, footer and help panel included.
-        let footer_area = match (&mut self.base, self.maximized) {
-            (BaseScreen::Startup(_), _) => None,
-            (BaseScreen::Auth(auth), _) => {
+        let footer_area = match &mut self.base {
+            BaseScreen::Startup(_) => None,
+            BaseScreen::Auth(auth) => {
                 auth.render(frame, area, &cx);
                 AuthScreen::footer_area(area)
             }
-            (BaseScreen::Main(main), Some(maximized)) => {
-                main.render_maximized(frame, area, maximized.target, &cx);
-                None
-            }
-            (BaseScreen::Main(main), None) => {
-                // The panel docks on the right over the full height, footer row included; the screen lays out in
-                // what's left.
+            BaseScreen::Main(main) => {
+                // The panel docks on the right over the full height, footer row included, maximized or not; the
+                // screen lays out in what's left.
                 let mut area = area;
                 if self.help_open {
                     let width = help_width(area.width);
@@ -498,8 +495,14 @@ impl App {
                         panel,
                     );
                 }
-                main.render(frame, area, &cx);
-                Some(main.footer_area(area))
+                // While maximized, the widget replaces the rest of the screen, footer included.
+                if let Some(maximized) = self.maximized {
+                    main.render_maximized(frame, area, maximized.target, &cx);
+                    None
+                } else {
+                    main.render(frame, area, &cx);
+                    Some(main.footer_area(area))
+                }
             }
         };
         self.footer_hits = match footer_area {
@@ -742,17 +745,27 @@ mod tests {
     }
 
     #[test]
-    fn maximize_hides_help_until_escape() {
+    fn help_stays_docked_while_maximized() {
         let mut app = test_app();
         app.press(&["?", "M"]);
-        assert!(app.app().help_open());
-        assert!(!app.screen(160, 48).contains('▏'));
-        app.press(&["escape"]);
+        assert!(app.app().maximized().is_some());
         assert!(help_shown(&mut app));
-        // `?` still toggles the flag while maximized.
-        app.press(&["M", "?", "escape"]);
-        assert!(!app.app().help_open());
+        // `?` toggles the panel while maximized, and escape minimizes without touching it.
+        app.press(&["?"]);
         assert!(!help_shown(&mut app));
+        app.press(&["?", "escape"]);
+        assert!(app.app().maximized().is_none());
+        assert!(help_shown(&mut app));
+    }
+
+    #[test]
+    fn question_mark_during_startup_opens_nothing() {
+        let mut app = TestApp::on_startup(Config::default(), lazy_github_core::github::FakeGithub::new());
+        assert_eq!(app.app().screen(), None);
+        app.press(&["?"]);
+        futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+        assert_eq!(app.app().screen(), Some(ScreenKind::Main));
+        assert!(!app.app().help_open());
     }
 
     #[test]

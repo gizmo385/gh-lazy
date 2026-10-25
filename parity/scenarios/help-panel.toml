@@ -1,5 +1,5 @@
 version = 1
-description = "? toggles the keybindings panel on the right: it narrows the main screen, follows focus, survives escape, and ? closes it"
+description = "? toggles the keybindings panel on the right: it narrows the main screen, follows focus, survives escape and maximize, and ? closes it"
 gate = true
 parity_rows = ["main-layout.help-panel", "keybindings.app-open-help"]
 sizes = [[160, 48], [100, 30]]
@@ -57,6 +57,33 @@ wait = { gone = "Previous tab" }
 capture = "closed"
 checks = ["titles", "focus"]
 
+# Maximizing keeps the panel docked: the maximized table and its hatch fill the narrower area.
+[[step]]
+keys = ["1", "?"]
+
+[[step]]
+wait = { text = "Cursor up" }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { text = "View Maximized" }
+
+[[step]]
+capture = "maximized"
+checks = ["titles"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[1] Repositories" }
+
+[[step]]
+capture = "minimized"
+checks = ["titles", "focus"]
+
 [expect.start]
 focused = ["[1] Repositories"]
 not_contains = ["Cursor up"]
@@ -76,3 +103,11 @@ contains = ["▏           ← Previous tab", "▏           → Next tab"]
 [expect.closed]
 focused = ["[5] Details"]
 not_contains = ["Previous tab", "Focus repos table"]
+
+[expect.maximized]
+contains = ["▏         ↑ k Cursor up", "▏           / Search Search"]
+not_contains = ["[1] Repositories"]
+
+[expect.minimized]
+focused = ["[1] Repositories"]
+contains = ["▏         ↑ k Cursor up"]

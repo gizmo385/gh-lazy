@@ -9,8 +9,8 @@ const ESC: u8 = 0x1b;
 pub enum KeyError {
     #[error("unknown key {0:?}")]
     Unknown(String),
-    /// Keys a terminal can't send distinctly without the kitty keyboard protocol (`PARITY.md`, "Known terminal
-    /// caveats").
+    /// Keys a terminal can't send distinctly without the kitty keyboard protocol (parity matrix,
+    /// `docs/rust-rewrite/parity/areas/terminal-caveats.md`).
     #[error("key {0:?} can't be sent distinctly by a terminal without the kitty keyboard protocol")]
     Indistinct(String),
 }

@@ -43,7 +43,7 @@ fn scenario(name: &str, result: ScenarioResult, rust: RunState) -> ScenarioSumma
         name: name.into(),
         description: format!("<{name}> & friends"),
         gate: false,
-        parity_rows: vec!["Main layout".into()],
+        parity_rows: vec!["main-layout.layout".into()],
         result,
         sizes: vec![SizeSummary {
             size: SIZE.into(),
@@ -121,6 +121,9 @@ fn writes_every_report_file_from_the_dumps() {
     let report = read(&out.join("demo/report.html"));
     assert!(report.contains("&lt;demo&gt; &amp; friends"));
     assert!(report.contains("1 cell(s) differ"));
+    assert!(report.contains(
+        "<li><code>main-layout.layout</code> in <code>docs/rust-rewrite/parity/areas/main-layout.md</code></li>"
+    ));
     assert!(report.contains("<td><code>alpha</code></td><td><code>alphA</code></td><td></td><td>cell differs</td>"));
     assert!(
         report.contains(

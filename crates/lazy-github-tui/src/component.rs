@@ -109,6 +109,13 @@ pub enum ScreenKind {
     Main,
 }
 
+impl ScreenKind {
+    /// Whether the binding chain stops at this screen (Textual's `ModalScreen`).
+    pub fn is_modal(self) -> bool {
+        matches!(self, ScreenKind::Auth)
+    }
+}
+
 /// The state every component may read, owned by `App`.
 pub(crate) struct Shared {
     pub(crate) config: Config,

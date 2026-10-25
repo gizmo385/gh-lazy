@@ -153,8 +153,8 @@ impl App {
     /// `_modal_binding_chain` does. Otherwise the app link comes last.
     pub fn binding_chain(&self) -> Vec<ChainLink> {
         let mut chain = self.full_binding_chain();
-        let modal = Owner::Screen(ScreenKind::Auth);
-        if let Some(end) = chain.iter().position(|link| link.owner == modal) {
+        let is_modal = |link: &ChainLink| matches!(link.owner, Owner::Screen(kind) if kind.is_modal());
+        if let Some(end) = chain.iter().position(is_modal) {
             chain.truncate(end + 1);
         }
         chain
@@ -344,6 +344,14 @@ impl App {
             BaseScreen::Startup(_) => None,
             BaseScreen::Auth(_) => Some(ScreenKind::Auth),
             BaseScreen::Main(_) => Some(ScreenKind::Main),
+        }
+    }
+
+    /// The authentication screen, while it's up.
+    pub fn auth_screen(&self) -> Option<&AuthScreen> {
+        match &self.base {
+            BaseScreen::Auth(auth) => Some(auth),
+            _ => None,
         }
     }
 

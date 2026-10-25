@@ -8,10 +8,11 @@ use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::github::{FakeGithub, GithubCall};
 
+use crate::app::App;
 use crate::clock::{Clock as _, FakeClock};
 use crate::component::ScreenKind;
 use crate::effect::{Effect, GithubRequest, TimerId};
-use crate::screens::auth::AUTH_POLL_INTERVAL;
+use crate::screens::auth::{AUTH_POLL_INTERVAL, AuthReason};
 use crate::test_util::TestApp;
 
 const LOGIN_MESSAGE: &str = "To proceed, please log into the Github CLI via gh auth login";
@@ -62,6 +63,10 @@ fn saved_configs(app: &TestApp) -> Vec<&Config> {
 }
 
 /// An app that failed the startup check with `error` and shows the authentication screen.
+fn reason(app: &App) -> Option<AuthReason> {
+    app.auth_screen().map(crate::screens::auth::AuthScreen::reason)
+}
+
 fn on_auth_screen(error: GhError) -> TestApp {
     let mut app = TestApp::on_startup(config_checked(None), FakeGithub::new().with_auth_error(error));
     settle(&mut app);
@@ -114,6 +119,7 @@ fn no_previous_check_is_stale() {
 #[test]
 fn not_logged_in_shows_the_login_message_and_starts_polling() {
     let mut app = on_auth_screen(not_logged_in());
+    assert_eq!(reason(app.app()), Some(AuthReason::NotLoggedIn));
     assert!(app.screen(100, 30).contains(LOGIN_MESSAGE));
     assert!(app.effects().contains(&Effect::StartInterval {
         id: TimerId::AuthPoll,
@@ -158,6 +164,7 @@ fn a_check_in_flight_is_not_doubled() {
 #[test]
 fn gh_missing_shows_the_install_message() {
     let mut app = on_auth_screen(GhError::NotInstalled);
+    assert_eq!(reason(app.app()), Some(AuthReason::NotInstalled));
     let screen = app.screen(160, 48);
     assert!(screen.contains(&GhError::NotInstalled.to_string()), "{screen}");
     assert!(!screen.contains(LOGIN_MESSAGE));
@@ -169,6 +176,7 @@ fn installing_gh_while_waiting_shows_the_login_message() {
     app.gh().set_auth_error(Some(not_logged_in()));
     app.advance(AUTH_POLL_INTERVAL);
     settle(&mut app);
+    assert_eq!(reason(app.app()), Some(AuthReason::NotLoggedIn));
     assert!(app.screen(100, 30).contains(LOGIN_MESSAGE));
 }
 

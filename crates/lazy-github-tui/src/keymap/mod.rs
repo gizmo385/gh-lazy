@@ -13,7 +13,7 @@ mod key;
 #[allow(clippy::module_inception)] // The file layout #73 specifies: ids.rs, key.rs, keymap.rs.
 mod keymap;
 
-pub use active::{ActiveGroup, active_bindings};
+pub use active::{ActiveBinding, active_bindings};
 pub use ids::{BindingDef, BindingId};
 pub use key::{KeyChord, KeySpec};
 pub use keymap::Keymap;

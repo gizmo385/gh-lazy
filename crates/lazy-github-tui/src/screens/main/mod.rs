@@ -158,15 +158,16 @@ const MAIN_VIEW_BINDINGS: &[BindingId] = &[
 /// `SelectionsPane.BINDINGS`.
 const SELECTIONS_BINDINGS: &[BindingId] = &[BindingId::IssueNew, BindingId::PullRequestNew];
 
-/// `LazyGithubMainScreen.BINDINGS`, then Textual's `Screen` built-ins.
+/// Textual's `Screen` built-ins, then `LazyGithubMainScreen.BINDINGS`: Textual merges a subclass's bindings after
+/// the ones it inherits, and the help panel lists them in that order.
 const SCREEN_BINDINGS: &[BindingId] = &[
+    BindingId::TextualFocusNext,
+    BindingId::TextualFocusPrevious,
+    BindingId::TextualCopyText,
     BindingId::NotificationsOpen,
     BindingId::LinkPaste,
     BindingId::LinkFollow,
     BindingId::LinkFollowExternal,
-    BindingId::TextualFocusNext,
-    BindingId::TextualFocusPrevious,
-    BindingId::TextualCopyText,
 ];
 
 /// `SearchableDataTable.BINDINGS`.

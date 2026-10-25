@@ -25,6 +25,8 @@ pub struct BindingDef {
     pub key_display: Option<&'static str>,
     /// Checked before the focused component sees the key (Textual's `priority=True`).
     pub priority: bool,
+    /// Left out of the help panel (Textual's `system=True`).
+    pub system: bool,
 }
 
 impl BindingDef {
@@ -45,6 +47,7 @@ impl BindingDef {
             show: !description.is_empty(),
             key_display: None,
             priority: false,
+            system: false,
         }
     }
 
@@ -65,6 +68,11 @@ impl BindingDef {
 
     const fn priority(mut self) -> Self {
         self.priority = true;
+        self
+    }
+
+    const fn system(mut self) -> Self {
+        self.system = true;
         self
     }
 }
@@ -197,7 +205,7 @@ registry! {
         .tooltip("Quit the app and return to the command prompt.")
         .hidden()
         .priority();
-    TextualHelpQuit("textual.app.help_quit", "ctrl+c", "help_quit", "");
+    TextualHelpQuit("textual.app.help_quit", "ctrl+c", "help_quit", "").system();
     TextualFocusNext("textual.screen.focus_next", "tab", "app.focus_next", "Focus Next").hidden();
     TextualFocusPrevious("textual.screen.focus_previous", "shift+tab", "app.focus_previous", "Focus Previous").hidden();
     // Falls through to `help_quit` while there's no text selection.
@@ -289,6 +297,12 @@ mod tests {
         assert_eq!(BindingId::from_config_id("textual.app.quit"), None);
         assert_eq!(BindingId::from_config_id("app.nope"), None);
         assert_eq!(BindingId::AppQuit.config_id(), Some("app.quit"));
+    }
+
+    #[test]
+    fn only_help_quit_is_system() {
+        let system: Vec<_> = BindingId::ALL.iter().copied().filter(|id| id.def().system).collect();
+        assert_eq!(system, [BindingId::TextualHelpQuit]);
     }
 
     #[test]

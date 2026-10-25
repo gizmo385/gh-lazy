@@ -1,0 +1,52 @@
+---
+source: crates/lazy-github-tui/src/components/help_panel/tests.rs
+expression: "panel(&[\"?\"], 160, 48)"
+---
+▏
+▏         ↑ k Cursor up
+▏         ↓ j Cursor down
+▏           ← Cursor left
+▏           → Cursor right
+▏        home Home
+▏         end End
+▏      pgup K Page up
+▏      pgdn J Page down
+▏     ^pgup ^ Page Left
+▏     ^pgdn $ Page Right
+▏     ⏎ space Select table entry
+▏     ^home g Top
+▏      ^end G Bottom
+▏           l Table scroll right
+▏           h Table scroll left
+▏
+▏           / Search Search in the table
+▏
+▏          ^f Toggle Favorite Mark/unmark a
+▏             repository as favorited, which are
+▏             displayed at the top of the repos
+▏             table
+▏           O Lookup Repository
+▏           u View User Open the GitHub profile
+▏             for the author/owner of the
+▏             highlighted row
+▏
+▏           I New Issue Open a new issue in the
+▏             current repository
+▏           P New PR Open a new pull request in
+▏             the current repository
+▏
+▏           1 Focus repos table Focus the table
+▏             of accessible repositories
+▏           2 Focus PRs table Focus the table of ▄▄
+▏             pull requests for the repo
+▏           3 Focus issues table Focus the table
+▏             of issues for the repo
+▏           4 Focus workflows table Focus and
+▏             swap between the workflow tabs
+▏           5 Focus details tabs Focus and swap
+▏             between the selection detail tabs
+▏             on the right
+▏           6 Focus command log Focus the
+▏             command log, where actions taken
+▏             by LazyGithub are shown
+▏

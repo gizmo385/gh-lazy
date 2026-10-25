@@ -117,6 +117,25 @@ pub enum Owner {
     CommandLog,
 }
 
+impl Owner {
+    /// The heading the help panel draws over this link's keys: Textual's `BINDING_GROUP_TITLE`. No M1 owner has
+    /// one. Textual's `Input` does ("Input"), so the table search box's owner returns it once it lands.
+    pub fn group_title(self) -> Option<&'static str> {
+        match self {
+            Owner::App
+            | Owner::Screen(_)
+            | Owner::MainView
+            | Owner::SelectionsPane
+            | Owner::Section(_)
+            | Owner::Table(_)
+            | Owner::SearchableTable(_)
+            | Owner::DetailsTabs
+            | Owner::DetailsContent
+            | Owner::CommandLog => None,
+        }
+    }
+}
+
 /// The base screens.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ScreenKind {

@@ -30,6 +30,8 @@ pub enum Action {
     Maximize,
     /// Escape while maximized: back to the normal layout, focus unchanged.
     Minimize,
+    /// `app.open_help`: open the keybindings panel, or close it if it's open.
+    ToggleHelp,
     /// Replace the startup or authentication screen with the main screen.
     EnterMain,
 

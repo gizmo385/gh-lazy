@@ -9,10 +9,10 @@ use crate::screens::main::{FocusTarget, SectionId};
 use crate::test_util::TestApp;
 
 /// The footer row as Textual draws it at an unlimited width, trailing space trimmed.
-fn joined(groups: &[ActiveGroup]) -> String {
-    let items: Vec<String> = footer_items(groups)
+fn joined(active: &[ActiveBinding]) -> String {
+    let items: Vec<String> = footer_items(active)
         .iter()
-        .map(|(key, description)| format!(" {key} {description} "))
+        .map(|item| format!(" {} {} ", item.key, item.description))
         .collect();
     items.concat().trim_end().to_owned()
 }
@@ -127,30 +127,58 @@ fn long_footers_are_cut_at_the_edge() {
     assert!(footer_row(&[], 100, 30).ends_with("  P New PR  ^v Paste lin"));
 }
 
-fn quit_group(enabled: bool) -> ActiveGroup {
-    ActiveGroup {
+fn quit_item(enabled: bool) -> FooterItem {
+    FooterItem {
         owner: Owner::App,
         id: BindingId::AppQuit,
-        action: "quit",
+        key: "q".into(),
         description: "Quit",
-        tooltip: "",
-        keys: vec!["q".into()],
-        show: true,
         enabled,
     }
+}
+
+/// Textual groups the footer by action across the whole chain, and only among the shown bindings: the hidden
+/// `common.table.select` doesn't join `workflows.view_run_details`, and the hidden `ctrl+q` doesn't take `q Quit`.
+#[test]
+fn items_group_shown_bindings_by_action() {
+    let chain = [
+        ChainLink {
+            owner: Owner::Table(SectionId::Workflows),
+            bindings: &[BindingId::TableSelect, BindingId::WorkflowsViewRunDetails],
+        },
+        ChainLink {
+            owner: Owner::App,
+            bindings: &[BindingId::TextualQuit, BindingId::AppQuit, BindingId::AppOpenHelp],
+        },
+    ];
+    let active = active_bindings(&chain, &Keymap::defaults(), |_, _| BindingState::Enabled);
+    // `enter` goes to the hidden select, so View Run Details is left with no key.
+    assert_eq!(joined(&active), " q Quit  ? Keybindings");
+    let chain = [
+        ChainLink {
+            owner: Owner::Table(SectionId::Workflows),
+            bindings: &[BindingId::WorkflowsViewRunDetails, BindingId::TableSelect],
+        },
+        ChainLink {
+            owner: Owner::App,
+            bindings: &[BindingId::AppQuit],
+        },
+    ];
+    let active = active_bindings(&chain, &Keymap::defaults(), |_, _| BindingState::Enabled);
+    assert_eq!(joined(&active), " ⏎ View Run Details  q Quit");
 }
 
 #[test]
 fn footer_styles() {
     // ` q ` in the key style, `Quit ` in the description style, the rest of the row on `$footer-background`.
     let theme = Theme::default();
-    let groups = [quit_group(true)];
+    let items = [quit_item(true)];
     let mut terminal = Terminal::new(TestBackend::new(12, 1)).unwrap();
     terminal
         .draw(|frame| {
             frame.render_widget(
                 Footer {
-                    groups: &groups,
+                    items: &items,
                     theme: &theme,
                 },
                 frame.area(),
@@ -166,7 +194,7 @@ fn disabled_items_are_dim() {
     for enabled in [true, false] {
         let mut buf = Buffer::empty(Rect::new(0, 0, 8, 1));
         Footer {
-            groups: &[quit_group(enabled)],
+            items: &[quit_item(enabled)],
             theme: &theme,
         }
         .render(buf.area, &mut buf);
@@ -179,10 +207,10 @@ fn disabled_items_are_dim() {
 #[test]
 fn hits_cover_each_item_and_stop_at_the_edge() {
     let mut app = TestApp::new(Config::default());
-    let groups = app.app_mut().active_bindings();
+    let items = footer_items(&app.app_mut().active_bindings());
     let theme = Theme::default();
     let footer = Footer {
-        groups: &groups,
+        items: &items,
         theme: &theme,
     };
     // " / Search " is 10 wide and " ^f Toggle Favorite " 20, cut to the 25 columns left.

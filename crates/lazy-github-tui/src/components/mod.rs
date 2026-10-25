@@ -3,6 +3,7 @@
 pub mod command_log;
 pub mod footer;
 pub mod hatch;
+pub mod help_panel;
 pub mod info;
 pub mod loading;
 pub mod scrollbar;

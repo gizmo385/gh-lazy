@@ -26,26 +26,26 @@ use crate::components::loading;
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::options::AppOptions;
 
-/// The bindings the table answers while it has focus, in Textual's merged order: `DataTable`'s own (and the two
-/// it inherits from `ScrollableContainer`), then `_VimLikeDataTable`'s `common.table.*`.
+/// The bindings the table answers while it has focus, in Textual's merged order, which the help panel lists them in:
+/// the keys `DataTable` inherits from `ScrollView`, then the keys `DataTable` adds, then `_VimLikeDataTable`'s
+/// `common.table.*`. Textual merges bindings key by key, so a key a subclass rebinds keeps its first place.
 ///
-/// `DataTable`'s `enter` is not here: `_VimLikeDataTable`'s `common.table.select` (`enter,space`) replaces it, because
-/// Textual merges bindings key by key, subclass last. Rebinding `common.table.select` takes `enter` away too, as in
-/// Python.
+/// `DataTable`'s `enter` is not here: `_VimLikeDataTable`'s `common.table.select` (`enter,space`) replaces it, at
+/// `enter`'s place. Rebinding `common.table.select` takes `enter` away too, as in Python.
 pub const TABLE_BINDINGS: &[BindingId] = &[
     BindingId::TextualTableCursorUp,
     BindingId::TextualTableCursorDown,
-    BindingId::TextualTableCursorRight,
     BindingId::TextualTableCursorLeft,
-    BindingId::TextualTablePageUp,
-    BindingId::TextualTablePageDown,
-    BindingId::TextualTableScrollTop,
-    BindingId::TextualTableScrollBottom,
+    BindingId::TextualTableCursorRight,
     BindingId::TextualTableScrollHome,
     BindingId::TextualTableScrollEnd,
+    BindingId::TextualTablePageUp,
+    BindingId::TextualTablePageDown,
     BindingId::TextualTablePageLeft,
     BindingId::TextualTablePageRight,
     BindingId::TableSelect,
+    BindingId::TextualTableScrollTop,
+    BindingId::TextualTableScrollBottom,
     BindingId::TableCursorDown,
     BindingId::TablePageDown,
     BindingId::TableCursorUp,

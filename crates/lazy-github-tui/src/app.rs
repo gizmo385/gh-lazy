@@ -5,6 +5,7 @@ use std::sync::Arc;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
 use ratatui::Frame;
+use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Block;
@@ -13,10 +14,11 @@ use tokio::time::Instant;
 use crate::action::Action;
 use crate::clock::Clock;
 use crate::component::{BindingState, ChainLink, Component, Cx, Outbox, Owner, RenderCx, ScreenKind, Shared};
-use crate::components::footer::{Footer, FooterHit};
+use crate::components::footer::{Footer, FooterHit, footer_items};
+use crate::components::help_panel::{HelpPanel, help_sections, help_width};
 use crate::effect::{Effect, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
-use crate::keymap::{ActiveGroup, BindingId, KeyChord, Keymap, active_bindings};
+use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
 use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
 use crate::screens::main::{FocusTarget, MainScreen};
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
@@ -58,6 +60,9 @@ pub struct App {
     maximized: Option<Maximized>,
     /// The maximize toast shows once per session. Never saved.
     has_shown_maximize_toast: bool,
+    /// Whether the keybindings panel is open. It's drawn only on the main screen, and not while maximized. Never
+    /// saved.
+    help_open: bool,
     /// The footer items drawn in the last frame, for clicks.
     footer_hits: Vec<FooterHit>,
     should_quit: bool,
@@ -74,6 +79,7 @@ impl App {
             toasts: Toasts::default(),
             maximized: None,
             has_shown_maximize_toast: false,
+            help_open: false,
             footer_hits: Vec::new(),
             should_quit: false,
         }
@@ -234,8 +240,8 @@ impl App {
         }
     }
 
-    /// The bindings active for the current focus, for the footer and help panel, read fresh each frame.
-    pub fn active_bindings(&mut self) -> Vec<ActiveGroup> {
+    /// The keys active for the current focus, for the footer and help panel, read fresh each frame.
+    pub fn active_bindings(&mut self) -> Vec<ActiveBinding> {
         let chain = self.binding_chain();
         let mut states = Vec::new();
         for link in &chain {
@@ -259,6 +265,7 @@ impl App {
                 BindingId::AppQuit | BindingId::TextualQuit => Some(Action::Quit),
                 BindingId::TextualHelpQuit => Some(Action::QuitHint),
                 BindingId::AppMaximizeWidget => Some(Action::Maximize),
+                BindingId::AppOpenHelp => Some(Action::ToggleHelp),
                 other => Some(Action::Unimplemented(other)),
             },
             owner => {
@@ -323,6 +330,8 @@ impl App {
             }
             Action::Maximize => self.maximize(out),
             Action::Minimize => self.maximized = None,
+            // Python's `action_open_help`: only this closes the panel, and it doesn't move focus.
+            Action::ToggleHelp => self.help_open = !self.help_open,
             Action::Main(action) => {
                 if let BaseScreen::Main(main) = &mut self.base {
                     main.update(action, &mut Cx::new(&mut self.shared, out));
@@ -387,6 +396,11 @@ impl App {
         self.maximized
     }
 
+    /// Whether the keybindings panel is open, even while a maximized widget hides it.
+    pub fn help_open(&self) -> bool {
+        self.help_open
+    }
+
     /// Hands a response to the screen waiting for it.
     fn route_response(&mut self, id: RequestId, response: GithubResponse, out: &mut Outbox) {
         // Screens and panes that make other requests (M2) claim their responses here by id.
@@ -433,7 +447,7 @@ impl App {
     /// The base screen and (later) modals.
     fn render_screens(&mut self, frame: &mut Frame<'_>) {
         let area = frame.area();
-        let groups = self.active_bindings();
+        let active = self.active_bindings();
         let theme = &self.shared.theme;
         // Textual's `Screen`: `background: $background; color: $foreground`.
         let screen = theme.background();
@@ -464,13 +478,34 @@ impl App {
                 None
             }
             (BaseScreen::Main(main), None) => {
+                // The panel docks on the right over the full height, footer row included; the screen lays out in
+                // what's left.
+                let mut area = area;
+                if self.help_open {
+                    let width = help_width(area.width);
+                    area.width -= width;
+                    let panel = Rect {
+                        x: area.right(),
+                        width,
+                        ..area
+                    };
+                    let sections = help_sections(&active);
+                    frame.render_widget(
+                        HelpPanel {
+                            sections: &sections,
+                            theme,
+                        },
+                        panel,
+                    );
+                }
                 main.render(frame, area, &cx);
                 Some(main.footer_area(area))
             }
         };
         self.footer_hits = match footer_area {
             Some(footer_area) => {
-                let footer = Footer { groups: &groups, theme };
+                let items = footer_items(&active);
+                let footer = Footer { items: &items, theme };
                 let hits = footer.hits(footer_area);
                 frame.render_widget(footer, footer_area);
                 hits
@@ -639,6 +674,100 @@ mod tests {
         app.press(&["ctrl+t"]);
         assert_eq!(app.effects(), [Effect::Quit]);
         assert_eq!(app.app().config(), &config);
+    }
+
+    /// Whether the help panel shows at 160x48: its border runs down column 108. Only the top rows are checked, since
+    /// toasts draw over the bottom right.
+    fn help_shown(app: &mut TestApp) -> bool {
+        app.screen(160, 48)
+            .lines()
+            .take(20)
+            .all(|row| row.chars().nth(108) == Some('▏'))
+    }
+
+    #[test]
+    fn question_mark_toggles_help() {
+        let mut app = test_app();
+        assert!(!help_shown(&mut app));
+        app.press(&["?"]);
+        assert!(app.app().help_open());
+        assert!(help_shown(&mut app));
+        // The main screen lays out in the 108 columns left: the footer stops before the panel.
+        let screen = app.screen(160, 48);
+        let footer = screen.lines().last().unwrap();
+        assert_eq!(footer.find('▏').map(|byte| footer[..byte].chars().count()), Some(108));
+        app.press(&["?"]);
+        assert!(!app.app().help_open());
+        assert!(!help_shown(&mut app));
+        assert_eq!(app.effects(), []);
+    }
+
+    #[test]
+    fn escape_leaves_help_open() {
+        let mut app = test_app();
+        app.press(&["?", "escape"]);
+        assert!(app.app().help_open());
+        assert!(help_shown(&mut app));
+    }
+
+    #[test]
+    fn help_follows_focus() {
+        let mut app = test_app();
+        app.press(&["?"]);
+        assert!(app.screen(160, 48).contains("O Lookup Repository"));
+        app.press(&["2"]);
+        let screen = app.screen(160, 48);
+        assert!(screen.contains("O Lookup Pull Request Lookup a pull"), "{screen}");
+        assert!(!screen.contains("O Lookup Repository"), "{screen}");
+        // Focus didn't move when the panel opened.
+        assert_eq!(
+            app.app().main_screen().unwrap().focus(),
+            FocusTarget::Table(crate::screens::main::SectionId::PullRequests)
+        );
+    }
+
+    #[test]
+    fn an_override_moves_the_toggle() {
+        let mut config = Config::default();
+        config.bindings.overrides.insert("app.open_help".into(), "f1".into());
+        let mut app = TestApp::new(config);
+        app.press(&["?"]);
+        assert!(!app.app().help_open());
+        app.press(&["f1"]);
+        assert!(app.app().help_open());
+        let screen = app.screen(160, 110);
+        assert!(screen.contains("f1 Keybindings Toggle this window"), "{screen}");
+        app.press(&["f1"]);
+        assert!(!app.app().help_open());
+    }
+
+    #[test]
+    fn maximize_hides_help_until_escape() {
+        let mut app = test_app();
+        app.press(&["?", "M"]);
+        assert!(app.app().help_open());
+        assert!(!app.screen(160, 48).contains('▏'));
+        app.press(&["escape"]);
+        assert!(help_shown(&mut app));
+        // `?` still toggles the flag while maximized.
+        app.press(&["M", "?", "escape"]);
+        assert!(!app.app().help_open());
+        assert!(!help_shown(&mut app));
+    }
+
+    #[test]
+    fn clicks_on_the_panel_do_nothing() {
+        let mut app = test_app();
+        app.press(&["?", "2"]);
+        app.screen(160, 48);
+        app.click(140, 47);
+        app.click(140, 5);
+        assert_eq!(
+            app.app().main_screen().unwrap().focus(),
+            FocusTarget::Table(crate::screens::main::SectionId::PullRequests)
+        );
+        assert!(!app.app().should_quit());
+        assert!(app.app().help_open());
     }
 
     #[test]

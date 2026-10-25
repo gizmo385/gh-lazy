@@ -13,6 +13,9 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 [[step]]
 keys = ["M"]
 
+[[step]]
+wait = { gone = "[1] Repositories" }
+
 # The "View Maximized" toast is checked by #79, which renders toasts.
 [[step]]
 capture = "max"
@@ -20,6 +23,17 @@ checks = ["titles", "focus"]
 
 [[step]]
 keys = ["escape"]
+
+# Wait for the whole layout to come back before capturing: a loaded runner can take longer than the default
+# stability wait to redraw after escape.
+[[step]]
+wait = { text = "[1] Repositories" }
+
+[[step]]
+wait = { regex = "╸━+╺" }
+
+[[step]]
+wait = { stable_ms = 1000 }
 
 [[step]]
 capture = "restored"
@@ -33,6 +47,9 @@ sleep_ms = 5500
 keys = ["M"]
 
 [[step]]
+wait = { gone = "[1] Repositories" }
+
+[[step]]
 capture = "max-again"
 checks = ["titles", "focus"]
 
@@ -44,6 +61,9 @@ wait = { text = "[5] Details" }
 
 [[step]]
 keys = ["5", "M"]
+
+[[step]]
+wait = { gone = "[5] Details" }
 
 [[step]]
 capture = "max-details"

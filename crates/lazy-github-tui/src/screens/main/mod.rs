@@ -183,6 +183,10 @@ const LOG_BINDINGS: &[BindingId] = &[
     BindingId::TextualScrollPageRight,
 ];
 
+/// The rows a section's table draws: an empty `DataTable` is its header row. Clicks hit only these rows, and a
+/// maximized table is this tall. #78 replaces it with the table's real natural height, in both places.
+const TABLE_NATURAL_HEIGHT: u16 = 1;
+
 /// The main screen.
 #[derive(Debug)]
 pub struct MainScreen {
@@ -367,8 +371,7 @@ impl MainScreen {
     /// full width, and either filling the height or centered on a hatch.
     pub fn render_maximized(&mut self, frame: &mut Frame<'_>, area: Rect, maximized: FocusTarget, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        // An empty table is its header row; #78 gives tables their real height.
-        let natural_height = maximized.section().map(|_| 1);
+        let natural_height = maximized.section().map(|_| TABLE_NATURAL_HEIGHT);
         let rect = match natural_height {
             Some(height) if height < area.height => Rect {
                 y: area.y + (area.height - height) / 2,
@@ -458,7 +461,13 @@ impl Component for MainScreen {
             if let Some(rect) = rect {
                 let focused = self.focus.section() == Some(id);
                 frame.render_widget(titled_box(title, focused, theme), rect);
-                self.hits.push((interior(rect), FocusTarget::Table(id)));
+                // Only the rows the `DataTable` draws take a click: below them is its unfocusable container.
+                let inner = interior(rect);
+                let table = Rect {
+                    height: inner.height.min(TABLE_NATURAL_HEIGHT),
+                    ..inner
+                };
+                self.hits.push((table, FocusTarget::Table(id)));
             }
         }
 

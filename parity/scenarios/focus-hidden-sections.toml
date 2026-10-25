@@ -17,6 +17,7 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 keys = ["2"]
 
 # The hidden section's bindings reach the footer (#76), so the footer is left out until then.
+# #76 adds contains = ["O Lookup Pull Request"] and the footer check
 [[step]]
 capture = "hidden-prs"
 checks = ["titles", "focus"]

@@ -11,7 +11,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.all-ids` | (all ids) | | Registered with defaults and `bindings.overrides` | keymap | M1 | not started | #73 | Ids below whose feature lands later are still registered in M1 so overrides round-trip. |
 | `keybindings.app-quit` | `app.quit` | `q` | Quit | app | M1 | not started | #73, #106 | Also on the auth screen. |
 | `keybindings.app-command-palette` | `app.command_palette` | `ctrl+p` | Command Pallete | app | M4 | not started | | Description typo is Python's (Py bug B14). Hidden from footer. |
-| `keybindings.app-maximize-widget` | `app.maximize_widget` | `M` | Maximize | app | M1 | not started | #75 | |
+| `keybindings.app-maximize-widget` | `app.maximize_widget` | `M` | Maximize | app | M1 | parity | #75 | |
 | `keybindings.app-open-help` | `app.open_help` | `?` | Keybindings | app | M1 | not started | #76 | Toggles. TERM: shifted character; override may be saved as `question_mark`. |
 | `keybindings.conversation-comment-new` | `conversation.comment.new` | `n` | New Comment | PR Conversation, Issue Comments | M3 | not started | | |
 | `keybindings.conversation-review-reply` | `conversation.review.reply` | `r` | Reply to Review | review block | M3 | not started | | Same key as `conversation.comment.reply`; the innermost focused block wins. |
@@ -62,9 +62,9 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.link-paste` | `link.paste` | `ctrl+v` | Paste link | main screen | M4 | not started | | TERM: many terminals turn `ctrl+v` into a paste; consider also opening the modal on a bracketed-paste event on the main screen. |
 | `keybindings.link-follow` | `link.follow` | `f` | Follow link | main screen | M4 | not started | | |
 | `keybindings.link-follow-external` | `link.follow_external` | `F` | Follow link (browser) | main screen | M4 | not started | | |
-| `keybindings.main-repos-focus` | `main.repos.focus` | `1` | Focus repos table | main view | M1 | not started | #75 | |
-| `keybindings.main-pull-requests-focus` | `main.pull_requests.focus` | `2` | Focus PRs table | main view | M1 | not started | #75 | |
-| `keybindings.main-issues-focus` | `main.issues.focus` | `3` | Focus issues table | main view | M1 | not started | #75 | |
-| `keybindings.main-workflows-focus` | `main.workflows.focus` | `4` | Focus workflows table | main view | M1 | not started | #75 | |
-| `keybindings.main-details-focus` | `main.details.focus` | `5` | Focus details tabs | main view | M1 | not started | #75 | |
-| `keybindings.main-command-log-focus` | `main.command_log.focus` | `6` | Focus command log | main view | M1 | not started | #75 | |
+| `keybindings.main-repos-focus` | `main.repos.focus` | `1` | Focus repos table | main view | M1 | parity | #75 | |
+| `keybindings.main-pull-requests-focus` | `main.pull_requests.focus` | `2` | Focus PRs table | main view | M1 | parity | #75 | |
+| `keybindings.main-issues-focus` | `main.issues.focus` | `3` | Focus issues table | main view | M1 | parity | #75 | |
+| `keybindings.main-workflows-focus` | `main.workflows.focus` | `4` | Focus workflows table | main view | M1 | parity | #75 | |
+| `keybindings.main-details-focus` | `main.details.focus` | `5` | Focus details tabs | main view | M1 | parity | #75 | |
+| `keybindings.main-command-log-focus` | `main.command_log.focus` | `6` | Focus command log | main view | M1 | parity | #75 | |

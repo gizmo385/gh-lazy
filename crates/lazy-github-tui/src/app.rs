@@ -298,6 +298,8 @@ impl App {
                 if matches!(self.base, BaseScreen::Auth(_)) {
                     out.effects.push(Effect::CancelTimer(TimerId::AuthPoll));
                 }
+                // A new main screen starts unmaximized, focused on repos.
+                self.maximized = None;
                 self.base = BaseScreen::Main(Box::new(self.new_main_screen()));
             }
             Action::Auth(action) => {

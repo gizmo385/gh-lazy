@@ -254,10 +254,11 @@ fn tab_walks_the_ring_and_wraps() {
 fn a_click_inside_a_box_focuses_it_and_a_border_click_does_not() {
     let mut app = TestApp::new(with_log());
     app.render(160, 48);
-    // The PR section is rows 20-28 with repos focused; its border is column 0 and row 20.
-    app.click(0, 22).click(5, 20);
+    // The PR section is rows 20-28 with repos focused: its border is column 0 and row 20, and its empty table is
+    // the header on row 21. Below the header is the table's container, which takes no focus.
+    app.click(0, 21).click(5, 20).click(5, 22).click(5, 27);
     assert_eq!(focus(&app), REPOS);
-    app.click(5, 22);
+    app.click(5, 21);
     assert_eq!(focus(&app), PRS);
     // Details: the tab strip is rows 4-5, the content below; the log is rows 39-46.
     app.render(160, 48);

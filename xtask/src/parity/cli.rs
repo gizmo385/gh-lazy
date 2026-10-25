@@ -153,7 +153,7 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     }
 
     let out = if let Some(out) = &args.out {
-        out.clone()
+        absolute(out)?
     } else {
         let latest = repo.join("parity/reports/latest");
         if latest.exists() {
@@ -510,6 +510,12 @@ fn run_app(
     }
 }
 
+/// `out` against the current directory. The apps under test run from their own work dir, so a relative `--out` would
+/// point fake-gh at a log path that doesn't exist from there.
+fn absolute(out: &Path) -> Result<PathBuf> {
+    std::path::absolute(out).with_context(|| format!("resolving {}", out.display()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -582,6 +588,14 @@ mod tests {
         assert_eq!(problems[0].0, Path::new("other/startup.toml"), "{problems:?}");
         assert!(problems[0].1.starts_with("scenario name \"startup\""), "{problems:?}");
         assert!(duplicate_names(&scenarios[1..]).is_empty());
+    }
+
+    #[test]
+    fn makes_out_absolute() {
+        let cwd = std::env::current_dir().unwrap();
+        assert_eq!(absolute(Path::new("reports/x")).unwrap(), cwd.join("reports/x"));
+        let abs = cwd.join("already");
+        assert_eq!(absolute(&abs).unwrap(), abs);
     }
 
     #[test]

@@ -117,3 +117,31 @@ fn a_fixture_miss_fails_the_run() {
     );
     assert_eq!(read_json(&out.join("summary.json"))["scenarios"][0]["result"], "fail");
 }
+
+#[test]
+#[ignore = "needs uv and the Python app"]
+fn a_relative_out_reaches_fake_gh() {
+    let tmp = tempfile::tempdir().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_xtask"))
+        .current_dir(tmp.path())
+        .args([
+            "parity",
+            "startup",
+            "--python-only",
+            "--size",
+            "100x30",
+            "--out",
+            "out",
+            "--no-build",
+        ])
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    let log = std::fs::read_to_string(tmp.path().join("out/startup/100x30/python/fake-gh.log")).unwrap();
+    assert!(log.contains(r#""command":"auth status""#), "{log}");
+}

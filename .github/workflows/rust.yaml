@@ -72,10 +72,13 @@ jobs:
         cache-dependency-glob: uv.lock
         python-version: "3.11"
     - name: Install the Python app
+      id: sync
       run: uv sync --frozen
     - name: Parity scenarios
       run: cargo xtask parity --all --ci --no-sync
+    # Runs even when the parity step fails, so a PR that breaks both reports both.
     - name: Python-backed integration tests
+      if: ${{ !cancelled() && steps.sync.outcome == 'success' }}
       run: cargo test --locked -p fake-gh -p xtask -- --ignored
     - name: Job summary
       if: always()

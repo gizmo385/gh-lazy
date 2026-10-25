@@ -96,6 +96,9 @@ pub fn venv_python(repo: &Path) -> PathBuf {
 pub fn run(args: &ParityArgs) -> std::process::ExitCode {
     let code = run_inner(args).unwrap_or_else(|e| {
         eprintln!("parity: {e}");
+        if args.ci {
+            println!("{}", ci::harness_error(format!("parity: {e}")));
+        }
         EXIT_HARNESS
     });
     std::process::ExitCode::from(code)
@@ -112,24 +115,9 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     };
 
     let files = resolve_scenarios(&repo, args)?;
-    let mut scenarios = Vec::new();
-    let mut invalid = false;
-    for file in &files {
-        match Scenario::load(file, &roots) {
-            Ok(s) => scenarios.push(s),
-            Err(e) => {
-                eprintln!("{e}");
-                invalid = true;
-            }
-        }
-    }
-    for problem in duplicate_names(&scenarios) {
-        eprintln!("{problem}");
-        invalid = true;
-    }
-    if invalid {
+    let Some(scenarios) = load_scenarios(&repo, &files, &roots, args.ci) else {
         return Ok(EXIT_HARNESS);
-    }
+    };
     if args.validate {
         println!("parity: {} scenario file(s) valid", scenarios.len());
         return Ok(EXIT_OK);
@@ -211,6 +199,40 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     Ok(exit_code(&summary))
 }
 
+/// Loads and validates every scenario file, printing each problem (and, with `--ci`, an `::error` for it). `None`
+/// when any file is invalid.
+fn load_scenarios(repo: &Path, files: &[PathBuf], roots: &Roots, ci: bool) -> Option<Vec<Scenario>> {
+    let mut scenarios = Vec::new();
+    let mut invalid = Vec::new();
+    for file in files {
+        match Scenario::load(file, roots) {
+            Ok(s) => scenarios.push(s),
+            Err(e) => {
+                eprintln!("{e}");
+                invalid.push(ci::invalid_scenario(repo, &e));
+            }
+        }
+    }
+    for (path, problem) in duplicate_names(&scenarios) {
+        eprintln!("{}: {problem}", path.display());
+        invalid.push(ci::Annotation {
+            level: ci::Level::Error,
+            file: Some(ci::scenario_file(repo, path)),
+            line: None,
+            message: problem,
+        });
+    }
+    if invalid.is_empty() {
+        return Some(scenarios);
+    }
+    if ci {
+        for annotation in &invalid {
+            println!("{annotation}");
+        }
+    }
+    None
+}
+
 /// Splits the runs into their summaries and, with `--ci`, the annotations for them.
 fn split_runs(
     runs: Vec<ScenarioRun>,
@@ -234,17 +256,19 @@ fn split_runs(
 }
 
 /// Each scenario owns `<out>/<name>/`, so two files with one stem in one run would wipe each other's results (and
-/// race under `--jobs`). Returns one message per clash.
-fn duplicate_names(scenarios: &[Scenario]) -> Vec<String> {
+/// race under `--jobs`). Returns the later file and a message for each clash.
+fn duplicate_names(scenarios: &[Scenario]) -> Vec<(&Path, String)> {
     let mut seen = BTreeMap::new();
     let mut problems = Vec::new();
     for s in scenarios {
         if let Some(first) = seen.insert(s.name.as_str(), &s.path) {
-            problems.push(format!(
-                "{}: scenario name {:?} is also used by {}; scenario names must be unique in a run",
-                s.path.display(),
-                s.name,
-                first.display()
+            problems.push((
+                s.path.as_path(),
+                format!(
+                    "scenario name {:?} is also used by {}; scenario names must be unique in a run",
+                    s.name,
+                    first.display()
+                ),
             ));
         }
     }
@@ -555,10 +579,8 @@ mod tests {
         ];
         let problems = duplicate_names(&scenarios);
         assert_eq!(problems.len(), 1, "{problems:?}");
-        assert!(
-            problems[0].starts_with("other/startup.toml: scenario name \"startup\""),
-            "{problems:?}"
-        );
+        assert_eq!(problems[0].0, Path::new("other/startup.toml"), "{problems:?}");
+        assert!(problems[0].1.starts_with("scenario name \"startup\""), "{problems:?}");
         assert!(duplicate_names(&scenarios[1..]).is_empty());
     }
 

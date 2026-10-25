@@ -950,10 +950,12 @@ report.
 **Annotations.** With `--ci`, the last lines of the output are workflow commands that GitHub shows on the run and
 on the scenario file in the PR:
 
-- `::error file=parity/scenarios/<name>.toml::<scenario>/<size>/<capture>: <check> <box>: <message>` for each
-  mismatch that counts against the gate;
+- `::error file=parity/scenarios/<name>.toml::<scenario>/<size>/<capture>: <source> <check> <box>: <message>` for
+  each mismatch that counts against the gate, where `<source>` is `<app> expect` for an `[expect]` mismatch on that
+  app's screen or `cross` for a Python-vs-Rust one (the same wording as the console lines);
 - `::error` for each app run that fails the gate (`<scenario>/<size>/<app>: timeout at step 0 (15.2s)`) and for a
-  harness error;
+  harness error: on the scenario file (and line) for an invalid scenario, and with no file for one that stops the
+  whole run;
 - one `::warning` per `rust-not-ready` scenario, listing the Rust failures and the number of mismatches, and one per
   run that passed only on retry.
 
@@ -985,6 +987,7 @@ report/index.html`.
   `xtask/src/parity/snapshots/`, and `xtask/tests/report.rs` writes a whole report from synthetic dumps. Review
   snapshot changes with `cargo insta review`, or rerun with `INSTA_UPDATE=always` and read the diff.
 - `xtask/tests/python_app.rs` runs `startup` against the Python app and checks that a fixture miss fails the run. It
-  needs uv, so it's `#[ignore]`d (the CI `parity` job runs it): run it with `cargo build -p fake-gh && cargo test -p xtask --test python_app --
-  --ignored`. `xtask/tests/structural_check.rs` (also ignored) rebinds `main.repos.focus` to `9` in a copy of
-  `startup` and checks that `[expect]` fails with a `titles` mismatch naming `[9] Repositories` and exit code 1.
+  needs uv, so it's `#[ignore]`d (the CI `parity` job runs it): run it with
+  `cargo build -p fake-gh && cargo test -p xtask --test python_app -- --ignored`. `xtask/tests/structural_check.rs`
+  (also ignored) rebinds `main.repos.focus` to `9` in a copy of `startup` and checks that `[expect]` fails with a
+  `titles` mismatch naming `[9] Repositories` and exit code 1.

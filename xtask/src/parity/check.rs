@@ -549,7 +549,7 @@ pub fn check_size(
                     against.push(app);
                 }
                 lines.extend(found.iter().map(|m| format!("{app} expect {}", m.describe())));
-                findings.extend(found.iter().map(|m| Finding::new(&size, name, app, m)));
+                findings.extend(found.iter().map(|m| Finding::expect(&size, name, app, m)));
                 expect.extend(found);
             }
         }
@@ -568,7 +568,7 @@ pub fn check_size(
             against.push(App::Rust);
         }
         lines.extend(cross.iter().map(|m| format!("cross {}", m.describe())));
-        findings.extend(cross.iter().map(|m| Finding::new(&size, name, App::Rust, m)));
+        findings.extend(cross.iter().map(|m| Finding::cross(&size, name, m)));
 
         let checked = cross_ran || (expectation.is_some() && !structures.is_empty());
         let mismatches = expect.len() + cross.len();

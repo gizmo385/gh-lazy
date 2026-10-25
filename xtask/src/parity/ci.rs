@@ -1,6 +1,7 @@
 //! `--ci` output: GitHub Actions workflow commands (`::error` and `::warning`) for the results of a run.
 //!
-//! Errors mark what fails the job: every mismatch that counts against the gate, and every app run that fails it.
+//! Errors mark what fails the job: every mismatch that counts against the gate, every app run that fails it, and any
+//! harness error (an invalid scenario file included).
 //! Warnings mark what doesn't: a `rust-not-ready` scenario (one annotation per scenario) and a run that only passed on
 //! retry.
 
@@ -8,25 +9,60 @@ use std::fmt;
 use std::path::Path;
 
 use super::check::Mismatch;
-use super::scenario::App;
+use super::scenario::{App, ScenarioError};
 use super::summary::{ScenarioResult, ScenarioSummary};
+
+/// Which check found a mismatch.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Source {
+    /// The capture's `[expect]` table, checked against one app's screen.
+    Expect,
+    /// The Python-vs-Rust comparison.
+    Cross,
+}
 
 /// A structural mismatch from one capture at one size, and the app it counts against.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Finding {
     pub size: String,
     pub capture: String,
+    pub source: Source,
     pub against: App,
     pub mismatch: Mismatch,
 }
 
 impl Finding {
-    pub fn new(size: &str, capture: &str, against: App, mismatch: &Mismatch) -> Self {
+    /// A mismatch between `app`'s screen and the capture's `[expect]` table.
+    pub fn expect(size: &str, capture: &str, app: App, mismatch: &Mismatch) -> Self {
+        Self::new(size, capture, Source::Expect, app, mismatch)
+    }
+
+    /// A cross-app mismatch, which always counts against Rust: Python is the reference.
+    pub fn cross(size: &str, capture: &str, mismatch: &Mismatch) -> Self {
+        Self::new(size, capture, Source::Cross, App::Rust, mismatch)
+    }
+
+    fn new(size: &str, capture: &str, source: Source, against: App, mismatch: &Mismatch) -> Self {
         Self {
             size: size.to_owned(),
             capture: capture.to_owned(),
+            source,
             against,
             mismatch: mismatch.clone(),
+        }
+    }
+
+    /// The check that failed, worded like `check_size`'s console lines: `python expect titles [5] Details` or
+    /// `cross titles [5] Details`.
+    fn target(&self) -> String {
+        let m = &self.mismatch;
+        let source = match self.source {
+            Source::Expect => format!("{} expect", self.against),
+            Source::Cross => "cross".to_owned(),
+        };
+        match &m.in_box {
+            Some(b) => format!("{source} {} {b}", m.check.as_str()),
+            None => format!("{source} {}", m.check.as_str()),
         }
     }
 }
@@ -37,12 +73,14 @@ pub enum Level {
     Warning,
 }
 
-/// One workflow command, attached to a scenario file.
+/// One workflow command, attached to a scenario file when there is one.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Annotation {
     pub level: Level,
     /// Repo-relative, with `/` separators, so GitHub can attach it to the file in the PR.
-    pub file: String,
+    pub file: Option<String>,
+    /// 1-based, within `file`.
+    pub line: Option<usize>,
     pub message: String,
 }
 
@@ -52,12 +90,34 @@ impl fmt::Display for Annotation {
             Level::Error => "error",
             Level::Warning => "warning",
         };
-        write!(
-            f,
-            "::{level} file={}::{}",
-            escape_property(&self.file),
-            escape_data(&self.message)
-        )
+        write!(f, "::{level}")?;
+        if let Some(file) = &self.file {
+            write!(f, " file={}", escape_property(file))?;
+            if let Some(line) = self.line {
+                write!(f, ",line={line}")?;
+            }
+        }
+        write!(f, "::{}", escape_data(&self.message))
+    }
+}
+
+/// The error for a harness failure that stops the whole run, which no scenario file is to blame for.
+pub fn harness_error(message: String) -> Annotation {
+    Annotation {
+        level: Level::Error,
+        file: None,
+        line: None,
+        message,
+    }
+}
+
+/// The error for a scenario file that doesn't validate, on the line at fault when there is one.
+pub fn invalid_scenario(repo: &Path, error: &ScenarioError) -> Annotation {
+    Annotation {
+        level: Level::Error,
+        file: Some(scenario_file(repo, &error.file)),
+        line: (error.line > 0).then_some(error.line),
+        message: error.message.clone(),
     }
 }
 
@@ -91,7 +151,8 @@ pub fn annotations(file: &str, summary: &ScenarioSummary, findings: &[Finding]) 
     let name = &summary.name;
     let at = |level, message| Annotation {
         level,
-        file: file.to_owned(),
+        file: Some(file.to_owned()),
+        line: None,
         message,
     };
     let mut out = Vec::new();
@@ -118,14 +179,15 @@ pub fn annotations(file: &str, summary: &ScenarioSummary, findings: &[Finding]) 
     let mut ungated_mismatches = 0;
     for f in findings {
         if gates(summary.gate, f.against) {
-            let m = &f.mismatch;
-            let target = match &m.in_box {
-                Some(b) => format!("{} {b}", m.check.as_str()),
-                None => m.check.as_str().to_owned(),
-            };
             out.push(at(
                 Level::Error,
-                format!("{name}/{}/{}: {target}: {}", f.size, f.capture, m.message),
+                format!(
+                    "{name}/{}/{}: {}: {}",
+                    f.size,
+                    f.capture,
+                    f.target(),
+                    f.mismatch.message
+                ),
             ));
         } else {
             ungated_mismatches += 1;
@@ -184,20 +246,19 @@ mod tests {
         }
     }
 
-    fn finding(against: App) -> Finding {
-        Finding {
-            size: "160x48".into(),
-            capture: "main".into(),
-            against,
-            mismatch: Mismatch {
-                check: Kind::Titles,
-                in_box: Some("[5] Details".into()),
-                python: Value::Null,
-                rust: Value::Null,
-                expected: None,
-                message: "expected \"Overview\", got \"Details\"".into(),
-            },
+    fn mismatch() -> Mismatch {
+        Mismatch {
+            check: Kind::Titles,
+            in_box: Some("[5] Details".into()),
+            python: Value::Null,
+            rust: Value::Null,
+            expected: None,
+            message: "expected \"Overview\", got \"Details\"".into(),
         }
+    }
+
+    fn finding(against: App) -> Finding {
+        Finding::expect("160x48", "main", against, &mismatch())
     }
 
     const FILE: &str = "parity/scenarios/startup.toml";
@@ -212,9 +273,64 @@ mod tests {
         assert_eq!(
             lines(&annotations(FILE, &s, &[finding(App::Rust)])),
             [
-                "::error file=parity/scenarios/startup.toml::startup/160x48/main: titles [5] Details: expected \
-                 \"Overview\", got \"Details\""
+                "::error file=parity/scenarios/startup.toml::startup/160x48/main: rust expect titles [5] Details: \
+                 expected \"Overview\", got \"Details\""
             ]
+        );
+    }
+
+    #[test]
+    fn mismatch_errors_name_the_app_and_the_check() {
+        let s = summary(true, RunState::Ok, ScenarioResult::Fail);
+        let mut whole_screen = Finding::cross("160x48", "main", &mismatch());
+        whole_screen.mismatch.in_box = None;
+        let findings = [
+            finding(App::Python),
+            Finding::cross("160x48", "main", &mismatch()),
+            whole_screen,
+        ];
+        let messages: Vec<_> = annotations(FILE, &s, &findings)
+            .into_iter()
+            .map(|a| a.message)
+            .collect();
+        assert_eq!(
+            messages,
+            [
+                "startup/160x48/main: python expect titles [5] Details: expected \"Overview\", got \"Details\"",
+                "startup/160x48/main: cross titles [5] Details: expected \"Overview\", got \"Details\"",
+                "startup/160x48/main: cross titles: expected \"Overview\", got \"Details\"",
+            ]
+        );
+    }
+
+    #[test]
+    fn cross_mismatches_count_against_rust() {
+        let f = Finding::cross("160x48", "main", &mismatch());
+        assert_eq!((f.source, f.against), (Source::Cross, App::Rust));
+        let s = summary(false, RunState::Ok, ScenarioResult::RustNotReady);
+        let out = annotations(FILE, &s, &[f]);
+        assert!(out.iter().all(|a| a.level == Level::Warning), "{out:?}");
+    }
+
+    #[test]
+    fn harness_errors_are_errors() {
+        assert_eq!(
+            harness_error("parity: no scenario \"nope\"".into()).to_string(),
+            "::error::parity: no scenario \"nope\""
+        );
+        let repo = Path::new("/repo");
+        let bad = |line| ScenarioError {
+            file: repo.join("parity").join("scenarios").join("startup.toml"),
+            line,
+            message: "unknown field `stpes`".into(),
+        };
+        assert_eq!(
+            invalid_scenario(repo, &bad(3)).to_string(),
+            "::error file=parity/scenarios/startup.toml,line=3::unknown field `stpes`"
+        );
+        assert_eq!(
+            invalid_scenario(repo, &bad(0)).to_string(),
+            "::error file=parity/scenarios/startup.toml::unknown field `stpes`"
         );
     }
 
@@ -263,7 +379,8 @@ mod tests {
     fn commands_are_escaped() {
         let a = Annotation {
             level: Level::Error,
-            file: "a:b,c.toml".into(),
+            file: Some("a:b,c.toml".into()),
+            line: None,
             message: "100%\nnext".into(),
         };
         assert_eq!(a.to_string(), "::error file=a%3Ab%2Cc.toml::100%25%0Anext");

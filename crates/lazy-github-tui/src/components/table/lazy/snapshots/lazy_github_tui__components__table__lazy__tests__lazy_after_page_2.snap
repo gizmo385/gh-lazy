@@ -1,0 +1,25 @@
+---
+source: crates/lazy-github-tui/src/components/table/lazy/tests.rs
+expression: "draw(&mut table, Rect::new(0, 0, 30, 10))"
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 30, height: 10 },
+    content: [
+        " #  Title                     ",
+        " 8  Pull request 8            ",
+        " 7  Pull request 7            ",
+        " 6  Pull request 6            ",
+        " 5  Pull request 5            ",
+        " 4  Pull request 4            ",
+        " 3  Pull request 3            ",
+        " 2  Pull request 2            ",
+        " 1  Pull request 1            ",
+        "                              ",
+    ],
+    styles: [
+        x: 0, y: 0, fg: Rgb(224, 224, 224), bg: Rgb(45, 55, 64), underline: Reset, modifier: BOLD,
+        x: 0, y: 1, fg: Rgb(221, 237, 249), bg: Rgb(1, 120, 212), underline: Reset, modifier: BOLD,
+        x: 0, y: 2, fg: Rgb(224, 224, 224), bg: Rgb(39, 39, 39), underline: Reset, modifier: NONE,
+        x: 0, y: 9, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+    ]
+}

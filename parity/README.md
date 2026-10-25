@@ -262,6 +262,10 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
 - `repos-60/`: 60 public repos owned by `parity-bot` and `parity-org`, with names long enough that the repos table
   overflows its pane, over two `GET /user/repos` pages (50, then 10). Listed before `base`, for the
   `table-navigation` scenario. Hand-written: only the fields the apps read are kept.
+- `prs-70/`: the repo `parity-bot/lazy-fixture`, added to base's `GET /user/repos` page, with 70 pull requests over
+  `GET /repos/parity-bot/lazy-fixture/issues` pages of 30 (`state=all`, as `list_issues` sends them: 30, 30, 10, then
+  an empty page 4), plus its README and empty workflows and runs. Listed before `base`, for the `table-lazy-load`
+  scenario. Hand-written.
 
 ## Recording fixtures
 

@@ -43,10 +43,12 @@ pub struct App {
 }
 
 impl App {
-    /// An app on the main screen. The clock is the only source of time for the app and its components.
-    pub fn new(config: Config, keymap: Keymap, theme: Theme, clock: impl Clock + 'static) -> Self {
+    /// An app on the main screen, with the keymap built from `config`'s `bindings.overrides`. The clock is the only
+    /// source of time for the app and its components.
+    pub fn new(config: Config, theme: Theme, clock: impl Clock + 'static) -> Self {
+        let keymap = Keymap::new(&config.bindings.overrides);
         Self {
-            base: BaseScreen::Main(MainScreen),
+            base: BaseScreen::Main(MainScreen::new(&config.appearance, &keymap)),
             shared: Shared::new(config, keymap, theme, Arc::new(clock)),
             toasts: Vec::new(),
             command_log: VecDeque::new(),
@@ -96,17 +98,19 @@ impl App {
         let chord = KeyChord::from_event(&key)?;
         // 2. Escape minimizes a maximized widget before any binding: arrives with maximize (#75).
         let chain = self.binding_chain();
-        // 3. Priority bindings, from the app link inward.
+        // 3. Priority bindings, from the app link inward. The clash rule sees the whole link, as in Textual.
         for link in chain.iter().rev() {
-            let priority: Vec<BindingId> = link.bindings.iter().copied().filter(|id| id.is_priority()).collect();
-            if let Some(action) = self.match_link(link.owner, &priority, &chord) {
+            let matches: Vec<BindingId> = self.shared.keymap.priority_matches_in(link.bindings, &chord).collect();
+            if let Some(action) = self.route_first(link.owner, matches) {
                 return Some(action);
             }
         }
         // 4. A focused component that consumes the key: none can have focus yet (#75).
-        // 5. The chain, innermost first. The first link whose component accepts the binding wins.
+        // 5. The chain, innermost first. Within a link, each binding the key fires is tried in turn; the first link
+        //    whose component accepts one wins.
         for link in &chain {
-            if let Some(action) = self.match_link(link.owner, link.bindings, &chord) {
+            let matches: Vec<BindingId> = self.shared.keymap.matches_in(link.bindings, &chord).collect();
+            if let Some(action) = self.route_first(link.owner, matches) {
                 return Some(action);
             }
         }
@@ -114,9 +118,9 @@ impl App {
         None
     }
 
-    fn match_link(&mut self, owner: Owner, ids: &[BindingId], chord: &KeyChord) -> Option<Action> {
-        let id = self.shared.keymap.match_in(ids, chord)?;
-        self.route_binding(owner, id)
+    /// Tries each binding a key fired in one link, in order, until one applies (Textual's `_check_bindings`).
+    fn route_first(&mut self, owner: Owner, matches: Vec<BindingId>) -> Option<Action> {
+        matches.into_iter().find_map(|id| self.route_binding(owner, id))
     }
 
     /// The binding chain for the current focus, innermost first. The app link comes last.
@@ -143,6 +147,7 @@ impl App {
             Owner::App => match id {
                 BindingId::AppQuit | BindingId::TextualQuit => Some(Action::Quit),
                 BindingId::TextualHelpQuit => Some(Action::QuitHint),
+                other => Some(Action::Unimplemented(other)),
             },
             Owner::Screen(ScreenKind::Main) => {
                 let mut scratch = Outbox::default();
@@ -217,8 +222,14 @@ impl App {
     pub fn render(&mut self, frame: &mut Frame<'_>) {
         let area = frame.area();
         let theme = &self.shared.theme;
+        // Textual's `Screen`: `background: $background; color: $foreground`.
+        let screen = theme.background();
         frame.render_widget(
-            Block::new().style(Style::new().fg(theme.foreground).bg(theme.background)),
+            Block::new().style(
+                Style::new()
+                    .fg(theme.color(theme.palette.foreground, screen))
+                    .bg(screen.into()),
+            ),
             area,
         );
         let cx = RenderCx {
@@ -345,13 +356,20 @@ mod tests {
     }
 
     #[test]
+    fn the_keymap_comes_from_the_config_overrides() {
+        let mut config = Config::default();
+        config.bindings.overrides.insert("app.quit".into(), "x, ctrl+t".into());
+        let mut app = TestApp::new(config.clone());
+        app.press(&["q"]);
+        assert_eq!(app.effects(), []);
+        app.press(&["ctrl+t"]);
+        assert_eq!(app.effects(), [Effect::Quit]);
+        assert_eq!(app.app().config(), &config);
+    }
+
+    #[test]
     fn ctrl_c_explains_how_to_quit() {
-        let mut app = App::new(
-            Config::default(),
-            Keymap::defaults(),
-            Theme::default(),
-            FakeClock::new(),
-        );
+        let mut app = App::new(Config::default(), Theme::default(), FakeClock::new());
         assert!(matches!(
             app.action_for(Event::Key(key_event("ctrl+c"))),
             Some(Action::QuitHint)
@@ -488,11 +506,6 @@ mod tests {
         assert_eq!(log.len(), COMMAND_LOG_LIMIT);
         assert_eq!(log.front(), Some(&line(1)));
         assert_eq!(log.back(), Some(&line(COMMAND_LOG_LIMIT)));
-    }
-
-    #[test]
-    fn placeholder_main_160x48() {
-        insta::assert_snapshot!(test_app().screen(160, 48));
     }
 
     #[test]

@@ -1,0 +1,24 @@
+version = 1
+description = "Main screen layout with the default config: status box, four sections, details with the Introduction tab"
+gate = true
+parity_rows = ["Main layout (status bar, selections pane 40%, details, command log, footer)"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+# Table headers and rows arrive with #78 and M2, the footer with #76.
+[[step]]
+capture = "start"
+checks = ["titles", "tabs", "focus"]
+
+# Box titles in pre-order by (row, col), as the structural check lists them: Details shares the Repositories row.
+[expect.start]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
+focused = ["[1] Repositories"]
+tabs = { box = "Details", names = ["Introduction"], active = "Introduction" }
+contains = ["No repository selected"]
+not_contains = ["Traceback"]

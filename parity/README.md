@@ -246,3 +246,8 @@ committed set (`crates/fake-gh/tests/lint_fixtures.rs`).
 - `GET /notifications` with `all=false`, `page=1`, `per_page=50`: no notifications.
 
 User-scoped endpoints stay hand-written so recordings never leak a real account's private data.
+
+## Overlays
+
+- `repos-two-pages/`: base's three repos split over two `GET /user/repos` pages (two, then one) linked by
+  `Link: rel="next"`. Listed before `base`, it exercises pagination; `crates/fake-gh/tests/rust_client.rs` uses it.

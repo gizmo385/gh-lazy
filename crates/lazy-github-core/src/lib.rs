@@ -3,3 +3,4 @@
 //! This crate has no UI dependencies, so all GitHub and config logic is testable without a terminal.
 
 pub mod config;
+pub mod logging;

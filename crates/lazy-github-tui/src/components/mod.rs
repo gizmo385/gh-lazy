@@ -2,3 +2,4 @@
 
 pub mod info;
 pub mod tabs;
+pub mod toasts;

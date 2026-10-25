@@ -20,7 +20,7 @@ use crate::event::Event;
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::screens::main::MainScreen;
 use crate::theme::Theme;
-use crate::toast::{Severity, Toast};
+use crate::toast::{Severity, Toast, Toasts};
 
 /// How many command-log lines `App` keeps for the command log pane (#80).
 pub const COMMAND_LOG_LIMIT: usize = 1000;
@@ -37,7 +37,7 @@ enum BaseScreen {
 pub struct App {
     base: BaseScreen,
     shared: Shared,
-    toasts: Vec<Toast>,
+    toasts: Toasts,
     command_log: VecDeque<LogLine>,
     should_quit: bool,
 }
@@ -50,7 +50,7 @@ impl App {
         Self {
             base: BaseScreen::Main(MainScreen::new(&config.appearance, &keymap)),
             shared: Shared::new(config, keymap, theme, Arc::new(clock)),
-            toasts: Vec::new(),
+            toasts: Toasts::default(),
             command_log: VecDeque::new(),
             should_quit: false,
         }
@@ -63,6 +63,14 @@ impl App {
 
     /// Maps `event` to actions and applies them.
     pub fn handle_event(&mut self, event: Event) -> Vec<Effect> {
+        // Toasts first: one past its timeout is gone before anything sees the event, and a click on a live one is
+        // consumed. A deadline needs nothing else.
+        self.toasts.expire(self.shared.clock.now());
+        if let Event::Mouse(mouse) = &event
+            && self.toasts.handle_mouse(mouse)
+        {
+            return Vec::new();
+        }
         match self.action_for(event) {
             Some(action) => self.update(action),
             None => Vec::new(),
@@ -180,6 +188,8 @@ impl App {
         while let Some(action) = out.actions.pop_front() {
             self.apply(action, out);
         }
+        // Toasts raised by this action time out from now.
+        self.toasts.stamp(self.shared.clock.now());
         // One save per processed action, like Python's `Config.to_edit()`.
         if self.shared.take_config_dirty() {
             out.effects
@@ -220,6 +230,13 @@ impl App {
 
     /// Draws the whole UI: the base screen, then (later) modals and toasts.
     pub fn render(&mut self, frame: &mut Frame<'_>) {
+        self.render_screens(frame);
+        self.toasts.expire(self.shared.clock.now());
+        self.toasts.render(frame, frame.area(), &self.shared.theme);
+    }
+
+    /// The base screen and (later) modals.
+    fn render_screens(&mut self, frame: &mut Frame<'_>) {
         let area = frame.area();
         let theme = &self.shared.theme;
         // Textual's `Screen`: `background: $background; color: $foreground`.
@@ -252,7 +269,7 @@ impl App {
     /// The next time something on screen changes by itself (toast expiry, a spinner frame), or `None` when nothing
     /// animates. Toasts (#79) and spinners (#78) feed it.
     pub fn next_deadline(&self) -> Option<Instant> {
-        None
+        self.toasts.next_deadline()
     }
 
     /// The most recent command-log lines, oldest first, at most [`COMMAND_LOG_LIMIT`].
@@ -260,9 +277,9 @@ impl App {
         &self.command_log
     }
 
-    /// Every toast raised so far, oldest first. #79 renders and expires them.
-    pub fn toasts(&self) -> &[Toast] {
-        &self.toasts
+    /// The toasts up now, oldest first.
+    pub fn toasts(&self) -> Vec<Toast> {
+        self.toasts.iter().cloned().collect()
     }
 
     /// The config as the app currently holds it.
@@ -387,6 +404,7 @@ mod tests {
                 Span::styled("ctrl+q", Style::new().add_modifier(Modifier::BOLD)),
                 Span::raw(" to quit the app"),
             ]),
+            timeout: crate::toast::DEFAULT_TIMEOUT,
         };
         assert_eq!(test.app().toasts(), [expected]);
     }

@@ -1,0 +1,2 @@
+# Matches the Python line length in pyproject.toml.
+max_width = 120

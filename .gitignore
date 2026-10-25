@@ -166,3 +166,7 @@ result
 .claude/*
 !.claude/agents/
 AGENTS.md
+
+# Rust
+/target/
+parity/reports/

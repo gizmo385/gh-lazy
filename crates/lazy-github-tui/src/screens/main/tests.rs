@@ -279,15 +279,15 @@ fn a_click_inside_a_box_focuses_it_and_a_border_click_does_not() {
 fn maximize_toast() -> Toast {
     use ratatui::style::{Modifier, Style};
     use ratatui::text::{Line, Span};
-    Toast {
-        severity: Severity::Information,
-        title: Some("View Maximized".into()),
-        message: Line::from(vec![
+    Toast::new(
+        Severity::Information,
+        Line::from(vec![
             Span::raw("Current view maximized. Press "),
             Span::styled("escape", Style::new().add_modifier(Modifier::BOLD)),
             Span::raw(" to return."),
         ]),
-    }
+    )
+    .with_title("View Maximized")
 }
 
 #[test]
@@ -295,7 +295,7 @@ fn maximize_toasts_once_and_escape_restores() {
     let mut app = TestApp::new(Config::default());
     app.press(&["M"]);
     assert_eq!(app.app().maximized(), Some(Maximized { target: REPOS }));
-    assert_eq!(app.app().toasts(), [maximize_toast()]);
+    assert!(app.app().toasts().iter().eq([&maximize_toast()]));
     // M while maximized is a no-op.
     app.press(&["M"]);
     assert_eq!(app.app().maximized(), Some(Maximized { target: REPOS }));
@@ -459,6 +459,8 @@ fn focus_command_log_160x48() {
 fn maximized_empty_repos_100x30() {
     let mut app = TestApp::new(Config::default());
     app.press(&["M"]);
+    // Past the "View Maximized" toast's timeout, so only the layout is on screen; `toasts.rs` covers the toast.
+    app.advance(std::time::Duration::from_secs(5));
     let screen = app.screen(100, 30);
     // The empty table is its header row, centered: row floor((30 - 1) / 2) = 14.
     let rows: Vec<&str> = screen.lines().collect();
@@ -475,6 +477,7 @@ fn maximized_empty_repos_100x30() {
 fn maximized_details_160x48() {
     let mut app = TestApp::new(Config::default());
     app.press(&["5", "M"]);
+    app.advance(std::time::Duration::from_secs(5));
     insta::assert_snapshot!(app.screen(160, 48));
 }
 

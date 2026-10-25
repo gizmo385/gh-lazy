@@ -10,6 +10,15 @@ publish.workspace = true
 
 [dependencies]
 clap = { workspace = true }
+# The fixture format, key normalization and lint live in fake-gh; the recorder reuses them.
+fake-gh = { workspace = true }
+form_urlencoded = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+# `preserve_order` keeps recorded bodies' key order.
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror = { workspace = true }
+toml = { workspace = true }
 
 [lints]
 workspace = true

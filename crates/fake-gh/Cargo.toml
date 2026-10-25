@@ -25,6 +25,7 @@ serde_json = { workspace = true, features = ["preserve_order"] }
 thiserror = { workspace = true }
 
 [dev-dependencies]
+assert_cmd = { workspace = true }
 insta = { workspace = true }
 
 [lints]

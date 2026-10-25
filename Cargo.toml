@@ -18,6 +18,7 @@ publish = false
 # Internal crates
 lazy-github-core = { path = "crates/lazy-github-core" }
 lazy-github-tui = { path = "crates/lazy-github-tui" }
+fake-gh = { path = "crates/fake-gh" }
 
 # TUI
 ratatui = "0.30"
@@ -35,6 +36,10 @@ serde_json = "1"
 clap = { version = "4.6", features = ["derive"] }
 thiserror = "2"
 form_urlencoded = "1"
+# Fixture recipes for `cargo xtask record-fixtures`.
+toml = "1"
+# Secret and email patterns in the fixture scrubber.
+regex = "1"
 # Canonical HTTP reason phrases for fake-gh's `-i` status line.
 http = "1"
 color-eyre = "0.6"

@@ -1,6 +1,6 @@
 # LazyGithub Rust Rewrite Plan
 
-Status: draft for review · Owner: @gizmo385 · Trunk branch: `rust-main`
+Status: in review · Owner: @gizmo385 · Trunk branch: `rust-main`
 
 ## 1. Goals and non-goals
 
@@ -14,7 +14,7 @@ Status: draft for review · Owner: @gizmo385 · Trunk branch: `rust-main`
    we keep it building in CI and fix cheap breakages, but it does not block milestones.
 4. Use the GitHub CLI (`gh`) for every GitHub interaction, including authentication.
 
-**Non-goals (deliberate scope changes, each to be confirmed during design)**
+**Non-goals (deliberate scope changes)**
 
 - The raw-HTTPS backend and the OAuth device-flow login (`lib/github/auth.py`, `backends/hishel.py`) are dropped.
   `gh auth login` owns authentication; the first-start screen becomes a "gh missing / not logged in" check.
@@ -189,10 +189,16 @@ Summary of the lifecycle: `status: needs-triage` → triage agent → `status: n
 spec → `status: ready` → implementer opens a PR into `rust-main` → `status: in-review` → code reviewer and parity
 reviewer → merged → parity matrix updated.
 
-## 10. Open questions for Chris
+## 10. Decisions
 
-1. Confirm dropping the raw-HTTPS backend and device-flow auth in favor of `gh auth` only.
-2. Trunk name `rust-main` and squash merges: OK?
-3. Should the parity CI gate run on every PR into `rust-main`, or only nightly plus on demand (it needs Python + uv in CI)?
-4. Shall we file the M0 and M1 issues now from §8, or do you want to review this plan first?
-5. Windows: keep as "allowed to fail" until M5, or drop from CI entirely until then?
+Recorded 2026-10-25 by Chris:
+
+1. The gh CLI is the only backend. The raw-HTTPS backend and device-flow auth are dropped.
+2. The parity strategy in §6 is the starting point; it can be adjusted as we learn.
+3. Branch naming is `rust-main` for the trunk and `rust/<issue>-<slug>` for work branches, as in §2.
+
+## 11. Open questions for Chris
+
+1. Should the parity CI gate run on every PR into `rust-main`, or only nightly plus on demand (it needs Python + uv in CI)?
+2. Shall we file the M0 and M1 issues now from §8?
+3. Windows: keep as "allowed to fail" until M5, or drop from CI entirely until then?

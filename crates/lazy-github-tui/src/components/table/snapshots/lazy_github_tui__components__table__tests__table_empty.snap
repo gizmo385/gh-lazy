@@ -1,0 +1,23 @@
+---
+source: crates/lazy-github-tui/src/components/table/tests.rs
+expression: "snap(&mut table, true)"
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 40, height: 8 },
+    content: [
+        " ★  Owner  Title  #                     ",
+        "                                        ",
+        "                                        ",
+        "                                        ",
+        "                                        ",
+        "                                        ",
+        "                                        ",
+        "                                        ",
+    ],
+    styles: [
+        x: 0, y: 0, fg: Rgb(224, 224, 224), bg: Rgb(45, 55, 64), underline: Reset, modifier: BOLD,
+        x: 1, y: 0, fg: Rgb(152, 224, 36), bg: Rgb(45, 55, 64), underline: Reset, modifier: BOLD,
+        x: 2, y: 0, fg: Rgb(224, 224, 224), bg: Rgb(45, 55, 64), underline: Reset, modifier: BOLD,
+        x: 0, y: 1, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+    ]
+}

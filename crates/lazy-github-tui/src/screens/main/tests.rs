@@ -4,6 +4,7 @@ use ratatui::style::Color;
 use super::*;
 use crate::keymap::Keymap;
 use crate::test_util::TestApp;
+use crate::theme::{ColorDepth, ColorMode, Theme};
 
 fn config(f: impl FnOnce(&mut AppearanceSettings)) -> Config {
     let mut config = Config::default();
@@ -68,6 +69,20 @@ fn main_styled_100x30() {
     // The focused repos border in `$success`, the other boxes in `$primary-lighten-3`, the status box in
     // `$secondary`, the details tabs and intro, and the footer row on `$footer-background`.
     insta::assert_debug_snapshot!(TestApp::new(Config::default()).render(100, 30));
+}
+
+#[test]
+fn main_styled_eight_bit_100x30() {
+    // The same screen in a 256-color terminal: every color reduced to Rich's xterm-256 index.
+    let mode = ColorMode {
+        depth: ColorDepth::EightBit,
+        no_color: false,
+    };
+    let theme = Theme::default().with_color_mode(mode);
+    let buffer = TestApp::with_theme(Config::default(), theme).render(100, 30);
+    let indexed = |c: Color| matches!(c, Color::Indexed(_) | Color::Reset);
+    assert!(buffer.content().iter().all(|cell| indexed(cell.fg) && indexed(cell.bg)));
+    insta::assert_debug_snapshot!(buffer);
 }
 
 #[test]

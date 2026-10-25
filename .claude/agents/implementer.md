@@ -49,4 +49,5 @@ One `rust` issue labeled `status: ready`. Take only one at a time.
 - Never push to `main` or `rust-main` directly. Never merge a PR by hand; enable auto-merge on PRs into `rust-main`
   instead, and never on a PR into `main`.
 - Don't edit the Python code. If the reference has a bug, note it in the PR and file a `python` issue.
-- Don't mark PARITY.md rows as `parity`; the parity reviewer does that.
+- Don't mark parity matrix rows as `parity`; the parity reviewer does that. List the rows your scenarios cover
+  by id in `parity_rows`, and if you must touch the matrix, edit only the area files for your rows.

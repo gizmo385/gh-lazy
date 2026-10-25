@@ -658,9 +658,18 @@ fn render_scenario(data: &ScenarioData<'_>, meta: &RunMeta) -> String {
         }
     );
     if !s.parity_rows.is_empty() {
-        body.push_str("<p>PARITY.md rows:</p>\n<ul>\n");
+        body.push_str("<p>Parity matrix rows:</p>\n<ul>\n");
+        // The report is self-contained and works from a downloaded artifact, so name the file rather than link it.
         for row in &s.parity_rows {
-            w!(body, "<li>{}</li>\n", escape(row));
+            match crate::matrix::row_file(row) {
+                Some(file) => w!(
+                    body,
+                    "<li><code>{}</code> in <code>{}</code></li>\n",
+                    escape(row),
+                    escape(&file)
+                ),
+                None => w!(body, "<li>{}</li>\n", escape(row)),
+            }
         }
         body.push_str("</ul>\n");
     }
@@ -1125,7 +1134,7 @@ mod tests {
             name: name.into(),
             description: format!("The {name} scenario"),
             gate,
-            parity_rows: vec!["Main layout".into()],
+            parity_rows: vec!["main-layout.layout".into()],
             result,
             sizes,
             error: None,

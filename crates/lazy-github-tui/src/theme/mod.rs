@@ -3,10 +3,12 @@
 //! Textual derives its CSS variables (`$panel`, `$primary-lighten-3`, …) in Python at runtime. Rather than port that,
 //! `gen/dump_themes.py` dumps Textual 8.2.5's results into the generated, committed `palette` module. Colors with
 //! alpha or `auto` are composited over what they're drawn on with Textual's arithmetic ([`ThemeColor::over`]), so a
-//! cell gets the same RGB in both apps. Components take every color from here.
+//! cell gets the same RGB in both apps. The result is then reduced to what the terminal shows ([`ColorMode`]), as Rich
+//! does it. Components take every color from here.
 
 mod accent;
 mod color;
+mod depth;
 #[rustfmt::skip]
 #[allow(clippy::enum_glob_use, clippy::unreadable_literal)]
 mod palette;
@@ -17,6 +19,7 @@ use ratatui::style::{Color, Style};
 
 pub use accent::{Accent, RichAnsi};
 pub use color::{AnsiColor, Paint, Rgb, TextStyle, ThemeColor};
+pub use depth::{ColorDepth, ColorMode, downsample};
 pub use palette::Palette;
 
 use palette::{BUILTIN, ThemeDef};
@@ -35,6 +38,9 @@ pub struct Theme {
     pub ansi: bool,
     /// Its colors and text styles.
     pub palette: &'static Palette,
+    /// What the terminal shows, which every color is reduced to. Set by [`Theme::from_config`]; truecolor for
+    /// [`Theme::by_name`], [`Theme::all`] and [`Theme::default`].
+    mode: ColorMode,
 }
 
 impl Theme {
@@ -44,7 +50,20 @@ impl Theme {
             dark: def.dark,
             ansi: def.ansi,
             palette: &def.palette,
+            mode: ColorMode::default(),
         }
+    }
+
+    /// This theme, with its colors reduced to `mode`. The mode belongs to the terminal, not the theme: switching
+    /// themes at runtime must carry it over, which [`Theme::from_config`] makes explicit.
+    #[must_use]
+    pub fn with_color_mode(self, mode: ColorMode) -> Self {
+        Self { mode, ..self }
+    }
+
+    /// What the terminal shows, which every color is reduced to.
+    pub fn color_mode(&self) -> ColorMode {
+        self.mode
     }
 
     /// The built-in theme called exactly `name`.
@@ -52,12 +71,16 @@ impl Theme {
         BUILTIN.iter().find(|def| def.name == name).map(Self::from_def)
     }
 
-    /// The theme for `appearance.theme`: an unknown name renders as `textual-dark`, silently, as in Python.
-    pub fn from_config(name: &str) -> Theme {
-        Self::by_name(name).unwrap_or_else(|| {
-            tracing::debug!("unknown theme {name:?}, using {DEFAULT}");
-            Self::default()
-        })
+    /// The theme for `appearance.theme`, reduced to the terminal's color `mode`: an unknown name renders as
+    /// `textual-dark`, silently, as in Python. To switch themes at runtime, pass the current theme's
+    /// [`Theme::color_mode`].
+    pub fn from_config(name: &str, mode: ColorMode) -> Theme {
+        Self::by_name(name)
+            .unwrap_or_else(|| {
+                tracing::debug!("unknown theme {name:?}, using {DEFAULT}");
+                Self::default()
+            })
+            .with_color_mode(mode)
     }
 
     /// Every built-in theme, in Textual's order.
@@ -91,13 +114,19 @@ impl Theme {
 
     /// The terminal color for `c` drawn over `under`.
     pub fn color(&self, c: ThemeColor, under: Paint) -> Color {
-        c.over(under).into()
+        self.paint(c.over(under))
+    }
+
+    /// The terminal color for an already composited paint, such as [`Theme::background`], reduced to the color mode.
+    /// Use this rather than `Color::from(paint)`, which always gives exact RGB.
+    pub fn paint(&self, paint: Paint) -> Color {
+        self.mode.paint(paint)
     }
 
     /// A style for `fg` text on a `bg` background, with `bg` itself drawn over `under`: "`$text` on `$panel`".
     pub fn fg_on(&self, fg: ThemeColor, bg: ThemeColor, under: Paint) -> Style {
         let bg = bg.over(under);
-        Style::new().fg(fg.over(bg).into()).bg(bg.into())
+        Style::new().fg(self.paint(fg.over(bg))).bg(self.paint(bg))
     }
 
     /// Textual's `background-tint: <tint> <percent>%` on `base`, as focused `DataTable`s and `Log`s use
@@ -117,21 +146,22 @@ impl Theme {
 
     /// A fixed markup color, the same in every theme.
     pub fn accent(&self, a: Accent) -> Color {
-        a.rgb().into()
+        self.paint(a.rgb().into())
     }
 
     /// A Rich ANSI color in a table cell: the terminal's own color under the ANSI themes, and Textual's terminal theme
     /// otherwise.
     pub fn rich_ansi(&self, c: RichAnsi) -> Color {
-        if self.ansi {
+        let paint = if self.ansi {
             match c {
-                RichAnsi::Green => Color::Green,
+                RichAnsi::Green => Paint::Ansi(AnsiColor::Green),
             }
         } else if self.dark {
             c.dark().into()
         } else {
             c.light().into()
-        }
+        };
+        self.paint(paint)
     }
 }
 
@@ -204,7 +234,7 @@ mod tests {
     fn by_name_finds_every_builtin_theme() {
         for name in NAMES {
             assert_eq!(Theme::by_name(name).map(|t| t.name), Some(name));
-            assert_eq!(Theme::from_config(name).name, name);
+            assert_eq!(Theme::from_config(name, ColorMode::default()).name, name);
         }
     }
 
@@ -214,7 +244,12 @@ mod tests {
     #[case("no-such-theme")]
     fn unknown_names_render_as_textual_dark(#[case] name: &str) {
         assert_eq!(Theme::by_name(name), None);
-        assert_eq!(Theme::from_config(name), theme("textual-dark"));
+        assert_eq!(Theme::from_config(name, ColorMode::default()), theme("textual-dark"));
+        let mode = ColorMode {
+            depth: ColorDepth::Standard,
+            no_color: true,
+        };
+        assert_eq!(Theme::from_config(name, mode).color_mode(), mode);
     }
 
     #[test]
@@ -301,7 +336,11 @@ mod tests {
                 let p = theme.palette;
                 let screen = theme.background();
                 frame.render_widget(
-                    Block::new().style(Style::new().fg(theme.color(p.foreground, screen)).bg(screen.into())),
+                    Block::new().style(
+                        Style::new()
+                            .fg(theme.color(p.foreground, screen))
+                            .bg(theme.paint(screen)),
+                    ),
                     frame.area(),
                 );
                 let surface = p.surface.over(screen);
@@ -327,7 +366,7 @@ mod tests {
                 ] {
                     let block = Block::bordered()
                         .border_style(Style::new().fg(theme.color(border, surface)))
-                        .style(Style::new().bg(surface.into()));
+                        .style(Style::new().bg(theme.paint(surface)));
                     frame.render_widget(Paragraph::new(row).block(block), area);
                 }
             })
@@ -342,5 +381,74 @@ mod tests {
     #[case("ansi-dark")]
     fn themed_widget_snapshot(#[case] name: &str) {
         insta::assert_debug_snapshot!(format!("themed_widget_{name}"), themed_widget(&theme(name)));
+    }
+
+    #[rstest]
+    #[case("eight_bit", ColorDepth::EightBit)]
+    #[case("standard", ColorDepth::Standard)]
+    fn themed_widget_snapshot_at_depth(#[case] label: &str, #[case] depth: ColorDepth) {
+        let mode = ColorMode { depth, no_color: false };
+        let theme = theme("textual-dark").with_color_mode(mode);
+        insta::assert_debug_snapshot!(format!("themed_widget_textual-dark_{label}"), themed_widget(&theme));
+    }
+
+    #[test]
+    fn color_mode_applies_after_compositing() {
+        let truecolor = theme("textual-dark");
+        assert_eq!(truecolor.color_mode(), ColorMode::default());
+        let eight_bit = truecolor.with_color_mode(ColorMode {
+            depth: ColorDepth::EightBit,
+            no_color: false,
+        });
+        let p = eight_bit.palette;
+        // $block-cursor-blurred-background (#0178D4, 30% alpha) over $surface is #153854, then index 23.
+        let surface = p.surface.over(eight_bit.background());
+        assert_eq!(
+            truecolor.color(p.block_cursor_blurred_background, surface),
+            Color::Rgb(0x15, 0x38, 0x54)
+        );
+        assert_eq!(
+            eight_bit.color(p.block_cursor_blurred_background, surface),
+            downsample(Rgb::new(0x15, 0x38, 0x54), eight_bit.color_mode())
+        );
+        assert_eq!(eight_bit.accent(Accent::Red), Color::Indexed(196));
+        assert_eq!(eight_bit.rich_ansi(RichAnsi::Green), Color::Indexed(112));
+    }
+
+    #[test]
+    fn no_color_grays_rgb_themes_and_resets_ansi_themes() {
+        let no_color = ColorMode {
+            depth: ColorDepth::TrueColor,
+            no_color: true,
+        };
+        let dark = theme("textual-dark").with_color_mode(no_color);
+        assert_eq!(
+            dark.color(dark.palette.primary, dark.background()),
+            Color::Rgb(101, 101, 101)
+        );
+        let eight_bit = dark.with_color_mode(ColorMode {
+            depth: ColorDepth::EightBit,
+            no_color: true,
+        });
+        assert_eq!(
+            eight_bit.color(eight_bit.palette.primary, eight_bit.background()),
+            Color::Indexed(241)
+        );
+
+        let ansi = theme("ansi-dark").with_color_mode(no_color);
+        let p = ansi.palette;
+        for c in [p.primary, p.error, p.foreground, p.surface] {
+            assert_eq!(ansi.color(c, ansi.background()), Color::Reset);
+        }
+        assert_eq!(ansi.rich_ansi(RichAnsi::Green), Color::Reset);
+    }
+
+    #[test]
+    fn ansi_themes_pass_through_at_every_depth() {
+        for depth in [ColorDepth::TrueColor, ColorDepth::EightBit, ColorDepth::Standard] {
+            let ansi = theme("ansi-dark").with_color_mode(ColorMode { depth, no_color: false });
+            assert_eq!(ansi.color(ansi.palette.primary, ansi.background()), Color::Blue);
+            assert_eq!(ansi.paint(ansi.background()), Color::Reset);
+        }
     }
 }

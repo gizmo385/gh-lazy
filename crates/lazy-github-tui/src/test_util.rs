@@ -47,8 +47,17 @@ impl TestApp {
 
     /// Like [`Self::new`], with requests answered by `gh`.
     pub fn with_github(config: Config, gh: FakeGithub) -> Self {
+        Self::build(config, Theme::default(), gh)
+    }
+
+    /// Like [`Self::new`], drawn with `theme` (for example one reduced to a 256-color terminal).
+    pub fn with_theme(config: Config, theme: Theme) -> Self {
+        Self::build(config, theme, FakeGithub::new())
+    }
+
+    fn build(config: Config, theme: Theme, gh: FakeGithub) -> Self {
         let clock = FakeClock::new();
-        let mut app = App::new(config, Theme::default(), clock.clone());
+        let mut app = App::new(config, theme, clock.clone());
         let init = app.init();
         let mut test = Self {
             app,

@@ -1,5 +1,5 @@
-//! Development tasks, run with `cargo xtask <task>`. Tasks (`parity`, `record-fixtures`, release helpers) are added
-//! by the issues that need them.
+//! Development tasks, run with `cargo xtask <task>`. Tasks (`parity`, `parity-matrix`, `record-fixtures`, release
+//! helpers) are added by the issues that need them.
 
 mod fixtures;
 
@@ -22,6 +22,15 @@ enum Task {
     CheckFixtures(fixtures::CheckArgs),
     /// Run parity scenarios against the Python and Rust apps and capture their screens.
     Parity(xtask::parity::cli::ParityArgs),
+    /// Check the parity matrix (docs/rust-rewrite/parity/) and print its rows per area and status.
+    ParityMatrix(ParityMatrixArgs),
+}
+
+#[derive(Debug, clap::Args)]
+struct ParityMatrixArgs {
+    /// Print the summary as a Markdown table.
+    #[arg(long)]
+    markdown: bool,
 }
 
 fn main() -> ExitCode {
@@ -35,6 +44,7 @@ fn main() -> ExitCode {
         Some(Task::RecordFixtures(args)) => fixtures::record_fixtures(&args),
         Some(Task::CheckFixtures(args)) => fixtures::check_fixtures(&args),
         Some(Task::Parity(args)) => xtask::parity::cli::run(&args),
+        Some(Task::ParityMatrix(args)) => xtask::matrix::run(&xtask::parity::cli::repo_root(), args.markdown),
     }
 }
 

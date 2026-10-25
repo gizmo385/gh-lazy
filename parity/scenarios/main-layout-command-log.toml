@@ -1,7 +1,7 @@
 version = 1
 description = "Main screen layout with appearance.show_command_log: the command log docked under details"
 gate = true
-parity_rows = ["Main layout (status bar, selections pane 40%, details, command log, footer)"]
+parity_rows = ["main-layout.layout", "main-layout.command-log"]
 sizes = [[160, 48], [100, 30]]
 
 [env]

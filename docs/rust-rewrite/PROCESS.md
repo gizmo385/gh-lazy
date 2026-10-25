@@ -70,7 +70,8 @@ needs-triage ──► needs-design ──► ready ──► in-progress ──
    merges on its own once required checks pass and both reviews approve. Chris can also merge by hand. This relies on
    branch protection for `rust-main` that requires the CI checks and approving reviews; without it, GitHub would merge
    as soon as auto-merge is enabled. The parity reviewer
-   updates the row in [PARITY.md](./PARITY.md).
+   moves the rows the PR completes to `parity` in the [parity matrix](./parity/README.md): normally the ids in
+   its scenarios' `parity_rows`, but not `intentional diff` rows or rows a scenario only covers in part.
 
 Any role that hits a choice that changes scope, UX or a dependency choice sets `status: needs-decision`, writes the
 question with options and a recommendation as an issue comment, and stops work on that issue.
@@ -95,3 +96,17 @@ Every `ready` issue body has these sections:
 - Don't change the Python code on `rust-main`. Python fixes go to `main` and flow into `rust-main` by merge.
 - Keep one issue per PR. If you find extra work, file an issue for it (`status: needs-triage`) and link it.
 - Leave a short comment on the issue whenever you change its status, saying why.
+
+## Editing the parity matrix
+
+The matrix is split into files so parallel PRs don't conflict. The full rules are in
+[parity/README.md](./parity/README.md#editing-the-matrix); in short:
+
+- A PR edits only the `parity/areas/<area>.md` file(s) that hold its rows, one row per line. Rows are named by
+  their stable **Id** (`<area>.<name>`); never rename or reuse an id.
+- A new suspected Python bug is a new `parity/py-bugs/B<nn>.md`; a new intentional diff is a new
+  `parity/decisions/<slug>.md`, linked from the row's Notes. Neither edits a shared file.
+- Nobody edits `parity/README.md`'s index except to add or remove an area file, and nobody keeps counts by
+  hand: `cargo xtask parity-matrix` prints them (`--markdown` for a table).
+- Scenarios name the rows they cover by id in `parity_rows`. `cargo test --workspace` fails if an id, status,
+  py-bug, decision or `parity_rows` reference is wrong.

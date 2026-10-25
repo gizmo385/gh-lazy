@@ -71,6 +71,9 @@ pub struct Tabs {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Table {
     pub headers: Vec<String>,
+    /// The last header ends within one cell of the interior's right edge, so the screen may have cut it (and the
+    /// last column's cells) off.
+    pub headers_clipped: bool,
     pub rows: Vec<Vec<String>>,
     pub cursor: Option<usize>,
 }
@@ -832,6 +835,7 @@ fn find_tables(view: &View<'_>, mask: &mut Mask, region: &Region, base_bg: Optio
         }
         let headers = region.segments(view, mask, r);
         let starts: Vec<usize> = headers.iter().map(|(s, _, _)| *s).collect();
+        let headers_clipped = headers.last().is_some_and(|&(_, end, _)| end + 1 >= region.right);
 
         let mut rows = Vec::new();
         let mut row_bgs = Vec::new();
@@ -864,6 +868,7 @@ fn find_tables(view: &View<'_>, mask: &mut Mask, region: &Region, base_bg: Optio
         }
         tables.push(Table {
             headers: headers.into_iter().map(|(_, _, t)| t).collect(),
+            headers_clipped,
             cursor: find_cursor(&row_bgs, &row_bold),
             rows,
         });
@@ -1093,6 +1098,7 @@ mod tests {
             b.tables,
             [Table {
                 headers: vec!["Owner".into(), "Name".into(), "Description".into()],
+                headers_clipped: false,
                 rows: vec![
                     vec!["parity-bot".into(), "alpha".into(), "First repo".into()],
                     vec!["parity-bot".into(), "beta".into(), "Second one".into()],

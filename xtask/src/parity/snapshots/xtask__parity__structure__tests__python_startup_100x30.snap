@@ -1,5 +1,6 @@
 ---
 source: xtask/src/parity/structure.rs
+assertion_line: 1181
 expression: "snapshot(\"100x30\")"
 ---
 {
@@ -50,6 +51,7 @@ expression: "snapshot(\"100x30\")"
             "Name",
             "Private"
           ],
+          "headers_clipped": false,
           "rows": [
             [
               "☆",
@@ -134,6 +136,7 @@ expression: "snapshot(\"100x30\")"
             "Author",
             "Title"
           ],
+          "headers_clipped": false,
           "rows": [],
           "cursor": null
         }
@@ -162,6 +165,7 @@ expression: "snapshot(\"100x30\")"
             "Author",
             "Title"
           ],
+          "headers_clipped": false,
           "rows": [],
           "cursor": null
         }
@@ -191,6 +195,7 @@ expression: "snapshot(\"100x30\")"
             "Run Name",
             "Run"
           ],
+          "headers_clipped": true,
           "rows": [],
           "cursor": null
         }

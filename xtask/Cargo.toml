@@ -14,21 +14,25 @@ clap = { workspace = true }
 # its `install` and request-log types.
 fake-gh = { workspace = true }
 form_urlencoded = { workspace = true }
+# The run timestamp at the top of the parity report's index.html.
+jiff = { workspace = true }
 portable-pty = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true }
 # `preserve_order` keeps recorded bodies' and config.json keys in their original order.
 serde_json = { workspace = true, features = ["preserve_order"] }
+# Unified diffs of the two apps' captures in the parity report.
+similar = { workspace = true }
 tempfile = { workspace = true }
 thiserror = { workspace = true }
 toml = { workspace = true }
 vt100 = { workspace = true }
 
 [dev-dependencies]
-# Golden snapshots of structure extraction on real Python dumps.
-insta = { workspace = true }
 # Only for the `echo_tui` test helper, which needs raw mode and terminal events.
 crossterm = { workspace = true }
+# Golden snapshots of structure extraction and the report.
+insta = { workspace = true }
 
 # A tiny TUI the runner integration test (tests/runner.rs) drives. `cargo test` builds examples, so the test finds
 # it at target/<profile>/examples/echo_tui.

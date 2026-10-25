@@ -252,7 +252,7 @@ committed set (`crates/fake-gh/tests/lint_fixtures.rs`).
 User-scoped endpoints stay hand-written so recordings never leak a real account's private data.
 
 Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` repo by `cargo xtask record-fixtures
---set base`, from `parity/fixtures/base/recipe.toml` (the first recording is still to be committed; see #113). See
+--set base`, from `parity/fixtures/base/recipe.toml`. See
 [Recording fixtures](#recording-fixtures).
 
 ## Overlays
@@ -288,9 +288,12 @@ committed fixtures without writing anything (it exits 1 if any file differs). `-
 write would produce, so key order and formatting count, but it keeps the committed `note` (which holds the recording
 date), so a re-recording on another day isn't drift.
 
-Some recorded data depends on who records it. For example, the repo object's `permissions` (and, for admins,
-`security_and_analysis`) reflects the recorder's token. A re-recording from a differently scoped token shows up as
-drift in `--check`. Review such diffs, and don't commit them as if they were upstream changes.
+Some recorded data depends on who records it: a repo object's `permissions` reflects the recorder's token, and
+viewers with push or admin access also get keys such as `temp_clone_token`, the merge settings and
+`security_and_analysis`. The recorder pins every `permissions` object to `pull` only and drops those keys (the list is
+`VIEWER_ONLY_KEYS` in `xtask/src/fixtures/scrub.rs`), so a recording looks like what a signed-in user without push
+access gets, whoever makes it. `check-fixtures` doesn't flag either, since hand-written fixtures such as `/user/repos`
+model a user who owns their repos.
 
 ### The recipe
 
@@ -684,7 +687,7 @@ text.
 {"version": 1, "size": [160, 48],
  "boxes": [{"id": 1, "parent": null, "title": "[1] Repositories", "subtitle": "", "rect": [0, 3, 64, 17],
             "border_fg": "#4ebf71", "focused": true, "tabs": null,
-            "tables": [{"headers": ["★", "Owner", "Name", "Private"],
+            "tables": [{"headers": ["★", "Owner", "Name", "Private"], "headers_clipped": false,
                         "rows": [["☆", "parity-bot", "dotfiles", "✘"]], "cursor": 0}],
             "text": []}],
  "tabs": null, "footer": [{"key": "q", "label": "Quit"}], "footer_clipped": true,
@@ -757,7 +760,8 @@ scrollbar is two such columns. Scrollbar glyphs at the end of a row (a horizonta
   - A **header row** is a row whose text cells are all bold and share one background other than the box's (its
     border's background), when neither the row above nor the row below has that same style.
   - The header's segments (separated by two or more blanks) are `headers`, and their start columns are the column
-    boundaries.
+    boundaries. `headers_clipped` is true when the last header ends within one cell of the interior's right edge,
+    so the screen may have cut it off (Python's Workflows at 100x30 shows `Run` for `Run #`).
   - Each following row is split at the boundaries and its cells trimmed, giving `rows`. The table ends at an empty
     row, at a row in the header's style (a stacked table) or at the end of the interior. A box can hold several
     tables.
@@ -797,8 +801,10 @@ differs:
   blanks ending in a glyph, and ignoring trailing glyphs makes it an empty row.
 - **Cursor in short tables.** "The row whose background differs from the others" has no answer with one or two rows,
   so bold breaks the tie.
-- **Footer clipping.** Both sizes cut the Python footer off (`^p Comman`, `^v Paste lin`), so the structure records
-  `footer_clipped` and `[expect] footer` allows the cut (see Checks).
+- **Clipping.** Both sizes cut the Python footer off (`^p Comman`, `^v Paste lin`), and 100x30 cuts the last
+  Workflows header. The structure records `footer_clipped` and `headers_clipped`, and both `[expect] footer` and the
+  cross-app `footer`, `headers` and `rows` checks allow the cut (see Checks), so Rust doesn't have to clip at
+  Textual's column.
 - **Top-level tabs** go in the structure's `tabs` field, which the v1 example didn't have.
 
 #### Rendering contract for the Rust UI
@@ -808,15 +814,26 @@ These rules double as the contract the Rust UI renders to, so that its screens a
 - Panes are light-border boxes (`┌┐└┘─│`) with the title on the top edge, drawn as `┌─ title ───┐`, and all border
   cells of a pane in one fg.
 - The focused pane's border uses the theme's success color, and no unfocused border does.
-- Tabs are a label row with names separated by at least two blanks, over an underline row of `━╸╺` in which the
-  active tab's segment has its own color.
-- A table's header row is bold on a background other than the pane's. Columns start where the header's labels start
-  and are separated by at least two blanks. The cursor row has its own background and is bold.
+- Colors are emitted as RGB (truecolor). An indexed color such as `Color::Green` dumps as `idx:2` and never equals a
+  theme color like `#4ebf71`.
+- Tabs are a label row with names separated by at least two blanks, over an underline row of `━╸╺`. ratatui's `Tabs`
+  widget defaults to a `│` divider with single spaces, so it needs a custom label row.
+- The underline spans the tab area's full width, in the inactive color everywhere except under the active tab. The
+  active segment is found as "the cells not in the bar's most common fg", so a bar drawn only under the labels can
+  name the wrong tab when the active label is wider than the others combined.
+- A table's header row is bold on a background other than the pane's, and its style (background, bold) differs from
+  the cursor row's: a header whose next row shares its style isn't a header, and the cursor is usually row 0.
+- Columns start where the header's labels start and are separated by at least two blanks (ratatui's default
+  `column_spacing` is 1, which merges columns; use 2). Every column has a non-empty header label, or its boundary
+  disappears.
+- The cursor row has its own background and is bold.
 - The footer is the last row: each key in a style distinct from the labels, in Textual's notation (`^p`, `q`, `?`).
 
 ### Checks
 
-`xtask/src/parity/check.rs` checks each capture in two ways and writes `<scenario>/<size>/<capture>.check.json`:
+`xtask/src/parity/check.rs` checks each capture in two ways and writes `<scenario>/<size>/<capture>.check.json`.
+A capture with nothing to check (`check: "n/a"` in `summary.json`) gets no `check.json`, so the report shows it as
+`not checked` rather than as having no mismatches.
 
 ```json
 {"capture": "main", "size": [160, 48],
@@ -845,17 +862,69 @@ the console gets one line per mismatch.
     order differs.
   - `tabs`: for each box title found in both apps, and for the top-level tabs, the names and the active tab are
     equal.
-  - `headers`: per box, the list of its tables' `headers`.
-  - `rows`: per box and table, the row count, then each row cell by cell. Cells are trimmed, and a cell ending in `…`
-    equals one that starts with its text before the `…`, because truncation width is layout, not content.
-  - `cursor`: per box and table, the `cursor` index.
-  - `footer`: the `(key, label)` lists.
+  - `headers`: per box, the list of its tables' `headers`. When either table has `headers_clipped`, the clipped-list
+    rule below applies to that table's headers.
+  - `rows`: per box, the number of tables (a table missing in one app is one mismatch, `python has N tables, rust
+    has M`), then per table the row count, then each row cell by cell. Cells are trimmed, and a cell ending in `…`
+    equals one that starts with its text before the `…`, because truncation width is layout, not content. When
+    either table has `headers_clipped`, a row's last cells may also be one a prefix of the other.
+  - `cursor`: per box and table, the `cursor` index. A differing number of tables is reported here when `rows`
+    isn't checked.
+  - `footer`: the `"<key> <label>"` lists. When either app has `footer_clipped`, the clipped-list rule applies.
+
+  **Clipped lists** are compared up to the shorter list, and the last entry compared may be a prefix of the other
+  app's: text cut at the screen's edge is layout, not content.
   - `focus`: the `focused` lists.
 
   Boxes are paired by title: the nth box with a title in one app with the nth in the other. A box found in only one
   app is reported once, under `titles`, and skipped by the other checks. Boxes whose title contains an `ignore.boxes`
   entry are skipped by every check but `titles`, and left out of the `focus` lists. Cross-app mismatches count against
   Rust.
+
+### Reading the report
+
+Every run ends by writing the human-readable report next to `summary.json` (`xtask/src/parity/report.rs`):
+
+```
+index.html                                       # every scenario × size, start here
+summary.md                                       # the short table for the CI job summary (#70)
+<scenario>/report.html                           # one page per scenario
+<scenario>/<cols>x<rows>/<capture>.diff.txt      # unified diff of python/<capture>.txt against rust/<capture>.txt
+```
+
+Open `index.html` in a browser. It works straight from disk or from a downloaded CI artifact (`file://`): every page
+is self-contained, with inline CSS, a few lines of inline JS and no external assets, fonts or CDNs.
+
+- **`index.html`** starts with the run's commit (`git rev-parse HEAD`), time, OS and command line, then one row per
+  scenario × size: the result badge, each app's status, and the structural mismatch count (`not checked` when there's
+  no `check.json`). Failed gated scenarios come first, then other failures, then `rust-not-ready`, then passes. Each
+  row links to the scenario's page.
+- **`<scenario>/report.html`** has a header with the description, `gate`, `parity_rows`, the result and a table of
+  every app run per size: status, duration, flaky, the failed step, the exit code and fixture misses as
+  `METHOD /path?query` keys. Then, per size and capture:
+  - **Two panels**, Python on the left and Rust on the right, each the captured screen drawn from `grid.json` at one
+    `ch` per cell (default colors `#d4d4d4` on `#1e1e1e`, inverse applied, indexed colors through the xterm palette).
+    A panel wider than its half of the page scrolls sideways inside itself.
+  - When an app has no capture, its panel says why (`exited with code 1 at step 2`, say) and shows `failure.grid.json`,
+    the screen when the run failed, if there is one. An app that didn't run says `not run (--python-only)` or similar.
+  - **Highlight differences** (when both apps captured) outlines every cell whose character differs between the two
+    grids, and the count of differing cells sits next to it. The cells are marked when the report is written; the
+    checkbox only flips a class, and it's hidden when JS is off.
+  - **Structural mismatches**: the `check.json` table (check, box, Python value, Rust value, the `[expect]` value
+    for an `expect` mismatch, message), tagged
+    `expect` or `cross`, or `not checked` when there's no `check.json`.
+  - Collapsible sections: the text diff, both `structure.json` files pretty-printed, and per size the last 50 lines of
+    each app's `fake-gh.log`. **Expand all** / **Collapse all** open or close every section at once.
+- **`<capture>.diff.txt`** is written only when both apps captured. It's informational and never gates: Markdown,
+  wrapping and spacing legitimately differ, and the structural check is what decides.
+- **`summary.md`** is a heading `Parity: <n> pass, <n> fail, <n> rust-not-ready` (plus `python-only` / `rust-only`
+  counts when there are any), a table `| Scenario | Gate | 160x48 | 100x30 | Mismatches |` (other sizes in the run get
+  extra columns; a size a scenario didn't run is `skipped`), and a `<details>` list of the first 20 mismatches as
+  `scenario/size/capture: check box: python=… rust=…`, plus ` expected=…` for an `[expect]` mismatch, with values
+  cut to 80 characters. It stays under 64 KiB.
+
+A size's result in the index and `summary.md` is computed from that size's app statuses; a size with structural
+mismatches takes the scenario's `fail` or `rust-not-ready` result.
 
 ### Testing the harness
 
@@ -868,6 +937,9 @@ the console gets one line per mismatch.
   mapping letters to styles (`g fg=#4ebf71 bg=#121212 bold inverse`); `xtask/src/parity/test_grid.rs` documents the
   format. When the Python screen changes, refresh the dumps from a `--python-only` run and review the snapshot diff
   with `cargo insta review`.
+- The report has `insta` snapshots (`summary.md`, the text diff, the HTML of a small grid pair) in
+  `xtask/src/parity/snapshots/`, and `xtask/tests/report.rs` writes a whole report from synthetic dumps. Review
+  snapshot changes with `cargo insta review`, or rerun with `INSTA_UPDATE=always` and read the diff.
 - `xtask/tests/python_app.rs` runs `startup` against the Python app and checks that a fixture miss fails the run. It
   needs uv, so it's `#[ignore]`d: run it with `cargo build -p fake-gh && cargo test -p xtask --test python_app --
   --ignored`. `xtask/tests/structural_check.rs` (also ignored) rebinds `main.repos.focus` to `9` in a copy of

@@ -50,6 +50,18 @@ pub struct CaptureSummary {
     pub against: Vec<App>,
 }
 
+impl CaptureSummary {
+    /// A capture the structural check had nothing to say about.
+    pub fn unchecked(name: &str) -> Self {
+        Self {
+            name: name.to_owned(),
+            check: CheckOutcome::NotApplicable,
+            mismatches: 0,
+            against: Vec::new(),
+        }
+    }
+}
+
 /// A capture's structural check.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CheckOutcome {

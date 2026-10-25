@@ -9,6 +9,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use super::check;
 use super::env::{self, Paths};
+use super::report;
 use super::runner::{self, AppRunStatus};
 use super::scenario::{App, Roots, Scenario, Size};
 use super::structure::Themes;
@@ -194,6 +195,11 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     // Plain data with string keys; serializing can't fail.
     let json = serde_json::to_string_pretty(&summary).expect("summary serializes");
     std::fs::write(out.join("summary.json"), json + "\n").context("writing summary.json")?;
+    let meta = report::RunMeta::current(&repo, args.python_only, args.rust_only);
+    // A reporting failure is printed but keeps the run's exit code, so it can never mask a gate result.
+    if let Err(e) = report::write_reports(&out, &summary, &meta) {
+        eprintln!("parity: writing the report: {e}");
+    }
 
     println!();
     for s in &summary.scenarios {

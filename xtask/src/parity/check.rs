@@ -258,8 +258,30 @@ fn cells_equal(a: &str, b: &str) -> bool {
     a == b || cut(a, b) || cut(b, a)
 }
 
-fn rows_equal(a: &[String], b: &[String]) -> bool {
-    a.len() == b.len() && a.iter().zip(b).all(|(x, y)| cells_equal(x, y))
+/// Rows are equal cell by cell. With `last_clipped`, the last cells may also be one a prefix of the other, since the
+/// screen may have cut the last column off.
+fn rows_equal(a: &[String], b: &[String], last_clipped: bool) -> bool {
+    a.len() == b.len()
+        && a.iter().zip(b).enumerate().all(|(i, (x, y))| {
+            cells_equal(x, y) || (last_clipped && i + 1 == a.len() && prefix_either(x.trim(), y.trim()))
+        })
+}
+
+fn prefix_either(a: &str, b: &str) -> bool {
+    a.starts_with(b) || b.starts_with(a)
+}
+
+/// Lists compared across apps when either side may have been cut off at the screen's edge: equal up to the shorter
+/// list, with the last entry compared there allowed to be a prefix of the other. Without `clipped`, exact equality.
+fn clipped_lists_equal(a: &[String], b: &[String], clipped: bool) -> bool {
+    if !clipped {
+        return a == b;
+    }
+    let n = a.len().min(b.len());
+    if n == 0 {
+        return a.len() == b.len();
+    }
+    a[..n - 1] == b[..n - 1] && prefix_either(&a[n - 1], &b[n - 1])
 }
 
 /// Pairs boxes with equal titles across apps, the nth box with a title in one app with the nth in the other.
@@ -303,6 +325,7 @@ fn compare_titles(py: &Structure, rs: &Structure) -> Option<Mismatch> {
 
 /// The row count of table `i`, then each row.
 fn compare_rows(title: &str, i: usize, pt: &Table, rt: &Table, out: &mut Vec<Mismatch>) {
+    let clipped = pt.headers_clipped || rt.headers_clipped;
     if pt.rows.len() != rt.rows.len() {
         out.push(Mismatch::cross(
             Kind::Rows,
@@ -318,13 +341,62 @@ fn compare_rows(title: &str, i: usize, pt: &Table, rt: &Table, out: &mut Vec<Mis
         return;
     }
     for (j, (pr, rr)) in pt.rows.iter().zip(&rt.rows).enumerate() {
-        if !rows_equal(pr, rr) {
+        if !rows_equal(pr, rr, clipped) {
             out.push(Mismatch::cross(
                 Kind::Rows,
                 Some(title),
                 json!(pr),
                 json!(rr),
                 format!("table {i} row {j} differs"),
+            ));
+        }
+    }
+}
+
+/// The `headers`, `rows` and `cursor` checks for one pair of boxes.
+fn compare_tables(p: &Pane, r: &Pane, wants: &impl Fn(Check) -> bool, out: &mut Vec<Mismatch>) {
+    if wants(Check::Headers) {
+        let ph: Vec<_> = p.tables.iter().map(|t| &t.headers).collect();
+        let rh: Vec<_> = r.tables.iter().map(|t| &t.headers).collect();
+        let same = p.tables.len() == r.tables.len()
+            && p.tables.iter().zip(&r.tables).all(|(pt, rt)| {
+                clipped_lists_equal(&pt.headers, &rt.headers, pt.headers_clipped || rt.headers_clipped)
+            });
+        if !same {
+            out.push(Mismatch::cross(
+                Kind::Headers,
+                Some(&p.title),
+                json!(ph),
+                json!(rh),
+                "table headers differ".into(),
+            ));
+        }
+    }
+    // A table missing in one app has a row count and a cursor too, and they don't match.
+    let table_check = [Check::Rows, Check::Cursor].into_iter().find(|&c| wants(c));
+    if let Some(check) = table_check.filter(|_| p.tables.len() != r.tables.len()) {
+        out.push(Mismatch::cross(
+            check.into(),
+            Some(&p.title),
+            json!(p.tables.len()),
+            json!(r.tables.len()),
+            format!("python has {} tables, rust has {}", p.tables.len(), r.tables.len()),
+        ));
+    }
+    for (i, (pt, rt)) in p.tables.iter().zip(&r.tables).enumerate() {
+        if wants(Check::Rows) {
+            compare_rows(&p.title, i, pt, rt, out);
+        }
+        if wants(Check::Cursor) && pt.cursor != rt.cursor {
+            out.push(Mismatch::cross(
+                Kind::Cursor,
+                Some(&p.title),
+                json!(pt.cursor),
+                json!(rt.cursor),
+                format!(
+                    "table {i}'s cursor is on row {:?} in python and {:?} in rust",
+                    pt.cursor, rt.cursor
+                ),
             ));
         }
     }
@@ -367,42 +439,13 @@ pub fn compare(py: &Structure, rs: &Structure, checks: &[Check], ignore: &Ignore
             }
         }
     }
-    if wants(Check::Headers) {
-        for (p, r) in &pairs {
-            let ph: Vec<_> = p.tables.iter().map(|t| &t.headers).collect();
-            let rh: Vec<_> = r.tables.iter().map(|t| &t.headers).collect();
-            if ph != rh {
-                out.push(Mismatch::cross(
-                    Kind::Headers,
-                    Some(&p.title),
-                    json!(ph),
-                    json!(rh),
-                    "table headers differ".into(),
-                ));
-            }
-        }
-    }
     for (p, r) in &pairs {
-        for (i, (pt, rt)) in p.tables.iter().zip(&r.tables).enumerate() {
-            if wants(Check::Rows) {
-                compare_rows(&p.title, i, pt, rt, &mut out);
-            }
-            if wants(Check::Cursor) && pt.cursor != rt.cursor {
-                out.push(Mismatch::cross(
-                    Kind::Cursor,
-                    Some(&p.title),
-                    json!(pt.cursor),
-                    json!(rt.cursor),
-                    format!(
-                        "table {i}'s cursor is on row {:?} in python and {:?} in rust",
-                        pt.cursor, rt.cursor
-                    ),
-                ));
-            }
-        }
+        compare_tables(p, r, &wants, &mut out);
     }
-    if wants(Check::Footer) && py.footer != rs.footer {
-        let (p, r) = (footer_strings(py), footer_strings(rs));
+    let (py_footer, rs_footer) = (footer_strings(py), footer_strings(rs));
+    let footer_clipped = py.footer_clipped || rs.footer_clipped;
+    if wants(Check::Footer) && !clipped_lists_equal(&py_footer, &rs_footer, footer_clipped) {
+        let (p, r) = (py_footer, rs_footer);
         out.push(Mismatch::cross(
             Kind::Footer,
             None,
@@ -529,7 +572,8 @@ pub fn check_size(
             (true, 0) => CheckOutcome::Pass,
             (true, _) => CheckOutcome::Fail,
         };
-        if !structures.is_empty() {
+        // An unchecked capture gets no check.json, so the report says "not checked" rather than "no mismatches".
+        if checked {
             let grid_size = structures.values().next().map_or([0, 0], |s| s.size);
             write_json(
                 &dir.join(format!("{name}.check.json")),
@@ -679,6 +723,90 @@ mod tests {
         let mut rs = py.clone();
         repos(&mut rs).cursor = Some(1);
         assert_eq!(kinds(&all(&py, &rs)), [Kind::Cursor]);
+    }
+
+    #[test]
+    fn a_table_missing_in_rust_fails_rows_and_cursor() {
+        let py = startup();
+        let mut rs = py.clone();
+        pane(&mut rs, "[1] Repositories").tables.clear();
+        let ms = compare(&py, &rs, &[Check::Rows], &Ignore::default());
+        assert_eq!(kinds(&ms), [Kind::Rows], "{ms:#?}");
+        assert_eq!(ms[0].in_box.as_deref(), Some("[1] Repositories"));
+        assert_eq!(ms[0].message, "python has 1 tables, rust has 0");
+        let ms = compare(&py, &rs, &[Check::Cursor], &Ignore::default());
+        assert_eq!(kinds(&ms), [Kind::Cursor], "{ms:#?}");
+        // One mismatch covers both.
+        assert_eq!(
+            kinds(&compare(&py, &rs, &[Check::Rows, Check::Cursor], &Ignore::default())),
+            [Kind::Rows]
+        );
+    }
+
+    #[test]
+    fn a_clipped_footer_matches_a_longer_one() {
+        let py = startup();
+        assert!(py.footer_clipped);
+        let mut rs = py.clone();
+        rs.footer_clipped = false;
+        // Rust shows the binding Python cut off in full, and more after it.
+        let last = rs.footer.len() - 1;
+        rs.footer[last].label.push_str(" and the rest");
+        rs.footer.push(Binding {
+            key: "z".into(),
+            label: "Extra".into(),
+        });
+        assert_eq!(all(&py, &rs), []);
+        // A difference before the cut still counts.
+        rs.footer[0].label = "Find".into();
+        assert_eq!(kinds(&all(&py, &rs)), [Kind::Footer]);
+        // So does a cut shown by neither app.
+        let mut py = py;
+        py.footer_clipped = false;
+        let mut rs = py.clone();
+        rs.footer.pop();
+        assert_eq!(kinds(&all(&py, &rs)), [Kind::Footer]);
+    }
+
+    #[test]
+    fn a_clipped_last_header_matches_its_full_text() {
+        let mut py = startup();
+        let mut rs = py.clone();
+        let t = repos(&mut py);
+        t.headers_clipped = true;
+        t.headers.last_mut().unwrap().truncate(4);
+        // Rust's last column is wider than the cut.
+        for row in &mut repos(&mut rs).rows {
+            row.last_mut().unwrap().push_str(" (more)");
+        }
+        assert_eq!(all(&py, &rs), []);
+        repos(&mut py).headers_clipped = false;
+        let rows = repos(&mut py).rows.len();
+        let expected: Vec<Kind> = std::iter::once(Kind::Headers)
+            .chain(std::iter::repeat_n(Kind::Rows, rows))
+            .collect();
+        assert_eq!(kinds(&all(&py, &rs)), expected);
+        repos(&mut py).headers_clipped = true;
+        repos(&mut rs).headers[0] = "Fav".into();
+        assert_eq!(kinds(&all(&py, &rs)), [Kind::Headers]);
+    }
+
+    #[test]
+    fn kind_names_are_the_serde_names() {
+        use Kind::*;
+        for kind in [
+            Titles,
+            Tabs,
+            Headers,
+            Rows,
+            Cursor,
+            Footer,
+            Focus,
+            Contains,
+            NotContains,
+        ] {
+            assert_eq!(serde_json::to_value(kind).unwrap(), kind.as_str(), "{kind:?}");
+        }
     }
 
     #[test]

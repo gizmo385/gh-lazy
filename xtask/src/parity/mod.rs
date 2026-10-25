@@ -3,9 +3,11 @@
 
 pub mod check;
 pub mod cli;
+pub mod diff;
 pub mod env;
 pub mod grid;
 pub mod keys;
+pub mod report;
 pub mod runner;
 pub mod scenario;
 pub mod structure;

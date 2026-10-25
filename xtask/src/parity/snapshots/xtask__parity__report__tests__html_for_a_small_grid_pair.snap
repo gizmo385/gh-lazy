@@ -1,0 +1,14 @@
+---
+source: xtask/src/parity/report.rs
+expression: "format!(\"{}\\n{py_html}\\n{rs_html}\", sheet.css())"
+---
+.s0{color:#4ebf71;font-weight:bold;}
+.s1{color:#1e1e1e;background:#d4d4d4;}
+.s2{color:#ff0000;background:#0000ee;}
+
+<pre class="term"><span class="s0">&lt;</span><span class="s0 d">a</span>&amp;&quot;
+<span class="s1">o</span>k  
+</pre>
+<pre class="term"><span class="s0">&lt;</span><span class="s0 d">b</span>&amp;&quot;
+<span class="s1">o</span>k <span class="s2"> </span>
+</pre>

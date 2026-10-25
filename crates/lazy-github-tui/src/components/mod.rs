@@ -4,3 +4,4 @@ pub mod footer;
 pub mod hatch;
 pub mod info;
 pub mod tabs;
+pub mod toasts;

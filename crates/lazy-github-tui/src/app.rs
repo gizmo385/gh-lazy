@@ -23,7 +23,7 @@ use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
 use crate::screens::main::{FocusTarget, MainScreen};
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
 use crate::theme::Theme;
-use crate::toast::{Severity, Toast};
+use crate::toast::{Severity, Toast, Toasts};
 
 /// How many command-log lines `App` keeps for the command log pane (#80).
 pub const COMMAND_LOG_LIMIT: usize = 1000;
@@ -59,7 +59,7 @@ enum BaseScreen {
 pub struct App {
     base: BaseScreen,
     shared: Shared,
-    toasts: Vec<Toast>,
+    toasts: Toasts,
     command_log: VecDeque<LogLine>,
     maximized: Option<Maximized>,
     /// The maximize toast shows once per session. Never saved.
@@ -77,7 +77,7 @@ impl App {
         Self {
             base: BaseScreen::Startup(StartupScreen::default()),
             shared: Shared::new(config, keymap, theme, Arc::new(clock)),
-            toasts: Vec::new(),
+            toasts: Toasts::default(),
             command_log: VecDeque::new(),
             maximized: None,
             has_shown_maximize_toast: false,
@@ -112,6 +112,14 @@ impl App {
 
     /// Maps `event` to actions and applies them.
     pub fn handle_event(&mut self, event: Event) -> Vec<Effect> {
+        // Toasts first: one past its timeout is gone before anything sees the event, and a click on a live one is
+        // consumed. A deadline needs nothing else.
+        self.toasts.expire(self.shared.clock.now());
+        if let Event::Mouse(mouse) = &event
+            && self.toasts.handle_mouse(mouse)
+        {
+            return Vec::new();
+        }
         match self.action_for(event) {
             Some(action) => self.update(action),
             None => Vec::new(),
@@ -289,6 +297,8 @@ impl App {
         while let Some(action) = out.actions.pop_front() {
             self.apply(action, out);
         }
+        // Toasts raised by this action time out from now.
+        self.toasts.stamp(self.shared.clock.now());
         // One save per processed action, like Python's `Config.to_edit()`.
         if self.shared.take_config_dirty() {
             out.effects
@@ -417,6 +427,13 @@ impl App {
 
     /// Draws the whole UI: the base screen, then (later) modals and toasts.
     pub fn render(&mut self, frame: &mut Frame<'_>) {
+        self.render_screens(frame);
+        // `handle_event` already dropped the expired ones: the loop wakes for each deadline.
+        self.toasts.render(frame, frame.area(), &self.shared.theme);
+    }
+
+    /// The base screen and (later) modals.
+    fn render_screens(&mut self, frame: &mut Frame<'_>) {
         let area = frame.area();
         let groups = self.active_bindings();
         let theme = &self.shared.theme;
@@ -505,7 +522,7 @@ impl App {
     /// The next time something on screen changes by itself (toast expiry, a spinner frame), or `None` when nothing
     /// animates. Toasts (#79) and spinners (#78) feed it.
     pub fn next_deadline(&self) -> Option<Instant> {
-        None
+        self.toasts.next_deadline()
     }
 
     /// The most recent command-log lines, oldest first, at most [`COMMAND_LOG_LIMIT`].
@@ -513,8 +530,8 @@ impl App {
         &self.command_log
     }
 
-    /// Every toast raised so far, oldest first. #79 renders and expires them.
-    pub fn toasts(&self) -> &[Toast] {
+    /// The toasts up now.
+    pub fn toasts(&self) -> &Toasts {
         &self.toasts
     }
 
@@ -650,8 +667,9 @@ mod tests {
                 Span::styled("ctrl+q", Style::new().add_modifier(Modifier::BOLD)),
                 Span::raw(" to quit the app"),
             ]),
+            timeout: crate::toast::DEFAULT_TIMEOUT,
         };
-        assert_eq!(test.app().toasts(), [expected]);
+        assert!(test.app().toasts().iter().eq([&expected]));
     }
 
     #[test]
@@ -697,10 +715,8 @@ mod tests {
             app.send(Event::ConfigSaved(Err("disk full".into())));
         });
         assert_eq!(out, "ERROR Failed to save config: disk full\n");
-        assert_eq!(
-            app.app().toasts(),
-            [Toast::new(Severity::Error, "Failed to save settings: disk full")]
-        );
+        let expected = Toast::new(Severity::Error, "Failed to save settings: disk full");
+        assert!(app.app().toasts().iter().eq([&expected]));
     }
 
     #[test]

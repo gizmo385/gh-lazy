@@ -1,0 +1,31 @@
+version = 1
+description = "The View Maximized toast: raised by M, drawn bottom-right over the maximized widget, gone after its 5 s timeout"
+gate = true
+parity_rows = ["main-layout.toasts", "toasts.view-maximized"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+keys = ["1", "M"]
+
+[[step]]
+capture = "toast"
+
+[[step]]
+sleep_ms = 5500
+
+[[step]]
+capture = "expired"
+
+# `contains` is matched per row, and at 100 columns the message wraps before "return." (46 content columns).
+[expect.toast]
+contains = ["View Maximized", "Current view maximized. Press escape to"]
+not_contains = ["Traceback"]
+
+[expect.expired]
+not_contains = ["View Maximized", "Traceback"]

@@ -9,12 +9,12 @@ listed with that modal under [Modals](./modals.md).
 | Id | Text | Severity / title | Python reference | Milestone | Status | Issue | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `toasts.settings-updated` | "Settings updated" | information | `ui/app.py` | M4 | not started | | |
-| `toasts.view-maximized` | "Current view maximized. Press escape to return." | information / "View Maximized" | `ui/app.py` | M1 | in progress | #75, #79 | Once per session. Emitted by #75; #79 draws it. |
+| `toasts.view-maximized` | "Current view maximized. Press escape to return." | information / "View Maximized" | `ui/app.py` | M1 | in progress | #75, #79 | Once per session. Emitted by #75; #79 draws it; scenario `toast-maximize`. Py bug B32. |
 | `toasts.select-repository-first` | "Please select a repository first!" | error / "Cannot open new pull request" | `ui/screens/primary.py` | M3 | not started | | Same title for issues (Py bug B14). |
 | `toasts.error-fetching-pr` | "Error fetching pull request!" | error / "API Error" | `ui/screens/primary.py` | M2 | not started | | |
 | `toasts.opening-for-link` | "Opening pull request for link", "Opening issue for link", "Opening repository for link" | information | `ui/screens/primary.py` | M4 | not started | | |
 | `toasts.opening-for-notification` | "Opening repository for notification", "Opening pull request for notification" | information | `ui/screens/primary.py` | M4 | not started | | |
-| `toasts.notifications-login` | "Cannot load notifications - please login to the gh CLI: gh auth login" | error / "Failed to Load Notifiations" | `ui/screens/primary.py` | M1 | not started | #81 | Py bug B14. |
+| `toasts.notifications-login` | "Cannot load notifications - please login to the gh CLI: gh auth login" | error / "Failed to Load Notifiations" | `ui/screens/primary.py` | M1 | not started | #81, #79 | Py bug B14. #79 draws it; scenario `toast-error-notifications`. |
 | `toasts.bug-report-error` | "Could not load LazyGithub repo! Please open the bug report on Github" | error / "Error opening bug report" | `ui/screens/primary.py` | M4 | not started | | |
 | `toasts.nothing-selected` | "No repository currently selected" / "No pull request currently selected" / "No issue currently selected" | error | `ui/widgets/repositories.py`, `ui/widgets/pull_requests.py`, `ui/widgets/issues.py` | M2 | not started | | |
 | `toasts.edit-pr-already-merged` | "This PR has already been merged!" | warning | `ui/widgets/pull_requests.py` | M3 | not started | | |

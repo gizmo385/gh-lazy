@@ -16,7 +16,6 @@ keys = ["M"]
 [[step]]
 wait = { gone = "[1] Repositories" }
 
-# The "View Maximized" toast is checked by #79, which renders toasts.
 [[step]]
 capture = "max"
 checks = ["titles", "focus"]
@@ -69,9 +68,12 @@ wait = { gone = "[5] Details" }
 capture = "max-details"
 checks = ["titles", "tabs", "focus"]
 
+# The first maximize raises the toast. `contains` is matched per row, and at 100 columns the message wraps before
+# "return.".
 [expect.max]
 pane_titles = []
 focused = []
+contains = ["View Maximized", "Current view maximized. Press escape to"]
 not_contains = ["[1] Repositories", "Traceback"]
 
 [expect.restored]

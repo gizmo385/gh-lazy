@@ -262,6 +262,31 @@ fn a_long_line_gets_a_horizontal_thumb() {
 }
 
 #[test]
+fn a_cut_through_a_wide_character_leaves_a_blank() {
+    // The #137 review's repro: the prefix is 27 cells, so column 28 is the right half of the first `日`. Textual's
+    // `crop_extend` draws a blank there and `本` at column 1.
+    let mut log = CommandLog::new(true);
+    log.push(&info("日本語日本語"));
+    log.push(&info(&"x".repeat(40)));
+    let row = |log: &mut CommandLog, x: usize| {
+        log.x = x;
+        // A fresh backend each time: `TestBackend` doesn't model a wide character covering the cell after it.
+        let mut terminal = Terminal::new(TestBackend::new(20, 3)).unwrap();
+        terminal
+            .draw(|frame| log.render(frame, frame.area(), &Theme::default(), false))
+            .unwrap();
+        let buffer = terminal.backend().buffer();
+        // A wide character's second cell holds a blank symbol.
+        let cells: String = (0..18).map(|col| buffer[(col, 0)].symbol().to_owned()).collect();
+        cells.trim_end().to_owned()
+    };
+    assert_eq!(row(&mut log, 28), " 本 語 日 本 語");
+    assert_eq!(row(&mut log, 29), "本 語 日 本 語");
+    assert_eq!(crop_left("ab", 5), "");
+    assert_eq!(crop_left("e\u{301}x", 1), "x");
+}
+
+#[test]
 fn tiny_areas_do_not_panic() {
     for (w, h) in [(0, 0), (1, 1), (2, 1), (3, 2), (5, 40)] {
         let mut log = log_with(3);

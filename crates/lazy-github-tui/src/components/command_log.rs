@@ -1,6 +1,8 @@
 //! The command log: the [`LogLine`]s from the core's command-log layer, one row each, in a view that scrolls both
 //! ways and never wraps. Python's `LazyGithubCommandLog`, a Textual `Log`.
 
+use std::borrow::Cow;
+
 use crossterm::event::{KeyModifiers, MouseEvent, MouseEventKind};
 use lazy_github_core::logging::LogLine;
 use ratatui::Frame;
@@ -184,11 +186,9 @@ impl CommandLog {
             .iter()
             .skip(self.y)
             .take(self.viewport.1)
-            .map(|row| Line::raw(row.as_str()))
+            .map(|row| Line::raw(crop_left(row, self.x)))
             .collect();
-        // Lines wider than u16::MAX cells can't be scrolled to their very end; no log line is that long.
-        let x = u16::try_from(self.x).unwrap_or(u16::MAX);
-        frame.render_widget(Paragraph::new(rows).style(style).scroll((0, x)), text);
+        frame.render_widget(Paragraph::new(rows).style(style), text);
 
         let back = palette.scrollbar_background.over(bg);
         let colors = ScrollbarColors {
@@ -233,6 +233,29 @@ impl CommandLog {
         frame.render_widget(Clear, corner);
         frame.render_widget(Block::new().style(Style::new().bg(corner_bg)), corner);
     }
+}
+
+/// `row` without its first `x` cells, as Textual's `Strip.crop_extend` cuts it: a wide character the cut goes through
+/// leaves blanks for the part of it that's still in view.
+fn crop_left(row: &str, x: usize) -> Cow<'_, str> {
+    if x == 0 {
+        return Cow::Borrowed(row);
+    }
+    let mut column = 0;
+    let mut buf = [0; 4];
+    for (i, c) in row.char_indices() {
+        let width = Span::raw(&*c.encode_utf8(&mut buf)).width();
+        // A zero-width mark right after the cut belongs to the character before it, which is gone.
+        if column >= x && width > 0 {
+            return Cow::Borrowed(&row[i..]);
+        }
+        column += width;
+        if column > x {
+            let rest = &row[i + c.len_utf8()..];
+            return Cow::Owned(format!("{}{rest}", " ".repeat(column - x)));
+        }
+    }
+    Cow::Borrowed("")
 }
 
 /// Textual's `ScrollBar.render`: no thumb unless the content is bigger than the window.

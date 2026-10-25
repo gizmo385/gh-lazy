@@ -1,7 +1,6 @@
 version = 1
 description = "An error toast: notifications enabled while logged out of gh shows the not-logged-in toast"
-# The Rust side needs the unread-count fetch (#81). Flip this to true once it lands.
-gate = false
+gate = true
 parity_rows = ["main-layout.toasts", "toasts.notifications-login"]
 sizes = [[160, 48], [100, 30]]
 
@@ -17,8 +16,10 @@ cache = { auth_last_checked = "2099-01-01T00:00:00" }
 [[step]]
 wait = { text = "Cannot load notifications", timeout_ms = 15000 }
 
+# The section tables are M2, so only titles and focus are compared across apps.
 [[step]]
 capture = "error-toast"
+checks = ["titles", "focus"]
 
 # The title differs by design (Py bug B14: Python's "Failed to Load Notifiations"), so it isn't asserted.
 # `contains` is matched per row, and the message wraps at both sizes: after "CLI:" at 160 columns, after "to" at 100.

@@ -263,6 +263,11 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   overflows its pane, over two `GET /user/repos` pages (50, then 10). Listed before `base`, for the
   `table-navigation` and `table-search` scenarios: on the first page, three `parity-bot` names contain `lazy` and two
   start with `gh`. Hand-written: only the fields the apps read are kept.
+- `notifications-0/`, `notifications-3/`, `notifications-50/`: `GET /notifications` (`all=false`, `page=1`,
+  `per_page=50`) answered with 0, 3 or 50 unread notifications (50 is a full first page) for repos in `base`. Listed
+  before `base`, for the `status-bar-unread-*` scenarios. Hand-written.
+- `repo-selected-empty/`: what selecting `parity-bot/dotfiles` loads (issues, workflows, runs, the README), all empty
+  but the README. Listed before `base`, for `status-bar-current-repo`. Hand-written.
 - `prs-70/`: the repo `parity-bot/lazy-fixture`, added to base's `GET /user/repos` page, with 70 pull requests over
   `GET /repos/parity-bot/lazy-fixture/issues` pages of 30 (`state=all`, as `list_issues` sends them: 30, 30, 10, then
   an empty page 4), plus its README and empty workflows and runs. Listed before `base`, for the `table-lazy-load`

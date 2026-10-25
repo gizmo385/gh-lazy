@@ -66,7 +66,10 @@ needs-triage ──► needs-design ──► ready ──► in-progress ──
    implement, add tests and a parity scenario, open a PR into `rust-main` that says `Closes #<n>`. Move to `in-review`.
 4. **Review** (code reviewer and parity reviewer, in parallel). The code reviewer checks Rust quality; the parity reviewer
    runs the scenarios and compares against Python. Either can request changes. Both approving is the merge bar.
-5. **Merge** (Chris, or an agent Chris has explicitly allowed to merge). Squash into `rust-main`. The parity reviewer
+5. **Merge.** Squash into `rust-main`. The implementer enables auto-merge (squash) on the PR when opening it, so it
+   merges on its own once required checks pass and both reviews approve. Chris can also merge by hand. This relies on
+   branch protection for `rust-main` that requires the CI checks and approving reviews; without it, GitHub would merge
+   as soon as auto-merge is enabled. The parity reviewer
    updates the row in [PARITY.md](./PARITY.md).
 
 Any role that hits a choice that changes scope, UX or a dependency choice sets `status: needs-decision`, writes the
@@ -87,7 +90,8 @@ Every `ready` issue body has these sections:
 ## Rules that apply to every agent
 
 - Never push to `main`, and never open a PR into `main`, until the cutover issue says so.
-- Never merge your own PR. Never approve a PR you wrote.
+- Never merge a PR by hand, and never approve a PR you wrote. Enabling auto-merge (squash) on a PR into `rust-main` is
+  allowed; it never applies to PRs into `main`.
 - Don't change the Python code on `rust-main`. Python fixes go to `main` and flow into `rust-main` by merge.
 - Keep one issue per PR. If you find extra work, file an issue for it (`status: needs-triage`) and link it.
 - Leave a short comment on the issue whenever you change its status, saying why.

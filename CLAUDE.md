@@ -14,6 +14,7 @@ Hard rules:
 
 - Never commit to or open PRs into `main` for rewrite work. Branch `rust/<issue>-<slug>` from `rust-main` and PR back
   into `rust-main`.
+- Auto-merge (squash) is allowed on PRs into `rust-main`. Never merge by hand, and never auto-merge into `main`.
 - All GitHub interaction in the app goes through the `gh` CLI.
 - Write idiomatic Rust; don't transliterate the Python.
 - Before pushing: `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`,

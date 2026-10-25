@@ -31,7 +31,7 @@ Status: in review · Owner: @gizmo385 · Trunk branch: `rust-main`
 - The Python code stays in place on `rust-main` as the parity reference and is only deleted in the cutover PR.
 - Python bug fixes that land on `main` are merged into `rust-main` periodically (`main` → `rust-main`, never the reverse)
   so the reference implementation stays current.
-- Squash-merge into `rust-main`; PR titles become the history.
+- Squash-merge into `rust-main`; PR titles become the history. Auto-merge is allowed on PRs into `rust-main`.
 
 ## 3. Repository layout on `rust-main`
 
@@ -202,3 +202,4 @@ Recorded 2026-10-25 by Chris:
    to the CI matrix in M5.
 6. M0 and M1 issues are filed. Milestones are tracked with `milestone: M<n>` labels plus one tracking issue per
    milestone.
+7. Auto-merge may be enabled on PRs into `rust-main` (squash). It's never used for PRs into `main`.

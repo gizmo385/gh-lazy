@@ -424,6 +424,8 @@ schema-mismatched file is ignored (logged as a warning) and fresh data is fetche
 | `clear-cache [--no-confirm]` | `cli.py` | M4 | not started | | Prompt "Confirm deletion of everything in <dir>"; prints "Cache cleared" or "Canceling cache deletion". |
 | `debug` | `cli.py`, `lib/debug.py` | M4 | not started | | Prints the debug markdown. |
 | `version` | `cli.py` | M4 | not started | | Prints "LazyGithub version <x>". |
+| `-h`/`--help` and `--version` have no side effects: no config dir, log file or cache is created | `cli.py` (Click runs `cli` setup first) | M1 | intentional diff | #72 | Python's `cli` group creates the config dir and logfile before printing help. Approved by Chris on 2026-10-25 ([thread](https://claude.ai/code/project/chan_012pc8Wphbdkgs8rn26pJBv9?thread=cmsg_012pc8Wphbdkgs8rn26pJBv91YRDXqF1kGmJaE3iA28mKh)). |
+| A config file that fails to load prints a one-line error naming the file and suggesting `lazy-github clear-config`, then exits 1 | `lib/config.py` (pydantic `ValidationError` traceback) | M1 | intentional diff | #72 | Python crashes with a traceback. Approved by Chris on 2026-10-25 ([thread](https://claude.ai/code/project/chan_012pc8Wphbdkgs8rn26pJBv9?thread=cmsg_012pc8Wphbdkgs8rn26pJBv91YRDXqF1kGmJaE3iA28mKh)). |
 | `LAZY_GITHUB_ORIGINAL_PWD` set to the cwd if unset (the `gh-lazy` extension script sets it) | `cli.py` `cli`, `gh-lazy` | M1 | not started | | |
 
 ## Terminal caveats

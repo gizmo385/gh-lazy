@@ -7,6 +7,8 @@ data with no network. See `docs/rust-rewrite/PLAN.md` §6.2.
 - [fake-gh](#fake-gh): installing it, environment variables, supported commands, output, the request log.
 - [Fixture format (v1)](#fixture-format-v1): layout, file schema, key normalization, matching.
 - [`fake-gh lint`](#fake-gh-lint).
+- [Recording fixtures](#recording-fixtures): `cargo xtask record-fixtures`, the scope rules, the scrub rules and
+  `cargo xtask check-fixtures`.
 - [The parity harness](#the-parity-harness-cargo-xtask-parity): running scenarios, flags, the isolated environment,
   the scenario format, screen dumps and results.
 
@@ -248,6 +250,133 @@ committed set (`crates/fake-gh/tests/lint_fixtures.rs`).
 - `GET /notifications` with `all=false`, `page=1`, `per_page=50`: no notifications.
 
 User-scoped endpoints stay hand-written so recordings never leak a real account's private data.
+
+Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` repo by `cargo xtask record-fixtures
+--set base`, from `parity/fixtures/base/recipe.toml` (the first recording is still to be committed; see #113). See
+[Recording fixtures](#recording-fixtures).
+
+## Overlays
+
+- `repos-two-pages/`: base's three repos split over two `GET /user/repos` pages (two, then one) linked by
+  `Link: rel="next"`. Listed before `base`, it exercises pagination; `crates/fake-gh/tests/rust_client.rs` uses it.
+
+## Recording fixtures
+
+```
+cargo xtask record-fixtures --set <name> [--recipe <path>] [--from-log <fake-gh.log>]... [--gh <path>] [--check] [--dry-run]
+cargo xtask check-fixtures [<fixtures-dir>]
+```
+
+`record-fixtures` runs a set's recipe against the real, authenticated `gh` and writes each response, scrubbed, as a
+fixture. It's a developer tool, run by hand or by an agent. It never runs in CI, and it never sends anything but `GET`.
+
+### Workflow
+
+1. Run the parity scenarios against the Python app only (`cargo xtask parity --python-only`, #69). Every request
+   fake-gh couldn't answer is a `"miss": true` line in
+   `parity/reports/latest/<scenario>/<size>/<app>/fake-gh.log`.
+2. Record from those misses:
+   `cargo xtask record-fixtures --set base --from-log parity/reports/latest/<scenario>/<size>/python/fake-gh.log`.
+   The `GET` misses are appended to the recipe, sorted and de-duplicated, so the recipe stays the source of truth and
+   a re-recording is reproducible. Misses that aren't `GET`, or that are outside the recording scope, are listed at the
+   end ("write these by hand", "refused") and not added.
+3. Review the diff of `parity/fixtures/`. Look at what was kept, not only at what was scrubbed.
+4. Commit the recipe and the fixtures together.
+
+Use `--dry-run` to print the planned requests without running `gh`, and `--check` to record and compare with the
+committed fixtures without writing anything (it exits 1 if any file differs). `--check` compares the exact bytes a
+write would produce, so key order and formatting count, but it keeps the committed `note` (which holds the recording
+date), so a re-recording on another day isn't drift.
+
+Some recorded data depends on who records it. For example, the repo object's `permissions` (and, for admins,
+`security_and_analysis`) reflects the recorder's token. A re-recording from a differently scoped token shows up as
+drift in `--check`. Review such diffs, and don't commit them as if they were upstream changes.
+
+### The recipe
+
+`parity/fixtures/<set>/recipe.toml` (or `--recipe`):
+
+```toml
+version = 1
+allowed_repos = ["gizmo385/gh-lazy"]    # every /repos/<owner>/<name>/... path must be in this list
+allowed_users = ["gizmo385"]            # /users/<login> and /users/<login>/repos are allowed for these
+
+[[request]]
+method = "GET"                          # only GET is accepted; this is the default
+path = "/repos/gizmo385/gh-lazy/issues"
+query = { state = "all", page = "1", per_page = "30" }
+accept = "json"                         # a normalized accept name (see Key normalization); default "json"
+
+[[request]]
+path = "/repos/gizmo385/gh-lazy/readme"
+accept = "raw"
+
+[[request]]
+path = "/repos/gizmo385/gh-lazy/actions/runs/123/logs"
+binary = true                           # stored as a body_file and not text-scanned; must be opted in
+```
+
+Each request runs as `gh api -i -X GET -H "Accept: <media type>" "<path>?<canonical query>"`, up to 4 at a time.
+The query goes in the path, so `-F` typing can't change values.
+
+### Scope rules
+
+Checked before any request is sent. A recipe entry that breaks one stops the run; a `--from-log` miss that breaks one
+is reported as refused and not added to the recipe.
+
+- The `gh` used (`--gh`, else the first `gh` on `PATH`) must not be fake-gh (`gh --version` contains `fake-gh`), and
+  `gh auth status` must exit 0.
+- Only `GET`. Write fixtures (merge, create issue, comment) are always hand-written.
+- Allowed paths: `/repos/<owner>/<name>` and anything under it for repos in `allowed_repos`; `/users/<login>` and
+  `/users/<login>/repos` for logins in `allowed_users`; `/emojis`; `/rate_limit`.
+- Admin-only repo sub-paths are refused even under an allowed repo, because the recorder's token can read them but
+  the public can't: `hooks`, `keys`, `invitations`, `collaborators`, `traffic`, `actions/secrets`,
+  `actions/variables`, and `environments/<name>/secrets` and `environments/<name>/variables`.
+- Everything else is refused. `/user*`, `/notifications*` and `/orgs/*` read the signed-in user's private scope, so
+  they stay hand-written in `base` under the fictional login `parity-bot`.
+
+### Scrub rules
+
+Applied to every response before anything is written. An **abort** stops the run before any file is written, names
+the request and the JSON pointer or byte offset, and exits 1. Secrets are never rewritten: a hit means the recipe is
+wrong.
+
+- **Headers**: only `Content-Type`, `Link` and `Location` are kept. Everything else (`Date`, `Etag`,
+  `X-Ratelimit-*`, `X-Github-Request-Id`, `X-Oauth-*`, ...) is dropped.
+- **JSON bodies** (a JSON `Content-Type` and a body that parses), walked recursively:
+  - `email`, `author_email` and `committer_email` string values become `user@example.com`. `null` stays `null`.
+  - `avatar_url` becomes `https://avatars.githubusercontent.com/u/0?v=4`, and `gravatar_id` becomes `""`.
+  - An object with `"private": true` aborts.
+  - A string matching a secret pattern aborts. The patterns are GitHub tokens (`gh[pousr]_...`, `github_pat_...`),
+    PEM private keys, AWS access key ids (`AKIA...`) and Slack tokens (`xox[baprs]-...`).
+  - Everything else is kept, including timestamps (the app only shows absolute dates), `node_id`s, and other
+    people's public logins and comment text.
+- **Text bodies** (diffs, raw READMEs, logs): secret patterns abort. Emails become `user@example.com`, except
+  addresses at `example.com` and `users.noreply.github.com`, SSH remotes (`git@github.com:o/r`), and image names
+  whose "TLD" is an image extension (`logo@2x.png`; png, jpg, jpeg, gif, svg, webp). The text is otherwise kept byte
+  for byte.
+- **Binary bodies** (`binary = true` only) are stored without scanning. A body that isn't UTF-8 from an entry not
+  marked binary aborts.
+
+### What gets written
+
+One fixture per request, at the canonical path and name for its key, in `parity/fixtures/<set>/`. JSON bodies go in
+`body`, pretty-printed with 2-space indent and the response's key order. Text up to 64 KiB goes in `body_text`;
+longer text and all binary bodies go in a `<name>.body.<ext>` sibling named by `body_file`. The `note` says
+`recorded <YYYY-MM-DD> by cargo xtask record-fixtures`.
+
+An existing fixture with the same key is overwritten. A hand-written one with the same key (and no `body` or `when`
+matcher) under another name is renamed to the canonical name. Hand-written fixtures with no recipe entry are left
+alone. If any file in the set fails to load, the run stops before sending a request, so it never writes over a file
+it couldn't read. After writing, the run checks the set with the scrub check and `fake-gh lint`, and prints
+`recorded N, refused M, write-by-hand K`.
+
+### `cargo xtask check-fixtures`
+
+Runs the same secret, email, avatar, `private` and header rules over every fixture under `parity/fixtures/`
+(hand-written ones included), without network, and exits 1 on any finding: anything the scrubber would have
+rewritten or refused. `body_file`s that aren't UTF-8 are treated as binary and skipped. `cargo test` runs it
+(`xtask/src/fixtures/check.rs`), so CI enforces it.
 
 ## The parity harness (`cargo xtask parity`)
 

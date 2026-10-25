@@ -14,11 +14,11 @@ use super::summary::{CaptureSummary, SUMMARY_VERSION, ScenarioResult, ScenarioSu
 use super::{Context, HarnessError, Result};
 
 /// Exit code: every gated scenario passed and the Python side is clean.
-pub const EXIT_OK: i32 = 0;
+pub const EXIT_OK: u8 = 0;
 /// Exit code: a gated scenario failed, or the Python side failed anywhere.
-pub const EXIT_FAILED: i32 = 1;
+pub const EXIT_FAILED: u8 = 1;
 /// Exit code: a scenario file is invalid, or the harness itself failed.
-pub const EXIT_HARNESS: i32 = 2;
+pub const EXIT_HARNESS: u8 = 2;
 
 /// Run parity scenarios against the Python and Rust apps and capture their screens.
 #[derive(Debug, Clone, clap::Args)]
@@ -87,17 +87,15 @@ pub fn venv_python(repo: &Path) -> PathBuf {
 }
 
 /// Runs the command and returns its exit code.
-pub fn run(args: &ParityArgs) -> i32 {
-    match run_inner(args) {
-        Ok(code) => code,
-        Err(e) => {
-            eprintln!("parity: {e}");
-            EXIT_HARNESS
-        }
-    }
+pub fn run(args: &ParityArgs) -> std::process::ExitCode {
+    let code = run_inner(args).unwrap_or_else(|e| {
+        eprintln!("parity: {e}");
+        EXIT_HARNESS
+    });
+    std::process::ExitCode::from(code)
 }
 
-fn run_inner(args: &ParityArgs) -> Result<i32> {
+fn run_inner(args: &ParityArgs) -> Result<u8> {
     let repo = repo_root();
     let roots = Roots {
         fixtures: args
@@ -198,7 +196,7 @@ fn run_inner(args: &ParityArgs) -> Result<i32> {
     Ok(exit_code(&summary))
 }
 
-fn exit_code(summary: &Summary) -> i32 {
+fn exit_code(summary: &Summary) -> u8 {
     if summary.scenarios.iter().any(|s| s.error.is_some()) {
         EXIT_HARNESS
     } else if summary.scenarios.iter().any(|s| s.result == ScenarioResult::Fail) {

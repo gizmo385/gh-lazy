@@ -10,11 +10,14 @@ publish.workspace = true
 
 [dependencies]
 clap = { workspace = true }
+# The fixture format, key normalization and lint live in fake-gh; the recorder reuses them. The parity harness uses
+# its `install` and request-log types.
 fake-gh = { workspace = true }
+form_urlencoded = { workspace = true }
 portable-pty = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true }
-# `preserve_order` keeps config.json keys in the order the config file lists them.
+# `preserve_order` keeps recorded bodies' and config.json keys in their original order.
 serde_json = { workspace = true, features = ["preserve_order"] }
 tempfile = { workspace = true }
 thiserror = { workspace = true }

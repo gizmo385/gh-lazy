@@ -1,0 +1,21 @@
+# What `cargo xtask record-fixtures --set base` records. See parity/README.md, "Recording fixtures".
+#
+# User-scoped endpoints (/user, /user/repos, /notifications) are never recorded: they're hand-written in this set
+# for the fictional login parity-bot. Write requests (merge, create, comment) are always hand-written too.
+version = 1
+allowed_repos = ["gizmo385/gh-lazy"]
+allowed_users = ["gizmo385"]
+
+# The repo itself.
+[[request]]
+path = "/repos/gizmo385/gh-lazy"
+
+# lazy_github/lib/github/repositories.py: the README, raw.
+[[request]]
+path = "/repos/gizmo385/gh-lazy/readme"
+accept = "raw"
+
+# lazy_github/lib/github/issues.py `list_issues`: the first page of all issues.
+[[request]]
+path = "/repos/gizmo385/gh-lazy/issues"
+query = { state = "all", page = "1", per_page = "30" }

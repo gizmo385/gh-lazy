@@ -1,0 +1,26 @@
+{
+    "appearance": {
+        "show_command_log": "yes",
+        "show_workflows": "OFF",
+        "show_issues": 0,
+        "show_pull_requests": "t"
+    },
+    "notifications": {
+        "enabled": 1,
+        "mark_notification_as_read_when_selected": "n"
+    },
+    "pull_requests": {
+        "preload_pull_request_for_current_commit": "True"
+    },
+    "cache": {
+        "auth_cache_duration": "3600",
+        "default_ttl": 120.0,
+        "list_repos_ttl": "7200",
+        "list_issues_ttl": 60
+    },
+    "core": {
+        "first_start": "0",
+        "logfile_max_bytes": "1000",
+        "logfile_count": 2.0
+    }
+}

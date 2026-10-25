@@ -25,7 +25,11 @@ serde_json = { workspace = true, features = ["preserve_order"] }
 thiserror = { workspace = true }
 
 [dev-dependencies]
+assert_cmd = { workspace = true }
 insta = { workspace = true }
+# tests/rust_client.rs drives the Rust app's `GhCli` against this binary.
+lazy-github-core = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt"] }
 
 [lints]
 workspace = true

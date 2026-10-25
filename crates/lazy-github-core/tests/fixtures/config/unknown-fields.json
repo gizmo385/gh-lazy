@@ -1,0 +1,33 @@
+{
+    "future_section": {
+        "nested": [
+            1,
+            2,
+            {
+                "deep": "value"
+            }
+        ]
+    },
+    "appearance": {
+        "zz_unknown": "kept",
+        "theme": "not-a-real-theme",
+        "aa_unknown": 42,
+        "show_workflows": false
+    },
+    "bindings": {
+        "overrides": {
+            "app.quit": "Q",
+            "app.help": "question_mark",
+            "common.search": "slash",
+            "app.dollar": "dollar_sign",
+            "common.table.select": "q, escape"
+        },
+        "bindings_extra": null
+    },
+    "api": {
+        "client_type": "GITHUB_CLI",
+        "base_url": "https://api.github.com",
+        "timeout": 30.5
+    },
+    "another_unknown": true
+}

@@ -4,6 +4,7 @@ use lazy_github_core::logging::LogLine;
 
 use crate::effect::{GithubResponse, RequestId, TimerId};
 use crate::keymap::BindingId;
+use crate::screens::auth::AuthAction;
 use crate::toast::Toast;
 
 /// The closed set of things `App::update` handles. It grows one variant per feature: screens and components add one
@@ -17,6 +18,12 @@ pub enum Action {
     QuitHint,
     /// Show a toast.
     Notify(Toast),
+    /// Replace the startup or authentication screen with the main screen.
+    EnterMain,
+
+    // Screens.
+    /// The authentication screen's own actions.
+    Auth(AuthAction),
 
     // Plumbing: results of effects and other runtime inputs, routed to their owner.
     /// A GitHub request finished.

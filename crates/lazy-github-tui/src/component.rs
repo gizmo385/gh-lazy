@@ -103,6 +103,8 @@ pub enum Owner {
 /// The base screens.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ScreenKind {
+    /// The "GitHub Authentication" screen.
+    Auth,
     /// The main screen.
     Main,
 }

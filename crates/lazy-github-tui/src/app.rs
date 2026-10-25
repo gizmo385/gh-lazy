@@ -15,10 +15,12 @@ use tokio::time::Instant;
 use crate::action::Action;
 use crate::clock::Clock;
 use crate::component::{ChainLink, Component, Cx, Outbox, Owner, RenderCx, ScreenKind, Shared};
-use crate::effect::Effect;
+use crate::effect::{Effect, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::{BindingId, KeyChord, Keymap};
+use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
 use crate::screens::main::MainScreen;
+use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
 use crate::theme::Theme;
 use crate::toast::{Severity, Toast};
 
@@ -30,6 +32,10 @@ const APP_BINDINGS: &[BindingId] = &[BindingId::TextualQuit, BindingId::TextualH
 
 /// The screen under any modals.
 enum BaseScreen {
+    /// Blank, until the startup auth check decides.
+    Startup(StartupScreen),
+    /// `gh` can't be used yet. Modal: only its own bindings and priority ones apply.
+    Auth(AuthScreen),
     Main(MainScreen),
 }
 
@@ -43,12 +49,12 @@ pub struct App {
 }
 
 impl App {
-    /// An app on the main screen, with the keymap built from `config`'s `bindings.overrides`. The clock is the only
-    /// source of time for the app and its components.
+    /// An app on the blank startup screen, with the keymap built from `config`'s `bindings.overrides`. The clock is
+    /// the only source of time for the app and its components. [`Self::init`] decides where it goes next.
     pub fn new(config: Config, theme: Theme, clock: impl Clock + 'static) -> Self {
         let keymap = Keymap::new(&config.bindings.overrides);
         Self {
-            base: BaseScreen::Main(MainScreen::new(&config.appearance, &keymap)),
+            base: BaseScreen::Startup(StartupScreen::default()),
             shared: Shared::new(config, keymap, theme, Arc::new(clock)),
             toasts: Vec::new(),
             command_log: VecDeque::new(),
@@ -56,9 +62,28 @@ impl App {
         }
     }
 
-    /// Effects to run when the event loop starts. The startup auth check arrives with #106.
+    /// Effects to run when the event loop starts: the startup auth check, unless a recent one is cached, in which
+    /// case the main screen is shown at once.
     pub fn init(&mut self) -> Vec<Effect> {
-        Vec::new()
+        let mut out = Outbox::default();
+        let BaseScreen::Startup(startup) = &mut self.base else {
+            return Vec::new();
+        };
+        if startup.begin(&mut Cx::new(&mut self.shared, &mut out)) == StartupDecision::Fresh {
+            out.actions.push_back(Action::EnterMain);
+        }
+        self.drain(&mut out);
+        out.effects
+    }
+
+    /// Shows the main screen without the startup check, for tests of everything after it.
+    #[cfg(any(test, feature = "test-util"))]
+    pub(crate) fn skip_startup(&mut self) {
+        self.base = BaseScreen::Main(self.main_screen());
+    }
+
+    fn main_screen(&self) -> MainScreen {
+        MainScreen::new(&self.shared.config.appearance, &self.shared.keymap)
     }
 
     /// Maps `event` to actions and applies them.
@@ -98,8 +123,9 @@ impl App {
         let chord = KeyChord::from_event(&key)?;
         // 2. Escape minimizes a maximized widget before any binding: arrives with maximize (#75).
         let chain = self.binding_chain();
-        // 3. Priority bindings, from the app link inward. The clash rule sees the whole link, as in Textual.
-        for link in chain.iter().rev() {
+        // 3. Priority bindings, from the app link inward, past any modal screen. The clash rule sees the whole link,
+        //    as in Textual.
+        for link in self.full_binding_chain().iter().rev() {
             let matches: Vec<BindingId> = self.shared.keymap.priority_matches_in(link.bindings, &chord).collect();
             if let Some(action) = self.route_first(link.owner, matches) {
                 return Some(action);
@@ -123,22 +149,37 @@ impl App {
         matches.into_iter().find_map(|id| self.route_binding(owner, id))
     }
 
-    /// The binding chain for the current focus, innermost first. The app link comes last.
+    /// The binding chain for the current focus, innermost first, ending at a modal screen as Textual's
+    /// `_modal_binding_chain` does. Otherwise the app link comes last.
     pub fn binding_chain(&self) -> Vec<ChainLink> {
+        let mut chain = self.full_binding_chain();
+        let modal = Owner::Screen(ScreenKind::Auth);
+        if let Some(end) = chain.iter().position(|link| link.owner == modal) {
+            chain.truncate(end + 1);
+        }
+        chain
+    }
+
+    /// The whole chain, modal screens included, which priority bindings are looked up in.
+    fn full_binding_chain(&self) -> Vec<ChainLink> {
         let screen = match &self.base {
-            BaseScreen::Main(main) => ChainLink {
+            BaseScreen::Startup(_) => None,
+            BaseScreen::Auth(auth) => Some(ChainLink {
+                owner: Owner::Screen(ScreenKind::Auth),
+                bindings: auth.bindings(),
+            }),
+            BaseScreen::Main(main) => Some(ChainLink {
                 owner: Owner::Screen(ScreenKind::Main),
                 bindings: main.bindings(),
-            },
+            }),
         };
-        // Modals (M2) will cut the chain here, as Textual's `_modal_binding_chain` does.
-        vec![
-            screen,
-            ChainLink {
+        screen
+            .into_iter()
+            .chain([ChainLink {
                 owner: Owner::App,
                 bindings: APP_BINDINGS,
-            },
-        ]
+            }])
+            .collect()
     }
 
     /// Asks the owner of a matched binding what it means right now.
@@ -149,11 +190,13 @@ impl App {
                 BindingId::TextualHelpQuit => Some(Action::QuitHint),
                 other => Some(Action::Unimplemented(other)),
             },
-            Owner::Screen(ScreenKind::Main) => {
+            Owner::Screen(kind) => {
                 let mut scratch = Outbox::default();
                 let cx = Cx::new(&mut self.shared, &mut scratch);
-                match &mut self.base {
-                    BaseScreen::Main(main) => main.on_binding(id, &cx),
+                match (&mut self.base, kind) {
+                    (BaseScreen::Main(main), ScreenKind::Main) => main.on_binding(id, &cx),
+                    (BaseScreen::Auth(auth), ScreenKind::Auth) => auth.on_binding(id, &cx),
+                    _ => None,
                 }
             }
         }
@@ -195,10 +238,20 @@ impl App {
             }
             Action::QuitHint => out.actions.push_back(Action::Notify(quit_hint())),
             Action::Notify(toast) => self.toasts.push(toast),
-            Action::Github(id, _) => {
-                // Screens that make requests (#106, #74) claim their responses here by id.
-                tracing::debug!("Dropping the response to request {id}: nothing is waiting for it");
+            Action::EnterMain => {
+                if matches!(self.base, BaseScreen::Auth(_)) {
+                    out.effects.push(Effect::CancelTimer(TimerId::AuthPoll));
+                }
+                self.base = BaseScreen::Main(self.main_screen());
             }
+            Action::Auth(action) => {
+                if let BaseScreen::Auth(auth) = &mut self.base {
+                    auth.update(action, &mut Cx::new(&mut self.shared, out));
+                } else {
+                    tracing::debug!("Dropping {action:?}: the authentication screen is gone");
+                }
+            }
+            Action::Github(id, response) => self.route_response(id, response, out),
             Action::ConfigSaved(Ok(())) => tracing::debug!("Saved the config"),
             Action::ConfigSaved(Err(message)) => {
                 tracing::error!("Failed to save config: {message}");
@@ -206,6 +259,9 @@ impl App {
                     Severity::Error,
                     format!("Failed to save settings: {message}"),
                 ));
+            }
+            Action::Timer(TimerId::AuthPoll) if matches!(self.base, BaseScreen::Auth(_)) => {
+                out.actions.push_back(Action::Auth(AuthAction::Poll));
             }
             Action::Timer(id) => tracing::debug!("Ignoring timer {id:?}: nothing owns it"),
             Action::CommandLog(line) => {
@@ -215,6 +271,42 @@ impl App {
                 self.command_log.push_back(line);
             }
             Action::Unimplemented(id) => tracing::debug!("{id:?} is not implemented yet"),
+        }
+    }
+
+    /// Hands a response to the screen waiting for it.
+    fn route_response(&mut self, id: RequestId, response: GithubResponse, out: &mut Outbox) {
+        // Screens and panes that make other requests (M2) claim their responses here by id.
+        let GithubResponse::CheckAuth(result) = response else {
+            tracing::debug!("Dropping the response to request {id}: nothing is waiting for it");
+            return;
+        };
+        let claimed = match &mut self.base {
+            BaseScreen::Startup(startup) => startup.take_pending(id),
+            BaseScreen::Auth(_) => {
+                out.actions.push_back(Action::Auth(AuthAction::Checked(id, result)));
+                return;
+            }
+            BaseScreen::Main(_) => false,
+        };
+        if !claimed {
+            tracing::debug!("Dropping the response to request {id}: nothing is waiting for it");
+            return;
+        }
+        let mut cx = Cx::new(&mut self.shared, out);
+        match result {
+            Ok(()) => {
+                let now = naive_now(&cx.local_now());
+                let config = cx.config_mut();
+                config.cache.auth_last_checked = Some(now);
+                // Rust has no backend picker, whose save cleared this in Python.
+                config.core.first_start = false;
+                cx.dispatch(Action::EnterMain);
+            }
+            Err(error) => {
+                tracing::debug!("Triggering auth with github");
+                self.base = BaseScreen::Auth(AuthScreen::open(AuthReason::from_error(&error), &mut cx));
+            }
         }
     }
 
@@ -240,7 +332,18 @@ impl App {
             focus_within: true,
         };
         match &mut self.base {
+            BaseScreen::Startup(_) => {}
+            BaseScreen::Auth(auth) => auth.render(frame, area, &cx),
             BaseScreen::Main(main) => main.render(frame, area, &cx),
+        }
+    }
+
+    /// The base screen showing, or `None` for the blank startup screen.
+    pub fn screen(&self) -> Option<ScreenKind> {
+        match self.base {
+            BaseScreen::Startup(_) => None,
+            BaseScreen::Auth(_) => Some(ScreenKind::Auth),
+            BaseScreen::Main(_) => Some(ScreenKind::Main),
         }
     }
 

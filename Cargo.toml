@@ -40,9 +40,9 @@ indexmap = { version = "2", features = ["serde"] }
 clap = { version = "4.6", features = ["derive"] }
 thiserror = "2"
 form_urlencoded = "1"
-# Fixture recipes for `cargo xtask record-fixtures`.
+# Fixture recipes for `cargo xtask record-fixtures`, and parity scenarios (`toml::Spanned` gives file:line errors).
 toml = "1"
-# Secret and email patterns in the fixture scrubber.
+# Secret and email patterns in the fixture scrubber, and parity `wait.regex` steps.
 regex = "1"
 # Canonical HTTP reason phrases for fake-gh's `-i` status line.
 http = "1"
@@ -66,6 +66,8 @@ rstest = "0.28"
 assert_cmd = "2"
 portable-pty = "0.9"
 vt100 = "0.18"
+# Per-run temp dirs in the parity harness.
+tempfile = "3"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

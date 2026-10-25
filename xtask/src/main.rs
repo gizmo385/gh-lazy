@@ -20,6 +20,8 @@ enum Task {
     RecordFixtures(fixtures::RecordArgs),
     /// Check every committed parity fixture against the scrub rules, without network.
     CheckFixtures(fixtures::CheckArgs),
+    /// Run parity scenarios against the Python and Rust apps and capture their screens.
+    Parity(xtask::parity::cli::ParityArgs),
 }
 
 fn main() -> ExitCode {
@@ -32,6 +34,7 @@ fn main() -> ExitCode {
         },
         Some(Task::RecordFixtures(args)) => fixtures::record_fixtures(&args),
         Some(Task::CheckFixtures(args)) => fixtures::check_fixtures(&args),
+        Some(Task::Parity(args)) => xtask::parity::cli::run(&args),
     }
 }
 

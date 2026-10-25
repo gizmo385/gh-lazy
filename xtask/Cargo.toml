@@ -10,15 +10,30 @@ publish.workspace = true
 
 [dependencies]
 clap = { workspace = true }
-# The fixture format, key normalization and lint live in fake-gh; the recorder reuses them.
+# The fixture format, key normalization and lint live in fake-gh; the recorder reuses them. The parity harness uses
+# its `install` and request-log types.
 fake-gh = { workspace = true }
 form_urlencoded = { workspace = true }
+portable-pty = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true }
-# `preserve_order` keeps recorded bodies' key order.
+# `preserve_order` keeps recorded bodies' and config.json keys in their original order.
 serde_json = { workspace = true, features = ["preserve_order"] }
+tempfile = { workspace = true }
 thiserror = { workspace = true }
 toml = { workspace = true }
+vt100 = { workspace = true }
+
+[dev-dependencies]
+# Only for the `echo_tui` test helper, which needs raw mode and terminal events.
+crossterm = { workspace = true }
+
+# A tiny TUI the runner integration test (tests/runner.rs) drives. `cargo test` builds examples, so the test finds
+# it at target/<profile>/examples/echo_tui.
+[[example]]
+name = "echo_tui"
+path = "tests/bin/echo_tui.rs"
+test = false
 
 [lints]
 workspace = true

@@ -1,0 +1,42 @@
+version = 1
+description = "The command log shows the logged-out notifications error, and 6 focuses it"
+# The Rust side needs the notifications poll (#81) to log the error line.
+gate = false
+parity_rows = ["main-layout.command-log"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+gh_auth = "logged-out"
+
+[env.config_overrides]
+appearance = { show_command_log = true }
+notifications = { enabled = true }
+cache = { auth_last_checked = "2099-01-01T00:00:00" }
+
+# The full line is "... - please login to the gh CLI: gh auth login", but it's wider than the log at both sizes and
+# doesn't wrap, so only its start is on screen.
+[[step]]
+wait = { regex = "ERROR \\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d - Cannot load notifications -", timeout_ms = 15000 }
+
+# Wall-clock timestamps differ between the two runs, so the log's rows aren't compared.
+[[step]]
+capture = "shown"
+checks = ["titles", "tabs", "focus", "rows"]
+ignore = { boxes = ["Command Log"] }
+
+[[step]]
+keys = ["6"]
+
+[[step]]
+capture = "focused"
+checks = ["titles", "tabs", "focus", "rows"]
+ignore = { boxes = ["Command Log"] }
+
+[expect.shown]
+focused = ["[1] Repositories"]
+not_contains = ["Traceback"]
+
+[expect.focused]
+focused = ["[6] Command Log"]
+not_contains = ["Traceback"]

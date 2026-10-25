@@ -284,6 +284,7 @@ fn bad_bools_are_errors(#[case] raw: &str) {
 #[case::whole_float("600.0", 600)]
 #[case::string("\"600\"", 600)]
 #[case::string_float("\"600.0\"", 600)]
+#[case::underscores("\"1_000\"", 1000)]
 fn lax_int_forms(#[case] raw: &str, #[case] expected: u64) {
     let (_tmp, _paths, c) = load_ok(&format!(r#"{{"cache": {{"default_ttl": {raw}}}}}"#));
     assert_eq!(c.cache.default_ttl, expected);
@@ -294,6 +295,8 @@ fn lax_int_forms(#[case] raw: &str, #[case] expected: u64) {
 #[case::word("\"ten\"")]
 #[case::negative("-1")]
 #[case::null("null")]
+#[case::exponent_string("\"1e3\"")]
+#[case::fraction_string("\"600.5\"")]
 fn bad_ints_are_errors(#[case] raw: &str) {
     let (_tmp, _paths, result) = load_text(&format!(r#"{{"cache": {{"default_ttl": {raw}}}}}"#));
     assert!(matches!(result, Err(ConfigError::Invalid { ref field, .. }) if field == "cache.default_ttl"));
@@ -400,23 +403,43 @@ fn auth_last_checked_round_trips(#[case] raw: &str) {
     assert_eq!(output["cache"]["auth_last_checked"], raw);
 }
 
+#[cfg(unix)]
 #[test]
-fn auth_last_checked_accepts_an_offset_timestamp_as_local_time() {
-    let raw = "2026-01-02T03:04:05.5+02:00";
-    let (_tmp, _paths, c) = load_ok(&format!(r#"{{"cache":{{"auth_last_checked":"{raw}"}}}}"#));
-    let expected = raw
-        .parse::<jiff::Timestamp>()
-        .unwrap()
-        .to_zoned(jiff::tz::TimeZone::system())
-        .datetime();
-    assert_eq!(c.cache.auth_last_checked, Some(expected));
+fn save_writes_through_a_symlinked_config_file() {
+    use std::os::unix::fs::PermissionsExt as _;
 
-    let (_tmp, _paths, c) = load_ok(r#"{"cache":{"auth_last_checked":"2026-01-02T03:04:05Z"}}"#);
-    let expected = "2026-01-02T03:04:05Z".parse::<jiff::Timestamp>().unwrap();
-    assert_eq!(
-        c.cache.auth_last_checked,
-        Some(expected.to_zoned(jiff::tz::TimeZone::system()).datetime())
-    );
+    let tmp = TempDir::new();
+    let paths = tmp.paths();
+    std::fs::create_dir_all(&paths.dir).unwrap();
+    let dotfiles = tmp.0.join("dotfiles");
+    std::fs::create_dir_all(&dotfiles).unwrap();
+    let target = dotfiles.join("lazy-github.json");
+    std::fs::write(&target, "{}").unwrap();
+    std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o600)).unwrap();
+    std::os::unix::fs::symlink(&target, &paths.file).unwrap();
+
+    let mut config = Config::load(&paths).unwrap();
+    config.repositories.favorites.push("gizmo385/gh-lazy".to_owned());
+    config.save(&paths).unwrap();
+
+    assert!(std::fs::symlink_metadata(&paths.file).unwrap().is_symlink());
+    assert_eq!(std::fs::read_to_string(&target).unwrap(), config.to_json_pretty());
+    let mode = std::fs::metadata(&target).unwrap().permissions().mode();
+    assert_eq!(mode & 0o777, 0o600);
+    let names: Vec<_> = std::fs::read_dir(&dotfiles)
+        .unwrap()
+        .map(|e| e.unwrap().file_name())
+        .collect();
+    assert_eq!(names, ["lazy-github.json"]);
+}
+
+#[rstest]
+#[case::null("null")]
+#[case::number("5")]
+#[case::object(r#"{"name": "nord"}"#)]
+fn non_string_theme_loads_as_textual_dark(#[case] raw: &str) {
+    let (_tmp, _paths, c) = load_ok(&format!(r#"{{"appearance": {{"theme": {raw}}}}}"#));
+    assert_eq!(c.appearance.theme, "textual-dark");
 }
 
 #[test]
@@ -516,29 +539,62 @@ fn list_items_have_no_nested_quotes() {
     }
 }
 
-// `ConfigPaths::discover` reads `HOME`, which can't be changed safely inside this process, so the parent test reruns
-// this test binary with a fake `HOME` and `XDG_CONFIG_HOME` and the child checks the result.
-const DISCOVER_CHILD_ENV: &str = "LAZY_GITHUB_TEST_DISCOVER_CHILD";
+// Some behavior depends on environment variables (`HOME`, `TZ`) that can't be changed safely inside this process.
+// A parent test reruns this test binary for one child test with the variables set, and the child checks the result.
+// A child test does nothing unless `CHILD_ENV` names it.
+const CHILD_ENV: &str = "LAZY_GITHUB_TEST_CHILD";
+
+#[cfg(unix)]
+fn run_child(name: &str, envs: &[(&str, &str)]) {
+    let status = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([name, "--exact", "--nocapture"])
+        .env(CHILD_ENV, name)
+        .envs(envs.iter().copied())
+        .status()
+        .unwrap();
+    assert!(status.success(), "child test {name} failed");
+}
+
+fn is_child(name: &str) -> bool {
+    std::env::var(CHILD_ENV).is_ok_and(|v| v == name)
+}
 
 #[cfg(unix)]
 #[test]
 fn discover_uses_home_and_ignores_xdg_config_home() {
-    let status = std::process::Command::new(std::env::current_exe().unwrap())
-        .args(["discover_child", "--exact", "--nocapture"])
-        .env(DISCOVER_CHILD_ENV, "1")
-        .env("HOME", "/home/lazy")
-        .env("XDG_CONFIG_HOME", "/somewhere/else")
-        .status()
-        .unwrap();
-    assert!(status.success());
+    run_child(
+        "discover_child",
+        &[("HOME", "/home/lazy"), ("XDG_CONFIG_HOME", "/somewhere/else")],
+    );
 }
 
 #[test]
 fn discover_child() {
-    if std::env::var_os(DISCOVER_CHILD_ENV).is_none() {
+    if !is_child("discover_child") {
         return;
     }
     let paths = ConfigPaths::discover().unwrap();
     assert_eq!(paths.dir, Path::new("/home/lazy/.config/lazy-github"));
     assert_eq!(paths.file, Path::new("/home/lazy/.config/lazy-github/config.json"));
+}
+
+#[cfg(unix)]
+#[test]
+fn auth_last_checked_converts_offset_timestamps_to_local_time() {
+    run_child("offset_timestamp_child", &[("TZ", "America/New_York")]);
+}
+
+#[test]
+fn offset_timestamp_child() {
+    if !is_child("offset_timestamp_child") {
+        return;
+    }
+    for (raw, local) in [
+        ("2026-01-02T03:04:05.5+02:00", "2026-01-01T20:04:05.5"),
+        ("2026-01-02T03:04:05Z", "2026-01-01T22:04:05"),
+        ("2026-07-02T03:04:05-07:00", "2026-07-02T06:04:05"),
+    ] {
+        let (_tmp, _paths, c) = load_ok(&format!(r#"{{"cache":{{"auth_last_checked":"{raw}"}}}}"#));
+        assert_eq!(c.cache.auth_last_checked, Some(dt(local)), "{raw}");
+    }
 }

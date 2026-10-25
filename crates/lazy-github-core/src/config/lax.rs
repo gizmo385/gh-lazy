@@ -62,8 +62,8 @@ pub(super) fn bool<'de, D: Deserializer<'de>>(deserializer: D) -> Result<bool, D
     deserializer.deserialize_any(LaxBool)
 }
 
-/// A non-negative integer given as a JSON integer, a float with no fractional part, a bool, or a string holding one
-/// of those.
+/// A non-negative integer given as a JSON integer, a float with no fractional part, a bool, or a string accepted by
+/// [`parse_int_str`].
 pub(super) fn u64<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u64, D::Error> {
     struct LaxU64;
 
@@ -101,18 +101,43 @@ pub(super) fn u64<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u64, D::
         }
 
         fn visit_str<E: de::Error>(self, v: &str) -> Result<u64, E> {
-            let trimmed = v.trim();
-            if let Ok(n) = trimmed.parse::<u64>() {
-                return Ok(n);
-            }
-            match trimmed.parse::<f64>() {
-                Ok(f) if f.is_finite() => self.visit_f64(f),
-                _ => Err(E::invalid_value(de::Unexpected::Str(v), &self)),
-            }
+            parse_int_str(v).ok_or_else(|| E::invalid_value(de::Unexpected::Str(v), &self))
         }
     }
 
     deserializer.deserialize_any(LaxU64)
+}
+
+/// Parses an integer string the way pydantic does: surrounding whitespace and a leading `+` are allowed, single
+/// underscores may separate digits (`1_000`), and a fractional part must be all zeros (`1.00`). Exponents (`1e3`)
+/// and other float spellings are rejected.
+fn parse_int_str(s: &str) -> Option<u64> {
+    let s = s.trim();
+    let s = s.strip_prefix('+').unwrap_or(s);
+    let (int_part, frac) = match s.split_once('.') {
+        Some((int_part, frac)) => (int_part, Some(frac)),
+        None => (s, None),
+    };
+    if frac.is_some_and(|frac| frac.is_empty() || !frac.bytes().all(|b| b == b'0')) {
+        return None;
+    }
+    // Every underscore-separated group must be a non-empty run of digits.
+    if !int_part
+        .split('_')
+        .all(|group| !group.is_empty() && group.bytes().all(|b| b.is_ascii_digit()))
+    {
+        return None;
+    }
+    int_part.replace('_', "").parse().ok()
+}
+
+/// A theme name. Python's `mode="before"` validator turns any value into a theme, falling back to `textual-dark`,
+/// so a non-string loads as `textual-dark`. An unknown string is kept as written.
+pub(super) fn theme<'de, D: Deserializer<'de>>(deserializer: D) -> Result<String, D::Error> {
+    Ok(match serde_json::Value::deserialize(deserializer)? {
+        serde_json::Value::String(name) => name,
+        _ => "textual-dark".to_owned(),
+    })
 }
 
 /// A path. An empty string becomes `.`, which is what Python's `Path("")` does; `~` is not expanded.
@@ -190,6 +215,35 @@ pub(super) mod naive_datetime {
             base
         } else {
             format!("{base}.{micros:06}")
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_int_str;
+
+    #[test]
+    fn int_strings_match_pydantic() {
+        for (raw, expected) in [
+            ("1_000", Some(1000)),
+            ("1_000.0", Some(1000)),
+            ("1.00", Some(1)),
+            ("+5", Some(5)),
+            (" 7 ", Some(7)),
+            ("00012", Some(12)),
+            ("_1", None),
+            ("1__0", None),
+            ("1_", None),
+            ("1.", None),
+            ("1.5", None),
+            ("1e3", None),
+            (".0", None),
+            ("0x10", None),
+            ("-1", None),
+            ("", None),
+        ] {
+            assert_eq!(parse_int_str(raw), expected, "{raw:?}");
         }
     }
 }

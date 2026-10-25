@@ -152,7 +152,9 @@ pub enum MergeMethod {
 #[serde(default)]
 #[allow(clippy::struct_excessive_bools)] // One bool per setting, mirroring the file.
 pub struct AppearanceSettings {
-    /// The Textual theme name. Kept as written, even when unknown; the theme code falls back where it's used.
+    /// The Textual theme name. Kept as written, even when unknown; the theme code falls back where it's used. A
+    /// non-string value loads as `textual-dark`, as in Python.
+    #[serde(deserialize_with = "lax::theme")]
     pub theme: String,
     /// Whether the command log is shown on startup.
     #[serde(deserialize_with = "lax::bool")]
@@ -375,6 +377,11 @@ impl Default for CoreConfig {
 ///
 /// Python's `client_type` isn't modeled, since this app always uses `gh`; it is kept in [`Self::extra`] and written
 /// back unchanged.
+///
+/// `ApiConfig::default()` carries Python's default `"client_type": "RAW_HTTP"`, so a new file matches what Python
+/// writes. That default applies only when the whole `api` section is missing: an `api` section without the key
+/// stays without it, because a flattened `extra` is filled from the input, not from the container default. Both
+/// mean `RAW_HTTP` to Python.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ApiConfig {
@@ -485,16 +492,24 @@ impl Config {
             source,
         })?;
 
-        let mut tmp_name = paths.file.file_name().unwrap_or_default().to_owned();
+        // Write through a symlinked config.json (dotfiles managers), as Python's in-place write does: the temp file
+        // sits next to the real target and the rename replaces the target, not the link. `canonicalize` fails when
+        // the file doesn't exist yet, which is the first save.
+        let target = std::fs::canonicalize(&paths.file).unwrap_or_else(|_| paths.file.clone());
+        let mut tmp_name = target.file_name().unwrap_or_default().to_owned();
         tmp_name.push(".tmp");
-        let tmp = paths.file.with_file_name(tmp_name);
+        let tmp = target.with_file_name(tmp_name);
 
         let write = || -> std::io::Result<()> {
             let mut file = std::fs::File::create(&tmp)?;
             file.write_all(self.to_json_pretty().as_bytes())?;
+            // Keep the mode of an existing file (say, `chmod 600`), as an in-place write would.
+            if let Ok(metadata) = std::fs::metadata(&target) {
+                file.set_permissions(metadata.permissions())?;
+            }
             file.sync_all()?;
             drop(file);
-            std::fs::rename(&tmp, &paths.file)
+            std::fs::rename(&tmp, &target)
         };
         write().map_err(|source| {
             // Best effort: the original error is the one worth reporting.

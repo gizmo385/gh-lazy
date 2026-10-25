@@ -1,0 +1,23 @@
+version = 1
+description = "With the default config the command log is hidden, and 6 does nothing"
+gate = true
+parity_rows = ["main-layout.command-log", "main-layout.focus-switching"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+keys = ["6"]
+
+[[step]]
+capture = "after-6"
+checks = ["titles", "tabs", "focus"]
+
+[expect.after-6]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
+focused = ["[1] Repositories"]
+not_contains = ["Command Log", "Traceback"]

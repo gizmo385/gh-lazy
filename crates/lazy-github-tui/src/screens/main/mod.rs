@@ -6,6 +6,7 @@ pub mod layout;
 mod sections;
 mod status;
 
+use crossterm::event::MouseEvent;
 use lazy_github_core::config::AppearanceSettings;
 use ratatui::Frame;
 use ratatui::layout::{Margin, Position, Rect};
@@ -14,6 +15,7 @@ use ratatui::widgets::{Block, Clear};
 
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Component, Cx, Owner, RenderCx, ScreenKind};
+use crate::components::command_log::{CommandLog, Wheel};
 use crate::components::hatch::Hatch;
 use crate::components::info::{INFO_BINDINGS, Scroll};
 use crate::keymap::{BindingId, Keymap};
@@ -169,7 +171,7 @@ const SCREEN_BINDINGS: &[BindingId] = &[
 /// Textual's `Tabs` bindings.
 const TABS_BINDINGS: &[BindingId] = &[BindingId::TextualTabsPrevious, BindingId::TextualTabsNext];
 
-/// Textual's `ScrollableContainer` bindings, which the command log's `Log` has. #80 makes them scroll.
+/// Textual's `ScrollableContainer` bindings, which the command log's `Log` has.
 const LOG_BINDINGS: &[BindingId] = &[
     BindingId::TextualScrollUp,
     BindingId::TextualScrollDown,
@@ -191,7 +193,6 @@ const TABLE_NATURAL_HEIGHT: u16 = 1;
 #[derive(Debug)]
 pub struct MainScreen {
     sections: [SectionState; 4],
-    command_log_displayed: bool,
     focus: FocusTarget,
     // Built once, as Python does: a Settings rebind doesn't refresh them.
     section_titles: [String; 4],
@@ -199,6 +200,7 @@ pub struct MainScreen {
     command_log_title: String,
     status: StatusBar,
     details: DetailsPane,
+    command_log: CommandLog,
     /// Where each focus target was drawn last, for clicks: the interiors of the boxes, not their borders.
     hits: Vec<(Rect, FocusTarget)>,
 }
@@ -208,6 +210,10 @@ pub struct MainScreen {
 pub enum MainAction {
     /// Scroll the details content (`textual.scroll.*` while it has focus).
     ScrollDetails(Scroll),
+    /// Scroll the command log (`textual.scroll.*` while it has focus).
+    ScrollLog(Scroll),
+    /// A wheel notch over the command log, focused or not.
+    WheelLog(Wheel),
 }
 
 impl MainScreen {
@@ -227,13 +233,13 @@ impl MainScreen {
                 hidden_by_toggle: false,
                 compact: false,
             }),
-            command_log_displayed: appearance.show_command_log,
             focus: FocusTarget::Table(SectionId::Repos),
             section_titles: SectionId::ALL.map(|id| title(id.focus_binding(), id.label())),
             details_title: title(BindingId::MainDetailsFocus, "Details"),
             command_log_title: title(BindingId::MainCommandLogFocus, "Command Log"),
             status: StatusBar::default(),
             details: DetailsPane::default(),
+            command_log: CommandLog::new(appearance.show_command_log),
             hits: Vec::new(),
         }
     }
@@ -258,6 +264,16 @@ impl MainScreen {
         self.sections[id.index()].hidden_by_toggle = hidden;
     }
 
+    /// The command log, which keeps every line pushed since the screen was built, shown or not.
+    pub fn command_log(&self) -> &CommandLog {
+        &self.command_log
+    }
+
+    /// The command log, to push lines and to show or hide it (the palette's toggle, M4).
+    pub fn command_log_mut(&mut self) -> &mut CommandLog {
+        &mut self.command_log
+    }
+
     /// Moves focus to `target` if Python would, and says whether it did.
     ///
     /// Python's `action_focus_section` checks `visible`, which only a runtime toggle (and the command log's
@@ -271,7 +287,7 @@ impl MainScreen {
             | FocusTarget::DetailsContent => true,
             FocusTarget::Table(id) | FocusTarget::Search(id) => !self.sections[id.index()].hidden_by_toggle,
             FocusTarget::DetailsTabs => self.details.has_tabs(),
-            FocusTarget::CommandLog => self.command_log_displayed,
+            FocusTarget::CommandLog => self.command_log.is_visible(),
         };
         if allowed {
             self.focus = target;
@@ -292,7 +308,7 @@ impl MainScreen {
             .then_some(FocusTarget::DetailsTabs)
             .into_iter()
             .chain([FocusTarget::DetailsContent]);
-        let log = self.command_log_displayed.then_some(FocusTarget::CommandLog);
+        let log = self.command_log.is_visible().then_some(FocusTarget::CommandLog);
         tables
             .chain(details)
             .chain(log)
@@ -320,6 +336,14 @@ impl MainScreen {
             .iter()
             .find(|(rect, _)| rect.contains(position))
             .map(|&(_, target)| target)
+    }
+
+    /// What a mouse wheel event means: Textual scrolls the widget under the pointer, focused or not. Only the
+    /// command log scrolls by wheel so far.
+    pub fn wheel(&self, mouse: &MouseEvent) -> Option<Action> {
+        let wheel = Wheel::from_mouse(mouse)?;
+        (self.hit(mouse.column, mouse.row) == Some(FocusTarget::CommandLog))
+            .then_some(Action::Main(MainAction::WheelLog(wheel)))
     }
 
     /// The binding chain for the current focus, innermost first, up to and including the screen. Python's widget
@@ -351,8 +375,9 @@ impl MainScreen {
             Owner::DetailsContent => {
                 Scroll::from_binding(id).map(|scroll| Action::Main(MainAction::ScrollDetails(scroll)))
             }
+            Owner::CommandLog => Scroll::from_binding(id).map(|scroll| Action::Main(MainAction::ScrollLog(scroll))),
             // Not built yet: the key is still consumed, as in Python. With one tab, switching tabs is a no-op.
-            Owner::Table(_) | Owner::Section(_) | Owner::SelectionsPane | Owner::DetailsTabs | Owner::CommandLog => {
+            Owner::Table(_) | Owner::Section(_) | Owner::SelectionsPane | Owner::DetailsTabs => {
                 Some(Action::Unimplemented(id))
             }
             Owner::App | Owner::Screen(ScreenKind::Auth) => None,
@@ -394,8 +419,11 @@ impl MainScreen {
                 let hits = self.details.render(frame, rect, theme, self.focus);
                 self.hits.extend(hits);
             }
-            // #80 draws the log's lines.
-            FocusTarget::CommandLog => self.hits.push((rect, FocusTarget::CommandLog)),
+            FocusTarget::CommandLog => {
+                let focused = self.focus == FocusTarget::CommandLog;
+                self.command_log.render(frame, rect, theme, focused);
+                self.hits.push((rect, FocusTarget::CommandLog));
+            }
         }
     }
 }
@@ -442,6 +470,8 @@ impl Component for MainScreen {
     fn update(&mut self, action: MainAction, _cx: &mut Cx<'_>) {
         match action {
             MainAction::ScrollDetails(scroll) => self.details.scroll(scroll),
+            MainAction::ScrollLog(scroll) => self.command_log.scroll(scroll),
+            MainAction::WheelLog(wheel) => self.command_log.wheel(wheel),
         }
     }
 
@@ -451,7 +481,7 @@ impl Component for MainScreen {
             area,
             sections: self.sections,
             focus: Some(self.focus),
-            command_log: self.command_log_displayed,
+            command_log: self.command_log.is_visible(),
         });
         self.hits.clear();
         let interior = |rect: Rect| rect.inner(Margin::new(1, 1));
@@ -480,6 +510,7 @@ impl Component for MainScreen {
         if let Some(rect) = boxes.command_log {
             let focused = self.focus == FocusTarget::CommandLog;
             frame.render_widget(titled_box(&self.command_log_title, focused, theme), rect);
+            self.command_log.render(frame, interior(rect), theme, focused);
             self.hits.push((interior(rect), FocusTarget::CommandLog));
         }
 

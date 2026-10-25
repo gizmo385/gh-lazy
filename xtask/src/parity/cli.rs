@@ -8,6 +8,7 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use super::env::{self, Paths};
+use super::report;
 use super::runner::{self, AppRunStatus};
 use super::scenario::{App, Roots, Scenario, Size};
 use super::summary::{CaptureSummary, SUMMARY_VERSION, ScenarioResult, ScenarioSummary, SizeSummary, Summary};
@@ -190,6 +191,8 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     // Plain data with string keys; serializing can't fail.
     let json = serde_json::to_string_pretty(&summary).expect("summary serializes");
     std::fs::write(out.join("summary.json"), json + "\n").context("writing summary.json")?;
+    let meta = report::RunMeta::current(&repo, args.python_only, args.rust_only);
+    report::write_reports(&out, &summary, &meta)?;
 
     println!();
     for s in &summary.scenarios {

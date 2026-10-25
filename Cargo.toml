@@ -68,6 +68,8 @@ portable-pty = "0.9"
 vt100 = "0.18"
 # Per-run temp dirs in the parity harness.
 tempfile = "3"
+# Unified text diffs of the two apps' captures in the parity report (#69, #94).
+similar = "2"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

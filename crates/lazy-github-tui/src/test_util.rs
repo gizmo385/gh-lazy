@@ -181,6 +181,11 @@ impl TestApp {
         &self.app
     }
 
+    /// The app, for setting up state that no key reaches yet.
+    pub fn app_mut(&mut self) -> &mut App {
+        &mut self.app
+    }
+
     /// The fake GitHub, for its call log.
     pub fn gh(&self) -> &FakeGithub {
         &self.gh

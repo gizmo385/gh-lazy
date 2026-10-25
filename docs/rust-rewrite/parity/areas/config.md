@@ -38,4 +38,4 @@ Settings modal can be strings where a number is expected (Py bug B2), so the loa
 | `config.core-logfile-max-bytes` | `core` | `logfile_max_bytes` | `5000000` | `lib/config.py` | M0 | not started | #64, #66 | |
 | `config.core-logfile-count` | `core` | `logfile_count` | `5` | `lib/config.py` | M0 | not started | #64, #66 | |
 | `config.api-base-url` | `api` | `base_url` | `"https://api.github.com"` | `lib/config.py` `ApiConfig` | M0 | not started | #64 | Preserved; decide whether it maps to `gh --hostname`. |
-| `config.api-client-type` | `api` | `client_type` | `"RAW_HTTP"` (ignored, gh only) | `lib/config.py`, `lib/github/backends/protocol.py` `BackendType` | M0 | intentional diff (gh only) | #64 | Preserved on save, not acted on. |
+| `config.api-client-type` | `api` | `client_type` | `"RAW_HTTP"` (ignored, gh only) | `lib/config.py`, `lib/github/backends/protocol.py` `BackendType` | M0 | intentional diff (gh only) | #64 | Preserved on save, not acted on. Decision: [gh-only-backend](../decisions/gh-only-backend.md). |

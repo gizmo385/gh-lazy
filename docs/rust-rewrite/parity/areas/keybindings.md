@@ -26,18 +26,18 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.repositories-favorite` | `repositories.favorite` | `ctrl+f` | Toggle Favorite | repos table | M2 | not started | | |
 | `keybindings.repositories-lookup` | `repositories.lookup` | `O` | Lookup Repository | repos table | M2 | not started | | |
 | `keybindings.user-view-profile` | `user.view_profile` | `u` | View User | repos, PR and issues tables | M2 | not started | | |
-| `keybindings.common-table-select` | `common.table.select` | `enter,space` | Select table entry | tables | M1 | not started | #78 | |
-| `keybindings.common-table-search` | `common.table.search` | `/` | Search | tables | M1 | not started | #78 | Override may be saved as `slash`. |
-| `keybindings.common-table-cursor-down` | `common.table.cursor_down` | `j` | Table cursor down | tables | M1 | not started | #78 | |
-| `keybindings.common-table-page-down` | `common.table.page_down` | `J` | Table page down | tables | M1 | not started | #78 | |
-| `keybindings.common-table-cursor-up` | `common.table.cursor_up` | `k` | Table cursor up | tables | M1 | not started | #78 | |
-| `keybindings.common-table-page-up` | `common.table.page_up` | `K` | Table page up | tables | M1 | not started | #78 | |
-| `keybindings.common-table-scroll-right` | `common.table.scroll_right` | `l` | Table scroll right | tables | M1 | not started | #78 | |
-| `keybindings.common-table-page-right` | `common.table.page_right` | `$` | Table page right | tables | M1 | not started | #78 | An earlier `L` definition is shadowed (Py bug B9). Override may be saved as `dollar_sign`. |
-| `keybindings.common-table-scroll-left` | `common.table.scroll_left` | `h` | Table scroll left | tables | M1 | not started | #78 | |
-| `keybindings.common-table-page-left` | `common.table.page_left` | `^` | Table page left | tables | M1 | not started | #78 | An earlier `H` definition is shadowed (Py bug B9). Override may be saved as `circumflex_accent`. |
-| `keybindings.common-table-scroll-top` | `common.table.scroll_top` | `g` | Table scroll to top | tables | M1 | not started | #78 | |
-| `keybindings.common-table-scroll-bottom` | `common.table.scroll_bottom` | `G` | Table scroll to bottom | tables | M1 | not started | #78 | |
+| `keybindings.common-table-select` | `common.table.select` | `enter,space` | Select table entry | tables | M1 | not started | #78, #100 | |
+| `keybindings.common-table-search` | `common.table.search` | `/` | Search | tables | M1 | not started | #78, #101 | Override may be saved as `slash`. |
+| `keybindings.common-table-cursor-down` | `common.table.cursor_down` | `j` | Table cursor down | tables | M1 | not started | #78, #100 | |
+| `keybindings.common-table-page-down` | `common.table.page_down` | `J` | Table page down | tables | M1 | not started | #78, #100 | |
+| `keybindings.common-table-cursor-up` | `common.table.cursor_up` | `k` | Table cursor up | tables | M1 | not started | #78, #100 | |
+| `keybindings.common-table-page-up` | `common.table.page_up` | `K` | Table page up | tables | M1 | not started | #78, #100 | |
+| `keybindings.common-table-scroll-right` | `common.table.scroll_right` | `l` | Table scroll right | tables | M1 | not started | #78, #100 | |
+| `keybindings.common-table-page-right` | `common.table.page_right` | `$` | Table page right | tables | M1 | not started | #78, #100 | An earlier `L` definition is shadowed (Py bug B9). Override may be saved as `dollar_sign`. |
+| `keybindings.common-table-scroll-left` | `common.table.scroll_left` | `h` | Table scroll left | tables | M1 | not started | #78, #100 | |
+| `keybindings.common-table-page-left` | `common.table.page_left` | `^` | Table page left | tables | M1 | not started | #78, #100 | An earlier `H` definition is shadowed (Py bug B9). Override may be saved as `circumflex_accent`. |
+| `keybindings.common-table-scroll-top` | `common.table.scroll_top` | `g` | Table scroll to top | tables | M1 | not started | #78, #100 | |
+| `keybindings.common-table-scroll-bottom` | `common.table.scroll_bottom` | `G` | Table scroll to bottom | tables | M1 | not started | #78, #100 | |
 | `keybindings.workflows-trigger` | `workflows.trigger` | `T` | Trigger Workflow | workflows section | M3 | not started | | |
 | `keybindings.workflows-view-run-details` | `workflows.view_run_details` | `enter` | View Run Details | (unused) | M2 | not started | | Defined, rebindable in Settings, never bound (Py bug B9). |
 | `keybindings.workflows-view-job-logs` | `workflows.view_job_logs` | `l` | View Job Logs | Jobs tab | M2 | not started | | |

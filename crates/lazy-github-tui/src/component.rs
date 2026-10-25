@@ -103,8 +103,17 @@ pub enum Owner {
 /// The base screens.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ScreenKind {
+    /// The "GitHub Authentication" screen.
+    Auth,
     /// The main screen.
     Main,
+}
+
+impl ScreenKind {
+    /// Whether the binding chain stops at this screen (Textual's `ModalScreen`).
+    pub fn is_modal(self) -> bool {
+        matches!(self, ScreenKind::Auth)
+    }
 }
 
 /// The state every component may read, owned by `App`.

@@ -44,3 +44,61 @@ jobs:
       run: cargo clippy --workspace --all-targets --locked -- -D warnings
     - name: Test
       run: cargo test --workspace --locked
+
+  # The parity gate (parity/README.md, "CI"): every scenario against both apps. The exit code of `cargo xtask parity`
+  # is the gate; the HTML report is uploaded for humans and the parity reviewer.
+  parity:
+    name: parity (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    # Same toolchain step as the check job: rust-toolchain.toml decides.
+    - name: Install toolchain
+      run: rustup toolchain install
+    # A separate cache from the check job's: this job builds a different set of targets.
+    - uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: parity
+    - uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+        cache-dependency-glob: uv.lock
+        python-version: "3.11"
+    - name: Install the Python app
+      id: sync
+      run: uv sync --frozen
+    - name: Parity scenarios
+      run: cargo xtask parity --all --ci --no-sync
+    # Runs even when the parity step fails, so a PR that breaks both reports both.
+    - name: Python-backed integration tests
+      if: ${{ !cancelled() && steps.sync.outcome == 'success' }}
+      run: cargo test --locked -p fake-gh -p xtask -- --ignored
+    - name: Job summary
+      if: always()
+      shell: bash
+      run: |
+        if [ -f parity/reports/latest/summary.md ]; then
+          cat parity/reports/latest/summary.md >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "Parity harness produced no summary (see log)." >> "$GITHUB_STEP_SUMMARY"
+        fi
+    - name: Upload report
+      id: upload
+      if: always()
+      uses: actions/upload-artifact@v6
+      with:
+        name: parity-report-${{ matrix.os }}
+        path: parity/reports/latest
+        retention-days: 14
+        if-no-files-found: warn
+    - name: Link report
+      if: always() && steps.upload.outputs.artifact-url != ''
+      shell: bash
+      run: echo "Report [parity-report-${{ matrix.os }}](${{ steps.upload.outputs.artifact-url }}); download and open index.html." >> "$GITHUB_STEP_SUMMARY"

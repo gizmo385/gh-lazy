@@ -1014,12 +1014,12 @@ fn render_summary_md(scenarios: &[ScenarioData<'_>]) -> String {
         let s = data.summary;
         let mut row = format!("| {} | {} |", md_escape(&s.name), if s.gate { "yes" } else { "no" });
         for size in &sizes {
-            let word = data
-                .sizes
-                .iter()
-                .find(|d| d.summary.size == *size)
-                .map_or("skipped", |d| d.result(s).as_str());
-            w!(row, " {word} |");
+            match data.sizes.iter().find(|d| d.summary.size == *size) {
+                None => row.push_str(" skipped |"),
+                // A run that passed only on retry doesn't change the result, but it's worth a look.
+                Some(d) if d.summary.apps.values().any(|a| a.flaky) => w!(row, " {} (flaky) |", d.result(s)),
+                Some(d) => w!(row, " {} |", d.result(s)),
+            }
         }
         let mismatches = data.mismatches().map_or_else(|| "n/a".to_owned(), |n| n.to_string());
         w!(row, " {mismatches} |\n");
@@ -1217,7 +1217,7 @@ mod tests {
     #[test]
     fn summary_md_for_a_mixed_run() {
         use RunState::{Ok, Timeout};
-        let pass = scenario(
+        let mut pass = scenario(
             "startup",
             true,
             ScenarioResult::Pass,
@@ -1226,6 +1226,8 @@ mod tests {
                 size_summary("100x30", Ok, Some(Ok)),
             ],
         );
+        // Passed on retry at 100x30.
+        pass.sizes[1].apps.get_mut(&App::Rust).unwrap().flaky = true;
         let fail = scenario(
             "repo-select",
             true,

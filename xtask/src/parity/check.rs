@@ -9,6 +9,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
+use super::ci::Finding;
 use super::env::build_config;
 use super::grid::{GRID_VERSION, Grid};
 use super::runner::AppRunStatus;
@@ -505,18 +506,20 @@ fn write_json(path: &Path, value: &impl Serialize) -> Result<()> {
 
 /// Runs the structural check for every capture of one scenario at one size. `dir` is
 /// `<out>/<scenario>/<COLSxROWS>`, holding one directory per app that ran. Writes `<app>/<capture>.structure.json`
-/// for each dump found and `<capture>.check.json`, and prints one line per mismatch.
+/// for each dump found and `<capture>.check.json`, and prints one line per mismatch. Returns each capture's summary
+/// and every mismatch with the app it counts against.
 pub fn check_size(
     scenario: &Scenario,
     dir: &Path,
     statuses: &BTreeMap<App, AppRunStatus>,
     theme: &ThemeColors,
-) -> Result<Vec<CaptureSummary>> {
+) -> Result<(Vec<CaptureSummary>, Vec<Finding>)> {
     let size = dir
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_default();
     let mut summaries = Vec::new();
+    let mut findings = Vec::new();
     for step in &scenario.steps {
         let Step::Capture(capture) = step else { continue };
         let name = &capture.name;
@@ -546,6 +549,7 @@ pub fn check_size(
                     against.push(app);
                 }
                 lines.extend(found.iter().map(|m| format!("{app} expect {}", m.describe())));
+                findings.extend(found.iter().map(|m| Finding::expect(&size, name, app, m)));
                 expect.extend(found);
             }
         }
@@ -564,6 +568,7 @@ pub fn check_size(
             against.push(App::Rust);
         }
         lines.extend(cross.iter().map(|m| format!("cross {}", m.describe())));
+        findings.extend(cross.iter().map(|m| Finding::cross(&size, name, m)));
 
         let checked = cross_ran || (expectation.is_some() && !structures.is_empty());
         let mismatches = expect.len() + cross.len();
@@ -603,7 +608,7 @@ pub fn check_size(
             against,
         });
     }
-    Ok(summaries)
+    Ok((summaries, findings))
 }
 
 #[cfg(test)]

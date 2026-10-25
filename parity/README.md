@@ -421,9 +421,9 @@ cargo xtask parity --validate              # check every scenario file, run noth
 | `--no-build` | Skip `cargo build -p lazy-github -p fake-gh`. The binaries must already be in `target/<profile>/`. |
 | `--no-sync` | Skip `uv sync --frozen`. |
 | `--python PATH` | Run `PATH -m lazy_github` instead of the repo's `.venv/bin/python` (`.venv\Scripts\python.exe` on Windows). |
-| `--retries N` | Re-run a failed app run up to N times. A run that passes on retry is marked `flaky: true`. Default 0. |
+| `--retries N` | Re-run a failed app run up to N times. A run that passes on retry is marked `flaky: true`. Default 0, or 1 with `--ci`. A Rust run in a scenario with `gate = false` is never retried, since it can't fail the gate. |
 | `--jobs N` | Run up to N scenarios in parallel. Default 1. |
-| `--ci` | Running in CI. Accepted now; CI-specific output arrives with #70. |
+| `--ci` | Running in CI: `--retries 1` unless `--retries` is given, `--color never` for the nested `cargo build` and `uv sync`, and GitHub Actions annotations at the end of the output (see [CI](#ci)). |
 | `--validate` | Parse and validate the scenario files (all, or the ones named) and exit. |
 
 Exit codes:
@@ -922,10 +922,56 @@ is self-contained, with inline CSS, a few lines of inline JS and no external ass
   counts when there are any), a table `| Scenario | Gate | 160x48 | 100x30 | Mismatches |` (other sizes in the run get
   extra columns; a size a scenario didn't run is `skipped`), and a `<details>` list of the first 20 mismatches as
   `scenario/size/capture: check box: python=… rust=…`, plus ` expected=…` for an `[expect]` mismatch, with values
-  cut to 80 characters. It stays under 64 KiB.
+  cut to 80 characters. A size where a run passed only on retry shows its result with ` (flaky)`. It stays under
+  64 KiB.
 
 A size's result in the index and `summary.md` is computed from that size's app statuses; a size with structural
 mismatches takes the scenario's `fail` or `rust-not-ready` result.
+
+### CI
+
+The `parity` job in `.github/workflows/rust.yaml` runs on every push to `rust-main` and every PR into it, on
+`ubuntu-latest` and `macos-latest`. It installs the toolchain from `rust-toolchain.toml`, Python 3.11 and the app
+with `uv sync --frozen`, then runs `cargo xtask parity --all --ci --no-sync` and the `#[ignore]`d Python-backed tests
+(`cargo test -p fake-gh -p xtask -- --ignored`). There's no `paths` filter: every PR runs it.
+
+**What gates.** The job fails when `cargo xtask parity` exits non-zero ([exit codes](#running-scenarios)) or an
+ignored test fails:
+
+- a scenario with `gate = true` has a structural mismatch, or an app run that failed at any size;
+- the Python side failed in any scenario (timeout, crash, fixture miss, failed `[expect]`), since that means the
+  fixtures or the scenario are broken;
+- a scenario file is invalid or the harness failed.
+
+A run that fails and then passes on its one retry doesn't fail the job; `summary.md` marks its size `(flaky)`.
+
+**What doesn't gate.** The Rust side of a scenario with `gate = false` (`rust-not-ready`), the text diffs and the HTML
+report.
+
+**Annotations.** With `--ci`, the last lines of the output are workflow commands that GitHub shows on the run and
+on the scenario file in the PR:
+
+- `::error file=parity/scenarios/<name>.toml::<scenario>/<size>/<capture>: <source> <check> <box>: <message>` for
+  each mismatch that counts against the gate, where `<source>` is `<app> expect` for an `[expect]` mismatch on that
+  app's screen or `cross` for a Python-vs-Rust one (the same wording as the console lines);
+- `::error` for each app run that fails the gate (`<scenario>/<size>/<app>: timeout at step 0 (15.2s)`) and for a
+  harness error: on the scenario file (and line) for an invalid scenario, and with no file for one that stops the
+  whole run;
+- one `::warning` per `rust-not-ready` scenario, listing the Rust failures and the number of mismatches, and one per
+  run that passed only on retry.
+
+**Flipping `gate`.** A feature PR that makes a scenario pass sets `gate = true` in that scenario file in the same
+PR; its acceptance criteria say "scenario `<name>` with `gate = true`". The parity reviewer checks the flip, and
+moves the PARITY.md rows named in `parity_rows` to `parity` when it merges. From then on a regression in that
+scenario fails every PR. The gate isn't read from PARITY.md, so turning it on is atomic with the change that earns it.
+
+**The report.** The job summary shows `summary.md` and a link to the `parity-report-<os>` artifact (kept 14 days).
+Download it from the link (or the run page's **Artifacts** section), unzip it and open `index.html` in a browser; it
+works from disk. With `gh`: `gh run download <run-id> -n parity-report-ubuntu-latest -D report && open
+report/index.html`.
+
+**Branch protection.** `parity (ubuntu-latest)` and `parity (macos-latest)` are meant to be required checks on
+`rust-main`, next to the `fmt, clippy, test` checks.
 
 ### Testing the harness
 
@@ -942,6 +988,7 @@ mismatches takes the scenario's `fail` or `rust-not-ready` result.
   `xtask/src/parity/snapshots/`, and `xtask/tests/report.rs` writes a whole report from synthetic dumps. Review
   snapshot changes with `cargo insta review`, or rerun with `INSTA_UPDATE=always` and read the diff.
 - `xtask/tests/python_app.rs` runs `startup` against the Python app and checks that a fixture miss fails the run. It
-  needs uv, so it's `#[ignore]`d: run it with `cargo build -p fake-gh && cargo test -p xtask --test python_app --
-  --ignored`. `xtask/tests/structural_check.rs` (also ignored) rebinds `main.repos.focus` to `9` in a copy of
-  `startup` and checks that `[expect]` fails with a `titles` mismatch naming `[9] Repositories` and exit code 1.
+  needs uv, so it's `#[ignore]`d (the CI `parity` job runs it): run it with
+  `cargo build -p fake-gh && cargo test -p xtask --test python_app -- --ignored`. `xtask/tests/structural_check.rs`
+  (also ignored) rebinds `main.repos.focus` to `9` in a copy of `startup` and checks that `[expect]` fails with a
+  `titles` mismatch naming `[9] Repositories` and exit code 1.

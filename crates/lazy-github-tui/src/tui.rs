@@ -502,7 +502,6 @@ mod tests {
     ) -> color_eyre::Result<()> {
         let mut app = App::new(
             lazy_github_core::config::Config::default(),
-            crate::keymap::Keymap::defaults(),
             crate::theme::Theme::default(),
             crate::clock::FakeClock::new(),
         );

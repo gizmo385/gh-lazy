@@ -1,0 +1,262 @@
+---
+source: xtask/src/parity/structure.rs
+assertion_line: 1176
+expression: "snapshot(\"160x48\")"
+---
+{
+  "version": 1,
+  "size": [
+    160,
+    48
+  ],
+  "boxes": [
+    {
+      "id": 0,
+      "parent": null,
+      "title": "",
+      "subtitle": "",
+      "rect": [
+        0,
+        0,
+        160,
+        3
+      ],
+      "border_fg": "#004578",
+      "focused": false,
+      "tabs": null,
+      "tables": [],
+      "text": [
+        "No repository selected"
+      ]
+    },
+    {
+      "id": 1,
+      "parent": null,
+      "title": "[1] Repositories",
+      "subtitle": "",
+      "rect": [
+        0,
+        3,
+        64,
+        17
+      ],
+      "border_fg": "#4ebf71",
+      "focused": true,
+      "tabs": null,
+      "tables": [
+        {
+          "headers": [
+            "★",
+            "Owner",
+            "Name",
+            "Private"
+          ],
+          "headers_clipped": false,
+          "rows": [
+            [
+              "☆",
+              "parity-bot",
+              "dotfiles",
+              "✘"
+            ],
+            [
+              "☆",
+              "parity-bot",
+              "hello-world",
+              "✘"
+            ],
+            [
+              "☆",
+              "parity-bot",
+              "lazy-demo",
+              "✘"
+            ]
+          ],
+          "cursor": 0
+        }
+      ],
+      "text": []
+    },
+    {
+      "id": 2,
+      "parent": null,
+      "title": "[5] Details",
+      "subtitle": "",
+      "rect": [
+        64,
+        3,
+        96,
+        44
+      ],
+      "border_fg": "#6db2ff",
+      "focused": false,
+      "tabs": {
+        "names": [
+          "Introduction"
+        ],
+        "active": "Introduction"
+      },
+      "tables": [],
+      "text": [
+        "LazyGithub: A Terminal UI For GitHub (0.6.6)",
+        "LazyGithub is a terminal UI for interacting with GitHub. You can get started by selecting",
+        "one of the repositories listed in the table on the left. Once you have selected a",
+        "repository, any issues, pull requests, and action workflows will be retrieved and",
+        "displayed below it.",
+        "Issues, pull requests, and action lists can also be interacted with!",
+        "Pull Requests",
+        "You can interact with a PR by viewing its details, viewing the PR diff, and participating",
+        "in any active conversations happening on the PR. You can also create a new PR for the",
+        "currently selected repo.",
+        "Issues",
+        "You can interact with an issue by viewing its details, partipcating in any activate",
+        "conversations happening on the issue, and by editing the issue itself. This means that you",
+        "can close an issue from within LazyGithub.",
+        "Actions",
+        "Github action and workflow support is pretty limited. It currently only supports listing",
+        "the workflows and the most recent runs across all actions on the currently selected repo,",
+        "as well as kicking off a workflow that supports manual triggers."
+      ]
+    },
+    {
+      "id": 3,
+      "parent": null,
+      "title": "[2] Pull Requests",
+      "subtitle": "",
+      "rect": [
+        0,
+        20,
+        64,
+        9
+      ],
+      "border_fg": "#6db2ff",
+      "focused": false,
+      "tabs": null,
+      "tables": [
+        {
+          "headers": [
+            "#",
+            "Status",
+            "Author",
+            "Title"
+          ],
+          "headers_clipped": false,
+          "rows": [],
+          "cursor": null
+        }
+      ],
+      "text": []
+    },
+    {
+      "id": 4,
+      "parent": null,
+      "title": "[3] Issues",
+      "subtitle": "",
+      "rect": [
+        0,
+        29,
+        64,
+        9
+      ],
+      "border_fg": "#6db2ff",
+      "focused": false,
+      "tabs": null,
+      "tables": [
+        {
+          "headers": [
+            "#",
+            "Status",
+            "Author",
+            "Title"
+          ],
+          "headers_clipped": false,
+          "rows": [],
+          "cursor": null
+        }
+      ],
+      "text": []
+    },
+    {
+      "id": 5,
+      "parent": null,
+      "title": "[4] Workflows",
+      "subtitle": "",
+      "rect": [
+        0,
+        38,
+        64,
+        9
+      ],
+      "border_fg": "#6db2ff",
+      "focused": false,
+      "tabs": null,
+      "tables": [
+        {
+          "headers": [
+            "Time",
+            "Result",
+            "Job Name",
+            "Run Name",
+            "Run #"
+          ],
+          "headers_clipped": false,
+          "rows": [],
+          "cursor": null
+        }
+      ],
+      "text": []
+    }
+  ],
+  "tabs": null,
+  "footer": [
+    {
+      "key": "/",
+      "label": "Search"
+    },
+    {
+      "key": "^f",
+      "label": "Toggle Favorite"
+    },
+    {
+      "key": "O",
+      "label": "Lookup Repository"
+    },
+    {
+      "key": "u",
+      "label": "View User"
+    },
+    {
+      "key": "I",
+      "label": "New Issue"
+    },
+    {
+      "key": "P",
+      "label": "New PR"
+    },
+    {
+      "key": "^v",
+      "label": "Paste link"
+    },
+    {
+      "key": "f",
+      "label": "Follow link"
+    },
+    {
+      "key": "F",
+      "label": "Follow link (browser)"
+    },
+    {
+      "key": "q",
+      "label": "Quit"
+    },
+    {
+      "key": "^p",
+      "label": "Comman"
+    }
+  ],
+  "footer_clipped": true,
+  "focused": [
+    "[1] Repositories"
+  ],
+  "loose_text": []
+}

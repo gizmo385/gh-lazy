@@ -31,6 +31,7 @@ vt100 = { workspace = true }
 [dev-dependencies]
 # Only for the `echo_tui` test helper, which needs raw mode and terminal events.
 crossterm = { workspace = true }
+# Golden snapshots of structure extraction and the report.
 insta = { workspace = true }
 
 # A tiny TUI the runner integration test (tests/runner.rs) drives. `cargo test` builds examples, so the test finds

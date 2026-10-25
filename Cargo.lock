@@ -1023,6 +1023,7 @@ dependencies = [
  "color-eyre",
  "crossterm",
  "futures-util",
+ "indexmap",
  "insta",
  "jiff",
  "lazy-github-core",

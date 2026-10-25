@@ -16,6 +16,7 @@ test-util = ["lazy-github-core/test-util"]
 color-eyre = { workspace = true }
 crossterm = { workspace = true, features = ["event-stream"] }
 futures-util = { workspace = true }
+indexmap = { workspace = true }
 jiff = { workspace = true }
 lazy-github-core = { workspace = true }
 ratatui = { workspace = true }

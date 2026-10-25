@@ -10,7 +10,7 @@ data with no network. See `docs/rust-rewrite/PLAN.md` §6.2.
 - [Recording fixtures](#recording-fixtures): `cargo xtask record-fixtures`, the scope rules, the scrub rules and
   `cargo xtask check-fixtures`.
 - [The parity harness](#the-parity-harness-cargo-xtask-parity): running scenarios, flags, the isolated environment,
-  the scenario format, screen dumps and results.
+  the scenario format, screen dumps, structure extraction, the checks and results.
 
 ## fake-gh
 
@@ -429,7 +429,8 @@ cargo xtask parity --validate              # check every scenario file, run noth
 Exit codes:
 
 - `0`: every gated scenario passed and the Python side is clean everywhere.
-- `1`: a gated scenario failed, or the Python side failed anywhere (timeout, crash, fixture miss).
+- `1`: a gated scenario failed, or the Python side failed anywhere (timeout, crash, fixture miss, failed
+  `[expect]`).
 - `2`: a scenario file is invalid (printed as `file:line: message`), or the harness itself failed.
 
 Rust-side failures in scenarios with `gate = false` are reported as `rust-not-ready` and don't change the exit code,
@@ -575,7 +576,7 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
   a keymap design question (PARITY.md, "Known terminal caveats").
 - `[expect.<capture>]` keys must name a capture in the scenario. All of them are optional. `pane_titles` and `focused`
   are exact ordered lists. `footer` is an exact ordered list of `"<key> <label>"`.
-- Until #93 lands, `checks`, `ignore` and `[expect]` are parsed and validated but not evaluated.
+- `checks`, `ignore` and `[expect]` are evaluated by the structural check, below.
 
 ### How a run works
 
@@ -605,9 +606,11 @@ summary.json                                     # all results
 <scenario>/<cols>x<rows>/<app>/<capture>.grid.json
 <scenario>/<cols>x<rows>/<app>/failure.txt       # only when the run failed (plus failure.grid.json)
 <scenario>/<cols>x<rows>/<app>/home/, work/      # only with --keep-home
+<scenario>/<cols>x<rows>/<app>/<capture>.structure.json   # what the extractor recognized
+<scenario>/<cols>x<rows>/<capture>.check.json    # structural mismatches
 ```
 
-The structural check (#93) adds `<capture>.structure.json` and `<capture>.check.json`, and the report (#94) adds
+The report (#94) adds
 `<capture>.diff.txt`, `report.html`, `index.html` and `summary.md`.
 
 ### Screen dumps
@@ -649,17 +652,234 @@ Each app run writes `status.json`:
 ```json
 {"version": 1, "scenarios": [{"name": "startup", "description": "…", "gate": false, "parity_rows": ["…"],
   "result": "rust-not-ready",
-  "sizes": [{"size": "160x48", "apps": {"python": <status>, "rust": <status>}, "captures": [{"name": "main"}]}]}]}
+  "sizes": [{"size": "160x48", "apps": {"python": <status>, "rust": <status>},
+             "captures": [{"name": "main", "check": "pass", "mismatches": 0, "against": []}]}]}]}
 ```
 
 An app that didn't run is left out of `apps`. A scenario's `result` is:
 
-- `pass`: both apps ran and passed.
-- `fail`: the Python side failed, or a gated scenario's Rust side did. `error` is set when the harness itself failed.
-- `rust-not-ready`: not gated, and the Rust side failed.
+- `pass`: both apps ran and passed, and every check passed.
+- `fail`: the Python side failed (including its `[expect]`), or a gated scenario's Rust side did (including a
+  mismatch). `error` is set when the harness itself failed.
+- `rust-not-ready`: not gated, and the Rust side failed or mismatched.
 - `python-only` / `rust-only`: only one app ran (a flag or the scenario's `apps`), and it passed.
 
-Until #93 lands, results come from app statuses only.
+Each capture in `captures` carries its structural check:
+
+```json
+{"name": "main", "check": "fail", "mismatches": 1, "against": ["python"]}
+```
+
+- `check` is `pass`, `fail`, or `n/a` when there was nothing to check (no `[expect]` for the capture and no cross-app
+  comparison, for example because only one app produced the capture).
+- `against` lists the apps the mismatches count against: an app whose `[expect]` failed, and `rust` for any cross-app
+  mismatch. An app with a mismatch counts as failed in the result rules above, so a Python `[expect]` failure always
+  fails the run, and a Rust mismatch makes an ungated scenario `rust-not-ready`.
+
+### Structure extraction
+
+After each size, every capture's `<capture>.grid.json` is turned into `<capture>.structure.json`
+(`xtask/src/parity/structure.rs`, `extract`). Extraction is pure and runs as passes over the grid, each claiming the
+cells it recognized so later passes skip them: boxes, nesting, the footer, then inside each box tabs, tables and
+text.
+
+```json
+{"version": 1, "size": [160, 48],
+ "boxes": [{"id": 1, "parent": null, "title": "[1] Repositories", "subtitle": "", "rect": [0, 3, 64, 17],
+            "border_fg": "#4ebf71", "focused": true, "tabs": null,
+            "tables": [{"headers": ["★", "Owner", "Name", "Private"], "headers_clipped": false,
+                        "rows": [["☆", "parity-bot", "dotfiles", "✘"]], "cursor": 0}],
+            "text": []}],
+ "tabs": null, "footer": [{"key": "q", "label": "Quit"}], "footer_clipped": true,
+ "focused": ["[1] Repositories"], "loose_text": []}
+```
+
+`xtask/src/parity/snapshots/` holds the full structure of the Python `startup` screen at 160x48 and 100x30, extracted
+from the dumps in `xtask/tests/grids/python/`.
+
+#### Boxes
+
+- **Families.** Each family is a set of corners, a horizontal char and a vertical char:
+
+  | Family | Corners (┌ ┐ └ ┘ order) | Horizontal | Vertical |
+  | --- | --- | --- | --- |
+  | light | `┌┐└┘` | `─` | `│` |
+  | rounded | `╭╮╰╯` | `─` | `│` |
+  | heavy | `┏┓┗┛` | `━` | `┃` |
+  | double | `╔╗╚╝` | `═` | `║` |
+  | ascii | `+` | `-` | `\|` |
+
+  Textual's `solid` border, which every Python pane uses, is the light family.
+- **Tracing**, from every top-left corner:
+  - Scan right over horizontal chars and title text to the first top-right corner. That corner must have the
+    top-left's fg, or there's no box. Any other box-drawing char on the way also means there's no box.
+  - Scan down both sides over the family's vertical char, in the same fg, to the bottom corners (same fg).
+  - The bottom edge is horizontal chars or subtitle text.
+  - Corners of the other box-drawing families are accepted when the fg matches, as when borders are joined. ascii
+    boxes only close with `+`, need both sides made entirely of `|`, and must be at least 3×3, so `C++` or `a + b` in
+    text isn't a box.
+  - `rect` is `[col, row, width, height]` of the outer border, and `border_fg` is the top-left corner's fg.
+- **Title** is the top edge between the corners. Runs of border chars split it into segments, which are trimmed, and
+  empty ones are dropped; `title` is the segments joined with `" | "` (`─ A ─── B ─` gives `A | B`). In an ascii box a
+  single `-` inside text (`my-repo`) doesn't split. **Subtitle** is the bottom edge, read the same way. An untitled
+  box has `""`.
+- **Nesting.** A box entirely inside another's interior gets `parent` set to the smallest such box. Boxes are listed
+  in pre-order: top-level boxes by (row, col), each followed by its children by (row, col). `id` is the index in that
+  order. On the main screen that gives the status summary, Repositories, Details, Pull Requests, Issues, Workflows.
+- **Limits.** Textual `thick`, `tall`, `wide` and `blank` borders, drawn with half blocks or spaces, aren't boxes in
+  v1. Most Python modals use `thick`; their content lands in `loose_text` and is still searched by `contains`. The
+  first modal spec (M3) extends the extractor.
+
+#### Focus
+
+- The focus color comes from `parity/themes.toml`, keyed by the scenario config's `appearance.theme` (default
+  `textual-dark`, the Python default). It's Textual's `$success`, measured from the Python startup dump: `#4ebf71` for
+  `textual-dark`.
+- A box is `focused` when its `border_fg` is the focus color, and the top-level `focused` lists the focused boxes'
+  titles in pre-order.
+- **Limits.** A theme whose focus color also draws an unfocused border gives false positives. A theme missing from
+  `themes.toml` gives `focused = []` and a `warnings` entry, which is also printed. Only `textual-dark` is measured.
+
+#### Inside a box
+
+Each pass looks at the box's interior minus nested boxes and claimed cells. First, **scrollbar columns** are dropped
+from the right edge: a column whose background (with `inverse` applied) differs from its row's most common background
+on at least half the rows, and that holds only blanks and `▁▂▃▄▅▆▇█▉▊▋▌▍▎▏▐▔▕` where it differs. Textual's vertical
+scrollbar is two such columns. Scrollbar glyphs at the end of a row (a horizontal scrollbar's thumb) are ignored too.
+
+- **Tabs.**
+  - A row is a tab bar when its non-blank cells are all in `━╸╺─▔▁`, span at least 50% of the interior width, and
+    use at least two fg colors. Textual draws `╸━━━╺━━━` with the active tab's segment in another color.
+  - The row directly above must have text. The tab names are its segments separated by two or more blanks.
+  - The bar cells whose fg differs from the bar's most common fg are the active segment. The active tab is the name
+    overlapping it most (`null` if none does).
+  - The box gets `"tabs": {"names": [...], "active": "..."}`, and both rows are claimed. The area outside every box
+    is searched the same way, into the top-level `tabs`.
+  - **Limit:** a tab label containing two consecutive blanks is split in two.
+- **Tables.**
+  - A **header row** is a row whose text cells are all bold and share one background other than the box's (its
+    border's background), when neither the row above nor the row below has that same style.
+  - The header's segments (separated by two or more blanks) are `headers`, and their start columns are the column
+    boundaries. `headers_clipped` is true when the last header ends within one cell of the interior's right edge,
+    so the screen may have cut it off (Python's Workflows at 100x30 shows `Run` for `Run #`).
+  - Each following row is split at the boundaries and its cells trimmed, giving `rows`. The table ends at an empty
+    row, at a row in the header's style (a stacked table) or at the end of the interior. A box can hold several
+    tables.
+  - **Cursor.** `cursor` is the index of the single row whose background differs from the other rows' common one.
+    With fewer than three rows there's no majority, so the single bold row (Textual's cursor style) is the cursor.
+    Otherwise it's `null`.
+  - **Limits:** a header cell with two consecutive blanks is split. A table without a styled header isn't detected,
+    and its rows land in `text`. A single bold line on its own background (a one-line bold code block, say) is read as
+    a table with no rows.
+- **Text.** `text` is the box's remaining interior, row by row: each run of unclaimed cells, trimmed, with empty ones
+  dropped. `loose_text` is the same for the area outside every box and the footer. Neither is compared across apps,
+  because Markdown and wrapping legitimately differ. They're there for the report.
+
+#### Footer
+
+- The last screen row is the footer unless a box covers it. It's split into style runs, and the style of the first
+  run with text is the key style.
+- Each key-style run with text starts a binding: its trimmed text is `key`, and the trimmed text of the runs up to
+  the next key run is `label`.
+- An empty last row gives `footer = []`. `footer_clipped` is true when the row's last cell isn't blank, which means
+  the screen may have cut the footer off.
+
+#### Changes from the v1 rules in #93
+
+The rules were checked against the Python `startup` dumps at 160x48 and 100x30, and adjusted where Textual's output
+differs:
+
+- **Header rows need bold and a background.** The v1 rule (bold *or* a background) read the bold Markdown headings
+  in the Details pane as one-column tables. Textual's `DataTable` header is both bold and on its own background. The
+  reference background is the box's border background, not the most common interior one, because a box full of rows
+  makes the row background the most common. A header also mustn't share its style with the row above, so the last
+  line of a highlighted block isn't a header.
+- **Backgrounds account for `inverse`.** Textual draws scrollbars in reverse video, so every background comparison
+  uses the color actually drawn.
+- **Scrollbars.** The vertical scrollbar is two columns wide, so scrollbar columns are dropped repeatedly, and only
+  when they hold nothing but blanks and scrollbar glyphs. A horizontal scrollbar (Workflows at 100x30) is a row of
+  blanks ending in a glyph, and ignoring trailing glyphs makes it an empty row.
+- **Cursor in short tables.** "The row whose background differs from the others" has no answer with one or two rows,
+  so bold breaks the tie.
+- **Clipping.** Both sizes cut the Python footer off (`^p Comman`, `^v Paste lin`), and 100x30 cuts the last
+  Workflows header. The structure records `footer_clipped` and `headers_clipped`, and both `[expect] footer` and the
+  cross-app `footer`, `headers` and `rows` checks allow the cut (see Checks), so Rust doesn't have to clip at
+  Textual's column.
+- **Top-level tabs** go in the structure's `tabs` field, which the v1 example didn't have.
+
+#### Rendering contract for the Rust UI
+
+These rules double as the contract the Rust UI renders to, so that its screens are recognized the same way:
+
+- Panes are light-border boxes (`┌┐└┘─│`) with the title on the top edge, drawn as `┌─ title ───┐`, and all border
+  cells of a pane in one fg.
+- The focused pane's border uses the theme's success color, and no unfocused border does.
+- Colors are emitted as RGB (truecolor). An indexed color such as `Color::Green` dumps as `idx:2` and never equals a
+  theme color like `#4ebf71`.
+- Tabs are a label row with names separated by at least two blanks, over an underline row of `━╸╺`. ratatui's `Tabs`
+  widget defaults to a `│` divider with single spaces, so it needs a custom label row.
+- The underline spans the tab area's full width, in the inactive color everywhere except under the active tab. The
+  active segment is found as "the cells not in the bar's most common fg", so a bar drawn only under the labels can
+  name the wrong tab when the active label is wider than the others combined.
+- A table's header row is bold on a background other than the pane's, and its style (background, bold) differs from
+  the cursor row's: a header whose next row shares its style isn't a header, and the cursor is usually row 0.
+- Columns start where the header's labels start and are separated by at least two blanks (ratatui's default
+  `column_spacing` is 1, which merges columns; use 2). Every column has a non-empty header label, or its boundary
+  disappears.
+- The cursor row has its own background and is bold.
+- The footer is the last row: each key in a style distinct from the labels, in Textual's notation (`^p`, `q`, `?`).
+
+### Checks
+
+`xtask/src/parity/check.rs` checks each capture in two ways and writes `<scenario>/<size>/<capture>.check.json`.
+A capture with nothing to check (`check: "n/a"` in `summary.json`) gets no `check.json`, so the report shows it as
+`not checked` rather than as having no mismatches.
+
+```json
+{"capture": "main", "size": [160, 48],
+ "expect": [{"check": "titles", "box": null, "python": ["", "[9] Repositories", "…"], "rust": null,
+             "expected": ["", "[1] Repositories", "…"], "message": "pane titles are […], expected […]"}],
+ "cross": []}
+```
+
+A mismatch has `check`, `box` (the box's title, when it's about one box), `python`, `rust` and `message`. An `expect`
+mismatch puts what the app showed under its own key and `null` under the other, and adds `expected`. After each size,
+the console gets one line per mismatch.
+
+- **`[expect.<capture>]`** is checked against each app that produced the capture:
+  - `pane_titles` (check `titles`): every box title in pre-order, untitled boxes as `""`, exactly.
+  - `focused` (check `focus`): the focused titles, exactly.
+  - `footer`: the `"<key> <label>"` strings in order. When `footer_clipped` is set, the bindings shown must be a
+    prefix of the expected list and the last one may be cut mid-label, so one full list works at every size.
+  - `tabs`: the first box (in pre-order) whose title contains `box`. `names` and `active` must match when given.
+  - `contains` / `not_contains`: searched in each row of the plain text, so they see everything on screen, modals
+    included.
+
+  A failure counts against that app. A Python failure always fails the run, because it means the scenario or the
+  fixtures are wrong.
+- **Cross-app**, Python against Rust, when both apps ran ok. Only the capture's `checks` run (default all):
+  - `titles`: the ordered title lists are equal. One mismatch names the boxes found in only one app, or says that the
+    order differs.
+  - `tabs`: for each box title found in both apps, and for the top-level tabs, the names and the active tab are
+    equal.
+  - `headers`: per box, the list of its tables' `headers`. When either table has `headers_clipped`, the clipped-list
+    rule below applies to that table's headers.
+  - `rows`: per box, the number of tables (a table missing in one app is one mismatch, `python has N tables, rust
+    has M`), then per table the row count, then each row cell by cell. Cells are trimmed, and a cell ending in `…`
+    equals one that starts with its text before the `…`, because truncation width is layout, not content. When
+    either table has `headers_clipped`, a row's last cells may also be one a prefix of the other.
+  - `cursor`: per box and table, the `cursor` index. A differing number of tables is reported here when `rows`
+    isn't checked.
+  - `footer`: the `"<key> <label>"` lists. When either app has `footer_clipped`, the clipped-list rule applies.
+
+  **Clipped lists** are compared up to the shorter list, and the last entry compared may be a prefix of the other
+  app's: text cut at the screen's edge is layout, not content.
+  - `focus`: the `focused` lists.
+
+  Boxes are paired by title: the nth box with a title in one app with the nth in the other. A box found in only one
+  app is reported once, under `titles`, and skipped by the other checks. Boxes whose title contains an `ignore.boxes`
+  entry are skipped by every check but `titles`, and left out of the `focus` lists. Cross-app mismatches count against
+  Rust.
 
 ### Reading the report
 
@@ -690,7 +910,8 @@ is self-contained, with inline CSS, a few lines of inline JS and no external ass
   - **Highlight differences** (when both apps captured) outlines every cell whose character differs between the two
     grids, and the count of differing cells sits next to it. The cells are marked when the report is written; the
     checkbox only flips a class, and it's hidden when JS is off.
-  - **Structural mismatches**: the `check.json` table (check, box, Python value, Rust value, message), tagged
+  - **Structural mismatches**: the `check.json` table (check, box, Python value, Rust value, the `[expect]` value
+    for an `expect` mismatch, message), tagged
     `expect` or `cross`, or `not checked` when there's no `check.json`.
   - Collapsible sections: the text diff, both `structure.json` files pretty-printed, and per size the last 50 lines of
     each app's `fake-gh.log`. **Expand all** / **Collapse all** open or close every section at once.
@@ -699,7 +920,8 @@ is self-contained, with inline CSS, a few lines of inline JS and no external ass
 - **`summary.md`** is a heading `Parity: <n> pass, <n> fail, <n> rust-not-ready` (plus `python-only` / `rust-only`
   counts when there are any), a table `| Scenario | Gate | 160x48 | 100x30 | Mismatches |` (other sizes in the run get
   extra columns; a size a scenario didn't run is `skipped`), and a `<details>` list of the first 20 mismatches as
-  `scenario/size/capture: check box: python=… rust=…` with values cut to 80 characters. It stays under 64 KiB.
+  `scenario/size/capture: check box: python=… rust=…`, plus ` expected=…` for an `[expect]` mismatch, with values
+  cut to 80 characters. It stays under 64 KiB.
 
 A size's result in the index and `summary.md` is computed from that size's app statuses; a size with structural
 mismatches takes the scenario's `fail` or `rust-not-ready` result.
@@ -709,9 +931,16 @@ mismatches takes the scenario's `fail` or `rust-not-ready` result.
 - `cargo test -p xtask` covers scenario parsing, key encoding, config layering, the query responder and the grid
   format, and drives a tiny test TUI (`xtask/tests/bin/echo_tui.rs`, built as an example) through the runner
   (`xtask/tests/runner.rs`). None of it needs Python.
+- Structure extraction and the checks are unit-tested on synthetic grids in `xtask/tests/grids/*.txt` and on the real
+  Python dumps in `xtask/tests/grids/python/` (golden `insta` snapshots in `xtask/src/parity/snapshots/`). A synthetic
+  grid is the screen's characters, then optionally a `--- styles` layer with one letter per cell and a `--- legend`
+  mapping letters to styles (`g fg=#4ebf71 bg=#121212 bold inverse`); `xtask/src/parity/test_grid.rs` documents the
+  format. When the Python screen changes, refresh the dumps from a `--python-only` run and review the snapshot diff
+  with `cargo insta review`.
 - The report has `insta` snapshots (`summary.md`, the text diff, the HTML of a small grid pair) in
   `xtask/src/parity/snapshots/`, and `xtask/tests/report.rs` writes a whole report from synthetic dumps. Review
   snapshot changes with `cargo insta review`, or rerun with `INSTA_UPDATE=always` and read the diff.
 - `xtask/tests/python_app.rs` runs `startup` against the Python app and checks that a fixture miss fails the run. It
   needs uv, so it's `#[ignore]`d: run it with `cargo build -p fake-gh && cargo test -p xtask --test python_app --
-  --ignored`.
+  --ignored`. `xtask/tests/structural_check.rs` (also ignored) rebinds `main.repos.focus` to `9` in a copy of
+  `startup` and checks that `[expect]` fails with a `titles` mismatch naming `[9] Repositories` and exit code 1.

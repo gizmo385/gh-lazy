@@ -1,0 +1,533 @@
+[
+  {
+    "id": "app.quit",
+    "key": "q",
+    "action": "quit",
+    "description": "Quit",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Exit LazyGithub"
+  },
+  {
+    "id": "app.command_palette",
+    "key": "ctrl+p",
+    "action": "command_palette",
+    "description": "Command Pallete",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "app.maximize_widget",
+    "key": "M",
+    "action": "maximize",
+    "description": "Maximize",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Fullscreen the currently focused element"
+  },
+  {
+    "id": "app.open_help",
+    "key": "?",
+    "action": "open_help",
+    "description": "Keybindings",
+    "show": true,
+    "key_display": "?",
+    "tooltip": "Toggle this window"
+  },
+  {
+    "id": "conversation.comment.new",
+    "key": "n",
+    "action": "new_comment",
+    "description": "New Comment",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Create a new comment in the thread"
+  },
+  {
+    "id": "conversation.review.reply",
+    "key": "r",
+    "action": "reply_to_review",
+    "description": "Reply to Review",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Reply to the selected Github review"
+  },
+  {
+    "id": "conversation.comment.reply",
+    "key": "r",
+    "action": "reply_to_individual_comment",
+    "description": "Reply to Comment",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Reply to the selected Github comment"
+  },
+  {
+    "id": "issue.new",
+    "key": "I",
+    "action": "open_issue",
+    "description": "New Issue",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Open a new issue in the current repository"
+  },
+  {
+    "id": "issue.edit",
+    "key": "E",
+    "action": "edit_issue",
+    "description": "Edit Issue",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Edit the selected issue"
+  },
+  {
+    "id": "issue.lookup",
+    "key": "O",
+    "action": "lookup_issue",
+    "description": "Lookup Issue",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Lookup an issue in the current repository"
+  },
+  {
+    "id": "pull_request.new",
+    "key": "P",
+    "action": "open_pull_request",
+    "description": "New PR",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Open a new pull request in the current repository"
+  },
+  {
+    "id": "pull_request.merge",
+    "key": "ctrl+m",
+    "action": "merge_pull_request",
+    "description": "Merge PR",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Merge the selected pull request"
+  },
+  {
+    "id": "pull_request.edit",
+    "key": "E",
+    "action": "edit_pull_request",
+    "description": "Edit PR",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Edit the selected pull request"
+  },
+  {
+    "id": "pull_request.lookup",
+    "key": "O",
+    "action": "lookup_pull_request",
+    "description": "Lookup Pull Request",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Lookup a pull request in the current repository"
+  },
+  {
+    "id": "repositories.favorite",
+    "key": "ctrl+f",
+    "action": "toggle_favorite_repo",
+    "description": "Toggle Favorite",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Mark/unmark a repository as favorited, which are displayed at the top of the repos table"
+  },
+  {
+    "id": "repositories.lookup",
+    "key": "O",
+    "action": "lookup_repository",
+    "description": "Lookup Repository",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "user.view_profile",
+    "key": "u",
+    "action": "view_user_profile",
+    "description": "View User",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Open the GitHub profile for the author/owner of the highlighted row"
+  },
+  {
+    "id": "common.table.select",
+    "key": "enter,space",
+    "action": "select_cursor",
+    "description": "Select table entry",
+    "show": false,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "common.table.search",
+    "key": "/",
+    "action": "focus_search",
+    "description": "Search",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Search in the table"
+  },
+  {
+    "id": "common.table.cursor_down",
+    "key": "j",
+    "action": "cursor_down",
+    "description": "Table cursor down",
+    "show": false,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "common.table.page_down",
+    "key": "J",
+    "action": "page_down",
+    "description": "Table page down",
+    "show": false,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "common.table.cursor_up",
+    "key": "k",
+    "action": "cursor_up",
+    "description": "Table cursor up",
+    "show": false,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "common.table.page_up",
+    "key": "K",
+    "action": "page_up",
+    "description": "Table page up",
+    "show": false,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "common.table.scroll_right",
+    "key": "l",
+    "action": "scroll_right",
+    "description": "Table scroll right",
+    "show": false,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "common.table.page_right",
+    "key": "$",
+    "action": "page_right",
+    "description": "Table page right",
+    "show": false,
+    "key_display": "$",
+    "tooltip": ""
+  },
+  {
+    "id": "common.table.scroll_left",
+    "key": "h",
+    "action": "scroll_left",
+    "description": "Table scroll left",
+    "show": false,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "common.table.page_left",
+    "key": "^",
+    "action": "page_left",
+    "description": "Table page left",
+    "show": false,
+    "key_display": "^",
+    "tooltip": ""
+  },
+  {
+    "id": "common.table.scroll_top",
+    "key": "g",
+    "action": "scroll_top",
+    "description": "Table scroll to top",
+    "show": false,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "common.table.scroll_bottom",
+    "key": "G",
+    "action": "scroll_bottom",
+    "description": "Table scroll to bottom",
+    "show": false,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "workflows.trigger",
+    "key": "T",
+    "action": "trigger_workflow",
+    "description": "Trigger Workflow",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "workflows.view_run_details",
+    "key": "enter",
+    "action": "select_cursor",
+    "description": "View Run Details",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "workflows.view_job_logs",
+    "key": "l",
+    "action": "view_logs",
+    "description": "View Job Logs",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "diff.add_comment",
+    "key": "c",
+    "action": "add_comment",
+    "description": "Add Comment",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "diff.cursor_down",
+    "key": "j",
+    "action": "cursor_down",
+    "description": "",
+    "show": false,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "diff.cursor_up",
+    "key": "k",
+    "action": "cursor_up",
+    "description": "",
+    "show": false,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "diff.clear_selection",
+    "key": "escape",
+    "action": "clear_selection",
+    "description": "Clear Selection",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "diff.next_hunk",
+    "key": "J",
+    "action": "next_hunk",
+    "description": "Next Hunk",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "diff.previous_hunk",
+    "key": "K",
+    "action": "previous_hunk",
+    "description": "Previous Hunk",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "diff.filter_files",
+    "key": "/",
+    "action": "focus_file_filter",
+    "description": "Filter Files",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "notifications.open",
+    "key": "ctrl+n",
+    "action": "view_notifications",
+    "description": "Notifications",
+    "show": false,
+    "key_display": null,
+    "tooltip": "Open the notifications modal"
+  },
+  {
+    "id": "notifications.mark_all_as_read",
+    "key": "ctrl+r",
+    "action": "mark_all_read",
+    "description": "Mark all as read",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Mark all unread notifications as read"
+  },
+  {
+    "id": "notifications.mark_read",
+    "key": "R",
+    "action": "mark_read",
+    "description": "Mark as Read",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Mark a single notification as read"
+  },
+  {
+    "id": "notifications.view_read",
+    "key": "r",
+    "action": "view_read",
+    "description": "View Read Notifications",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Swap to the viewed notifications tab"
+  },
+  {
+    "id": "notifications.view_unread",
+    "key": "u",
+    "action": "view_unread",
+    "description": "View Unread Notifications",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Swap to the viewed notifications tab"
+  },
+  {
+    "id": "modal.submit",
+    "key": "shift+enter",
+    "action": "submit",
+    "description": "Submit",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Submit whatever is being created in the current dialog"
+  },
+  {
+    "id": "modal.close",
+    "key": "q, escape",
+    "action": "close",
+    "description": "Close",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Close the current dialog"
+  },
+  {
+    "id": "modal.search",
+    "key": "/",
+    "action": "search",
+    "description": "Search",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Search within a dialog window"
+  },
+  {
+    "id": "confirm.yes",
+    "key": "y",
+    "action": "confirm_yes",
+    "description": "Yes",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "confirm.no",
+    "key": "n",
+    "action": "confirm_no",
+    "description": "No",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "react.add",
+    "key": "R",
+    "action": "add_reaction",
+    "description": "Add reaction",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "link.paste",
+    "key": "ctrl+v",
+    "action": "open_link_paste_modal",
+    "description": "Paste link",
+    "show": true,
+    "key_display": null,
+    "tooltip": ""
+  },
+  {
+    "id": "link.follow",
+    "key": "f",
+    "action": "follow_link",
+    "description": "Follow link",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Show hints on visible links and pick one"
+  },
+  {
+    "id": "link.follow_external",
+    "key": "F",
+    "action": "follow_link_external",
+    "description": "Follow link (browser)",
+    "show": true,
+    "key_display": null,
+    "tooltip": "Show hints on visible links and open the pick in the system browser"
+  },
+  {
+    "id": "main.repos.focus",
+    "key": "1",
+    "action": "focus_section('#repos_table')",
+    "description": "Focus repos table",
+    "show": false,
+    "key_display": null,
+    "tooltip": "Focus the table of accessible repositories"
+  },
+  {
+    "id": "main.pull_requests.focus",
+    "key": "2",
+    "action": "focus_section('#pull_requests_table')",
+    "description": "Focus PRs table",
+    "show": false,
+    "key_display": null,
+    "tooltip": "Focus the table of pull requests for the repo"
+  },
+  {
+    "id": "main.issues.focus",
+    "key": "3",
+    "action": "focus_section('#issues_table')",
+    "description": "Focus issues table",
+    "show": false,
+    "key_display": null,
+    "tooltip": "Focus the table of issues for the repo"
+  },
+  {
+    "id": "main.workflows.focus",
+    "key": "4",
+    "action": "focus_workflow_tabs",
+    "description": "Focus workflows table",
+    "show": false,
+    "key_display": null,
+    "tooltip": "Focus and swap between the workflow tabs"
+  },
+  {
+    "id": "main.details.focus",
+    "key": "5",
+    "action": "focus_tabs",
+    "description": "Focus details tabs",
+    "show": false,
+    "key_display": null,
+    "tooltip": "Focus and swap between the selection detail tabs on the right"
+  },
+  {
+    "id": "main.command_log.focus",
+    "key": "6",
+    "action": "focus_section('LazyGithubCommandLog')",
+    "description": "Focus command log",
+    "show": false,
+    "key_display": null,
+    "tooltip": "Focus the command log, where actions taken by LazyGithub are shown"
+  }
+]

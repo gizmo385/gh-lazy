@@ -1,0 +1,24 @@
+┌─ [1] Repositories ───────────────────────┐
+│ Owner       Name   Description          ▇│
+│ parity-bot  alpha  First repo           ▇│
+│ parity-bot  beta   Second one            │
+│ gizmo       gamma                        │
+│ gizmo       delta  Last                  │
+│                                          │
+│ after the table                          │
+└──────────────────────────────────────────┘
+                                            
+--- styles
+
+.hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhs
+.rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrs
+.cccccccccccccccccccccccccccccccccccccccccs
+.rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrs
+.rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrs
+..........................................s
+..........................................s
+--- legend
+h fg=#e0e0e0 bg=#2d3740 bold
+r fg=#e0e0e0 bg=#272727
+c fg=#ddedf9 bg=#0178d4 bold
+s fg=#000000 bg=#003054 inverse

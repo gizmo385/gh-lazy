@@ -1,0 +1,15 @@
+[package]
+name = "lazy-github"
+description = "A terminal UI for GitHub"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+clap = { workspace = true }
+
+[lints]
+workspace = true

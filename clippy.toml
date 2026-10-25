@@ -1,0 +1,2 @@
+# The product name isn't code, so `doc_markdown` shouldn't ask for backticks around it. ".." keeps clippy's defaults.
+doc-valid-idents = ["LazyGithub", ".."]

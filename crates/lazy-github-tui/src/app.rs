@@ -48,7 +48,7 @@ impl App {
     pub fn new(config: Config, theme: Theme, clock: impl Clock + 'static) -> Self {
         let keymap = Keymap::new(&config.bindings.overrides);
         Self {
-            base: BaseScreen::Main(MainScreen),
+            base: BaseScreen::Main(MainScreen::new(&config.appearance, &keymap)),
             shared: Shared::new(config, keymap, theme, Arc::new(clock)),
             toasts: Vec::new(),
             command_log: VecDeque::new(),
@@ -222,8 +222,14 @@ impl App {
     pub fn render(&mut self, frame: &mut Frame<'_>) {
         let area = frame.area();
         let theme = &self.shared.theme;
+        // Textual's `Screen`: `background: $background; color: $foreground`.
+        let screen = theme.background();
         frame.render_widget(
-            Block::new().style(Style::new().fg(theme.foreground).bg(theme.background)),
+            Block::new().style(
+                Style::new()
+                    .fg(theme.color(theme.palette.foreground, screen))
+                    .bg(screen.into()),
+            ),
             area,
         );
         let cx = RenderCx {
@@ -500,11 +506,6 @@ mod tests {
         assert_eq!(log.len(), COMMAND_LOG_LIMIT);
         assert_eq!(log.front(), Some(&line(1)));
         assert_eq!(log.back(), Some(&line(COMMAND_LOG_LIMIT)));
-    }
-
-    #[test]
-    fn placeholder_main_160x48() {
-        insta::assert_snapshot!(test_app().screen(160, 48));
     }
 
     #[test]

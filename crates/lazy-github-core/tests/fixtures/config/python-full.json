@@ -1,0 +1,62 @@
+{
+    "appearance": {
+        "theme": "nord",
+        "show_command_log": true,
+        "show_workflows": false,
+        "show_issues": false,
+        "show_pull_requests": false
+    },
+    "notifications": {
+        "enabled": true,
+        "mark_notification_as_read_when_selected": false
+    },
+    "bindings": {
+        "overrides": {
+            "app.quit": "ctrl+q",
+            "common.table.select": "enter,space"
+        }
+    },
+    "repositories": {
+        "additional_repos_to_track": [
+            "Textualize/textual",
+            "org/repo.with-chars_1"
+        ],
+        "favorites": [
+            "gizmo385/gh-lazy",
+            "gizmo385/dotfiles"
+        ]
+    },
+    "pull_requests": {
+        "state_filter": "open",
+        "owner_filter": "mine",
+        "preferred_merge_method": "rebase",
+        "additional_suggested_pr_reviewers": [
+            "octocat",
+            "hubot"
+        ],
+        "preload_pull_request_for_current_commit": true,
+        "pull_request_template": "/home/lazy/templates/pr.md"
+    },
+    "issues": {
+        "state_filter": "open",
+        "owner_filter": "mine"
+    },
+    "cache": {
+        "auth_cache_duration": 7200,
+        "auth_last_checked": "2026-10-24T18:30:05.123456",
+        "cache_directory": "/var/cache/lazy-github",
+        "default_ttl": 300,
+        "list_repos_ttl": 43200,
+        "list_issues_ttl": 1800
+    },
+    "core": {
+        "first_start": false,
+        "logfile_path": "/var/log/lazy-github/app.log",
+        "logfile_max_bytes": 1000000,
+        "logfile_count": 3
+    },
+    "api": {
+        "base_url": "https://github.example.com/api/v3",
+        "client_type": "GITHUB_CLI"
+    }
+}

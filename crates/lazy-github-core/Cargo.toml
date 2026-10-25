@@ -9,14 +9,19 @@ repository.workspace = true
 publish.workspace = true
 
 [dependencies]
+etcetera = { workspace = true }
 form_urlencoded = { workspace = true }
+indexmap = { workspace = true }
+jiff = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_path_to_error = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["io-util", "macros", "process"] }
 tracing = { workspace = true }
 
 [dev-dependencies]
+rstest = { workspace = true }
 tokio = { workspace = true, features = ["rt"] }
 
 [lints]

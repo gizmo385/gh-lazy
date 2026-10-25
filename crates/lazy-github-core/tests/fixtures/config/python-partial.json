@@ -1,0 +1,17 @@
+{
+    "appearance": {
+        "theme": "dracula",
+        "show_command_log": true
+    },
+    "repositories": {
+        "favorites": [
+            "gizmo385/gh-lazy"
+        ]
+    },
+    "pull_requests": {
+        "preferred_merge_method": "merge"
+    },
+    "cache": {
+        "auth_last_checked": "2025-03-04T05:06:07"
+    }
+}

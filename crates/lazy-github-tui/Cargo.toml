@@ -8,7 +8,25 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[features]
+# `test_util::TestApp` for UI tests, including other crates' tests: enable it from their `[dev-dependencies]`.
+test-util = ["lazy-github-core/test-util"]
+
 [dependencies]
+color-eyre = { workspace = true }
+crossterm = { workspace = true, features = ["event-stream"] }
+futures-util = { workspace = true }
+jiff = { workspace = true }
+lazy-github-core = { workspace = true }
+ratatui = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt", "signal", "sync", "time"] }
+tracing = { workspace = true }
+
+[dev-dependencies]
+insta = { workspace = true }
+lazy-github-core = { workspace = true, features = ["test-util"] }
+tokio = { workspace = true, features = ["test-util"] }
+tracing-subscriber = { workspace = true, features = ["fmt", "std"] }
 
 [lints]
 workspace = true

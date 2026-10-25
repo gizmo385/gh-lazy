@@ -10,7 +10,10 @@ publish.workspace = true
 
 [dependencies]
 clap = { workspace = true }
+color-eyre = { workspace = true }
 lazy-github-core = { workspace = true }
+lazy-github-tui = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread"] }
 tracing = { workspace = true }
 
 [dev-dependencies]

@@ -13,6 +13,7 @@ use crate::action::Action;
 use crate::clock::Clock;
 use crate::effect::{Effect, GithubRequest, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
+use crate::screens::main::SectionId;
 use crate::theme::Theme;
 use crate::toast::Toast;
 
@@ -91,20 +92,43 @@ pub struct ChainLink {
     pub bindings: &'static [BindingId],
 }
 
-/// The components that can own bindings. Panes and modals add their variants as they land.
+/// The components that can own bindings, as Python's widget tree nests them. Modals add their variants as they land.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Owner {
-    /// The app itself: quitting, and later help and maximize.
+    /// The app itself: quitting, the command palette, maximize and help.
     App,
     /// A whole screen.
     Screen(ScreenKind),
+    /// The main screen's `MainViewPane`: the focus keys.
+    MainView,
+    /// The `SelectionsPane` around the four sections: new issue and new PR.
+    SelectionsPane,
+    /// A selection section's container, with the section's actions.
+    Section(SectionId),
+    /// A section's table. #78 adds its bindings.
+    Table(SectionId),
+    /// The details tab strip.
+    DetailsTabs,
+    /// The content of the active details tab.
+    DetailsContent,
+    /// The command log.
+    CommandLog,
 }
 
 /// The base screens.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ScreenKind {
+    /// The "GitHub Authentication" screen.
+    Auth,
     /// The main screen.
     Main,
+}
+
+impl ScreenKind {
+    /// Whether the binding chain stops at this screen (Textual's `ModalScreen`).
+    pub fn is_modal(self) -> bool {
+        matches!(self, ScreenKind::Auth)
+    }
 }
 
 /// The state every component may read, owned by `App`.

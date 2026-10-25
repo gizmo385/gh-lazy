@@ -80,11 +80,11 @@ fn compositing_matches_textual_for_every_theme() {
             let under = operand(theme.palette, bg).over(Paint::Rgb(Rgb::BLACK));
             let fg_color = operand(theme.palette, fg);
             assert_eq!(fg_color.over(under), want, "{name}: {fg} over {bg}");
-            assert_eq!(
-                theme.color(fg_color, under),
-                Color::from(want),
-                "{name}: {fg} over {bg}"
-            );
+            let want_color = match want {
+                Paint::Rgb(c) => Color::Rgb(c.r, c.g, c.b),
+                Paint::Ansi(c) => Color::from(c),
+            };
+            assert_eq!(theme.color(fg_color, under), want_color, "{name}: {fg} over {bg}");
             match (want, under) {
                 // The ANSI themes paint the terminal's own colors.
                 (Paint::Ansi(_), _) => assert!(theme.ansi, "{name}: {fg} over {bg} is ANSI"),

@@ -7,7 +7,7 @@ use lazy_github_core::github::{GhCli, GhCliOptions};
 use lazy_github_core::logging::{self, LoggingOptions};
 use lazy_github_tui::app::App;
 use lazy_github_tui::clock::SystemClock;
-use lazy_github_tui::theme::Theme;
+use lazy_github_tui::theme::{ColorMode, Theme};
 
 /// The variable the git helpers read the user's working directory from. The `gh-lazy` extension script and Nix
 /// wrappers set it before changing directory; otherwise it's the current directory.
@@ -71,13 +71,17 @@ fn run(original_pwd: Option<&Path>) -> ExitCode {
         tracing::debug!("Working directory: {}", pwd.display());
     }
 
+    // Read once, before the terminal is set up, like Textual and Rich do.
+    let color_mode = ColorMode::from_env();
+    tracing::debug!("Color mode: {color_mode:?}");
+
     let result = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .map_err(color_eyre::Report::from)
         .and_then(|runtime| {
             let gh = GhCli::new(GhCliOptions::from(&config));
-            let theme = Theme::from_config(&config.appearance.theme);
+            let theme = Theme::from_config(&config.appearance.theme, color_mode);
             let app = App::new(config, theme, SystemClock);
             runtime.block_on(lazy_github_tui::tui::run(app, gh, logging.command_log, paths))
         });

@@ -26,7 +26,7 @@ pub use model::{Body, CannotScroll, Cell, CellValue, Column, Horizontal, Positio
 pub use py_repr::{is_printable, py_repr_row, py_repr_str};
 pub use search::TableFocus;
 
-use self::model::{RowEntry, sort_rows};
+use self::model::{RowEntry, Rows, sort_rows};
 use self::render::{Layout, Styles};
 use self::search::SearchBox;
 use crate::component::RenderCx;
@@ -160,7 +160,7 @@ pub struct SearchableTable<T: TableItem> {
     /// Every item, in insertion order: Python's `self.items` dict, which the M2 cache writes in this order.
     items: IndexMap<T::Key, T>,
     /// The shown rows, sorted.
-    rows: Vec<RowEntry<T::Key>>,
+    rows: Rows<T::Key>,
     /// The cells of the items the last submitted search hid, so the next search can match them again.
     hidden: HashMap<T::Key, Vec<Cell>>,
     search: SearchBox,
@@ -191,7 +191,7 @@ impl<T: TableItem> SearchableTable<T> {
             columns,
             sort,
             items: IndexMap::new(),
-            rows: Vec::new(),
+            rows: Rows::new(),
             hidden: HashMap::new(),
             search: SearchBox::new(),
             focus: TableFocus::Table,
@@ -240,7 +240,7 @@ impl<T: TableItem> SearchableTable<T> {
             self.insert_unsorted(item, cx);
         }
         // Sorting is a total order on (value, insertion), so sorting once gives what sorting after each insert does.
-        sort_rows(&mut self.rows, self.sort);
+        sort_rows(self.rows.edit(), self.sort);
         if was_empty && !self.rows.is_empty() {
             self.check_load_more(self.pos.cursor)
         } else {
@@ -258,7 +258,7 @@ impl<T: TableItem> SearchableTable<T> {
         let cells = item.cells(cx);
         // `IndexMap::insert` keeps an existing key's position.
         self.items.insert(key.clone(), item);
-        self.rows.push(RowEntry {
+        self.rows.edit().push(RowEntry {
             key,
             cells,
             seq: self.next_seq,
@@ -276,7 +276,7 @@ impl<T: TableItem> SearchableTable<T> {
 
     fn remove_row(&mut self, key: &T::Key) {
         if let Some(index) = self.rows.iter().position(|row| &row.key == key) {
-            self.rows.remove(index);
+            self.rows.edit().remove(index);
             // Only a cursor past the end moves, and only then is the body height (and so the column widths) needed.
             if self.pos.cursor >= self.rows.len() {
                 self.pos = self.body().clamped(self.pos);
@@ -290,7 +290,7 @@ impl<T: TableItem> SearchableTable<T> {
     pub fn clear(&mut self) {
         self.lazy = None;
         self.items.clear();
-        self.rows.clear();
+        self.rows.edit().clear();
         self.hidden.clear();
         self.pos = Position::default();
         self.cursor_column = 0;
@@ -309,7 +309,7 @@ impl<T: TableItem> SearchableTable<T> {
     /// Recomputes every row's cells, for example after a favorite toggle, then re-sorts. Rows keep their insertion
     /// order for ties.
     pub fn refresh_rows(&mut self, cx: &T::Ctx) {
-        for row in &mut self.rows {
+        for row in self.rows.edit() {
             if let Some(item) = self.items.get(&row.key) {
                 row.cells = item.cells(cx);
             }
@@ -319,7 +319,7 @@ impl<T: TableItem> SearchableTable<T> {
                 *cells = item.cells(cx);
             }
         }
-        sort_rows(&mut self.rows, self.sort);
+        sort_rows(self.rows.edit(), self.sort);
     }
 
     /// Every item, in insertion order.
@@ -415,8 +415,7 @@ impl<T: TableItem> SearchableTable<T> {
         let Some(action) = TableAction::from_binding(id) else {
             return Handled::Ignored;
         };
-        let body = self.body();
-        let horizontal = self.horizontal();
+        let (body, horizontal) = self.extents();
         let handled = match action {
             TableAction::Select => {
                 return match self.rows.get(self.pos.cursor) {
@@ -569,7 +568,7 @@ impl<T: TableItem> SearchableTable<T> {
     /// The column at content offset `x`; past the last column it's column 0, as Textual's out-of-bounds cells say.
     fn column_at(&self, x: usize) -> usize {
         let mut right = 0;
-        for (i, width) in self.widths().into_iter().enumerate() {
+        for (i, width) in self.widths().iter().enumerate() {
             right += width;
             if x < right {
                 return i;
@@ -704,6 +703,7 @@ impl<T: TableItem> SearchableTable<T> {
         let query = self.search.query();
         let mut cells: HashMap<T::Key, Vec<Cell>> = self
             .rows
+            .edit()
             .drain(..)
             .map(|row| (row.key, row.cells))
             .chain(self.hidden.drain())
@@ -713,7 +713,7 @@ impl<T: TableItem> SearchableTable<T> {
                 continue;
             };
             if search::matches(&cells, &query) {
-                self.rows.push(RowEntry {
+                self.rows.edit().push(RowEntry {
                     key: key.clone(),
                     cells,
                     seq: self.next_seq,
@@ -723,7 +723,7 @@ impl<T: TableItem> SearchableTable<T> {
                 self.hidden.insert(key.clone(), cells);
             }
         }
-        sort_rows(&mut self.rows, self.sort);
+        sort_rows(self.rows.edit(), self.sort);
         self.pos = Position::default();
         self.cursor_column = 0;
         self.scroll_x = 0;
@@ -743,8 +743,8 @@ impl<T: TableItem> SearchableTable<T> {
 
     // Measuring.
 
-    fn widths(&self) -> Vec<usize> {
-        render::column_widths(&self.columns, &self.rows)
+    fn widths(&self) -> &[usize] {
+        self.rows.widths(&self.columns)
     }
 
     fn layout_in(&self, area: Rect) -> Layout {
@@ -756,20 +756,24 @@ impl<T: TableItem> SearchableTable<T> {
         self.search.split(self.area).1
     }
 
-    /// The vertical extent, measured against the last rendered area.
-    fn body(&self) -> Body {
-        Body {
+    /// The vertical and horizontal extents, measured against the last rendered area.
+    fn extents(&self) -> (Body, Horizontal) {
+        let content = self.widths().iter().sum();
+        let layout = Layout::new(self.table_area(), content, self.rows.len());
+        let body = Body {
             rows: self.rows.len(),
-            height: self.layout_in(self.table_area()).body_height,
-        }
+            height: layout.body_height,
+        };
+        let horizontal = Horizontal {
+            content,
+            viewport: layout.viewport_width,
+        };
+        (body, horizontal)
     }
 
-    /// The horizontal extent, measured against the last rendered area.
-    fn horizontal(&self) -> Horizontal {
-        Horizontal {
-            content: self.widths().iter().sum(),
-            viewport: self.layout_in(self.table_area()).viewport_width,
-        }
+    /// The vertical extent, measured against the last rendered area.
+    fn body(&self) -> Body {
+        self.extents().0
     }
 
     // Drawing.
@@ -793,7 +797,7 @@ impl<T: TableItem> SearchableTable<T> {
                 .input
                 .render(buf, search, cx.theme, cx.theme.background(), focused);
         }
-        let widths = self.widths();
+        let widths = self.rows.widths(&self.columns);
         let layout = Layout::new(area, widths.iter().sum(), self.rows.len());
         // Rows may have gone since the last frame; the view never scrolls past the end.
         let body = Body {
@@ -814,7 +818,7 @@ impl<T: TableItem> SearchableTable<T> {
             &render::Frame {
                 columns: &self.columns,
                 rows: &self.rows,
-                widths: &widths,
+                widths,
                 layout,
                 scroll_x: self.scroll_x,
                 scroll_y: self.pos.scroll_y,

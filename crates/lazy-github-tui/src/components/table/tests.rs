@@ -208,6 +208,57 @@ fn refresh_rows_recomputes_cells_and_resorts() {
     assert_eq!(table.row_keys().copied().collect::<Vec<_>>(), [1, 2, 3, 4]);
 }
 
+#[test]
+fn cached_widths_follow_every_mutation() {
+    #[track_caller]
+    fn assert_fresh(table: &SearchableTable<Item>) -> Vec<usize> {
+        let cached = table.widths().to_vec();
+        assert_eq!(cached, render::column_widths(&table.columns, &table.rows));
+        cached
+    }
+    let title = |widths: &[usize]| widths[2];
+    let mut table = SearchableTable::new(columns(), SortSpec::ascending(3));
+    let empty = assert_fresh(&table);
+
+    let _ = table.insert(item(1, false), &CX);
+    let short = assert_fresh(&table);
+    assert!(title(&short) > title(&empty));
+    let _ = table.insert_many([item(2, false), item(3, false)], &CX);
+    let long = assert_fresh(&table);
+    assert_eq!(title(&long), LONG_TITLE.len() + 2);
+    assert!(table.remove(&3).is_some());
+    assert_eq!(title(&assert_fresh(&table)), title(&short));
+
+    let _ = table.insert(item(3, false), &CX);
+    assert_eq!(assert_fresh(&table), long);
+    table.clear();
+    assert_eq!(assert_fresh(&table), empty);
+    table.replace_all([item(3, false)], &CX);
+    assert_eq!(title(&assert_fresh(&table)), LONG_TITLE.len() + 2);
+}
+
+#[test]
+fn refresh_rows_measures_the_new_cells() {
+    struct Titles(&'static str);
+    #[derive(Debug)]
+    struct Row(i64);
+    impl TableItem for Row {
+        type Key = i64;
+        type Ctx = Titles;
+        fn key(&self) -> i64 {
+            self.0
+        }
+        fn cells(&self, cx: &Titles) -> Vec<Cell> {
+            vec![Cell::int(self.0), Cell::text(cx.0)]
+        }
+    }
+    let mut rows = SearchableTable::new(vec![Column::new("#"), Column::new("T")], SortSpec::ascending(0));
+    let _ = rows.insert(Row(1), &Titles("a"));
+    assert_eq!(rows.widths()[1], 3);
+    rows.refresh_rows(&Titles("a longer title"));
+    assert_eq!(rows.widths()[1], "a longer title".len() + 2);
+}
+
 // The cursor.
 
 #[test]

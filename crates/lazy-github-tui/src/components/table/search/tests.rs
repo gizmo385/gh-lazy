@@ -464,3 +464,12 @@ fn search_closed_after_empty_submit() {
     assert!(buffer_to_string(&buffer).starts_with(" ★  Owner"));
     insta::assert_debug_snapshot!(buffer);
 }
+
+#[test]
+fn a_search_measures_the_rows_it_leaves() {
+    let mut table = table();
+    assert_eq!(table.widths()[2], "lazy-github".len() + 2);
+    let _ = submit(&mut table, "gh-");
+    assert_eq!(table.widths(), render::column_widths(&table.columns, &table.rows));
+    assert_eq!(table.widths()[2], "gh-dash".len() + 2);
+}

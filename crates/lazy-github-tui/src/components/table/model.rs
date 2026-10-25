@@ -3,6 +3,7 @@
 //! Nothing here renders. The arithmetic is plain functions over counts and offsets, so it's tested without a
 //! terminal.
 
+use std::cell::OnceCell;
 use std::fmt::Debug;
 use std::hash::Hash;
 
@@ -124,6 +125,44 @@ pub(crate) fn sort_rows<K>(rows: &mut [RowEntry<K>], sort: SortSpec) {
         let by_value = if sort.reverse { by_value.reverse() } else { by_value };
         by_value.then(a.seq.cmp(&b.seq))
     });
+}
+
+/// The shown rows, with their column widths cached. Reads go through `Deref`; every change goes through
+/// [`Rows::edit`], which drops the cache, so no mutation can leave stale widths behind.
+#[derive(Debug)]
+pub(crate) struct Rows<K> {
+    entries: Vec<RowEntry<K>>,
+    widths: OnceCell<Vec<usize>>,
+}
+
+impl<K> Rows<K> {
+    pub(crate) fn new() -> Self {
+        Self {
+            entries: Vec::new(),
+            widths: OnceCell::new(),
+        }
+    }
+
+    /// The rows, for changing; the next [`Rows::widths`] measures them again.
+    pub(crate) fn edit(&mut self) -> &mut Vec<RowEntry<K>> {
+        self.widths.take();
+        &mut self.entries
+    }
+
+    /// Each column's width over these rows: measured on first use after a change, then cached. `columns` must be the
+    /// same on every call, as a table's columns are.
+    pub(crate) fn widths(&self, columns: &[Column]) -> &[usize] {
+        self.widths
+            .get_or_init(|| super::render::column_widths(columns, &self.entries))
+    }
+}
+
+impl<K> std::ops::Deref for Rows<K> {
+    type Target = [RowEntry<K>];
+
+    fn deref(&self) -> &Self::Target {
+        &self.entries
+    }
 }
 
 /// The cursor and the vertical scroll offset, in rows.

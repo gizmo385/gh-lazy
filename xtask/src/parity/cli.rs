@@ -8,6 +8,7 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use super::check;
+use super::ci::{self, Finding};
 use super::env::{self, Paths};
 use super::report;
 use super::runner::{self, AppRunStatus};
@@ -57,13 +58,15 @@ pub struct ParityArgs {
     /// The Python interpreter to run `-m lazy_github` with [default: the repo's .venv].
     #[arg(long, value_name = "PATH")]
     pub python: Option<PathBuf>,
-    /// Re-run a failed app run up to N times; a run that passes on retry is marked flaky.
-    #[arg(long, value_name = "N", default_value_t = 0)]
-    pub retries: u32,
+    /// Re-run a failed app run up to N times; a run that passes on retry is marked flaky [default: 0, or 1 with
+    /// --ci]. A Rust run in a scenario with `gate = false` is never retried.
+    #[arg(long, value_name = "N")]
+    pub retries: Option<u32>,
     /// Run up to N scenarios in parallel. Sizes and apps within a scenario always run one after another.
     #[arg(long, value_name = "N", default_value_t = 1, value_parser = clap::value_parser!(u16).range(1..))]
     pub jobs: u16,
-    /// Running in CI. Accepted now; the CI-specific output arrives with #70.
+    /// Running in CI: retry failed runs once, print GitHub Actions `::error`/`::warning` annotations, and ask cargo
+    /// and uv for plain (uncolored) output.
     #[arg(long)]
     pub ci: bool,
     /// Check every scenario file (or the ones named) without running anything.
@@ -141,13 +144,7 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     };
     let needs_python = scenarios.iter().any(|s| s.apps.contains(&App::Python)) && requested.contains(&App::Python);
 
-    if !args.no_build {
-        let cargo = std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
-        run_tool(&repo, &cargo, &["build", "-p", "lazy-github", "-p", "fake-gh"])?;
-    }
-    if needs_python && !args.no_sync {
-        run_tool(&repo, "uv".as_ref(), &["sync", "--frozen", "--quiet"])?;
-    }
+    build_and_sync(&repo, args, needs_python)?;
 
     // `cargo xtask` runs target/<profile>/xtask, next to the binaries the build above produced.
     let exe = std::env::current_exe().context("finding the xtask binary")?;
@@ -182,11 +179,12 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     let options = RunOptions {
         apps: &requested,
         sizes: &args.sizes,
-        retries: args.retries,
+        retries: args.retries.unwrap_or(u32::from(args.ci)),
         keep_home: args.keep_home,
         themes: &themes,
     };
-    let summaries = run_all(&scenarios, &paths, &out, &options, usize::from(args.jobs));
+    let runs = run_all(&scenarios, &paths, &out, &options, usize::from(args.jobs));
+    let (summaries, annotations) = split_runs(runs, &scenarios, &repo, args.ci);
 
     let summary = Summary {
         version: SUMMARY_VERSION,
@@ -206,8 +204,33 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
         println!("{}: {}", s.name, s.result);
     }
     println!("report: {}", out.display());
+    for annotation in &annotations {
+        println!("{annotation}");
+    }
 
     Ok(exit_code(&summary))
+}
+
+/// Splits the runs into their summaries and, with `--ci`, the annotations for them.
+fn split_runs(
+    runs: Vec<ScenarioRun>,
+    scenarios: &[Scenario],
+    repo: &Path,
+    ci: bool,
+) -> (Vec<ScenarioSummary>, Vec<ci::Annotation>) {
+    let mut annotations = Vec::new();
+    let summaries = runs
+        .into_iter()
+        .zip(scenarios)
+        .map(|((summary, findings), scenario)| {
+            if ci {
+                let file = ci::scenario_file(repo, &scenario.path);
+                annotations.extend(ci::annotations(&file, &summary, &findings));
+            }
+            summary
+        })
+        .collect();
+    (summaries, annotations)
 }
 
 /// Each scenario owns `<out>/<name>/`, so two files with one stem in one run would wipe each other's results (and
@@ -236,6 +259,20 @@ fn exit_code(summary: &Summary) -> u8 {
     } else {
         EXIT_OK
     }
+}
+
+/// Builds the binaries and syncs the venv, unless the flags say not to. `--ci` asks both tools for plain output.
+fn build_and_sync(repo: &Path, args: &ParityArgs, needs_python: bool) -> Result<()> {
+    let color: &[&str] = if args.ci { &["--color", "never"] } else { &[] };
+    if !args.no_build {
+        let cargo = std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
+        let build = [&["build", "-p", "lazy-github", "-p", "fake-gh"], color].concat();
+        run_tool(repo, &cargo, &build)?;
+    }
+    if needs_python && !args.no_sync {
+        run_tool(repo, "uv".as_ref(), &[&["sync", "--frozen", "--quiet"], color].concat())?;
+    }
+    Ok(())
 }
 
 fn run_tool(repo: &Path, program: &std::ffi::OsStr, args: &[&str]) -> Result<()> {
@@ -296,24 +333,27 @@ struct RunOptions<'a> {
     themes: &'a Themes,
 }
 
-/// Runs the scenarios on up to `jobs` threads and returns their summaries in input order.
+/// A scenario's summary and its structural mismatches.
+type ScenarioRun = (ScenarioSummary, Vec<Finding>);
+
+/// Runs the scenarios on up to `jobs` threads and returns their results in input order.
 fn run_all(
     scenarios: &[Scenario],
     paths: &Paths,
     out: &Path,
     options: &RunOptions<'_>,
     jobs: usize,
-) -> Vec<ScenarioSummary> {
+) -> Vec<ScenarioRun> {
     let next = AtomicUsize::new(0);
-    let results: Vec<Mutex<Option<ScenarioSummary>>> = scenarios.iter().map(|_| Mutex::new(None)).collect();
+    let results: Vec<Mutex<Option<ScenarioRun>>> = scenarios.iter().map(|_| Mutex::new(None)).collect();
     std::thread::scope(|scope| {
         for _ in 0..jobs.min(scenarios.len()) {
             scope.spawn(|| {
                 loop {
                     let i = next.fetch_add(1, Ordering::Relaxed);
                     let Some(scenario) = scenarios.get(i) else { break };
-                    let summary = run_scenario(scenario, paths, out, options);
-                    *results[i].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(summary);
+                    let run = run_scenario(scenario, paths, out, options);
+                    *results[i].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(run);
                 }
             });
         }
@@ -324,9 +364,12 @@ fn run_all(
         .map(|(slot, scenario)| {
             slot.into_inner()
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .unwrap_or_else(|| ScenarioSummary {
-                    error: Some("the scenario's worker thread panicked".into()),
-                    ..empty_summary(scenario)
+                .unwrap_or_else(|| {
+                    let summary = ScenarioSummary {
+                        error: Some("the scenario's worker thread panicked".into()),
+                        ..empty_summary(scenario)
+                    };
+                    (summary, Vec::new())
                 })
         })
         .collect()
@@ -344,8 +387,9 @@ fn empty_summary(scenario: &Scenario) -> ScenarioSummary {
     }
 }
 
-fn run_scenario(scenario: &Scenario, paths: &Paths, out: &Path, options: &RunOptions<'_>) -> ScenarioSummary {
+fn run_scenario(scenario: &Scenario, paths: &Paths, out: &Path, options: &RunOptions<'_>) -> ScenarioRun {
     let mut summary = empty_summary(scenario);
+    let mut findings = Vec::new();
     let dir = out.join(&scenario.name);
     let sizes = if options.sizes.is_empty() {
         &scenario.sizes[..]
@@ -382,7 +426,8 @@ fn run_scenario(scenario: &Scenario, paths: &Paths, out: &Path, options: &RunOpt
                 }
                 statuses.insert(app, status);
             }
-            let captures = check::check_size(scenario, &dir.join(size.to_string()), &statuses, &theme)?;
+            let (captures, found) = check::check_size(scenario, &dir.join(size.to_string()), &statuses, &theme)?;
+            findings.extend(found);
             summary.sizes.push(SizeSummary {
                 size: size.to_string(),
                 apps: statuses,
@@ -398,10 +443,11 @@ fn run_scenario(scenario: &Scenario, paths: &Paths, out: &Path, options: &RunOpt
         summary.error = Some(e.to_string());
         summary.result = ScenarioResult::Fail;
     }
-    summary
+    (summary, findings)
 }
 
-/// Runs one app at one size, retrying a failure up to `options.retries` times.
+/// Runs one app at one size, retrying a failure up to `options.retries` times. A run whose failure can't fail the
+/// gate (Rust in an ungated scenario) isn't retried: the retry would only cost time.
 fn run_app(
     scenario: &Scenario,
     app: App,
@@ -410,6 +456,11 @@ fn run_app(
     out: &Path,
     options: &RunOptions<'_>,
 ) -> Result<AppRunStatus> {
+    let retries = if ci::gates(scenario.gate, app) {
+        options.retries
+    } else {
+        0
+    };
     let mut attempt = 0;
     loop {
         if out.exists() {
@@ -418,7 +469,7 @@ fn run_app(
         std::fs::create_dir_all(out).with_context(|| format!("creating {}", out.display()))?;
         let env = env::prepare(scenario, app, size, paths, out, options.keep_home)?;
         let mut status = runner::run(env, &scenario.steps, out)?;
-        if status.passed() || attempt >= options.retries {
+        if status.passed() || attempt >= retries {
             if status.passed() && attempt > 0 {
                 status.flaky = true;
                 runner::write_status(&status, out)?;
@@ -430,7 +481,7 @@ fn run_app(
             "{} {size} {app}: {}; retrying ({attempt}/{})",
             scenario.name,
             status.describe(),
-            options.retries
+            retries
         );
     }
 }
@@ -476,7 +527,10 @@ mod tests {
         assert_eq!(args.scenarios, ["startup"]);
         assert!(args.python_only && args.keep_home && args.no_build && args.no_sync && args.ci);
         assert_eq!(args.sizes, [Size { cols: 100, rows: 30 }, Size { cols: 80, rows: 24 }]);
-        assert_eq!((args.retries, args.jobs), (2, 4));
+        assert_eq!((args.retries, args.jobs), (Some(2), 4));
+        let ci = parse(&["--all", "--ci", "--no-sync"]).unwrap();
+        assert!(ci.all && ci.ci && ci.no_sync);
+        assert_eq!(ci.retries, None);
     }
 
     #[test]

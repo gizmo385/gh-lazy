@@ -20,8 +20,10 @@ impl KeyChord {
     /// The chord for a terminal key event, or `None` for a release.
     ///
     /// - `BackTab` is `Tab` with SHIFT.
-    /// - A character without CTRL or ALT folds SHIFT into the character: `M`, `shift+m` and `Char('M')` with SHIFT
-    ///   are all `Char('M')` with no modifiers.
+    /// - An ASCII letter without CTRL or ALT folds SHIFT into the character: `M`, `shift+m` and `Char('M')` with
+    ///   SHIFT are all `Char('M')` with no modifiers.
+    /// - Space keeps SHIFT, so `shift+space` (kitty only) never fires on plain space.
+    /// - Other characters drop SHIFT: it's what typed them (`?`, `!`), and Textual reports them without it.
     /// - A character with CTRL or ALT is lowercased, keeping SHIFT if it was uppercase or SHIFT was set.
     /// - Other keys keep their modifiers, so plain Enter is never `ctrl+m`, Tab never `ctrl+i` and Escape never
     ///   `ctrl+[`: unlike Textual, there are no event aliases.
@@ -48,6 +50,7 @@ fn normalize(code: KeyCode, mods: KeyModifiers) -> KeyChord {
             code: KeyCode::Tab,
             mods: mods | KeyModifiers::SHIFT,
         },
+        KeyCode::Char(' ') if !mods.intersects(KeyModifiers::CONTROL | KeyModifiers::ALT) => KeyChord { code, mods },
         KeyCode::Char(c) if !mods.intersects(KeyModifiers::CONTROL | KeyModifiers::ALT) => {
             let c = if mods.contains(KeyModifiers::SHIFT) {
                 c.to_ascii_uppercase()
@@ -198,7 +201,17 @@ fn parse_chord(token: &str) -> Option<KeyChord> {
             _ => return None,
         };
     }
-    Some(KeyChord::new(key_code(name)?, mods))
+    let code = key_code(name)?;
+    if let KeyCode::Char(c) = code
+        && mods == KeyModifiers::SHIFT
+        && !c.is_ascii_alphabetic()
+        && c != ' '
+    {
+        // `shift+1`, `shift+?`: a terminal sends the shifted character instead (`!`, `?`), and Textual never reports
+        // these, so the chord keeps SHIFT and matches nothing, rather than firing on the plain key.
+        return Some(KeyChord { code, mods });
+    }
+    Some(KeyChord::new(code, mods))
 }
 
 fn key_code(name: &str) -> Option<KeyCode> {
@@ -369,7 +382,6 @@ mod tests {
     #[rstest]
     #[case("M", "shift+m")]
     #[case("ctrl+F", "ctrl+shift+f")]
-    #[case("shift+?", "?")]
     #[case("ctrl+i", "ctrl+i")]
     fn spellings_of_the_same_key(#[case] a: &str, #[case] b: &str) {
         assert_eq!(parsed(a), parsed(b));
@@ -396,6 +408,26 @@ mod tests {
         assert_eq!(chord(event(KeyCode::Char('M'), KeyModifiers::SHIFT)), Some(upper));
         assert_eq!(chord(event(KeyCode::Char('m'), KeyModifiers::SHIFT)), Some(upper));
         assert_ne!(chord(event(KeyCode::Char('m'), KeyModifiers::NONE)), Some(upper));
+    }
+
+    #[test]
+    fn shift_stays_on_space_and_never_matches_shifted_characters() {
+        let shift_space = parsed("shift+space");
+        assert_eq!(chord(event(KeyCode::Char(' '), KeyModifiers::SHIFT)), Some(shift_space));
+        assert_ne!(chord(event(KeyCode::Char(' '), KeyModifiers::NONE)), Some(shift_space));
+        for (spec, plain_key) in [("shift+1", '1'), ("shift+?", '?'), ("shift+question_mark", '?')] {
+            let spec = parsed(spec);
+            for mods in [KeyModifiers::NONE, KeyModifiers::SHIFT] {
+                assert_ne!(chord(event(KeyCode::Char(plain_key), mods)), Some(spec));
+            }
+        }
+        // A shifted character arrives as itself, with or without SHIFT reported.
+        assert_eq!(chord(event(KeyCode::Char('!'), KeyModifiers::SHIFT)), Some(parsed("!")));
+        assert_eq!(
+            chord(event(KeyCode::Char('?'), KeyModifiers::SHIFT)),
+            Some(parsed("question_mark"))
+        );
+        assert_eq!(KeySpec::display("shift+1"), "shift+1");
     }
 
     #[test]

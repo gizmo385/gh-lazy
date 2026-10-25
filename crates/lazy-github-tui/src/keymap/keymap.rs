@@ -19,7 +19,8 @@ impl Keymap {
     /// Every binding on its default keys, with `overrides` (`bindings.overrides`: id to key list) on top.
     ///
     /// - An overridden binding answers only to its override keys, and its `key_display` is dropped.
-    /// - An empty or blank override is ignored, so the binding keeps its defaults.
+    /// - An empty or blank override is ignored, so the binding keeps its defaults. One made only of commas (`" , "`)
+    ///   unbinds it, as in Textual, where it isn't blank.
     /// - An override for an id that doesn't exist is ignored. It stays in the config file.
     /// - A token that isn't a key never matches, but it's displayed as written.
     pub fn new(overrides: &IndexMap<String, String>) -> Self {
@@ -35,10 +36,11 @@ impl Keymap {
                 continue;
             };
             raw.insert(id, value.clone());
-            let parsed = KeySpec::parse_list(value);
-            if parsed.is_empty() {
+            // Textual's `apply_keymap` skips only a falsy (blank, after normalization) override.
+            if value.trim().is_empty() {
                 continue;
             }
+            let parsed = KeySpec::parse_list(value);
             for (token, spec) in &parsed {
                 if matches!(spec, KeySpec::Unknown(_)) {
                     tracing::warn!("Unknown key {token:?} in bindings.overrides for {config_id}");
@@ -109,21 +111,29 @@ impl Keymap {
             .collect()
     }
 
-    /// The binding in one component's list `ids` that owns `chord`, if any, under [`Self::effective_keys`]'s rules:
-    /// an overridden binding wins over a default one, and otherwise the first in list order wins. A component nearer
-    /// the focus still wins over one further out: that's the caller walking the chain innermost first.
+    /// Every binding in one component's list `ids` that `chord` fires, in the order Textual's `_check_bindings`
+    /// tries them: [`Self::effective_keys`] order. Dispatch tries each until one applies, then stops; only when none
+    /// does it moves on to the next chain link.
+    pub fn matches_in(&self, ids: &[BindingId], chord: &KeyChord) -> impl Iterator<Item = BindingId> {
+        let chord = *chord;
+        self.effective_keys(ids)
+            .into_iter()
+            .filter(move |(_, key)| *key == chord)
+            .map(|(id, _)| id)
+    }
+
+    /// The first of [`Self::matches_in`]: an overridden binding wins over a default one, and otherwise the first in
+    /// list order wins. A component nearer the focus still wins over one further out: that's the caller walking the
+    /// chain innermost first.
     pub fn match_in(&self, ids: &[BindingId], chord: &KeyChord) -> Option<BindingId> {
-        let owns = |id: &BindingId| {
-            self.keys(*id)
-                .iter()
-                .any(|(_, spec)| matches!(spec, KeySpec::Chord(key) if key == chord))
-        };
-        // Same answer as searching `effective_keys`, without collecting it on every key press.
-        ids.iter()
-            .filter(|&&id| self.is_overridden(id))
-            .find(|id| owns(id))
-            .or_else(|| ids.iter().filter(|&&id| !self.is_overridden(id)).find(|id| owns(id)))
-            .copied()
+        self.matches_in(ids, chord).next()
+    }
+
+    /// The priority bindings in `ids` that `chord` fires, in [`Self::matches_in`] order. The clash rule applies to
+    /// the whole list first, as Textual applies the keymap to a node before checking `priority`: an override onto
+    /// `ctrl+q` in the same list takes the key from the built-in quit.
+    pub fn priority_matches_in(&self, ids: &[BindingId], chord: &KeyChord) -> impl Iterator<Item = BindingId> {
+        self.matches_in(ids, chord).filter(|id| id.is_priority())
     }
 
     /// The bindings checked before the focused component sees a key.
@@ -299,6 +309,58 @@ mod tests {
             keymap.match_in(&ids, &key("r")),
             Some(BindingId::ConversationReviewReply)
         );
+        // Dispatch falls through to the second when the first doesn't apply.
+        assert_eq!(
+            keymap.matches_in(&ids, &key("r")).collect::<Vec<_>>(),
+            [BindingId::ConversationReviewReply, BindingId::ConversationCommentReply]
+        );
+    }
+
+    #[test]
+    fn matches_in_puts_overrides_after_defaults() {
+        let keymap = keymap(&[("common.table.select", "enter")]);
+        let table = [
+            BindingId::TableSelect,
+            BindingId::TextualTableSelect,
+            BindingId::WorkflowsViewRunDetails,
+        ];
+        // The override claims Enter, so the defaults that held it lose it.
+        assert_eq!(
+            keymap.matches_in(&table, &key("enter")).collect::<Vec<_>>(),
+            [BindingId::TableSelect]
+        );
+        let keymap = Keymap::defaults();
+        assert_eq!(
+            keymap.matches_in(&table, &key("enter")).collect::<Vec<_>>(),
+            [
+                BindingId::TableSelect,
+                BindingId::TextualTableSelect,
+                BindingId::WorkflowsViewRunDetails
+            ]
+        );
+    }
+
+    #[test]
+    fn an_override_onto_ctrl_q_takes_it_from_the_priority_quit() {
+        let ids = [BindingId::TextualQuit, BindingId::AppOpenHelp];
+        let ctrl_q = key("ctrl+q");
+        let keymap = keymap(&[("app.open_help", "ctrl+q")]);
+        assert_eq!(keymap.priority_matches_in(&ids, &ctrl_q).next(), None);
+        assert_eq!(keymap.match_in(&ids, &ctrl_q), Some(BindingId::AppOpenHelp));
+        assert_eq!(
+            Keymap::defaults()
+                .priority_matches_in(&ids, &ctrl_q)
+                .collect::<Vec<_>>(),
+            [BindingId::TextualQuit]
+        );
+    }
+    #[test]
+    fn a_comma_only_override_unbinds() {
+        let keymap = keymap(&[("main.repos.focus", " , ")]);
+        assert!(keymap.is_overridden(BindingId::MainReposFocus));
+        assert_eq!(keymap.keys(BindingId::MainReposFocus), []);
+        assert_eq!(keymap.match_in(MAIN_FOCUS, &key("1")), None);
+        assert_eq!(keymap.title_key(BindingId::MainReposFocus), " , ");
     }
 
     #[test]

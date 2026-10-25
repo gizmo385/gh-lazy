@@ -141,8 +141,11 @@ structural check is the gate in CI; the visual report is what the parity agent a
 
 ## 7. Cross-platform
 
-- CI matrix: `ubuntu-latest` and `macos-latest`, both required. Windows isn't built or tested until later in the
-  project; `windows-latest` joins the matrix in M5.
+- CI: one required job on `ubuntu-latest`, `fmt, clippy, test (ubuntu-latest)`, which also runs the parity gate on
+  PRs. macOS stays a first-class target, but its runners cost about 10x Linux minutes, so CI doesn't run it (Chris,
+  2026-10-25). macOS-only code paths (`cfg!(target_os = "macos")`, the parity
+  harness's `TMPDIR`) are checked locally on a Mac before merge, and macOS gaps get a `platform: macos` label. Windows
+  isn't built or tested until later in the project; `windows-latest` joins the matrix in M5.
 - No shelling out except to `gh` and `git`; no `sh -c`. Paths via `std::path` and `etcetera`.
 - `fake-gh` is Rust, not a shell script, so the parity harness runs on all three OSes.
 - Windows-specific gaps get a `platform: windows` label instead of blocking a PR.

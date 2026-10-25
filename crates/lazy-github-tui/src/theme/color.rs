@@ -27,8 +27,17 @@ impl Rgb {
         (299.0 * r + 587.0 * g + 114.0 * b) / 1000.0
     }
 
+    /// Textual's `Color.lighten`: `amount` (0 to 1) added to the CIE-L*ab lightness, with Textual's conversions,
+    /// `int()` truncation and clamping. A negative `amount` darkens.
+    #[must_use]
+    pub fn lighten(self, amount: f64) -> Rgb {
+        let (l, a, b) = rgb_to_lab(self);
+        lab_to_rgb(l + amount * 100.0, a, b)
+    }
+
     /// Textual's `Color.blend` between two opaque colors, including its `int()` truncation.
-    fn blend(self, to: Rgb, factor: f64) -> Rgb {
+    #[must_use]
+    pub fn blend(self, to: Rgb, factor: f64) -> Rgb {
         if factor <= 0.0 {
             return self;
         }
@@ -40,6 +49,70 @@ impl Rgb {
         let mix = |a: u8, b: u8| (f64::from(a) + (f64::from(b) - f64::from(a)) * factor) as u8;
         Rgb::new(mix(self.r, to.r), mix(self.g, to.g), mix(self.b, to.b))
     }
+}
+
+/// Textual's `rgb_to_lab`: sRGB to CIE-L*ab through XYZ, D65/2°.
+// Textual's formula, with its single-letter names and constants.
+#[allow(clippy::many_single_char_names, clippy::unreadable_literal)]
+fn rgb_to_lab(c: Rgb) -> (f64, f64, f64) {
+    let linear = |v: u8| {
+        let v = f64::from(v) / 255.0;
+        if v > 0.04045 {
+            ((v + 0.055) / 1.055).powf(2.4)
+        } else {
+            v / 12.92
+        }
+    };
+    let (r, g, b) = (linear(c.r), linear(c.g), linear(c.b));
+    let x = (r * 41.24 + g * 35.76 + b * 18.05) / 95.047;
+    let y = (r * 21.26 + g * 71.52 + b * 7.22) / 100.0;
+    let z = (r * 1.93 + g * 11.92 + b * 95.05) / 108.883;
+    let f = |t: f64| {
+        if t > 0.008856 {
+            t.powf(1.0 / 3.0)
+        } else {
+            7.787 * t + 16.0 / 116.0
+        }
+    };
+    let (x, y, z) = (f(x), f(y), f(z));
+    (116.0 * y - 16.0, 500.0 * (x - y), 200.0 * (y - z))
+}
+
+/// Textual's `lab_to_rgb` followed by `Color.clamped`.
+#[allow(clippy::many_single_char_names, clippy::unreadable_literal)]
+fn lab_to_rgb(l: f64, a: f64, b: f64) -> Rgb {
+    let off = 16.0 / 116.0;
+    let y = (l + 16.0) / 116.0;
+    let x = a / 500.0 + y;
+    let z = y - b / 200.0;
+    let cube = |t: f64, white: f64, linear: f64| {
+        if t > 0.206_893_034_4 {
+            white * t.powi(3)
+        } else {
+            linear * (t - off)
+        }
+    };
+    let y = if y > 0.206_893_034_4 {
+        y.powi(3)
+    } else {
+        (y - off) / 7.787
+    };
+    let x = cube(x, 0.95047, 0.122_059);
+    let z = cube(z, 1.08883, 0.139_827);
+    let gamma = |v: f64| {
+        if v > 0.003_130_8 {
+            1.055 * v.powf(1.0 / 2.4) - 0.055
+        } else {
+            12.92 * v
+        }
+    };
+    let r = gamma(x * 3.2406 + y * -1.5372 + z * -0.4986);
+    let g = gamma(x * -0.9689 + y * 1.8758 + z * 0.0415);
+    let b = gamma(x * 0.0557 + y * -0.2040 + z * 1.0570);
+    // `int()` truncates toward zero, then `clamped` limits to 0..=255; `as` saturates the same way.
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    let channel = |v: f64| (v * 255.0).trunc().clamp(0.0, 255.0) as u8;
+    Rgb::new(channel(r), channel(g), channel(b))
 }
 
 /// One of the terminal's 16 named colors, or its default color.

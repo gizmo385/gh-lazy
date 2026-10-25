@@ -1,0 +1,38 @@
+---
+source: crates/lazy-github-tui/src/components/table/tests.rs
+expression: "snap(&mut table, true)"
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 40, height: 8 },
+    content: [
+        " ★  Owner       Title                   ",
+        " ☆  parity-bot  Item 6                  ",
+        " ☆  octo        Item 7                  ",
+        " ☆  parity-bot  Item 8                ▇▇",
+        " ☆  parity-bot  Item 10                 ",
+        " ☆  octo        Item 11                 ",
+        " ☆  parity-bot  Item 12                 ",
+        "             ▎                          ",
+    ],
+    styles: [
+        x: 0, y: 0, fg: Rgb(224, 224, 224), bg: Rgb(45, 55, 64), underline: Reset, modifier: BOLD,
+        x: 1, y: 0, fg: Rgb(152, 224, 36), bg: Rgb(45, 55, 64), underline: Reset, modifier: BOLD,
+        x: 2, y: 0, fg: Rgb(224, 224, 224), bg: Rgb(45, 55, 64), underline: Reset, modifier: BOLD,
+        x: 38, y: 0, fg: Rgb(224, 224, 224), bg: Rgb(0, 0, 0), underline: Reset, modifier: NONE,
+        x: 0, y: 1, fg: Rgb(224, 224, 224), bg: Rgb(39, 39, 39), underline: Reset, modifier: NONE,
+        x: 38, y: 1, fg: Rgb(224, 224, 224), bg: Rgb(0, 0, 0), underline: Reset, modifier: NONE,
+        x: 0, y: 2, fg: Rgb(224, 224, 224), bg: Rgb(39, 39, 39), underline: Reset, modifier: NONE,
+        x: 38, y: 2, fg: Rgb(224, 224, 224), bg: Rgb(0, 0, 0), underline: Reset, modifier: NONE,
+        x: 0, y: 3, fg: Rgb(224, 224, 224), bg: Rgb(39, 39, 39), underline: Reset, modifier: NONE,
+        x: 38, y: 3, fg: Rgb(0, 48, 84), bg: Rgb(0, 0, 0), underline: Reset, modifier: NONE,
+        x: 0, y: 4, fg: Rgb(224, 224, 224), bg: Rgb(39, 39, 39), underline: Reset, modifier: NONE,
+        x: 38, y: 4, fg: Rgb(0, 48, 84), bg: Rgb(39, 39, 39), underline: Reset, modifier: REVERSED,
+        x: 0, y: 5, fg: Rgb(224, 224, 224), bg: Rgb(39, 39, 39), underline: Reset, modifier: NONE,
+        x: 38, y: 5, fg: Rgb(0, 48, 84), bg: Rgb(39, 39, 39), underline: Reset, modifier: REVERSED,
+        x: 0, y: 6, fg: Rgb(221, 237, 249), bg: Rgb(1, 120, 212), underline: Reset, modifier: BOLD,
+        x: 38, y: 6, fg: Rgb(0, 48, 84), bg: Rgb(39, 39, 39), underline: Reset, modifier: REVERSED,
+        x: 13, y: 7, fg: Rgb(0, 48, 84), bg: Rgb(0, 0, 0), underline: Reset, modifier: NONE,
+        x: 14, y: 7, fg: Rgb(224, 224, 224), bg: Rgb(0, 0, 0), underline: Reset, modifier: NONE,
+        x: 38, y: 7, fg: Reset, bg: Rgb(0, 0, 0), underline: Reset, modifier: NONE,
+    ]
+}

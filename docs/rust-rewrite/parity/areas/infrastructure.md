@@ -6,7 +6,7 @@ this file.
 | Id | Item | Python reference | Milestone | Status | Issue | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | `infrastructure.workspace` | Cargo workspace and crate skeletons | n/a | M0 | not started | #62 | |
-| `infrastructure.ci` | CI for `rust-main` (fmt, clippy, tests on Linux and macOS) | `.github/workflows/code-checks.yaml` (Python equivalent) | M0 | not started | #63 | |
+| `infrastructure.ci` | CI for `rust-main` (fmt, clippy, tests on Linux; macOS dropped for cost, PLAN §7) | `.github/workflows/code-checks.yaml` (Python equivalent) | M0 | not started | #63 | |
 | `infrastructure.config-load-save` | Config load/save compatible with `config.json` (see [Config](./config.md)) | `lib/config.py` `Config.load_config`, `Config.save` | M0 | not started | #64 | Must also accept values the Python Settings modal wrote as strings (Py bug B2). |
 | `infrastructure.gh-client` | `Github` trait, `gh` CLI client, auth check | `lib/github/client.py`, `lib/github/backends/cli.py`, `lib/github/auth.py` `is_logged_in_to_cli` | M0 | not started | #65 | |
 | `infrastructure.log-file` | Rolling log file at `core.logfile_path` (`LEVEL YYYY-mm-dd HH:MM:SS - message`) | `lib/logging.py` `LazyGithubLogFormatter`, `lib/context.py` `_setup_logging_handler` | M0 | not started | #66 | Rotates at `logfile_max_bytes`, keeps `logfile_count` files. |

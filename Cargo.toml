@@ -18,6 +18,7 @@ publish = false
 # Internal crates
 lazy-github-core = { path = "crates/lazy-github-core" }
 lazy-github-tui = { path = "crates/lazy-github-tui" }
+fake-gh = { path = "crates/fake-gh" }
 
 # TUI
 ratatui = "0.30"
@@ -55,6 +56,10 @@ rstest = "0.28"
 assert_cmd = "2"
 portable-pty = "0.9"
 vt100 = "0.18"
+# Parity scenario files (`toml::Spanned` gives file:line errors), `wait.regex` steps and per-run temp dirs.
+toml = "1"
+regex = "1"
+tempfile = "3"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

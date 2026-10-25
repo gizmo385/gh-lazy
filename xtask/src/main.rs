@@ -11,13 +11,16 @@ struct Cli {
 }
 
 #[derive(Debug, Subcommand)]
-enum Task {}
+enum Task {
+    Parity(xtask::parity::cli::ParityArgs),
+}
 
 fn main() -> std::io::Result<()> {
     let cli = Cli::parse();
     match cli.task {
         // With no task given, show what's available and exit successfully.
         None => Cli::command().print_help(),
+        Some(Task::Parity(args)) => std::process::exit(xtask::parity::cli::run(&args)),
     }
 }
 

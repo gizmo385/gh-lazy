@@ -27,7 +27,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.repositories-lookup` | `repositories.lookup` | `O` | Lookup Repository | repos table | M2 | not started | | |
 | `keybindings.user-view-profile` | `user.view_profile` | `u` | View User | repos, PR and issues tables | M2 | not started | | |
 | `keybindings.common-table-select` | `common.table.select` | `enter,space` | Select table entry | tables | M1 | not started | #78, #100 | |
-| `keybindings.common-table-search` | `common.table.search` | `/` | Search | tables | M1 | not started | #78, #101 | Override may be saved as `slash`. |
+| `keybindings.common-table-search` | `common.table.search` | `/` | Search | tables | M1 | in progress | #78, #101 | Override may be saved as `slash`. Rust (#101): `SEARCHABLE_BINDINGS` in `components/table/`, checked after the table's own bindings. |
 | `keybindings.common-table-cursor-down` | `common.table.cursor_down` | `j` | Table cursor down | tables | M1 | not started | #78, #100 | |
 | `keybindings.common-table-page-down` | `common.table.page_down` | `J` | Table page down | tables | M1 | not started | #78, #100 | |
 | `keybindings.common-table-cursor-up` | `common.table.cursor_up` | `k` | Table cursor up | tables | M1 | not started | #78, #100 | |

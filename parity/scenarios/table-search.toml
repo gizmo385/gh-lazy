@@ -1,0 +1,106 @@
+version = 1
+description = "Searchable table: / opens the search box, enter filters the 60-repo table by a substring of each row's repr (including across cells), and an empty search restores every row and hides the box"
+# Flipped to true by the M2 repos-table issue, which puts the table on screen.
+gate = false
+parity_rows = [
+    "searchable-tables.search",
+    "searchable-tables.search-hide-on-blur",
+    "keybindings.common-table-search",
+]
+sizes = [[160, 48]]
+
+[env]
+fixtures = ["repos-60", "base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+# Python fills the table once it has every page, so the first repo showing means the table is complete (50 rows
+# until #134 is fixed, then 60). The matching repos are all on the first page.
+[[step]]
+wait = { text = "alpha-service", timeout_ms = 15000 }
+
+[[step]]
+keys = ["1", "/"]
+
+[[step]]
+capture = "open"
+checks = ["rows", "cursor", "focus"]
+
+# `india-lazy-…`, `juliett-lazy-…` and `lima-lazy-…`.
+[[step]]
+type = "lazy"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+capture = "filtered"
+checks = ["rows", "cursor", "focus"]
+
+# Reopening selects the old query (Textual's `select_on_focus`).
+[[step]]
+keys = ["/"]
+
+[[step]]
+capture = "reopen"
+checks = ["rows", "cursor", "focus"]
+
+# `('☆', 'parity-bot', 'gh-golf-…', …)`: the end of the owner cell and the start of the name cell.
+[[step]]
+keys = ["ctrl+u"]
+
+[[step]]
+type = "', 'gh"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+capture = "cross-cell"
+checks = ["rows", "cursor", "focus"]
+
+# Typed straight over the selected old query, with no ctrl+u: the new text replaces it.
+[[step]]
+keys = ["/"]
+
+[[step]]
+type = "gh-hotel"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+capture = "typed-over"
+checks = ["rows", "cursor", "focus"]
+
+[[step]]
+keys = ["/", "ctrl+u", "enter"]
+
+[[step]]
+capture = "cleared"
+checks = ["rows", "cursor", "focus"]
+
+[expect.open]
+contains = ["Search..."]
+not_contains = ["Traceback"]
+
+[expect.filtered]
+contains = ["india-lazy-service", "juliett-lazy-service", "lima-lazy-service"]
+not_contains = ["alpha-service", "Traceback"]
+
+[expect.reopen]
+contains = ["india-lazy-service"]
+not_contains = ["alpha-service", "Traceback"]
+
+[expect.cross-cell]
+contains = ["gh-golf-service", "gh-hotel-service"]
+not_contains = ["india-lazy-service", "Traceback"]
+
+[expect.typed-over]
+contains = ["gh-hotel-service"]
+not_contains = ["gh-golf-service", "', 'gh", "Traceback"]
+
+[expect.cleared]
+contains = ["alpha-service"]
+not_contains = ["Search...", "Traceback"]

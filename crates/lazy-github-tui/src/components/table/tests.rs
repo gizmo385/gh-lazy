@@ -334,7 +334,8 @@ fn shift_h_and_l_are_not_table_keys() {
     let keymap = Keymap::defaults();
     let mut table = twelve();
     snap(&mut table, true);
-    for key in ["H", "L", "x", "/", "q", "1", "ctrl+f"] {
+    // `/` opens the search box (`search::tests`).
+    for key in ["H", "L", "x", "q", "1", "ctrl+f"] {
         assert_eq!(press(&mut table, &keymap, key), Handled::Ignored, "{key}");
     }
     assert_eq!((table.cursor(), table.scroll()), (0, (0, 0)));

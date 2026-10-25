@@ -230,6 +230,28 @@ registry! {
     // `Tabs`: the details tab strip (#74).
     TextualTabsPrevious("textual.tabs.previous_tab", "left", "previous_tab", "Previous tab").hidden();
     TextualTabsNext("textual.tabs.next_tab", "right", "next_tab", "Next tab").hidden();
+    // `Input`: the table's search box (#101). Selection and clipboard keys come with the M3 shared input.
+    TextualInputCursorLeft("textual.input.cursor_left", "left", "cursor_left", "Move cursor left").hidden();
+    TextualInputCursorLeftWord("textual.input.cursor_left_word", "ctrl+left", "cursor_left_word", "Move cursor left a word")
+        .hidden();
+    TextualInputCursorRight("textual.input.cursor_right", "right", "cursor_right", "Move cursor right or accept the completion suggestion")
+        .hidden();
+    TextualInputCursorRightWord("textual.input.cursor_right_word", "ctrl+right", "cursor_right_word", "Move cursor right a word")
+        .hidden();
+    TextualInputDeleteLeft("textual.input.delete_left", "backspace", "delete_left", "Delete character left").hidden();
+    TextualInputHome("textual.input.home", "home,ctrl+a", "home", "Go to start").hidden();
+    TextualInputEnd("textual.input.end", "end,ctrl+e", "end", "Go to end").hidden();
+    TextualInputDeleteRight("textual.input.delete_right", "delete,ctrl+d", "delete_right", "Delete character right")
+        .hidden();
+    TextualInputSubmit("textual.input.submit", "enter", "submit", "Submit").hidden();
+    TextualInputDeleteLeftWord("textual.input.delete_left_word", "ctrl+w", "delete_left_word", "Delete left to start of word")
+        .hidden();
+    TextualInputDeleteLeftAll("textual.input.delete_left_all", "ctrl+u", "delete_left_all", "Delete all to the left")
+        .hidden();
+    TextualInputDeleteRightWord("textual.input.delete_right_word", "ctrl+f", "delete_right_word", "Delete right to start of word")
+        .hidden();
+    TextualInputDeleteRightAll("textual.input.delete_right_all", "ctrl+k", "delete_right_all", "Delete all to the right")
+        .hidden();
 }
 
 impl BindingId {

@@ -361,8 +361,8 @@
       {
         "id": 3000007,
         "node_id": "R_kgDOAC3000007",
-        "name": "golf-service-with-a-deliberately-long-repository-name-06",
-        "full_name": "parity-bot/golf-service-with-a-deliberately-long-repository-name-06",
+        "name": "gh-golf-service-with-a-deliberately-long-repository-name-06",
+        "full_name": "parity-bot/gh-golf-service-with-a-deliberately-long-repository-name-06",
         "private": false,
         "owner": {
           "login": "parity-bot",
@@ -374,10 +374,10 @@
           "type": "User",
           "site_admin": false
         },
-        "html_url": "https://github.com/parity-bot/golf-service-with-a-deliberately-long-repository-name-06",
+        "html_url": "https://github.com/parity-bot/gh-golf-service-with-a-deliberately-long-repository-name-06",
         "description": "Parity fixture repository 7 of 60",
         "fork": false,
-        "url": "https://api.github.com/repos/parity-bot/golf-service-with-a-deliberately-long-repository-name-06",
+        "url": "https://api.github.com/repos/parity-bot/gh-golf-service-with-a-deliberately-long-repository-name-06",
         "created_at": "2024-02-01T10:00:00Z",
         "updated_at": "2026-09-30T08:00:00Z",
         "pushed_at": "2026-09-29T21:15:00Z",
@@ -395,8 +395,8 @@
       {
         "id": 3000008,
         "node_id": "R_kgDOAC3000008",
-        "name": "hotel-service-with-a-deliberately-long-repository-name-07",
-        "full_name": "parity-bot/hotel-service-with-a-deliberately-long-repository-name-07",
+        "name": "gh-hotel-service-with-a-deliberately-long-repository-name-07",
+        "full_name": "parity-bot/gh-hotel-service-with-a-deliberately-long-repository-name-07",
         "private": false,
         "owner": {
           "login": "parity-bot",
@@ -408,10 +408,10 @@
           "type": "User",
           "site_admin": false
         },
-        "html_url": "https://github.com/parity-bot/hotel-service-with-a-deliberately-long-repository-name-07",
+        "html_url": "https://github.com/parity-bot/gh-hotel-service-with-a-deliberately-long-repository-name-07",
         "description": "Parity fixture repository 8 of 60",
         "fork": false,
-        "url": "https://api.github.com/repos/parity-bot/hotel-service-with-a-deliberately-long-repository-name-07",
+        "url": "https://api.github.com/repos/parity-bot/gh-hotel-service-with-a-deliberately-long-repository-name-07",
         "created_at": "2024-02-01T10:00:00Z",
         "updated_at": "2026-09-30T08:00:00Z",
         "pushed_at": "2026-09-29T21:15:00Z",
@@ -429,8 +429,8 @@
       {
         "id": 3000009,
         "node_id": "R_kgDOAC3000009",
-        "name": "india-service-with-a-deliberately-long-repository-name-08",
-        "full_name": "parity-bot/india-service-with-a-deliberately-long-repository-name-08",
+        "name": "india-lazy-service-with-a-deliberately-long-repository-name-08",
+        "full_name": "parity-bot/india-lazy-service-with-a-deliberately-long-repository-name-08",
         "private": false,
         "owner": {
           "login": "parity-bot",
@@ -442,10 +442,10 @@
           "type": "User",
           "site_admin": false
         },
-        "html_url": "https://github.com/parity-bot/india-service-with-a-deliberately-long-repository-name-08",
+        "html_url": "https://github.com/parity-bot/india-lazy-service-with-a-deliberately-long-repository-name-08",
         "description": "Parity fixture repository 9 of 60",
         "fork": false,
-        "url": "https://api.github.com/repos/parity-bot/india-service-with-a-deliberately-long-repository-name-08",
+        "url": "https://api.github.com/repos/parity-bot/india-lazy-service-with-a-deliberately-long-repository-name-08",
         "created_at": "2024-02-01T10:00:00Z",
         "updated_at": "2026-09-30T08:00:00Z",
         "pushed_at": "2026-09-29T21:15:00Z",
@@ -463,8 +463,8 @@
       {
         "id": 3000010,
         "node_id": "R_kgDOAC3000010",
-        "name": "juliett-service-with-a-deliberately-long-repository-name-09",
-        "full_name": "parity-bot/juliett-service-with-a-deliberately-long-repository-name-09",
+        "name": "juliett-lazy-service-with-a-deliberately-long-repository-name-09",
+        "full_name": "parity-bot/juliett-lazy-service-with-a-deliberately-long-repository-name-09",
         "private": false,
         "owner": {
           "login": "parity-bot",
@@ -476,10 +476,10 @@
           "type": "User",
           "site_admin": false
         },
-        "html_url": "https://github.com/parity-bot/juliett-service-with-a-deliberately-long-repository-name-09",
+        "html_url": "https://github.com/parity-bot/juliett-lazy-service-with-a-deliberately-long-repository-name-09",
         "description": "Parity fixture repository 10 of 60",
         "fork": false,
-        "url": "https://api.github.com/repos/parity-bot/juliett-service-with-a-deliberately-long-repository-name-09",
+        "url": "https://api.github.com/repos/parity-bot/juliett-lazy-service-with-a-deliberately-long-repository-name-09",
         "created_at": "2024-02-01T10:00:00Z",
         "updated_at": "2026-09-30T08:00:00Z",
         "pushed_at": "2026-09-29T21:15:00Z",
@@ -531,8 +531,8 @@
       {
         "id": 3000012,
         "node_id": "R_kgDOAC3000012",
-        "name": "lima-service-with-a-deliberately-long-repository-name-11",
-        "full_name": "parity-bot/lima-service-with-a-deliberately-long-repository-name-11",
+        "name": "lima-lazy-service-with-a-deliberately-long-repository-name-11",
+        "full_name": "parity-bot/lima-lazy-service-with-a-deliberately-long-repository-name-11",
         "private": false,
         "owner": {
           "login": "parity-bot",
@@ -544,10 +544,10 @@
           "type": "User",
           "site_admin": false
         },
-        "html_url": "https://github.com/parity-bot/lima-service-with-a-deliberately-long-repository-name-11",
+        "html_url": "https://github.com/parity-bot/lima-lazy-service-with-a-deliberately-long-repository-name-11",
         "description": "Parity fixture repository 12 of 60",
         "fork": false,
-        "url": "https://api.github.com/repos/parity-bot/lima-service-with-a-deliberately-long-repository-name-11",
+        "url": "https://api.github.com/repos/parity-bot/lima-lazy-service-with-a-deliberately-long-repository-name-11",
         "created_at": "2024-02-01T10:00:00Z",
         "updated_at": "2026-09-30T08:00:00Z",
         "pushed_at": "2026-09-29T21:15:00Z",

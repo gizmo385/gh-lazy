@@ -4,7 +4,7 @@
 use std::collections::{HashMap, VecDeque};
 use std::time::Duration;
 
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
+use crossterm::event::{KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
 use lazy_github_core::github::FakeGithub;
 use ratatui::Terminal;
@@ -18,7 +18,7 @@ use crate::clock::{Clock as _, FakeClock};
 use crate::component::{Component, Cx, RenderCx};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
-use crate::keymap::Keymap;
+use crate::keymap::KeySpec;
 use crate::theme::Theme;
 
 /// An [`App`] under test.
@@ -40,7 +40,7 @@ struct FakeTimer {
 }
 
 impl TestApp {
-    /// An app on the main screen with `config`, the default keymap and theme, and a logged-in [`FakeGithub`].
+    /// An app on the main screen with `config` (and its keymap), the default theme, and a logged-in [`FakeGithub`].
     pub fn new(config: Config) -> Self {
         Self::with_github(config, FakeGithub::new())
     }
@@ -48,7 +48,7 @@ impl TestApp {
     /// Like [`Self::new`], with requests answered by `gh`.
     pub fn with_github(config: Config, gh: FakeGithub) -> Self {
         let clock = FakeClock::new();
-        let mut app = App::new(config, Keymap::defaults(), Theme::default(), clock.clone());
+        let mut app = App::new(config, Theme::default(), clock.clone());
         let init = app.init();
         let mut test = Self {
             app,
@@ -62,8 +62,8 @@ impl TestApp {
         test
     }
 
-    /// Presses each key in turn, in Textual key syntax: `"q"`, `"M"`, `"escape"`, `"enter"`, `"tab"`, `"shift+tab"`,
-    /// `"ctrl+q"`.
+    /// Presses each key in turn, in Textual key syntax ([`KeySpec::parse`]): `"q"`, `"M"`, `"escape"`, `"shift+tab"`,
+    /// `"ctrl+q"`, `"question_mark"`.
     pub fn press(&mut self, keys: &[&str]) -> &mut Self {
         for key in keys {
             self.send(Event::Key(key_event(key)));
@@ -237,33 +237,15 @@ pub fn buffer_to_string(buffer: &Buffer) -> String {
     out
 }
 
-/// The key event a terminal sends for `key`, in Textual key syntax.
+/// The key event a terminal sends for `key`, in Textual key syntax ([`KeySpec::parse`]).
 ///
-/// A minimal parser for single characters, `escape`, `enter`, `tab`, `shift+tab` and `ctrl+<letter>`, until #73's
-/// `KeySpec::parse` replaces it.
+/// # Panics
+///
+/// If `key` isn't a key, so a typo fails the test instead of pressing nothing.
 pub fn key_event(key: &str) -> KeyEvent {
-    let mut chars = key.chars();
-    if let (Some(c), None) = (chars.next(), chars.next()) {
-        let mods = if c.is_uppercase() {
-            KeyModifiers::SHIFT
-        } else {
-            KeyModifiers::NONE
-        };
-        return KeyEvent::new(KeyCode::Char(c), mods);
-    }
-    match key {
-        "escape" => KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE),
-        "enter" => KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE),
-        "tab" => KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE),
-        "shift+tab" => KeyEvent::new(KeyCode::BackTab, KeyModifiers::SHIFT),
-        _ => match key
-            .strip_prefix("ctrl+")
-            .map(|rest| rest.chars().collect::<Vec<_>>())
-            .as_deref()
-        {
-            Some(&[c]) if c.is_ascii_alphabetic() => KeyEvent::new(KeyCode::Char(c), KeyModifiers::CONTROL),
-            _ => panic!("TestApp can't parse the key {key:?} yet; the full parser arrives with #73"),
-        },
+    match KeySpec::parse(key) {
+        KeySpec::Chord(chord) => chord.to_event(),
+        KeySpec::Unknown(token) => panic!("{token:?} isn't a key"),
     }
 }
 

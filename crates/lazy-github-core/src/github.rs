@@ -247,8 +247,9 @@ impl GhCli {
         }
     }
 
-    /// The runner the typed methods are built on.
-    pub fn runner(&self) -> &gh::GhCli {
+    /// The runner the typed methods are built on. Test-only, so every real call site stays typed.
+    #[cfg(test)]
+    fn runner(&self) -> &gh::GhCli {
         &self.inner.runner
     }
 

@@ -81,7 +81,7 @@ impl GhCli {
     }
 
     /// The GitHub Enterprise host passed as `--hostname`, or `None` for gh's default host.
-    pub fn hostname(&self) -> Option<&str> {
+    pub(crate) fn hostname(&self) -> Option<&str> {
         self.inner.hostname.as_deref()
     }
 

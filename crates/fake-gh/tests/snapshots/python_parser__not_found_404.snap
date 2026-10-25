@@ -1,0 +1,8 @@
+---
+source: crates/fake-gh/tests/python_parser.rs
+expression: escaped(&out)
+---
+HTTP/2.0 404 Not Found\n
+Content-Type: application/json; charset=utf-8\r\n
+\r\n
+{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest\",\"status\":\"404\"}

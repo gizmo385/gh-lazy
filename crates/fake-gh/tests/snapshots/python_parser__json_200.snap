@@ -1,0 +1,11 @@
+---
+source: crates/fake-gh/tests/python_parser.rs
+expression: escaped(&out)
+---
+HTTP/2.0 200 OK\n
+Content-Type: application/json; charset=utf-8\r\n
+Etag: W/\"abc\"\r\n
+Link: <https://api.github.com/user/repos?page=2&per_page=50>; rel=\"next\"\r\n
+X-Ratelimit-Remaining: 4999\r\n
+\r\n
+[{\"name\":\"lazy-demo\",\"full_name\":\"parity-bot/lazy-demo\",\"private\":false,\"description\":\"a: b\"}]

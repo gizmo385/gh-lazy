@@ -16,8 +16,16 @@ use serde_json::Value;
 /// Where a child test finds the installed fake-gh.
 const GH_BIN_ENV: &str = "LAZY_GITHUB_TEST_GH";
 
+/// The unread count a notifications child test expects.
+const EXPECTED_UNREAD_ENV: &str = "LAZY_GITHUB_TEST_EXPECTED_UNREAD";
+
 /// Runs the child test `name` with fake-gh's environment, asserts it passed and returns fake-gh's request log.
 fn run_child(name: &str, auth: &str, fixture_sets: &[&str]) -> Vec<Value> {
+    run_child_with(name, auth, fixture_sets, &[])
+}
+
+/// [`run_child`], with extra environment variables for the child.
+fn run_child_with(name: &str, auth: &str, fixture_sets: &[&str], envs: &[(&str, &str)]) -> Vec<Value> {
     let tmp = common::TempDir::new(name);
     let bin = common::install_gh(tmp.path());
     let log = tmp.path().join("fake-gh.log");
@@ -32,6 +40,7 @@ fn run_child(name: &str, auth: &str, fixture_sets: &[&str]) -> Vec<Value> {
         .env("FAKE_GH_AUTH", auth)
         .env_remove("FAKE_GH_USER")
         .env_remove("GH_HOST")
+        .envs(envs.iter().copied())
         .output()
         .unwrap();
     let stdout = String::from_utf8_lossy(&out.stdout);
@@ -162,4 +171,66 @@ async fn child_logged_out() {
         error.to_string(),
         "To proceed, please log into the Github CLI via `gh auth login`"
     );
+}
+
+/// `unread_notification_count` against each notifications fixture set, listed before `base` as the scenarios list
+/// them.
+#[test]
+fn unread_notification_counts() {
+    for (set, expected) in [
+        ("notifications-0", "0"),
+        ("notifications-3", "3"),
+        ("notifications-50", "50"),
+    ] {
+        let log = run_child_with(
+            "child_unread_count",
+            "logged-in",
+            &[set, "base"],
+            &[(EXPECTED_UNREAD_ENV, expected)],
+        );
+        assert_eq!(log.len(), 1, "{log:#?}");
+        let line = &log[0];
+        assert_eq!(
+            strings(&line["argv"]),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/notifications?all=false&page=1&per_page=50"
+            ]
+        );
+        assert!(line["cache"].is_null());
+        assert_eq!(line["miss"], false);
+        assert_eq!(
+            line["fixture"],
+            format!("{set}/notifications/GET.all-false_page-1_per_page-50.json")
+        );
+    }
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_unread_count() {
+    let Some(gh) = client() else { return };
+    let expected: usize = std::env::var(EXPECTED_UNREAD_ENV).unwrap().parse().unwrap();
+    assert_eq!(gh.unread_notification_count().await.unwrap(), expected);
+}
+
+#[test]
+fn a_missing_notifications_fixture_is_an_error() {
+    // `repos-60` alone has no /notifications fixture, so the request misses.
+    let log = run_child("child_unread_count_miss", "logged-in", &["repos-60"]);
+    assert_eq!(log.len(), 1, "{log:#?}");
+    assert_eq!(log[0]["miss"], true);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_unread_count_miss() {
+    let Some(gh) = client() else { return };
+    let error = gh.unread_notification_count().await.unwrap_err();
+    assert!(matches!(error, GhError::Http { status: 404, .. }), "{error:?}");
 }

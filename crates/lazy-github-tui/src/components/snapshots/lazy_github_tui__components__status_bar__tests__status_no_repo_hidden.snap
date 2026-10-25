@@ -1,0 +1,8 @@
+---
+source: crates/lazy-github-tui/src/components/status_bar.rs
+assertion_line: 169
+expression: "screen(None, UnreadState::Hidden)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘

@@ -419,8 +419,10 @@ fn notifications_open_falls_through_while_notifications_are_off() {
 
     config.notifications.enabled = true;
     let mut app = TestApp::new(config);
+    // Entering the main screen starts the notifications poll.
+    let started = app.effects().len();
     app.press(&["ctrl+n"]);
-    assert_eq!(app.effects(), []);
+    assert_eq!(app.effects()[started..], []);
 }
 
 #[test]

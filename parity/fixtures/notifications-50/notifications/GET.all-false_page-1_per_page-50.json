@@ -1,0 +1,1821 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/notifications",
+    "query": {
+      "all": "false",
+      "page": "1",
+      "per_page": "50"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "id": "9000001",
+        "unread": true,
+        "reason": "review_requested",
+        "updated_at": "2026-10-24T23:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Add a README badge (1)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/pulls/100",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/pulls/100",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000001",
+        "subscription_url": "https://api.github.com/notifications/threads/9000001/subscription"
+      },
+      {
+        "id": "9000002",
+        "unread": true,
+        "reason": "mention",
+        "updated_at": "2026-10-24T22:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Typo in the install instructions (2)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/issues/101",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/issues/101",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000002",
+        "subscription_url": "https://api.github.com/notifications/threads/9000002/subscription"
+      },
+      {
+        "id": "9000003",
+        "unread": true,
+        "reason": "author",
+        "updated_at": "2026-10-24T21:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Bump the minimum Python version (3)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/102",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/102",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000003",
+        "subscription_url": "https://api.github.com/notifications/threads/9000003/subscription"
+      },
+      {
+        "id": "9000004",
+        "unread": true,
+        "reason": "assign",
+        "updated_at": "2026-10-24T20:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Crash when the config file is empty (4)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/issues/103",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/issues/103",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000004",
+        "subscription_url": "https://api.github.com/notifications/threads/9000004/subscription"
+      },
+      {
+        "id": "9000005",
+        "unread": true,
+        "reason": "comment",
+        "updated_at": "2026-10-24T19:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Refactor the settings loader (5)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/104",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/104",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000005",
+        "subscription_url": "https://api.github.com/notifications/threads/9000005/subscription"
+      },
+      {
+        "id": "9000006",
+        "unread": true,
+        "reason": "review_requested",
+        "updated_at": "2026-10-24T18:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Add a README badge (6)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/105",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/105",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000006",
+        "subscription_url": "https://api.github.com/notifications/threads/9000006/subscription"
+      },
+      {
+        "id": "9000007",
+        "unread": true,
+        "reason": "mention",
+        "updated_at": "2026-10-24T17:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Typo in the install instructions (7)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/issues/106",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/issues/106",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000007",
+        "subscription_url": "https://api.github.com/notifications/threads/9000007/subscription"
+      },
+      {
+        "id": "9000008",
+        "unread": true,
+        "reason": "author",
+        "updated_at": "2026-10-24T16:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Bump the minimum Python version (8)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/107",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/107",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000008",
+        "subscription_url": "https://api.github.com/notifications/threads/9000008/subscription"
+      },
+      {
+        "id": "9000009",
+        "unread": true,
+        "reason": "assign",
+        "updated_at": "2026-10-24T15:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Crash when the config file is empty (9)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/issues/108",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/issues/108",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000009",
+        "subscription_url": "https://api.github.com/notifications/threads/9000009/subscription"
+      },
+      {
+        "id": "9000010",
+        "unread": true,
+        "reason": "comment",
+        "updated_at": "2026-10-24T14:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Refactor the settings loader (10)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/pulls/109",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/pulls/109",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000010",
+        "subscription_url": "https://api.github.com/notifications/threads/9000010/subscription"
+      },
+      {
+        "id": "9000011",
+        "unread": true,
+        "reason": "review_requested",
+        "updated_at": "2026-10-24T13:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Add a README badge (11)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/110",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/110",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000011",
+        "subscription_url": "https://api.github.com/notifications/threads/9000011/subscription"
+      },
+      {
+        "id": "9000012",
+        "unread": true,
+        "reason": "mention",
+        "updated_at": "2026-10-24T12:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Typo in the install instructions (12)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/issues/111",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/issues/111",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000012",
+        "subscription_url": "https://api.github.com/notifications/threads/9000012/subscription"
+      },
+      {
+        "id": "9000013",
+        "unread": true,
+        "reason": "author",
+        "updated_at": "2026-10-24T11:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Bump the minimum Python version (13)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/pulls/112",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/pulls/112",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000013",
+        "subscription_url": "https://api.github.com/notifications/threads/9000013/subscription"
+      },
+      {
+        "id": "9000014",
+        "unread": true,
+        "reason": "assign",
+        "updated_at": "2026-10-24T10:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Crash when the config file is empty (14)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/issues/113",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/issues/113",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000014",
+        "subscription_url": "https://api.github.com/notifications/threads/9000014/subscription"
+      },
+      {
+        "id": "9000015",
+        "unread": true,
+        "reason": "comment",
+        "updated_at": "2026-10-24T09:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Refactor the settings loader (15)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/114",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/114",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000015",
+        "subscription_url": "https://api.github.com/notifications/threads/9000015/subscription"
+      },
+      {
+        "id": "9000016",
+        "unread": true,
+        "reason": "review_requested",
+        "updated_at": "2026-10-24T08:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Add a README badge (16)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/pulls/115",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/pulls/115",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000016",
+        "subscription_url": "https://api.github.com/notifications/threads/9000016/subscription"
+      },
+      {
+        "id": "9000017",
+        "unread": true,
+        "reason": "mention",
+        "updated_at": "2026-10-24T07:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Typo in the install instructions (17)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/issues/116",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/issues/116",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000017",
+        "subscription_url": "https://api.github.com/notifications/threads/9000017/subscription"
+      },
+      {
+        "id": "9000018",
+        "unread": true,
+        "reason": "author",
+        "updated_at": "2026-10-24T06:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Bump the minimum Python version (18)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/117",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/117",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000018",
+        "subscription_url": "https://api.github.com/notifications/threads/9000018/subscription"
+      },
+      {
+        "id": "9000019",
+        "unread": true,
+        "reason": "assign",
+        "updated_at": "2026-10-24T05:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Crash when the config file is empty (19)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/issues/118",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/issues/118",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000019",
+        "subscription_url": "https://api.github.com/notifications/threads/9000019/subscription"
+      },
+      {
+        "id": "9000020",
+        "unread": true,
+        "reason": "comment",
+        "updated_at": "2026-10-24T04:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Refactor the settings loader (20)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/119",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/119",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000020",
+        "subscription_url": "https://api.github.com/notifications/threads/9000020/subscription"
+      },
+      {
+        "id": "9000021",
+        "unread": true,
+        "reason": "review_requested",
+        "updated_at": "2026-10-24T03:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Add a README badge (21)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/120",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/120",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000021",
+        "subscription_url": "https://api.github.com/notifications/threads/9000021/subscription"
+      },
+      {
+        "id": "9000022",
+        "unread": true,
+        "reason": "mention",
+        "updated_at": "2026-10-24T02:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Typo in the install instructions (22)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/issues/121",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/issues/121",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000022",
+        "subscription_url": "https://api.github.com/notifications/threads/9000022/subscription"
+      },
+      {
+        "id": "9000023",
+        "unread": true,
+        "reason": "author",
+        "updated_at": "2026-10-24T01:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Bump the minimum Python version (23)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/122",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/122",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000023",
+        "subscription_url": "https://api.github.com/notifications/threads/9000023/subscription"
+      },
+      {
+        "id": "9000024",
+        "unread": true,
+        "reason": "assign",
+        "updated_at": "2026-10-24T00:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Crash when the config file is empty (24)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/issues/123",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/issues/123",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000024",
+        "subscription_url": "https://api.github.com/notifications/threads/9000024/subscription"
+      },
+      {
+        "id": "9000025",
+        "unread": true,
+        "reason": "comment",
+        "updated_at": "2026-10-23T23:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Refactor the settings loader (25)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/pulls/124",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/pulls/124",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000025",
+        "subscription_url": "https://api.github.com/notifications/threads/9000025/subscription"
+      },
+      {
+        "id": "9000026",
+        "unread": true,
+        "reason": "review_requested",
+        "updated_at": "2026-10-23T22:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Add a README badge (26)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/125",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/125",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000026",
+        "subscription_url": "https://api.github.com/notifications/threads/9000026/subscription"
+      },
+      {
+        "id": "9000027",
+        "unread": true,
+        "reason": "mention",
+        "updated_at": "2026-10-23T21:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Typo in the install instructions (27)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/issues/126",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/issues/126",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000027",
+        "subscription_url": "https://api.github.com/notifications/threads/9000027/subscription"
+      },
+      {
+        "id": "9000028",
+        "unread": true,
+        "reason": "author",
+        "updated_at": "2026-10-23T20:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Bump the minimum Python version (28)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/pulls/127",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/pulls/127",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000028",
+        "subscription_url": "https://api.github.com/notifications/threads/9000028/subscription"
+      },
+      {
+        "id": "9000029",
+        "unread": true,
+        "reason": "assign",
+        "updated_at": "2026-10-23T19:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Crash when the config file is empty (29)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/issues/128",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/issues/128",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000029",
+        "subscription_url": "https://api.github.com/notifications/threads/9000029/subscription"
+      },
+      {
+        "id": "9000030",
+        "unread": true,
+        "reason": "comment",
+        "updated_at": "2026-10-23T18:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Refactor the settings loader (30)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/129",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/129",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000030",
+        "subscription_url": "https://api.github.com/notifications/threads/9000030/subscription"
+      },
+      {
+        "id": "9000031",
+        "unread": true,
+        "reason": "review_requested",
+        "updated_at": "2026-10-23T17:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Add a README badge (31)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/pulls/130",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/pulls/130",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000031",
+        "subscription_url": "https://api.github.com/notifications/threads/9000031/subscription"
+      },
+      {
+        "id": "9000032",
+        "unread": true,
+        "reason": "mention",
+        "updated_at": "2026-10-23T16:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Typo in the install instructions (32)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/issues/131",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/issues/131",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000032",
+        "subscription_url": "https://api.github.com/notifications/threads/9000032/subscription"
+      },
+      {
+        "id": "9000033",
+        "unread": true,
+        "reason": "author",
+        "updated_at": "2026-10-23T15:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Bump the minimum Python version (33)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/132",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/132",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000033",
+        "subscription_url": "https://api.github.com/notifications/threads/9000033/subscription"
+      },
+      {
+        "id": "9000034",
+        "unread": true,
+        "reason": "assign",
+        "updated_at": "2026-10-23T14:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Crash when the config file is empty (34)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/issues/133",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/issues/133",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000034",
+        "subscription_url": "https://api.github.com/notifications/threads/9000034/subscription"
+      },
+      {
+        "id": "9000035",
+        "unread": true,
+        "reason": "comment",
+        "updated_at": "2026-10-23T13:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Refactor the settings loader (35)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/134",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/134",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000035",
+        "subscription_url": "https://api.github.com/notifications/threads/9000035/subscription"
+      },
+      {
+        "id": "9000036",
+        "unread": true,
+        "reason": "review_requested",
+        "updated_at": "2026-10-23T12:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Add a README badge (36)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/135",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/135",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000036",
+        "subscription_url": "https://api.github.com/notifications/threads/9000036/subscription"
+      },
+      {
+        "id": "9000037",
+        "unread": true,
+        "reason": "mention",
+        "updated_at": "2026-10-23T11:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Typo in the install instructions (37)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/issues/136",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/issues/136",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000037",
+        "subscription_url": "https://api.github.com/notifications/threads/9000037/subscription"
+      },
+      {
+        "id": "9000038",
+        "unread": true,
+        "reason": "author",
+        "updated_at": "2026-10-23T10:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Bump the minimum Python version (38)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/137",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/137",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000038",
+        "subscription_url": "https://api.github.com/notifications/threads/9000038/subscription"
+      },
+      {
+        "id": "9000039",
+        "unread": true,
+        "reason": "assign",
+        "updated_at": "2026-10-23T09:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Crash when the config file is empty (39)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/issues/138",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/issues/138",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000039",
+        "subscription_url": "https://api.github.com/notifications/threads/9000039/subscription"
+      },
+      {
+        "id": "9000040",
+        "unread": true,
+        "reason": "comment",
+        "updated_at": "2026-10-23T08:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Refactor the settings loader (40)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/pulls/139",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/pulls/139",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000040",
+        "subscription_url": "https://api.github.com/notifications/threads/9000040/subscription"
+      },
+      {
+        "id": "9000041",
+        "unread": true,
+        "reason": "review_requested",
+        "updated_at": "2026-10-23T07:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Add a README badge (41)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/140",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/140",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000041",
+        "subscription_url": "https://api.github.com/notifications/threads/9000041/subscription"
+      },
+      {
+        "id": "9000042",
+        "unread": true,
+        "reason": "mention",
+        "updated_at": "2026-10-23T06:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Typo in the install instructions (42)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/issues/141",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/issues/141",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000042",
+        "subscription_url": "https://api.github.com/notifications/threads/9000042/subscription"
+      },
+      {
+        "id": "9000043",
+        "unread": true,
+        "reason": "author",
+        "updated_at": "2026-10-23T05:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Bump the minimum Python version (43)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/pulls/142",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/pulls/142",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000043",
+        "subscription_url": "https://api.github.com/notifications/threads/9000043/subscription"
+      },
+      {
+        "id": "9000044",
+        "unread": true,
+        "reason": "assign",
+        "updated_at": "2026-10-23T04:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Crash when the config file is empty (44)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/issues/143",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/issues/143",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000044",
+        "subscription_url": "https://api.github.com/notifications/threads/9000044/subscription"
+      },
+      {
+        "id": "9000045",
+        "unread": true,
+        "reason": "comment",
+        "updated_at": "2026-10-23T03:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Refactor the settings loader (45)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/144",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/144",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000045",
+        "subscription_url": "https://api.github.com/notifications/threads/9000045/subscription"
+      },
+      {
+        "id": "9000046",
+        "unread": true,
+        "reason": "review_requested",
+        "updated_at": "2026-10-23T02:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Add a README badge (46)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/pulls/145",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/pulls/145",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000046",
+        "subscription_url": "https://api.github.com/notifications/threads/9000046/subscription"
+      },
+      {
+        "id": "9000047",
+        "unread": true,
+        "reason": "mention",
+        "updated_at": "2026-10-23T01:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Typo in the install instructions (47)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/issues/146",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/issues/146",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000047",
+        "subscription_url": "https://api.github.com/notifications/threads/9000047/subscription"
+      },
+      {
+        "id": "9000048",
+        "unread": true,
+        "reason": "author",
+        "updated_at": "2026-10-23T00:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Bump the minimum Python version (48)",
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/147",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/lazy-demo/pulls/147",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000003,
+          "node_id": "R_kgDOAB2000003",
+          "name": "lazy-demo",
+          "full_name": "parity-bot/lazy-demo",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/lazy-demo",
+          "description": "A demo repository for LazyGithub",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/lazy-demo"
+        },
+        "url": "https://api.github.com/notifications/threads/9000048",
+        "subscription_url": "https://api.github.com/notifications/threads/9000048/subscription"
+      },
+      {
+        "id": "9000049",
+        "unread": true,
+        "reason": "assign",
+        "updated_at": "2026-10-22T23:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Crash when the config file is empty (49)",
+          "url": "https://api.github.com/repos/parity-bot/hello-world/issues/148",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/hello-world/issues/148",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000002,
+          "node_id": "R_kgDOAB2000002",
+          "name": "hello-world",
+          "full_name": "parity-bot/hello-world",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/hello-world",
+          "description": "My first repository",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/hello-world"
+        },
+        "url": "https://api.github.com/notifications/threads/9000049",
+        "subscription_url": "https://api.github.com/notifications/threads/9000049/subscription"
+      },
+      {
+        "id": "9000050",
+        "unread": true,
+        "reason": "comment",
+        "updated_at": "2026-10-22T22:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Refactor the settings loader (50)",
+          "url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/149",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/dotfiles/pulls/149",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "Configuration files",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9000050",
+        "subscription_url": "https://api.github.com/notifications/threads/9000050/subscription"
+      }
+    ]
+  },
+  "note": "hand-written: 50 unread notifications (a full first page)"
+}

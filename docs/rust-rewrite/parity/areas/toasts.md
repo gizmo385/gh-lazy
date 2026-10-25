@@ -14,7 +14,7 @@ listed with that modal under [Modals](./modals.md).
 | `toasts.error-fetching-pr` | "Error fetching pull request!" | error / "API Error" | `ui/screens/primary.py` | M2 | not started | | |
 | `toasts.opening-for-link` | "Opening pull request for link", "Opening issue for link", "Opening repository for link" | information | `ui/screens/primary.py` | M4 | not started | | |
 | `toasts.opening-for-notification` | "Opening repository for notification", "Opening pull request for notification" | information | `ui/screens/primary.py` | M4 | not started | | |
-| `toasts.notifications-login` | "Cannot load notifications - please login to the gh CLI: gh auth login" | error / "Failed to Load Notifiations" | `ui/screens/primary.py` | M1 | not started | #81, #79 | Py bug B14. #79 draws it; scenario `toast-error-notifications`. |
+| `toasts.notifications-login` | "Cannot load notifications - please login to the gh CLI: gh auth login" | error / "Failed to Load Notifiations" | `ui/screens/primary.py` | M1 | in progress | #81, #79 | Py bug B14: Rust's title is "Failed to Load Notifications". #79 draws it; scenario `toast-error-notifications`. |
 | `toasts.bug-report-error` | "Could not load LazyGithub repo! Please open the bug report on Github" | error / "Error opening bug report" | `ui/screens/primary.py` | M4 | not started | | |
 | `toasts.nothing-selected` | "No repository currently selected" / "No pull request currently selected" / "No issue currently selected" | error | `ui/widgets/repositories.py`, `ui/widgets/pull_requests.py`, `ui/widgets/issues.py` | M2 | not started | | |
 | `toasts.edit-pr-already-merged` | "This PR has already been merged!" | warning | `ui/widgets/pull_requests.py` | M3 | not started | | |

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/dotfiles/readme",
+    "accept": "raw"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain; charset=utf-8"
+    },
+    "body_text": "# dotfiles\n\nConfiguration files.\n"
+  },
+  "note": "hand-written: a one-line README"
+}

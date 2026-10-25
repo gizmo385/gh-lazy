@@ -49,14 +49,16 @@ impl TestApp {
     /// Like [`Self::new`], with requests answered by `gh`.
     pub fn with_github(config: Config, gh: FakeGithub) -> Self {
         let mut test = Self::build(config, Theme::default(), gh);
-        test.app.skip_startup();
+        let effects = test.app.skip_startup();
+        test.perform(effects);
         test
     }
 
     /// Like [`Self::new`], drawn with `theme` (for example one reduced to a 256-color terminal).
     pub fn with_theme(config: Config, theme: Theme) -> Self {
         let mut test = Self::build(config, theme, FakeGithub::new());
-        test.app.skip_startup();
+        let effects = test.app.skip_startup();
+        test.perform(effects);
         test
     }
 
@@ -260,6 +262,36 @@ pub fn buffer_to_string(buffer: &Buffer) -> String {
         out.push('\n');
     }
     out
+}
+
+/// What `f` logs at `DEBUG` and above, as `LEVEL message` lines.
+#[cfg(test)]
+pub fn logs(f: impl FnOnce()) -> String {
+    #[derive(Clone, Default)]
+    struct Capture(std::sync::Arc<std::sync::Mutex<Vec<u8>>>);
+    impl std::io::Write for Capture {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.0.lock().unwrap().extend_from_slice(buf);
+            Ok(buf.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+    let capture = Capture::default();
+    let writer = capture.clone();
+    let subscriber = tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .without_time()
+        .with_target(false)
+        .with_writer(move || writer.clone())
+        .finish();
+    tracing::subscriber::with_default(subscriber, f);
+    let out = String::from_utf8(capture.0.lock().unwrap().clone()).unwrap();
+    // The fmt layer pads levels to five columns.
+    out.lines()
+        .map(|line| line.split_whitespace().collect::<Vec<_>>().join(" ") + "\n")
+        .collect()
 }
 
 /// The key event a terminal sends for `key`, in Textual key syntax ([`KeySpec::parse`]).

@@ -81,6 +81,8 @@ pub enum GithubRequest {
     CurrentUser,
     /// [`Github::list_repositories`].
     ListRepositories(RepoListQuery),
+    /// [`Github::unread_notification_count`].
+    UnreadNotificationCount,
 }
 
 /// The result of a [`GithubRequest`], in the variant of the same name.
@@ -92,6 +94,8 @@ pub enum GithubResponse {
     CurrentUser(Result<User, GhError>),
     /// [`Github::list_repositories`].
     ListRepositories(Result<Vec<Repository>, GhError>),
+    /// [`Github::unread_notification_count`].
+    UnreadNotificationCount(Result<usize, GhError>),
 }
 
 impl GithubRequest {
@@ -102,6 +106,9 @@ impl GithubRequest {
             GithubRequest::CurrentUser => GithubResponse::CurrentUser(gh.current_user().await),
             GithubRequest::ListRepositories(query) => {
                 GithubResponse::ListRepositories(gh.list_repositories(query).await)
+            }
+            GithubRequest::UnreadNotificationCount => {
+                GithubResponse::UnreadNotificationCount(gh.unread_notification_count().await)
             }
         }
     }

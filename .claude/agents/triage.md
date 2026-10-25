@@ -24,7 +24,8 @@ Open issues with `status: needs-triage`, or with no `python`/`rust` label.
    `docs/rust-rewrite/PARITY.md` via a comment on the rust issue that owns that row, rather than cloning the issue.
 3. **Type.** Exactly one of `bug`, `enhancement`, `parity`, `parity-gap`, `infra`.
 4. **Area.** One or more `area: *` labels. Add `platform: *` when it only reproduces on one OS.
-5. **Milestone.** For `rust` issues, the milestone from PLAN.md §8 that the behavior belongs to.
+5. **Milestone.** For `rust` issues, the `milestone: M<n>` label from PLAN.md §8, and add the issue to that
+   milestone's tracking issue checklist.
 6. **Route.** For `rust` issues:
    - If the body already meets the spec format in PROCESS.md (Python reference, behavior, acceptance criteria, fixtures),
      set `status: ready`.
@@ -38,7 +39,7 @@ Open issues with `status: needs-triage`, or with no `python`/`rust` label.
 
 ## Rules
 
-- Change labels, milestones and state only. Don't edit the author's text, except to append a "Triage notes" section
+- Change labels, tracking-issue checklists and state only. Don't edit the author's text, except to append a "Triage notes" section
   when you need to record links.
 - Never close an issue for any reason other than a duplicate or an explicit request from Chris.
 - Don't start design or implementation work yourself.

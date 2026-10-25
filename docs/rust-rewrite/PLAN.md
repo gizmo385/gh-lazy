@@ -141,18 +141,19 @@ structural check is the gate in CI; the visual report is what the parity agent a
 
 ## 7. Cross-platform
 
-- CI matrix: `ubuntu-latest`, `macos-latest` (required), `windows-latest` (allowed to fail until M5).
+- CI matrix: `ubuntu-latest` and `macos-latest`, both required. Windows isn't built or tested until later in the
+  project; `windows-latest` joins the matrix in M5.
 - No shelling out except to `gh` and `git`; no `sh -c`. Paths via `std::path` and `etcetera`.
 - `fake-gh` is Rust, not a shell script, so the parity harness runs on all three OSes.
 - Windows-specific gaps get a `platform: windows` label instead of blocking a PR.
 
 ## 8. Milestones
 
-Each milestone is a GitHub milestone with issues labeled `rust`. Rough order; issues inside a milestone can run in
+Each milestone is a `milestone: M<n>` label plus a tracking issue, on issues labeled `rust`. Rough order; issues inside a milestone can run in
 parallel once their dependencies land.
 
-**M0 Foundations.** Cargo workspace and crate skeletons. CI workflow for `rust-main` (fmt, clippy `-D warnings`, test,
-3-OS matrix). `core` config load/save with compatibility tests against the Python test fixtures. `Github` trait and
+**M0 Foundations.** Cargo workspace and crate skeletons. CI workflow for `rust-main` (fmt, clippy `-D warnings`, test on
+Linux and macOS). `core` config load/save with compatibility tests against the Python test fixtures. `Github` trait and
 `GhCli` impl with auth check. tracing setup. `fake-gh` and fixture format. Parity harness skeleton running one trivial
 scenario against both apps. Seed `PARITY.md`.
 
@@ -175,7 +176,7 @@ Link hints (`f`/`F`) and paste-link modal. Settings modal including key rebindin
 Preload PR for current commit. CLI subcommands (`dump-config`, `clear-config`, `clear-auth` becomes a no-op or a
 pointer to `gh auth logout`).
 
-**M5 Hardening and cutover.** Every parity matrix row signed off. Windows status decided. Packaging: release workflow
+**M5 Hardening and cutover.** Every parity matrix row signed off. Windows added to CI and its status decided. Packaging: release workflow
 building binaries for `gh extension install` (precompiled gh extension, e.g. `cli/gh-extension-precompile`),
 `cargo install`, and an updated Nix flake. README rewrite. Cutover PR `rust-main` → `main` that removes the Python
 code, the PyPI publish workflow and `uv.lock`, with a final `python` release note.
@@ -196,9 +197,8 @@ Recorded 2026-10-25 by Chris:
 1. The gh CLI is the only backend. The raw-HTTPS backend and device-flow auth are dropped.
 2. The parity strategy in §6 is the starting point; it can be adjusted as we learn.
 3. Branch naming is `rust-main` for the trunk and `rust/<issue>-<slug>` for work branches, as in §2.
-
-## 11. Open questions for Chris
-
-1. Should the parity CI gate run on every PR into `rust-main`, or only nightly plus on demand (it needs Python + uv in CI)?
-2. Shall we file the M0 and M1 issues now from §8?
-3. Windows: keep as "allowed to fail" until M5, or drop from CI entirely until then?
+4. The parity check runs on every PR into `rust-main`.
+5. Windows is allowed to fail until later in the project. We don't build or test it in CI at the start; it gets added
+   to the CI matrix in M5.
+6. M0 and M1 issues are filed. Milestones are tracked with `milestone: M<n>` labels plus one tracking issue per
+   milestone.

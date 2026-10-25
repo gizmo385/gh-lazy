@@ -42,8 +42,9 @@ Labels are defined in [`labels.json`](./labels.json) and created with `scripts/s
 
 ## Milestones
 
-`M0 Foundations`, `M1 App shell`, `M2 Read-only browsing`, `M3 Write actions`, `M4 Remaining features`,
-`M5 Hardening and cutover`. See [PLAN.md](./PLAN.md#8-milestones).
+Labels `milestone: M0` through `milestone: M5` (Foundations, App shell, Read-only browsing, Write actions, Remaining
+features, Hardening and cutover), plus one tracking issue per milestone with a checklist of its issues. See
+[PLAN.md](./PLAN.md#8-milestones).
 
 ## Lifecycle
 

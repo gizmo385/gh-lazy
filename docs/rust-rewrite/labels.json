@@ -1,25 +1,147 @@
 [
-  {"name": "python", "color": "3572A5", "description": "Python/Textual implementation on main"},
-  {"name": "rust", "color": "DEA584", "description": "Rust rewrite on rust-main"},
-  {"name": "parity", "color": "5319E7", "description": "Rust must reproduce existing Python behavior"},
-  {"name": "parity-gap", "color": "B60205", "description": "Difference found between the Rust and Python apps"},
-  {"name": "infra", "color": "0E8A16", "description": "Build, CI, harness, packaging, tooling"},
-  {"name": "status: needs-triage", "color": "EDEDED", "description": "Waiting on the triage agent"},
-  {"name": "status: needs-design", "color": "C5DEF5", "description": "Waiting on the design agent for a spec"},
-  {"name": "status: needs-decision", "color": "FBCA04", "description": "Waiting on a decision from the maintainer"},
-  {"name": "status: ready", "color": "0E8A16", "description": "Specced and ready to implement"},
-  {"name": "status: in-progress", "color": "1D76DB", "description": "Being implemented"},
-  {"name": "status: in-review", "color": "6F42C1", "description": "PR open, under code and parity review"},
-  {"name": "status: blocked", "color": "D93F0B", "description": "Blocked on a linked issue"},
-  {"name": "area: shell", "color": "BFD4F2", "description": "Layout, focus, keymap, themes, footer"},
-  {"name": "area: repos", "color": "BFD4F2", "description": "Repositories table and repo details"},
-  {"name": "area: pull-requests", "color": "BFD4F2", "description": "Pull request list, details, diff, review"},
-  {"name": "area: issues", "color": "BFD4F2", "description": "Issue list, details, conversation"},
-  {"name": "area: workflows", "color": "BFD4F2", "description": "Actions workflows, runs, jobs, logs"},
-  {"name": "area: notifications", "color": "BFD4F2", "description": "Notifications modal and polling"},
-  {"name": "area: settings", "color": "BFD4F2", "description": "Config file and settings UI"},
-  {"name": "area: core", "color": "BFD4F2", "description": "gh client, models, config, caching"},
-  {"name": "area: parity-harness", "color": "BFD4F2", "description": "fake-gh, fixtures, scenarios, xtask parity"},
-  {"name": "platform: windows", "color": "F9D0C4", "description": "Windows-specific"},
-  {"name": "platform: macos", "color": "F9D0C4", "description": "macOS-specific"}
+  {
+    "name": "python",
+    "color": "3572A5",
+    "description": "Python/Textual implementation on main"
+  },
+  {
+    "name": "rust",
+    "color": "DEA584",
+    "description": "Rust rewrite on rust-main"
+  },
+  {
+    "name": "parity",
+    "color": "5319E7",
+    "description": "Rust must reproduce existing Python behavior"
+  },
+  {
+    "name": "parity-gap",
+    "color": "B60205",
+    "description": "Difference found between the Rust and Python apps"
+  },
+  {
+    "name": "infra",
+    "color": "0E8A16",
+    "description": "Build, CI, harness, packaging, tooling"
+  },
+  {
+    "name": "status: needs-triage",
+    "color": "EDEDED",
+    "description": "Waiting on the triage agent"
+  },
+  {
+    "name": "status: needs-design",
+    "color": "C5DEF5",
+    "description": "Waiting on the design agent for a spec"
+  },
+  {
+    "name": "status: needs-decision",
+    "color": "FBCA04",
+    "description": "Waiting on a decision from the maintainer"
+  },
+  {
+    "name": "status: ready",
+    "color": "0E8A16",
+    "description": "Specced and ready to implement"
+  },
+  {
+    "name": "status: in-progress",
+    "color": "1D76DB",
+    "description": "Being implemented"
+  },
+  {
+    "name": "status: in-review",
+    "color": "6F42C1",
+    "description": "PR open, under code and parity review"
+  },
+  {
+    "name": "status: blocked",
+    "color": "D93F0B",
+    "description": "Blocked on a linked issue"
+  },
+  {
+    "name": "area: shell",
+    "color": "BFD4F2",
+    "description": "Layout, focus, keymap, themes, footer"
+  },
+  {
+    "name": "area: repos",
+    "color": "BFD4F2",
+    "description": "Repositories table and repo details"
+  },
+  {
+    "name": "area: pull-requests",
+    "color": "BFD4F2",
+    "description": "Pull request list, details, diff, review"
+  },
+  {
+    "name": "area: issues",
+    "color": "BFD4F2",
+    "description": "Issue list, details, conversation"
+  },
+  {
+    "name": "area: workflows",
+    "color": "BFD4F2",
+    "description": "Actions workflows, runs, jobs, logs"
+  },
+  {
+    "name": "area: notifications",
+    "color": "BFD4F2",
+    "description": "Notifications modal and polling"
+  },
+  {
+    "name": "area: settings",
+    "color": "BFD4F2",
+    "description": "Config file and settings UI"
+  },
+  {
+    "name": "area: core",
+    "color": "BFD4F2",
+    "description": "gh client, models, config, caching"
+  },
+  {
+    "name": "area: parity-harness",
+    "color": "BFD4F2",
+    "description": "fake-gh, fixtures, scenarios, xtask parity"
+  },
+  {
+    "name": "platform: windows",
+    "color": "F9D0C4",
+    "description": "Windows-specific"
+  },
+  {
+    "name": "platform: macos",
+    "color": "F9D0C4",
+    "description": "macOS-specific"
+  },
+  {
+    "name": "milestone: M0",
+    "color": "FEF2C0",
+    "description": "M0 Foundations"
+  },
+  {
+    "name": "milestone: M1",
+    "color": "FEF2C0",
+    "description": "M1 App shell"
+  },
+  {
+    "name": "milestone: M2",
+    "color": "FEF2C0",
+    "description": "M2 Read-only browsing"
+  },
+  {
+    "name": "milestone: M3",
+    "color": "FEF2C0",
+    "description": "M3 Write actions"
+  },
+  {
+    "name": "milestone: M4",
+    "color": "FEF2C0",
+    "description": "M4 Remaining features"
+  },
+  {
+    "name": "milestone: M5",
+    "color": "FEF2C0",
+    "description": "M5 Hardening and cutover"
+  }
 ]

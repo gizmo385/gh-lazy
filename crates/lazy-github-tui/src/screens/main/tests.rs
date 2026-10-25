@@ -510,3 +510,112 @@ fn clicks_while_maximized_hit_the_maximized_widget() {
     app.click(10, 0);
     assert_eq!(focus(&app), FocusTarget::DetailsTabs);
 }
+
+// The command log (#80).
+
+fn log_line(n: usize) -> crate::event::Event {
+    crate::event::Event::CommandLog(lazy_github_core::logging::LogLine {
+        level: tracing::Level::INFO,
+        timestamp: jiff::civil::date(2026, 10, 25).at(1, 2, 3, 0),
+        message: format!("line {n}"),
+    })
+}
+
+fn log_offset(app: &TestApp) -> (usize, usize) {
+    app.app().main_screen().unwrap().command_log().offset()
+}
+
+#[test]
+fn the_command_log_shows_lines_and_paints_surface() {
+    let mut app = TestApp::new(with_log());
+    for n in 1..=3 {
+        app.send(log_line(n));
+    }
+    let buffer = app.render(160, 48);
+    let screen = crate::test_util::buffer_to_string(&buffer);
+    let rows: Vec<&str> = screen.lines().collect();
+    // Python at 160x48: the log's interior is rows 40-45 and columns 65-158, with the tracks in the last two
+    // columns and the last row.
+    assert!(rows[40].contains("│INFO 2026-10-25 01:02:03 - line 1"), "{}", rows[40]);
+    let surface = Color::Rgb(0x1e, 0x1e, 0x1e);
+    assert_eq!(buffer[(65, 44)].bg, surface);
+    assert_eq!(buffer[(156, 44)].bg, surface);
+    for (x, y) in [(157, 40), (158, 44), (65, 45), (158, 45)] {
+        assert_eq!(buffer[(x, y)].bg, Color::Rgb(0, 0, 0), "({x}, {y})");
+    }
+}
+
+#[test]
+fn hidden_command_log_lines_are_kept() {
+    let mut app = TestApp::new(Config::default());
+    app.send(log_line(1));
+    let log = app.app().main_screen().unwrap().command_log();
+    assert!(!log.is_visible());
+    assert_eq!(log.lines().len(), 1);
+    app.app_mut()
+        .main_screen_mut()
+        .unwrap()
+        .command_log_mut()
+        .set_visible(true);
+    assert!(app.screen(160, 48).contains("line 1"));
+}
+
+#[test]
+fn the_focused_command_log_scrolls_with_its_keys() {
+    let mut app = TestApp::new(with_log());
+    for n in 1..=30 {
+        app.send(log_line(n));
+    }
+    app.press(&["6"]);
+    app.render(160, 48);
+    // Focused, the log is 40% of the 44 rows: 15 inside the border, 14 of text.
+    assert_eq!(log_offset(&app), (0, 16));
+    app.press(&["up", "up", "pageup"]);
+    assert_eq!(log_offset(&app), (0, 0));
+    app.press(&["end", "home"]);
+    assert_eq!(log_offset(&app), (0, 0));
+    app.press(&["pagedown", "down"]);
+    assert_eq!(log_offset(&app), (0, 15));
+    // j and k aren't bound here.
+    app.press(&["j", "k"]);
+    assert_eq!(log_offset(&app), (0, 15));
+    assert_eq!(app.effects(), []);
+}
+
+#[test]
+fn the_wheel_scrolls_the_command_log_under_the_pointer() {
+    use crossterm::event::{KeyModifiers, MouseEvent, MouseEventKind};
+    let mut app = TestApp::new(with_log());
+    for n in 1..=30 {
+        app.send(log_line(n));
+    }
+    app.render(160, 48);
+    assert_eq!(log_offset(&app), (0, 25));
+    let wheel = |kind, column, row| {
+        crate::event::Event::Mouse(MouseEvent {
+            kind,
+            column,
+            row,
+            modifiers: KeyModifiers::NONE,
+        })
+    };
+    app.send(wheel(MouseEventKind::ScrollUp, 100, 41));
+    assert_eq!(log_offset(&app), (0, 23));
+    // Not over the log: nothing scrolls, and focus stays put.
+    app.send(wheel(MouseEventKind::ScrollUp, 10, 10));
+    assert_eq!(log_offset(&app), (0, 23));
+    assert_eq!(focus(&app), REPOS);
+}
+
+#[test]
+fn the_maximized_command_log_fills_the_screen() {
+    let mut app = TestApp::new(with_log());
+    app.send(log_line(1));
+    app.press(&["6", "M"]);
+    let buffer = app.render(100, 30);
+    let screen = crate::test_util::buffer_to_string(&buffer);
+    assert!(screen.starts_with("INFO 2026-10-25 01:02:03 - line 1"), "{screen}");
+    // Focused, so tinted.
+    assert_eq!(buffer[(0, 0)].bg, Color::Rgb(0x27, 0x27, 0x27));
+    assert_eq!(buffer[(99, 29)].bg, Color::Rgb(0, 0, 0));
+}

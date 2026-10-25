@@ -1,11 +1,9 @@
 //! `App`: all UI state, the synchronous `update`, key dispatch and rendering.
 
-use std::collections::VecDeque;
 use std::sync::Arc;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
-use lazy_github_core::logging::LogLine;
 use ratatui::Frame;
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
@@ -24,9 +22,6 @@ use crate::screens::main::{FocusTarget, MainScreen};
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
 use crate::theme::Theme;
 use crate::toast::{Severity, Toast, Toasts};
-
-/// How many command-log lines `App` keeps for the command log pane (#80).
-pub const COMMAND_LOG_LIMIT: usize = 1000;
 
 /// The bindings on the app link of every non-modal chain, in Textual order: its built-ins, then `LazyGithub.BINDINGS`.
 const APP_BINDINGS: &[BindingId] = &[
@@ -60,7 +55,6 @@ pub struct App {
     base: BaseScreen,
     shared: Shared,
     toasts: Toasts,
-    command_log: VecDeque<LogLine>,
     maximized: Option<Maximized>,
     /// The maximize toast shows once per session. Never saved.
     has_shown_maximize_toast: bool,
@@ -78,7 +72,6 @@ impl App {
             base: BaseScreen::Startup(StartupScreen::default()),
             shared: Shared::new(config, keymap, theme, Arc::new(clock)),
             toasts: Toasts::default(),
-            command_log: VecDeque::new(),
             maximized: None,
             has_shown_maximize_toast: false,
             footer_hits: Vec::new(),
@@ -176,19 +169,22 @@ impl App {
     }
 
     /// A left click on a footer item runs its binding, as Textual's `FooterKey` does; elsewhere it focuses the
-    /// target under the pointer. Both as of the last frame.
+    /// target under the pointer, and the wheel scrolls it. All as of the last frame.
     fn action_for_mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
-        if mouse.kind != MouseEventKind::Down(MouseButton::Left) {
+        if mouse.kind == MouseEventKind::Down(MouseButton::Left) {
+            let position = ratatui::layout::Position::new(mouse.column, mouse.row);
+            if let Some(hit) = self.footer_hits.iter().find(|hit| hit.rect.contains(position)).copied() {
+                // Textual rings the bell for a disabled item instead. There's no bell yet, and nothing is disabled in
+                // M1.
+                return hit.enabled.then(|| self.route_binding(hit.owner, hit.id)).flatten();
+            }
+        }
+        let BaseScreen::Main(main) = &self.base else {
             return None;
-        }
-        let position = ratatui::layout::Position::new(mouse.column, mouse.row);
-        if let Some(hit) = self.footer_hits.iter().find(|hit| hit.rect.contains(position)).copied() {
-            // Textual rings the bell for a disabled item instead. There's no bell yet, and nothing is disabled in M1.
-            return hit.enabled.then(|| self.route_binding(hit.owner, hit.id)).flatten();
-        }
-        match &self.base {
-            BaseScreen::Main(main) => main.hit(mouse.column, mouse.row).map(Action::Focus),
-            BaseScreen::Startup(_) | BaseScreen::Auth(_) => None,
+        };
+        match mouse.kind {
+            MouseEventKind::Down(MouseButton::Left) => main.hit(mouse.column, mouse.row).map(Action::Focus),
+            _ => main.wheel(&mouse),
         }
     }
 
@@ -360,11 +356,12 @@ impl App {
                 out.actions.push_back(Action::Auth(AuthAction::Poll));
             }
             Action::Timer(id) => tracing::debug!("Ignoring timer {id:?}: nothing owns it"),
+            // Python attaches the pane's handler when the main screen mounts, so lines from before it (startup and
+            // auth) never show.
             Action::CommandLog(line) => {
-                if self.command_log.len() == COMMAND_LOG_LIMIT {
-                    self.command_log.pop_front();
+                if let BaseScreen::Main(main) = &mut self.base {
+                    main.command_log_mut().push(&line);
                 }
-                self.command_log.push_back(line);
             }
             Action::Unimplemented(id) => tracing::debug!("{id:?} is not implemented yet"),
         }
@@ -526,11 +523,6 @@ impl App {
         self.toasts.next_deadline()
     }
 
-    /// The most recent command-log lines, oldest first, at most [`COMMAND_LOG_LIMIT`].
-    pub fn command_log(&self) -> &VecDeque<LogLine> {
-        &self.command_log
-    }
-
     /// The toasts up now.
     pub fn toasts(&self) -> &Toasts {
         &self.toasts
@@ -569,6 +561,7 @@ mod tests {
 
     use crossterm::event::{KeyCode, KeyEventKind, KeyModifiers};
     use lazy_github_core::github::GithubCall;
+    use lazy_github_core::logging::LogLine;
     use lazy_github_core::models::User;
     use tracing::Level;
 
@@ -770,22 +763,22 @@ mod tests {
     }
 
     #[test]
-    fn the_command_log_keeps_the_last_thousand_lines() {
-        let mut app = test_app();
-        let line = |n: usize| LogLine {
+    fn command_log_lines_before_the_main_screen_are_dropped() {
+        let line = |message: &str| LogLine {
             level: Level::INFO,
             timestamp: jiff::civil::date(2026, 10, 25).at(1, 2, 3, 0),
-            message: format!("line {n}"),
+            message: message.into(),
         };
-        app.send(Event::CommandLog(line(0)));
-        assert_eq!(app.app().command_log().iter().collect::<Vec<_>>(), [&line(0)]);
-        for n in 1..=COMMAND_LOG_LIMIT {
-            app.send(Event::CommandLog(line(n)));
-        }
-        let log = app.app().command_log();
-        assert_eq!(log.len(), COMMAND_LOG_LIMIT);
-        assert_eq!(log.front(), Some(&line(1)));
-        assert_eq!(log.back(), Some(&line(COMMAND_LOG_LIMIT)));
+        let mut config = Config::default();
+        config.appearance.show_command_log = true;
+        let mut app = TestApp::on_startup(config, lazy_github_core::github::FakeGithub::new());
+        assert_eq!(app.app().screen(), None);
+        app.send(Event::CommandLog(line("during startup")));
+        futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+        assert_eq!(app.app().screen(), Some(ScreenKind::Main));
+        app.send(Event::CommandLog(line("on the main screen")));
+        let log = app.app().main_screen().unwrap().command_log();
+        assert_eq!(log.lines(), ["INFO 2026-10-25 01:02:03 - on the main screen"]);
     }
 
     #[test]

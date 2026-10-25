@@ -22,14 +22,17 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  # One job, so the workspace is built once per run (Linux only: macOS runners cost about 10x, PLAN §7; Windows joins
+  # in M5). The name is kept from when this was only fmt/clippy/test, so the required check in branch protection still
+  # matches; the job now also runs the parity gate (parity/README.md, "CI").
   check:
     name: fmt, clippy, test (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
-        # Windows joins in M5 (docs/rust-rewrite/PLAN.md §7).
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     steps:
     - uses: actions/checkout@v6
       with:
@@ -37,6 +40,8 @@ jobs:
     # rust-toolchain.toml is the single source of truth for the toolchain version and components.
     - name: Install toolchain
       run: rustup toolchain install
+    # Pushes to rust-main still run the Rust checks, which keeps this cache warm for PRs (a PR can only restore caches
+    # saved on its own ref or on rust-main).
     - uses: Swatinem/rust-cache@v2
     - name: Check formatting
       run: cargo fmt --all --check
@@ -45,43 +50,28 @@ jobs:
     - name: Test
       run: cargo test --workspace --locked
 
-  # The parity gate (parity/README.md, "CI"): every scenario against both apps. The exit code of `cargo xtask parity`
-  # is the gate; the HTML report is uploaded for humans and the parity reviewer.
-  parity:
-    name: parity (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    steps:
-    - uses: actions/checkout@v6
-      with:
-        persist-credentials: false
-    # Same toolchain step as the check job: rust-toolchain.toml decides.
-    - name: Install toolchain
-      run: rustup toolchain install
-    # A separate cache from the check job's: this job builds a different set of targets.
-    - uses: Swatinem/rust-cache@v2
-      with:
-        shared-key: parity
+    # The parity gate: every scenario against both apps. It runs on PRs only: a squash merge's tree already passed it
+    # on the PR. The exit code of `cargo xtask parity` is the gate; the HTML report is uploaded for humans and the
+    # parity reviewer.
     - uses: astral-sh/setup-uv@v7
+      if: github.event_name == 'pull_request'
       with:
         enable-cache: true
         cache-dependency-glob: uv.lock
         python-version: "3.11"
     - name: Install the Python app
       id: sync
+      if: github.event_name == 'pull_request'
       run: uv sync --frozen
     - name: Parity scenarios
+      if: github.event_name == 'pull_request'
       run: cargo xtask parity --all --ci --no-sync
     # Runs even when the parity step fails, so a PR that breaks both reports both.
     - name: Python-backed integration tests
       if: ${{ !cancelled() && steps.sync.outcome == 'success' }}
       run: cargo test --locked -p fake-gh -p xtask -- --ignored
     - name: Job summary
-      if: always()
+      if: ${{ always() && github.event_name == 'pull_request' }}
       shell: bash
       run: |
         if [ -f parity/reports/latest/summary.md ]; then
@@ -91,7 +81,7 @@ jobs:
         fi
     - name: Upload report
       id: upload
-      if: always()
+      if: ${{ always() && github.event_name == 'pull_request' }}
       uses: actions/upload-artifact@v6
       with:
         name: parity-report-${{ matrix.os }}

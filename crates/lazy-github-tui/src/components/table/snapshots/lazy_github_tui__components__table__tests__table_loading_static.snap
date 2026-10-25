@@ -1,0 +1,20 @@
+---
+source: crates/lazy-github-tui/src/components/table/tests.rs
+expression: "snap(&mut table, true)"
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 40, height: 8 },
+    content: [
+        "                                        ",
+        "                                        ",
+        "                                        ",
+        "               Loading...               ",
+        "                                        ",
+        "                                        ",
+        "                                        ",
+        "                                        ",
+    ],
+    styles: [
+        x: 0, y: 0, fg: Rgb(1, 120, 212), bg: Rgb(27, 27, 27), underline: Reset, modifier: NONE,
+    ]
+}

@@ -1,0 +1,14 @@
+---
+source: xtask/src/parity/diff.rs
+expression: "text_diff(py, rs)"
+---
+--- python
++++ rust
+@@ -1,5 +1,5 @@
+ ┌─ [1] Repositories ─┐
+ │ alpha              │
+-│ beta               │
++│ gamma              │
+ └────────────────────┘
+-q Quit
++q Quit  ? Help

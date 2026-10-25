@@ -661,11 +661,57 @@ An app that didn't run is left out of `apps`. A scenario's `result` is:
 
 Until #93 lands, results come from app statuses only.
 
+### Reading the report
+
+Every run ends by writing the human-readable report next to `summary.json` (`xtask/src/parity/report.rs`):
+
+```
+index.html                                       # every scenario × size, start here
+summary.md                                       # the short table for the CI job summary (#70)
+<scenario>/report.html                           # one page per scenario
+<scenario>/<cols>x<rows>/<capture>.diff.txt      # unified diff of python/<capture>.txt against rust/<capture>.txt
+```
+
+Open `index.html` in a browser. It works straight from disk or from a downloaded CI artifact (`file://`): every page
+is self-contained, with inline CSS, a few lines of inline JS and no external assets, fonts or CDNs.
+
+- **`index.html`** starts with the run's commit (`git rev-parse HEAD`), time, OS and command line, then one row per
+  scenario × size: the result badge, each app's status, and the structural mismatch count (`not checked` when there's
+  no `check.json`). Failed gated scenarios come first, then other failures, then `rust-not-ready`, then passes. Each
+  row links to the scenario's page.
+- **`<scenario>/report.html`** has a header with the description, `gate`, `parity_rows`, the result and a table of
+  every app run per size: status, duration, flaky, the failed step, the exit code and fixture misses as
+  `METHOD /path?query` keys. Then, per size and capture:
+  - **Two panels**, Python on the left and Rust on the right, each the captured screen drawn from `grid.json` at one
+    `ch` per cell (default colors `#d4d4d4` on `#1e1e1e`, inverse applied, indexed colors through the xterm palette).
+    A panel wider than its half of the page scrolls sideways inside itself.
+  - When an app has no capture, its panel says why (`exited with code 1 at step 2`, say) and shows `failure.grid.json`,
+    the screen when the run failed, if there is one. An app that didn't run says `not run (--python-only)` or similar.
+  - **Highlight differences** (when both apps captured) outlines every cell whose character differs between the two
+    grids, and the count of differing cells sits next to it. The cells are marked when the report is written; the
+    checkbox only flips a class, and it's hidden when JS is off.
+  - **Structural mismatches**: the `check.json` table (check, box, Python value, Rust value, message), tagged
+    `expect` or `cross`, or `not checked` when there's no `check.json`.
+  - Collapsible sections: the text diff, both `structure.json` files pretty-printed, and per size the last 50 lines of
+    each app's `fake-gh.log`. **Expand all** / **Collapse all** open or close every section at once.
+- **`<capture>.diff.txt`** is written only when both apps captured. It's informational and never gates: Markdown,
+  wrapping and spacing legitimately differ, and the structural check is what decides.
+- **`summary.md`** is a heading `Parity: <n> pass, <n> fail, <n> rust-not-ready` (plus `python-only` / `rust-only`
+  counts when there are any), a table `| Scenario | Gate | 160x48 | 100x30 | Mismatches |` (other sizes in the run get
+  extra columns; a size a scenario didn't run is `skipped`), and a `<details>` list of the first 20 mismatches as
+  `scenario/size/capture: check box: python=… rust=…` with values cut to 80 characters. It stays under 64 KiB.
+
+A size's result in the index and `summary.md` is computed from that size's app statuses; a size with structural
+mismatches takes the scenario's `fail` or `rust-not-ready` result.
+
 ### Testing the harness
 
 - `cargo test -p xtask` covers scenario parsing, key encoding, config layering, the query responder and the grid
   format, and drives a tiny test TUI (`xtask/tests/bin/echo_tui.rs`, built as an example) through the runner
   (`xtask/tests/runner.rs`). None of it needs Python.
+- The report has `insta` snapshots (`summary.md`, the text diff, the HTML of a small grid pair) in
+  `xtask/src/parity/snapshots/`, and `xtask/tests/report.rs` writes a whole report from synthetic dumps. Review
+  snapshot changes with `cargo insta review`, or rerun with `INSTA_UPDATE=always` and read the diff.
 - `xtask/tests/python_app.rs` runs `startup` against the Python app and checks that a fixture miss fails the run. It
   needs uv, so it's `#[ignore]`d: run it with `cargo build -p fake-gh && cargo test -p xtask --test python_app --
   --ignored`.

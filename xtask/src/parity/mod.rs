@@ -2,9 +2,11 @@
 //! The CLI, environment, scenario format and report layout are documented in `parity/README.md`.
 
 pub mod cli;
+pub mod diff;
 pub mod env;
 pub mod grid;
 pub mod keys;
+pub mod report;
 pub mod runner;
 pub mod scenario;
 pub mod summary;

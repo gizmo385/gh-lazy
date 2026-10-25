@@ -1,0 +1,16 @@
+HTTP/2.0 204 No Content
+Access-Control-Allow-Origin: *
+Cache-Control: private, max-age=60, s-maxage=60
+Content-Security-Policy: default-src 'none'
+Date: Sun, 25 Oct 2026 03:00:00 GMT
+Server: github.com
+Vary: Accept, Authorization, Cookie, X-GitHub-OTP,Accept-Encoding, Accept, X-Requested-With
+X-Github-Api-Version-Selected: 2022-11-28
+X-Github-Media-Type: github.v3; format=json
+X-Github-Request-Id: SCRUBBED
+X-Ratelimit-Limit: 5000
+X-Ratelimit-Remaining: 4999
+X-Ratelimit-Reset: 1792900800
+X-Ratelimit-Resource: core
+X-Ratelimit-Used: 1
+

@@ -22,6 +22,8 @@ lazy-github-tui = { path = "crates/lazy-github-tui" }
 # TUI
 ratatui = "0.30"
 crossterm = "0.29"
+# `StreamExt` over crossterm's `EventStream` in the event loop (#72).
+futures-util = { version = "0.3", default-features = false }
 # Text input (`tui-textarea`) is not declared yet: its latest release (0.7.0) requires ratatui 0.29, which conflicts
 # with ratatui 0.30 above. See https://github.com/gizmo385/gh-lazy/issues/85.
 pulldown-cmark = "0.13"

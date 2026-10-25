@@ -81,10 +81,14 @@ const INTRO: &[Block] = &[
 pub enum Scroll {
     Up,
     Down,
+    Left,
+    Right,
     Home,
     End,
     PageUp,
     PageDown,
+    PageLeft,
+    PageRight,
 }
 
 impl Scroll {
@@ -93,10 +97,14 @@ impl Scroll {
         Some(match id {
             BindingId::TextualScrollUp => Scroll::Up,
             BindingId::TextualScrollDown => Scroll::Down,
+            BindingId::TextualScrollLeft => Scroll::Left,
+            BindingId::TextualScrollRight => Scroll::Right,
             BindingId::TextualScrollHome => Scroll::Home,
             BindingId::TextualScrollEnd => Scroll::End,
             BindingId::TextualScrollPageUp => Scroll::PageUp,
             BindingId::TextualScrollPageDown => Scroll::PageDown,
+            BindingId::TextualScrollPageLeft => Scroll::PageLeft,
+            BindingId::TextualScrollPageRight => Scroll::PageRight,
             _ => return None,
         })
     }
@@ -127,6 +135,8 @@ impl InfoView {
             Scroll::End => max,
             Scroll::PageUp => self.offset.saturating_sub(window),
             Scroll::PageDown => self.offset + window,
+            // The intro wraps, so there's nothing to scroll sideways; `INFO_BINDINGS` doesn't bind these.
+            Scroll::Left | Scroll::Right | Scroll::PageLeft | Scroll::PageRight => self.offset,
         }
         .min(max);
     }

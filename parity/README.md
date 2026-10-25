@@ -931,7 +931,7 @@ mismatches takes the scenario's `fail` or `rust-not-ready` result.
 ### CI
 
 The `parity` job in `.github/workflows/rust.yaml` runs on every push to `rust-main` and every PR into it, on
-`ubuntu-latest` and `macos-latest`. It installs the toolchain from `rust-toolchain.toml`, Python 3.11 and the app
+`ubuntu-latest` only (macOS runners are too expensive; see PLAN §7). It installs the toolchain from `rust-toolchain.toml`, Python 3.11 and the app
 with `uv sync --frozen`, then runs `cargo xtask parity --all --ci --no-sync` and the `#[ignore]`d Python-backed tests
 (`cargo test -p fake-gh -p xtask -- --ignored`). There's no `paths` filter: every PR runs it.
 
@@ -971,8 +971,8 @@ Download it from the link (or the run page's **Artifacts** section), unzip it an
 works from disk. With `gh`: `gh run download <run-id> -n parity-report-ubuntu-latest -D report && open
 report/index.html`.
 
-**Branch protection.** `parity (ubuntu-latest)` and `parity (macos-latest)` are meant to be required checks on
-`rust-main`, next to the `fmt, clippy, test` checks.
+**Branch protection.** `parity (ubuntu-latest)` is meant to be a required check on `rust-main`, next to
+`fmt, clippy, test (ubuntu-latest)`.
 
 ### Testing the harness
 

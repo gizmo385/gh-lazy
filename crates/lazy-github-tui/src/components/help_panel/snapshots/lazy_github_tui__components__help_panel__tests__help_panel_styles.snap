@@ -1,0 +1,32 @@
+---
+source: crates/lazy-github-tui/src/components/help_panel/tests.rs
+expression: terminal.backend().buffer()
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 34, height: 5 },
+    content: [
+        "▏                                 ",
+        "▏    Input                        ",
+        "▏                                 ",
+        "▏  / Search Search in the table   ",
+        "▏                                 ",
+    ],
+    styles: [
+        x: 0, y: 0, fg: Rgb(79, 79, 79), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 1, y: 0, fg: Rgb(224, 224, 224), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 0, y: 1, fg: Rgb(79, 79, 79), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 1, y: 1, fg: Rgb(224, 224, 224), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 5, y: 1, fg: Rgb(87, 165, 226), bg: Rgb(18, 18, 18), underline: Reset, modifier: UNDERLINED,
+        x: 10, y: 1, fg: Rgb(224, 224, 224), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 0, y: 2, fg: Rgb(79, 79, 79), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 1, y: 2, fg: Rgb(224, 224, 224), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 0, y: 3, fg: Rgb(79, 79, 79), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 1, y: 3, fg: Rgb(224, 224, 224), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 3, y: 3, fg: Rgb(255, 196, 115), bg: Rgb(18, 18, 18), underline: Reset, modifier: BOLD,
+        x: 4, y: 3, fg: Rgb(224, 224, 224), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 12, y: 3, fg: Rgb(153, 153, 153), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 31, y: 3, fg: Rgb(224, 224, 224), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 0, y: 4, fg: Rgb(79, 79, 79), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+        x: 1, y: 4, fg: Rgb(224, 224, 224), bg: Rgb(18, 18, 18), underline: Reset, modifier: NONE,
+    ]
+}

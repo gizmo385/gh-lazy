@@ -1,79 +1,68 @@
-//! The bindings active for the current focus, as Textual's `Screen.active_bindings` finds them, grouped the way its
-//! `Footer` and `KeyPanel` show them. The footer (#107) and the help panel (#108) both draw from [`active_bindings`].
+//! The bindings active for the current focus, one per key, as Textual's `Screen.active_bindings` finds them. The
+//! footer (#107) and the help panel (#108) group them each their own way, as Textual's `Footer` and `KeyPanel` do.
 
-use super::{BindingId, KeySpec, Keymap};
+use super::{BindingDef, BindingId, KeySpec, Keymap};
 use crate::component::{BindingState, ChainLink, Owner};
 
-/// The bindings of one link that share an action, shown as one footer or help entry.
+/// One active key: the binding that claimed it, and the chain link that declares the binding.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ActiveGroup {
-    /// The chain link that declares them, which handles a click on the entry.
+pub struct ActiveBinding {
+    /// The chain link that declares the binding, which handles it.
     pub owner: Owner,
-    /// The first binding of the group: what a click on the entry runs.
+    /// The binding.
     pub id: BindingId,
-    /// The Textual action they share.
-    pub action: &'static str,
-    /// The first binding's label.
-    pub description: &'static str,
-    /// The first binding's tooltip, or empty.
-    pub tooltip: &'static str,
-    /// Every key still claimed by the group, as displayed (`^p`, `?`, `bogus`), in chain order.
-    pub keys: Vec<String>,
-    /// Whether the footer lists the group.
-    pub show: bool,
-    /// False for a group shown dimmed ([`BindingState::Disabled`]).
+    /// The key, as displayed (`^p`, `?`, `bogus`).
+    pub key: String,
+    /// False for a binding shown dimmed ([`BindingState::Disabled`]).
     pub enabled: bool,
 }
 
-impl ActiveGroup {
-    /// The key the footer shows: the first one claimed.
-    pub fn first_key(&self) -> &str {
-        self.keys.first().map_or("", String::as_str)
+impl ActiveBinding {
+    /// The binding's registry entry: its action, description, tooltip and flags.
+    pub fn def(&self) -> &'static BindingDef {
+        self.id.def()
     }
 }
 
-/// The active bindings of `chain` (innermost first), grouped by owner and action in first-seen order.
+/// The active keys of `chain` (innermost first), in Textual's `Screen.active_bindings` order.
 ///
 /// - Links are walked innermost first, and each link's bindings in [`Keymap::effective_specs`] order.
-/// - Each key goes to the first binding that has it. A binding whose keys are all taken by then disappears.
+/// - Each key goes to the first binding that has it. A binding whose keys are all taken by then has no entry.
+/// - A priority binding takes a key from a non-priority one further in, at that key's place, as Textual replaces
+///   the entry in its key-ordered dict.
 /// - A binding whose `state` is [`BindingState::Hidden`] is skipped and claims nothing, like Textual's
 ///   `check_action` returning `False`. A disabled one is kept, with `enabled` false.
-/// - Shown and hidden bindings of the same action never share a group: Textual drops `show=False` bindings before it
-///   groups by action, so the hidden `ctrl+q` quit doesn't take `q Quit` with it.
 pub fn active_bindings(
     chain: &[ChainLink],
     keymap: &Keymap,
     state: impl Fn(Owner, BindingId) -> BindingState,
-) -> Vec<ActiveGroup> {
+) -> Vec<ActiveBinding> {
+    // Parallel to `active`: the key each entry claimed.
     let mut claimed: Vec<&KeySpec> = Vec::new();
-    let mut groups: Vec<ActiveGroup> = Vec::new();
+    let mut active: Vec<ActiveBinding> = Vec::new();
     for link in chain {
         for (id, token, spec) in keymap.effective_specs(link.bindings) {
             let binding_state = state(link.owner, id);
-            if binding_state == BindingState::Hidden || claimed.contains(&spec) {
+            if binding_state == BindingState::Hidden {
                 continue;
             }
-            claimed.push(spec);
-            let def = id.def();
-            let key = keymap.key_display(id, token);
-            let same =
-                |group: &ActiveGroup| group.owner == link.owner && group.action == def.action && group.show == def.show;
-            match groups.iter_mut().find(|group| same(group)) {
-                Some(group) => group.keys.push(key),
-                None => groups.push(ActiveGroup {
-                    owner: link.owner,
-                    id,
-                    action: def.action,
-                    description: def.description,
-                    tooltip: def.tooltip,
-                    keys: vec![key],
-                    show: def.show,
-                    enabled: binding_state == BindingState::Enabled,
-                }),
+            let binding = ActiveBinding {
+                owner: link.owner,
+                id,
+                key: keymap.key_display(id, token),
+                enabled: binding_state == BindingState::Enabled,
+            };
+            match claimed.iter().position(|&taken| taken == spec) {
+                Some(i) if id.is_priority() && !active[i].id.is_priority() => active[i] = binding,
+                Some(_) => {}
+                None => {
+                    claimed.push(spec);
+                    active.push(binding);
+                }
             }
         }
     }
-    groups
+    active
 }
 
 #[cfg(test)]
@@ -82,6 +71,7 @@ mod tests {
 
     use super::*;
     use crate::component::ScreenKind;
+    use crate::screens::main::SectionId;
 
     fn keymap(overrides: &[(&str, &str)]) -> Keymap {
         let overrides: IndexMap<String, String> = overrides
@@ -99,11 +89,11 @@ mod tests {
         BindingState::Enabled
     }
 
-    /// `"<key> <description>"` for each group, all keys joined with a space.
-    fn entries(groups: &[ActiveGroup]) -> Vec<String> {
-        groups
+    /// `"<key> <description>"` for each key.
+    fn entries(active: &[ActiveBinding]) -> Vec<String> {
+        active
             .iter()
-            .map(|group| format!("{} {}", group.keys.join(" "), group.description))
+            .map(|binding| format!("{} {}", binding.key, binding.def().description))
             .collect()
     }
 
@@ -114,10 +104,10 @@ mod tests {
             link(Owner::Screen(ScreenKind::Main), &[BindingId::PullRequestLookup]),
             link(Owner::App, &[BindingId::IssueLookup]),
         ];
-        let groups = active_bindings(&chain, &Keymap::defaults(), enabled);
-        assert_eq!(entries(&groups), ["O Lookup Pull Request"]);
-        assert_eq!(groups[0].owner, Owner::Screen(ScreenKind::Main));
-        assert_eq!(groups[0].id, BindingId::PullRequestLookup);
+        let active = active_bindings(&chain, &Keymap::defaults(), enabled);
+        assert_eq!(entries(&active), ["O Lookup Pull Request"]);
+        assert_eq!(active[0].owner, Owner::Screen(ScreenKind::Main));
+        assert_eq!(active[0].id, BindingId::PullRequestLookup);
     }
 
     #[test]
@@ -142,40 +132,47 @@ mod tests {
     }
 
     #[test]
-    fn same_action_bindings_merge_within_an_owner() {
-        // `textual.app.quit` and `app.quit` are both `quit`, and the hidden one comes first. An overridden binding's
-        // keys go last, and all of them stay in its group.
+    fn every_key_is_its_own_entry() {
+        // An overridden binding's keys go after the defaults, one entry each.
         let chain = [link(
             Owner::App,
             &[
                 BindingId::TextualQuit,
                 BindingId::AppQuit,
                 BindingId::LinkFollow,
-                BindingId::NotificationsMarkRead,
+                BindingId::TableSelect,
             ],
         )];
         let keymap = keymap(&[("link.follow", "f, x")]);
-        let groups = active_bindings(&chain, &keymap, enabled);
-        let shown: Vec<&ActiveGroup> = groups.iter().filter(|group| group.show).collect();
         assert_eq!(
-            shown
-                .iter()
-                .map(|g| (g.description, g.keys.clone()))
-                .collect::<Vec<_>>(),
+            entries(&active_bindings(&chain, &keymap, enabled)),
             [
-                ("Quit", vec!["q".to_owned()]),
-                ("Mark as Read", vec!["R".to_owned()]),
-                ("Follow link", vec!["f".to_owned(), "x".to_owned()]),
+                "^q Quit",
+                "q Quit",
+                "⏎ Select table entry",
+                "space Select table entry",
+                "f Follow link",
+                "x Follow link"
             ]
         );
-        // A shown and a hidden binding with one action stay apart: the hidden one keeps only the key left to it.
-        let chain = [link(
-            Owner::Table(crate::screens::main::SectionId::Workflows),
-            &[BindingId::WorkflowsViewRunDetails, BindingId::TableSelect],
-        )];
-        let groups = active_bindings(&chain, &Keymap::defaults(), enabled);
-        assert_eq!(entries(&groups), ["⏎ View Run Details", "space Select table entry"]);
-        assert!(groups[0].show && !groups[1].show);
+    }
+
+    #[test]
+    fn a_priority_binding_takes_the_key_in_place() {
+        // `ctrl+q` moved onto the PR lookup further in (overridden keys go last in their link): the app's priority
+        // quit takes it back, at the inner place.
+        let chain = [
+            link(
+                Owner::Section(SectionId::PullRequests),
+                &[BindingId::PullRequestLookup, BindingId::PullRequestEdit],
+            ),
+            link(Owner::App, &[BindingId::TextualQuit, BindingId::AppQuit]),
+        ];
+        let keymap = keymap(&[("pull_request.lookup", "ctrl+q")]);
+        let active = active_bindings(&chain, &keymap, enabled);
+        assert_eq!(entries(&active), ["E Edit PR", "^q Quit", "q Quit"]);
+        assert_eq!(active[1].owner, Owner::App);
+        assert_eq!(active[1].id, BindingId::TextualQuit);
     }
 
     #[test]
@@ -192,12 +189,12 @@ mod tests {
             (_, BindingId::LinkPaste) => BindingState::Disabled,
             _ => BindingState::Enabled,
         };
-        let groups = active_bindings(&chain, &Keymap::defaults(), state);
+        let active = active_bindings(&chain, &Keymap::defaults(), state);
         // The screen's hidden ^n leaves the key to the app's.
-        assert_eq!(entries(&groups), ["^v Paste link", "^n Notifications"]);
-        assert_eq!(groups[1].owner, Owner::App);
-        assert!(!groups[0].enabled);
-        assert!(groups[1].enabled);
+        assert_eq!(entries(&active), ["^v Paste link", "^n Notifications"]);
+        assert_eq!(active[1].owner, Owner::App);
+        assert!(!active[0].enabled);
+        assert!(active[1].enabled);
     }
 
     #[test]
@@ -209,22 +206,17 @@ mod tests {
             ("app.maximize_widget", "bogus"),
         ]);
         let chain = [
-            link(
-                Owner::Table(crate::screens::main::SectionId::Repos),
-                &[BindingId::TableScrollLeft],
-            ),
-            link(
-                Owner::SearchableTable(crate::screens::main::SectionId::Repos),
-                &[BindingId::TableSearch],
-            ),
+            link(Owner::Table(SectionId::Repos), &[BindingId::TableScrollLeft]),
+            link(Owner::SearchableTable(SectionId::Repos), &[BindingId::TableSearch]),
             link(
                 Owner::App,
                 &[BindingId::AppQuit, BindingId::AppMaximizeWidget, BindingId::AppOpenHelp],
             ),
         ];
-        let groups = active_bindings(&chain, &keymap, enabled);
-        let shown: Vec<String> = entries(&groups).into_iter().skip(1).collect();
-        assert_eq!(shown, ["? Search", "q Quit", "bogus Maximize"]);
-        assert!(!groups[0].show);
+        let active = active_bindings(&chain, &keymap, enabled);
+        assert_eq!(
+            entries(&active),
+            ["h Table scroll left", "? Search", "q Quit", "bogus Maximize"]
+        );
     }
 }

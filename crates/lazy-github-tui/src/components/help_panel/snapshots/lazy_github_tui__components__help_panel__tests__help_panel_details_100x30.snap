@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/components/help_panel/tests.rs
+expression: "panel(&[\"?\", \"5\"], 100, 30)"
+---
+▏
+▏           ← Previous tab
+▏           → Next tab
+▏
+▏           1 Focus repos
+▏             table Focus the
+▏             table of
+▏             accessible
+▏             repositories
+▏           2 Focus PRs table
+▏             Focus the table
+▏             of pull
+▏             requests for
+▏             the repo        ▄▄
+▏           3 Focus issues
+▏             table Focus the
+▏             table of issues
+▏             for the repo
+▏           4 Focus workflows
+▏             table Focus and
+▏             swap between
+▏             the workflow
+▏             tabs
+▏           5 Focus details
+▏             tabs Focus and
+▏             swap between
+▏             the selection
+▏             detail tabs on
+▏             the right
+▏           6 Focus command

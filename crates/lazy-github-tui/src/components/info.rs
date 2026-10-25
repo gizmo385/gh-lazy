@@ -17,14 +17,18 @@ const PADDING: u16 = 2;
 const SCROLLBAR_WIDTH: u16 = 2;
 
 /// The bindings the view answers while it has focus, in Textual's `ScrollableContainer` order. #75 puts them in the
-/// binding chain.
+/// binding chain. The sideways ones do nothing, since the intro wraps, but Python's help panel lists them.
 pub const INFO_BINDINGS: &[BindingId] = &[
     BindingId::TextualScrollUp,
     BindingId::TextualScrollDown,
+    BindingId::TextualScrollLeft,
+    BindingId::TextualScrollRight,
     BindingId::TextualScrollHome,
     BindingId::TextualScrollEnd,
     BindingId::TextualScrollPageUp,
     BindingId::TextualScrollPageDown,
+    BindingId::TextualScrollPageLeft,
+    BindingId::TextualScrollPageRight,
 ];
 
 /// One Markdown block of the intro.
@@ -135,7 +139,7 @@ impl InfoView {
             Scroll::End => max,
             Scroll::PageUp => self.offset.saturating_sub(window),
             Scroll::PageDown => self.offset + window,
-            // The intro wraps, so there's nothing to scroll sideways; `INFO_BINDINGS` doesn't bind these.
+            // The intro wraps, so there's nothing to scroll sideways.
             Scroll::Left | Scroll::Right | Scroll::PageLeft | Scroll::PageRight => self.offset,
         }
         .min(max);

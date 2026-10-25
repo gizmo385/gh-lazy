@@ -1,0 +1,113 @@
+version = 1
+description = "? toggles the keybindings panel on the right: it narrows the main screen, follows focus, survives escape and maximize, and ? closes it"
+gate = true
+parity_rows = ["main-layout.help-panel", "keybindings.app-open-help"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+capture = "start"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["?"]
+
+# The panel overflows at both sizes, so "Toggle this window" is cut off.
+[[step]]
+wait = { text = "Cursor up" }
+
+# The box titles are cut to the narrower main area (108 columns at 160, 67 at 100), so matching them proves the
+# width split. The panel's text isn't compared whole: Python lists `^n` while notifications are off (Py bug B7) and
+# says "Command Pallete" (Py bug B14), and both shift the rows and the scrollbar below them. The `contains` lines are
+# ones neither bug touches.
+[[step]]
+capture = "open"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["5"]
+
+[[step]]
+wait = { text = "Previous tab" }
+
+[[step]]
+capture = "details"
+checks = ["titles", "focus"]
+
+# Escape doesn't close the panel, in Python either.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+capture = "escape-kept"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["?"]
+
+[[step]]
+wait = { gone = "Previous tab" }
+
+[[step]]
+capture = "closed"
+checks = ["titles", "focus"]
+
+# Maximizing keeps the panel docked: the maximized table and its hatch fill the narrower area.
+[[step]]
+keys = ["1", "?"]
+
+[[step]]
+wait = { text = "Cursor up" }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { text = "View Maximized" }
+
+[[step]]
+capture = "maximized"
+checks = ["titles"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[1] Repositories" }
+
+[[step]]
+capture = "minimized"
+checks = ["titles", "focus"]
+
+[expect.start]
+focused = ["[1] Repositories"]
+not_contains = ["Cursor up"]
+
+[expect.open]
+focused = ["[1] Repositories"]
+contains = ["▏         ↑ k Cursor up", "▏     ⏎ space Select table", "▏           / Search Search", "▏           h Table scroll"]
+
+[expect.details]
+focused = ["[5] Details"]
+contains = ["▏           ← Previous tab", "▏           → Next tab", "▏           1 Focus repos"]
+
+[expect.escape-kept]
+focused = ["[5] Details"]
+contains = ["▏           ← Previous tab", "▏           → Next tab"]
+
+[expect.closed]
+focused = ["[5] Details"]
+not_contains = ["Previous tab", "Focus repos table"]
+
+[expect.maximized]
+contains = ["▏         ↑ k Cursor up", "▏           / Search Search"]
+not_contains = ["[1] Repositories"]
+
+[expect.minimized]
+focused = ["[1] Repositories"]
+contains = ["▏         ↑ k Cursor up"]

@@ -8,16 +8,31 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Widget};
 
 use crate::component::Owner;
-use crate::keymap::{ActiveGroup, BindingId};
+use crate::keymap::{ActiveBinding, BindingId};
 use crate::theme::Theme;
 
-/// The footer for `groups`, from [`crate::keymap::active_bindings`]. Each shown group is one item: `" {key} "` in the
-/// key style, then `"{description} "`. Text past the right edge is cut off.
+/// The footer for `items`, from [`footer_items`]. Each item is `" {key} "` in the key style, then `"{description} "`.
+/// Text past the right edge is cut off.
 pub struct Footer<'a> {
-    /// The active bindings, innermost first.
-    pub groups: &'a [ActiveGroup],
+    /// The items, in order.
+    pub items: &'a [FooterItem],
     /// The theme.
     pub theme: &'a Theme,
+}
+
+/// One footer entry: the shown bindings of one action, as their first one.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FooterItem {
+    /// The chain link that declares the first binding, which handles a click on the item.
+    pub owner: Owner,
+    /// The first binding: what a click on the item runs.
+    pub id: BindingId,
+    /// The first binding's key, as displayed.
+    pub key: String,
+    /// The first binding's label.
+    pub description: &'static str,
+    /// False for a disabled item, drawn dim.
+    pub enabled: bool,
 }
 
 /// What a click on a footer item runs: the binding, at the chain link that declares it.
@@ -33,22 +48,31 @@ pub struct FooterHit {
     pub enabled: bool,
 }
 
-/// The `(key, description)` of each footer item, in order.
-pub fn footer_items(groups: &[ActiveGroup]) -> Vec<(String, String)> {
-    shown(groups)
-        .map(|group| (group.first_key().to_owned(), group.description.to_owned()))
-        .collect()
-}
-
-fn shown(groups: &[ActiveGroup]) -> impl Iterator<Item = &ActiveGroup> {
-    groups.iter().filter(|group| group.show)
+/// The footer items for the active keys from [`crate::keymap::active_bindings`], as Textual's `Footer.compose`
+/// picks them: the `show` bindings grouped by action across the whole chain, each item at its action's first key.
+pub fn footer_items(active: &[ActiveBinding]) -> Vec<FooterItem> {
+    let mut items: Vec<FooterItem> = Vec::new();
+    for binding in active.iter().filter(|binding| binding.def().show) {
+        let def = binding.def();
+        if items.iter().any(|item| item.id.def().action == def.action) {
+            continue;
+        }
+        items.push(FooterItem {
+            owner: binding.owner,
+            id: binding.id,
+            key: binding.key.clone(),
+            description: def.description,
+            enabled: binding.enabled,
+        });
+    }
+    items
 }
 
 /// One item's two spans.
-fn item_spans(group: &ActiveGroup) -> [Span<'static>; 2] {
+fn item_spans(item: &FooterItem) -> [Span<'static>; 2] {
     [
-        Span::raw(format!(" {} ", group.first_key())),
-        Span::raw(format!("{} ", group.description)),
+        Span::raw(format!(" {} ", item.key)),
+        Span::raw(format!("{} ", item.description)),
     ]
 }
 
@@ -60,17 +84,17 @@ impl Footer<'_> {
         if area.is_empty() {
             return hits;
         }
-        for group in shown(self.groups) {
+        for item in self.items {
             if x >= area.right() {
                 break;
             }
-            let width: usize = item_spans(group).iter().map(Span::width).sum();
+            let width: usize = item_spans(item).iter().map(Span::width).sum();
             let width = u16::try_from(width).unwrap_or(u16::MAX).min(area.right() - x);
             hits.push(FooterHit {
                 rect: Rect { x, width, ..area },
-                owner: group.owner,
-                id: group.id,
-                enabled: group.enabled,
+                owner: item.owner,
+                id: item.id,
+                enabled: item.enabled,
             });
             x += width;
         }
@@ -83,9 +107,9 @@ impl Widget for Footer<'_> {
         let theme = self.theme;
         let palette = theme.palette;
         let bar = palette.footer_background.over(theme.background());
-        let item = palette.footer_item_background.over(bar);
-        let key_bg = palette.footer_key_background.over(item);
-        let description_bg = palette.footer_description_background.over(item);
+        let item_bg = palette.footer_item_background.over(bar);
+        let key_bg = palette.footer_key_background.over(item_bg);
+        let description_bg = palette.footer_description_background.over(item_bg);
         let key_style = Style::new()
             .fg(theme.color(palette.footer_key_foreground, key_bg))
             .bg(theme.paint(key_bg))
@@ -93,15 +117,17 @@ impl Widget for Footer<'_> {
         let description_style = Style::new()
             .fg(theme.color(palette.footer_description_foreground, description_bg))
             .bg(theme.paint(description_bg));
-        let spans: Vec<Span<'static>> = shown(self.groups)
-            .flat_map(|group| {
+        let spans: Vec<Span<'static>> = self
+            .items
+            .iter()
+            .flat_map(|item| {
                 // Textual's `FooterKey.-disabled` is `text-style: dim`.
-                let dim = if group.enabled {
+                let dim = if item.enabled {
                     Style::new()
                 } else {
                     Style::new().add_modifier(Modifier::DIM)
                 };
-                let [key, description] = item_spans(group);
+                let [key, description] = item_spans(item);
                 [
                     key.style(key_style.patch(dim)),
                     description.style(description_style.patch(dim)),

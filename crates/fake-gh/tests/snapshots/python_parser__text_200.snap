@@ -1,0 +1,11 @@
+---
+source: crates/fake-gh/tests/python_parser.rs
+expression: escaped(&out)
+---
+HTTP/2.0 200 OK\n
+Content-Type: application/vnd.github.raw; charset=utf-8\r\n
+\r\n
+# parity-bot/lazy-demo\n
+Demo data for the parity harness.\n
+- one\n
+- two\n

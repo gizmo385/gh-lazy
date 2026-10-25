@@ -1,6 +1,10 @@
 //! Development tasks, run with `cargo xtask <task>`. Tasks (`parity`, `record-fixtures`, release helpers) are added
 //! by the issues that need them.
 
+mod fixtures;
+
+use std::process::ExitCode;
+
 use clap::{CommandFactory, Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -11,13 +15,26 @@ struct Cli {
 }
 
 #[derive(Debug, Subcommand)]
-enum Task {}
+enum Task {
+    /// Record a parity fixture set from the real gh and scrub it. Run by hand, never in CI.
+    RecordFixtures(fixtures::RecordArgs),
+    /// Check every committed parity fixture against the scrub rules, without network.
+    CheckFixtures(fixtures::CheckArgs),
+    /// Run parity scenarios against the Python and Rust apps and capture their screens.
+    Parity(xtask::parity::cli::ParityArgs),
+}
 
-fn main() -> std::io::Result<()> {
+fn main() -> ExitCode {
     let cli = Cli::parse();
     match cli.task {
         // With no task given, show what's available and exit successfully.
-        None => Cli::command().print_help(),
+        None => match Cli::command().print_help() {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(_) => ExitCode::FAILURE,
+        },
+        Some(Task::RecordFixtures(args)) => fixtures::record_fixtures(&args),
+        Some(Task::CheckFixtures(args)) => fixtures::check_fixtures(&args),
+        Some(Task::Parity(args)) => xtask::parity::cli::run(&args),
     }
 }
 

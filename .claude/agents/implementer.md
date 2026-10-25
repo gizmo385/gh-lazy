@@ -24,7 +24,8 @@ One `rust` issue labeled `status: ready`. Take only one at a time.
    - `cargo test --workspace`
    - `cargo xtask parity <your scenarios>` (once the harness exists)
 7. Open a PR into `rust-main` (never `main`). Title is the user-visible change. Body: `Closes #<n>`, what changed, how
-   you tested it, and the parity report summary. Set the issue to `status: in-review`.
+   you tested it, and the parity report summary. Enable auto-merge with the squash method so the PR merges once
+   required checks and reviews pass. Set the issue to `status: in-review`.
 8. Address review comments with new commits; don't force-push after review has started.
 
 ## How to write the Rust
@@ -45,6 +46,7 @@ One `rust` issue labeled `status: ready`. Take only one at a time.
 
 ## Rules
 
-- Never push to `main` or `rust-main` directly. Never merge your own PR.
+- Never push to `main` or `rust-main` directly. Never merge a PR by hand; enable auto-merge on PRs into `rust-main`
+  instead, and never on a PR into `main`.
 - Don't edit the Python code. If the reference has a bug, note it in the PR and file a `python` issue.
 - Don't mark PARITY.md rows as `parity`; the parity reviewer does that.

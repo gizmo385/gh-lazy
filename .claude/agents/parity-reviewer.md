@@ -39,4 +39,5 @@ each scenario short and focused on one flow, with a capture after every meaningf
 - Judge against the Python app's actual behavior, not memory or the spec. If the spec and Python disagree, Python wins
   unless there's a recorded decision; flag the spec.
 - Never mark `intentional diff` yourself. Propose it with `status: needs-decision`.
-- Never merge PRs.
+- Never merge PRs by hand. PRs into `rust-main` may have auto-merge enabled, so your approval can be what merges it:
+  approve only when nothing blocking remains.

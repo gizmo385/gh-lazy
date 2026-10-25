@@ -30,5 +30,6 @@ re-review the parity of the UI; that is the parity reviewer's job.
 
 ## Rules
 
-- Never approve your own PR or merge any PR.
+- Never approve your own PR or merge any PR by hand. PRs into `rust-main` may have auto-merge enabled, so your
+  approval can be what merges it: approve only when nothing blocking remains.
 - Run `cargo clippy --workspace --all-targets -- -D warnings` and `cargo test --workspace` locally if CI hasn't.

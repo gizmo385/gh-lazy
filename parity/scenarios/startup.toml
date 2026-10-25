@@ -1,7 +1,7 @@
 version = 1
 description = "Main screen right after launch, no current-directory repo"
 gate = false
-parity_rows = ["Main layout (status bar, selections pane 40%, details, command log, footer)"]
+parity_rows = ["main-layout.layout"]
 sizes = [[160, 48], [100, 30]]
 
 [env]

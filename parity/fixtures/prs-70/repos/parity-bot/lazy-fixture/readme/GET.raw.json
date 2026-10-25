@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/lazy-fixture/readme",
+    "accept": "raw"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/vnd.github.raw; charset=utf-8"
+    },
+    "body_text": "# lazy-fixture\n\nSeventy pull requests over three pages.\n"
+  },
+  "note": "hand-written: the README the repo overview shows"
+}

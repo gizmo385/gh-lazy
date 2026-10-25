@@ -267,6 +267,10 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   before `base`, for the `status-bar-unread-*` scenarios. Hand-written.
 - `repo-selected-empty/`: what selecting `parity-bot/dotfiles` loads (issues, workflows, runs, the README), all empty
   but the README. Listed before `base`, for `status-bar-current-repo`. Hand-written.
+- `prs-70/`: the repo `parity-bot/lazy-fixture`, added to base's `GET /user/repos` page, with 70 pull requests over
+  `GET /repos/parity-bot/lazy-fixture/issues` pages of 30 (`state=all`, as `list_issues` sends them: 30, 30, 10, then
+  an empty page 4), plus its README and empty workflows and runs. Listed before `base`, for the `table-lazy-load`
+  scenario. Hand-written.
 
 ## Recording fixtures
 

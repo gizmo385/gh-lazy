@@ -147,8 +147,8 @@ pub enum Issue {
     /// An `avatar_url` or `gravatar_id` that the scrubber replaces with its placeholder.
     Avatar,
     /// Data that describes the recorder's own access to a repo: a `permissions` object other than read-only, or a
-    /// `security_and_analysis` object (shown to admins only). When recording, the scrubber pins the first and drops
-    /// the second. `check-fixtures` doesn't flag either, so hand-written fixtures can model an owner.
+    /// key that GitHub only shows to push or admin viewers ([`VIEWER_ONLY_KEYS`]). When recording, the scrubber pins
+    /// the first and drops the second. `check-fixtures` doesn't flag either, so hand-written fixtures can model an owner.
     Viewer,
 }
 
@@ -171,7 +171,7 @@ impl fmt::Display for Issue {
             Issue::Email => write!(f, "email should be {PLACEHOLDER_EMAIL}"),
             Issue::Avatar => write!(f, "avatar should be the placeholder ({PLACEHOLDER_AVATAR} or \"\")"),
             Issue::Viewer => f.write_str(
-                "depends on who recorded: `permissions` should be read-only and `security_and_analysis` absent",
+                "depends on who recorded: `permissions` should be read-only and push/admin-only repo keys absent",
             ),
         }
     }
@@ -341,13 +341,15 @@ impl Rules {
                         issue: Issue::Private,
                     });
                 }
-                if pin_viewer && map.contains_key(VIEWER_ONLY_KEY) {
+                if pin_viewer {
+                    for key in VIEWER_ONLY_KEYS.iter().filter(|key| map.contains_key(**key)) {
+                        findings.push(Finding {
+                            location: Location::Json(format!("{pointer}/{key}")),
+                            issue: Issue::Viewer,
+                        });
+                    }
                     // `retain` keeps the order of the other keys; `remove` would swap the last key into its place.
-                    map.retain(|key, _| key != VIEWER_ONLY_KEY);
-                    findings.push(Finding {
-                        location: Location::Json(format!("{pointer}/{VIEWER_ONLY_KEY}")),
-                        issue: Issue::Viewer,
-                    });
+                    map.retain(|key, _| !VIEWER_ONLY_KEYS.contains(&key.as_str()));
                 }
                 for (key, item) in map.iter_mut() {
                     let len = pointer.len();
@@ -447,10 +449,25 @@ fn is_personal_email(candidate: &str) -> bool {
         || IMAGE_EXTENSIONS.iter().any(|ext| tld.eq_ignore_ascii_case(ext)))
 }
 
-/// A repo object's key that GitHub only returns to admins. The scrubber drops it.
-const VIEWER_ONLY_KEY: &str = "security_and_analysis";
+/// Repo object keys that GitHub only returns to viewers with push or admin access. The scrubber drops them, so a
+/// recording looks like what a signed-in user without push access gets, matching the pinned `permissions`.
+const VIEWER_ONLY_KEYS: &[&str] = &[
+    "security_and_analysis",
+    "temp_clone_token",
+    "allow_squash_merge",
+    "allow_merge_commit",
+    "allow_rebase_merge",
+    "allow_auto_merge",
+    "delete_branch_on_merge",
+    "allow_update_branch",
+    "use_squash_pr_title_as_default",
+    "squash_merge_commit_message",
+    "squash_merge_commit_title",
+    "merge_commit_message",
+    "merge_commit_title",
+];
 
-/// Pins a repo `permissions` object to what an anonymous reader of a public repo has: `pull` only. Returns whether
+/// Pins a repo `permissions` object to what a signed-in user without push access has: `pull` only. Returns whether
 /// anything changed. Key order is kept.
 fn pin_read_only_permissions(map: &mut serde_json::Map<String, Value>) -> bool {
     let mut changed = false;
@@ -590,6 +607,7 @@ mod tests {
             "permissions": {"admin": true, "maintain": true, "push": true, "triage": true, "pull": true},
             "security_and_analysis": {"secret_scanning": {"status": "disabled"}},
             "default_branch": "main",
+            "allow_auto_merge": true,
             "performed_via_github_app": {"permissions": {"issues": "write"}},
         });
         let mut got = body.clone();
@@ -614,6 +632,10 @@ mod tests {
             [
                 Finding {
                     location: Location::Json("/security_and_analysis".into()),
+                    issue: Issue::Viewer,
+                },
+                Finding {
+                    location: Location::Json("/allow_auto_merge".into()),
                     issue: Issue::Viewer,
                 },
                 Finding {

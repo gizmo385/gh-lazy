@@ -130,18 +130,6 @@
         "triage": false,
         "pull": true
       },
-      "temp_clone_token": "",
-      "allow_squash_merge": true,
-      "allow_merge_commit": false,
-      "allow_rebase_merge": false,
-      "allow_auto_merge": true,
-      "delete_branch_on_merge": true,
-      "allow_update_branch": false,
-      "use_squash_pr_title_as_default": true,
-      "squash_merge_commit_message": "PR_BODY",
-      "squash_merge_commit_title": "PR_TITLE",
-      "merge_commit_message": "PR_TITLE",
-      "merge_commit_title": "MERGE_MESSAGE",
       "network_count": 1,
       "subscribers_count": 2
     }

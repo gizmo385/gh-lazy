@@ -288,10 +288,12 @@ committed fixtures without writing anything (it exits 1 if any file differs). `-
 write would produce, so key order and formatting count, but it keeps the committed `note` (which holds the recording
 date), so a re-recording on another day isn't drift.
 
-Some recorded data depends on who records it: a repo object's `permissions` reflects the recorder's token, and admins
-also get `security_and_analysis`. The recorder pins every `permissions` object to read-only (`pull` only) and drops
-`security_and_analysis`, so a recording looks the same whoever makes it. `check-fixtures` doesn't flag either, since
-hand-written fixtures such as `/user/repos` model a user who owns their repos.
+Some recorded data depends on who records it: a repo object's `permissions` reflects the recorder's token, and
+viewers with push or admin access also get keys such as `temp_clone_token`, the merge settings and
+`security_and_analysis`. The recorder pins every `permissions` object to `pull` only and drops those keys (the list is
+`VIEWER_ONLY_KEYS` in `xtask/src/fixtures/scrub.rs`), so a recording looks like what a signed-in user without push
+access gets, whoever makes it. `check-fixtures` doesn't flag either, since hand-written fixtures such as `/user/repos`
+model a user who owns their repos.
 
 ### The recipe
 

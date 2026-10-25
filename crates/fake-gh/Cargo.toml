@@ -8,7 +8,24 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[lib]
+path = "src/lib.rs"
+
+# Not named `gh`: `target/debug/gh` would shadow the real gh for anyone with `target/debug` on `PATH`. The parity
+# harness copies this binary to `<tmp>/bin/gh` instead.
+[[bin]]
+name = "fake-gh"
+path = "src/main.rs"
+
 [dependencies]
+http = { workspace = true }
+serde = { workspace = true }
+# `preserve_order` keeps fixture bodies' key order when fake-gh re-serializes them.
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+insta = { workspace = true }
 
 [lints]
 workspace = true

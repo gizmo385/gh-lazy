@@ -8,7 +8,7 @@ expression: md
 | --- | --- | --- | --- | --- |
 | repo-select | yes | fail | skipped | 2 |
 | pr-list | no | rust-not-ready | rust-not-ready | n/a |
-| startup | yes | pass | pass | 0 |
+| startup | yes | pass | pass (flaky) | 0 |
 
 <details><summary>Mismatches (first 2 of 2)</summary>
 

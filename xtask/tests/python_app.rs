@@ -1,6 +1,6 @@
 //! End-to-end runs of `cargo xtask parity` against the Python app. They need uv and the repo's Python dependencies,
 //! so they're ignored by default; run them with `cargo test -p xtask --test python_app -- --ignored` after a
-//! `cargo build -p fake-gh` (CI wires them up in #70).
+//! `cargo build -p fake-gh` (the CI `parity` job does).
 
 use std::path::{Path, PathBuf};
 use std::process::Command;

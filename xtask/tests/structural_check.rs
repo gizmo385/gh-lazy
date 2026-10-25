@@ -1,6 +1,6 @@
 //! The structural check end to end against the Python app: a deliberately changed pane title fails `[expect]`. It
 //! needs uv and the repo's Python dependencies, so it's ignored by default; run it with
-//! `cargo build -p fake-gh && cargo test -p xtask --test structural_check -- --ignored` (CI wires it up in #70).
+//! `cargo build -p fake-gh && cargo test -p xtask --test structural_check -- --ignored` (the CI `parity` job does).
 
 use std::path::Path;
 use std::process::Command;

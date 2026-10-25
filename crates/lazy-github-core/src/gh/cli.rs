@@ -72,11 +72,16 @@ impl GhCli {
         if output.status.success() {
             return Ok(());
         }
-        let mut detail = String::from_utf8_lossy(&output.stderr).into_owned();
-        detail.push_str(&String::from_utf8_lossy(&output.stdout));
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let detail = [stderr.trim(), stdout.trim()]
+            .into_iter()
+            .filter(|part| !part.is_empty())
+            .collect::<Vec<_>>()
+            .join("\n");
         Err(GhError::NotAuthenticated {
             hostname: self.inner.hostname.clone(),
-            detail: detail.trim().to_owned(),
+            detail,
         })
     }
 
@@ -94,6 +99,27 @@ impl GhCli {
         })
     }
 
+    /// The `gh` command for `args`, with every stream piped (stdin only when `has_input`) and an environment that keeps
+    /// its output machine-readable.
+    fn command(&self, args: &[OsString], has_input: bool) -> Command {
+        let mut command = Command::new(&self.inner.program);
+        command
+            .args(args)
+            .env("GH_PROMPT_DISABLED", "1")
+            .env("GH_NO_UPDATE_NOTIFIER", "1")
+            // Inherited, these make gh colorize `-i` headers and pretty-print JSON even into a pipe, which breaks
+            // header parsing and decoding.
+            .env_remove("CLICOLOR_FORCE")
+            .env_remove("GH_FORCE_TTY")
+            .env("NO_COLOR", "1")
+            .env("GH_PAGER", "")
+            .stdin(if has_input { Stdio::piped() } else { Stdio::null() })
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .kill_on_drop(true);
+        command
+    }
+
     /// Spawns `gh` with every stream piped (stdin only when there is a body) and waits for it.
     ///
     /// Dropping the returned future kills the child.
@@ -107,14 +133,8 @@ impl GhCli {
         );
         let input = body.map(serde_json::to_vec).transpose()?;
 
-        let mut child = Command::new(&self.inner.program)
-            .args(args)
-            .env("GH_PROMPT_DISABLED", "1")
-            .env("GH_NO_UPDATE_NOTIFIER", "1")
-            .stdin(if input.is_some() { Stdio::piped() } else { Stdio::null() })
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .kill_on_drop(true)
+        let mut child = self
+            .command(args, input.is_some())
             .spawn()
             .map_err(|error| match error.kind() {
                 io::ErrorKind::NotFound => GhError::NotInstalled,
@@ -152,6 +172,24 @@ impl GhCli {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::OsStr;
+
+    #[test]
+    fn command_environment_keeps_output_plain() {
+        let gh = GhCli::default();
+        let command = gh.command(&["api".into(), "/user".into()], false);
+        let envs: Vec<(&OsStr, Option<&OsStr>)> = command.as_std().get_envs().collect();
+        let env = |name: &str| envs.iter().find(|(key, _)| *key == name).map(|(_, value)| *value);
+        assert_eq!(env("GH_PROMPT_DISABLED"), Some(Some(OsStr::new("1"))));
+        assert_eq!(env("GH_NO_UPDATE_NOTIFIER"), Some(Some(OsStr::new("1"))));
+        assert_eq!(env("NO_COLOR"), Some(Some(OsStr::new("1"))));
+        assert_eq!(env("GH_PAGER"), Some(Some(OsStr::new(""))));
+        // `None` means removed from the inherited environment.
+        assert_eq!(env("CLICOLOR_FORCE"), Some(None));
+        assert_eq!(env("GH_FORCE_TTY"), Some(None));
+        assert_eq!(command.as_std().get_program(), "gh");
+        assert_eq!(command.as_std().get_args().collect::<Vec<_>>(), ["api", "/user"]);
+    }
 
     #[tokio::test]
     async fn missing_program_is_not_installed() {

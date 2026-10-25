@@ -20,24 +20,25 @@ pub enum GhError {
         detail: String,
     },
     /// GitHub answered with an HTTP error status.
-    #[error("GitHub API request failed (HTTP {status}): {message}")]
+    #[error("GitHub API request failed (HTTP {status}){}", detail_suffix(message))]
     Http {
         /// The HTTP status code, 300 or above.
         status: u16,
-        /// The `message` field of the JSON error body, or `gh`'s error output.
+        /// The `message` field of the JSON error body, or `gh`'s error line; may be empty.
         message: String,
         /// The raw response body.
         body: Vec<u8>,
     },
     /// `gh` exited non-zero without an HTTP response (network down, bad flag).
     #[error(
-        "gh failed{}: {stderr}",
-        code.map(|c| format!(" with exit code {c}")).unwrap_or_default()
+        "gh failed{}{}",
+        code.map(|c| format!(" with exit code {c}")).unwrap_or_default(),
+        detail_suffix(stderr)
     )]
     Command {
         /// The exit code, or `None` if `gh` was killed by a signal.
         code: Option<i32>,
-        /// `gh`'s error output, trimmed.
+        /// `gh`'s full error output, trimmed. May span several lines; `Display` folds it onto one.
         stderr: String,
     },
     /// `gh api -i` output had no HTTP status line.
@@ -49,6 +50,16 @@ pub enum GhError {
     /// Spawning or talking to the `gh` process failed.
     #[error("failed to run gh: {0}")]
     Io(#[from] std::io::Error),
+}
+
+/// `": "` and `detail` folded onto one line (non-empty lines joined with `"; "`), or nothing if `detail` is blank.
+fn detail_suffix(detail: &str) -> String {
+    let lines: Vec<&str> = detail.lines().map(str::trim).filter(|line| !line.is_empty()).collect();
+    if lines.is_empty() {
+        String::new()
+    } else {
+        format!(": {}", lines.join("; "))
+    }
 }
 
 impl GhError {
@@ -73,6 +84,17 @@ mod tests {
 
     #[test]
     fn every_variant_displays_one_sentence() {
+        let network = crate::gh::interpret(
+            Some(1),
+            b"",
+            include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/tests/fixtures/gh/network_error.stderr"
+            )),
+            false,
+        )
+        .unwrap_err();
+        assert!(matches!(&network, GhError::Command { stderr, .. } if stderr.lines().count() == 2));
         let decode = serde_json::from_str::<u32>("\"x\"").unwrap_err();
         let cases = [
             (
@@ -102,11 +124,23 @@ mod tests {
                 "GitHub API request failed (HTTP 404): Not Found",
             ),
             (
+                network,
+                "gh failed with exit code 1: error connecting to api.github.com; check your internet connection or https://githubstatus.com",
+            ),
+            (
                 GhError::Command {
-                    code: Some(1),
-                    stderr: "error connecting to api.github.com".into(),
+                    code: Some(2),
+                    stderr: String::new(),
                 },
-                "gh failed with exit code 1: error connecting to api.github.com",
+                "gh failed with exit code 2",
+            ),
+            (
+                GhError::Http {
+                    status: 502,
+                    message: String::new(),
+                    body: Vec::new(),
+                },
+                "GitHub API request failed (HTTP 502)",
             ),
             (
                 GhError::Command {

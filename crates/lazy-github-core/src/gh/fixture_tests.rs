@@ -150,3 +150,30 @@ fn paginated_network_error() {
         Err(GhError::Command { code: Some(1), .. })
     ));
 }
+
+#[test]
+fn paginated_failure_on_page_two_keeps_only_the_error_body() {
+    let error = interpret(
+        Some(1),
+        fixture!("paginated_page2_fails.stdout"),
+        fixture!("paginated_page2_fails.stderr"),
+        true,
+    )
+    .unwrap_err();
+    let GhError::Http { status, message, body } = error else {
+        panic!("expected Http, got {error:?}");
+    };
+    assert_eq!(status, 500);
+    assert_eq!(message, "Server Error");
+    assert_eq!(body, br#"{"message":"Server Error","status":"500"}"#);
+}
+
+#[test]
+fn realistic_headers() {
+    let response = interpret(Some(0), fixture!("labels_http2.stdout"), b"", false).unwrap();
+    assert!(response.header("etag").is_some_and(|etag| etag.starts_with("W/\"")));
+    assert_eq!(
+        response.header("x-oauth-scopes"),
+        Some("gist, read:org, repo, workflow")
+    );
+}

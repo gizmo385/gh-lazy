@@ -1,16 +1,23 @@
 HTTP/2.0 204 No Content
 Access-Control-Allow-Origin: *
-Cache-Control: private, max-age=60, s-maxage=60
+Access-Control-Expose-Headers: ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset
 Content-Security-Policy: default-src 'none'
 Date: Sun, 25 Oct 2026 03:00:00 GMT
+Referrer-Policy: origin-when-cross-origin, strict-origin-when-cross-origin
 Server: github.com
-Vary: Accept, Authorization, Cookie, X-GitHub-OTP,Accept-Encoding, Accept, X-Requested-With
+Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
+Vary: Accept-Encoding, Accept, X-Requested-With
+X-Accepted-Oauth-Scopes: repo
+X-Content-Type-Options: nosniff
+X-Frame-Options: deny
 X-Github-Api-Version-Selected: 2022-11-28
 X-Github-Media-Type: github.v3; format=json
 X-Github-Request-Id: SCRUBBED
+X-Oauth-Scopes: gist, read:org, repo, workflow
 X-Ratelimit-Limit: 5000
 X-Ratelimit-Remaining: 4999
 X-Ratelimit-Reset: 1792900800
 X-Ratelimit-Resource: core
 X-Ratelimit-Used: 1
+X-Xss-Protection: 0
 

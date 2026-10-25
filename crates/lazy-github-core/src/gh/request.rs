@@ -71,6 +71,9 @@ pub struct GhRequest {
     /// The HTTP method.
     pub method: Method,
     /// The API path, such as `/user/repos`, without a query string.
+    ///
+    /// Passed to `gh` verbatim: callers must percent-encode any segment that can contain reserved characters (a
+    /// branch name with `#` or `?`, a file path with spaces). Only `query` is encoded here.
     pub path: String,
     /// Query parameters, URL-encoded into the path in insertion order.
     pub query: Vec<(String, String)>,

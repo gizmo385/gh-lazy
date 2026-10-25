@@ -146,6 +146,10 @@ pub enum Issue {
     Email,
     /// An `avatar_url` or `gravatar_id` that the scrubber replaces with its placeholder.
     Avatar,
+    /// Data that describes the recorder's own access to a repo: a `permissions` object other than read-only, or a
+    /// key that GitHub only shows to push or admin viewers ([`VIEWER_ONLY_KEYS`]). When recording, the scrubber pins
+    /// the first and drops the second. `check-fixtures` doesn't flag either, so hand-written fixtures can model an owner.
+    Viewer,
 }
 
 impl Issue {
@@ -166,6 +170,9 @@ impl fmt::Display for Issue {
             Issue::Header => write!(f, "header not in the allow-list ({})", ALLOWED_HEADERS.join(", ")),
             Issue::Email => write!(f, "email should be {PLACEHOLDER_EMAIL}"),
             Issue::Avatar => write!(f, "avatar should be the placeholder ({PLACEHOLDER_AVATAR} or \"\")"),
+            Issue::Viewer => f.write_str(
+                "depends on who recorded: `permissions` should be read-only and push/admin-only repo keys absent",
+            ),
         }
     }
 }
@@ -216,7 +223,7 @@ pub fn scrub(resp: RawResponse, entry: &RecipeEntry) -> Result<ScrubbedResponse,
                 .flatten()
             {
                 Some(mut value) => {
-                    rules.scrub_json(&mut value, &mut String::new(), &mut findings);
+                    rules.scrub_json(&mut value, &mut String::new(), &mut findings, true);
                     ScrubbedBody::Json(value)
                 }
                 None => ScrubbedBody::Text(rules.scrub_text(&text, &mut findings)),
@@ -305,8 +312,10 @@ impl Rules {
         kept
     }
 
-    /// Rewrites emails and avatars in place and records every hit. `pointer` is the location of `value`.
-    fn scrub_json(&self, value: &mut Value, pointer: &mut String, findings: &mut Vec<Finding>) {
+    /// Rewrites emails and avatars in place and records every hit. `pointer` is the location of `value`. With
+    /// `pin_viewer`, recorder-specific repo access is also pinned or dropped (see [`Issue::Viewer`]); that's for
+    /// recordings only, since hand-written fixtures may model a user who owns their repos.
+    fn scrub_json(&self, value: &mut Value, pointer: &mut String, findings: &mut Vec<Finding>, pin_viewer: bool) {
         match value {
             Value::String(s) => {
                 if let Some((secret, _)) = self.find_secret(s) {
@@ -321,7 +330,7 @@ impl Rules {
                     let len = pointer.len();
                     pointer.push('/');
                     pointer.push_str(&i.to_string());
-                    self.scrub_json(item, pointer, findings);
+                    self.scrub_json(item, pointer, findings, pin_viewer);
                     pointer.truncate(len);
                 }
             }
@@ -331,6 +340,16 @@ impl Rules {
                         location: Location::Json(pointer.clone()),
                         issue: Issue::Private,
                     });
+                }
+                if pin_viewer {
+                    for key in VIEWER_ONLY_KEYS.iter().filter(|key| map.contains_key(**key)) {
+                        findings.push(Finding {
+                            location: Location::Json(format!("{pointer}/{key}")),
+                            issue: Issue::Viewer,
+                        });
+                    }
+                    // `retain` keeps the order of the other keys; `remove` would swap the last key into its place.
+                    map.retain(|key, _| !VIEWER_ONLY_KEYS.contains(&key.as_str()));
                 }
                 for (key, item) in map.iter_mut() {
                     let len = pointer.len();
@@ -343,8 +362,8 @@ impl Rules {
                         });
                     }
                     // Secrets are looked for before any rewrite, so a token in an email field still aborts.
-                    self.scrub_json(item, pointer, findings);
-                    if let Some(issue) = replace_known_field(key, item) {
+                    self.scrub_json(item, pointer, findings, pin_viewer);
+                    if let Some(issue) = replace_known_field(key, item, pin_viewer) {
                         findings.push(Finding {
                             location: Location::Json(pointer.clone()),
                             issue,
@@ -402,7 +421,7 @@ impl Rules {
             .collect();
         self.filter_headers(headers, &mut findings);
         if let Some(body) = &fixture.response.body {
-            self.scrub_json(&mut body.clone(), &mut String::new(), &mut findings);
+            self.scrub_json(&mut body.clone(), &mut String::new(), &mut findings, false);
         }
         if let Some(text) = &fixture.response.body_text {
             self.scrub_text(text, &mut findings);
@@ -430,8 +449,45 @@ fn is_personal_email(candidate: &str) -> bool {
         || IMAGE_EXTENSIONS.iter().any(|ext| tld.eq_ignore_ascii_case(ext)))
 }
 
-/// Applies the field rules (emails and avatars) to `value` under `key`, returning the issue when it changed.
-fn replace_known_field(key: &str, value: &mut Value) -> Option<Issue> {
+/// Repo object keys that GitHub only returns to viewers with push or admin access. The scrubber drops them, so a
+/// recording looks like what a signed-in user without push access gets, matching the pinned `permissions`.
+const VIEWER_ONLY_KEYS: &[&str] = &[
+    "security_and_analysis",
+    "temp_clone_token",
+    "allow_squash_merge",
+    "allow_merge_commit",
+    "allow_rebase_merge",
+    "allow_auto_merge",
+    "delete_branch_on_merge",
+    "allow_update_branch",
+    "use_squash_pr_title_as_default",
+    "squash_merge_commit_message",
+    "squash_merge_commit_title",
+    "merge_commit_message",
+    "merge_commit_title",
+];
+
+/// Pins a repo `permissions` object to what a signed-in user without push access has: `pull` only. Returns whether
+/// anything changed. Key order is kept.
+fn pin_read_only_permissions(map: &mut serde_json::Map<String, Value>) -> bool {
+    let mut changed = false;
+    for (key, flag) in map.iter_mut() {
+        let want = Value::Bool(key == "pull");
+        if matches!(flag, Value::Bool(_)) && *flag != want {
+            *flag = want;
+            changed = true;
+        }
+    }
+    changed
+}
+
+/// Applies the field rules (emails, avatars and repo permissions) to `value` under `key`, returning the issue when
+/// it changed.
+fn replace_known_field(key: &str, value: &mut Value, pin_viewer: bool) -> Option<Issue> {
+    if pin_viewer && key == "permissions" {
+        let Value::Object(map) = value else { return None };
+        return pin_read_only_permissions(map).then_some(Issue::Viewer);
+    }
     let (issue, placeholder) = if EMAIL_KEYS.contains(&key) {
         (Issue::Email, PLACEHOLDER_EMAIL)
     } else if key == "avatar_url" {
@@ -542,6 +598,61 @@ mod tests {
         for secret in secrets {
             assert!(scrub(text_response(&secret), &entry()).is_err(), "{secret}");
         }
+    }
+
+    #[test]
+    fn recorder_specific_repo_access_is_pinned_and_dropped() {
+        let body = json!({
+            "name": "r",
+            "permissions": {"admin": true, "maintain": true, "push": true, "triage": true, "pull": true},
+            "security_and_analysis": {"secret_scanning": {"status": "disabled"}},
+            "default_branch": "main",
+            "allow_auto_merge": true,
+            "performed_via_github_app": {"permissions": {"issues": "write"}},
+        });
+        let mut got = body.clone();
+        let mut findings = Vec::new();
+        Rules::get().scrub_json(&mut got, &mut String::new(), &mut findings, true);
+        assert_eq!(
+            got,
+            json!({
+                "name": "r",
+                "permissions": {"admin": false, "maintain": false, "push": false, "triage": false, "pull": true},
+                "default_branch": "main",
+                "performed_via_github_app": {"permissions": {"issues": "write"}},
+            })
+        );
+        let keys: Vec<_> = got.as_object().unwrap().keys().collect();
+        assert_eq!(
+            keys,
+            ["name", "permissions", "default_branch", "performed_via_github_app"]
+        );
+        assert_eq!(
+            findings,
+            [
+                Finding {
+                    location: Location::Json("/security_and_analysis".into()),
+                    issue: Issue::Viewer,
+                },
+                Finding {
+                    location: Location::Json("/allow_auto_merge".into()),
+                    issue: Issue::Viewer,
+                },
+                Finding {
+                    location: Location::Json("/permissions".into()),
+                    issue: Issue::Viewer,
+                },
+            ]
+        );
+        assert!(!findings[0].issue.aborts());
+
+        let mut again = Vec::new();
+        Rules::get().scrub_json(&mut got.clone(), &mut String::new(), &mut again, true);
+        assert!(again.is_empty(), "{again:?}");
+        assert_eq!(
+            scrub(json_response(&body), &entry()).unwrap().body,
+            ScrubbedBody::Json(got)
+        );
     }
 
     #[test]

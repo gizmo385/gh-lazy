@@ -10,7 +10,7 @@ publish.workspace = true
 
 [features]
 # `github::FakeGithub`, for other crates' tests: enable it from their `[dev-dependencies]`.
-test-util = []
+test-util = ["tokio/time"]
 
 [dependencies]
 etcetera = { workspace = true }
@@ -28,7 +28,7 @@ tracing-subscriber = { workspace = true, features = ["fmt", "registry", "std"] }
 
 [dev-dependencies]
 rstest = { workspace = true }
-tokio = { workspace = true, features = ["rt"] }
+tokio = { workspace = true, features = ["rt", "time"] }
 
 [lints]
 workspace = true

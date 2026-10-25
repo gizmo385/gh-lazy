@@ -2,6 +2,7 @@
 
 use std::io;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::time::Duration;
 
 use serde::de::Error as _;
 
@@ -34,6 +35,7 @@ struct State {
     auth_error: Option<GhError>,
     user: Option<Result<User, GhError>>,
     repositories: Option<Result<Vec<Repository>, GhError>>,
+    latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
 
@@ -78,6 +80,14 @@ impl FakeGithub {
         self
     }
 
+    /// Every call is recorded at once but returns only after `latency`, on tokio's clock. With
+    /// `tokio::time::pause()` this keeps a request in flight, so a test can cancel it.
+    #[must_use]
+    pub fn with_latency(self, latency: Duration) -> Self {
+        self.lock().latency = Some(latency);
+        self
+    }
+
     /// Every call made so far, oldest first.
     pub fn calls(&self) -> Vec<GithubCall> {
         self.lock().calls.clone()
@@ -95,31 +105,49 @@ impl FakeGithub {
     }
 }
 
+impl FakeGithub {
+    /// Records `call`, computes its result from the canned state, then waits out the latency. The lock is released
+    /// before waiting, so the future stays `Send`.
+    async fn respond<T>(&self, call: GithubCall, result: impl FnOnce(&State) -> T) -> T {
+        let (result, latency) = {
+            let state = self.record(call);
+            (result(&state), state.latency)
+        };
+        if let Some(latency) = latency {
+            tokio::time::sleep(latency).await;
+        }
+        result
+    }
+}
+
 impl Github for FakeGithub {
     async fn check_auth(&self) -> Result<(), GhError> {
-        match &self.record(GithubCall::CheckAuth).auth_error {
+        self.respond(GithubCall::CheckAuth, |state| match &state.auth_error {
             Some(error) => Err(duplicate(error)),
             None => Ok(()),
-        }
+        })
+        .await
     }
 
     async fn current_user(&self) -> Result<User, GhError> {
-        match &self.record(GithubCall::CurrentUser).user {
+        self.respond(GithubCall::CurrentUser, |state| match &state.user {
             Some(Ok(user)) => Ok(user.clone()),
             Some(Err(error)) => Err(duplicate(error)),
             None => Err(GhError::Command {
                 code: None,
                 stderr: "FakeGithub has no current user; call with_user".to_owned(),
             }),
-        }
+        })
+        .await
     }
 
     async fn list_repositories(&self, query: RepoListQuery) -> Result<Vec<Repository>, GhError> {
-        match &self.record(GithubCall::ListRepositories(query)).repositories {
+        self.respond(GithubCall::ListRepositories(query), |state| match &state.repositories {
             Some(Ok(repositories)) => Ok(repositories.clone()),
             Some(Err(error)) => Err(duplicate(error)),
             None => Ok(Vec::new()),
-        }
+        })
+        .await
     }
 }
 

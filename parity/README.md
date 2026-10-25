@@ -962,8 +962,9 @@ on the scenario file in the PR:
 
 **Flipping `gate`.** A feature PR that makes a scenario pass sets `gate = true` in that scenario file in the same
 PR; its acceptance criteria say "scenario `<name>` with `gate = true`". The parity reviewer checks the flip, and
-moves the PARITY.md rows named in `parity_rows` to `parity` when it merges. From then on a regression in that
-scenario fails every PR. The gate isn't read from PARITY.md, so turning it on is atomic with the change that earns it.
+moves the rows whose ids are in `parity_rows` to `parity` in their `docs/rust-rewrite/parity/areas/<area>.md` files
+when it merges. From then on a regression in that scenario fails every PR. The gate isn't read from the parity matrix,
+so turning it on is atomic with the change that earns it.
 
 **The report.** The job summary shows `summary.md` and a link to the `parity-report-<os>` artifact (kept 14 days).
 Download it from the link (or the run page's **Artifacts** section), unzip it and open `index.html` in a browser; it

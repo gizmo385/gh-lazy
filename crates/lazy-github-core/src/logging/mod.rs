@@ -15,6 +15,8 @@ mod format;
 mod rotating;
 
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use tokio::sync::mpsc;
 use tracing::{Level, Subscriber};
@@ -25,7 +27,7 @@ use tracing_subscriber::layer::{Layer, SubscriberExt as _};
 use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::util::SubscriberInitExt as _;
 
-pub use command_log::{COMMAND_LOG_CAPACITY, CommandLogLayer, command_log_layer, dropped_command_log_lines};
+pub use command_log::{COMMAND_LOG_CAPACITY, CommandLogLayer, command_log_layer};
 pub use format::{LogClock, LogLine, system_clock};
 pub use rotating::RotatingFileWriter;
 
@@ -63,6 +65,14 @@ pub struct LoggingHandle {
     _file: Option<WorkerGuard>,
     /// Command-log lines, including those logged before anything reads them (up to [`COMMAND_LOG_CAPACITY`]).
     pub command_log: mpsc::Receiver<LogLine>,
+    dropped_command_log_lines: Arc<AtomicU64>,
+}
+
+impl LoggingHandle {
+    /// How many command-log lines were dropped because [`Self::command_log`] was full.
+    pub fn dropped_command_log_lines(&self) -> u64 {
+        self.dropped_command_log_lines.load(Ordering::Relaxed)
+    }
 }
 
 /// Installs the global subscriber: the log file and the command-log stream.
@@ -71,7 +81,7 @@ pub struct LoggingHandle {
 /// command log, as the Python app does. Call it before the TUI starts. Calling it again leaves the first subscriber
 /// in place.
 pub fn init(opts: LoggingOptions) -> LoggingHandle {
-    let (command_log, rx) = command_log_layer(opts.clock.clone());
+    let (command_log, rx, dropped) = command_log_layer(opts.clock.clone());
     let (filter, filter_error) = file_filter(std::env::var(LOG_FILTER_ENV).ok().as_deref());
 
     let (file_layer, guard) = match RotatingFileWriter::open(&opts.path, opts.max_bytes, opts.backup_count) {
@@ -94,12 +104,14 @@ pub fn init(opts: LoggingOptions) -> LoggingHandle {
         .with(command_log)
         .try_init();
     if let Some(e) = filter_error {
-        tracing::warn!("Ignoring {LOG_FILTER_ENV}: {e}");
+        // `debug!` keeps this out of the command log: users never see the variable.
+        tracing::debug!("Ignoring {LOG_FILTER_ENV}: {e}");
     }
 
     LoggingHandle {
         _file: guard,
         command_log: rx,
+        dropped_command_log_lines: dropped,
     }
 }
 

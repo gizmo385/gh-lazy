@@ -1,71 +1,68 @@
 //! The tracing layer behind the command-log pane: INFO and above from the app's own crates, as [`LogLine`]s.
 
+use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use tokio::sync::mpsc;
 use tracing::{Event, Level, Subscriber};
 use tracing_subscriber::filter::Targets;
 use tracing_subscriber::layer::{Context, Layer};
+use tracing_subscriber::registry::LookupSpan;
 
 use super::format::{LogClock, LogLine};
 
 /// How many lines the command-log channel holds before new lines are dropped.
 pub const COMMAND_LOG_CAPACITY: usize = 1024;
 
-static DROPPED_LINES: AtomicU64 = AtomicU64::new(0);
-
-/// How many command-log lines have been dropped because the channel was full, across the whole process.
-pub fn dropped_command_log_lines() -> u64 {
-    DROPPED_LINES.load(Ordering::Relaxed)
-}
-
-/// Turns each INFO-or-above event from a `lazy_github*` target into a [`LogLine`] and hands it to `sink`.
+/// Turns each event it sees into a [`LogLine`] and hands it to `sink`. [`command_log_layer`] limits it to INFO and
+/// above from `lazy_github*` targets.
 ///
 /// The line holds the message and fields but not error source chains; those go only to the log file.
 pub struct CommandLogLayer<F: Fn(LogLine) + Send + Sync + 'static> {
     sink: F,
     clock: LogClock,
-    filter: Targets,
 }
 
 impl<F: Fn(LogLine) + Send + Sync + 'static> CommandLogLayer<F> {
-    /// A layer that calls `sink` with each command-log line, timestamped by `clock`.
+    /// A layer that calls `sink` with each line, timestamped by `clock`.
     pub fn new(sink: F, clock: LogClock) -> Self {
-        Self {
-            sink,
-            clock,
-            // Target matching is by prefix, so this covers `lazy_github_core` and `lazy_github_tui` too.
-            filter: Targets::new().with_target("lazy_github", Level::INFO),
-        }
+        Self { sink, clock }
     }
 }
 
 impl<S: Subscriber, F: Fn(LogLine) + Send + Sync + 'static> Layer<S> for CommandLogLayer<F> {
     fn on_event(&self, event: &Event<'_>, _ctx: Context<'_, S>) {
-        let metadata = event.metadata();
-        // Filtered here rather than with a per-layer filter so the layer behaves the same on its own in tests.
-        if self.filter.would_enable(metadata.target(), metadata.level()) {
-            (self.sink)(LogLine::from_event(event, &self.clock, false));
-        }
+        (self.sink)(LogLine::from_event(event, &self.clock, false));
     }
 }
 
-/// A [`CommandLogLayer`] that sends its lines into a bounded channel, and the receiving end. When the channel is
-/// full the line is dropped and counted (see [`dropped_command_log_lines`]), so logging never blocks.
-pub fn command_log_layer(
+/// The command-log layer, the receiving end of its channel, and the count of lines dropped because the channel was
+/// full. Dropping instead of waiting means logging never blocks.
+///
+/// The layer only sees INFO and above from `lazy_github*` targets. That is a per-layer filter, so it neither hides
+/// events from other layers nor makes the subscriber build events the file layer would also discard.
+pub fn command_log_layer<S>(
     clock: LogClock,
 ) -> (
-    CommandLogLayer<impl Fn(LogLine) + Send + Sync + 'static>,
+    impl Layer<S> + Send + Sync + 'static,
     mpsc::Receiver<LogLine>,
-) {
+    Arc<AtomicU64>,
+)
+where
+    S: Subscriber + for<'a> LookupSpan<'a>,
+{
     let (tx, rx) = mpsc::channel(COMMAND_LOG_CAPACITY);
+    let dropped = Arc::new(AtomicU64::new(0));
+    let counter = Arc::clone(&dropped);
     let sink = move |line| {
         // A closed channel means nobody shows the command log any more; dropping the line is all there is to do.
         if let Err(mpsc::error::TrySendError::Full(_)) = tx.try_send(line) {
-            DROPPED_LINES.fetch_add(1, Ordering::Relaxed);
+            counter.fetch_add(1, Ordering::Relaxed);
         }
     };
-    (CommandLogLayer::new(sink, clock), rx)
+    // Target matching is by prefix, so this covers `lazy_github_core` and `lazy_github_tui` too.
+    let filter = Targets::new().with_target("lazy_github", Level::INFO);
+    (CommandLogLayer::new(sink, clock).with_filter(filter), rx, dropped)
 }
 
 #[cfg(test)]
@@ -81,7 +78,7 @@ mod tests {
 
     #[test]
     fn app_events_at_info_and_above_arrive_in_order() {
-        let (layer, mut rx) = command_log_layer(fixed_clock());
+        let (layer, mut rx, _) = command_log_layer(fixed_clock());
         tracing::subscriber::with_default(tracing_subscriber::registry().with(layer), || {
             tracing::info!(target: "lazy_github_tui", "Selected repo foo/bar");
             tracing::debug!(target: "lazy_github_tui", "not shown");
@@ -120,7 +117,7 @@ mod tests {
         #[error("outer")]
         struct Outer(#[source] std::io::Error);
 
-        let (layer, mut rx) = command_log_layer(fixed_clock());
+        let (layer, mut rx, _) = command_log_layer(fixed_clock());
         let err = Outer(std::io::Error::other("inner"));
         tracing::subscriber::with_default(tracing_subscriber::registry().with(layer), || {
             tracing::error!(
@@ -134,8 +131,7 @@ mod tests {
 
     #[test]
     fn a_full_channel_drops_lines_without_blocking() {
-        let (layer, mut rx) = command_log_layer(fixed_clock());
-        let before = dropped_command_log_lines();
+        let (layer, mut rx, dropped) = command_log_layer(fixed_clock());
         tracing::subscriber::with_default(tracing_subscriber::registry().with(layer), || {
             for n in 0..COMMAND_LOG_CAPACITY + 10 {
                 tracing::info!(target: "lazy_github_core", "line {n}");
@@ -147,7 +143,6 @@ mod tests {
             lines.last().unwrap().message,
             format!("line {}", COMMAND_LOG_CAPACITY - 1)
         );
-        // Other tests may drop lines concurrently, so this only checks a lower bound.
-        assert!(dropped_command_log_lines() - before >= 10);
+        assert_eq!(dropped.load(Ordering::Relaxed), 10);
     }
 }

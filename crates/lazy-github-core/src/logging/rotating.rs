@@ -15,6 +15,8 @@ use std::path::{Path, PathBuf};
 /// - Rollover shifts `<path>.N-1` to `<path>.N`, …, `<path>.1` to `<path>.2`, moves `<path>` to `<path>.1` and
 ///   reopens `<path>` empty. `<path>.1` is always the newest backup.
 /// - `max_bytes = 0` never rolls over. `backup_count = 0` reopens the same file at rollover, so it keeps growing.
+/// - A path that isn't a regular file, such as `/dev/null` or a FIFO, never rolls over (Python's bpo-45401 guard),
+///   so a device node is never renamed away.
 ///
 /// Each `write` call is treated as one record, which is how `tracing-subscriber`'s fmt layer writes events.
 #[derive(Debug)]
@@ -25,6 +27,8 @@ pub struct RotatingFileWriter {
     /// `None` only between closing the file for a rollover and reopening it, or when reopening failed.
     file: Option<File>,
     len: u64,
+    /// Whether the open file is a regular file, following symlinks. Only regular files roll over.
+    regular: bool,
 }
 
 impl RotatingFileWriter {
@@ -34,19 +38,20 @@ impl RotatingFileWriter {
         if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
             std::fs::create_dir_all(parent)?;
         }
-        let file = open_append(path)?;
-        let len = file.metadata()?.len();
-        Ok(Self {
+        let mut writer = Self {
             path: path.to_owned(),
             max_bytes,
             backup_count,
-            file: Some(file),
-            len,
-        })
+            file: None,
+            len: 0,
+            regular: false,
+        };
+        writer.reopen()?;
+        Ok(writer)
     }
 
     fn should_roll_over(&self, record_len: u64) -> bool {
-        self.max_bytes > 0 && self.len > 0 && self.len.saturating_add(record_len) >= self.max_bytes
+        self.regular && self.max_bytes > 0 && self.len > 0 && self.len.saturating_add(record_len) >= self.max_bytes
     }
 
     fn backup_path(&self, n: u32) -> PathBuf {
@@ -74,7 +79,9 @@ impl RotatingFileWriter {
 
     fn reopen(&mut self) -> io::Result<()> {
         let file = open_append(&self.path)?;
-        self.len = file.metadata()?.len();
+        let metadata = file.metadata()?;
+        self.len = metadata.len();
+        self.regular = metadata.is_file();
         self.file = Some(file);
         Ok(())
     }
@@ -227,6 +234,22 @@ mod tests {
         w.write_all(b"z").unwrap();
         assert_eq!(read(&tmp.path().join("log.1")), big);
         assert_eq!(read(&path), "z");
+    }
+
+    /// Points `log` in the temp dir at `/dev/null`, so the real `/dev` is only written to, never renamed.
+    #[cfg(unix)]
+    #[test]
+    fn a_device_never_rotates() {
+        let tmp = TempDir::new();
+        let path = tmp.path().join("log");
+        std::os::unix::fs::symlink("/dev/null", &path).unwrap();
+        let mut w = RotatingFileWriter::open(&path, 10, 2).unwrap();
+        for n in 0..5 {
+            w.write_all(&record(n)).unwrap();
+        }
+        assert!(!w.should_roll_over(11));
+        assert!(!tmp.path().join("log.1").exists());
+        assert!(std::fs::symlink_metadata(&path).unwrap().file_type().is_symlink());
     }
 
     #[test]

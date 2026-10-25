@@ -1,7 +1,7 @@
 version = 1
 description = "Focus keys 2-6 and the Tab ring: each section's border follows focus, 5 twice stays on Details, 6 without the log does nothing"
 gate = true
-parity_rows = ["Focus switching (1-6)"]
+parity_rows = ["main-layout.focus-switching", "main-layout.focus-ring", "main-layout.details-tabs-focused", "keybindings.main-pull-requests-focus", "keybindings.main-issues-focus", "keybindings.main-workflows-focus", "keybindings.main-details-focus", "keybindings.main-command-log-focus"]
 sizes = [[160, 48], [100, 30]]
 
 [env]

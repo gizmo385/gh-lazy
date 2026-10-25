@@ -1,7 +1,7 @@
 version = 1
 description = "M maximizes the focused widget over the whole screen, escape restores it, and 5 then M maximizes the details tabs"
 gate = true
-parity_rows = ["Maximize (M)"]
+parity_rows = ["main-layout.maximize", "keybindings.app-maximize-widget", "main-layout.details-tabs-focused"]
 sizes = [[160, 48], [100, 30]]
 
 [env]

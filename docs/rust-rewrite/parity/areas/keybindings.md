@@ -48,7 +48,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.diff-next-hunk` | `diff.next_hunk` | `J` | Next Hunk | diff viewer | M2 | not started | | Py bug B8. |
 | `keybindings.diff-previous-hunk` | `diff.previous_hunk` | `K` | Previous Hunk | diff viewer | M2 | not started | | Py bug B8. |
 | `keybindings.diff-filter-files` | `diff.filter_files` | `/` | Filter Files | diff viewer | M2 | not started | | |
-| `keybindings.notifications-open` | `notifications.open` | `ctrl+n` | Notifications | main screen | M4 | not started | | Shown in footer only when enabled at startup (Py bug B7). |
+| `keybindings.notifications-open` | `notifications.open` | `ctrl+n` | Notifications | main screen | M4 | not started | #75 | Shown in footer only when enabled at startup (Py bug B7). Rust (#75): hidden and inactive while `notifications.enabled` is false, re-read on config change; the key falls through. |
 | `keybindings.notifications-mark-all-as-read` | `notifications.mark_all_as_read` | `ctrl+r` | Mark all as read | Unread tab | M4 | not started | | |
 | `keybindings.notifications-mark-read` | `notifications.mark_read` | `R` | Mark as Read | Unread tab | M4 | not started | | |
 | `keybindings.notifications-view-read` | `notifications.view_read` | `r` | View Read Notifications | notifications modal | M4 | not started | | |

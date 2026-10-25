@@ -1,7 +1,7 @@
 version = 1
 description = "With appearance.show_command_log, 6 focuses the command log and its pane grows to 40%"
 gate = true
-parity_rows = ["Focus switching (1-6)"]
+parity_rows = ["main-layout.focus-switching", "keybindings.main-command-log-focus"]
 sizes = [[160, 48], [100, 30]]
 
 [env]

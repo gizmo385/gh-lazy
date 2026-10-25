@@ -1,7 +1,7 @@
 version = 1
 description = "A section hidden by config still takes focus with its key (Py bug B31): no border is focused, and Tab goes to the repos table"
 gate = true
-parity_rows = ["Focus switching (1-6)"]
+parity_rows = ["main-layout.focus-switching", "main-layout.focus-ring", "keybindings.main-pull-requests-focus"]
 sizes = [[160, 48], [100, 30]]
 
 [env]

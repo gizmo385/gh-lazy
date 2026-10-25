@@ -382,7 +382,7 @@ impl MainScreen {
         }
         let screen = theme.background();
         frame.render_widget(Clear, rect);
-        frame.render_widget(Block::new().style(Style::new().bg(screen.into())), rect);
+        frame.render_widget(Block::new().style(Style::new().bg(theme.paint(screen))), rect);
 
         self.hits.clear();
         match maximized {

@@ -20,7 +20,7 @@ impl Hatch {
         Self {
             style: Style::new()
                 .fg(theme.color(theme.palette.panel, under))
-                .bg(under.into()),
+                .bg(theme.paint(under)),
         }
     }
 }

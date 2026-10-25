@@ -27,7 +27,8 @@ favorites = [
 [[step]]
 wait = { text = "Repositories", timeout_ms = 15000 }
 
-# Python fetches every page before it fills the table, so the first favorite showing means all 60 rows are in.
+# Python fetches all its pages before it fills the table, so once the first favorite shows, the table is complete
+# (50 rows until #134 is fixed, then 60).
 [[step]]
 wait = { text = "mike-service", timeout_ms = 15000 }
 

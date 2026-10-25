@@ -231,7 +231,10 @@ impl<T: TableItem> SearchableTable<T> {
     fn remove_row(&mut self, key: &T::Key) {
         if let Some(index) = self.rows.iter().position(|row| &row.key == key) {
             self.rows.remove(index);
-            self.pos = self.body().clamped(self.pos);
+            // Only a cursor past the end moves, and only then is the body height (and so the column widths) needed.
+            if self.pos.cursor >= self.rows.len() {
+                self.pos = self.body().clamped(self.pos);
+            }
         }
     }
 

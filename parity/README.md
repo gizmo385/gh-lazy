@@ -250,7 +250,7 @@ committed set (`crates/fake-gh/tests/lint_fixtures.rs`).
 User-scoped endpoints stay hand-written so recordings never leak a real account's private data.
 
 Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` repo by `cargo xtask record-fixtures
---set base`, from `parity/fixtures/base/recipe.toml` (the first recording is still to be committed; see #68). See
+--set base`, from `parity/fixtures/base/recipe.toml` (the first recording is still to be committed; see #113). See
 [Recording fixtures](#recording-fixtures).
 
 ## Overlays
@@ -282,8 +282,13 @@ fixture. It's a developer tool, run by hand or by an agent. It never runs in CI,
 4. Commit the recipe and the fixtures together.
 
 Use `--dry-run` to print the planned requests without running `gh`, and `--check` to record and compare with the
-committed fixtures without writing anything (it exits 1 if any file differs). `--check` ignores the `note`, which
-holds the recording date, so it reports only upstream drift.
+committed fixtures without writing anything (it exits 1 if any file differs). `--check` compares the exact bytes a
+write would produce, so key order and formatting count, but it keeps the committed `note` (which holds the recording
+date), so a re-recording on another day isn't drift.
+
+Some recorded data depends on who records it. For example, the repo object's `permissions` (and, for admins,
+`security_and_analysis`) reflects the recorder's token. A re-recording from a differently scoped token shows up as
+drift in `--check`. Review such diffs, and don't commit them as if they were upstream changes.
 
 ### The recipe
 
@@ -322,6 +327,9 @@ is reported as refused and not added to the recipe.
 - Only `GET`. Write fixtures (merge, create issue, comment) are always hand-written.
 - Allowed paths: `/repos/<owner>/<name>` and anything under it for repos in `allowed_repos`; `/users/<login>` and
   `/users/<login>/repos` for logins in `allowed_users`; `/emojis`; `/rate_limit`.
+- Admin-only repo sub-paths are refused even under an allowed repo, because the recorder's token can read them but
+  the public can't: `hooks`, `keys`, `invitations`, `collaborators`, `traffic`, `actions/secrets`,
+  `actions/variables`, and `environments/<name>/secrets` and `environments/<name>/variables`.
 - Everything else is refused. `/user*`, `/notifications*` and `/orgs/*` read the signed-in user's private scope, so
   they stay hand-written in `base` under the fictional login `parity-bot`.
 
@@ -342,7 +350,9 @@ wrong.
   - Everything else is kept, including timestamps (the app only shows absolute dates), `node_id`s, and other
     people's public logins and comment text.
 - **Text bodies** (diffs, raw READMEs, logs): secret patterns abort. Emails become `user@example.com`, except
-  addresses at `example.com` and `users.noreply.github.com`. The text is otherwise kept byte for byte.
+  addresses at `example.com` and `users.noreply.github.com`, SSH remotes (`git@github.com:o/r`), and image names
+  whose "TLD" is an image extension (`logo@2x.png`; png, jpg, jpeg, gif, svg, webp). The text is otherwise kept byte
+  for byte.
 - **Binary bodies** (`binary = true` only) are stored without scanning. A body that isn't UTF-8 from an entry not
   marked binary aborts.
 
@@ -355,7 +365,8 @@ longer text and all binary bodies go in a `<name>.body.<ext>` sibling named by `
 
 An existing fixture with the same key is overwritten. A hand-written one with the same key (and no `body` or `when`
 matcher) under another name is renamed to the canonical name. Hand-written fixtures with no recipe entry are left
-alone. After writing, the run checks the set with the scrub check and `fake-gh lint`, and prints
+alone. If any file in the set fails to load, the run stops before sending a request, so it never writes over a file
+it couldn't read. After writing, the run checks the set with the scrub check and `fake-gh lint`, and prints
 `recorded N, refused M, write-by-hand K`.
 
 ### `cargo xtask check-fixtures`

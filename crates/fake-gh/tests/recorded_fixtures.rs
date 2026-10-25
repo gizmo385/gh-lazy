@@ -5,7 +5,7 @@ mod common;
 use common::{TempDir, gh, install_gh, repo_root};
 
 // The recording needs an authenticated real gh, which the environment that built the recorder didn't have. Remove
-// the `ignore` once `parity/fixtures/base/repos/gizmo385/gh-lazy/` is recorded and committed.
+// the `ignore` once `parity/fixtures/base/repos/gizmo385/gh-lazy/` is recorded and committed (#113).
 #[test]
 #[ignore = "needs the recorded base fixtures; run `cargo xtask record-fixtures --set base` with an authenticated gh"]
 fn recorded_issues_page_replays() {

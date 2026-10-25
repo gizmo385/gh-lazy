@@ -370,8 +370,7 @@ impl Rules {
         let mut out = String::with_capacity(text.len());
         let mut last = 0;
         for m in self.email.find_iter(text) {
-            let domain = m.as_str().rsplit_once('@').map_or("", |(_, d)| d);
-            if SAFE_EMAIL_DOMAINS.iter().any(|safe| domain.eq_ignore_ascii_case(safe)) {
+            if !is_personal_email(m.as_str()) {
                 continue;
             }
             findings.push(Finding {
@@ -413,6 +412,22 @@ impl Rules {
         }
         findings
     }
+}
+
+/// Image extensions that the email pattern mistakes for a TLD, as in `logo@2x.png`.
+const IMAGE_EXTENSIONS: [&str; 6] = ["png", "jpg", "jpeg", "gif", "svg", "webp"];
+
+/// Whether a match of the text email pattern should be replaced. Safe domains, SSH remotes (`git@github.com:o/r`)
+/// and retina image names (`logo@2x.png`) are kept. Everything else is treated as an address: a false positive costs
+/// a cosmetic diff, a false negative leaks one.
+fn is_personal_email(candidate: &str) -> bool {
+    let Some((local, domain)) = candidate.rsplit_once('@') else {
+        return false;
+    };
+    let tld = domain.rsplit_once('.').map_or("", |(_, tld)| tld);
+    !(SAFE_EMAIL_DOMAINS.iter().any(|safe| domain.eq_ignore_ascii_case(safe))
+        || local == "git"
+        || IMAGE_EXTENSIONS.iter().any(|ext| tld.eq_ignore_ascii_case(ext)))
 }
 
 /// Applies the field rules (emails and avatars) to `value` under `key`, returning the issue when it changed.
@@ -569,6 +584,19 @@ mod tests {
                 "From: Jane <user@example.com>\n+ cc bot@users.noreply.github.com, x@example.com\n".into()
             )
         );
+    }
+
+    #[test]
+    fn ssh_remotes_and_retina_images_are_not_emails() {
+        let readme =
+            "clone git@github.com:gizmo385/gh-lazy.git\n![logo](logo@2x.png) ![x](a@3x.JPEG) b@c.svg\nme@corp.test\n";
+        let out = scrub(text_response(readme), &entry()).unwrap();
+        assert_eq!(
+            out.body,
+            ScrubbedBody::Text(readme.replace("me@corp.test", PLACEHOLDER_EMAIL))
+        );
+        assert!(is_personal_email("gitty@github.com"));
+        assert!(is_personal_email("jane@png.io"));
     }
 
     #[test]

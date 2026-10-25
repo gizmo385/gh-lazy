@@ -162,6 +162,8 @@ pub enum RecordError {
     Refused(Vec<String>),
     #[error("{0}")]
     Guard(String),
+    #[error("fix or remove these fixtures before recording over the set:\n{}", indent(.0))]
+    Unloadable(Vec<String>),
     #[error("recording stopped and nothing was written:\n{}", indent(.0))]
     Requests(Vec<String>),
     #[error("{}: {source}", path.display())]
@@ -269,14 +271,21 @@ pub fn run(opts: &Options<'_>) -> Result<Outcome, RecordError> {
         return Ok(outcome);
     }
 
-    guard_gh(opts.gh)?;
-    let responses = record_all(opts.gh, &outcome.requests)?;
-
-    let (existing, _) = if opts.set_dir.is_dir() {
+    // A file that doesn't load isn't known to the planner, which could then write over it under the same name.
+    let (existing, load_errors) = if opts.set_dir.is_dir() {
         scan_set(&opts.set_dir, 0)
     } else {
         Default::default()
     };
+    if !load_errors.is_empty() {
+        return Err(RecordError::Unloadable(
+            load_errors.iter().map(ToString::to_string).collect(),
+        ));
+    }
+
+    guard_gh(opts.gh)?;
+    let responses = record_all(opts.gh, &outcome.requests)?;
+
     let plan = plan_files(&opts.set_dir, &outcome.requests, responses, &existing, &opts.today);
 
     match opts.mode {
@@ -526,21 +535,28 @@ fn diff_planned(set_dir: &Path, planned: &PlannedFile) -> FileChange {
     }
 }
 
+/// Byte comparison of what a write would produce, with the committed `note` kept: key order and formatting count.
 fn same_content(set_dir: &Path, abs: &Path, planned: &PlannedFile) -> bool {
-    let Some(mut committed) = std::fs::read_to_string(abs)
-        .ok()
-        .and_then(|text| serde_json::from_str::<Fixture>(&text).ok())
-    else {
+    let Ok(text) = std::fs::read_to_string(abs) else {
         return false;
     };
-    let mut fresh = planned.fixture.clone();
-    committed.note = None;
-    fresh.note = None;
+    let Ok(committed) = serde_json::from_str::<Fixture>(&text) else {
+        return false;
+    };
+    let fresh = PlannedFile {
+        rel: PathBuf::new(),
+        fixture: Fixture {
+            note: committed.note,
+            ..planned.fixture.clone()
+        },
+        sibling: None,
+        replaces: Vec::new(),
+    };
     let sibling_same = planned
         .sibling
         .as_ref()
         .is_none_or(|(rel, bytes)| std::fs::read(set_dir.join(rel)).is_ok_and(|b| b == *bytes));
-    committed == fresh && sibling_same && planned.replaces.is_empty()
+    fresh.json() == text && sibling_same && planned.replaces.is_empty()
 }
 
 fn write_plan(set_dir: &Path, plan: &[PlannedFile]) -> Result<(), RecordError> {
@@ -929,6 +945,53 @@ accept = "raw"
             std::fs::read_to_string(s.set.join("repos/o/r/GET.json"))
                 .unwrap()
                 .contains("\"owner\"")
+        );
+    }
+
+    #[test]
+    fn check_reports_reordered_keys_and_other_formatting_as_changed() {
+        let s = setup();
+        s.run(&stub(), Mode::Write, &[]).unwrap();
+        let path = s.set.join("repos/o/r/GET.json");
+        let committed = std::fs::read_to_string(&path).unwrap();
+        let value: Value = serde_json::from_str(&committed).unwrap();
+
+        let mut reordered = value.clone();
+        let body = reordered["response"]["body"].as_object_mut().unwrap();
+        let owner = body.shift_remove("owner").unwrap();
+        body.insert("owner".into(), owner.clone());
+        let full_name = body.shift_remove("full_name").unwrap();
+        body.insert("full_name".into(), full_name);
+        let variants = [
+            (
+                "reordered keys",
+                serde_json::to_string_pretty(&reordered).unwrap() + "\n",
+            ),
+            ("compact", serde_json::to_string(&value).unwrap()),
+            ("no trailing newline", committed.trim_end().to_owned()),
+            ("4-space indent", committed.replace("\n  ", "\n    ")),
+        ];
+        for (what, text) in variants {
+            assert_ne!(text, committed, "{what}");
+            std::fs::write(&path, &text).unwrap();
+            let outcome = s.run(&stub(), Mode::Check, &[]).unwrap();
+            assert_eq!(outcome.files[0].kind, ChangeKind::Changed, "{what}");
+            assert_eq!(outcome.files[1].kind, ChangeKind::Unchanged, "{what}");
+        }
+    }
+
+    #[test]
+    fn refuses_to_record_over_a_fixture_that_does_not_load() {
+        let s = setup();
+        write(&s.set, "repos/o/r/GET.json", "{ not json");
+        let gh = stub();
+        let err = s.run(&gh, Mode::Write, &[]).unwrap_err().to_string();
+        assert!(err.contains("fix or remove these fixtures"), "{err}");
+        assert!(err.contains("GET.json"), "{err}");
+        assert!(gh.calls.lock().unwrap().is_empty());
+        assert_eq!(
+            std::fs::read_to_string(s.set.join("repos/o/r/GET.json")).unwrap(),
+            "{ not json"
         );
     }
 

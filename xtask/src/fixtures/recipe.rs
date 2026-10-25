@@ -127,6 +127,10 @@ impl Recipe {
         let user_allowed = |login: &str| self.allowed_users.iter().any(|u| u.eq_ignore_ascii_case(login));
         match segments.as_slice() {
             ["emojis" | "rate_limit"] => Ok(()),
+            ["repos", _, _, rest @ ..] if is_admin_only(rest) => Err(format!(
+                "{} is admin-only repo data (the recorder's token can read it, the public can't); {BY_HAND}",
+                key.path
+            )),
             ["repos", owner, name, ..] if repo_allowed(owner, name) => Ok(()),
             ["users", login] | ["users", login, "repos"] if user_allowed(login) => Ok(()),
             ["user" | "notifications" | "orgs", ..] => Err(format!(
@@ -144,6 +148,17 @@ impl Recipe {
             )),
         }
     }
+}
+
+/// Repo sub-paths that only admins can read, even on a public repo: webhooks (whose URLs can carry tokens), deploy
+/// keys, invitations, collaborators, Actions secrets and variables, environment secrets and traffic.
+fn is_admin_only(rest: &[&str]) -> bool {
+    matches!(
+        rest,
+        ["hooks" | "keys" | "invitations" | "collaborators" | "traffic", ..]
+            | ["actions", "secrets" | "variables", ..]
+            | ["environments", _, "secrets" | "variables", ..]
+    )
 }
 
 /// A miss from a fake-gh request log.
@@ -282,6 +297,34 @@ mod tests {
         assert!(refused("GET", "/search/issues").contains("outside the recording scope"));
         assert!(refused("GET", "/repos/gizmo385/gh-lazy/../../user").contains("relative segments"));
         assert!(refused("PUT", "/repos/gizmo385/gh-lazy/pulls/1/merge").contains("only GET"));
+    }
+
+    #[test]
+    fn scope_refuses_admin_only_repo_paths() {
+        let r = recipe();
+        for path in [
+            "/repos/gizmo385/gh-lazy/hooks",
+            "/repos/gizmo385/gh-lazy/hooks/1/config",
+            "/repos/gizmo385/gh-lazy/keys",
+            "/repos/gizmo385/gh-lazy/invitations",
+            "/repos/gizmo385/gh-lazy/collaborators",
+            "/repos/gizmo385/gh-lazy/collaborators/someone/permission",
+            "/repos/gizmo385/gh-lazy/actions/secrets",
+            "/repos/gizmo385/gh-lazy/actions/secrets/public-key",
+            "/repos/gizmo385/gh-lazy/actions/variables",
+            "/repos/gizmo385/gh-lazy/environments/prod/secrets",
+            "/repos/gizmo385/gh-lazy/traffic/views",
+        ] {
+            let err = r.check_scope(&key("GET", path)).unwrap_err();
+            assert!(err.contains("admin-only"), "{path}: {err}");
+        }
+        // Neighbours stay allowed.
+        for path in [
+            "/repos/gizmo385/gh-lazy/actions/runs",
+            "/repos/gizmo385/gh-lazy/environments",
+        ] {
+            assert_eq!(r.check_scope(&key("GET", path)), Ok(()), "{path}");
+        }
     }
 
     #[test]

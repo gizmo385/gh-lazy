@@ -123,10 +123,10 @@ fn a_run_without_a_terminal_logs_and_stops_before_the_tui() {
     let home = TempHome::new("no-tty");
     let output = home.run(&[]);
     assert_eq!(output.status.code(), Some(1));
-    assert!(
-        text(&output.stderr).contains("stdout is not one"),
-        "{}",
-        text(&output.stderr)
+    // One line for the user, however the report would render.
+    assert_eq!(
+        text(&output.stderr),
+        "Error: LazyGithub needs a terminal, but stdout is not one\n"
     );
     assert_eq!(text(&output.stdout), "");
     let log = std::fs::read_to_string(home.config_dir().join("lazy_github.log")).unwrap();

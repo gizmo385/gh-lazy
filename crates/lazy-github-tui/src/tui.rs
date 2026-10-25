@@ -4,6 +4,7 @@ use std::io::{self, IsTerminal as _, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
 
+use color_eyre::eyre::bail;
 use crossterm::cursor::{Hide, Show};
 use crossterm::event::{
     DisableBracketedPaste, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableFocusChange,
@@ -17,7 +18,7 @@ use lazy_github_core::config::ConfigPaths;
 use lazy_github_core::github::Github;
 use lazy_github_core::logging::LogLine;
 use ratatui::Terminal;
-use ratatui::backend::CrosstermBackend;
+use ratatui::backend::{Backend, CrosstermBackend};
 use tokio::sync::mpsc;
 
 use crate::app::App;
@@ -40,9 +41,17 @@ pub struct TerminalGuard<W: Write> {
 impl<W: Write> TerminalGuard<W> {
     /// Writes the enter sequence: alternate screen, hidden cursor, mouse capture, bracketed paste, focus-change
     /// reporting and, with `kitty`, the kitty keyboard flag `DISAMBIGUATE_ESCAPE_CODES`.
-    pub fn enter(mut out: W, kitty: bool) -> io::Result<Self> {
-        execute!(
+    ///
+    /// The guard exists before the first write, so if a write fails partway, dropping it on the `?` restores
+    /// whatever was entered.
+    pub fn enter(out: W, kitty: bool) -> io::Result<Self> {
+        let mut guard = Self {
             out,
+            kitty_pushed: false,
+            restored: Arc::new(AtomicBool::new(false)),
+        };
+        execute!(
+            guard.out,
             EnterAlternateScreen,
             Hide,
             EnableMouseCapture,
@@ -51,15 +60,12 @@ impl<W: Write> TerminalGuard<W> {
         )?;
         if kitty {
             execute!(
-                out,
+                guard.out,
                 PushKeyboardEnhancementFlags(KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES)
             )?;
+            guard.kitty_pushed = true;
         }
-        Ok(Self {
-            out,
-            kitty_pushed: kitty,
-            restored: Arc::new(AtomicBool::new(false)),
-        })
+        Ok(guard)
     }
 
     /// Writes the exit sequence, the enter sequence undone in reverse. Later calls, and the restore closure, write
@@ -194,16 +200,19 @@ impl Signals {
 ///
 /// `log_rx` is the command-log stream from `LoggingHandle`. Requests run against `gh` and config saves go to
 /// `paths`. Must be called inside a multi-threaded tokio runtime.
+///
+/// Returns an error when the terminal can't be set up or read, and when any thread panics. The panic hook restores
+/// the terminal at once, and the loop then stops instead of drawing into the restored screen.
 pub async fn run<G: Github>(
     mut app: App,
     gh: G,
-    mut log_rx: mpsc::Receiver<LogLine>,
+    log_rx: mpsc::Receiver<LogLine>,
     paths: ConfigPaths,
 ) -> color_eyre::Result<()> {
     if !io::stdout().is_terminal() {
-        color_eyre::eyre::bail!("LazyGithub needs a terminal, but stdout is not one");
+        bail!("LazyGithub needs a terminal, but stdout is not one");
     }
-    let mut signals = Signals::new()?;
+    let signals = Signals::new()?;
     // Pushing the kitty flags is what makes `shift+enter` and `ctrl+m` distinguishable (#73).
     let kitty = terminal::supports_keyboard_enhancement().unwrap_or(false);
 
@@ -211,25 +220,29 @@ pub async fn run<G: Github>(
     let raw_mode = RawMode::enable()?;
     let mut guard = TerminalGuard::enter(StdoutWriter, kitty)?;
     let restore = guard.restore_fn();
+    let (panic_tx, panics) = mpsc::unbounded_channel();
     install_panic_hook(move || {
         restore();
         let _ = terminal::disable_raw_mode();
+        // Tokio catches panics in spawned tasks, so without this the loop would carry on.
+        let _ = panic_tx.send(());
     });
     let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
     terminal.clear()?;
 
     let (tx, mut rx) = mpsc::unbounded_channel();
     let mut runtime = Runtime::new(gh, tx, paths);
-    let result = event_loop(
-        &mut app,
-        &mut runtime,
-        &mut terminal,
-        &mut rx,
-        &mut log_rx,
-        &mut signals,
-    )
-    .await;
+    let mut inputs = Inputs {
+        term: TerminalEvents::spawn(),
+        log: log_rx,
+        log_open: true,
+        panics,
+        signals: Some(signals),
+    };
+    runtime.execute_all(app.init());
+    let result = event_loop(&mut app, &mut runtime, &mut terminal, &mut rx, &mut inputs).await;
 
+    drop(inputs);
     drop(terminal);
     let restored = guard.restore();
     drop(raw_mode);
@@ -240,36 +253,46 @@ pub async fn run<G: Github>(
     Ok(())
 }
 
-async fn event_loop<G: Github>(
+/// Everything the loop waits on besides the runtime's events.
+struct Inputs {
+    term: TerminalEvents,
+    log: mpsc::Receiver<LogLine>,
+    log_open: bool,
+    /// One message per panic on any thread, from the panic hook.
+    panics: mpsc::UnboundedReceiver<()>,
+    signals: Option<Signals>,
+}
+
+async fn event_loop<G: Github, B: Backend>(
     app: &mut App,
     runtime: &mut Runtime<G>,
-    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+    terminal: &mut Terminal<B>,
     rx: &mut mpsc::UnboundedReceiver<Event>,
-    log_rx: &mut mpsc::Receiver<LogLine>,
-    signals: &mut Signals,
-) -> color_eyre::Result<()> {
-    let mut term = terminal_events();
-    let mut log_open = true;
-    runtime.execute_all(app.init());
+    inputs: &mut Inputs,
+) -> color_eyre::Result<()>
+where
+    B::Error: Send + Sync + 'static,
+{
     while !app.should_quit() {
         terminal.draw(|frame| app.render(frame))?;
         let deadline = app.next_deadline();
         let event = tokio::select! {
             biased;
-            event = term.rx.recv() => match event {
+            Some(()) = inputs.panics.recv() => bail!("a background task panicked"),
+            event = inputs.term.rx.recv() => match event {
                 Some(event) => Event::from(event?),
-                None => break,
+                None => bail!("the terminal event reader stopped"),
             },
             Some(event) = rx.recv() => event,
-            line = log_rx.recv(), if log_open => {
+            line = inputs.log.recv(), if inputs.log_open => {
                 let Some(line) = line else {
-                    log_open = false;
+                    inputs.log_open = false;
                     continue;
                 };
                 Event::CommandLog(line)
             }
             () = sleep_until(deadline), if deadline.is_some() => Event::Deadline,
-            signal = signals.recv() => Event::Signal(signal),
+            signal = recv_signal(inputs.signals.as_mut()) => Event::Signal(signal),
         };
         runtime.execute_all(app.handle_event(event));
 
@@ -280,7 +303,7 @@ async fn event_loop<G: Github>(
             }
             let event = if let Ok(event) = rx.try_recv() {
                 event
-            } else if let Ok(event) = term.rx.try_recv() {
+            } else if let Ok(event) = inputs.term.rx.try_recv() {
                 Event::from(event?)
             } else {
                 break;
@@ -291,6 +314,13 @@ async fn event_loop<G: Github>(
     Ok(())
 }
 
+async fn recv_signal(signals: Option<&mut Signals>) -> Signal {
+    match signals {
+        Some(signals) => signals.recv().await,
+        None => std::future::pending().await,
+    }
+}
+
 /// Terminal events, read by a task of their own.
 ///
 /// `EventStream` keeps the waker from the first poll that found nothing, so polling it from a `select!` that drops
@@ -298,27 +328,31 @@ async fn event_loop<G: Github>(
 /// makes queued events available to `try_recv` for coalescing.
 struct TerminalEvents {
     rx: mpsc::UnboundedReceiver<io::Result<crossterm::event::Event>>,
-    task: tokio::task::JoinHandle<()>,
+    task: Option<tokio::task::JoinHandle<()>>,
+}
+
+impl TerminalEvents {
+    fn spawn() -> Self {
+        let (tx, rx) = mpsc::unbounded_channel();
+        let task = tokio::spawn(async move {
+            let mut stream = EventStream::new();
+            while let Some(event) = stream.next().await {
+                if tx.send(event).is_err() {
+                    break;
+                }
+            }
+        });
+        Self { rx, task: Some(task) }
+    }
 }
 
 impl Drop for TerminalEvents {
     fn drop(&mut self) {
         // Dropping the stream stops crossterm's reader thread.
-        self.task.abort();
-    }
-}
-
-fn terminal_events() -> TerminalEvents {
-    let (tx, rx) = mpsc::unbounded_channel();
-    let task = tokio::spawn(async move {
-        let mut stream = EventStream::new();
-        while let Some(event) = stream.next().await {
-            if tx.send(event).is_err() {
-                break;
-            }
+        if let Some(task) = &self.task {
+            task.abort();
         }
-    });
-    TerminalEvents { rx, task }
+    }
 }
 
 async fn sleep_until(deadline: Option<tokio::time::Instant>) {
@@ -407,5 +441,120 @@ mod tests {
         guard.restore_fn()();
         drop(guard);
         assert_eq!(buf.take(), RESTORE);
+    }
+
+    /// Fails exactly one write, the `n`th.
+    struct FailNthWrite {
+        buf: SharedBuf,
+        n: usize,
+    }
+
+    impl Write for FailNthWrite {
+        fn write(&mut self, data: &[u8]) -> io::Result<usize> {
+            self.n = self.n.saturating_sub(1);
+            if self.n == 0 {
+                self.n = usize::MAX;
+                return Err(io::Error::other("write failed"));
+            }
+            self.buf.write(data)
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn a_partial_enter_is_restored() {
+        let buf = SharedBuf::default();
+        // The alternate screen goes out, then hiding the cursor fails.
+        let out = FailNthWrite { buf: buf.clone(), n: 2 };
+        assert!(TerminalGuard::enter(out, true).is_err());
+        assert_eq!(buf.take(), format!("\x1b[?1049h{RESTORE}"));
+    }
+
+    /// A `Github` whose `check_auth` panics, as a bug in parsing `gh` output would.
+    #[derive(Clone)]
+    struct PanickingGithub;
+
+    impl Github for PanickingGithub {
+        async fn check_auth(&self) -> Result<(), lazy_github_core::gh::GhError> {
+            panic!("check_auth exploded");
+        }
+
+        async fn current_user(&self) -> Result<lazy_github_core::models::User, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
+        async fn list_repositories(
+            &self,
+            _query: lazy_github_core::github::RepoListQuery,
+        ) -> Result<Vec<lazy_github_core::models::Repository>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+    }
+
+    /// Runs the loop on a `TestBackend` with `effect` already started, and returns how it ended.
+    async fn run_loop_until_it_stops(
+        effect: Option<crate::effect::Effect>,
+        keep_terminal_reader: bool,
+        panics: mpsc::UnboundedReceiver<()>,
+    ) -> color_eyre::Result<()> {
+        let mut app = App::new(
+            lazy_github_core::config::Config::default(),
+            crate::keymap::Keymap::defaults(),
+            crate::theme::Theme::default(),
+            crate::clock::FakeClock::new(),
+        );
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        let paths = ConfigPaths::in_dir(std::env::temp_dir().join("lazy-github-tui-loop-test-unused"));
+        let mut runtime = Runtime::new(PanickingGithub, tx, paths);
+        let (term_tx, term_rx) = mpsc::unbounded_channel();
+        let (_log_tx, log_rx) = mpsc::channel(1);
+        let mut inputs = Inputs {
+            term: TerminalEvents {
+                rx: term_rx,
+                task: None,
+            },
+            log: log_rx,
+            log_open: true,
+            panics,
+            signals: None,
+        };
+        let _term_tx = keep_terminal_reader.then_some(term_tx);
+        runtime.execute_all(effect);
+        let mut terminal = Terminal::new(ratatui::backend::TestBackend::new(20, 5)).unwrap();
+        let result = tokio::time::timeout(
+            std::time::Duration::from_secs(10),
+            event_loop(&mut app, &mut runtime, &mut terminal, &mut rx, &mut inputs),
+        )
+        .await
+        .expect("the loop should stop");
+        runtime.shutdown().await;
+        result
+    }
+
+    #[tokio::test]
+    async fn a_panic_in_a_background_task_stops_the_loop_with_an_error() {
+        let (panic_tx, panics) = mpsc::unbounded_channel();
+        // The hook `run` installs, minus the terminal restore.
+        install_panic_hook(move || {
+            let _ = panic_tx.send(());
+        });
+        let effect = crate::effect::Effect::Github {
+            id: crate::effect::RequestId::new(1),
+            request: crate::effect::GithubRequest::CheckAuth,
+        };
+        let result = run_loop_until_it_stops(Some(effect), true, panics).await;
+        // Back to the default hook for the rest of the test binary.
+        drop(std::panic::take_hook());
+        assert_eq!(result.unwrap_err().to_string(), "a background task panicked");
+    }
+
+    #[tokio::test]
+    async fn a_stopped_terminal_reader_is_an_error() {
+        let (_panic_tx, panics) = mpsc::unbounded_channel();
+        let result = run_loop_until_it_stops(None, false, panics).await;
+        assert_eq!(result.unwrap_err().to_string(), "the terminal event reader stopped");
     }
 }

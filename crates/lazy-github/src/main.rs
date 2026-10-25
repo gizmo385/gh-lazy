@@ -84,8 +84,10 @@ fn run(original_pwd: Option<&Path>) -> ExitCode {
     match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(report) => {
-            tracing::error!("LazyGithub stopped: {report}");
-            eprintln!("Error: {report:?}");
+            // One line with the cause chain, in both places. color-eyre's full report adds ANSI colors and a
+            // backtrace that help neither the user nor the log; panics are logged in full by the panic hook.
+            tracing::error!("LazyGithub stopped: {report:#}");
+            eprintln!("Error: {report:#}");
             ExitCode::FAILURE
         }
     }

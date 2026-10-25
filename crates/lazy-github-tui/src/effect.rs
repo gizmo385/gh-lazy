@@ -31,6 +31,8 @@ pub enum Effect {
         every: Duration,
     },
     /// Send `Event::Timer(id)` once, after `after`. Replaces a running timer with the same id.
+    ///
+    /// A tick the replaced timer already sent may still be queued and arrive after this.
     StartTimeout {
         /// The timer.
         id: TimerId,
@@ -38,6 +40,8 @@ pub enum Effect {
         after: Duration,
     },
     /// Stop the timer with this id. A no-op if it isn't running.
+    ///
+    /// A tick already sent may still be queued and arrive after this; owners that care check their own state.
     CancelTimer(TimerId),
     /// Stop the event loop after the current batch of events.
     Quit,

@@ -71,14 +71,22 @@ pub fn run(program: &OsStr, args: &[String], env: &Env, io: &mut Stdio<'_>) -> u
     let mut ctx = Ctx { args, env, io };
     match ctx.run() {
         Ok(code) => code,
-        Err(Failure { code, message, entry }) => {
+        Err(Failure {
+            code,
+            message,
+            entry,
+            log_broken,
+        }) => {
             let _ = writeln!(ctx.io.stderr, "fake-gh: {message}");
-            let mut entry = entry.map(|e| *e).unwrap_or_default();
-            entry.argv = args.to_vec();
-            entry.error = Some(message);
-            // Already failing; a log problem here has nowhere better to go than stderr.
-            if let Err(e) = ctx.log_only(entry) {
-                let _ = writeln!(ctx.io.stderr, "fake-gh: {e}");
+            // When the log itself is what failed, logging the failure would only fail (and print) again.
+            if !log_broken {
+                let mut entry = entry.map(|e| *e).unwrap_or_default();
+                entry.argv = args.to_vec();
+                entry.error = Some(message);
+                // Already failing; a log problem here has nowhere better to go than stderr.
+                if let Err(e) = ctx.log_only(entry) {
+                    let _ = writeln!(ctx.io.stderr, "fake-gh: {e}");
+                }
             }
             code
         }
@@ -114,6 +122,8 @@ struct Failure {
     message: String,
     /// What's known about the request so far, for the log line.
     entry: Option<Box<LogEntry>>,
+    /// The failure is the log file itself, so don't try to log it.
+    log_broken: bool,
 }
 
 impl Failure {
@@ -122,6 +132,15 @@ impl Failure {
             code,
             message: message.into(),
             entry: None,
+            log_broken: false,
+        }
+    }
+
+    /// The log couldn't be opened or written.
+    fn log(message: impl Into<String>) -> Self {
+        Failure {
+            log_broken: true,
+            ..Failure::new(EXIT_CONFIG, message)
         }
     }
 
@@ -153,7 +172,7 @@ impl Ctx<'_, '_> {
         };
         match command {
             Command::Version => {
-                self.log_only(base).map_err(|e| Failure::new(EXIT_CONFIG, e))?;
+                self.log_only(base).map_err(Failure::log)?;
                 self.out(VERSION_TEXT.as_bytes());
                 Ok(EXIT_OK)
             }
@@ -207,7 +226,7 @@ impl Ctx<'_, '_> {
 
     fn auth(&mut self, command: &Command, base: LogEntry) -> Result<u8, Failure> {
         let logged_in = self.logged_in().map_err(|f| f.with_entry(&base))?;
-        self.log_only(base).map_err(|e| Failure::new(EXIT_CONFIG, e))?;
+        self.log_only(base).map_err(Failure::log)?;
         match (command, logged_in) {
             (Command::AuthStatus, true) => {
                 let text = format!(
@@ -241,13 +260,8 @@ impl Ctx<'_, '_> {
         FixtureStore::load(sets).map_err(|e| Failure::new(EXIT_CONFIG, e.to_string()).with_entry(entry))
     }
 
-    fn lock_log(&self, entry: &LogEntry) -> Result<Option<LockedLog>, Failure> {
-        self.env
-            .log
-            .as_deref()
-            .map(open_log)
-            .transpose()
-            .map_err(|e| Failure::new(EXIT_CONFIG, e).with_entry(entry))
+    fn lock_log(&self) -> Result<Option<LockedLog>, Failure> {
+        self.env.log.as_deref().map(open_log).transpose().map_err(Failure::log)
     }
 
     fn pr_diff(&mut self, path: &str, accept: &Accept, mut entry: LogEntry) -> Result<u8, Failure> {
@@ -258,7 +272,7 @@ impl Ctx<'_, '_> {
         entry.query = Some(key.query.clone());
         entry.accept = Some(accept.to_string());
         let store = self.store(&entry)?;
-        let locked = self.lock_log(&entry)?;
+        let locked = self.lock_log()?;
         let log = locked.as_ref().map_or_else(RequestLog::disabled, |l| l.log().clone());
 
         let page = match store.lookup(&Request { key, body: None }, &log) {
@@ -284,7 +298,7 @@ impl Ctx<'_, '_> {
         if let Some(locked) = locked {
             locked
                 .append(entry)
-                .map_err(|e| Failure::new(EXIT_CONFIG, format!("can't write log: {e}")))?;
+                .map_err(|e| Failure::log(format!("can't write log: {e}")))?;
         }
         sleep_ms(page.delay_ms);
         if page.rendered.status >= 400 {
@@ -327,7 +341,7 @@ impl Ctx<'_, '_> {
         }
 
         let store = self.store(&entry)?;
-        let locked = self.lock_log(&entry)?;
+        let locked = self.lock_log()?;
         let log = locked.as_ref().map_or_else(RequestLog::disabled, |l| l.log().clone());
         let first = first.map(|key| Request { key, body });
         let pages = fetch_pages(&store, &log, first, req.paginate, &mut entry)?;
@@ -336,7 +350,7 @@ impl Ctx<'_, '_> {
         if let Some(locked) = locked {
             locked
                 .append(entry)
-                .map_err(|e| Failure::new(EXIT_CONFIG, format!("can't write log: {e}")))?;
+                .map_err(|e| Failure::log(format!("can't write log: {e}")))?;
         }
 
         self.out(&render_pages(&pages, req.include, req.slurp));
@@ -471,6 +485,17 @@ fn render_pages(pages: &[Page], include: bool, slurp: bool) -> Vec<u8> {
         }
         buf.push(b']');
     } else {
+        if !include
+            && !slurp
+            && pages.len() > 1
+            && !failed
+            && let Some(merged) = merge_array_pages(pages)
+        {
+            for p in pages {
+                sleep_ms(p.delay_ms);
+            }
+            return merged;
+        }
         // A failed slurp shows just the error, as gh stops at the failing page.
         let shown = if slurp {
             &pages[pages.len().saturating_sub(1)..]
@@ -484,6 +509,33 @@ fn render_pages(pages: &[Page], include: bool, slurp: bool) -> Vec<u8> {
         }
     }
     buf
+}
+
+/// What real gh's `paginatedArrayReader` does for `--paginate` without `-i`/`--slurp`: when every page is a JSON
+/// array, `[a,b]` and `[c]` come out as `[a,b,c]`. Works on the bytes, so each element is printed exactly as stored.
+/// `None` when some page isn't an array; those print back to back.
+fn merge_array_pages(pages: &[Page]) -> Option<Vec<u8>> {
+    let mut inners = Vec::with_capacity(pages.len());
+    for p in pages {
+        let body = p.rendered.body.trim_ascii();
+        if !serde_json::from_slice::<Value>(body).is_ok_and(|v| v.is_array()) {
+            return None;
+        }
+        // A valid JSON array starts with `[` and ends with `]`.
+        let inner = body[1..body.len() - 1].trim_ascii();
+        if !inner.is_empty() {
+            inners.push(inner);
+        }
+    }
+    let mut out = vec![b'['];
+    for (i, inner) in inners.iter().enumerate() {
+        if i > 0 {
+            out.push(b',');
+        }
+        out.extend_from_slice(inner);
+    }
+    out.push(b']');
+    Some(out)
 }
 
 impl Page {

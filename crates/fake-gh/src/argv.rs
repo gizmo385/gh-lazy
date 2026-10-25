@@ -74,6 +74,8 @@ impl ApiRequest {
     pub fn method(&self) -> String {
         match &self.method {
             Some(m) => m.clone(),
+            // A bare `gh api graphql` is a GET in real gh; POST here is #67's choice, and every real GraphQL call
+            // carries `-f query=` anyway.
             None if !self.fields.is_empty() || self.input.is_some() || self.is_graphql() => "POST".into(),
             None => "GET".into(),
         }

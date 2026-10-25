@@ -45,31 +45,9 @@ pub fn write(dir: &Path, rel: &str, contents: &str) {
     std::fs::write(path, contents).unwrap();
 }
 
-/// Copies the fake-gh binary to `<dir>/bin/gh` (`gh.exe` on Windows), as the harness does, and returns the bin dir.
+/// Installs the fake-gh binary as `<dir>/bin/gh` with `fake_gh::install`, as the harness does.
 pub fn install_gh(dir: &Path) -> PathBuf {
-    let bin = dir.join("bin");
-    std::fs::create_dir_all(&bin).unwrap();
-    let name = format!("gh{}", std::env::consts::EXE_SUFFIX);
-    let target = bin.join(name);
-    std::fs::copy(env!("CARGO_BIN_EXE_fake-gh"), &target).unwrap();
-    // A test thread that forked while the copy's write handle was open holds it until its child execs, and exec'ing
-    // the copy meanwhile fails with ETXTBSY. Wait that out once here, so tests never see it.
-    for _ in 0..100 {
-        match Command::new(&target)
-            .arg("--version")
-            .env_remove("FAKE_GH_LOG")
-            .output()
-        {
-            Err(e) if e.kind() == std::io::ErrorKind::ExecutableFileBusy => {
-                std::thread::sleep(std::time::Duration::from_millis(10));
-            }
-            other => {
-                other.unwrap();
-                break;
-            }
-        }
-    }
-    bin
+    fake_gh::install(Path::new(env!("CARGO_BIN_EXE_fake-gh")), dir).unwrap()
 }
 
 /// A `gh` command (the copied binary) with fake-gh's env cleared down to what's given.

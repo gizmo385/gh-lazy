@@ -69,9 +69,10 @@ fn paginate_prints_pages_back_to_back_and_slurp_wraps_them() {
         &page_fixture(2, None, &json!([{"n": 3}])),
     );
 
+    // Like gh 2.89's paginatedArrayReader: array pages are merged into one array when there's no -i or --slurp.
     let plain = s.run(&["api", "--paginate", "/repos/o/r/issues?page=1&per_page=2"]);
     assert_eq!(plain.status.code(), Some(0), "{}", stderr(&plain));
-    assert_eq!(stdout(&plain), r#"[{"n":1},{"n":2}][{"n":3}]"#);
+    assert_eq!(stdout(&plain), r#"[{"n":1},{"n":2},{"n":3}]"#);
 
     let slurp = s.run(&[
         "api",
@@ -99,6 +100,63 @@ fn paginate_prints_pages_back_to_back_and_slurp_wraps_them() {
         stdout(&s.run(&["api", "/repos/o/r/issues?page=1&per_page=2"])),
         r#"[{"n":1},{"n":2}]"#
     );
+}
+
+#[test]
+fn paginate_prints_non_array_pages_back_to_back() {
+    let s = setup("paginate-objects");
+    let page = |page: u32, next: Option<u32>, body: &Value| {
+        let headers = next.map_or_else(
+            || json!({}),
+            |n| json!({"Link": format!("<https://api.github.com/x?page={n}>; rel=\"next\"")}),
+        );
+        json!({"version": 1, "request": {"method": "GET", "path": "/x", "query": {"page": page.to_string()}},
+               "response": {"status": 200, "headers": headers, "body": body}})
+        .to_string()
+    };
+    write(
+        &s.set,
+        "x/GET.page-1.json",
+        &page(1, Some(2), &json!({"total": 3, "items": [1]})),
+    );
+    write(
+        &s.set,
+        "x/GET.page-2.json",
+        &page(2, Some(3), &json!({"total": 3, "items": [2]})),
+    );
+    write(&s.set, "x/GET.page-3.json", &page(3, None, &json!([])));
+    let out = s.run(&["api", "--paginate", "/x?page=1"]);
+    assert_eq!(stdout(&out), r#"{"total":3,"items":[1]}{"total":3,"items":[2]}[]"#);
+}
+
+#[test]
+fn paginate_merges_empty_array_pages() {
+    let s = setup("paginate-empty");
+    write(
+        &s.set,
+        "repos/o/r/issues/GET.page-1_per_page-2.json",
+        &page_fixture(1, Some(2), &json!([1, 2])),
+    );
+    write(
+        &s.set,
+        "repos/o/r/issues/GET.page-2_per_page-2.json",
+        &page_fixture(2, None, &json!([])),
+    );
+    let out = s.run(&["api", "--paginate", "/repos/o/r/issues?page=1&per_page=2"]);
+    assert_eq!(stdout(&out), "[1,2]");
+}
+
+#[test]
+fn unwritable_log_is_reported_once() {
+    let s = setup("bad-log");
+    let missing = s.tmp.path().join("missing-dir").join("fake-gh.log");
+    let out = gh(&s.bin, &[&s.set], Some(&missing))
+        .args(["api", "/user"])
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(3));
+    let err = stderr(&out);
+    assert_eq!(err.matches("can't open log").count(), 1, "{err}");
 }
 
 #[test]

@@ -10,8 +10,10 @@ data with no network. See `docs/rust-rewrite/PLAN.md` §6.2.
 
 ## fake-gh
 
-`fake-gh` is a drop-in `gh` binary. Build it with `cargo build -p fake-gh`, copy `target/debug/fake-gh` to
-`<tmp>/bin/gh` (`gh.exe` on Windows), and put that directory first on `PATH`. The binary is deliberately not named
+`fake-gh` is a drop-in `gh` binary. Build it with `cargo build -p fake-gh`, install `target/debug/fake-gh` as
+`<tmp>/bin/gh` (`gh.exe` on Windows), and put that directory first on `PATH`. From Rust, `fake_gh::install(binary,
+dir)` does the install: it hard-links when it can, and otherwise copies and waits out the `ETXTBSY` race that a
+freshly copied executable has in a multi-threaded process. The binary is deliberately not named
 `gh`, so `target/debug` on `PATH` never shadows the real gh.
 
 ### Environment variables
@@ -44,9 +46,12 @@ accept `--flag value` and `--flag=value`; short flags accept `-X GET`, `-XGET` a
      parses, and kept as a string otherwise.
    - `-i/--include`: print the status line and headers before the body.
    - `--cache <dur>`: accepted and logged as `cache`. Nothing is cached.
-   - `--paginate` and `--slurp`: follow `Link: <url>; rel="next"` from fixture to fixture. Without `--slurp`, page
-     bodies are printed back to back, and with `-i` each page gets its own status line and headers. With `--slurp`, the
-     pages are wrapped in one outer JSON array. A missing next page is a miss.
+   - `--paginate` and `--slurp`: follow `Link: <url>; rel="next"` from fixture to fixture. A missing next page is a
+     miss. The pages are printed as gh 2.89 prints them:
+     - Without `-i` or `--slurp`, when every page is a JSON array, the arrays are merged into one (`[a,b]` and `[c]`
+       give `[a,b,c]`, as gh's `paginatedArrayReader` does). Other pages (objects, text) are printed back to back.
+     - With `-i`, page bodies are printed back to back, each with its own status line and headers.
+     - With `--slurp`, the pages are wrapped in one outer JSON array.
    - `--hostname github.com`: accepted. Any other host exits 2.
    - Any other flag (`--jq`, `--template`, `--verbose`, `-p`, ...) exits 2 with `fake-gh: unsupported flag --jq` on
      stderr, and is logged with `"error"`.
@@ -71,6 +76,14 @@ accept `--flag value` and `--flag=value`; short flags accept `-X GET`, `-XGET` a
    a miss or status ≥ 400, prints `could not find pull request diff: HTTP <status>` on stderr and exits 1. `-R` is
    required, since fake-gh doesn't read git remotes.
 6. Anything else exits 2 with `fake-gh: unsupported command: gh <argv>` on stderr, and is logged as an error.
+
+**Known differences from real gh.** Neither app sends these shapes, so they're left as is:
+
+- A bare `gh api graphql` (no fields, no `--input`) is a POST here; real gh sends a GET. #67 chose POST, and real
+  GraphQL calls always carry `-f query=`.
+- `--input` files and `-F k=@file` values must be UTF-8 text. A non-UTF-8 file, or a missing one, exits 2 (real gh
+  sends the bytes, and exits 1 on a missing file).
+- Boolean flags don't take a value: `--paginate=true` or `--include=false` exits 2, where real gh's pflag accepts them.
 
 Exit codes: 0 success; 1 HTTP status ≥ 400, a miss, or logged out; 2 unsupported argv; 3 fake-gh configuration problems
 (no `FAKE_GH_FIXTURES`, a fixture that doesn't load, duplicate matchers, an ambiguous match, log I/O errors).
@@ -178,6 +191,9 @@ parity/fixtures/pr-merge/repos/gizmo385/gh-lazy/pulls/12/merge/PUT.json
 ```
 
 - Unknown fields are rejected, so a typo like `"qurey"` is a load error rather than a silently broader matcher.
+- Query values are strings (or arrays of strings), as they are on the wire: write `"page": "1"`, not `"page": 1`.
+- `body_file` is a bare file name in the fixture's own directory; `lint` rejects paths like `../x` or `/abs`.
+- The loader doesn't follow symlinked directories (so a loop can't hang it); a symlink to a file is read.
 - `request.body: null` is the same as no `body` matcher.
 - A `when.after` entry has `method` and `path`, and optionally `query`, `accept` and `body`, which are compared only when
   given. A "served" request is a log line with a `fixture`, no `miss` and no `error`.
@@ -216,8 +232,8 @@ fake-gh lint parity/fixtures/*
 ```
 
 Available when the binary is invoked as `fake-gh` (not as `gh`). It loads each set, then reports load errors,
-duplicate matchers, methods that aren't uppercase, paths that aren't normalized, and files whose directory or name
-isn't the canonical one for their key. It exits 1 when there are problems. `cargo test` runs the same checks on every
+duplicate matchers, methods that aren't uppercase, paths that aren't normalized, `body_file`s outside the fixture's
+directory, and files whose directory or name isn't the canonical one for their key. It exits 1 when there are problems. `cargo test` runs the same checks on every
 committed set (`crates/fake-gh/tests/lint_fixtures.rs`).
 
 ## The `base` set

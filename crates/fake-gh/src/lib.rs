@@ -6,10 +6,13 @@
 pub mod app;
 pub mod argv;
 pub mod fixture;
+mod install;
 pub mod lint;
 pub mod log;
 pub mod output;
 pub mod store;
+
+pub use install::install;
 
 #[cfg(test)]
 mod test_support;

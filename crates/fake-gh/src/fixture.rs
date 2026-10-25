@@ -108,11 +108,38 @@ fn is_zero(n: &u64) -> bool {
 }
 
 /// A query value: one string, or several when the key repeats.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(untagged)]
 pub enum QueryValue {
     One(String),
     Many(Vec<String>),
+}
+
+impl<'de> Deserialize<'de> for QueryValue {
+    // Hand-written so a fixture with `"page": 1` (Python passes ints) says what to write instead.
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let not_string = |v: &Value| {
+            let hint = match v {
+                Value::Number(_) | Value::Bool(_) => format!("; write \"{v}\""),
+                _ => String::new(),
+            };
+            serde::de::Error::custom(format!(
+                "query values must be strings or arrays of strings (got {v}{hint})"
+            ))
+        };
+        match Value::deserialize(deserializer)? {
+            Value::String(s) => Ok(QueryValue::One(s)),
+            Value::Array(items) => items
+                .into_iter()
+                .map(|item| match item {
+                    Value::String(s) => Ok(s),
+                    other => Err(not_string(&other)),
+                })
+                .collect::<Result<_, _>>()
+                .map(QueryValue::Many),
+            other => Err(not_string(&other)),
+        }
+    }
 }
 
 impl QueryValue {
@@ -650,6 +677,21 @@ mod tests {
         assert_eq!(serde_json::to_string(&f.response.body).unwrap(), r#"[{"b":1,"a":2}]"#);
         let back: Fixture = serde_json::from_str(&serde_json::to_string(&f).unwrap()).unwrap();
         assert_eq!(back, f);
+    }
+
+    #[test]
+    fn non_string_query_values_say_what_to_write() {
+        let text = r#"{"version": 1, "request": {"method": "GET", "path": "/x", "query": {"page": 1}},
+                       "response": {"status": 200}}"#;
+        let err = serde_json::from_str::<Fixture>(text).unwrap_err().to_string();
+        assert!(
+            err.contains(r#"query values must be strings or arrays of strings (got 1; write "1")"#),
+            "{err}"
+        );
+        let text = r#"{"version": 1, "request": {"method": "GET", "path": "/x", "query": {"k": ["a", true]}},
+                       "response": {"status": 200}}"#;
+        let err = serde_json::from_str::<Fixture>(text).unwrap_err().to_string();
+        assert!(err.contains(r#"(got true; write "true")"#), "{err}");
     }
 
     #[test]

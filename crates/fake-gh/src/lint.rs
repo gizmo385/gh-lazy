@@ -60,6 +60,17 @@ fn check_canonical(f: &LoadedFixture) -> Vec<Problem> {
         }
     }
 
+    if let Some(name) = &f.fixture.response.body_file {
+        let mut components = Path::new(name).components();
+        let is_sibling =
+            matches!(components.next(), Some(std::path::Component::Normal(_))) && components.next().is_none();
+        if !is_sibling {
+            problems.push(problem(format!(
+                "body_file {name:?} must be a file name in the fixture's directory"
+            )));
+        }
+    }
+
     let key = f.fixture.request.key();
     let want_dir = f.set_dir.join(dir_for(&key));
     let actual_dir = f.file.parent().unwrap_or(Path::new(""));
@@ -146,6 +157,24 @@ mod tests {
         assert!(
             text.iter().any(|p| p.contains(r#"should be written as "/x""#)),
             "{text:?}"
+        );
+    }
+
+    #[test]
+    fn body_file_must_be_a_sibling() {
+        let tmp = TempDir::new();
+        let set = tmp.path().join("base");
+        write(&set, "outside.txt", "x");
+        write(
+            &set,
+            "user/GET.json",
+            r#"{"version":1,"request":{"method":"GET","path":"/user"},"response":{"status":200,"body_file":"../outside.txt"}}"#,
+        );
+        let report = lint_sets(&[set]);
+        let text: Vec<String> = report.problems.iter().map(ToString::to_string).collect();
+        assert_eq!(
+            text,
+            [r#"base/user/GET.json: body_file "../outside.txt" must be a file name in the fixture's directory"#]
         );
     }
 

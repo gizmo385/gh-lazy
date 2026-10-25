@@ -185,10 +185,14 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) -> Result<(), LoadError> {
         source,
     };
     for entry in std::fs::read_dir(dir).map_err(io_err)? {
-        let path = entry.map_err(io_err)?.path();
-        if path.is_dir() {
+        let entry = entry.map_err(io_err)?;
+        let path = entry.path();
+        // `file_type` doesn't follow symlinks, so a symlinked directory (possibly a loop) is never recursed into.
+        // A symlink to a file is still read.
+        let file_type = entry.file_type().map_err(io_err)?;
+        if file_type.is_dir() {
             walk(&path, out)?;
-        } else if is_fixture_file(&path) {
+        } else if (file_type.is_file() || (file_type.is_symlink() && path.is_file())) && is_fixture_file(&path) {
             out.push(path);
         }
     }
@@ -477,6 +481,21 @@ mod tests {
             FixtureStore::load(&[tmp.path().join("missing")]),
             Err(LoadError::MissingSet(_))
         ));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn symlinked_directories_are_not_followed() {
+        let tmp = TempDir::new();
+        let set = tmp.path().join("base");
+        write(&set, "user/GET.json", &fixture("GET", "/user", "", 200));
+        // A loop back to the set root would recurse forever if followed.
+        std::os::unix::fs::symlink(&set, set.join("user").join("loop")).unwrap();
+        std::os::unix::fs::symlink(set.join("user/GET.json"), set.join("linked.json")).unwrap();
+        let (loaded, errors) = scan_set(&set, 0);
+        assert!(errors.is_empty(), "{errors:?}");
+        let names: Vec<&str> = loaded.iter().map(|f| f.display.as_str()).collect();
+        assert_eq!(names, ["base/linked.json", "base/user/GET.json"]);
     }
 
     #[test]

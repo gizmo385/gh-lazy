@@ -253,6 +253,11 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
 --set base`, from `parity/fixtures/base/recipe.toml` (the first recording is still to be committed; see #68). See
 [Recording fixtures](#recording-fixtures).
 
+## Overlays
+
+- `repos-two-pages/`: base's three repos split over two `GET /user/repos` pages (two, then one) linked by
+  `Link: rel="next"`. Listed before `base`, it exercises pagination; `crates/fake-gh/tests/rust_client.rs` uses it.
+
 ## Recording fixtures
 
 ```

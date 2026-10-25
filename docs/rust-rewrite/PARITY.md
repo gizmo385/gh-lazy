@@ -121,15 +121,15 @@ Every field in `lib/config.py` must load from an existing `config.json` and roun
 
 | Section | Fields | Status | Issue |
 | --- | --- | --- | --- |
-| `appearance` | `theme`, `show_command_log`, `show_workflows`, `show_issues`, `show_pull_requests` | not started | |
-| `notifications` | `enabled`, `mark_notification_as_read_when_selected` | not started | |
-| `bindings` | `overrides` | not started | |
-| `repositories` | `additional_repos_to_track`, `favorites` | not started | |
-| `pull_requests` | `state_filter`, `owner_filter`, `preferred_merge_method`, `additional_suggested_pr_reviewers`, `preload_pull_request_for_current_commit`, `pull_request_template` | not started | |
-| `issues` | `state_filter`, `owner_filter` | not started | |
-| `cache` | `auth_cache_duration`, `auth_last_checked`, `cache_directory`, `default_ttl`, `list_repos_ttl`, `list_issues_ttl` | not started | |
-| `core` | `first_start`, `logfile_path`, `logfile_max_bytes`, `logfile_count` | not started | |
-| `api` | `base_url`, `client_type` (ignored, gh only) | not started | |
+| `appearance` | `theme`, `show_command_log`, `show_workflows`, `show_issues`, `show_pull_requests` | not started | [#64](https://github.com/gizmo385/gh-lazy/issues/64) |
+| `notifications` | `enabled`, `mark_notification_as_read_when_selected` | not started | [#64](https://github.com/gizmo385/gh-lazy/issues/64) |
+| `bindings` | `overrides` | not started | [#64](https://github.com/gizmo385/gh-lazy/issues/64) |
+| `repositories` | `additional_repos_to_track`, `favorites` | not started | [#64](https://github.com/gizmo385/gh-lazy/issues/64) |
+| `pull_requests` | `state_filter`, `owner_filter`, `preferred_merge_method`, `additional_suggested_pr_reviewers`, `preload_pull_request_for_current_commit`, `pull_request_template` | not started | [#64](https://github.com/gizmo385/gh-lazy/issues/64) |
+| `issues` | `state_filter`, `owner_filter` | not started | [#64](https://github.com/gizmo385/gh-lazy/issues/64) |
+| `cache` | `auth_cache_duration`, `auth_last_checked`, `cache_directory`, `default_ttl`, `list_repos_ttl`, `list_issues_ttl` | not started | [#64](https://github.com/gizmo385/gh-lazy/issues/64) |
+| `core` | `first_start`, `logfile_path`, `logfile_max_bytes`, `logfile_count` | not started | [#64](https://github.com/gizmo385/gh-lazy/issues/64) |
+| `api` | `base_url`, `client_type` (ignored, gh only) | not started | [#64](https://github.com/gizmo385/gh-lazy/issues/64) |
 
 ## CLI
 

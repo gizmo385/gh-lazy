@@ -63,12 +63,7 @@ impl GhCli {
 
     /// Checks `gh auth status [--hostname h]`: `Ok` when logged in, otherwise [`GhError::NotAuthenticated`].
     pub async fn auth_status(&self) -> Result<(), GhError> {
-        let mut args: Vec<OsString> = vec!["auth".into(), "status".into()];
-        if let Some(hostname) = self.hostname() {
-            args.push("--hostname".into());
-            args.push(hostname.into());
-        }
-        let output = self.run(&args, None).await?;
+        let output = self.run(&self.auth_status_argv(), None).await?;
         if output.status.success() {
             return Ok(());
         }
@@ -85,8 +80,19 @@ impl GhCli {
         })
     }
 
-    fn hostname(&self) -> Option<&str> {
+    /// The GitHub Enterprise host passed as `--hostname`, or `None` for gh's default host.
+    pub(crate) fn hostname(&self) -> Option<&str> {
         self.inner.hostname.as_deref()
+    }
+
+    /// The arguments [`Self::auth_status`] passes to `gh` (not including the program name).
+    pub(crate) fn auth_status_argv(&self) -> Vec<OsString> {
+        let mut args: Vec<OsString> = vec!["auth".into(), "status".into()];
+        if let Some(hostname) = self.hostname() {
+            args.push("--hostname".into());
+            args.push(hostname.into());
+        }
+        args
     }
 
     fn interpret(&self, output: &Output, paginated: bool) -> Result<GhResponse, GhError> {

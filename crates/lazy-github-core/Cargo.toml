@@ -8,6 +8,10 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[features]
+# `github::FakeGithub`, for other crates' tests: enable it from their `[dev-dependencies]`.
+test-util = []
+
 [dependencies]
 etcetera = { workspace = true }
 form_urlencoded = { workspace = true }

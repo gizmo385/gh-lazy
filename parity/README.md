@@ -472,7 +472,8 @@ Every scenario × size × app gets a temp dir `<run>` holding `home/`, `bin/` an
 
 ### Scenario format (v1)
 
-A scenario is `parity/scenarios/<name>.toml`; the file stem is its name.
+A scenario is `parity/scenarios/<name>.toml`; the file stem is its name. The name must match `[a-z0-9][a-z0-9-]*`,
+since it names the scenario's report directory, and names must be unique within a run.
 
 ```toml
 version = 1
@@ -577,6 +578,8 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
 
 - The app runs in a `portable-pty` pseudo-terminal at the scenario's size. A reader thread feeds its output into a
   `vt100` parser and appends the raw bytes to `pty.raw`.
+- Input (keys, text, pastes and query replies) is queued to a writer thread that owns the PTY's input side, so
+  neither the step loop nor the reader ever blocks on a write the app isn't reading, and `timeout_ms` always fires.
 - The reader answers the terminal queries apps wait on, which `vt100` doesn't: cursor position (`ESC[6n`, from the
   parser's cursor), primary and secondary device attributes (`ESC[c` → `ESC[?62;22c`, `ESC[>c` → `ESC[>0;10;1c`) and
   DECRQM (`ESC[?<n>$p` → `ESC[?<n>;0$y`, "not recognized"). The kitty keyboard query (`ESC[?u`) is deliberately left

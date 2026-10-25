@@ -413,6 +413,14 @@ impl Scenario {
             .and_then(|s| s.to_str())
             .ok_or_else(|| loc.at(0, "the file name isn't valid UTF-8"))?
             .to_owned();
+        // The name becomes a report directory that gets wiped, so `.`, `..` and the like must never get through.
+        if !is_scenario_name(&name) {
+            return Err(ScenarioError {
+                file: path.to_owned(),
+                line: 0,
+                message: format!("scenario name {name:?} (the file stem) must match [a-z0-9][a-z0-9-]*"),
+            });
+        }
 
         if *raw.version.get_ref() != SCENARIO_VERSION {
             return Err(loc.at_span(
@@ -572,6 +580,11 @@ fn is_plain_name(s: &str) -> bool {
         && s != ".."
         && s.chars()
             .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
+}
+
+/// `[a-z0-9][a-z0-9-]*`: safe as a report directory name.
+fn is_scenario_name(s: &str) -> bool {
+    s.starts_with(|c: char| c.is_ascii_lowercase() || c.is_ascii_digit()) && is_capture_name(s)
 }
 
 fn is_capture_name(s: &str) -> bool {
@@ -935,6 +948,28 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
             5,
             "pane_title",
         );
+    }
+
+    #[test]
+    fn rejects_scenario_names_that_are_not_plain_directory_names() {
+        for file in [
+            "...toml",
+            "..toml",
+            ".toml",
+            "-x.toml",
+            "Startup.toml",
+            "a_b.toml",
+            "a b.toml",
+        ] {
+            let path = Path::new("parity/scenarios").join(file);
+            let err = Scenario::parse(&path, "version = 1\n", &roots()).expect_err(file);
+            assert_eq!(err.line, 0, "{err}");
+            assert!(err.message.contains("[a-z0-9][a-z0-9-]*"), "{err}");
+        }
+        for file in ["startup.toml", "pr-merge.toml", "2col.toml"] {
+            let path = Path::new("parity/scenarios").join(file);
+            Scenario::parse(&path, "version = 1\n", &roots()).unwrap_or_else(|e| panic!("{e}"));
+        }
     }
 
     #[test]

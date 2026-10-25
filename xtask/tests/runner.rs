@@ -115,11 +115,18 @@ capture = "end"
 #[test]
 fn stable_wait_lasts_until_the_screen_stops_changing() {
     let out = tempfile::tempdir().unwrap();
-    // The ticks change row 1 every 40 ms for about 320 ms, so a 200 ms stable wait can only finish after them.
-    let s = scenario("[[step]]\nwait = { stable_ms = 200 }\n\n[[step]]\ncapture = \"after\"\n");
+    // The ticks change row 1 every 40 ms for about 320 ms. A 1.5 s stable wait can only finish after them unless the
+    // machine stalls the app for longer than that between two ticks, so a slow CI box doesn't make this flaky.
+    let s = scenario(
+        "[[step]]\nwait = { text = \"cpr\" }\n\n[[step]]\nwait = { stable_ms = 1500 }\n\n[[step]]\ncapture = \"after\"\n",
+    );
+    let started = Instant::now();
     let status = run(&s, out.path());
     assert_eq!(status.status, RunState::Ok, "{status:?}");
-    assert!(read(&out.path().join("after.txt")).contains("settled"));
+    // Timing-independent: a stable wait never returns before its duration has passed.
+    assert!(started.elapsed() >= Duration::from_millis(1500));
+    let after = read(&out.path().join("after.txt"));
+    assert!(after.contains("settled"), "{after}");
 }
 
 #[test]

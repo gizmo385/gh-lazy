@@ -10,7 +10,7 @@ use std::io::{Read, Write};
 use std::num::NonZeroU16;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError, mpsc};
 use std::time::{Duration, Instant};
 
 use fake_gh::log::{LogEntry, RequestLog};
@@ -144,10 +144,8 @@ pub fn run(env: RunEnv, steps: &[Step], out: &Path) -> Result<AppRunStatus> {
                     session.dump_failure(out)?;
                     AppRunStatus::new(RunState::Exited, Some(index), code)
                 }
-                Err((_, StepError::Io(e))) => {
-                    session.stop();
-                    return Err(e);
-                }
+                // Dropping the session on the way out stops the app.
+                Err((_, StepError::Io(e))) => return Err(e),
             };
             session.stop();
             status
@@ -167,8 +165,13 @@ pub fn run(env: RunEnv, steps: &[Step], out: &Path) -> Result<AppRunStatus> {
         status.fixture_problems = !status.misses.is_empty() || !status.errors.is_empty();
     }
 
-    env.finish()?;
+    // status.json goes first, so a failed --keep-home copy still leaves a complete report.
     write_status(&status, out)?;
+    if let Err(e) = env.finish() {
+        status.message = Some(format!("--keep-home copy failed: {e}"));
+        write_status(&status, out)?;
+        return Err(e);
+    }
     Ok(status)
 }
 
@@ -187,15 +190,19 @@ enum StepError {
     Io(super::HarnessError),
 }
 
-type Writer = Arc<Mutex<Box<dyn Write + Send>>>;
+/// Bytes for the writer thread, which owns the PTY's input side. Both keystrokes and query replies go through it,
+/// so neither the step loop nor the reader thread ever blocks on a write the app isn't reading.
+type Writer = mpsc::Sender<Vec<u8>>;
 
 /// A running app.
 struct Session {
     master: Option<Box<dyn MasterPty + Send>>,
     child: Box<dyn Child + Send + Sync>,
-    writer: Writer,
+    /// `None` once stopped, which ends the writer thread.
+    writer: Option<Writer>,
     parser: Arc<Mutex<vt100::Parser>>,
     reader_done: Arc<AtomicBool>,
+    stopped: bool,
     /// The end of the whole run's `timeout_ms`.
     deadline: Instant,
     env_log: Option<std::path::PathBuf>,
@@ -242,9 +249,9 @@ impl Session {
             .master
             .try_clone_reader()
             .map_err(|e| format!("reading the PTY: {e}"))?;
-        let writer: Writer = Arc::new(Mutex::new(
-            pair.master.take_writer().map_err(|e| format!("writing the PTY: {e}"))?,
-        ));
+        let pty_writer = pair.master.take_writer().map_err(|e| format!("writing the PTY: {e}"))?;
+        let (writer, queue) = mpsc::channel();
+        std::thread::spawn(move || write_input(pty_writer, &queue));
         let parser = Arc::new(Mutex::new(vt100::Parser::new(
             nonzero(env.size.rows),
             nonzero(env.size.cols),
@@ -253,15 +260,16 @@ impl Session {
         let raw = File::create(out.join("pty.raw")).map_err(|e| format!("creating pty.raw: {e}"))?;
         let reader_done = Arc::new(AtomicBool::new(false));
         {
-            let (parser, writer, done) = (Arc::clone(&parser), Arc::clone(&writer), Arc::clone(&reader_done));
+            let (parser, writer, done) = (Arc::clone(&parser), writer.clone(), Arc::clone(&reader_done));
             std::thread::spawn(move || read_output(reader, raw, &parser, &writer, &done));
         }
         Ok(Self {
             master: Some(pair.master),
             child,
-            writer,
+            writer: Some(writer),
             parser,
             reader_done,
+            stopped: false,
             deadline: Instant::now() + env.timing.timeout,
             env_log: env.log.clone(),
             timing: env.timing,
@@ -325,14 +333,13 @@ impl Session {
     }
 
     fn send(&mut self, bytes: &[u8]) -> std::result::Result<(), StepError> {
-        let mut writer = lock(&self.writer);
-        let result = writer.write_all(bytes).and_then(|()| writer.flush());
-        drop(writer);
-        // A write fails once the app is gone; report that as an exit rather than an I/O error.
-        if result.is_err() {
+        let sent = self.writer.as_ref().is_some_and(|w| w.send(bytes.to_vec()).is_ok());
+        if !sent {
+            // The writer thread stops when a write fails, which normally means the app is gone.
             self.check_alive()?;
+            return Err(StepError::Io(super::HarnessError("writing to the PTY failed".into())));
         }
-        result.map_err(|e| StepError::Io(super::HarnessError(format!("writing to the PTY: {e}"))))
+        Ok(())
     }
 
     /// Fails with [`StepError::Exited`] once the app has exited.
@@ -409,8 +416,11 @@ impl Session {
         write_grid(&grid, out, "failure")
     }
 
-    /// Kills the app, waits up to [`KILL_WAIT`] for it, and closes the PTY.
+    /// Kills the app, waits up to [`KILL_WAIT`] for it, and closes the PTY. Safe to call more than once.
     fn stop(&mut self) {
+        if std::mem::replace(&mut self.stopped, true) {
+            return;
+        }
         // Already exited is fine.
         let _ = self.child.kill();
         let end = Instant::now() + KILL_WAIT;
@@ -418,11 +428,28 @@ impl Session {
             std::thread::sleep(POLL);
         }
         self.master = None;
+        self.writer = None;
         // The reader sees EOF once the PTY is closed, unless a grandchild still holds the terminal; in that case the
         // thread is left to finish on its own.
         let end = Instant::now() + KILL_WAIT;
         while !self.reader_done.load(Ordering::Acquire) && Instant::now() < end {
             std::thread::sleep(POLL);
+        }
+    }
+}
+
+impl Drop for Session {
+    /// Every way out of a run, including `?` and panics, kills the app: dropping a portable-pty child doesn't.
+    fn drop(&mut self) {
+        self.stop();
+    }
+}
+
+/// The writer thread: sends queued input to the app until the session hangs up or a write fails.
+fn write_input(mut pty: Box<dyn Write + Send>, queue: &mpsc::Receiver<Vec<u8>>) {
+    for bytes in queue {
+        if pty.write_all(&bytes).and_then(|()| pty.flush()).is_err() {
+            break;
         }
     }
 }
@@ -462,9 +489,8 @@ fn read_output(
             parser.process(&chunk[pos..end]);
             pos = end;
             if let Some(reply) = query.reply(parser.screen().cursor_position()) {
-                let mut w = lock(writer);
-                // A failed reply means the app is gone; the step loop notices that.
-                let _ = w.write_all(&reply).and_then(|()| w.flush());
+                // Queued, never written here: a send only fails once the writer thread is gone with the app.
+                let _ = writer.send(reply);
             }
         }
         parser.process(&chunk[pos..]);

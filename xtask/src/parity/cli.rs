@@ -117,6 +117,10 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
             }
         }
     }
+    for problem in duplicate_names(&scenarios) {
+        eprintln!("{problem}");
+        invalid = true;
+    }
     if invalid {
         return Ok(EXIT_HARNESS);
     }
@@ -194,6 +198,24 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     println!("report: {}", out.display());
 
     Ok(exit_code(&summary))
+}
+
+/// Each scenario owns `<out>/<name>/`, so two files with one stem in one run would wipe each other's results (and
+/// race under `--jobs`). Returns one message per clash.
+fn duplicate_names(scenarios: &[Scenario]) -> Vec<String> {
+    let mut seen = BTreeMap::new();
+    let mut problems = Vec::new();
+    for s in scenarios {
+        if let Some(first) = seen.insert(s.name.as_str(), &s.path) {
+            problems.push(format!(
+                "{}: scenario name {:?} is also used by {}; scenario names must be unique in a run",
+                s.path.display(),
+                s.name,
+                first.display()
+            ));
+        }
+    }
+    problems
 }
 
 fn exit_code(summary: &Summary) -> u8 {
@@ -454,6 +476,28 @@ mod tests {
         assert!(parse(&["--python-only", "--rust-only"]).is_err());
         assert!(parse(&["--size", "100"]).is_err());
         assert!(parse(&["--jobs", "0"]).is_err());
+    }
+
+    #[test]
+    fn rejects_two_scenarios_with_one_name() {
+        let repo = repo_root();
+        let roots = Roots {
+            fixtures: repo.join("parity/fixtures"),
+            configs: repo.join("parity/configs"),
+        };
+        let load = |path: &str| Scenario::parse(Path::new(path), "version = 1\n", &roots).unwrap();
+        let scenarios = [
+            load("parity/scenarios/startup.toml"),
+            load("other/startup.toml"),
+            load("other/b.toml"),
+        ];
+        let problems = duplicate_names(&scenarios);
+        assert_eq!(problems.len(), 1, "{problems:?}");
+        assert!(
+            problems[0].starts_with("other/startup.toml: scenario name \"startup\""),
+            "{problems:?}"
+        );
+        assert!(duplicate_names(&scenarios[1..]).is_empty());
     }
 
     #[test]

@@ -1448,6 +1448,7 @@ dependencies = [
  "crossterm",
  "fake-gh",
  "form_urlencoded",
+ "insta",
  "portable-pty",
  "regex",
  "serde",

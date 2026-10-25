@@ -25,6 +25,8 @@ toml = { workspace = true }
 vt100 = { workspace = true }
 
 [dev-dependencies]
+# Golden snapshots of structure extraction on real Python dumps.
+insta = { workspace = true }
 # Only for the `echo_tui` test helper, which needs raw mode and terminal events.
 crossterm = { workspace = true }
 

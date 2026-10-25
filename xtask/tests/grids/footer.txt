@@ -1,0 +1,10 @@
+status line                                     
+                                                
+ q Quit  ^p Command Pallete  ? Keybindings      
+--- styles
+
+
+kkklllllkkkkllllllllllllllllkkklllllllllllllllll
+--- legend
+k fg=#ffa62b bg=#242f38 bold
+l fg=#e0e0e0 bg=#242f38

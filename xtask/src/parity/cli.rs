@@ -7,10 +7,12 @@ use std::process::Command;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use super::check;
 use super::env::{self, Paths};
 use super::runner::{self, AppRunStatus};
 use super::scenario::{App, Roots, Scenario, Size};
-use super::summary::{CaptureSummary, SUMMARY_VERSION, ScenarioResult, ScenarioSummary, SizeSummary, Summary};
+use super::structure::Themes;
+use super::summary::{SUMMARY_VERSION, ScenarioResult, ScenarioSummary, SizeSummary, Summary};
 use super::{Context, HarnessError, Result};
 
 /// Exit code: every gated scenario passed and the Python side is clean.
@@ -174,12 +176,14 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
         latest
     };
     std::fs::create_dir_all(&out).with_context(|| format!("creating {}", out.display()))?;
+    let themes = Themes::load(&repo.join("parity/themes.toml"))?;
 
     let options = RunOptions {
         apps: &requested,
         sizes: &args.sizes,
         retries: args.retries,
         keep_home: args.keep_home,
+        themes: &themes,
     };
     let summaries = run_all(&scenarios, &paths, &out, &options, usize::from(args.jobs));
 
@@ -283,6 +287,7 @@ struct RunOptions<'a> {
     sizes: &'a [Size],
     retries: u32,
     keep_home: bool,
+    themes: &'a Themes,
 }
 
 /// Runs the scenarios on up to `jobs` threads and returns their summaries in input order.
@@ -347,15 +352,11 @@ fn run_scenario(scenario: &Scenario, paths: &Paths, out: &Path, options: &RunOpt
         .copied()
         .filter(|a| options.apps.contains(a))
         .collect();
-    let captures: Vec<CaptureSummary> = scenario
-        .capture_names()
-        .map(|name| CaptureSummary { name: name.to_owned() })
-        .collect();
-
     let result = (|| -> Result<()> {
         if dir.exists() {
             std::fs::remove_dir_all(&dir).with_context(|| format!("wiping {}", dir.display()))?;
         }
+        let theme = options.themes.colors(&check::scenario_theme(scenario, &paths.roots)?);
         for &size in sizes {
             let mut statuses = BTreeMap::new();
             for &app in &apps {
@@ -375,10 +376,11 @@ fn run_scenario(scenario: &Scenario, paths: &Paths, out: &Path, options: &RunOpt
                 }
                 statuses.insert(app, status);
             }
+            let captures = check::check_size(scenario, &dir.join(size.to_string()), &statuses, &theme)?;
             summary.sizes.push(SizeSummary {
                 size: size.to_string(),
                 apps: statuses,
-                captures: captures.clone(),
+                captures,
             });
         }
         Ok(())

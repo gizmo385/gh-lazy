@@ -1,13 +1,17 @@
 //! `cargo xtask parity`: runs scenarios against the Python and Rust apps in pseudo-terminals and dumps their screens.
 //! The CLI, environment, scenario format and report layout are documented in `parity/README.md`.
 
+pub mod check;
 pub mod cli;
 pub mod env;
 pub mod grid;
 pub mod keys;
 pub mod runner;
 pub mod scenario;
+pub mod structure;
 pub mod summary;
+#[cfg(test)]
+mod test_grid;
 
 use std::fmt::Display;
 

@@ -1,0 +1,8 @@
+# Theme colors the structural check needs, measured from Python screen dumps (see parity/README.md,
+# "Structure extraction"). Keyed by the config's appearance.theme; the Python app defaults to textual-dark.
+#
+# focus: the border color of the focused pane, Textual's $success. Measured from the Python startup dump
+# (xtask/tests/grids/python/startup-160x48.grid.json): the focused "[1] Repositories" border.
+
+[textual-dark]
+focus = "#4ebf71"

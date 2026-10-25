@@ -1,0 +1,13 @@
+┌─ [5] Details ─────────────────────────┐
+│ Info  Changed Files  Checks           │
+│╸━━━━━╺━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━│
+│ tab body                              │
+└───────────────────────────────────────┘
+                                         
+--- styles
+
+
+.ddddddaaaaaaaaaaaaadddddddddddddddddddd
+--- legend
+d fg=#262626
+a fg=#0178d4

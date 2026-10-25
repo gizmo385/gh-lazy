@@ -1,0 +1,237 @@
+---
+source: xtask/src/parity/structure.rs
+expression: "snapshot(\"100x30\")"
+---
+{
+  "version": 1,
+  "size": [
+    100,
+    30
+  ],
+  "boxes": [
+    {
+      "id": 0,
+      "parent": null,
+      "title": "",
+      "subtitle": "",
+      "rect": [
+        0,
+        0,
+        100,
+        3
+      ],
+      "border_fg": "#004578",
+      "focused": false,
+      "tabs": null,
+      "tables": [],
+      "text": [
+        "No repository selected"
+      ]
+    },
+    {
+      "id": 1,
+      "parent": null,
+      "title": "[1] Repositories",
+      "subtitle": "",
+      "rect": [
+        0,
+        3,
+        40,
+        10
+      ],
+      "border_fg": "#4ebf71",
+      "focused": true,
+      "tabs": null,
+      "tables": [
+        {
+          "headers": [
+            "★",
+            "Owner",
+            "Name",
+            "Private"
+          ],
+          "rows": [
+            [
+              "☆",
+              "parity-bot",
+              "dotfiles",
+              "✘"
+            ],
+            [
+              "☆",
+              "parity-bot",
+              "hello-world",
+              "✘"
+            ],
+            [
+              "☆",
+              "parity-bot",
+              "lazy-demo",
+              "✘"
+            ]
+          ],
+          "cursor": 0
+        }
+      ],
+      "text": []
+    },
+    {
+      "id": 2,
+      "parent": null,
+      "title": "[5] Details",
+      "subtitle": "",
+      "rect": [
+        40,
+        3,
+        60,
+        26
+      ],
+      "border_fg": "#6db2ff",
+      "focused": false,
+      "tabs": {
+        "names": [
+          "Introduction"
+        ],
+        "active": "Introduction"
+      },
+      "tables": [],
+      "text": [
+        "LazyGithub: A Terminal UI For GitHub (0.6.6)",
+        "LazyGithub is a terminal UI for interacting with",
+        "GitHub. You can get started by selecting one of the",
+        "repositories listed in the table on the left. Once",
+        "you have selected a repository, any issues, pull",
+        "requests, and action workflows will be retrieved and",
+        "displayed below it.",
+        "Issues, pull requests, and action lists can also be",
+        "interacted with!",
+        "Pull Requests",
+        "You can interact with a PR by viewing its details,",
+        "viewing the PR diff, and participating in any active",
+        "conversations happening on the PR. You can also",
+        "create a new PR for the currently selected repo."
+      ]
+    },
+    {
+      "id": 3,
+      "parent": null,
+      "title": "[2] Pull Requests",
+      "subtitle": "",
+      "rect": [
+        0,
+        13,
+        40,
+        5
+      ],
+      "border_fg": "#6db2ff",
+      "focused": false,
+      "tabs": null,
+      "tables": [
+        {
+          "headers": [
+            "#",
+            "Status",
+            "Author",
+            "Title"
+          ],
+          "rows": [],
+          "cursor": null
+        }
+      ],
+      "text": []
+    },
+    {
+      "id": 4,
+      "parent": null,
+      "title": "[3] Issues",
+      "subtitle": "",
+      "rect": [
+        0,
+        18,
+        40,
+        5
+      ],
+      "border_fg": "#6db2ff",
+      "focused": false,
+      "tabs": null,
+      "tables": [
+        {
+          "headers": [
+            "#",
+            "Status",
+            "Author",
+            "Title"
+          ],
+          "rows": [],
+          "cursor": null
+        }
+      ],
+      "text": []
+    },
+    {
+      "id": 5,
+      "parent": null,
+      "title": "[4] Workflows",
+      "subtitle": "",
+      "rect": [
+        0,
+        23,
+        40,
+        6
+      ],
+      "border_fg": "#6db2ff",
+      "focused": false,
+      "tabs": null,
+      "tables": [
+        {
+          "headers": [
+            "Time",
+            "Result",
+            "Job Name",
+            "Run Name",
+            "Run"
+          ],
+          "rows": [],
+          "cursor": null
+        }
+      ],
+      "text": []
+    }
+  ],
+  "tabs": null,
+  "footer": [
+    {
+      "key": "/",
+      "label": "Search"
+    },
+    {
+      "key": "^f",
+      "label": "Toggle Favorite"
+    },
+    {
+      "key": "O",
+      "label": "Lookup Repository"
+    },
+    {
+      "key": "u",
+      "label": "View User"
+    },
+    {
+      "key": "I",
+      "label": "New Issue"
+    },
+    {
+      "key": "P",
+      "label": "New PR"
+    },
+    {
+      "key": "^v",
+      "label": "Paste lin"
+    }
+  ],
+  "footer_clipped": true,
+  "focused": [
+    "[1] Repositories"
+  ],
+  "loose_text": []
+}

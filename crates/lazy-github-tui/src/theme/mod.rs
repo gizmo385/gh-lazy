@@ -72,17 +72,14 @@ impl Theme {
         let mut after_letter = false;
         let mut out = String::with_capacity(self.name.len());
         for c in self.name.chars() {
-            if c.is_alphabetic() {
-                if after_letter {
-                    out.extend(c.to_lowercase());
-                } else {
-                    out.extend(c.to_uppercase());
-                }
-            }
-            after_letter = c.is_alphabetic();
             if !c.is_alphabetic() {
                 out.push(if c == '-' { ' ' } else { c });
+            } else if after_letter {
+                out.extend(c.to_lowercase());
+            } else {
+                out.extend(c.to_uppercase());
             }
+            after_letter = c.is_alphabetic();
         }
         out
     }
@@ -104,11 +101,17 @@ impl Theme {
     }
 
     /// Textual's `background-tint: <tint> <percent>%` on `base`, as focused `DataTable`s and `Log`s use
-    /// (`$foreground 5%`). An ANSI tint leaves `base` unchanged.
-    pub fn tint(&self, base: Rgb, tint: ThemeColor, percent: f64) -> Rgb {
-        match tint.multiply_alpha(percent / 100.0).over(base.into()) {
-            Paint::Rgb(tinted) => tinted,
+    /// (`$foreground 5%`). Like Textual's `Color.tint`, an ANSI base or an ANSI tint leaves `base` unchanged.
+    ///
+    /// Textual tints the widget's own background before compositing it over its parent; tinting the composited
+    /// `base` gives the same result only while that background is opaque, as every built-in one is.
+    pub fn tint(&self, base: Paint, tint: ThemeColor, percent: f64) -> Paint {
+        match base {
             Paint::Ansi(_) => base,
+            Paint::Rgb(_) => match tint.multiply_alpha(percent / 100.0).over(base) {
+                tinted @ Paint::Rgb(_) => tinted,
+                Paint::Ansi(_) => base,
+            },
         }
     }
 
@@ -238,6 +241,21 @@ mod tests {
         assert_eq!(ansi.palette.surface, ThemeColor::Transparent);
         assert_eq!(ansi.background(), Paint::Ansi(AnsiColor::Default));
         assert_eq!(ansi.color(ansi.palette.primary, ansi.background()), Color::Blue);
+    }
+
+    #[test]
+    fn tint_passes_ansi_through() {
+        let ansi = theme("ansi-dark");
+        let surface = ansi.palette.surface.over(ansi.background());
+        assert_eq!(surface, Paint::Ansi(AnsiColor::Default));
+        assert_eq!(ansi.tint(surface, ansi.palette.foreground, 5.0), surface);
+        // An ANSI tint over an RGB base also leaves the base alone, unlike `over`.
+        let base = Paint::Rgb(Rgb::new(30, 30, 30));
+        assert_eq!(ansi.tint(base, ThemeColor::Ansi(AnsiColor::Red), 5.0), base);
+        assert_eq!(
+            theme("textual-dark").tint(base, hex("#E0E0E0"), 5.0),
+            Paint::Rgb(Rgb::new(39, 39, 39))
+        );
     }
 
     #[rstest]

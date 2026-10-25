@@ -90,7 +90,11 @@ fn compositing_matches_textual_for_every_theme() {
                 (Paint::Ansi(_), _) => assert!(theme.ansi, "{name}: {fg} over {bg} is ANSI"),
                 // The focused DataTable/Log tint, through the theme's helper.
                 (Paint::Rgb(want), Paint::Rgb(base)) if fg == "$foreground 5%" => {
-                    assert_eq!(theme.tint(base, theme.palette.foreground, 5.0), want, "{name}: tint");
+                    assert_eq!(
+                        theme.tint(Paint::Rgb(base), theme.palette.foreground, 5.0),
+                        Paint::Rgb(want),
+                        "{name}: tint"
+                    );
                 }
                 (Paint::Rgb(_), _) => {}
             }

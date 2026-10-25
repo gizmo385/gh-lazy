@@ -140,7 +140,12 @@ def composite_result(variables: dict[str, str], fg: str, bg: str) -> str:
     def resolve(css: str) -> Color:
         return parse_color(re.sub(r"\$([a-z0-9-]+)", lambda m: variables[m[1]], css))
 
-    result = resolve(bg) + resolve(fg)
+    under = resolve(bg)
+    # `+` blends with `under`'s RGB and ignores its alpha, while the Rust test composites `under` over black first.
+    # The two agree only for an opaque or fully transparent background, so refuse anything in between.
+    if under.ansi is None and 0 < under.a < 1:
+        fail(f"{fg} over {bg}: the background is semi-transparent ({under!r}); pick an opaque one")
+    result = under + resolve(fg)
     if result.ansi is not None:
         return result.hex
     if result.a != 1:

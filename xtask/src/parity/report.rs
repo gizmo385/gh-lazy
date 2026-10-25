@@ -2,6 +2,7 @@
 //! `<capture>.diff.txt` per size, a self-contained `report.html` per scenario, `index.html` and `summary.md`.
 //!
 //! `check.json` and `structure.json` (#93) are read when they exist; without them the report says "not checked".
+//! The check writes no `check.json` for a capture it had nothing to check, so "not checked" covers that too.
 //! Everything here is plain string building: the markup is small and fixed, so there's no template engine.
 
 use std::collections::HashMap;
@@ -144,6 +145,8 @@ struct Mismatch {
     box_title: Value,
     python: Value,
     rust: Value,
+    /// What `[expect]` wanted; `null` for a cross-app mismatch.
+    expected: Value,
     message: String,
 }
 
@@ -741,6 +744,45 @@ fn status_cells(status: &AppRunStatus) -> String {
     )
 }
 
+/// The structural mismatch table of one capture, or why there isn't one.
+fn render_mismatches(check: &CheckState) -> String {
+    let mut out = String::new();
+    match check {
+        CheckState::Absent => out.push_str("<p class=\"muted\">not checked</p>\n"),
+        CheckState::Unreadable(e) => w!(
+            out,
+            "<p class=\"reason\">check.json couldn't be read: {}</p>\n",
+            escape(e)
+        ),
+        CheckState::Loaded(check) if check.len() == 0 => out.push_str("<p>No mismatches.</p>\n"),
+        CheckState::Loaded(check) => {
+            out.push_str(
+                "<table>\n<tr><th>Check</th><th>Box</th><th>Python</th><th>Rust</th><th>Expected</th>\
+                 <th>Message</th></tr>\n",
+            );
+            for (kind, m) in check.mismatches() {
+                let expected = if m.expected.is_null() {
+                    String::new()
+                } else {
+                    format!("<code>{}</code>", escape(&value_text(&m.expected)))
+                };
+                w!(
+                    out,
+                    "<tr><td>{} <span class=\"muted\">({kind})</span></td><td>{}</td><td><code>{}</code></td>\
+                     <td><code>{}</code></td><td>{expected}</td><td>{}</td></tr>\n",
+                    escape(&m.check),
+                    escape(&value_text(&m.box_title)),
+                    escape(&mismatch_value(&m.python)),
+                    escape(&mismatch_value(&m.rust)),
+                    escape(&m.message)
+                );
+            }
+            out.push_str("</table>\n");
+        }
+    }
+    out
+}
+
 fn render_capture(size: &SizeData<'_>, capture: &CaptureData, meta: &RunMeta, sheet: &mut StyleSheet) -> String {
     let mut html = String::new();
     w!(
@@ -800,31 +842,7 @@ fn render_capture(size: &SizeData<'_>, capture: &CaptureData, meta: &RunMeta, sh
     html.push_str(&panels);
 
     html.push_str("<h4>Structural mismatches</h4>\n");
-    match &capture.check {
-        CheckState::Absent => html.push_str("<p class=\"muted\">not checked</p>\n"),
-        CheckState::Unreadable(e) => w!(
-            html,
-            "<p class=\"reason\">check.json couldn't be read: {}</p>\n",
-            escape(e)
-        ),
-        CheckState::Loaded(check) if check.len() == 0 => html.push_str("<p>No mismatches.</p>\n"),
-        CheckState::Loaded(check) => {
-            html.push_str("<table>\n<tr><th>Check</th><th>Box</th><th>Python</th><th>Rust</th><th>Message</th></tr>\n");
-            for (kind, m) in check.mismatches() {
-                w!(
-                    html,
-                    "<tr><td>{} <span class=\"muted\">({kind})</span></td><td>{}</td><td><code>{}</code></td>\
-                     <td><code>{}</code></td><td>{}</td></tr>\n",
-                    escape(&m.check),
-                    escape(&value_text(&m.box_title)),
-                    escape(&mismatch_value(&m.python)),
-                    escape(&mismatch_value(&m.rust)),
-                    escape(&m.message)
-                );
-            }
-            html.push_str("</table>\n");
-        }
-    }
+    html.push_str(&render_mismatches(&capture.check));
 
     let diff = match &capture.diff {
         Some(d) if d.is_empty() => "<p class=\"muted\">The two captures' text is identical.</p>".to_owned(),
@@ -1021,8 +1039,13 @@ fn render_summary_md(scenarios: &[ScenarioData<'_>]) -> String {
                             format!("{} {box_title}", m.check)
                         };
                         let value = |v: &Value| md_escape(&cut(&mismatch_value(v), SUMMARY_VALUE_CHARS));
+                        let expected = if m.expected.is_null() {
+                            String::new()
+                        } else {
+                            format!(" expected={}", value(&m.expected))
+                        };
                         format!(
-                            "- {}: {}: python={} rust={}",
+                            "- {}: {}: python={} rust={}{expected}",
                             md_escape(&cut(&at, SUMMARY_TARGET_CHARS)),
                             md_escape(&cut(&target, SUMMARY_TARGET_CHARS)),
                             value(&m.python),
@@ -1093,7 +1116,7 @@ mod tests {
         SizeSummary {
             size: size.into(),
             apps,
-            captures: vec![CaptureSummary { name: "main".into() }],
+            captures: vec![CaptureSummary::unchecked("main")],
         }
     }
 
@@ -1142,6 +1165,7 @@ mod tests {
             box_title: Value::String(title.into()),
             python,
             rust,
+            expected: Value::Null,
             message: format!("{check} differ"),
         }
     }
@@ -1262,6 +1286,7 @@ mod tests {
                         box_title: serde_json::json!({ "title": huge }),
                         python: Value::String(huge.clone()),
                         rust: serde_json::json!([huge]),
+                        expected: Value::String(huge.clone()),
                         message: huge.clone(),
                     })
                     .collect(),

@@ -48,7 +48,7 @@ fn scenario(name: &str, result: ScenarioResult, rust: RunState) -> ScenarioSumma
         sizes: vec![SizeSummary {
             size: SIZE.into(),
             apps: BTreeMap::from([(App::Python, status(RunState::Ok)), (App::Rust, status(rust))]),
-            captures: vec![CaptureSummary { name: "main".into() }],
+            captures: vec![CaptureSummary::unchecked("main")],
         }],
         error: None,
     }
@@ -85,7 +85,9 @@ fn writes_every_report_file_from_the_dumps() {
     );
     write(
         &demo.join("main.check.json"),
-        r#"{"capture":"main","size":[24,4],"expect":[],
+        r#"{"capture":"main","size":[24,4],
+            "expect":[{"check":"titles","box":null,"python":["[9] Repos"],"rust":null,"expected":["[1] Repos"],
+                       "message":"pane titles differ"}],
             "cross":[{"check":"rows","box":"[1] Repositories","python":"alpha","rust":"alphA","message":"cell differs"}]}"#,
     );
 
@@ -119,7 +121,13 @@ fn writes_every_report_file_from_the_dumps() {
     let report = read(&out.join("demo/report.html"));
     assert!(report.contains("&lt;demo&gt; &amp; friends"));
     assert!(report.contains("1 cell(s) differ"));
-    assert!(report.contains("<td><code>alpha</code></td><td><code>alphA</code></td><td>cell differs</td>"));
+    assert!(report.contains("<td><code>alpha</code></td><td><code>alphA</code></td><td></td><td>cell differs</td>"));
+    assert!(
+        report.contains(
+            "<td><code>(none)</code></td><td><code>[&quot;[1] Repos&quot;]</code></td><td>pane titles differ</td>"
+        ),
+        "an [expect] mismatch shows what was expected"
+    );
     assert!(
         report.contains("&quot;focused&quot;: ["),
         "structure.json is pretty-printed"
@@ -139,11 +147,15 @@ fn writes_every_report_file_from_the_dumps() {
     let md = read(&out.join("summary.md"));
     assert!(md.starts_with("## Parity: 0 pass, 0 fail, 2 rust-not-ready\n"), "{md}");
     assert!(
-        md.contains("| demo | no | skipped | skipped | rust-not-ready | 1 |"),
+        md.contains("| demo | no | skipped | skipped | rust-not-ready | 2 |"),
         "{md}"
     );
     assert!(
         md.contains("- demo/24x4/main: rows [1] Repositories: python=alpha rust=alphA"),
+        "{md}"
+    );
+    assert!(
+        md.contains(r#"- demo/24x4/main: titles: python=["[9] Repos"] rust=(none) expected=["[1] Repos"]"#),
         "{md}"
     );
 }

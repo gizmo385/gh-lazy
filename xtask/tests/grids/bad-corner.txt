@@ -1,0 +1,12 @@
+┌─ Good ─┐ ┌─ Bad ──┐
+│        │ │        │
+└────────┘ └────────┘
+                     
+--- styles
+gggggggggg bbbbbbbbbr
+gggggggggg bbbbbbbbbb
+gggggggggg bbbbbbbbbb
+--- legend
+g fg=#4ebf71
+b fg=#6db2ff
+r fg=#ff0000

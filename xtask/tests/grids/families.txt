@@ -1,0 +1,4 @@
+┌─ Light ─┐ ╭─Rounded─╮ ┏━ Heavy ━┓ ╔═ Double═╗ +- Ascii -+
+│ hi      │ │ hi      │ ┃ hi      ┃ ║ hi      ║ | hi      |
+│         │ │         │ ┃         ┃ ║         ║ |         |
+└── sub ──┘ ╰─────────╯ ┗━━━━━━━━━┛ ╚═════════╝ +-my-sub--+

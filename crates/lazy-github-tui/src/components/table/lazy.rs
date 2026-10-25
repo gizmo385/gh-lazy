@@ -24,8 +24,9 @@ pub struct LazyLoad {
     can_load_more: bool,
     /// The page asked for and not yet loaded.
     in_flight: Option<u32>,
-    /// The highest cursor index seen while a page was in flight, re-checked once when it lands. Python queues each
-    /// highlight behind its fetch lock and re-checks every one after the fetch; only the highest can still fire.
+    /// The highest cursor index seen while a page was in flight, re-checked once when it lands. Python serializes
+    /// loads with `@work` and `fetch_lock` and re-checks each queued highlight after the fetch before it, so a run of
+    /// short pages can chain several fetches; here at most one re-check fires, and the next cursor move asks again.
     pending_cursor: Option<usize>,
 }
 
@@ -95,6 +96,9 @@ impl<T: TableItem> SearchableTable<T> {
     /// Call it before inserting the first page: Python sets the load function in the same handler that adds the
     /// page, and the highlight the first row posts is only handled after both, so a short first page asks for page
     /// 2 straight away.
+    ///
+    /// Calling it again while a page is in flight, without a [`Self::clear`] in between, forgets the request in
+    /// flight: that page is dropped when it arrives.
     pub fn enable_lazy_load(&mut self, batch_size: u32, current_batch: u32) {
         self.lazy = Some(LazyLoad::new(batch_size, current_batch));
     }

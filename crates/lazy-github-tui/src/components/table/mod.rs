@@ -209,11 +209,13 @@ impl<T: TableItem> SearchableTable<T> {
     ///
     /// The first row of an empty table highlights row 0, as Textual's `add_row` does, which runs a lazy table's
     /// check: the result is its [`TableEvent::LoadMore`].
+    #[must_use = "a lazy table's first rows may ask for the next page"]
     pub fn insert(&mut self, item: T, cx: &T::Ctx) -> Option<TableEvent<T::Key>> {
         self.insert_many([item], cx)
     }
 
     /// [`Self::insert`] for each item in turn.
+    #[must_use = "a lazy table's first rows may ask for the next page"]
     pub fn insert_many(&mut self, items: impl IntoIterator<Item = T>, cx: &T::Ctx) -> Option<TableEvent<T::Key>> {
         let was_empty = self.rows.is_empty();
         for item in items {
@@ -278,7 +280,7 @@ impl<T: TableItem> SearchableTable<T> {
     pub fn replace_all(&mut self, items: impl IntoIterator<Item = T>, cx: &T::Ctx) {
         self.clear();
         // Lazy loading is off after a clear, so the first rows run no check.
-        self.insert_many(items, cx);
+        let _ = self.insert_many(items, cx);
     }
 
     /// Recomputes every row's cells, for example after a favorite toggle, then re-sorts. Rows keep their insertion

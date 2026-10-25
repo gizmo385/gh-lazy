@@ -163,5 +163,6 @@ cython_debug/
 result
 
 # AI stuff
-.claude
+.claude/*
+!.claude/agents/
 AGENTS.md

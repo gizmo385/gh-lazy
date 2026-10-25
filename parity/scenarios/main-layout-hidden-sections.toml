@@ -1,0 +1,24 @@
+version = 1
+description = "Main screen layout with show_pull_requests and show_workflows off: the shown sections take the space"
+gate = true
+parity_rows = ["Main layout (status bar, selections pane 40%, details, command log, footer)"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+
+[env.config_overrides]
+appearance = { show_pull_requests = false, show_workflows = false }
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+capture = "start"
+checks = ["titles", "tabs", "focus"]
+
+[expect.start]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[3] Issues"]
+focused = ["[1] Repositories"]
+tabs = { box = "Details", names = ["Introduction"], active = "Introduction" }
+not_contains = ["Traceback"]

@@ -1,0 +1,33 @@
+---
+source: crates/lazy-github-tui/src/screens/main/tests.rs
+expression: "screen(Config::default(), 100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Details ────────────────────────────────────────────┐
+│                                      ││ Introduction                                             │
+│                                      ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                      ││                                                          │
+│                                      ││                                                          │
+│                                      ││      LazyGithub: A Terminal UI For GitHub (0.1.0)        │
+│                                      ││                                                          │
+│                                      ││  LazyGithub is a terminal UI for interacting with        │
+│                                      ││  GitHub. You can get started by selecting one of the     │
+└──────────────────────────────────────┘│  repositories listed in the table on the left. Once      │
+┌─ [2] Pull Requests ──────────────────┐│  you have selected a repository, any issues, pull        │
+│                                      ││  requests, and action workflows will be retrieved and    │
+│                                      ││  displayed below it.                                     │
+│                                      ││                                                          │
+└──────────────────────────────────────┘│  Issues, pull requests, and action lists can also be   ▁▁│
+┌─ [3] Issues ─────────────────────────┐│  interacted with!                                        │
+│                                      ││                                                          │
+│                                      ││                                                          │
+│                                      ││  Pull Requests                                           │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows ──────────────────────┐│  You can interact with a PR by viewing its details,      │
+│                                      ││  viewing the PR diff, and participating in any active    │
+│                                      ││  conversations happening on the PR. You can also         │
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘

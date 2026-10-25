@@ -9,6 +9,7 @@ pub mod action;
 pub mod app;
 pub mod clock;
 pub mod component;
+pub mod components;
 pub mod effect;
 pub mod event;
 pub mod keymap;

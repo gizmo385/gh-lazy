@@ -1,0 +1,69 @@
+version = 1
+description = "The footer follows focus: repos, PRs, issues, workflows and details, cut off at the right edge"
+gate = true
+parity_rows = ["main-layout.footer", "keybindings.app-quit", "keybindings.app-maximize-widget", "keybindings.app-open-help", "keybindings.common-table-search"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+# Cut off at "^p Comman" (160) and "^v Paste lin" (100), in both apps. A cut item only has to start the expected
+# one, so the list runs to the end.
+[[step]]
+capture = "start"
+checks = ["titles", "focus", "footer"]
+
+# From here on the `^p` item shows at 160 columns far enough to tell "Pallete" (Python) from "Palette" (Rust): Py
+# bug B14, fixed on purpose. These captures check the footer's text with `contains`, up to the last item both apps
+# show the same at 100 columns, and leave the cross-app footer check to `footer-narrow`.
+[[step]]
+keys = ["2"]
+
+[[step]]
+capture = "prs"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["3"]
+
+[[step]]
+capture = "issues"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["4"]
+
+[[step]]
+capture = "workflows"
+checks = ["titles", "focus"]
+
+# B14: the whole `^p` item shows at both sizes.
+[[step]]
+keys = ["5"]
+
+[[step]]
+capture = "details"
+checks = ["titles", "focus"]
+
+[expect.start]
+focused = ["[1] Repositories"]
+footer = ["/ Search", "^f Toggle Favorite", "O Lookup Repository", "u View User", "I New Issue", "P New PR", "^v Paste link", "f Follow link", "F Follow link (browser)", "q Quit", "^p Command Palette", "M Maximize", "? Keybindings"]
+
+[expect.prs]
+focused = ["[2] Pull Requests"]
+contains = [" / Search  O Lookup Pull Request  E Edit PR  u View User  I New Issue  P New PR  ^v Paste link "]
+
+[expect.issues]
+focused = ["[3] Issues"]
+contains = [" / Search  O Lookup Issue  E Edit Issue  u View User  I New Issue  P New PR  ^v Paste link  f Follow"]
+
+[expect.workflows]
+focused = ["[4] Workflows"]
+contains = [" / Search  T Trigger Workflow  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (b"]
+
+[expect.details]
+focused = ["[5] Details"]
+contains = [" ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pal", "  M Maximize  ? Ke"]

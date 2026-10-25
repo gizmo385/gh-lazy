@@ -166,6 +166,38 @@ const SCREEN_BINDINGS: &[BindingId] = &[
     BindingId::TextualCopyText,
 ];
 
+/// A section table's bindings: Textual's `DataTable` ones, then `_VimLikeDataTable`'s, which replace `enter`. The
+/// same list as the table component's `TABLE_BINDINGS` (#100); the screen switches to that once the table is on
+/// screen (M2).
+const TABLE_BINDINGS: &[BindingId] = &[
+    BindingId::TextualTableCursorUp,
+    BindingId::TextualTableCursorDown,
+    BindingId::TextualTableCursorRight,
+    BindingId::TextualTableCursorLeft,
+    BindingId::TextualTablePageUp,
+    BindingId::TextualTablePageDown,
+    BindingId::TextualTableScrollTop,
+    BindingId::TextualTableScrollBottom,
+    BindingId::TextualTableScrollHome,
+    BindingId::TextualTableScrollEnd,
+    BindingId::TextualTablePageLeft,
+    BindingId::TextualTablePageRight,
+    BindingId::TableSelect,
+    BindingId::TableCursorDown,
+    BindingId::TablePageDown,
+    BindingId::TableCursorUp,
+    BindingId::TablePageUp,
+    BindingId::TableScrollRight,
+    BindingId::TablePageRight,
+    BindingId::TableScrollLeft,
+    BindingId::TablePageLeft,
+    BindingId::TableScrollTop,
+    BindingId::TableScrollBottom,
+];
+
+/// `SearchableDataTable.BINDINGS`.
+const SEARCHABLE_BINDINGS: &[BindingId] = &[BindingId::TableSearch];
+
 /// Textual's `Tabs` bindings.
 const TABS_BINDINGS: &[BindingId] = &[BindingId::TextualTabsPrevious, BindingId::TextualTabsNext];
 
@@ -327,9 +359,15 @@ impl MainScreen {
     pub fn binding_chain(&self) -> Vec<ChainLink> {
         let link = |owner: Owner, bindings: &'static [BindingId]| ChainLink { owner, bindings };
         let mut chain = match self.focus {
-            // #78 adds the table's own bindings and the search input's link.
-            FocusTarget::Table(id) | FocusTarget::Search(id) => vec![
-                link(Owner::Table(id), &[]),
+            // #78 adds the search input's own link.
+            FocusTarget::Table(id) => vec![
+                link(Owner::Table(id), TABLE_BINDINGS),
+                link(Owner::SearchableTable(id), SEARCHABLE_BINDINGS),
+                link(Owner::Section(id), id.bindings()),
+                link(Owner::SelectionsPane, SELECTIONS_BINDINGS),
+            ],
+            FocusTarget::Search(id) => vec![
+                link(Owner::SearchableTable(id), SEARCHABLE_BINDINGS),
                 link(Owner::Section(id), id.bindings()),
                 link(Owner::SelectionsPane, SELECTIONS_BINDINGS),
             ],
@@ -352,9 +390,12 @@ impl MainScreen {
                 Scroll::from_binding(id).map(|scroll| Action::Main(MainAction::ScrollDetails(scroll)))
             }
             // Not built yet: the key is still consumed, as in Python. With one tab, switching tabs is a no-op.
-            Owner::Table(_) | Owner::Section(_) | Owner::SelectionsPane | Owner::DetailsTabs | Owner::CommandLog => {
-                Some(Action::Unimplemented(id))
-            }
+            Owner::Table(_)
+            | Owner::SearchableTable(_)
+            | Owner::Section(_)
+            | Owner::SelectionsPane
+            | Owner::DetailsTabs
+            | Owner::CommandLog => Some(Action::Unimplemented(id)),
             Owner::App | Owner::Screen(ScreenKind::Auth) => None,
         }
     }
@@ -365,6 +406,17 @@ impl MainScreen {
             Owner::Screen(ScreenKind::Main) => self.binding_state(id, cx),
             _ => BindingState::Enabled,
         }
+    }
+
+    /// The footer row for a screen drawn in `area`: its last row, full width. There's none while maximized.
+    pub fn footer_area(&self, area: Rect) -> Rect {
+        layout(&LayoutInput {
+            area,
+            sections: self.sections,
+            focus: Some(self.focus),
+            command_log: self.command_log_displayed,
+        })
+        .footer
     }
 
     /// Draws only the maximized widget for `maximized`, over the whole `area`, as Textual's `Screen.maximize`: at
@@ -482,10 +534,7 @@ impl Component for MainScreen {
             frame.render_widget(titled_box(&self.command_log_title, focused, theme), rect);
             self.hits.push((interior(rect), FocusTarget::CommandLog));
         }
-
-        // Footer content arrives with #76.
-        let footer_bg = theme.color(theme.palette.footer_background, theme.background());
-        frame.render_widget(Block::new().style(Style::new().bg(footer_bg)), boxes.footer);
+        // `App` draws the footer into `Self::footer_area`, from the chain's active bindings.
     }
 }
 

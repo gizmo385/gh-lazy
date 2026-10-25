@@ -791,8 +791,11 @@ scrollbar is two such columns. Scrollbar glyphs at the end of a row (a horizonta
 
 #### Footer
 
-- The last screen row is the footer unless a box covers it. It's split into style runs, and the style of the first
-  run with text is the key style.
+- The last screen row is the footer unless a box covers it. Otherwise the footer is the last inner row of the
+  innermost box over the last screen row, as on screens that put `LazyGithubFooter` inside a bordered container (the
+  auth screen, settings, the lookup and confirm modals). That row only counts when every binding read from it has a
+  label, so ordinary box content isn't taken for a footer. The row is split into style runs, and the style of the
+  first run with text is the key style.
 - Each key-style run with text starts a binding: its trimmed text is `key`, and the trimmed text of the runs up to
   the next key run is `label`.
 - An empty last row gives `footer = []`. `footer_clipped` is true when the row's last cell isn't blank, which means

@@ -17,9 +17,8 @@ wait = { text = "GitHub Authentication", timeout_ms = 15000 }
 capture = "auth"
 checks = ["titles", "footer"]
 
-# The footer sits inside the border, on the box's last row, and the extractor only reads a footer from the screen's
-# last row when no box covers it. So both apps' footers read as [] and `q Quit` is checked as text instead.
+# The footer sits inside the border, on the box's last inner row.
 [expect.auth]
 pane_titles = ["GitHub Authentication"]
-contains = ["To proceed, please log into the Github CLI via gh auth login", "q Quit"]
-footer = []
+contains = ["To proceed, please log into the Github CLI via gh auth login"]
+footer = ["q Quit"]

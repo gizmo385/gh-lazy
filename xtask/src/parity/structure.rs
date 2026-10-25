@@ -922,20 +922,50 @@ fn collect_text(view: &View<'_>, mask: &Mask, region: &Region) -> Vec<String> {
 
 // The footer.
 
-/// Reads the last screen row as a Textual footer, unless a box covers it: each run in the first run's style is a
-/// key, and the runs after it up to the next key are its label. Returns the bindings and whether the row is full.
+/// Reads the screen's footer. That's the last screen row when no box covers it. Otherwise it's the last inner row of
+/// the innermost box over the last screen row, as on Textual screens that put the footer inside a bordered container,
+/// but only if that row reads as bindings that all have labels, so ordinary box content isn't taken for a footer.
+/// Returns the bindings and whether the footer reaches its row's end.
 fn find_footer(view: &View<'_>, mask: &mut Mask, boxes: &[Found]) -> (Vec<Binding>, bool) {
-    let Some(r) = view.rows.checked_sub(1) else {
+    let Some(last) = view.rows.checked_sub(1) else {
         return (Vec::new(), false);
     };
-    if boxes.iter().any(|b| (b.rect.row..=b.rect.bottom()).contains(&r)) {
+    let covers = |b: &Found, r: usize| (b.rect.row..=b.rect.bottom()).contains(&r);
+    let has_child_over = |id: usize, r: usize| boxes.iter().any(|c| c.parent == Some(id) && covers(c, r));
+    let Some((id, rect)) = boxes
+        .iter()
+        .enumerate()
+        .find(|&(id, b)| covers(b, last) && !has_child_over(id, last))
+        .map(|(id, b)| (id, b.rect))
+    else {
+        let cols = 0..view.cols;
+        claim_row(mask, last, cols.clone());
+        return read_footer(view, last, cols);
+    };
+    let r = rect.bottom() - 1;
+    if r <= rect.row || has_child_over(id, r) {
         return (Vec::new(), false);
     }
-    for c in 0..view.cols {
+    let cols = rect.col + 1..rect.right();
+    let (bindings, clipped) = read_footer(view, r, cols.clone());
+    if bindings.is_empty() || bindings.iter().any(|b| b.label.is_empty()) {
+        return (Vec::new(), false);
+    }
+    claim_row(mask, r, cols);
+    (bindings, clipped)
+}
+
+fn claim_row(mask: &mut Mask, r: usize, cols: std::ops::Range<usize>) {
+    for c in cols {
         mask.claim(r, c);
     }
+}
+
+/// Reads `cols` of row `r` as a Textual footer: each run in the first run's style is a key, and the
+/// runs after it up to the next key are its label. Also returns whether the row's last cell isn't blank.
+fn read_footer(view: &View<'_>, r: usize, cols: std::ops::Range<usize>) -> (Vec<Binding>, bool) {
     let mut runs: Vec<(&Style, String)> = Vec::new();
-    for c in 0..view.cols {
+    for c in cols.clone() {
         let style = view.style(r, c);
         match runs.last_mut() {
             Some((s, text)) if *s == style => text.push_str(view.text(r, c)),
@@ -961,7 +991,7 @@ fn find_footer(view: &View<'_>, mask: &mut Mask, boxes: &[Found]) -> (Vec<Bindin
     for (binding, label) in bindings.iter_mut().zip(labels) {
         label.trim().clone_into(&mut binding.label);
     }
-    let clipped = view.cols > 0 && !view.is_space(r, view.cols - 1);
+    let clipped = cols.end > cols.start && !view.is_space(r, cols.end - 1);
     (bindings, clipped)
 }
 
@@ -1153,6 +1183,30 @@ mod tests {
         let covered = extract(&test_grid::parse("┌─ A ─┐\n│     │\n└─────┘\n"), &dark());
         assert!(covered.footer.is_empty());
         assert_eq!(covered.boxes.len(), 1);
+    }
+
+    #[test]
+    fn reads_a_footer_inside_the_box_over_the_last_row() {
+        let s = extract(
+            &test_grid::parse(
+                "┌─ Auth ───────────┐\n│ log in please    │\n│ q Quit  ? Help   │\n└──────────────────┘\n--- styles\n\n\n.kkklllllkkkllll\n--- legend\nk fg=#ffa62b bold\nl fg=#e0e0e0\n",
+            ),
+            &dark(),
+        );
+        let footer: Vec<String> = s.footer.iter().map(Binding::display).collect();
+        assert_eq!(footer, ["q Quit", "? Help"]);
+        assert!(!s.footer_clipped);
+        assert_eq!(s.boxes[0].text, ["log in please"]);
+    }
+
+    #[test]
+    fn plain_text_on_a_boxes_last_row_is_not_a_footer() {
+        let s = extract(
+            &test_grid::parse("┌─ A ────────┐\n│ first      │\n│ last line  │\n└────────────┘\n"),
+            &dark(),
+        );
+        assert!(s.footer.is_empty());
+        assert_eq!(s.boxes[0].text, ["first", "last line"]);
     }
 
     #[test]

@@ -351,7 +351,7 @@ impl MainScreen {
             Owner::Table(_) | Owner::Section(_) | Owner::SelectionsPane | Owner::DetailsTabs | Owner::CommandLog => {
                 Some(Action::Unimplemented(id))
             }
-            Owner::App => None,
+            Owner::App | Owner::Screen(ScreenKind::Auth) => None,
         }
     }
 

@@ -4,6 +4,7 @@ use lazy_github_core::logging::LogLine;
 
 use crate::effect::{GithubResponse, RequestId, TimerId};
 use crate::keymap::BindingId;
+use crate::screens::auth::AuthAction;
 use crate::screens::main::{FocusTarget, MainAction};
 use crate::toast::Toast;
 
@@ -29,7 +30,13 @@ pub enum Action {
     Maximize,
     /// Escape while maximized: back to the normal layout, focus unchanged.
     Minimize,
-    /// One of the main screen's own actions.
+    /// Replace the startup or authentication screen with the main screen.
+    EnterMain,
+
+    // Screens.
+    /// The authentication screen's own actions.
+    Auth(AuthAction),
+    /// The main screen's own actions.
     Main(MainAction),
 
     // Plumbing: results of effects and other runtime inputs, routed to their owner.

@@ -80,6 +80,12 @@ impl FakeGithub {
         self
     }
 
+    /// From now on, `check_auth` fails with `error`, or succeeds for `None`. Clones see the change too, so a test can
+    /// log in while the app holds the fake.
+    pub fn set_auth_error(&self, error: Option<GhError>) {
+        self.lock().auth_error = error;
+    }
+
     /// Every call is recorded at once but returns only after `latency`, on tokio's clock. With
     /// `tokio::time::pause()` this keeps a request in flight, so a test can cancel it.
     #[must_use]

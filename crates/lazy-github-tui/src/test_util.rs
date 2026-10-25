@@ -41,34 +41,45 @@ struct FakeTimer {
 
 impl TestApp {
     /// An app on the main screen with `config` (and its keymap), the default theme, and a logged-in [`FakeGithub`].
+    /// The startup auth check is skipped; [`Self::on_startup`] runs it.
     pub fn new(config: Config) -> Self {
         Self::with_github(config, FakeGithub::new())
     }
 
     /// Like [`Self::new`], with requests answered by `gh`.
     pub fn with_github(config: Config, gh: FakeGithub) -> Self {
-        Self::build(config, Theme::default(), gh)
+        let mut test = Self::build(config, Theme::default(), gh);
+        test.app.skip_startup();
+        test
     }
 
     /// Like [`Self::new`], drawn with `theme` (for example one reduced to a 256-color terminal).
     pub fn with_theme(config: Config, theme: Theme) -> Self {
-        Self::build(config, theme, FakeGithub::new())
+        let mut test = Self::build(config, theme, FakeGithub::new());
+        test.app.skip_startup();
+        test
+    }
+
+    /// An app as it launches: on the blank startup screen, with [`App::init`]'s effects performed. Requests it makes
+    /// are answered by `gh` on [`Self::settle`].
+    pub fn on_startup(config: Config, gh: FakeGithub) -> Self {
+        let mut test = Self::build(config, Theme::default(), gh);
+        let init = test.app.init();
+        test.perform(init);
+        test
     }
 
     fn build(config: Config, theme: Theme, gh: FakeGithub) -> Self {
         let clock = FakeClock::new();
-        let mut app = App::new(config, theme, clock.clone());
-        let init = app.init();
-        let mut test = Self {
+        let app = App::new(config, theme, clock.clone());
+        Self {
             app,
             gh,
             clock,
             effects: Vec::new(),
             queued: VecDeque::new(),
             timers: HashMap::new(),
-        };
-        test.perform(init);
-        test
+        }
     }
 
     /// Presses each key in turn, in Textual key syntax ([`KeySpec::parse`]): `"q"`, `"M"`, `"escape"`, `"shift+tab"`,

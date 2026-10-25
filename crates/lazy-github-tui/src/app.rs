@@ -3,7 +3,7 @@
 use std::collections::VecDeque;
 use std::sync::Arc;
 
-use crossterm::event::KeyEvent;
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
 use lazy_github_core::logging::LogLine;
 use ratatui::Frame;
@@ -14,11 +14,11 @@ use tokio::time::Instant;
 
 use crate::action::Action;
 use crate::clock::Clock;
-use crate::component::{ChainLink, Component, Cx, Outbox, Owner, RenderCx, ScreenKind, Shared};
+use crate::component::{BindingState, ChainLink, Component, Cx, Outbox, Owner, RenderCx, Shared};
 use crate::effect::Effect;
 use crate::event::Event;
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::screens::main::MainScreen;
+use crate::screens::main::{FocusTarget, MainScreen};
 use crate::theme::Theme;
 use crate::toast::{Severity, Toast};
 
@@ -26,7 +26,21 @@ use crate::toast::{Severity, Toast};
 pub const COMMAND_LOG_LIMIT: usize = 1000;
 
 /// The bindings on the app link of every non-modal chain, in Textual order: its built-ins, then `LazyGithub.BINDINGS`.
-const APP_BINDINGS: &[BindingId] = &[BindingId::TextualQuit, BindingId::TextualHelpQuit, BindingId::AppQuit];
+const APP_BINDINGS: &[BindingId] = &[
+    BindingId::TextualQuit,
+    BindingId::TextualHelpQuit,
+    BindingId::AppQuit,
+    BindingId::AppCommandPalette,
+    BindingId::AppMaximizeWidget,
+    BindingId::AppOpenHelp,
+];
+
+/// The widget shown alone while maximized.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Maximized {
+    /// What had focus when it was maximized. It stays fixed until minimized, even when focus keys move focus.
+    pub target: FocusTarget,
+}
 
 /// The screen under any modals.
 enum BaseScreen {
@@ -39,6 +53,9 @@ pub struct App {
     shared: Shared,
     toasts: Vec<Toast>,
     command_log: VecDeque<LogLine>,
+    maximized: Option<Maximized>,
+    /// The maximize toast shows once per session. Never saved.
+    has_shown_maximize_toast: bool,
     should_quit: bool,
 }
 
@@ -52,6 +69,8 @@ impl App {
             shared: Shared::new(config, keymap, theme, Arc::new(clock)),
             toasts: Vec::new(),
             command_log: VecDeque::new(),
+            maximized: None,
+            has_shown_maximize_toast: false,
             should_quit: false,
         }
     }
@@ -81,14 +100,10 @@ impl App {
                 tracing::debug!("Received {signal:?}; quitting");
                 Some(Action::Quit)
             }
-            // Mouse hit-testing arrives with the first focusable regions (#75). Resizes need no state: the next
-            // draw uses the new size. Nothing animates yet, so a deadline has nothing to advance.
-            Event::Mouse(_)
-            | Event::Paste(_)
-            | Event::Resize(..)
-            | Event::FocusGained
-            | Event::FocusLost
-            | Event::Deadline => None,
+            Event::Mouse(mouse) => self.action_for_mouse(mouse),
+            // Resizes need no state: the next draw uses the new size. Nothing animates yet, so a deadline has
+            // nothing to advance.
+            Event::Paste(_) | Event::Resize(..) | Event::FocusGained | Event::FocusLost | Event::Deadline => None,
         }
     }
 
@@ -96,7 +111,10 @@ impl App {
     fn action_for_key(&mut self, key: KeyEvent) -> Option<Action> {
         // 1. Normalize; releases are ignored.
         let chord = KeyChord::from_event(&key)?;
-        // 2. Escape minimizes a maximized widget before any binding: arrives with maximize (#75).
+        // 2. Escape minimizes a maximized widget before any binding (Textual's `ESCAPE_TO_MINIMIZE`).
+        if self.maximized.is_some() && chord == KeyChord::new(KeyCode::Esc, KeyModifiers::NONE) {
+            return Some(Action::Minimize);
+        }
         let chain = self.binding_chain();
         // 3. Priority bindings, from the app link inward. The clash rule sees the whole link, as in Textual.
         for link in chain.iter().rev() {
@@ -118,6 +136,16 @@ impl App {
         None
     }
 
+    /// A left click focuses the target under the pointer, as of the last frame.
+    fn action_for_mouse(&self, mouse: MouseEvent) -> Option<Action> {
+        if mouse.kind != MouseEventKind::Down(MouseButton::Left) {
+            return None;
+        }
+        match &self.base {
+            BaseScreen::Main(main) => main.hit(mouse.column, mouse.row).map(Action::Focus),
+        }
+    }
+
     /// Tries each binding a key fired in one link, in order, until one applies (Textual's `_check_bindings`).
     fn route_first(&mut self, owner: Owner, matches: Vec<BindingId>) -> Option<Action> {
         matches.into_iter().find_map(|id| self.route_binding(owner, id))
@@ -125,20 +153,25 @@ impl App {
 
     /// The binding chain for the current focus, innermost first. The app link comes last.
     pub fn binding_chain(&self) -> Vec<ChainLink> {
-        let screen = match &self.base {
-            BaseScreen::Main(main) => ChainLink {
-                owner: Owner::Screen(ScreenKind::Main),
-                bindings: main.bindings(),
-            },
+        let mut chain = match &self.base {
+            BaseScreen::Main(main) => main.binding_chain(),
         };
         // Modals (M2) will cut the chain here, as Textual's `_modal_binding_chain` does.
-        vec![
-            screen,
-            ChainLink {
-                owner: Owner::App,
-                bindings: APP_BINDINGS,
-            },
-        ]
+        chain.push(ChainLink {
+            owner: Owner::App,
+            bindings: APP_BINDINGS,
+        });
+        chain
+    }
+
+    /// How the footer and help panel (#76) show binding `id` of the chain link `owner`.
+    pub fn binding_state(&mut self, owner: Owner, id: BindingId) -> BindingState {
+        let mut scratch = Outbox::default();
+        let cx = Cx::new(&mut self.shared, &mut scratch);
+        match (&self.base, owner) {
+            (_, Owner::App) => BindingState::Enabled,
+            (BaseScreen::Main(main), owner) => main.link_binding_state(owner, id, &cx),
+        }
     }
 
     /// Asks the owner of a matched binding what it means right now.
@@ -147,13 +180,14 @@ impl App {
             Owner::App => match id {
                 BindingId::AppQuit | BindingId::TextualQuit => Some(Action::Quit),
                 BindingId::TextualHelpQuit => Some(Action::QuitHint),
+                BindingId::AppMaximizeWidget => Some(Action::Maximize),
                 other => Some(Action::Unimplemented(other)),
             },
-            Owner::Screen(ScreenKind::Main) => {
+            owner => {
                 let mut scratch = Outbox::default();
                 let cx = Cx::new(&mut self.shared, &mut scratch);
                 match &mut self.base {
-                    BaseScreen::Main(main) => main.on_binding(id, &cx),
+                    BaseScreen::Main(main) => main.on_link_binding(owner, id, &cx),
                 }
             }
         }
@@ -195,6 +229,20 @@ impl App {
             }
             Action::QuitHint => out.actions.push_back(Action::Notify(quit_hint())),
             Action::Notify(toast) => self.toasts.push(toast),
+            Action::Focus(target) => {
+                let BaseScreen::Main(main) = &mut self.base;
+                main.try_focus(target);
+            }
+            Action::FocusNext | Action::FocusPrevious => {
+                let BaseScreen::Main(main) = &mut self.base;
+                main.focus_step(matches!(action, Action::FocusNext), self.maximized.map(|m| m.target));
+            }
+            Action::Maximize => self.maximize(out),
+            Action::Minimize => self.maximized = None,
+            Action::Main(action) => {
+                let BaseScreen::Main(main) = &mut self.base;
+                main.update(action, &mut Cx::new(&mut self.shared, out));
+            }
             Action::Github(id, _) => {
                 // Screens that make requests (#106, #74) claim their responses here by id.
                 tracing::debug!("Dropping the response to request {id}: nothing is waiting for it");
@@ -218,6 +266,27 @@ impl App {
         }
     }
 
+    /// Shows only the focused widget, with the one-time toast. A no-op while something is maximized: `M` doesn't
+    /// toggle back.
+    fn maximize(&mut self, out: &mut Outbox) {
+        if self.maximized.is_some() {
+            return;
+        }
+        let target = match &self.base {
+            BaseScreen::Main(main) => main.focus(),
+        };
+        self.maximized = Some(Maximized { target });
+        if !self.has_shown_maximize_toast {
+            self.has_shown_maximize_toast = true;
+            out.actions.push_back(Action::Notify(maximize_toast()));
+        }
+    }
+
+    /// What is maximized, if anything.
+    pub fn maximized(&self) -> Option<Maximized> {
+        self.maximized
+    }
+
     /// Draws the whole UI: the base screen, then (later) modals and toasts.
     pub fn render(&mut self, frame: &mut Frame<'_>) {
         let area = frame.area();
@@ -239,8 +308,24 @@ impl App {
             focused: true,
             focus_within: true,
         };
+        // While maximized, the widget replaces the whole screen, footer and help panel included.
+        match (&mut self.base, self.maximized) {
+            (BaseScreen::Main(main), Some(maximized)) => main.render_maximized(frame, area, maximized.target, &cx),
+            (BaseScreen::Main(main), None) => main.render(frame, area, &cx),
+        }
+    }
+
+    /// The main screen, while it's the base screen.
+    pub fn main_screen(&self) -> Option<&MainScreen> {
+        match &self.base {
+            BaseScreen::Main(main) => Some(main),
+        }
+    }
+
+    /// The main screen, for changing state that later milestones drive (runtime section toggles).
+    pub fn main_screen_mut(&mut self) -> Option<&mut MainScreen> {
         match &mut self.base {
-            BaseScreen::Main(main) => main.render(frame, area, &cx),
+            BaseScreen::Main(main) => Some(main),
         }
     }
 
@@ -269,6 +354,16 @@ impl App {
     pub fn config(&self) -> &Config {
         &self.shared.config
     }
+}
+
+/// Python's `action_maximize` toast.
+fn maximize_toast() -> Toast {
+    let message = Line::from(vec![
+        Span::raw("Current view maximized. Press "),
+        Span::styled("escape", Style::new().add_modifier(Modifier::BOLD)),
+        Span::raw(" to return."),
+    ]);
+    Toast::new(Severity::Information, message).with_title("View Maximized")
 }
 
 /// Textual's `help_quit` toast.

@@ -1,0 +1,26 @@
+version = 1
+description = "With appearance.show_command_log, 6 focuses the command log and its pane grows to 40%"
+gate = true
+parity_rows = ["Focus switching (1-6)"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+
+[env.config_overrides]
+appearance = { show_command_log = true }
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+keys = ["6"]
+
+[[step]]
+capture = "log"
+checks = ["titles", "tabs", "focus"]
+
+[expect.log]
+# The log grows to 40% when focused, so its title row is above the Workflows title.
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[6] Command Log", "[4] Workflows"]
+focused = ["[6] Command Log"]

@@ -5,7 +5,7 @@ this file.
 
 | Id | Item | Python reference | Milestone | Status | Issue | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| `markdown-links.rendering` | Markdown rendering of bodies, comments, README, debug info | Textual `Markdown` | M2 | not started | | PLAN §4: own pulldown-cmark renderer. |
+| `markdown-links.rendering` | Markdown rendering of bodies, comments, README, debug info | Textual `Markdown` | M2 | not started | #174 | PLAN §4: own pulldown-cmark renderer. |
 | `markdown-links.reference-expansion` | Reference expansion: `#N`, `owner/repo#N`, `@user` become links, not inside code fences or inline code | `lib/github/references.py` `expand_github_references` | M2 | not started | | Port the regexes' lookbehind rules. |
 | `markdown-links.link-click` | Clicking a markdown link or `@click` link: PR/issue URLs open in-app (repo switches), user URLs open the profile modal, everything else opens the browser | `ui/screens/primary.py` `action_open_gh_link`, `handle_markdown_link_clicked`, `_open_link_subject`; `ui/screens/link_paste.py` `resolve_github_url` (`accept_repo=False`) | M2 | not started | | Bare repo URLs go to the browser here, unlike the paste modal. |
 | `markdown-links.link-hints` | Link hints overlay | `ui/widgets/link_hints.py` | M4 | not started | | |

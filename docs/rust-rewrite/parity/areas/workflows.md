@@ -5,9 +5,9 @@ this file.
 
 | Id | Item | Python reference | Milestone | Status | Issue | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| `workflows.runs-table` | Workflows tabs and runs table | `ui/widgets/workflows.py` `WorkflowsContainer`, `WorkflowRunsContainer` | M2 | not started | | There are no tabs any more; one runs table. |
-| `workflows.columns` | Columns: "Time" (`%Y-%m-%d %H:%M`), "Result" (conclusion or status), "Job Name" (workflow name), "Run Name" (display title), "Run #"; sorted by time desc | `ui/widgets/workflows.py` `workflow_run_to_cell`, `WorkflowRunsContainer.on_mount` | M2 | not started | | Py bug B4 (keyed by run number). |
-| `workflows.loading` | Loading: spinner, cached rows from `<owner>_<repo>_workflow_runs.json`, workflows and runs fetched together, lazy pages of 30 | `ui/widgets/workflows.py` `load_repo`, `initialize_tables_from_cache` | M2 | not started | | No error handling (Py bug B16). |
+| `workflows.runs-table` | Workflows tabs and runs table | `ui/widgets/workflows.py` `WorkflowsContainer`, `WorkflowRunsContainer` | M2 | not started | #173 | There are no tabs any more; one runs table. |
+| `workflows.columns` | Columns: "Time" (`%Y-%m-%d %H:%M`), "Result" (conclusion or status), "Job Name" (workflow name), "Run Name" (display title), "Run #"; sorted by time desc | `ui/widgets/workflows.py` `workflow_run_to_cell`, `WorkflowRunsContainer.on_mount` | M2 | not started | #173 | Py bug B4 (keyed by run number). |
+| `workflows.loading` | Loading: spinner, cached rows from `<owner>_<repo>_workflow_runs.json`, workflows and runs fetched together, lazy pages of 30 | `ui/widgets/workflows.py` `load_repo`, `initialize_tables_from_cache` | M2 | not started | #173 | No error handling (Py bug B16). |
 | `workflows.select` | Enter/space selects a run: details get Overview / Jobs / Logs, focus moves to details | `ui/widgets/workflows.py` `workflow_run_selected`; `ui/screens/primary.py` `load_workflow_run` | M2 | not started | | |
 | `workflows.trigger` | `T` trigger workflow; toasts warning "No repository selected", "No workflows found in this repository", "Successfully triggered workflow" | `ui/widgets/workflows.py` `action_trigger_workflow` | M3 | not started | | |
 | `workflows.details` | Details: workflow run overview / jobs / logs | `ui/widgets/workflow_run_details.py` | M2 | not started | | |

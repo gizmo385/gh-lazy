@@ -1,0 +1,98 @@
+lazy-github-screen 1
+size 100x30
+cursor 1 4 hidden
+--- text
+┌─────────────────────────────────────────────────────────────────┐▏
+│No repository selected                                           │▏         ↑ k Cursor up
+└─────────────────────────────────────────────────────────────────┘▏         ↓ j Cursor down
+┌─ [1] Repositories ─────┐┌─ [5] Details ─────────────────────────┐▏           ← Cursor left
+│ ★  Owner       Name    ││ Introduction                          │▏           → Cursor right
+│ ☆  parity-bot  dotfiles││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━│▏        home Home
+│ ☆  parity-bot  hello-wo││                                       │▏         end End
+│ ☆  parity-bot  lazy-dem││                                       │▏      pgup K Page up         ▂▂
+│               ▋        ││    LazyGithub: A Terminal UI For      │▏      pgdn J Page down
+│                        ││    GitHub (0.6.6)                     │▏     ^pgup ^ Page Left
+│                        ││                                       │▏     ^pgdn $ Page Right
+│                        ││  LazyGithub is a terminal UI for      │▏     ⏎ space Select table
+└────────────────────────┘│  interacting with GitHub. You can     │▏             entry
+┌─ [2] Pull Requests ────┐│  get started by selecting one of      │▏     ^home g Top
+│ #  Status  Author  Titl││  the repositories listed in the       │▏      ^end G Bottom
+│                      ▎ ││  table on the left. Once you have   ▆▆│▏           l Table scroll
+│                        ││  selected a repository, any           │▏             right
+└────────────────────────┘│  issues, pull requests, and action    │▏           h Table scroll
+┌─ [3] Issues ───────────┐│  workflows will be retrieved and      │▏             left
+│ #  Status  Author  Titl││  displayed below it.                  │▏
+│                      ▎ ││                                       │▏           / Search Search
+│                        ││  Issues, pull requests, and action    │▏             in the table
+└────────────────────────┘│  lists can also be interacted         │▏
+┌─ [4] Workflows ────────┐│  with!                                │▏          ^f Toggle Favorite
+│ Time  Result  Job Name ││                                       │▏             Mark/unmark a
+│              ▏         ││                      ▌
+│                        ││  Pull Requests       ▌ View Maximized
+│                        ││                      ▌ Current view maximized. Press escape to
+└────────────────────────┘└──────────────────────▌ return.
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I ▏             the top of the
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcddddddddddddddddddddddddddddeec
+a.................................................................abcdffffffffffd...............deec
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcdffffffffffd...............deec
+gggggggggggggggggggggggggghhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbcdffffffffffd...............deec
+gijiiiiiiiiiiiiiiiiiiiiiighc............cccccccccccccccccccccccccchbcdffffffffffd...............deec
+gkkkkkkkkkkkkkkkkkkkkkkkkghlmmmmmmmmmmmmllllllllllllllllllllllllllhbcdffffffffffd...............deec
+gnnnnnnnnnnnnnnnnnnnnnnnnghccccccccccccccccccccccccccccccccccccceehbcdffffffffffd...............deec
+gnnnnnnnnnnnnnnnnnnnnnnnnghccccccccccccccccccccccccccccccccccccceehbcdffffffffffd...............dooc
+gpppppppppppppppqrrrrrrrrghccssssssssssssssssssssssssssssssssscceehbcdffffffffffd...............drrc
+gccccccccccccccccccccccccghccssssssssssssssssssssssssssssssssscceehbcdffffffffffd...............drrc
+gccccccccccccccccccccccccghccccccccccccccccccccccccccccccccccccceehbcdffffffffffd...............drrc
+gccccccccccccccccccccccccghcc...............................cccceehbcdffffffffffd...............drrc
+gggggggggggggggggggggggggghcc................................ccceehbcd..........d...............drrc
+hhhhhhhhhhhhhhhhhhhhhhhhhhhcc...............................cccceehbcdffffffffffd...............drrc
+htttttttttttttttttttttttthhcc..............................ccccceehbcdffffffffffd...............drrc
+huuuuuuuuuuuuuuuuuuuuuuqrhhcc................................cccoohbcdffffffffffd...............drrc
+hcccccccccccccccccccccccchhcc..........................cccccccccrrhbcd..........d...............drrc
+hhhhhhhhhhhhhhhhhhhhhhhhhhhcc.................................ccrrhbcdffffffffffd...............drrc
+hhhhhhhhhhhhhhhhhhhhhhhhhhhcc...............................ccccrrhbcd..........d...............drrc
+htttttttttttttttttttttttthhcc...................ccccccccccccccccrrhbcddddddddddddddddddddddddddddrrc
+huuuuuuuuuuuuuuuuuuuuuuqrhhcccccccccccccccccccccccccccccccccccccrrhbcdffffffffffd.......vvvvvvv.drrc
+hcccccccccccccccccccccccchhccwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwccrrhbcd..........dvvvvvvvvvvvv...drrc
+hhhhhhhhhhhhhhhhhhhhhhhhhhhccwwwwwwwwwwwwwwwwwwwwwwwwwwwwcccccccrrhbcddddddddddddddddddddddddddddrrc
+hhhhhhhhhhhhhhhhhhhhhhhhhhhccwwwwwccccccccccccccccccccccccccccccrrhbcdffffffffffd...............drrc
+htttttttttttttttttttttttthhcccccccccccccccccccccccccccccccccccccrrhbcd..........dvvvvvvvvvvvvvv.drrc
+huuuuuuuuuuuuuuqrrrrrrrrrhhccccccccccccccccccccccxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyrc
+hcccccccccccccccccccccccchhcczzzzzzzzzzzzzcccccccxyAAAAAAAAAAAAAAyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyrc
+hcccccccccccccccccccccccchhccccccccccccccccccccccxyBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCBBByyyyyyyyrc
+hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxyBBBBBBByyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyrc
+DDDEEEEEEEDDDDEEEEEEEEEEEEEEEEDDDEEEEEEEEEEEEEEEEEEDDDEEEEEEEEEEDDDbcd..........dvvvvvvvvvvvvvvvdrrc
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#4f4f4f bg=#121212
+c bg=#121212
+d fg=#121212 bg=#121212
+e fg=#003054 bg=#121212 inverse
+f fg=#ffc473 bg=#121212 bold
+g fg=#4ebf71 bg=#121212
+h fg=#6db2ff bg=#121212
+i fg=#e0e0e0 bg=#2d3740 bold
+j fg=#98e024 bg=#2d3740 bold
+k fg=#ddedf9 bg=#0178d4 bold
+l fg=#262626 bg=#121212
+m fg=#0178d4 bg=#121212
+n fg=#e0e0e0 bg=#272727
+o fg=#003054 bg=#000000 inverse
+p fg=#003054 bg=#272727 inverse
+q fg=#003054 bg=#000000
+r fg=#e0e0e0 bg=#000000
+s fg=#0178d4 bg=#121212 bold
+t fg=#e0e0e0 bg=#242f38 bold
+u fg=#003054 bg=#1e1e1e inverse
+v fg=#999999 bg=#121212
+w fg=#e0e0e0 bg=#121212 bold
+x fg=#4ebf71 bg=#343f49
+y bg=#343f49
+z fg=#0178d4 bg=#121212 underline
+A fg=#8ad4a1 bg=#343f49 bold
+B fg=#e0e0e0 bg=#343f49
+C fg=#e0e0e0 bg=#343f49 bold
+D fg=#ffa62b bg=#242f38 bold
+E fg=#e0e0e0 bg=#242f38

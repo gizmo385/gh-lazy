@@ -1,0 +1,117 @@
+lazy-github-screen 1
+size 160x48
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                                                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] Details ────────────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Introduction                                                                                 │
+│ ☆  parity-bot  dotfiles     ✘                                ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  ✘                                ││                                                                                              │
+│ ☆  parity-bot  lazy-demo    ✘                                ││                                                                                              │
+│                                                              ││                         LazyGithub: A Terminal UI For GitHub (0.6.6)                         │
+│                                                              ││                                                                                              │
+│                                                              ││  LazyGithub is a terminal UI for interacting with GitHub. You can get started by selecting   │
+│                                                              ││  one of the repositories listed in the table on the left. Once you have selected a           │
+│                                                              ││  repository, any issues, pull requests, and action workflows will be retrieved and           │
+│                                                              ││  displayed below it.                                                                         │
+│                                                              ││                                                                                              │
+│                                                              ││  Issues, pull requests, and action lists can also be interacted with!                        │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││  Pull Requests                                                                               │
+│                                                              ││                                                                                              │
+│                                                              ││  You can interact with a PR by viewing its details, viewing the PR diff, and participating   │
+│                                                              ││  in any active conversations happening on the PR. You can also create a new PR for the       │
+│                                                              ││  currently selected repo.                                                                    │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [3] Issues ─────────────────────────────────────────────────┐│  Issues                                                                                      │
+│ #  Status  Author  Title                                     ││                                                                                              │
+│                                                              ││  You can interact with an issue by viewing its details, partipcating in any activate         │
+│                                                              ││  conversations happening on the issue, and by editing the issue itself. This means that you  │
+│                                                              ││  can close an issue from within LazyGithub.                                                  │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││  Actions                                                                                     │
+│                                                              ││                                                                                              │
+│                                                              ││  Github action and workflow support is pretty limited. It currently only supports listing    │
+│                                                              ││  the workflows and the most recent runs across all actions on the currently selected repo,   │
+│                                                              ││  as well as kicking off a workflow that supports manual triggers.                            │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ / Search  O Lookup Pull Request  E Edit PR  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palle
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cdeddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcc.bbbbbbbbbbbb.................................................................................c
+cffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffccghhhhhhhhhhhhgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggc
+ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicc..............................................................................................c
+ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicc..............................................................................................c
+c..............................................................cc..jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj..c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...........c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...........c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbb.........................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk........................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..lllllllllllll...............................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.......c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbb....................................................................c
+c..............................................................cc..............................................................................................c
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc..............................................................................................c
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc..llllll......................................................................................c
+cddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcc..............................................................................................c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.........c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..lllllll.....................................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb....c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...c
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb............................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..............................................................................................c
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+mmmnnnnnnnmmmnnnnnnnnnnnnnnnnnnnnmmmnnnnnnnnmmmnnnnnnnnnnmmmnnnnnnnnnnmmmnnnnnnnmmmmnnnnnnnnnnnmmmnnnnnnnnnnnnmmmnnnnnnnnnnnnnnnnnnnnnnmmmnnnnnmmmmnnnnnnnnnnnnn
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#6db2ff bg=#121212
+d fg=#e0e0e0 bg=#242f38 bold
+e fg=#98e024 bg=#242f38 bold
+f fg=#e0e0e0 bg=#153854
+g fg=#262626 bg=#121212
+h fg=#0178d4 bg=#121212
+i fg=#e0e0e0 bg=#1e1e1e
+j fg=#0178d4 bg=#121212 bold
+k fg=#e0e0e0 bg=#121212 bold
+l fg=#0178d4 bg=#121212 underline
+m fg=#ffa62b bg=#242f38 bold
+n fg=#e0e0e0 bg=#242f38

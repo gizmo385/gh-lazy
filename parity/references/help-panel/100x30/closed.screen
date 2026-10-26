@@ -1,0 +1,89 @@
+lazy-github-screen 1
+size 100x30
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Details ────────────────────────────────────────────┐
+│ ★  Owner       Name         Private  ││ Introduction                                             │
+│ ☆  parity-bot  dotfiles     ✘        ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  ✘        ││                                                          │
+│ ☆  parity-bot  lazy-demo    ✘        ││                                                          │
+└──────────────────────────────────────┘│      LazyGithub: A Terminal UI For GitHub (0.6.6)        │
+┌─ [2] Pull Requests ──────────────────┐│                                                          │
+│ #  Status  Author  Title             ││  LazyGithub is a terminal UI for interacting with        │
+│                                      ││  GitHub. You can get started by selecting one of the     │
+│                                      ││  repositories listed in the table on the left. Once      │
+│                                      ││  you have selected a repository, any issues, pull        │
+│                                      ││  requests, and action workflows will be retrieved and    │
+└──────────────────────────────────────┘│  displayed below it.                                     │
+┌─ [3] Issues ─────────────────────────┐│                                                          │
+│ #  Status  Author  Title             ││  Issues, pull requests, and action lists can also be   ▁▁│
+│                                      ││  interacted with!                                        │
+│                                      ││                                                          │
+│                                      ││                                                          │
+└──────────────────────────────────────┘│  Pull Requests                                           │
+┌─ [4] Workflows ──────────────────────┐│                                                          │
+│ Time  Result  Job Name  Run Name  Run││  You can interact with a PR by viewing its details,      │
+│                                   ▎  ││  viewing the PR diff, and participating in any active    │
+│                                      ││  conversations happening on the PR. You can also         │
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pallete  M Maximize  ? Ke
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+cefeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecdghhhhhhhhhhhhg............................................d
+ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicdjkkkkkkkkkkkkjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjd
+cllllllllllllllllllllllllllllllllllllllcd........................................................mmd
+cllllllllllllllllllllllllllllllllllllllcd........................................................mmd
+ccccccccccccccccccccccccccccccccccccccccd..nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn..mmd
+ccccccccccccccccccccccccccccccccccccccccd........................................................mmd
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb......mmd
+c......................................cd..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...mmd
+c......................................cd..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb....mmd
+c......................................cd..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb......mmd
+c......................................cd..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..mmd
+ccccccccccccccccccccccccccccccccccccccccd..bbbbbbbbbbbbbbbbbbb...................................mmd
+ccccccccccccccccccccccccccccccccccccccccd........................................................mmd
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd..ooooooooooooooooooooooooooooooooooooooooooooooooooo...ppd
+c......................................cd..oooooooooooooooo......................................qqd
+c......................................cd........................................................qqd
+c......................................cd........................................................qqd
+ccccccccccccccccccccccccccccccccccccccccd..rrrrrrrrrrrrr.........................................qqd
+ccccccccccccccccccccccccccccccccccccccccd........................................................qqd
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb....qqd
+cssssssssssssssssssssssssssssssssssstqqcd..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..qqd
+c......................................cd..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.......qqd
+c......................................cd..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb......qqd
+c......................................cd........................................................qqd
+ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+uuuuvvvvvvvvvvvuuuvvvvvvvvvvvvuuuvvvvvvvvvvvvvvvvvvvvvvuuuvvvvvuuuuvvvvvvvvvvvvvvvvuuuvvvvvvvvvuuuvv
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#6db2ff bg=#121212
+d fg=#4ebf71 bg=#121212
+e fg=#e0e0e0 bg=#242f38 bold
+f fg=#98e024 bg=#242f38 bold
+g bg=#0178d4
+h fg=#ddedf9 bg=#0178d4 bold
+i fg=#e0e0e0 bg=#153854
+j fg=#4f4f4f bg=#121212
+k fg=#0178d4 bg=#121212
+l fg=#e0e0e0 bg=#1e1e1e
+m fg=#003054 bg=#121212 inverse
+n fg=#0178d4 bg=#121212 bold
+o fg=#e0e0e0 bg=#121212 bold
+p fg=#003054 bg=#000000 inverse
+q fg=#e0e0e0 bg=#000000
+r fg=#0178d4 bg=#121212 underline
+s fg=#003054 bg=#1e1e1e inverse
+t fg=#003054 bg=#000000
+u fg=#ffa62b bg=#242f38 bold
+v fg=#e0e0e0 bg=#242f38

@@ -1,0 +1,94 @@
+lazy-github-screen 1
+size 100x30
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Details ────────────────────────────────────────────┐
+│ ★  Owner       Name         Private  ││ Introduction                                             │
+│ ☆  parity-bot  dotfiles     ✘        ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  ✘        ││                                                          │
+│ ☆  parity-bot  lazy-demo    ✘        ││                                                          │
+└──────────────────────────────────────┘│      LazyGithub: A Terminal UI For GitHub (0.6.6)        │
+┌─ [2] Pull Requests ──────────────────┐│                                                        ▃▃│
+│ #  Status  Author  Title             ││  LazyGithub is a terminal UI for interacting with        │
+│                                      ││  GitHub. You can get started by selecting one of the     │
+│                                      ││  repositories listed in the table on the left. Once      │
+│                                      ││  you have selected a repository, any issues, pull        │
+│                                      ││  requests, and action workflows will be retrieved and    │
+└──────────────────────────────────────┘│  displayed below it.                                     │
+┌─ [3] Issues ─────────────────────────┐│                                                          │
+│ #  Status  Author  Title             ││  Issues, pull requests, and action lists can also be     │
+│                                      │└──────────────────────────────────────────────────────────┘
+│                                      │┌─ [6] Command Log ────────────────────────────────────────┐
+│                                      ││ERROR 2026-10-26 05:00:40 - Cannot load notifications -   │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows ──────────────────────┐│                                                          │
+│ Time  Result  Job Name  Run Name  Run││                                                          │
+│                                   ▎  ││        ▌                                                 │
+│                                      ││        ▌ Failed to Load Notifiations                     │
+│                                      ││        ▌ Cannot load notifications - please login to     │
+│                                      ││        ▌ the gh CLI: gh auth login                       │
+└──────────────────────────────────────┘└────────▌                                                ─┘
+ ^n Notifications  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pallete
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cdeddddddddddddddddddddddddddddddddddddcc.bbbbbbbbbbbb.............................................c
+cffffffffffffffffffffffffffffffffffffffccghhhhhhhhhhhhgggggggggggggggggggggggggggggggggggggggggggggc
+ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicc........................................................jjc
+ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicc........................................................jjc
+ccccccccccccccccccccccccccccccccccccccccc..kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk..jjc
+ccccccccccccccccccccccccccccccccccccccccc........................................................llc
+cddddddddddddddddddddddddddddddddddddddcc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb......mmc
+c......................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...mmc
+c......................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb....mmc
+c......................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb......mmc
+c......................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..mmc
+ccccccccccccccccccccccccccccccccccccccccc..bbbbbbbbbbbbbbbbbbb...................................mmc
+ccccccccccccccccccccccccccccccccccccccccc........................................................mmc
+cddddddddddddddddddddddddddddddddddddddcc..nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn...mmc
+c......................................ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+c......................................coooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+c......................................coppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqo
+ccccccccccccccccccccccccccccccccccccccccoppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqo
+ccccccccccccccccccccccccccccccccccccccccoppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqo
+cddddddddddddddddddddddddddddddddddddddcoppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqo
+crrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsmmcopppppppptuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuqo
+c......................................copppppppptuvvvvvvvvvvvvvvvvvvvvvvvvvvvuuuuuuuuuuuuuuuuuuuuqo
+c......................................copppppppptuwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwuuuuqo
+c......................................coxxxxxxxxtuwwwwwwwwwwwwwwwwwwwwwwwwwuuuuuuuuuuuuuuuuuuuuuuyo
+ccccccccccccccccccccccccccccccccccccccccoooooooootuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuoo
+zzzzAAAAAAAAAAAAAAzzzzAAAAAAAAAAAzzzAAAAAAAAAAAAzzzAAAAAAAAAAAAAAAAAAAAAAzzzAAAAAzzzzAAAAAAAAAAAAAAA
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#6db2ff bg=#121212
+d fg=#e0e0e0 bg=#242f38 bold
+e fg=#98e024 bg=#242f38 bold
+f fg=#e0e0e0 bg=#153854
+g fg=#262626 bg=#121212
+h fg=#0178d4 bg=#121212
+i fg=#e0e0e0 bg=#1e1e1e
+j fg=#003054 bg=#121212 inverse
+k fg=#0178d4 bg=#121212 bold
+l fg=#003054 bg=#000000 inverse
+m fg=#e0e0e0 bg=#000000
+n fg=#e0e0e0 bg=#121212 bold
+o fg=#4ebf71 bg=#121212
+p fg=#e2e2e2 bg=#272727
+q fg=#e2e2e2 bg=#000000
+r fg=#003054 bg=#1e1e1e inverse
+s fg=#003054 bg=#000000
+t fg=#b93c5b bg=#343f49
+u bg=#343f49
+v fg=#d17e92 bg=#343f49 bold
+w fg=#e0e0e0 bg=#343f49
+x fg=#003054 bg=#272727 inverse
+y bg=#000000
+z fg=#ffa62b bg=#242f38 bold
+A fg=#e0e0e0 bg=#242f38

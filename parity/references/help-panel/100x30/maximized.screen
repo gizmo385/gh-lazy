@@ -1,0 +1,85 @@
+lazy-github-screen 1
+size 100x30
+cursor 1 4 hidden
+--- text
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏         ↑ k Cursor up
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏         ↓ j Cursor down
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏           ← Cursor left
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏           → Cursor right
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏        home Home
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏         end End
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏      pgup K Page up         ▂▂
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏      pgdn J Page down
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏     ^pgup ^ Page Left
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏     ^pgdn $ Page Right
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏     ⏎ space Select table
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏             entry
+ ★  Owner       Name         Private                               ▏     ^home g Top
+ ☆  parity-bot  dotfiles     ✘                                     ▏      ^end G Bottom
+ ☆  parity-bot  hello-world  ✘                                     ▏           l Table scroll
+ ☆  parity-bot  lazy-demo    ✘                                     ▏             right
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏           h Table scroll
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏             left
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏           / Search Search
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏             in the table
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏          ^f Toggle Favorite
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏             Mark/unmark a
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▌
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▌ View Maximized
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▌ Current view maximized. Press escape to
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▌ return.
+╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱▏             the top of the
+--- styles
+...................................................................abccccccccccccccccccccccccccccddb
+...................................................................abceeeeeeeeeecfffffffffffffffcddb
+...................................................................abceeeeeeeeeecfffffffffffffffcddb
+...................................................................abceeeeeeeeeecfffffffffffffffcddb
+...................................................................abceeeeeeeeeecfffffffffffffffcddb
+...................................................................abceeeeeeeeeecfffffffffffffffcddb
+...................................................................abceeeeeeeeeecfffffffffffffffcddb
+...................................................................abceeeeeeeeeecfffffffffffffffcggb
+...................................................................abceeeeeeeeeecfffffffffffffffchhb
+...................................................................abceeeeeeeeeecfffffffffffffffchhb
+...................................................................abceeeeeeeeeecfffffffffffffffchhb
+...................................................................abceeeeeeeeeecfffffffffffffffchhb
+...................................................................abcffffffffffcfffffffffffffffchhb
+ijiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiabceeeeeeeeeecfffffffffffffffchhb
+kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkabceeeeeeeeeecfffffffffffffffchhb
+lllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllabceeeeeeeeeecfffffffffffffffchhb
+lllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllabcffffffffffcfffffffffffffffchhb
+...................................................................abceeeeeeeeeecfffffffffffffffchhb
+...................................................................abcffffffffffcfffffffffffffffchhb
+...................................................................abcccccccccccccccccccccccccccchhb
+...................................................................abceeeeeeeeeecfffffffmmmmmmmfchhb
+...................................................................abcffffffffffcmmmmmmmmmmmmfffchhb
+...................................................................abcccccccccccccccccccccccccccchhb
+...................................................................abceeeeeeeeeecfffffffffffffffchhb
+...................................................................abcffffffffffcmmmmmmmmmmmmmmfchhb
+.................................................noooooooooooooooooooooooooooooooooooooooooooooooohb
+.................................................noppppppppppppppooooooooooooooooooooooooooooooooohb
+.................................................noqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrrrrrqqqoooooooohb
+.................................................noqqqqqqqoooooooooooooooooooooooooooooooooooooooohb
+...................................................................abcffffffffffcmmmmmmmmmmmmmmmchhb
+--- legend
+. fg=#242f38 bg=#121212
+a fg=#4f4f4f bg=#121212
+b bg=#121212
+c fg=#121212 bg=#121212
+d fg=#003054 bg=#121212 inverse
+e fg=#ffc473 bg=#121212 bold
+f fg=#e0e0e0 bg=#121212
+g fg=#003054 bg=#000000 inverse
+h fg=#e0e0e0 bg=#000000
+i fg=#e0e0e0 bg=#2d3740 bold
+j fg=#98e024 bg=#2d3740 bold
+k fg=#ddedf9 bg=#0178d4 bold
+l fg=#e0e0e0 bg=#272727
+m fg=#999999 bg=#121212
+n fg=#4ebf71 bg=#343f49
+o bg=#343f49
+p fg=#8ad4a1 bg=#343f49 bold
+q fg=#e0e0e0 bg=#343f49
+r fg=#e0e0e0 bg=#343f49 bold

@@ -1,0 +1,130 @@
+lazy-github-screen 1
+size 160x48
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                                                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] Details ────────────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Introduction                                                                                 │
+│ ☆  parity-bot  dotfiles     ✘                                ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  ✘                                ││                                                                                              │
+│ ☆  parity-bot  lazy-demo    ✘                                ││                                                                                              │
+│                                                              ││                        LazyGithub: A Terminal UI For GitHub (0.6.6)                          │
+│                                                              ││                                                                                              │
+│                                                              ││  LazyGithub is a terminal UI for interacting with GitHub. You can get started by             │
+│                                                              ││  selecting one of the repositories listed in the table on the left. Once you have            │
+│                                                              ││  selected a repository, any issues, pull requests, and action workflows will be retrieved    │
+└──────────────────────────────────────────────────────────────┘│  and displayed below it.                                                                     │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
+│ #  Status  Author  Title                                     ││  Issues, pull requests, and action lists can also be interacted with!                        │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││  Pull Requests                                                                               │
+│                                                              ││                                                                                              │
+│                                                              ││  You can interact with a PR by viewing its details, viewing the PR diff, and                 │
+│                                                              ││  participating in any active conversations happening on the PR. You can also create a new    │
+│                                                              ││  PR for the currently selected repo.                                                       ▃▃│
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [3] Issues ─────────────────────────────────────────────────┐│  Issues                                                                                      │
+│ #  Status  Author  Title                                     ││                                                                                              │
+│                                                              ││  You can interact with an issue by viewing its details, partipcating in any activate         │
+│                                                              ││  conversations happening on the issue, and by editing the issue itself. This means that      │
+│                                                              │└──────────────────────────────────────────────────────────────────────────────────────────────┘
+│                                                              │┌─ [6] Command Log ────────────────────────────────────────────────────────────────────────────┐
+│                                                              ││ERROR 2026-10-26 05:00:40 - Cannot load notifications - please login to the gh CLI: gh auth   │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows ──────────────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Failed to Load Notifiations                                │
+│                                                              ││                                 ▌ Cannot load notifications - please login to the gh CLI:    │
+│                                                              ││                                 ▌ gh auth login                                              │
+└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+ ^n Notifications  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pallete  M Maximize  ? Keybindings
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cdeddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcc.bbbbbbbbbbbb.................................................................................c
+cffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffccghhhhhhhhhhhhgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggc
+ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicc............................................................................................jjc
+ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicc............................................................................................jjc
+c..............................................................cc..kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk..jjc
+c..............................................................cc............................................................................................jjc
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...........jjc
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..........jjc
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..jjc
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc..bbbbbbbbbbbbbbbbbbbbbbb...................................................................jjc
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc............................................................................................jjc
+cddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcc..llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll......................jjc
+c..............................................................cc............................................................................................jjc
+c..............................................................cc............................................................................................jjc
+c..............................................................cc..mmmmmmmmmmmmm.............................................................................jjc
+c..............................................................cc............................................................................................jjc
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...............jjc
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..jjc
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.......................................................nnc
+c..............................................................cc............................................................................................ooc
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc............................................................................................ooc
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc..mmmmmm....................................................................................ooc
+cddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcc............................................................................................ooc
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.......ooc
+c..............................................................cc..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb....ooc
+c..............................................................ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+c..............................................................cpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
+c..............................................................cpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrp
+c..............................................................cpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrp
+c..............................................................cpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrp
+c..............................................................cpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrp
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrp
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrp
+cddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrp
+c..............................................................cpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrp
+c..............................................................cpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrp
+c..............................................................cpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrp
+c..............................................................cpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrp
+c..............................................................cpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqstttttttttttttttttttttttttttttttttttttttttttttttttttttttttttrp
+c..............................................................cpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqstuuuuuuuuuuuuuuuuuuuuuuuuuuutttttttttttttttttttttttttttttttrp
+c..............................................................cpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqstvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttrp
+c..............................................................cpwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwstvvvvvvvvvvvvvtttttttttttttttttttttttttttttttttttttttttttttxp
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccppppppppppppppppppppppppppppppppppstttttttttttttttttttttttttttttttttttttttttttttttttttttttttttpp
+yyyyzzzzzzzzzzzzzzyyyyzzzzzzzzzzzyyyzzzzzzzzzzzzyyyzzzzzzzzzzzzzzzzzzzzzzyyyzzzzzyyyyzzzzzzzzzzzzzzzzyyyzzzzzzzzzyyyzzzzzzzzzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#6db2ff bg=#121212
+d fg=#e0e0e0 bg=#242f38 bold
+e fg=#98e024 bg=#242f38 bold
+f fg=#e0e0e0 bg=#153854
+g fg=#262626 bg=#121212
+h fg=#0178d4 bg=#121212
+i fg=#e0e0e0 bg=#1e1e1e
+j fg=#003054 bg=#121212 inverse
+k fg=#0178d4 bg=#121212 bold
+l fg=#e0e0e0 bg=#121212 bold
+m fg=#0178d4 bg=#121212 underline
+n fg=#003054 bg=#000000 inverse
+o fg=#e0e0e0 bg=#000000
+p fg=#4ebf71 bg=#121212
+q fg=#e2e2e2 bg=#272727
+r fg=#e2e2e2 bg=#000000
+s fg=#b93c5b bg=#343f49
+t bg=#343f49
+u fg=#d17e92 bg=#343f49 bold
+v fg=#e0e0e0 bg=#343f49
+w fg=#003054 bg=#272727 inverse
+x bg=#000000
+y fg=#ffa62b bg=#242f38 bold
+z fg=#e0e0e0 bg=#242f38
+A bg=#242f38

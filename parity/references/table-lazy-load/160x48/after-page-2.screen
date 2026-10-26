@@ -1,0 +1,128 @@
+lazy-github-screen 1
+size 160x48
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/lazy-fixture                                                                                                                         │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-bot/lazy-fixture Details ────────────────────────────────────────────────────────┐
+│ ★  Owner       Name          Private                         ││ Repo Overview                                                                                │
+│ ☆  parity-bot  dotfiles      ✘                               ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world   ✘                               ││parity-bot/lazy-fixture • Public                                                              │
+│ ☆  parity-bot  lazy-demo     ✘                               ││Owned by parity-bot                                                                           │
+│ ☆  parity-bot  lazy-fixture  ✘                               ││Default branch: main                                                                          │
+│                                                              ││                                                                                              │
+│                                                              ││70 pull requests over three pages, for the lazy-loading table.                                │
+│                                                              ││                                                                                              │
+│                                                              ││──────────────────────────────────────────────────────────────────────────────────────────────│
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                         lazy-fixture                                         │
+│                                                              ││                                                                                              │
+│                                                              ││  Seventy pull requests over three pages.                                                     │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
+│ #   Status  Author      Title                                ││                                                                                              │
+│ 56  open    parity-bot  Lazy fixture pull request 56         ││                                                                                              │
+│ 55  open    parity-bot  Lazy fixture pull request 55         ││                                                                                              │
+│ 54  open    parity-bot  Lazy fixture pull request 54       ▁▁││                                                                                              │
+│ 53  open    parity-bot  Lazy fixture pull request 53         ││                                                                                              │
+│ 52  open    parity-bot  Lazy fixture pull request 52         ││                                                                                              │
+│ 51  open    parity-bot  Lazy fixture pull request 51         ││                                                                                              │
+│ 50  open    parity-bot  Lazy fixture pull request 50         ││                                                                                              │
+│ 49  open    parity-bot  Lazy fixture pull request 49       ▃▃││                                                                                              │
+│ 48  open    parity-bot  Lazy fixture pull request 48         ││                                                                                              │
+│ 47  open    parity-bot  Lazy fixture pull request 47         ││                                                                                              │
+│ 46  open    parity-bot  Lazy fixture pull request 46         ││                                                                                              │
+│ 45  open    parity-bot  Lazy fixture pull request 45         ││                                                                                              │
+│ 44  open    parity-bot  Lazy fixture pull request 44         ││                                                                                              │
+│ 43  open    parity-bot  Lazy fixture pull request 43         ││                                                                                              │
+│ 42  open    parity-bot  Lazy fixture pull request 42         ││                                                                                              │
+│ 41  open    parity-bot  Lazy fixture pull request 41         ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [3] Issues (empty) ─────────────────────────────────────────┐│                                                                                              │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ / Search  O Lookup Pull Request  E Edit PR  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palle
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+defeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd.bbbbbbbbbbbbb................................................................................d
+dggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggddhiiiiiiiiiiiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhd
+dggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggddjjjjjjjjjjjjjjjjjjjjjjjbbbcccccc..............................................................d
+dggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggddbbbbbbbbbkkkkkkkkkk...........................................................................d
+dllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllddbbbbbbbbbbbbbbbbmmmm..........................................................................d
+d..............................................................dd..............................................................................................d
+d..............................................................ddbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb................................d
+d..............................................................dd..............................................................................................d
+d..............................................................ddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+d..............................................................dd..............................................................................................d
+d..............................................................dd..............................................................................................d
+d..............................................................dd..............................................................................................d
+d..............................................................dd..nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn..d
+d..............................................................dd..............................................................................................d
+d..............................................................dd..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.....................................................d
+d..............................................................dd..............................................................................................d
+d..............................................................dd..............................................................................................d
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooood..............................................................................................d
+oppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrssod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrruuod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
+orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
+ovvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvqqod..............................................................................................d
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooood..............................................................................................d
+ddddddddddddddwwwwwwwdddddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
+deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd..............................................................................................d
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
+dddddddddddddddddwwwwwwwddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
+deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd..............................................................................................d
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+xxxyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyxxxyyyyyyyyxxxyyyyyyyyyyxxxyyyyyyyyyyxxxyyyyyyyxxxxyyyyyyyyyyyxxxyyyyyyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyyyxxxyyyyyxxxxyyyyyyyyyyyyy
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#adff2f bg=#121212
+d fg=#6db2ff bg=#121212
+e fg=#e0e0e0 bg=#242f38 bold
+f fg=#98e024 bg=#242f38 bold
+g fg=#e0e0e0 bg=#1e1e1e
+h fg=#262626 bg=#121212
+i fg=#0178d4 bg=#121212
+j fg=#e0e0e0 bg=#121212 bold underline
+k fg=#e0e0e0 bg=#121212 underline
+l fg=#e0e0e0 bg=#153854
+m fg=#e0e0e0 bg=#121212 bold
+n fg=#0178d4 bg=#121212 bold
+o fg=#4ebf71 bg=#121212
+p fg=#e0e0e0 bg=#2d3740 bold
+q fg=#e0e0e0 bg=#000000
+r fg=#e0e0e0 bg=#272727
+s fg=#003054 bg=#000000
+t fg=#003054 bg=#272727 inverse
+u fg=#003054 bg=#000000 inverse
+v fg=#ddedf9 bg=#0178d4 bold
+w fg=#4e7bae bg=#121212
+x fg=#ffa62b bg=#242f38 bold
+y fg=#e0e0e0 bg=#242f38

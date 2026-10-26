@@ -1,0 +1,93 @@
+lazy-github-screen 1
+size 100x30
+cursor 1 4 hidden
+--- text
+┌─────────────────────────────────────────────────────────────────┐▏
+│No repository selected                                           │▏           ← Previous tab
+└─────────────────────────────────────────────────────────────────┘▏           → Next tab
+┌─ [1] Repositories ─────┐┌─ [5] Details ─────────────────────────┐▏
+│ ★  Owner       Name    ││ Introduction                          │▏           1 Focus repos
+│ ☆  parity-bot  dotfil  ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━│▏             table Focus the
+│ ☆  parity-bot  hello-▆▆││                                       │▏             table of
+│             ▏          ││                                       │▏             accessible
+└────────────────────────┘│    LazyGithub: A Terminal UI For      │▏             repositories
+┌─ [2] Pull Requests ────┐│    GitHub (0.6.6)                     │▏           2 Focus PRs table
+│ #  Status  Author  Titl││                                       │▏             Focus the table
+│                      ▎ ││  LazyGithub is a terminal UI for      │▏             of pull
+│                        ││  interacting with GitHub. You can     │▏             requests for    ▂▂
+│                        ││  get started by selecting one of      │▏             the repo
+│                        ││  the repositories listed in the       │▏           3 Focus issues
+└────────────────────────┘│  table on the left. Once you have   ▆▆│▏             table Focus the
+┌─ [3] Issues ───────────┐│  selected a repository, any           │▏             table of issues
+│ #  Status  Author  Titl││  issues, pull requests, and action    │▏             for the repo
+│                      ▎ ││  workflows will be retrieved and      │▏           4 Focus workflows
+│                        ││  displayed below it.                  │▏             table Focus and
+│                        ││                                       │▏             swap between
+└────────────────────────┘│  Issues, pull requests, and action    │▏             the workflow
+┌─ [4] Workflows ────────┐│  lists can also be interacted         │▏             tabs
+│ Time  Result  Job Name ││  with!                                │▏           5 Focus details
+│              ▏         ││                                       │▏             tabs Focus and
+│                        ││                                       │▏             swap between
+│                        ││  Pull Requests                        │▏             the selection
+│                        ││                                       │▏             detail tabs on
+└────────────────────────┘└───────────────────────────────────────┘▏             the right
+ ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p ▏           6 Focus command
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcddddddddddddddddddddddddddddeec
+a.................................................................abcdffffffffffd...............deec
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcdffffffffffd...............deec
+gggggggggggggggggggggggggghhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbcddddddddddddddddddddddddddddeec
+gijiiiiiiiiiiiiiiiiiiiikkghlmmmmmmmmmmmmlccccccccccccccccccccccccchbcdffffffffffd...............deec
+gnnnnnnnnnnnnnnnnnnnnnnkkghboooooooooooobbbbbbbbbbbbbbbbbbbbbbbbbbhbcd..........d......pppppppppdeec
+gqqqqqqqqqqqqqqqqqqqqqqrrghccccccccccccccccccccccccccccccccccccceehbcd..........dppppppppp......deec
+gkkkkkkkkkkkkksttttttttuughccccccccccccccccccccccccccccccccccccceehbcd..........dppppppppppp....deec
+gggggggggggggggggggggggggghccvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvcceehbcd..........dpppppppppppp...deec
+gggggggggggggggggggggggggghccvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvcceehbcdffffffffffd...............deec
+giiiiiiiiiiiiiiiiiiiiiiiighccccccccccccccccccccccccccccccccccccceehbcd..........dpppppppppppppppdeec
+gkkkkkkkkkkkkkkkkkkkkkkstghcc...............................cccceehbcd..........dpppppppp.......deec
+gccccccccccccccccccccccccghcc................................ccceehbcd..........dppppppppppppp..drrc
+gccccccccccccccccccccccccghcc...............................cccceehbcd..........dpppppppp.......dttc
+gccccccccccccccccccccccccghcc..............................ccccceehbcdffffffffffd...............dttc
+gggggggggggggggggggggggggghcc................................cccrrhbcd..........d......pppppppppdttc
+gggggggggggggggggggggggggghcc..........................ccccccccctthbcd..........dpppppppppppppppdttc
+giiiiiiiiiiiiiiiiiiiiiiiighcc.................................cctthbcd..........dpppppppppppp...dttc
+gkkkkkkkkkkkkkkkkkkkkkkstghcc...............................cccctthbcdffffffffffd...............dttc
+gccccccccccccccccccccccccghcc...................cccccccccccccccctthbcd..........d......pppppppppdttc
+gccccccccccccccccccccccccghccccccccccccccccccccccccccccccccccccctthbcd..........dppppppppppppp..dttc
+gggggggggggggggggggggggggghccwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwcctthbcd..........dppppppppppppp..dttc
+gggggggggggggggggggggggggghccwwwwwwwwwwwwwwwwwwwwwwwwwwwwccccccctthbcd..........dpppp...........dttc
+giiiiiiiiiiiiiiiiiiiiiiiighccwwwwwcccccccccccccccccccccccccccccctthbcdffffffffffd...............dttc
+gkkkkkkkkkkkkkkstttttttttghccccccccccccccccccccccccccccccccccccctthbcd..........d.....ppppppppppdttc
+gccccccccccccccccccccccccghccccccccccccccccccccccccccccccccccccctthbcd..........dppppppppppppp..dttc
+gccccccccccccccccccccccccghccxxxxxxxxxxxxxcccccccccccccccccccccctthbcd..........dpppppppppppppp.dttc
+gccccccccccccccccccccccccghccccccccccccccccccccccccccccccccccccctthbcd..........dpppppppppppppppdttc
+gggggggggggggggggggggggggghhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbcd..........dppppppppp......dttc
+yyyyzzzzzzzzzzzyyyzzzzzzzzzzzzyyyzzzzzzzzzzzzzzzzzzzzzzyyyzzzzzyyyybcdffffffffffd...............dttc
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#4f4f4f bg=#121212
+c bg=#121212
+d fg=#121212 bg=#121212
+e fg=#003054 bg=#121212 inverse
+f fg=#ffc473 bg=#121212 bold
+g fg=#6db2ff bg=#121212
+h fg=#4ebf71 bg=#121212
+i fg=#e0e0e0 bg=#242f38 bold
+j fg=#98e024 bg=#242f38 bold
+k fg=#003054 bg=#1e1e1e inverse
+l bg=#0178d4
+m fg=#ddedf9 bg=#0178d4 bold
+n fg=#e0e0e0 bg=#153854
+o fg=#0178d4 bg=#121212
+p fg=#999999 bg=#121212
+q fg=#e0e0e0 bg=#1e1e1e
+r fg=#003054 bg=#000000 inverse
+s fg=#003054 bg=#000000
+t fg=#e0e0e0 bg=#000000
+u bg=#000000
+v fg=#0178d4 bg=#121212 bold
+w fg=#e0e0e0 bg=#121212 bold
+x fg=#0178d4 bg=#121212 underline
+y fg=#ffa62b bg=#242f38 bold
+z fg=#e0e0e0 bg=#242f38

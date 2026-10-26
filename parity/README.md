@@ -1157,9 +1157,11 @@ the capture races with, or add the box to `ignore.boxes` when the capture doesn'
 dumps first; a disagreement between two Python runs is a race the Rust side would be compared against too. Under
 load (other parity runs at the same time), rerun with `--jobs 1` before changing anything.
 
-Known races that record anyway, because no capture checks them: the Details tab underline after selecting a repo is
-sometimes drawn zero-width (`table-lazy-load`, `status-bar-current-repo`), and the hidden cursor position varies.
-Each re-record of such a scenario can flip the stored screen between the two forms.
+Known races: after a repo is selected, Python sometimes draws the Details tab underline zero-width (`╸╺━━━` instead
+of `╸━━━━╺`) and leaves it that way, so no wait settles it (#209). Captures taken after selecting a repo that don't
+check the Details box list it in `ignore.boxes` (`table-lazy-load`, `status-bar-current-repo`), so a forced
+re-record keeps the stored screen whichever form the run drew. The hidden terminal cursor's position varies too, but
+no check reads it and a re-record doesn't compare it, so it never rewrites a screen.
 
 Re-record a scenario, and commit `parity/references/`, whenever its env, steps, `checks` or `ignore` change. Flipping
 `gate`, editing `parity_rows` or editing `[expect]` needs no re-record.

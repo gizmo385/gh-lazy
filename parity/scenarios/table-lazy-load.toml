@@ -31,9 +31,12 @@ keys = ["2", "G"]
 [[step]]
 wait = { log = { method = "GET", path = "/repos/parity-bot/lazy-fixture/issues", query = { page = "2", per_page = "30", state = "all" } }, timeout_ms = 15000 }
 
+# Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and no wait settles it.
+# These captures are about the PR table, so the Details box is ignored: a re-record keeps the stored screen.
 [[step]]
 capture = "after-page-2"
 checks = ["rows", "cursor"]
+ignore = { boxes = ["Details"] }
 
 # Page 2 doesn't move the cursor (row 29 of 60); the new bottom row asks for page 3.
 [[step]]
@@ -45,6 +48,7 @@ wait = { log = { method = "GET", path = "/repos/parity-bot/lazy-fixture/issues",
 [[step]]
 capture = "after-page-3"
 checks = ["rows", "cursor"]
+ignore = { boxes = ["Details"] }
 
 [expect.after-page-2]
 not_contains = ["Traceback"]

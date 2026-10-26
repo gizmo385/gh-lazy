@@ -20,9 +20,12 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Current repo: parity-bot/dotfiles", timeout_ms = 15000 }
 
+# Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and no wait settles it.
+# Only titles are checked, which `ignore` leaves alone; ignoring the Details box lets a re-record keep the stored screen.
 [[step]]
 capture = "selected"
 checks = ["titles"]
+ignore = { boxes = ["Details"] }
 
 [expect.selected]
 contains = ["Current repo: parity-bot/dotfiles"]

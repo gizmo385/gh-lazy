@@ -159,14 +159,11 @@ fn details_and_content_list_their_own_bindings_first() {
 #[test]
 fn hidden_groups_are_absent_and_unshown_ones_present() {
     let chain = [
-        ChainLink {
-            owner: Owner::Screen(ScreenKind::Main),
-            bindings: &[BindingId::NotificationsOpen, BindingId::TextualFocusNext],
-        },
-        ChainLink {
-            owner: Owner::App,
-            bindings: &[BindingId::TextualHelpQuit, BindingId::AppQuit],
-        },
+        ChainLink::new(
+            Owner::Screen(ScreenKind::Main),
+            &[BindingId::NotificationsOpen, BindingId::TextualFocusNext],
+        ),
+        ChainLink::new(Owner::App, &[BindingId::TextualHelpQuit, BindingId::AppQuit]),
     ];
     let state = |_: Owner, id: BindingId| match id {
         BindingId::NotificationsOpen => BindingState::Hidden,
@@ -203,10 +200,10 @@ fn a_comma_only_override_is_listed_with_no_key() {
 #[test]
 fn one_action_is_one_row_per_link() {
     // The workflow runs table: `workflows.view_run_details` and `common.table.select` are both `select_cursor`.
-    let chain = [ChainLink {
-        owner: Owner::Table(SectionId::Workflows),
-        bindings: &[BindingId::WorkflowsViewRunDetails, BindingId::TableSelect],
-    }];
+    let chain = [ChainLink::new(
+        Owner::Table(SectionId::Workflows),
+        &[BindingId::WorkflowsViewRunDetails, BindingId::TableSelect],
+    )];
     let sections = help_sections(&active_bindings(&chain, &Keymap::defaults(), |_, _| {
         BindingState::Enabled
     }));

@@ -55,7 +55,13 @@ impl SearchBox {
         py_strip(self.input.value()).to_lowercase()
     }
 
-    /// Splits the component's `area` into the box (while shown) and the table below it.
+    /// Splits the component's `area` into the box (while shown) and the area the table lays itself out in, below
+    /// the box.
+    ///
+    /// Textual's `DataTable` has `max-height: 100%`, so below the box it can still be as tall as the whole area, and
+    /// the container clips what the box pushes past its bottom: up to 4 rows, its horizontal scrollbar included.
+    /// The cursor can move into those rows without the table scrolling (Py bug B40). Until that's answered, the
+    /// table area here keeps the whole height too, and the drawing is clipped to `area`.
     pub(crate) fn split(&self, area: Rect) -> (Option<Rect>, Rect) {
         if !self.visible {
             return (None, area);
@@ -66,8 +72,7 @@ impl SearchBox {
             ..area
         };
         let table = Rect {
-            y: area.y + taken,
-            height: area.height - taken,
+            y: area.y.saturating_add(taken),
             ..area
         };
         (Some(search), table)

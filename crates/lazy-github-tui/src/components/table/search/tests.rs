@@ -358,6 +358,10 @@ fn clicks_move_focus_between_the_box_and_the_table() {
     assert_eq!(table.focus(), TableFocus::Search);
     type_text(&mut table, "-");
     assert_eq!(table.search_text(), "la-zy");
+    // The margin under the box and the space below the rows are the unfocusable container: focus stays.
+    let _ = table.handle_mouse(click(3), area);
+    let _ = table.handle_mouse(click(11), area);
+    assert_eq!(table.focus(), TableFocus::Search);
     // The table's first row is below the box, its margin and the header.
     let _ = table.handle_mouse(click(5), area);
     assert_eq!(table.focus(), TableFocus::Table);
@@ -416,6 +420,24 @@ fn the_lazy_check_after_a_submit_counts_hidden_items() {
     assert_eq!(submit(&mut table, "lazy"), Handled::Consumed);
     assert_eq!(ids(&table), [7, 1, 4]);
     assert_eq!(table.lazy_load().and_then(LazyLoad::in_flight), None);
+}
+
+/// Py bug B40: below the shown box the table keeps the whole area's height (`max-height: 100%`) and its bottom rows
+/// are clipped, so the cursor can go under the clip without the table scrolling, as in Python.
+#[test]
+fn the_box_pushes_the_bottom_of_the_table_out_of_view() {
+    let mut table = table();
+    search(&mut table, "o");
+    assert_eq!(table.row_count(), 8);
+    let area = Rect::new(0, 0, 40, 12);
+    // The header and seven of the eight rows show, below the box and its margin.
+    assert_eq!(table.table_rect(area), Rect::new(0, 4, 40, 8));
+    let _ = draw(&mut table, true);
+    let _ = press(&mut table, "G");
+    let screen = buffer_to_string(&draw(&mut table, true));
+    assert_eq!((table.cursor(), table.scroll()), (7, (0, 0)));
+    let last = repo(usize::try_from(ids(&table)[7]).unwrap()).name;
+    assert!(!screen.contains(last), "{screen}");
 }
 
 // Snapshots, 40x12 in textual-dark.

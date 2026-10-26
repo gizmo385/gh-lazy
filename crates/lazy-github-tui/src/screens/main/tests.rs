@@ -374,7 +374,7 @@ fn every_other_focus_target_maximizes() {
         app.press(&["M"]);
         assert_eq!(app.app().maximized(), Some(Maximized { target }), "{target:?}");
     }
-    // The search box isn't reachable by keys yet.
+    // The search box types `M`; a rebound maximize reaches it (`a_rebound_maximize_maximizes_the_search_box`).
     for id in SectionId::ALL {
         assert!(FocusTarget::Search(id).maximizable());
     }
@@ -1039,4 +1039,262 @@ fn a_maximized_table_of_60_repos_fills_the_screen() {
     let screen = app.screen(100, 30);
     assert!(!screen.contains('╱'));
     assert!(screen.starts_with(" ★  Owner"));
+}
+
+// The search box on the main screen (#169).
+
+use crate::components::table::TableFocus;
+
+const SEARCH: FocusTarget = FocusTarget::Search(SectionId::Repos);
+
+/// Types `text` one key at a time.
+fn type_text(app: &mut TestApp, text: &str) {
+    for c in text.chars() {
+        app.press(&[c.encode_utf8(&mut [0; 4])]);
+    }
+}
+
+/// The screen's focus and the table's own agree.
+fn assert_focus_in_step(app: &TestApp) {
+    let table = repos_table(app).focus();
+    if focus(app) == SEARCH {
+        assert_eq!(table, TableFocus::Search);
+    } else {
+        assert_eq!(table, TableFocus::Table);
+    }
+}
+
+fn footer(app: &mut TestApp) -> String {
+    app.screen(100, 30).lines().last().unwrap().trim_end().to_owned()
+}
+
+#[test]
+fn the_focus_path_keeps_the_table_in_step() {
+    let mut app = with_repos(with_log(), base_repos());
+    app.render(100, 30);
+    let steps: [(&[&str], FocusTarget); 7] = [
+        (&["/"], SEARCH),
+        (&["d", "o", "t"], SEARCH),
+        (&["enter"], REPOS),
+        (&["shift+tab"], SEARCH),
+        (&["tab"], REPOS),
+        (&["shift+tab", "shift+tab"], FocusTarget::CommandLog),
+        (&["1"], REPOS),
+    ];
+    for (keys, expected) in steps {
+        app.press(keys);
+        app.render(100, 30);
+        assert_eq!(focus(&app), expected, "{keys:?}");
+        assert_focus_in_step(&app);
+    }
+    for target in [SEARCH, FocusTarget::CommandLog] {
+        app.app_mut().update(Action::Focus(target));
+        assert_eq!(focus(&app), target);
+        assert_focus_in_step(&app);
+    }
+    // Clicks: on the box (rows 4-6), then on a row of the table under it.
+    app.press(&["1"]);
+    app.render(100, 30);
+    app.click(10, 5);
+    assert_eq!(focus(&app), SEARCH);
+    assert_focus_in_step(&app);
+    app.render(100, 30);
+    app.click(10, 9);
+    assert_eq!(focus(&app), REPOS);
+    assert_focus_in_step(&app);
+}
+
+#[test]
+fn the_ring_has_the_box_before_its_table_while_it_is_shown() {
+    let mut app = with_repos(Config::default(), base_repos());
+    let ring = |app: &TestApp| app.app().main_screen().unwrap().focus_ring(None);
+    let rest = [
+        PRS,
+        ISSUES,
+        WORKFLOWS,
+        FocusTarget::DetailsTabs,
+        FocusTarget::DetailsContent,
+    ];
+    assert_eq!(ring(&app), [&[REPOS][..], &rest].concat());
+    app.press(&["/"]);
+    assert_eq!(ring(&app), [&[SEARCH, REPOS][..], &rest].concat());
+    // Shift+Tab from the blank box wraps to the end of the ring, and the box hides.
+    app.press(&["shift+tab"]);
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    assert_eq!(ring(&app), [&[REPOS][..], &rest].concat());
+    // With text, it stays a stop.
+    app.press(&["1", "/", "x", "shift+tab", "tab"]);
+    assert_eq!(focus(&app), SEARCH);
+    app.press(&["tab"]);
+    assert_eq!(focus(&app), REPOS);
+    app.press(&["shift+tab"]);
+    assert_eq!(focus(&app), SEARCH);
+    // While the table is maximized, the ring holds only the table: the box is outside the `DataTable`.
+    app.press(&["tab", "M"]);
+    assert_eq!(app.app().main_screen().unwrap().focus_ring(Some(REPOS)), [REPOS]);
+    app.press(&["shift+tab"]);
+    assert_eq!(focus(&app), REPOS);
+}
+
+#[test]
+fn a_blank_box_hides_whichever_way_focus_leaves_it() {
+    let leave: [&[&str]; 3] = [&["enter"], &["tab"], &["shift+tab"]];
+    for keys in leave {
+        let mut app = with_repos(Config::default(), base_repos());
+        app.press(&["/", "space", "space"]);
+        app.press(keys);
+        assert_ne!(focus(&app), SEARCH, "{keys:?}");
+        assert!(!repos_table(&app).search_visible(), "{keys:?}");
+    }
+    // A click elsewhere: the details content.
+    let mut app = with_repos(Config::default(), base_repos());
+    app.press(&["/"]);
+    app.render(100, 30);
+    app.click(70, 10);
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    assert!(!repos_table(&app).search_visible());
+    // Text left unsubmitted keeps the box, and filters nothing.
+    let mut app = with_repos(Config::default(), base_repos());
+    app.press(&["/"]);
+    type_text(&mut app, "dot");
+    app.press(&["tab"]);
+    assert!(repos_table(&app).search_visible());
+    assert_eq!(repos_table(&app).row_count(), 3);
+}
+
+#[test]
+fn printable_keys_type_into_the_box() {
+    let mut app = with_repos(with_log(), base_repos());
+    app.press(&["/"]);
+    type_text(&mut app, "1a/b?qM6");
+    assert_eq!(focus(&app), SEARCH);
+    assert_eq!(repos_table(&app).search_text(), "1a/b?qM6");
+    assert_eq!(app.app().maximized(), None);
+    assert!(!app.app().help_open());
+    assert!(!app.app().should_quit());
+    assert_eq!(app.effects(), []);
+    // The editing keys edit, and enter filters and focuses the table.
+    app.press(&["ctrl+u"]);
+    type_text(&mut app, "dot");
+    app.press(&["enter"]);
+    assert_eq!(focus(&app), REPOS);
+    assert_eq!(row_keys(&app), ["parity-bot/dotfiles"]);
+}
+
+#[test]
+fn paste_goes_into_the_box_only_while_it_has_focus() {
+    let mut app = with_repos(Config::default(), base_repos());
+    app.send(Event::Paste("dot".into()));
+    assert_eq!(repos_table(&app).search_text(), "");
+    app.press(&["/"]);
+    app.send(Event::Paste("hello\nworld".into()));
+    assert_eq!(repos_table(&app).search_text(), "hello");
+    app.press(&["tab"]);
+    app.send(Event::Paste("more".into()));
+    assert_eq!(repos_table(&app).search_text(), "hello");
+}
+
+#[test]
+fn the_footer_with_the_box_focused_is_search_and_the_palette() {
+    let mut app = with_repos(Config::default(), base_repos());
+    let row = footer(&mut app);
+    assert!(row.contains("^f Toggle Favorite"), "{row}");
+    app.press(&["/"]);
+    let row = footer(&mut app);
+    assert_eq!(row, " / Search  ^p Command Palette");
+    insta::assert_snapshot!(row);
+    // The help panel lists the box's keys under its heading, and none of the keys it types.
+    app.app_mut().update(Action::ToggleHelp);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("Input"), "{screen}");
+    assert!(screen.contains("Delete character left"), "{screen}");
+    assert!(!screen.contains("Maximize"), "{screen}");
+    assert!(!screen.contains("Lookup Repository"), "{screen}");
+}
+
+#[test]
+fn search_box_open_100x30() {
+    let mut app = with_repos(Config::default(), base_repos());
+    app.press(&["/"]);
+    type_text(&mut app, "lazy");
+    let screen = app.screen(100, 30);
+    let rows: Vec<&str> = screen.lines().collect();
+    assert!(rows[5].starts_with("│▊  lazy"), "{}", rows[5]);
+    assert!(rows[8].starts_with("│ ★  Owner"), "{}", rows[8]);
+    // The section keeps its focused border while the box has focus.
+    let buffer = app.render(100, 30);
+    assert_eq!(buffer[(0, 3)].fg, Color::Rgb(0x4e, 0xbf, 0x71));
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn slash_while_maximized_filters_the_maximized_table() {
+    let mut app = with_repos(Config::default(), base_repos());
+    app.press(&["M", "/"]);
+    app.advance(std::time::Duration::from_secs(5));
+    assert_eq!(focus(&app), SEARCH);
+    assert_eq!(app.app().maximized(), Some(Maximized { target: REPOS }));
+    // The box takes focus and typing, but isn't drawn.
+    type_text(&mut app, "dot");
+    let screen = app.screen(100, 30);
+    assert!(!screen.contains("Search"), "{screen}");
+    assert_eq!(screen.lines().nth(13), Some(" ★  Owner       Name         Private"));
+    app.press(&["enter"]);
+    assert_eq!(focus(&app), REPOS);
+    // The header and one row, re-centered: rows 14-15.
+    let screen = app.screen(100, 30);
+    let rows: Vec<&str> = screen.lines().collect();
+    assert_eq!(rows[14], " ★  Owner       Name      Private");
+    assert_eq!(rows[15], " ☆  parity-bot  dotfiles  ✘");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn escape_with_the_box_focused_while_maximized_minimizes() {
+    let mut app = with_repos(Config::default(), base_repos());
+    app.press(&["M", "/"]);
+    type_text(&mut app, "lazy");
+    app.press(&["escape"]);
+    assert_eq!(app.app().maximized(), None);
+    assert_eq!(focus(&app), SEARCH);
+    assert_eq!(repos_table(&app).search_text(), "lazy");
+    // Not maximized, escape does nothing in the box.
+    app.press(&["escape"]);
+    assert_eq!(focus(&app), SEARCH);
+}
+
+/// Py bug B38, answered by Chris on #169: behind the box, outer keys are dropped by their keys after overrides, so
+/// a maximize rebound off `M` works from the box, and maximizes the box alone (#156).
+#[test]
+fn a_rebound_maximize_maximizes_the_search_box() {
+    let mut config = Config::default();
+    config
+        .bindings
+        .overrides
+        .insert("app.maximize_widget".into(), "f2".into());
+    let mut app = with_repos(config, base_repos());
+    app.press(&["/"]);
+    assert_eq!(footer(&mut app), " / Search  ^p Command Palette  f2 Maximize");
+    // `M` is typed, as with the default keys.
+    app.press(&["M"]);
+    assert_eq!(app.app().maximized(), None);
+    app.press(&["f2"]);
+    assert_eq!(app.app().maximized(), Some(Maximized { target: SEARCH }));
+    app.advance(std::time::Duration::from_secs(5));
+    // The input alone, at its 3 rows, centered on the hatch.
+    let screen = app.screen(100, 30);
+    let rows: Vec<&str> = screen.lines().collect();
+    assert!(rows[14].starts_with("▊  M"), "{screen}");
+    assert!(rows[12].chars().all(|c| c == '╱'), "{screen}");
+    assert!(rows[16].chars().all(|c| c == '╱'), "{screen}");
+    assert!(!screen.contains("Owner"), "{screen}");
+    // The ring holds only the box.
+    assert_eq!(app.app().main_screen().unwrap().focus_ring(Some(SEARCH)), [SEARCH]);
+    app.press(&["tab", "shift+tab"]);
+    assert_eq!(focus(&app), SEARCH);
+    app.press(&["x"]);
+    assert_eq!(repos_table(&app).search_text(), "Mx");
+    app.press(&["escape"]);
+    assert_eq!(app.app().maximized(), None);
+    assert_eq!(focus(&app), SEARCH);
 }

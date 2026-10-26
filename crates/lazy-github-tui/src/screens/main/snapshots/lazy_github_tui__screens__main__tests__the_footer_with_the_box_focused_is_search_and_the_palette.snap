@@ -1,0 +1,5 @@
+---
+source: crates/lazy-github-tui/src/screens/main/tests.rs
+expression: row
+---
+ / Search  ^p Command Palette

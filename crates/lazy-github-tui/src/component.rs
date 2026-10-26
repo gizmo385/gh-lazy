@@ -91,6 +91,31 @@ pub struct ChainLink {
     pub owner: Owner,
     /// The bindings declared there.
     pub bindings: &'static [BindingId],
+    /// A focused text input sits further in, so the keys it types are no longer this link's
+    /// ([`crate::keymap::KeyChord::typed_by_input`]). [`crate::keymap::Keymap::link_specs`] drops them.
+    pub behind_input: bool,
+}
+
+impl ChainLink {
+    /// A link for `owner`'s `bindings`, with no input in front of it.
+    pub fn new(owner: Owner, bindings: &'static [BindingId]) -> Self {
+        Self {
+            owner,
+            bindings,
+            behind_input: false,
+        }
+    }
+
+    /// Marks every link after the first that types text as [`Self::behind_input`], as Textual filters each outer
+    /// namespace by the ones before it.
+    pub fn filter_behind_inputs(chain: &mut [ChainLink]) {
+        let Some(input) = chain.iter().position(|link| link.owner.types_text()) else {
+            return;
+        };
+        for link in &mut chain[input + 1..] {
+            link.behind_input = true;
+        }
+    }
 }
 
 /// The components that can own bindings, as Python's widget tree nests them. Modals add their variants as they land.
@@ -110,6 +135,8 @@ pub enum Owner {
     Table(SectionId),
     /// The `SearchableDataTable` around a section's table: `/` search.
     SearchableTable(SectionId),
+    /// A section's `/` search box: Textual's `Input`.
+    SearchInput(SectionId),
     /// The details tab strip.
     DetailsTabs,
     /// The content of the active details tab.
@@ -119,10 +146,11 @@ pub enum Owner {
 }
 
 impl Owner {
-    /// The heading the help panel draws over this link's keys: Textual's `BINDING_GROUP_TITLE`. No M1 owner has
-    /// one. Textual's `Input` does ("Input"), so the table search box's owner returns it once it lands.
+    /// The heading the help panel draws over this link's keys: Textual's `BINDING_GROUP_TITLE`. Only Textual's
+    /// `Input` has one.
     pub fn group_title(self) -> Option<&'static str> {
         match self {
+            Owner::SearchInput(_) => Some("Input"),
             Owner::App
             | Owner::Screen(_)
             | Owner::MainView
@@ -134,6 +162,11 @@ impl Owner {
             | Owner::DetailsContent
             | Owner::CommandLog => None,
         }
+    }
+
+    /// Whether the owner is a text input, which takes the keys it types from every link further out.
+    pub fn types_text(self) -> bool {
+        matches!(self, Owner::SearchInput(_))
     }
 }
 

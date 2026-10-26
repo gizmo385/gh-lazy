@@ -238,7 +238,7 @@ registry! {
     // `Tabs`: the details tab strip (#74).
     TextualTabsPrevious("textual.tabs.previous_tab", "left", "previous_tab", "Previous tab").hidden();
     TextualTabsNext("textual.tabs.next_tab", "right", "next_tab", "Next tab").hidden();
-    // `Input`: the table's search box (#101). Selection and clipboard keys come with the M3 shared input.
+    // `Input`: the table's search box (#101). Selection, copy and cut come with the M3 shared input (#145).
     TextualInputCursorLeft("textual.input.cursor_left", "left", "cursor_left", "Move cursor left").hidden();
     TextualInputCursorLeftWord("textual.input.cursor_left_word", "ctrl+left", "cursor_left_word", "Move cursor left a word")
         .hidden();
@@ -260,6 +260,7 @@ registry! {
         .hidden();
     TextualInputDeleteRightAll("textual.input.delete_right_all", "ctrl+k", "delete_right_all", "Delete all to the right")
         .hidden();
+    TextualInputPaste("textual.input.paste", "ctrl+v", "paste", "Paste text from the clipboard").hidden();
 }
 
 impl BindingId {

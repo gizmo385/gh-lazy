@@ -8,6 +8,7 @@ mod sections;
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::AppearanceSettings;
+use lazy_github_core::models::Repository;
 use ratatui::Frame;
 use ratatui::layout::{Margin, Position, Rect};
 use ratatui::style::Style;
@@ -19,9 +20,10 @@ use crate::component::{BindingState, ChainLink, Component, Cx, Owner, RenderCx, 
 use crate::components::command_log::{CommandLog, Wheel};
 use crate::components::hatch::Hatch;
 use crate::components::info::{INFO_BINDINGS, Scroll};
-use crate::components::table::{Handled, SEARCHABLE_BINDINGS, TABLE_BINDINGS, TableEvent};
+use crate::components::table::{Handled, SEARCHABLE_BINDINGS, SearchableTable, TABLE_BINDINGS, TableEvent, TableFocus};
+use crate::components::text_input::{self, INPUT_BINDINGS};
 use crate::effect::{GithubResponse, RequestId};
-use crate::keymap::{BindingId, Keymap};
+use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::options::AppOptions;
 use crate::theme::Theme;
 
@@ -120,7 +122,8 @@ impl FocusTarget {
     /// widget's `ALLOW_MAXIMIZE`, then maximizes its nearest maximizable ancestor, else the widget itself:
     ///
     /// - a table (`DataTable`), the search box (`Input`) and the command log (`Log`) are `ScrollView`s, which allow
-    ///   it, and have no maximizable ancestor;
+    ///   it, and have no maximizable ancestor. The search box types `M`, so only a maximize rebound to a key it
+    ///   doesn't type reaches it (Py bug B38, #156), and that maximizes the box alone;
     /// - the details tab strip (`Tabs`) is focusable, so allowed, and maximizes its `TabbedContent`;
     /// - the details content is a `VerticalScroll`, and `ScrollableContainer` sets `ALLOW_MAXIMIZE = False`, so `M`
     ///   there does nothing.
@@ -132,11 +135,12 @@ impl FocusTarget {
         matches!(self, FocusTarget::DetailsTabs | FocusTarget::DetailsContent)
     }
 
-    /// Whether `self` is inside the widget that maximizing `maximized` shows: the same section's table, the details
-    /// tab area, or the command log.
+    /// Whether `self` is inside the widget that maximizing `maximized` shows: the table or the search box itself
+    /// (the box is outside the `DataTable`, and the table outside the `Input`), the details tab area, or the
+    /// command log.
     fn within_maximized(self, maximized: FocusTarget) -> bool {
         match (self.section(), maximized.section()) {
-            (Some(a), Some(b)) => a == b,
+            (Some(_), Some(_)) => self == maximized,
             (None, None) => self.in_details() == maximized.in_details(),
             _ => false,
         }
@@ -288,9 +292,89 @@ impl MainScreen {
         self.focus
     }
 
-    /// Moves focus, without the rules of [`Self::try_focus`].
+    /// Moves focus, without the rules of [`Self::try_focus`]. A hidden search box still can't take it.
     pub fn set_focus(&mut self, focus: FocusTarget) {
-        self.focus = focus;
+        self.move_focus(focus);
+    }
+
+    /// The one place focus changes, which keeps the table's own [`TableFocus`] in step with [`FocusTarget`]: focus
+    /// leaving `Search(id)` blurs the box (a blank one hides), and focus entering it focuses the box, selecting its
+    /// text. A hidden box takes no focus, so the move doesn't happen and this returns false.
+    fn move_focus(&mut self, target: FocusTarget) -> bool {
+        if target == self.focus {
+            return true;
+        }
+        if let FocusTarget::Search(id) = target
+            && let Some(table) = self.table_mut(id)
+            && !table.focus_search()
+        {
+            return false;
+        }
+        if let FocusTarget::Search(id) = self.focus
+            && let Some(table) = self.table_mut(id)
+        {
+            table.focus_table();
+        }
+        self.focus = target;
+        true
+    }
+
+    /// The section's table, once it's built. #171, #172 and #173 add theirs.
+    fn table_mut(&mut self, id: SectionId) -> Option<&mut SearchableTable<Repository>> {
+        match id {
+            SectionId::Repos => Some(&mut self.repos.table),
+            SectionId::PullRequests | SectionId::Issues | SectionId::Workflows => None,
+        }
+    }
+
+    fn table(&self, id: SectionId) -> Option<&SearchableTable<Repository>> {
+        match id {
+            SectionId::Repos => Some(&self.repos.table),
+            SectionId::PullRequests | SectionId::Issues | SectionId::Workflows => None,
+        }
+    }
+
+    /// `common.table.search`: shows the section's search box and focuses it, keeping its text.
+    fn open_search(&mut self, id: SectionId) {
+        if let Some(table) = self.table_mut(id) {
+            table.open_search();
+        }
+        self.move_focus(FocusTarget::Search(id));
+    }
+
+    /// Follows a change the table made to its own focus (a submit, a click), through [`Self::move_focus`].
+    fn sync_table_focus(&mut self, id: SectionId) {
+        let Some(table) = self.table(id) else { return };
+        let target = match table.focus() {
+            TableFocus::Search => FocusTarget::Search(id),
+            TableFocus::Table if self.focus == FocusTarget::Search(id) => FocusTarget::Table(id),
+            TableFocus::Table => return,
+        };
+        self.move_focus(target);
+    }
+
+    /// Step 4 of key dispatch: a key the focused search box takes before the binding chain. `None` passes it on.
+    pub fn handle_focused_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Option<Action> {
+        let FocusTarget::Search(id) = self.focus else {
+            return None;
+        };
+        let table = self.table_mut(id)?;
+        if !table.consumes_key(key, keymap) {
+            return None;
+        }
+        let handled = table.handle_key(key, keymap);
+        // A submit moved the table's focus to the table.
+        self.sync_table_focus(id);
+        Some(table_outcome(&handled).unwrap_or(Action::Consumed))
+    }
+
+    /// A bracketed paste, which only the focused search box takes.
+    pub fn handle_paste(&mut self, text: &str) -> Option<Action> {
+        let FocusTarget::Search(id) = self.focus else {
+            return None;
+        };
+        let handled = self.table_mut(id)?.handle_paste(text);
+        handled.is_handled().then_some(Action::Consumed)
     }
 
     /// The state of one section.
@@ -328,19 +412,23 @@ impl MainScreen {
             FocusTarget::DetailsTabs => self.details.has_tabs(),
             FocusTarget::CommandLog => self.command_log.is_visible(),
         };
-        if allowed {
-            self.focus = target;
-        }
-        allowed
+        allowed && self.move_focus(target)
     }
 
-    /// What Tab and Shift+Tab walk through, in order: the shown sections' tables, the details tabs and content, and
-    /// the command log when it's displayed. While something is maximized, only the targets inside it.
+    /// What Tab and Shift+Tab walk through, in order: the shown sections' tables, each after its search box while
+    /// the box is shown, the details tabs and content, and the command log when it's displayed. While something is
+    /// maximized, only the targets inside it.
     pub fn focus_ring(&self, maximized: Option<FocusTarget>) -> Vec<FocusTarget> {
         let tables = SectionId::ALL
             .into_iter()
             .filter(|id| self.sections[id.index()].shown())
-            .map(FocusTarget::Table);
+            .flat_map(|id| {
+                let search = self
+                    .table(id)
+                    .is_some_and(SearchableTable::search_visible)
+                    .then_some(FocusTarget::Search(id));
+                search.into_iter().chain([FocusTarget::Table(id)])
+            });
         let details = self
             .details
             .has_tabs()
@@ -360,11 +448,12 @@ impl MainScreen {
     pub fn focus_step(&mut self, forward: bool, maximized: Option<FocusTarget>) {
         let ring = self.focus_ring(maximized);
         let Some(&first) = ring.first() else { return };
-        self.focus = match ring.iter().position(|&target| target == self.focus) {
+        let target = match ring.iter().position(|&target| target == self.focus) {
             Some(i) if forward => ring[(i + 1) % ring.len()],
             Some(i) => ring[(i + ring.len() - 1) % ring.len()],
             None => first,
         };
+        self.move_focus(target);
     }
 
     /// The target drawn at a cell in the last frame, if any. Borders, titles, the status box and the footer have
@@ -398,7 +487,8 @@ impl MainScreen {
         }
     }
 
-    /// A mouse event over the repos section's interior.
+    /// A mouse event over the repos section's interior. A left press on the search box or the table focuses it: the
+    /// table moves its own focus, and the screen follows it.
     fn repos_mouse(&mut self, mouse: MouseEvent, at: Position) -> Option<Action> {
         let on_table = self.repos.table_rect().is_some_and(|rect| rect.contains(at));
         // Below the table's rows is its container, which neither scrolls nor takes focus.
@@ -412,7 +502,16 @@ impl MainScreen {
             // The loading overlay took it.
             _ if overlay => None,
             MouseEventKind::Down(MouseButton::Left) => {
-                on_table.then_some(Action::Focus(FocusTarget::Table(SectionId::Repos)))
+                let id = SectionId::Repos;
+                if self.repos.table.focus() == TableFocus::Search {
+                    Some(Action::Focus(FocusTarget::Search(id)))
+                } else if on_table {
+                    // A press on the table blurred the box, if it had focus.
+                    self.sync_table_focus(id);
+                    Some(Action::Focus(FocusTarget::Table(id)))
+                } else {
+                    None
+                }
             }
             _ => table_outcome(&handled),
         }
@@ -429,16 +528,17 @@ impl MainScreen {
     /// The binding chain for the current focus, innermost first, up to and including the screen. Python's widget
     /// tree from the focused widget up.
     pub fn binding_chain(&self) -> Vec<ChainLink> {
-        let link = |owner: Owner, bindings: &'static [BindingId]| ChainLink { owner, bindings };
+        let link = ChainLink::new;
         let mut chain = match self.focus {
-            // #78 adds the search input's own link.
             FocusTarget::Table(id) => vec![
                 link(Owner::Table(id), TABLE_BINDINGS),
                 link(Owner::SearchableTable(id), SEARCHABLE_BINDINGS),
                 link(Owner::Section(id), id.bindings()),
                 link(Owner::SelectionsPane, SELECTIONS_BINDINGS),
             ],
+            // `App` marks every link after the box's own as behind it, which drops the keys the box types.
             FocusTarget::Search(id) => vec![
+                link(Owner::SearchInput(id), INPUT_BINDINGS),
                 link(Owner::SearchableTable(id), SEARCHABLE_BINDINGS),
                 link(Owner::Section(id), id.bindings()),
                 link(Owner::SelectionsPane, SELECTIONS_BINDINGS),
@@ -464,6 +564,12 @@ impl MainScreen {
             Owner::CommandLog => Scroll::from_binding(id).map(|scroll| Action::Main(MainAction::ScrollLog(scroll))),
             // The table is plain state, so it applies the binding now, as Textual runs the binding's action.
             Owner::Table(SectionId::Repos) => table_outcome(&self.repos.table.on_binding(id)),
+            Owner::SearchableTable(SectionId::Repos) if id == BindingId::TableSearch => {
+                self.open_search(SectionId::Repos);
+                Some(Action::Consumed)
+            }
+            // `handle_focused_key` already gave the box every key it binds.
+            Owner::SearchInput(_) => Some(Action::Consumed),
             // Not built yet: the key is still consumed, as in Python. With one tab, switching tabs is a no-op.
             Owner::Table(_)
             | Owner::SearchableTable(_)
@@ -505,10 +611,12 @@ impl MainScreen {
     /// full width, and either filling the height or centered on a hatch.
     pub fn render_maximized(&mut self, frame: &mut Frame<'_>, area: Rect, maximized: FocusTarget, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let natural_height = maximized.section().map(|id| match id {
-            SectionId::Repos => self.repos.table.table_rect(area).height,
-            _ => EMPTY_TABLE_HEIGHT,
-        });
+        let natural_height = match maximized {
+            FocusTarget::Table(SectionId::Repos) => Some(self.repos.table.bare_table_rect(area).height),
+            FocusTarget::Table(_) => Some(EMPTY_TABLE_HEIGHT),
+            FocusTarget::Search(_) => Some(text_input::HEIGHT),
+            FocusTarget::DetailsTabs | FocusTarget::DetailsContent | FocusTarget::CommandLog => None,
+        };
         let rect = match natural_height {
             Some(height) if height < area.height => Rect {
                 y: area.y + (area.height - height) / 2,
@@ -526,18 +634,25 @@ impl MainScreen {
 
         self.hits.clear();
         self.repos.area = None;
+        let within = self.focus.section() == Some(SectionId::Repos);
+        let repos_cx = RenderCx {
+            focused: within,
+            focus_within: within,
+            ..*cx
+        };
         match maximized {
-            FocusTarget::Table(SectionId::Repos) | FocusTarget::Search(SectionId::Repos) => {
-                let cx = RenderCx {
-                    focused: self.focus == FocusTarget::Table(SectionId::Repos),
-                    focus_within: self.focus.section() == Some(SectionId::Repos),
-                    ..*cx
-                };
-                self.repos.table.render_content(frame, rect, &cx);
+            // Only the `DataTable`: the search box is outside it, even while it has focus.
+            FocusTarget::Table(SectionId::Repos) => {
+                self.repos.table.render_table(frame, rect, &repos_cx);
                 self.repos.area = Some(rect);
-                self.hits.push((rect, FocusTarget::Table(SectionId::Repos)));
+                self.hits.push((rect, maximized));
             }
-            FocusTarget::Table(id) | FocusTarget::Search(id) => self.hits.push((rect, FocusTarget::Table(id))),
+            // Only the `Input` (#156).
+            FocusTarget::Search(SectionId::Repos) => {
+                self.repos.table.render_search(frame, rect, &repos_cx);
+                self.hits.push((rect, maximized));
+            }
+            FocusTarget::Table(_) | FocusTarget::Search(_) => self.hits.push((rect, maximized)),
             // `DetailsContent` is never maximized (see `FocusTarget::maximizable`); it's here to keep the match total.
             FocusTarget::DetailsTabs | FocusTarget::DetailsContent => {
                 let hits = self.details.render(frame, rect, theme, self.focus);
@@ -625,8 +740,9 @@ impl Component for MainScreen {
                 // Only the rows the `DataTable` draws take a click: below them is its unfocusable container.
                 let inner = interior(rect);
                 let table = if id == SectionId::Repos {
+                    // The table draws the box or itself focused, by its own `TableFocus`.
                     let cx = RenderCx {
-                        focused: self.focus == FocusTarget::Table(id),
+                        focused,
                         focus_within: focused,
                         ..*cx
                     };

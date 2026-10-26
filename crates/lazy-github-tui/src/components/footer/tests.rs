@@ -121,10 +121,7 @@ fn footer_comma_only_override_120x30() {
 
 #[test]
 fn the_auth_screen_shows_only_quit() {
-    let chain = [ChainLink {
-        owner: Owner::Screen(ScreenKind::Auth),
-        bindings: &[BindingId::AppQuit],
-    }];
+    let chain = [ChainLink::new(Owner::Screen(ScreenKind::Auth), &[BindingId::AppQuit])];
     let groups = active_bindings(&chain, &Keymap::defaults(), |_, _| BindingState::Enabled);
     assert_eq!(joined(&groups), " q Quit");
 }
@@ -168,27 +165,24 @@ fn quit_item(enabled: bool) -> FooterItem {
 #[test]
 fn items_group_shown_bindings_by_action() {
     let chain = [
-        ChainLink {
-            owner: Owner::Table(SectionId::Workflows),
-            bindings: &[BindingId::TableSelect, BindingId::WorkflowsViewRunDetails],
-        },
-        ChainLink {
-            owner: Owner::App,
-            bindings: &[BindingId::TextualQuit, BindingId::AppQuit, BindingId::AppOpenHelp],
-        },
+        ChainLink::new(
+            Owner::Table(SectionId::Workflows),
+            &[BindingId::TableSelect, BindingId::WorkflowsViewRunDetails],
+        ),
+        ChainLink::new(
+            Owner::App,
+            &[BindingId::TextualQuit, BindingId::AppQuit, BindingId::AppOpenHelp],
+        ),
     ];
     let active = active_bindings(&chain, &Keymap::defaults(), |_, _| BindingState::Enabled);
     // `enter` goes to the hidden select, so View Run Details is left with no key.
     assert_eq!(joined(&active), " q Quit  ? Keybindings");
     let chain = [
-        ChainLink {
-            owner: Owner::Table(SectionId::Workflows),
-            bindings: &[BindingId::WorkflowsViewRunDetails, BindingId::TableSelect],
-        },
-        ChainLink {
-            owner: Owner::App,
-            bindings: &[BindingId::AppQuit],
-        },
+        ChainLink::new(
+            Owner::Table(SectionId::Workflows),
+            &[BindingId::WorkflowsViewRunDetails, BindingId::TableSelect],
+        ),
+        ChainLink::new(Owner::App, &[BindingId::AppQuit]),
     ];
     let active = active_bindings(&chain, &Keymap::defaults(), |_, _| BindingState::Enabled);
     assert_eq!(joined(&active), " ⏎ View Run Details  q Quit");

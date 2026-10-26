@@ -26,7 +26,7 @@ static WORD: LazyLock<Regex> = LazyLock::new(|| {
 
 /// The input's bindings, in Textual's merged order: `left`, `right`, `home` and `end` keep the places of the
 /// `ScrollView` keys they replace, then the rest of `Input.BINDINGS` follows. Selection (`shift+…`, `ctrl+shift+a`),
-/// the clipboard (`ctrl+x`, `ctrl+c`, `ctrl+v`) and the inherited scroll keys come with the M3 shared input (#145).
+/// copy and cut (`ctrl+c`, `ctrl+x`) and the inherited scroll keys come with the M3 shared input (#145).
 pub const INPUT_BINDINGS: &[BindingId] = &[
     BindingId::TextualInputCursorLeft,
     BindingId::TextualInputCursorRight,
@@ -41,6 +41,7 @@ pub const INPUT_BINDINGS: &[BindingId] = &[
     BindingId::TextualInputDeleteLeftAll,
     BindingId::TextualInputDeleteRightWord,
     BindingId::TextualInputDeleteRightAll,
+    BindingId::TextualInputPaste,
 ];
 
 /// Rows the input takes: the text between the top and bottom border.
@@ -140,6 +141,13 @@ impl TextInput {
         let len = self.len();
         if id == B::TextualInputSubmit {
             return InputOutcome::Submitted;
+        }
+        if id == B::TextualInputPaste {
+            // Textual's `action_paste` types the app's own clipboard over the selection (PLAN §10.10). Nothing can
+            // copy into it until #145 adds copy and cut, so it's always empty and this deletes the selection, as
+            // pasting an empty clipboard does in Python.
+            self.replace_selection("");
+            return InputOutcome::Changed;
         }
         // Every other key ends the selection. With one, left and right collapse it to its start or end and the delete
         // keys delete it; the other moves start from the cursor, which is the selection's end.
@@ -509,17 +517,7 @@ mod tests {
     #[test]
     fn non_text_keys_are_ignored() {
         let mut input = input("abc", 1);
-        for key in [
-            "tab",
-            "shift+tab",
-            "escape",
-            "ctrl+p",
-            "f1",
-            "up",
-            "down",
-            "ctrl+v",
-            "alt+x",
-        ] {
+        for key in ["tab", "shift+tab", "escape", "ctrl+p", "f1", "up", "down", "alt+x"] {
             assert_eq!(press(&mut input, key), InputOutcome::Ignored, "{key}");
         }
         assert_eq!((input.value(), input.cursor()), ("abc", 1));
@@ -528,6 +526,20 @@ mod tests {
         assert!(input.consumes_key(&chord("q"), &keymap));
         assert!(input.consumes_key(&chord("ctrl+f"), &keymap));
         assert!(input.consumes_key(&chord("enter"), &keymap));
+    }
+
+    #[test]
+    fn ctrl_v_pastes_the_empty_in_app_clipboard() {
+        let keymap = Keymap::defaults();
+        let mut plain = input("abc", 1);
+        assert!(plain.consumes_key(&chord("ctrl+v"), &keymap));
+        assert_eq!(press(&mut plain, "ctrl+v"), InputOutcome::Changed);
+        assert_eq!((plain.value(), plain.cursor()), ("abc", 1));
+        // Over a selection, the empty paste deletes it.
+        let mut selected = input("abc", 1);
+        selected.select_all();
+        let _ = press(&mut selected, "ctrl+v");
+        assert_eq!((selected.value(), selected.cursor()), ("", 0));
     }
 
     #[test]

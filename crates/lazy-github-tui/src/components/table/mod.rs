@@ -18,6 +18,7 @@ use std::time::Duration;
 use crossterm::event::{KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use indexmap::IndexMap;
 use ratatui::Frame;
+use ratatui::buffer::Buffer;
 use ratatui::layout::{Position as CellPosition, Rect};
 use tokio::time::Instant;
 
@@ -185,6 +186,17 @@ pub struct SearchableTable<T: TableItem> {
     lazy: Option<LazyLoad>,
     /// The area of the last render, which paging and scrolling measure against.
     area: Rect,
+    /// How the last render laid the component out.
+    drawn: Drawn,
+}
+
+/// How a render laid the table component out.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Drawn {
+    /// The search box, while it's shown, above the table.
+    WithSearch,
+    /// The table alone ([`SearchableTable::render_table`]): a maximized `DataTable`, with the box outside it.
+    TableAlone,
 }
 
 impl<T: TableItem> SearchableTable<T> {
@@ -210,6 +222,7 @@ impl<T: TableItem> SearchableTable<T> {
             generation: 0,
             lazy: None,
             area: Rect::default(),
+            drawn: Drawn::WithSearch,
         }
     }
 
@@ -498,7 +511,7 @@ impl<T: TableItem> SearchableTable<T> {
         }
         // A press focuses what it lands on, as Textual focuses the widget under a mouse down.
         let press = matches!(event.kind, MouseEventKind::Down(MouseButton::Left));
-        let (search, area) = self.search.split(area);
+        let (search, area) = self.laid_out_split(area);
         if let Some(search) = search.filter(|search| search.contains(at)) {
             self.hover = None;
             if press {
@@ -509,10 +522,11 @@ impl<T: TableItem> SearchableTable<T> {
             }
             return Handled::Ignored;
         }
-        if press && area.contains(at) {
+        let layout = self.layout_in(area);
+        // Below the rows is the unfocusable container, which leaves focus where it is, as Textual does.
+        if press && layout.table.contains(at) {
             self.focus_table();
         }
-        let layout = self.layout_in(area);
         let row = self.row_at(layout, at);
         match event.kind {
             MouseEventKind::Moved => {
@@ -765,13 +779,32 @@ impl<T: TableItem> SearchableTable<T> {
     /// header, the rows and any horizontal scrollbar, capped at what's left of `area` (Textual's `height: auto`).
     /// An owner hit-tests clicks against it and sizes a maximized table by it.
     pub fn table_rect(&self, area: Rect) -> Rect {
-        let (_, area) = self.search.split(area);
+        let (_, table) = self.search.split(area);
+        self.layout_in(table).table.intersection(area)
+    }
+
+    /// Where [`Self::render_table`] puts the table in `area`: the table alone, with no room for the search box.
+    pub fn bare_table_rect(&self, area: Rect) -> Rect {
         self.layout_in(area).table
+    }
+
+    /// Where the last frame drew the table itself in `area`, the area it was given: below the search box while the
+    /// box was laid out, or all of it when the table was drawn alone. It takes clicks.
+    pub fn drawn_table_rect(&self, area: Rect) -> Rect {
+        self.layout_in(self.laid_out_split(area).1).table.intersection(area)
+    }
+
+    /// [`SearchBox::split`], as the last render laid the box out.
+    fn laid_out_split(&self, area: Rect) -> (Option<Rect>, Rect) {
+        match self.drawn {
+            Drawn::WithSearch => self.search.split(area),
+            Drawn::TableAlone => (None, area),
+        }
     }
 
     /// Where the table went in the last rendered area: below the search box while it's shown.
     fn table_area(&self) -> Rect {
-        self.search.split(self.area).1
+        self.laid_out_split(self.area).1
     }
 
     /// The vertical and horizontal extents, measured against the last rendered area.
@@ -802,6 +835,7 @@ impl<T: TableItem> SearchableTable<T> {
     pub fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         if self.loading {
             self.area = area;
+            self.drawn = Drawn::WithSearch;
             self.overlay_hidden = false;
             let since = *self.loading_since.get_or_insert(cx.now);
             let elapsed = cx.now.checked_duration_since(since).unwrap_or(Duration::ZERO);
@@ -815,15 +849,38 @@ impl<T: TableItem> SearchableTable<T> {
     /// overlay belongs to the container around the `DataTable`, so a table maximized during a load shows without it.
     pub fn render_content(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         self.area = area;
+        self.drawn = Drawn::WithSearch;
         self.overlay_hidden = self.loading;
-        let buf = frame.buffer_mut();
-        let (search, area) = self.search.split(area);
+        let (search, table) = self.search.split(area);
         if let Some(search) = search {
-            let focused = cx.focused && self.focus == TableFocus::Search;
-            self.search
-                .input
-                .render(buf, search, cx.theme, cx.theme.background(), focused);
+            self.draw_search(frame, search, cx);
         }
+        self.draw_table(frame, table, area, cx);
+    }
+
+    /// The table alone in all of `area`, without the search box or the loading overlay: the maximized `DataTable`,
+    /// which leaves the box outside it even while the box has focus. Typing into the box still filters this table.
+    pub fn render_table(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
+        self.area = area;
+        self.drawn = Drawn::TableAlone;
+        self.overlay_hidden = self.loading;
+        self.draw_table(frame, area, area, cx);
+    }
+
+    /// The search box alone in `area`, as a maximized `Input` draws it. Clicks on it don't reach the table.
+    pub fn render_search(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
+        self.draw_search(frame, area, cx);
+    }
+
+    fn draw_search(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
+        let focused = cx.focused && self.focus == TableFocus::Search;
+        self.search
+            .input
+            .render(frame.buffer_mut(), area, cx.theme, cx.theme.background(), focused);
+    }
+
+    /// The table laid out in `area`, and drawn only where it's inside `clip` (see [`SearchBox::split`]).
+    fn draw_table(&mut self, frame: &mut Frame<'_>, area: Rect, clip: Rect, cx: &RenderCx<'_>) {
         let widths = self.rows.widths(&self.columns);
         let layout = Layout::new(area, widths.iter().sum(), self.rows.len());
         // Rows may have gone since the last frame; the view never scrolls past the end.
@@ -840,6 +897,12 @@ impl<T: TableItem> SearchableTable<T> {
             .max_scroll(),
         );
         let styles = Styles::new(cx.theme, cx.focused && self.focus == TableFocus::Table);
+        let clipped = layout.table.intersection(clip) != layout.table;
+        let mut scratch = clipped.then(|| Buffer::empty(layout.table));
+        let buf = match scratch.as_mut() {
+            Some(scratch) => scratch,
+            None => frame.buffer_mut(),
+        };
         render::draw(
             buf,
             &render::Frame {
@@ -854,6 +917,13 @@ impl<T: TableItem> SearchableTable<T> {
             },
             &styles,
         );
+        if let Some(scratch) = scratch {
+            let out = frame.buffer_mut();
+            let visible = layout.table.intersection(clip).intersection(out.area);
+            for position in visible.positions() {
+                out[position] = scratch[position].clone();
+            }
+        }
     }
 }
 

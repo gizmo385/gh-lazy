@@ -5,6 +5,7 @@ use std::collections::{HashMap, HashSet};
 use indexmap::IndexMap;
 
 use super::{BindingId, KeyChord, KeySpec};
+use crate::component::ChainLink;
 
 /// The keys of every binding, with `bindings.overrides` applied as Textual's `App.set_keymap` applies them.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -149,6 +150,39 @@ impl Keymap {
     /// chain innermost first.
     pub fn match_in(&self, ids: &[BindingId], chord: &KeyChord) -> Option<BindingId> {
         self.matches_in(ids, chord).next()
+    }
+
+    /// [`Self::effective_specs`] for one link of a binding chain. Behind a focused text input
+    /// ([`ChainLink::behind_input`]) the keys the input types are dropped, as Textual's `Screen._binding_chain`
+    /// drops them from every outer link.
+    ///
+    /// Textual filters before it applies the keymap, so it looks at the default keys: a binding rebound away from a
+    /// printable default vanishes too. Here the filter looks at the keys after `bindings.overrides` instead (Py bug
+    /// B38, answered by Chris on #169), so `app.maximize_widget = "f2"` still maximizes from the search box and the
+    /// footer lists it. With the default keymap both give the same keys.
+    pub fn link_specs(&self, link: &ChainLink) -> Vec<(BindingId, &str, &KeySpec)> {
+        let mut specs = self.effective_specs(link.bindings);
+        if link.behind_input {
+            specs.retain(|(_, _, spec)| !spec.typed_by_input());
+        }
+        specs
+    }
+
+    /// The bindings of one chain link that `chord` fires, in [`Self::link_specs`] order: [`Self::matches_in`] for
+    /// the link.
+    pub fn link_matches(&self, link: &ChainLink, chord: &KeyChord) -> Vec<BindingId> {
+        self.link_specs(link)
+            .into_iter()
+            .filter(|(_, _, spec)| matches!(spec, KeySpec::Chord(key) if key == chord))
+            .map(|(id, _, _)| id)
+            .collect()
+    }
+
+    /// The priority bindings of one chain link that `chord` fires: [`Self::priority_matches_in`] for the link.
+    pub fn link_priority_matches(&self, link: &ChainLink, chord: &KeyChord) -> Vec<BindingId> {
+        let mut matches = self.link_matches(link, chord);
+        matches.retain(|id| id.is_priority());
+        matches
     }
 
     /// The priority bindings in `ids` that `chord` fires, in [`Self::matches_in`] order. The clash rule applies to
@@ -296,6 +330,66 @@ mod tests {
         ];
         let winner = chain.iter().find_map(|ids| keymap.match_in(ids, &key("h")));
         assert_eq!(winner, Some(BindingId::TableScrollLeft));
+    }
+
+    /// The keys of a link behind the search box, as `(binding, key)` pairs.
+    fn behind_input(keymap: &Keymap, bindings: &'static [BindingId]) -> Vec<(BindingId, String)> {
+        let link = ChainLink {
+            behind_input: true,
+            ..ChainLink::new(crate::component::Owner::App, bindings)
+        };
+        keymap
+            .link_specs(&link)
+            .into_iter()
+            .map(|(id, token, _)| (id, token.to_owned()))
+            .collect()
+    }
+
+    const APP: &[BindingId] = &[
+        BindingId::AppQuit,
+        BindingId::AppCommandPalette,
+        BindingId::AppMaximizeWidget,
+        BindingId::AppOpenHelp,
+    ];
+
+    #[test]
+    fn behind_an_input_the_keys_it_types_are_dropped() {
+        let keymap = Keymap::defaults();
+        // `M`, `?` and `q` are typed; `/` and `ctrl+p` stay.
+        assert_eq!(
+            behind_input(&keymap, APP),
+            [(BindingId::AppCommandPalette, "ctrl+p".to_owned())]
+        );
+        assert_eq!(
+            behind_input(&keymap, &[BindingId::TableSearch]),
+            [(BindingId::TableSearch, "/".to_owned())]
+        );
+        // Not behind an input, nothing is dropped, and a link behind one still matches what's left.
+        assert_eq!(keymap.effective_specs(APP).len(), 4);
+        let link = ChainLink {
+            behind_input: true,
+            ..ChainLink::new(crate::component::Owner::App, APP)
+        };
+        assert_eq!(keymap.link_matches(&link, &key("M")), []);
+        assert_eq!(
+            keymap.link_matches(&link, &key("ctrl+p")),
+            [BindingId::AppCommandPalette]
+        );
+        assert_eq!(
+            keymap.link_matches(&ChainLink::new(link.owner, APP), &key("M")),
+            [BindingId::AppMaximizeWidget]
+        );
+    }
+
+    /// Py bug B38, answered by Chris on #169: the filter looks at the keys after overrides, so a binding moved off a
+    /// typed key stays, and one moved onto a typed key goes.
+    #[test]
+    fn behind_an_input_the_filter_follows_the_overrides() {
+        let keymap = keymap(&[("app.maximize_widget", "f2"), ("app.command_palette", "p")]);
+        assert_eq!(
+            behind_input(&keymap, APP),
+            [(BindingId::AppMaximizeWidget, "f2".to_owned())]
+        );
     }
 
     #[test]

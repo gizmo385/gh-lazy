@@ -26,7 +26,8 @@ impl ActiveBinding {
 
 /// The active keys of `chain` (innermost first), in Textual's `Screen.active_bindings` order.
 ///
-/// - Links are walked innermost first, and each link's bindings in [`Keymap::effective_specs`] order.
+/// - Links are walked innermost first, and each link's bindings in [`Keymap::link_specs`] order, which drops the
+///   keys a focused input types from the links behind it.
 /// - Each key goes to the first binding that has it. A binding whose keys are all taken by then has no entry.
 /// - A priority binding takes a key from a non-priority one further in, at that key's place, as Textual replaces
 ///   the entry in its key-ordered dict.
@@ -41,7 +42,7 @@ pub fn active_bindings(
     let mut claimed: Vec<&KeySpec> = Vec::new();
     let mut active: Vec<ActiveBinding> = Vec::new();
     for link in chain {
-        for (id, token, spec) in keymap.effective_specs(link.bindings) {
+        for (id, token, spec) in keymap.link_specs(link) {
             let binding_state = state(link.owner, id);
             if binding_state == BindingState::Hidden {
                 continue;
@@ -82,7 +83,7 @@ mod tests {
     }
 
     fn link(owner: Owner, bindings: &'static [BindingId]) -> ChainLink {
-        ChainLink { owner, bindings }
+        ChainLink::new(owner, bindings)
     }
 
     fn enabled(_: Owner, _: BindingId) -> BindingState {

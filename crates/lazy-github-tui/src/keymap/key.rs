@@ -2,6 +2,8 @@
 
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
+use crate::components::table::is_printable;
+
 /// A key press with its modifiers, normalized so matching a binding is plain equality.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct KeyChord {
@@ -33,6 +35,23 @@ impl KeyChord {
             return None;
         }
         Some(normalize(event.code, event.modifiers))
+    }
+
+    /// Whether a focused text input takes this key away from the bindings around it, by Textual's rule: the input
+    /// consumes a key whose name `key_to_character` turns into a printable character (`Input.check_consume_key`),
+    /// and the screen drops that key from every outer link of the binding chain (`Screen._binding_chain`).
+    ///
+    /// That's a plain printable character, `space` included. Textual names `+ - / @ \ _` `plus`, `minus`, `slash`,
+    /// `at`, `backslash` and `underscore`, which `key_to_character` doesn't resolve, so those stay: `/` still
+    /// searches while the search box has focus. Keys with modifiers and named keys (`enter`, `f2`) stay too.
+    /// Non-ASCII characters count as printable here; Textual misses a few whose Unicode names hold a hyphen.
+    pub fn typed_by_input(&self) -> bool {
+        match self.code {
+            KeyCode::Char(c) if self.mods.is_empty() => {
+                is_printable(c) && !matches!(c, '+' | '-' | '/' | '@' | '\\' | '_')
+            }
+            _ => false,
+        }
     }
 
     /// The key event a terminal would send for this chord. `shift+tab` is `BackTab`, as crossterm reports it.
@@ -139,6 +158,11 @@ const DISPLAY_ALIASES: &[(&str, &str)] = &[
 ];
 
 impl KeySpec {
+    /// [`KeyChord::typed_by_input`] for a key; a token that names no key is never typed.
+    pub fn typed_by_input(&self) -> bool {
+        matches!(self, KeySpec::Chord(chord) if chord.typed_by_input())
+    }
+
     /// The keys in a comma-separated list, each with its trimmed token as written: `"q, escape"` gives two.
     /// Empty tokens are skipped, so `""` and `"  "` give none. A literal comma is written `comma`.
     pub fn parse_list(s: &str) -> Vec<(String, KeySpec)> {
@@ -321,6 +345,36 @@ mod tests {
     #[case("alt+x", KeyChord::new(KeyCode::Char('x'), KeyModifiers::ALT))]
     fn parses(#[case] token: &str, #[case] expected: KeyChord) {
         assert_eq!(KeySpec::parse(token), KeySpec::Chord(expected));
+    }
+
+    /// Textual's `check_consume_key(key, key_to_character(key))` for each key name, from Textual 8.2.5.
+    #[rstest]
+    #[case("M", true)]
+    #[case("q", true)]
+    #[case("1", true)]
+    #[case("?", true)]
+    #[case("question_mark", true)]
+    #[case("full_stop", true)]
+    #[case("space", true)]
+    #[case("é", true)]
+    #[case("/", false)]
+    #[case("slash", false)]
+    #[case("+", false)]
+    #[case("minus", false)]
+    #[case("@", false)]
+    #[case("backslash", false)]
+    #[case("_", false)]
+    #[case("ctrl+p", false)]
+    #[case("ctrl+f", false)]
+    #[case("shift+space", false)]
+    #[case("enter", false)]
+    #[case("tab", false)]
+    #[case("escape", false)]
+    #[case("f2", false)]
+    #[case("up", false)]
+    #[case("bogus", false)]
+    fn input_typed_keys(#[case] token: &str, #[case] typed: bool) {
+        assert_eq!(KeySpec::parse(token).typed_by_input(), typed, "{token}");
     }
 
     #[test]

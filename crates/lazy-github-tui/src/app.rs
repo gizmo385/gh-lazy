@@ -166,9 +166,14 @@ impl App {
                 Some(Action::Quit)
             }
             Event::Mouse(mouse) => self.action_for_mouse(mouse),
+            // A bracketed paste goes to the focused search box, and nowhere else.
+            Event::Paste(text) => match &mut self.base {
+                BaseScreen::Main(main) => main.handle_paste(&text),
+                _ => None,
+            },
             // Resizes need no state: the next draw uses the new size. A deadline only needs the redraw that follows
             // every event: animations take their frame from the clock.
-            Event::Paste(_) | Event::Resize(..) | Event::FocusGained | Event::FocusLost | Event::Deadline => None,
+            Event::Resize(..) | Event::FocusGained | Event::FocusLost | Event::Deadline => None,
         }
     }
 
@@ -184,21 +189,27 @@ impl App {
         // 3. Priority bindings, from the app link inward, past any modal screen. The clash rule sees the whole link,
         //    as in Textual.
         for link in self.full_binding_chain().iter().rev() {
-            let matches: Vec<BindingId> = self.shared.keymap.priority_matches_in(link.bindings, &chord).collect();
+            let matches = self.shared.keymap.link_priority_matches(link, &chord);
             if let Some(action) = self.route_first(link.owner, matches) {
                 return Some(action);
             }
         }
-        // 4. A focused component that consumes the key: none can have focus yet (#75).
+        // 4. A focused component that consumes the key: the search box types printable keys and takes its editing
+        //    keys (Textual's `Input._on_key`, then the input's own bindings, innermost in the chain).
+        if let BaseScreen::Main(main) = &mut self.base
+            && let Some(action) = main.handle_focused_key(&chord, &self.shared.keymap)
+        {
+            return Some(action);
+        }
         // 5. The chain, innermost first. Within a link, each binding the key fires is tried in turn; the first link
-        //    whose component accepts one wins.
+        //    whose component accepts one wins. Behind the search box, the keys it types are gone from every link.
         for link in &chain {
-            let matches: Vec<BindingId> = self.shared.keymap.matches_in(link.bindings, &chord).collect();
+            let matches = self.shared.keymap.link_matches(link, &chord);
             if let Some(action) = self.route_first(link.owner, matches) {
                 return Some(action);
             }
         }
-        // 6. Unbound keys go to the focused component's `handle_key`, once something can have focus.
+        // 6. Nothing takes the key.
         None
     }
 
@@ -241,16 +252,11 @@ impl App {
     fn full_binding_chain(&self) -> Vec<ChainLink> {
         let mut chain = match &self.base {
             BaseScreen::Startup(_) => Vec::new(),
-            BaseScreen::Auth(auth) => vec![ChainLink {
-                owner: Owner::Screen(ScreenKind::Auth),
-                bindings: auth.bindings(),
-            }],
+            BaseScreen::Auth(auth) => vec![ChainLink::new(Owner::Screen(ScreenKind::Auth), auth.bindings())],
             BaseScreen::Main(main) => main.binding_chain(),
         };
-        chain.push(ChainLink {
-            owner: Owner::App,
-            bindings: APP_BINDINGS,
-        });
+        chain.push(ChainLink::new(Owner::App, APP_BINDINGS));
+        ChainLink::filter_behind_inputs(&mut chain);
         chain
     }
 

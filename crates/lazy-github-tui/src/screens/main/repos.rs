@@ -146,7 +146,7 @@ impl ReposSection {
     /// Where the table's own rows were drawn in the last frame (header, rows and any horizontal scrollbar), which
     /// takes clicks.
     pub(super) fn table_rect(&self) -> Option<Rect> {
-        self.area.map(|area| self.table.table_rect(area))
+        self.area.map(|area| self.table.drawn_table_rect(area))
     }
 }
 

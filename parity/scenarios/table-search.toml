@@ -26,9 +26,12 @@ keys = ["1", "/"]
 
 # Every capture ignores the PR, Issues and Workflows sections, which have no table in Rust yet: #171, #172 and #173
 # each remove their box from these lists.
+# No `rows`: Python keeps the table at the full section height under the box and clips its bottom rows, while Rust
+# lays it out in the rows the box leaves, so its horizontal scrollbar takes one of them (Py bug B40, decision
+# `search-box-table-height`). The cursor and focus still match.
 [[step]]
 capture = "open"
-checks = ["rows", "cursor", "focus"]
+checks = ["cursor", "focus"]
 ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
 
 # `india-lazy-…`, `juliett-lazy-…` and `lima-lazy-…`.

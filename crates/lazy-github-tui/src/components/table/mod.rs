@@ -18,7 +18,6 @@ use std::time::Duration;
 use crossterm::event::{KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use indexmap::IndexMap;
 use ratatui::Frame;
-use ratatui::buffer::Buffer;
 use ratatui::layout::{Position as CellPosition, Rect};
 use tokio::time::Instant;
 
@@ -855,7 +854,7 @@ impl<T: TableItem> SearchableTable<T> {
         if let Some(search) = search {
             self.draw_search(frame, search, cx);
         }
-        self.draw_table(frame, table, area, cx);
+        self.draw_table(frame, table, cx);
     }
 
     /// The table alone in all of `area`, without the search box or the loading overlay: the maximized `DataTable`,
@@ -864,7 +863,7 @@ impl<T: TableItem> SearchableTable<T> {
         self.area = area;
         self.drawn = Drawn::TableAlone;
         self.overlay_hidden = self.loading;
-        self.draw_table(frame, area, area, cx);
+        self.draw_table(frame, area, cx);
     }
 
     /// The search box alone in `area`, as a maximized `Input` draws it. Clicks on it don't reach the table.
@@ -879,8 +878,8 @@ impl<T: TableItem> SearchableTable<T> {
             .render(frame.buffer_mut(), area, cx.theme, cx.theme.background(), focused);
     }
 
-    /// The table laid out in `area`, and drawn only where it's inside `clip` (see [`SearchBox::split`]).
-    fn draw_table(&mut self, frame: &mut Frame<'_>, area: Rect, clip: Rect, cx: &RenderCx<'_>) {
+    /// The table laid out in `area`.
+    fn draw_table(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let widths = self.rows.widths(&self.columns);
         let layout = Layout::new(area, widths.iter().sum(), self.rows.len());
         // Rows may have gone since the last frame; the view never scrolls past the end.
@@ -897,14 +896,8 @@ impl<T: TableItem> SearchableTable<T> {
             .max_scroll(),
         );
         let styles = Styles::new(cx.theme, cx.focused && self.focus == TableFocus::Table);
-        let clipped = layout.table.intersection(clip) != layout.table;
-        let mut scratch = clipped.then(|| Buffer::empty(layout.table));
-        let buf = match scratch.as_mut() {
-            Some(scratch) => scratch,
-            None => frame.buffer_mut(),
-        };
         render::draw(
-            buf,
+            frame.buffer_mut(),
             &render::Frame {
                 columns: &self.columns,
                 rows: &self.rows,
@@ -917,13 +910,6 @@ impl<T: TableItem> SearchableTable<T> {
             },
             &styles,
         );
-        if let Some(scratch) = scratch {
-            let out = frame.buffer_mut();
-            let visible = layout.table.intersection(clip).intersection(out.area);
-            for position in visible.positions() {
-                out[position] = scratch[position].clone();
-            }
-        }
     }
 }
 

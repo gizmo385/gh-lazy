@@ -422,22 +422,27 @@ fn the_lazy_check_after_a_submit_counts_hidden_items() {
     assert_eq!(table.lazy_load().and_then(LazyLoad::in_flight), None);
 }
 
-/// Py bug B40: below the shown box the table keeps the whole area's height (`max-height: 100%`) and its bottom rows
-/// are clipped, so the cursor can go under the clip without the table scrolling, as in Python.
+/// Py bug B40, answered "fix it": below the shown box the table gets only the rows the box leaves, so moving the
+/// cursor past the old clipped bottom scrolls, and every row the cursor reaches is drawn.
 #[test]
-fn the_box_pushes_the_bottom_of_the_table_out_of_view() {
+fn the_table_below_the_box_keeps_the_cursor_row_in_view() {
     let mut table = table();
     search(&mut table, "o");
     assert_eq!(table.row_count(), 8);
     let area = Rect::new(0, 0, 40, 12);
-    // The header and seven of the eight rows show, below the box and its margin.
+    // The header and seven of the eight rows fit below the box and its margin.
     assert_eq!(table.table_rect(area), Rect::new(0, 4, 40, 8));
     let _ = draw(&mut table, true);
-    let _ = press(&mut table, "G");
-    let screen = buffer_to_string(&draw(&mut table, true));
-    assert_eq!((table.cursor(), table.scroll()), (7, (0, 0)));
-    let last = repo(usize::try_from(ids(&table)[7]).unwrap()).name;
-    assert!(!screen.contains(last), "{screen}");
+    assert_eq!(table.focus(), TableFocus::Table);
+    for row in 1..8 {
+        let _ = press(&mut table, "j");
+        let screen = buffer_to_string(&draw(&mut table, true));
+        assert_eq!(table.cursor(), row);
+        let name = repo(usize::try_from(ids(&table)[row]).unwrap()).name;
+        assert!(screen.contains(name), "row {row}, {name}:\n{screen}");
+    }
+    // The eighth row scrolled the view by one: Python's clipped table didn't scroll at all.
+    assert_eq!(table.scroll(), (1, 0));
 }
 
 // Snapshots, 40x12 in textual-dark.

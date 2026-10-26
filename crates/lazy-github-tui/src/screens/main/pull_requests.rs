@@ -6,6 +6,7 @@ use lazy_github_core::github::IssueListQuery;
 use lazy_github_core::models::{IssueListItem, PartialPullRequest, Repository};
 
 use super::issue_lists::log_fetch_failure;
+use super::issues::{issue_cells, issue_columns};
 use super::list::{ListSource, PageFailure};
 use crate::components::table::{Cell, Column, Page, SortSpec, TableItem};
 use crate::effect::{GithubRequest, GithubResponse};
@@ -21,13 +22,7 @@ impl TableItem for PartialPullRequest {
     /// Python's `pull_request_to_cell`. A merged PR is `closed` and a draft `open`, as the API's `state` says. The
     /// title is drawn as typed (Py bug B46).
     fn cells(&self, (): &()) -> Vec<Cell> {
-        let issue = &self.issue;
-        vec![
-            Cell::int(i64::try_from(issue.number).unwrap_or(i64::MAX)),
-            Cell::text(issue.state.as_str()),
-            Cell::text(issue.user.login.clone()),
-            Cell::text(issue.title.clone()),
-        ]
+        issue_cells(&self.issue)
     }
 }
 
@@ -46,7 +41,7 @@ impl ListSource for PullRequestsSource {
     type Item = PartialPullRequest;
 
     fn columns() -> Vec<Column> {
-        ["#", "Status", "Author", "Title"].map(Column::new).into()
+        issue_columns()
     }
 
     fn sort() -> SortSpec {
@@ -85,19 +80,20 @@ pub(super) fn pull_requests_query(config: &Config) -> IssueListQuery {
     IssueListQuery::first_page(settings.state_filter, settings.owner_filter)
 }
 
-/// An issues-endpoint item in `repo` for tests: issue `number`, or a pull request (open, closed or draft) when `kind`
-/// says so. Titles are `Issue <n>` and `PR <n>`.
+/// An issues-endpoint item in `repo` for tests: issue `number` (open or closed), or a pull request (open, closed or
+/// draft), as `kind` says. Titles are `Issue <n>` and `PR <n>`.
 #[cfg(test)]
 pub(super) fn item(repo: &Repository, number: u64, kind: Kind) -> IssueListItem {
     use lazy_github_core::models::{Issue, IssueState, User};
 
-    let closed = kind == Kind::ClosedPr;
+    let closed = matches!(kind, Kind::ClosedPr | Kind::ClosedIssue);
+    let is_issue = matches!(kind, Kind::Issue | Kind::ClosedIssue);
     let issue = Issue {
         id: 7_000_000 + number,
         number,
         locked: false,
         state: if closed { IssueState::Closed } else { IssueState::Open },
-        title: if kind == Kind::Issue {
+        title: if is_issue {
             format!("Issue {number}")
         } else {
             format!("PR {number}")
@@ -120,7 +116,7 @@ pub(super) fn item(repo: &Repository, number: u64, kind: Kind) -> IssueListItem 
         repo: repo.clone(),
     };
     match kind {
-        Kind::Issue => IssueListItem::Issue(issue),
+        Kind::Issue | Kind::ClosedIssue => IssueListItem::Issue(issue),
         Kind::OpenPr | Kind::ClosedPr | Kind::DraftPr => IssueListItem::PullRequest(PartialPullRequest {
             issue,
             draft: kind == Kind::DraftPr,
@@ -133,6 +129,7 @@ pub(super) fn item(repo: &Repository, number: u64, kind: Kind) -> IssueListItem 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Kind {
     Issue,
+    ClosedIssue,
     OpenPr,
     ClosedPr,
     DraftPr,

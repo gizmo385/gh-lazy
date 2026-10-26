@@ -11,19 +11,19 @@ expression: screen
 │ ☆  parity-bot  hello-world  ✘        ││                                                          │
 │ ☆  parity-bot  lazy-demo    ✘        ││                                                          │
 │                                      ││                                                          │
-└──────────────────────────────────────┘│  ────────────────────────────────────────────────────    │
-┌─ [2] Pull Requests (empty) ──────────┐│                                                          │
-│ #  Status  Author  Title             ││  Name Value                                              │
+│                                      ││  ────────────────────────────────────────────────────    │
+│                                      ││                                                          │
+│                                      ││  Name Value                                              │
 └──────────────────────────────────────┘│                                                          │
-┌─ [3] Issues ─────────────────────────┐│  a 1                                                     │
+┌─ [2] Pull Requests (empty) ──────────┐│  a 1                                                     │
+│ #  Status  Author  Title             ││                                                          │
+└──────────────────────────────────────┘│  Options                                                 │
+┌─ [3] Issues (empty) ─────────────────┐│                                                          │
+│ #  Status  Author  Title             ││  Option Description                                      │
+└──────────────────────────────────────┘│                                                        ▂▂│
+┌─ [4] Workflows ──────────────────────┐│  --verbose Prints every request and response while it    │
+│                                      ││  runs, which is a lot of output for a long session.      │
 │                                      ││                                                          │
-│                                      ││  Options                                                 │
-│                                      ││                                                          │
-│                                      ││  Option Description                                      │
-│                                      ││                                                        ▂▂│
-│                                      ││  --verbose Prints every request and response while it    │
-└──────────────────────────────────────┘│  runs, which is a lot of output for a long session.      │
-┌─ [4] Workflows ──────────────────────┐│                                                          │
 │                                      ││  -q Quiet.                                               │
 │                                      ││                                                          │
 │                                      ││  Notes                                                   │

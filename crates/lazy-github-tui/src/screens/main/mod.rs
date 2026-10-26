@@ -3,6 +3,7 @@
 
 mod details;
 mod issue_lists;
+mod issues;
 pub mod layout;
 mod list;
 mod pull_requests;
@@ -393,12 +394,13 @@ impl MainScreen {
         true
     }
 
-    /// The section's table, once it's mounted. #172 and #173 mount theirs.
+    /// The section's table, once it's mounted. #173 mounts the workflows one.
     fn table_mut(&mut self, id: SectionId) -> Option<&mut dyn SectionTable> {
         match id {
             SectionId::Repos => Some(&mut self.repos.table),
             SectionId::PullRequests => Some(self.issue_lists.prs_table_mut()),
-            SectionId::Issues | SectionId::Workflows => None,
+            SectionId::Issues => Some(self.issue_lists.issues_table_mut()),
+            SectionId::Workflows => None,
         }
     }
 
@@ -406,7 +408,8 @@ impl MainScreen {
         match id {
             SectionId::Repos => Some(&self.repos.table),
             SectionId::PullRequests => Some(self.issue_lists.prs_table()),
-            SectionId::Issues | SectionId::Workflows => None,
+            SectionId::Issues => Some(self.issue_lists.issues_table()),
+            SectionId::Workflows => None,
         }
     }
 
@@ -415,8 +418,9 @@ impl MainScreen {
     fn compact(&self, id: SectionId) -> bool {
         match id {
             SectionId::PullRequests => self.issue_lists.prs_compact(),
-            // #172 and #173 read their section's flag here.
-            SectionId::Repos | SectionId::Issues | SectionId::Workflows => self.sections[id.index()].compact,
+            SectionId::Issues => self.issue_lists.issues_compact(),
+            // #173 reads its section's flag here.
+            SectionId::Repos | SectionId::Workflows => self.sections[id.index()].compact,
         }
     }
 
@@ -424,8 +428,9 @@ impl MainScreen {
     fn load_more(&mut self, section: SectionId, generation: u64, page: u32, per_page: u32, cx: &mut Cx<'_>) {
         match section {
             SectionId::PullRequests => self.issue_lists.load_more_prs(generation, page, per_page, cx),
-            // The repos table isn't lazy; #172 and #173 route their sections' asks here.
-            SectionId::Repos | SectionId::Issues | SectionId::Workflows => {}
+            SectionId::Issues => self.issue_lists.load_more_issues(generation, page, per_page, cx),
+            // The repos table isn't lazy; #173 routes its sections' asks here.
+            SectionId::Repos | SectionId::Workflows => {}
         }
     }
 

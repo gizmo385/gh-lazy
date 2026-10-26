@@ -1,7 +1,8 @@
 //! Where each box of the main screen goes, with Textual's rounding.
 //!
-//! ratatui's `Layout` solver rounds differently from Textual, so this is plain integer arithmetic: percentages round
-//! down, and `1fr` shares are handed out by cumulative floor, so share *i* of *n* ends at `floor(i × R / n)`.
+//! ratatui's `Layout` solver rounds differently from Textual, so this is plain integer arithmetic. A lone percentage
+//! rounds down. The sections stack exact fractional heights (a focused one's 40%, then `1fr` shares) and each ends at
+//! the floor of its exact bottom edge, so share *i* of *n* equal ones ends at `floor(i × R / n)`.
 
 use ratatui::layout::Rect;
 
@@ -119,26 +120,34 @@ pub fn layout(input: &LayoutInput) -> MainLayout {
     }
 }
 
-/// The height of each displayed section, in [`SectionId::ALL`] order.
+/// Fractions of a row the section heights are worked out in: a multiple of 5 for the 40% rule and of every share
+/// count up to 4, so every exact height below is a whole number of these.
+const SUBROWS: u32 = 120;
+
+/// The height of each displayed section, in [`SectionId::ALL`] order. As in Textual, the heights are exact fractions
+/// (a focused section's 40% of 44 rows is 17.6) and each box ends at the floor of its exact bottom edge, so the
+/// leftover fractions go to the boxes below rather than being dropped from the focused one.
 fn section_heights(total: u16, sections: &[SectionState; 4], focused: Option<SectionId>) -> [Option<u16>; 4] {
-    let min_focused = percent(total, 40);
+    let total_exact = u32::from(total) * SUBROWS;
+    let min_focused = total_exact * 2 / 5;
+    let compact_height = u32::from(COMPACT_HEIGHT) * SUBROWS;
     let is_focused = |i: usize| focused.is_some_and(|id| id.index() == i && sections[i].shown());
-    let mut heights = [None; 4];
+    let mut exact: [Option<u32>; 4] = [None; 4];
 
     // Fixed heights first: compact sections, and a focused compact one under the 40% rule.
-    let mut fixed = 0u16;
+    let mut fixed = 0u32;
     for (i, section) in sections.iter().enumerate() {
         if section.shown() && section.compact {
             let height = if is_focused(i) {
-                COMPACT_HEIGHT.max(min_focused)
+                compact_height.max(min_focused)
             } else {
-                COMPACT_HEIGHT
+                compact_height
             };
-            heights[i] = Some(height);
-            fixed = fixed.saturating_add(height);
+            exact[i] = Some(height);
+            fixed += height;
         }
     }
-    let rest = total.saturating_sub(fixed);
+    let rest = total_exact.saturating_sub(fixed);
     let flexible: Vec<usize> = (0..4)
         .filter(|&i| sections[i].shown() && !sections[i].compact)
         .collect();
@@ -149,23 +158,28 @@ fn section_heights(total: u16, sections: &[SectionState; 4], focused: Option<Sec
     let mut shared = rest;
     if let Some(position) = focused_flexible {
         let n = u32::try_from(flexible.len()).unwrap_or(u32::MAX);
-        if u32::from(rest) < u32::from(min_focused) * n {
+        if rest < min_focused.saturating_mul(n) {
             let height = min_focused.min(rest);
-            heights[sharing.remove(position)] = Some(height);
+            exact[sharing.remove(position)] = Some(height);
             shared = rest - height;
         }
     }
-    for (i, height) in sharing.iter().zip(cumulative_floor(shared, sharing.len())) {
-        heights[*i] = Some(height);
+    let n = u32::try_from(sharing.len()).unwrap_or(u32::MAX).max(1);
+    for i in sharing {
+        exact[i] = Some(shared / n);
+    }
+
+    // Each box ends at the floor of its exact bottom edge.
+    let mut heights = [None; 4];
+    let mut bottom = 0u32;
+    for (height, exact) in heights.iter_mut().zip(exact) {
+        if let Some(exact) = exact {
+            let top = bottom / SUBROWS;
+            bottom += exact;
+            *height = Some(u16::try_from(bottom / SUBROWS - top).unwrap_or(u16::MAX));
+        }
     }
     heights
-}
-
-/// `total` split into `n` shares by cumulative floor: share *i* ends at `floor(i × total / n)`.
-fn cumulative_floor(total: u16, n: usize) -> impl Iterator<Item = u16> {
-    let n = u32::try_from(n).unwrap_or(u32::MAX).max(1);
-    let end = move |i: u32| u16::try_from(u32::from(total) * i / n).unwrap_or(total);
-    (1..=n).map(move |i| end(i) - end(i - 1))
 }
 
 /// `floor(value × percent / 100)`, as Textual rounds percentages.
@@ -220,6 +234,12 @@ mod tests {
     #[rstest]
     #[case::default_repos_160((160, 48), [SHOWN; 4], FocusTarget::Table(SectionId::Repos), false,
         [Some((3, 19)), Some((20, 28)), Some((29, 37)), Some((38, 46))], (3, 46), None)]
+    // 40% of 44 is 17.6 and the others share 26.4: Python's 8, 9, 18 and 9 rows, from the edges' floors.
+    #[case::default_issues_160((160, 48), [SHOWN; 4], FocusTarget::Table(SectionId::Issues), false,
+        [Some((3, 10)), Some((11, 19)), Some((20, 37)), Some((38, 46))], (3, 46), None)]
+    // repo-lists' `issues-page-2`: 13.2, 13.2 and 17.6 rows end up 13, 13 and 18.
+    #[case::no_workflows_issues_160((160, 48), [SHOWN, SHOWN, SHOWN, HIDDEN], FocusTarget::Table(SectionId::Issues),
+        false, [Some((3, 15)), Some((16, 28)), Some((29, 46)), None], (3, 46), None)]
     #[case::default_details_160((160, 48), [SHOWN; 4], FocusTarget::DetailsTabs, false,
         [Some((3, 13)), Some((14, 24)), Some((25, 35)), Some((36, 46))], (3, 46), None)]
     #[case::log_repos_160((160, 48), [SHOWN; 4], FocusTarget::Table(SectionId::Repos), true,

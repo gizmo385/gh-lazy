@@ -7,8 +7,9 @@
 
 use lazy_github_core::gh::GhError;
 use lazy_github_core::github::IssueListQuery;
-use lazy_github_core::models::{PartialPullRequest, Repository};
+use lazy_github_core::models::{Issue, IssueListItem, PartialPullRequest, Repository};
 
+use super::issues::{IssuesSource, issues_page, issues_query};
 use super::list::{ListSection, PER_PAGE};
 use super::pull_requests::{PullRequestsSource, pull_requests_page, pull_requests_query};
 use crate::component::Cx;
@@ -48,7 +49,6 @@ enum FirstPage {
 #[derive(Debug, Clone, Copy)]
 struct Feeds {
     prs: bool,
-    #[expect(dead_code, reason = "#172 hands the issues table its half")]
     issues: bool,
 }
 
@@ -56,7 +56,7 @@ struct Feeds {
 #[derive(Debug)]
 pub(super) struct IssueLists {
     prs: ListSection<PullRequestsSource>,
-    // #172 adds `issues: ListSection<IssuesSource>`.
+    issues: ListSection<IssuesSource>,
     first_page: FirstPage,
 }
 
@@ -64,8 +64,24 @@ impl IssueLists {
     pub(super) fn new(options: AppOptions) -> Self {
         Self {
             prs: ListSection::new(options),
+            issues: ListSection::new(options),
             first_page: FirstPage::Idle,
         }
+    }
+
+    /// The Issues table.
+    pub(super) fn issues_table(&self) -> &SearchableTable<Issue> {
+        self.issues.table()
+    }
+
+    /// The Issues table, for the screen's input and drawing paths.
+    pub(super) fn issues_table_mut(&mut self) -> &mut SearchableTable<Issue> {
+        self.issues.table_mut()
+    }
+
+    /// Whether the Issues section is compact.
+    pub(super) fn issues_compact(&self) -> bool {
+        self.issues.compact()
     }
 
     /// The PR table.
@@ -90,11 +106,9 @@ impl IssueLists {
             cx.effect(Effect::Cancel(id));
         }
         self.prs.begin(repo, cx);
+        self.issues.begin(repo, cx);
         let prs = pull_requests_query(cx.config());
-        let issues = {
-            let settings = &cx.config().issues;
-            IssueListQuery::first_page(settings.state_filter, settings.owner_filter)
-        };
+        let issues = issues_query(cx.config());
         let mut request = |query: IssueListQuery| {
             cx.request(GithubRequest::ListIssues {
                 repo: Box::new(repo.clone()),
@@ -168,6 +182,11 @@ impl IssueLists {
         self.prs.load_more(generation, page, per_page, cx);
     }
 
+    /// Requests the page the Issues table asked for.
+    pub(super) fn load_more_issues(&mut self, generation: u64, page: u32, per_page: u32, cx: &mut Cx<'_>) {
+        self.issues.load_more(generation, page, per_page, cx);
+    }
+
     /// Takes a response to a first page or a table's later page, and hands back any other. A first page that was
     /// cancelled by a newer selection is handed back, so the app drops it (Py bug B45).
     pub(super) fn on_response(
@@ -180,15 +199,25 @@ impl IssueLists {
             return Some(response);
         };
         let Some(feeds) = self.take_first_page(id) else {
-            return self.prs.on_response(id, GithubResponse::ListIssues(result), cx);
+            let response = self.prs.on_response(id, GithubResponse::ListIssues(result), cx)?;
+            return self.issues.on_response(id, response, cx);
         };
-        if let Err(error) = &result {
-            log_fetch_failure(error);
-        }
-        // #172 splits the items between the tables when `feeds.issues`.
+        // A failure logs once, whichever tables it feeds, and leaves them empty.
+        let items = result.unwrap_or_else(|error| {
+            log_fetch_failure(&error);
+            Vec::new()
+        });
+        // Each table keeps its own kind, in API order. A first page's `last` isn't read, so splitting first is fine.
+        let (prs, issues): (Vec<_>, Vec<_>) = items
+            .into_iter()
+            .partition(|item| matches!(item, IssueListItem::PullRequest(_)));
         if feeds.prs {
-            self.prs.first_page(result.map(pull_requests_page), cx);
+            self.prs.first_page(Ok(pull_requests_page(prs)), cx);
             self.prs.refresh_compact();
+        }
+        if feeds.issues {
+            self.issues.first_page(Ok(issues_page(issues)), cx);
+            self.issues.refresh_compact();
         }
         None
     }

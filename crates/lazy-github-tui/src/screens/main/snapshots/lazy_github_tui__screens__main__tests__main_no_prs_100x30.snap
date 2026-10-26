@@ -16,7 +16,7 @@ expression: "screen(config(|a| a.show_pull_requests = false), 100, 30)"
 │                                      ││  GitHub. You can get started by selecting one of the     │
 └──────────────────────────────────────┘│  repositories listed in the table on the left. Once      │
 ┌─ [3] Issues ─────────────────────────┐│  you have selected a repository, any issues, pull        │
-│                                      ││  requests, and action workflows will be retrieved and    │
+│ #  Status  Author  Title             ││  requests, and action workflows will be retrieved and    │
 │                                      ││  displayed below it.                                     │
 │                                      ││                                                          │
 │                                      ││  Issues, pull requests, and action lists can also be   ▁▁│

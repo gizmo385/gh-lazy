@@ -21,23 +21,23 @@ expression: "app.screen(160, 48)"
 │                                                              ││                                        Hello World                                           │
 │                                                              ││                                                                                              │
 │                                                              ││  A first repository for trying things out, with bold, italic, inline code and a link.        │
-└──────────────────────────────────────────────────────────────┘│  This line continues the same paragraph.                                                     │
-┌─ [2] Pull Requests (empty) ──────────────────────────────────┐│                                                                                              │
-│ #  Status  Author  Title                                     ││                                                                                              │
-└──────────────────────────────────────────────────────────────┘│  Install                                                                                     │
-┌─ [3] Issues ─────────────────────────────────────────────────┐│                                                                                              │
-│                                                              ││   1. Clone the repo                                                                          │
-│                                                              ││   2. Run make install                                                                        │
+│                                                              ││  This line continues the same paragraph.                                                     │
 │                                                              ││                                                                                              │
-│                                                              ││  • one                                                                                       │
-│                                                              ││  • two                                                                                       │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [2] Pull Requests (empty) ──────────────────────────────────┐│  Install                                                                                     │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│   1. Clone the repo                                                                          │
+┌─ [3] Issues (empty) ─────────────────────────────────────────┐│   2. Run make install                                                                        │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│  • one                                                                                       │
+┌─ [4] Workflows ──────────────────────────────────────────────┐│  • two                                                                                       │
 │                                                              ││    ▪ nested under two                                                                        │
 │                                                              ││                                                                                              │
 │                                                              ││  ▌ A quoted line.                                                                            │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
-└──────────────────────────────────────────────────────────────┘│    echo hello                                                                                │
-┌─ [4] Workflows ──────────────────────────────────────────────┐│    echo world                                                                                │
+│                                                              ││    echo hello                                                                                │
+│                                                              ││    echo world                                                                                │
 │                                                              ││                                                                                            ▁▁│
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │

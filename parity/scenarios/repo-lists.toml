@@ -7,6 +7,9 @@ parity_rows = [
   "pull-requests.rows-from-issues",
   "searchable-tables.lazy-loading",
   "main-layout.maximize",
+  "issues.table",
+  "issues.columns",
+  "issues.filters",
 ]
 sizes = [[160, 48]]
 
@@ -14,9 +17,9 @@ sizes = [[160, 48]]
 # repo-lists adds parity-bot/browse-fixture as the first repo: numbers 100 to 36 over three issues-endpoint pages, where
 # a number divisible by 3 is a pull request and the rest are issues.
 fixtures = ["repo-lists", "base"]
-# Issues and Workflows are hidden so the PR box is as tall in both apps: Python collapses an empty section, and Rust's
-# stub sections can't until #172 and #173, which each remove their half of this override.
-config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+# Workflows is hidden so the PR box is as tall in both apps: Python collapses an empty section, and Rust's stub
+# section can't until #173, which removes this override.
+config_overrides = { appearance = { show_workflows = false } }
 
 [[step]]
 wait = { text = "browse-fixture", timeout_ms = 15000 }
@@ -32,6 +35,32 @@ wait = { text = "Browse fixture pull request 99", timeout_ms = 15000 }
 [[step]]
 capture = "loaded"
 checks = ["headers", "rows", "cursor", "focus"]
+ignore = { boxes = ["Details"] }
+
+# The Issues table's 20 issues from the shared first page: G puts the cursor on issue 71 (row 20 of 20), which asks for
+# page 2 with the default `issues.*` filters. These steps come before the PR ones because they send the first page-2
+# and page-3 requests, which the log waits rely on.
+[[step]]
+keys = ["3", "G"]
+
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/browse-fixture/issues", query = { page = "2", per_page = "30", state = "all" } }, timeout_ms = 15000 }
+
+[[step]]
+capture = "issues-page-2"
+checks = ["rows", "cursor"]
+ignore = { boxes = ["Details"] }
+
+# Page 2 doesn't move the cursor (row 20 of 40); the new bottom row asks for page 3.
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/browse-fixture/issues", query = { page = "3", per_page = "30", state = "all" } }, timeout_ms = 15000 }
+
+[[step]]
+capture = "issues-page-3"
+checks = ["rows", "cursor"]
 ignore = { boxes = ["Details"] }
 
 [[step]]
@@ -51,8 +80,8 @@ keys = ["escape"]
 [[step]]
 wait = { text = "[1] Repositories" }
 
-# G asks for page 2, whose newest PR, 69, shows below 72 in the focused box. Text waits, not request waits: #172's issue
-# paging sends the same page requests.
+# G asks for page 2, whose newest PR, 69, shows below 72 in the focused box. Text waits, not request waits: the issue
+# steps above already sent the same page requests.
 [[step]]
 keys = ["G"]
 
@@ -71,6 +100,12 @@ not_contains = ["Traceback"]
 # PR 90's title is checked maximized: in the 160x48 layout the Title column is too narrow for its last character.
 [expect.prs-maximized]
 contains = ["[WIP] Browse fixture pull request 90"]
+not_contains = ["Traceback"]
+
+[expect.issues-page-2]
+not_contains = ["Traceback"]
+
+[expect.issues-page-3]
 not_contains = ["Traceback"]
 
 [expect.prs-page-2]

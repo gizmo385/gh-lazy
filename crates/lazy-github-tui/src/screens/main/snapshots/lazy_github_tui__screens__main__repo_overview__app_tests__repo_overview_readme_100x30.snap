@@ -18,13 +18,13 @@ expression: "app.screen(100, 30)"
 ┌─ [2] Pull Requests (empty) ──────────┐│                                                          │
 │ #  Status  Author  Title             ││                                                          │
 └──────────────────────────────────────┘│                                                        ▆▆│
-┌─ [3] Issues ─────────────────────────┐│                      Hello World                         │
-│                                      ││                                                          │
-│                                      ││  A first repository for trying things out, with bold,    │
-│                                      ││  italic, inline code and a link. This line continues     │
+┌─ [3] Issues (empty) ─────────────────┐│                      Hello World                         │
+│ #  Status  Author  Title             ││                                                          │
+└──────────────────────────────────────┘│  A first repository for trying things out, with bold,    │
+┌─ [4] Workflows ──────────────────────┐│  italic, inline code and a link. This line continues     │
 │                                      ││  the same paragraph.                                     │
-└──────────────────────────────────────┘│                                                          │
-┌─ [4] Workflows ──────────────────────┐│                                                          │
+│                                      ││                                                          │
+│                                      ││                                                          │
 │                                      ││  Install                                                 │
 │                                      ││                                                          │
 │                                      ││   1. Clone the repo                                      │

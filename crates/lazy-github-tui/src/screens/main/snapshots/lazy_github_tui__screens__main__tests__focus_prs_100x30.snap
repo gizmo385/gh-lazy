@@ -21,7 +21,7 @@ expression: "app.screen(100, 30)"
 │                                      ││                                                          │
 └──────────────────────────────────────┘│  Issues, pull requests, and action lists can also be   ▁▁│
 ┌─ [3] Issues ─────────────────────────┐│  interacted with!                                        │
-│                                      ││                                                          │
+│ #  Status  Author  Title             ││                                                          │
 │                                      ││                                                          │
 │                                      ││  Pull Requests                                           │
 └──────────────────────────────────────┘│                                                          │

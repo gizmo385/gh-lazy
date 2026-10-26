@@ -1817,3 +1817,74 @@ fn prs_maximized_100x30() {
     assert!(rows[16].starts_with(" 11  open    parity-bot  PR 11"), "{}", rows[16]);
     insta::assert_snapshot!(screen);
 }
+
+// The issues section (#172).
+
+/// `octo/one` selected, with an open and a closed issue among PRs on its first page.
+fn issues_loaded() -> TestApp {
+    let repo = repos::repo("octo", "one", false);
+    let page: Vec<IssueListItem> = vec![
+        item(&repo, 9, Kind::Issue),
+        item(&repo, 8, Kind::OpenPr),
+        item(&repo, 7, Kind::ClosedIssue),
+    ];
+    let gh = FakeGithub::new()
+        .with_repositories(octo_repos())
+        .with_issue_page("octo/one", 1, Ok(page));
+    let mut app = TestApp::with_github(Config::default(), gh);
+    app.press(&["enter"]);
+    settle_logged(&mut app);
+    app
+}
+
+#[test]
+fn issues_section_100x30() {
+    let mut app = issues_loaded();
+    let screen = app.screen(100, 30);
+    let rows: Vec<&str> = screen.lines().collect();
+    let title = rows
+        .iter()
+        .position(|row| row.starts_with("┌─ [3] Issues ─"))
+        .expect("the Issues box");
+    assert!(
+        rows[title + 1].starts_with("│ #  Status  Author      Title"),
+        "{}",
+        rows[title + 1]
+    );
+    assert!(
+        rows[title + 2].starts_with("│ 9  open    parity-bot  Issue 9"),
+        "{}",
+        rows[title + 2]
+    );
+    assert!(
+        rows[title + 3].starts_with("│ 7  closed  parity-bot  Issue 7"),
+        "{}",
+        rows[title + 3]
+    );
+    let issues = app.app().main_screen().unwrap().issue_lists.issues_table();
+    assert_eq!(issues.row_keys().copied().collect::<Vec<u64>>(), [9, 7]);
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn compact_issues_100x30() {
+    // The first page is empty, so the Issues section is ` (empty)` too.
+    let mut app = compact_prs();
+    let screen = app.screen(100, 30);
+    assert!(screen.contains("┌─ [3] Issues (empty) ─"), "{screen}");
+    assert!(app.app().main_screen().unwrap().section(SectionId::Issues).compact);
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn issues_focus_key_focuses_the_table() {
+    let mut app = issues_loaded();
+    app.press(&["3"]);
+    assert_eq!(
+        app.app().main_screen().unwrap().focus(),
+        FocusTarget::Table(SectionId::Issues)
+    );
+    app.press(&["j"]);
+    let issues = app.app().main_screen().unwrap().issue_lists.issues_table();
+    assert_eq!(issues.selected().map(|issue| issue.number), Some(7));
+}

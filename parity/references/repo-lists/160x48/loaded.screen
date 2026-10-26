@@ -21,11 +21,6 @@ cursor 1 4 hidden
 │                                                              ││                                        browse-fixture                                        │
 │                                                              ││                                                                                              │
 │                                                              ││  Pull requests and issues mixed over three pages.                                            │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
 │ #   Status  Author      Title                                ││                                                                                              │
@@ -39,15 +34,20 @@ cursor 1 4 hidden
 │ 78  open    parity-bot  Browse fixture pull request 78       ││                                                                                              │
 │ 75  open    parity-bot  Browse fixture pull request 75       ││                                                                                              │
 │ 72  open    parity-bot  Browse fixture pull request 72       ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [3] Issues ─────────────────────────────────────────────────┐│                                                                                              │
+│ #    Status  Author         Title                            ││                                                                                              │
+│ 100  open    parity-bot     Browse fixture issue 100         ││                                                                                              │
+│ 98   closed  parity-bot     Browse fixture issue 98          ││                                                                                              │
+│ 97   open    parity-friend  Browse fixture issue 97          ││                                                                                              │
+│ 95   open    parity-friend  Browse fixture issue 95          ││                                                                                              │
+│ 94   open    parity-bot     Browse fixture issue 94          ││                                                                                              │
+│ 92   open    parity-bot     Browse fixture issue 92        ▁▁││                                                                                              │
+│ 91   open    parity-friend  Browse fixture issue 91          ││                                                                                              │
+│ 89   open    parity-friend  Browse fixture issue 89          ││                                                                                              │
+│ 88   open    parity-bot     Browse fixture issue 88          ││                                                                                              │
+│ 86   open    parity-bot     Browse fixture issue 86          ││                                                                                              │
+│ 85   open    parity-friend  Browse fixture issue 85          ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Comman
 --- styles
@@ -70,11 +70,6 @@ d..............................................................de...............
 d..............................................................de..oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo..e
 d..............................................................de..............................................................................................e
 d..............................................................de..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb............................................e
-d..............................................................de..............................................................................................e
-d..............................................................de..............................................................................................e
-d..............................................................de..............................................................................................e
-d..............................................................de..............................................................................................e
-d..............................................................de..............................................................................................e
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..............................................................................................e
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..............................................................................................e
 eppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppee..............................................................................................e
@@ -88,17 +83,22 @@ errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrree...............
 errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrree..............................................................................................e
 errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrree..............................................................................................e
 errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrree..............................................................................................e
-e..............................................................ee..............................................................................................e
-e..............................................................ee..............................................................................................e
-e..............................................................ee..............................................................................................e
-e..............................................................ee..............................................................................................e
-e..............................................................ee..............................................................................................e
-e..............................................................ee..............................................................................................e
-e..............................................................ee..............................................................................................e
-e..............................................................ee..............................................................................................e
-e..............................................................ee..............................................................................................e
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..............................................................................................e
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..............................................................................................e
+eppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppssee..............................................................................................e
+eqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqssee..............................................................................................e
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrssee..............................................................................................e
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrssee..............................................................................................e
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrssee..............................................................................................e
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrssee..............................................................................................e
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttee..............................................................................................e
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrruuee..............................................................................................e
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrruuee..............................................................................................e
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrruuee..............................................................................................e
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrruuee..............................................................................................e
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrruuee..............................................................................................e
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ssstttttttssssttttttttttttttttsssttttttttttttttttttsssttttttttttsssttttttttttssstttttttsssstttttttttttsssttttttttttttsssttttttttttttttttttttttssstttttsssstttttt
+vvvwwwwwwwvvvvwwwwwwwwwwwwwwwwvvvwwwwwwwwwwwwwwwwwwvvvwwwwwwwwwwvvvwwwwwwwwwwvvvwwwwwwwvvvvwwwwwwwwwwwvvvwwwwwwwwwwwwvvvwwwwwwwwwwwwwwwwwwwwwwvvvwwwwwvvvvwwwwww
 --- legend
 . bg=#121212
 a fg=#004578 bg=#121212
@@ -119,5 +119,8 @@ o fg=#0178d4 bg=#121212 bold
 p fg=#e0e0e0 bg=#242f38 bold
 q fg=#e0e0e0 bg=#153854
 r fg=#e0e0e0 bg=#1e1e1e
-s fg=#ffa62b bg=#242f38 bold
-t fg=#e0e0e0 bg=#242f38
+s fg=#003054 bg=#1e1e1e inverse
+t fg=#003054 bg=#000000 inverse
+u fg=#e0e0e0 bg=#000000
+v fg=#ffa62b bg=#242f38 bold
+w fg=#e0e0e0 bg=#242f38

@@ -21,8 +21,8 @@ expression: "screen(Config::default(), 50, 30)"
 │                  ││  one of the                │
 └──────────────────┘│  repositories listed in    │
 ┌─ [3] Issues ─────┐│  the table on the left.    │
-│                  ││  Once you have selected    │
-│                  ││  a repository, any         │
+│ #  Status  Author││  Once you have selected    │
+│            ▌     ││  a repository, any         │
 │                  ││  issues, pull requests,    │
 └──────────────────┘│  and action workflows      │
 ┌─ [4] Workflows ──┐│  will be retrieved and     │

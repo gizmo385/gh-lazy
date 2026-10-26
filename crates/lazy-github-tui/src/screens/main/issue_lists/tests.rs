@@ -317,4 +317,187 @@ fn selecting_another_repo_cancels_the_requests_in_flight_and_drops_late_answers(
     settle(&mut app);
     assert!(lists(&app).prs_compact(), "octo/other has no issues");
     assert_eq!(pr_numbers(&app), Vec::<u64>::new());
+    assert!(lists(&app).issues_compact());
+    assert_eq!(issue_numbers(&app), Vec::<u64>::new());
+}
+
+// The Issues section (#172).
+
+fn issue_numbers(app: &TestApp) -> Vec<u64> {
+    lists(app).issues_table().row_keys().copied().collect()
+}
+
+/// Open issues numbered `numbers`, in that order.
+fn issues(repo: &Repository, numbers: impl IntoIterator<Item = u64>) -> Vec<IssueListItem> {
+    numbers.into_iter().map(|n| item(repo, n, Kind::Issue)).collect()
+}
+
+/// Moves the Issues table's cursor with `binding`, as a key press with the table focused would.
+fn issue_cursor(app: &mut TestApp, binding: BindingId) {
+    let screen = app.app_mut().main_screen_mut().expect("on the main screen");
+    if let Handled::Event(TableEvent::LoadMore {
+        generation,
+        page,
+        per_page,
+    }) = screen.issue_lists.issues_table_mut().on_binding(binding)
+    {
+        app.dispatch(Action::Main(MainAction::LoadMore {
+            section: SectionId::Issues,
+            generation,
+            page,
+            per_page,
+        }));
+    }
+}
+
+#[test]
+fn the_shared_first_page_feeds_issues_and_prs_to_their_tables_in_api_order() {
+    let repo = lists_repo();
+    let mixed = vec![
+        item(&repo, 5, Kind::Issue),
+        item(&repo, 8, Kind::ClosedPr),
+        item(&repo, 9, Kind::Issue),
+        item(&repo, 6, Kind::DraftPr),
+        item(&repo, 7, Kind::ClosedIssue),
+    ];
+    let mut app = app(
+        Config::default(),
+        FakeGithub::new().with_issue_page("octo/lists", 1, Ok(mixed)),
+    );
+    select(&mut app, repo);
+    assert!(lists(&app).issues_table().is_loading());
+    assert_eq!(issue_requests(&app).len(), 1, "one request for both tables");
+    settle(&mut app);
+    // Each table holds its own kind in API order, and shows it highest number first.
+    let issue_items: Vec<u64> = lists(&app).issues_table().items().map(|issue| issue.number).collect();
+    let pr_items: Vec<u64> = lists(&app).prs_table().items().map(|pr| pr.issue.number).collect();
+    assert_eq!(issue_items, [5, 9, 7]);
+    assert_eq!(pr_items, [8, 6]);
+    assert_eq!(issue_numbers(&app), [9, 7, 5]);
+    assert_eq!(pr_numbers(&app), [8, 6]);
+    assert!(!lists(&app).issues_table().is_loading());
+    assert!(!lists(&app).issues_compact());
+}
+
+#[test]
+fn a_first_page_of_only_prs_leaves_issues_compact() {
+    let repo = lists_repo();
+    let gh = FakeGithub::new().with_issue_page("octo/lists", 1, Ok(prs(&repo, 1..=30)));
+    let mut app = app(Config::default(), gh);
+    select(&mut app, repo);
+    settle(&mut app);
+    assert!(lists(&app).issues_compact());
+    assert!(!lists(&app).prs_compact());
+    assert_eq!(lists(&app).issues_table().row_count(), 0);
+}
+
+#[test]
+fn differing_filters_fill_the_issues_table_from_its_own_request() {
+    let repo = lists_repo();
+    let mut config = Config::default();
+    config.issues.state_filter = IssueStateFilter::Closed;
+    config.issues.owner_filter = IssueOwnerFilter::Mine;
+    let mut app = app(config, FakeGithub::new());
+    select(&mut app, repo.clone());
+    let requests = issue_requests(&app);
+    let [(prs_id, ..), (issues_id, _, issues_query)] = requests[..] else {
+        panic!("one first page per table: {requests:?}");
+    };
+    // The Issues table's own filters (Py bug B3).
+    assert_eq!(issues_query, query(IssueStateFilter::Closed, IssueOwnerFilter::Mine, 1));
+    // The PR request's issues don't reach the Issues table.
+    app.send(Event::Github {
+        id: prs_id,
+        response: GithubResponse::ListIssues(Ok(vec![item(&repo, 4, Kind::Issue), item(&repo, 3, Kind::OpenPr)])),
+    });
+    assert_eq!(pr_numbers(&app), [3]);
+    assert!(lists(&app).issues_table().is_loading());
+    assert_eq!(issue_numbers(&app), Vec::<u64>::new());
+    // And its own request's PRs don't reach the PR table.
+    app.send(Event::Github {
+        id: issues_id,
+        response: GithubResponse::ListIssues(Ok(vec![
+            item(&repo, 2, Kind::ClosedIssue),
+            item(&repo, 1, Kind::OpenPr),
+        ])),
+    });
+    assert_eq!(issue_numbers(&app), [2]);
+    assert_eq!(pr_numbers(&app), [3]);
+    assert!(!lists(&app).issues_table().is_loading());
+    assert_eq!(lists(&app).first_page, FirstPage::Idle);
+}
+
+#[test]
+fn a_later_issues_page_uses_the_issue_filters_and_the_loaded_repo() {
+    let repo = lists_repo();
+    let mut config = Config::default();
+    config.issues.state_filter = IssueStateFilter::Open;
+    config.issues.owner_filter = IssueOwnerFilter::Mine;
+    let gh = FakeGithub::new().with_issue_page("octo/lists", 1, Ok(issues(&repo, (1..=30).rev())));
+    let mut app = app(config, gh);
+    select(&mut app, repo);
+    settle(&mut app);
+    issue_cursor(&mut app, BindingId::TableScrollBottom);
+    let requests = issue_requests(&app);
+    let (_, name, asked) = requests.last().expect("a page request");
+    assert_eq!(name, "octo/lists");
+    assert_eq!(*asked, query(IssueStateFilter::Open, IssueOwnerFilter::Mine, 2));
+}
+
+#[test]
+fn a_page_of_only_prs_keeps_the_issues_paging_on() {
+    let repo = lists_repo();
+    let gh = FakeGithub::new()
+        .with_issue_page("octo/lists", 1, Ok(issues(&repo, 1..=30)))
+        .with_issue_page("octo/lists", 2, Ok(prs(&repo, 31..=60)));
+    let mut app = app(Config::default(), gh);
+    select(&mut app, repo);
+    settle(&mut app);
+    issue_cursor(&mut app, BindingId::TableScrollBottom);
+    settle(&mut app);
+    let lazy = lists(&app).issues_table().lazy_load().expect("paging is on");
+    assert!(
+        lazy.can_load_more(),
+        "page 2 had no issues but wasn't empty (Py bug B44)"
+    );
+    // Page 3 isn't in the fake, so it's empty: paging ends.
+    issue_cursor(&mut app, BindingId::TableCursorUp);
+    settle(&mut app);
+    let lazy = lists(&app).issues_table().lazy_load().expect("paging is on");
+    assert!(!lazy.can_load_more());
+    assert_eq!(lists(&app).issues_table().row_count(), 30);
+}
+
+#[test]
+fn a_failed_shared_request_logs_once_and_both_sections_are_compact() {
+    let gh = FakeGithub::new().with_issue_page("octo/lists", 1, Err(server_error()));
+    let mut app = app(Config::default(), gh);
+    select(&mut app, lists_repo());
+    let out = settle(&mut app);
+    assert_eq!(out.matches("ERROR").count(), 1, "{out}");
+    assert!(!lists(&app).issues_table().is_loading());
+    assert!(lists(&app).issues_compact());
+    assert!(lists(&app).prs_compact());
+}
+
+#[test]
+fn a_failed_later_issues_page_logs_keeps_the_rows_and_asks_again() {
+    let repo = lists_repo();
+    let gh = FakeGithub::new()
+        .with_issue_page("octo/lists", 1, Ok(issues(&repo, 1..=30)))
+        .with_issue_page("octo/lists", 2, Err(server_error()));
+    let mut app = app(Config::default(), gh);
+    select(&mut app, repo);
+    settle(&mut app);
+    issue_cursor(&mut app, BindingId::TableScrollBottom);
+    let out = settle(&mut app);
+    assert!(
+        out.starts_with("ERROR API Error fetching issues and PRs from Github API\n"),
+        "{out}"
+    );
+    assert!(app.app().toasts().is_empty());
+    assert_eq!(lists(&app).issues_table().row_count(), 30);
+    issue_cursor(&mut app, BindingId::TableCursorUp);
+    let pages: Vec<u32> = issue_requests(&app).iter().map(|(.., query)| query.page).collect();
+    assert_eq!(pages, [1, 2, 2]);
 }

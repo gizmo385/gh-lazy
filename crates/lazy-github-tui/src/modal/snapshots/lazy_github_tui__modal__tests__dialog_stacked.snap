@@ -21,7 +21,7 @@ expression: "styled(&mut app, 100, 30)"
 │                   █              █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█              █                   │
 └───────────────────█              █                            █              █ts can also be   ▁▁│
 ┌─ [3] Issues ──────█              █Plain field                 █              █                   │
-│                   █              █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█              █                   │
+│ #  Status  Author █              █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█              █                   │
 │                   █                                                          █                   │
 │                   █                                                          █                   │
 └───────────────────█            ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔             █                   │
@@ -52,7 +52,7 @@ eaaaaaaaaaaaaaaaaaaabddddddddddddddqtwwxxxxwwwwwwwwwwwwwwwwwwwwvqddddddddddddddb
 eaaaaaaaaaaaaaaaaaaabddddddddddddddqtuuuuuuuuuuuuuuuuuuuuuuuuuuvqddddddddddddddbaaaaaaaaaaaaaaaaaiie
 eeeeeeeeeeeeeeeeeeeebddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddbyyyyyyyyyyyyyyaaazze
 eeeeeeeeeeeeeeeeeeeebddddddddddddddqAAAAAAAAAAAAAAAAAAAAAAAAAAAAqddddddddddddddbaaaaaaaaaaaaaaaaaBBe
-eaaaaaaaaaaaaaaaaaaabddddddddddddddqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqddddddddddddddbaaaaaaaaaaaaaaaaaBBe
+esssssssssssssssssssbddddddddddddddqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqddddddddddddddbaaaaaaaaaaaaaaaaaBBe
 eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaBBe
 eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaBBe
 eeeeeeeeeeeeeeeeeeeebddddddddddddCCCCCCCCCCCCCCCCdDDDDDDDDDDDDDDDDdddddddddddddbaaaaaaaaaaaaaaaaaBBe

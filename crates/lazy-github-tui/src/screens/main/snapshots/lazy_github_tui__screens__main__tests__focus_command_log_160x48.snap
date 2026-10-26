@@ -28,7 +28,7 @@ expression: "app.screen(160, 48)"
 │                                                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [3] Issues ─────────────────────────────────────────────────┐│  Issues                                                                                      │
-│                                                              ││                                                                                              │
+│ #  Status  Author  Title                                     ││                                                                                              │
 │                                                              ││  You can interact with an issue by viewing its details, partipcating in any activate         │
 │                                                              ││  conversations happening on the issue, and by editing the issue itself. This means that      │
 │                                                              │└──────────────────────────────────────────────────────────────────────────────────────────────┘

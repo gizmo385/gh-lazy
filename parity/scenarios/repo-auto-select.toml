@@ -23,12 +23,12 @@ config_overrides = { appearance = { show_command_log = true } }
 wait = { text = "Current repo: parity-bot/dotfiles", timeout_ms = 15000 }
 
 # Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and the command log's
-# timestamps differ run to run, so both boxes are ignored. `titles` waits for #172 and #173: Python collapses
-# the empty Issues and Workflows sections to `[3] Issues (empty)` and so on, which Rust doesn't draw yet.
+# timestamps differ run to run, so both boxes are ignored. `titles` waits for #173: Python collapses
+# the empty Workflows section to `[4] Workflows (empty)`, which Rust doesn't draw yet.
 [[step]]
 capture = "auto"
 checks = ["headers", "rows", "cursor", "focus"]
-ignore = { boxes = ["Details", "Issues", "Workflows", "Command Log"] }
+ignore = { boxes = ["Details", "Workflows", "Command Log"] }
 
 [expect.auto]
 contains = [

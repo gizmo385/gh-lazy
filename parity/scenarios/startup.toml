@@ -13,10 +13,10 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 [[step]]
 wait = { text = "dotfiles" }
 
-# The Issues and Workflows sections have no table in Rust yet: #172 and #173 each remove their box here.
+# The Workflows section has no table in Rust yet: #173 removes its box here.
 [[step]]
 capture = "main"
-ignore = { boxes = ["Issues", "Workflows"] }
+ignore = { boxes = ["Workflows"] }
 
 # Taken from the Python capture. The footer is the full binding list: at 160 and 100 columns the screen cuts it off,
 # which the footer expectation allows (parity/README.md, "Checks").

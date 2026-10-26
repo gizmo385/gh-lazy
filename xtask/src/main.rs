@@ -22,15 +22,19 @@ enum Task {
     CheckFixtures(fixtures::CheckArgs),
     /// Run parity scenarios against the Python and Rust apps and capture their screens.
     Parity(xtask::parity::cli::ParityArgs),
-    /// Check the parity matrix (docs/rust-rewrite/parity/) and print its rows per area and status.
+    /// Check the parity matrix (docs/rust-rewrite/parity/) and the scenarios and golden manifests that name its rows,
+    /// and print its rows per area and status, then per area and coverage.
     ParityMatrix(ParityMatrixArgs),
 }
 
 #[derive(Debug, clap::Args)]
 struct ParityMatrixArgs {
-    /// Print the summary as a Markdown table.
-    #[arg(long)]
+    /// Print the tables as Markdown.
+    #[arg(long, conflicts_with = "uncovered")]
     markdown: bool,
+    /// Print the rows no scenario or golden names, except intentional diffs, as `<id>  <status>` lines in area order.
+    #[arg(long)]
+    uncovered: bool,
 }
 
 fn main() -> ExitCode {
@@ -44,7 +48,9 @@ fn main() -> ExitCode {
         Some(Task::RecordFixtures(args)) => fixtures::record_fixtures(&args),
         Some(Task::CheckFixtures(args)) => fixtures::check_fixtures(&args),
         Some(Task::Parity(args)) => xtask::parity::cli::run(&args),
-        Some(Task::ParityMatrix(args)) => xtask::matrix::run(&xtask::parity::cli::repo_root(), args.markdown),
+        Some(Task::ParityMatrix(args)) => {
+            xtask::matrix::run(&xtask::parity::cli::repo_root(), args.markdown, args.uncovered)
+        }
     }
 }
 

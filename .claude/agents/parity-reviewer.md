@@ -24,6 +24,11 @@ Read `docs/rust-rewrite/PLAN.md` §6 and `docs/rust-rewrite/parity/README.md` fi
    Leave `intentional diff` rows alone (e.g. `repositories.introduction-version`), and leave rows a scenario only
    covers in part (e.g. `main-layout.command-log` until #80 lands the log body). Touch only those rows. An approved difference gets a new
    `parity/decisions/<slug>.md` and `intentional diff`.
+   A row named in a golden manifest's `parity_rows` (`parity/goldens/*.toml`, see "Python goldens" in
+   `parity/README.md`) moves to `parity` when the manifest's `test` passes in `cargo test` and its `fresh_test`
+   passed in the PR's CI run (the "Python-backed integration tests" step). The same exceptions apply: leave
+   `intentional diff` rows, rows whose Notes say the golden covers them only in part, and rows with an open `Py bug`
+   whose recommendation the Rust side doesn't follow yet.
 
 ## Audits
 

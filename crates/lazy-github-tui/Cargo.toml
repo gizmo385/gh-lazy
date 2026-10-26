@@ -30,6 +30,9 @@ insta = { workspace = true }
 lazy-github-core = { workspace = true, features = ["test-util"] }
 rstest = { workspace = true }
 serde_json = { workspace = true }
+# The diff `bindings_goldens_are_fresh` prints for a stale golden.
+similar = { workspace = true }
+tempfile = { workspace = true }
 tokio = { workspace = true, features = ["test-util"] }
 tracing-subscriber = { workspace = true, features = ["fmt", "std"] }
 

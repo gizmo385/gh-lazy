@@ -1,0 +1,7 @@
+---
+source: xtask/tests/parity_matrix.rs
+expression: matrix.coverage_summary(false)
+---
+Area   Rows  Scenario  Golden  Both  Neither
+demo      5         1       1     1        2
+Total     5         1       1     1        2

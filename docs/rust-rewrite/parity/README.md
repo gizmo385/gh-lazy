@@ -69,6 +69,11 @@ Wording in quotes is the exact text the Python app shows. Toast rows give severi
 - The parity reviewer moves the rows a PR completes to `parity`, and back from `parity` when a gap is found. That is
   usually, but not always, every id in the PR's scenarios' `parity_rows`: an `intentional diff` row stays one, and
   a row the scenario only covers in part (e.g. `main-layout.command-log` before #80) stays where it is.
+- The same goes for a row named in a golden manifest's `parity_rows` (`parity/goldens/`, see
+  [`parity/README.md`](../../../parity/README.md#python-goldens)). The reviewer moves it to `parity` when the
+  manifest's `test` passes in `cargo test` and its `fresh_test` passed in the PR's CI run. The exceptions are the
+  same as for scenarios: an `intentional diff` row stays as it is, and so does a row whose Notes say the golden
+  covers it only in part, or one with an open `Py bug` whose recommendation the Rust side doesn't follow yet.
 - A new suspected Python bug is a new file `py-bugs/B<nn>.md` with the next free number (look at `rust-main` and open
   PRs). If another PR takes the number first, renumber yours. The file starts with a `# B<n>: <title>` heading and
   these lines, then the behavior as prose:
@@ -94,13 +99,19 @@ Wording in quotes is the exact text the Python app shows. Toast rows give severi
   ```
 
 - Only edit this README's index when you add or remove an area file.
-- Don't keep counts by hand. `cargo xtask parity-matrix` checks the matrix and prints the rows per area and status
-  (`--markdown` for a table to paste into an issue or PR).
+- Don't keep counts by hand. `cargo xtask parity-matrix` checks the matrix and prints the rows per area and status,
+  then per area and coverage: Scenario (named by a scenario and no golden), Golden (by a golden and no scenario),
+  Both, and Neither. `--markdown` prints both as tables to paste into an issue or PR. `--uncovered` prints the
+  Neither rows, except intentional diffs, as `<id>  <status>` lines in index order: the backlog of rows nothing
+  checks yet.
 
 `cargo test --workspace` runs the same check, so CI fails when an id is duplicated or malformed, a status isn't one
 of the values above, a `Py bug Bn` note has no file, an `intentional diff` row doesn't link a decision, a py-bug or
 decision file names a row that doesn't exist, a scenario's `parity_rows` entry isn't a row id, or an area file is
-missing from the index below.
+missing from the index below. It also checks the golden manifests in `parity/goldens/`: each parses with no unknown
+keys and `version = 1`, its `parity_rows` are row ids, its `generator`, `golden` and `test` files exist, its
+`test` file has a `#[test]` that isn't `#[ignore]`d, and its `fresh_test` is an `#[ignore]`d `#[test]` fn in that
+file.
 
 ## Index
 

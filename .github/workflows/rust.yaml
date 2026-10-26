@@ -69,7 +69,7 @@ jobs:
     # Runs even when the parity step fails, so a PR that breaks both reports both.
     - name: Python-backed integration tests
       if: ${{ !cancelled() && steps.sync.outcome == 'success' }}
-      run: cargo test --locked -p fake-gh -p xtask -- --ignored
+      run: cargo test --locked -p fake-gh -p xtask -p lazy-github-tui -p lazy-github-core -- --ignored
     - name: Job summary
       if: ${{ always() && github.event_name == 'pull_request' }}
       shell: bash

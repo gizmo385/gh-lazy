@@ -73,7 +73,10 @@ needs-triage ──► needs-design ──► ready ──► in-progress ──
    branch protection for `rust-main` that requires the CI checks and approving reviews; without it, GitHub would merge
    as soon as auto-merge is enabled. The parity reviewer
    moves the rows the PR completes to `parity` in the [parity matrix](./parity/README.md): normally the ids in
-   its scenarios' `parity_rows`, but not `intentional diff` rows or rows a scenario only covers in part.
+   its scenarios' `parity_rows`, but not `intentional diff` rows or rows a scenario only covers in part. A row in a
+   golden manifest's `parity_rows` (`parity/goldens/`) moves when the manifest's `test` passes in `cargo test` and
+   its `fresh_test` passed in the PR's CI run, with the same exceptions, plus rows with an open `Py bug` whose
+   recommendation the Rust side doesn't follow yet.
 
 Any role that hits a choice that changes scope, UX or a dependency choice sets `status: needs-decision`, writes the
 question with options and a recommendation as an issue comment, and stops work on that issue.
@@ -110,5 +113,9 @@ The matrix is split into files so parallel PRs don't conflict. The full rules ar
   `parity/decisions/<slug>.md`, linked from the row's Notes. Neither edits a shared file.
 - Nobody edits `parity/README.md`'s index except to add or remove an area file, and nobody keeps counts by
   hand: `cargo xtask parity-matrix` prints them (`--markdown` for a table).
-- Scenarios name the rows they cover by id in `parity_rows`. `cargo test --workspace` fails if an id, status,
-  py-bug, decision or `parity_rows` reference is wrong.
+- Scenarios and golden manifests (`parity/goldens/`) name the rows they cover by id in `parity_rows`.
+  `cargo test --workspace` fails if an id, status, py-bug, decision or `parity_rows` reference is wrong, or a
+  golden manifest is malformed. `cargo xtask parity-matrix` also prints which rows scenarios, goldens, both or
+  neither cover (`--uncovered` lists the last).
+- The parity reviewer moves a golden's rows to `parity` when its `test` passes in `cargo test` and its
+  `fresh_test` passed in the PR's CI run; the exceptions are the same as for scenarios.

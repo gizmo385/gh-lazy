@@ -17,6 +17,15 @@ fn committed_matrix_is_valid() {
     );
     assert!(matrix.row_ids().count() > 300);
     assert!(matrix.summary(true).contains("| Total |"));
+
+    // The coverage columns add up to each area's rows, and the areas to the status table's total.
+    let coverage = matrix.coverage_counts();
+    for (area, [rows, columns @ ..]) in &coverage {
+        assert_eq!(columns.iter().sum::<usize>(), *rows, "{area}");
+    }
+    let rows: usize = coverage.iter().map(|(_, c)| c[0]).sum();
+    let by_status: usize = matrix.counts().iter().map(|(_, c)| c.iter().sum::<usize>()).sum();
+    assert_eq!(rows, by_status);
 }
 
 const README: &str =
@@ -50,6 +59,23 @@ const DECISION: &str = "\
 - Rows: `demo.two`
 ";
 const SCENARIO: &str = "version = 1\nparity_rows = [\"demo.one\"]\n";
+const GOLDEN: &str = r#"version = 1
+description = "Demo golden"
+generator = "gen.py"
+golden = ["golden.json"]
+test = "tests/demo.rs"
+fresh_test = "demo_goldens_are_fresh"
+parity_rows = ["demo.two"]
+"#;
+const GOLDEN_TEST: &str = r#"
+#[test]
+fn matches_the_golden() {}
+
+#[cfg(unix)]
+#[test]
+#[ignore = "needs uv and the Python app"]
+fn demo_goldens_are_fresh() {}
+"#;
 
 /// A repo with a valid matrix, with `edit` applied to one of its files.
 fn repo_with(edit: impl FnOnce(&Path)) -> tempfile::TempDir {
@@ -60,11 +86,17 @@ fn repo_with(edit: impl FnOnce(&Path)) -> tempfile::TempDir {
         fs::create_dir_all(m.join(sub)).unwrap();
     }
     fs::create_dir_all(root.join("parity/scenarios")).unwrap();
+    fs::create_dir_all(root.join("parity/goldens")).unwrap();
+    fs::create_dir_all(root.join("tests")).unwrap();
     fs::write(m.join("README.md"), README).unwrap();
     fs::write(m.join("areas/demo.md"), AREA).unwrap();
     fs::write(m.join("py-bugs/B01.md"), BUG).unwrap();
     fs::write(m.join("decisions/gh.md"), DECISION).unwrap();
     fs::write(root.join("parity/scenarios/demo.toml"), SCENARIO).unwrap();
+    fs::write(root.join("parity/goldens/demo.toml"), GOLDEN).unwrap();
+    fs::write(root.join("gen.py"), "").unwrap();
+    fs::write(root.join("golden.json"), "[]\n").unwrap();
+    fs::write(root.join("tests/demo.rs"), GOLDEN_TEST).unwrap();
     edit(root);
     dir
 }
@@ -98,6 +130,7 @@ fn assert_edit(file: &str, from: &str, to: &str, want: &str) {
 const AREA_FILE: &str = "docs/rust-rewrite/parity/areas/demo.md";
 const BUG_FILE: &str = "docs/rust-rewrite/parity/py-bugs/B01.md";
 const DECISION_FILE: &str = "docs/rust-rewrite/parity/decisions/gh.md";
+const GOLDEN_FILE: &str = "parity/goldens/demo.toml";
 
 #[test]
 fn valid_fixture_has_no_problems_and_counts_statuses() {
@@ -247,7 +280,7 @@ fn every_area_file_is_in_the_index() {
         |r| fs::write(r.join("docs/rust-rewrite/parity/areas/extra.md"), "# Extra\n").unwrap(),
         "areas/extra.md is missing from the index",
     );
-    // Its rows are gone too, so the py bug, decision and scenario that name them also fail.
+    // Its rows are gone too, so the py bug, decision, scenario and golden that name them also fail.
     let found = problems(|r| fs::remove_file(r.join(AREA_FILE)).unwrap());
     assert!(
         found
@@ -255,4 +288,119 @@ fn every_area_file_is_in_the_index() {
             .any(|p| p.contains("the index links areas/demo.md, which doesn't exist")),
         "{found:#?}"
     );
+}
+
+#[test]
+fn golden_parity_rows_must_be_row_ids() {
+    assert_edit(
+        GOLDEN_FILE,
+        "\"demo.two\"",
+        "\"demo.gone\"",
+        "parity/goldens/demo.toml:7: parity_rows names `demo.gone`, which isn't a row id",
+    );
+}
+
+#[test]
+fn golden_manifests_reject_unknown_keys() {
+    assert_edit(
+        GOLDEN_FILE,
+        "parity_rows =",
+        "parity_row =",
+        "parity/goldens/demo.toml:7: unknown field `parity_row`",
+    );
+}
+
+#[test]
+fn golden_manifests_are_version_1() {
+    assert_edit(
+        GOLDEN_FILE,
+        "version = 1",
+        "version = 2",
+        "parity/goldens/demo.toml:1: version 2 isn't supported (only 1 is)",
+    );
+}
+
+#[test]
+fn golden_manifest_paths_must_exist() {
+    assert_one(
+        |r| fs::remove_file(r.join("gen.py")).unwrap(),
+        "parity/goldens/demo.toml:3: generator file `gen.py` doesn't exist",
+    );
+    assert_one(
+        |r| fs::remove_file(r.join("golden.json")).unwrap(),
+        "parity/goldens/demo.toml:4: golden file `golden.json` doesn't exist",
+    );
+    assert_one(
+        |r| fs::remove_file(r.join("tests/demo.rs")).unwrap(),
+        "parity/goldens/demo.toml:5: test file `tests/demo.rs` doesn't exist",
+    );
+}
+
+#[test]
+fn golden_test_must_run_in_plain_cargo_test() {
+    assert_edit(
+        "tests/demo.rs",
+        "#[test]\nfn matches_the_golden",
+        "#[test]\n#[ignore]\nfn matches_the_golden",
+        "parity/goldens/demo.toml:5: tests/demo.rs has no #[test] that isn't #[ignore]d",
+    );
+}
+
+#[test]
+fn fresh_test_must_exist() {
+    assert_edit(
+        GOLDEN_FILE,
+        "\"demo_goldens_are_fresh\"",
+        "\"demo_golden_is_fresh\"",
+        "parity/goldens/demo.toml:6: fresh_test `demo_golden_is_fresh` isn't a #[test] fn in tests/demo.rs",
+    );
+}
+
+#[test]
+fn fresh_test_must_be_ignored() {
+    assert_edit(
+        "tests/demo.rs",
+        "#[ignore = \"needs uv and the Python app\"]\n",
+        "",
+        "parity/goldens/demo.toml:6: fresh_test `demo_goldens_are_fresh` in tests/demo.rs isn't #[ignore]d",
+    );
+}
+
+/// The fixture plus rows in every coverage column: the scenario alone names `demo.one`, the golden alone names
+/// `demo.two`, a second scenario and the golden name `demo.four`, and nothing names `demo.three` or `demo.five` (an
+/// intentional diff).
+fn coverage_fixture() -> tempfile::TempDir {
+    repo_with(|r| {
+        let area = r.join(AREA_FILE);
+        let rows = "| `demo.four` | Four | M1 | in progress | | |\n\
+                    | `demo.five` | Five | M1 | intentional diff | | Decision: [gh](../decisions/gh.md). |\n";
+        fs::write(&area, fs::read_to_string(&area).unwrap() + rows).unwrap();
+        fs::write(
+            r.join("parity/scenarios/both.toml"),
+            "version = 1\nparity_rows = [\"demo.four\"]\n",
+        )
+        .unwrap();
+        let golden = r.join(GOLDEN_FILE);
+        let text = fs::read_to_string(&golden).unwrap();
+        fs::write(&golden, text.replace("[\"demo.two\"]", "[\"demo.two\", \"demo.four\"]")).unwrap();
+    })
+}
+
+#[test]
+fn coverage_summary_counts_rows_per_column() {
+    let dir = coverage_fixture();
+    let matrix = check(dir.path());
+    assert!(matrix.problems.is_empty(), "{:#?}", matrix.problems);
+    assert_eq!(matrix.coverage_counts(), vec![("demo", [5, 1, 1, 1, 2])]);
+    insta::assert_snapshot!("coverage_text", matrix.coverage_summary(false));
+    insta::assert_snapshot!("coverage_markdown", matrix.coverage_summary(true));
+}
+
+#[test]
+fn uncovered_lists_neither_rows_except_intentional_diffs() {
+    let dir = coverage_fixture();
+    let matrix = check(dir.path());
+    let ids: Vec<&str> = matrix.uncovered().iter().map(|r| r.id.as_str()).collect();
+    assert_eq!(ids, ["demo.three"]);
+    assert_eq!(matrix.uncovered_report(), "demo.three  parity\n");
 }

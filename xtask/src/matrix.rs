@@ -1,5 +1,7 @@
-//! `cargo xtask parity-matrix`: parses the parity matrix in `docs/rust-rewrite/parity/`, checks it, and prints the
-//! number of rows per area and status. The layout and editing rules are in `docs/rust-rewrite/parity/README.md`.
+//! `cargo xtask parity-matrix`: parses the parity matrix in `docs/rust-rewrite/parity/`, checks it and the scenarios
+//! and golden manifests that name its rows, and prints the number of rows per area and status, then per area and
+//! coverage. The layout and editing rules are in `docs/rust-rewrite/parity/README.md`; golden manifests are described
+//! in `parity/README.md`, "Python goldens".
 //!
 //! The check also runs in `cargo test` (`xtask/tests/parity_matrix.rs`), so a malformed matrix fails CI.
 
@@ -10,11 +12,14 @@ use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
 use regex::Regex;
+use serde::Deserialize;
 
 /// The matrix directory, relative to the repository root.
 pub const MATRIX_DIR: &str = "docs/rust-rewrite/parity";
 /// The scenarios whose `parity_rows` must name rows, relative to the repository root.
 pub const SCENARIOS_DIR: &str = "parity/scenarios";
+/// The golden manifests, relative to the repository root.
+pub const GOLDENS_DIR: &str = "parity/goldens";
 
 /// The values a row's Status may start with. `intentional diff` may be followed by ` (<qualifier>)`.
 pub const STATUSES: [&str; 4] = ["not started", "in progress", "parity", "intentional diff"];
@@ -78,6 +83,45 @@ pub struct Area {
     pub rows: Vec<Row>,
 }
 
+/// The scenario and golden manifest files (relative to the repository root) whose `parity_rows` name a row.
+#[derive(Debug, Clone, Default)]
+pub struct Covered {
+    pub scenarios: Vec<PathBuf>,
+    pub goldens: Vec<PathBuf>,
+}
+
+/// The coverage table's columns after Rows, in order.
+const COVERAGE: [&str; 4] = ["Scenario", "Golden", "Both", "Neither"];
+const NEITHER: usize = 3;
+
+impl Covered {
+    /// The index into [`COVERAGE`] this row counts under.
+    fn column(&self) -> usize {
+        match (self.scenarios.is_empty(), self.goldens.is_empty()) {
+            (false, true) => 0,
+            (true, false) => 1,
+            (false, false) => 2,
+            (true, true) => NEITHER,
+        }
+    }
+}
+
+/// A `parity/goldens/<name>.toml` manifest: a Python-dumped golden, the Rust test that checks it, and the rows it
+/// covers.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct GoldenManifest {
+    version: u32,
+    // Only people read it; it is required so every manifest says what it checks.
+    #[expect(dead_code, reason = "read by people, not by the check")]
+    description: String,
+    generator: PathBuf,
+    golden: Vec<PathBuf>,
+    test: PathBuf,
+    fresh_test: String,
+    parity_rows: Vec<String>,
+}
+
 /// The parsed matrix plus everything the check found wrong while parsing and cross-checking it.
 #[derive(Debug, Default)]
 pub struct Matrix {
@@ -85,6 +129,8 @@ pub struct Matrix {
     pub areas: Vec<Area>,
     pub py_bugs: BTreeSet<u32>,
     pub decisions: BTreeSet<String>,
+    /// For each row id that a scenario or golden manifest names, which ones name it. Rows nothing names are absent.
+    pub coverage: BTreeMap<String, Covered>,
     pub problems: Vec<Problem>,
 }
 
@@ -95,9 +141,7 @@ impl Matrix {
 
     /// Rows per status for each area that has a Status column, in area order.
     pub fn counts(&self) -> Vec<(&str, [usize; STATUSES.len()])> {
-        self.areas
-            .iter()
-            .filter(|a| a.rows.iter().any(|r| r.status.is_some()))
+        self.status_areas()
             .map(|a| {
                 let mut counts = [0; STATUSES.len()];
                 for status in a.rows.iter().filter_map(Row::base_status) {
@@ -132,41 +176,105 @@ impl Matrix {
         total.push(totals.iter().sum::<usize>().to_string());
         rows.push(total);
 
-        let mut out = String::new();
-        if markdown {
-            let _ = writeln!(out, "| {} |", header.join(" | "));
-            let _ = writeln!(out, "|{}", " --- |".repeat(header.len()));
-            for row in &rows {
-                let _ = writeln!(out, "| {} |", row.join(" | "));
-            }
-        } else {
-            let widths: Vec<usize> = (0..header.len())
-                .map(|i| {
-                    rows.iter()
-                        .map(|r| r[i].len())
-                        .chain([header[i].len()])
-                        .max()
-                        .unwrap_or(0)
-                })
-                .collect();
-            let line = |cells: &[&str]| {
-                let mut s = format!("{:<w$}", cells[0], w = widths[0]);
-                for (cell, w) in cells.iter().zip(&widths).skip(1) {
-                    let _ = write!(s, "  {cell:>w$}");
+        render_table(&header, &rows, markdown)
+    }
+
+    /// For each area with a Status column, in area order: its row count, then its rows per coverage column
+    /// (Scenario, Golden, Both, Neither). The four add up to the row count.
+    pub fn coverage_counts(&self) -> Vec<(&str, [usize; 1 + COVERAGE.len()])> {
+        self.status_areas()
+            .map(|a| {
+                let mut counts = [0; 1 + COVERAGE.len()];
+                for row in &a.rows {
+                    counts[0] += 1;
+                    counts[1 + self.coverage.get(&row.id).map_or(NEITHER, Covered::column)] += 1;
                 }
-                s.trim_end().to_owned()
-            };
-            let _ = writeln!(out, "{}", line(&header));
-            for row in &rows {
-                let cells: Vec<&str> = row.iter().map(String::as_str).collect();
-                let _ = writeln!(out, "{}", line(&cells));
+                (a.name.as_str(), counts)
+            })
+            .collect()
+    }
+
+    /// The coverage counts as an aligned text table, or as a Markdown table.
+    pub fn coverage_summary(&self, markdown: bool) -> String {
+        let mut header = vec!["Area", "Rows"];
+        header.extend(COVERAGE);
+        let mut rows: Vec<Vec<String>> = Vec::new();
+        let mut totals = [0; 1 + COVERAGE.len()];
+        for (area, c) in self.coverage_counts() {
+            let mut row = vec![area.to_owned()];
+            row.extend(c.iter().map(ToString::to_string));
+            rows.push(row);
+            for (t, n) in totals.iter_mut().zip(c) {
+                *t += n;
             }
+        }
+        let mut total = vec!["Total".to_owned()];
+        total.extend(totals.iter().map(ToString::to_string));
+        rows.push(total);
+        render_table(&header, &rows, markdown)
+    }
+
+    /// The rows no scenario or golden names, in area order, except intentional diffs: the backlog of rows that still
+    /// need a check.
+    pub fn uncovered(&self) -> Vec<&Row> {
+        self.status_areas()
+            .flat_map(|a| &a.rows)
+            .filter(|r| !self.coverage.contains_key(&r.id) && r.base_status() != Some(INTENTIONAL_DIFF))
+            .collect()
+    }
+
+    /// [`Matrix::uncovered`] as `<id>  <status>` lines, for `--uncovered`.
+    pub fn uncovered_report(&self) -> String {
+        let mut out = String::new();
+        for row in self.uncovered() {
+            let _ = writeln!(out, "{}  {}", row.id, row.status.as_deref().unwrap_or_default());
         }
         out
     }
+
+    /// The areas that have a Status column (terminal caveats don't).
+    fn status_areas(&self) -> impl Iterator<Item = &Area> {
+        self.areas.iter().filter(|a| a.rows.iter().any(|r| r.status.is_some()))
+    }
 }
 
-/// Parses and checks the matrix under `repo`, and the `parity_rows` of every scenario.
+/// `rows` under `header` as an aligned text table (the first column left-aligned, the rest right-aligned), or as a
+/// Markdown table.
+fn render_table(header: &[&str], rows: &[Vec<String>], markdown: bool) -> String {
+    let mut out = String::new();
+    if markdown {
+        let _ = writeln!(out, "| {} |", header.join(" | "));
+        let _ = writeln!(out, "|{}", " --- |".repeat(header.len()));
+        for row in rows {
+            let _ = writeln!(out, "| {} |", row.join(" | "));
+        }
+    } else {
+        let widths: Vec<usize> = (0..header.len())
+            .map(|i| {
+                rows.iter()
+                    .map(|r| r[i].len())
+                    .chain([header[i].len()])
+                    .max()
+                    .unwrap_or(0)
+            })
+            .collect();
+        let line = |cells: &[&str]| {
+            let mut s = format!("{:<w$}", cells[0], w = widths[0]);
+            for (cell, w) in cells.iter().zip(&widths).skip(1) {
+                let _ = write!(s, "  {cell:>w$}");
+            }
+            s.trim_end().to_owned()
+        };
+        let _ = writeln!(out, "{}", line(header));
+        for row in rows {
+            let cells: Vec<&str> = row.iter().map(String::as_str).collect();
+            let _ = writeln!(out, "{}", line(&cells));
+        }
+    }
+    out
+}
+
+/// Parses and checks the matrix under `repo`, the `parity_rows` of every scenario, and every golden manifest.
 pub fn check(repo: &Path) -> Matrix {
     let mut m = Matrix::default();
     let dir = repo.join(MATRIX_DIR);
@@ -178,7 +286,8 @@ pub fn check(repo: &Path) -> Matrix {
     check_py_bugs(&dir, &rel, &ids, &mut m);
     check_decisions(&dir, &rel, &ids, &mut m);
     check_row_references(&mut m);
-    check_scenarios(repo, &ids, &mut m.problems);
+    check_scenarios(repo, &ids, &mut m);
+    check_goldens(repo, &ids, &mut m);
 
     m.problems.sort();
     m
@@ -573,9 +682,11 @@ fn check_field_eq(fields: &Fields, key: &str, want: &str, file: &Path, problems:
     }
 }
 
-fn check_scenarios(repo: &Path, ids: &BTreeSet<String>, problems: &mut Vec<Problem>) {
-    let Ok(entries) = fs::read_dir(repo.join(SCENARIOS_DIR)) else {
-        return;
+/// The `*.toml` files in `repo/dir`, sorted, each as (path relative to `repo`, full path). A missing directory has
+/// none.
+fn toml_files(repo: &Path, dir: &str) -> Vec<(PathBuf, PathBuf)> {
+    let Ok(entries) = fs::read_dir(repo.join(dir)) else {
+        return Vec::new();
     };
     let mut paths: Vec<PathBuf> = entries
         .flatten()
@@ -583,8 +694,42 @@ fn check_scenarios(repo: &Path, ids: &BTreeSet<String>, problems: &mut Vec<Probl
         .filter(|p| p.extension().is_some_and(|e| e == "toml"))
         .collect();
     paths.sort();
-    for path in paths {
-        let file = path.strip_prefix(repo).unwrap_or(&path).to_owned();
+    paths
+        .into_iter()
+        .map(|path| (path.strip_prefix(repo).unwrap_or(&path).to_owned(), path))
+        .collect()
+}
+
+/// Checks that each of `rows`, the `parity_rows` of `file` (whose contents are `text`), is a row id, and returns the
+/// ones that are. Scenarios and golden manifests share it, so their messages and line lookup match.
+fn check_parity_rows<'a>(
+    file: &Path,
+    text: &str,
+    rows: impl IntoIterator<Item = &'a str>,
+    ids: &BTreeSet<String>,
+    problems: &mut Vec<Problem>,
+) -> Vec<&'a str> {
+    let mut known = Vec::new();
+    for row in rows {
+        if ids.contains(row) {
+            known.push(row);
+        } else {
+            let line = text
+                .lines()
+                .position(|l| l.contains(&format!("\"{row}\"")))
+                .map_or(0, |i| i + 1);
+            problems.push(problem(
+                file,
+                line,
+                format!("parity_rows names `{row}`, which isn't a row id in {MATRIX_DIR}/areas/"),
+            ));
+        }
+    }
+    known
+}
+
+fn check_scenarios(repo: &Path, ids: &BTreeSet<String>, m: &mut Matrix) {
+    for (file, path) in toml_files(repo, SCENARIOS_DIR) {
         let Ok(text) = fs::read_to_string(&path) else { continue };
         // Invalid scenario files are `cargo xtask parity --validate`'s business.
         let Ok(table) = text.parse::<toml::Table>() else {
@@ -593,27 +738,148 @@ fn check_scenarios(repo: &Path, ids: &BTreeSet<String>, problems: &mut Vec<Probl
         let Some(rows) = table.get("parity_rows").and_then(toml::Value::as_array) else {
             continue;
         };
-        for row in rows.iter().filter_map(toml::Value::as_str) {
-            if !ids.contains(row) {
-                let line = text
-                    .lines()
-                    .position(|l| l.contains(&format!("\"{row}\"")))
-                    .map_or(0, |i| i + 1);
-                problems.push(problem(
-                    &file,
-                    line,
-                    format!("parity_rows names `{row}`, which isn't a row id in {MATRIX_DIR}/areas/"),
-                ));
-            }
+        let rows = rows.iter().filter_map(toml::Value::as_str);
+        for row in check_parity_rows(&file, &text, rows, ids, &mut m.problems) {
+            m.coverage
+                .entry(row.to_owned())
+                .or_default()
+                .scenarios
+                .push(file.clone());
         }
     }
 }
 
-/// `cargo xtask parity-matrix`: prints the problems and exits 1, or prints the summary.
-pub fn run(repo: &Path, markdown: bool) -> std::process::ExitCode {
+/// The 1-based line of the `key = …` line in a TOML file, or 0 if there isn't one.
+fn key_line(text: &str, key: &str) -> usize {
+    text.lines()
+        .position(|l| {
+            l.strip_prefix(key)
+                .is_some_and(|rest| rest.trim_start().starts_with('='))
+        })
+        .map_or(0, |i| i + 1)
+}
+
+/// Checks every golden manifest: it parses, its paths exist, its `test` and `fresh_test` are set up as
+/// `parity/README.md` says, and its `parity_rows` are row ids.
+fn check_goldens(repo: &Path, ids: &BTreeSet<String>, m: &mut Matrix) {
+    for (file, path) in toml_files(repo, GOLDENS_DIR) {
+        let text = match fs::read_to_string(&path) {
+            Ok(text) => text,
+            Err(e) => {
+                m.problems.push(problem(&file, 0, format!("can't read: {e}")));
+                continue;
+            }
+        };
+        let manifest: GoldenManifest = match toml::from_str(&text) {
+            Ok(manifest) => manifest,
+            Err(e) => {
+                let line = e.span().map_or(0, |s| {
+                    text.get(..s.start).map_or(0, |before| before.matches('\n').count() + 1)
+                });
+                m.problems.push(problem(&file, line, e.message().trim_end().to_owned()));
+                continue;
+            }
+        };
+        if manifest.version != 1 {
+            m.problems.push(problem(
+                &file,
+                key_line(&text, "version"),
+                format!("version {} isn't supported (only 1 is)", manifest.version),
+            ));
+        }
+        let rows = manifest.parity_rows.iter().map(String::as_str);
+        for row in check_parity_rows(&file, &text, rows, ids, &mut m.problems) {
+            m.coverage.entry(row.to_owned()).or_default().goldens.push(file.clone());
+        }
+        let paths = [("generator", &manifest.generator), ("test", &manifest.test)]
+            .into_iter()
+            .chain(manifest.golden.iter().map(|g| ("golden", g)));
+        for (key, rel) in paths {
+            if !repo.join(rel).is_file() {
+                m.problems.push(problem(
+                    &file,
+                    key_line(&text, key),
+                    format!("{key} file `{}` doesn't exist", rel.display()),
+                ));
+            }
+        }
+        // A missing `test` file is reported above.
+        if let Ok(source) = fs::read_to_string(repo.join(&manifest.test)) {
+            check_golden_test(&file, &text, &manifest, &source, &mut m.problems);
+        }
+    }
+}
+
+/// A `#[test]` fn that [`test_fns`] found.
+struct TestFn {
+    name: String,
+    ignored: bool,
+}
+
+/// The `#[test]` fns in a Rust source file. This is a line scan, not a Rust parser: a line starting with `#[test]`
+/// (after trimming) starts an attribute block, which ends at the next line starting with `fn ` or `async fn `, and the
+/// fn is ignored if a line in the block starts with `#[ignore`. So `#[tokio::test]`, `#[rstest]`, `pub fn` and
+/// attributes sharing a line aren't seen. The golden tests don't need them.
+fn test_fns(source: &str) -> Vec<TestFn> {
+    let mut fns = Vec::new();
+    // `Some(ignored)` inside an attribute block.
+    let mut block: Option<bool> = None;
+    for line in source.lines().map(str::trim) {
+        if line.starts_with("#[test]") {
+            block = Some(false);
+        } else if let Some(ignored) = block {
+            if line.starts_with("#[ignore") {
+                block = Some(true);
+            } else if let Some(rest) = line.strip_prefix("fn ").or_else(|| line.strip_prefix("async fn ")) {
+                let name = rest.split(['(', '<']).next().unwrap_or_default().trim().to_owned();
+                fns.push(TestFn { name, ignored });
+                block = None;
+            }
+        }
+    }
+    fns
+}
+
+/// The manifest's `test` file has a comparison that runs in plain `cargo test`, and its `fresh_test`, `#[ignore]`d.
+fn check_golden_test(file: &Path, text: &str, manifest: &GoldenManifest, source: &str, problems: &mut Vec<Problem>) {
+    let fns = test_fns(source);
+    let test_file = manifest.test.display();
+    if !fns.iter().any(|f| !f.ignored) {
+        problems.push(problem(
+            file,
+            key_line(text, "test"),
+            format!("{test_file} has no #[test] that isn't #[ignore]d, so plain `cargo test` doesn't check the golden"),
+        ));
+    }
+    let fresh = &manifest.fresh_test;
+    match fns.iter().find(|f| f.name == *fresh) {
+        None => problems.push(problem(
+            file,
+            key_line(text, "fresh_test"),
+            format!("fresh_test `{fresh}` isn't a #[test] fn in {test_file}"),
+        )),
+        Some(f) if !f.ignored => problems.push(problem(
+            file,
+            key_line(text, "fresh_test"),
+            format!(
+                "fresh_test `{fresh}` in {test_file} isn't #[ignore]d; it needs Python, so it must only run with \
+                 --ignored"
+            ),
+        )),
+        Some(_) => {}
+    }
+}
+
+/// `cargo xtask parity-matrix`: prints the problems and exits 1, or prints the status and coverage tables (with
+/// `uncovered`, the rows nothing covers instead).
+pub fn run(repo: &Path, markdown: bool, uncovered: bool) -> std::process::ExitCode {
     let matrix = check(repo);
     if matrix.problems.is_empty() {
-        print!("{}", matrix.summary(markdown));
+        if uncovered {
+            print!("{}", matrix.uncovered_report());
+        } else {
+            print!("{}\n{}", matrix.summary(markdown), matrix.coverage_summary(markdown));
+        }
         std::process::ExitCode::SUCCESS
     } else {
         for p in &matrix.problems {
@@ -644,6 +910,26 @@ mod tests {
             split_row("| `a.b` | x \\| y | | z |"),
             vec!["`a.b`", "x \\| y", "", "z"]
         );
+    }
+
+    #[test]
+    fn finds_test_fns_and_their_ignore_attributes() {
+        let source = "\
+#[test]
+fn plain() {}
+
+    #[cfg(unix)]
+    #[test]
+    #[ignore = \"needs Python\"]
+    async fn ignored<T>() {}
+
+#[rstest]
+fn not_seen() {}
+
+fn helper() {}
+";
+        let fns: Vec<(String, bool)> = test_fns(source).into_iter().map(|f| (f.name, f.ignored)).collect();
+        assert_eq!(fns, [("plain".to_owned(), false), ("ignored".to_owned(), true)]);
     }
 
     #[test]

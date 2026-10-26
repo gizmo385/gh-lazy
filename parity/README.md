@@ -978,7 +978,8 @@ The parity gate runs in the single CI job of `.github/workflows/rust.yaml`, `fmt
 every PR into `rust-main`, after fmt, clippy and the unit tests. It runs on Linux only, because macOS runners are too
 expensive (PLAN §7). It installs Python 3.11 and the app with `uv sync --frozen`, then runs
 `cargo xtask parity --all --ci --no-sync --jobs 4` (the runner's 4 vCPUs) and the `#[ignore]`d Python-backed tests
-(`cargo test -p fake-gh -p xtask -- --ignored`). There's no `paths` filter: every PR runs it. Pushes to `rust-main`
+(`cargo test -p fake-gh -p xtask -p lazy-github-tui -p lazy-github-core -- --ignored`), which include the
+[stale-golden checks](#the-staleness-test). There's no `paths` filter: every PR runs it. Pushes to `rust-main`
 run only fmt, clippy and the unit tests, because the squash-merged tree already passed the gate on its PR, and that
 run keeps the Rust cache warm for PRs.
 
@@ -1041,3 +1042,89 @@ parity gate too. The name predates the merged job and is kept so branch protecti
   `cargo build -p fake-gh && cargo test -p xtask --test python_app -- --ignored`. `xtask/tests/structural_check.rs`
   (also ignored) rebinds `main.repos.focus` to `9` in a copy of `startup` and checks that `[expect]` fails with a
   `titles` mismatch naming `[9] Repositories` and exit code 1.
+
+## Python goldens
+
+Some parity rows are about data, not screens: binding ids and their defaults, config defaults, labels, key spellings,
+parsing and file formats. For those, a script imports the Python app and dumps what it has (a **golden**, committed
+next to the Rust test), and a plain Rust test compares the Rust side with it in `cargo test`. A manifest in
+`parity/goldens/<name>.toml`, parallel to `parity/scenarios/`, links the golden to the parity matrix.
+
+### Golden or scenario
+
+Use a golden for data: ids, defaults, labels, key spellings, parsing and file formats. A golden checks every entry at
+once, and doesn't need a screen. Use a scenario for anything that needs a screen or a key press to have an effect:
+what's drawn, where focus goes, what a key does. A row can be named by both, when the golden checks its data and a
+scenario its effect.
+
+### Manifest format (v1)
+
+```toml
+version = 1
+description = "Binding registry: every id's default keys, action, label, tooltip, show and key_display"
+generator = "crates/lazy-github-tui/tests/fixtures/generate_bindings.py"
+golden = ["crates/lazy-github-tui/tests/fixtures/bindings.json"]
+test = "crates/lazy-github-tui/tests/registry.rs"
+fresh_test = "bindings_goldens_are_fresh"
+parity_rows = ["keybindings.all-ids"]
+```
+
+| Key | Meaning |
+| --- | --- |
+| `version` | Always `1`. |
+| `description` | What the golden holds, in one line. |
+| `generator` | The Python script that writes the golden. It takes `--out DIR` (default: its own directory). |
+| `golden` | The files the generator writes, all of them. |
+| `test` | The Rust test file that compares the Rust side with the golden in plain `cargo test`. |
+| `fresh_test` | The `#[ignore]`d `#[test]` fn in `test` that regenerates the golden and compares it ([below](#the-staleness-test)). |
+| `parity_rows` | The row ids the golden covers. |
+
+Paths are relative to the repository root. Unknown keys are an error, so a typo like `parity_row` can't silently cover
+nothing. `parity_rows` is an explicit list; globs aren't allowed. A row goes in only when this golden checks every
+column and note of the row, together with any scenario that also names it. A feature PR that completes a golden's
+check for a row adds the id in that PR.
+
+`cargo xtask parity-matrix` (and `cargo test --workspace`, through `xtask/tests/parity_matrix.rs`) reports a manifest
+that doesn't parse, has an unknown key or a `version` other than 1, a `parity_rows` entry that isn't a row id, a
+`generator`, `golden` or `test` file that doesn't exist, a `test` file with no `#[test]` that isn't `#[ignore]`d, and
+a `fresh_test` that isn't an `#[ignore]`d `#[test]` fn in `test`. The `#[test]` and `#[ignore]` detection is a line
+scan: a line `#[test]` starts an attribute block that ends at the next `fn ` or `async fn ` line, and the fn is ignored
+if a line in the block starts with `#[ignore`. Write the golden tests as plain `#[test]` fns, one attribute per line.
+
+The coverage table after the status table counts each area's rows named by a scenario only, a golden only, both, or
+neither; `cargo xtask parity-matrix --uncovered` lists the neither rows (except intentional diffs).
+
+### Regenerating a golden
+
+The Python app is frozen on `rust-main`, so a golden changes only when its generator does (for example, when a
+feature adds a field to the dump). Run the generator from the repository root with the `HOME` its docstring names, so
+the user's own config doesn't leak in, e.g.:
+
+```sh
+HOME=$(mktemp -d) uv run python crates/lazy-github-tui/tests/fixtures/generate_bindings.py
+HOME=/home/lazy uv run python crates/lazy-github-core/tests/fixtures/config/generate.py
+```
+
+Commit the generator change and the regenerated golden together. Run with no arguments, a generator must leave
+`git status` clean.
+
+### The staleness test
+
+Each manifest's `fresh_test`, `#[ignore = "needs uv and the Python app"]` in its `test` file, runs the generator with
+`--out <tempdir>` from the repository root, with the `HOME` its docstring names, and compares every `golden` file byte
+for byte. On a mismatch it fails with the first 40 lines of a unified diff and the regenerate command. (It asks
+`uv run --frozen python` for the project's interpreter under the real `HOME`, so uv's cache is the usual one, then runs
+the generator with that interpreter and the test's `HOME`.) The config generator also checks that the hand-written
+config fixtures load in Python; its non-zero exit fails the test.
+
+CI runs these in the "Python-backed integration tests" step,
+`cargo test --locked -p fake-gh -p xtask -p lazy-github-tui -p lazy-github-core -- --ignored`. So every `#[ignore]`d
+test in `lazy-github-tui` and `lazy-github-core` must be safe to run there. Locally:
+
+```sh
+cargo test -p lazy-github-tui -p lazy-github-core -- --ignored
+```
+
+The parity reviewer moves a row in a golden's `parity_rows` to `parity` when the manifest's `test` passes in
+`cargo test` and its `fresh_test` passed in the PR's CI run, with the exceptions in
+[Editing the matrix](../docs/rust-rewrite/parity/README.md#editing-the-matrix).

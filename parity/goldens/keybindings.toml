@@ -1,0 +1,7 @@
+version = 1
+description = "Binding registry: every id's default keys, action, label, tooltip, show and key_display"
+generator = "crates/lazy-github-tui/tests/fixtures/generate_bindings.py"
+golden = ["crates/lazy-github-tui/tests/fixtures/bindings.json"]
+test = "crates/lazy-github-tui/tests/registry.rs"
+fresh_test = "bindings_goldens_are_fresh"
+parity_rows = ["keybindings.all-ids"]

@@ -6,8 +6,12 @@ Run from the repository root with:
 
 `python-default.json` and `python-full.json` are written by the Python app. The other fixtures are written by hand;
 this script only checks that the Python app loads them, so they stay valid Python configs.
+
+`--out DIR` writes the two generated fixtures to DIR instead of this directory; the hand-written ones are still read
+from here. The `config_goldens_are_fresh` test uses it.
 """
 
+import argparse
 import json
 from datetime import datetime
 from pathlib import Path
@@ -55,8 +59,12 @@ def full_config() -> Config:
 
 
 def main() -> None:
-    (HERE / "python-default.json").write_text(Config().model_dump_json(indent=4))
-    (HERE / "python-full.json").write_text(full_config().model_dump_json(indent=4))
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--out", type=Path, default=HERE, help="directory to write the generated fixtures to")
+    args = parser.parse_args()
+
+    (args.out / "python-default.json").write_text(Config().model_dump_json(indent=4))
+    (args.out / "python-full.json").write_text(full_config().model_dump_json(indent=4))
     for name in HAND_WRITTEN:
         Config(**json.loads((HERE / name).read_text()))
         print(f"{name}: loads in Python")

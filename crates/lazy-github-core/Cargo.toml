@@ -28,6 +28,8 @@ tracing-subscriber = { workspace = true, features = ["fmt", "registry", "std"] }
 
 [dev-dependencies]
 rstest = { workspace = true }
+# The diff `config_goldens_are_fresh` prints for a stale golden.
+similar = { workspace = true }
 tokio = { workspace = true, features = ["rt"] }
 
 [lints]

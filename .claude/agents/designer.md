@@ -30,7 +30,8 @@ PROCESS.md:
   data flow, not Python-to-Rust line mapping. If Textual did something because of Textual (CSS, message bubbling,
   reactive attributes), say what the user-visible effect was and design for that effect directly.
 - **Acceptance criteria.** A checklist that a reviewer can verify. Always includes: the parity scenario file name(s) to
-  add under `parity/scenarios/`, the structural assertions that must pass, the `insta` snapshots to add, and unit tests
+  add under `parity/scenarios/` or golden manifest(s) under `parity/goldens/` (data rows; see "Python goldens" in
+  `parity/README.md`), the structural assertions that must pass, the `insta` snapshots to add, and unit tests
   for any non-UI logic.
 - **Fixtures.** The `parity/fixtures` entries needed, and whether they must be recorded.
 
@@ -46,8 +47,8 @@ Add or update the rows the issue covers in `docs/rust-rewrite/parity/areas/<area
 row gets a new, stable id (`<area>.<name>`, kebab-case) and goes next to the rows it relates to. Edit only the
 area files your rows live in. A Python behavior that looks like a bug gets a new `parity/py-bugs/B<nn>.md` file
 (next free number) and a `Py bug B<n>` note on the rows. Put the row ids in the spec, so the implementer can list
-them in the scenario's `parity_rows`. Run `cargo xtask parity-matrix` to check your edit. Open a PR into
-`rust-main` for the matrix change, or fold it into the first implementation PR if one is already open.
+them in the scenario's or golden manifest's `parity_rows`. Run `cargo xtask parity-matrix` to check your edit. Open
+a PR into `rust-main` for the matrix change, or fold it into the first implementation PR if one is already open.
 
 ## When you're done
 

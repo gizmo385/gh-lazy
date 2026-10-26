@@ -2,7 +2,8 @@ version = 1
 description = "M on each focus target: the details content doesn't maximize and leaves the one-time toast for the next maximize; each table, the details tabs and the command log do"
 gate = true
 parity_rows = ["main-layout.maximize"]
-sizes = [[160, 48], [100, 30]]
+# Which targets maximize is behavior, not layout, so one size is enough (parity/README.md, "Keeping the suite fast").
+sizes = [[160, 48]]
 
 [env]
 fixtures = ["base"]

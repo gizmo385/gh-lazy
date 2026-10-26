@@ -403,14 +403,17 @@ impl App {
         }
     }
 
-    /// Shows only the focused widget, with the one-time toast. A no-op while something is maximized: `M` doesn't
-    /// toggle back.
+    /// Shows only the focused widget, with the one-time toast. A no-op while something is maximized (`M` doesn't
+    /// toggle back) or when the focused widget isn't maximizable, which leaves the toast for the next maximize.
     fn maximize(&mut self, out: &mut Outbox) {
         if self.maximized.is_some() {
             return;
         }
         let BaseScreen::Main(main) = &self.base else { return };
         let target = main.focus();
+        if !target.maximizable() {
+            return;
+        }
         self.maximized = Some(Maximized { target });
         if !self.has_shown_maximize_toast {
             self.has_shown_maximize_toast = true;

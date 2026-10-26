@@ -1,0 +1,133 @@
+version = 1
+description = "M on each focus target: the details content doesn't maximize and leaves the one-time toast for the next maximize; each table, the details tabs and the command log do"
+gate = true
+parity_rows = ["main-layout.maximize"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+
+[env.config_overrides]
+appearance = { show_command_log = true }
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+keys = ["5", "tab"]
+
+[[step]]
+wait = { stable_ms = 800 }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { stable_ms = 1200 }
+
+[[step]]
+capture = "content-noop"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Command Log"] }
+
+[[step]]
+keys = ["1", "M"]
+
+[[step]]
+wait = { gone = "[1] Repositories" }
+
+[[step]]
+capture = "repos-max"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[2] Pull Requests" }
+
+[[step]]
+keys = ["2", "M"]
+
+[[step]]
+wait = { gone = "[2] Pull Requests" }
+
+[[step]]
+capture = "prs-max"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[3] Issues" }
+
+[[step]]
+keys = ["3", "M"]
+
+[[step]]
+wait = { gone = "[3] Issues" }
+
+[[step]]
+capture = "issues-max"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[4] Workflows" }
+
+[[step]]
+keys = ["4", "M"]
+
+[[step]]
+wait = { gone = "[4] Workflows" }
+
+[[step]]
+capture = "workflows-max"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[6] Command Log" }
+
+[[step]]
+keys = ["6", "M"]
+
+[[step]]
+wait = { gone = "[6] Command Log" }
+
+[[step]]
+capture = "log-max"
+checks = ["titles", "focus"]
+
+[expect.content-noop]
+focused = ["[5] Details"]
+contains = ["[1] Repositories", "[5] Details"]
+not_contains = ["View Maximized", "Traceback"]
+
+# `contains` is matched per row, and at 100 columns the message wraps before "return.".
+[expect.repos-max]
+pane_titles = []
+focused = []
+contains = ["View Maximized", "Current view maximized. Press escape to"]
+not_contains = ["[1] Repositories", "Traceback"]
+
+[expect.prs-max]
+pane_titles = []
+not_contains = ["[2] Pull Requests", "Traceback"]
+
+[expect.issues-max]
+pane_titles = []
+not_contains = ["[3] Issues", "Traceback"]
+
+[expect.workflows-max]
+pane_titles = []
+not_contains = ["[4] Workflows", "Traceback"]
+
+[expect.log-max]
+pane_titles = []
+not_contains = ["[6] Command Log", "Traceback"]

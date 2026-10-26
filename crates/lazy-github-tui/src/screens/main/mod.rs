@@ -110,6 +110,18 @@ impl FocusTarget {
         }
     }
 
+    /// Whether `M` maximizes anything with `self` focused. Textual's `Screen.maximize` decides by the focused
+    /// widget's `ALLOW_MAXIMIZE`, then maximizes its nearest maximizable ancestor, else the widget itself:
+    ///
+    /// - a table (`DataTable`), the search box (`Input`) and the command log (`Log`) are `ScrollView`s, which allow
+    ///   it, and have no maximizable ancestor;
+    /// - the details tab strip (`Tabs`) is focusable, so allowed, and maximizes its `TabbedContent`;
+    /// - the details content is a `VerticalScroll`, and `ScrollableContainer` sets `ALLOW_MAXIMIZE = False`, so `M`
+    ///   there does nothing.
+    pub fn maximizable(self) -> bool {
+        !matches!(self, FocusTarget::DetailsContent)
+    }
+
     fn in_details(self) -> bool {
         matches!(self, FocusTarget::DetailsTabs | FocusTarget::DetailsContent)
     }
@@ -443,6 +455,7 @@ impl MainScreen {
         self.hits.clear();
         match maximized {
             FocusTarget::Table(id) | FocusTarget::Search(id) => self.hits.push((rect, FocusTarget::Table(id))),
+            // `DetailsContent` is never maximized (see `FocusTarget::maximizable`); it's here to keep the match total.
             FocusTarget::DetailsTabs | FocusTarget::DetailsContent => {
                 let hits = self.details.render(frame, rect, theme, self.focus);
                 self.hits.extend(hits);

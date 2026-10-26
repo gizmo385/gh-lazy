@@ -341,6 +341,47 @@ fn tab_while_details_is_maximized_swaps_tabs_and_content() {
 }
 
 #[test]
+fn maximize_on_the_details_content_does_nothing_and_keeps_the_toast() {
+    let mut app = TestApp::new(Config::default());
+    app.press(&["5", "tab"]);
+    let before = app.screen(160, 48);
+    app.press(&["M"]);
+    assert_eq!(app.app().maximized(), None);
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    assert!(app.app().toasts().is_empty());
+    assert_eq!(app.screen(160, 48), before);
+    // The one-time toast is still unused, so the next maximize that works shows it.
+    app.press(&["1", "M"]);
+    assert_eq!(app.app().maximized(), Some(Maximized { target: REPOS }));
+    assert!(app.app().toasts().iter().eq([&maximize_toast()]));
+    assert_eq!(app.effects(), []);
+}
+
+#[test]
+fn every_other_focus_target_maximizes() {
+    let targets = [
+        FocusTarget::Table(SectionId::Repos),
+        FocusTarget::Table(SectionId::PullRequests),
+        FocusTarget::Table(SectionId::Issues),
+        FocusTarget::Table(SectionId::Workflows),
+        FocusTarget::DetailsTabs,
+        FocusTarget::CommandLog,
+    ];
+    for (keys, target) in [["1"], ["2"], ["3"], ["4"], ["5"], ["6"]].iter().zip(targets) {
+        let mut app = TestApp::new(with_log());
+        app.press(keys);
+        assert_eq!(focus(&app), target);
+        app.press(&["M"]);
+        assert_eq!(app.app().maximized(), Some(Maximized { target }), "{target:?}");
+    }
+    // The search box isn't reachable by keys yet.
+    for id in SectionId::ALL {
+        assert!(FocusTarget::Search(id).maximizable());
+    }
+    assert!(!FocusTarget::DetailsContent.maximizable());
+}
+
+#[test]
 fn escape_does_nothing_unless_maximized() {
     let mut app = TestApp::new(Config::default());
     app.press(&["escape"]);

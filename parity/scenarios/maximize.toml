@@ -1,5 +1,5 @@
 version = 1
-description = "M maximizes the focused widget over the whole screen, escape restores it, and 5 then M maximizes the details tabs"
+description = "M maximizes the focused widget over the whole screen, escape restores it, 5 then M maximizes the details tabs, and M on the details content does nothing"
 gate = true
 parity_rows = ["main-layout.maximize", "keybindings.app-maximize-widget", "main-layout.details-tabs-focused"]
 sizes = [[160, 48], [100, 30]]
@@ -68,6 +68,29 @@ wait = { gone = "[5] Details" }
 capture = "max-details"
 checks = ["titles", "tabs", "focus"]
 
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[5] Details" }
+
+# The details content is a Textual `VerticalScroll`, which isn't maximizable: M leaves the layout and focus alone.
+[[step]]
+keys = ["5", "tab"]
+
+[[step]]
+wait = { stable_ms = 800 }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { stable_ms = 1200 }
+
+[[step]]
+capture = "content-max-noop"
+checks = ["titles", "focus"]
+
 # The first maximize raises the toast. `contains` is matched per row, and at 100 columns the message wraps before
 # "return.".
 [expect.max]
@@ -87,3 +110,7 @@ not_contains = ["[1] Repositories", "View Maximized"]
 pane_titles = []
 contains = ["Introduction"]
 not_contains = ["[5] Details"]
+
+[expect.content-max-noop]
+focused = ["[5] Details"]
+contains = ["[1] Repositories", "[5] Details"]

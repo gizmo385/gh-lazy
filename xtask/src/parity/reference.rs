@@ -1034,6 +1034,9 @@ struct CaptureKey<'a> {
     fixtures: &'a [String],
     gh_auth: &'static str,
     git_remote: Option<&'a str>,
+    /// Only `"ssh"`: left out for the default, so keys from before the field existed don't change.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    git_remote_protocol: Option<&'static str>,
     git_branch: &'a str,
     key_delay_ms: u64,
     capture_stable_ms: u64,
@@ -1103,6 +1106,8 @@ pub fn capture_key(scenario: &Scenario, size: Size, roots: &Roots) -> Result<Str
         fixtures: &scenario.env.fixtures,
         gh_auth: scenario.env.gh_auth.env_value(),
         git_remote: scenario.env.git_remote.as_deref(),
+        git_remote_protocol: (scenario.env.git_remote_protocol != super::scenario::GitRemoteProtocol::Https)
+            .then(|| scenario.env.git_remote_protocol.as_str()),
         git_branch: &scenario.env.git_branch,
         key_delay_ms: millis(scenario.timing.key_delay),
         capture_stable_ms: millis(scenario.timing.capture_stable),
@@ -1569,6 +1574,21 @@ contains = ["Hi"]
 
         std::fs::write(dir.path().join("configs/default.json"), "{\"a\": 2}").unwrap();
         assert_ne!(key_of(KEYED, SIZE, &roots), base, "config file contents");
+    }
+
+    #[test]
+    fn the_capture_key_has_the_git_remote_protocol_only_when_it_is_ssh() {
+        let (_dir, roots) = key_roots();
+        let with = |extra: &str| {
+            let source = variant("[env]\n", &format!("[env]\ngit_remote = \"o/r\"\n{extra}"));
+            key_of(&source, SIZE, &roots)
+        };
+        let https = with("");
+        assert!(!https.contains("git_remote_protocol"), "{https}");
+        assert_eq!(with("git_remote_protocol = \"https\"\n"), https);
+        let ssh = with("git_remote_protocol = \"ssh\"\n");
+        assert_ne!(ssh, https);
+        assert!(ssh.contains(r#""git_remote_protocol":"ssh""#), "{ssh}");
     }
 
     #[test]

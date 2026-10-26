@@ -127,7 +127,8 @@ pub fn prepare(
         .with_context(|| format!("installing {} as gh", paths.fake_gh.display()))?;
 
     if let Some(remote) = &scenario.env.git_remote {
-        init_git_repo(&work, &home, remote, &scenario.env.git_branch)?;
+        let url = scenario.env.git_remote_protocol.url(remote);
+        init_git_repo(&work, &home, &url, &scenario.env.git_branch)?;
     }
 
     let log = out.join("fake-gh.log");
@@ -204,12 +205,11 @@ fn isolated_env(
     env
 }
 
-/// Makes `work` a git repo whose `origin` is `owner/name`, with one empty commit whose SHA is the same on every run.
-fn init_git_repo(work: &Path, home: &Path, remote: &str, branch: &str) -> Result<()> {
-    let url = format!("https://github.com/{remote}.git");
+/// Makes `work` a git repo whose `origin` is `url`, with one empty commit whose SHA is the same on every run.
+fn init_git_repo(work: &Path, home: &Path, url: &str, branch: &str) -> Result<()> {
     let runs: [&[&str]; 3] = [
         &["init", "-q", "-b", branch],
-        &["remote", "add", "origin", &url],
+        &["remote", "add", "origin", url],
         &[
             "-c",
             "commit.gpgsign=false",
@@ -268,6 +268,7 @@ fn copy_dir(from: &Path, to: &Path) -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parity::scenario::GitRemoteProtocol;
 
     #[test]
     fn overrides_are_deep_merged_and_forced_fields_win() {
@@ -299,6 +300,30 @@ mod tests {
         assert_eq!(config["a"], json!([1, 2]));
         // Forcing `core.first_start` replaces a non-object `core` too.
         assert_eq!(config["core"], json!({"first_start": false}));
+    }
+
+    /// `git remote get-url origin` in a work dir set up for `protocol`.
+    fn origin_for(protocol: GitRemoteProtocol) -> String {
+        let dir = tempfile::tempdir().unwrap();
+        let (home, work) = (dir.path().join("home"), dir.path().join("work"));
+        std::fs::create_dir_all(&home).unwrap();
+        std::fs::create_dir_all(&work).unwrap();
+        init_git_repo(&work, &home, &protocol.url("o/n"), "main").unwrap();
+        let output = Command::new("git")
+            .args(["remote", "get-url", "origin"])
+            .current_dir(&work)
+            .env("HOME", &home)
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        String::from_utf8(output.stdout).unwrap().trim().to_owned()
+    }
+
+    #[test]
+    fn the_origin_url_follows_the_protocol() {
+        assert_eq!(origin_for(GitRemoteProtocol::Ssh), "git@github.com:o/n.git");
+        assert_eq!(origin_for(GitRemoteProtocol::Https), "https://github.com/o/n.git");
     }
 
     #[test]

@@ -102,6 +102,35 @@ impl GhAuth {
     }
 }
 
+/// `env.git_remote_protocol`: how the work dir's `origin` URL is spelled.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum GitRemoteProtocol {
+    /// `https://github.com/<owner>/<name>.git`. Python doesn't parse this one (Py bug B5), so it never auto-selects.
+    #[default]
+    Https,
+    /// `git@github.com:<owner>/<name>.git`, which both apps parse.
+    Ssh,
+}
+
+impl GitRemoteProtocol {
+    /// The scenario value.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            GitRemoteProtocol::Https => "https",
+            GitRemoteProtocol::Ssh => "ssh",
+        }
+    }
+
+    /// `origin`'s URL for `remote` (`owner/name`).
+    pub fn url(self, remote: &str) -> String {
+        match self {
+            GitRemoteProtocol::Https => format!("https://github.com/{remote}.git"),
+            GitRemoteProtocol::Ssh => format!("git@github.com:{remote}.git"),
+        }
+    }
+}
+
 /// A structural check a capture can ask for (evaluated by #93).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -168,6 +197,8 @@ pub struct EnvSpec {
     pub gh_auth: GhAuth,
     /// `owner/name` for the work dir's `origin`; `None` leaves the work dir outside any git repo.
     pub git_remote: Option<String>,
+    /// How `origin` is spelled. Only set to `Ssh` with a `git_remote`.
+    pub git_remote_protocol: GitRemoteProtocol,
     pub git_branch: String,
     /// Deep-merged over the config file. Always a JSON object.
     pub config_overrides: Value,
@@ -333,6 +364,7 @@ struct RawEnv {
     #[serde(default)]
     gh_auth: GhAuth,
     git_remote: Option<Spanned<String>>,
+    git_remote_protocol: Option<Spanned<GitRemoteProtocol>>,
     git_branch: Option<String>,
     config_overrides: Option<toml::Table>,
 }
@@ -561,6 +593,16 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
             Some(remote.into_inner())
         }
     };
+    let git_remote_protocol = match raw.git_remote_protocol {
+        None => GitRemoteProtocol::default(),
+        Some(protocol) if git_remote.is_none() => {
+            return Err(loc.at_span(
+                &protocol,
+                "`git_remote_protocol` needs a `git_remote` to apply to".to_owned(),
+            ));
+        }
+        Some(protocol) => protocol.into_inner(),
+    };
 
     let config_overrides = match raw.config_overrides {
         None => Value::Object(serde_json::Map::new()),
@@ -573,6 +615,7 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
         config,
         gh_auth: raw.gh_auth,
         git_remote,
+        git_remote_protocol,
         git_branch: raw.git_branch.unwrap_or_else(|| "main".to_owned()),
         config_overrides,
     })
@@ -861,7 +904,42 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
         assert_eq!(s.env.config, "default");
         assert_eq!(s.env.gh_auth, GhAuth::LoggedIn);
         assert_eq!(s.env.git_remote, None);
+        assert_eq!(s.env.git_remote_protocol, GitRemoteProtocol::Https);
         assert_eq!(s.env.git_branch, "main");
+    }
+
+    #[test]
+    fn parses_the_git_remote_protocol() {
+        let env = |extra: &str| {
+            parse(&format!("version = 1\n[env]\ngit_remote = \"o/n\"\n{extra}"))
+                .unwrap()
+                .env
+        };
+        assert_eq!(env("").git_remote_protocol, GitRemoteProtocol::Https);
+        assert_eq!(
+            env("git_remote_protocol = \"https\"\n").git_remote_protocol,
+            GitRemoteProtocol::Https
+        );
+        assert_eq!(
+            env("git_remote_protocol = \"ssh\"\n").git_remote_protocol,
+            GitRemoteProtocol::Ssh
+        );
+        assert_eq!(GitRemoteProtocol::Https.url("o/n"), "https://github.com/o/n.git");
+        assert_eq!(GitRemoteProtocol::Ssh.url("o/n"), "git@github.com:o/n.git");
+    }
+
+    #[test]
+    fn rejects_a_git_remote_protocol_without_a_remote_or_known_value() {
+        assert_error(
+            "version = 1\n[env]\ngit_remote_protocol = \"ssh\"\n",
+            3,
+            "needs a `git_remote`",
+        );
+        assert_error(
+            "version = 1\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"git\"\n",
+            4,
+            "unknown variant `git`",
+        );
     }
 
     #[test]

@@ -514,7 +514,9 @@ Every scenario × size × app gets a temp dir `<run>` holding `home/`, `bin/` an
 - `bin/gh` (`gh.exe` on Windows) is fake-gh, installed with `fake_gh::install`.
 - `work/` is the app's working directory. When the scenario sets `git_remote = "owner/name"`, it's made a git repo:
   - `git init -q -b <git_branch, default main>`
-  - `git remote add origin https://github.com/owner/name.git`
+  - `git remote add origin https://github.com/owner/name.git`, or `git@github.com:owner/name.git` with
+    `git_remote_protocol = "ssh"`. Python keeps the `.git` of an HTTPS remote in the repo name (Py bug B5), so it
+    never finds that repo; a scenario where both apps should pick up the current directory's repo uses `"ssh"`.
   - `git commit -q --allow-empty -m parity` as `parity-bot <parity-bot@example.com>` dated `2026-01-01T00:00:00Z`,
     so the commit SHA is the same on every run.
 - The environment is cleared, then only these are set:
@@ -558,6 +560,7 @@ fixtures = ["base"]              # sets under parity/fixtures/, earlier override
 config = "default"               # parity/configs/<name>.json; default "default"
 gh_auth = "logged-in"            # or "logged-out"; default "logged-in"
 git_remote = "gizmo385/gh-lazy"  # optional; omit = CWD is not a git repo
+git_remote_protocol = "https"    # or "ssh" (origin is git@github.com:...); default "https"; needs git_remote
 git_branch = "main"              # optional, default "main"
 
 [env.config_overrides]           # optional, deep-merged over the config file
@@ -1127,7 +1130,7 @@ Each input is a git object id from `git hash-object`, run in the repo with a cle
 
 | Input | What it hashes |
 | --- | --- |
-| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_branch`, `key_delay_ms`, `capture_stable_ms`, the size and every step. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore`. |
+| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `key_delay_ms`, `capture_stable_ms`, the size and every step. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore`. |
 | `fixtures` | Every fixture in the scenario's sets whose request key (method, path, query, accept) equals a served entry in `requests.jsonl`, plus its `body_file`, as sorted `<set>/<relpath> <blob>` lines. For a `--paginate` request, the pages its `Link: rel="next"` headers lead to as well. |
 | `python_app` | `lazy_github/`, `pyproject.toml` and `uv.lock`. |
 | `harness` | `crates/fake-gh/src/`, `crates/fake-gh/Cargo.toml`, `xtask/src/parity/{env,runner,keys,grid}.rs`, `CAPTURE_VERSION` and the `vt100` and `portable-pty` versions in `Cargo.lock`. |

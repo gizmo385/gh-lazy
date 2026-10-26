@@ -29,6 +29,10 @@ A row's **Status** is one of:
   (`Decision: [<slug>](../decisions/<slug>.md)`). A short qualifier in parentheses is allowed, e.g.
   `intentional diff (gh only)`.
 
+What has to match is functionality and general UI structure, not Textual's rendering ([PLAN §10](../PLAN.md#10-decisions),
+decision 8). A minor cosmetic difference that comes only from Textual (the pointer shape, exact glyphs, hover tints)
+doesn't keep a row from `parity` and needs no decision file. Say so in the row's Notes instead.
+
 ## Columns
 
 Every area table starts with **Id**. The other columns depend on the area (keybindings have Binding id, Default key,

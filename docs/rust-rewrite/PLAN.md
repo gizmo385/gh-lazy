@@ -20,6 +20,9 @@ Status: in review · Owner: @gizmo385 · Trunk branch: `rust-main`
   `gh auth login` owns authentication; the first-start screen becomes a "gh missing / not logged in" check.
 - The `hishel` HTTP cache is replaced by `gh api --cache <ttl>`, which gives us the same TTL semantics per request.
 - Textual-specific features with no user-facing value (the `textual-dev` console, Textual's CSS) are not reproduced.
+- Minor cosmetic details that come from Textual itself rather than from LazyGithub (the mouse pointer shape, exact
+  scrollbar glyphs, hover tints, animation curves) are not mimicked. Parity means the same functionality and the same
+  general UI structure (§10, decision 8).
 - New features are out of scope until parity is reached. New feature requests get labeled and parked.
 
 ## 2. Branching model
@@ -206,3 +209,11 @@ Recorded 2026-10-25 by Chris:
 6. M0 and M1 issues are filed. Milestones are tracked with `milestone: M<n>` labels plus one tracking issue per
    milestone.
 7. Auto-merge may be enabled on PRs into `rust-main` (squash). It's never used for PRs into `main`.
+
+Recorded 2026-10-25 by Chris:
+
+8. Parity is about functionality and general UI structure: the same panes, tabs, tables, columns, keys, workflows and
+   text. A minor cosmetic difference that exists only because the app no longer runs on Textual (for example the
+   mouse pointer shape, Kitty OSC 22) is acceptable. Don't file issues to copy such details, and don't block a row
+   on them. Note them in the row's Notes as "Textual-only cosmetic detail, not reproduced (PLAN §10.8)". Behavior
+   that users rely on, such as a key doing nothing, a toast appearing or text being cut off, is still parity work.

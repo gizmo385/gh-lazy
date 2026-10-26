@@ -1,0 +1,20 @@
+---
+source: xtask/src/parity/screen.rs
+expression: round_trip(&g)
+---
+lazy-github-screen 1
+size 10x3
+cursor 1 2 visible
+--- text
+┌ Repos ─┐
+│a漢b    │
+└────────┘
+--- styles
+..aaaaa
+.bbbb
+--- legend
+. bg=#121212
+a fg=#4ebf71 bg=#121212 bold
+b fg=#e0e0e0 bg=#242f38 inverse
+--- cells
+1 ["│","a","漢","","b"," "," "," "," ","│"]

@@ -11,6 +11,7 @@ pub mod keys;
 pub mod report;
 pub mod runner;
 pub mod scenario;
+pub mod screen;
 pub mod structure;
 pub mod summary;
 #[cfg(test)]

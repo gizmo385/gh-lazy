@@ -1,18 +1,22 @@
-//! The "Introduction" text, laid out the way Textual's `Markdown` shows Python's `LAZY_GITHUB_INFO`, in a vertically
-//! scrolling view. The M2 markdown renderer may replace the internals; the auth screen (#106) embeds it too.
+//! The "Introduction" text: Python's `LAZY_GITHUB_INFO` through the markdown renderer, in a vertically scrolling
+//! view. The auth screen (#106) embeds it too.
+
+use std::sync::LazyLock;
 
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
-use ratatui::text::{Line, Span};
+use ratatui::text::Line;
 use ratatui::widgets::Paragraph;
 
+// The intro's wrapping tests predate the renderer, which now owns `wrap`.
+#[cfg(test)]
+use super::markdown::wrap;
+use super::markdown::{Markdown, Rendered};
 use crate::keymap::BindingId;
-use crate::theme::{Theme, ThemeColor};
+use crate::theme::Theme;
 
-/// Textual's `Markdown`: `padding: 0 2`.
-const PADDING: u16 = 2;
 /// Textual's vertical scrollbar width.
 const SCROLLBAR_WIDTH: u16 = 2;
 
@@ -31,54 +35,54 @@ pub const INFO_BINDINGS: &[BindingId] = &[
     BindingId::TextualScrollPageRight,
 ];
 
-/// One Markdown block of the intro.
-#[derive(Debug, Clone, Copy)]
-enum Block {
-    H1,
-    H2(&'static str),
-    Paragraph(&'static str),
-    Strong(&'static str),
+/// The intro's title, with this crate's version where Python has its own.
+macro_rules! title {
+    () => {
+        concat!("LazyGithub: A Terminal UI For GitHub (", env!("CARGO_PKG_VERSION"), ")")
+    };
 }
 
-impl Block {
-    /// Textual's margins (top, bottom): headers `2 0 1 0`, paragraphs `0 0 1 0`. Adjacent margins collapse.
-    fn margins(self) -> (usize, usize) {
-        match self {
-            Block::H1 | Block::H2(_) => (2, 1),
-            Block::Paragraph(_) | Block::Strong(_) => (0, 1),
-        }
-    }
-}
+#[cfg(test)]
+const TITLE: &str = title!();
 
-const TITLE: &str = concat!("LazyGithub: A Terminal UI For GitHub (", env!("CARGO_PKG_VERSION"), ")");
+/// Python's `LAZY_GITHUB_INFO`, line for line.
+const LAZY_GITHUB_INFO: &str = concat!(
+    "# ",
+    title!(),
+    "\n",
+    "\n",
+    "LazyGithub is a terminal UI for interacting with GitHub. You can get started by selecting one of the \
+     repositories listed\n",
+    "in the table on the left. Once you have selected a repository, any issues, pull requests, and action \
+     workflows will be\n",
+    "retrieved and displayed below it.\n",
+    "\n",
+    "\n",
+    "**Issues, pull requests, and action lists can also be interacted with!**\n",
+    "\n",
+    "## Pull Requests\n",
+    "\n",
+    "You can interact with a PR by viewing its details, viewing the PR diff, and participating in any active \
+     conversations\n",
+    "happening on the PR. You can also create a new PR for the currently selected repo.\n",
+    "\n",
+    "## Issues\n",
+    "\n",
+    "You can interact with an issue by viewing its details, partipcating in any activate conversations \
+     happening on the\n",
+    "issue, and by editing the issue itself. This means that you can close an issue from within LazyGithub.\n",
+    "\n",
+    "## Actions\n",
+    "\n",
+    "Github action and workflow support is pretty limited. It currently only supports listing the workflows and \
+     the most\n",
+    "recent runs across all actions on the currently selected repo, as well as kicking off a workflow that \
+     supports manual\n",
+    "triggers.",
+);
 
-/// Python's `LAZY_GITHUB_INFO`, with soft line breaks joined.
-const INTRO: &[Block] = &[
-    Block::H1,
-    Block::Paragraph(
-        "LazyGithub is a terminal UI for interacting with GitHub. You can get started by selecting one of the \
-         repositories listed in the table on the left. Once you have selected a repository, any issues, pull \
-         requests, and action workflows will be retrieved and displayed below it.",
-    ),
-    Block::Strong("Issues, pull requests, and action lists can also be interacted with!"),
-    Block::H2("Pull Requests"),
-    Block::Paragraph(
-        "You can interact with a PR by viewing its details, viewing the PR diff, and participating in any active \
-         conversations happening on the PR. You can also create a new PR for the currently selected repo.",
-    ),
-    Block::H2("Issues"),
-    Block::Paragraph(
-        "You can interact with an issue by viewing its details, partipcating in any activate conversations \
-         happening on the issue, and by editing the issue itself. This means that you can close an issue from \
-         within LazyGithub.",
-    ),
-    Block::H2("Actions"),
-    Block::Paragraph(
-        "Github action and workflow support is pretty limited. It currently only supports listing the workflows \
-         and the most recent runs across all actions on the currently selected repo, as well as kicking off a \
-         workflow that supports manual triggers.",
-    ),
-];
+/// The intro, parsed once.
+static INTRO: LazyLock<Markdown> = LazyLock::new(|| Markdown::parse(LAZY_GITHUB_INFO));
 
 /// A scroll command, from the `textual.scroll.*` bindings.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -120,6 +124,8 @@ pub struct InfoView {
     offset: usize,
     /// Content and window heights at the last draw, which scrolling is clamped to.
     last: (usize, usize),
+    /// The intro's latest layouts by width and theme: a draw that overflows lays it out at two widths.
+    layouts: Vec<(u16, Theme, Rendered)>,
 }
 
 impl InfoView {
@@ -158,10 +164,8 @@ impl InfoView {
 
     fn draw(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, scrollbar: bool) {
         let window = usize::from(area.height);
-        let mut lines = intro_lines(area.width, theme);
-        let overflows = scrollbar && lines.len() > window;
+        let overflows = scrollbar && self.layout(area.width, theme).lines.len() > window;
         let text_area = if overflows {
-            lines = intro_lines(area.width.saturating_sub(SCROLLBAR_WIDTH), theme);
             Rect {
                 width: area.width.saturating_sub(SCROLLBAR_WIDTH),
                 ..area
@@ -169,10 +173,14 @@ impl InfoView {
         } else {
             area
         };
-        self.last = (lines.len(), window);
-        self.offset = self.offset.min(lines.len().saturating_sub(window));
+        let offset = self.offset;
+        let lines = &self.layout(text_area.width, theme).lines;
+        let content = lines.len();
+        let offset = offset.min(content.saturating_sub(window));
+        let visible: Vec<Line<'static>> = lines.iter().skip(offset).take(window).cloned().collect();
+        self.last = (content, window);
+        self.offset = offset;
 
-        let visible: Vec<Line<'static>> = lines.into_iter().skip(self.offset).take(window).collect();
         frame.render_widget(Paragraph::new(visible), text_area);
         if overflows {
             let bar = Rect {
@@ -183,82 +191,26 @@ impl InfoView {
             render_scrollbar(frame.buffer_mut(), bar, self.last.0, self.offset, theme);
         }
     }
+
+    /// The intro laid out `width` cells wide, from the cache when it's there.
+    fn layout(&mut self, width: u16, theme: &Theme) -> &Rendered {
+        let index = if let Some(index) = self.layouts.iter().position(|(w, t, _)| *w == width && t == theme) {
+            index
+        } else {
+            if self.layouts.len() == 2 {
+                self.layouts.remove(0);
+            }
+            self.layouts.push((width, *theme, INTRO.layout(width, theme)));
+            self.layouts.len() - 1
+        };
+        &self.layouts[index].2
+    }
 }
 
 /// The intro as lines `width` cells wide, Markdown padding included.
+#[cfg(test)]
 fn intro_lines(width: u16, theme: &Theme) -> Vec<Line<'static>> {
-    let palette = theme.palette;
-    let under = theme.background();
-    let fg = |c: ThemeColor| Style::new().fg(theme.color(c, under));
-    let text_width = usize::from(width.saturating_sub(2 * PADDING)).max(1);
-    let indent = " ".repeat(usize::from(PADDING));
-
-    let mut lines = Vec::new();
-    let mut pending_margin = 0;
-    for block in INTRO {
-        let (top, bottom) = block.margins();
-        lines.extend(std::iter::repeat_n(Line::default(), pending_margin.max(top)));
-        pending_margin = bottom;
-        let (text, style) = match *block {
-            Block::H1 => {
-                let style = palette.markdown_h1_text_style.apply(fg(palette.markdown_h1_color));
-                // `content-align: center`: the whole row is the header, padding cells included.
-                for row in wrap(TITLE, text_width) {
-                    let left = (text_width.saturating_sub(row.len())) / 2;
-                    let right = text_width.saturating_sub(left + row.len());
-                    let cells = format!("{}{row}{}", " ".repeat(left), " ".repeat(right));
-                    lines.push(Line::from(vec![Span::raw(indent.clone()), Span::styled(cells, style)]));
-                }
-                continue;
-            }
-            Block::H2(text) => (
-                text,
-                palette.markdown_h2_text_style.apply(fg(palette.markdown_h2_color)),
-            ),
-            Block::Paragraph(text) => (text, fg(palette.foreground)),
-            Block::Strong(text) => (text, fg(palette.foreground).add_modifier(Modifier::BOLD)),
-        };
-        for row in wrap(text, text_width) {
-            lines.push(Line::from(vec![Span::raw(indent.clone()), Span::styled(row, style)]));
-        }
-    }
-    lines.extend(std::iter::repeat_n(Line::default(), pending_margin));
-    lines
-}
-
-/// Greedy word wrap, as Rich does it; a word longer than `width` is split.
-fn wrap(text: &str, width: usize) -> Vec<String> {
-    let mut rows = Vec::new();
-    let mut row = String::new();
-    for word in text.split_whitespace() {
-        let mut word = word;
-        loop {
-            let needed = if row.is_empty() {
-                word.len()
-            } else {
-                row.len() + 1 + word.len()
-            };
-            if needed <= width {
-                if !row.is_empty() {
-                    row.push(' ');
-                }
-                row.push_str(word);
-                break;
-            }
-            if !row.is_empty() {
-                rows.push(std::mem::take(&mut row));
-                continue;
-            }
-            // The text is ASCII, so byte offsets are char boundaries.
-            let (head, tail) = word.split_at(width);
-            rows.push(head.to_owned());
-            word = tail;
-        }
-    }
-    if !row.is_empty() {
-        rows.push(row);
-    }
-    rows
+    INTRO.layout(width, theme).lines
 }
 
 /// Textual's `ScrollBarRender.render_bar` for a vertical bar: a thumb in reverse `$scrollbar` over the track's

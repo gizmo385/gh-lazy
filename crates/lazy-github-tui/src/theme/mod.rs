@@ -160,6 +160,28 @@ impl Theme {
         self.paint(Paint::Rgb(rgb.blend(background, factor)))
     }
 
+    /// The background of a markdown code block: Textual's `MarkdownFence` CSS, `black 10%` on dark themes and
+    /// `white 30%` on light ones. ANSI themes give fences no background.
+    pub fn markdown_fence_background(&self) -> ThemeColor {
+        if self.ansi {
+            ThemeColor::Transparent
+        } else if self.dark {
+            ThemeColor::Rgba {
+                r: 0,
+                g: 0,
+                b: 0,
+                a: 0.1,
+            }
+        } else {
+            ThemeColor::Rgba {
+                r: 255,
+                g: 255,
+                b: 255,
+                a: 0.3,
+            }
+        }
+    }
+
     /// A fixed markup color, the same in every theme.
     pub fn accent(&self, a: Accent) -> Color {
         self.paint(a.rgb().into())

@@ -1,0 +1,33 @@
+---
+source: crates/lazy-github-tui/src/components/markdown/tests.rs
+expression: "buffer(&rendered, 40)"
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 40, height: 3 },
+    content: [
+        "  bold italic struck code link code     ",
+        "  link 🖼  alt all                       ",
+        "                                        ",
+    ],
+    styles: [
+        x: 0, y: 0, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 2, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: BOLD,
+        x: 6, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+        x: 7, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: ITALIC,
+        x: 13, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+        x: 14, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: CROSSED_OUT,
+        x: 20, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+        x: 21, y: 0, fg: Rgb(244, 187, 110), bg: Rgb(36, 29, 19), underline: Reset, modifier: NONE,
+        x: 25, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+        x: 26, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: UNDERLINED,
+        x: 30, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+        x: 31, y: 0, fg: Rgb(224, 224, 224), bg: Rgb(36, 29, 19), underline: Reset, modifier: UNDERLINED,
+        x: 35, y: 0, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 2, y: 1, fg: Rgb(224, 224, 224), bg: Rgb(36, 29, 19), underline: Reset, modifier: UNDERLINED,
+        x: 6, y: 1, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+        x: 7, y: 1, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: UNDERLINED,
+        x: 13, y: 1, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+        x: 14, y: 1, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: BOLD | ITALIC | CROSSED_OUT,
+        x: 17, y: 1, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+    ]
+}

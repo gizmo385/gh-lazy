@@ -263,6 +263,33 @@ impl ThemeColor {
             ThemeColor::Ansi(_) | ThemeColor::Transparent => self,
         }
     }
+
+    /// The background a component class gets in Textual's partial visual style (`get_visual_style(...,
+    /// partial=True)`, which inline markup such as markdown's `.code_inline` uses): Textual blends the color into
+    /// transparent black by `1 - a`, truncating each channel, and keeps `a * (1 - a)` as the alpha. So
+    /// `$warning 10%` is drawn as 90% of `$warning` at 9%, a little darker than [`ThemeColor::over`] gives, and an
+    /// opaque color, blended by 0, is dropped.
+    #[must_use]
+    pub fn component_background(self) -> ThemeColor {
+        match self {
+            ThemeColor::Rgba { a, .. } if a >= 1.0 => ThemeColor::Transparent,
+            ThemeColor::Rgba { r, g, b, a } if a > 0.0 => {
+                let factor = 1.0 - a;
+                // Each channel times a factor in (0, 1) stays in 0..=255; `as` truncates like `int()`.
+                #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                let scale = |c: u8| (f64::from(c) * factor) as u8;
+                ThemeColor::Rgba {
+                    r: scale(r),
+                    g: scale(g),
+                    b: scale(b),
+                    a: a * factor,
+                }
+            }
+            // An invisible color and an ANSI color come out as they went in, as Textual's `blend` returns the
+            // destination for a factor of 1 and for ANSI colors. No theme gives a component an `auto` background.
+            _ => self,
+        }
+    }
 }
 
 /// Textual's `get_contrast_text`, before its alpha is applied.
@@ -332,6 +359,25 @@ mod tests {
             ThemeColor::Ansi(AnsiColor::Default).multiply_alpha(0.5),
             ThemeColor::Ansi(AnsiColor::Default)
         );
+    }
+
+    #[test]
+    fn component_backgrounds_blend_from_transparent_black() {
+        // `$warning 10%` on textual-dark: (228, 149, 38) at 9%, which over #121212 is #241D13, as Textual draws
+        // inline code.
+        let partial = rgba(0xFE, 0xA6, 0x2B, 0.1).component_background();
+        let ThemeColor::Rgba { r, g, b, a } = partial else {
+            panic!("{partial:?}");
+        };
+        assert_eq!((r, g, b), (228, 149, 38));
+        assert!((a - 0.09).abs() < 1e-9);
+        assert_eq!(
+            partial.over(Rgb::new(0x12, 0x12, 0x12).into()),
+            Paint::Rgb(Rgb::new(0x24, 0x1D, 0x13))
+        );
+        assert_eq!(rgb(1, 2, 3).component_background(), ThemeColor::Transparent);
+        let ansi = ThemeColor::Ansi(AnsiColor::Red);
+        assert_eq!(ansi.component_background(), ansi);
     }
 
     #[test]

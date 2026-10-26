@@ -19,6 +19,8 @@ futures-util = { workspace = true }
 indexmap = { workspace = true }
 jiff = { workspace = true }
 lazy-github-core = { workspace = true }
+# The markdown renderer's parser (PLAN §4, #215).
+pulldown-cmark = { workspace = true }
 ratatui = { workspace = true }
 # Python's `str.isprintable` by general category, for the table search's `repr` of a row (#101).
 regex = { workspace = true }

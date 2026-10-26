@@ -27,7 +27,8 @@ crossterm = "0.29"
 futures-util = { version = "0.3", default-features = false }
 # Text input (`tui-textarea`) is not declared yet: its latest release (0.7.0) requires ratatui 0.29, which conflicts
 # with ratatui 0.30 above. See https://github.com/gizmo385/gh-lazy/issues/85.
-pulldown-cmark = "0.13"
+# `default-features = false`: the markdown renderer (#215) uses only the event iterator, not the HTML writer.
+pulldown-cmark = { version = "0.13", default-features = false }
 syntect = "5.3"
 nucleo-matcher = "0.3"
 

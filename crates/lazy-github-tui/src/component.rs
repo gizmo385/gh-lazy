@@ -11,7 +11,7 @@ use tokio::time::Instant;
 
 use crate::action::Action;
 use crate::clock::Clock;
-use crate::effect::{Effect, GithubRequest, RequestId};
+use crate::effect::{Effect, GitRequest, GithubRequest, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::options::AppOptions;
 use crate::screens::main::SectionId;
@@ -274,9 +274,22 @@ impl<'a> Cx<'a> {
     /// Starts `request` in the background and returns its id. The response comes back as [`Action::Github`] with
     /// that id; store it to tell the response apart from a stale one.
     pub fn request(&mut self, request: GithubRequest) -> RequestId {
+        let id = self.next_request_id();
+        self.out.effects.push(Effect::Github { id, request });
+        id
+    }
+
+    /// Starts `request` in the user's working directory and returns its id. The response comes back as
+    /// [`Action::Git`] with that id. Ids come from the same counter as [`Self::request`]'s, so the two never collide.
+    pub fn git(&mut self, request: GitRequest) -> RequestId {
+        let id = self.next_request_id();
+        self.out.effects.push(Effect::Git { id, request });
+        id
+    }
+
+    fn next_request_id(&mut self) -> RequestId {
         let id = RequestId::new(self.shared.next_request);
         self.shared.next_request += 1;
-        self.out.effects.push(Effect::Github { id, request });
         id
     }
 

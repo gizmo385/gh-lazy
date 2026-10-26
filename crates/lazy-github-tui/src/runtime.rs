@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::io::{self, Write};
 
 use lazy_github_core::config::{Config, ConfigPaths};
+use lazy_github_core::git::GitCli;
 use lazy_github_core::github::Github;
 use tokio::sync::{mpsc, watch};
 use tokio::task::{AbortHandle, JoinHandle};
@@ -15,7 +16,9 @@ use crate::event::Event;
 /// Runs effects. Every method returns at once; the work happens on spawned tasks.
 pub struct Runtime<G: Github> {
     gh: G,
+    git: GitCli,
     tx: mpsc::UnboundedSender<Event>,
+    /// GitHub and git requests alike, so `Effect::Cancel` works for both.
     tasks: HashMap<RequestId, AbortHandle>,
     timers: HashMap<TimerId, AbortHandle>,
     saver: ConfigSaver,
@@ -24,11 +27,13 @@ pub struct Runtime<G: Github> {
 }
 
 impl<G: Github> Runtime<G> {
-    /// A runtime that sends results to `tx` and saves the config to `paths`. Must be called inside a tokio runtime.
-    pub fn new(gh: G, tx: mpsc::UnboundedSender<Event>, paths: ConfigPaths) -> Self {
+    /// A runtime that asks GitHub through `gh` and the user's working directory through `git`, sends results to
+    /// `tx` and saves the config to `paths`. Must be called inside a tokio runtime.
+    pub fn new(gh: G, git: GitCli, tx: mpsc::UnboundedSender<Event>, paths: ConfigPaths) -> Self {
         let saver = ConfigSaver::spawn(paths, tx.clone());
         Self {
             gh,
+            git,
             tx,
             tasks: HashMap::new(),
             timers: HashMap::new(),
@@ -60,8 +65,17 @@ impl<G: Github> Runtime<G> {
                 });
                 self.tasks.insert(id, task.abort_handle());
             }
+            Effect::Git { id, request } => {
+                let git = self.git.clone();
+                let tx = self.tx.clone();
+                let task = tokio::spawn(async move {
+                    let response = request.run(&git).await;
+                    let _ = tx.send(Event::Git { id, response });
+                });
+                self.tasks.insert(id, task.abort_handle());
+            }
             Effect::Cancel(id) => {
-                // Aborting drops the future, and with it the `gh` child (`kill_on_drop`).
+                // Aborting drops the future, and with it the `gh` or `git` child (`kill_on_drop`).
                 if let Some(task) = self.tasks.remove(&id) {
                     task.abort();
                 }
@@ -118,7 +132,7 @@ impl<G: Github> Runtime<G> {
         }
     }
 
-    /// Aborts every request (killing their `gh` children) and timer, then waits for the config saver to write the
+    /// Aborts every request (killing their `gh` and `git` children) and timer, then waits for the config saver to write the
     /// newest pending save.
     pub async fn shutdown(self) {
         for task in self.tasks.into_values().chain(self.timers.into_values()) {
@@ -176,7 +190,7 @@ mod tests {
     use lazy_github_core::github::{FakeGithub, GithubCall};
 
     use super::*;
-    use crate::effect::{GithubRequest, GithubResponse};
+    use crate::effect::{GitRequest, GitResponse, GithubRequest, GithubResponse};
 
     struct TempDir(std::path::PathBuf);
 
@@ -202,8 +216,84 @@ mod tests {
     }
 
     fn runtime(gh: FakeGithub, dir: &TempDir) -> (Runtime<FakeGithub>, mpsc::UnboundedReceiver<Event>) {
+        runtime_with_git(gh, GitCli::new(Some(dir.0.clone())), dir)
+    }
+
+    fn runtime_with_git(
+        gh: FakeGithub,
+        git: GitCli,
+        dir: &TempDir,
+    ) -> (Runtime<FakeGithub>, mpsc::UnboundedReceiver<Event>) {
         let (tx, rx) = mpsc::unbounded_channel();
-        (Runtime::new(gh, tx, dir.paths()), rx)
+        (Runtime::new(gh, git, tx, dir.paths()), rx)
+    }
+
+    /// Runs `git args` in `dir` with the developer's global and system config out of the way.
+    fn git_in(dir: &std::path::Path, home: &std::path::Path, args: &[&str]) {
+        let output = std::process::Command::new("git")
+            .args(args)
+            .current_dir(dir)
+            .env("HOME", home)
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "git {args:?}: {output:?}");
+    }
+
+    // Not on a paused clock: the git child is a real process, and auto-advancing time would trip its timeout.
+    #[tokio::test(flavor = "current_thread")]
+    async fn git_effects_deliver_the_parsed_origin() {
+        let dir = TempDir::new();
+        let (home, work) = (dir.0.join("home"), dir.0.join("work"));
+        std::fs::create_dir_all(&home).unwrap();
+        std::fs::create_dir_all(&work).unwrap();
+        git_in(&work, &home, &["init", "-q"]);
+        git_in(
+            &work,
+            &home,
+            &["remote", "add", "origin", "git@github.com:o/my.repo.git"],
+        );
+        let git = GitCli::new(Some(work))
+            .with_env("HOME", &home)
+            .with_env("GIT_CONFIG_NOSYSTEM", "1");
+        let (mut runtime, mut rx) = runtime_with_git(FakeGithub::new(), git, &dir);
+        let id = RequestId::new(3);
+        runtime.execute(Effect::Git {
+            id,
+            request: GitRequest::OriginRepo,
+        });
+        match tokio::time::timeout(Duration::from_secs(10), rx.recv())
+            .await
+            .unwrap()
+            .unwrap()
+        {
+            Event::Git {
+                id: got,
+                response: GitResponse::OriginRepo(Some(repo)),
+            } => {
+                assert_eq!(got, id);
+                assert_eq!(repo.to_string(), "o/my.repo");
+            }
+            other => panic!("unexpected {other:?}"),
+        }
+        runtime.shutdown().await;
+    }
+
+    #[tokio::test(flavor = "current_thread", start_paused = true)]
+    async fn a_cancelled_git_request_delivers_nothing() {
+        let dir = TempDir::new();
+        let (mut runtime, mut rx) = runtime(FakeGithub::new(), &dir);
+        let id = RequestId::new(2);
+        runtime.execute(Effect::Git {
+            id,
+            request: GitRequest::OriginRepo,
+        });
+        // Cancelled before its task first runs, so git never starts and nothing can arrive.
+        runtime.execute(Effect::Cancel(id));
+        run_ready_tasks().await;
+        tokio::time::sleep(Duration::from_mins(1)).await;
+        assert!(rx.try_recv().is_err());
+        runtime.shutdown().await;
     }
 
     /// Lets every ready task run.

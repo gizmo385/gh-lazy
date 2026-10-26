@@ -1010,6 +1010,7 @@ dependencies = [
  "serde_json",
  "serde_path_to_error",
  "similar",
+ "tempfile",
  "thiserror 2.0.21",
  "tokio",
  "tracing",

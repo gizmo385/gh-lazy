@@ -18,7 +18,7 @@ use crate::component::{BindingState, ChainLink, Component, Cx, Outbox, Owner, Re
 use crate::components::footer::{Footer, FooterHit, footer_items};
 use crate::components::help_panel::{HelpPanel, help_sections, help_width};
 use crate::components::status_bar::{StatusBar, UnreadState};
-use crate::effect::{Effect, GithubResponse, RequestId, TimerId};
+use crate::effect::{Effect, GitResponse, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
 use crate::notifications::NotificationPoll;
@@ -158,6 +158,7 @@ impl App {
         match event {
             Event::Key(key) => self.action_for_key(key),
             Event::Github { id, response } => Some(Action::Github(id, response)),
+            Event::Git { id, response } => Some(Action::Git(id, response)),
             Event::ConfigSaved(result) => Some(Action::ConfigSaved(result)),
             Event::Timer(id) => Some(Action::Timer(id)),
             Event::CommandLog(line) => Some(Action::CommandLog(line)),
@@ -389,6 +390,7 @@ impl App {
                 }
             }
             Action::Github(id, response) => self.route_response(id, response, out),
+            Action::Git(id, response) => Self::route_git(id, &response),
             Action::ConfigSaved(Ok(())) => tracing::debug!("Saved the config"),
             Action::ConfigSaved(Err(message)) => {
                 tracing::error!("Failed to save config: {message}");
@@ -461,6 +463,12 @@ impl App {
     /// Whether a notifications refresh is running.
     pub fn notifications_refreshing(&self) -> bool {
         self.notifications.is_refreshing()
+    }
+
+    /// Hands a git response to whatever is waiting for it. Nothing asks git anything yet (#170 will claim
+    /// `OriginRepo` here), so every response is dropped.
+    fn route_git(id: RequestId, _response: &GitResponse) {
+        tracing::debug!("Dropping the response to request {id}: nothing is waiting for it");
     }
 
     /// Hands a response to the screen waiting for it.
@@ -694,7 +702,7 @@ mod tests {
 
     use super::*;
     use crate::clock::FakeClock;
-    use crate::effect::{GithubRequest, GithubResponse, TimerId};
+    use crate::effect::{GitRequest, GithubRequest, GithubResponse, TimerId};
     use crate::event::Signal;
     use crate::test_util::{LatestWins, LatestWinsAction, TestApp, key_event, logs};
 
@@ -1023,6 +1031,47 @@ mod tests {
             out,
             format!("DEBUG Dropping the response to request {id}: nothing is waiting for it\n")
         );
+    }
+
+    #[test]
+    fn an_unclaimed_git_response_is_dropped() {
+        let repo = lazy_github_core::models::RepoName::from_remote_url("git@github.com:o/n.git");
+        let mut app = TestApp::new(Config::default()).with_local_repo(repo.clone());
+        let id = app.with_cx(|cx| cx.git(GitRequest::OriginRepo));
+        assert_eq!(
+            app.effects().last(),
+            Some(&Effect::Git {
+                id,
+                request: GitRequest::OriginRepo
+            })
+        );
+        let out = logs(|| futures_util::FutureExt::now_or_never(app.settle()).unwrap());
+        assert_eq!(
+            out,
+            format!("DEBUG Dropping the response to request {id}: nothing is waiting for it\n")
+        );
+
+        // Fed straight in, as the runtime would deliver it: dropped the same way, with nothing else happening.
+        let before = app.effects().len();
+        let event = Event::Git {
+            id,
+            response: GitResponse::OriginRepo(repo),
+        };
+        let out = logs(|| {
+            app.send(event);
+        });
+        assert_eq!(
+            out,
+            format!("DEBUG Dropping the response to request {id}: nothing is waiting for it\n")
+        );
+        assert_eq!(app.effects().len(), before);
+    }
+
+    #[test]
+    fn git_and_github_requests_share_the_id_counter() {
+        let mut app = test_app();
+        let (github, git) = app.with_cx(|cx| (cx.request(GithubRequest::CheckAuth), cx.git(GitRequest::OriginRepo)));
+        assert!(git > github);
     }
 
     #[test]

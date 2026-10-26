@@ -5,8 +5,9 @@ use std::time::Duration;
 
 use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
+use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{Github, RepoListQuery};
-use lazy_github_core::models::{Repository, User};
+use lazy_github_core::models::{RepoName, Repository, User};
 
 /// Something the runtime does on the app's behalf.
 #[derive(Debug, Clone, PartialEq)]
@@ -18,7 +19,16 @@ pub enum Effect {
         /// What to ask GitHub.
         request: GithubRequest,
     },
-    /// Abort the request with this id, killing its `gh` child. Its response never arrives. A no-op once it finished.
+    /// Run `request` in the user's working directory, in the background. The result comes back as `Event::Git` with
+    /// the same `id`.
+    Git {
+        /// Which request this is, from the same counter as GitHub requests.
+        id: RequestId,
+        /// What to ask git.
+        request: GitRequest,
+    },
+    /// Abort the GitHub or git request with this id, killing its `gh` or `git` child. Its response never arrives. A
+    /// no-op once it finished.
     Cancel(RequestId),
     /// Save this snapshot of the config. Saves happen in order, and a newer pending save replaces an older one.
     SaveConfig(Box<Config>),
@@ -112,6 +122,29 @@ impl GithubRequest {
             GithubRequest::UnreadNotificationCount => {
                 GithubResponse::UnreadNotificationCount(gh.unread_notification_count().await)
             }
+        }
+    }
+}
+
+/// One `git` call in the user's working directory, as data.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GitRequest {
+    /// [`GitCli::origin_repo`]: the repo LazyGithub was launched in.
+    OriginRepo,
+}
+
+/// The result of a [`GitRequest`], in the variant of the same name.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GitResponse {
+    /// [`GitCli::origin_repo`]: `None` when there's no current-directory repo, whatever the reason.
+    OriginRepo(Option<RepoName>),
+}
+
+impl GitRequest {
+    /// Performs the request against `git`.
+    pub async fn run(self, git: &GitCli) -> GitResponse {
+        match self {
+            GitRequest::OriginRepo => GitResponse::OriginRepo(git.origin_repo().await),
         }
     }
 }

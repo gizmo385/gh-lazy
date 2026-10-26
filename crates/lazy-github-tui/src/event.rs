@@ -3,7 +3,7 @@
 use crossterm::event::{KeyEvent, MouseEvent};
 use lazy_github_core::logging::LogLine;
 
-use crate::effect::{GithubResponse, RequestId, TimerId};
+use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
 
 /// An input to the event loop: from the terminal, the runtime, the logger, the clock or the OS.
 #[derive(Debug)]
@@ -26,6 +26,13 @@ pub enum Event {
         id: RequestId,
         /// Its result.
         response: GithubResponse,
+    },
+    /// A `GitRequest` finished.
+    Git {
+        /// The id from the `Effect::Git` that started it.
+        id: RequestId,
+        /// Its result.
+        response: GitResponse,
     },
     /// An `Effect::SaveConfig` finished. The error is already rendered as text.
     ConfigSaved(Result<(), String>),

@@ -4,8 +4,10 @@
 //! `None` when missing. Serializing writes every field (`None` as `null`), the shape the Python app's pydantic models
 //! produce, so local table caches stay readable by both apps.
 
+mod repo_name;
 mod repository;
 mod user;
 
+pub use repo_name::RepoName;
 pub use repository::{Repository, RepositoryPermission};
 pub use user::User;

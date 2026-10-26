@@ -7,6 +7,7 @@ use std::time::Duration;
 use crossterm::event::{KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
 use lazy_github_core::github::FakeGithub;
+use lazy_github_core::models::RepoName;
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
@@ -16,7 +17,7 @@ use tokio::time::Instant;
 use crate::app::App;
 use crate::clock::{Clock as _, FakeClock};
 use crate::component::{Component, Cx, RenderCx};
-use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId, TimerId};
+use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::KeySpec;
 use crate::options::AppOptions;
@@ -27,11 +28,14 @@ const TEST_OPTIONS: AppOptions = AppOptions { animations: false };
 
 /// An [`App`] under test.
 ///
-/// Effects are recorded in [`Self::effects`] and performed against fakes: GitHub requests run on [`FakeGithub`] in
-/// [`Self::settle`], config saves succeed without touching the disk, and timers fire from [`Self::advance`].
+/// Effects are recorded in [`Self::effects`] and performed against fakes: GitHub requests run on [`FakeGithub`] and
+/// git requests are answered from [`Self::with_local_repo`] in [`Self::settle`], config saves succeed without
+/// touching the disk, and timers fire from [`Self::advance`].
 pub struct TestApp {
     app: App,
     gh: FakeGithub,
+    /// The working directory's `origin` repo, `None` for "not a repo".
+    local_repo: Option<RepoName>,
     clock: FakeClock,
     effects: Vec<Effect>,
     queued: VecDeque<Effect>,
@@ -101,6 +105,7 @@ impl TestApp {
         Self {
             app,
             gh,
+            local_repo: None,
             clock,
             effects: Vec::new(),
             queued: VecDeque::new(),
@@ -164,14 +169,33 @@ impl TestApp {
         self
     }
 
-    /// Runs queued GitHub requests on the [`FakeGithub`] and completes queued config saves, feeding each result
-    /// back, until nothing is left.
+    /// This app with its working directory in a git repo whose `origin` is `repo`; `None` (the default) means the
+    /// directory isn't a repo. Git requests are answered from it in [`Self::settle`].
+    #[must_use]
+    pub fn with_local_repo(mut self, repo: Option<RepoName>) -> Self {
+        self.local_repo = repo;
+        self
+    }
+
+    /// What git would answer `request` with in the [`Self::with_local_repo`] directory.
+    fn answer_git(&self, request: &GitRequest) -> GitResponse {
+        match request {
+            GitRequest::OriginRepo => GitResponse::OriginRepo(self.local_repo.clone()),
+        }
+    }
+
+    /// Runs queued GitHub requests on the [`FakeGithub`], answers queued git requests from
+    /// [`Self::with_local_repo`] and completes queued config saves, feeding each result back, until nothing is left.
     pub async fn settle(&mut self) {
         while let Some(effect) = self.queued.pop_front() {
             let event = match effect {
                 Effect::Github { id, request } => Event::Github {
                     id,
                     response: request.run(&self.gh).await,
+                },
+                Effect::Git { id, request } => Event::Git {
+                    id,
+                    response: self.answer_git(&request),
                 },
                 Effect::SaveConfig(_) => Event::ConfigSaved(Ok(())),
                 _ => continue,
@@ -272,10 +296,12 @@ impl TestApp {
     fn perform(&mut self, effects: Vec<Effect>) {
         for effect in effects {
             match &effect {
-                Effect::Github { .. } | Effect::SaveConfig(_) => self.queued.push_back(effect.clone()),
-                Effect::Cancel(id) => self
-                    .queued
-                    .retain(|queued| !matches!(queued, Effect::Github { id: queued, .. } if queued == id)),
+                Effect::Github { .. } | Effect::Git { .. } | Effect::SaveConfig(_) => {
+                    self.queued.push_back(effect.clone());
+                }
+                Effect::Cancel(id) => self.queued.retain(|queued| {
+                    !matches!(queued, Effect::Github { id: queued, .. } | Effect::Git { id: queued, .. } if queued == id)
+                }),
                 Effect::StartInterval { id, every } => {
                     let next = self.clock.now() + *every;
                     self.timers.entry(*id).or_insert(FakeTimer {
@@ -397,4 +423,39 @@ impl Component for LatestWins {
     }
 
     fn render(&mut self, _frame: &mut ratatui::Frame<'_>, _area: Rect, _cx: &RenderCx<'_>) {}
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn git_requests_are_answered_from_the_local_repo() {
+        let repo = RepoName::from_remote_url("https://github.com/o/n.git");
+        assert!(repo.is_some());
+        let app = TestApp::new(Config::default());
+        assert_eq!(app.answer_git(&GitRequest::OriginRepo), GitResponse::OriginRepo(None));
+        let app = app.with_local_repo(repo.clone());
+        assert_eq!(app.answer_git(&GitRequest::OriginRepo), GitResponse::OriginRepo(repo));
+    }
+
+    #[test]
+    fn settle_answers_queued_git_requests_and_cancel_drops_them() {
+        let mut app = TestApp::new(Config::default()).with_local_repo(RepoName::from_remote_url("git@h:o/n"));
+        let (kept, cancelled) = app.with_cx(|cx| {
+            let kept = cx.git(GitRequest::OriginRepo);
+            let cancelled = cx.git(GitRequest::OriginRepo);
+            cx.effect(Effect::Cancel(cancelled));
+            (kept, cancelled)
+        });
+        let queued = |app: &TestApp, wanted: RequestId| {
+            app.queued
+                .iter()
+                .any(|effect| matches!(effect, Effect::Git { id, .. } if *id == wanted))
+        };
+        assert!(queued(&app, kept));
+        assert!(!queued(&app, cancelled));
+        futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+        assert!(app.queued.is_empty());
+    }
 }

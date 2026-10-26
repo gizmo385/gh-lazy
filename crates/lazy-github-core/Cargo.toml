@@ -21,7 +21,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 serde_path_to_error = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["io-util", "macros", "process", "sync", "time"] }
+tokio = { workspace = true, features = ["fs", "io-util", "macros", "process", "sync", "time"] }
 tracing = { workspace = true }
 tracing-appender = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["fmt", "registry", "std"] }
@@ -30,6 +30,8 @@ tracing-subscriber = { workspace = true, features = ["fmt", "registry", "std"] }
 rstest = { workspace = true }
 # The diff `config_goldens_are_fresh` prints for a stale golden.
 similar = { workspace = true }
+# Throwaway git repos for the `GitCli` tests.
+tempfile = { workspace = true }
 tokio = { workspace = true, features = ["rt"] }
 
 [lints]

@@ -15,6 +15,7 @@ use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::{execute, terminal};
 use futures_util::StreamExt as _;
 use lazy_github_core::config::ConfigPaths;
+use lazy_github_core::git::GitCli;
 use lazy_github_core::github::Github;
 use lazy_github_core::logging::LogLine;
 use ratatui::Terminal;
@@ -198,14 +199,16 @@ impl Signals {
 
 /// Takes over the terminal and runs `app` until it quits, then gives the terminal back exactly as it was.
 ///
-/// `log_rx` is the command-log stream from `LoggingHandle`. Requests run against `gh` and config saves go to
-/// `paths`. Must be called inside a multi-threaded tokio runtime.
+/// `log_rx` is the command-log stream from `LoggingHandle`. Requests run against `gh`, git requests against `git`
+/// (in the user's working directory) and config saves go to `paths`. Must be called inside a multi-threaded tokio
+/// runtime.
 ///
 /// Returns an error when the terminal can't be set up or read, and when any thread panics. The panic hook restores
 /// the terminal at once, and the loop then stops instead of drawing into the restored screen.
 pub async fn run<G: Github>(
     mut app: App,
     gh: G,
+    git: GitCli,
     log_rx: mpsc::Receiver<LogLine>,
     paths: ConfigPaths,
 ) -> color_eyre::Result<()> {
@@ -231,7 +234,7 @@ pub async fn run<G: Github>(
     terminal.clear()?;
 
     let (tx, mut rx) = mpsc::unbounded_channel();
-    let mut runtime = Runtime::new(gh, tx, paths);
+    let mut runtime = Runtime::new(gh, git, tx, paths);
     let mut inputs = Inputs {
         term: TerminalEvents::spawn(),
         log: log_rx,
@@ -512,7 +515,7 @@ mod tests {
         );
         let (tx, mut rx) = mpsc::unbounded_channel();
         let paths = ConfigPaths::in_dir(std::env::temp_dir().join("lazy-github-tui-loop-test-unused"));
-        let mut runtime = Runtime::new(PanickingGithub, tx, paths);
+        let mut runtime = Runtime::new(PanickingGithub, GitCli::new(None), tx, paths);
         let (term_tx, term_rx) = mpsc::unbounded_channel();
         let (_log_tx, log_rx) = mpsc::channel(1);
         let mut inputs = Inputs {

@@ -4,6 +4,7 @@
 
 pub mod config;
 pub mod gh;
+pub mod git;
 pub mod github;
 pub mod logging;
 pub mod models;

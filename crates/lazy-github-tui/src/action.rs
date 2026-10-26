@@ -2,7 +2,7 @@
 
 use lazy_github_core::logging::LogLine;
 
-use crate::effect::{GithubResponse, RequestId, TimerId};
+use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
 use crate::keymap::BindingId;
 use crate::screens::auth::AuthAction;
 use crate::screens::main::{FocusTarget, MainAction};
@@ -49,6 +49,8 @@ pub enum Action {
     // Plumbing: results of effects and other runtime inputs, routed to their owner.
     /// A GitHub request finished.
     Github(RequestId, GithubResponse),
+    /// A git request finished.
+    Git(RequestId, GitResponse),
     /// A config save finished.
     ConfigSaved(Result<(), String>),
     /// A timer ticked.

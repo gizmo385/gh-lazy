@@ -361,6 +361,12 @@ wrong.
 
 - **Headers**: only `Content-Type`, `Link` and `Location` are kept. Everything else (`Date`, `Etag`,
   `X-Ratelimit-*`, `X-Github-Request-Id`, `X-Oauth-*`, ...) is dropped.
+- **`Link`**: GitHub writes page links at numeric-id paths, which fake-gh can't follow. Every URL (`next`, `prev`,
+  `first`, `last`) at `/repositories/<id><rest>`, `/user/<id><rest>` or `/organizations/<id><rest>` is mapped back to
+  the request's `/repos/<owner>/<repo><rest>`, `/users/<login><rest>` or `/orgs/<org><rest>`. Only the path changes;
+  the host, the query (including `after=` cursors), the `rel`s and their order are kept byte for byte. A URL whose
+  request path doesn't have the matching shape and the same `<rest>` is left as it is, and the post-write scrub check
+  reports it. `Location` isn't touched, since a `/repositories/<id>` redirect there is real.
 - **JSON bodies** (a JSON `Content-Type` and a body that parses), walked recursively:
   - `email`, `author_email` and `committer_email` string values become `user@example.com`. `null` stays `null`.
   - `avatar_url` becomes `https://avatars.githubusercontent.com/u/0?v=4`, and `gravatar_id` becomes `""`.
@@ -391,7 +397,7 @@ it couldn't read. After writing, the run checks the set with the scrub check and
 
 ### `cargo xtask check-fixtures`
 
-Runs the same secret, email, avatar, `private` and header rules over every fixture under `parity/fixtures/`
+Runs the same secret, email, avatar, `private`, header and numeric-id `Link` rules over every fixture under `parity/fixtures/`
 (hand-written ones included), without network, and exits 1 on any finding: anything the scrubber would have
 rewritten or refused. `body_file`s that aren't UTF-8 are treated as binary and skipped. `cargo test` runs it
 (`xtask/src/fixtures/check.rs`), so CI enforces it.

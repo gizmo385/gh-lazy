@@ -128,6 +128,32 @@ mod tests {
     }
 
     #[test]
+    fn a_numeric_id_link_fails_the_check() {
+        let tmp = TempDir::new("check-id-link");
+        let set = tmp.path().join("base");
+        write(
+            &set,
+            "repos/o/r/issues/GET.page-1.json",
+            &serde_json::json!({
+                "version": 1,
+                "request": {"method": "GET", "path": "/repos/o/r/issues", "query": {"page": "1"}},
+                "response": {"status": 200, "headers": {
+                    "Link": "<https://api.github.com/repositories/9/issues?page=2>; rel=\"next\", \
+                             <https://api.github.com/repositories/9/issues?page=3>; rel=\"last\""
+                }, "body": []}
+            })
+            .to_string(),
+        );
+        assert_eq!(
+            check_set(&set),
+            [
+                "base/repos/o/r/issues/GET.page-1.json: header Link: points at a numeric-id path \
+              (/repositories/<id>/...); should be the request's path"
+            ]
+        );
+    }
+
+    #[test]
     fn placeholders_and_binary_body_files_pass() {
         let tmp = TempDir::new("check-clean");
         let set = tmp.path().join("base");

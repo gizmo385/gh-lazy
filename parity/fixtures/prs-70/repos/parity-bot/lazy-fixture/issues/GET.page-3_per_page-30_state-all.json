@@ -13,7 +13,7 @@
     "status": 200,
     "headers": {
       "Content-Type": "application/json; charset=utf-8",
-      "Link": "<https://api.github.com/repositories/2000070/issues?state=all&page=2&per_page=30>; rel=\"prev\", <https://api.github.com/repositories/2000070/issues?state=all&page=1&per_page=30>; rel=\"first\""
+      "Link": "<https://api.github.com/repos/parity-bot/lazy-fixture/issues?state=all&page=2&per_page=30>; rel=\"prev\", <https://api.github.com/repos/parity-bot/lazy-fixture/issues?state=all&page=1&per_page=30>; rel=\"first\""
     },
     "body": [
       {

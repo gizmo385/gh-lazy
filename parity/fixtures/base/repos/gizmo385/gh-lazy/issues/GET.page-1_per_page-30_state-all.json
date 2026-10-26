@@ -13,7 +13,7 @@
     "status": 200,
     "headers": {
       "Content-Type": "application/json; charset=utf-8",
-      "Link": "<https://api.github.com/repositories/812868589/issues?page=2&per_page=30&state=all&after=Y3Vyc29yOnYyOpLPAAABoXDF_RDPAAAAAWbO-iA%3D>; rel=\"next\""
+      "Link": "<https://api.github.com/repos/gizmo385/gh-lazy/issues?page=2&per_page=30&state=all&after=Y3Vyc29yOnYyOpLPAAABoXDF_RDPAAAAAWbO-iA%3D>; rel=\"next\""
     },
     "body": [
       {

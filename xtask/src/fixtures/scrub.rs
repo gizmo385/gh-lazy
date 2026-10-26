@@ -8,7 +8,7 @@ use std::fmt;
 use std::sync::OnceLock;
 
 use fake_gh::fixture::{Fixture, canonical_header_name};
-use regex::Regex;
+use regex::{Captures, Regex};
 use serde_json::Value;
 
 use super::recipe::RecipeEntry;
@@ -150,6 +150,9 @@ pub enum Issue {
     /// key that GitHub only shows to push or admin viewers ([`VIEWER_ONLY_KEYS`]). When recording, the scrubber pins
     /// the first and drops the second. `check-fixtures` doesn't flag either, so hand-written fixtures can model an owner.
     Viewer,
+    /// A `Link` URL at a numeric-id path (`/repositories/<id>`, `/user/<id>`, `/organizations/<id>`). The scrubber
+    /// maps it to the request's path when the rest of the path matches, and otherwise leaves it for a person to fix.
+    IdLink,
 }
 
 impl Issue {
@@ -173,6 +176,9 @@ impl fmt::Display for Issue {
             Issue::Viewer => f.write_str(
                 "depends on who recorded: `permissions` should be read-only and push/admin-only repo keys absent",
             ),
+            Issue::IdLink => {
+                f.write_str("points at a numeric-id path (/repositories/<id>/...); should be the request's path")
+            }
         }
     }
 }
@@ -202,7 +208,17 @@ pub struct ScrubAbort {
 pub fn scrub(resp: RawResponse, entry: &RecipeEntry) -> Result<ScrubbedResponse, ScrubAbort> {
     let rules = Rules::get();
     let mut findings = Vec::new();
-    let headers = rules.filter_headers(resp.headers, &mut findings);
+    let mut headers = rules.filter_headers(resp.headers, &mut findings);
+    if let Some(link) = headers.get_mut("Link") {
+        let (rewritten, flagged) = rewrite_id_links(link, &entry.path);
+        if flagged {
+            findings.push(Finding {
+                location: Location::Header("Link".into()),
+                issue: Issue::IdLink,
+            });
+        }
+        *link = rewritten;
+    }
     let content_type = headers.get("Content-Type").map_or("", String::as_str);
 
     let body = if resp.body.is_empty() {
@@ -253,6 +269,8 @@ fn is_json_content_type(content_type: &str) -> bool {
 pub struct Rules {
     secrets: Vec<(&'static str, Regex)>,
     email: Regex,
+    /// One `<url>` in a `Link` value.
+    link_url: Regex,
 }
 
 impl Rules {
@@ -271,6 +289,7 @@ impl Rules {
                     ("Slack token", re(r"xox[baprs]-[A-Za-z0-9-]{10,}")),
                 ],
                 email: re(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
+                link_url: re(r"<([^>]*)>"),
             }
         })
     }
@@ -419,7 +438,15 @@ impl Rules {
             .iter()
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
-        self.filter_headers(headers, &mut findings);
+        let kept = self.filter_headers(headers, &mut findings);
+        if let Some(link) = kept.get("Link")
+            && rewrite_id_links(link, &fixture.request.path).1
+        {
+            findings.push(Finding {
+                location: Location::Header("Link".into()),
+                issue: Issue::IdLink,
+            });
+        }
         if let Some(body) = &fixture.response.body {
             self.scrub_json(&mut body.clone(), &mut String::new(), &mut findings, false);
         }
@@ -431,6 +458,88 @@ impl Rules {
         }
         findings
     }
+}
+
+/// A numeric-id path form that GitHub writes in `Link` URLs, and the request path it stands for.
+struct IdAlias {
+    /// `/repositories/`, followed by the id.
+    id_prefix: &'static str,
+    /// `/repos/`, followed by `names` slash-separated name segments.
+    named_prefix: &'static str,
+    names: usize,
+}
+
+const ID_ALIASES: [IdAlias; 3] = [
+    IdAlias {
+        id_prefix: "/repositories/",
+        named_prefix: "/repos/",
+        names: 2,
+    },
+    IdAlias {
+        id_prefix: "/user/",
+        named_prefix: "/users/",
+        names: 1,
+    },
+    IdAlias {
+        id_prefix: "/organizations/",
+        named_prefix: "/orgs/",
+        names: 1,
+    },
+];
+
+impl IdAlias {
+    /// The alias `path` uses, and the rest of the path after the id (`""` or starting with `/`).
+    fn split(path: &str) -> Option<(&'static IdAlias, &str)> {
+        ID_ALIASES.iter().find_map(|alias| {
+            let after = path.strip_prefix(alias.id_prefix)?;
+            let (id, rest) = after.split_at(after.find('/').unwrap_or(after.len()));
+            (!id.is_empty() && id.bytes().all(|b| b.is_ascii_digit())).then_some((alias, rest))
+        })
+    }
+
+    /// The rest of `request_path` after the part the id stands for (`/repos/<owner>/<repo>`), if it has that shape.
+    fn rest_of<'a>(&self, request_path: &'a str) -> Option<&'a str> {
+        let tail = request_path.strip_prefix(self.named_prefix)?;
+        let names: Vec<&str> = tail.splitn(self.names + 1, '/').take(self.names).collect();
+        if names.len() < self.names || names.iter().any(|name| name.is_empty()) {
+            return None;
+        }
+        let len = names.iter().map(|name| name.len()).sum::<usize>() + self.names - 1;
+        Some(&tail[len..])
+    }
+}
+
+/// Maps every numeric-id URL in a `Link` value back to `request_path`, changing only the URL's path: the host, the
+/// query, the `rel`s and their order are kept byte for byte. A URL is mapped only when `request_path` has the alias's
+/// shape and ends with the same rest of the path; otherwise it's left as it is. The flag is whether any numeric-id
+/// URL was seen, mapped or not: either way the input isn't what a fixture should hold.
+fn rewrite_id_links(link: &str, request_path: &str) -> (String, bool) {
+    let mut flagged = false;
+    let rewritten = Rules::get().link_url.replace_all(link, |caps: &Captures| {
+        let url = &caps[1];
+        let (start, end) = url_path_span(url);
+        let Some((alias, rest)) = IdAlias::split(&url[start..end]) else {
+            return caps[0].to_owned();
+        };
+        flagged = true;
+        if alias.rest_of(request_path) == Some(rest) {
+            format!("<{}{request_path}{}>", &url[..start], &url[end..])
+        } else {
+            caps[0].to_owned()
+        }
+    });
+    (rewritten.into_owned(), flagged)
+}
+
+/// The byte range of a URL's path: after `scheme://host`, up to the query or fragment. A URL with no scheme is taken
+/// to start with its path.
+fn url_path_span(url: &str) -> (usize, usize) {
+    let start = url.find("://").map_or(0, |scheme| {
+        let host = scheme + 3;
+        url[host..].find('/').map_or(url.len(), |slash| host + slash)
+    });
+    let end = url[start..].find(['?', '#']).map_or(url.len(), |i| start + i);
+    (start, end)
 }
 
 /// Image extensions that the email pattern mistakes for a TLD, as in `logo@2x.png`.
@@ -749,6 +858,137 @@ mod tests {
                 ),
                 ("Location".to_owned(), "https://example.com/logs.zip".to_owned()),
             ])
+        );
+    }
+
+    fn link_response(link: &str) -> RawResponse {
+        let mut resp = json_response(&json!([]));
+        resp.headers.push(("Link".into(), link.into()));
+        resp
+    }
+
+    fn id_link_finding() -> Finding {
+        Finding {
+            location: Location::Header("Link".into()),
+            issue: Issue::IdLink,
+        }
+    }
+
+    #[test]
+    fn each_numeric_id_alias_maps_to_the_request_path() {
+        for (link_path, request_path) in [
+            ("/repositories/812868589/issues", "/repos/gizmo385/gh-lazy/issues"),
+            ("/user/42/repos", "/users/gizmo385/repos"),
+            ("/organizations/7/repos", "/orgs/acme/repos"),
+            ("/repositories/1", "/repos/o/r"),
+        ] {
+            let link = format!("<https://api.github.com{link_path}?page=2>; rel=\"next\"");
+            assert_eq!(
+                rewrite_id_links(&link, request_path),
+                (
+                    format!("<https://api.github.com{request_path}?page=2>; rel=\"next\""),
+                    true
+                ),
+                "{link_path}"
+            );
+        }
+    }
+
+    #[test]
+    fn every_rel_is_rewritten_and_the_rest_is_kept() {
+        let id = "https://api.github.com/repositories/2000070/issues";
+        let named = "https://api.github.com/repos/parity-bot/lazy-fixture/issues";
+        let header = |base: &str| {
+            format!(
+                "<{base}?state=all&page=1&per_page=30>; rel=\"prev\", <{base}?state=all&page=3&per_page=30&after=Y3V%3D>; \
+                 rel=\"next\", <{base}?state=all&page=3&per_page=30>; rel=\"last\", <{base}?page=1>; rel=\"first\""
+            )
+        };
+        let mut entry = entry();
+        entry.path = "/repos/parity-bot/lazy-fixture/issues".into();
+        let out = scrub(link_response(&header(id)), &entry).unwrap();
+        assert_eq!(out.headers["Link"], header(named));
+        assert_eq!(rewrite_id_links(&header(id), &entry.path), (header(named), true));
+    }
+
+    /// Base's issues page was fixed by hand (#151), so `record-fixtures --set base --check` stays clean only if the
+    /// edit is exactly what the scrubber writes for GitHub's original header.
+    #[test]
+    fn base_issues_link_is_what_the_scrubber_writes() {
+        let recorded = "<https://api.github.com/repositories/812868589/issues?page=2&per_page=30&state=all&\
+                        after=Y3Vyc29yOnYyOpLPAAABoXDF_RDPAAAAAWbO-iA%3D>; rel=\"next\"";
+        let path = crate::fixtures::repo_root()
+            .join("parity/fixtures/base/repos/gizmo385/gh-lazy/issues/GET.page-1_per_page-30_state-all.json");
+        let fixture: Fixture = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+        let mut entry = entry();
+        entry.path.clone_from(&fixture.request.path);
+        let out = scrub(link_response(recorded), &entry).unwrap();
+        assert_eq!(out.headers["Link"], fixture.response.headers["Link"]);
+    }
+
+    #[test]
+    fn a_correct_link_is_unchanged_with_no_finding() {
+        let link = "<https://api.github.com/user/repos?page=2&per_page=30>; rel=\"next\", \
+                    <https://api.github.com/repos/o/r/issues?page=3>; rel=\"last\"";
+        assert_eq!(rewrite_id_links(link, "/user/repos"), (link.to_owned(), false));
+        let fixture: Fixture = serde_json::from_value(json!({
+            "version": 1,
+            "request": {"method": "GET", "path": "/user/repos"},
+            "response": {"status": 200, "headers": {"Link": link}}
+        }))
+        .unwrap();
+        let findings = Rules::get().check_fixture(&fixture, None);
+        assert!(findings.is_empty(), "{findings:?}");
+    }
+
+    #[test]
+    fn a_mismatched_rest_is_left_alone_and_reported() {
+        let link = "<https://api.github.com/repositories/9/pulls?page=2>; rel=\"next\"";
+        for request_path in [
+            "/repos/o/r/issues",
+            "/users/o/pulls",
+            "/repos/o",
+            "/repos/o/r/issues/pulls",
+        ] {
+            assert_eq!(
+                rewrite_id_links(link, request_path),
+                (link.to_owned(), true),
+                "{request_path}"
+            );
+        }
+        // A rewritable URL next to an unmappable one: the first is mapped, the second kept.
+        let mixed = "<https://api.github.com/repositories/9/issues?page=2>; rel=\"next\", \
+                     <https://api.github.com/user/9/repos?page=1>; rel=\"first\"";
+        assert_eq!(
+            rewrite_id_links(mixed, "/repos/o/r/issues").0,
+            "<https://api.github.com/repos/o/r/issues?page=2>; rel=\"next\", \
+             <https://api.github.com/user/9/repos?page=1>; rel=\"first\""
+        );
+        let fixture: Fixture = serde_json::from_value(json!({
+            "version": 1,
+            "request": {"method": "GET", "path": "/repos/o/r/issues"},
+            "response": {"status": 200, "headers": {"Link": link}}
+        }))
+        .unwrap();
+        assert_eq!(Rules::get().check_fixture(&fixture, None), [id_link_finding()]);
+        assert_eq!(
+            id_link_finding().to_string(),
+            "header Link: points at a numeric-id path (/repositories/<id>/...); should be the request's path"
+        );
+        assert!(!Issue::IdLink.aborts());
+    }
+
+    #[test]
+    fn location_is_not_rewritten() {
+        let mut resp = json_response(&json!({}));
+        resp.headers.push((
+            "Location".into(),
+            "https://api.github.com/repositories/812868589/issues/1".into(),
+        ));
+        let out = scrub(resp, &RecipeEntry::get("/repos/gizmo385/gh-lazy/issues/1")).unwrap();
+        assert_eq!(
+            out.headers["Location"],
+            "https://api.github.com/repositories/812868589/issues/1"
         );
     }
 

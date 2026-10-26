@@ -20,7 +20,7 @@ pub struct LazyLoad {
     batch_size: u32,
     /// The last page loaded.
     current_batch: u32,
-    /// False once a page came back empty.
+    /// False once a page came back as the last one.
     can_load_more: bool,
     /// The page asked for and not yet loaded.
     in_flight: Option<u32>,
@@ -51,7 +51,7 @@ impl LazyLoad {
         self.current_batch
     }
 
-    /// False once a page came back empty.
+    /// False once a page came back as the last one.
     pub fn can_load_more(&self) -> bool {
         self.can_load_more
     }
@@ -68,6 +68,24 @@ impl LazyLoad {
 pub(crate) fn should_load(items: usize, cursor: usize, lazy: &LazyLoad) -> Option<u32> {
     let remaining = items.saturating_sub(cursor);
     (lazy.can_load_more && remaining <= LOAD_MORE_BUFFER).then_some(lazy.current_batch + 1)
+}
+
+/// One page of items, as an owner hands it to [`SearchableTable::page_loaded`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Page<T> {
+    /// The page's items for this table, in API order.
+    pub items: Vec<T>,
+    /// The API has nothing after this page, which ends paging. A source that filters an API page sets it from the
+    /// unfiltered page, so a page with none of the table's own items still pages on (Py bug B44's recommendation).
+    pub last: bool,
+}
+
+impl<T> From<Vec<T>> for Page<T> {
+    /// A page of a source that doesn't filter: it's the last one when it's empty.
+    fn from(items: Vec<T>) -> Self {
+        let last = items.is_empty();
+        Self { items, last }
+    }
 }
 
 /// What [`SearchableTable::page_loaded`] did with a page.
@@ -129,12 +147,13 @@ impl<T: TableItem> SearchableTable<T> {
     ///
     /// A page from an older [`Self::generation`] (the table was cleared since), or one that isn't the page in
     /// flight, is dropped. A failure keeps the paging state, so the next cursor move asks again. Otherwise the items
-    /// are inserted as [`Self::insert_many`] does, and the cursor seen while the page was in flight is checked again.
+    /// are inserted as [`Self::insert_many`] does, a [`Page::last`] page ends paging, and the cursor seen while the
+    /// page was in flight is checked again. A page that adds no rows but isn't the last keeps paging on.
     pub fn page_loaded(
         &mut self,
         generation: u64,
         page: u32,
-        result: Result<Vec<T>, GhError>,
+        result: Result<Page<T>, GhError>,
         cx: &T::Ctx,
     ) -> PageLoaded<T::Key> {
         if generation != self.generation {
@@ -156,18 +175,18 @@ impl<T: TableItem> SearchableTable<T> {
         }
         lazy.in_flight = None;
         let pending = lazy.pending_cursor.take();
-        let items = match result {
-            Ok(items) => items,
+        let page = match result {
+            Ok(page) => page,
             Err(error) => {
                 tracing::warn!(page, %error, "loading the next page failed");
                 return PageLoaded::dropped();
             }
         };
         lazy.current_batch += 1;
-        if items.is_empty() {
+        if page.last {
             lazy.can_load_more = false;
         }
-        let first_rows = self.insert_many(items, cx);
+        let first_rows = self.insert_many(page.items, cx);
         // A page that filled an empty table already ran the check for cursor 0; otherwise re-check what was seen.
         let event = first_rows.or_else(|| pending.and_then(|cursor| self.check_load_more(cursor)));
         PageLoaded { applied: true, event }

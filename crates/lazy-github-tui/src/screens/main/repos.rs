@@ -2,7 +2,6 @@
 
 use lazy_github_core::github::RepoListQuery;
 use lazy_github_core::models::Repository;
-use ratatui::layout::Rect;
 use ratatui::style::{Color, Style};
 use ratatui::text::Span;
 
@@ -79,9 +78,6 @@ impl TableItem for Repository {
 pub struct ReposSection {
     pub(super) table: SearchableTable<Repository>,
     pending: Option<RequestId>,
-    /// Where the table component was drawn in the last frame: the box's interior, or the maximized rect. `None`
-    /// when it wasn't drawn.
-    pub(super) area: Option<Rect>,
 }
 
 impl std::fmt::Debug for ReposSection {
@@ -106,7 +102,6 @@ impl ReposSection {
         Self {
             table: SearchableTable::new(columns, SortSpec::ascending(0)).with_options(options),
             pending: None,
-            area: None,
         }
     }
 
@@ -162,12 +157,6 @@ impl ReposSection {
     /// The table, for reading its rows and cursor.
     pub fn table(&self) -> &SearchableTable<Repository> {
         &self.table
-    }
-
-    /// Where the table's own rows were drawn in the last frame (header, rows and any horizontal scrollbar), which
-    /// takes clicks.
-    pub(super) fn table_rect(&self) -> Option<Rect> {
-        self.area.map(|area| self.table.drawn_table_rect(area))
     }
 }
 

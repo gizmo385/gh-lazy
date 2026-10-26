@@ -134,7 +134,7 @@ fn a_move_that_leaves_the_cursor_in_place_runs_no_check() {
             per_page: 30
         })
     );
-    let page = table.page_loaded(0, 2, Ok(prs(4..=6)), &());
+    let page = table.page_loaded(0, 2, Ok(prs(4..=6).into()), &());
     assert!(page.applied);
     // Page 2 landed with nothing seen meanwhile, so nothing re-checks until the cursor moves.
     assert_eq!(page.event, None);
@@ -184,7 +184,7 @@ fn a_single_insert_into_an_empty_table_runs_the_check() {
 fn an_empty_page_stops_further_requests() {
     let mut table = thirty();
     assert_eq!(press(&mut table, "G"), load_more(0, 2, 30));
-    let page = table.page_loaded(0, 2, Ok(Vec::new()), &());
+    let page = table.page_loaded(0, 2, Ok(Vec::new().into()), &());
     assert!(
         page.applied,
         "the owner still writes its cache, as Python's add_items does"
@@ -197,6 +197,50 @@ fn an_empty_page_stops_further_requests() {
 }
 
 #[test]
+fn a_page_with_no_items_that_is_not_the_last_keeps_paging_on() {
+    // A PR table's page 2 held only issues: nothing to add, but the API has more (Py bug B44).
+    let mut table = thirty();
+    assert_eq!(press(&mut table, "G"), load_more(0, 2, 30));
+    let page = table.page_loaded(
+        0,
+        2,
+        Ok(Page {
+            items: Vec::new(),
+            last: false,
+        }),
+        &(),
+    );
+    assert!(page.applied);
+    assert_eq!(page.event, None);
+    let lazy = table.lazy_load().unwrap();
+    assert_eq!(
+        (lazy.current_batch(), lazy.can_load_more(), lazy.in_flight()),
+        (2, true, None)
+    );
+    // No eager chaining: the next cursor move asks for page 3.
+    assert_eq!(press(&mut table, "k"), load_more(0, 3, 30));
+}
+
+#[test]
+fn a_last_page_with_items_ends_paging() {
+    let mut table = thirty();
+    assert_eq!(press(&mut table, "G"), load_more(0, 2, 30));
+    let page = table.page_loaded(
+        0,
+        2,
+        Ok(Page {
+            items: prs(31..=32),
+            last: true,
+        }),
+        &(),
+    );
+    assert!(page.applied);
+    assert_eq!(table.items().len(), 32);
+    assert!(!table.lazy_load().unwrap().can_load_more());
+    assert_eq!(press(&mut table, "G"), Handled::Consumed);
+}
+
+#[test]
 fn a_page_in_flight_suppresses_duplicates_and_the_pending_cursor_is_rechecked_once() {
     let mut table = thirty();
     down_to(&mut table, 24);
@@ -206,7 +250,7 @@ fn a_page_in_flight_suppresses_duplicates_and_the_pending_cursor_is_rechecked_on
     assert_eq!(press(&mut table, "j"), Handled::Consumed);
     assert_eq!(press(&mut table, "k"), Handled::Consumed);
     // A short page 2: 32 items, and the highest cursor seen (27) leaves 5, so page 3 is asked for at once.
-    let page = table.page_loaded(0, 2, Ok(prs(31..=32)), &());
+    let page = table.page_loaded(0, 2, Ok(prs(31..=32).into()), &());
     assert!(page.applied);
     assert_eq!(
         page.event,
@@ -217,7 +261,7 @@ fn a_page_in_flight_suppresses_duplicates_and_the_pending_cursor_is_rechecked_on
         })
     );
     // The re-check ran once: page 3 landing has nothing left to re-check.
-    let page = table.page_loaded(0, 3, Ok(prs(33..=40)), &());
+    let page = table.page_loaded(0, 3, Ok(prs(33..=40).into()), &());
     assert!(page.applied);
     assert_eq!(page.event, None);
     assert_eq!(table.lazy_load().unwrap().current_batch(), 3);
@@ -229,7 +273,7 @@ fn a_pending_cursor_far_from_the_end_asks_for_nothing() {
     down_to(&mut table, 24);
     assert_eq!(press(&mut table, "j"), load_more(0, 2, 30));
     assert_eq!(press(&mut table, "j"), Handled::Consumed);
-    let page = table.page_loaded(0, 2, Ok(prs(31..=60)), &());
+    let page = table.page_loaded(0, 2, Ok(prs(31..=60).into()), &());
     assert!(page.applied);
     assert_eq!(page.event, None);
     assert_eq!(table.items().len(), 60);
@@ -269,7 +313,7 @@ fn clear_drops_a_late_page_by_generation() {
     table.enable_lazy_load(30, 1);
     assert_eq!(table.insert_many(prs(101..=130), &()), None);
     // The first repo's page 2 arrives late.
-    let page = table.page_loaded(0, 2, Ok(prs(31..=60)), &());
+    let page = table.page_loaded(0, 2, Ok(prs(31..=60).into()), &());
     assert!(!page.applied);
     assert_eq!(table.items().len(), 30);
     assert!(table.get(&31).is_none());
@@ -281,7 +325,7 @@ fn clear_drops_a_late_page_by_generation() {
 #[test]
 fn a_page_nobody_asked_for_is_dropped() {
     let mut table = thirty();
-    let page = table.page_loaded(0, 2, Ok(prs(31..=60)), &());
+    let page = table.page_loaded(0, 2, Ok(prs(31..=60).into()), &());
     assert!(!page.applied);
     assert_eq!(table.items().len(), 30);
 }
@@ -339,7 +383,7 @@ fn lazy_after_page_2() {
             per_page: 4
         })
     );
-    let page = table.page_loaded(0, 2, Ok(prs([7, 5, 3, 1])), &());
+    let page = table.page_loaded(0, 2, Ok(prs([7, 5, 3, 1]).into()), &());
     assert!(page.applied);
     assert_eq!(numbers(&table), [8, 7, 6, 5, 4, 3, 2, 1]);
     insta::assert_debug_snapshot!(draw(&mut table, Rect::new(0, 0, 30, 10)));

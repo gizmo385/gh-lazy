@@ -935,11 +935,11 @@ fn a_click_below_the_rows_focuses_nothing_and_one_on_the_header_focuses_the_tabl
 fn the_hit_rect_is_the_header_and_the_rows() {
     let mut app = with_repos(Config::default(), base_repos());
     app.render(100, 30);
-    let rect = app.app().main_screen().unwrap().repos().table_rect();
+    let rect = app.app().main_screen().unwrap().drawn_table_rect(SectionId::Repos);
     assert_eq!(rect, Some(ratatui::layout::Rect::new(1, 4, 38, 4)));
     let mut empty = TestApp::new(Config::default());
     empty.render(100, 30);
-    let rect = empty.app().main_screen().unwrap().repos().table_rect();
+    let rect = empty.app().main_screen().unwrap().drawn_table_rect(SectionId::Repos);
     assert_eq!(rect, Some(ratatui::layout::Rect::new(1, 4, 38, 1)));
 }
 
@@ -1473,7 +1473,12 @@ fn a_click_on_the_cursor_cell_focuses_the_repos_table_and_selects() {
     app.press(&["2"]);
     app.render(100, 30);
     // The header is the rect's first row and the cursor's cell, column 0 of row 0, is under it.
-    let rect = app.app().main_screen().unwrap().repos().table_rect().unwrap();
+    let rect = app
+        .app()
+        .main_screen()
+        .unwrap()
+        .drawn_table_rect(SectionId::Repos)
+        .unwrap();
     let out = logs(|| {
         app.click(rect.x + 1, rect.y + 1);
     });
@@ -1487,7 +1492,12 @@ fn a_click_on_another_row_moves_the_cursor_without_selecting() {
     let mut app = with_repos(Config::default(), octo_repos());
     app.press(&["2"]);
     app.render(100, 30);
-    let rect = app.app().main_screen().unwrap().repos().table_rect().unwrap();
+    let rect = app
+        .app()
+        .main_screen()
+        .unwrap()
+        .drawn_table_rect(SectionId::Repos)
+        .unwrap();
     let out = logs(|| {
         app.click(rect.x + 10, rect.y + 2);
     });
@@ -1664,4 +1674,49 @@ fn the_current_directory_match_ignores_ascii_case() {
     app.set_local_repo(local("Parity-Bot/DOTFILES"));
     assert_eq!(current_repo(&app), Some("parity-bot/dotfiles"));
     assert!(app.screen(100, 30).contains("Current repo: parity-bot/dotfiles"));
+}
+
+/// A stub section marked compact: three rows, titled with a dim ` (empty)`.
+fn compact_prs() -> TestApp {
+    let mut app = TestApp::new(Config::default());
+    app.app_mut()
+        .main_screen_mut()
+        .expect("on the main screen")
+        .set_compact(SectionId::PullRequests, true);
+    app
+}
+
+/// The cells of the PR box's title row that are dim, as `d`s.
+fn dim_title(app: &mut TestApp) -> String {
+    let buffer = app.render(100, 30);
+    let row = (0..30)
+        .find(|&y| buffer[(3, y)].symbol() == "[" && buffer[(4, y)].symbol() == "2")
+        .expect("the PR box's title row");
+    (0..100)
+        .map(|x| {
+            if buffer[(x, row)].modifier.contains(ratatui::style::Modifier::DIM) {
+                'd'
+            } else {
+                ' '
+            }
+        })
+        .collect::<String>()
+        .trim_end()
+        .to_owned()
+}
+
+#[test]
+fn compact_stub_section_100x30() {
+    let mut app = compact_prs();
+    insta::assert_snapshot!(app.screen(100, 30));
+    // `[2] Pull Requests ` is plain and `(empty)` dim.
+    assert_eq!(dim_title(&mut app), format!("{}ddddddd", " ".repeat(21)));
+}
+
+#[test]
+fn compact_stub_section_focused_100x30() {
+    let mut app = compact_prs();
+    app.press(&["2"]);
+    insta::assert_snapshot!(app.screen(100, 30));
+    assert_eq!(dim_title(&mut app), format!("{}ddddddd", " ".repeat(21)));
 }

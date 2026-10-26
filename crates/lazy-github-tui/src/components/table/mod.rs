@@ -21,7 +21,7 @@ use ratatui::Frame;
 use ratatui::layout::{Position as CellPosition, Rect};
 use tokio::time::Instant;
 
-pub use lazy::{LOAD_MORE_BUFFER, LazyLoad, PageLoaded};
+pub use lazy::{LOAD_MORE_BUFFER, LazyLoad, Page, PageLoaded};
 pub use model::{Body, CannotScroll, Cell, CellValue, Column, Horizontal, Position, SortSpec, TableItem};
 pub use py_repr::{is_printable, py_repr_row, py_repr_str};
 pub use search::TableFocus;
@@ -94,7 +94,7 @@ pub enum TableEvent<K> {
 }
 
 /// Whether the table took an input.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[must_use]
 pub enum Handled<E> {
     /// Not the table's: the owner passes it on, as Textual bubbles it to the parent.

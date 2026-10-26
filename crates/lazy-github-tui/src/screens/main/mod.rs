@@ -3,7 +3,13 @@
 
 mod details;
 pub mod layout;
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "no list section is mounted until #171, #172 and #173")
+)]
+mod list;
 mod repos;
+mod section_table;
 mod sections;
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
@@ -20,7 +26,7 @@ use crate::component::{BindingState, ChainLink, Component, Cx, Owner, RenderCx, 
 use crate::components::command_log::{CommandLog, Wheel};
 use crate::components::hatch::Hatch;
 use crate::components::info::{INFO_BINDINGS, Scroll};
-use crate::components::table::{Handled, SEARCHABLE_BINDINGS, SearchableTable, TABLE_BINDINGS, TableEvent, TableFocus};
+use crate::components::table::{Handled, SEARCHABLE_BINDINGS, TABLE_BINDINGS, TableFocus};
 use crate::components::text_input::{self, INPUT_BINDINGS};
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
@@ -30,7 +36,8 @@ use crate::theme::Theme;
 use details::DetailsPane;
 use layout::{LayoutInput, layout};
 pub use repos::{RepoCells, ReposSection};
-use sections::titled_box;
+use section_table::{SectionEvent, SectionTable, earliest_deadline};
+use sections::{EMPTY_SUFFIX, titled_box};
 
 /// The four selection sections, top to bottom.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -208,7 +215,7 @@ pub const LOG_BINDINGS: &[BindingId] = &[
 ];
 
 /// The rows an empty `DataTable` draws: its header row. The sections without a table yet take clicks on this row
-/// only, and maximized they're this tall. #171, #172 and #173 replace it with their tables' real height.
+/// only, and maximized they're this tall. The last of #171, #172 and #173 to mount its table deletes it.
 const EMPTY_TABLE_HEIGHT: u16 = 1;
 
 /// The main screen.
@@ -223,6 +230,9 @@ pub struct MainScreen {
     details: DetailsPane,
     command_log: CommandLog,
     repos: ReposSection,
+    /// Where each mounted section's table component was drawn in the last frame, by [`SectionId::index`]: the box's
+    /// interior, or the maximized rect. `None` when it wasn't drawn.
+    table_areas: [Option<Rect>; 4],
     /// Where each focus target was drawn last, for clicks: the interiors of the boxes, not their borders.
     hits: Vec<(Rect, FocusTarget)>,
 }
@@ -238,6 +248,17 @@ pub enum MainAction {
     WheelLog(Wheel),
     /// A click on the repos table's cursor cell: focus the table, then select the repo, in that order.
     ClickSelect(Box<Repository>),
+    /// A section's lazy table asked for `page` (a cursor key, a click or a search submit): its section requests it.
+    LoadMore {
+        /// The section whose table asked.
+        section: SectionId,
+        /// The table's generation when it asked.
+        generation: u64,
+        /// The page to fetch, from 1.
+        page: u32,
+        /// Items per page.
+        per_page: u32,
+    },
 }
 
 impl MainScreen {
@@ -265,6 +286,7 @@ impl MainScreen {
             details: DetailsPane::default(),
             command_log: CommandLog::new(appearance.show_command_log),
             repos: ReposSection::new(theme, options),
+            table_areas: [None; 4],
             hits: Vec::new(),
         }
     }
@@ -317,8 +339,10 @@ impl MainScreen {
         self.details.repo()
     }
 
-    /// Takes a response to one of the screen's requests, and hands back any other.
+    /// Takes a response to one of the screen's requests, and hands back any other: the repos section is offered it
+    /// first, then each mounted section's pane.
     pub fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
+        // #171, #172 and #173 offer what's left to their panes.
         self.repos.on_response(id, response, cx)
     }
 
@@ -327,9 +351,9 @@ impl MainScreen {
         &self.repos
     }
 
-    /// The next animation frame on the screen, if anything animates.
+    /// The next animation frame on the screen, if anything animates: the earliest over every mounted table.
     pub fn next_deadline(&self, now: Instant) -> Option<Instant> {
-        self.repos.table.next_deadline(now)
+        earliest_deadline(SectionId::ALL.into_iter().filter_map(|id| self.table(id)), now)
     }
 
     /// What has focus.
@@ -364,19 +388,39 @@ impl MainScreen {
         true
     }
 
-    /// The section's table, once it's built. #171, #172 and #173 add theirs.
-    fn table_mut(&mut self, id: SectionId) -> Option<&mut SearchableTable<Repository>> {
+    /// The section's table, once it's mounted. #171, #172 and #173 mount theirs.
+    fn table_mut(&mut self, id: SectionId) -> Option<&mut dyn SectionTable> {
         match id {
             SectionId::Repos => Some(&mut self.repos.table),
             SectionId::PullRequests | SectionId::Issues | SectionId::Workflows => None,
         }
     }
 
-    fn table(&self, id: SectionId) -> Option<&SearchableTable<Repository>> {
+    fn table(&self, id: SectionId) -> Option<&dyn SectionTable> {
         match id {
             SectionId::Repos => Some(&self.repos.table),
             SectionId::PullRequests | SectionId::Issues | SectionId::Workflows => None,
         }
+    }
+
+    /// Whether a section is compact: a mounted list section's own flag, as of its last `refresh_compact`, else the
+    /// stored one.
+    fn compact(&self, id: SectionId) -> bool {
+        // #171, #172 and #173 read their section's flag here.
+        self.sections[id.index()].compact
+    }
+
+    /// Requests the page a section's table asked for.
+    #[expect(clippy::unused_self, reason = "#171, #172 and #173 route their sections' asks here")]
+    fn load_more(&mut self, section: SectionId, generation: u64, page: u32, per_page: u32, cx: &mut Cx<'_>) {
+        // The repos table isn't lazy, and no list section is mounted yet.
+        let _ = (section, generation, page, per_page, cx);
+    }
+
+    /// Where the table itself (not its search box) was drawn in the last frame, which takes clicks.
+    pub(crate) fn drawn_table_rect(&self, id: SectionId) -> Option<Rect> {
+        let area = self.table_areas[id.index()]?;
+        Some(self.table(id)?.drawn_table_rect(area))
     }
 
     /// `common.table.search`: shows the section's search box and focuses it, keeping its text.
@@ -410,7 +454,7 @@ impl MainScreen {
         let handled = table.handle_key(key, keymap);
         // A submit moved the table's focus to the table.
         self.sync_table_focus(id);
-        Some(table_outcome(&handled).unwrap_or(Action::Consumed))
+        Some(table_outcome(id, handled).unwrap_or(Action::Consumed))
     }
 
     /// A bracketed paste, which only the focused search box takes.
@@ -424,7 +468,21 @@ impl MainScreen {
 
     /// The state of one section.
     pub fn section(&self, id: SectionId) -> SectionState {
-        self.sections[id.index()]
+        SectionState {
+            compact: self.compact(id),
+            ..self.sections[id.index()]
+        }
+    }
+
+    /// Every section's state, by [`SectionId::index`].
+    fn section_states(&self) -> [SectionState; 4] {
+        SectionId::ALL.map(|id| self.section(id))
+    }
+
+    /// Sets a section's stored compact flag, which a section without a table yet follows.
+    #[cfg(test)]
+    pub(crate) fn set_compact(&mut self, id: SectionId, compact: bool) {
+        self.sections[id.index()].compact = compact;
     }
 
     /// Hides or shows a section by a runtime toggle. M4's command palette drives this.
@@ -470,7 +528,7 @@ impl MainScreen {
             .flat_map(|id| {
                 let search = self
                     .table(id)
-                    .is_some_and(SearchableTable::search_visible)
+                    .is_some_and(SectionTable::search_visible)
                     .then_some(FocusTarget::Search(id));
                 search.into_iter().chain([FocusTarget::Table(id)])
             });
@@ -512,19 +570,24 @@ impl MainScreen {
     }
 
     /// A mouse event, against the last frame. A left press focuses what it lands on, and the wheel scrolls the widget
-    /// under the pointer, focused or not, as in Textual. The repos table also takes moves (its hover) and the click
-    /// that moves its cursor.
+    /// under the pointer, focused or not, as in Textual. The tables also take moves (their hover) and the click that
+    /// moves their cursor.
     pub fn handle_mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
         let at = Position::new(mouse.column, mouse.row);
-        if self.repos.area.is_some_and(|area| area.contains(at)) {
-            return self.repos_mouse(mouse, at);
-        }
-        // Moves elsewhere still reach the table, so its hover clears when the pointer leaves.
+        let over = SectionId::ALL
+            .into_iter()
+            .find(|&id| self.table_areas[id.index()].is_some_and(|area| area.contains(at)) && self.table(id).is_some());
+        // Moves elsewhere still reach the other tables, so their hover clears when the pointer leaves.
         if mouse.kind == MouseEventKind::Moved {
-            let _ = self
-                .repos
-                .table
-                .handle_mouse(mouse, self.repos.area.unwrap_or_default());
+            for id in SectionId::ALL.into_iter().filter(|&id| Some(id) != over) {
+                let area = self.table_areas[id.index()].unwrap_or_default();
+                if let Some(table) = self.table_mut(id) {
+                    let _ = table.handle_mouse(mouse, area);
+                }
+            }
+        }
+        if let Some(id) = over {
+            return self.table_mouse(id, mouse, at);
         }
         match mouse.kind {
             MouseEventKind::Down(MouseButton::Left) => self.hit(mouse.column, mouse.row).map(Action::Focus),
@@ -532,23 +595,24 @@ impl MainScreen {
         }
     }
 
-    /// A mouse event over the repos section's interior. A left press on the search box or the table focuses it: the
+    /// A mouse event over a mounted section's interior. A left press on the search box or the table focuses it: the
     /// table moves its own focus, and the screen follows it.
-    fn repos_mouse(&mut self, mouse: MouseEvent, at: Position) -> Option<Action> {
-        let on_table = self.repos.table_rect().is_some_and(|rect| rect.contains(at));
+    fn table_mouse(&mut self, id: SectionId, mouse: MouseEvent, at: Position) -> Option<Action> {
+        let on_table = self.drawn_table_rect(id).is_some_and(|rect| rect.contains(at));
         // Below the table's rows is its container, which neither scrolls nor takes focus.
         if Wheel::from_mouse(&mouse).is_some() && !on_table {
             return None;
         }
-        let area = self.repos.area.unwrap_or_default();
-        let overlay = self.repos.table.overlay_shown();
-        let handled = self.repos.table.handle_mouse(mouse, area);
+        let area = self.table_areas[id.index()].unwrap_or_default();
+        let table = self.table_mut(id)?;
+        let overlay = table.overlay_shown();
+        let handled = table.handle_mouse(mouse, area);
+        let focus = table.focus();
         match mouse.kind {
             // The loading overlay took it.
             _ if overlay => None,
             MouseEventKind::Down(MouseButton::Left) => {
-                let id = SectionId::Repos;
-                if self.repos.table.focus() == TableFocus::Search {
+                if focus == TableFocus::Search {
                     Some(Action::Focus(FocusTarget::Search(id)))
                 } else if on_table {
                     // A press on the table blurred the box, if it had focus.
@@ -560,14 +624,14 @@ impl MainScreen {
             }
             // A click on the cursor's cell: the press focused the table, and this release selects.
             _ => match handled {
-                Handled::Event(TableEvent::Selected(key)) => self
+                Handled::Event(SectionEvent::Selected) if id == SectionId::Repos => self
                     .repos
                     .table
-                    .get(&key)
+                    .selected()
                     .map(|repo| Action::Main(MainAction::ClickSelect(Box::new(repo.clone()))))
-                    // The key is the cursor row's, so it's always there.
+                    // The event is for the cursor's row, so it's always there.
                     .or(Some(Action::Consumed)),
-                handled => table_outcome(&handled),
+                handled => table_outcome(id, handled),
             },
         }
     }
@@ -618,18 +682,18 @@ impl MainScreen {
             }
             Owner::CommandLog => Scroll::from_binding(id).map(|scroll| Action::Main(MainAction::ScrollLog(scroll))),
             // The table is plain state, so it applies the binding now, as Textual runs the binding's action.
-            Owner::Table(SectionId::Repos) => match self.repos.table.on_binding(id) {
-                Handled::Event(TableEvent::Selected(key)) => self
+            Owner::Table(section) if let Some(table) = self.table_mut(section) => match table.on_binding(id) {
+                Handled::Event(SectionEvent::Selected) if section == SectionId::Repos => self
                     .repos
                     .table
-                    .get(&key)
+                    .selected()
                     .map(|repo| Action::SelectRepo(Box::new(repo.clone())))
-                    // The key is the cursor row's, so it's always there.
+                    // The event is for the cursor's row, so it's always there.
                     .or(Some(Action::Consumed)),
-                handled => table_outcome(&handled),
+                handled => table_outcome(section, handled),
             },
-            Owner::SearchableTable(SectionId::Repos) if id == BindingId::TableSearch => {
-                self.open_search(SectionId::Repos);
+            Owner::SearchableTable(section) if id == BindingId::TableSearch && self.table(section).is_some() => {
+                self.open_search(section);
                 Some(Action::Consumed)
             }
             // `handle_focused_key` already gave the box every key it binds.
@@ -665,7 +729,7 @@ impl MainScreen {
     fn layout(&self, area: Rect) -> layout::MainLayout {
         layout(&LayoutInput {
             area,
-            sections: self.sections,
+            sections: self.section_states(),
             focus: Some(self.focus),
             command_log: self.command_log.is_visible(),
         })
@@ -676,8 +740,10 @@ impl MainScreen {
     pub fn render_maximized(&mut self, frame: &mut Frame<'_>, area: Rect, maximized: FocusTarget, cx: &RenderCx<'_>) {
         let theme = cx.theme;
         let natural_height = match maximized {
-            FocusTarget::Table(SectionId::Repos) => Some(self.repos.table.bare_table_rect(area).height),
-            FocusTarget::Table(_) => Some(EMPTY_TABLE_HEIGHT),
+            FocusTarget::Table(id) => Some(
+                self.table(id)
+                    .map_or(EMPTY_TABLE_HEIGHT, |table| table.bare_table_rect(area).height),
+            ),
             FocusTarget::Search(_) => Some(text_input::HEIGHT),
             FocusTarget::DetailsTabs | FocusTarget::DetailsContent | FocusTarget::CommandLog => None,
         };
@@ -697,26 +763,28 @@ impl MainScreen {
         frame.render_widget(Block::new().style(Style::new().bg(theme.paint(screen))), rect);
 
         self.hits.clear();
-        self.repos.area = None;
-        let within = self.focus.section() == Some(SectionId::Repos);
-        let repos_cx = RenderCx {
-            focused: within,
-            focus_within: within,
-            ..*cx
-        };
+        self.table_areas = [None; 4];
         match maximized {
-            // Only the `DataTable`: the search box is outside it, even while it has focus.
-            FocusTarget::Table(SectionId::Repos) => {
-                self.repos.table.render_table(frame, rect, &repos_cx);
-                self.repos.area = Some(rect);
+            FocusTarget::Table(id) | FocusTarget::Search(id) => {
+                let within = self.focus.section() == Some(id);
+                let table_cx = RenderCx {
+                    focused: within,
+                    focus_within: within,
+                    ..*cx
+                };
+                if let Some(table) = self.table_mut(id) {
+                    if matches!(maximized, FocusTarget::Table(_)) {
+                        // Only the `DataTable`: the search box is outside it, even while it has focus. No loading
+                        // overlay either: Python's belongs to the container around it.
+                        table.render_table(frame, rect, &table_cx);
+                        self.table_areas[id.index()] = Some(rect);
+                    } else {
+                        // Only the `Input` (#156).
+                        table.render_search(frame, rect, &table_cx);
+                    }
+                }
                 self.hits.push((rect, maximized));
             }
-            // Only the `Input` (#156).
-            FocusTarget::Search(SectionId::Repos) => {
-                self.repos.table.render_search(frame, rect, &repos_cx);
-                self.hits.push((rect, maximized));
-            }
-            FocusTarget::Table(_) | FocusTarget::Search(_) => self.hits.push((rect, maximized)),
             // `DetailsContent` is never maximized (see `FocusTarget::maximizable`); it's here to keep the match total.
             FocusTarget::DetailsTabs | FocusTarget::DetailsContent => {
                 let hits = self.details.render(frame, rect, theme, self.focus);
@@ -731,14 +799,23 @@ impl MainScreen {
     }
 }
 
-/// What a table's answer to an input means for the screen. `None` lets the input fall through.
-fn table_outcome<K>(handled: &Handled<TableEvent<K>>) -> Option<Action> {
+/// What a section table's answer to an input means for the screen. `None` lets the input fall through.
+fn table_outcome(section: SectionId, handled: Handled<SectionEvent>) -> Option<Action> {
     match handled {
         Handled::Ignored => None,
-        // Only lazy tables ask for pages, and none is mounted yet (#171).
-        Handled::Consumed | Handled::Event(TableEvent::LoadMore { .. }) => Some(Action::Consumed),
+        Handled::Consumed => Some(Action::Consumed),
+        Handled::Event(SectionEvent::LoadMore {
+            generation,
+            page,
+            per_page,
+        }) => Some(Action::Main(MainAction::LoadMore {
+            section,
+            generation,
+            page,
+            per_page,
+        })),
         // The repos table's selections are taken before this; the other tables' select issues take theirs.
-        Handled::Event(TableEvent::Selected(_)) => Some(Action::Unimplemented(BindingId::TableSelect)),
+        Handled::Event(SectionEvent::Selected) => Some(Action::Unimplemented(BindingId::TableSelect)),
     }
 }
 
@@ -790,6 +867,12 @@ impl Component for MainScreen {
                 self.try_focus(FocusTarget::Table(SectionId::Repos));
                 cx.dispatch(Action::SelectRepo(repo));
             }
+            MainAction::LoadMore {
+                section,
+                generation,
+                page,
+                per_page,
+            } => self.load_more(section, generation, page, per_page, cx),
         }
     }
 
@@ -797,37 +880,46 @@ impl Component for MainScreen {
         let theme = cx.theme;
         let boxes = self.layout(area);
         self.hits.clear();
-        self.repos.area = None;
+        self.table_areas = [None; 4];
         let interior = |rect: Rect| rect.inner(Margin::new(1, 1));
 
         // `App` draws the status box into `Self::status_area`, from the current repo and unread count it holds.
-        for ((id, rect), title) in SectionId::ALL.into_iter().zip(boxes.sections).zip(&self.section_titles) {
-            if let Some(rect) = rect {
-                let focused = self.focus.section() == Some(id);
-                frame.render_widget(titled_box(title, rect.width, focused, theme), rect);
-                // Only the rows the `DataTable` draws take a click: below them is its unfocusable container.
-                let inner = interior(rect);
-                let table = if id == SectionId::Repos {
+        for (id, rect) in SectionId::ALL.into_iter().zip(boxes.sections) {
+            let Some(rect) = rect else { continue };
+            let focused = self.focus.section() == Some(id);
+            let suffix = self.compact(id).then_some(EMPTY_SUFFIX);
+            let title = titled_box(&self.section_titles[id.index()], suffix, rect.width, focused, theme);
+            frame.render_widget(title, rect);
+            // Only the rows the `DataTable` draws take a click: below them is its unfocusable container.
+            let inner = interior(rect);
+            let table_rect = match self.table_mut(id) {
+                Some(table) => {
                     // The table draws the box or itself focused, by its own `TableFocus`.
                     let cx = RenderCx {
                         focused,
                         focus_within: focused,
                         ..*cx
                     };
-                    self.repos.table.render(frame, inner, &cx);
-                    self.repos.area = Some(inner);
-                    self.repos.table.table_rect(inner)
-                } else {
-                    Rect {
-                        height: inner.height.min(EMPTY_TABLE_HEIGHT),
-                        ..inner
-                    }
-                };
-                self.hits.push((table, FocusTarget::Table(id)));
-            }
+                    table.render(frame, inner, &cx);
+                    let table_rect = table.table_rect(inner);
+                    self.table_areas[id.index()] = Some(inner);
+                    table_rect
+                }
+                None => Rect {
+                    height: inner.height.min(EMPTY_TABLE_HEIGHT),
+                    ..inner
+                },
+            };
+            self.hits.push((table_rect, FocusTarget::Table(id)));
         }
 
-        let details = titled_box(&self.details_title, boxes.details.width, self.focus.in_details(), theme);
+        let details = titled_box(
+            &self.details_title,
+            None,
+            boxes.details.width,
+            self.focus.in_details(),
+            theme,
+        );
         let inner = details.inner(boxes.details);
         frame.render_widget(details, boxes.details);
         let hits = self.details.render(frame, inner, theme, self.focus);
@@ -835,7 +927,10 @@ impl Component for MainScreen {
 
         if let Some(rect) = boxes.command_log {
             let focused = self.focus == FocusTarget::CommandLog;
-            frame.render_widget(titled_box(&self.command_log_title, rect.width, focused, theme), rect);
+            frame.render_widget(
+                titled_box(&self.command_log_title, None, rect.width, focused, theme),
+                rect,
+            );
             self.command_log.render(frame, interior(rect), theme, focused);
             self.hits.push((interior(rect), FocusTarget::CommandLog));
         }

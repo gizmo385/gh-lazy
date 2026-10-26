@@ -435,8 +435,8 @@ cargo xtask parity --validate              # check every scenario file, run noth
 | `--no-sync` | Skip `uv sync --frozen`. |
 | `--python PATH` | Run `PATH -m lazy_github` instead of the repo's `.venv/bin/python` (`.venv\Scripts\python.exe` on Windows). |
 | `--retries N` | Re-run a failed app run up to N times. A run that passes on retry is marked `flaky: true`. Default 0, or 1 with `--ci`. A Rust run in a scenario with `gate = false` is never retried, since it can't fail the gate. |
-| `--jobs N` | Run up to N scenarios in parallel. Default 1. |
-| `--ci` | Running in CI: `--retries 1` unless `--retries` is given, `--color never` for the nested `cargo build` and `uv sync`, and GitHub Actions annotations at the end of the output (see [CI](#ci)). |
+| `--jobs N` | Run up to N scenarios in parallel. Default: the CPU count, at most 4. More runs at once slow each app enough to risk timeouts. |
+| `--ci` | Running in CI: `--retries 1` unless `--retries` is given, each condition `wait` capped at 3 s in runs that can't fail the gate (the Rust side of a `gate = false` scenario, which usually times out waiting for something it can't draw yet; stability waits aren't capped), `--color never` for the nested `cargo build` and `uv sync`, and GitHub Actions annotations at the end of the output (see [CI](#ci)). |
 | `--validate` | Parse and validate the scenario files (all, or the ones named) and exit. |
 
 Exit codes:
@@ -949,7 +949,7 @@ mismatches takes the scenario's `fail` or `rust-not-ready` result.
 The parity gate runs in the single CI job of `.github/workflows/rust.yaml`, `fmt, clippy, test (ubuntu-latest)`, on
 every PR into `rust-main`, after fmt, clippy and the unit tests. It runs on Linux only, because macOS runners are too
 expensive (PLAN §7). It installs Python 3.11 and the app with `uv sync --frozen`, then runs
-`cargo xtask parity --all --ci --no-sync` and the `#[ignore]`d Python-backed tests
+`cargo xtask parity --all --ci --no-sync --jobs 4` (the runner's 4 vCPUs) and the `#[ignore]`d Python-backed tests
 (`cargo test -p fake-gh -p xtask -- --ignored`). There's no `paths` filter: every PR runs it. Pushes to `rust-main`
 run only fmt, clippy and the unit tests, because the squash-merged tree already passed the gate on its PR, and that
 run keeps the Rust cache warm for PRs.
@@ -965,7 +965,8 @@ ignored test fails:
 A run that fails and then passes on its one retry doesn't fail the job; `summary.md` marks its size `(flaky)`.
 
 **What doesn't gate.** The Rust side of a scenario with `gate = false` (`rust-not-ready`), the text diffs and the HTML
-report.
+report. Because of `--ci`'s 3 s wait cap, a CI `rust-not-ready` can also mean a ready step that needs longer than 3 s.
+Run the scenario locally without `--ci` before setting `gate = true`.
 
 **Annotations.** With `--ci`, the last lines of the output are workflow commands that GitHub shows on the run and
 on the scenario file in the PR:

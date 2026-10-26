@@ -65,7 +65,7 @@ jobs:
       run: uv sync --frozen
     - name: Parity scenarios
       if: github.event_name == 'pull_request'
-      run: cargo xtask parity --all --ci --no-sync
+      run: cargo xtask parity --all --ci --no-sync --jobs 4
     # Runs even when the parity step fails, so a PR that breaks both reports both.
     - name: Python-backed integration tests
       if: ${{ !cancelled() && steps.sync.outcome == 'success' }}

@@ -205,6 +205,8 @@ struct Session {
     stopped: bool,
     /// The end of the whole run's `timeout_ms`.
     deadline: Instant,
+    /// [`Timing::wait_cap`](super::scenario::Timing::wait_cap).
+    wait_cap: Option<Duration>,
     env_log: Option<std::path::PathBuf>,
     timing: super::scenario::Timing,
 }
@@ -271,6 +273,7 @@ impl Session {
             reader_done,
             stopped: false,
             deadline: Instant::now() + env.timing.timeout,
+            wait_cap: env.timing.wait_cap,
             env_log: env.log.clone(),
             timing: env.timing,
         })
@@ -368,6 +371,10 @@ impl Session {
     }
 
     fn wait(&mut self, until: &WaitFor, timeout: Duration) -> std::result::Result<(), StepError> {
+        let timeout = match (until, self.wait_cap) {
+            (WaitFor::Stable(_), _) | (_, None) => timeout,
+            (_, Some(cap)) => timeout.min(cap),
+        };
         let end = (Instant::now() + timeout).min(self.deadline);
         let mut stable: Option<(String, Instant)> = None;
         loop {

@@ -159,6 +159,21 @@ fn the_whole_run_is_bounded_by_timeout_ms() {
 }
 
 #[test]
+fn wait_cap_shortens_condition_waits_but_not_stability_waits() {
+    let out = tempfile::tempdir().unwrap();
+    let mut s = scenario(
+        "[[step]]\nwait = { text = \"settled\" }\n\n[[step]]\nwait = { stable_ms = 2500 }\n\n[[step]]\nwait = { text = \"never shown\", timeout_ms = 10000 }\n",
+    );
+    s.timing.wait_cap = Some(Duration::from_secs(2));
+    let started = Instant::now();
+    let status = run(&s, out.path());
+    // The stability wait outlasts the cap and still passes; the text wait gives up at the cap, not after 10 s.
+    assert_eq!(status.status, RunState::Timeout, "{status:?}");
+    assert_eq!(status.step, Some(2));
+    assert!(started.elapsed() < Duration::from_secs(8), "{:?}", started.elapsed());
+}
+
+#[test]
 fn an_early_exit_is_reported_with_its_code() {
     let out = tempfile::tempdir().unwrap();
     let s = scenario(

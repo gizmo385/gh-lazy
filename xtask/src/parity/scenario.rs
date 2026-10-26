@@ -223,6 +223,9 @@ pub struct Timing {
     pub key_delay: Duration,
     /// The implicit stability wait before each capture.
     pub capture_stable: Duration,
+    /// When set, the most any condition `wait` may take, whatever its `timeout_ms`. Stability waits aren't capped.
+    /// Never set from a scenario file: `--ci` sets it for runs that can't fail the gate.
+    pub wait_cap: Option<Duration>,
 }
 
 impl Default for Timing {
@@ -231,6 +234,7 @@ impl Default for Timing {
             timeout: DEFAULT_TIMEOUT,
             key_delay: DEFAULT_KEY_DELAY,
             capture_stable: DEFAULT_CAPTURE_STABLE,
+            wait_cap: None,
         }
     }
 }
@@ -460,6 +464,7 @@ impl Scenario {
             capture_stable: raw
                 .capture_stable_ms
                 .map_or(DEFAULT_CAPTURE_STABLE, Duration::from_millis),
+            wait_cap: None,
         };
 
         let env = parse_env(raw.env, &loc, roots)?;
@@ -809,7 +814,8 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
             Timing {
                 timeout: Duration::from_secs(20),
                 key_delay: Duration::from_millis(10),
-                capture_stable: Duration::from_millis(200)
+                capture_stable: Duration::from_millis(200),
+                wait_cap: None,
             }
         );
         assert_eq!(s.env.gh_auth, GhAuth::LoggedOut);

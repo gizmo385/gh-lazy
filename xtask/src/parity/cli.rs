@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::time::Duration;
 
 use super::check;
 use super::ci::{self, Finding};
@@ -62,11 +63,13 @@ pub struct ParityArgs {
     /// --ci]. A Rust run in a scenario with `gate = false` is never retried.
     #[arg(long, value_name = "N")]
     pub retries: Option<u32>,
-    /// Run up to N scenarios in parallel. Sizes and apps within a scenario always run one after another.
-    #[arg(long, value_name = "N", default_value_t = 1, value_parser = clap::value_parser!(u16).range(1..))]
-    pub jobs: u16,
-    /// Running in CI: retry failed runs once, print GitHub Actions `::error`/`::warning` annotations, and ask cargo
-    /// and uv for plain (uncolored) output.
+    /// Run up to N scenarios in parallel. Sizes and apps within a scenario always run one after another [default:
+    /// the CPU count, at most 4].
+    #[arg(long, value_name = "N", value_parser = clap::value_parser!(u16).range(1..))]
+    pub jobs: Option<u16>,
+    /// Running in CI: retry failed runs once, cap each wait at 3 s for runs that can't fail the gate (Rust in a
+    /// `gate = false` scenario), print GitHub Actions `::error`/`::warning` annotations, and ask cargo and uv for
+    /// plain (uncolored) output.
     #[arg(long)]
     pub ci: bool,
     /// Check every scenario file (or the ones named) without running anything.
@@ -169,9 +172,10 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
         sizes: &args.sizes,
         retries: args.retries.unwrap_or(u32::from(args.ci)),
         keep_home: args.keep_home,
+        cap_ungated_waits: args.ci,
         themes: &themes,
     };
-    let runs = run_all(&scenarios, &paths, &out, &options, usize::from(args.jobs));
+    let runs = run_all(&scenarios, &paths, &out, &options, jobs(args.jobs));
     let (summaries, annotations) = split_runs(runs, &scenarios, &repo, args.ci);
 
     let summary = Summary {
@@ -354,6 +358,8 @@ struct RunOptions<'a> {
     sizes: &'a [Size],
     retries: u32,
     keep_home: bool,
+    /// Cap the waits of runs that can't fail the gate at [`UNGATED_WAIT_CAP`].
+    cap_ungated_waits: bool,
     themes: &'a Themes,
 }
 
@@ -470,6 +476,22 @@ fn run_scenario(scenario: &Scenario, paths: &Paths, out: &Path, options: &RunOpt
     (summary, findings)
 }
 
+/// The most a condition wait may take in a run that can't fail the gate, under `--ci`. Such a run is usually a Rust
+/// side that can't draw what it waits for yet, so waiting out the scenario's `timeout_ms` (15 s or more) only costs
+/// CI time. The app is up within a second, so a ready step finishes well inside this.
+const UNGATED_WAIT_CAP: Duration = Duration::from_secs(3);
+
+/// `--jobs`, or the CPU count up to [`DEFAULT_MAX_JOBS`].
+fn jobs(arg: Option<u16>) -> usize {
+    arg.map_or_else(
+        || std::thread::available_parallelism().map_or(1, |n| n.get().min(DEFAULT_MAX_JOBS)),
+        usize::from,
+    )
+}
+
+/// More parallel runs than this start to slow each app enough to risk timeouts; 4 is what CI runners have.
+const DEFAULT_MAX_JOBS: usize = 4;
+
 /// Runs one app at one size, retrying a failure up to `options.retries` times. A run whose failure can't fail the
 /// gate (Rust in an ungated scenario) isn't retried: the retry would only cost time.
 fn run_app(
@@ -480,18 +502,18 @@ fn run_app(
     out: &Path,
     options: &RunOptions<'_>,
 ) -> Result<AppRunStatus> {
-    let retries = if ci::gates(scenario.gate, app) {
-        options.retries
-    } else {
-        0
-    };
+    let gates = ci::gates(scenario.gate, app);
+    let retries = if gates { options.retries } else { 0 };
     let mut attempt = 0;
     loop {
         if out.exists() {
             std::fs::remove_dir_all(out).with_context(|| format!("wiping {}", out.display()))?;
         }
         std::fs::create_dir_all(out).with_context(|| format!("creating {}", out.display()))?;
-        let env = env::prepare(scenario, app, size, paths, out, options.keep_home)?;
+        let mut env = env::prepare(scenario, app, size, paths, out, options.keep_home)?;
+        if options.cap_ungated_waits && !gates {
+            env.timing.wait_cap = Some(UNGATED_WAIT_CAP);
+        }
         let mut status = runner::run(env, &scenario.steps, out)?;
         if status.passed() || attempt >= retries {
             if status.passed() && attempt > 0 {
@@ -557,7 +579,7 @@ mod tests {
         assert_eq!(args.scenarios, ["startup"]);
         assert!(args.python_only && args.keep_home && args.no_build && args.no_sync && args.ci);
         assert_eq!(args.sizes, [Size { cols: 100, rows: 30 }, Size { cols: 80, rows: 24 }]);
-        assert_eq!((args.retries, args.jobs), (Some(2), 4));
+        assert_eq!((args.retries, args.jobs), (Some(2), Some(4)));
         let ci = parse(&["--all", "--ci", "--no-sync"]).unwrap();
         assert!(ci.all && ci.ci && ci.no_sync);
         assert_eq!(ci.retries, None);

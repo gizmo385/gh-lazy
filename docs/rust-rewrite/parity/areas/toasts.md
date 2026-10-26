@@ -8,25 +8,25 @@ listed with that modal under [Modals](./modals.md).
 
 | Id | Text | Severity / title | Python reference | Milestone | Status | Issue | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `toasts.settings-updated` | "Settings updated" | information | `ui/app.py` | M4 | not started | | |
+| `toasts.settings-updated` | "Settings updated" | information | `ui/app.py` | M4 | not started | #193 | |
 | `toasts.view-maximized` | "Current view maximized. Press escape to return." | information / "View Maximized" | `ui/app.py` | M1 | in progress | #75, #79 | Once per session. Emitted by #75; #79 draws it; scenarios `maximize` (`max`) and `toast-maximize`. Py bug B32. |
-| `toasts.select-repository-first` | "Please select a repository first!" | error / "Cannot open new pull request" | `ui/screens/primary.py` | M3 | not started | | Same title for issues (Py bug B14). |
+| `toasts.select-repository-first` | "Please select a repository first!" | error / "Cannot open new pull request" | `ui/screens/primary.py` | M3 | not started | #181, #184 | Same title for issues (Py bug B14). |
 | `toasts.error-fetching-pr` | "Error fetching pull request!" | error / "API Error" | `ui/screens/primary.py` | M2 | not started | | |
-| `toasts.opening-for-link` | "Opening pull request for link", "Opening issue for link", "Opening repository for link" | information | `ui/screens/primary.py` | M4 | not started | | |
-| `toasts.opening-for-notification` | "Opening repository for notification", "Opening pull request for notification" | information | `ui/screens/primary.py` | M4 | not started | | |
+| `toasts.opening-for-link` | "Opening pull request for link", "Opening issue for link", "Opening repository for link" | information | `ui/screens/primary.py` | M4 | not started | #197 | |
+| `toasts.opening-for-notification` | "Opening repository for notification", "Opening pull request for notification" | information | `ui/screens/primary.py` | M4 | not started | #190 | |
 | `toasts.notifications-login` | "Cannot load notifications - please login to the gh CLI: gh auth login" | error / "Failed to Load Notifiations" | `ui/screens/primary.py` | M1 | in progress | #81, #79 | Py bug B14: Rust's title is "Failed to Load Notifications". #79 draws it; scenario `command-log` (`shown`). |
-| `toasts.bug-report-error` | "Could not load LazyGithub repo! Please open the bug report on Github" | error / "Error opening bug report" | `ui/screens/primary.py` | M4 | not started | | |
+| `toasts.bug-report-error` | "Could not load LazyGithub repo! Please open the bug report on Github" | error / "Error opening bug report" | `ui/screens/primary.py` | M4 | not started | #195 | |
 | `toasts.nothing-selected` | "No repository currently selected" / "No pull request currently selected" / "No issue currently selected" | error | `ui/widgets/repositories.py`, `ui/widgets/pull_requests.py`, `ui/widgets/issues.py` | M2 | not started | | |
-| `toasts.edit-pr-already-merged` | "This PR has already been merged!" | warning | `ui/widgets/pull_requests.py` | M3 | not started | | |
-| `toasts.merge-already-merged` | "PR has already been merged!" | warning / "Already Merged" | `ui/widgets/pull_requests.py` | M3 | not started | | |
-| `toasts.pr-merged` | "Pull request N merged. Note some cached information on the UI may be out of date." | information / "PR Merged" | `ui/widgets/pull_requests.py` | M3 | not started | | |
-| `toasts.pr-merge-failed` | "Pull request N could not be merged" | error / "Error Merging PR" | `ui/widgets/pull_requests.py` | M3 | not started | | |
-| `toasts.comment-empty` | "Comment cannot be empty!" | warning | `ui/widgets/split_diff_viewer.py` | M3 | not started | | |
-| `toasts.comment-review-added` | "New comment added", "New review created!" | information | `ui/widgets/split_diff_viewer.py` | M3 | not started | | |
-| `toasts.review-status-missing` | "Please select a status for the new review!" | error | `ui/widgets/split_diff_viewer.py` | M3 | not started | | |
-| `toasts.rerun-started` | "Workflow run queued for re-run", "Failed jobs queued for re-run" | information / "Re-run Started" | `ui/widgets/workflow_run_details.py` | M3 | not started | | |
-| `toasts.rerun-failed` | "Failed to re-run workflow", "Failed to re-run failed jobs" | error / "Error" | `ui/widgets/workflow_run_details.py` | M3 | not started | | |
-| `toasts.workflow-nothing-to-trigger` | "No repository selected", "No workflows found in this repository" | warning | `ui/widgets/workflows.py` | M3 | not started | | |
-| `toasts.workflow-triggered` | "Successfully triggered workflow" | information | `ui/widgets/workflows.py` | M3 | not started | | |
-| `toasts.no-links-visible` | "No links visible" | information | `ui/widgets/link_hints.py` | M4 | not started | | |
-| `toasts.opening-externally` | "Opening <url> externally" | information | `ui/widgets/link_hints.py` | M4 | not started | | |
+| `toasts.edit-pr-already-merged` | "This PR has already been merged!" | warning | `ui/widgets/pull_requests.py` | M3 | not started | #185 | |
+| `toasts.merge-already-merged` | "PR has already been merged!" | warning / "Already Merged" | `ui/widgets/pull_requests.py` | M3 | not started | #183 | |
+| `toasts.pr-merged` | "Pull request N merged. Note some cached information on the UI may be out of date." | information / "PR Merged" | `ui/widgets/pull_requests.py` | M3 | not started | #183 | |
+| `toasts.pr-merge-failed` | "Pull request N could not be merged" | error / "Error Merging PR" | `ui/widgets/pull_requests.py` | M3 | not started | #183 | |
+| `toasts.comment-empty` | "Comment cannot be empty!" | warning | `ui/widgets/split_diff_viewer.py` | M3 | not started | #187 | |
+| `toasts.comment-review-added` | "New comment added", "New review created!" | information | `ui/widgets/split_diff_viewer.py` | M3 | not started | #187 | |
+| `toasts.review-status-missing` | "Please select a status for the new review!" | error | `ui/widgets/split_diff_viewer.py` | M3 | not started | #187 | |
+| `toasts.rerun-started` | "Workflow run queued for re-run", "Failed jobs queued for re-run" | information / "Re-run Started" | `ui/widgets/workflow_run_details.py` | M3 | not started | #188 | |
+| `toasts.rerun-failed` | "Failed to re-run workflow", "Failed to re-run failed jobs" | error / "Error" | `ui/widgets/workflow_run_details.py` | M3 | not started | #188 | |
+| `toasts.workflow-nothing-to-trigger` | "No repository selected", "No workflows found in this repository" | warning | `ui/widgets/workflows.py` | M3 | not started | #188 | |
+| `toasts.workflow-triggered` | "Successfully triggered workflow" | information | `ui/widgets/workflows.py` | M3 | not started | #188 | |
+| `toasts.no-links-visible` | "No links visible" | information | `ui/widgets/link_hints.py` | M4 | not started | #196 | |
+| `toasts.opening-externally` | "Opening <url> externally" | information | `ui/widgets/link_hints.py` | M4 | not started | #196 | |

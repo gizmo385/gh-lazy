@@ -513,7 +513,7 @@ impl Component for MainScreen {
         for ((id, rect), title) in SectionId::ALL.into_iter().zip(boxes.sections).zip(&self.section_titles) {
             if let Some(rect) = rect {
                 let focused = self.focus.section() == Some(id);
-                frame.render_widget(titled_box(title, focused, theme), rect);
+                frame.render_widget(titled_box(title, rect.width, focused, theme), rect);
                 // Only the rows the `DataTable` draws take a click: below them is its unfocusable container.
                 let inner = interior(rect);
                 let table = Rect {
@@ -524,7 +524,7 @@ impl Component for MainScreen {
             }
         }
 
-        let details = titled_box(&self.details_title, self.focus.in_details(), theme);
+        let details = titled_box(&self.details_title, boxes.details.width, self.focus.in_details(), theme);
         let inner = details.inner(boxes.details);
         frame.render_widget(details, boxes.details);
         let hits = self.details.render(frame, inner, theme, self.focus);
@@ -532,7 +532,7 @@ impl Component for MainScreen {
 
         if let Some(rect) = boxes.command_log {
             let focused = self.focus == FocusTarget::CommandLog;
-            frame.render_widget(titled_box(&self.command_log_title, focused, theme), rect);
+            frame.render_widget(titled_box(&self.command_log_title, rect.width, focused, theme), rect);
             self.command_log.render(frame, interior(rect), theme, focused);
             self.hits.push((interior(rect), FocusTarget::CommandLog));
         }

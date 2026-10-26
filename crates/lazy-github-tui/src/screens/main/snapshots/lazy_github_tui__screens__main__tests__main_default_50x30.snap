@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/screens/main/tests.rs
+expression: "screen(Config::default(), 50, 30)"
+---
+┌────────────────────────────────────────────────┐
+│No repository selected                          │
+└────────────────────────────────────────────────┘
+┌─ [1] Repositor… ─┐┌─ [5] Details ──────────────┐
+│                  ││ Introduction               │
+│                  ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━│
+│                  ││                            │
+│                  ││                            │
+│                  ││  LazyGithub: A Terminal    │
+│                  ││  UI For GitHub (0.1.0)     │
+│                  ││                            │
+│                  ││  LazyGithub is a           │
+└──────────────────┘│  terminal UI for         ▂▂│
+┌─ [2] Pull Requ… ─┐│  interacting with          │
+│                  ││  GitHub. You can get       │
+│                  ││  started by selecting      │
+│                  ││  one of the                │
+└──────────────────┘│  repositories listed in    │
+┌─ [3] Issues ─────┐│  the table on the left.    │
+│                  ││  Once you have selected    │
+│                  ││  a repository, any         │
+│                  ││  issues, pull requests,    │
+└──────────────────┘│  and action workflows      │
+┌─ [4] Workflows ──┐│  will be retrieved and     │
+│                  ││  displayed below it.       │
+│                  ││                            │
+│                  ││  Issues, pull requests,    │
+│                  ││  and action lists can      │
+└──────────────────┘└────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository

@@ -1,0 +1,31 @@
+version = 1
+description = "Main screen at 50 columns, where the 20-cell left column cuts the Repositories and Pull Requests titles with an ellipsis"
+gate = true
+parity_rows = ["main-layout.section-titles"]
+sizes = [[50, 30]]
+
+[env]
+fixtures = ["base"]
+
+# "Repositories" never appears whole at this width.
+[[step]]
+wait = { text = "[1] Repositor…", timeout_ms = 15000 }
+
+[[step]]
+capture = "start"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+capture = "prs"
+checks = ["titles", "focus"]
+
+# Box titles in pre-order by (row, col), as the structural check lists them: Details shares the Repositories row.
+[expect.start]
+pane_titles = ["", "[1] Repositor…", "[5] Details", "[2] Pull Requ…", "[3] Issues", "[4] Workflows"]
+focused = ["[1] Repositor…"]
+
+[expect.prs]
+focused = ["[2] Pull Requ…"]

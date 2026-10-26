@@ -26,6 +26,12 @@ fn main_default_100x30() {
     insta::assert_snapshot!(screen(Config::default(), 100, 30));
 }
 
+// The left column is 20 cells wide, too narrow for "[1] Repositories" and "[2] Pull Requests" (#149).
+#[test]
+fn main_default_50x30() {
+    insta::assert_snapshot!(screen(Config::default(), 50, 30));
+}
+
 #[test]
 fn main_command_log_160x48() {
     insta::assert_snapshot!(screen(config(|a| a.show_command_log = true), 160, 48));

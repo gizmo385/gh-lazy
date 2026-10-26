@@ -1,4 +1,10 @@
 //! `interpret` over the captured `gh` outputs in `tests/fixtures/gh/`.
+//!
+//! Captured from gh 2.101.0 against github.com, with `X-Github-Request-Id` scrubbed: `labels_http2`, `labels_http11`
+//! (`GODEBUG=http2client=0`), `no_content`, `not_found`, `readme_raw_real` and `paginated_merged`. Hand-written, for
+//! cases github.com can't produce on demand or edge cases the real output doesn't hit: `auth_required`,
+//! `network_error`, `paginated` (older gh's page-after-page form), `paginated_forbidden`, `paginated_page2_fails` and
+//! `readme_raw` (body lines that look like headers).
 
 use serde::Deserialize;
 
@@ -20,15 +26,20 @@ struct Label {
 fn assert_labels_ok(response: &GhResponse) {
     assert_eq!(response.status, 200);
     assert_eq!(response.header("content-type"), Some("application/json; charset=utf-8"));
-    assert_eq!(response.header("X-RATELIMIT-REMAINING"), Some("4999"));
+    // Header lookup ignores case; the value is whatever the capture had left.
+    assert!(
+        response
+            .header("X-RATELIMIT-REMAINING")
+            .is_some_and(|n| n.parse::<u32>().is_ok())
+    );
     assert_eq!(response.header("x-missing"), None);
     assert!(response.has_next_page());
     let labels: Vec<Label> = response.json().unwrap();
     assert_eq!(
         labels,
         [Label {
-            id: 1,
-            name: "bug".into()
+            id: 2_341_282_801,
+            name: "accessibility".into()
         }]
     );
 }
@@ -82,6 +93,17 @@ fn raw_readme_body_is_verbatim() {
 }
 
 #[test]
+fn raw_readme_from_github() {
+    let response = interpret(Some(0), fixture!("readme_raw_real.stdout"), b"", false).unwrap();
+    assert_eq!(response.status, 200);
+    assert_eq!(response.text(), "Hello World!\n");
+    assert_eq!(
+        response.header("content-type"),
+        Some("application/vnd.github.raw; charset=utf-8")
+    );
+}
+
+#[test]
 fn auth_required() {
     let error = interpret(
         Some(4),
@@ -125,6 +147,27 @@ fn paginated_pages_are_flattened() {
     let labels: Vec<Label> = decode_pages(&response.body).unwrap();
     let ids: Vec<u64> = labels.iter().map(|l| l.id).collect();
     assert_eq!(ids, [1, 2, 3]);
+}
+
+/// gh 2.101 merges the pages of a JSON array into one array (`repos/octocat/linguist/labels?per_page=3`: 3 pages, 7
+/// labels). Older versions print the pages one after another, as `paginated.stdout` has them.
+#[test]
+fn paginated_pages_merged_by_gh() {
+    let response = interpret(Some(0), fixture!("paginated_merged.stdout"), b"", true).unwrap();
+    let labels: Vec<Label> = decode_pages(&response.body).unwrap();
+    let names: Vec<&str> = labels.iter().map(|l| l.name.as_str()).collect();
+    assert_eq!(
+        names,
+        [
+            "bug",
+            "duplicate",
+            "enhancement",
+            "help wanted",
+            "invalid",
+            "question",
+            "wontfix"
+        ]
+    );
 }
 
 #[test]
@@ -174,6 +217,6 @@ fn realistic_headers() {
     assert!(response.header("etag").is_some_and(|etag| etag.starts_with("W/\"")));
     assert_eq!(
         response.header("x-oauth-scopes"),
-        Some("gist, read:org, repo, workflow")
+        Some("gist, notifications, read:org, repo, workflow")
     );
 }

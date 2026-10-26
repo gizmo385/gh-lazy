@@ -55,6 +55,19 @@ pub struct ParityArgs {
         conflicts_with = "rust_only"
     )]
     pub live_python: Option<Vec<String>>,
+    /// For CI: run Python live for every selected scenario if a Python-app, harness or CI-Python input changed
+    /// since REV (`git diff REV`), otherwise only for those whose recorded references changed. The rest read
+    /// their references.
+    #[arg(
+        long,
+        value_name = "REV",
+        conflicts_with_all = ["live_python", "python_only", "rust_only", "record", "check_references"]
+    )]
+    pub live_python_since: Option<String>,
+    /// With --live-python-since: print `live-python=all`, `live-python=none` or `live-python=a,b,c` and exit,
+    /// without building or running anything.
+    #[arg(long, requires = "live_python_since")]
+    pub plan: bool,
     /// Run at this size instead of the scenarios' sizes. Repeatable.
     #[arg(long = "size", value_name = "COLSxROWS")]
     pub sizes: Vec<Size>,
@@ -118,6 +131,22 @@ pub struct ParityArgs {
     pub fixtures_dir: Option<PathBuf>,
 }
 
+impl ParityArgs {
+    /// These flags with `--live-python-since` resolved to the `--live-python` that `live` amounts to.
+    fn with_live_plan(&self, live: &reference::LivePlan) -> Self {
+        let live_python = match live {
+            reference::LivePlan::All => Some(Vec::new()),
+            reference::LivePlan::None => None,
+            reference::LivePlan::Some(names) => Some(names.clone()),
+        };
+        Self {
+            live_python,
+            live_python_since: None,
+            ..self.clone()
+        }
+    }
+}
+
 /// The repository root: xtask lives one level below it.
 pub fn repo_root() -> PathBuf {
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -168,6 +197,10 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     }
     if args.record {
         return record_references(&repo, &scenarios, roots, args);
+    }
+    if let Some(rev) = args.live_python_since.as_deref().filter(|_| args.plan) {
+        println!("{}", reference::plan(&repo, rev, &scenarios)?);
+        return Ok(EXIT_OK);
     }
     let themes = Themes::load(&repo.join("parity/themes.toml"))?;
     run_scenarios(&repo, &scenarios, &roots, &themes, args, None)
@@ -318,6 +351,16 @@ pub fn run_scenarios(
     args: &ParityArgs,
     paths: Option<Paths>,
 ) -> Result<u8> {
+    let planned;
+    let args = match &args.live_python_since {
+        Some(rev) => {
+            let live = reference::plan(repo, rev, scenarios)?;
+            println!("parity: {live} (since {rev})");
+            planned = args.with_live_plan(&live);
+            &planned
+        }
+        None => args,
+    };
     let plan = Plan::new(args, scenarios)?;
     let freshness = freshnesses(repo, scenarios, &plan, &args.sizes, roots)?;
     let problems = problems_reading(scenarios, &plan, &args.sizes, &freshness);
@@ -1115,6 +1158,63 @@ mod tests {
                 "{command:?}: {err}"
             );
         }
+    }
+
+    #[test]
+    fn live_python_since_takes_a_rev_and_plan_needs_it() {
+        let args = parse(&["--all", "--ci", "--live-python-since", "HEAD^1", "--plan"]).unwrap();
+        assert_eq!(args.live_python_since.as_deref(), Some("HEAD^1"));
+        assert!(args.plan && args.all && args.ci);
+        assert!(!parse(&["--live-python-since", "main"]).unwrap().plan);
+        for flag in [
+            &["--live-python"][..],
+            &["--live-python=a"],
+            &["--python-only"],
+            &["--rust-only"],
+            &["--record"],
+            &["--check-references"],
+        ] {
+            let command = [&["--live-python-since", "HEAD"][..], flag].concat();
+            let err = parse(&command).map(|_| ()).expect_err(&command.join(" "));
+            assert_eq!(
+                err.kind(),
+                clap::error::ErrorKind::ArgumentConflict,
+                "{command:?}: {err}"
+            );
+        }
+        let err = parse(&["--plan"]).map(|_| ()).expect_err("--plan alone");
+        assert_eq!(err.kind(), clap::error::ErrorKind::MissingRequiredArgument, "{err}");
+    }
+
+    #[test]
+    fn a_live_plan_becomes_the_live_python_it_amounts_to() {
+        use PythonSource::{Live, Recorded};
+        use reference::LivePlan;
+
+        let args = parse(&["--live-python-since", "HEAD"]).unwrap();
+        let resolve = |live: LivePlan| {
+            let resolved = args.with_live_plan(&live);
+            assert_eq!(resolved.live_python_since, None);
+            Plan::new(&resolved, &plan_scenarios()).unwrap().python
+        };
+        assert_eq!(resolve(LivePlan::All), [Some(Live), Some(Live), Some(Live), None]);
+        assert_eq!(
+            resolve(LivePlan::None),
+            [Some(Recorded), Some(Recorded), Some(Recorded), None]
+        );
+        assert_eq!(
+            resolve(LivePlan::Some(vec!["b".into()])),
+            [Some(Recorded), Some(Live), Some(Recorded), None]
+        );
+    }
+
+    #[test]
+    fn a_live_plan_prints_as_one_output_line() {
+        use reference::LivePlan;
+        assert_eq!(LivePlan::All.to_string(), "live-python=all");
+        assert_eq!(LivePlan::None.to_string(), "live-python=none");
+        let some = LivePlan::Some(vec!["startup".into(), "table-search".into()]);
+        assert_eq!(some.to_string(), "live-python=startup,table-search");
     }
 
     #[test]

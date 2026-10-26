@@ -34,9 +34,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
+    # Two commits deep: in a pull_request run the checkout is the PR's merge commit, and its first parent, HEAD^1, is
+    # the base tip the parity plan diffs against.
     - uses: actions/checkout@v6
       with:
         persist-credentials: false
+        fetch-depth: 2
     # rust-toolchain.toml is the single source of truth for the toolchain version and components.
     - name: Install toolchain
       run: rustup toolchain install
@@ -51,29 +54,49 @@ jobs:
       run: cargo test --workspace --locked
 
     # The parity gate: every scenario against both apps. It runs on PRs only: a squash merge's tree already passed it
-    # on the PR. The exit code of `cargo xtask parity` is the gate; the HTML report is uploaded for humans and the
-    # parity reviewer.
-    - uses: astral-sh/setup-uv@v7
+    # on the PR, and on rust-main the Test step above still fails at once on a stale recorded reference. The exit code
+    # of `cargo xtask parity` is the gate; the HTML report is uploaded for humans and the parity reviewer.
+    #
+    # Python's side comes from the recorded references in parity/references/ unless the PR changed something Python
+    # depends on. xtask decides the plan from the same path lists that decide whether a reference is fresh
+    # (parity/README.md, "CI"):
+    #   live-python=all   the Python app, the capture harness, a Python-backed test, a golden's files or this
+    #                     workflow changed: every scenario runs Python live, then the Python-backed tests run;
+    #   live-python=a,b   only these scenarios' references changed: they run Python live, which checks that the
+    #                     recording reproduces here;
+    #   live-python=none  no uv and no Python: Rust runs against the references.
+    - name: Plan the parity run
+      id: plan
       if: github.event_name == 'pull_request'
+      run: cargo xtask parity --all --live-python-since HEAD^1 --plan >> "$GITHUB_OUTPUT"
+    - uses: astral-sh/setup-uv@v7
+      if: steps.plan.outcome == 'success' && steps.plan.outputs.live-python != 'none'
       with:
         enable-cache: true
         cache-dependency-glob: uv.lock
         python-version: "3.11"
     - name: Install the Python app
       id: sync
-      if: github.event_name == 'pull_request'
+      if: steps.plan.outcome == 'success' && steps.plan.outputs.live-python != 'none'
       run: uv sync --frozen
     - name: Parity scenarios
       if: github.event_name == 'pull_request'
-      run: cargo xtask parity --all --ci --no-sync --jobs 4
+      run: cargo xtask parity --all --ci --no-sync --jobs 4 --live-python-since HEAD^1
     # Runs even when the parity step fails, so a PR that breaks both reports both.
     - name: Python-backed integration tests
-      if: ${{ !cancelled() && steps.sync.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.plan.outputs.live-python == 'all' && steps.sync.outcome == 'success' }}
       run: cargo test --locked -p fake-gh -p xtask -p lazy-github-tui -p lazy-github-core -- --ignored
     - name: Job summary
       if: ${{ always() && github.event_name == 'pull_request' }}
       shell: bash
+      env:
+        LIVE_PYTHON: ${{ steps.plan.outputs.live-python }}
       run: |
+        if [ -n "$LIVE_PYTHON" ]; then
+          printf 'Parity plan: %s\n\n' "\`live-python=$LIVE_PYTHON\`" >> "$GITHUB_STEP_SUMMARY"
+        else
+          printf 'Parity plan failed (see log).\n\n' >> "$GITHUB_STEP_SUMMARY"
+        fi
         if [ -f parity/reports/latest/summary.md ]; then
           cat parity/reports/latest/summary.md >> "$GITHUB_STEP_SUMMARY"
         else

@@ -143,7 +143,10 @@ The Python side doesn't have to run every time. Its screens and request logs are
 `parity/references/`, with a manifest hashing every input that could change them (the Python app, fixtures, the
 harness), and `cargo xtask parity --record` re-records only the stale ones, writing a reference only when two Python
 runs agree. `--check-references` fails on a stale or missing reference. Runs compare Rust against these references
-and run Python live only when its inputs change (#150). See "Recorded references" in `parity/README.md`.
+and run Python live only when its inputs change (#150): in CI, `--live-python-since HEAD^1` runs every scenario's
+Python live when a PR touches the Python app, the harness, a Python-backed test, a golden's files or the workflow,
+only the scenarios whose references changed otherwise, and none at all on most PRs (#165). See "Recorded references"
+and "CI" in `parity/README.md`.
 
 **6.4 Rust-only snapshots.** Components get `insta` snapshots of `TestBackend` buffers so regressions show up in normal
 `cargo test`, independent of the Python app.
@@ -151,10 +154,11 @@ and run Python live only when its inputs change (#150). See "Recorded references
 ## 7. Cross-platform
 
 - CI: one required job on `ubuntu-latest`, `fmt, clippy, test (ubuntu-latest)`, which also runs the parity gate on
-  PRs. macOS stays a first-class target, but its runners cost about 10x Linux minutes, so CI doesn't run it (Chris,
-  2026-10-25). macOS-only code paths (`cfg!(target_os = "macos")`, the parity
-  harness's `TMPDIR`) are checked locally on a Mac before merge, and macOS gaps get a `platform: macos` label. Windows
-  isn't built or tested until later in the project; `windows-latest` joins the matrix in M5.
+  PRs, installing and running Python only when the parity plan says a PR changed a Python input (§6.3). macOS stays
+  a first-class target, but its runners cost about 10x Linux minutes, so CI doesn't run it (Chris, 2026-10-25).
+  macOS-only code paths (`cfg!(target_os = "macos")`, the parity harness's `TMPDIR`) are checked locally on a Mac
+  before merge, and macOS gaps get a `platform: macos` label. Windows isn't built or tested until later in the
+  project; `windows-latest` joins the matrix in M5.
 - No shelling out except to `gh` and `git`; no `sh -c`. Paths via `std::path` and `etcetera`.
 - `fake-gh` is Rust, not a shell script, so the parity harness runs on all three OSes.
 - Recorded parity references are checked out with LF line endings on every OS (`.gitattributes`), so their hashes

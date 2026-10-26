@@ -299,3 +299,72 @@ fn the_stale_line_names_the_way_around_it() {
     }
     assert!(!out.exists());
 }
+
+impl Repo {
+    fn git(&self, args: &[&str]) {
+        let status = Command::new("git")
+            .args([
+                "-c",
+                "user.name=t",
+                "-c",
+                "user.email=t@example.com",
+                "-c",
+                "commit.gpgsign=false",
+            ])
+            .args(args)
+            .current_dir(self.path())
+            .status()
+            .unwrap();
+        assert!(status.success(), "git {args:?}");
+    }
+}
+
+/// `--live-python-since` reads every reference when nothing Python-related changed, and runs Python live (checked
+/// for drift) for a scenario whose reference changed.
+#[test]
+fn live_python_since_runs_python_only_where_its_reference_changed() {
+    let repo = Repo::recorded();
+    // Out of the diff, like the report directory in a real checkout.
+    repo.write(".gitignore", "/out/\n/record/\n");
+    repo.git(&["add", "-A"]);
+    repo.git(&["commit", "-qm", "recorded"]);
+    let (code, out) = repo.run(&["--live-python-since", "HEAD"], PathBuf::from("/nonexistent/python"));
+    assert_eq!(code, EXIT_OK);
+    let status = read_json(&out.join("steady/80x24/python/status.json"));
+    assert_eq!(status["recorded"], true, "{status:#}");
+
+    // Commit a different screen, then put the recorded one back: the reference differs from HEAD.
+    let screen = repo.path().join(STEADY).join("main.screen");
+    let recorded = std::fs::read_to_string(&screen).unwrap();
+    std::fs::write(&screen, recorded.replace("size 80x24", "size 80x99")).unwrap();
+    repo.git(&["commit", "-qam", "tampered"]);
+    std::fs::write(&screen, &recorded).unwrap();
+    let (code, out) = repo.run(&["--live-python-since", "HEAD"], echo_tui());
+    assert_eq!(code, EXIT_OK);
+    let status = read_json(&out.join("steady/80x24/python/status.json"));
+    assert!(status.get("recorded").is_none(), "{status:#}");
+    assert!(out.join("steady/80x24/python/pty.raw").is_file());
+    let check = read_json(&out.join("steady/80x24/main.check.json"));
+    assert!(check.get("drift").is_none(), "{check:#}");
+    let md = std::fs::read_to_string(out.join("summary.md")).unwrap();
+    assert!(md.contains("\n\nPython: live\n\n"), "{md}");
+}
+
+/// The binary against the real repo: `--plan` prints one `live-python=` line and nothing else, and exits 0 before
+/// it builds anything (a nested `cargo build` would wait on this test run's lock).
+#[test]
+fn plan_prints_one_output_line_without_building() {
+    let output = Command::new(env!("CARGO_BIN_EXE_xtask"))
+        .args(["parity", "--all", "--live-python-since", "HEAD", "--plan"])
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(0), "{stdout}{stderr}");
+    assert!(stderr.is_empty(), "{stderr}");
+    let value = stdout
+        .strip_prefix("live-python=")
+        .and_then(|rest| rest.strip_suffix('\n'))
+        .unwrap_or_else(|| panic!("{stdout:?}"));
+    assert!(!value.is_empty() && !value.contains(['\n', ' ']), "{stdout:?}");
+}

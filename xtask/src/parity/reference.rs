@@ -47,6 +47,14 @@ pub const HARNESS_INPUTS: &[&str] = &[
     "xtask/src/parity/keys.rs",
     "xtask/src/parity/grid.rs",
 ];
+/// Paths that need live Python in CI without being reference inputs: the Python-backed `#[ignore]`d tests and the
+/// workflow itself. [`plan`] adds every path the `parity/goldens/*.toml` manifests name.
+pub const CI_PYTHON_PATHS: &[&str] = &[
+    "xtask/tests/python_app.rs",
+    "xtask/tests/structural_check.rs",
+    "crates/fake-gh/tests/python_client.rs",
+    ".github/workflows/rust.yaml",
+];
 /// Crates whose versions are part of `harness`, as `Cargo.lock` pins them.
 pub const PINNED_CRATES: &[&str] = &["vt100", "portable-pty"];
 
@@ -969,6 +977,13 @@ pub fn harness_hash(repo: &Path) -> Result<String> {
 /// `name version` for each of [`PINNED_CRATES`] in `repo`'s `Cargo.lock`, sorted. A crate locked at two versions
 /// appears twice.
 fn pinned_versions(repo: &Path) -> Result<Vec<(String, String)>> {
+    let path = repo.join("Cargo.lock");
+    let text = std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    pinned_versions_in(&text, &path.display().to_string())
+}
+
+/// [`pinned_versions`] of a `Cargo.lock` with contents `text`, named `shown` in errors.
+fn pinned_versions_in(text: &str, shown: &str) -> Result<Vec<(String, String)>> {
     #[derive(Deserialize)]
     struct Lock {
         #[serde(default)]
@@ -979,9 +994,7 @@ fn pinned_versions(repo: &Path) -> Result<Vec<(String, String)>> {
         name: String,
         version: String,
     }
-    let path = repo.join("Cargo.lock");
-    let text = std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
-    let lock: Lock = toml::from_str(&text).with_context(|| format!("parsing {}", path.display()))?;
+    let lock: Lock = toml::from_str(text).with_context(|| format!("parsing {shown}"))?;
     let mut versions = Vec::new();
     for name in PINNED_CRATES {
         let before = versions.len();
@@ -992,7 +1005,7 @@ fn pinned_versions(repo: &Path) -> Result<Vec<(String, String)>> {
                 .map(|p| (p.name.clone(), p.version.clone())),
         );
         if versions.len() == before {
-            return Err(HarnessError(format!("{} has no package {name}", path.display())));
+            return Err(HarnessError(format!("{shown} has no package {name}")));
         }
     }
     versions.sort();
@@ -1232,6 +1245,122 @@ fn blob_ids(repo: &Path, paths: &[String]) -> Result<Vec<String>> {
 }
 
 /// `git hash-object --stdin`, which hashes the bytes as they are (no filters).
+/// Which scenarios run Python live in a `--live-python-since` run: what [`plan`] decides.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LivePlan {
+    /// Every selected scenario: a Python-app, harness or CI-Python input changed.
+    All,
+    /// None: every Python side is read from its reference.
+    None,
+    /// These selected scenarios, in selection order: their references changed.
+    Some(Vec<String>),
+}
+
+impl fmt::Display for LivePlan {
+    /// The line `--plan` prints and CI appends to `$GITHUB_OUTPUT`: `live-python=all`, `none` or `a,b,c`.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::All => f.write_str("live-python=all"),
+            Self::None => f.write_str("live-python=none"),
+            Self::Some(names) => write!(f, "live-python={}", names.join(",")),
+        }
+    }
+}
+
+/// Decides where the Python sides of `scenarios` come from, given what changed between `rev` and the working tree
+/// under `repo` (`git diff REV`, plus untracked files). A change to any of [`PYTHON_APP_INPUTS`],
+/// [`HARNESS_INPUTS`], [`CI_PYTHON_PATHS`], a path a golden manifest names, or a [`PINNED_CRATES`] version in
+/// `Cargo.lock` runs every scenario live. Otherwise the selected scenarios that run Python and whose
+/// `parity/references/<name>/` changed run live; references of other scenarios (or deleted ones) are ignored.
+pub fn plan(repo: &Path, rev: &str, scenarios: &[Scenario]) -> Result<LivePlan> {
+    let changed = changed_since(repo, rev)?;
+    let mut triggers: Vec<String> = PYTHON_APP_INPUTS
+        .iter()
+        .chain(HARNESS_INPUTS)
+        .chain(CI_PYTHON_PATHS)
+        .map(|p| (*p).to_owned())
+        .collect();
+    triggers.extend(golden_paths(repo)?);
+    let under =
+        |path: &str, input: &str| path == input || path.strip_prefix(input).is_some_and(|rest| rest.starts_with('/'));
+    if changed.iter().any(|path| triggers.iter().any(|t| under(path, t))) {
+        return Ok(LivePlan::All);
+    }
+    if changed.contains("Cargo.lock") && pinned_versions_changed(repo, rev)? {
+        return Ok(LivePlan::All);
+    }
+    let prefix = format!("{REFERENCES_DIR}/");
+    let touched: BTreeSet<&str> = changed
+        .iter()
+        .filter_map(|path| path.strip_prefix(&prefix)?.split('/').next())
+        .collect();
+    let live: Vec<String> = scenarios
+        .iter()
+        .filter(|s| s.apps.contains(&App::Python) && touched.contains(s.name.as_str()))
+        .map(|s| s.name.clone())
+        .collect();
+    Ok(if live.is_empty() {
+        LivePlan::None
+    } else {
+        LivePlan::Some(live)
+    })
+}
+
+/// The repo-relative paths that differ between `rev` and the working tree, plus untracked files that aren't ignored
+/// (the hashes count those too). A rename is its old path and its new one.
+fn changed_since(repo: &Path, rev: &str) -> Result<BTreeSet<String>> {
+    let diff = git(repo, &["diff", "--name-only", "--no-renames", "-z", rev, "--"], None)
+        .map_err(|e| HarnessError(format!("--live-python-since {rev}: {e}")))?;
+    let untracked = git(repo, &["ls-files", "-o", "--exclude-standard", "-z"], None)?;
+    Ok(diff
+        .split(|&b| b == 0)
+        .chain(untracked.split(|&b| b == 0))
+        .filter(|raw| !raw.is_empty())
+        .map(|raw| String::from_utf8_lossy(raw).into_owned())
+        .collect())
+}
+
+/// The `generator`, `golden` and `test` paths of every `parity/goldens/*.toml` manifest, so a change to one runs its
+/// `#[ignore]`d freshness test. `cargo xtask parity-matrix` checks the rest of each manifest.
+fn golden_paths(repo: &Path) -> Result<Vec<String>> {
+    #[derive(Deserialize)]
+    struct Manifest {
+        generator: String,
+        golden: Vec<String>,
+        test: String,
+    }
+    let mut paths = Vec::new();
+    for file in list_dir(&repo.join(crate::matrix::GOLDENS_DIR))? {
+        if file.extension().is_none_or(|e| e != "toml") {
+            continue;
+        }
+        let text = std::fs::read_to_string(&file).with_context(|| format!("reading {}", file.display()))?;
+        let manifest: Manifest = toml::from_str(&text).with_context(|| format!("parsing {}", file.display()))?;
+        let named = [manifest.generator, manifest.test].into_iter().chain(manifest.golden);
+        paths.extend(named.map(|path| {
+            let path = path.replace('\\', "/");
+            path.strip_prefix("./").map_or_else(|| path.clone(), str::to_owned)
+        }));
+    }
+    Ok(paths)
+}
+
+/// Whether a [`PINNED_CRATES`] version differs between `rev`'s `Cargo.lock` and the working tree's. A `Cargo.lock`
+/// that only one side has, or that doesn't parse, counts as a change.
+fn pinned_versions_changed(repo: &Path, rev: &str) -> Result<bool> {
+    let shown = format!("{rev}:Cargo.lock");
+    let Ok(before) = git(repo, &["show", &shown], None) else {
+        return Ok(true);
+    };
+    let before = pinned_versions_in(&String::from_utf8_lossy(&before), &shown).ok();
+    let now = repo
+        .join("Cargo.lock")
+        .is_file()
+        .then(|| pinned_versions(repo))
+        .transpose()?;
+    Ok(before.is_none() || before != now)
+}
+
 fn hash_bytes(repo: &Path, bytes: &[u8]) -> Result<String> {
     let out = git(repo, &["hash-object", "--stdin"], Some(bytes))?;
     Ok(String::from_utf8_lossy(&out).trim().to_owned())
@@ -2266,5 +2395,184 @@ c fg=#ddedf9 bg=#0178d4 bold
         paged.query = Some(fake_gh::fixture::query_from_pairs([("page", "2"), ("per_page", "50")]));
         let keys: Vec<String> = served_keys(&jsonl(&[auth, paged])).into_iter().collect();
         assert_eq!(keys, ["GET /items?page=2&per_page=50 (json)", "auth status"]);
+    }
+
+    // ---- the CI plan ----
+
+    const GOLDEN_MANIFEST: &str = r#"version = 1
+description = "d"
+generator = "crates/core/tests/fixtures/generate.py"
+golden = ["crates/core/tests/fixtures/python.json"]
+test = "crates/core/tests/config.rs"
+fresh_test = "config_goldens_are_fresh"
+parity_rows = ["config.theme"]
+"#;
+
+    /// [`Repo::harness`] plus everything [`plan`] tells apart, committed: scenarios `demo` and `startup` with
+    /// references, `rust-only` that doesn't run Python, a reference of a deleted scenario `gone`, a golden manifest
+    /// and its files, a Python-backed test, Rust app code and docs.
+    fn planned_repo() -> Repo {
+        let repo = Repo::harness();
+        repo.write("parity/scenarios/startup.toml", DEMO);
+        repo.write("parity/scenarios/rust-only.toml", "version = 1\napps = [\"rust\"]\n");
+        for name in ["demo", "startup", "gone", "rust-only"] {
+            repo.write(&format!("parity/references/{name}/80x24/manifest.toml"), "format = 1\n");
+        }
+        repo.write("parity/goldens/config.toml", GOLDEN_MANIFEST);
+        for rel in [
+            "crates/core/tests/fixtures/generate.py",
+            "crates/core/tests/fixtures/python.json",
+            "crates/core/tests/config.rs",
+            "crates/core/tests/other.rs",
+            "xtask/tests/python_app.rs",
+            "xtask/tests/reference_reads.rs",
+            "crates/lazy-github/src/main.rs",
+            "docs/notes.md",
+        ] {
+            repo.write(rel, "// v1\n");
+        }
+        repo.commit();
+        repo
+    }
+
+    fn plan_of(repo: &Repo, rev: &str) -> LivePlan {
+        let scenarios: Vec<Scenario> = ["demo", "rust-only", "startup"].map(|n| repo.scenario(n)).into();
+        plan(repo.path(), rev, &scenarios).unwrap()
+    }
+
+    /// The plan for a second commit that edits `paths`.
+    fn plan_after(paths: &[&str]) -> LivePlan {
+        let repo = planned_repo();
+        for rel in paths {
+            repo.write(rel, "// v2\n");
+        }
+        repo.commit();
+        plan_of(&repo, "HEAD~1")
+    }
+
+    fn live(names: &[&str]) -> LivePlan {
+        LivePlan::Some(names.iter().map(|&n| n.to_owned()).collect())
+    }
+
+    #[test]
+    fn a_python_app_harness_or_ci_python_change_runs_everything_live() {
+        for path in [
+            "lazy_github/__init__.py",
+            "lazy_github/ui/new_screen.py",
+            "uv.lock",
+            "xtask/src/parity/runner.rs",
+            "crates/fake-gh/src/lib.rs",
+            "xtask/tests/python_app.rs",
+            "crates/fake-gh/tests/python_client.rs",
+            ".github/workflows/rust.yaml",
+        ] {
+            assert_eq!(plan_after(&[path]), LivePlan::All, "{path}");
+        }
+    }
+
+    #[test]
+    fn a_path_a_golden_manifest_names_runs_everything_live() {
+        for path in [
+            "crates/core/tests/fixtures/generate.py",
+            "crates/core/tests/fixtures/python.json",
+            "crates/core/tests/config.rs",
+        ] {
+            assert_eq!(plan_after(&[path]), LivePlan::All, "{path}");
+        }
+        // A file next to them that no manifest names doesn't.
+        assert_eq!(plan_after(&["crates/core/tests/other.rs"]), LivePlan::None);
+    }
+
+    #[test]
+    fn a_changed_reference_runs_only_its_scenario_live() {
+        let startup = "parity/references/startup/80x24/manifest.toml";
+        assert_eq!(plan_after(&[startup]), live(&["startup"]));
+        assert_eq!(
+            plan_after(&["parity/references/startup/80x24/main.screen"]),
+            live(&["startup"])
+        );
+        // In selection order, whatever order git lists them in.
+        let demo = "parity/references/demo/80x24/manifest.toml";
+        assert_eq!(
+            plan_after(&[startup, demo, "docs/notes.md"]),
+            live(&["demo", "startup"])
+        );
+    }
+
+    #[test]
+    fn references_of_deleted_and_rust_only_scenarios_are_ignored() {
+        assert_eq!(
+            plan_after(&["parity/references/gone/80x24/manifest.toml"]),
+            LivePlan::None
+        );
+        assert_eq!(
+            plan_after(&["parity/references/rust-only/80x24/manifest.toml"]),
+            LivePlan::None
+        );
+        let repo = planned_repo();
+        repo.remove("parity/references/gone");
+        repo.commit();
+        assert_eq!(plan_of(&repo, "HEAD~1"), LivePlan::None);
+    }
+
+    #[test]
+    fn rust_app_docs_and_other_tests_run_no_python() {
+        assert_eq!(plan_after(&["crates/lazy-github/src/main.rs"]), LivePlan::None);
+        assert_eq!(plan_after(&["docs/notes.md"]), LivePlan::None);
+        assert_eq!(plan_after(&["xtask/tests/reference_reads.rs"]), LivePlan::None);
+        // A scenario edit alone: its reference is stale, which the run itself reports.
+        let repo = planned_repo();
+        repo.write(
+            "parity/scenarios/startup.toml",
+            &format!("{DEMO}\n[[step]]\nsleep_ms = 1\n"),
+        );
+        repo.commit();
+        assert_eq!(plan_of(&repo, "HEAD~1"), LivePlan::None);
+        // No change at all.
+        assert_eq!(plan_of(&planned_repo(), "HEAD"), LivePlan::None);
+    }
+
+    #[test]
+    fn uncommitted_untracked_and_renamed_paths_count() {
+        let repo = planned_repo();
+        repo.write("lazy_github/new.py", "x = 1\n");
+        assert_eq!(plan_of(&repo, "HEAD"), LivePlan::All, "untracked");
+
+        let repo = planned_repo();
+        repo.write("lazy_github/__init__.py", "print('changed')\n");
+        assert_eq!(plan_of(&repo, "HEAD"), LivePlan::All, "uncommitted");
+
+        // Moving a file out of the Python app changes the app, though only the old path is under it.
+        let repo = planned_repo();
+        repo.remove("lazy_github/__init__.py");
+        repo.write("docs/__init__.py", "print('hi')\n");
+        repo.commit();
+        assert_eq!(plan_of(&repo, "HEAD~1"), LivePlan::All, "renamed");
+    }
+
+    #[test]
+    fn cargo_lock_counts_only_for_the_pinned_crates() {
+        const LOCK: &str = "version = 4\n\n[[package]]\nname = \"vt100\"\nversion = \"0.18.1\"\n\n\
+                            [[package]]\nname = \"portable-pty\"\nversion = \"0.9.0\"\n";
+        let repo = planned_repo();
+        repo.write(
+            "Cargo.lock",
+            &format!("{LOCK}\n[[package]]\nname = \"serde\"\nversion = \"1.0.0\"\n"),
+        );
+        repo.commit();
+        assert_eq!(plan_of(&repo, "HEAD~1"), LivePlan::None);
+        repo.write("Cargo.lock", &LOCK.replace("0.18.1", "0.18.2"));
+        assert_eq!(plan_of(&repo, "HEAD"), LivePlan::All);
+    }
+
+    #[test]
+    fn an_unknown_rev_is_an_error_that_names_the_flag() {
+        let repo = planned_repo();
+        let scenarios = [repo.scenario("demo")];
+        let err = plan(repo.path(), "no-such-rev", &scenarios).unwrap_err();
+        assert!(
+            err.to_string().starts_with("--live-python-since no-such-rev: git diff"),
+            "{err}"
+        );
     }
 }

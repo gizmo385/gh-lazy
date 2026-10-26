@@ -424,6 +424,7 @@ isolated `HOME` and fake-gh on `PATH`, and dumps the screen at each capture poin
 cargo xtask parity [SCENARIO...] [--all] [--python-only | --rust-only] [--live-python[=SCENARIO,...]]
                    [--size COLSxROWS]... [--out DIR] [--keep-home] [--no-build] [--no-sync] [--python PATH]
                    [--retries N] [--jobs N] [--ci] [--validate]
+cargo xtask parity [SCENARIO...] [--all] --live-python-since REV [--plan] [run flags as above]
 cargo xtask parity --check-references [SCENARIO...] [--all] [--ci]
 cargo xtask parity --record [--force] [SCENARIO...] [--all] [--jobs N] [--python PATH] [--no-sync] [--no-build]
                    [--out DIR] [--keep-home]
@@ -458,6 +459,18 @@ cargo xtask parity --validate              # check every scenario file, run noth
   (`startup 160x48: reference stale, drift not checked`), which isn't an error, so a PR can be checked live before
   its references are re-recorded. What the live run gets wrong on its own (a failure, its `[expect]`) is reported as
   usual, not as drift.
+- **Python live where its inputs changed (CI).** `--live-python-since REV` compares `REV` with the working tree
+  (`git diff --name-only --no-renames REV`, plus untracked files that aren't ignored). If any changed path is under
+  the Python app or harness inputs, the Python-backed tests, `.github/workflows/rust.yaml`, a `generator`, `golden`
+  or `test` path of a [golden manifest](#manifest-format-v1), or a `vt100`/`portable-pty` version in `Cargo.lock`
+  changed, every selected scenario runs Python live, as with `--live-python`. Otherwise only the selected scenarios
+  whose `parity/references/<name>/` changed run it live, as with `--live-python=a,b`, and the rest read their
+  references; references of a scenario that's deleted, not selected or doesn't run Python are ignored. The run
+  prints the plan first (`parity: live-python=startup (since HEAD^1)`), and drift is checked as above. With
+  `--plan` it prints only the plan line, `live-python=all`, `live-python=none` or `live-python=a,b,c`, and exits
+  `0` without building or running anything. The path lists are in `xtask/src/parity/reference.rs`
+  (`PYTHON_APP_INPUTS`, `HARNESS_INPUTS`, `CI_PYTHON_PATHS`), the same lists that decide whether a reference is
+  fresh.
 - `--rust-only` neither reads nor checks references.
 - Before running, xtask builds `lazy-github` and `fake-gh` (`cargo build -p lazy-github -p fake-gh`) unless
   `--no-build`. When a selected scenario runs Python live, it also runs `uv sync --frozen --quiet` under your real
@@ -472,6 +485,8 @@ cargo xtask parity --validate              # check every scenario file, run noth
 | `--all` | Run every scenario in `parity/scenarios/`. |
 | `--python-only`, `--rust-only` | Run one app only: for capturing references and for debugging. `--python-only` runs Python live and checks it for drift; `--rust-only` doesn't read references. |
 | `--live-python[=SCENARIO,...]` | Run Python live instead of reading its reference: in every selected scenario, or in those named (after `=`, comma-separated). Fresh references are checked for drift. Conflicts with `--rust-only`, `--record` and `--check-references`. |
+| `--live-python-since REV` | Run Python live in every selected scenario if a Python input changed since `REV`, otherwise in those whose references changed (above). Conflicts with `--live-python`, `--python-only`, `--rust-only`, `--record` and `--check-references`. |
+| `--plan` | With `--live-python-since`: print the plan line and exit `0`, building and running nothing. |
 | `--size COLSxROWS` | Run at this size instead of the scenarios' `sizes`. Repeatable. |
 | `--out DIR` | Write the report here instead of `parity/reports/latest/`. |
 | `--keep-home` | Copy each run's `home/` and `work/` into its report directory. |
@@ -1040,12 +1055,32 @@ mismatches takes the scenario's `fail` or `rust-not-ready` result.
 
 The parity gate runs in the single CI job of `.github/workflows/rust.yaml`, `fmt, clippy, test (ubuntu-latest)`, on
 every PR into `rust-main`, after fmt, clippy and the unit tests. It runs on Linux only, because macOS runners are too
-expensive (PLAN §7). It installs Python 3.11 and the app with `uv sync --frozen`, then runs
-`cargo xtask parity --all --ci --no-sync --jobs 4` (the runner's 4 vCPUs) and the `#[ignore]`d Python-backed tests
-(`cargo test -p fake-gh -p xtask -p lazy-github-tui -p lazy-github-core -- --ignored`), which include the
-[stale-golden checks](#the-staleness-test). There's no `paths` filter: every PR runs it. Pushes to `rust-main`
-run only fmt, clippy and the unit tests, because the squash-merged tree already passed the gate on its PR, and that
-run keeps the Rust cache warm for PRs.
+expensive (PLAN §7). There's no `paths` filter: every PR runs the gate, and every PR runs the Rust app live. Python
+runs only when the PR changes something it depends on, because a scenario's Python side is otherwise exactly its
+[recorded reference](#recorded-references), which `cargo test` has already checked is fresh.
+
+The checkout is two commits deep (`fetch-depth: 2`): a PR run checks out the PR's merge commit, whose first parent,
+`HEAD^1`, is the base tip. A `Plan the parity run` step runs
+`cargo xtask parity --all --live-python-since HEAD^1 --plan >> "$GITHUB_OUTPUT"`, and the rest of the job follows the
+plan ([Running scenarios](#running-scenarios) has the rules):
+
+| Plan | When | What runs |
+| --- | --- | --- |
+| `live-python=all` | The PR changes the Python app (`lazy_github/`, `pyproject.toml`, `uv.lock`), the capture harness, a pinned crate version, a Python-backed test (`xtask/tests/python_app.rs`, `xtask/tests/structural_check.rs`, `crates/fake-gh/tests/python_client.rs`), a file a [golden manifest](#manifest-format-v1) names, or the workflow. That's a merge of `main`, a harness change or a golden change. | Python 3.11 and `uv sync --frozen`, every scenario with Python live (checked for drift, so the re-recorded references are checked on the CI machine), and the `#[ignore]`d Python-backed tests, `cargo test -p fake-gh -p xtask -p lazy-github-tui -p lazy-github-core -- --ignored`, which include the [stale-golden checks](#the-staleness-test). |
+| `live-python=a,b` | The PR re-recorded the references of `a` and `b`, and nothing above changed. | Python and `uv sync`; `a` and `b` run Python live, which checks that the developer's recording reproduces on Linux with Python 3.11. The rest read their references. No Python-backed tests. |
+| `live-python=none` | Anything else: most feature PRs. | No `setup-uv`, no `uv sync`, no Python process. Rust runs against the references. |
+
+The parity step is `cargo xtask parity --all --ci --no-sync --jobs 4 --live-python-since HEAD^1` (the runner's 4
+vCPUs), which recomputes the same plan. The job summary starts with the plan line. Pushes to `rust-main` run only
+fmt, clippy and the unit tests, because the squash-merged tree already passed the gate on its PR, and that run keeps
+the Rust cache warm for PRs. The unit tests include the references freshness test, so a trunk that merged stale
+references goes red at once.
+
+A PR that edits a scenario, its fixtures or a harness input without re-recording fails in the Test step (stale
+reference) and again in the parity step (exit `2`), with the `--record` command to run. Live runs on CI are the
+check that the manifests hash every input: a missed input shows up as drift the next time the scenario runs live.
+There's no scheduled live audit, since `schedule` runs only on the default branch, `main`; the parity reviewer's
+milestone audits (`cargo xtask parity --all --live-python`) take that role.
 
 **What gates.** The job fails when `cargo xtask parity` exits non-zero ([exit codes](#running-scenarios)) or an
 ignored test fails:
@@ -1319,7 +1354,9 @@ the generator with that interpreter and the test's `HOME`.) The config generator
 config fixtures load in Python; its non-zero exit fails the test.
 
 CI runs these in the "Python-backed integration tests" step,
-`cargo test --locked -p fake-gh -p xtask -p lazy-github-tui -p lazy-github-core -- --ignored`. So every `#[ignore]`d
+`cargo test --locked -p fake-gh -p xtask -p lazy-github-tui -p lazy-github-core -- --ignored`, on every PR whose
+[parity plan](#ci) is `live-python=all`. A change to the Python app or to any `generator`, `golden` or `test` file a
+manifest names makes it `all` (the plan reads the manifests). So every `#[ignore]`d
 test in `lazy-github-tui` and `lazy-github-core` must be safe to run there. Locally:
 
 ```sh

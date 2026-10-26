@@ -678,7 +678,7 @@ use lazy_github_core::models::Repository;
 
 use crate::action::Action;
 use crate::components::table::SearchableTable;
-use crate::effect::{GithubResponse, RequestId};
+use crate::effect::{GithubRequest, GithubResponse, RequestId};
 use crate::event::Event;
 use crate::test_util::{key_event, logs};
 
@@ -898,7 +898,17 @@ fn table_keys_move_the_cursor_quietly_and_select_selects() {
     assert_eq!(out, "INFO Selected repo parity-bot/lazy-demo\n");
     // The columns fit, so `l` falls through the whole chain.
     assert!(app.app_mut().action_for(Event::Key(key_event("l"))).is_none());
-    assert_eq!(app.effects(), []);
+    // The only effect is the selection's PR and issue first page.
+    let [
+        Effect::Github {
+            request: GithubRequest::ListIssues { repo, query },
+            ..
+        },
+    ] = app.effects()
+    else {
+        panic!("one first-page request: {:?}", app.effects());
+    };
+    assert_eq!((repo.full_name.as_str(), query.page), ("parity-bot/lazy-demo", 1));
 }
 
 #[test]
@@ -1677,12 +1687,18 @@ fn the_current_directory_match_ignores_ascii_case() {
 }
 
 /// A stub section marked compact: three rows, titled with a dim ` (empty)`.
+/// A repo selected whose first page is empty, so the PR section is compact.
 fn compact_prs() -> TestApp {
-    let mut app = TestApp::new(Config::default());
-    app.app_mut()
-        .main_screen_mut()
-        .expect("on the main screen")
-        .set_compact(SectionId::PullRequests, true);
+    let mut app = with_repos(Config::default(), octo_repos());
+    app.press(&["enter"]);
+    settle_logged(&mut app);
+    assert!(
+        app.app()
+            .main_screen()
+            .unwrap()
+            .section(SectionId::PullRequests)
+            .compact
+    );
     app
 }
 
@@ -1706,7 +1722,7 @@ fn dim_title(app: &mut TestApp) -> String {
 }
 
 #[test]
-fn compact_stub_section_100x30() {
+fn compact_prs_100x30() {
     let mut app = compact_prs();
     insta::assert_snapshot!(app.screen(100, 30));
     // `[2] Pull Requests ` is plain and `(empty)` dim.
@@ -1714,9 +1730,86 @@ fn compact_stub_section_100x30() {
 }
 
 #[test]
-fn compact_stub_section_focused_100x30() {
+fn compact_prs_focused_100x30() {
     let mut app = compact_prs();
     app.press(&["2"]);
     insta::assert_snapshot!(app.screen(100, 30));
     assert_eq!(dim_title(&mut app), format!("{}ddddddd", " ".repeat(21)));
+}
+
+// The pull requests section (#171).
+
+use lazy_github_core::models::IssueListItem;
+
+use super::pull_requests::{Kind, item};
+
+/// `octo/one` selected, with an open, a closed and a draft PR among issues on its first page.
+fn prs_loaded() -> TestApp {
+    let repo = repos::repo("octo", "one", false);
+    let page: Vec<IssueListItem> = vec![
+        item(&repo, 14, Kind::Issue),
+        item(&repo, 13, Kind::OpenPr),
+        item(&repo, 12, Kind::ClosedPr),
+        item(&repo, 11, Kind::DraftPr),
+    ];
+    let gh = FakeGithub::new()
+        .with_repositories(octo_repos())
+        .with_issue_page("octo/one", 1, Ok(page));
+    let mut app = TestApp::with_github(Config::default(), gh);
+    app.press(&["enter"]);
+    settle_logged(&mut app);
+    app
+}
+
+#[test]
+fn prs_section_100x30() {
+    let mut app = prs_loaded();
+    let screen = app.screen(100, 30);
+    let rows: Vec<&str> = screen.lines().collect();
+    let header = rows
+        .iter()
+        .position(|row| row.contains("#   Status  Author"))
+        .expect("the PR header");
+    assert!(
+        rows[header - 1].starts_with("┌─ [2] Pull Requests ─"),
+        "{}",
+        rows[header - 1]
+    );
+    assert!(
+        rows[header + 1].starts_with("│ 13  open    parity-bot  PR 13"),
+        "{}",
+        rows[header + 1]
+    );
+    assert!(
+        rows[header + 2].starts_with("│ 12  closed  parity-bot  PR 12"),
+        "{}",
+        rows[header + 2]
+    );
+    // The draft is below the fold here, and drawn in `prs_maximized_100x30`; the issue isn't a row at all.
+    let prs = app.app().main_screen().unwrap().issue_lists.prs_table();
+    assert_eq!(prs.row_keys().copied().collect::<Vec<u64>>(), [13, 12, 11]);
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn prs_loading_100x30() {
+    let gh = FakeGithub::new().with_repositories(octo_repos());
+    let mut app = TestApp::with_github(Config::default(), gh);
+    app.press(&["enter"]);
+    let screen = app.screen(100, 30);
+    assert!(screen.contains("Loading..."), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn prs_maximized_100x30() {
+    let mut app = prs_loaded();
+    app.press(&["2", "M"]);
+    app.advance(std::time::Duration::from_secs(5));
+    let screen = app.screen(100, 30);
+    let rows: Vec<&str> = screen.lines().collect();
+    // The header and 3 rows, centered: rows 13-16.
+    assert!(rows[13].starts_with(" #   Status  Author      Title"), "{}", rows[13]);
+    assert!(rows[16].starts_with(" 11  open    parity-bot  PR 11"), "{}", rows[16]);
+    insta::assert_snapshot!(screen);
 }

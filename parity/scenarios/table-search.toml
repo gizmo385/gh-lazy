@@ -24,15 +24,15 @@ wait = { text = "alpha-service", timeout_ms = 15000 }
 [[step]]
 keys = ["1", "/"]
 
-# Every capture ignores the PR, Issues and Workflows sections, which have no table in Rust yet: #171, #172 and #173
-# each remove their box from these lists.
+# Every capture ignores the Issues and Workflows sections, which have no table in Rust yet: #172 and #173 each remove
+# their box from these lists.
 # No `rows`: Python keeps the table at the full section height under the box and clips its bottom rows, while Rust
 # lays it out in the rows the box leaves, so its horizontal scrollbar takes one of them (Py bug B40, decision
 # `search-box-table-height`). The cursor and focus still match.
 [[step]]
 capture = "open"
 checks = ["cursor", "focus"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 # `india-lazy-…`, `juliett-lazy-…` and `lima-lazy-…`.
 [[step]]
@@ -44,7 +44,7 @@ keys = ["enter"]
 [[step]]
 capture = "filtered"
 checks = ["rows", "cursor", "focus"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 # Reopening selects the old query (Textual's `select_on_focus`).
 [[step]]
@@ -53,7 +53,7 @@ keys = ["/"]
 [[step]]
 capture = "reopen"
 checks = ["rows", "cursor", "focus"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 # `('☆', 'parity-bot', 'gh-golf-…', …)`: the end of the owner cell and the start of the name cell.
 [[step]]
@@ -68,7 +68,7 @@ keys = ["enter"]
 [[step]]
 capture = "cross-cell"
 checks = ["rows", "cursor", "focus"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 # Typed straight over the selected old query, with no ctrl+u: the new text replaces it.
 [[step]]
@@ -83,7 +83,7 @@ keys = ["enter"]
 [[step]]
 capture = "typed-over"
 checks = ["rows", "cursor", "focus"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 [[step]]
 keys = ["/", "ctrl+u", "enter"]
@@ -91,7 +91,7 @@ keys = ["/", "ctrl+u", "enter"]
 [[step]]
 capture = "cleared"
 checks = ["rows", "cursor", "focus"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 # The box takes focus but isn't drawn: it's outside the maximized `DataTable`. Enter filters the maximized table,
 # which re-centers at its new height, and focus goes back to it.
@@ -126,7 +126,7 @@ wait = { text = "[1] Repositories", timeout_ms = 5000 }
 [[step]]
 capture = "max-restored"
 checks = ["titles", "rows", "focus"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 # Escape with the box focused while the table is maximized minimizes, and focus stays in the box.
 [[step]]
@@ -144,7 +144,7 @@ wait = { text = "[1] Repositories", timeout_ms = 5000 }
 [[step]]
 capture = "max-escape-in-box"
 checks = ["focus"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 [expect.open]
 contains = ["Search...", " / Search  ^p Command Pal"]

@@ -21,12 +21,12 @@ checks = ["titles", "focus"]
 [[step]]
 wait = { regex = 'ERROR \d{4}-\d\d-\d\d \d\d:\d\d:\d\d - Error fetching repositories from Github API' }
 
-# The PR, Issues and Workflows sections have no table in Rust yet: #171, #172 and #173 each remove their box here. The
-# log's lines carry the time, which differs between the apps; the expectation checks the line.
+# The Issues and Workflows sections have no table in Rust yet: #172 and #173 each remove their box here. The log's
+# lines carry the time, which differs between the apps; the expectation checks the line.
 [[step]]
 capture = "error"
 checks = ["titles", "headers", "rows", "focus"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows", "Command Log"] }
+ignore = { boxes = ["Issues", "Workflows", "Command Log"] }
 
 [expect.loading]
 contains = ["Loading..."]

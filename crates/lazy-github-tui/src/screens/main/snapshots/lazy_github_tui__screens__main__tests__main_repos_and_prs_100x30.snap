@@ -19,7 +19,7 @@ expression: "screen(config, 100, 30)"
 │                                      ││  requests, and action workflows will be retrieved and    │
 └──────────────────────────────────────┘│  displayed below it.                                     │
 ┌─ [2] Pull Requests ──────────────────┐│                                                          │
-│                                      ││  Issues, pull requests, and action lists can also be   ▁▁│
+│ #  Status  Author  Title             ││  Issues, pull requests, and action lists can also be   ▁▁│
 │                                      ││  interacted with!                                        │
 │                                      ││                                                          │
 │                                      ││                                                          │

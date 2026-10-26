@@ -31,12 +31,12 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 [[step]]
 wait = { text = "mike-service", timeout_ms = 15000 }
 
-# Every capture ignores the PR, Issues and Workflows sections, which have no table in Rust yet: #171, #172 and #173
-# each remove their box from these lists.
+# Every capture ignores the Issues and Workflows sections, which have no table in Rust yet: #172 and #173 each remove
+# their box from these lists.
 [[step]]
 capture = "initial"
 checks = ["headers", "rows", "cursor"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 [[step]]
 keys = ["1", "j", "j"]
@@ -44,7 +44,7 @@ keys = ["1", "j", "j"]
 [[step]]
 capture = "down-2"
 checks = ["headers", "rows", "cursor"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 [[step]]
 keys = ["J"]
@@ -52,7 +52,7 @@ keys = ["J"]
 [[step]]
 capture = "page-down"
 checks = ["headers", "rows", "cursor"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 [[step]]
 keys = ["G"]
@@ -61,7 +61,7 @@ keys = ["G"]
 [[step]]
 capture = "bottom"
 checks = ["headers"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 [[step]]
 keys = ["g"]
@@ -69,7 +69,7 @@ keys = ["g"]
 [[step]]
 capture = "top"
 checks = ["headers", "rows", "cursor"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 [[step]]
 keys = ["$"]
@@ -77,7 +77,7 @@ keys = ["$"]
 [[step]]
 capture = "page-right"
 checks = ["headers", "rows", "cursor"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 [[step]]
 keys = ["^"]
@@ -85,7 +85,7 @@ keys = ["^"]
 [[step]]
 capture = "page-left"
 checks = ["headers", "rows", "cursor"]
-ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Issues", "Workflows"] }
 
 [expect.initial]
 not_contains = ["Traceback"]

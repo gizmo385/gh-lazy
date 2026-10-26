@@ -1,6 +1,5 @@
 ---
 source: crates/lazy-github-tui/src/modal/tests.rs
-assertion_line: 387
 expression: buffer_to_styled_string(&over)
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -17,7 +16,7 @@ expression: buffer_to_styled_string(&over)
 │                   █Plain field                                               █ing one of the     │
 └───────────────────█                                                          █he left. Once      │
 ┌─ [2] Pull Requests█                                                          █ssues, pull        │
-│                   █                                                          █e retrieved and    │
+│ #  Status  Author █                                                          █e retrieved and    │
 │                   █                                                          █                   │
 │                   █                                                          █                   │
 └───────────────────█                                                          █ts can also be   ▁▁│
@@ -48,7 +47,7 @@ baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
 bbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
 ccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
+cdddddddddddddddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
 ccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaallllllllllllllaaammc

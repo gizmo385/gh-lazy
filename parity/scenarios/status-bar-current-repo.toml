@@ -26,12 +26,12 @@ keys = ["enter"]
 wait = { text = "Current repo: parity-bot/dotfiles", timeout_ms = 15000 }
 
 # Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and no wait settles it,
-# so the Details box is ignored: a re-record keeps the stored screen. `titles` waits for #171, #172 and #173: Python
-# collapses the empty sections to `[2] Pull Requests (empty)` and so on, which Rust doesn't draw yet.
+# so the Details box is ignored: a re-record keeps the stored screen. `titles` waits for #172 and #173: Python
+# collapses the empty Issues and Workflows sections to `[3] Issues (empty)` and so on, which Rust doesn't draw yet.
 [[step]]
 capture = "selected"
 checks = ["headers", "rows", "cursor", "focus"]
-ignore = { boxes = ["Details", "Pull Requests", "Issues", "Workflows"] }
+ignore = { boxes = ["Details", "Issues", "Workflows"] }
 
 # No `tabs`: with the zero-width underline (#209) Python's strip isn't read as a tab bar at all, which happens in most
 # runs of this scenario, so the tab name is in `contains` instead, as in `repo-overview`.

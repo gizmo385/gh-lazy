@@ -206,6 +206,13 @@ impl TestApp {
         self
     }
 
+    /// Applies one action and performs the effects it returns.
+    pub fn dispatch(&mut self, action: Action) -> &mut Self {
+        let effects = self.app.update(action);
+        self.perform(effects);
+        self
+    }
+
     /// Feeds one event to the app and performs the effects it returns.
     pub fn send(&mut self, event: Event) -> &mut Self {
         let effects = self.app.handle_event(event);

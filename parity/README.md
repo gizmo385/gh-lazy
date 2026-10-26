@@ -283,6 +283,16 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   `GET /repos/parity-bot/lazy-fixture/issues` pages of 30 (`state=all`, as `list_issues` sends them: 30, 30, 10, then
   an empty page 4), plus its README and empty workflows and runs. Listed before `base`, for the `table-lazy-load`
   scenario. Hand-written.
+- `repo-lists/`: the repo `parity-bot/browse-fixture`, listed first on base's `GET /user/repos` page, with numbers 100
+  to 36 over `GET /repos/parity-bot/browse-fixture/issues` pages of 30 (`state=all`: 30, 30, 5, then an empty page 4).
+  A number divisible by 3 is a pull request (it has `draft` and `pull_request`) and every other number an issue: 10
+  PRs and 20 issues on pages 1 and 2, then PRs 39 and 36 and three issues on page 3. PR 96 is closed, PR 84 closed
+  and merged, PR 93 a draft, issues 98 and 80 closed; PR 90's title is `[WIP] Browse fixture pull request 90`. Issue
+  authors alternate `parity-bot` and `parity-friend`. Plus its README and empty workflows and runs. Listed before
+  `base`, for the `repo-lists` scenario. Hand-written.
+- `lists-error/`: `parity-bot/dotfiles`' `issues` page 1 (`state=all`), `actions/workflows` page 1 and `actions/runs`
+  page 1, each answered with a 500 (`{"message": "Server Error"}`) after 1.5 s. Listed before `repo-selected-empty`
+  (the README) and `base`, for the `lists-fetch-error` scenario. Hand-written.
 
 ## Recording fixtures
 

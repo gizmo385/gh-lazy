@@ -17,7 +17,7 @@ expression: "app.screen(160, 48)"
 │                                                              ││  selected a repository, any issues, pull requests, and action workflows will be retrieved    │
 └──────────────────────────────────────────────────────────────┘│  and displayed below it.                                                                     │
 ┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
-│                                                              ││  Issues, pull requests, and action lists can also be interacted with!                        │
+│ #  Status  Author  Title                                     ││  Issues, pull requests, and action lists can also be interacted with!                        │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││  Pull Requests                                                                               │

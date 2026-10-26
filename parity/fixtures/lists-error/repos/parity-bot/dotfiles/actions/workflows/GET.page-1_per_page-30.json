@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/dotfiles/actions/workflows",
+    "query": {
+      "page": "1",
+      "per_page": "30"
+    }
+  },
+  "response": {
+    "status": 500,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "message": "Server Error"
+    },
+    "delay_ms": 1500
+  },
+  "note": "Hand-written for lists-fetch-error: fails late enough for the loading overlay to be captured."
+}

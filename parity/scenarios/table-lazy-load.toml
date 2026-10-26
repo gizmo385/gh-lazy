@@ -1,13 +1,20 @@
 version = 1
 description = "Searchable table: lazy loading asks for the next page when the cursor nears the end of a 70-PR table (30, 30, 10)"
-# Flipped to true by the M2 pull-requests-table issue, which puts a lazy table on screen.
-gate = false
-parity_rows = ["searchable-tables.lazy-loading"]
+gate = true
+parity_rows = [
+  "searchable-tables.lazy-loading",
+  "pull-requests.table",
+  "pull-requests.columns",
+  "pull-requests.rows-from-issues",
+]
 sizes = [[160, 48]]
 
 [env]
 # prs-70's /user/repos page 1 is base's three repos plus parity-bot/lazy-fixture.
 fixtures = ["prs-70", "base"]
+# Issues and Workflows are hidden so the PR box is as tall in both apps: Python collapses an empty section, and Rust's
+# stub sections can't until #172 and #173, which each remove their half of this override.
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
 
 [[step]]
 wait = { text = "Pull Requests", timeout_ms = 15000 }

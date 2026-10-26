@@ -2,12 +2,10 @@
 //! command log) on the right, and the footer row. Python's `LazyGithubMainScreen`.
 
 mod details;
+mod issue_lists;
 pub mod layout;
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "no list section is mounted until #171, #172 and #173")
-)]
 mod list;
+mod pull_requests;
 mod repos;
 mod section_table;
 mod sections;
@@ -34,6 +32,7 @@ use crate::options::AppOptions;
 use crate::theme::Theme;
 
 use details::DetailsPane;
+use issue_lists::IssueLists;
 use layout::{LayoutInput, layout};
 pub use repos::{RepoCells, ReposSection};
 use section_table::{SectionEvent, SectionTable, earliest_deadline};
@@ -230,6 +229,7 @@ pub struct MainScreen {
     details: DetailsPane,
     command_log: CommandLog,
     repos: ReposSection,
+    issue_lists: IssueLists,
     /// Where each mounted section's table component was drawn in the last frame, by [`SectionId::index`]: the box's
     /// interior, or the maximized rect. `None` when it wasn't drawn.
     table_areas: [Option<Rect>; 4],
@@ -286,6 +286,7 @@ impl MainScreen {
             details: DetailsPane::default(),
             command_log: CommandLog::new(appearance.show_command_log),
             repos: ReposSection::new(theme, options),
+            issue_lists: IssueLists::new(options),
             table_areas: [None; 4],
             hits: Vec::new(),
         }
@@ -301,7 +302,7 @@ impl MainScreen {
     /// publishes" for the contract of its `load_repo`.
     pub fn on_repo_selected(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
         if self.section(SectionId::PullRequests).shown() || self.section(SectionId::Issues).shown() {
-            // #171: one shared first-page request feeding both tables; #172 adds the issues side.
+            self.issue_lists.load_repo(repo, cx);
         }
         if self.section(SectionId::Workflows).shown() {
             // #173: workflows and runs.
@@ -342,8 +343,9 @@ impl MainScreen {
     /// Takes a response to one of the screen's requests, and hands back any other: the repos section is offered it
     /// first, then each mounted section's pane.
     pub fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
-        // #171, #172 and #173 offer what's left to their panes.
-        self.repos.on_response(id, response, cx)
+        // #173 offers what's left to the workflows pane.
+        let response = self.repos.on_response(id, response, cx)?;
+        self.issue_lists.on_response(id, response, cx)
     }
 
     /// The repos section.
@@ -388,33 +390,40 @@ impl MainScreen {
         true
     }
 
-    /// The section's table, once it's mounted. #171, #172 and #173 mount theirs.
+    /// The section's table, once it's mounted. #172 and #173 mount theirs.
     fn table_mut(&mut self, id: SectionId) -> Option<&mut dyn SectionTable> {
         match id {
             SectionId::Repos => Some(&mut self.repos.table),
-            SectionId::PullRequests | SectionId::Issues | SectionId::Workflows => None,
+            SectionId::PullRequests => Some(self.issue_lists.prs_table_mut()),
+            SectionId::Issues | SectionId::Workflows => None,
         }
     }
 
     fn table(&self, id: SectionId) -> Option<&dyn SectionTable> {
         match id {
             SectionId::Repos => Some(&self.repos.table),
-            SectionId::PullRequests | SectionId::Issues | SectionId::Workflows => None,
+            SectionId::PullRequests => Some(self.issue_lists.prs_table()),
+            SectionId::Issues | SectionId::Workflows => None,
         }
     }
 
     /// Whether a section is compact: a mounted list section's own flag, as of its last `refresh_compact`, else the
     /// stored one.
     fn compact(&self, id: SectionId) -> bool {
-        // #171, #172 and #173 read their section's flag here.
-        self.sections[id.index()].compact
+        match id {
+            SectionId::PullRequests => self.issue_lists.prs_compact(),
+            // #172 and #173 read their section's flag here.
+            SectionId::Repos | SectionId::Issues | SectionId::Workflows => self.sections[id.index()].compact,
+        }
     }
 
     /// Requests the page a section's table asked for.
-    #[expect(clippy::unused_self, reason = "#171, #172 and #173 route their sections' asks here")]
     fn load_more(&mut self, section: SectionId, generation: u64, page: u32, per_page: u32, cx: &mut Cx<'_>) {
-        // The repos table isn't lazy, and no list section is mounted yet.
-        let _ = (section, generation, page, per_page, cx);
+        match section {
+            SectionId::PullRequests => self.issue_lists.load_more_prs(generation, page, per_page, cx),
+            // The repos table isn't lazy; #172 and #173 route their sections' asks here.
+            SectionId::Repos | SectionId::Issues | SectionId::Workflows => {}
+        }
     }
 
     /// Where the table itself (not its search box) was drawn in the last frame, which takes clicks.
@@ -477,12 +486,6 @@ impl MainScreen {
     /// Every section's state, by [`SectionId::index`].
     fn section_states(&self) -> [SectionState; 4] {
         SectionId::ALL.map(|id| self.section(id))
-    }
-
-    /// Sets a section's stored compact flag, which a section without a table yet follows.
-    #[cfg(test)]
-    pub(crate) fn set_compact(&mut self, id: SectionId, compact: bool) {
-        self.sections[id.index()].compact = compact;
     }
 
     /// Hides or shows a section by a runtime toggle. M4's command palette drives this.

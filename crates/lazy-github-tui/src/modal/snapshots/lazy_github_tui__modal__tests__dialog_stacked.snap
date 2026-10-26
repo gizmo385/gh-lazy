@@ -1,6 +1,5 @@
 ---
 source: crates/lazy-github-tui/src/modal/tests.rs
-assertion_line: 400
 expression: "styled(&mut app, 100, 30)"
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -17,7 +16,7 @@ expression: "styled(&mut app, 100, 30)"
 │                   █Plain field   █         Test dialog        █              █ing one of the     │
 └───────────────────█              █                            █              █he left. Once      │
 ┌─ [2] Pull Requests█              █Name:                       █              █ssues, pull        │
-│                   █              █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█              █e retrieved and    │
+│ #  Status  Author █              █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█              █e retrieved and    │
 │                   █              █▊  Name                    ▎█              █                   │
 │                   █              █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█              █                   │
 └───────────────────█              █                            █              █ts can also be   ▁▁│
@@ -48,22 +47,22 @@ caaaaaaaaaaaaaaaaaaabddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddb
 caaaaaaaaaaaaaaaaaaabddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddbaaaaaaaaaaaaaaaaaiie
 ccccccccccccccccccccbddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddbaaaaaaaaaaaaaaaaaiie
 eeeeeeeeeeeeeeeeeeeebddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddbaaaaaaaaaaaaaaaaaiie
-eaaaaaaaaaaaaaaaaaaabddddddddddddddqsttttttttttttttttttttttttttuqddddddddddddddbaaaaaaaaaaaaaaaaaiie
-eaaaaaaaaaaaaaaaaaaabddddddddddddddqsvvwwwwvvvvvvvvvvvvvvvvvvvvuqddddddddddddddbaaaaaaaaaaaaaaaaaiie
-eaaaaaaaaaaaaaaaaaaabddddddddddddddqsttttttttttttttttttttttttttuqddddddddddddddbaaaaaaaaaaaaaaaaaiie
-eeeeeeeeeeeeeeeeeeeebddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddbxxxxxxxxxxxxxxaaayye
-eeeeeeeeeeeeeeeeeeeebddddddddddddddqzzzzzzzzzzzzzzzzzzzzzzzzzzzzqddddddddddddddbaaaaaaaaaaaaaaaaaAAe
-eaaaaaaaaaaaaaaaaaaabddddddddddddddqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqddddddddddddddbaaaaaaaaaaaaaaaaaAAe
-eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaAAe
-eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaAAe
-eeeeeeeeeeeeeeeeeeeebddddddddddddBBBBBBBBBBBBBBBBdCCCCCCCCCCCCCCCCdddddddddddddbaaaaaaaaaaaaaaaaaAAe
-eeeeeeeeeeeeeeeeeeeebddddddddddddDDDDEEEEEEEEDDDDdFFFFGGGGGGGGFFFFdddddddddddddbaaaaaaaaaaaaaaaaaAAe
-eaaaaaaaaaaaaaaaaaaabddddddddddddHHHHHHHHHHHHHHHHdIIIIIIIIIIIIIIIIdddddddddddddbaaaaaaaaaaaaaaaaaAAe
-eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaAAe
-eaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaAAe
-eaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAe
+esssssssssssssssssssbddddddddddddddqtuuuuuuuuuuuuuuuuuuuuuuuuuuvqddddddddddddddbaaaaaaaaaaaaaaaaaiie
+eaaaaaaaaaaaaaaaaaaabddddddddddddddqtwwxxxxwwwwwwwwwwwwwwwwwwwwvqddddddddddddddbaaaaaaaaaaaaaaaaaiie
+eaaaaaaaaaaaaaaaaaaabddddddddddddddqtuuuuuuuuuuuuuuuuuuuuuuuuuuvqddddddddddddddbaaaaaaaaaaaaaaaaaiie
+eeeeeeeeeeeeeeeeeeeebddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddbyyyyyyyyyyyyyyaaazze
+eeeeeeeeeeeeeeeeeeeebddddddddddddddqAAAAAAAAAAAAAAAAAAAAAAAAAAAAqddddddddddddddbaaaaaaaaaaaaaaaaaBBe
+eaaaaaaaaaaaaaaaaaaabddddddddddddddqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqddddddddddddddbaaaaaaaaaaaaaaaaaBBe
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaBBe
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaBBe
+eeeeeeeeeeeeeeeeeeeebddddddddddddCCCCCCCCCCCCCCCCdDDDDDDDDDDDDDDDDdddddddddddddbaaaaaaaaaaaaaaaaaBBe
+eeeeeeeeeeeeeeeeeeeebddddddddddddEEEEFFFFFFFFEEEEdGGGGHHHHHHHHGGGGdddddddddddddbaaaaaaaaaaaaaaaaaBBe
+eaaaaaaaaaaaaaaaaaaabddddddddddddIIIIIIIIIIIIIIIIdJJJJJJJJJJJJJJJJdddddddddddddbaaaaaaaaaaaaaaaaaBBe
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaBBe
+eaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaBBe
+eaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBBe
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-JJJJJJJJJKKKKKKKJJJKKKKKKLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+KKKKKKKKKLLLLLLLKKKLLLLLLMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 --- legend
 . fg=#0e1a22 bg=#121212
 a fg=#323232 bg=#121212
@@ -84,23 +83,24 @@ o fg=#3b3b3b bg=#1a1a1a
 p fg=#0f2230 bg=#121212 BOLD
 q fg=#121212 bg=#4f4f4f
 r fg=#e0e0e0 bg=#4f4f4f
-s fg=#191919 bg=#4f4f4f REVERSED
-t fg=#191919 bg=#1e1e1e
-u fg=#191919 bg=#4f4f4f
-v fg=#e0e0e0 bg=#1e1e1e
-w fg=#737373 bg=#1e1e1e
-x fg=#323232 bg=#121212 BOLD
-y fg=#0e161c bg=#0e0e0e REVERSED
-z fg=#e0e0e0 bg=#4f4f4f REVERSED
-A fg=#323232 bg=#0e0e0e
-B fg=#3b6847 bg=#2a5738
-C fg=#67333e bg=#54222f
-D fg=#0e1410 bg=#2a5738
-E fg=#0e1410 bg=#2a5738 BOLD
-F fg=#6c6668 bg=#54222f
-G fg=#6c6668 bg=#54222f BOLD
-H fg=#0a3e21 bg=#2a5738
-I fg=#3a0a1a bg=#54222f
-J fg=#ffa62b bg=#242f38 BOLD
-K fg=#e0e0e0 bg=#242f38
-L fg=Reset bg=#242f38
+s fg=#323232 bg=#141618 BOLD
+t fg=#191919 bg=#4f4f4f REVERSED
+u fg=#191919 bg=#1e1e1e
+v fg=#191919 bg=#4f4f4f
+w fg=#e0e0e0 bg=#1e1e1e
+x fg=#737373 bg=#1e1e1e
+y fg=#323232 bg=#121212 BOLD
+z fg=#0e161c bg=#0e0e0e REVERSED
+A fg=#e0e0e0 bg=#4f4f4f REVERSED
+B fg=#323232 bg=#0e0e0e
+C fg=#3b6847 bg=#2a5738
+D fg=#67333e bg=#54222f
+E fg=#0e1410 bg=#2a5738
+F fg=#0e1410 bg=#2a5738 BOLD
+G fg=#6c6668 bg=#54222f
+H fg=#6c6668 bg=#54222f BOLD
+I fg=#0a3e21 bg=#2a5738
+J fg=#3a0a1a bg=#54222f
+K fg=#ffa62b bg=#242f38 BOLD
+L fg=#e0e0e0 bg=#242f38
+M fg=Reset bg=#242f38

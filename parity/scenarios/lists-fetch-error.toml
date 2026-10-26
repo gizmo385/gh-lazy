@@ -1,0 +1,43 @@
+version = 1
+description = "The first issues-endpoint page fails: the PR table's loading overlay, then an empty, compact section and one error line in the command log, with no toast"
+gate = true
+parity_rows = ["pull-requests.loading", "main-layout.empty-section-collapse", "main-layout.loading-spinner"]
+sizes = [[160, 48]]
+
+[env]
+# lists-error answers dotfiles' issues, workflows and runs with a 500 after 1.5 s; repo-selected-empty has its README.
+fixtures = ["lists-error", "repo-selected-empty", "base"]
+
+[env.config_overrides]
+appearance = { show_command_log = true }
+
+[[step]]
+wait = { text = "dotfiles", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Loading...", timeout_ms = 15000 }
+
+# The Issues and Workflows boxes are #172's and #173's; the last of #171, #172 and #173 adds `titles`. The log's lines
+# carry the time, which differs between the apps, so the expectations check the line.
+[[step]]
+capture = "loading"
+checks = ["headers", "rows", "focus"]
+ignore = { boxes = ["Details", "Issues", "Workflows", "Command Log"] }
+
+[[step]]
+wait = { regex = 'ERROR \d{4}-\d\d-\d\d \d\d:\d\d:\d\d - API Error fetching issues and PRs from Github API', timeout_ms = 15000 }
+
+[[step]]
+capture = "error"
+checks = ["headers", "rows", "focus"]
+ignore = { boxes = ["Details", "Issues", "Workflows", "Command Log"] }
+
+[expect.loading]
+contains = ["Loading..."]
+
+[expect.error]
+contains = ["[2] Pull Requests (empty)", "API Error fetching issues and PRs from Github API"]
+not_contains = ["Traceback"]

@@ -11,7 +11,7 @@ expression: "app.screen(100, 30)"
 │                                      ││                                                          │
 └──────────────────────────────────────┘│                                                          │
 ┌─ [2] Pull Requests ──────────────────┐│      LazyGithub: A Terminal UI For GitHub (0.1.0)        │
-│                                      ││                                                          │
+│ #  Status  Author  Title             ││                                                          │
 │                                      ││  LazyGithub is a terminal UI for interacting with        │
 │                                      ││  GitHub. You can get started by selecting one of the     │
 │                                      ││  repositories listed in the table on the left. Once      │

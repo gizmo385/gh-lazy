@@ -23,7 +23,7 @@ expression: "screen(config(|a| a.show_command_log = true), 160, 48)"
 │                                                              ││  Pull Requests                                                                               │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [2] Pull Requests ──────────────────────────────────────────┐│  You can interact with a PR by viewing its details, viewing the PR diff, and participating   │
-│                                                              ││  in any active conversations happening on the PR. You can also create a new PR for the       │
+│ #  Status  Author  Title                                     ││  in any active conversations happening on the PR. You can also create a new PR for the       │
 │                                                              ││  currently selected repo.                                                                    │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │

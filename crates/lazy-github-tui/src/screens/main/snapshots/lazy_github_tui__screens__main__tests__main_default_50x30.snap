@@ -16,8 +16,8 @@ expression: "screen(Config::default(), 50, 30)"
 │                  ││  LazyGithub is a           │
 └──────────────────┘│  terminal UI for         ▂▂│
 ┌─ [2] Pull Requ… ─┐│  interacting with          │
-│                  ││  GitHub. You can get       │
-│                  ││  started by selecting      │
+│ #  Status  Author││  GitHub. You can get       │
+│            ▌     ││  started by selecting      │
 │                  ││  one of the                │
 └──────────────────┘│  repositories listed in    │
 ┌─ [3] Issues ─────┐│  the table on the left.    │

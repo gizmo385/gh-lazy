@@ -10,8 +10,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, Instant};
 
+use lazy_github_core::config::{IssueOwnerFilter, IssueStateFilter};
 use lazy_github_core::gh::{GhError, GhTimeouts};
-use lazy_github_core::github::{GhCli, GhCliOptions, Github, RepoListQuery};
+use lazy_github_core::github::{GhCli, GhCliOptions, Github, IssueListQuery, RepoListQuery};
+use lazy_github_core::models::{IssueListItem, Repository};
 use serde_json::Value;
 
 /// Where a child test finds the installed fake-gh.
@@ -340,4 +342,131 @@ async fn child_list_repositories_timeout() {
         SHORT_TIMEOUTS.paginate,
         started,
     );
+}
+
+/// The issues-endpoint fixtures for `parity-bot/lazy-fixture`, relative to a fixture set.
+const LAZY_FIXTURE_ISSUES: &str = "repos/parity-bot/lazy-fixture/issues";
+
+/// `parity-bot/lazy-fixture`, as `prs-70` records it.
+fn lazy_fixture() -> Repository {
+    let path = common::repo_root().join("parity/fixtures/prs-70/repos/parity-bot/lazy-fixture/GET.json");
+    let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    serde_json::from_value(fixture["response"]["body"].clone()).unwrap()
+}
+
+fn issue_numbers(items: &[IssueListItem]) -> Vec<u64> {
+    items.iter().map(|item| item.issue().number).collect()
+}
+
+#[test]
+fn list_issues_fetches_one_page() {
+    let log = run_child("child_list_issues_page_2", "logged-in", &["prs-70"]);
+    assert_eq!(log.len(), 1, "{log:#?}");
+    assert_eq!(
+        strings(&log[0]["argv"]),
+        [
+            "api",
+            "-i",
+            "-X",
+            "GET",
+            "--cache",
+            "600s",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "/repos/parity-bot/lazy-fixture/issues?state=all&page=2&per_page=30"
+        ]
+    );
+    assert_eq!(
+        log[0]["fixture"],
+        format!("prs-70/{LAZY_FIXTURE_ISSUES}/GET.page-2_per_page-30_state-all.json")
+    );
+    assert_eq!(log[0]["status"], 200);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_list_issues_page_2() {
+    let Some(gh) = client() else { return };
+    let repo = lazy_fixture();
+    let query = IssueListQuery {
+        page: 2,
+        ..IssueListQuery::first_page(IssueStateFilter::All, IssueOwnerFilter::All)
+    };
+    let items = gh.list_issues(&repo, query).await.unwrap();
+    assert_eq!(issue_numbers(&items), (11..=40).rev().collect::<Vec<_>>());
+    assert!(items.iter().all(IssueListItem::is_pull_request));
+    assert!(items.iter().all(|item| item.issue().repo == repo));
+}
+
+#[test]
+fn mine_fetches_the_login_once() {
+    // `prs-70`'s first two pages, as answers to `state=open&creator=parity-bot`.
+    let mine = common::TempDir::new("issues-mine");
+    for page in [1, 2] {
+        let source = common::repo_root().join(format!(
+            "parity/fixtures/prs-70/{LAZY_FIXTURE_ISSUES}/GET.page-{page}_per_page-30_state-all.json"
+        ));
+        let mut fixture: Value = serde_json::from_str(&std::fs::read_to_string(source).unwrap()).unwrap();
+        fixture["request"]["query"]["state"] = "open".into();
+        fixture["request"]["query"]["creator"] = "parity-bot".into();
+        common::write(
+            mine.path(),
+            &format!("{LAZY_FIXTURE_ISSUES}/GET.creator-parity-bot_page-{page}_per_page-30_state-open.json"),
+            &serde_json::to_string_pretty(&fixture).unwrap(),
+        );
+    }
+    let set = mine.path().to_str().unwrap();
+
+    let log = run_child("child_list_issues_mine", "logged-in", &[set, "base"]);
+    assert!(
+        log.iter().all(|line| line["miss"] == false && line["error"].is_null()),
+        "{log:#?}"
+    );
+    let paths: Vec<&str> = log.iter().map(|line| line["path"].as_str().unwrap()).collect();
+    assert_eq!(
+        paths,
+        [
+            "/user",
+            "/repos/parity-bot/lazy-fixture/issues",
+            "/repos/parity-bot/lazy-fixture/issues"
+        ]
+    );
+    for (line, page) in log[1..].iter().zip([1, 2]) {
+        let expected =
+            format!("/repos/parity-bot/lazy-fixture/issues?state=open&page={page}&per_page=30&creator=parity-bot");
+        assert_eq!(strings(&line["argv"]).last().copied(), Some(expected.as_str()));
+    }
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_list_issues_mine() {
+    let Some(gh) = client() else { return };
+    let repo = lazy_fixture();
+    let first = IssueListQuery::first_page(IssueStateFilter::Open, IssueOwnerFilter::Mine);
+    let items = gh.list_issues(&repo, first).await.unwrap();
+    assert_eq!(issue_numbers(&items), (41..=70).rev().collect::<Vec<_>>());
+    let items = gh
+        .list_issues(&repo, IssueListQuery { page: 2, ..first })
+        .await
+        .unwrap();
+    assert_eq!(issue_numbers(&items), (11..=40).rev().collect::<Vec<_>>());
+}
+
+#[test]
+fn a_failing_current_user_fails_mine_without_listing() {
+    // `prs-70` alone has no `/user` fixture, so the login lookup misses.
+    let log = run_child("child_list_issues_mine_no_user", "logged-in", &["prs-70"]);
+    assert_eq!(log.len(), 1, "{log:#?}");
+    assert_eq!(log[0]["path"], "/user");
+    assert_eq!(log[0]["miss"], true);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_list_issues_mine_no_user() {
+    let Some(gh) = client() else { return };
+    let query = IssueListQuery::first_page(IssueStateFilter::All, IssueOwnerFilter::Mine);
+    let error = gh.list_issues(&lazy_fixture(), query).await.unwrap_err();
+    assert!(matches!(error, GhError::Http { status: 404, .. }), "{error:?}");
 }

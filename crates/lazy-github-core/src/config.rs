@@ -123,6 +123,17 @@ pub enum IssueStateFilter {
     Closed,
 }
 
+impl IssueStateFilter {
+    /// The `state` query value: `all`, `open` or `closed`.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            IssueStateFilter::All => "all",
+            IssueStateFilter::Open => "open",
+            IssueStateFilter::Closed => "closed",
+        }
+    }
+}
+
 /// Which issues or pull requests to list, by author.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

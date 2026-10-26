@@ -1,19 +1,20 @@
 //! An in-memory [`Github`] for tests.
 
+use std::collections::HashMap;
 use std::io;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Duration;
 
 use serde::de::Error as _;
 
-use super::{Github, RepoListQuery};
+use super::{Github, IssueListQuery, RepoListQuery};
 use crate::gh::GhError;
-use crate::models::{Repository, User};
+use crate::models::{IssueListItem, Repository, User};
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues` returns an empty page, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -30,6 +31,13 @@ pub enum GithubCall {
     ListRepositories(RepoListQuery),
     /// [`Github::unread_notification_count`].
     UnreadNotificationCount,
+    /// [`Github::list_issues`].
+    ListIssues {
+        /// The repository listed.
+        repo: Repository,
+        /// The filters and page.
+        query: IssueListQuery,
+    },
 }
 
 #[derive(Debug, Default)]
@@ -38,6 +46,8 @@ struct State {
     user: Option<Result<User, GhError>>,
     repositories: Option<Result<Vec<Repository>, GhError>>,
     unread_count: Option<Result<usize, GhError>>,
+    /// Keyed by `full_name` and page.
+    issue_pages: HashMap<(String, u32), Result<Vec<IssueListItem>, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -86,6 +96,16 @@ impl FakeGithub {
     /// From now on, `unread_notification_count` returns `count`. Clones see the change too.
     pub fn set_unread_count(&self, count: Result<usize, GhError>) {
         self.lock().unread_count = Some(count);
+    }
+
+    /// `list_issues` returns `page` for page `page_number` of the repository named `full_name`, whatever the
+    /// filters. Pages not set are empty.
+    #[must_use]
+    pub fn with_issue_page(self, full_name: &str, page_number: u32, page: Result<Vec<IssueListItem>, GhError>) -> Self {
+        self.lock()
+            .issue_pages
+            .insert((full_name.to_owned(), page_number), page);
+        self
     }
 
     /// `check_auth` fails with `error`.
@@ -176,6 +196,20 @@ impl Github for FakeGithub {
             Some(Ok(count)) => Ok(*count),
             Some(Err(error)) => Err(duplicate(error)),
             None => Ok(0),
+        })
+        .await
+    }
+
+    async fn list_issues(&self, repo: &Repository, query: IssueListQuery) -> Result<Vec<IssueListItem>, GhError> {
+        let key = (repo.full_name.clone(), query.page);
+        let call = GithubCall::ListIssues {
+            repo: repo.clone(),
+            query,
+        };
+        self.respond(call, |state| match state.issue_pages.get(&key) {
+            Some(Ok(items)) => Ok(items.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Ok(Vec::new()),
         })
         .await
     }
@@ -315,6 +349,72 @@ mod tests {
             ));
         }
         assert_eq!(github.calls().len(), 8);
+    }
+
+    fn issue_item(number: u64) -> IssueListItem {
+        let item = serde_json::json!({
+            "id": number,
+            "number": number,
+            "locked": false,
+            "state": "open",
+            "title": "An issue",
+            "user": {"login": "octocat", "id": 1, "html_url": "https://github.com/octocat"},
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z",
+            "comments_url": "https://api.github.com/repos/octocat/a/issues/1/comments",
+            "html_url": "https://github.com/octocat/a/issues/1",
+        });
+        IssueListItem::from_api_item(item, &repo("a")).unwrap()
+    }
+
+    #[tokio::test]
+    async fn issue_pages_by_repo_and_page() {
+        use crate::config::{IssueOwnerFilter, IssueStateFilter};
+
+        let github = FakeGithub::new()
+            .with_issue_page("octocat/a", 1, Ok(vec![issue_item(2), issue_item(1)]))
+            .with_issue_page(
+                "octocat/a",
+                2,
+                Err(GhError::Http {
+                    status: 500,
+                    message: "Server Error".into(),
+                    body: Vec::new(),
+                }),
+            );
+        let first = IssueListQuery::first_page(IssueStateFilter::Open, IssueOwnerFilter::Mine);
+        let second = IssueListQuery { page: 2, ..first };
+
+        let page = github.list_issues(&repo("a"), first).await.unwrap();
+        assert_eq!(page, [issue_item(2), issue_item(1)]);
+        assert!(matches!(
+            github.list_issues(&repo("a"), second).await,
+            Err(GhError::Http { status: 500, .. })
+        ));
+        // Unset pages and repositories are empty.
+        assert!(
+            github
+                .list_issues(&repo("a"), IssueListQuery { page: 3, ..first })
+                .await
+                .unwrap()
+                .is_empty()
+        );
+        assert!(github.list_issues(&repo("b"), first).await.unwrap().is_empty());
+
+        assert_eq!(
+            github.calls()[..2],
+            [
+                GithubCall::ListIssues {
+                    repo: repo("a"),
+                    query: first
+                },
+                GithubCall::ListIssues {
+                    repo: repo("a"),
+                    query: second
+                },
+            ]
+        );
+        assert_eq!(github.calls().len(), 4);
     }
 
     #[test]

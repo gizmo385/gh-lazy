@@ -13,9 +13,9 @@ use std::time::Duration;
 
 use tokio::sync::OnceCell;
 
-use crate::config::{CacheSettings, Config};
+use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
 use crate::gh::{self, GhError, GhRequest, GhResponse, GhTimeouts};
-use crate::models::{Repository, User};
+use crate::models::{IssueListItem, Repository, User};
 
 #[cfg(any(test, feature = "test-util"))]
 mod fake;
@@ -29,6 +29,9 @@ const REPOS_PER_PAGE: &str = "50";
 /// Page size for `/notifications`: Python's `NOTIFICATIONS_PAGE_COUNT`. Only the first page is counted, so this is
 /// also the most [`Github::unread_notification_count`] returns.
 pub const NOTIFICATIONS_PER_PAGE: usize = 50;
+
+/// Page size for `/repos/{owner}/{repo}/issues`: Python's `DEFAULT_PAGE_SIZE`, so both apps request the same pages.
+pub const ISSUES_PER_PAGE: u32 = 30;
 
 /// GitHub as the app sees it.
 ///
@@ -52,6 +55,18 @@ pub trait Github: Clone + Send + Sync + 'static {
     ///
     /// Fails on an HTTP error status or a body that isn't a JSON array.
     fn unread_notification_count(&self) -> impl Future<Output = Result<usize, GhError>> + Send;
+
+    /// One page of `repo`'s issues and pull requests matching `query`, in API order. Each item carries `repo`.
+    ///
+    /// For [`IssueOwnerFilter::Mine`] the login comes from [`Github::current_user`]; if that fails, so does this,
+    /// without listing anything.
+    ///
+    /// Fails on an HTTP error status, or with [`GhError::Decode`] when any item doesn't decode.
+    fn list_issues(
+        &self,
+        repo: &Repository,
+        query: IssueListQuery,
+    ) -> impl Future<Output = Result<Vec<IssueListItem>, GhError>> + Send;
 }
 
 /// Which repositories [`Github::list_repositories`] returns, by the user's relationship to them.
@@ -141,6 +156,32 @@ impl RepoListQuery {
             kind: RepoKind::All,
             sort: RepoSort::FullName,
             direction: SortDirection::Asc,
+        }
+    }
+}
+
+/// The parameters of [`Github::list_issues`]: the filters and which page.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct IssueListQuery {
+    /// Which items to list, by state.
+    pub state: IssueStateFilter,
+    /// Which items to list, by author.
+    pub owner: IssueOwnerFilter,
+    /// The page, from 1.
+    pub page: u32,
+    /// Items per page.
+    pub per_page: u32,
+}
+
+impl IssueListQuery {
+    /// Page 1, of [`ISSUES_PER_PAGE`] items, with these filters. Callers take them from `config.pull_requests` or
+    /// `config.issues`.
+    pub fn first_page(state: IssueStateFilter, owner: IssueOwnerFilter) -> Self {
+        Self {
+            state,
+            owner,
+            page: 1,
+            per_page: ISSUES_PER_PAGE,
         }
     }
 }
@@ -290,6 +331,23 @@ impl GhCli {
         request
     }
 
+    /// One page of `GET /repos/{owner}/{repo}/issues`, with `creator` set for the `mine` filter.
+    fn list_issues_request(&self, repo: &Repository, query: IssueListQuery, creator: Option<&str>) -> GhRequest {
+        let mut request = GhRequest::get(format!("/repos/{}/{}/issues", repo.owner.login, repo.name));
+        // Python's order, so both apps' request logs read the same.
+        request.query = vec![
+            ("state".to_owned(), query.state.as_str().to_owned()),
+            ("page".to_owned(), query.page.to_string()),
+            ("per_page".to_owned(), query.per_page.to_string()),
+        ];
+        if let Some(creator) = creator {
+            request.query.push(("creator".to_owned(), creator.to_owned()));
+        }
+        // Python sends its default TTL here; `cache.list_issues_ttl` is never read.
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -305,6 +363,15 @@ impl GhCli {
 /// The number of items in a JSON array body, without decoding the items.
 fn count_items(response: &GhResponse) -> Result<usize, GhError> {
     Ok(response.json::<Vec<serde::de::IgnoredAny>>()?.len())
+}
+
+/// The items of one issues-endpoint page, each tagged with `repo`. One bad item fails the page.
+fn issue_list_items(response: &GhResponse, repo: &Repository) -> Result<Vec<IssueListItem>, GhError> {
+    response
+        .json::<Vec<serde_json::Value>>()?
+        .into_iter()
+        .map(|item| Ok(IssueListItem::from_api_item(item, repo)?))
+        .collect()
 }
 
 impl Github for GhCli {
@@ -329,6 +396,17 @@ impl Github for GhCli {
     async fn unread_notification_count(&self) -> Result<usize, GhError> {
         let response = self.inner.runner.request(Self::unread_notifications_request()).await?;
         count_items(&response)
+    }
+
+    async fn list_issues(&self, repo: &Repository, query: IssueListQuery) -> Result<Vec<IssueListItem>, GhError> {
+        let creator = match query.owner {
+            IssueOwnerFilter::Mine => Some(self.current_user().await?.login),
+            IssueOwnerFilter::All => None,
+        };
+        // One page per call, never `--paginate`: tables load further pages as they scroll.
+        let request = self.list_issues_request(repo, query, creator.as_deref());
+        let response = self.inner.runner.request(request).await?;
+        issue_list_items(&response, repo)
     }
 }
 
@@ -663,5 +741,169 @@ mod tests {
             gh.unread_notification_count().await,
             Err(GhError::NotInstalled)
         ));
+        let query = IssueListQuery::first_page(IssueStateFilter::All, IssueOwnerFilter::All);
+        assert!(matches!(
+            gh.list_issues(&lazy_fixture(), query).await,
+            Err(GhError::NotInstalled)
+        ));
+    }
+
+    /// The `response.body` of a recorded parity fixture, as `gh api -i` would print it.
+    fn parity_response(set: &str, file: &str) -> GhResponse {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../parity/fixtures")
+            .join(set)
+            .join(file);
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+        let fixture: serde_json::Value = serde_json::from_str(&text).unwrap();
+        api_response(&fixture["response"]["body"].to_string())
+    }
+
+    fn api_response(body: &str) -> GhResponse {
+        let stdout = format!("HTTP/2.0 200 OK\r\nContent-Type: application/json\r\n\r\n{body}");
+        gh::interpret(Some(0), stdout.as_bytes(), b"", false).unwrap()
+    }
+
+    fn parity_repo(set: &str, full_name: &str) -> Repository {
+        parity_response(set, &format!("repos/{full_name}/GET.json"))
+            .json()
+            .unwrap()
+    }
+
+    fn lazy_fixture() -> Repository {
+        parity_repo("prs-70", "parity-bot/lazy-fixture")
+    }
+
+    fn list_issues_argv(config: &Config, query: IssueListQuery, creator: Option<&str>) -> Vec<String> {
+        let gh = GhCli::new(GhCliOptions::from(config));
+        let request = gh.list_issues_request(&lazy_fixture(), query, creator);
+        strings(request.argv(gh.runner().hostname(), false))
+    }
+
+    #[test]
+    fn list_issues_argv_with_default_config() {
+        let query = IssueListQuery::first_page(IssueStateFilter::All, IssueOwnerFilter::All);
+        let defaults = Config::default();
+        assert_eq!(
+            query,
+            IssueListQuery::first_page(defaults.pull_requests.state_filter, defaults.pull_requests.owner_filter)
+        );
+        assert_eq!(
+            list_issues_argv(&defaults, query, None),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--cache",
+                "600s",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/lazy-fixture/issues?state=all&page=1&per_page=30"
+            ]
+        );
+    }
+
+    #[test]
+    fn list_issues_argv_for_mine() {
+        let query = IssueListQuery {
+            page: 2,
+            ..IssueListQuery::first_page(IssueStateFilter::Open, IssueOwnerFilter::Mine)
+        };
+        assert_eq!(
+            list_issues_argv(&Config::default(), query, Some("parity-bot")),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--cache",
+                "600s",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/lazy-fixture/issues?state=open&page=2&per_page=30&creator=parity-bot"
+            ]
+        );
+    }
+
+    #[test]
+    fn list_issues_argv_for_enterprise_without_cache() {
+        let mut config = Config::default();
+        config.api.base_url = "https://ghe.example.com/api/v3".into();
+        config.cache.default_ttl = 0;
+        // Only the default TTL applies to this endpoint, as in Python.
+        config.cache.list_issues_ttl = 900;
+        let query = IssueListQuery::first_page(IssueStateFilter::Closed, IssueOwnerFilter::All);
+        assert_eq!(
+            list_issues_argv(&config, query, None),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--hostname",
+                "ghe.example.com",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/lazy-fixture/issues?state=closed&page=1&per_page=30"
+            ]
+        );
+    }
+
+    #[test]
+    fn prs_70_first_page_is_thirty_pull_requests() {
+        let repo = lazy_fixture();
+        let response = parity_response(
+            "prs-70",
+            "repos/parity-bot/lazy-fixture/issues/GET.page-1_per_page-30_state-all.json",
+        );
+        let items = issue_list_items(&response, &repo).unwrap();
+        let numbers: Vec<u64> = items.iter().map(|item| item.issue().number).collect();
+        assert_eq!(numbers, (41..=70).rev().collect::<Vec<_>>());
+        for item in items {
+            let pr = item.into_pull_request().unwrap();
+            assert!(!pr.draft);
+            assert_eq!(pr.issue.repo, repo);
+        }
+    }
+
+    #[test]
+    fn base_first_page_mixes_issues_and_pull_requests_in_api_order() {
+        let repo = parity_repo("base", "gizmo385/gh-lazy");
+        let response = parity_response(
+            "base",
+            "repos/gizmo385/gh-lazy/issues/GET.page-1_per_page-30_state-all.json",
+        );
+        let items = issue_list_items(&response, &repo).unwrap();
+        assert_eq!(items.len(), 30);
+        assert_eq!(items.iter().filter(|item| item.is_pull_request()).count(), 12);
+        assert!(!items[0].is_pull_request());
+        assert_eq!(items[0].issue().number, 113);
+        assert!(items[1].is_pull_request());
+        assert_eq!(items[1].issue().number, 112);
+        // API order is newest first.
+        let numbers: Vec<u64> = items.iter().map(|item| item.issue().number).collect();
+        assert!(numbers.is_sorted_by(|a, b| a > b), "{numbers:?}");
+        assert!(items.iter().all(|item| item.issue().repo == repo));
+    }
+
+    #[test]
+    fn one_bad_item_fails_the_page() {
+        let repo = lazy_fixture();
+        let response = parity_response(
+            "prs-70",
+            "repos/parity-bot/lazy-fixture/issues/GET.page-3_per_page-30_state-all.json",
+        );
+        assert_eq!(issue_list_items(&response, &repo).unwrap().len(), 10);
+
+        let mut items: Vec<serde_json::Value> = response.json().unwrap();
+        items[4].as_object_mut().unwrap().remove("number");
+        let bad = api_response(&serde_json::Value::from(items).to_string());
+        assert!(matches!(issue_list_items(&bad, &repo), Err(GhError::Decode(_))));
+        assert!(matches!(
+            issue_list_items(&api_response(r#"{"message":"hi"}"#), &repo),
+            Err(GhError::Decode(_))
+        ));
+        assert!(issue_list_items(&api_response("[]"), &repo).unwrap().is_empty());
     }
 }

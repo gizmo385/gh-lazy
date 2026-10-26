@@ -499,6 +499,14 @@ mod tests {
         async fn unread_notification_count(&self) -> Result<usize, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }
+
+        async fn list_issues(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _query: lazy_github_core::github::IssueListQuery,
+        ) -> Result<Vec<lazy_github_core::models::IssueListItem>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
     }
 
     /// Runs the loop on a `TestBackend` with `effect` already started, and returns how it ended.

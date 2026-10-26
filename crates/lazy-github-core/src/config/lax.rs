@@ -62,58 +62,58 @@ pub(super) fn bool<'de, D: Deserializer<'de>>(deserializer: D) -> Result<bool, D
     deserializer.deserialize_any(LaxBool)
 }
 
-/// A non-negative integer given as a JSON integer, a float with no fractional part, a bool, or a string accepted by
-/// [`parse_int_str`].
-pub(super) fn u64<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u64, D::Error> {
-    struct LaxU64;
+/// An integer given as a JSON integer, a float with no fractional part, a bool, or a string accepted by
+/// [`parse_int_str`]. Negative values are allowed, as pydantic allows them; the accessors that use a value clamp it.
+pub(super) fn i64<'de, D: Deserializer<'de>>(deserializer: D) -> Result<i64, D::Error> {
+    struct LaxI64;
 
-    impl Visitor<'_> for LaxU64 {
-        type Value = u64;
+    impl Visitor<'_> for LaxI64 {
+        type Value = i64;
 
         fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            f.write_str("a non-negative integer")
+            f.write_str("an integer")
         }
 
-        fn visit_bool<E: de::Error>(self, v: bool) -> Result<u64, E> {
-            Ok(u64::from(v))
+        fn visit_bool<E: de::Error>(self, v: bool) -> Result<i64, E> {
+            Ok(i64::from(v))
         }
 
-        fn visit_u64<E: de::Error>(self, v: u64) -> Result<u64, E> {
+        fn visit_u64<E: de::Error>(self, v: u64) -> Result<i64, E> {
+            i64::try_from(v).map_err(|_| E::invalid_value(de::Unexpected::Unsigned(v), &self))
+        }
+
+        fn visit_i64<E: de::Error>(self, v: i64) -> Result<i64, E> {
             Ok(v)
         }
 
-        fn visit_i64<E: de::Error>(self, v: i64) -> Result<u64, E> {
-            u64::try_from(v).map_err(|_| E::invalid_value(de::Unexpected::Signed(v), &self))
-        }
-
-        #[allow(
-            clippy::cast_possible_truncation,
-            clippy::cast_sign_loss,
-            clippy::cast_precision_loss
-        )]
-        fn visit_f64<E: de::Error>(self, v: f64) -> Result<u64, E> {
-            // The range and fraction checks make the cast exact.
-            if v.fract() == 0.0 && (0.0..=u64::MAX as f64).contains(&v) {
-                Ok(v as u64)
+        #[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
+        fn visit_f64<E: de::Error>(self, v: f64) -> Result<i64, E> {
+            // The range and fraction checks make the cast exact. `i64::MAX as f64` rounds up to 2^63, one past the
+            // largest `i64`, so the range is half-open.
+            if v.fract() == 0.0 && (i64::MIN as f64..i64::MAX as f64).contains(&v) {
+                Ok(v as i64)
             } else {
                 Err(E::invalid_value(de::Unexpected::Float(v), &self))
             }
         }
 
-        fn visit_str<E: de::Error>(self, v: &str) -> Result<u64, E> {
+        fn visit_str<E: de::Error>(self, v: &str) -> Result<i64, E> {
             parse_int_str(v).ok_or_else(|| E::invalid_value(de::Unexpected::Str(v), &self))
         }
     }
 
-    deserializer.deserialize_any(LaxU64)
+    deserializer.deserialize_any(LaxI64)
 }
 
-/// Parses an integer string the way pydantic does: surrounding whitespace and a leading `+` are allowed, single
-/// underscores may separate digits (`1_000`), and a fractional part must be all zeros (`1.00`). Exponents (`1e3`)
-/// and other float spellings are rejected.
-fn parse_int_str(s: &str) -> Option<u64> {
+/// Parses an integer string the way pydantic does: surrounding whitespace and a leading `+` or `-` are allowed,
+/// single underscores may separate digits (`1_000`), and a fractional part must be all zeros (`1.00`). Exponents
+/// (`1e3`) and other float spellings are rejected.
+fn parse_int_str(s: &str) -> Option<i64> {
     let s = s.trim();
-    let s = s.strip_prefix('+').unwrap_or(s);
+    let (sign, s) = match s.strip_prefix('-') {
+        Some(rest) => ("-", rest),
+        None => ("", s.strip_prefix('+').unwrap_or(s)),
+    };
     let (int_part, frac) = match s.split_once('.') {
         Some((int_part, frac)) => (int_part, Some(frac)),
         None => (s, None),
@@ -128,15 +128,28 @@ fn parse_int_str(s: &str) -> Option<u64> {
     {
         return None;
     }
-    int_part.replace('_', "").parse().ok()
+    // Parsing with the sign attached keeps `i64::MIN` in range.
+    format!("{sign}{}", int_part.replace('_', "")).parse().ok()
 }
 
-/// A theme name. Python's `mode="before"` validator turns any value into a theme, falling back to `textual-dark`,
-/// so a non-string loads as `textual-dark`. An unknown string is kept as written.
+/// A string enum, such as [`super::MergeMethod`]. Read as a string first: `serde_json` reports a number where an enum is
+/// expected as a JSON syntax error, which would blame the file rather than the field.
+pub(super) fn string_enum<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    let name = String::deserialize(deserializer)?;
+    T::deserialize(de::value::StringDeserializer::new(name))
+}
+
+/// A theme name. Python's `mode="before"` validator looks the value up in Textual's built-in themes and falls back to
+/// `textual-dark`, so an unknown name (matched exactly, case included) or a non-string loads as `textual-dark`, which
+/// the next save writes back.
 pub(super) fn theme<'de, D: Deserializer<'de>>(deserializer: D) -> Result<String, D::Error> {
     Ok(match serde_json::Value::deserialize(deserializer)? {
-        serde_json::Value::String(name) => name,
-        _ => "textual-dark".to_owned(),
+        serde_json::Value::String(name) if super::TEXTUAL_THEMES.contains(&name.as_str()) => name,
+        _ => super::DEFAULT_THEME.to_owned(),
     })
 }
 
@@ -185,15 +198,49 @@ pub(super) mod naive_datetime {
         }
     }
 
+    const EXPECTING: &str = "a datetime like 2024-01-31T12:34:56[.123456]";
+
+    /// A datetime string, `null`, or a Unix timestamp as a number or numeric string, as pydantic accepts.
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<DateTime>, D::Error> {
-        match Option::<String>::deserialize(deserializer)? {
-            // The Python settings modal saves an unset datetime as the string "None".
-            None => Ok(None),
-            Some(s) if s == "None" => Ok(None),
-            Some(s) => parse(&s).map(Some).ok_or_else(|| {
-                de::Error::invalid_value(de::Unexpected::Str(&s), &"a datetime like 2024-01-31T12:34:56[.123456]")
-            }),
+        use serde_json::Value;
+
+        match Value::deserialize(deserializer)? {
+            Value::Null => Ok(None),
+            // The Python settings modal saves an unset datetime as the string "None" (Py bug B2).
+            Value::String(s) if s == "None" => Ok(None),
+            Value::String(s) => parse(&s)
+                .or_else(|| unix_number_str(&s).and_then(from_unix))
+                .map(Some)
+                .ok_or_else(|| de::Error::invalid_value(de::Unexpected::Str(&s), &EXPECTING)),
+            Value::Number(n) => n
+                .as_f64()
+                .and_then(from_unix)
+                .map(Some)
+                .ok_or_else(|| de::Error::invalid_value(de::Unexpected::Other("number"), &EXPECTING)),
+            Value::Bool(b) => Err(de::Error::invalid_type(de::Unexpected::Bool(b), &EXPECTING)),
+            Value::Array(_) => Err(de::Error::invalid_type(de::Unexpected::Seq, &EXPECTING)),
+            Value::Object(_) => Err(de::Error::invalid_type(de::Unexpected::Map, &EXPECTING)),
         }
+    }
+
+    /// A string pydantic reads as a Unix timestamp: an optional sign, then digits with at most one `.` (`5.`, `.5`).
+    fn unix_number_str(s: &str) -> Option<f64> {
+        let digits = s.strip_prefix(['+', '-']).unwrap_or(s);
+        let (int_part, frac) = digits.split_once('.').unwrap_or((digits, ""));
+        let all_digits = |part: &str| part.bytes().all(|b| b.is_ascii_digit());
+        if (int_part.is_empty() && frac.is_empty()) || !all_digits(int_part) || !all_digits(frac) {
+            return None;
+        }
+        s.parse().ok()
+    }
+
+    /// A Unix timestamp in local civil time, as Python's aware UTC datetime is converted for Py bug B37. As in
+    /// pydantic, a value beyond ±2e10 is in milliseconds rather than seconds; precision is microseconds.
+    #[allow(clippy::cast_possible_truncation)] // Saturating: an out-of-range value fails in `from_microsecond`.
+    fn from_unix(value: f64) -> Option<DateTime> {
+        let micros = if value.abs() > 2e10 { value * 1e3 } else { value * 1e6 };
+        let ts = Timestamp::from_microsecond(micros.round() as i64).ok()?;
+        Some(ts.to_zoned(TimeZone::system()).datetime())
     }
 
     /// Parses a naive datetime, or an RFC 3339 timestamp with an offset converted to local civil time. Precision
@@ -221,7 +268,33 @@ pub(super) mod naive_datetime {
 
 #[cfg(test)]
 mod tests {
-    use super::parse_int_str;
+    use super::{TimeZone, Timestamp, naive_datetime, parse_int_str};
+
+    #[test]
+    fn unix_timestamps_load_as_local_time() {
+        let local = |s: &str| s.parse::<Timestamp>().unwrap().to_zoned(TimeZone::system()).datetime();
+        for (raw, utc) in [
+            ("0", "1970-01-01T00:00:00Z"),
+            ("-5", "1969-12-31T23:59:55Z"),
+            ("1.5", "1970-01-01T00:00:01.5Z"),
+            ("\"01\"", "1970-01-01T00:00:01Z"),
+            ("\"+5\"", "1970-01-01T00:00:05Z"),
+            ("\"5.\"", "1970-01-01T00:00:05Z"),
+            ("\".5\"", "1970-01-01T00:00:00.5Z"),
+            // Beyond 2e10 the value is in milliseconds.
+            ("1700000000123", "2023-11-14T22:13:20.123Z"),
+            ("20000000001", "1970-08-20T11:33:20.001Z"),
+            ("1700000000123.5", "2023-11-14T22:13:20.1235Z"),
+        ] {
+            let mut de = serde_json::Deserializer::from_str(raw);
+            let loaded = naive_datetime::deserialize(&mut de).unwrap();
+            assert_eq!(loaded, Some(local(utc)), "{raw}");
+        }
+        for raw in ["\"1e3\"", "\" 5\"", "\".\"", "\"-\"", "true", "99999999999999999999"] {
+            let mut de = serde_json::Deserializer::from_str(raw);
+            assert!(naive_datetime::deserialize(&mut de).is_err(), "{raw}");
+        }
+    }
 
     #[test]
     fn int_strings_match_pydantic() {
@@ -240,7 +313,13 @@ mod tests {
             ("1e3", None),
             (".0", None),
             ("0x10", None),
-            ("-1", None),
+            ("-1", Some(-1)),
+            (" -1_000.0 ", Some(-1000)),
+            ("-9223372036854775808", Some(i64::MIN)),
+            ("9223372036854775808", None),
+            ("-+1", None),
+            ("+-1", None),
+            ("-", None),
             ("", None),
         ] {
             assert_eq!(parse_int_str(raw), expected, "{raw:?}");

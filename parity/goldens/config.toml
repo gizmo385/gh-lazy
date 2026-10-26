@@ -1,10 +1,43 @@
 version = 1
-description = "Config file: the Python app's default config and a config with every field set, loaded and saved byte for byte"
+description = "Config file: the Python app's default config and a config with every field set, loaded and saved byte for byte, and every field's accepted and rejected forms"
 generator = "crates/lazy-github-core/tests/fixtures/config/generate.py"
 golden = [
   "crates/lazy-github-core/tests/fixtures/config/python-default.json",
   "crates/lazy-github-core/tests/fixtures/config/python-full.json",
+  "crates/lazy-github-core/tests/fixtures/config/python-parsing.json",
 ]
 test = "crates/lazy-github-core/tests/config.rs"
 fresh_test = "config_goldens_are_fresh"
-parity_rows = ["config.api-base-url", "config.api-client-type"]
+parity_rows = [
+  "config.appearance-theme",
+  "config.appearance-show-command-log",
+  "config.appearance-show-workflows",
+  "config.appearance-show-issues",
+  "config.appearance-show-pull-requests",
+  "config.notifications-enabled",
+  "config.notifications-mark-notification-as-read-when-selected",
+  "config.bindings-overrides",
+  "config.repositories-additional-repos-to-track",
+  "config.repositories-favorites",
+  "config.pull-requests-state-filter",
+  "config.pull-requests-owner-filter",
+  "config.pull-requests-preferred-merge-method",
+  "config.pull-requests-additional-suggested-pr-reviewers",
+  "config.pull-requests-preload-pull-request-for-current-commit",
+  "config.pull-requests-pull-request-template",
+  "config.issues-state-filter",
+  "config.issues-owner-filter",
+  "config.cache-auth-cache-duration",
+  "config.cache-auth-last-checked",
+  "config.cache-cache-directory",
+  "config.cache-default-ttl",
+  "config.cache-list-repos-ttl",
+  "config.cache-list-issues-ttl",
+  "config.core-first-start",
+  "config.core-logfile-path",
+  "config.core-logfile-max-bytes",
+  "config.core-logfile-count",
+  "config.api-base-url",
+  "config.api-client-type",
+  "infrastructure.config-load-save",
+]

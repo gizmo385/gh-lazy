@@ -10,7 +10,7 @@ accept negative values, as pydantic does: they load and save unchanged, and act 
 
 | Id | Section | Field | Default | Python reference | Milestone | Status | Issue | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `config.appearance-theme` | `appearance` | `theme` | `"textual-dark"` | `lib/config.py` `AppearanceSettings` | M0 | not started | #64, #159 | Unknown name (or any non-string) → `textual-dark`, which the next save writes back. Applied in #77. |
+| `config.appearance-theme` | `appearance` | `theme` | `"textual-dark"` | `lib/config.py` `AppearanceSettings` | M0 | not started | #64, #159 | Unknown name (or any non-string) → `textual-dark`, which the next save writes back. A list or object crashes Python (Py bug B39); Rust loads it as `textual-dark`. Applied in #77. |
 | `config.appearance-show-command-log` | `appearance` | `show_command_log` | `false` | `lib/config.py` | M0 | not started | #64, #159 | Used by #74/#80. |
 | `config.appearance-show-workflows` | `appearance` | `show_workflows` | `true` | `lib/config.py` | M0 | not started | #64, #159 | |
 | `config.appearance-show-issues` | `appearance` | `show_issues` | `true` | `lib/config.py` | M0 | not started | #64, #159 | |
@@ -29,7 +29,7 @@ accept negative values, as pydantic does: they load and save unchanged, and act 
 | `config.issues-state-filter` | `issues` | `state_filter` | `"all"` | `lib/config.py` `IssueSettings` | M0 | not started | #64, #159 | |
 | `config.issues-owner-filter` | `issues` | `owner_filter` | `"all"` | `lib/config.py` | M0 | not started | #64, #159 | |
 | `config.cache-auth-cache-duration` | `cache` | `auth_cache_duration` | `86400` | `lib/config.py` `CacheSettings` | M0 | not started | #64, #159 | Seconds. |
-| `config.cache-auth-last-checked` | `cache` | `auth_last_checked` | `null` (ISO datetime) | `lib/config.py` | M0 | not started | #64, #159 | Python writes naive local time. A `"None"` string can appear (Py bug B2). A timestamp with an offset loads in Python but crashes the auth check (Py bug B37). |
+| `config.cache-auth-last-checked` | `cache` | `auth_last_checked` | `null` (ISO datetime) | `lib/config.py` | M0 | not started | #64, #159 | Python writes naive local time. A `"None"` string can appear (Py bug B2). A timestamp with an offset, or a Unix timestamp (number or numeric string), loads in Python but crashes the auth check (Py bug B37). |
 | `config.cache-cache-directory` | `cache` | `cache_directory` | `~/.config/lazy-github/.cache` | `lib/config.py` | M0 | not started | #64, #159 | Absolute path is written. |
 | `config.cache-default-ttl` | `cache` | `default_ttl` | `600` | `lib/config.py` | M0 | not started | #64, #159 | |
 | `config.cache-list-repos-ttl` | `cache` | `list_repos_ttl` | `86400` | `lib/config.py` | M0 | not started | #64, #159 | |

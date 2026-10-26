@@ -31,7 +31,8 @@ impl StartupScreen {
         if auth_is_fresh(
             cache.auth_last_checked,
             cx.local_now().datetime(),
-            cache.auth_cache_duration,
+            // Clamped: a negative duration, which Python keeps, means the check always runs.
+            cache.auth_cache_duration().as_secs(),
         ) {
             return StartupDecision::Fresh;
         }
@@ -101,6 +102,17 @@ mod tests {
     #[test]
     fn a_check_in_the_future_is_fresh() {
         assert!(auth_is_fresh(Some(now() + 1.hour()), now(), DAY));
+    }
+
+    #[test]
+    fn a_negative_duration_always_checks() {
+        let cache = lazy_github_core::config::CacheSettings {
+            auth_cache_duration: -1,
+            ..Default::default()
+        };
+        let duration = cache.auth_cache_duration().as_secs();
+        assert!(!auth_is_fresh(Some(now()), now(), duration));
+        assert!(!auth_is_fresh(Some(now() - 1.second()), now(), duration));
     }
 
     #[test]

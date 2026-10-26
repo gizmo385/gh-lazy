@@ -299,11 +299,12 @@ mod tests {
             Box::new(config)
         };
 
-        runtime.execute(Effect::SaveConfig(config("first")));
+        // Real theme names, since an unknown one loads back as `textual-dark`.
+        runtime.execute(Effect::SaveConfig(config("nord")));
         // The saver takes the first snapshot and starts writing it.
         run_ready_tasks().await;
-        runtime.execute(Effect::SaveConfig(config("second")));
-        runtime.execute(Effect::SaveConfig(config("third")));
+        runtime.execute(Effect::SaveConfig(config("dracula")));
+        runtime.execute(Effect::SaveConfig(config("gruvbox")));
         runtime.shutdown().await;
 
         let mut saves = 0;
@@ -312,7 +313,7 @@ mod tests {
             saves += 1;
         }
         assert_eq!(saves, 2);
-        assert_eq!(Config::load(&paths).unwrap().appearance.theme, "third");
+        assert_eq!(Config::load(&paths).unwrap().appearance.theme, "gruvbox");
     }
 
     #[tokio::test(flavor = "current_thread", start_paused = true)]

@@ -389,6 +389,23 @@ mod tests {
         assert_eq!(options.timeouts, GhTimeouts::default());
     }
 
+    /// A negative TTL, which Python loads and keeps, means no HTTP cache, as a TTL of 0 does.
+    #[test]
+    fn negative_ttls_disable_the_cache() {
+        let mut config = Config::default();
+        config.cache.default_ttl = -1;
+        config.cache.list_repos_ttl = -600;
+        config.cache.list_issues_ttl = -5;
+        assert_eq!(
+            GhCliOptions::from(&config).ttls,
+            CacheTtls {
+                default: Duration::ZERO,
+                list_repos: Duration::ZERO,
+                list_issues: Duration::ZERO,
+            }
+        );
+    }
+
     #[test]
     fn check_auth_argv() {
         assert_eq!(

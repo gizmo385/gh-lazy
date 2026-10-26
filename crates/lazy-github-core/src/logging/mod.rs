@@ -53,8 +53,8 @@ impl From<&CoreConfig> for LoggingOptions {
     fn from(core: &CoreConfig) -> Self {
         Self {
             path: core.logfile_path.clone(),
-            max_bytes: core.logfile_max_bytes,
-            backup_count: u32::try_from(core.logfile_count).unwrap_or(u32::MAX),
+            max_bytes: core.logfile_max_bytes(),
+            backup_count: core.logfile_count(),
             clock: system_clock(),
         }
     }
@@ -233,6 +233,20 @@ mod tests {
         assert_eq!(opts.path, core.logfile_path);
         assert_eq!(opts.max_bytes, 123);
         assert_eq!(opts.backup_count, 7);
+    }
+
+    /// Python's `RotatingFileHandler` never rolls over at a size of 0 or less, and keeps no backups for a count of 0 or
+    /// less.
+    #[test]
+    fn negative_log_sizes_never_rotate_and_keep_no_backups() {
+        let core = CoreConfig {
+            logfile_max_bytes: -1,
+            logfile_count: -3,
+            ..CoreConfig::default()
+        };
+        let opts = LoggingOptions::from(&core);
+        assert_eq!(opts.max_bytes, 0);
+        assert_eq!(opts.backup_count, 0);
     }
 
     /// Runs `f` with the real file layer writing through `tracing_appender::non_blocking`, and returns the file.

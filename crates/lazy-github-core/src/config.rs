@@ -147,13 +147,42 @@ pub enum MergeMethod {
     Rebase,
 }
 
+/// The names of Textual's built-in themes, in Textual's order: the only values `appearance.theme` loads as. The UI
+/// crate's theme list is checked against this one.
+pub const TEXTUAL_THEMES: &[&str] = &[
+    "textual-dark",
+    "textual-light",
+    "nord",
+    "gruvbox",
+    "catppuccin-mocha",
+    "dracula",
+    "tokyo-night",
+    "monokai",
+    "flexoki",
+    "catppuccin-latte",
+    "catppuccin-frappe",
+    "catppuccin-macchiato",
+    "solarized-light",
+    "solarized-dark",
+    "rose-pine",
+    "rose-pine-moon",
+    "rose-pine-dawn",
+    "atom-one-dark",
+    "atom-one-light",
+    "ansi-dark",
+    "ansi-light",
+];
+
+/// The theme of a new config, and what any value outside [`TEXTUAL_THEMES`] loads as.
+pub const DEFAULT_THEME: &str = "textual-dark";
+
 /// Settings that change the appearance of LazyGithub, including which sections are shown.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 #[allow(clippy::struct_excessive_bools)] // One bool per setting, mirroring the file.
 pub struct AppearanceSettings {
-    /// The Textual theme name. Kept as written, even when unknown; the theme code falls back where it's used. A
-    /// non-string value loads as `textual-dark`, as in Python.
+    /// The Textual theme name, one of [`TEXTUAL_THEMES`] once loaded: an unknown name or a non-string value loads as
+    /// [`DEFAULT_THEME`], as in Python, so the next save writes that.
     #[serde(deserialize_with = "lax::theme")]
     pub theme: String,
     /// Whether the command log is shown on startup.
@@ -176,7 +205,7 @@ pub struct AppearanceSettings {
 impl Default for AppearanceSettings {
     fn default() -> Self {
         Self {
-            theme: "textual-dark".to_owned(),
+            theme: DEFAULT_THEME.to_owned(),
             show_command_log: false,
             show_workflows: true,
             show_issues: true,
@@ -241,10 +270,13 @@ pub struct RepositorySettings {
 #[serde(default)]
 pub struct PullRequestSettings {
     /// Which pull requests to list, by state.
+    #[serde(deserialize_with = "lax::string_enum")]
     pub state_filter: IssueStateFilter,
     /// Which pull requests to list, by author.
+    #[serde(deserialize_with = "lax::string_enum")]
     pub owner_filter: IssueOwnerFilter,
     /// How pull requests are merged.
+    #[serde(deserialize_with = "lax::string_enum")]
     pub preferred_merge_method: MergeMethod,
     /// Extra logins to suggest as reviewers.
     pub additional_suggested_pr_reviewers: Vec<String>,
@@ -267,21 +299,24 @@ pub struct PullRequestSettings {
 #[serde(default)]
 pub struct IssueSettings {
     /// Which issues to list, by state.
+    #[serde(deserialize_with = "lax::string_enum")]
     pub state_filter: IssueStateFilter,
     /// Which issues to list, by author.
+    #[serde(deserialize_with = "lax::string_enum")]
     pub owner_filter: IssueOwnerFilter,
     /// Unknown keys, written back on save.
     #[serde(flatten)]
     pub extra: ExtraFields,
 }
 
-/// How long data from the GitHub API is cached. Durations are whole seconds, as in the file.
+/// How long data from the GitHub API is cached. Durations are whole seconds, as in the file. A negative value loads
+/// and saves unchanged, as in Python, and the accessors treat it as zero.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct CacheSettings {
     /// How long a successful authentication check is trusted, in seconds.
-    #[serde(deserialize_with = "lax::u64")]
-    pub auth_cache_duration: u64,
+    #[serde(deserialize_with = "lax::i64")]
+    pub auth_cache_duration: i64,
     /// When authentication was last checked, in local civil time.
     #[serde(with = "lax::naive_datetime")]
     pub auth_last_checked: Option<DateTime>,
@@ -290,14 +325,14 @@ pub struct CacheSettings {
     #[serde(serialize_with = "lax::serialize_path", deserialize_with = "lax::path")]
     pub cache_directory: PathBuf,
     /// The default cache TTL for requests, in seconds.
-    #[serde(deserialize_with = "lax::u64")]
-    pub default_ttl: u64,
+    #[serde(deserialize_with = "lax::i64")]
+    pub default_ttl: i64,
     /// The cache TTL for listing repositories, in seconds.
-    #[serde(deserialize_with = "lax::u64")]
-    pub list_repos_ttl: u64,
+    #[serde(deserialize_with = "lax::i64")]
+    pub list_repos_ttl: i64,
     /// The cache TTL for listing issues, in seconds.
-    #[serde(deserialize_with = "lax::u64")]
-    pub list_issues_ttl: u64,
+    #[serde(deserialize_with = "lax::i64")]
+    pub list_issues_ttl: i64,
     /// Unknown keys, written back on save.
     #[serde(flatten)]
     pub extra: ExtraFields,
@@ -317,25 +352,30 @@ impl Default for CacheSettings {
     }
 }
 
+/// Seconds as a [`Duration`], a negative count being zero.
+fn clamped_secs(secs: i64) -> Duration {
+    Duration::from_secs(u64::try_from(secs).unwrap_or(0))
+}
+
 impl CacheSettings {
-    /// [`Self::auth_cache_duration`] as a [`Duration`].
+    /// [`Self::auth_cache_duration`] as a [`Duration`]. A negative value is zero: the auth check always runs.
     pub fn auth_cache_duration(&self) -> Duration {
-        Duration::from_secs(self.auth_cache_duration)
+        clamped_secs(self.auth_cache_duration)
     }
 
-    /// [`Self::default_ttl`] as a [`Duration`].
+    /// [`Self::default_ttl`] as a [`Duration`]. A negative value is zero: no HTTP cache.
     pub fn default_ttl(&self) -> Duration {
-        Duration::from_secs(self.default_ttl)
+        clamped_secs(self.default_ttl)
     }
 
-    /// [`Self::list_repos_ttl`] as a [`Duration`].
+    /// [`Self::list_repos_ttl`] as a [`Duration`]. A negative value is zero: no HTTP cache.
     pub fn list_repos_ttl(&self) -> Duration {
-        Duration::from_secs(self.list_repos_ttl)
+        clamped_secs(self.list_repos_ttl)
     }
 
-    /// [`Self::list_issues_ttl`] as a [`Duration`].
+    /// [`Self::list_issues_ttl`] as a [`Duration`]. A negative value is zero: no HTTP cache.
     pub fn list_issues_ttl(&self) -> Duration {
-        Duration::from_secs(self.list_issues_ttl)
+        clamped_secs(self.list_issues_ttl)
     }
 }
 
@@ -350,12 +390,13 @@ pub struct CoreConfig {
     /// which can't know the config folder.
     #[serde(serialize_with = "lax::serialize_path", deserialize_with = "lax::path")]
     pub logfile_path: PathBuf,
-    /// How large the log grows before it is rotated, in bytes.
-    #[serde(deserialize_with = "lax::u64")]
-    pub logfile_max_bytes: u64,
-    /// How many rotated logs are kept.
-    #[serde(deserialize_with = "lax::u64")]
-    pub logfile_count: u64,
+    /// How large the log grows before it is rotated, in bytes. Kept as written, negative included; use
+    /// [`Self::logfile_max_bytes()`].
+    #[serde(deserialize_with = "lax::i64")]
+    pub logfile_max_bytes: i64,
+    /// How many rotated logs are kept. Kept as written, negative included; use [`Self::logfile_count()`].
+    #[serde(deserialize_with = "lax::i64")]
+    pub logfile_count: i64,
     /// Unknown keys, written back on save.
     #[serde(flatten)]
     pub extra: ExtraFields,
@@ -370,6 +411,19 @@ impl Default for CoreConfig {
             logfile_count: 5,
             extra: ExtraFields::new(),
         }
+    }
+}
+
+impl CoreConfig {
+    /// [`Self::logfile_max_bytes`] as a size. A negative value is zero: the log never rotates.
+    pub fn logfile_max_bytes(&self) -> u64 {
+        u64::try_from(self.logfile_max_bytes).unwrap_or(0)
+    }
+
+    /// [`Self::logfile_count`] as a count. A negative value is zero: no rotated logs are kept. A count beyond
+    /// `u32::MAX` is `u32::MAX`, which keeps every log anyway.
+    pub fn logfile_count(&self) -> u32 {
+        u32::try_from(self.logfile_count.max(0)).unwrap_or(u32::MAX)
     }
 }
 
@@ -477,7 +531,7 @@ impl Config {
             }
         };
         let config = serde_path_to_error::deserialize(&mut deserializer).map_err(|err| {
-            let field = err.path().to_string();
+            let field = field_path(err.path());
             to_error(field, err.inner())
         })?;
         // Rejects trailing content after the object, as `json.loads` does.
@@ -545,6 +599,26 @@ impl Config {
     }
 }
 
+/// The path of a bad value as pydantic writes its `loc`: every segment joined with `.`, list indices included
+/// (`repositories.favorites.0`, where `serde_path_to_error` writes `favorites[0]`).
+fn field_path(path: &serde_path_to_error::Path) -> String {
+    use serde_path_to_error::Segment;
+
+    if path.iter().next().is_none() {
+        // The whole file, which `serde_path_to_error` shows as `.`.
+        return path.to_string();
+    }
+    let segments: Vec<String> = path
+        .iter()
+        .map(|segment| match segment {
+            Segment::Seq { index } => index.to_string(),
+            Segment::Map { key } | Segment::Enum { variant: key } => key.clone(),
+            Segment::Unknown => "?".to_owned(),
+        })
+        .collect();
+    segments.join(".")
+}
+
 /// `serde_json` appends " at line L column C" to its messages; the position is reported separately.
 fn strip_position(err: &serde_json::Error) -> String {
     let message = err.to_string();
@@ -562,6 +636,38 @@ mod tests {
         let paths = ConfigPaths::for_home(Path::new("/home/lazy"));
         assert_eq!(paths.dir, Path::new("/home/lazy/.config/lazy-github"));
         assert_eq!(paths.file, Path::new("/home/lazy/.config/lazy-github/config.json"));
+    }
+
+    #[test]
+    fn negative_cache_durations_act_as_zero() {
+        let cache = CacheSettings {
+            auth_cache_duration: -1,
+            default_ttl: -600,
+            list_repos_ttl: i64::MIN,
+            list_issues_ttl: -5,
+            ..CacheSettings::default()
+        };
+        assert_eq!(cache.auth_cache_duration(), Duration::ZERO);
+        assert_eq!(cache.default_ttl(), Duration::ZERO);
+        assert_eq!(cache.list_repos_ttl(), Duration::ZERO);
+        assert_eq!(cache.list_issues_ttl(), Duration::ZERO);
+        assert_eq!(CacheSettings::default().default_ttl(), Duration::from_mins(10));
+    }
+
+    #[test]
+    fn negative_log_sizes_act_as_zero() {
+        let core = CoreConfig {
+            logfile_max_bytes: -1,
+            logfile_count: -5,
+            ..CoreConfig::default()
+        };
+        assert_eq!(core.logfile_max_bytes(), 0);
+        assert_eq!(core.logfile_count(), 0);
+        let huge = CoreConfig {
+            logfile_count: i64::MAX,
+            ..CoreConfig::default()
+        };
+        assert_eq!(huge.logfile_count(), u32::MAX);
     }
 
     #[test]

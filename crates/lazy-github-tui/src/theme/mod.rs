@@ -230,6 +230,15 @@ mod tests {
         assert_eq!(Theme::default().name, "textual-dark");
     }
 
+    /// The config loads only the names in `TEXTUAL_THEMES`, so that list must be exactly the themes drawn here.
+    #[test]
+    fn config_theme_names_are_the_builtin_themes() {
+        use lazy_github_core::config::{DEFAULT_THEME, TEXTUAL_THEMES};
+
+        assert_eq!(Theme::all().map(|t| t.name).collect::<Vec<_>>(), TEXTUAL_THEMES);
+        assert_eq!(Theme::default().name, DEFAULT_THEME);
+    }
+
     #[test]
     fn by_name_finds_every_builtin_theme() {
         for name in NAMES {

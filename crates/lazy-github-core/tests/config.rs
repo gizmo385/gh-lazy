@@ -67,9 +67,9 @@ fn default_matches_python_byte_for_byte() {
     assert_eq!(config.to_json_pretty(), fixture("python-default.json"));
 }
 
-/// Regenerates `python-default.json` and `python-full.json` with the Python app and checks the committed copies match
-/// (the golden manifest is `parity/goldens/config.toml`). The generator also checks the hand-written fixtures load in
-/// Python, and fails if one doesn't.
+/// Regenerates `python-default.json`, `python-full.json` and `python-parsing.json` with the Python app and checks the
+/// committed copies match (the golden manifest is `parity/goldens/config.toml`). The generator also checks the
+/// hand-written fixtures load in Python, and fails if one doesn't.
 // Unix only, like `default_matches_python_byte_for_byte`: the goldens hold `/home/lazy/...` paths.
 #[cfg(unix)]
 #[test]
@@ -80,6 +80,7 @@ fn config_goldens_are_fresh() {
         &[
             "crates/lazy-github-core/tests/fixtures/config/python-default.json",
             "crates/lazy-github-core/tests/fixtures/config/python-full.json",
+            "crates/lazy-github-core/tests/fixtures/config/python-parsing.json",
         ],
         Path::new("/home/lazy"),
         "HOME=/home/lazy uv run python crates/lazy-github-core/tests/fixtures/config/generate.py",
@@ -246,8 +247,8 @@ fn keys(value: &Value) -> Vec<&str> {
 fn unknown_fields_survive_a_round_trip_after_known_keys() {
     let text = fixture("unknown-fields.json");
     let (_tmp, paths, c) = load_ok(&text);
-    // The theme is kept as written, even though Textual doesn't know it.
-    assert_eq!(c.appearance.theme, "not-a-real-theme");
+    // An unknown theme loads as the default, as in Python, so it's the one known value that changes.
+    assert_eq!(c.appearance.theme, "textual-dark");
     // Override strings are kept raw, Textual key names included.
     assert_eq!(c.bindings.overrides["app.help"], "question_mark");
     assert_eq!(c.bindings.overrides["common.search"], "slash");
@@ -255,8 +256,10 @@ fn unknown_fields_survive_a_round_trip_after_known_keys() {
     assert_eq!(c.bindings.overrides["common.table.select"], "q, escape");
     c.save(&paths).unwrap();
 
-    let input: Value = serde_json::from_str(&text).unwrap();
+    let mut input: Value = serde_json::from_str(&text).unwrap();
     let output: Value = serde_json::from_str(&std::fs::read_to_string(&paths.file).unwrap()).unwrap();
+    assert_eq!(output["appearance"]["theme"], "textual-dark");
+    input["appearance"]["theme"] = "textual-dark".into();
     assert_contains(&output, &input, "");
     assert_eq!(output["api"]["client_type"], "GITHUB_CLI");
 
@@ -324,57 +327,161 @@ fn lax_values_load_and_save_canonically() {
     assert_eq!(output["core"]["logfile_count"], Value::from(2));
 }
 
-#[rstest]
-#[case::true_lower("\"true\"", true)]
-#[case::false_mixed("\"FaLsE\"", false)]
-#[case::yes("\"YES\"", true)]
-#[case::no("\"no\"", false)]
-#[case::on("\"On\"", true)]
-#[case::off("\"off\"", false)]
-#[case::t("\"T\"", true)]
-#[case::f("\"f\"", false)]
-#[case::y("\"y\"", true)]
-#[case::n("\"N\"", false)]
-#[case::one_str("\"1\"", true)]
-#[case::zero_str("\"0\"", false)]
-#[case::one("1", true)]
-#[case::zero("0", false)]
-#[case::json_true("true", true)]
-fn lax_bool_forms(#[case] raw: &str, #[case] expected: bool) {
-    let (_tmp, _paths, c) = load_ok(&format!(r#"{{"notifications": {{"enabled": {raw}}}}}"#));
-    assert_eq!(c.notifications.enabled, expected);
+/// What loading one value does, on either side.
+#[derive(Debug, Clone, PartialEq)]
+enum Outcome {
+    /// It loads, and a save writes this value.
+    Saved(Value),
+    /// The file is rejected at this field.
+    Error(String),
+    /// Python raises this exception from inside validation, which the app doesn't catch (no Rust equivalent).
+    Exception(String),
 }
 
-#[rstest]
-#[case::bool_two("2")]
-#[case::bool_word("\"maybe\"")]
-#[case::bool_null("null")]
-fn bad_bools_are_errors(#[case] raw: &str) {
-    let (_tmp, _paths, result) = load_text(&format!(r#"{{"notifications": {{"enabled": {raw}}}}}"#));
-    assert!(matches!(result, Err(ConfigError::Invalid { ref field, .. }) if field == "notifications.enabled"));
+/// One case of `python-parsing.json`.
+#[derive(Debug, serde::Deserialize)]
+struct ParseCase {
+    field: String,
+    input: Value,
+    #[serde(flatten)]
+    python: PythonResult,
 }
 
-#[rstest]
-#[case::int("600", 600)]
-#[case::whole_float("600.0", 600)]
-#[case::string("\"600\"", 600)]
-#[case::string_float("\"600.0\"", 600)]
-#[case::underscores("\"1_000\"", 1000)]
-fn lax_int_forms(#[case] raw: &str, #[case] expected: u64) {
-    let (_tmp, _paths, c) = load_ok(&format!(r#"{{"cache": {{"default_ttl": {raw}}}}}"#));
-    assert_eq!(c.cache.default_ttl, expected);
+#[derive(Debug, serde::Deserialize)]
+#[serde(tag = "result", rename_all = "lowercase")]
+enum PythonResult {
+    Ok { saved: Value },
+    Error { loc: String },
+    Exception { exception: String },
 }
 
-#[rstest]
-#[case::fraction("600.5")]
-#[case::word("\"ten\"")]
-#[case::negative("-1")]
-#[case::null("null")]
-#[case::exponent_string("\"1e3\"")]
-#[case::fraction_string("\"600.5\"")]
-fn bad_ints_are_errors(#[case] raw: &str) {
-    let (_tmp, _paths, result) = load_text(&format!(r#"{{"cache": {{"default_ttl": {raw}}}}}"#));
-    assert!(matches!(result, Err(ConfigError::Invalid { ref field, .. }) if field == "cache.default_ttl"));
+impl From<PythonResult> for Outcome {
+    fn from(result: PythonResult) -> Self {
+        match result {
+            PythonResult::Ok { saved } => Outcome::Saved(saved),
+            PythonResult::Error { loc } => Outcome::Error(loc),
+            PythonResult::Exception { exception } => Outcome::Exception(exception),
+        }
+    }
+}
+
+/// What the Rust app does instead, for a case listed in [`PARSE_DIFFS`].
+#[derive(Debug, Clone, Copy)]
+enum Expected {
+    /// Loads, and a save writes this JSON.
+    Saved(&'static str),
+    /// Loads as this instant in local civil time, which a save writes naive (whole seconds only).
+    LocalTime(&'static str),
+}
+
+impl Expected {
+    fn outcome(self) -> Outcome {
+        match self {
+            Expected::Saved(json) => Outcome::Saved(serde_json::from_str(json).unwrap()),
+            Expected::LocalTime(instant) => {
+                let local = instant
+                    .parse::<jiff::Timestamp>()
+                    .unwrap()
+                    .to_zoned(jiff::tz::TimeZone::system());
+                Outcome::Saved(local.strftime("%Y-%m-%dT%H:%M:%S").to_string().into())
+            }
+        }
+    }
+}
+
+/// The cases of `python-parsing.json` where the Rust app deliberately differs: field, input (JSON), what Rust does, and
+/// why, naming the py-bug.
+const PARSE_DIFFS: &[(&str, &str, Expected, &str)] = &[
+    (
+        "cache.auth_last_checked",
+        r#""None""#,
+        Expected::Saved("null"),
+        "B2: Python's Settings modal writes an unset datetime as \"None\", which Python then can't load",
+    ),
+    (
+        "cache.auth_last_checked",
+        r#""2026-01-02T03:04:05+02:00""#,
+        Expected::LocalTime("2026-01-02T03:04:05+02:00"),
+        "B37: Python keeps the offset, and the aware datetime crashes the auth check at startup",
+    ),
+    (
+        "cache.auth_last_checked",
+        "0",
+        Expected::LocalTime("1970-01-01T00:00:00Z"),
+        "B37: Python loads a Unix timestamp as an aware UTC datetime, which crashes the auth check at startup",
+    ),
+    (
+        "appearance.theme",
+        r#"{"name": "nord"}"#,
+        Expected::Saved(r#""textual-dark""#),
+        "B39: Python's theme validator raises TypeError for an unhashable value, which crashes startup",
+    ),
+];
+
+/// Loads `{section: {key: input}}` and reports what a save writes at that field, or the field it's rejected at.
+fn rust_outcome(field: &str, input: &Value) -> Outcome {
+    let (section, key) = field.split_once('.').unwrap();
+    let text = serde_json::json!({ section: { key: input } }).to_string();
+    match load_text(&text).2 {
+        Ok(config) => {
+            let saved: Value = serde_json::from_str(&config.to_json_pretty()).unwrap();
+            Outcome::Saved(saved[section][key].clone())
+        }
+        Err(ConfigError::Invalid { field, .. }) => Outcome::Error(field),
+        // Not a field error, so it matches nothing Python reports; the message shows in the failure.
+        Err(other) => Outcome::Error(format!("not a field error: {other}")),
+    }
+}
+
+/// Every case the Python app's validators were run on (`python-parsing.json`, from `generate.py`): Rust loads the
+/// value to what Python saves, or rejects the file at the field Python names, except for the cases in
+/// [`PARSE_DIFFS`]. A listed difference that no longer differs fails too.
+#[test]
+fn python_parsing_cases_match() {
+    let cases: Vec<ParseCase> = serde_json::from_str(&fixture("python-parsing.json")).unwrap();
+    let diffs: Vec<(&str, Value, Expected, &str)> = PARSE_DIFFS
+        .iter()
+        .map(|&(field, input, expected, why)| (field, serde_json::from_str(input).unwrap(), expected, why))
+        .collect();
+    let mut used = vec![false; diffs.len()];
+    let mut failures = Vec::new();
+
+    for case in cases {
+        let python = Outcome::from(case.python);
+        let rust = rust_outcome(&case.field, &case.input);
+        let diff = diffs
+            .iter()
+            .position(|(field, input, ..)| *field == case.field && *input == case.input);
+        let at = format!("{} = {}", case.field, case.input);
+        match diff {
+            Some(i) => {
+                used[i] = true;
+                let (.., expected, why) = diffs[i];
+                if rust == python {
+                    failures.push(format!(
+                        "{at}: listed in PARSE_DIFFS ({why}) but now matches Python: {rust:?}"
+                    ));
+                } else if rust != expected.outcome() {
+                    failures.push(format!("{at}: expected {:?} ({why}), got {rust:?}", expected.outcome()));
+                }
+            }
+            None if rust != python => failures.push(format!("{at}: Python {python:?}, Rust {rust:?}")),
+            None => {}
+        }
+    }
+    for (i, (field, input, ..)) in diffs.iter().enumerate() {
+        if !used[i] {
+            failures.push(format!(
+                "PARSE_DIFFS lists {field} = {input}, which python-parsing.json has no case for"
+            ));
+        }
+    }
+    assert!(
+        failures.is_empty(),
+        "{} mismatches:\n{}",
+        failures.len(),
+        failures.join("\n")
+    );
 }
 
 /// Python's settings modal (bug B2 in #71) saves numbers as strings and an unset `auth_last_checked` as "None".
@@ -451,17 +558,12 @@ fn bad_enum_value_reports_the_field_path() {
     assert!(shown.contains("lazy-github clear-config"), "{shown}");
 }
 
-#[rstest]
-#[case::null_list(r#"{"repositories":{"favorites":null}}"#, "repositories.favorites")]
-#[case::null_section(r#"{"issues":null}"#, "issues")]
-#[case::null_path(r#"{"cache":{"cache_directory":null}}"#, "cache.cache_directory")]
-#[case::non_string_override(r#"{"bindings":{"overrides":{"app.quit":1}}}"#, "bindings.overrides.app.quit")]
-#[case::string_list(r#"{"repositories":{"favorites":"a/b, c/d"}}"#, "repositories.favorites")]
-#[case::bad_datetime(r#"{"cache":{"auth_last_checked":"yesterday"}}"#, "cache.auth_last_checked")]
-fn invalid_values_report_their_field(#[case] text: &str, #[case] expected: &str) {
-    let (_tmp, _paths, result) = load_text(text);
+/// The field cases are in `python-parsing.json`; this one is a whole section.
+#[test]
+fn a_null_section_reports_the_section() {
+    let (_tmp, _paths, result) = load_text(r#"{"issues":null}"#);
     match result {
-        Err(ConfigError::Invalid { field, .. }) => assert_eq!(field, expected),
+        Err(ConfigError::Invalid { field, .. }) => assert_eq!(field, "issues"),
         other => panic!("expected an invalid-value error, got {other:?}"),
     }
 }
@@ -506,15 +608,6 @@ fn save_writes_through_a_symlinked_config_file() {
         .map(|e| e.unwrap().file_name())
         .collect();
     assert_eq!(names, ["lazy-github.json"]);
-}
-
-#[rstest]
-#[case::null("null")]
-#[case::number("5")]
-#[case::object(r#"{"name": "nord"}"#)]
-fn non_string_theme_loads_as_textual_dark(#[case] raw: &str) {
-    let (_tmp, _paths, c) = load_ok(&format!(r#"{{"appearance": {{"theme": {raw}}}}}"#));
-    assert_eq!(c.appearance.theme, "textual-dark");
 }
 
 #[test]

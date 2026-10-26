@@ -12,7 +12,7 @@ use std::process::Command;
 use std::time::Duration;
 
 use fake_gh::log::LogEntry;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use super::diff::text_diff;
@@ -48,10 +48,17 @@ macro_rules! w {
     }};
 }
 
-/// Where and how the run happened, shown at the top of `index.html`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// The file [`write_reports`] writes [`RunMeta`] to, next to `summary.md`, for tools that publish the report
+/// (`cargo xtask parity-site`).
+pub const META_FILE: &str = "meta.json";
+
+/// Where and how the run happened, shown at the top of `index.html` and written to [`META_FILE`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RunMeta {
     pub git_sha: String,
+    /// The commit's subject line, empty when git couldn't say.
+    #[serde(default)]
+    pub subject: String,
     pub timestamp: String,
     pub os: String,
     /// The command line after `cargo xtask`, e.g. `parity startup --python-only`.
@@ -63,7 +70,8 @@ pub struct RunMeta {
 }
 
 /// What a run did with one app.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum AppSource {
     /// A flag left the app out.
     NotRun,
@@ -89,24 +97,31 @@ impl std::fmt::Display for AppSource {
 impl RunMeta {
     /// The current run: `git rev-parse HEAD` in `repo`, the time now and this process's arguments.
     pub fn current(repo: &Path, python: AppSource, rust: AppSource) -> Self {
-        let git_sha = Command::new("git")
-            .args(["rev-parse", "HEAD"])
-            .current_dir(repo)
-            .output()
-            .ok()
-            .filter(|o| o.status.success())
-            .map_or_else(
-                || "unknown".to_owned(),
-                |o| String::from_utf8_lossy(&o.stdout).trim().to_owned(),
-            );
+        let git = |args: &[&str]| {
+            Command::new("git")
+                .args(args)
+                .current_dir(repo)
+                .output()
+                .ok()
+                .filter(|o| o.status.success())
+                .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned())
+        };
         Self {
-            git_sha,
+            git_sha: git(&["rev-parse", "HEAD"]).unwrap_or_else(|| "unknown".to_owned()),
+            subject: git(&["log", "-1", "--format=%s", "HEAD"]).unwrap_or_default(),
             timestamp: jiff::Timestamp::now().strftime("%Y-%m-%dT%H:%M:%SZ").to_string(),
             os: format!("{} ({})", std::env::consts::OS, std::env::consts::ARCH),
             command: std::env::args().skip(1).collect::<Vec<_>>().join(" "),
             python,
             rust,
         }
+    }
+
+    /// Reads the [`META_FILE`] a run wrote into the report directory `dir`.
+    pub fn read(dir: &Path) -> Result<Self> {
+        let path = dir.join(META_FILE);
+        let text = std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+        serde_json::from_str(&text).with_context(|| format!("parsing {}", path.display()))
     }
 
     /// Why `app` has no run at a size.
@@ -119,13 +134,17 @@ impl RunMeta {
     }
 
     /// `Python: recorded`, `Python: live`, ...
-    fn python_line(&self) -> String {
+    pub fn python_line(&self) -> String {
         format!("Python: {}", self.python)
     }
 }
 
-/// Writes every `<capture>.diff.txt`, each scenario's `report.html`, `index.html` and `summary.md` into `out`.
+/// Writes [`META_FILE`], every `<capture>.diff.txt`, each scenario's `report.html`, `index.html` and `summary.md`
+/// into `out`.
 pub fn write_reports(out: &Path, summary: &Summary, meta: &RunMeta) -> Result<()> {
+    // Plain strings and enums; serializing can't fail.
+    let json = serde_json::to_string_pretty(meta).expect("run metadata serializes");
+    std::fs::write(out.join(META_FILE), json + "\n").with_context(|| format!("writing {META_FILE}"))?;
     let mut scenarios = Vec::with_capacity(summary.scenarios.len());
     for scenario in &summary.scenarios {
         let data = load_scenario(out, scenario)?;
@@ -396,7 +415,7 @@ fn load_scenario<'a>(out: &Path, scenario: &'a ScenarioSummary) -> Result<Scenar
 // Grids as HTML
 
 /// HTML-escapes text for element content and double- or single-quoted attributes.
-fn escape(text: &str) -> String {
+pub(crate) fn escape(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     for c in text.chars() {
         match c {
@@ -564,7 +583,9 @@ fn render_grid(grid: &Grid, other: Option<&Grid>, sheet: &mut StyleSheet) -> (St
 // ---------------------------------------------------------------------------------------------------------------
 // Pages
 
-const PAGE_CSS: &str = r#":root{color-scheme:light dark;--fg:#1f2328;--bg:#ffffff;--muted:#59636e;--line:#d1d9e0;--panel:#f6f8fa}
+/// The stylesheet every report page shares, light and dark. `cargo xtask parity-site` reuses it so the landing page
+/// and the report look like one site.
+pub(crate) const PAGE_CSS: &str = r#":root{color-scheme:light dark;--fg:#1f2328;--bg:#ffffff;--muted:#59636e;--line:#d1d9e0;--panel:#f6f8fa}
 @media (prefers-color-scheme:dark){:root{--fg:#e6edf3;--bg:#0d1117;--muted:#9198a1;--line:#3d444d;--panel:#151b23}}
 *{box-sizing:border-box}
 body{margin:0;padding:16px 24px 48px;font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--fg);background:var(--bg)}
@@ -614,7 +635,7 @@ fn page(title: &str, styles: &str, body: &str) -> String {
     )
 }
 
-fn badge(word: &str) -> String {
+pub(crate) fn badge(word: &str) -> String {
     format!("<span class=\"badge b-{0}\">{0}</span>", escape(word))
 }
 
@@ -1148,6 +1169,7 @@ mod tests {
     fn meta() -> RunMeta {
         RunMeta {
             git_sha: "0123abcd".into(),
+            subject: "Add a thing".into(),
             timestamp: "2026-01-01T00:00:00Z".into(),
             os: "linux (x86_64)".into(),
             command: "parity --all".into(),

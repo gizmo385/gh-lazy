@@ -26,6 +26,14 @@ fn committed_matrix_is_valid() {
     let rows: usize = coverage.iter().map(|(_, c)| c[0]).sum();
     let by_status: usize = matrix.counts().iter().map(|(_, c)| c.iter().sum::<usize>()).sum();
     assert_eq!(rows, by_status);
+
+    // Every status row has a milestone, so the milestone table has exactly M0 to M5 and the same total.
+    let by_milestone = matrix.counts_by_milestone();
+    assert_eq!(by_milestone.len(), 6);
+    assert_eq!(
+        by_milestone.iter().map(|(_, c)| c.iter().sum::<usize>()).sum::<usize>(),
+        by_status
+    );
 }
 
 const README: &str =
@@ -145,6 +153,39 @@ fn valid_fixture_has_no_problems_and_counts_statuses() {
          | demo | 1 | 0 | 1 | 1 | 3 |\n\
          | Total | 1 | 0 | 1 | 1 | 3 |\n"
     );
+}
+
+#[test]
+fn counts_statuses_by_milestone() {
+    let dir = repo_with(|_| {});
+    let matrix = check(dir.path());
+    assert_eq!(matrix.row_ids().count(), 3);
+    assert_eq!(matrix.areas[0].rows[0].milestone.as_deref(), Some("M1"));
+    assert_eq!(
+        matrix.counts_by_milestone(),
+        vec![
+            ("M0", [0, 0, 0, 0]),
+            ("M1", [1, 0, 0, 0]),
+            ("M2", [0, 0, 0, 1]),
+            ("M3", [0, 0, 0, 0]),
+            ("M4", [0, 0, 1, 0]),
+            ("M5", [0, 0, 0, 0]),
+        ]
+    );
+
+    // A row with an invalid milestone is a problem, and still counted, under `none`, so the totals agree.
+    let dir = repo_with(|root| {
+        let path = root.join(AREA_FILE);
+        let text = fs::read_to_string(&path).unwrap();
+        fs::write(&path, text + "| `demo.four` | Four | M9 | in progress | | |\n").unwrap();
+    });
+    let matrix = check(dir.path());
+    assert_eq!(matrix.problems.len(), 1, "{:#?}", matrix.problems);
+    let by_milestone = matrix.counts_by_milestone();
+    assert_eq!(by_milestone.len(), 7);
+    assert_eq!(by_milestone[6], ("none", [0, 1, 0, 0]));
+    let total = |counts: &[(&str, [usize; 4])]| counts.iter().flat_map(|(_, c)| c).sum::<usize>();
+    assert_eq!(total(&by_milestone), total(&matrix.counts()));
 }
 
 #[test]

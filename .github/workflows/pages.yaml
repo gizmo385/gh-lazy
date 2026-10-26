@@ -1,0 +1,97 @@
+name: Pages
+
+# Builds and deploys the whole GitHub Pages site (https://www.gizmo.codes/gh-lazy/): `main`'s README at `/`, built by
+# Jekyll as the legacy branch build did, and the latest rust-main parity report under `/parity/` (#220;
+# parity/README.md, "CI"). Not a gate: failing scenarios are published, and gating stays with rust.yaml.
+#
+# `main` is frozen during the rewrite, so nothing here reacts to pushes to `main`; run this by hand to pick up a
+# one-off change there.
+
+on:
+  push:
+    branches:
+    - rust-main
+    # Only what changes the report or the matrix. Docs-only pushes don't run.
+    paths:
+    - 'crates/**'
+    - 'xtask/**'
+    - 'parity/**'
+    - 'docs/rust-rewrite/parity/**'
+    - Cargo.toml
+    - Cargo.lock
+    - rust-toolchain.toml
+    - .github/workflows/pages.yaml
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy the site (off to only build the github-pages artifact, e.g. to check it first)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+# One deploy at a time; a newer push supersedes a deploy still running.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    # The root site's source. Checked out after rust-main, since the first checkout cleans the workspace.
+    - uses: actions/checkout@v6
+      with:
+        ref: main
+        path: site-src
+        persist-credentials: false
+    # rust-toolchain.toml is the single source of truth for the toolchain version and components.
+    - name: Install toolchain
+      run: rustup toolchain install
+    - uses: Swatinem/rust-cache@v2
+    # No uv and no Python: Python's side comes from the recorded references in parity/references/. Failing
+    # scenarios still produce a report, which is published.
+    - name: Parity scenarios
+      continue-on-error: true
+      run: cargo xtask parity --all --no-sync --jobs 4
+    # Fails when the run wrote no report (no index.html), which leaves the live site as it was.
+    - name: Landing page
+      run: cargo xtask parity-site --report parity/reports/latest --out _parity
+    - name: Build the root site
+      uses: actions/jekyll-build-pages@v1
+      with:
+        source: ./site-src
+        destination: ./_site
+    # The Jekyll action runs in a container, so its output is root-owned.
+    - name: Add the parity pages
+      run: |
+        sudo chown -R "$(id -u):$(id -g)" _site
+        mkdir -p _site/parity
+        cp -R _parity/. _site/parity/
+        cp -R parity/reports/latest _site/parity/report
+    - uses: actions/upload-pages-artifact@v4
+      with:
+        path: _site
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' || inputs.deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - id: deployment
+      uses: actions/deploy-pages@v4

@@ -1017,12 +1017,23 @@ Every run ends by writing the human-readable report next to `summary.json` (`xta
 ```
 index.html                                       # every scenario × size, start here
 summary.md                                       # the short table for the CI job summary (#70)
+meta.json                                        # the run's commit, subject, time, OS, command and app sources
 <scenario>/report.html                           # one page per scenario
 <scenario>/<cols>x<rows>/<capture>.diff.txt      # unified diff of python/<capture>.txt against rust/<capture>.txt
 ```
 
 Open `index.html` in a browser. It works straight from disk or from a downloaded CI artifact (`file://`): every page
 is self-contained, with inline CSS, a few lines of inline JS and no external assets, fonts or CDNs.
+
+**The published report.** The latest `rust-main` report is online at
+<https://www.gizmo.codes/gh-lazy/parity/report/>, under a landing page at <https://www.gizmo.codes/gh-lazy/parity/>
+that shows the commit it was built from (linked, with its subject) and when, the run's pass / fail / `rust-not-ready`
+counts with the failed scenarios, the matrix's status by milestone and by area, its coverage (the
+`cargo xtask parity-matrix` tables), and links to the matrix and PLAN §6.3. Only the latest report is kept. The
+[Pages workflow](#ci) builds both; `cargo xtask parity-site --report <dir> --out <dir>` writes the landing page's
+`index.html` locally from any report (the commit and time come from the report's `meta.json`, the counts from its
+`summary.json`, so the page and the report can't disagree). It fails when the report has no `index.html`, and lists
+the matrix's problems on the page rather than failing on them.
 
 - **`index.html`** starts with the run's commit (`git rev-parse HEAD`), time, OS and command line, and where Python
   came from (`Python: recorded`, `Python: live`, `Python: live for a, b; recorded for the rest` or
@@ -1131,6 +1142,17 @@ report/index.html`.
 
 **Branch protection.** `fmt, clippy, test (ubuntu-latest)` is the one required check on `rust-main`. It covers the
 parity gate too. The name predates the merged job and is kept so branch protection didn't have to change.
+
+**Publishing (`.github/workflows/pages.yaml`).** A separate workflow, "Pages", builds and deploys the whole GitHub Pages
+site: `main`'s README at <https://www.gizmo.codes/gh-lazy/>, built by `actions/jekyll-build-pages` as the legacy
+branch build did, and the parity site under `/parity/` ([The published report](#reading-the-report)). It runs on a
+push to `rust-main` that touches `crates/`, `xtask/`, `parity/`, `docs/rust-rewrite/parity/`, `Cargo.toml`,
+`Cargo.lock`, `rust-toolchain.toml` or the workflow, and by hand (`workflow_dispatch`; with `deploy` off it only
+builds the `github-pages` artifact). A newer run cancels one still running. It isn't a gate: it runs
+`cargo xtask parity --all --no-sync --jobs 4` against the recorded references (no Python, no uv), ignores its exit
+code so failing scenarios are published, then `cargo xtask parity-site`, and copies the report to `/parity/report/`.
+Only a run with no report (no `index.html`) fails, which leaves the live site as it was. `main` is frozen during the
+rewrite, so a change there is picked up by the next run, or a manual one.
 
 ### Recorded references
 

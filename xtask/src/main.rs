@@ -25,6 +25,9 @@ enum Task {
     /// Check the parity matrix (docs/rust-rewrite/parity/) and the scenarios and golden manifests that name its rows,
     /// and print its rows per area and status, then per area and coverage.
     ParityMatrix(ParityMatrixArgs),
+    /// Write the parity site's landing page (run results, matrix status and coverage) from a parity report and the
+    /// matrix. The Pages workflow publishes it with the report under report/.
+    ParitySite(xtask::site::SiteArgs),
 }
 
 #[derive(Debug, clap::Args)]
@@ -51,6 +54,7 @@ fn main() -> ExitCode {
         Some(Task::ParityMatrix(args)) => {
             xtask::matrix::run(&xtask::parity::cli::repo_root(), args.markdown, args.uncovered)
         }
+        Some(Task::ParitySite(args)) => xtask::site::run(&xtask::parity::cli::repo_root(), &args),
     }
 }
 

@@ -6,7 +6,7 @@ use std::num::NonZeroU16;
 use std::path::Path;
 
 use xtask::parity::grid::Grid;
-use xtask::parity::report::{AppSource, RunMeta, write_reports};
+use xtask::parity::report::{AppSource, META_FILE, RunMeta, write_reports};
 use xtask::parity::runner::{AppRunStatus, RunState};
 use xtask::parity::scenario::App;
 use xtask::parity::summary::{CaptureSummary, ScenarioResult, ScenarioSummary, SizeSummary, Summary};
@@ -105,6 +105,7 @@ fn writes_every_report_file_from_the_dumps() {
     };
     let meta = RunMeta {
         git_sha: "abc123".into(),
+        subject: "Add <things>".into(),
         timestamp: "2026-01-01T00:00:00Z".into(),
         os: "test".into(),
         command: "parity demo broken".into(),
@@ -161,4 +162,31 @@ fn writes_every_report_file_from_the_dumps() {
         md.contains(r#"- demo/24x4/main: titles: python=["[9] Repos"] rust=(none) expected=["[1] Repos"]"#),
         "{md}"
     );
+
+    // The run metadata sits next to summary.md, machine-readable, and reads back as written.
+    assert_eq!(RunMeta::read(out).unwrap(), meta);
+    let json: serde_json::Value = serde_json::from_str(&read(&out.join(META_FILE))).unwrap();
+    assert_eq!(json["git_sha"], "abc123");
+    assert_eq!(json["python"], "recorded");
+}
+
+#[test]
+fn run_metadata_round_trips_every_app_source() {
+    let out = tempfile::tempdir().unwrap();
+    let meta = RunMeta {
+        git_sha: "abc123".into(),
+        subject: String::new(),
+        timestamp: "2026-01-01T00:00:00Z".into(),
+        os: "test".into(),
+        command: "parity --all".into(),
+        python: AppSource::LiveFor(vec!["a".into(), "b".into()]),
+        rust: AppSource::NotRun,
+    };
+    let summary = Summary {
+        version: 1,
+        scenarios: Vec::new(),
+    };
+    write_reports(out.path(), &summary, &meta).unwrap();
+    assert_eq!(RunMeta::read(out.path()).unwrap(), meta);
+    assert!(RunMeta::read(&out.path().join("missing")).is_err());
 }

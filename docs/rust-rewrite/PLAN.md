@@ -148,6 +148,12 @@ Python live when a PR touches the Python app, the harness, a Python-backed test,
 only the scenarios whose references changed otherwise, and none at all on most PRs (#165). See "Recorded references"
 and "CI" in `parity/README.md`.
 
+The latest `rust-main` report is published at https://www.gizmo.codes/gh-lazy/parity/report/, under a landing page at
+https://www.gizmo.codes/gh-lazy/parity/ with the commit, the run's results and the matrix's status by milestone and
+area and its coverage (#220). The "Pages" workflow (`.github/workflows/pages.yaml`) rebuilds the whole Pages site, with
+`main`'s README still at the root, on each `rust-main` push that touches the Rust app or parity inputs; it isn't a
+gate. See "Reading the report" and "CI" in `parity/README.md`.
+
 **6.4 Rust-only snapshots.** Components get `insta` snapshots of `TestBackend` buffers so regressions show up in normal
 `cargo test`, independent of the Python app.
 

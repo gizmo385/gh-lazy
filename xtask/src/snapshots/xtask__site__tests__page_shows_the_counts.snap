@@ -1,0 +1,29 @@
+---
+source: xtask/src/site.rs
+expression: "format!(\"{}\\n{}\\n{}\", section(&html, \"Status by milestone\"),\nsection(&html, \"Status by area\"), section(&html, \"Coverage\"))"
+---
+<h3>Status by milestone</h3>
+<table>
+<tr><th>Milestone</th><th class="n">not started</th><th class="n">in progress</th><th class="n">parity</th><th class="n">intentional diff</th><th class="n">Total</th></tr>
+<tr><td>M0</td><td class="n">0</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">1</td></tr>
+<tr><td>M1</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">1</td><td class="n">2</td></tr>
+<tr><td>M2</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">1</td></tr>
+<tr><td>M3</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><td>M4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><td>M5</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+<tr class="total"><td>Total</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">4</td></tr>
+
+<h3>Status by area</h3>
+<table>
+<tr><th>Area</th><th class="n">not started</th><th class="n">in progress</th><th class="n">parity</th><th class="n">intentional diff</th><th class="n">Total</th></tr>
+<tr><td><a href="https://github.com/gizmo385/gh-lazy/blob/rust-main/docs/rust-rewrite/parity/areas/main-layout.md">main-layout</a></td><td class="n">0</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">3</td></tr>
+<tr><td><a href="https://github.com/gizmo385/gh-lazy/blob/rust-main/docs/rust-rewrite/parity/areas/issues.md">issues</a></td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">1</td></tr>
+<tr class="total"><td>Total</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">4</td></tr>
+
+<h3>Coverage</h3>
+<p class="muted">How many of each area's rows a parity scenario, a Python golden, both or neither names.</p>
+<table>
+<tr><th>Area</th><th class="n">Rows</th><th class="n">Scenario</th><th class="n">Golden</th><th class="n">Both</th><th class="n">Neither</th></tr>
+<tr><td><a href="https://github.com/gizmo385/gh-lazy/blob/rust-main/docs/rust-rewrite/parity/areas/main-layout.md">main-layout</a></td><td class="n">3</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">2</td></tr>
+<tr><td><a href="https://github.com/gizmo385/gh-lazy/blob/rust-main/docs/rust-rewrite/parity/areas/issues.md">issues</a></td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">1</td></tr>
+<tr class="total"><td>Total</td><td class="n">4</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">3</td></tr>

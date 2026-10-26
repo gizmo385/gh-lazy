@@ -23,6 +23,10 @@ pub const GOLDENS_DIR: &str = "parity/goldens";
 
 /// The values a row's Status may start with. `intentional diff` may be followed by ` (<qualifier>)`.
 pub const STATUSES: [&str; 4] = ["not started", "in progress", "parity", "intentional diff"];
+/// The milestones a row's Milestone may name (PLAN §8), in order.
+pub const MILESTONES: [&str; 6] = ["M0", "M1", "M2", "M3", "M4", "M5"];
+/// The [`Matrix::counts_by_milestone`] entry for status rows without a valid milestone.
+pub const NO_MILESTONE: &str = "none";
 const INTENTIONAL_DIFF: &str = "intentional diff";
 const PY_BUG_STATUSES: [&str; 3] = ["open", "answered", "withdrawn"];
 
@@ -64,6 +68,8 @@ pub struct Row {
     pub line: usize,
     /// `None` for tables without a Status column (terminal caveats).
     pub status: Option<String>,
+    /// The Milestone cell as written (`M0`–`M5` when the matrix is valid), or `None` for tables without one.
+    pub milestone: Option<String>,
     /// The whole table line, for finding `Py bug` notes and decision links in any cell.
     pub source: String,
 }
@@ -91,7 +97,7 @@ pub struct Covered {
 }
 
 /// The coverage table's columns after Rows, in order.
-const COVERAGE: [&str; 4] = ["Scenario", "Golden", "Both", "Neither"];
+pub const COVERAGE: [&str; 4] = ["Scenario", "Golden", "Both", "Neither"];
 const NEITHER: usize = 3;
 
 impl Covered {
@@ -152,6 +158,32 @@ impl Matrix {
                 (a.name.as_str(), counts)
             })
             .collect()
+    }
+
+    /// Rows per status for each milestone, M0 to M5, across every area with a Status column. All six milestones are
+    /// listed, even with no rows. Status rows without a valid Milestone (a matrix problem) are counted under a last
+    /// [`NO_MILESTONE`] entry, present only when there are any, so the totals match [`Matrix::counts`].
+    pub fn counts_by_milestone(&self) -> Vec<(&str, [usize; STATUSES.len()])> {
+        let mut counts: Vec<(&str, [usize; STATUSES.len()])> =
+            MILESTONES.iter().map(|m| (*m, [0; STATUSES.len()])).collect();
+        let mut none = [0; STATUSES.len()];
+        for row in self.status_areas().flat_map(|a| &a.rows) {
+            let Some(status) = row.base_status().and_then(|s| STATUSES.iter().position(|x| *x == s)) else {
+                continue;
+            };
+            match row
+                .milestone
+                .as_deref()
+                .and_then(|m| MILESTONES.iter().position(|x| *x == m))
+            {
+                Some(i) => counts[i].1[status] += 1,
+                None => none[status] += 1,
+            }
+        }
+        if none.iter().any(|n| *n > 0) {
+            counts.push((NO_MILESTONE, none));
+        }
+        counts
     }
 
     /// The counts as an aligned text table, or as a Markdown table.
@@ -581,11 +613,11 @@ fn parse_area(name: &str, file: &Path, text: &str, problems: &mut Vec<Problem>) 
             )),
             Some(_) => {}
         }
-        let status = col("Status").map(str::to_owned);
         let row = Row {
             id,
             line: n,
-            status,
+            status: col("Status").map(str::to_owned),
+            milestone: col("Milestone").map(str::to_owned),
             source: line.to_owned(),
         };
         if let Some(status) = &row.status {

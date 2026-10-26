@@ -202,6 +202,7 @@ fn duplicate(error: &GhError) -> GhError {
         GhError::Parse(message) => GhError::Parse(message.clone()),
         GhError::Decode(error) => GhError::Decode(serde_json::Error::custom(error)),
         GhError::Io(error) => GhError::Io(io::Error::new(error.kind(), error.to_string())),
+        GhError::Timeout { after } => GhError::Timeout { after: *after },
     }
 }
 
@@ -337,6 +338,9 @@ mod tests {
             GhError::Parse("no status line".into()),
             GhError::Decode(decode),
             GhError::Io(io::Error::other("broken")),
+            GhError::Timeout {
+                after: Duration::from_secs(30),
+            },
         ];
         for error in &errors {
             assert_eq!(duplicate(error).to_string(), error.to_string());

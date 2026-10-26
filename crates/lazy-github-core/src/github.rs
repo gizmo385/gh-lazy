@@ -14,7 +14,7 @@ use std::time::Duration;
 use tokio::sync::OnceCell;
 
 use crate::config::{CacheSettings, Config};
-use crate::gh::{self, GhError, GhRequest, GhResponse};
+use crate::gh::{self, GhError, GhRequest, GhResponse, GhTimeouts};
 use crate::models::{Repository, User};
 
 #[cfg(any(test, feature = "test-util"))]
@@ -182,25 +182,30 @@ pub struct GhCliOptions {
     pub hostname: Option<String>,
     /// Cache lifetimes per request kind.
     pub ttls: CacheTtls,
+    /// How long each kind of `gh` call may run before it's killed.
+    pub timeouts: GhTimeouts,
 }
 
 impl Default for GhCliOptions {
-    /// `gh` from `PATH`, github.com, and the default TTLs.
+    /// `gh` from `PATH`, github.com, and the default TTLs and time limits.
     fn default() -> Self {
         Self {
             program: PathBuf::from("gh"),
             hostname: None,
             ttls: CacheTtls::default(),
+            timeouts: GhTimeouts::default(),
         }
     }
 }
 
 impl From<&Config> for GhCliOptions {
+    /// The config has no time limits (Python has none to mirror), so these are always the defaults.
     fn from(config: &Config) -> Self {
         Self {
             program: PathBuf::from("gh"),
             hostname: hostname_for_base_url(&config.api.base_url),
             ttls: CacheTtls::from(&config.cache),
+            timeouts: GhTimeouts::default(),
         }
     }
 }
@@ -250,7 +255,7 @@ impl GhCli {
     pub fn new(options: GhCliOptions) -> Self {
         Self {
             inner: Arc::new(GhCliInner {
-                runner: gh::GhCli::new(options.program, options.hostname),
+                runner: gh::GhCli::new(options.program, options.hostname).with_timeouts(options.timeouts),
                 ttls: options.ttls,
                 current_user: OnceCell::new(),
             }),
@@ -381,6 +386,7 @@ mod tests {
                 list_issues: Duration::from_secs(7),
             }
         );
+        assert_eq!(options.timeouts, GhTimeouts::default());
     }
 
     #[test]

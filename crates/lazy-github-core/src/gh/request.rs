@@ -85,6 +85,9 @@ pub struct GhRequest {
     pub body: Option<serde_json::Value>,
     /// How long `gh` may serve this response from its cache. Only applies to `GET`; ignored otherwise.
     pub cache: Option<Duration>,
+    /// How long this one request may run before `gh` is killed, overriding the runner's limit for its kind (see
+    /// [`GhTimeouts`](super::GhTimeouts)). For calls known to run long, such as log downloads.
+    pub timeout: Option<Duration>,
 }
 
 impl GhRequest {

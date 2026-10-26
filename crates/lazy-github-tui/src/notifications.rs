@@ -292,6 +292,81 @@ mod tests {
         assert!(app.app().toasts().is_empty());
     }
 
+    /// A `gh` call that ran past its limit and was killed.
+    fn timed_out(secs: u64) -> GhError {
+        GhError::Timeout {
+            after: Duration::from_secs(secs),
+        }
+    }
+
+    #[test]
+    fn a_timed_out_count_shows_zero_logs_and_the_next_tick_refreshes() {
+        let gh = FakeGithub::new().with_unread_count(Err(timed_out(30)));
+        let mut app = TestApp::with_github(enabled(), gh);
+        let out = logs(|| settle(&mut app));
+        assert_eq!(
+            out,
+            "ERROR Failed to retrieve notifications from the Github API\n\
+             DEBUG Fetching notifications failed: gh did not respond within 30 seconds\n"
+        );
+        assert_eq!(app.app().unread(), UnreadState::Count(0));
+        assert!(status_row(&mut app).ends_with("No unread notifications│"));
+        assert!(app.app().toasts().is_empty());
+        assert!(!app.app().notifications_refreshing());
+
+        app.gh().set_unread_count(Ok(3));
+        app.advance(REFRESH_INTERVAL);
+        settle(&mut app);
+        assert_eq!(
+            app.gh().calls(),
+            [
+                GithubCall::CheckAuth,
+                GithubCall::UnreadNotificationCount,
+                GithubCall::CheckAuth,
+                GithubCall::UnreadNotificationCount
+            ]
+        );
+        assert_eq!(app.app().unread(), UnreadState::Count(3));
+    }
+
+    #[test]
+    fn a_timed_out_auth_check_toasts_keeps_the_count_and_the_next_tick_checks_again() {
+        let gh = FakeGithub::new().with_unread_count(Ok(3));
+        let mut app = TestApp::with_github(enabled(), gh);
+        settle(&mut app);
+        assert_eq!(app.app().unread(), UnreadState::Count(3));
+
+        app.gh().set_auth_error(Some(timed_out(20)));
+        app.advance(REFRESH_INTERVAL);
+        let out = logs(|| settle(&mut app));
+        assert_eq!(
+            out,
+            "DEBUG Notifications auth check failed: gh did not respond within 20 seconds\n\
+             ERROR Cannot load notifications - please login to the gh CLI: gh auth login\n"
+        );
+        let toast = app.app().toasts().iter().next().expect("the error toast");
+        assert_eq!(toast.severity, Severity::Error);
+        assert_eq!(toast.title.as_deref(), Some("Failed to Load Notifications"));
+        assert_eq!(
+            toast.message.to_string(),
+            "Cannot load notifications - please login to the gh CLI: gh auth login"
+        );
+        assert_eq!(app.app().unread(), UnreadState::Count(3));
+        assert!(!app.app().notifications_refreshing());
+        assert_eq!(app.gh().calls().last(), Some(&GithubCall::CheckAuth));
+
+        // The next tick checks again rather than being skipped as still in flight.
+        app.gh().set_auth_error(None);
+        app.gh().set_unread_count(Ok(5));
+        app.advance(REFRESH_INTERVAL);
+        settle(&mut app);
+        assert_eq!(
+            app.gh().calls()[3..],
+            [GithubCall::CheckAuth, GithubCall::UnreadNotificationCount]
+        );
+        assert_eq!(app.app().unread(), UnreadState::Count(5));
+    }
+
     #[test]
     fn a_refresh_while_one_runs_is_skipped() {
         let mut app = TestApp::new(enabled());

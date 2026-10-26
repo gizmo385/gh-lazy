@@ -5,14 +5,58 @@ use std::io;
 use std::path::PathBuf;
 use std::process::{Output, Stdio};
 use std::sync::Arc;
+use std::time::Duration;
 
 use serde::de::DeserializeOwned;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 use tokio::process::Command;
 use tracing::debug;
 
 use super::response::{decode_pages, interpret};
 use super::{GhError, GhRequest, GhResponse};
+
+/// How long each kind of `gh` call may run before it's killed.
+///
+/// Each limit covers the whole run: spawning `gh`, writing its input and reading all its output.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GhTimeouts {
+    /// For `gh auth status`.
+    pub auth_status: Duration,
+    /// For one `gh api -i` request, unless the request sets [`GhRequest::timeout`].
+    pub request: Duration,
+    /// For a whole `gh api --paginate`, every page, unless the request sets [`GhRequest::timeout`].
+    pub paginate: Duration,
+}
+
+impl Default for GhTimeouts {
+    /// 20 s for `auth status`, 30 s for a request and 180 s for a paginated request.
+    fn default() -> Self {
+        Self {
+            auth_status: Duration::from_secs(20),
+            request: Duration::from_secs(30),
+            paginate: Duration::from_secs(180),
+        }
+    }
+}
+
+/// The kinds of `gh` call, each with its own default limit in [`GhTimeouts`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CallKind {
+    AuthStatus,
+    Request,
+    Paginate,
+}
+
+impl GhTimeouts {
+    /// The limit for a `kind` call. `requested` (a request's [`GhRequest::timeout`]) overrides the API kinds' limits.
+    fn limit(&self, kind: CallKind, requested: Option<Duration>) -> Duration {
+        match kind {
+            CallKind::AuthStatus => self.auth_status,
+            CallKind::Request => requested.unwrap_or(self.request),
+            CallKind::Paginate => requested.unwrap_or(self.paginate),
+        }
+    }
+}
 
 /// Runs requests through the `gh` CLI. Cheap to clone; clones share configuration.
 #[derive(Debug, Clone)]
@@ -20,10 +64,11 @@ pub struct GhCli {
     inner: Arc<GhCliInner>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct GhCliInner {
     program: PathBuf,
     hostname: Option<String>,
+    timeouts: GhTimeouts,
 }
 
 impl Default for GhCli {
@@ -40,14 +85,23 @@ impl GhCli {
             inner: Arc::new(GhCliInner {
                 program: program.into(),
                 hostname,
+                timeouts: GhTimeouts::default(),
             }),
         }
+    }
+
+    /// This client with `timeouts` in place of [`GhTimeouts::default`]. Clones made before this keep their limits.
+    #[must_use]
+    pub fn with_timeouts(mut self, timeouts: GhTimeouts) -> Self {
+        Arc::make_mut(&mut self.inner).timeouts = timeouts;
+        self
     }
 
     /// Runs one request with `gh api -i`.
     pub async fn request(&self, req: GhRequest) -> Result<GhResponse, GhError> {
         let args = req.argv(self.hostname(), false);
-        let output = self.run(&args, req.body.as_ref()).await?;
+        let limit = self.inner.timeouts.limit(CallKind::Request, req.timeout);
+        let output = self.run(&args, req.body.as_ref(), limit).await?;
         self.interpret(&output, false)
     }
 
@@ -56,14 +110,16 @@ impl GhCli {
     /// Only for endpoints whose every page is wanted at once; lazily loaded tables page explicitly with `request`.
     pub async fn paginate<T: DeserializeOwned>(&self, req: GhRequest) -> Result<Vec<T>, GhError> {
         let args = req.argv(self.hostname(), true);
-        let output = self.run(&args, req.body.as_ref()).await?;
+        let limit = self.inner.timeouts.limit(CallKind::Paginate, req.timeout);
+        let output = self.run(&args, req.body.as_ref(), limit).await?;
         let response = self.interpret(&output, true)?;
         decode_pages(&response.body)
     }
 
     /// Checks `gh auth status [--hostname h]`: `Ok` when logged in, otherwise [`GhError::NotAuthenticated`].
     pub async fn auth_status(&self) -> Result<(), GhError> {
-        let output = self.run(&self.auth_status_argv(), None).await?;
+        let limit = self.inner.timeouts.limit(CallKind::AuthStatus, None);
+        let output = self.run(&self.auth_status_argv(), None, limit).await?;
         if output.status.success() {
             return Ok(());
         }
@@ -126,17 +182,22 @@ impl GhCli {
         command
     }
 
-    /// Spawns `gh` with every stream piped (stdin only when there is a body) and waits for it.
+    /// Spawns `gh` with every stream piped (stdin only when there is a body) and waits for it, for at most `limit`.
     ///
-    /// Dropping the returned future kills the child.
-    async fn run(&self, args: &[OsString], body: Option<&serde_json::Value>) -> Result<Output, GhError> {
-        debug!(
-            "Running Github CLI command: gh {}",
-            args.iter()
-                .map(|arg| arg.to_string_lossy())
-                .collect::<Vec<_>>()
-                .join(" ")
-        );
+    /// Past `limit`, `gh` is killed and reaped and the result is [`GhError::Timeout`]. Dropping the returned future
+    /// kills the child too, through `kill_on_drop`.
+    async fn run(
+        &self,
+        args: &[OsString],
+        body: Option<&serde_json::Value>,
+        limit: Duration,
+    ) -> Result<Output, GhError> {
+        let command_line = args
+            .iter()
+            .map(|arg| arg.to_string_lossy())
+            .collect::<Vec<_>>()
+            .join(" ");
+        debug!("Running Github CLI command: gh {command_line}");
         let input = body.map(serde_json::to_vec).transpose()?;
 
         let mut child = self
@@ -157,8 +218,30 @@ impl GhCli {
             }
             Ok::<(), io::Error>(())
         };
-        let (written, output) = tokio::join!(write, child.wait_with_output());
-        let output = output?;
+        let stdout = child.stdout.take();
+        let stderr = child.stderr.take();
+        // Borrows `child` only until it finishes or the timeout drops it, so the timeout path can still kill it.
+        let finish = async {
+            let (written, stdout, stderr, status) =
+                tokio::join!(write, read_all(stdout), read_all(stderr), child.wait());
+            let output = Output {
+                status: status?,
+                stdout: stdout?,
+                stderr: stderr?,
+            };
+            Ok::<_, io::Error>((written, output))
+        };
+        let (written, output) = match tokio::time::timeout(limit, finish).await {
+            Ok(finished) => finished?,
+            Err(_elapsed) => {
+                // `kill` waits after killing, so the process is reaped before the caller hears about it.
+                if let Err(error) = child.kill().await {
+                    debug!("Couldn't kill the timed-out gh: {error}");
+                }
+                debug!("gh {command_line} timed out after {}s and was killed", limit.as_secs());
+                return Err(GhError::Timeout { after: limit });
+            }
+        };
         match written {
             // gh exited without reading all its input (a bad flag, say); its exit status explains why.
             Err(error) if error.kind() != io::ErrorKind::BrokenPipe => return Err(error.into()),
@@ -173,6 +256,15 @@ impl GhCli {
         }
         Ok(output)
     }
+}
+
+/// Everything `stream` yields until end of file, or nothing when the stream wasn't piped.
+async fn read_all(stream: Option<impl AsyncRead + Unpin>) -> io::Result<Vec<u8>> {
+    let mut buf = Vec::new();
+    if let Some(mut stream) = stream {
+        stream.read_to_end(&mut buf).await?;
+    }
+    Ok(buf)
 }
 
 #[cfg(test)]
@@ -195,6 +287,41 @@ mod tests {
         assert_eq!(env("GH_FORCE_TTY"), Some(None));
         assert_eq!(command.as_std().get_program(), "gh");
         assert_eq!(command.as_std().get_args().collect::<Vec<_>>(), ["api", "/user"]);
+    }
+
+    #[test]
+    fn limits_per_call_kind() {
+        let timeouts = GhTimeouts::default();
+        assert_eq!(
+            timeouts,
+            GhTimeouts {
+                auth_status: Duration::from_secs(20),
+                request: Duration::from_secs(30),
+                paginate: Duration::from_secs(180),
+            }
+        );
+        assert_eq!(timeouts.limit(CallKind::AuthStatus, None), Duration::from_secs(20));
+        assert_eq!(timeouts.limit(CallKind::Request, None), Duration::from_secs(30));
+        assert_eq!(timeouts.limit(CallKind::Paginate, None), Duration::from_secs(180));
+
+        let long = Some(Duration::from_secs(600));
+        assert_eq!(timeouts.limit(CallKind::Request, long), Duration::from_secs(600));
+        assert_eq!(timeouts.limit(CallKind::Paginate, long), Duration::from_secs(600));
+        // `auth status` has no request to carry an override.
+        assert_eq!(timeouts.limit(CallKind::AuthStatus, long), Duration::from_secs(20));
+    }
+
+    #[test]
+    fn with_timeouts_replaces_the_defaults() {
+        let short = GhTimeouts {
+            auth_status: Duration::from_millis(1),
+            request: Duration::from_millis(2),
+            paginate: Duration::from_millis(3),
+        };
+        let original = GhCli::default();
+        let gh = original.clone().with_timeouts(short);
+        assert_eq!(gh.inner.timeouts, short);
+        assert_eq!(original.inner.timeouts, GhTimeouts::default());
     }
 
     #[tokio::test]

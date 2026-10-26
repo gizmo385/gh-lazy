@@ -8,8 +8,9 @@ mod common;
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::time::{Duration, Instant};
 
-use lazy_github_core::gh::GhError;
+use lazy_github_core::gh::{GhError, GhTimeouts};
 use lazy_github_core::github::{GhCli, GhCliOptions, Github, RepoListQuery};
 use serde_json::Value;
 
@@ -233,4 +234,110 @@ async fn child_unread_count_miss() {
     let Some(gh) = client() else { return };
     let error = gh.unread_notification_count().await.unwrap_err();
     assert!(matches!(error, GhError::Http { status: 404, .. }), "{error:?}");
+}
+
+/// How long fake-gh sleeps in the timeout tests: far past [`SHORT_TIMEOUTS`], and long enough that a client that
+/// waited it out would fail the wall-time check.
+const SLOW_DELAY_MS: u64 = 30_000;
+
+/// The limits a timeout child test's client runs with, each different so a test can tell which one applied.
+const SHORT_TIMEOUTS: GhTimeouts = GhTimeouts {
+    auth_status: Duration::from_millis(200),
+    request: Duration::from_millis(300),
+    paginate: Duration::from_millis(400),
+};
+
+/// Copies `files` (paths relative to the fixture set `from`) into `to`, adding [`SLOW_DELAY_MS`] to the response of
+/// those marked slow.
+fn copy_fixtures(from: &str, to: &Path, files: &[(&str, bool)]) {
+    let source = common::repo_root().join("parity").join("fixtures").join(from);
+    for &(file, slow) in files {
+        let text = std::fs::read_to_string(source.join(file)).unwrap();
+        let mut fixture: Value = serde_json::from_str(&text).unwrap();
+        if slow {
+            fixture["response"]["delay_ms"] = SLOW_DELAY_MS.into();
+        }
+        common::write(to, file, &serde_json::to_string_pretty(&fixture).unwrap());
+    }
+}
+
+/// A child's client with [`SHORT_TIMEOUTS`], or `None` as for [`client`].
+fn impatient_client() -> Option<GhCli> {
+    let program = std::env::var_os(GH_BIN_ENV)?;
+    Some(GhCli::new(GhCliOptions {
+        program: Path::new(&program).to_path_buf(),
+        timeouts: SHORT_TIMEOUTS,
+        ..GhCliOptions::default()
+    }))
+}
+
+/// Asserts that `result` is a timeout after `limit` and that it came well before fake-gh's delay ran out.
+fn assert_timed_out<T: std::fmt::Debug>(result: &Result<T, GhError>, limit: Duration, started: Instant) {
+    let elapsed = started.elapsed();
+    assert!(
+        matches!(result, Err(GhError::Timeout { after }) if *after == limit),
+        "{result:?}"
+    );
+    assert!(elapsed < Duration::from_secs(5), "took {elapsed:?}");
+}
+
+#[test]
+fn a_slow_notifications_count_times_out() {
+    let slow = common::TempDir::new("slow-notifications");
+    copy_fixtures(
+        "notifications-3",
+        slow.path(),
+        &[("notifications/GET.all-false_page-1_per_page-50.json", true)],
+    );
+    let set = slow.path().to_str().unwrap();
+    let log = run_child("child_unread_count_timeout", "logged-in", &[set]);
+    assert_eq!(log.len(), 1, "{log:#?}");
+    assert_eq!(log[0]["path"], "/notifications");
+    assert_eq!(log[0]["miss"], false);
+    assert_eq!(log[0]["status"], 200);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_unread_count_timeout() {
+    let Some(gh) = impatient_client() else { return };
+    let started = Instant::now();
+    assert_timed_out(&gh.unread_notification_count().await, SHORT_TIMEOUTS.request, started);
+}
+
+#[test]
+fn a_slow_second_page_times_out_the_whole_list() {
+    let slow = common::TempDir::new("slow-repos");
+    copy_fixtures(
+        "repos-two-pages",
+        slow.path(),
+        &[
+            (
+                "user/repos/GET.direction-asc_page-1_per_page-50_sort-full_name_type-all.json",
+                false,
+            ),
+            (
+                "user/repos/GET.direction-asc_page-2_per_page-50_sort-full_name_type-all.json",
+                true,
+            ),
+        ],
+    );
+    let set = slow.path().to_str().unwrap();
+    let log = run_child("child_list_repositories_timeout", "logged-in", &[set]);
+    assert_eq!(log.len(), 1, "{log:#?}");
+    assert_eq!(log[0]["path"], "/user/repos");
+    assert!(strings(&log[0]["argv"]).contains(&"--paginate"), "{log:#?}");
+    assert_eq!(log[0]["miss"], false);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_list_repositories_timeout() {
+    let Some(gh) = impatient_client() else { return };
+    let started = Instant::now();
+    assert_timed_out(
+        &gh.list_repositories(RepoListQuery::all()).await,
+        SHORT_TIMEOUTS.paginate,
+        started,
+    );
 }

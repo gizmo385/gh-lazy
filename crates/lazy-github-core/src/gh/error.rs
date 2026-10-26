@@ -1,5 +1,7 @@
 //! The errors a `gh` invocation can produce.
 
+use std::time::Duration;
+
 /// Why a `gh` invocation failed. Each variant's `Display` is a sentence fit to show the user.
 #[derive(Debug, thiserror::Error)]
 pub enum GhError {
@@ -50,6 +52,12 @@ pub enum GhError {
     /// Spawning or talking to the `gh` process failed.
     #[error("failed to run gh: {0}")]
     Io(#[from] std::io::Error),
+    /// `gh` ran past its time limit and was killed.
+    #[error("gh did not respond within {} seconds", after.as_secs())]
+    Timeout {
+        /// The limit it ran past.
+        after: Duration,
+    },
 }
 
 /// `": "` and `detail` folded onto one line (non-empty lines joined with `"; "`), or nothing if `detail` is blank.
@@ -157,6 +165,12 @@ mod tests {
                 GhError::Io(std::io::Error::other("broken pipe")),
                 "failed to run gh: broken pipe",
             ),
+            (
+                GhError::Timeout {
+                    after: Duration::from_secs(30),
+                },
+                "gh did not respond within 30 seconds",
+            ),
         ];
         for (error, expected) in cases {
             let text = error.to_string();
@@ -194,5 +208,11 @@ mod tests {
             .is_unauthorized()
         );
         assert!(!GhError::NotInstalled.is_unauthorized());
+        assert!(
+            !GhError::Timeout {
+                after: Duration::from_secs(20)
+            }
+            .is_unauthorized()
+        );
     }
 }

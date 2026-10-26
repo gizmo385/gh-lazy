@@ -269,6 +269,68 @@ mod tests {
             stderr: String::new(),
         };
         assert_eq!(AuthReason::from_error(&command), AuthReason::NotLoggedIn);
+        let timeout = GhError::Timeout {
+            after: Duration::from_secs(20),
+        };
+        assert_eq!(AuthReason::from_error(&timeout), AuthReason::NotLoggedIn);
+    }
+
+    /// A `gh auth status` that ran past its limit, at startup and then on the poll: the screen stays up with the login
+    /// message, and every tick checks again until one succeeds.
+    #[test]
+    fn a_timed_out_check_keeps_the_screen_and_the_next_tick_rechecks() {
+        use futures_util::FutureExt as _;
+        use lazy_github_core::config::Config;
+        use lazy_github_core::github::{FakeGithub, GithubCall};
+
+        use crate::component::ScreenKind;
+        use crate::test_util::TestApp;
+
+        let timed_out = || GhError::Timeout {
+            after: Duration::from_secs(20),
+        };
+        let settle = |app: &mut TestApp| app.settle().now_or_never().expect("the fake answers at once");
+        let check_auths = |app: &TestApp| {
+            app.effects()
+                .iter()
+                .filter(|effect| {
+                    matches!(
+                        effect,
+                        Effect::Github {
+                            request: GithubRequest::CheckAuth,
+                            ..
+                        }
+                    )
+                })
+                .count()
+        };
+
+        let mut app = TestApp::on_startup(Config::default(), FakeGithub::new().with_auth_error(timed_out()));
+        settle(&mut app);
+        assert_eq!(app.app().screen(), Some(ScreenKind::Auth));
+        let reason = |app: &TestApp| app.app().auth_screen().map(AuthScreen::reason);
+        assert_eq!(reason(&app), Some(AuthReason::NotLoggedIn));
+        assert!(
+            app.screen(100, 30)
+                .contains("To proceed, please log into the Github CLI via gh auth login")
+        );
+
+        // The poll's check times out too: the screen stays, and the next tick isn't skipped as still in flight.
+        app.advance(AUTH_POLL_INTERVAL);
+        assert_eq!(check_auths(&app), 2);
+        settle(&mut app);
+        assert_eq!(app.app().screen(), Some(ScreenKind::Auth));
+        assert_eq!(reason(&app), Some(AuthReason::NotLoggedIn));
+        app.advance(AUTH_POLL_INTERVAL);
+        assert_eq!(check_auths(&app), 3);
+
+        app.gh().set_auth_error(None);
+        settle(&mut app);
+        assert_eq!(app.app().screen(), Some(ScreenKind::Main));
+        assert_eq!(
+            app.gh().calls(),
+            [GithubCall::CheckAuth, GithubCall::CheckAuth, GithubCall::CheckAuth]
+        );
     }
 
     #[test]

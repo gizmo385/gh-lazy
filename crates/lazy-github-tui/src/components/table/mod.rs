@@ -192,8 +192,10 @@ pub struct SearchableTable<T: TableItem> {
 /// How a render laid the table component out.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Drawn {
-    /// The search box, while it's shown, above the table.
-    WithSearch,
+    /// The search box, while it's shown, above the table. `box_shown` says the box was drawn: a frame that newly lays
+    /// it out shortens the table, so it scrolls the cursor's row back into view (decision `search-box-table-height`).
+    /// The loading overlay counts as not drawing it.
+    WithSearch { box_shown: bool },
     /// The table alone ([`SearchableTable::render_table`]): a maximized `DataTable`, with the box outside it.
     TableAlone,
 }
@@ -221,7 +223,7 @@ impl<T: TableItem> SearchableTable<T> {
             generation: 0,
             lazy: None,
             area: Rect::default(),
-            drawn: Drawn::WithSearch,
+            drawn: Drawn::WithSearch { box_shown: false },
         }
     }
 
@@ -796,7 +798,7 @@ impl<T: TableItem> SearchableTable<T> {
     /// [`SearchBox::split`], as the last render laid the box out.
     fn laid_out_split(&self, area: Rect) -> (Option<Rect>, Rect) {
         match self.drawn {
-            Drawn::WithSearch => self.search.split(area),
+            Drawn::WithSearch { .. } => self.search.split(area),
             Drawn::TableAlone => (None, area),
         }
     }
@@ -834,7 +836,7 @@ impl<T: TableItem> SearchableTable<T> {
     pub fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         if self.loading {
             self.area = area;
-            self.drawn = Drawn::WithSearch;
+            self.drawn = Drawn::WithSearch { box_shown: false };
             self.overlay_hidden = false;
             let since = *self.loading_since.get_or_insert(cx.now);
             let elapsed = cx.now.checked_duration_since(since).unwrap_or(Duration::ZERO);
@@ -847,14 +849,17 @@ impl<T: TableItem> SearchableTable<T> {
     /// [`Self::render`] without the loading overlay, even while loading: the search box and the table. Python's
     /// overlay belongs to the container around the `DataTable`, so a table maximized during a load shows without it.
     pub fn render_content(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
-        self.area = area;
-        self.drawn = Drawn::WithSearch;
-        self.overlay_hidden = self.loading;
         let (search, table) = self.search.split(area);
+        let reveal = search.is_some() && self.drawn != (Drawn::WithSearch { box_shown: true });
+        self.area = area;
+        self.drawn = Drawn::WithSearch {
+            box_shown: search.is_some(),
+        };
+        self.overlay_hidden = self.loading;
         if let Some(search) = search {
             self.draw_search(frame, search, cx);
         }
-        self.draw_table(frame, table, cx);
+        self.draw_table(frame, table, reveal, cx);
     }
 
     /// The table alone in all of `area`, without the search box or the loading overlay: the maximized `DataTable`,
@@ -863,7 +868,7 @@ impl<T: TableItem> SearchableTable<T> {
         self.area = area;
         self.drawn = Drawn::TableAlone;
         self.overlay_hidden = self.loading;
-        self.draw_table(frame, area, cx);
+        self.draw_table(frame, area, false, cx);
     }
 
     /// The search box alone in `area`, as a maximized `Input` draws it. Clicks on it don't reach the table.
@@ -878,8 +883,8 @@ impl<T: TableItem> SearchableTable<T> {
             .render(frame.buffer_mut(), area, cx.theme, cx.theme.background(), focused);
     }
 
-    /// The table laid out in `area`.
-    fn draw_table(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
+    /// The table laid out in `area`. With `reveal`, the view first scrolls the cursor's row into view.
+    fn draw_table(&mut self, frame: &mut Frame<'_>, area: Rect, reveal: bool, cx: &RenderCx<'_>) {
         let widths = self.rows.widths(&self.columns);
         let layout = Layout::new(area, widths.iter().sum(), self.rows.len());
         // Rows may have gone since the last frame; the view never scrolls past the end.
@@ -887,7 +892,11 @@ impl<T: TableItem> SearchableTable<T> {
             rows: self.rows.len(),
             height: layout.body_height,
         };
-        self.pos = body.clamp_scroll(self.pos);
+        self.pos = if reveal {
+            body.reveal_cursor(self.pos)
+        } else {
+            body.clamp_scroll(self.pos)
+        };
         self.scroll_x = self.scroll_x.min(
             Horizontal {
                 content: widths.iter().sum(),

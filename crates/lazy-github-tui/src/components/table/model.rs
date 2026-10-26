@@ -207,6 +207,15 @@ impl Body {
         }
     }
 
+    /// `pos` scrolled, with the least movement, so the cursor's row is in view, and clamped to the rows. The cursor
+    /// stays where it is.
+    pub fn reveal_cursor(self, pos: Position) -> Position {
+        Position {
+            scroll_y: self.scroll_to(pos.cursor, pos.scroll_y),
+            ..pos
+        }
+    }
+
     /// The scroll offset that brings `cursor` into view with the least movement (Textual's `scroll_to_region`).
     fn scroll_to(self, cursor: usize, scroll_y: usize) -> usize {
         let scroll_y = if cursor < scroll_y {

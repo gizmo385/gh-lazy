@@ -422,6 +422,24 @@ fn the_lazy_check_after_a_submit_counts_hidden_items() {
     assert_eq!(table.lazy_load().and_then(LazyLoad::in_flight), None);
 }
 
+/// Decision `search-box-table-height`: the cursor on the last row that shows without the box, which the box then
+/// covers, scrolls back into view as the box opens.
+#[test]
+fn opening_the_box_scrolls_a_covered_cursor_row_into_view() {
+    let mut table = table();
+    let _ = draw(&mut table, true);
+    let _ = press(&mut table, "G");
+    let last = repo(usize::try_from(ids(&table)[7]).unwrap()).name;
+    // All eight rows fit below the header with the box closed.
+    assert!(buffer_to_string(&draw(&mut table, true)).contains(last));
+    assert_eq!((table.cursor(), table.scroll()), (7, (0, 0)));
+    table.open_search();
+    let screen = buffer_to_string(&draw(&mut table, true));
+    assert!(screen.contains("Search..."), "{screen}");
+    assert!(screen.contains(last), "{last}:\n{screen}");
+    assert_eq!((table.cursor(), table.scroll()), (7, (1, 0)));
+}
+
 /// Py bug B40, answered "fix it": below the shown box the table gets only the rows the box leaves, so moving the
 /// cursor past the old clipped bottom scrolls, and every row the cursor reaches is drawn.
 #[test]

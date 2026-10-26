@@ -26,6 +26,9 @@ What differs on screen, and only with the box shown over a table with more rows 
   but not `rows`.
 - The vertical scrollbar's thumb reflects the shorter view.
 - Moving the cursor past the bottom row on screen scrolls the view, where Python leaves the cursor out of view.
+- Opening the box scrolls the table, with the least movement, when the cursor is on one of the bottom rows the box
+  now covers, so the cursor's row stays drawn. The same goes for the first frame that draws the box after the table
+  was maximized with it open. In Python the cursor stays on its row, out of view. The test
+  `opening_the_box_scrolls_a_covered_cursor_row_into_view` pins it.
 
-Opening the box doesn't scroll the table by itself: a cursor that was on one of the bottom rows the box covers is
-out of view until it next moves, which scrolls it back in. A table whose rows all fit below the box (a filtered one, usually) is laid out the same in both apps.
+A table whose rows all fit below the box (a filtered one, usually) is laid out the same in both apps.

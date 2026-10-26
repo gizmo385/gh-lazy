@@ -7,6 +7,7 @@
 use std::collections::BTreeSet;
 
 use lazy_github_tui::app::APP_BINDINGS;
+use lazy_github_tui::components::button::BUTTON_BINDINGS;
 use lazy_github_tui::components::info::INFO_BINDINGS;
 use lazy_github_tui::components::table::{SEARCHABLE_BINDINGS, TABLE_BINDINGS};
 use lazy_github_tui::components::text_input::INPUT_BINDINGS;
@@ -30,6 +31,7 @@ const MAPPED: &[(&str, &[BindingId])] = &[
     ("textual.widgets.Log", LOG_BINDINGS),
     ("textual.widgets.Tabs", TABS_BINDINGS),
     ("textual.widgets.Input", INPUT_BINDINGS),
+    ("textual.widgets.Button", BUTTON_BINDINGS),
 ];
 
 /// An expected difference between a mapped class and its Rust list. The test fails once it's gone, so the entry is
@@ -284,7 +286,7 @@ fn diff_for(class: &str) -> Option<&'static ContextDiff> {
 #[test]
 fn every_class_is_mapped_or_not_built() {
     let python: Vec<String> = python_contexts().into_iter().map(|(class, _)| class).collect();
-    assert_eq!(python.len(), 44);
+    assert_eq!(python.len(), 45);
     for class in &python {
         let mapped = MAPPED.iter().any(|&(mapped, _)| mapped == class);
         let not_built = NOT_BUILT.iter().any(|&(not_built, _)| not_built == class);

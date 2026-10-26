@@ -165,7 +165,8 @@ impl Owner {
             | Owner::SearchableTable(_)
             | Owner::DetailsTabs
             | Owner::DetailsContent
-            | Owner::CommandLog => None,
+            | Owner::CommandLog
+            | Owner::DialogField(_, FieldKind::Button) => None,
         }
     }
 

@@ -1,0 +1,26 @@
+---
+source: crates/lazy-github-tui/src/components/button/tests.rs
+assertion_line: 160
+expression: buffer_to_styled_string(&buf)
+---
+
+             ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+                  Lookup           Cancel
+             ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+
+--- styles
+............................................................
+.............aaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbb..............
+.............ccccddddddddcccc.eeeeffffffffeeee..............
+.............gggggggggggggggg.hhhhhhhhhhhhhhhh..............
+............................................................
+--- legend
+. fg=Reset bg=Reset
+a fg=#7ae998 bg=#55c076
+b fg=#e76580 bg=#b93c5b
+c fg=#0b180f bg=#55c076
+d fg=#0b180f bg=#55c076 BOLD | REVERSED
+e fg=#f5e5e9 bg=#b93c5b
+f fg=#f5e5e9 bg=#b93c5b BOLD
+g fg=#008139 bg=#55c076
+h fg=#780028 bg=#b93c5b

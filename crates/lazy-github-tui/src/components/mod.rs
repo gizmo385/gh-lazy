@@ -1,5 +1,6 @@
 //! Reusable widgets shared by screens.
 
+pub mod button;
 pub mod command_log;
 pub mod footer;
 pub mod hatch;

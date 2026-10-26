@@ -13,7 +13,7 @@ use crate::action::Action;
 use crate::components::footer::footer_items;
 use crate::event::Event;
 use crate::screens::main::{FocusTarget, SectionId};
-use crate::test_util::{TestApp, TestDialog, buffer_to_styled_string};
+use crate::test_util::{TestApp, TestDialog, TestField, buffer_to_styled_string};
 use crate::theme::Theme;
 use crate::toast::{Severity, Toast};
 
@@ -529,5 +529,143 @@ fn the_dim_matches_pythons_colors() {
             assert_eq!(&hex(cell.fg), fg, "fg at ({x}, {y})");
         }
         assert_eq!(bg.as_deref(), Some(hex(cell.bg).as_str()), "bg at ({x}, {y})");
+    }
+}
+
+// Focus, buttons and `modal.submit` (#213).
+
+#[test]
+fn tab_walks_lookups_order_and_wraps() {
+    // Input, the other field, Submit, Cancel: the footer shows which has focus, as the modal-frame captures check.
+    let mut app = app_with(TestDialog::new(1));
+    let mut footers = vec![footer(&mut app)];
+    for _ in 0..4 {
+        app.press(&["tab"]);
+        footers.push(footer(&mut app));
+    }
+    let typing = ["shift+⏎ Submit", "esc Close"];
+    let other = ["shift+⏎ Submit", "q Close"];
+    assert_eq!(footers, [&typing[..], &other, &other, &other, &typing]);
+    // Back on the input after the wrap: it types.
+    app.press(&["q", "shift+enter"]);
+    assert_eq!(replies(&app), [r#"1: Some("q")"#]);
+
+    // shift+tab from the input goes to Cancel, which enter presses.
+    let mut app = app_with(TestDialog::new(1));
+    app.press(&["shift+tab", "enter"]);
+    assert_eq!(open_kinds(&app), []);
+    assert_eq!(replies(&app), ["1: None"]);
+}
+
+#[test]
+fn shift_enter_submits_from_every_field() {
+    for field in [TestField::Input, TestField::Plain, TestField::Submit, TestField::Cancel] {
+        let mut app = app_with(TestDialog::new(1).focused_on(field));
+        app.press(&["shift+enter"]);
+        assert_eq!(replies(&app), [r#"1: Some("")"#], "{field:?}");
+    }
+}
+
+#[test]
+fn enter_presses_the_focused_button_and_does_nothing_in_the_input() {
+    let mut app = app_with(TestDialog::new(1).focused_on(TestField::Submit));
+    app.press(&["enter"]);
+    assert_eq!(replies(&app), [r#"1: Some("")"#]);
+
+    let mut app = app_with(TestDialog::new(1).focused_on(TestField::Cancel));
+    app.press(&["enter"]);
+    assert_eq!(replies(&app), ["1: None"]);
+
+    let mut app = app_with(TestDialog::new(1));
+    app.press(&["a", "enter", "enter"]);
+    assert_eq!(open_kinds(&app), [ModalKind::Test(1)]);
+    assert!(replies(&app).is_empty());
+    app.press(&["shift+enter"]);
+    assert_eq!(replies(&app), [r#"1: Some("a")"#]);
+}
+
+#[test]
+fn clicking_a_button_presses_it() {
+    // Lookup's buttons at 160x48: Submit at x = 63 to 78 and Cancel at x = 80 to 95, on rows 31 to 33.
+    let mut app = app_with(TestDialog::new(1));
+    app.render(160, 48);
+    app.click(85, 32);
+    assert_eq!(replies(&app), ["1: None"]);
+
+    let mut app = app_with(TestDialog::new(1));
+    app.press(&["x"]);
+    app.render(160, 48);
+    app.click(64, 31);
+    assert_eq!(replies(&app), [r#"1: Some("x")"#]);
+
+    // Between the buttons is neither.
+    let mut app = app_with(TestDialog::new(1));
+    app.render(160, 48);
+    app.click(79, 32);
+    assert_eq!(open_kinds(&app), [ModalKind::Test(1)]);
+}
+
+#[test]
+fn a_disabled_button_is_skipped_and_cant_be_pressed() {
+    let mut app = app_with(TestDialog::new(1).with_disabled(TestField::Submit));
+    app.render(160, 48);
+    app.click(64, 32);
+    assert_eq!(open_kinds(&app), [ModalKind::Test(1)]);
+    // The click didn't focus it: the input still types. Then input, plain, Cancel: enter there cancels.
+    app.press(&["q", "tab", "tab", "enter"]);
+    assert_eq!(replies(&app), ["1: None"]);
+}
+
+#[test]
+fn disabling_the_focused_button_leaves_nothing_focused() {
+    let mut dialog = TestDialog::new(1).focused_on(TestField::Submit);
+    dialog.set_disabled(TestField::Submit, true);
+    let mut app = app_with(dialog);
+    // Nothing focused: enter does nothing, and the footer is the screen's alone.
+    app.press(&["enter"]);
+    assert_eq!(open_kinds(&app), [ModalKind::Test(1)]);
+    assert_eq!(footer(&mut app), ["shift+⏎ Submit", "q Close"]);
+    // shift+tab, like tab, goes to the first field.
+    app.press(&["shift+tab"]);
+    assert_eq!(footer(&mut app), ["shift+⏎ Submit", "esc Close"]);
+}
+
+#[test]
+fn dialog_focus_input() {
+    let mut app = app_with(TestDialog::new(1));
+    insta::assert_snapshot!(styled(&mut app, 160, 48));
+}
+
+#[test]
+fn dialog_focus_button() {
+    let mut app = app_with(TestDialog::new(1));
+    app.press(&["tab", "tab"]);
+    insta::assert_snapshot!(styled(&mut app, 160, 48));
+}
+
+#[test]
+fn the_buttons_match_pythons_colors() {
+    for (capture, presses) in [("open", &[][..]), ("submit-focused", &["tab", "tab"][..])] {
+        let python = Capture::read(&format!("parity/references/modal-frame/160x48/{capture}.screen"));
+        let mut app = app_with(TestDialog::new(1));
+        app.press(presses);
+        let rust = app.render(160, 48);
+        for y in 31..=33 {
+            for x in (63..79).chain(80..96) {
+                let (fg, bg) = python.colors(x, y);
+                let cell = &rust[(x, y)];
+                assert_eq!(
+                    cell.symbol().chars().next(),
+                    Some(python.symbol(x, y)),
+                    "{capture} ({x}, {y})"
+                );
+                assert_eq!(bg.as_deref(), Some(hex(cell.bg).as_str()), "{capture} bg at ({x}, {y})");
+                if let Some(fg) = fg
+                    && cell.symbol() != " "
+                {
+                    assert_eq!(&hex(cell.fg), fg, "{capture} fg at ({x}, {y})");
+                }
+            }
+        }
     }
 }

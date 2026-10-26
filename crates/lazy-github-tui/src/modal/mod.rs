@@ -5,17 +5,21 @@
 //! binding chain is the focused field's links, then its screen link, and only priority bindings from the app link
 //! (`ctrl+q`). Drawing dims everything below each dialog, then draws its frame, its interior and its footer.
 
+mod focus;
 mod frame;
 mod stack;
 
 use ratatui::layout::Rect;
 
 use crate::action::Action;
-use crate::component::{BindingState, ChainLink, Component, Cx};
+use crate::component::{BindingState, ChainLink, Component, Cx, Owner};
+use crate::components::button::BUTTON_BINDINGS;
+use crate::components::text_input::INPUT_BINDINGS;
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::BindingId;
 use crate::theme::{Palette, ThemeColor};
 
+pub use focus::{FocusMove, FocusRing};
 pub use frame::{DIM_FACTOR, DialogFrame, dim, frame_rect};
 pub use stack::ModalEntry;
 
@@ -58,11 +62,25 @@ pub enum ModalKind {
     Test(u8),
 }
 
-/// The kinds of focusable field a dialog has, for [`crate::component::Owner::DialogField`]. #213 adds the rest.
+/// The kinds of focusable field a dialog has, for [`crate::component::Owner::DialogField`]. Switches, selects and
+/// editors come with #179 and #180.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum FieldKind {
     /// Textual's `Input`: it types text, so the keys it types are gone from the links behind it.
     TextInput,
+    /// Textual's `Button`: `enter` presses it.
+    Button,
+}
+
+impl FieldKind {
+    /// The chain link of a focused field of this kind in dialog `kind`, for [`Dialog::field_chain`].
+    pub fn link(self, kind: ModalKind) -> ChainLink {
+        let bindings = match self {
+            FieldKind::TextInput => INPUT_BINDINGS,
+            FieldKind::Button => BUTTON_BINDINGS,
+        };
+        ChainLink::new(Owner::DialogField(kind, self), bindings)
+    }
 }
 
 /// A dialog's own action, wrapped for [`Action::Dialog`]. Each dialog adds a variant holding its action enum.
@@ -84,9 +102,9 @@ impl DialogAction {
 /// The test dialog's actions (`test_util::TestDialog`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TestDialogAction {
-    /// `modal.close`: done, with no result.
+    /// `modal.close` or the Cancel button: done, with no result.
     Close,
-    /// `modal.submit`: done, with the input's text.
+    /// `modal.submit` or the submit button: done, with the input's text.
     Submit,
     /// The reply from a dialog it opened, as a dialog lower in the stack gets one.
     Replied(Option<String>),
@@ -107,6 +125,10 @@ pub trait Dialog: Component + Send + 'static {
 
     /// Its own action out of a routed [`DialogAction`] of its [`Self::kind`]. `None` drops it.
     fn own_action(&self, action: DialogAction) -> Option<Self::Action>;
+
+    /// `tab` or `shift+tab` (the modal screen's `TextualFocusNext` and `TextualFocusPrevious`): moves focus, usually
+    /// with [`FocusRing::step`] on the dialog's ring. The dialog's `on_binding` never sees those two bindings.
+    fn move_focus(&mut self, direction: FocusMove);
 
     /// The frame's outer size, border included, for a screen whose area above the footer row is `available`. A
     /// size larger than `available` is clipped to it.

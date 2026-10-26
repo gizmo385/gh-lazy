@@ -2504,6 +2504,22 @@
     ]
   },
   {
+    "class": "textual.widgets.Button",
+    "bindings": [
+      {
+        "key": "enter",
+        "id": null,
+        "action": "press",
+        "description": "Press button",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  },
+  {
     "class": "textual.widgets.Input",
     "bindings": [
       {

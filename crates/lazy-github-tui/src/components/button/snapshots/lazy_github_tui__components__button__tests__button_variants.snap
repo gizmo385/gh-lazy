@@ -1,0 +1,88 @@
+---
+source: crates/lazy-github-tui/src/components/button/tests.rs
+assertion_line: 144
+expression: "variants(&Theme::default())"
+---
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+    Default           Default           Default
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+    Primary           Primary           Primary
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+    Success           Success           Success
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+    Warning           Warning           Warning
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+     Error             Error             Error
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+--- styles
+................aabbbbbbbbbbbbbbbbaa................aa
+cccdddddddddccccaaeeefffffffffeeeeaaggghhhhhhhhhggggaa
+iiiiiiiiiiiiiiiiaajjjjjjjjjjjjjjjjaaiiiiiiiiiiiiiiiiaa
+kkkkkkkkkkkkkkkkaallllllllllllllllaakkkkkkkkkkkkkkkkaa
+mmmnnnnnnnnnmmmmaaooopppppppppooooaaqqqrrrrrrrrrqqqqaa
+ssssssssssssssssaattttttttttttttttaassssssssssssssssaa
+uuuuuuuuuuuuuuuuaavvvvvvvvvvvvvvvvaauuuuuuuuuuuuuuuuaa
+wwwxxxxxxxxxwwwwaayyyzzzzzzzzzyyyyaaAAABBBBBBBBBAAAAaa
+CCCCCCCCCCCCCCCCaaDDDDDDDDDDDDDDDDaaCCCCCCCCCCCCCCCCaa
+EEEEEEEEEEEEEEEEaaFFFFFFFFFFFFFFFFaaEEEEEEEEEEEEEEEEaa
+GGGHHHHHHHHHGGGGaaIIIJJJJJJJJJIIIIaaKKKLLLLLLLLLKKKKaa
+MMMMMMMMMMMMMMMMaaNNNNNNNNNNNNNNNNaaMMMMMMMMMMMMMMMMaa
+OOOOOOOOOOOOOOOOaaPPPPPPPPPPPPPPPPaaOOOOOOOOOOOOOOOOaa
+QQQQRRRRRRRQQQQQaaSSSSTTTTTTTSSSSSaaUUUUVVVVVVVUUUUUaa
+WWWWWWWWWWWWWWWWaaXXXXXXXXXXXXXXXXaaWWWWWWWWWWWWWWWWaa
+--- legend
+. fg=#2d2d2d bg=#1e1e1e
+a fg=Reset bg=#4f4f4f
+b fg=#2d2d2d bg=#272727
+c fg=#e0e0e0 bg=#1e1e1e
+d fg=#e0e0e0 bg=#1e1e1e BOLD
+e fg=#e0e0e0 bg=#272727
+f fg=#e0e0e0 bg=#272727 BOLD | REVERSED
+g fg=#929292 bg=#1e1e1e
+h fg=#929292 bg=#1e1e1e BOLD
+i fg=#0d0d0d bg=#1e1e1e
+j fg=#0d0d0d bg=#272727
+k fg=#6db2ff bg=#0178d4
+l fg=#6db2ff bg=#0c7dd4
+m fg=#ddedf9 bg=#0178d4
+n fg=#ddedf9 bg=#0178d4 BOLD
+o fg=#dfeef9 bg=#0c7dd4
+p fg=#dfeef9 bg=#0c7dd4 BOLD | REVERSED
+q fg=#85beea bg=#0178d4
+r fg=#85beea bg=#0178d4 BOLD
+s fg=#004295 bg=#0178d4
+t fg=#004295 bg=#0c7dd4
+u fg=#7ae998 bg=#4ebf71
+v fg=#7ae998 bg=#55c076
+w fg=#0a180e bg=#4ebf71
+x fg=#0a180e bg=#4ebf71 BOLD
+y fg=#0b180f bg=#55c076
+z fg=#0b180f bg=#55c076 BOLD | REVERSED
+A fg=#255b36 bg=#4ebf71
+B fg=#255b36 bg=#4ebf71 BOLD
+C fg=#008139 bg=#4ebf71
+D fg=#008139 bg=#55c076
+E fg=#ffcf56 bg=#fea62b
+F fg=#ffcf56 bg=#fca834
+G fg=#211505 bg=#fea62b
+H fg=#211505 bg=#fea62b BOLD
+I fg=#201506 bg=#fca834
+J fg=#201506 bg=#fca834 BOLD | REVERSED
+K fg=#794f14 bg=#fea62b
+L fg=#794f14 bg=#fea62b BOLD
+M fg=#b86b00 bg=#fea62b
+N fg=#b86b00 bg=#fca834
+O fg=#e76580 bg=#b93c5b
+P fg=#e76580 bg=#ba4461
+Q fg=#f5e5e9 bg=#b93c5b
+R fg=#f5e5e9 bg=#b93c5b BOLD
+S fg=#f6e6ea bg=#ba4461
+T fg=#f6e6ea bg=#ba4461 BOLD | REVERSED
+U fg=#dda1b0 bg=#b93c5b
+V fg=#dda1b0 bg=#b93c5b BOLD
+W fg=#780028 bg=#b93c5b
+X fg=#780028 bg=#ba4461

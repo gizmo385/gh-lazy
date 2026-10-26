@@ -1,5 +1,6 @@
 ---
 source: crates/lazy-github-tui/src/modal/tests.rs
+assertion_line: 372
 expression: "styled(&mut app, 100, 30)"
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -24,9 +25,9 @@ expression: "styled(&mut app, 100, 30)"
 │                   █                                                          █                   │
 │                   █                                                          █                   │
 │                   █                                                          █                   │
-└───────────────────█                                                          █                   │
-┌─ [4] Workflows ───█                                                          █ its details,      │
-│                   █                                                          █g in any active    │
+└───────────────────█            ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔             █                   │
+┌─ [4] Workflows ───█                 Lookup           Cancel                  █ its details,      │
+│                   █            ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁             █g in any active    │
 │                   █                                                          █u can also         │
 │                   █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ected repo.        │
 │                                      ││                                                          │
@@ -55,14 +56,14 @@ eeeeeeeeeeeeeeeeeeeebddddddddddddddddddddddddddddddddddddddddddddddddddddddddddb
 eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
 eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
 eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
-eeeeeeeeeeeeeeeeeeeebddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
-eeeeeeeeeeeeeeeeeeeebddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
-eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
+eeeeeeeeeeeeeeeeeeeebddddddddddddttttttttttttttttduuuuuuuuuuuuuuuudddddddddddddbaaaaaaaaaaaaaaaaasse
+eeeeeeeeeeeeeeeeeeeebddddddddddddvvvvwwwwwwwwvvvvdxxxxyyyyyyyyxxxxdddddddddddddbaaaaaaaaaaaaaaaaasse
+eaaaaaaaaaaaaaaaaaaabddddddddddddzzzzzzzzzzzzzzzzdAAAAAAAAAAAAAAAAdddddddddddddbaaaaaaaaaaaaaaaaasse
 eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
 eaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaasse
 eaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasse
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-tttttttttuuuuuuutttttuuuuuuvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+BBBBBBBBBCCCCCCCBBBBBCCCCCCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 --- legend
 . fg=#0a263a bg=#121212
 a fg=#646464 bg=#121212
@@ -84,6 +85,14 @@ p fg=#0b3a5f bg=#121212 BOLD
 q fg=#646464 bg=#121212 BOLD
 r fg=#0a1e2c bg=#0a0a0a REVERSED
 s fg=#646464 bg=#0a0a0a
-t fg=#ffa62b bg=#242f38 BOLD
-u fg=#e0e0e0 bg=#242f38
-v fg=Reset bg=#242f38
+t fg=#7ae998 bg=#4ebf71
+u fg=#e76580 bg=#b93c5b
+v fg=#0a180e bg=#4ebf71
+w fg=#0a180e bg=#4ebf71 BOLD
+x fg=#f5e5e9 bg=#b93c5b
+y fg=#f5e5e9 bg=#b93c5b BOLD
+z fg=#008139 bg=#4ebf71
+A fg=#780028 bg=#b93c5b
+B fg=#ffa62b bg=#242f38 BOLD
+C fg=#e0e0e0 bg=#242f38
+D fg=Reset bg=#242f38

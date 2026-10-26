@@ -19,12 +19,15 @@ use tokio::time::Instant;
 use crate::action::Action;
 use crate::app::App;
 use crate::clock::{Clock as _, FakeClock};
-use crate::component::{ChainLink, Component, Cx, Owner, RenderCx};
-use crate::components::text_input::{self, INPUT_BINDINGS, InputOutcome, TextInput};
+use crate::component::{ChainLink, Component, Cx, RenderCx};
+use crate::components::button::{ButtonMouse, ButtonRow, Pressed};
+use crate::components::text_input::{self, InputOutcome, TextInput};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::{BindingId, KeyChord, KeySpec, Keymap};
-use crate::modal::{Dialog, DialogAction, FieldKind, ModalKind, TestDialogAction, dialog_bindings};
+use crate::modal::{
+    Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, TestDialogAction, dialog_bindings,
+};
 use crate::options::AppOptions;
 use crate::theme::Theme;
 
@@ -474,25 +477,42 @@ impl Component for LatestWins {
     fn render(&mut self, _frame: &mut ratatui::Frame<'_>, _area: Rect, _cx: &RenderCx<'_>) {}
 }
 
-/// The test dialog's two fields.
+/// The test dialog's fields, in Lookup repository's order: the input, another field (Lookup's switch), then the
+/// button row.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TestField {
     /// A text input, which types `q`.
     Input,
     /// A field without bindings, like a switch.
     Plain,
+    /// The submit button.
+    Submit,
+    /// The Cancel button.
+    Cancel,
 }
 
-/// A dialog for testing the modal stack: a text input and a plain field, `modal.submit` and `modal.close`. Its
-/// output is the input's text on submit, or `None` on close. By default it's Lookup repository's 60 x 25 with its
-/// input focused.
+impl TestField {
+    /// The row's button, for the buttons.
+    fn button(self) -> Option<Pressed> {
+        match self {
+            TestField::Submit => Some(Pressed::Submit),
+            TestField::Cancel => Some(Pressed::Cancel),
+            TestField::Input | TestField::Plain => None,
+        }
+    }
+}
+
+/// A dialog for testing the modal stack: a text input, a plain field and a Lookup/Cancel [`ButtonRow`], with
+/// `modal.submit` and `modal.close`. Its output is the input's text on submit, or `None` on close. By default it's
+/// Lookup repository's 60 x 25 with its input focused, and its buttons where Lookup's are.
 #[derive(Debug)]
 pub struct TestDialog {
     id: u8,
     size: (u16, u16),
     footer: bool,
-    focus: TestField,
+    ring: FocusRing<TestField>,
     input: TextInput,
+    buttons: ButtonRow,
     // The outer `Option` is whether it's done, the inner the dialog's output.
     #[allow(clippy::option_option)]
     output: Option<Option<String>>,
@@ -506,6 +526,8 @@ const TEST_DIALOG_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalCl
 /// The rows of the test dialog's interior that each field takes, from the interior's top.
 const INPUT_ROW: u16 = 4;
 const PLAIN_ROW: u16 = 8;
+/// Lookup's button row: its buttons are on interior rows 19 to 21.
+const BUTTON_ROW: u16 = 18;
 
 impl TestDialog {
     /// The dialog with id `id`: [`ModalKind::Test`]`(id)`.
@@ -514,8 +536,9 @@ impl TestDialog {
             id,
             size: (60, 25),
             footer: true,
-            focus: TestField::Input,
+            ring: FocusRing::new([TestField::Input, TestField::Plain, TestField::Submit, TestField::Cancel]),
             input: TextInput::new("Name"),
+            buttons: ButtonRow::new("Lookup"),
             output: None,
             mouse_events: 0,
         }
@@ -530,9 +553,30 @@ impl TestDialog {
 
     /// This dialog with its plain field focused.
     #[must_use]
-    pub fn focused_on_plain(mut self) -> Self {
-        self.focus = TestField::Plain;
+    pub fn focused_on_plain(self) -> Self {
+        self.focused_on(TestField::Plain)
+    }
+
+    /// This dialog with `field` focused.
+    #[must_use]
+    pub fn focused_on(mut self, field: TestField) -> Self {
+        self.ring.focus(field);
         self
+    }
+
+    /// This dialog with `button` disabled, and so blurred if it had focus.
+    #[must_use]
+    pub fn with_disabled(mut self, field: TestField) -> Self {
+        self.set_disabled(field, true);
+        self
+    }
+
+    /// Disables or enables `field`.
+    pub fn set_disabled(&mut self, field: TestField, disabled: bool) {
+        if let Some(button) = field.button() {
+            self.buttons.button_mut(button).set_disabled(disabled);
+        }
+        self.ring.set_disabled(field, disabled);
     }
 
     /// This dialog without a footer, as Create PR has none.
@@ -544,6 +588,14 @@ impl TestDialog {
 
     fn action(&self, action: TestDialogAction) -> Action {
         Action::Dialog(DialogAction::Test(self.id, action))
+    }
+
+    /// What a counted press of `button` does: the same as `modal.submit` or `modal.close`.
+    fn pressed(&self, button: Pressed) -> Action {
+        self.action(match button {
+            Pressed::Submit => TestDialogAction::Submit,
+            Pressed::Cancel => TestDialogAction::Close,
+        })
     }
 }
 
@@ -557,41 +609,48 @@ impl Component for TestDialog {
     fn on_binding(&mut self, id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
         match id {
             BindingId::ModalClose => Some(self.action(TestDialogAction::Close)),
-            BindingId::ModalSubmit => Some(self.action(TestDialogAction::Submit)),
-            BindingId::TextualFocusNext | BindingId::TextualFocusPrevious => {
-                self.focus = match self.focus {
-                    TestField::Input => TestField::Plain,
-                    TestField::Plain => TestField::Input,
-                };
-                Some(Action::Consumed)
-            }
+            BindingId::ModalSubmit => Some(self.pressed(Pressed::Submit)),
             _ => None,
         }
     }
 
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
-        self.focus == TestField::Input && self.input.consumes_key(key, keymap)
+        self.ring.is_focused(TestField::Input) && self.input.consumes_key(key, keymap)
     }
 
     fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action> {
         let chord = KeyChord::from_event(&key)?;
         match self.input.handle_key(&chord, cx.keymap()) {
-            InputOutcome::Changed => Some(Action::Consumed),
-            InputOutcome::Submitted => Some(self.action(TestDialogAction::Submit)),
+            // Like Python's dialogs, `enter` in a single-line input doesn't submit.
+            InputOutcome::Changed | InputOutcome::Submitted => Some(Action::Consumed),
             InputOutcome::Ignored => None,
         }
     }
 
-    fn handle_mouse(&mut self, event: MouseEvent, area: Rect, _cx: &Cx<'_>) -> Option<Action> {
+    fn handle_mouse(&mut self, event: MouseEvent, area: Rect, cx: &Cx<'_>) -> Option<Action> {
         self.mouse_events += 1;
+        if let Some((button, outcome)) = self.buttons.handle_mouse(&event, cx.now()) {
+            let field = match button {
+                Pressed::Submit => TestField::Submit,
+                Pressed::Cancel => TestField::Cancel,
+            };
+            return Some(match outcome {
+                ButtonMouse::Focus => {
+                    self.ring.focus(field);
+                    Action::Consumed
+                }
+                ButtonMouse::Pressed => self.pressed(button),
+                ButtonMouse::Missed => Action::Consumed,
+            });
+        }
         if event.kind != MouseEventKind::Down(MouseButton::Left) {
             return None;
         }
         let row = event.row - area.y;
         if (INPUT_ROW..INPUT_ROW + text_input::HEIGHT).contains(&row) {
-            self.focus = TestField::Input;
+            self.ring.focus(TestField::Input);
         } else if row == PLAIN_ROW {
-            self.focus = TestField::Plain;
+            self.ring.focus(TestField::Plain);
         }
         Some(Action::Consumed)
     }
@@ -615,7 +674,7 @@ impl Component for TestDialog {
         };
         let rows = |offset: u16, height: u16| {
             Rect {
-                y: area.y + offset,
+                y: area.y.saturating_add(offset),
                 height,
                 ..area
             }
@@ -635,9 +694,9 @@ impl Component for TestDialog {
             input_area,
             theme,
             under,
-            self.focus == TestField::Input,
+            self.ring.is_focused(TestField::Input),
         );
-        let plain = if self.focus == TestField::Plain {
+        let plain = if self.ring.is_focused(TestField::Plain) {
             text.add_modifier(Modifier::REVERSED)
         } else {
             text
@@ -646,6 +705,9 @@ impl Component for TestDialog {
             Paragraph::new("Plain field").style(plain),
             row(PLAIN_ROW).intersection(area),
         );
+        let focused = self.ring.focused().and_then(TestField::button);
+        self.buttons
+            .render(frame.buffer_mut(), rows(BUTTON_ROW, ButtonRow::HEIGHT), theme, focused);
     }
 }
 
@@ -663,6 +725,10 @@ impl Dialog for TestDialog {
         }
     }
 
+    fn move_focus(&mut self, direction: FocusMove) {
+        self.ring.step(direction);
+    }
+
     fn size(&self, _available: Rect) -> (u16, u16) {
         self.size
     }
@@ -676,22 +742,31 @@ impl Dialog for TestDialog {
     }
 
     fn field_chain(&self) -> Vec<ChainLink> {
-        match self.focus {
-            TestField::Input => vec![ChainLink::new(
-                Owner::DialogField(self.kind(), FieldKind::TextInput),
-                INPUT_BINDINGS,
-            )],
-            TestField::Plain => Vec::new(),
+        match self.ring.focused() {
+            Some(TestField::Input) => vec![FieldKind::TextInput.link(self.kind())],
+            Some(TestField::Submit | TestField::Cancel) => vec![FieldKind::Button.link(self.kind())],
+            Some(TestField::Plain) | None => Vec::new(),
         }
     }
 
-    fn on_field_binding(&mut self, _field: FieldKind, _id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
-        // `consumes_key` already gave the input every key it binds.
-        Some(Action::Consumed)
+    fn on_field_binding(&mut self, field: FieldKind, id: BindingId, cx: &Cx<'_>) -> Option<Action> {
+        match (field, id) {
+            (FieldKind::Button, BindingId::TextualButtonPress) => {
+                let button = self.ring.focused().and_then(TestField::button)?;
+                // A press inside the debounce still takes the key.
+                Some(
+                    self.buttons
+                        .press(button, cx.now())
+                        .map_or(Action::Consumed, |pressed| self.pressed(pressed)),
+                )
+            }
+            // `consumes_key` already gave the input every key it binds.
+            _ => Some(Action::Consumed),
+        }
     }
 
     fn handle_paste(&mut self, text: &str) -> Option<Action> {
-        (self.focus == TestField::Input).then(|| {
+        self.ring.is_focused(TestField::Input).then(|| {
             self.input.handle_paste(text);
             Action::Consumed
         })

@@ -24,7 +24,7 @@ from textual.app import App
 from textual.binding import Binding, BindingsMap
 from textual.containers import VerticalScroll
 from textual.dom import DOMNode
-from textual.widgets import Input, Log, Tabs
+from textual.widgets import Button, Input, Log, Tabs
 
 import lazy_github.lib.bindings as bindings_module
 from lazy_github.lib.bindings import LazyGithubBindings
@@ -35,6 +35,7 @@ TEXTUAL_CLASSES: dict[str, type[DOMNode]] = {
     "textual.widgets.Log": Log,
     "textual.widgets.Tabs": Tabs,
     "textual.widgets.Input": Input,
+    "textual.widgets.Button": Button,
 }
 
 # Override spellings that the parity matrix, keymap-overrides.toml and unknown-fields.json use, and the edge cases

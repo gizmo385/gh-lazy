@@ -6,7 +6,7 @@ use crossterm::event::{KeyEvent, MouseEvent};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 
-use super::{Dialog, DialogAction, ModalKind};
+use super::{Dialog, DialogAction, FocusMove, ModalKind};
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Cx, Owner, RenderCx, ScreenKind};
 use crate::effect::{GithubResponse, RequestId};
@@ -57,6 +57,14 @@ impl ModalEntry {
             // Nothing in a dialog can be selected yet, so the copy never applies; with the app link cut off, `ctrl+c`
             // then does nothing at all.
             Owner::Screen(_) if id == BindingId::TextualCopyText => None,
+            Owner::Screen(_) if id == BindingId::TextualFocusNext => {
+                self.dialog.move_focus(FocusMove::Next);
+                Some(Action::Consumed)
+            }
+            Owner::Screen(_) if id == BindingId::TextualFocusPrevious => {
+                self.dialog.move_focus(FocusMove::Previous);
+                Some(Action::Consumed)
+            }
             _ => self.dialog.on_binding(id, cx),
         }
     }
@@ -145,6 +153,7 @@ trait AnyDialog: Send {
     fn bindings(&self) -> &'static [BindingId];
     fn field_chain(&self) -> Vec<ChainLink>;
     fn on_binding(&mut self, id: BindingId, cx: &Cx<'_>) -> Option<Action>;
+    fn move_focus(&mut self, direction: FocusMove);
     fn on_field_binding(&mut self, field: super::FieldKind, id: BindingId, cx: &Cx<'_>) -> Option<Action>;
     fn binding_state(&self, id: BindingId, cx: &Cx<'_>) -> BindingState;
     fn field_binding_state(&self, field: super::FieldKind, id: BindingId, cx: &Cx<'_>) -> BindingState;
@@ -176,6 +185,10 @@ impl<D: Dialog> AnyDialog for Open<D> {
 
     fn on_binding(&mut self, id: BindingId, cx: &Cx<'_>) -> Option<Action> {
         self.dialog.on_binding(id, cx)
+    }
+
+    fn move_focus(&mut self, direction: FocusMove) {
+        self.dialog.move_focus(direction);
     }
 
     fn on_field_binding(&mut self, field: super::FieldKind, id: BindingId, cx: &Cx<'_>) -> Option<Action> {

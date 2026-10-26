@@ -1,0 +1,63 @@
+---
+source: crates/lazy-github-tui/src/components/button/tests.rs
+assertion_line: 149
+expression: "variants(&Theme::by_name(\"ansi-dark\").unwrap())"
+---
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊   Default    ▎  ▊   Default    ▎  ▊   Default    ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊   Primary    ▎  ▊   Primary    ▎  ▊   Primary    ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊   Success    ▎  ▊   Success    ▎  ▊   Success    ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊   Warning    ▎  ▊   Warning    ▎  ▊   Warning    ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊    Error     ▎  ▊    Error     ▎  ▊    Error     ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+--- styles
+.aaaaaaaaaaaaaaabb.aaaaaaaaaaaaaaabb.aaaaaaaaaaaaaaabb
+.bbcccccccccbbbabb.bbdddddddddbbbabb.bbeeeeeeeeebbbabb
+.aaaaaaaaaaaaaaabb.aaaaaaaaaaaaaaabb.aaaaaaaaaaaaaaabb
+fgggggggggggggggbbfgggggggggggggggbb.aaaaaaaaaaaaaaabb
+fbbhhhhhhhhhbbbgbbfbbiiiiiiiiibbbgbb.bbjjjjjjjjjbbbabb
+fgggggggggggggggbbfgggggggggggggggbb.aaaaaaaaaaaaaaabb
+klllllllllllllllbbklllllllllllllllbb.aaaaaaaaaaaaaaabb
+kbbmmmmmmmmmbbblbbkbbnnnnnnnnnbbblbb.bbooooooooobbbabb
+klllllllllllllllbbklllllllllllllllbb.aaaaaaaaaaaaaaabb
+pqqqqqqqqqqqqqqqbbpqqqqqqqqqqqqqqqbb.aaaaaaaaaaaaaaabb
+pbbrrrrrrrrrbbbqbbpbbsssssssssbbbqbb.bbtttttttttbbbabb
+pqqqqqqqqqqqqqqqbbpqqqqqqqqqqqqqqqbb.aaaaaaaaaaaaaaabb
+uvvvvvvvvvvvvvvvbbuvvvvvvvvvvvvvvvbb.aaaaaaaaaaaaaaabb
+ubbbwwwwwwwbbbbvbbubbbxxxxxxxbbbbvbb.bbbyyyyyyybbbbabb
+uvvvvvvvvvvvvvvvbbuvvvvvvvvvvvvvvvbb.aaaaaaaaaaaaaaabb
+--- legend
+. fg=Black bg=Reset REVERSED
+a fg=Black bg=Reset
+b fg=Reset bg=Reset
+c fg=Reset bg=Reset BOLD
+d fg=Reset bg=Reset BOLD | REVERSED
+e fg=Reset bg=Reset BOLD | DIM
+f fg=Blue bg=Reset REVERSED
+g fg=Blue bg=Reset
+h fg=Blue bg=Reset BOLD
+i fg=Blue bg=Reset BOLD | REVERSED
+j fg=Blue bg=Reset BOLD | DIM
+k fg=Green bg=Reset REVERSED
+l fg=Green bg=Reset
+m fg=Green bg=Reset BOLD
+n fg=Green bg=Reset BOLD | REVERSED
+o fg=Green bg=Reset BOLD | DIM
+p fg=Yellow bg=Reset REVERSED
+q fg=Yellow bg=Reset
+r fg=Yellow bg=Reset BOLD
+s fg=Yellow bg=Reset BOLD | REVERSED
+t fg=Yellow bg=Reset BOLD | DIM
+u fg=Red bg=Reset REVERSED
+v fg=Red bg=Reset
+w fg=Red bg=Reset BOLD
+x fg=Red bg=Reset BOLD | REVERSED
+y fg=Red bg=Reset BOLD | DIM

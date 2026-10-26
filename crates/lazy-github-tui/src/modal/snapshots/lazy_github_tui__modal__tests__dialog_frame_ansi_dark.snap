@@ -1,5 +1,6 @@
 ---
 source: crates/lazy-github-tui/src/modal/tests.rs
+assertion_line: 387
 expression: buffer_to_styled_string(&over)
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -24,9 +25,9 @@ expression: buffer_to_styled_string(&over)
 │                   █                                                          █                   │
 │                   █                                                          █                   │
 │                   █                                                          █                   │
-└───────────────────█                                                          █                   │
-┌─ [4] Workflows ───█                                                          █ its details,      │
-│                   █                                                          █g in any active    │
+└───────────────────█            ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎             █                   │
+┌─ [4] Workflows ───█            ▊    Lookup    ▎ ▊    Cancel    ▎             █ its details,      │
+│                   █            ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎ ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎             █g in any active    │
 │                   █                                                          █u can also         │
 │                   █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ected repo.        │
 │                                      ││                                                          │
@@ -55,9 +56,9 @@ ccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
-ccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
-ccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
+ccccccccccccccccccccaaaaaaaaaaaaaobbbbbbbbbbbbbbbapqqqqqqqqqqqqqqqaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
+ccccccccccccccccccccaaaaaaaaaaaaaoaaarrrrrrrraaabapaaassssssssaaaqaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaobbbbbbbbbbbbbbbapqqqqqqqqqqqqqqqaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
@@ -79,3 +80,8 @@ k fg=Magenta bg=Reset BOLD
 l fg=Reset bg=Reset BOLD
 m fg=Blue bg=Black REVERSED
 n fg=Reset bg=Black
+o fg=Green bg=Reset REVERSED
+p fg=Red bg=Reset REVERSED
+q fg=Red bg=Reset
+r fg=Green bg=Reset BOLD
+s fg=Red bg=Reset BOLD

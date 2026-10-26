@@ -261,6 +261,8 @@ registry! {
     TextualInputDeleteRightAll("textual.input.delete_right_all", "ctrl+k", "delete_right_all", "Delete all to the right")
         .hidden();
     TextualInputPaste("textual.input.paste", "ctrl+v", "paste", "Paste text from the clipboard").hidden();
+    // `Button`: the dialogs' buttons (#213).
+    TextualButtonPress("textual.button.press", "enter", "press", "Press button").hidden();
 }
 
 impl BindingId {

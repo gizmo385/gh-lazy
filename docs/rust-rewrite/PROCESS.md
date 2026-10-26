@@ -42,8 +42,10 @@ Labels are defined in [`labels.json`](./labels.json) and created with `scripts/s
 
 ## Milestones
 
-Labels `milestone: M0` through `milestone: M5` (Foundations, App shell, Read-only browsing, Write actions, Remaining
-features, Hardening and cutover), plus one tracking issue per milestone with a checklist of its issues. See
+GitHub milestones `Rust M0: Foundations`, `Rust M1: App shell`, `Rust M2: Read-only browsing`, `Rust M3: Write
+actions`, `Rust M4: Remaining features` and `Rust M5: Hardening and cutover`, set with `gh issue create --milestone` or
+`gh issue edit --milestone`. Each also has a tracking issue with a checklist of its issues in order, since a milestone
+itself is unordered. See
 [PLAN.md](./PLAN.md#8-milestones).
 
 ## Lifecycle
@@ -55,7 +57,7 @@ needs-triage ──► needs-design ──► ready ──► in-progress ──
                  (Chris answers, issue returns to the state it came from)
 ```
 
-1. **Triage** (triage agent). New issue arrives. Apply implementation, type, area and milestone labels. Close
+1. **Triage** (triage agent). New issue arrives. Apply implementation, type and area labels, and set the milestone. Close
    duplicates with a link. If it's a `python` bug, leave it for the Python track and don't move it into the rust flow.
    Move `rust` issues to `needs-design`, or straight to `ready` if the issue already meets the spec bar below.
 2. **Design** (design agent). Read the Python implementation for the behavior, run the parity harness against the

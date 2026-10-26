@@ -155,7 +155,7 @@ structural check is the gate in CI; the visual report is what the parity agent a
 
 ## 8. Milestones
 
-Each milestone is a `milestone: M<n>` label plus a tracking issue, on issues labeled `rust`. Rough order; issues inside a milestone can run in
+Each milestone is a GitHub milestone (`Rust M<n>: <name>`) plus a tracking issue, on issues labeled `rust`. Rough order; issues inside a milestone can run in
 parallel once their dependencies land.
 
 **M0 Foundations.** Cargo workspace and crate skeletons. CI workflow for `rust-main` (fmt, clippy `-D warnings`, test on
@@ -206,8 +206,10 @@ Recorded 2026-10-25 by Chris:
 4. The parity check runs on every PR into `rust-main`.
 5. Windows is allowed to fail until later in the project. We don't build or test it in CI at the start; it gets added
    to the CI matrix in M5.
-6. M0 and M1 issues are filed. Milestones are tracked with `milestone: M<n>` labels plus one tracking issue per
-   milestone.
+6. M0 and M1 issues are filed. Milestones are tracked with GitHub milestones (`Rust M0: Foundations` through
+   `Rust M5: Hardening and cutover`) plus one tracking issue per milestone, whose checklist holds the order and
+   dependencies. They replaced `milestone: M<n>` labels on 2026-10-25: a native milestone allows only one per issue,
+   and it shows progress.
 7. Auto-merge may be enabled on PRs into `rust-main` (squash). It's never used for PRs into `main`.
 
 Recorded 2026-10-25 by Chris:

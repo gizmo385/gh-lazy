@@ -113,35 +113,5 @@
     "name": "platform: macos",
     "color": "F9D0C4",
     "description": "macOS-specific"
-  },
-  {
-    "name": "milestone: M0",
-    "color": "FEF2C0",
-    "description": "M0 Foundations"
-  },
-  {
-    "name": "milestone: M1",
-    "color": "FEF2C0",
-    "description": "M1 App shell"
-  },
-  {
-    "name": "milestone: M2",
-    "color": "FEF2C0",
-    "description": "M2 Read-only browsing"
-  },
-  {
-    "name": "milestone: M3",
-    "color": "FEF2C0",
-    "description": "M3 Write actions"
-  },
-  {
-    "name": "milestone: M4",
-    "color": "FEF2C0",
-    "description": "M4 Remaining features"
-  },
-  {
-    "name": "milestone: M5",
-    "color": "FEF2C0",
-    "description": "M5 Hardening and cutover"
   }
 ]

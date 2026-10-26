@@ -25,8 +25,9 @@ Open issues with `status: needs-triage`, or with no `python`/`rust` label.
    that row, rather than cloning the issue.
 3. **Type.** Exactly one of `bug`, `enhancement`, `parity`, `parity-gap`, `infra`.
 4. **Area.** One or more `area: *` labels. Add `platform: *` when it only reproduces on one OS.
-5. **Milestone.** For `rust` issues, the `milestone: M<n>` label from PLAN.md §8, and add the issue to that
-   milestone's tracking issue checklist.
+5. **Milestone.** For `rust` issues, the GitHub milestone from PLAN.md §8 (`gh issue edit <n> --milestone
+   "Rust M<n>: <name>"`; `gh api 'repos/{owner}/{repo}/milestones'` lists them), and add the issue to that milestone's
+   tracking issue checklist.
 6. **Route.** For `rust` issues:
    - If the body already meets the spec format in PROCESS.md (Python reference, behavior, acceptance criteria, fixtures),
      set `status: ready`.

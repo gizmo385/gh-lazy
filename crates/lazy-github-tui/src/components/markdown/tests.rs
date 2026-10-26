@@ -834,6 +834,107 @@ fn a_theme_change_recolors_the_highlighting() {
     assert_ne!(light[(4, 2)].fg, light[(9, 2)].fg);
 }
 
+/// Each link's text and target, in order.
+fn link_texts(rendered: &Rendered) -> Vec<(String, String)> {
+    let mut links: Vec<(String, String)> = Vec::new();
+    let mut last: Option<(usize, u16, Arc<str>)> = None;
+    for link in &rendered.links {
+        let line = rendered.lines[link.row].to_string();
+        let text: String = line
+            .chars()
+            .skip(usize::from(link.columns.start))
+            .take(usize::from(link.columns.end - link.columns.start))
+            .collect();
+        // A link that wraps continues on the next row from the left padding.
+        let continues = last
+            .as_ref()
+            .is_some_and(|(row, _, target)| *row + 1 == link.row && Arc::ptr_eq(target, &link.target));
+        match links.last_mut() {
+            Some((previous, _)) if continues => previous.push_str(&text),
+            _ => links.push((text, link.target.to_string())),
+        }
+        last = Some((link.row, link.columns.end, Arc::clone(&link.target)));
+    }
+    links
+}
+
+#[test]
+fn bare_urls_become_links() {
+    let rendered = render(
+        "see https://example.com. or www.github.com, mail foo@bar.com and <a@b.co>",
+        80,
+    );
+    assert_eq!(
+        link_texts(&rendered),
+        [
+            ("https://example.com".to_owned(), "https://example.com".to_owned()),
+            ("www.github.com".to_owned(), "http://www.github.com".to_owned()),
+            ("foo@bar.com".to_owned(), "mailto:foo@bar.com".to_owned()),
+            ("a@b.co".to_owned(), "mailto:a@b.co".to_owned()),
+        ]
+    );
+    // Underlined like any link.
+    let buf = buffer(&rendered, 80);
+    assert_eq!(buf[(6, 0)].modifier, Modifier::UNDERLINED);
+    assert_eq!(buf[(25, 0)].modifier, Modifier::empty());
+}
+
+#[test]
+fn linkify_skips_code_fences_and_existing_links() {
+    let rendered = render(
+        "`https://code.com` [www.inside.com](https://u.com) www.after.com\n\n```\nhttps://fence.com\n```\n\n    www.indented.com",
+        80,
+    );
+    assert_eq!(
+        link_texts(&rendered),
+        [
+            ("www.inside.com".to_owned(), "https://u.com".to_owned()),
+            ("www.after.com".to_owned(), "http://www.after.com".to_owned()),
+        ]
+    );
+}
+
+#[test]
+fn links_are_found_in_styled_text_headings_and_tables() {
+    let rendered = render(
+        "# see foo.io\n\n**https://bold.com** *www.em.com*\n\n| a |\n|---|\n| x.org |",
+        60,
+    );
+    let targets: Vec<String> = link_texts(&rendered).into_iter().map(|(_, target)| target).collect();
+    assert_eq!(
+        targets,
+        ["http://foo.io", "https://bold.com", "http://www.em.com", "http://x.org"]
+    );
+    let buf = buffer(&render("**https://bold.com**", 40), 40);
+    assert_eq!(buf[(2, 0)].modifier, Modifier::BOLD | Modifier::UNDERLINED);
+}
+
+#[test]
+fn a_wrapped_url_is_one_link_over_both_rows() {
+    let rendered = render("see https://example.com/a/long/path", 24);
+    assert_eq!(
+        rows(&rendered),
+        ["  see", "  https://example.com/", "  a/long/path", ""]
+    );
+    let target: Arc<str> = Arc::from("https://example.com/a/long/path");
+    let spans: Vec<_> = rendered
+        .links
+        .iter()
+        .map(|link| (link.row, link.columns.clone(), *link.target == *target))
+        .collect();
+    assert_eq!(spans, [(1, 2..22, true), (2, 2..13, true)]);
+    assert_eq!(link_texts(&rendered), [(target.to_string(), target.to_string())]);
+}
+
+#[test]
+fn markdown_linkify() {
+    let source = "Visit https://example.com/a_(b), www.github.com or example.com/docs?x=1#y. Mail foo@bar.com or \
+                  <a@b.co>. Not config.json, v1.2, x.dev, x@y, skype:me or 1.2.3.4, nor `https://code.com`; see \
+                  README.md and [t](https://u.com) https://after.com.";
+    let rendered = Markdown::parse(source).layout(60, &dark());
+    insta::assert_debug_snapshot!((buffer(&rendered, 60), &rendered.links));
+}
+
 #[test]
 fn markdown_code_rust() {
     let source = "```rust\n/// Doc.\n#[derive(Debug)]\npub struct Point { x: i32 }\n\nfn main() {\n    let p = \"point\"; // note\n    println!(\"{p} {}\", 42);\n}\n```";

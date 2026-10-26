@@ -4,10 +4,11 @@
 //! [`Markdown::layout`] lays the tree out at a width in a theme's colors, as [`Rendered`] lines plus the cells every
 //! link covers. Layout is pure, so a view keeps the parsed document and caches the layout for its width and theme.
 //!
-//! Not drawn yet: links for bare URLs (#218).
+//! Bare URLs, `www.` hosts and emails become links, as markdown-it's linkify makes them.
 
 mod highlight;
 mod layout;
+mod linkify;
 mod parse;
 mod table;
 mod wrap;

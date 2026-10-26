@@ -1,0 +1,85 @@
+---
+source: crates/lazy-github-tui/src/components/markdown/tests.rs
+expression: "(buffer(&rendered, 60), &rendered.links)"
+---
+(
+    Buffer {
+        area: Rect { x: 0, y: 0, width: 60, height: 5 },
+        content: [
+            "  Visit https://example.com/a_(b), www.github.com or        ",
+            "  example.com/docs?x=1#y. Mail foo@bar.com or a@b.co. Not   ",
+            "  config.json, v1.2, x.dev, x@y, skype:me or 1.2.3.4, nor   ",
+            "  https://code.com; see README.md and t https://after.com.  ",
+            "                                                            ",
+        ],
+        styles: [
+            x: 0, y: 0, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+            x: 2, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 8, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: UNDERLINED,
+            x: 33, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 35, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: UNDERLINED,
+            x: 49, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 52, y: 0, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+            x: 2, y: 1, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: UNDERLINED,
+            x: 24, y: 1, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 31, y: 1, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: UNDERLINED,
+            x: 42, y: 1, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 46, y: 1, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: UNDERLINED,
+            x: 52, y: 1, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 57, y: 1, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+            x: 2, y: 2, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 57, y: 2, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+            x: 2, y: 3, fg: Rgb(244, 187, 110), bg: Rgb(36, 29, 19), underline: Reset, modifier: NONE,
+            x: 18, y: 3, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 24, y: 3, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: UNDERLINED,
+            x: 33, y: 3, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 38, y: 3, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: UNDERLINED,
+            x: 39, y: 3, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 40, y: 3, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: UNDERLINED,
+            x: 57, y: 3, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 58, y: 3, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        ]
+    },
+    [
+        LinkSpan {
+            row: 0,
+            columns: 8..33,
+            target: "https://example.com/a_(b)",
+        },
+        LinkSpan {
+            row: 0,
+            columns: 35..49,
+            target: "http://www.github.com",
+        },
+        LinkSpan {
+            row: 1,
+            columns: 2..24,
+            target: "http://example.com/docs?x=1#y",
+        },
+        LinkSpan {
+            row: 1,
+            columns: 31..42,
+            target: "mailto:foo@bar.com",
+        },
+        LinkSpan {
+            row: 1,
+            columns: 46..52,
+            target: "mailto:a@b.co",
+        },
+        LinkSpan {
+            row: 3,
+            columns: 24..33,
+            target: "http://README.md",
+        },
+        LinkSpan {
+            row: 3,
+            columns: 38..39,
+            target: "https://u.com",
+        },
+        LinkSpan {
+            row: 3,
+            columns: 40..57,
+            target: "https://after.com",
+        },
+    ],
+)

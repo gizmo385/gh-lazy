@@ -3,9 +3,9 @@
 
 use std::sync::Arc;
 
-use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, OffsetIter, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, LinkType, OffsetIter, Options, Parser, Tag, TagEnd};
 
-use super::{Block, Inline, InlineStyle};
+use super::{Block, Inline, InlineStyle, linkify};
 
 /// How deep quotes and lists nest before the rest of a container reads as one paragraph of its text. Layout recurses
 /// per level, and no README nests this far.
@@ -16,7 +16,7 @@ const IMAGE_PREFIX: &str = "🖼  ";
 
 pub(super) fn parse(source: &str) -> Vec<Block> {
     // Tables and strikethrough only, as in `gfm-like`: no task lists, footnotes, smart punctuation or heading
-    // attributes. Linkify (#218) isn't a pulldown-cmark option; it will split the text runs built here.
+    // attributes. Linkify isn't a pulldown-cmark option: `Inlines` splits each text token at its links.
     let options = Options::ENABLE_TABLES | Options::ENABLE_STRIKETHROUGH;
     let mut parser = BlockParser {
         events: Parser::new_ext(source, options).into_offset_iter(),
@@ -241,6 +241,9 @@ struct Inlines {
     /// Whether the next text event continues the last one, as one markdown-it text token. Anything in between, even
     /// dropped inline HTML, makes it a token of its own, whose whitespace collapses separately.
     joins: bool,
+    /// The current text token's text, outside links and images, held until the token ends so linkify can look for
+    /// bare URLs in all of it, as markdown-it's linkify does per text token.
+    pending: String,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -251,10 +254,11 @@ struct Strike {
 
 impl Inlines {
     fn is_empty(&self) -> bool {
-        self.runs.is_empty()
+        self.runs.is_empty() && self.pending.is_empty()
     }
 
-    fn finish(self) -> Vec<Inline> {
+    fn finish(mut self) -> Vec<Inline> {
+        self.flush();
         self.runs
     }
 
@@ -268,6 +272,7 @@ impl Inlines {
     }
 
     fn start(&mut self, tag: &Tag<'_>, source: &str) {
+        self.flush();
         self.joins = false;
         match tag {
             Tag::Strikethrough => {
@@ -291,12 +296,19 @@ impl Inlines {
             _ if self.images > 0 => {}
             Tag::Strong => self.strong += 1,
             Tag::Emphasis => self.emphasis += 1,
+            // markdown-it's email autolinks (`<a@b.co>`) go to `mailto:`; pulldown-cmark gives the bare address.
+            Tag::Link {
+                link_type: LinkType::Email,
+                dest_url,
+                ..
+            } if !dest_url.starts_with("mailto:") => self.links.push(Arc::from(format!("mailto:{dest_url}"))),
             Tag::Link { dest_url, .. } => self.links.push(Arc::from(dest_url.as_ref())),
             _ => {}
         }
     }
 
     fn end(&mut self, tag: TagEnd) {
+        self.flush();
         self.joins = false;
         match tag {
             TagEnd::Strikethrough => {
@@ -325,6 +337,7 @@ impl Inlines {
     fn event(&mut self, event: Event<'_>) {
         let in_image = self.images > 0;
         if !matches!(event, Event::Text(_)) {
+            self.flush();
             self.joins = false;
         }
         match event {
@@ -349,13 +362,22 @@ impl Inlines {
 
     /// Adds text in the current style. `collapse` turns each run of whitespace into one space, as Textual does with
     /// a text token (markdown-it joins adjacent text, so a run that continues the previous one collapses with it).
+    /// Collapsed text outside links and images waits in [`Inlines::pending`] for linkify.
     fn text(&mut self, text: &str, collapse: bool) {
+        if !collapse || !self.joins {
+            self.flush();
+        }
         if !collapse {
             self.push(text, self.style());
             self.joins = false;
             return;
         }
-        let after_space = self.joins && self.runs.last().is_some_and(|run| run.text.ends_with(is_space));
+        let after_space = self.joins
+            && if self.pending.is_empty() {
+                self.runs.last().is_some_and(|run| run.text.ends_with(is_space))
+            } else {
+                self.pending.ends_with(is_space)
+            };
         let mut collapsed = String::with_capacity(text.len());
         let mut space = after_space;
         for c in text.chars() {
@@ -369,20 +391,45 @@ impl Inlines {
                 space = false;
             }
         }
-        self.push(&collapsed, self.style());
+        if self.images == 0 && self.links.is_empty() {
+            self.pending.push_str(&collapsed);
+        } else {
+            self.push(&collapsed, self.style());
+        }
         self.joins = true;
     }
 
-    /// Appends `text` as a run, joining it to the last run when they look the same.
+    /// Adds the pending text token, its bare URLs, `www.` hosts and emails as links (#218).
+    fn flush(&mut self) {
+        if self.pending.is_empty() {
+            return;
+        }
+        let text = std::mem::take(&mut self.pending);
+        let style = self.style();
+        let mut at = 0;
+        for found in linkify::links(&text) {
+            self.push_run(&text[at..found.range.start], style, None);
+            self.push_run(&text[found.range.clone()], style, Some(Arc::from(found.url)));
+            at = found.range.end;
+        }
+        self.push_run(&text[at..], style, None);
+    }
+
+    /// Appends `text` as a run of the link being read, if any.
     fn push(&mut self, text: &str, style: InlineStyle) {
+        let link = self.links.last().cloned();
+        self.push_run(text, style, link);
+    }
+
+    /// Appends `text` as a run, joining it to the last run when they look the same.
+    fn push_run(&mut self, text: &str, style: InlineStyle, link: Option<Arc<str>>) {
         if text.is_empty() {
             return;
         }
-        let link = self.links.last();
         if let Some(last) = self.runs.last_mut()
             && !style.code
             && last.style == style
-            && same_link(last.link.as_ref(), link)
+            && same_link(last.link.as_ref(), link.as_ref())
         {
             last.text.push_str(text);
             return;
@@ -390,7 +437,7 @@ impl Inlines {
         self.runs.push(Inline {
             text: text.to_owned(),
             style,
-            link: link.cloned(),
+            link,
         });
     }
 }

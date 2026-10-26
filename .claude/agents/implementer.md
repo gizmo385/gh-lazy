@@ -18,11 +18,14 @@ One `rust` issue labeled `status: ready`. Take only one at a time.
 3. Read the Python reference listed in the spec to understand the behavior. Then close it and design from the spec.
 4. Implement. Keep the change to what the spec asks; file new issues (`status: needs-triage`) for anything else.
 5. Add the tests the acceptance criteria list: unit tests, `insta` snapshots, and the parity scenario plus fixtures.
+   When you add a scenario or change one's env, steps, `checks` or `ignore` (or its fixtures), re-record its Python
+   references with `cargo xtask parity --record <scenario>` and commit `parity/references/`. Flipping `gate` or
+   editing `parity_rows` or `[expect]` needs no re-record.
 6. Run, and make pass, before every push:
    - `cargo fmt --all --check`
    - `cargo clippy --workspace --all-targets -- -D warnings`
    - `cargo test --workspace`
-   - `cargo xtask parity <your scenarios>` (once the harness exists)
+   - `cargo xtask parity <your scenarios>` and `cargo xtask parity --check-references`
 7. Open a PR into `rust-main` (never `main`). Title is the user-visible change. Body: `Closes #<n>`, what changed, how
    you tested it, and the parity report summary. Enable auto-merge with the squash method so the PR merges once
    required checks and reviews pass. Set the issue to `status: in-review`.

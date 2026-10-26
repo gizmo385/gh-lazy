@@ -21,9 +21,9 @@ PROCESS.md:
   ranges on `main`. Note the GitHub endpoints it calls and the config fields and binding ids it reads.
 - **Behavior.** Describe what the user sees, from the user's side, not from Textual's. Cover the default state, empty
   state, loading state, error state, every keybinding by binding id, focus movement, and what changes after each action.
-  Run the Python app through the parity harness (`cargo xtask parity --python-only <scenario>` once it exists; before
-  that, `uv run lazy-github` in a fixed-size terminal with the fake `gh` on `PATH`) and attach or reference the
-  captured screens.
+  Run the Python app through the parity harness (`cargo xtask parity --python-only <scenario>`) and attach or
+  reference the captured screens. When you commit a scenario, also commit its Python references with
+  `cargo xtask parity --record <scenario>` (see "Recorded references" in `parity/README.md`).
 - **Out of scope.** Name what this issue doesn't do and link the issues that do.
 - **Design notes.** The idiomatic Rust shape: which crate it lives in, the component and its state, the `Action`s and
   `Effect`s it adds, the `Github` trait methods and models it needs, which library from PLAN.md §4 it uses. Describe

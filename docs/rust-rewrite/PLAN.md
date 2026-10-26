@@ -139,6 +139,12 @@ the `vt100` screen grid (characters plus colors) for both apps. It then writes:
 Exact cell-for-cell equality is not the target, since Textual and ratatui draw borders and scrollbars differently. The
 structural check is the gate in CI; the visual report is what the parity agent and Chris review.
 
+The Python side doesn't have to run every time. Its screens and request logs are recorded per scenario and size under
+`parity/references/`, with a manifest hashing every input that could change them (the Python app, fixtures, the
+harness), and `cargo xtask parity --record` re-records only the stale ones, writing a reference only when two Python
+runs agree. `--check-references` fails on a stale or missing reference. Runs compare Rust against these references
+and run Python live only when its inputs change (#150). See "Recorded references" in `parity/README.md`.
+
 **6.4 Rust-only snapshots.** Components get `insta` snapshots of `TestBackend` buffers so regressions show up in normal
 `cargo test`, independent of the Python app.
 
@@ -151,6 +157,8 @@ structural check is the gate in CI; the visual report is what the parity agent a
   isn't built or tested until later in the project; `windows-latest` joins the matrix in M5.
 - No shelling out except to `gh` and `git`; no `sh -c`. Paths via `std::path` and `etcetera`.
 - `fake-gh` is Rust, not a shell script, so the parity harness runs on all three OSes.
+- Recorded parity references are checked out with LF line endings on every OS (`.gitattributes`), so their hashes
+  and diffs don't depend on the platform. The harness hashes inputs with `git hash-object`.
 - Windows-specific gaps get a `platform: windows` label instead of blocking a PR.
 
 ## 8. Milestones

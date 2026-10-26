@@ -95,7 +95,7 @@ fn main_styled_eight_bit_100x30() {
 fn borders_follow_focus() {
     let theme = crate::theme::Theme::default();
     let keymap = Keymap::new(&indexmap::IndexMap::new());
-    let mut screen = MainScreen::new(&AppearanceSettings::default(), &keymap);
+    let mut screen = MainScreen::new(&AppearanceSettings::default(), &keymap, &theme, AppOptions::default());
     let fg = |screen: &mut MainScreen, x: u16, y: u16| {
         let mut terminal = ratatui::Terminal::new(ratatui::backend::TestBackend::new(100, 30)).unwrap();
         terminal
@@ -514,7 +514,7 @@ fn maximized_empty_repos_100x30() {
     let screen = app.screen(100, 30);
     // The empty table is its header row, centered: row floor((30 - 1) / 2) = 14.
     let rows: Vec<&str> = screen.lines().collect();
-    assert_eq!(rows[14], "");
+    assert_eq!(rows[14], " ★  Owner  Name  Private");
     assert!(
         rows.iter()
             .enumerate()
@@ -667,4 +667,376 @@ fn the_maximized_command_log_fills_the_screen() {
     // Focused, so tinted.
     assert_eq!(buffer[(0, 0)].bg, Color::Rgb(0x27, 0x27, 0x27));
     assert_eq!(buffer[(99, 29)].bg, Color::Rgb(0, 0, 0));
+}
+
+// The repos table (#168).
+
+use crossterm::event::{KeyModifiers, MouseEvent, MouseEventKind};
+use lazy_github_core::gh::GhError;
+use lazy_github_core::github::FakeGithub;
+use lazy_github_core::models::Repository;
+
+use crate::action::Action;
+use crate::components::table::SearchableTable;
+use crate::effect::{GithubResponse, RequestId};
+use crate::event::Event;
+use crate::test_util::{key_event, logs};
+
+/// `base`'s three repos, in the API's `full_name` order.
+fn base_repos() -> Vec<Repository> {
+    ["dotfiles", "hello-world", "lazy-demo"]
+        .map(|name| repos::repo("parity-bot", name, false))
+        .into()
+}
+
+fn many_repos(n: usize) -> Vec<Repository> {
+    (0..n)
+        .map(|i| repos::repo("parity-bot", &format!("repo-{i:02}"), false))
+        .collect()
+}
+
+fn with_repos(config: Config, repos: Vec<Repository>) -> TestApp {
+    TestApp::with_github(config, FakeGithub::new().with_repositories(repos))
+}
+
+fn repos_table(app: &TestApp) -> &SearchableTable<Repository> {
+    app.app().main_screen().unwrap().repos().table()
+}
+
+fn row_keys(app: &TestApp) -> Vec<String> {
+    repos_table(app).row_keys().cloned().collect()
+}
+
+fn server_error() -> GhError {
+    GhError::Http {
+        status: 500,
+        message: "Server Error".into(),
+        body: br#"{"message": "Server Error"}"#.to_vec(),
+    }
+}
+
+/// Answers every queued request, and returns what that logged.
+fn settle_logged(app: &mut TestApp) -> String {
+    logs(|| futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once"))
+}
+
+fn mouse(kind: MouseEventKind, column: u16, row: u16) -> Event {
+    Event::Mouse(MouseEvent {
+        kind,
+        column,
+        row,
+        modifiers: KeyModifiers::NONE,
+    })
+}
+
+#[test]
+fn repos_section_100x30() {
+    // A favorite, which sorts first in green, and a private repo.
+    let mut repos = base_repos();
+    repos[2].private = true;
+    let mut config = Config::default();
+    config.repositories.favorites = vec!["parity-bot/hello-world".into()];
+    let mut app = with_repos(config, repos);
+    let buffer = app.render(100, 30);
+    let screen = crate::test_util::buffer_to_string(&buffer);
+    let rows: Vec<&str> = screen.lines().collect();
+    assert!(
+        rows[4].starts_with("│ ★  Owner       Name         Private  │"),
+        "{}",
+        rows[4]
+    );
+    assert!(
+        rows[5].starts_with("│ ★  parity-bot  hello-world  ✘        │"),
+        "{}",
+        rows[5]
+    );
+    assert!(
+        rows[6].starts_with("│ ☆  parity-bot  dotfiles     ✘        │"),
+        "{}",
+        rows[6]
+    );
+    assert!(
+        rows[7].starts_with("│ ☆  parity-bot  lazy-demo    ✓        │"),
+        "{}",
+        rows[7]
+    );
+    // Rich's green, in the header; the cursor row draws over the cell's own color until the cursor moves off it.
+    let green = Color::Rgb(0x98, 0xe0, 0x24);
+    assert_eq!(buffer[(2, 4)].fg, green);
+    assert_ne!(buffer[(2, 5)].fg, green);
+    app.press(&["j"]);
+    assert_eq!(app.render(100, 30)[(2, 5)].fg, green);
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn repos_loading_100x30() {
+    let mut app = TestApp::loading(Config::default(), FakeGithub::new().with_repositories(base_repos()));
+    assert!(repos_table(&app).is_loading());
+    let screen = app.screen(100, 30);
+    // Centered in the 38x8 interior, rows 4-11.
+    let row = screen.lines().nth(7).unwrap();
+    assert!(row.starts_with("│              Loading...              │"), "{row}");
+    insta::assert_snapshot!(screen);
+    settle_logged(&mut app);
+    assert!(!repos_table(&app).is_loading());
+    assert!(app.screen(100, 30).contains("dotfiles"));
+}
+
+#[test]
+fn keys_reach_the_table_under_the_overlay() {
+    let mut app = with_repos(Config::default(), base_repos());
+    app.app_mut().main_screen_mut().unwrap().repos.table.set_loading(true);
+    app.render(100, 30);
+    app.press(&["j"]);
+    assert_eq!(repos_table(&app).cursor(), 1);
+}
+
+#[test]
+fn repos_fetch_error_100x30() {
+    let gh = FakeGithub::new().with_repositories_error(server_error());
+    let mut app = TestApp::loading(Config::default(), gh);
+    let out = settle_logged(&mut app);
+    let mut lines = out.lines();
+    assert_eq!(lines.next(), Some("ERROR Error fetching repositories from Github API"));
+    assert!(
+        lines
+            .next()
+            .is_some_and(|line| line.starts_with("DEBUG Fetching repositories failed: ")),
+        "{out}"
+    );
+    assert_eq!(lines.next(), None);
+    assert!(app.app().toasts().is_empty());
+    assert!(!repos_table(&app).is_loading());
+    assert_eq!(repos_table(&app).row_count(), 0);
+    let screen = app.screen(100, 30);
+    // Only the header, and the section keeps its size.
+    let rows: Vec<&str> = screen.lines().collect();
+    assert!(rows[4].starts_with("│ ★  Owner  Name  Private"), "{}", rows[4]);
+    assert!(rows[3].starts_with("┌─ [1] Repositories"), "{}", rows[3]);
+    assert!(rows[12].starts_with("└"), "{}", rows[12]);
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn an_empty_list_draws_the_header_and_keeps_the_section() {
+    let mut app = TestApp::new(Config::default());
+    assert_eq!(repos_table(&app).row_count(), 0);
+    let screen = app.screen(100, 30);
+    assert!(screen.contains("[1] Repositories"));
+    assert!(!screen.contains("(empty)"));
+    assert!(screen.lines().nth(4).unwrap().starts_with("│ ★  Owner  Name  Private"));
+}
+
+#[test]
+fn only_the_pending_response_fills_the_table() {
+    let mut app = TestApp::loading(Config::default(), FakeGithub::new());
+    let pending = match app.effects() {
+        [Effect::Github { id, .. }] => *id,
+        other => panic!("{other:?}"),
+    };
+    // A response to another request, even a repos list, is dropped.
+    let stale = RequestId::new(999);
+    let out = logs(|| {
+        app.send(Event::Github {
+            id: stale,
+            response: GithubResponse::ListRepositories(Ok(base_repos())),
+        });
+    });
+    assert_eq!(
+        out,
+        format!("DEBUG Dropping the response to request {stale}: nothing is waiting for it\n")
+    );
+    assert!(repos_table(&app).is_loading());
+    assert_eq!(repos_table(&app).row_count(), 0);
+
+    let out = logs(|| {
+        app.send(Event::Github {
+            id: pending,
+            response: GithubResponse::ListRepositories(Ok(base_repos())),
+        });
+    });
+    assert_eq!(out, "");
+    assert!(!repos_table(&app).is_loading());
+    assert_eq!(
+        row_keys(&app),
+        ["parity-bot/dotfiles", "parity-bot/hello-world", "parity-bot/lazy-demo"]
+    );
+
+    // Answered once: a second answer to the same id is dropped too.
+    let out = logs(|| {
+        app.send(Event::Github {
+            id: pending,
+            response: GithubResponse::ListRepositories(Ok(Vec::new())),
+        });
+    });
+    assert!(out.contains("Dropping the response"), "{out}");
+    assert_eq!(repos_table(&app).row_count(), 3);
+}
+
+#[test]
+fn table_keys_move_the_cursor_quietly_and_select_is_unimplemented() {
+    let mut app = with_repos(Config::default(), base_repos());
+    app.render(100, 30);
+    assert!(matches!(
+        app.app_mut().action_for(Event::Key(key_event("j"))),
+        Some(Action::Consumed)
+    ));
+    assert_eq!(repos_table(&app).cursor(), 1);
+    let out = logs(|| {
+        app.press(&["j", "k", "G"]);
+    });
+    assert_eq!(out, "");
+    assert_eq!(repos_table(&app).cursor(), 2);
+    assert!(matches!(
+        app.app_mut().action_for(Event::Key(key_event("enter"))),
+        Some(Action::Unimplemented(BindingId::TableSelect))
+    ));
+    let out = logs(|| {
+        app.press(&["space"]);
+    });
+    assert_eq!(out, "DEBUG TableSelect is not implemented yet\n");
+    // The columns fit, so `l` falls through the whole chain.
+    assert!(app.app_mut().action_for(Event::Key(key_event("l"))).is_none());
+    assert_eq!(app.effects(), []);
+}
+
+#[test]
+fn a_click_on_a_row_focuses_the_table_and_moves_the_cursor() {
+    let mut app = with_repos(Config::default(), base_repos());
+    app.press(&["5"]);
+    app.render(100, 30);
+    // With details focused, repos is rows 3-8: the header on row 4 and the rows on 5-7.
+    app.click(10, 6);
+    assert_eq!(focus(&app), REPOS);
+    assert_eq!(repos_table(&app).cursor(), 1);
+    // A second click on the cursor's cell selects the row.
+    app.render(100, 30);
+    let out = logs(|| {
+        app.click(10, 6);
+    });
+    assert_eq!(out, "DEBUG TableSelect is not implemented yet\n");
+}
+
+#[test]
+fn a_click_below_the_rows_focuses_nothing_and_one_on_the_header_focuses_the_table() {
+    let mut app = with_repos(Config::default(), base_repos());
+    // Drawn with repos focused: the header on row 4 and the rows on 5-7, in a box down to row 12.
+    app.render(100, 30);
+    app.app_mut().main_screen_mut().unwrap().set_focus(PRS);
+    app.click(10, 9);
+    assert_eq!(focus(&app), PRS);
+    app.click(10, 4);
+    assert_eq!(focus(&app), REPOS);
+    assert_eq!(repos_table(&app).cursor(), 0);
+}
+
+#[test]
+fn the_hit_rect_is_the_header_and_the_rows() {
+    let mut app = with_repos(Config::default(), base_repos());
+    app.render(100, 30);
+    let rect = app.app().main_screen().unwrap().repos().table_rect();
+    assert_eq!(rect, Some(ratatui::layout::Rect::new(1, 4, 38, 4)));
+    let mut empty = TestApp::new(Config::default());
+    empty.render(100, 30);
+    let rect = empty.app().main_screen().unwrap().repos().table_rect();
+    assert_eq!(rect, Some(ratatui::layout::Rect::new(1, 4, 38, 1)));
+}
+
+#[test]
+fn the_wheel_scrolls_the_unfocused_repos_table() {
+    let mut app = with_repos(Config::default(), many_repos(20));
+    app.press(&["2"]);
+    app.render(100, 30);
+    app.send(mouse(MouseEventKind::ScrollDown, 10, 5));
+    assert_eq!(repos_table(&app).scroll(), (2, 0));
+    assert_eq!(repos_table(&app).cursor(), 0);
+    assert_eq!(focus(&app), PRS);
+    // Elsewhere, the wheel leaves it alone.
+    app.send(mouse(MouseEventKind::ScrollDown, 60, 10));
+    assert_eq!(repos_table(&app).scroll(), (2, 0));
+    assert_eq!(app.effects(), []);
+}
+
+#[test]
+fn moves_draw_the_hover_and_leaving_clears_it() {
+    let mut app = with_repos(Config::default(), base_repos());
+    let before = app.render(100, 30);
+    app.send(mouse(MouseEventKind::Moved, 10, 6));
+    assert_ne!(app.render(100, 30)[(10, 6)].bg, before[(10, 6)].bg);
+    app.send(mouse(MouseEventKind::Moved, 60, 20));
+    assert_eq!(app.render(100, 30)[(10, 6)].bg, before[(10, 6)].bg);
+}
+
+#[test]
+fn the_loading_overlay_takes_clicks() {
+    let mut app = TestApp::loading(Config::default(), FakeGithub::new());
+    app.press(&["2"]);
+    app.render(100, 30);
+    app.click(10, 4);
+    assert_eq!(focus(&app), PRS);
+}
+
+#[test]
+fn without_animations_the_loading_table_has_no_deadline() {
+    let app = TestApp::loading(Config::default(), FakeGithub::new());
+    assert!(repos_table(&app).is_loading());
+    assert_eq!(app.app().next_deadline(), None);
+    let animated = TestApp::loading_with_options(
+        Config::default(),
+        FakeGithub::new(),
+        crate::options::AppOptions { animations: true },
+    );
+    let now = crate::clock::Clock::now(animated.clock());
+    assert_eq!(
+        animated.app().next_deadline(),
+        Some(now + crate::components::loading::FRAME_INTERVAL)
+    );
+}
+
+#[test]
+fn maximized_repos_100x30() {
+    let mut app = with_repos(Config::default(), base_repos());
+    app.press(&["M"]);
+    app.advance(std::time::Duration::from_secs(5));
+    let screen = app.screen(100, 30);
+    let rows: Vec<&str> = screen.lines().collect();
+    // The header and 3 rows, centered: rows 13-16.
+    assert_eq!(rows[13], " ★  Owner       Name         Private");
+    assert_eq!(rows[16], " ☆  parity-bot  lazy-demo    ✘");
+    assert!(
+        rows.iter()
+            .enumerate()
+            .all(|(i, row)| (13..=16).contains(&i) || row.chars().all(|c| c == '╱'))
+    );
+    // The maximized table takes clicks.
+    app.click(10, 15);
+    assert_eq!(repos_table(&app).cursor(), 1);
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn maximized_while_loading_100x30() {
+    let mut app = TestApp::loading(Config::default(), FakeGithub::new().with_repositories(base_repos()));
+    app.press(&["M"]);
+    app.advance(std::time::Duration::from_secs(5));
+    let screen = app.screen(100, 30);
+    // The table alone, its header only, with no overlay.
+    assert!(!screen.contains("Loading"));
+    assert_eq!(screen.lines().nth(14), Some(" ★  Owner  Name  Private"));
+    insta::assert_snapshot!(screen);
+    // The rows appear when the load lands.
+    settle_logged(&mut app);
+    let screen = app.screen(100, 30);
+    assert_eq!(screen.lines().nth(13), Some(" ★  Owner       Name         Private"));
+}
+
+#[test]
+fn a_maximized_table_of_60_repos_fills_the_screen() {
+    let mut app = with_repos(Config::default(), many_repos(60));
+    app.press(&["M"]);
+    app.advance(std::time::Duration::from_secs(5));
+    let screen = app.screen(100, 30);
+    assert!(!screen.contains('╱'));
+    assert!(screen.starts_with(" ★  Owner"));
 }

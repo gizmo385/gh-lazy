@@ -1,7 +1,7 @@
 version = 1
 description = "Main screen right after launch, no current-directory repo"
-gate = false
-parity_rows = ["main-layout.layout"]
+gate = true
+parity_rows = ["main-layout.layout", "repositories.table", "repositories.columns"]
 sizes = [[160, 48], [100, 30]]
 
 [env]
@@ -11,7 +11,12 @@ fixtures = ["base"]
 wait = { text = "Repositories", timeout_ms = 15000 }
 
 [[step]]
+wait = { text = "dotfiles" }
+
+# The PR, Issues and Workflows sections have no table in Rust yet: #171, #172 and #173 each remove their box here.
+[[step]]
 capture = "main"
+ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
 
 # Taken from the Python capture. The footer is the full binding list: at 160 and 100 columns the screen cuts it off,
 # which the footer expectation allows (parity/README.md, "Checks").

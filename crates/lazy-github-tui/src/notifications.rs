@@ -152,6 +152,13 @@ mod tests {
         }
     }
 
+    /// The fake's calls, without the repos list the main screen makes when it opens.
+    fn poll_calls(app: &TestApp) -> Vec<GithubCall> {
+        let mut calls = app.gh().calls();
+        calls.retain(|call| !matches!(call, GithubCall::ListRepositories(_)));
+        calls
+    }
+
     /// Runs every queued request on the fake.
     fn settle(app: &mut TestApp) {
         app.settle().now_or_never().expect("the fake answers at once");
@@ -191,7 +198,7 @@ mod tests {
         let mut app = TestApp::on_startup(enabled(), FakeGithub::new().with_unread_count(Ok(3)));
         settle(&mut app);
         assert_eq!(
-            app.gh().calls(),
+            poll_calls(&app),
             [
                 GithubCall::CheckAuth,
                 GithubCall::CheckAuth,
@@ -217,7 +224,7 @@ mod tests {
         let mut app = TestApp::with_github(enabled(), gh);
         settle(&mut app);
         assert_eq!(
-            app.gh().calls(),
+            poll_calls(&app),
             [GithubCall::CheckAuth, GithubCall::UnreadNotificationCount]
         );
         assert_eq!(app.app().unread(), UnreadState::Count(3));
@@ -235,15 +242,15 @@ mod tests {
         app.gh().set_unread_count(Ok(50));
         app.advance(Duration::from_secs(59));
         settle(&mut app);
-        assert_eq!(app.gh().calls().len(), 2);
+        assert_eq!(poll_calls(&app).len(), 2);
         app.advance(Duration::from_secs(1));
         settle(&mut app);
-        assert_eq!(app.gh().calls().len(), 4);
+        assert_eq!(poll_calls(&app).len(), 4);
         assert_eq!(app.app().unread(), UnreadState::Count(50));
         assert!(status_row(&mut app).ends_with("• Unread Notifications: 50+│"));
         app.advance(REFRESH_INTERVAL);
         settle(&mut app);
-        assert_eq!(app.gh().calls().len(), 6);
+        assert_eq!(poll_calls(&app).len(), 6);
     }
 
     #[test]
@@ -271,7 +278,7 @@ mod tests {
         assert_eq!(app.app().unread(), UnreadState::Count(3));
         assert!(!app.app().notifications_refreshing());
         // No count was fetched after the failed check.
-        assert_eq!(app.gh().calls().last(), Some(&GithubCall::CheckAuth));
+        assert_eq!(poll_calls(&app).last(), Some(&GithubCall::CheckAuth));
     }
 
     #[test]
@@ -318,7 +325,7 @@ mod tests {
         app.advance(REFRESH_INTERVAL);
         settle(&mut app);
         assert_eq!(
-            app.gh().calls(),
+            poll_calls(&app),
             [
                 GithubCall::CheckAuth,
                 GithubCall::UnreadNotificationCount,
@@ -353,7 +360,7 @@ mod tests {
         );
         assert_eq!(app.app().unread(), UnreadState::Count(3));
         assert!(!app.app().notifications_refreshing());
-        assert_eq!(app.gh().calls().last(), Some(&GithubCall::CheckAuth));
+        assert_eq!(poll_calls(&app).last(), Some(&GithubCall::CheckAuth));
 
         // The next tick checks again rather than being skipped as still in flight.
         app.gh().set_auth_error(None);
@@ -361,7 +368,7 @@ mod tests {
         app.advance(REFRESH_INTERVAL);
         settle(&mut app);
         assert_eq!(
-            app.gh().calls()[3..],
+            poll_calls(&app)[3..],
             [GithubCall::CheckAuth, GithubCall::UnreadNotificationCount]
         );
         assert_eq!(app.app().unread(), UnreadState::Count(5));
@@ -380,7 +387,7 @@ mod tests {
         app.advance(REFRESH_INTERVAL);
         settle(&mut app);
         assert_eq!(
-            app.gh().calls(),
+            poll_calls(&app),
             [GithubCall::CheckAuth, GithubCall::UnreadNotificationCount]
         );
     }
@@ -396,10 +403,10 @@ mod tests {
         assert_eq!(app.app_mut().update(Action::RefreshNotifications), []);
         assert_eq!(app.app().unread(), UnreadState::Hidden);
         // The interval keeps ticking, but calls nothing.
-        let calls = app.gh().calls().len();
+        let calls = poll_calls(&app).len();
         app.advance(REFRESH_INTERVAL * 3);
         settle(&mut app);
-        assert_eq!(app.gh().calls().len(), calls);
+        assert_eq!(poll_calls(&app).len(), calls);
         assert!(!status_row(&mut app).contains("nread"));
     }
 

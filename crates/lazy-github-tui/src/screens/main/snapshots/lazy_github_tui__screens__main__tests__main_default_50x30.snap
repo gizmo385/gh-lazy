@@ -6,7 +6,7 @@ expression: "screen(Config::default(), 50, 30)"
 │No repository selected                          │
 └────────────────────────────────────────────────┘
 ┌─ [1] Repositor… ─┐┌─ [5] Details ──────────────┐
-│                  ││ Introduction               │
+│ ★  Owner  Name  P││ Introduction               │
 │                  ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━│
 │                  ││                            │
 │                  ││                            │

@@ -174,6 +174,9 @@ pub struct SearchableTable<T: TableItem> {
     /// The row under the mouse, while the hover highlight is shown. Keys hide it until the mouse moves again.
     hover: Option<usize>,
     loading: bool,
+    /// The last frame drew the table without its loading overlay ([`Self::render_content`]), so the overlay isn't
+    /// there to take the mouse.
+    overlay_hidden: bool,
     /// When the loading overlay was first drawn, which sets the animation's phase.
     loading_since: Option<Instant>,
     animations: bool,
@@ -201,6 +204,7 @@ impl<T: TableItem> SearchableTable<T> {
             scroll_x: 0,
             hover: None,
             loading: false,
+            overlay_hidden: false,
             loading_since: None,
             animations: true,
             generation: 0,
@@ -367,6 +371,7 @@ impl<T: TableItem> SearchableTable<T> {
     /// Shows or hides the loading overlay over the whole area. Keys keep working underneath it, as in Python.
     pub fn set_loading(&mut self, loading: bool) {
         self.loading = loading;
+        self.overlay_hidden = false;
         if !loading {
             self.loading_since = None;
         }
@@ -375,6 +380,11 @@ impl<T: TableItem> SearchableTable<T> {
     /// Whether the loading overlay is shown.
     pub fn is_loading(&self) -> bool {
         self.loading
+    }
+
+    /// Whether the last frame drew the loading overlay, which takes mouse events inside the area.
+    pub fn overlay_shown(&self) -> bool {
+        self.loading && !self.overlay_hidden
     }
 
     /// When the next animation frame is due, while the animated overlay is shown.
@@ -482,7 +492,7 @@ impl<T: TableItem> SearchableTable<T> {
             }
             return Handled::Ignored;
         }
-        if self.loading {
+        if self.overlay_shown() {
             self.hover = None;
             return Handled::Consumed;
         }
@@ -751,6 +761,14 @@ impl<T: TableItem> SearchableTable<T> {
         Layout::new(area, self.widths().iter().sum(), self.rows.len())
     }
 
+    /// Where [`Self::render`] puts the table itself in `area`: below the search box while it's shown, as tall as the
+    /// header, the rows and any horizontal scrollbar, capped at what's left of `area` (Textual's `height: auto`).
+    /// An owner hit-tests clicks against it and sizes a maximized table by it.
+    pub fn table_rect(&self, area: Rect) -> Rect {
+        let (_, area) = self.search.split(area);
+        self.layout_in(area).table
+    }
+
     /// Where the table went in the last rendered area: below the search box while it's shown.
     fn table_area(&self) -> Rect {
         self.search.split(self.area).1
@@ -782,14 +800,23 @@ impl<T: TableItem> SearchableTable<T> {
     /// overlay over all of `area`. `cx.focused` says the component has focus, and [`Self::focus`] which part gets
     /// the focused styles. `cx.now` picks the animation frame.
     pub fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
-        self.area = area;
-        let buf = frame.buffer_mut();
         if self.loading {
+            self.area = area;
+            self.overlay_hidden = false;
             let since = *self.loading_since.get_or_insert(cx.now);
             let elapsed = cx.now.checked_duration_since(since).unwrap_or(Duration::ZERO);
-            loading::render(buf, area, cx.theme, self.animations, elapsed);
+            loading::render(frame.buffer_mut(), area, cx.theme, self.animations, elapsed);
             return;
         }
+        self.render_content(frame, area, cx);
+    }
+
+    /// [`Self::render`] without the loading overlay, even while loading: the search box and the table. Python's
+    /// overlay belongs to the container around the `DataTable`, so a table maximized during a load shows without it.
+    pub fn render_content(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
+        self.area = area;
+        self.overlay_hidden = self.loading;
+        let buf = frame.buffer_mut();
         let (search, area) = self.search.split(area);
         if let Some(search) = search {
             let focused = cx.focused && self.focus == TableFocus::Search;

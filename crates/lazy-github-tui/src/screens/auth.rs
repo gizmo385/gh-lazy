@@ -329,7 +329,12 @@ mod tests {
         assert_eq!(app.app().screen(), Some(ScreenKind::Main));
         assert_eq!(
             app.gh().calls(),
-            [GithubCall::CheckAuth, GithubCall::CheckAuth, GithubCall::CheckAuth]
+            [
+                GithubCall::CheckAuth,
+                GithubCall::CheckAuth,
+                GithubCall::CheckAuth,
+                GithubCall::ListRepositories(lazy_github_core::github::RepoListQuery::all())
+            ]
         );
     }
 

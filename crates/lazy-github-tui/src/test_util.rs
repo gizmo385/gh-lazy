@@ -19,7 +19,11 @@ use crate::component::{Component, Cx, RenderCx};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::KeySpec;
+use crate::options::AppOptions;
 use crate::theme::Theme;
+
+/// The options every [`TestApp`] runs with unless it says otherwise: no animations.
+const TEST_OPTIONS: AppOptions = AppOptions { animations: false };
 
 /// An [`App`] under test.
 ///
@@ -41,22 +45,42 @@ struct FakeTimer {
 
 impl TestApp {
     /// An app on the main screen with `config` (and its keymap), the default theme, and a logged-in [`FakeGithub`].
-    /// The startup auth check is skipped; [`Self::on_startup`] runs it.
+    /// The startup auth check is skipped; [`Self::on_startup`] runs it. The repos list the main screen asks for is
+    /// answered at once (the fake has no repos unless `gh` says otherwise), so the screen is loaded; [`Self::loading`]
+    /// leaves it pending. That request is setup: it's in the fake's call log but not in [`Self::effects`], which
+    /// starts with the other startup effects, such as the notifications poll.
+    ///
+    /// Animations are off, as under the parity harness's `TEXTUAL_ANIMATIONS=none`, so loading overlays are still.
     pub fn new(config: Config) -> Self {
         Self::with_github(config, FakeGithub::new())
     }
 
     /// Like [`Self::new`], with requests answered by `gh`.
     pub fn with_github(config: Config, gh: FakeGithub) -> Self {
-        let mut test = Self::build(config, Theme::default(), gh);
-        let effects = test.app.skip_startup();
-        test.perform(effects);
+        let mut test = Self::loading(config, gh);
+        test.answer_repos();
         test
+    }
+
+    /// Like [`Self::with_github`], with the main screen's repos list still in flight: [`Self::settle`] answers it.
+    pub fn loading(config: Config, gh: FakeGithub) -> Self {
+        Self::entered(config, Theme::default(), gh, TEST_OPTIONS)
     }
 
     /// Like [`Self::new`], drawn with `theme` (for example one reduced to a 256-color terminal).
     pub fn with_theme(config: Config, theme: Theme) -> Self {
-        let mut test = Self::build(config, theme, FakeGithub::new());
+        let mut test = Self::entered(config, theme, FakeGithub::new(), TEST_OPTIONS);
+        test.answer_repos();
+        test
+    }
+
+    /// Like [`Self::loading`], with `options`.
+    pub fn loading_with_options(config: Config, gh: FakeGithub, options: AppOptions) -> Self {
+        Self::entered(config, Theme::default(), gh, options)
+    }
+
+    fn entered(config: Config, theme: Theme, gh: FakeGithub, options: AppOptions) -> Self {
+        let mut test = Self::build(config, theme, gh, options);
         let effects = test.app.skip_startup();
         test.perform(effects);
         test
@@ -65,15 +89,15 @@ impl TestApp {
     /// An app as it launches: on the blank startup screen, with [`App::init`]'s effects performed. Requests it makes
     /// are answered by `gh` on [`Self::settle`].
     pub fn on_startup(config: Config, gh: FakeGithub) -> Self {
-        let mut test = Self::build(config, Theme::default(), gh);
+        let mut test = Self::build(config, Theme::default(), gh, TEST_OPTIONS);
         let init = test.app.init();
         test.perform(init);
         test
     }
 
-    fn build(config: Config, theme: Theme, gh: FakeGithub) -> Self {
+    fn build(config: Config, theme: Theme, gh: FakeGithub, options: AppOptions) -> Self {
         let clock = FakeClock::new();
-        let app = App::new(config, theme, clock.clone());
+        let app = App::new(config, theme, options, clock.clone());
         Self {
             app,
             gh,
@@ -81,6 +105,30 @@ impl TestApp {
             effects: Vec::new(),
             queued: VecDeque::new(),
             timers: HashMap::new(),
+        }
+    }
+
+    /// Answers the queued repos list requests on the fake, leaving every other queued effect in place.
+    fn answer_repos(&mut self) {
+        let (repos, rest): (VecDeque<Effect>, VecDeque<Effect>) =
+            std::mem::take(&mut self.queued).into_iter().partition(|effect| {
+                matches!(
+                    effect,
+                    Effect::Github {
+                        request: GithubRequest::ListRepositories(_),
+                        ..
+                    }
+                )
+            });
+        self.queued = rest;
+        self.effects.retain(|effect| !repos.contains(effect));
+        for effect in repos {
+            if let Effect::Github { id, request } = effect {
+                // The fake answers without awaiting anything unless it was given a latency.
+                let response = futures_util::FutureExt::now_or_never(request.run(&self.gh))
+                    .expect("the fake answers the repos list at once");
+                self.send(Event::Github { id, response });
+            }
         }
     }
 

@@ -265,6 +265,9 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   overflows its pane, over two `GET /user/repos` pages (50, then 10). Listed before `base`, for the
   `table-navigation` and `table-search` scenarios: on the first page, three `parity-bot` names contain `lazy` and two
   start with `gh`. Hand-written: only the fields the apps read are kept.
+- `repos-error/`: base's `GET /user/repos` page 1 answered with a 500 (`{"message": "Server Error"}`) after 1.5 s,
+  long enough to capture the loading overlay. Listed before `base`, for the `repos-fetch-error` scenario.
+  Hand-written.
 - `notifications-0/`, `notifications-3/`, `notifications-50/`: `GET /notifications` (`all=false`, `page=1`,
   `per_page=50`) answered with 0, 3 or 50 unread notifications (50 is a full first page) for repos in `base`. Listed
   before `base`, for the `status-bar-unread-*` scenarios. Hand-written.

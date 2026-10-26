@@ -3,25 +3,31 @@
 
 mod details;
 pub mod layout;
+mod repos;
 mod sections;
 
-use crossterm::event::MouseEvent;
+use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::AppearanceSettings;
 use ratatui::Frame;
 use ratatui::layout::{Margin, Position, Rect};
 use ratatui::style::Style;
 use ratatui::widgets::{Block, Clear};
+use tokio::time::Instant;
 
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Component, Cx, Owner, RenderCx, ScreenKind};
 use crate::components::command_log::{CommandLog, Wheel};
 use crate::components::hatch::Hatch;
 use crate::components::info::{INFO_BINDINGS, Scroll};
-use crate::components::table::TABLE_BINDINGS;
+use crate::components::table::{Handled, TABLE_BINDINGS, TableEvent};
+use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::{BindingId, Keymap};
+use crate::options::AppOptions;
+use crate::theme::Theme;
 
 use details::DetailsPane;
 use layout::{LayoutInput, layout};
+pub use repos::{RepoCells, ReposSection};
 use sections::titled_box;
 
 /// The four selection sections, top to bottom.
@@ -200,9 +206,9 @@ const LOG_BINDINGS: &[BindingId] = &[
     BindingId::TextualScrollPageRight,
 ];
 
-/// The rows a section's table draws: an empty `DataTable` is its header row. Clicks hit only these rows, and a
-/// maximized table is this tall. #78 replaces it with the table's real natural height, in both places.
-const TABLE_NATURAL_HEIGHT: u16 = 1;
+/// The rows an empty `DataTable` draws: its header row. The sections without a table yet take clicks on this row
+/// only, and maximized they're this tall. #171, #172 and #173 replace it with their tables' real height.
+const EMPTY_TABLE_HEIGHT: u16 = 1;
 
 /// The main screen.
 #[derive(Debug)]
@@ -215,6 +221,7 @@ pub struct MainScreen {
     command_log_title: String,
     details: DetailsPane,
     command_log: CommandLog,
+    repos: ReposSection,
     /// Where each focus target was drawn last, for clicks: the interiors of the boxes, not their borders.
     hits: Vec<(Rect, FocusTarget)>,
 }
@@ -231,9 +238,10 @@ pub enum MainAction {
 }
 
 impl MainScreen {
-    /// The main screen for the `appearance` settings read at startup, with titles from `keymap`. The repos table has
-    /// focus, as Textual focuses the first focusable widget.
-    pub fn new(appearance: &AppearanceSettings, keymap: &Keymap) -> Self {
+    /// The main screen for the `appearance` settings read at startup, with titles from `keymap`, the repos table's
+    /// header colored by `theme` and the startup `options`. The repos table has focus, as Textual focuses the first
+    /// focusable widget. [`Self::start`] starts loading it.
+    pub fn new(appearance: &AppearanceSettings, keymap: &Keymap, theme: &Theme, options: AppOptions) -> Self {
         let displayed = [
             true,
             appearance.show_pull_requests,
@@ -253,8 +261,29 @@ impl MainScreen {
             command_log_title: title(BindingId::MainCommandLogFocus, "Command Log"),
             details: DetailsPane::default(),
             command_log: CommandLog::new(appearance.show_command_log),
+            repos: ReposSection::new(theme, options),
             hits: Vec::new(),
         }
+    }
+
+    /// What the screen does once it's shown: load the repos, under the loading overlay.
+    pub fn start(&mut self, cx: &mut Cx<'_>) {
+        self.repos.start(cx);
+    }
+
+    /// Takes a response to one of the screen's requests, and hands back any other.
+    pub fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
+        self.repos.on_response(id, response, cx)
+    }
+
+    /// The repos section.
+    pub fn repos(&self) -> &ReposSection {
+        &self.repos
+    }
+
+    /// The next animation frame on the screen, if anything animates.
+    pub fn next_deadline(&self, now: Instant) -> Option<Instant> {
+        self.repos.table.next_deadline(now)
     }
 
     /// What has focus.
@@ -351,8 +380,49 @@ impl MainScreen {
             .map(|&(_, target)| target)
     }
 
-    /// What a mouse wheel event means: Textual scrolls the widget under the pointer, focused or not. Only the
-    /// command log scrolls by wheel so far.
+    /// A mouse event, against the last frame. A left press focuses what it lands on, and the wheel scrolls the widget
+    /// under the pointer, focused or not, as in Textual. The repos table also takes moves (its hover) and the click
+    /// that moves its cursor.
+    pub fn handle_mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
+        let at = Position::new(mouse.column, mouse.row);
+        if self.repos.area.is_some_and(|area| area.contains(at)) {
+            return self.repos_mouse(mouse, at);
+        }
+        // Moves elsewhere still reach the table, so its hover clears when the pointer leaves.
+        if mouse.kind == MouseEventKind::Moved {
+            let _ = self
+                .repos
+                .table
+                .handle_mouse(mouse, self.repos.area.unwrap_or_default());
+        }
+        match mouse.kind {
+            MouseEventKind::Down(MouseButton::Left) => self.hit(mouse.column, mouse.row).map(Action::Focus),
+            _ => self.wheel(&mouse),
+        }
+    }
+
+    /// A mouse event over the repos section's interior.
+    fn repos_mouse(&mut self, mouse: MouseEvent, at: Position) -> Option<Action> {
+        let on_table = self.repos.table_rect().is_some_and(|rect| rect.contains(at));
+        // Below the table's rows is its container, which neither scrolls nor takes focus.
+        if Wheel::from_mouse(&mouse).is_some() && !on_table {
+            return None;
+        }
+        let area = self.repos.area.unwrap_or_default();
+        let overlay = self.repos.table.overlay_shown();
+        let handled = self.repos.table.handle_mouse(mouse, area);
+        match mouse.kind {
+            // The loading overlay took it.
+            _ if overlay => None,
+            MouseEventKind::Down(MouseButton::Left) => {
+                on_table.then_some(Action::Focus(FocusTarget::Table(SectionId::Repos)))
+            }
+            _ => table_outcome(&handled),
+        }
+    }
+
+    /// What a mouse wheel event means: Textual scrolls the widget under the pointer, focused or not. The repos table
+    /// takes its own in [`Self::handle_mouse`]; here it's the command log.
     pub fn wheel(&self, mouse: &MouseEvent) -> Option<Action> {
         let wheel = Wheel::from_mouse(mouse)?;
         (self.hit(mouse.column, mouse.row) == Some(FocusTarget::CommandLog))
@@ -395,6 +465,8 @@ impl MainScreen {
                 Scroll::from_binding(id).map(|scroll| Action::Main(MainAction::ScrollDetails(scroll)))
             }
             Owner::CommandLog => Scroll::from_binding(id).map(|scroll| Action::Main(MainAction::ScrollLog(scroll))),
+            // The table is plain state, so it applies the binding now, as Textual runs the binding's action.
+            Owner::Table(SectionId::Repos) => table_outcome(&self.repos.table.on_binding(id)),
             // Not built yet: the key is still consumed, as in Python. With one tab, switching tabs is a no-op.
             Owner::Table(_)
             | Owner::SearchableTable(_)
@@ -436,7 +508,10 @@ impl MainScreen {
     /// full width, and either filling the height or centered on a hatch.
     pub fn render_maximized(&mut self, frame: &mut Frame<'_>, area: Rect, maximized: FocusTarget, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let natural_height = maximized.section().map(|_| TABLE_NATURAL_HEIGHT);
+        let natural_height = maximized.section().map(|id| match id {
+            SectionId::Repos => self.repos.table.table_rect(area).height,
+            _ => EMPTY_TABLE_HEIGHT,
+        });
         let rect = match natural_height {
             Some(height) if height < area.height => Rect {
                 y: area.y + (area.height - height) / 2,
@@ -453,7 +528,18 @@ impl MainScreen {
         frame.render_widget(Block::new().style(Style::new().bg(theme.paint(screen))), rect);
 
         self.hits.clear();
+        self.repos.area = None;
         match maximized {
+            FocusTarget::Table(SectionId::Repos) | FocusTarget::Search(SectionId::Repos) => {
+                let cx = RenderCx {
+                    focused: self.focus == FocusTarget::Table(SectionId::Repos),
+                    focus_within: self.focus.section() == Some(SectionId::Repos),
+                    ..*cx
+                };
+                self.repos.table.render_content(frame, rect, &cx);
+                self.repos.area = Some(rect);
+                self.hits.push((rect, FocusTarget::Table(SectionId::Repos)));
+            }
             FocusTarget::Table(id) | FocusTarget::Search(id) => self.hits.push((rect, FocusTarget::Table(id))),
             // `DetailsContent` is never maximized (see `FocusTarget::maximizable`); it's here to keep the match total.
             FocusTarget::DetailsTabs | FocusTarget::DetailsContent => {
@@ -466,6 +552,17 @@ impl MainScreen {
                 self.hits.push((rect, FocusTarget::CommandLog));
             }
         }
+    }
+}
+
+/// What a table's answer to an input means for the screen. `None` lets the input fall through.
+fn table_outcome<K>(handled: &Handled<TableEvent<K>>) -> Option<Action> {
+    match handled {
+        Handled::Ignored => None,
+        // Only lazy tables ask for pages, and none is mounted yet (#171).
+        Handled::Consumed | Handled::Event(TableEvent::LoadMore { .. }) => Some(Action::Consumed),
+        // #170 makes selecting a repo do something.
+        Handled::Event(TableEvent::Selected(_)) => Some(Action::Unimplemented(BindingId::TableSelect)),
     }
 }
 
@@ -520,6 +617,7 @@ impl Component for MainScreen {
         let theme = cx.theme;
         let boxes = self.layout(area);
         self.hits.clear();
+        self.repos.area = None;
         let interior = |rect: Rect| rect.inner(Margin::new(1, 1));
 
         // `App` draws the status box into `Self::status_area`, from the current repo and unread count it holds.
@@ -529,9 +627,20 @@ impl Component for MainScreen {
                 frame.render_widget(titled_box(title, rect.width, focused, theme), rect);
                 // Only the rows the `DataTable` draws take a click: below them is its unfocusable container.
                 let inner = interior(rect);
-                let table = Rect {
-                    height: inner.height.min(TABLE_NATURAL_HEIGHT),
-                    ..inner
+                let table = if id == SectionId::Repos {
+                    let cx = RenderCx {
+                        focused: self.focus == FocusTarget::Table(id),
+                        focus_within: focused,
+                        ..*cx
+                    };
+                    self.repos.table.render(frame, inner, &cx);
+                    self.repos.area = Some(inner);
+                    self.repos.table.table_rect(inner)
+                } else {
+                    Rect {
+                        height: inner.height.min(EMPTY_TABLE_HEIGHT),
+                        ..inner
+                    }
                 };
                 self.hits.push((table, FocusTarget::Table(id)));
             }

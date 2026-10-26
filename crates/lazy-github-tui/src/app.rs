@@ -22,6 +22,7 @@ use crate::effect::{Effect, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
 use crate::notifications::NotificationPoll;
+use crate::options::AppOptions;
 use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
 use crate::screens::main::{FocusTarget, MainScreen};
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
@@ -79,13 +80,14 @@ pub struct App {
 }
 
 impl App {
-    /// An app on the blank startup screen, with the keymap built from `config`'s `bindings.overrides`. The clock is
-    /// the only source of time for the app and its components. [`Self::init`] decides where it goes next.
-    pub fn new(config: Config, theme: Theme, clock: impl Clock + 'static) -> Self {
+    /// An app on the blank startup screen, with the keymap built from `config`'s `bindings.overrides` and the
+    /// process-wide `options` the binary read at startup. The clock is the only source of time for the app and its
+    /// components. [`Self::init`] decides where it goes next.
+    pub fn new(config: Config, theme: Theme, options: AppOptions, clock: impl Clock + 'static) -> Self {
         let keymap = Keymap::new(&config.bindings.overrides);
         Self {
             base: BaseScreen::Startup(StartupScreen::default()),
-            shared: Shared::new(config, keymap, theme, Arc::new(clock)),
+            shared: Shared::new(config, keymap, theme, options, Arc::new(clock)),
             toasts: Toasts::default(),
             maximized: None,
             has_shown_maximize_toast: false,
@@ -119,14 +121,18 @@ impl App {
         self.update(Action::EnterMain)
     }
 
-    /// Replaces the base screen with a new main screen, unmaximized and focused on repos, and starts the
-    /// notifications poll, as Python's `on_mount` does.
+    /// Replaces the base screen with a new main screen, unmaximized and focused on repos, starts loading the repos
+    /// and starts the notifications poll, as the Python widgets' `on_mount`s do (children first).
     fn enter_main(&mut self, out: &mut Outbox) {
         self.maximized = None;
-        self.base = BaseScreen::Main(Box::new(MainScreen::new(
+        let mut main = Box::new(MainScreen::new(
             &self.shared.config.appearance,
             &self.shared.keymap,
-        )));
+            &self.shared.theme,
+            self.shared.options,
+        ));
+        main.start(&mut Cx::new(&mut self.shared, out));
+        self.base = BaseScreen::Main(main);
         self.notifications.start(&mut Cx::new(&mut self.shared, out));
     }
 
@@ -160,8 +166,8 @@ impl App {
                 Some(Action::Quit)
             }
             Event::Mouse(mouse) => self.action_for_mouse(mouse),
-            // Resizes need no state: the next draw uses the new size. Nothing animates yet, so a deadline has
-            // nothing to advance.
+            // Resizes need no state: the next draw uses the new size. A deadline only needs the redraw that follows
+            // every event: animations take their frame from the clock.
             Event::Paste(_) | Event::Resize(..) | Event::FocusGained | Event::FocusLost | Event::Deadline => None,
         }
     }
@@ -208,13 +214,10 @@ impl App {
                 return self.route_binding(hit.owner, hit.id);
             }
         }
-        let BaseScreen::Main(main) = &self.base else {
+        let BaseScreen::Main(main) = &mut self.base else {
             return None;
         };
-        match mouse.kind {
-            MouseEventKind::Down(MouseButton::Left) => main.hit(mouse.column, mouse.row).map(Action::Focus),
-            _ => main.wheel(&mouse),
-        }
+        main.handle_mouse(mouse)
     }
 
     /// Tries each binding a key fired in one link, in order, until one applies (Textual's `_check_bindings`).
@@ -358,7 +361,8 @@ impl App {
             // Only the main screen has the panel: Python mounts it on the startup screen, which the main screen
             // then covers.
             Action::ToggleHelp if matches!(self.base, BaseScreen::Main(_)) => self.help_open = !self.help_open,
-            Action::ToggleHelp => {}
+            // `Consumed` was applied where it was produced.
+            Action::ToggleHelp | Action::Consumed => {}
             Action::Main(action) => {
                 if let BaseScreen::Main(main) = &mut self.base {
                     main.update(action, &mut Cx::new(&mut self.shared, out));
@@ -455,13 +459,19 @@ impl App {
 
     /// Hands a response to the screen waiting for it.
     fn route_response(&mut self, id: RequestId, response: GithubResponse, out: &mut Outbox) {
-        // Screens and panes that make other requests (M2) claim their responses here by id.
-        let Some(response) = self
+        // Screens and panes that make other requests claim their responses here by id.
+        let Some(mut response) = self
             .notifications
             .on_response(id, response, &mut Cx::new(&mut self.shared, out))
         else {
             return;
         };
+        if let BaseScreen::Main(main) = &mut self.base {
+            let Some(unclaimed) = main.on_response(id, response, &mut Cx::new(&mut self.shared, out)) else {
+                return;
+            };
+            response = unclaimed;
+        }
         let GithubResponse::CheckAuth(result) = response else {
             tracing::debug!("Dropping the response to request {id}: nothing is waiting for it");
             return;
@@ -625,10 +635,14 @@ impl App {
         self.should_quit
     }
 
-    /// The next time something on screen changes by itself (toast expiry, a spinner frame), or `None` when nothing
-    /// animates. Toasts (#79) and spinners (#78) feed it.
+    /// The next time something on screen changes by itself (toast expiry, a loading animation frame), or `None` when
+    /// nothing animates.
     pub fn next_deadline(&self) -> Option<Instant> {
-        self.toasts.next_deadline()
+        let main = match &self.base {
+            BaseScreen::Main(main) => main.next_deadline(self.shared.clock.now()),
+            _ => None,
+        };
+        [self.toasts.next_deadline(), main].into_iter().flatten().min()
     }
 
     /// The toasts up now.
@@ -825,7 +839,12 @@ mod tests {
 
     #[test]
     fn ctrl_c_explains_how_to_quit() {
-        let mut app = App::new(Config::default(), Theme::default(), FakeClock::new());
+        let mut app = App::new(
+            Config::default(),
+            Theme::default(),
+            AppOptions::default(),
+            FakeClock::new(),
+        );
         assert!(matches!(
             app.action_for(Event::Key(key_event("ctrl+c"))),
             Some(Action::QuitHint)
@@ -987,7 +1006,13 @@ mod tests {
         let mut app = test_app();
         let id = app.with_cx(|cx| cx.request(GithubRequest::CheckAuth));
         let out = logs(|| futures_util::FutureExt::now_or_never(app.settle()).unwrap());
-        assert_eq!(app.gh().calls(), [GithubCall::CheckAuth]);
+        assert_eq!(
+            app.gh().calls(),
+            [
+                GithubCall::ListRepositories(lazy_github_core::github::RepoListQuery::all()),
+                GithubCall::CheckAuth
+            ]
+        );
         assert_eq!(
             out,
             format!("DEBUG Dropping the response to request {id}: nothing is waiting for it\n")

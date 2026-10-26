@@ -1,7 +1,6 @@
 version = 1
 description = "Searchable table: row cursor, paging, top and bottom, and horizontal paging on a 60-repo table that overflows its pane"
-# Flipped to true by the M2 repos-table issue, which puts the table on screen.
-gate = false
+gate = true
 parity_rows = [
     "searchable-tables.vim-cursor",
     "searchable-tables.sort-on-insert",
@@ -32,9 +31,12 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 [[step]]
 wait = { text = "mike-service", timeout_ms = 15000 }
 
+# Every capture ignores the PR, Issues and Workflows sections, which have no table in Rust yet: #171, #172 and #173
+# each remove their box from these lists.
 [[step]]
 capture = "initial"
 checks = ["headers", "rows", "cursor"]
+ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
 
 [[step]]
 keys = ["1", "j", "j"]
@@ -42,6 +44,7 @@ keys = ["1", "j", "j"]
 [[step]]
 capture = "down-2"
 checks = ["headers", "rows", "cursor"]
+ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
 
 [[step]]
 keys = ["J"]
@@ -49,13 +52,16 @@ keys = ["J"]
 [[step]]
 capture = "page-down"
 checks = ["headers", "rows", "cursor"]
+ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
 
 [[step]]
 keys = ["G"]
 
+# Python stops at 50 rows (B33, #134), so `rows` and `cursor` come back once #134's fix is merged into rust-main.
 [[step]]
 capture = "bottom"
-checks = ["headers", "rows", "cursor"]
+checks = ["headers"]
+ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
 
 [[step]]
 keys = ["g"]
@@ -63,6 +69,7 @@ keys = ["g"]
 [[step]]
 capture = "top"
 checks = ["headers", "rows", "cursor"]
+ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
 
 [[step]]
 keys = ["$"]
@@ -70,6 +77,7 @@ keys = ["$"]
 [[step]]
 capture = "page-right"
 checks = ["headers", "rows", "cursor"]
+ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
 
 [[step]]
 keys = ["^"]
@@ -77,6 +85,7 @@ keys = ["^"]
 [[step]]
 capture = "page-left"
 checks = ["headers", "rows", "cursor"]
+ignore = { boxes = ["Pull Requests", "Issues", "Workflows"] }
 
 [expect.initial]
 not_contains = ["Traceback"]

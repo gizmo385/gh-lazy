@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/user/repos",
+    "query": {
+      "direction": "asc",
+      "page": "1",
+      "per_page": "50",
+      "sort": "full_name",
+      "type": "all"
+    }
+  },
+  "response": {
+    "status": 500,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "message": "Server Error"
+    },
+    "delay_ms": 1500
+  },
+  "note": "Hand-written for repos-fetch-error: the repos list fails, late enough for the loading overlay to be captured."
+}

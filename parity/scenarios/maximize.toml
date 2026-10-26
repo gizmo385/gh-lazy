@@ -11,6 +11,10 @@ fixtures = ["base"]
 [[step]]
 wait = { text = "Repositories", timeout_ms = 15000 }
 
+# Maximize once the repos are in, so the maximized table has its rows.
+[[step]]
+wait = { text = "dotfiles" }
+
 [[step]]
 keys = ["M"]
 
@@ -51,7 +55,8 @@ checks = ["titles", "tabs", "focus"]
 [expect.max]
 pane_titles = []
 focused = []
-contains = ["View Maximized", "Current view maximized. Press escape to"]
+# The maximized repos table pins the rows too: its header and base's three repos, centered on the hatch.
+contains = ["View Maximized", "Current view maximized. Press escape to", "★  Owner", "dotfiles", "lazy-demo"]
 not_contains = ["[1] Repositories", "Traceback"]
 
 [expect.restored]

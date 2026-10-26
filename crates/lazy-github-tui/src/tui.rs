@@ -507,6 +507,7 @@ mod tests {
         let mut app = App::new(
             lazy_github_core::config::Config::default(),
             crate::theme::Theme::default(),
+            crate::options::AppOptions::default(),
             crate::clock::FakeClock::new(),
         );
         let (tx, mut rx) = mpsc::unbounded_channel();

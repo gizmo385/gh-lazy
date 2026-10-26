@@ -56,6 +56,10 @@ pub enum Action {
     /// A command-log line arrived.
     CommandLog(LogLine),
 
+    /// An input a component took and already applied, such as a table key moving the cursor: nothing else happens,
+    /// and nothing is logged. Returning it stops the key at that link of the chain.
+    Consumed,
+
     /// A binding whose feature lands in a later milestone: logged at debug, otherwise a no-op.
     Unimplemented(BindingId),
 }

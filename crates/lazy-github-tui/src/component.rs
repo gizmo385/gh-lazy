@@ -13,6 +13,7 @@ use crate::action::Action;
 use crate::clock::Clock;
 use crate::effect::{Effect, GithubRequest, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
+use crate::options::AppOptions;
 use crate::screens::main::SectionId;
 use crate::theme::Theme;
 use crate::toast::Toast;
@@ -157,17 +158,25 @@ pub(crate) struct Shared {
     pub(crate) config: Config,
     pub(crate) keymap: Keymap,
     pub(crate) theme: Theme,
+    pub(crate) options: AppOptions,
     pub(crate) clock: Arc<dyn Clock>,
     next_request: u64,
     config_dirty: bool,
 }
 
 impl Shared {
-    pub(crate) fn new(config: Config, keymap: Keymap, theme: Theme, clock: Arc<dyn Clock>) -> Self {
+    pub(crate) fn new(
+        config: Config,
+        keymap: Keymap,
+        theme: Theme,
+        options: AppOptions,
+        clock: Arc<dyn Clock>,
+    ) -> Self {
         Self {
             config,
             keymap,
             theme,
+            options,
             clock,
             next_request: 1,
             config_dirty: false,

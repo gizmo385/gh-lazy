@@ -6,7 +6,7 @@ use futures_util::FutureExt as _;
 use jiff::ToSpan as _;
 use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
-use lazy_github_core::github::{FakeGithub, GithubCall};
+use lazy_github_core::github::{FakeGithub, GithubCall, RepoListQuery};
 
 use crate::app::App;
 use crate::clock::{Clock as _, FakeClock};
@@ -79,8 +79,15 @@ fn a_fresh_cache_goes_straight_to_main() {
     let mut app = TestApp::on_startup(config_checked(Some(1.hour())), FakeGithub::new());
     settle(&mut app);
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
-    assert_eq!(app.effects(), []);
-    assert_eq!(app.gh().calls(), []);
+    // Only the main screen's repos list.
+    assert!(matches!(
+        app.effects(),
+        [Effect::Github {
+            request: GithubRequest::ListRepositories(_),
+            ..
+        }]
+    ));
+    assert_eq!(app.gh().calls(), [GithubCall::ListRepositories(RepoListQuery::all())]);
 }
 
 #[test]
@@ -97,13 +104,20 @@ fn a_stale_cache_checks_then_saves_once_and_shows_main() {
         }]
     ));
     settle(&mut app);
-    assert_eq!(app.gh().calls(), [GithubCall::CheckAuth]);
+    assert_eq!(
+        app.gh().calls(),
+        [
+            GithubCall::CheckAuth,
+            GithubCall::ListRepositories(RepoListQuery::all())
+        ]
+    );
     let saved = saved_configs(&app);
     assert_eq!(saved.len(), 1);
     let now = app.clock().local_now().datetime();
     assert_eq!(saved[0].cache.auth_last_checked, Some(now));
     assert!(!saved[0].core.first_start);
-    assert_eq!(app.effects().len(), 2);
+    // The check, the repos list and the save.
+    assert_eq!(app.effects().len(), 3);
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
 }
 
@@ -111,7 +125,13 @@ fn a_stale_cache_checks_then_saves_once_and_shows_main() {
 fn no_previous_check_is_stale() {
     let mut app = TestApp::on_startup(config_checked(None), FakeGithub::new());
     settle(&mut app);
-    assert_eq!(app.gh().calls(), [GithubCall::CheckAuth]);
+    assert_eq!(
+        app.gh().calls(),
+        [
+            GithubCall::CheckAuth,
+            GithubCall::ListRepositories(RepoListQuery::all())
+        ]
+    );
     assert_eq!(saved_configs(&app).len(), 1);
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
 }
@@ -144,7 +164,20 @@ fn the_poll_rechecks_and_moves_on_without_saving() {
     settle(&mut app);
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
     assert_eq!(saved_configs(&app), Vec::<&Config>::new());
-    assert_eq!(app.effects().last(), Some(&Effect::CancelTimer(TimerId::AuthPoll)));
+    let last = &app.effects()[app.effects().len() - 2..];
+    assert!(
+        matches!(
+            last,
+            [
+                Effect::CancelTimer(TimerId::AuthPoll),
+                Effect::Github {
+                    request: GithubRequest::ListRepositories(_),
+                    ..
+                }
+            ]
+        ),
+        "{last:?}"
+    );
 
     // The timer is gone, so nothing checks again.
     app.advance(AUTH_POLL_INTERVAL * 3);

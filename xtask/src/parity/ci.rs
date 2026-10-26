@@ -1,7 +1,7 @@
 //! `--ci` output: GitHub Actions workflow commands (`::error` and `::warning`) for the results of a run.
 //!
-//! Errors mark what fails the job: every mismatch that counts against the gate, every app run that fails it, and any
-//! harness error (an invalid scenario file included).
+//! Errors mark what fails the job: every mismatch that counts against the gate (drift included), every app run that
+//! fails it, and any harness error (an invalid scenario file included).
 //! Warnings mark what doesn't: a `rust-not-ready` scenario (one annotation per scenario) and a run that only passed on
 //! retry.
 
@@ -19,6 +19,8 @@ pub enum Source {
     Expect,
     /// The Python-vs-Rust comparison.
     Cross,
+    /// A live Python run against its fresh reference.
+    Drift,
 }
 
 /// A structural mismatch from one capture at one size, and the app it counts against.
@@ -42,6 +44,11 @@ impl Finding {
         Self::new(size, capture, Source::Cross, App::Rust, mismatch)
     }
 
+    /// A live Python run that disagrees with its reference, which counts against Python: the reference is wrong.
+    pub fn drift(size: &str, capture: &str, mismatch: &Mismatch) -> Self {
+        Self::new(size, capture, Source::Drift, App::Python, mismatch)
+    }
+
     fn new(size: &str, capture: &str, source: Source, against: App, mismatch: &Mismatch) -> Self {
         Self {
             size: size.to_owned(),
@@ -59,6 +66,7 @@ impl Finding {
         let source = match self.source {
             Source::Expect => format!("{} expect", self.against),
             Source::Cross => "cross".to_owned(),
+            Source::Drift => "drift".to_owned(),
         };
         match &m.in_box {
             Some(b) => format!("{source} {} {b}", m.check.as_str()),

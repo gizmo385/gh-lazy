@@ -65,6 +65,10 @@ pub struct AppRunStatus {
     /// Why the run failed, for humans.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
+    /// Read from a recorded reference instead of run: nothing was started, and `duration_ms` is 0. Left out of the
+    /// JSON when false, so a live run's status looks as it always did.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub recorded: bool,
 }
 
 impl AppRunStatus {
@@ -79,6 +83,15 @@ impl AppRunStatus {
             misses: Vec::new(),
             errors: Vec::new(),
             message: None,
+            recorded: false,
+        }
+    }
+
+    /// The status of a Python side read from a recorded reference: `ok`, which recording guarantees.
+    pub fn recorded() -> Self {
+        Self {
+            recorded: true,
+            ..Self::new(RunState::Ok, None, None)
         }
     }
 
@@ -89,6 +102,9 @@ impl AppRunStatus {
 
     /// A one-line description for the console.
     pub fn describe(&self) -> String {
+        if self.recorded {
+            return "recorded".to_owned();
+        }
         let secs = Duration::from_millis(self.duration_ms).as_secs_f64();
         let mut s = match self.status {
             RunState::Ok if self.fixture_problems => {
@@ -664,6 +680,7 @@ mod tests {
             misses: Vec::new(),
             errors: Vec::new(),
             message: None,
+            recorded: false,
         };
         let json = serde_json::to_value(&status).unwrap();
         assert_eq!(
@@ -674,5 +691,16 @@ mod tests {
         assert_eq!(serde_json::to_value(RunState::SpawnError).unwrap(), "spawn-error");
         assert!(!status.passed());
         assert_eq!(status.describe(), "timeout at step 2 (1.5s)");
+
+        let recorded = AppRunStatus::recorded();
+        let json = serde_json::to_value(&recorded).unwrap();
+        assert_eq!(
+            json,
+            serde_json::json!({"status": "ok", "step": null, "exit_code": null, "duration_ms": 0, "flaky": false,
+                "fixture_problems": false, "misses": [], "errors": [], "recorded": true})
+        );
+        assert_eq!(serde_json::from_value::<AppRunStatus>(json).unwrap(), recorded);
+        assert!(recorded.passed());
+        assert_eq!(recorded.describe(), "recorded");
     }
 }

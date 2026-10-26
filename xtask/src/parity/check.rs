@@ -31,6 +31,8 @@ pub enum Kind {
     Focus,
     Contains,
     NotContains,
+    /// The served requests (drift only: a live Python run against its reference).
+    Requests,
 }
 
 impl From<Check> for Kind {
@@ -59,6 +61,7 @@ impl Kind {
             Kind::Focus => "focus",
             Kind::Contains => "contains",
             Kind::NotContains => "not_contains",
+            Kind::Requests => "requests",
         }
     }
 }
@@ -122,6 +125,27 @@ pub struct CheckFile {
     pub size: [u16; 2],
     pub expect: Vec<Mismatch>,
     pub cross: Vec<Mismatch>,
+    /// Where a live Python run disagrees with its fresh reference. `python` is the live value, `rust` the
+    /// reference's. Left out when empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub drift: Vec<Mismatch>,
+}
+
+/// One disagreement between a live Python run and its fresh reference, on one capture
+/// ([`reference::drift`](super::reference::drift)). It means the reference is wrong, so it counts against Python.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Drift {
+    pub capture: String,
+    /// `python` is the live value and `rust` the reference's; the message doesn't say so yet.
+    pub mismatch: Mismatch,
+}
+
+/// The note after every drift line: what drift means and how to fix it.
+pub fn drift_hint(scenario: &str) -> String {
+    format!(
+        "the reference is wrong or nondeterministic: run cargo xtask parity --record --force {scenario} and review \
+         the diff"
+    )
 }
 
 fn titles(s: &Structure) -> Vec<&str> {
@@ -504,15 +528,41 @@ fn write_json(path: &Path, value: &impl Serialize) -> Result<()> {
     std::fs::write(path, json + "\n").with_context(|| format!("writing {}", path.display()))
 }
 
+/// The drift on capture `name` of `scenario` at `size`: its console lines and its mismatches for `check.json` (saying
+/// which side is which). Its findings for `--ci`, with the hint, go to `findings`.
+fn capture_drift(
+    scenario: &str,
+    size: &str,
+    name: &str,
+    drift: &[Drift],
+    findings: &mut Vec<Finding>,
+) -> (Vec<String>, Vec<Mismatch>) {
+    let hint = drift_hint(scenario);
+    let mut lines = Vec::new();
+    let mut mismatches = Vec::new();
+    for m in drift.iter().filter(|d| d.capture == name).map(|d| &d.mismatch) {
+        lines.push(format!("{scenario} {size} {name}: drift: {}; {hint}", m.describe()));
+        let with = |message: String| Mismatch { message, ..m.clone() };
+        findings.push(Finding::drift(size, name, &with(format!("{}; {hint}", m.message))));
+        mismatches.push(with(format!(
+            "{} (python is the live run, rust the reference)",
+            m.message
+        )));
+    }
+    (lines, mismatches)
+}
+
 /// Runs the structural check for every capture of one scenario at one size. `dir` is
 /// `<out>/<scenario>/<COLSxROWS>`, holding one directory per app that ran. Writes `<app>/<capture>.structure.json`
-/// for each dump found and `<capture>.check.json`, and prints one line per mismatch. Returns each capture's summary
-/// and every mismatch with the app it counts against.
+/// for each dump found and `<capture>.check.json`, and prints one line per mismatch. `drift` goes into each
+/// capture's `check.json` and counts against Python. Returns each capture's summary and every mismatch with the app
+/// it counts against.
 pub fn check_size(
     scenario: &Scenario,
     dir: &Path,
     statuses: &BTreeMap<App, AppRunStatus>,
     theme: &ThemeColors,
+    drift: &[Drift],
 ) -> Result<(Vec<CaptureSummary>, Vec<Finding>)> {
     let size = dir
         .file_name()
@@ -570,8 +620,13 @@ pub fn check_size(
         lines.extend(cross.iter().map(|m| format!("cross {}", m.describe())));
         findings.extend(cross.iter().map(|m| Finding::cross(&size, name, m)));
 
-        let checked = cross_ran || (expectation.is_some() && !structures.is_empty());
-        let mismatches = expect.len() + cross.len();
+        let (drift_lines, drifted) = capture_drift(&scenario.name, &size, name, drift, &mut findings);
+        if !drifted.is_empty() && !against.contains(&App::Python) {
+            against.push(App::Python);
+        }
+
+        let checked = cross_ran || (expectation.is_some() && !structures.is_empty()) || !drifted.is_empty();
+        let mismatches = expect.len() + cross.len() + drifted.len();
         let check = match (checked, mismatches) {
             (false, _) => CheckOutcome::NotApplicable,
             (true, 0) => CheckOutcome::Pass,
@@ -587,6 +642,7 @@ pub fn check_size(
                     size: grid_size,
                     expect,
                     cross,
+                    drift: drifted,
                 },
             )?;
         }
@@ -598,6 +654,9 @@ pub fn check_size(
             );
             for line in &lines {
                 println!("  {line}");
+            }
+            for line in &drift_lines {
+                println!("{line}");
             }
         }
         against.sort();
@@ -971,6 +1030,140 @@ mod tests {
         assert!(!footer_matches(&shown(&["q Quit", "^p Comman"]), false, &expected));
         assert!(!footer_matches(&shown(&["q Quit", "^x Comman"]), true, &expected));
         assert!(!footer_matches(&shown(&["q Exit", "^p Comman"]), true, &expected));
+    }
+
+    /// A scenario `drifty` whose capture checks `rows`, and a live grid whose table differs from the stored one.
+    fn drifted_table() -> (Scenario, ThemeColors, Grid, Grid) {
+        let repo = crate::parity::cli::repo_root();
+        let roots = Roots {
+            fixtures: repo.join("parity/fixtures"),
+            configs: repo.join("parity/configs"),
+        };
+        let source = "version = 1\ngate = false\n[[step]]\ncapture = \"main\"\nchecks = [\"rows\"]\n";
+        let scenario = Scenario::parse(Path::new("drifty.toml"), source, &roots).unwrap();
+        let theme = ThemeColors {
+            name: "textual-dark".into(),
+            focus: Some("#4ebf71".into()),
+        };
+        let stored = test_grid::load("table.txt");
+        let mut live = stored.clone();
+        // "beta" becomes "bets" in the live run: table 0, row 1.
+        let row = live.lines.iter_mut().find(|l| l.text().contains("beta")).unwrap();
+        let col = row.cells.windows(4).position(|w| w.concat() == "beta").unwrap();
+        row.cells[col + 3] = "s".into();
+        (scenario, theme, live, stored)
+    }
+
+    fn side(label: &str, grid: &Grid, requests: &str) -> crate::parity::reference::Side {
+        crate::parity::reference::Side {
+            label: label.into(),
+            failure: None,
+            captures: vec![("main".into(), grid.clone())],
+            requests: requests.into(),
+        }
+    }
+
+    #[test]
+    fn drift_is_what_a_live_run_disagrees_with_its_reference_on() {
+        use crate::parity::reference::{self, LIVE_LABEL, REFERENCE_LABEL};
+
+        let (scenario, theme, live, stored) = drifted_table();
+        let served = r#"{"seq":0,"argv":["api","/user"],"command":"api","method":"GET","path":"/user","query":{},"accept":"json","cache":null,"cache_control":null,"body":null,"fixture":"base/user/GET.json","status":200,"miss":false,"error":null}"#;
+        let drift = reference::drift(
+            &scenario,
+            &theme,
+            &side(LIVE_LABEL, &live, &format!("{served}\n")),
+            &side(REFERENCE_LABEL, &stored, ""),
+        );
+        let kinds: Vec<Kind> = drift.iter().map(|d| d.mismatch.check).collect();
+        assert_eq!(kinds, [Kind::Rows, Kind::Requests], "{drift:#?}");
+        assert!(drift.iter().all(|d| d.capture == "main"), "{drift:#?}");
+        assert_eq!(drift[0].mismatch.message, "table 0 row 1 differs");
+        assert_eq!(
+            drift[1].mismatch.message,
+            "the served requests differ; only in the live run: GET /user (json)"
+        );
+        // A failed live run isn't compared: its failure is reported already.
+        let mut failed = side(LIVE_LABEL, &live, "");
+        failed.failure = Some("timeout at step 0 (1.0s)".into());
+        assert!(reference::drift(&scenario, &theme, &failed, &side(REFERENCE_LABEL, &stored, "")).is_empty());
+    }
+
+    #[test]
+    fn drift_fails_the_scenario_against_python() {
+        use crate::parity::reference::{self, LIVE_LABEL, REFERENCE_LABEL};
+        use crate::parity::runner::{AppRunStatus, RunState};
+        use crate::parity::summary::{ScenarioResult, ScenarioSummary, SizeSummary};
+
+        let (scenario, theme, live, stored) = drifted_table();
+        let drift = reference::drift(
+            &scenario,
+            &theme,
+            &side(LIVE_LABEL, &live, ""),
+            &side(REFERENCE_LABEL, &stored, ""),
+        );
+        // The Rust side matches the live run, so the only mismatches are drift.
+        let tmp = tempfile::tempdir().unwrap();
+        let dir = tmp.path().join("44x10");
+        for (app, grid) in [(App::Python, &live), (App::Rust, &live)] {
+            let app_dir = dir.join(app.name());
+            std::fs::create_dir_all(&app_dir).unwrap();
+            std::fs::write(app_dir.join("main.grid.json"), grid.to_json()).unwrap();
+        }
+        let ok: AppRunStatus = serde_json::from_value(json!({
+            "status": RunState::Ok, "step": null, "exit_code": null, "duration_ms": 1, "flaky": false,
+            "fixture_problems": false, "misses": [], "errors": []
+        }))
+        .unwrap();
+        let statuses = BTreeMap::from([(App::Python, ok.clone()), (App::Rust, ok)]);
+        let (captures, findings) = check_size(&scenario, &dir, &statuses, &theme, &drift).unwrap();
+
+        let check: CheckFile =
+            serde_json::from_str(&std::fs::read_to_string(dir.join("main.check.json")).unwrap()).unwrap();
+        assert!(check.expect.is_empty() && check.cross.is_empty(), "{check:#?}");
+        assert_eq!(check.drift.len(), 1, "{check:#?}");
+        let m = &check.drift[0];
+        assert_eq!((m.check, m.in_box.as_deref()), (Kind::Rows, Some("[1] Repositories")));
+        assert_eq!(m.python[1], "bets");
+        assert_eq!(m.rust[1], "beta");
+        assert_eq!(
+            m.message,
+            "table 0 row 1 differs (python is the live run, rust the reference)"
+        );
+        assert_eq!(captures[0].against, [App::Python]);
+        assert_eq!((captures[0].check, captures[0].mismatches), (CheckOutcome::Fail, 1));
+
+        let summary = ScenarioSummary {
+            name: "drifty".into(),
+            description: String::new(),
+            gate: false,
+            parity_rows: Vec::new(),
+            result: ScenarioResult::from_statuses(
+                false,
+                &[SizeSummary {
+                    size: "44x10".into(),
+                    apps: statuses,
+                    captures,
+                }],
+            ),
+            sizes: Vec::new(),
+            error: None,
+        };
+        // Drift fails even an ungated scenario: it's against Python.
+        assert_eq!(summary.result, ScenarioResult::Fail);
+        let annotations: Vec<String> =
+            crate::parity::ci::annotations("parity/scenarios/drifty.toml", &summary, &findings)
+                .iter()
+                .map(ToString::to_string)
+                .collect();
+        assert_eq!(
+            annotations,
+            [
+                "::error file=parity/scenarios/drifty.toml::drifty/44x10/main: drift rows [1] Repositories: table 0 row \
+                 1 differs; the reference is wrong or nondeterministic: run cargo xtask parity --record --force \
+                 drifty and review the diff"
+            ]
+        );
     }
 
     #[test]

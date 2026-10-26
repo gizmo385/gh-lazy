@@ -4,15 +4,18 @@ expression: md
 ---
 ## Parity: 1 pass, 1 fail, 1 rust-not-ready
 
+Python: live for repo-select; recorded for the rest
+
 | Scenario | Gate | 160x48 | 100x30 | Mismatches |
 | --- | --- | --- | --- | --- |
-| repo-select | yes | fail | skipped | 2 |
+| repo-select | yes | fail | skipped | 3 |
 | pr-list | no | rust-not-ready | rust-not-ready | n/a |
 | startup | yes | pass | pass (flaky) | 0 |
 
-<details><summary>Mismatches (first 2 of 2)</summary>
+<details><summary>Mismatches (first 3 of 3)</summary>
 
 - repo-select/160x48/main: titles [1] Repositories: python=[1] Repositories rust=(none)
 - repo-select/160x48/main: rows Pull \| Requests: python=["a","&lt;b&gt;"] rust=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…
+- repo-select/160x48/main: drift rows [1] Repositories: python=["parity-bot","alpha"] rust=["parity-bot","beta"]
 
 </details>

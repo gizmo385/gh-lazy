@@ -6,7 +6,7 @@ use std::num::NonZeroU16;
 use std::path::Path;
 
 use xtask::parity::grid::Grid;
-use xtask::parity::report::{RunMeta, write_reports};
+use xtask::parity::report::{AppSource, RunMeta, write_reports};
 use xtask::parity::runner::{AppRunStatus, RunState};
 use xtask::parity::scenario::App;
 use xtask::parity::summary::{CaptureSummary, ScenarioResult, ScenarioSummary, SizeSummary, Summary};
@@ -108,8 +108,8 @@ fn writes_every_report_file_from_the_dumps() {
         timestamp: "2026-01-01T00:00:00Z".into(),
         os: "test".into(),
         command: "parity demo broken".into(),
-        python_only: false,
-        rust_only: false,
+        python: AppSource::Recorded,
+        rust: AppSource::Live,
     };
     write_reports(out, &summary, &meta).unwrap();
 

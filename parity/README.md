@@ -407,15 +407,16 @@ rewritten or refused. `body_file`s that aren't UTF-8 are treated as binary and s
 
 ## The parity harness (`cargo xtask parity`)
 
-`cargo xtask parity` runs scenarios from `parity/scenarios/` against the Python app and the Rust app, each in its own
-pseudo-terminal with an isolated `HOME` and fake-gh on `PATH`, and dumps the screen at each capture point. See
-`docs/rust-rewrite/PLAN.md` §6.3. The code is in `xtask/src/parity/`.
+`cargo xtask parity` runs scenarios from `parity/scenarios/` against the Rust app, in a pseudo-terminal with an
+isolated `HOME` and fake-gh on `PATH`, and dumps the screen at each capture point. The Python side comes from the
+[recorded references](#recorded-references) in `parity/references/`, or from the Python app run the same way with
+`--live-python`. See `docs/rust-rewrite/PLAN.md` §6.3. The code is in `xtask/src/parity/`.
 
 ### Running scenarios
 
 ```
-cargo xtask parity [SCENARIO...] [--all] [--python-only | --rust-only] [--size COLSxROWS]...
-                   [--out DIR] [--keep-home] [--no-build] [--no-sync] [--python PATH]
+cargo xtask parity [SCENARIO...] [--all] [--python-only | --rust-only] [--live-python[=SCENARIO,...]]
+                   [--size COLSxROWS]... [--out DIR] [--keep-home] [--no-build] [--no-sync] [--python PATH]
                    [--retries N] [--jobs N] [--ci] [--validate]
 cargo xtask parity --check-references [SCENARIO...] [--all] [--ci]
 cargo xtask parity --record [--force] [SCENARIO...] [--all] [--jobs N] [--python PATH] [--no-sync] [--no-build]
@@ -423,16 +424,38 @@ cargo xtask parity --record [--force] [SCENARIO...] [--all] [--jobs N] [--python
 ```
 
 ```sh
-cargo xtask parity startup --python-only   # the Python side of one scenario
-cargo xtask parity                         # every scenario, both apps
+cargo xtask parity                         # every scenario: Rust live, Python from the references
+cargo xtask parity startup --live-python   # one scenario, both apps live, Python checked against its reference
+cargo xtask parity startup --python-only   # the Python side of one scenario, live
 cargo xtask parity --validate              # check every scenario file, run nothing
 ```
 
 - `SCENARIO` is a file stem from `parity/scenarios/` (`startup`) or a path to a `.toml` file. With none given,
   `--all` is implied.
+- **Python from references (the default).** Before building or running anything, xtask checks the reference of every
+  selected scenario that runs Python, at each size it runs (as `--check-references` does; a `--size` the scenario
+  doesn't list has no reference and counts as missing). If any is stale, missing or invalid, it prints the
+  `--check-references` line with ` (or use --live-python)` appended, plus the `::error` annotations with `--ci`, and
+  exits `2`:
+  `stale reference: startup/160x48: scenario changed; run cargo xtask parity --record startup (or use --live-python)`.
+  Otherwise the reference is copied into the report as the Python run's dumps (`startup 160x48 python: recorded`) and
+  only Rust runs. No Python process starts, so this needs no `uv sync` and no `.venv`.
+- **Python live.** `--live-python` runs Python live for every selected scenario, and `--live-python=a,b` for those
+  (naming a scenario that isn't selected is an error, exit `2`; the others read their references). `--python-only`
+  runs it live too. After each live Python run whose reference is fresh, the run is compared with the reference by
+  the rule recording uses ([Recording](#recording)); where they disagree, that's **drift**:
+  `startup 160x48 main: drift: rows [[1] Repositories]: table 0 row 2 differs; the reference is wrong or
+  nondeterministic: run cargo xtask parity --record --force startup and review the diff`. Drift goes into the
+  capture's `check.json` (`drift`), counts against Python, so the scenario fails whatever its `gate`, and is an
+  `::error` with `--ci`. A disagreement about the served requests is listed on the first capture, as a `requests`
+  mismatch. A stale, missing or invalid reference skips the check with a note
+  (`startup 160x48: reference stale, drift not checked`), which isn't an error, so a PR can be checked live before
+  its references are re-recorded. What the live run gets wrong on its own (a failure, its `[expect]`) is reported as
+  usual, not as drift.
+- `--rust-only` neither reads nor checks references.
 - Before running, xtask builds `lazy-github` and `fake-gh` (`cargo build -p lazy-github -p fake-gh`) unless
-  `--no-build`. It also runs `uv sync --frozen --quiet` under your real environment unless `--no-sync` (or no Python
-  run is needed). uv is never run under the isolated `HOME`, where it would start from an empty cache.
+  `--no-build`. When a selected scenario runs Python live, it also runs `uv sync --frozen --quiet` under your real
+  environment unless `--no-sync`. uv is never run under the isolated `HOME`, where it would start from an empty cache.
 - Each scenario runs once per size and per app, in a fresh isolated environment. Sizes and apps within a scenario run
   one after another.
 - The report goes to `parity/reports/latest/` (wiped first, and git-ignored) or to `--out DIR`. With `--out`, only the
@@ -441,27 +464,29 @@ cargo xtask parity --validate              # check every scenario file, run noth
 | Flag | Meaning |
 | --- | --- |
 | `--all` | Run every scenario in `parity/scenarios/`. |
-| `--python-only`, `--rust-only` | Run one app only: for capturing references and for debugging. |
+| `--python-only`, `--rust-only` | Run one app only: for capturing references and for debugging. `--python-only` runs Python live and checks it for drift; `--rust-only` doesn't read references. |
+| `--live-python[=SCENARIO,...]` | Run Python live instead of reading its reference: in every selected scenario, or in those named (after `=`, comma-separated). Fresh references are checked for drift. Conflicts with `--rust-only`, `--record` and `--check-references`. |
 | `--size COLSxROWS` | Run at this size instead of the scenarios' `sizes`. Repeatable. |
 | `--out DIR` | Write the report here instead of `parity/reports/latest/`. |
 | `--keep-home` | Copy each run's `home/` and `work/` into its report directory. |
 | `--no-build` | Skip `cargo build -p lazy-github -p fake-gh`. The binaries must already be in `target/<profile>/`. |
-| `--no-sync` | Skip `uv sync --frozen`. |
+| `--no-sync` | Skip `uv sync --frozen` (which only runs when Python runs live). |
 | `--python PATH` | Run `PATH -m lazy_github` instead of the repo's `.venv/bin/python` (`.venv\Scripts\python.exe` on Windows). |
 | `--retries N` | Re-run a failed app run up to N times. A run that passes on retry is marked `flaky: true`. Default 0, or 1 with `--ci`. A Rust run in a scenario with `gate = false` is never retried, since it can't fail the gate. |
 | `--jobs N` | Run up to N scenarios in parallel. Default: the CPU count, at most 4. More runs at once slow each app enough to risk timeouts. |
 | `--ci` | Running in CI: `--retries 1` unless `--retries` is given, each condition `wait` capped at 3 s in runs that can't fail the gate (the Rust side of a `gate = false` scenario, which usually times out waiting for something it can't draw yet; stability waits aren't capped), `--color never` for the nested `cargo build` and `uv sync`, and GitHub Actions annotations at the end of the output (see [CI](#ci)). |
 | `--validate` | Parse and validate the scenario files (all, or the ones named) and exit. |
 | `--check-references` | Check the [recorded references](#recorded-references) of the scenarios (all, or the ones named) against the current inputs and exit: `0` when all are fresh, `1` otherwise. Builds and runs nothing. Takes only scenario names, `--all` and `--ci`. |
-| `--record` | [Record](#recording) the stale and missing references of the scenarios (all, or the ones named) by running Python, and delete orphans. Builds only `fake-gh`. Run dumps go to `--out`, default `parity/reports/record/` (wiped first). Conflicts with `--python-only`, `--rust-only`, `--size`, `--retries`, `--ci`, `--validate` and `--check-references`. |
+| `--record` | [Record](#recording) the stale and missing references of the scenarios (all, or the ones named) by running Python, and delete orphans. Builds only `fake-gh`. Run dumps go to `--out`, default `parity/reports/record/` (wiped first). Conflicts with `--python-only`, `--rust-only`, `--live-python`, `--size`, `--retries`, `--ci`, `--validate` and `--check-references`. |
 | `--force` | With `--record`: re-record fresh references too. |
 
 Exit codes:
 
 - `0`: every gated scenario passed and the Python side is clean everywhere.
 - `1`: a gated scenario failed, or the Python side failed anywhere (timeout, crash, fixture miss, failed
-  `[expect]`).
-- `2`: a scenario file is invalid (printed as `file:line: message`), or the harness itself failed.
+  `[expect]`, drift).
+- `2`: a scenario file is invalid (printed as `file:line: message`), a reference the run reads isn't fresh, or the
+  harness itself failed.
 
 Rust-side failures in scenarios with `gate = false` are reported as `rust-not-ready` and don't change the exit code,
 so scenarios can land before the Rust UI exists. Until M1 the Rust binary just exits, so every scenario's Rust side
@@ -662,8 +687,12 @@ summary.json                                     # all results
 <scenario>/<cols>x<rows>/<app>/failure.txt       # only when the run failed (plus failure.grid.json)
 <scenario>/<cols>x<rows>/<app>/home/, work/      # only with --keep-home
 <scenario>/<cols>x<rows>/<app>/<capture>.structure.json   # what the extractor recognized
-<scenario>/<cols>x<rows>/<capture>.check.json    # structural mismatches
+<scenario>/<cols>x<rows>/<capture>.check.json    # structural mismatches, and drift
 ```
+
+When Python comes from a reference, its directory holds what the reference stores, in the same form: each
+`<capture>.grid.json` and `<capture>.txt` (from the `.screen`), `fake-gh.log` (the normalized `requests.jsonl`) and a
+`status.json` with `"recorded": true`. Nothing ran, so there's no `pty.raw` and no `failure.txt`.
 
 The report (#94) adds
 `<capture>.diff.txt`, `report.html`, `index.html` and `summary.md`.
@@ -701,6 +730,9 @@ Each app run writes `status.json`:
 - `misses` are the fake-gh log lines with `"miss": true`, ready for `cargo xtask record-fixtures --from-log` (#68), and
   `errors` the lines with an `error`. Either makes `fixture_problems: true`, and the run counts as failed even though
   its status is `ok`.
+- `recorded: true` marks a Python side read from its [recorded reference](#recorded-references): status `ok`,
+  `duration_ms: 0`, and the console, the index and the run table say `recorded` instead of a duration. The field is
+  left out when false, so a live run's status is unchanged.
 
 `summary.json` collects everything:
 
@@ -727,9 +759,14 @@ Each capture in `captures` carries its structural check:
 
 - `check` is `pass`, `fail`, or `n/a` when there was nothing to check (no `[expect]` for the capture and no cross-app
   comparison, for example because only one app produced the capture).
-- `against` lists the apps the mismatches count against: an app whose `[expect]` failed, and `rust` for any cross-app
-  mismatch. An app with a mismatch counts as failed in the result rules above, so a Python `[expect]` failure always
-  fails the run, and a Rust mismatch makes an ungated scenario `rust-not-ready`.
+- `against` lists the apps the mismatches count against: an app whose `[expect]` failed, `rust` for any cross-app
+  mismatch, and `python` for drift. An app with a mismatch counts as failed in the result rules above, so a Python
+  `[expect]` failure or drift always fails the run, and a Rust mismatch makes an ungated scenario `rust-not-ready`.
+  `mismatches` counts drift too.
+
+`<capture>.check.json` holds the mismatches: `expect` (per app), `cross` (Python against Rust) and, after a live
+Python run with a fresh reference, `drift` (left out when empty). A drift mismatch has the same keys as a cross-app
+one, with the live run's value under `python` and the reference's under `rust`, and its `message` says so.
 
 ### Structure extraction
 
@@ -953,16 +990,19 @@ summary.md                                       # the short table for the CI jo
 Open `index.html` in a browser. It works straight from disk or from a downloaded CI artifact (`file://`): every page
 is self-contained, with inline CSS, a few lines of inline JS and no external assets, fonts or CDNs.
 
-- **`index.html`** starts with the run's commit (`git rev-parse HEAD`), time, OS and command line, then one row per
+- **`index.html`** starts with the run's commit (`git rev-parse HEAD`), time, OS and command line, and where Python
+  came from (`Python: recorded`, `Python: live`, `Python: live for a, b; recorded for the rest` or
+  `Python: not run`), then one row per
   scenario × size: the result badge, each app's status, and the structural mismatch count (`not checked` when there's
   no `check.json`). Failed gated scenarios come first, then other failures, then `rust-not-ready`, then passes. Each
   row links to the scenario's page.
 - **`<scenario>/report.html`** has a header with the description, `gate`, `parity_rows`, the result and a table of
-  every app run per size: status, duration, flaky, the failed step, the exit code and fixture misses as
-  `METHOD /path?query` keys. Then, per size and capture:
+  every app run per size: status, duration (`recorded` for a Python side read from its reference), flaky, the failed
+  step, the exit code and fixture misses as `METHOD /path?query` keys. Then, per size and capture:
   - **Two panels**, Python on the left and Rust on the right, each the captured screen drawn from `grid.json` at one
     `ch` per cell (default colors `#d4d4d4` on `#1e1e1e`, inverse applied, indexed colors through the xterm palette).
-    A panel wider than its half of the page scrolls sideways inside itself.
+    A panel wider than its half of the page scrolls sideways inside itself. The Python panel is captioned
+    `Python (recorded)` when it shows a reference.
   - When an app has no capture, its panel says why (`exited with code 1 at step 2`, say) and shows `failure.grid.json`,
     the screen when the run failed, if there is one. An app that didn't run says `not run (--python-only)` or similar.
   - **Highlight differences** (when both apps captured) outlines every cell whose character differs between the two
@@ -970,15 +1010,17 @@ is self-contained, with inline CSS, a few lines of inline JS and no external ass
     checkbox only flips a class, and it's hidden when JS is off.
   - **Structural mismatches**: the `check.json` table (check, box, Python value, Rust value, the `[expect]` value
     for an `expect` mismatch, message), tagged
-    `expect` or `cross`, or `not checked` when there's no `check.json`.
+    `expect`, `cross` or `drift`, or `not checked` when there's no `check.json`.
   - Collapsible sections: the text diff, both `structure.json` files pretty-printed, and per size the last 50 lines of
     each app's `fake-gh.log`. **Expand all** / **Collapse all** open or close every section at once.
 - **`<capture>.diff.txt`** is written only when both apps captured. It's informational and never gates: Markdown,
   wrapping and spacing legitimately differ, and the structural check is what decides.
 - **`summary.md`** is a heading `Parity: <n> pass, <n> fail, <n> rust-not-ready` (plus `python-only` / `rust-only`
-  counts when there are any), a table `| Scenario | Gate | 160x48 | 100x30 | Mismatches |` (other sizes in the run get
-  extra columns; a size a scenario didn't run is `skipped`), and a `<details>` list of the first 20 mismatches as
-  `scenario/size/capture: check box: python=… rust=…`, plus ` expected=…` for an `[expect]` mismatch, with values
+  counts when there are any), the line `Python: …` as in `index.html`, a table
+  `| Scenario | Gate | 160x48 | 100x30 | Mismatches |` (other sizes in the run get extra columns; a size a scenario
+  didn't run is `skipped`; drift counts as mismatches), and a `<details>` list of the first 20 mismatches as
+  `scenario/size/capture: check box: python=… rust=…` (`drift check box` for drift, where `python` is the live run and
+  `rust` the reference), plus ` expected=…` for an `[expect]` mismatch, with values
   cut to 80 characters. A size where a run passed only on retry shows its result with ` (flaky)`. It stays under
   64 KiB.
 
@@ -1040,8 +1082,9 @@ parity gate too. The name predates the merged job and is kept so branch protecti
 
 A recorded reference is the Python side of one scenario at one size, checked into the repo like an `insta`
 snapshot, so a parity run can compare the Rust app against it without starting Python (#150). They are separate from
-the data goldens in `parity/goldens/` (#157). `cargo xtask parity --record` writes them and `--check-references`
-checks them. Until #164 lands, a normal run still starts Python and doesn't read them.
+the data goldens in `parity/goldens/` (#157). `cargo xtask parity --record` writes them, `--check-references`
+checks them, and a normal run reads them instead of starting Python ([Running scenarios](#running-scenarios));
+`--live-python` runs Python and checks the references for drift.
 
 ```
 parity/references/<scenario>/<cols>x<rows>/
@@ -1141,7 +1184,8 @@ fails the pre-push checks the way an outdated `insta` snapshot does.
 **Agree** means both runs passed (status `ok`, no fixture misses or errors), both pass the scenario's `[expect]`,
 they produced the same captures, `check::compare` finds nothing between them for each capture's `checks` and
 `ignore` (the cross-app check, between two Python runs; in its messages `python` is the first run and `rust` the
-second), and they served the same request keys. `reference::agree` implements it, and #164's drift check reuses it.
+second), and they served the same request keys. `reference::agree` implements it, and the drift check of a live run
+against its reference reuses it.
 A failed run is never written and nothing is retried, so a flaky Python run shows up once, at record time, instead
 of being stored.
 
@@ -1180,6 +1224,11 @@ Re-record a scenario, and commit `parity/references/`, whenever its env, steps, 
 - The report has `insta` snapshots (`summary.md`, the text diff, the HTML of a small grid pair) in
   `xtask/src/parity/snapshots/`, and `xtask/tests/report.rs` writes a whole report from synthetic dumps. Review
   snapshot changes with `cargo insta review`, or rerun with `INSTA_UPDATE=always` and read the diff.
+- `xtask/tests/reference_reads.rs` records a reference with `echo_tui` standing in for Python in a temp repo, then
+  checks that a normal run reads it with `--python /nonexistent` (`recorded: true`, checks run against it), that a
+  stale one exits `2` before anything starts, and that `--live-python` finds no drift in an agreeing run and drift in
+  a tampered reference. It also runs the `xtask` binary on a modified copy of `startup` for the stale lines. None of
+  it needs Python.
 - `xtask/tests/python_app.rs` runs `startup` against the Python app and checks that a fixture miss fails the run. It
   needs uv, so it's `#[ignore]`d (CI runs it after the parity scenarios): run it with
   `cargo build -p fake-gh && cargo test -p xtask --test python_app -- --ignored`. `xtask/tests/structural_check.rs`

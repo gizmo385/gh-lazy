@@ -1,7 +1,8 @@
 //! Recorded Python references (`parity/references/<scenario>/<cols>x<rows>/`): the manifest, the four input hashes
 //! that decide whether a reference is still what Python would draw, and the freshness check behind
-//! `cargo xtask parity --check-references`. The layout and the invalidation rules are documented in
-//! `parity/README.md` ("Recorded references").
+//! `cargo xtask parity --check-references`, the agreement rule recording and the drift check share, and
+//! [`materialize`], which puts a reference where a normal run reads its Python side. The layout and the rules are
+//! documented in `parity/README.md` ("Recorded references").
 //!
 //! Every hash is a git object id from `git hash-object`, so file contents are hashed after `.gitattributes`
 //! filters and a CRLF checkout of a `text eol=lf` file hashes like an LF one.
@@ -24,6 +25,7 @@ use serde_json::Value;
 use super::check::{self, Mismatch};
 use super::env;
 use super::grid::{Grid, Line, Style};
+use super::runner::{self, AppRunStatus};
 use super::scenario::{App, Check, Ignore, Roots, Scenario, Size, Step, WaitFor};
 use super::screen;
 use super::structure::{self, ThemeColors};
@@ -263,23 +265,8 @@ pub fn check(repo: &Path, scenarios: &[Scenario], roots: &Roots, all: bool) -> R
         }
         for &size in &scenario.sizes {
             report.checked += 1;
-            let problem = match freshness_with(&mut hasher, &dir, scenario, size, roots)? {
-                Freshness::Fresh => continue,
-                Freshness::Stale(inputs) => Problem::Stale {
-                    scenario: scenario.name.clone(),
-                    size,
-                    inputs,
-                },
-                Freshness::Missing => Problem::Missing {
-                    scenario: scenario.name.clone(),
-                    size,
-                },
-                Freshness::Invalid(detail) => Problem::Invalid {
-                    scenario: scenario.name.clone(),
-                    detail,
-                },
-            };
-            report.problems.push(problem);
+            let freshness = freshness_with(&mut hasher, &dir, scenario, size, roots)?;
+            report.problems.extend(problem(scenario, size, freshness));
         }
         report.problems.extend(orphans_in_scenario(repo, &dir, scenario)?);
     }
@@ -306,6 +293,192 @@ pub fn check(repo: &Path, scenarios: &[Scenario], roots: &Roots, all: bool) -> R
 pub fn freshness(repo: &Path, scenario: &Scenario, size: Size, roots: &Roots) -> Result<Freshness> {
     let dir = repo.join(REFERENCES_DIR).join(&scenario.name);
     freshness_with(&mut Hasher::new(repo), &dir, scenario, size, roots)
+}
+
+/// The freshness of each (scenario, size) in `units`, in order, computing the scenario-independent hashes once. A
+/// size the scenario doesn't list has no reference: it's [`Freshness::Missing`] whatever is on disk.
+pub fn freshness_of(repo: &Path, units: &[(&Scenario, Size)], roots: &Roots) -> Result<Vec<Freshness>> {
+    let mut hasher = Hasher::new(repo);
+    let references = repo.join(REFERENCES_DIR);
+    units
+        .iter()
+        .map(|&(scenario, size)| {
+            if scenario.sizes.contains(&size) {
+                freshness_with(&mut hasher, &references.join(&scenario.name), scenario, size, roots)
+            } else {
+                Ok(Freshness::Missing)
+            }
+        })
+        .collect()
+}
+
+/// The problem `--check-references` reports for a reference in this state, or `None` when it's fresh.
+pub fn problem(scenario: &Scenario, size: Size, freshness: Freshness) -> Option<Problem> {
+    let name = scenario.name.clone();
+    match freshness {
+        Freshness::Fresh => None,
+        Freshness::Stale(inputs) => Some(Problem::Stale {
+            scenario: name,
+            size,
+            inputs,
+        }),
+        Freshness::Missing => Some(Problem::Missing { scenario: name, size }),
+        Freshness::Invalid(detail) => Some(Problem::Invalid { scenario: name, detail }),
+    }
+}
+
+/// Writes the reference in `dir` into `out` as a Python run would have left it there: `<capture>.grid.json` and
+/// `<capture>.txt` for each capture, `fake-gh.log` (the normalized `requests.jsonl`) and a `status.json` that says
+/// `ok` with `recorded: true`, which it returns. `dir` must hold a valid reference; [`freshness`] checks that.
+pub fn materialize(dir: &Path, out: &Path) -> Result<AppRunStatus> {
+    let read = |file: &str| {
+        let path = dir.join(file);
+        std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))
+    };
+    let write = |file: &str, text: &str| {
+        let path = out.join(file);
+        std::fs::write(&path, text).with_context(|| format!("writing {}", path.display()))
+    };
+    let manifest = Manifest::parse(&read(MANIFEST_FILE)?)
+        .map_err(|e| HarnessError(format!("{}: {}", dir.join(MANIFEST_FILE).display(), e.message)))?;
+    std::fs::create_dir_all(out).with_context(|| format!("creating {}", out.display()))?;
+    for capture in &manifest.captures {
+        let file = format!("{capture}.{SCREEN_EXTENSION}");
+        let grid = screen::parse(&read(&file)?).with_context(|| format!("parsing {}", dir.join(&file).display()))?;
+        write(&format!("{capture}.txt"), &grid.to_text())?;
+        write(&format!("{capture}.grid.json"), &(grid.to_json() + "\n"))?;
+    }
+    write("fake-gh.log", &read(REQUESTS_FILE)?)?;
+    let status = AppRunStatus::recorded();
+    runner::write_status(&status, out)?;
+    Ok(status)
+}
+
+/// A reference as it's stored: its grids for comparing, and each `.screen`'s text for keeping it byte for byte.
+pub struct Stored {
+    /// Labeled `the reference`.
+    pub side: Side,
+    /// Each capture's `.screen` text, in step order.
+    pub screens: Vec<(String, String)>,
+}
+
+/// Reads the reference in `dir` for `scenario`. It must be valid; [`freshness`] checks that.
+pub fn load(dir: &Path, scenario: &Scenario) -> Result<Stored> {
+    let mut captures = Vec::new();
+    let mut screens = Vec::new();
+    for name in scenario.capture_names() {
+        let path = dir.join(format!("{name}.{SCREEN_EXTENSION}"));
+        let text = std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+        let grid = screen::parse(&text).with_context(|| format!("parsing {}", path.display()))?;
+        captures.push((name.to_owned(), grid));
+        screens.push((name.to_owned(), text));
+    }
+    let path = dir.join(REQUESTS_FILE);
+    let requests = std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    Ok(Stored {
+        side: Side {
+            label: REFERENCE_LABEL.to_owned(),
+            failure: None,
+            captures,
+            requests,
+        },
+        screens,
+    })
+}
+
+/// How messages name a stored reference.
+pub const REFERENCE_LABEL: &str = "the reference";
+/// How drift messages name the live Python run.
+pub const LIVE_LABEL: &str = "the live run";
+
+/// Reads back what a finished Python run in `out` captured, as side `label`. A run that didn't pass has its
+/// failure set and no captures.
+pub fn read_run(scenario: &Scenario, status: &AppRunStatus, out: &Path, label: &str) -> Result<Side> {
+    let failure = (!status.passed()).then(|| status.describe());
+    let mut captures = Vec::new();
+    if failure.is_none() {
+        for name in scenario.capture_names() {
+            let path = out.join(format!("{name}.grid.json"));
+            let text = std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+            let grid: Grid = serde_json::from_str(&text).with_context(|| format!("parsing {}", path.display()))?;
+            captures.push((name.to_owned(), grid));
+        }
+    }
+    let log = out.join("fake-gh.log");
+    let log = match std::fs::read_to_string(&log) {
+        Ok(text) => text,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
+        Err(e) => return Err(HarnessError(format!("reading {}: {e}", log.display()))),
+    };
+    Ok(Side {
+        label: label.to_owned(),
+        failure,
+        captures,
+        requests: screen::normalize_log(&log),
+    })
+}
+
+/// Where a live Python run disagrees with its fresh reference, by [`agree`]: each disagreement as a mismatch on
+/// the capture it's about, `python` holding the live value and `rust` the reference's. A disagreement about no
+/// capture (the served requests) goes on the first capture; a scenario without captures has nowhere to put it, and
+/// it's dropped. What the live run gets wrong on its own (a failure, its `[expect]`) isn't drift: the structural
+/// check already reports it.
+pub fn drift(scenario: &Scenario, theme: &ThemeColors, live: &Side, reference: &Side) -> Vec<check::Drift> {
+    if live.failure.is_some() {
+        return Vec::new();
+    }
+    let Some(first) = scenario.capture_names().next() else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for disagreement in agree(scenario, theme, live, reference) {
+        let (capture, mismatch) = match disagreement {
+            Disagreement::Failed { .. } => continue,
+            Disagreement::Expect { run, .. } if run == live.label => continue,
+            Disagreement::Expect {
+                capture, mut mismatch, ..
+            } => {
+                // `check_expect` put the reference's value under `python`; here it's the `rust` side.
+                mismatch.rust = std::mem::take(&mut mismatch.python);
+                mismatch.message = format!("{} [expect]: {}", reference.label, mismatch.message);
+                (capture, mismatch)
+            }
+            Disagreement::Check { capture, mismatch, .. } => (capture, mismatch),
+            Disagreement::Captures { a_names, b_names, .. } => (
+                first.to_owned(),
+                Mismatch {
+                    check: check::Kind::Titles,
+                    in_box: None,
+                    python: serde_json::json!(a_names),
+                    rust: serde_json::json!(b_names),
+                    expected: None,
+                    message: "the captures differ".to_owned(),
+                },
+            ),
+            Disagreement::Requests { only_a, only_b, .. } => {
+                let mut message = "the served requests differ".to_owned();
+                if !only_a.is_empty() {
+                    let _ = write!(message, "; only in {}: {}", live.label, only_a.join(", "));
+                }
+                if !only_b.is_empty() {
+                    let _ = write!(message, "; only in {}: {}", reference.label, only_b.join(", "));
+                }
+                (
+                    first.to_owned(),
+                    Mismatch {
+                        check: check::Kind::Requests,
+                        in_box: None,
+                        python: serde_json::json!(only_a),
+                        rust: serde_json::json!(only_b),
+                        expected: None,
+                        message,
+                    },
+                )
+            }
+        };
+        out.push(check::Drift { capture, mismatch });
+    }
+    out
 }
 
 /// The four hashes for a Python run of `scenario` at `size` that made the requests in `requests`.

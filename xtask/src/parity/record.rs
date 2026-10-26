@@ -18,10 +18,9 @@ use super::check;
 use super::cli::{self, RunOptions};
 use super::diff;
 use super::env::Paths;
-use super::grid::Grid;
 use super::reference::{
     self, Disagreement, Freshness, MANIFEST_FILE, MANIFEST_FORMAT, Manifest, Problem, REFERENCES_DIR, REQUESTS_FILE,
-    RecordedWith, SCREEN_EXTENSION, Side,
+    RecordedWith, SCREEN_EXTENSION, Side, Stored,
 };
 use super::scenario::{App, Scenario, Size, Step};
 use super::screen;
@@ -177,13 +176,6 @@ pub fn record(repo: &Path, scenarios: &[Scenario], paths: &Paths, out: &Path, op
     })
 }
 
-/// A reference as it's stored: its grids for comparing and its files' text for keeping.
-struct Stored {
-    side: Side,
-    /// Each capture's `.screen` text.
-    screens: Vec<(String, String)>,
-}
-
 /// One finished Python run.
 struct Run {
     side: Side,
@@ -206,7 +198,7 @@ fn record_unit(
     let dir = reference_dir(repo, scenario, size);
     // A missing or invalid reference has nothing to compare with.
     let old = match freshness {
-        Freshness::Fresh | Freshness::Stale(_) => Some(load(&dir, scenario)?),
+        Freshness::Fresh | Freshness::Stale(_) => Some(reference::load(&dir, scenario)?),
         Freshness::Missing | Freshness::Invalid(_) => None,
     };
 
@@ -273,54 +265,9 @@ fn run_python(
     n: u32,
 ) -> Result<Run> {
     let status = cli::run_app(scenario, App::Python, size, paths, out, options)?;
-    let failure = (!status.passed()).then(|| status.describe());
-    let mut captures = Vec::new();
-    if failure.is_none() {
-        for name in scenario.capture_names() {
-            let path = out.join(format!("{name}.grid.json"));
-            let text = std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
-            let grid: Grid = serde_json::from_str(&text).with_context(|| format!("parsing {}", path.display()))?;
-            captures.push((name.to_owned(), grid));
-        }
-    }
-    let log = out.join("fake-gh.log");
-    let log = match std::fs::read_to_string(&log) {
-        Ok(text) => text,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
-        Err(e) => return Err(HarnessError(format!("reading {}: {e}", log.display()))),
-    };
     Ok(Run {
-        side: Side {
-            label: format!("run {n}"),
-            failure,
-            captures,
-            requests: screen::normalize_log(&log),
-        },
+        side: reference::read_run(scenario, &status, out, &format!("run {n}"))?,
         duration: Duration::from_millis(status.duration_ms),
-    })
-}
-
-/// Reads a reference that `freshness` found valid.
-fn load(dir: &Path, scenario: &Scenario) -> Result<Stored> {
-    let mut captures = Vec::new();
-    let mut screens = Vec::new();
-    for name in scenario.capture_names() {
-        let path = dir.join(format!("{name}.{SCREEN_EXTENSION}"));
-        let text = std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
-        let grid = screen::parse(&text).with_context(|| format!("parsing {}", path.display()))?;
-        captures.push((name.to_owned(), grid));
-        screens.push((name.to_owned(), text));
-    }
-    let path = dir.join(REQUESTS_FILE);
-    let requests = std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
-    Ok(Stored {
-        side: Side {
-            label: "the reference".to_owned(),
-            failure: None,
-            captures,
-            requests,
-        },
-        screens,
     })
 }
 

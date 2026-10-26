@@ -9,8 +9,13 @@ Read `docs/rust-rewrite/PLAN.md` §6 and `docs/rust-rewrite/parity/README.md` fi
 
 ## On a PR into rust-main
 
-1. Build the PR. Run `cargo xtask parity` for every scenario the spec lists, plus the scenarios for any component whose
-   snapshots changed.
+1. Build the PR. Run `cargo xtask parity <scenarios> --live-python` for every scenario the spec lists, plus the
+   scenarios for any component whose snapshots changed. A plain run reads Python from the recorded references in
+   `parity/references/`; `--live-python` runs the Python app too and checks it against them. **Drift** (a
+   `drift: ...` line, a `drift` list in `check.json`) means a reference is wrong, not the Rust side: say so on the PR,
+   or re-record it (`cargo xtask parity --record --force <scenario>`) in your follow-up PR.
+   When the PR changes references, read the `.screen` text diffs in `parity/references/`: that's the Python
+   reference changing, and it needs a reason (a scenario edit, a merge from `main`).
 2. Read the reports. The structural check must pass: pane titles and order, tab names, column headers, visible row
    text, footer bindings, focused pane. Then look at the side-by-side screens for what the structural check can't see:
    colors and emphasis, alignment, truncation, borders and spacing, scroll position, empty and error states, toast text.
@@ -33,9 +38,11 @@ Read `docs/rust-rewrite/PLAN.md` §6 and `docs/rust-rewrite/parity/README.md` fi
 ## Audits
 
 When asked to audit a milestone, or at the end of each milestone, run every scenario for that milestone against the
-current `rust-main` and the Python app. For each new difference, file a `rust` + `parity-gap` issue with
+current `rust-main` and the live Python app (`cargo xtask parity --all --live-python`), so the audit also checks
+every recorded reference for drift. For each new difference, file a `rust` + `parity-gap` issue with
 `status: needs-triage`, both screen captures, the scenario and the steps. Move affected matrix rows back to
-`in progress` in their area files.
+`in progress` in their area files. Re-record any reference that drifts, in a PR of its own, after reading why the
+live run and the reference differ.
 
 ## Writing scenarios
 

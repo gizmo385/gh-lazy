@@ -56,13 +56,39 @@ pub struct RunMeta {
     pub os: String,
     /// The command line after `cargo xtask`, e.g. `parity startup --python-only`.
     pub command: String,
-    pub python_only: bool,
-    pub rust_only: bool,
+    /// Where the Python side came from.
+    pub python: AppSource,
+    /// Whether the Rust app ran: [`AppSource::Live`] or [`AppSource::NotRun`].
+    pub rust: AppSource,
+}
+
+/// What a run did with one app.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AppSource {
+    /// A flag left the app out.
+    NotRun,
+    /// Read from recorded references; only the Python side can be.
+    Recorded,
+    /// Run live in every scenario.
+    Live,
+    /// Run live in these scenarios and read from references in the rest.
+    LiveFor(Vec<String>),
+}
+
+impl std::fmt::Display for AppSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AppSource::NotRun => f.write_str("not run"),
+            AppSource::Recorded => f.write_str("recorded"),
+            AppSource::Live => f.write_str("live"),
+            AppSource::LiveFor(names) => write!(f, "live for {}; recorded for the rest", names.join(", ")),
+        }
+    }
 }
 
 impl RunMeta {
     /// The current run: `git rev-parse HEAD` in `repo`, the time now and this process's arguments.
-    pub fn current(repo: &Path, python_only: bool, rust_only: bool) -> Self {
+    pub fn current(repo: &Path, python: AppSource, rust: AppSource) -> Self {
         let git_sha = Command::new("git")
             .args(["rev-parse", "HEAD"])
             .current_dir(repo)
@@ -78,18 +104,23 @@ impl RunMeta {
             timestamp: jiff::Timestamp::now().strftime("%Y-%m-%dT%H:%M:%SZ").to_string(),
             os: format!("{} ({})", std::env::consts::OS, std::env::consts::ARCH),
             command: std::env::args().skip(1).collect::<Vec<_>>().join(" "),
-            python_only,
-            rust_only,
+            python,
+            rust,
         }
     }
 
     /// Why `app` has no run at a size.
     fn not_run(&self, app: App) -> &'static str {
         match app {
-            App::Rust if self.python_only => "not run (--python-only)",
-            App::Python if self.rust_only => "not run (--rust-only)",
+            App::Rust if self.rust == AppSource::NotRun => "not run (--python-only)",
+            App::Python if self.python == AppSource::NotRun => "not run (--rust-only)",
             _ => "not run (not in the scenario's apps)",
         }
+    }
+
+    /// `Python: recorded`, `Python: live`, ...
+    fn python_line(&self) -> String {
+        format!("Python: {}", self.python)
     }
 }
 
@@ -105,7 +136,7 @@ pub fn write_reports(out: &Path, summary: &Summary, meta: &RunMeta) -> Result<()
         scenarios.push(data);
     }
     std::fs::write(out.join("index.html"), render_index(&scenarios, meta)).context("writing index.html")?;
-    std::fs::write(out.join("summary.md"), render_summary_md(&scenarios)).context("writing summary.md")?;
+    std::fs::write(out.join("summary.md"), render_summary_md(&scenarios, meta)).context("writing summary.md")?;
     Ok(())
 }
 
@@ -150,22 +181,25 @@ struct Mismatch {
     message: String,
 }
 
-/// `<capture>.check.json`: `expect` mismatches are per app, `cross` ones are Python vs Rust.
+/// `<capture>.check.json`: `expect` mismatches are per app, `cross` ones are Python vs Rust, and `drift` ones are a
+/// live Python run against its reference.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(default)]
 struct CheckFile {
     expect: Vec<Mismatch>,
     cross: Vec<Mismatch>,
+    drift: Vec<Mismatch>,
 }
 
 impl CheckFile {
     fn mismatches(&self) -> impl Iterator<Item = (&'static str, &Mismatch)> {
         let expect = self.expect.iter().map(|m| ("expect", m));
-        expect.chain(self.cross.iter().map(|m| ("cross", m)))
+        let cross = self.cross.iter().map(|m| ("cross", m));
+        expect.chain(cross).chain(self.drift.iter().map(|m| ("drift", m)))
     }
 
     fn len(&self) -> usize {
-        self.expect.len() + self.cross.len()
+        self.expect.len() + self.cross.len() + self.drift.len()
     }
 }
 
@@ -744,9 +778,14 @@ fn status_cells(status: &AppRunStatus) -> String {
     if misses.is_empty() {
         misses.push_str("<span class=\"muted\">none</span>");
     }
+    // A recorded side took no time: say where it came from instead.
+    let duration = if status.recorded {
+        "recorded".to_owned()
+    } else {
+        format!("{:.1} s", Duration::from_millis(status.duration_ms).as_secs_f64())
+    };
     format!(
-        "<td>{cell}</td><td>{:.1} s</td><td>{}</td><td>{}</td><td>{}</td><td>{misses}</td>",
-        Duration::from_millis(status.duration_ms).as_secs_f64(),
+        "<td>{cell}</td><td>{duration}</td><td>{}</td><td>{}</td><td>{}</td><td>{misses}</td>",
         if status.flaky { "yes" } else { "no" },
         opt(status.step.map(|s| s.to_string())),
         opt(status.exit_code.map(|c| c.to_string())),
@@ -805,10 +844,12 @@ fn render_capture(size: &SizeData<'_>, capture: &CaptureData, meta: &RunMeta, sh
     let mut panels = String::from("<div class=\"panels\">\n");
     let mut differing = 0;
     for app in App::ALL {
+        let recorded = size.summary.apps.get(&app).is_some_and(|s| s.recorded);
         w!(
             panels,
-            "<figure class=\"panel\"><figcaption>{}</figcaption>",
-            label(app)
+            "<figure class=\"panel\"><figcaption>{}{}</figcaption>",
+            label(app),
+            if recorded { " (recorded)" } else { "" }
         );
         let other = both.map(|(py, rs)| if app == App::Python { rs } else { py });
         match (capture.grids.get(app), size.summary.apps.get(&app)) {
@@ -917,11 +958,13 @@ fn render_index(scenarios: &[ScenarioData<'_>], meta: &RunMeta) -> String {
     w!(
         body,
         "<table>\n<tr><th>Commit</th><td><code>{}</code></td></tr>\n<tr><th>Time</th><td>{}</td></tr>\n\
-         <tr><th>OS</th><td>{}</td></tr>\n<tr><th>Command</th><td><code>cargo xtask {}</code></td></tr>\n</table>\n",
+         <tr><th>OS</th><td>{}</td></tr>\n<tr><th>Command</th><td><code>cargo xtask {}</code></td></tr>\n</table>\n\
+         <p>{}</p>\n",
         escape(&meta.git_sha),
         escape(&meta.timestamp),
         escape(&meta.os),
-        escape(&meta.command)
+        escape(&meta.command),
+        escape(&meta.python_line())
     );
     body.push_str(
         "<table>\n<tr><th>Scenario</th><th>Gate</th><th>Size</th><th>Result</th><th>Python</th><th>Rust</th>\
@@ -989,7 +1032,7 @@ fn cut(text: &str, max: usize) -> String {
     }
 }
 
-fn render_summary_md(scenarios: &[ScenarioData<'_>]) -> String {
+fn render_summary_md(scenarios: &[ScenarioData<'_>], meta: &RunMeta) -> String {
     const CLOSE: &str = "\n</details>\n";
 
     let mut sizes: Vec<&str> = SUMMARY_SIZES.to_vec();
@@ -999,7 +1042,11 @@ fn render_summary_md(scenarios: &[ScenarioData<'_>]) -> String {
         }
     }
 
-    let mut md = format!("## Parity: {}\n\n| Scenario | Gate |", counts(scenarios));
+    let mut md = format!(
+        "## Parity: {}\n\n{}\n\n| Scenario | Gate |",
+        counts(scenarios),
+        md_escape(&meta.python_line())
+    );
     for size in &sizes {
         w!(md, " {size} |");
     }
@@ -1039,13 +1086,19 @@ fn render_summary_md(scenarios: &[ScenarioData<'_>]) -> String {
                         CheckState::Loaded(c) => Some(c),
                         _ => None,
                     };
-                    check.into_iter().flat_map(CheckFile::mismatches).map(move |(_, m)| {
+                    check.into_iter().flat_map(CheckFile::mismatches).map(move |(kind, m)| {
                         let at = format!("{}/{}/{}", data.summary.name, size.summary.size, capture.name);
                         let box_title = value_text(&m.box_title);
-                        let target = if box_title.is_empty() {
-                            m.check.clone()
+                        // Drift is a Python problem, unlike the other mismatches here: say so.
+                        let check = if kind == "drift" {
+                            format!("drift {}", m.check)
                         } else {
-                            format!("{} {box_title}", m.check)
+                            m.check.clone()
+                        };
+                        let target = if box_title.is_empty() {
+                            check
+                        } else {
+                            format!("{check} {box_title}")
                         };
                         let value = |v: &Value| md_escape(&cut(&mismatch_value(v), SUMMARY_VALUE_CHARS));
                         let expected = if m.expected.is_null() {
@@ -1098,8 +1151,8 @@ mod tests {
             timestamp: "2026-01-01T00:00:00Z".into(),
             os: "linux (x86_64)".into(),
             command: "parity --all".into(),
-            python_only: false,
-            rust_only: false,
+            python: AppSource::Recorded,
+            rust: AppSource::Live,
         }
     }
 
@@ -1114,6 +1167,7 @@ mod tests {
             misses: Vec::new(),
             errors: Vec::new(),
             message: None,
+            recorded: false,
         }
     }
 
@@ -1260,6 +1314,13 @@ mod tests {
                     Value::String(long),
                 ),
             ],
+            // `repo-select` ran Python live, and it disagrees with its reference.
+            drift: vec![mismatch(
+                "rows",
+                "[1] Repositories",
+                serde_json::json!(["parity-bot", "alpha"]),
+                serde_json::json!(["parity-bot", "beta"]),
+            )],
         });
         let clean = || CheckState::Loaded(CheckFile::default());
         let scenarios = [
@@ -1267,7 +1328,11 @@ mod tests {
             data(&fail, vec![checked]),
             data(&not_ready, vec![]),
         ];
-        let md = render_summary_md(&scenarios);
+        let meta = RunMeta {
+            python: AppSource::LiveFor(vec!["repo-select".into()]),
+            ..meta()
+        };
+        let md = render_summary_md(&scenarios, &meta);
         assert!(md.len() < SUMMARY_MD_LIMIT);
         insta::assert_snapshot!(md);
     }
@@ -1301,6 +1366,7 @@ mod tests {
                         message: huge.clone(),
                     })
                     .collect(),
+                drift: Vec::new(),
             })
         };
         // Two scenarios' worth of mismatches is already more than the list shows.
@@ -1309,7 +1375,7 @@ mod tests {
             .enumerate()
             .map(|(i, s)| data(s, vec![if i < 2 { big() } else { CheckState::Absent }]))
             .collect();
-        let md = render_summary_md(&scenarios);
+        let md = render_summary_md(&scenarios, &meta());
         assert!(md.len() <= SUMMARY_MD_LIMIT, "{} bytes", md.len());
         assert!(md.contains("more scenario(s); see index.html"));
         assert!(md.contains(MORE_MISMATCHES), "the mismatch list was cut too");
@@ -1363,7 +1429,7 @@ mod tests {
             ScenarioResult::PythonOnly,
             vec![size_summary("100x30", RunState::Ok, None)],
         );
-        let md = render_summary_md(&[data(&only, vec![])]);
+        let md = render_summary_md(&[data(&only, vec![])], &meta());
         assert!(
             md.starts_with("## Parity: 0 pass, 0 fail, 0 rust-not-ready, 1 python-only\n"),
             "{md}"
@@ -1461,6 +1527,7 @@ mod tests {
             vec![CheckState::Loaded(CheckFile {
                 expect: vec![mismatch("titles", "Repos", Value::Null, Value::Null)],
                 cross: Vec::new(),
+                drift: Vec::new(),
             })],
         );
         let screen = grid(&["┌─ [1] Repositories ─┐", "└────────────────────┘"], &[]);
@@ -1485,6 +1552,44 @@ mod tests {
     }
 
     #[test]
+    fn a_recorded_python_side_says_so() {
+        let mut summary = scenario(
+            "startup",
+            true,
+            ScenarioResult::Pass,
+            vec![size_summary("160x48", RunState::Ok, Some(RunState::Ok))],
+        );
+        summary.sizes[0].apps.insert(App::Python, AppRunStatus::recorded());
+        let mut d = data(&summary, vec![CheckState::Loaded(CheckFile::default())]);
+        d.sizes[0].captures[0].grids.python = Some(grid(&["hi"], &[]));
+        d.sizes[0].captures[0].grids.rust = Some(grid(&["hi"], &[]));
+        let html = render_scenario(&d, &meta());
+        let section = |start: &str, end: &str| {
+            let from = html.find(start).unwrap();
+            let len = html[from..].find(end).unwrap() + end.len();
+            html[from..from + len].to_owned()
+        };
+        let runs = section("<table>\n<tr><th>Size</th>", "</table>\n");
+        let panels = section("<div class=\"panels\">", "</figure>\n</div>\n");
+        insta::assert_snapshot!(format!("{runs}{panels}"));
+
+        let index = render_index(&[d.clone()], &meta());
+        assert!(index.contains("<p>Python: recorded</p>"), "{index}");
+        assert!(index.contains("<td>recorded</td>"), "{index}");
+    }
+
+    #[test]
+    fn app_sources_read_as_the_report_says_them() {
+        assert_eq!(AppSource::NotRun.to_string(), "not run");
+        assert_eq!(AppSource::Recorded.to_string(), "recorded");
+        assert_eq!(AppSource::Live.to_string(), "live");
+        assert_eq!(
+            AppSource::LiveFor(vec!["a".into(), "b".into()]).to_string(),
+            "live for a, b; recorded for the rest"
+        );
+    }
+
+    #[test]
     fn missing_apps_say_why() {
         let summary = scenario(
             "startup",
@@ -1495,7 +1600,7 @@ mod tests {
         let mut d = data(&summary, vec![]);
         d.sizes[0].captures[0].grids.python = Some(grid(&["hi"], &[]));
         let meta = RunMeta {
-            python_only: true,
+            rust: AppSource::NotRun,
             ..meta()
         };
         let html = render_scenario(&d, &meta);

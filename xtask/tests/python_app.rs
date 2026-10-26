@@ -96,6 +96,8 @@ fn a_fixture_miss_fails_the_run() {
     let output = parity(&[
         scenario.as_os_str(),
         "--python-only".as_ref(),
+        // A modified scenario has no reference to read, so Python runs live (as --python-only implies anyway).
+        "--live-python".as_ref(),
         "--out".as_ref(),
         out.as_os_str(),
         "--fixtures-dir".as_ref(),

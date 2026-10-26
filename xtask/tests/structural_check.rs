@@ -25,7 +25,14 @@ fn a_rebound_pane_key_fails_the_expected_titles() {
     let output = Command::new(env!("CARGO_BIN_EXE_xtask"))
         .arg("parity")
         .arg(&scenario)
-        .args(["--python-only", "--size", "160x48", "--no-build", "--out"])
+        .args([
+            "--python-only",
+            "--live-python",
+            "--size",
+            "160x48",
+            "--no-build",
+            "--out",
+        ])
         .arg(&out)
         .output()
         .unwrap();

@@ -7,7 +7,7 @@ captures = ["open", "filtered", "reopen", "cross-cell", "typed-over", "cleared",
 scenario = "0055caca1f444b8883877d806712422a22422dc3"
 fixtures = "358be860850dcbf852b92d3a22080fa6888c313d"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "d4d3c886b5b933e2a2f12386f785ebe572d4e5f2"
+harness = "b3659445b74981b1bdfd0465f7e2a5db78df0aa5"
 
 [recorded_with]
 python = "3.14.7"

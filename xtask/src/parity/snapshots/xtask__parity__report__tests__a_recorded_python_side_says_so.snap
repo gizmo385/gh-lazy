@@ -1,0 +1,15 @@
+---
+source: xtask/src/parity/report.rs
+expression: "format!(\"{runs}{panels}\")"
+---
+<table>
+<tr><th>Size</th><th>App</th><th>Status</th><th>Duration</th><th>Flaky</th><th>Failed step</th><th>Exit code</th><th>Fixture misses</th></tr>
+<tr><td>160x48</td><td>python</td><td>ok</td><td>recorded</td><td>no</td><td><span class="muted">-</span></td><td><span class="muted">-</span></td><td><span class="muted">none</span></td></tr>
+<tr><td>160x48</td><td>rust</td><td>ok</td><td>1.2 s</td><td>no</td><td><span class="muted">-</span></td><td><span class="muted">-</span></td><td><span class="muted">none</span></td></tr>
+</table>
+<div class="panels">
+<figure class="panel"><figcaption>Python (recorded)</figcaption><div class="scroll"><pre class="term">hi
+</pre></div></figure>
+<figure class="panel"><figcaption>Rust</figcaption><div class="scroll"><pre class="term">hi
+</pre></div></figure>
+</div>

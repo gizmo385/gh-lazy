@@ -75,6 +75,15 @@ pub fn build_config(base: Value, overrides: &Value) -> Value {
     config
 }
 
+/// The scenario's `config.json`: its config file under `roots.configs` with [`build_config`] applied.
+pub fn scenario_config(scenario: &Scenario, roots: &Roots) -> Result<Value> {
+    let config_file = roots.config_file(&scenario.env.config);
+    let base = std::fs::read_to_string(&config_file).with_context(|| format!("reading {}", config_file.display()))?;
+    let base: Value = serde_json::from_str(&base)
+        .map_err(|e| HarnessError(format!("{} isn't valid JSON: {e}", config_file.display())))?;
+    Ok(build_config(base, &scenario.env.config_overrides))
+}
+
 /// Deep-merges `over` into `base`: objects merge key by key, anything else replaces.
 fn merge(base: &mut Value, over: &Value) {
     match (base, over) {
@@ -109,11 +118,7 @@ pub fn prepare(
         std::fs::create_dir_all(dir).with_context(|| format!("creating {}", dir.display()))?;
     }
 
-    let config_file = paths.roots.config_file(&scenario.env.config);
-    let base = std::fs::read_to_string(&config_file).with_context(|| format!("reading {}", config_file.display()))?;
-    let base: Value = serde_json::from_str(&base)
-        .map_err(|e| HarnessError(format!("{} isn't valid JSON: {e}", config_file.display())))?;
-    let config = build_config(base, &scenario.env.config_overrides);
+    let config = scenario_config(scenario, &paths.roots)?;
     // A `Value` always serializes.
     let config = serde_json::to_string_pretty(&config).expect("JSON value serializes");
     std::fs::write(config_dir.join("config.json"), config).context("writing config.json")?;

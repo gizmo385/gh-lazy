@@ -8,6 +8,7 @@ pub mod diff;
 pub mod env;
 pub mod grid;
 pub mod keys;
+pub mod reference;
 pub mod report;
 pub mod runner;
 pub mod scenario;

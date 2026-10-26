@@ -414,6 +414,7 @@ pseudo-terminal with an isolated `HOME` and fake-gh on `PATH`, and dumps the scr
 cargo xtask parity [SCENARIO...] [--all] [--python-only | --rust-only] [--size COLSxROWS]...
                    [--out DIR] [--keep-home] [--no-build] [--no-sync] [--python PATH]
                    [--retries N] [--jobs N] [--ci] [--validate]
+cargo xtask parity --check-references [SCENARIO...] [--all] [--ci]
 ```
 
 ```sh
@@ -446,6 +447,7 @@ cargo xtask parity --validate              # check every scenario file, run noth
 | `--jobs N` | Run up to N scenarios in parallel. Default: the CPU count, at most 4. More runs at once slow each app enough to risk timeouts. |
 | `--ci` | Running in CI: `--retries 1` unless `--retries` is given, each condition `wait` capped at 3 s in runs that can't fail the gate (the Rust side of a `gate = false` scenario, which usually times out waiting for something it can't draw yet; stability waits aren't capped), `--color never` for the nested `cargo build` and `uv sync`, and GitHub Actions annotations at the end of the output (see [CI](#ci)). |
 | `--validate` | Parse and validate the scenario files (all, or the ones named) and exit. |
+| `--check-references` | Check the [recorded references](#recorded-references) of the scenarios (all, or the ones named) against the current inputs and exit: `0` when all are fresh, `1` otherwise. Builds and runs nothing. Takes only scenario names, `--all` and `--ci`. |
 
 Exit codes:
 
@@ -1022,6 +1024,89 @@ report/index.html`.
 
 **Branch protection.** `fmt, clippy, test (ubuntu-latest)` is the one required check on `rust-main`. It covers the
 parity gate too. The name predates the merged job and is kept so branch protection didn't have to change.
+
+### Recorded references
+
+A recorded reference is the Python side of one scenario at one size, checked into the repo like an `insta`
+snapshot, so a parity run can compare the Rust app against it without starting Python (#150). They are separate from
+the data goldens in `parity/goldens/` (#157). `cargo xtask parity --record` writes them (#163) and a normal run reads
+them (#164); this section covers what's there today: the layout, the manifest and the freshness check.
+
+```
+parity/references/<scenario>/<cols>x<rows>/
+  manifest.toml        # input hashes; written by --record, never by hand
+  <capture>.screen     # one per capture step (format in #161)
+  requests.jsonl       # the Python run's fake-gh log, normalized
+```
+
+Every scenario that runs Python has one directory per size in its `sizes`. Anything else under `parity/references/`
+is an orphan: a directory for a scenario that doesn't exist or doesn't run Python, a size the scenario doesn't list,
+a `.screen` for a capture it doesn't have, or any other file.
+
+**The manifest.**
+
+```toml
+# Written by `cargo xtask parity --record`. Don't edit.
+format = 1
+size = "160x48"
+captures = ["main"]
+
+[inputs]
+scenario = "3f1c..."
+fixtures = "a09e..."
+python_app = "77d2..."
+harness = "c41b..."
+
+[recorded_with]
+python = "3.11.14"
+os = "linux"
+```
+
+`captures` must equal the scenario's captures in step order. `recorded_with` is informational and never compared.
+Each input is a git object id from `git hash-object`, run in the repo with a cleared environment:
+
+| Input | What it hashes |
+| --- | --- |
+| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_branch`, `key_delay_ms`, `capture_stable_ms`, the size and every step. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore`. |
+| `fixtures` | Every fixture in the scenario's sets whose request key (method, path, query, accept) equals a served entry in `requests.jsonl`, plus its `body_file`, as sorted `<set>/<relpath> <blob>` lines. For a `--paginate` request, the pages its `Link: rel="next"` headers lead to as well. |
+| `python_app` | `lazy_github/`, `pyproject.toml` and `uv.lock`. |
+| `harness` | `crates/fake-gh/src/`, `crates/fake-gh/Cargo.toml`, `xtask/src/parity/{env,runner,keys,grid}.rs`, `CAPTURE_VERSION` and the `vt100` and `portable-pty` versions in `Cargo.lock`. |
+
+The file sets (`python_app`, `harness`) are the files `git ls-files -co --exclude-standard` lists (tracked, plus
+untracked but not ignored: local edits count and `__pycache__` doesn't), each hashed from the working tree after
+`.gitattributes` filters, so a CRLF checkout hashes like an LF one. The path lists and `CAPTURE_VERSION` are consts in
+`xtask/src/parity/reference.rs`. Bump `CAPTURE_VERSION` when capture semantics change somewhere that isn't listed,
+for example a new env var set in a file that isn't hashed.
+
+**What invalidates a reference.**
+
+| Change | References invalidated |
+| --- | --- |
+| Merging `main` into `rust-main` with changes to `lazy_github/`, `pyproject.toml` or `uv.lock` | all |
+| A scenario's env, steps, `checks` or `ignore`, or the config file it uses | that scenario's |
+| Adding or changing fixtures | those whose Python run requested a changed key |
+| `crates/fake-gh/src/`, `env.rs`, `runner.rs`, `keys.rs` or `grid.rs`, a pinned crate, or `CAPTURE_VERSION` | all |
+| `[expect]`, `gate`, `parity_rows`, `description`, timeouts, `apps`, `check.rs`, `structure.rs`, `report.rs` or `themes.toml` | none |
+
+`[expect]` and the checks run against the stored screen on every run, which is why they need no re-record.
+
+**Checking.** `cargo xtask parity --check-references [SCENARIO...]` recomputes the four hashes for each reference
+and prints one line per problem, then a count. It needs only `git` and the fixtures (no build, no Python, no `uv`) and
+takes well under a second.
+
+```
+stale reference: startup/160x48: fixtures, python_app changed; run cargo xtask parity --record startup
+missing reference: startup/100x30; run cargo xtask parity --record startup
+orphaned reference: parity/references/old-name/ (no such scenario); cargo xtask parity --record deletes it
+invalid reference: startup/160x48/main.screen:1: expected "lazy-github-screen 1", got "..."
+```
+
+A stale reference names every changed input, in the order `scenario, fixtures, python_app, harness`. A reference is
+invalid when `manifest.toml` doesn't parse, has another `format` or `size`, or lists other captures than the
+scenario, or when a `.screen` or `requests.jsonl` is missing or doesn't parse. Orphaned directories of other
+scenarios are reported only when checking all of them. With `--ci`, each problem is also an `::error` on the
+scenario file. `xtask/tests/references.rs` runs the same check in `cargo test`, and fails on any stale, orphaned or
+invalid reference. It allows missing ones until #163 records every scenario.
 
 ### Testing the harness
 

@@ -11,6 +11,7 @@ use std::time::Duration;
 use super::check;
 use super::ci::{self, Finding};
 use super::env::{self, Paths};
+use super::reference;
 use super::report;
 use super::runner::{self, AppRunStatus};
 use super::scenario::{App, Roots, Scenario, Size};
@@ -75,6 +76,17 @@ pub struct ParityArgs {
     /// Check every scenario file (or the ones named) without running anything.
     #[arg(long)]
     pub validate: bool,
+    /// Check the recorded Python references in parity/references/ (all, or the named scenarios') against the
+    /// current inputs, without building or running anything. Exits 1 if any is stale, missing, orphaned or
+    /// invalid.
+    #[arg(
+        long,
+        conflicts_with_all = [
+            "python_only", "rust_only", "sizes", "validate", "out", "keep_home", "no_build", "no_sync", "python",
+            "retries", "jobs",
+        ]
+    )]
+    pub check_references: bool,
     /// Read fixture sets from this directory instead of parity/fixtures/. For tests that need a modified set.
     #[arg(long, value_name = "DIR", hide = true)]
     pub fixtures_dir: Option<PathBuf>,
@@ -124,6 +136,9 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     if args.validate {
         println!("parity: {} scenario file(s) valid", scenarios.len());
         return Ok(EXIT_OK);
+    }
+    if args.check_references {
+        return check_references(&repo, &scenarios, &roots, args);
     }
 
     let requested: Vec<App> = if args.python_only {
@@ -201,6 +216,48 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     }
 
     Ok(exit_code(&summary))
+}
+
+/// `--check-references`: one line per problem (and, with `--ci`, an `::error` on the scenario file), then a count.
+fn check_references(repo: &Path, scenarios: &[Scenario], roots: &Roots, args: &ParityArgs) -> Result<u8> {
+    let all = args.all || args.scenarios.is_empty();
+    let report = reference::check(repo, scenarios, roots, all)?;
+    for problem in &report.problems {
+        println!("{problem}");
+    }
+    if report.problems.is_empty() {
+        println!("parity: {} recorded reference(s), all fresh", report.checked);
+        return Ok(EXIT_OK);
+    }
+    println!(
+        "parity: {} reference problem(s) ({}) across {} reference(s)",
+        report.problems.len(),
+        report.counts(),
+        report.checked
+    );
+    if args.ci {
+        for annotation in reference_annotations(repo, scenarios, &report) {
+            println!("{annotation}");
+        }
+    }
+    Ok(EXIT_FAILED)
+}
+
+/// An `::error` per problem, on the scenario file it belongs to (none for a directory of a removed scenario).
+fn reference_annotations(repo: &Path, scenarios: &[Scenario], report: &reference::Report) -> Vec<ci::Annotation> {
+    report
+        .problems
+        .iter()
+        .map(|problem| ci::Annotation {
+            level: ci::Level::Error,
+            file: problem
+                .scenario()
+                .and_then(|name| scenarios.iter().find(|s| s.name == name))
+                .map(|s| ci::scenario_file(repo, &s.path)),
+            line: None,
+            message: problem.to_string(),
+        })
+        .collect()
 }
 
 /// Loads and validates every scenario file, printing each problem (and, with `--ci`, an `::error` for it). `None`
@@ -590,6 +647,73 @@ mod tests {
         assert!(parse(&["--python-only", "--rust-only"]).is_err());
         assert!(parse(&["--size", "100"]).is_err());
         assert!(parse(&["--jobs", "0"]).is_err());
+    }
+
+    #[test]
+    fn check_references_takes_scenarios_and_ci_but_no_run_flags() {
+        let args = parse(&["startup", "--check-references", "--ci"]).unwrap();
+        assert!(args.check_references && args.ci);
+        assert_eq!(args.scenarios, ["startup"]);
+        assert!(parse(&["--check-references", "--all"]).unwrap().all);
+        for flag in [
+            &["--python-only"][..],
+            &["--rust-only"],
+            &["--size", "100x30"],
+            &["--validate"],
+            &["--out", "x"],
+            &["--keep-home"],
+            &["--no-build"],
+            &["--no-sync"],
+            &["--python", "python3"],
+            &["--retries", "1"],
+            &["--jobs", "2"],
+        ] {
+            let command = [&["--check-references"][..], flag].concat();
+            let err = parse(&command).map(|_| ()).expect_err(&command.join(" "));
+            assert_eq!(
+                err.kind(),
+                clap::error::ErrorKind::ArgumentConflict,
+                "{command:?}: {err}"
+            );
+        }
+    }
+
+    #[test]
+    fn reference_problems_annotate_their_scenario_file() {
+        let repo = repo_root();
+        let roots = Roots {
+            fixtures: repo.join("parity/fixtures"),
+            configs: repo.join("parity/configs"),
+        };
+        let path = repo.join("parity/scenarios/startup.toml");
+        let startup = Scenario::parse(&path, "version = 1\n", &roots).unwrap();
+        let report = reference::Report {
+            checked: 1,
+            problems: vec![
+                reference::Problem::Missing {
+                    scenario: "startup".into(),
+                    size: Size { cols: 160, rows: 48 },
+                },
+                reference::Problem::Orphaned {
+                    path: "parity/references/old-name/".into(),
+                    reason: "no such scenario".into(),
+                    scenario: None,
+                },
+            ],
+        };
+        let lines: Vec<String> = reference_annotations(&repo, &[startup], &report)
+            .iter()
+            .map(ToString::to_string)
+            .collect();
+        assert_eq!(
+            lines,
+            [
+                "::error file=parity/scenarios/startup.toml::missing reference: startup/160x48; run cargo xtask \
+                 parity --record startup",
+                "::error::orphaned reference: parity/references/old-name/ (no such scenario); cargo xtask parity \
+                 --record deletes it",
+            ]
+        );
     }
 
     #[test]

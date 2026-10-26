@@ -19,6 +19,8 @@ pub enum Action {
     QuitHint,
     /// Show a toast.
     Notify(Toast),
+    /// Ring the terminal bell (Textual's `App.bell`): a click on a disabled footer item.
+    Bell,
     /// Move focus to a target on the main screen, from a focus key or a click. The screen applies Python's rules:
     /// a section hidden by a runtime toggle or a hidden command log doesn't take focus.
     Focus(FocusTarget),

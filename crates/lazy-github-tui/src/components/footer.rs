@@ -9,13 +9,15 @@ use ratatui::widgets::{Paragraph, Widget};
 
 use crate::component::Owner;
 use crate::keymap::{ActiveBinding, BindingId};
-use crate::theme::Theme;
+use crate::theme::{Paint, Theme};
 
 /// The footer for `items`, from [`footer_items`]. Each item is `" {key} "` in the key style, then `"{description} "`.
 /// Text past the right edge is cut off.
 pub struct Footer<'a> {
     /// The items, in order.
     pub items: &'a [FooterItem],
+    /// The index in `items` of the one under the mouse, drawn on `$block-hover-background`.
+    pub hovered: Option<usize>,
     /// The theme.
     pub theme: &'a Theme,
 }
@@ -107,20 +109,28 @@ impl Widget for Footer<'_> {
         let theme = self.theme;
         let palette = theme.palette;
         let bar = palette.footer_background.over(theme.background());
-        let item_bg = palette.footer_item_background.over(bar);
-        let key_bg = palette.footer_key_background.over(item_bg);
-        let description_bg = palette.footer_description_background.over(item_bg);
-        let key_style = Style::new()
-            .fg(theme.color(palette.footer_key_foreground, key_bg))
-            .bg(theme.paint(key_bg))
-            .add_modifier(Modifier::BOLD);
-        let description_style = Style::new()
-            .fg(theme.color(palette.footer_description_foreground, description_bg))
-            .bg(theme.paint(description_bg));
+        // Textual's `FooterKey:hover` swaps the item's background, and the key and description backgrounds are
+        // drawn over it, so the whole item lights up. Its `color` changes nothing: both parts set their own.
+        let styles = |item_bg: Paint| {
+            let key_bg = palette.footer_key_background.over(item_bg);
+            let description_bg = palette.footer_description_background.over(item_bg);
+            let key = Style::new()
+                .fg(theme.color(palette.footer_key_foreground, key_bg))
+                .bg(theme.paint(key_bg))
+                .add_modifier(Modifier::BOLD);
+            let description = Style::new()
+                .fg(theme.color(palette.footer_description_foreground, description_bg))
+                .bg(theme.paint(description_bg));
+            (key, description)
+        };
+        let plain = styles(palette.footer_item_background.over(bar));
+        let hovered = styles(palette.block_hover_background.over(bar));
         let spans: Vec<Span<'static>> = self
             .items
             .iter()
-            .flat_map(|item| {
+            .enumerate()
+            .flat_map(|(index, item)| {
+                let (key_style, description_style) = if self.hovered == Some(index) { hovered } else { plain };
                 // Textual's `FooterKey.-disabled` is `text-style: dim`.
                 let dim = if item.enabled {
                     Style::new()

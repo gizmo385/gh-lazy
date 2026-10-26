@@ -6,7 +6,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent,
 use lazy_github_core::config::Config;
 use lazy_github_core::models::Repository;
 use ratatui::Frame;
-use ratatui::layout::Rect;
+use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Block;
@@ -67,6 +67,10 @@ pub struct App {
     help_open: bool,
     /// The footer items drawn in the last frame, for clicks.
     footer_hits: Vec<FooterHit>,
+    /// Where the mouse was at the last mouse event, for hover highlights. Each frame checks it against that frame's
+    /// layout, as Textual re-checks hover after each layout change. Terminals don't report the pointer leaving the
+    /// window, so it stays at its last cell.
+    mouse: Option<Position>,
     /// The repo the PR, issue and workflow sections show. Python's `LazyGithubContext.current_repo`.
     current_repo: Option<Repository>,
     /// The unread count in the status box.
@@ -87,6 +91,7 @@ impl App {
             has_shown_maximize_toast: false,
             help_open: false,
             footer_hits: Vec::new(),
+            mouse: None,
             current_repo: None,
             notifications: NotificationPoll::default(),
             should_quit: false,
@@ -130,10 +135,11 @@ impl App {
         // Toasts first: one past its timeout is gone before anything sees the event, and a click on a live one is
         // consumed. A deadline needs nothing else.
         self.toasts.expire(self.shared.clock.now());
-        if let Event::Mouse(mouse) = &event
-            && self.toasts.handle_mouse(mouse)
-        {
-            return Vec::new();
+        if let Event::Mouse(mouse) = &event {
+            self.mouse = Some(Position::new(mouse.column, mouse.row));
+            if self.toasts.handle_mouse(mouse) {
+                return Vec::new();
+            }
         }
         match self.action_for(event) {
             Some(action) => self.update(action),
@@ -190,15 +196,16 @@ impl App {
         None
     }
 
-    /// A left click on a footer item runs its binding, as Textual's `FooterKey` does; elsewhere it focuses the
-    /// target under the pointer, and the wheel scrolls it. All as of the last frame.
+    /// A left click on a footer item runs its binding, or rings the bell if it's disabled, as Textual's `FooterKey`
+    /// does; elsewhere it focuses the target under the pointer, and the wheel scrolls it. All as of the last frame.
     fn action_for_mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
         if mouse.kind == MouseEventKind::Down(MouseButton::Left) {
-            let position = ratatui::layout::Position::new(mouse.column, mouse.row);
+            let position = Position::new(mouse.column, mouse.row);
             if let Some(hit) = self.footer_hits.iter().find(|hit| hit.rect.contains(position)).copied() {
-                // Textual rings the bell for a disabled item instead. There's no bell yet, and nothing is disabled in
-                // M1.
-                return hit.enabled.then(|| self.route_binding(hit.owner, hit.id)).flatten();
+                if !hit.enabled {
+                    return Some(Action::Bell);
+                }
+                return self.route_binding(hit.owner, hit.id);
             }
         }
         let BaseScreen::Main(main) = &self.base else {
@@ -334,6 +341,7 @@ impl App {
             }
             Action::QuitHint => out.actions.push_back(Action::Notify(quit_hint())),
             Action::Notify(toast) => self.toasts.push(toast),
+            Action::Bell => out.effects.push(Effect::Bell),
             Action::Focus(target) => {
                 if let BaseScreen::Main(main) = &mut self.base {
                     main.try_focus(target);
@@ -559,8 +567,16 @@ impl App {
         self.footer_hits = match footer_area {
             Some(footer_area) => {
                 let items = footer_items(&active);
-                let footer = Footer { items: &items, theme };
+                let mut footer = Footer {
+                    items: &items,
+                    hovered: None,
+                    theme,
+                };
                 let hits = footer.hits(footer_area);
+                // Hits are in item order, so the hit's index is the item's.
+                footer.hovered = self
+                    .mouse
+                    .and_then(|mouse| hits.iter().position(|hit| hit.rect.contains(mouse)));
                 frame.render_widget(footer, footer_area);
                 hits
             }
@@ -852,6 +868,25 @@ mod tests {
         app.press(&["x", "Q", "escape", "enter", "tab", "shift+tab", "ctrl+x"]);
         app.click(3, 3);
         assert_eq!(app.effects(), []);
+        assert!(!app.app().should_quit());
+    }
+
+    /// Textual's `FooterKey.on_mouse_down`: a click on a disabled item rings the bell instead of running its binding.
+    #[test]
+    fn clicking_a_disabled_footer_item_rings_the_bell() {
+        let mut app = test_app();
+        app.render(160, 48);
+        // Nothing is disabled in M1, so disable `q Quit` where the last frame drew it.
+        let hit = app
+            .app_mut()
+            .footer_hits
+            .iter_mut()
+            .find(|hit| hit.id == BindingId::AppQuit)
+            .unwrap();
+        hit.enabled = false;
+        let (column, row) = (hit.rect.x + 1, hit.rect.y);
+        app.click(column, row);
+        assert_eq!(app.effects(), [Effect::Bell]);
         assert!(!app.app().should_quit());
     }
 

@@ -242,7 +242,7 @@ impl TestApp {
                 Effect::CancelTimer(id) => {
                     self.timers.remove(id);
                 }
-                Effect::Quit => {}
+                Effect::Bell | Effect::Quit => {}
             }
             self.effects.push(effect);
         }

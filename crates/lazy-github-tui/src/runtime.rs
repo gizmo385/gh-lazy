@@ -1,6 +1,7 @@
 //! The effect runner: performs `Effect`s in the background and sends their results back as `Event`s.
 
 use std::collections::HashMap;
+use std::io::{self, Write};
 
 use lazy_github_core::config::{Config, ConfigPaths};
 use lazy_github_core::github::Github;
@@ -18,6 +19,8 @@ pub struct Runtime<G: Github> {
     tasks: HashMap<RequestId, AbortHandle>,
     timers: HashMap<TimerId, AbortHandle>,
     saver: ConfigSaver,
+    /// The terminal, for the bell.
+    terminal: Box<dyn Write + Send>,
 }
 
 impl<G: Github> Runtime<G> {
@@ -30,7 +33,15 @@ impl<G: Github> Runtime<G> {
             tasks: HashMap::new(),
             timers: HashMap::new(),
             saver,
+            terminal: Box::new(io::stdout()),
         }
+    }
+
+    /// Sends the bell to `terminal` instead of stdout.
+    #[cfg(test)]
+    fn with_terminal(mut self, terminal: impl Write + Send + 'static) -> Self {
+        self.terminal = Box::new(terminal);
+        self
     }
 
     /// Starts performing `effect`. Never blocks.
@@ -87,6 +98,12 @@ impl<G: Github> Runtime<G> {
             Effect::CancelTimer(id) => {
                 if let Some(timer) = self.timers.remove(&id) {
                     timer.abort();
+                }
+            }
+            // One byte between frames, on the thread that draws them, so it can't land inside a frame's escapes.
+            Effect::Bell => {
+                if let Err(err) = self.terminal.write_all(b"\x07").and_then(|()| self.terminal.flush()) {
+                    tracing::debug!("Failed to ring the bell: {err}");
                 }
             }
             // `App` already stopped the loop; there's nothing to perform.
@@ -205,6 +222,32 @@ mod tests {
             }
         }
         ticks
+    }
+
+    /// A writer whose clones share one buffer.
+    #[derive(Clone, Default)]
+    struct SharedBuf(std::sync::Arc<std::sync::Mutex<Vec<u8>>>);
+
+    impl Write for SharedBuf {
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            self.0.lock().unwrap().extend_from_slice(buf);
+            Ok(buf.len())
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn the_bell_writes_bel_to_the_terminal() {
+        let dir = TempDir::new();
+        let (runtime, _rx) = runtime(FakeGithub::new(), &dir);
+        let terminal = SharedBuf::default();
+        let mut runtime = runtime.with_terminal(terminal.clone());
+        runtime.execute(Effect::Bell);
+        runtime.execute(Effect::Bell);
+        assert_eq!(*terminal.0.lock().unwrap(), b"\x07\x07");
     }
 
     #[tokio::test(flavor = "current_thread", start_paused = true)]

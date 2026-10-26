@@ -43,6 +43,8 @@ pub enum Effect {
     ///
     /// A tick already sent may still be queued and arrive after this; owners that care check their own state.
     CancelTimer(TimerId),
+    /// Ring the terminal bell (Textual's `App.bell`). Terminals may beep, flash, or do nothing.
+    Bell,
     /// Stop the event loop after the current batch of events.
     Quit,
 }

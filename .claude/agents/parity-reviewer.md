@@ -34,8 +34,9 @@ current `rust-main` and the Python app. For each new difference, file a `rust` +
 
 ## Writing scenarios
 
-When a spec's scenarios are missing coverage you need, add them under `parity/scenarios/` in your follow-up PR. Keep
-each scenario short and focused on one flow, with a capture after every meaningful step.
+When a spec's scenarios are missing coverage you need, add them under `parity/scenarios/` in your follow-up PR. Follow
+"Keeping the suite fast" in `parity/README.md`: extend a scenario that already has the env you need rather than adding
+one, one size unless the rows are about layout, and a capture after every meaningful step.
 
 ## Rules
 

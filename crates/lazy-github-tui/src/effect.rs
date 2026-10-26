@@ -6,8 +6,8 @@ use std::time::Duration;
 use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
-use lazy_github_core::github::{Github, RepoListQuery};
-use lazy_github_core::models::{RepoName, Repository, User};
+use lazy_github_core::github::{Github, IssueListQuery, RepoListQuery};
+use lazy_github_core::models::{IssueListItem, RepoName, Repository, User};
 
 /// Something the runtime does on the app's behalf.
 #[derive(Debug, Clone, PartialEq)]
@@ -93,6 +93,13 @@ pub enum GithubRequest {
     CurrentUser,
     /// [`Github::list_repositories`].
     ListRepositories(RepoListQuery),
+    /// [`Github::list_issues`].
+    ListIssues {
+        /// The repo whose issues and pull requests to list.
+        repo: Box<Repository>,
+        /// The filters and page.
+        query: IssueListQuery,
+    },
     /// [`Github::unread_notification_count`].
     UnreadNotificationCount,
 }
@@ -106,6 +113,8 @@ pub enum GithubResponse {
     CurrentUser(Result<User, GhError>),
     /// [`Github::list_repositories`].
     ListRepositories(Result<Vec<Repository>, GhError>),
+    /// [`Github::list_issues`].
+    ListIssues(Result<Vec<IssueListItem>, GhError>),
     /// [`Github::unread_notification_count`].
     UnreadNotificationCount(Result<usize, GhError>),
 }
@@ -119,6 +128,7 @@ impl GithubRequest {
             GithubRequest::ListRepositories(query) => {
                 GithubResponse::ListRepositories(gh.list_repositories(query).await)
             }
+            GithubRequest::ListIssues { repo, query } => GithubResponse::ListIssues(gh.list_issues(&repo, query).await),
             GithubRequest::UnreadNotificationCount => {
                 GithubResponse::UnreadNotificationCount(gh.unread_notification_count().await)
             }

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-org/lookup-me"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "id": 2000201,
+      "node_id": "R_parity2000201",
+      "name": "lookup-me",
+      "full_name": "parity-org/lookup-me",
+      "private": false,
+      "owner": {
+        "login": "parity-org",
+        "id": 1000012,
+        "node_id": "U_parity1000012",
+        "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+        "url": "https://api.github.com/users/parity-org",
+        "html_url": "https://github.com/parity-org",
+        "type": "Organization",
+        "site_admin": false
+      },
+      "html_url": "https://github.com/parity-org/lookup-me",
+      "description": "Found through the lookup modal.",
+      "fork": false,
+      "url": "https://api.github.com/repos/parity-org/lookup-me",
+      "created_at": "2024-02-01T10:00:00Z",
+      "updated_at": "2026-09-30T08:00:00Z",
+      "pushed_at": "2026-09-30T08:00:00Z",
+      "default_branch": "main",
+      "archived": false,
+      "visibility": "public",
+      "permissions": {
+        "admin": false,
+        "maintain": false,
+        "push": false,
+        "triage": false,
+        "pull": true
+      }
+    }
+  },
+  "note": "hand-written: the repo the lookup finds"
+}

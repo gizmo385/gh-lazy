@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/users/parity-bot/repos",
+    "query": {
+      "direction": "desc",
+      "page": "1",
+      "per_page": "30",
+      "sort": "updated"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "id": 2000001,
+        "node_id": "R_parity2000001",
+        "name": "dotfiles",
+        "full_name": "parity-bot/dotfiles",
+        "private": false,
+        "owner": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_parity1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-bot/dotfiles",
+        "description": "Shell configuration, kept in one place.",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-bot/dotfiles",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-10-20T08:00:00Z",
+        "pushed_at": "2026-10-20T08:00:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": false,
+          "maintain": false,
+          "push": false,
+          "triage": false,
+          "pull": true
+        }
+      },
+      {
+        "id": 2000301,
+        "node_id": "R_parity2000301",
+        "name": "profile-only",
+        "full_name": "parity-bot/profile-only",
+        "private": false,
+        "owner": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_parity1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-bot/profile-only",
+        "description": "Only reachable from the profile modal.",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-bot/profile-only",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-10-19T08:00:00Z",
+        "pushed_at": "2026-10-19T08:00:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": false,
+          "maintain": false,
+          "push": false,
+          "triage": false,
+          "pull": true
+        }
+      },
+      {
+        "id": 2000002,
+        "node_id": "R_parity2000002",
+        "name": "hello-world",
+        "full_name": "parity-bot/hello-world",
+        "private": false,
+        "owner": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_parity1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-bot/hello-world",
+        "description": null,
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-bot/hello-world",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-10-18T08:00:00Z",
+        "pushed_at": "2026-10-18T08:00:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": false,
+          "maintain": false,
+          "push": false,
+          "triage": false,
+          "pull": true
+        }
+      },
+      {
+        "id": 2000003,
+        "node_id": "R_parity2000003",
+        "name": "lazy-demo",
+        "full_name": "parity-bot/lazy-demo",
+        "private": false,
+        "owner": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_parity1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/parity-bot/lazy-demo",
+        "description": "A demo repository with a description long enough to run past the right edge of the profile modal.",
+        "fork": false,
+        "url": "https://api.github.com/repos/parity-bot/lazy-demo",
+        "created_at": "2024-02-01T10:00:00Z",
+        "updated_at": "2026-10-17T08:00:00Z",
+        "pushed_at": "2026-10-17T08:00:00Z",
+        "default_branch": "main",
+        "archived": false,
+        "visibility": "public",
+        "permissions": {
+          "admin": false,
+          "maintain": false,
+          "push": false,
+          "triage": false,
+          "pull": true
+        }
+      }
+    ]
+  },
+  "note": "hand-written: public repos by last update, one of them not in /user/repos"
+}

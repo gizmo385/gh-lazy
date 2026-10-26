@@ -1,0 +1,30 @@
+version = 1
+description = "User profile (u) on an empty repos table: the error toast, and no request"
+gate = false
+parity_rows = [
+    "repositories.user-profile",
+    "toasts.nothing-selected",
+]
+
+[env]
+fixtures = ["repos-error", "base"]
+
+[[step]]
+wait = { text = "Loading...", timeout_ms = 15000 }
+
+[[step]]
+wait = { gone = "Loading..." }
+
+[[step]]
+keys = ["u"]
+
+[[step]]
+wait = { text = "No repository currently selected" }
+
+[[step]]
+capture = "no-repo"
+checks = ["titles", "rows", "focus"]
+
+[expect.no-repo]
+contains = ["No repository currently selected"]
+not_contains = ["Recent repositories", "Traceback"]

@@ -1,0 +1,61 @@
+version = 1
+description = "Per-repo table caches: a repo's PR, issue and run rows come back from the cache when it's selected again and its live fetches fail"
+gate = false
+parity_rows = [
+    "searchable-tables.row-cache",
+    "caches-drafts.pull-requests-json",
+    "caches-drafts.issues-json",
+    "caches-drafts.workflow-runs-json",
+]
+
+[env]
+fixtures = ["table-caches", "repo-selected-empty", "base"]
+
+[[step]]
+wait = { text = "cache-fixture", timeout_ms = 15000 }
+
+# The first selection fetches the rows, and writes them to the cache.
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Cached pull request 6" }
+
+[[step]]
+wait = { text = "Cached run 3" }
+
+[[step]]
+capture = "live"
+checks = ["titles", "rows"]
+ignore = { boxes = ["Details"] }
+
+# Another repo, then back: the second fetches fail.
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/dotfiles" }
+
+[[step]]
+wait = { text = "[2] Pull Requests (empty)" }
+
+[[step]]
+keys = ["k", "enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/cache-fixture" }
+
+[[step]]
+wait = { text = "Cached pull request 6" }
+
+[[step]]
+wait = { text = "Cached run 3" }
+
+[[step]]
+capture = "restored"
+checks = ["titles", "rows"]
+ignore = { boxes = ["Details"] }
+
+[expect.restored]
+contains = ["Current repo: parity-bot/cache-fixture", "Cached pull request 6", "Cached issue 5", "Cached run 3"]
+not_contains = ["Traceback"]

@@ -301,6 +301,23 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   and `skipped`. On page 1 the 5th and 6th runs share a minute, the earlier second listed first, which pins the sort to
   the `Time` string. Plus its README and an empty issues page 1. Listed before `base`, for the `workflow-runs`
   scenario. Hand-written.
+- `repos-tracked/`: `GET /repos/<owner>/<name>` for tracked repos (`repositories.additional_repos_to_track`):
+  `parity-org/tracked-tool`, `parity-bot/hello-world` (also in base's list, with another description),
+  `ghost-org/orphan` (whose owner 404s in `user-profile`) and `parity-org/gone` (a 404). Listed before `base`, for the
+  `repos-tracked` and `user-profile` scenarios. Hand-written.
+- `repo-lookup/`: `GET /repos/parity-org/lookup-me` (found) and `GET /repos/parity-org/missing` (a 404), plus what
+  selecting `lookup-me` loads (empty issues, workflows and runs, a short README). Listed before `base`, for the
+  `repo-lookup` scenario. Hand-written.
+- `user-profile/`: `GET /users/<login>` and `GET /users/<login>/repos` (`sort=updated`, `direction=desc`,
+  `per_page=30`) for `parity-bot` (every profile field, four repos, one of them `parity-bot/profile-only`, which isn't
+  in base's list), `parity-org` (an organization with no name, bio or repos) and `ghost-org` (both 404), plus what
+  selecting `profile-only` loads. Listed before `repos-tracked` and `base`, for the `user-profile` scenario.
+  Hand-written.
+- `table-caches/`: base's `GET /user/repos` page with `parity-bot/cache-fixture` first; its issues page 1 (three PRs,
+  three issues), runs page 1 (three runs), empty second pages, no workflows and a README. Once
+  `parity-bot/dotfiles`' issues have been served (`when.after`), its issues and runs page 1 answer 500, so selecting it
+  again leaves the rows restored from the cache. Listed before `repo-selected-empty` and `base`, for the
+  `table-caches` scenario. Hand-written.
 
 ## Recording fixtures
 

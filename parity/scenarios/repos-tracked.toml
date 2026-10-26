@@ -1,0 +1,25 @@
+version = 1
+description = "Tracked repos (repositories.additional_repos_to_track): fetched after the user's repos and appended, a tracked favorite first, a tracked repo already listed replaced, and one that 404s left out"
+gate = false
+parity_rows = [
+    "repositories.rows",
+    "repositories.tracked-repos",
+]
+
+[env]
+fixtures = ["repos-tracked", "base"]
+
+[env.config_overrides.repositories]
+additional_repos_to_track = ["parity-bot/hello-world", "parity-org/tracked-tool", "parity-org/gone"]
+favorites = ["parity-org/tracked-tool"]
+
+[[step]]
+wait = { text = "tracked-tool", timeout_ms = 15000 }
+
+[[step]]
+capture = "loaded"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+[expect.loaded]
+contains = ["tracked-tool", "hello-world"]
+not_contains = ["gone", "Traceback"]

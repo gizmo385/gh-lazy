@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-friend/friend-tools/issues",
+    "query": {
+      "page": "1",
+      "per_page": "30",
+      "state": "all"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": []
+  },
+  "note": "hand-written: parity-friend/friend-tools has none (selected from an author's profile)"
+}

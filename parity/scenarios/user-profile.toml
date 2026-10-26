@@ -1,0 +1,91 @@
+version = 1
+description = "User profile modal (u) from the repos table: a user with every field and four repos, picking a repo that isn't listed yet, an organization with none, and an owner whose profile 404s"
+gate = false
+parity_rows = [
+    "repositories.user-profile",
+    "modals.user-profile",
+    "modals.user-profile-header",
+    "modals.user-profile-repos",
+    "keybindings.user-view-profile",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["user-profile", "repos-tracked", "base"]
+
+[env.config_overrides.repositories]
+additional_repos_to_track = ["parity-org/tracked-tool", "ghost-org/orphan"]
+
+[[step]]
+wait = { text = "orphan", timeout_ms = 15000 }
+
+# The first row's owner, parity-bot.
+[[step]]
+keys = ["u"]
+
+[[step]]
+wait = { text = "Parity Bot (@parity-bot)" }
+
+[[step]]
+capture = "open"
+checks = ["titles", "headers", "rows", "cursor"]
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+capture = "tabbed"
+checks = ["rows", "cursor"]
+
+# The second repo, which isn't in the repos table: it's added and selected.
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/profile-only" }
+
+[[step]]
+capture = "picked"
+
+# An organization with no name, bio or public repos.
+[[step]]
+keys = ["j", "j", "j", "u"]
+
+[[step]]
+wait = { text = "No public repositories." }
+
+[[step]]
+capture = "organization"
+checks = ["titles", "rows"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "No public repositories." }
+
+# An owner GitHub doesn't know.
+[[step]]
+keys = ["j", "u"]
+
+[[step]]
+wait = { text = "Could not find user @ghost-org" }
+
+[[step]]
+capture = "unknown-user"
+
+[expect.open]
+contains = ["Parity Bot (@parity-bot) — user", "Fictional account for", "Company: @parity-org"]
+not_contains = ["Traceback"]
+
+[expect.picked]
+contains = ["Current repo: parity-bot/profile-only", "profile-only"]
+not_contains = ["Recent repositories"]
+
+[expect.organization]
+contains = ["parity-org (@parity-org) — organization", "Location: Remote", "No public repositories."]
+not_contains = ["Company:", "Twitter:"]
+
+[expect.unknown-user]
+contains = ["Could not find user @ghost-org"]
+not_contains = ["Recent repositories"]

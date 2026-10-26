@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/profile-only/readme",
+    "accept": "raw"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain; charset=utf-8"
+    },
+    "body_text": "# profile-only\n\nPicked from a profile.\n"
+  },
+  "note": "hand-written: a short README (selected from the profile modal)"
+}

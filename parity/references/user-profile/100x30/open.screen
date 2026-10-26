@@ -1,0 +1,92 @@
+lazy-github-screen 1
+size 100x30
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No r█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█    │
+└────█                                                                                        █────┘
+┌─ [1█  Parity Bot (@parity-bot) — user                                                       █────┐
+│ ★  █                                                                                        █    │
+│ ☆  █  ──────────────────────────────────────────────────────────────────────────────────    █━━━━│
+│ ☆  █                                                                                        █    │
+│ ☆  █    Fictional account for LazyGithub parity fixtures.                                   █    │
+│ ☆  █                                                                                        █    │
+│ ☆  █    Keeps dotfiles and a few demos.                                                     █    │
+│    █                                                                                        █    │
+│    █                                                                                        █    │
+└────█  ──────────────────────────────────────────────────────────────────────────────────    █    │
+┌─ [2█                                                                                        █    │
+│ #  █  Company: @parity-org                                                                  █    │
+│    █                                                                                      ▃▃█    │
+│    █  Location: Testville                                                                   █    │
+└────█                                                                                        █  ▁▁│
+┌─ [3█  Email: user@example.com                                                               █    │
+│ #  █                                                                                        █    │
+│    █  Blog: https://example.com/parity-bot                                                  █    │
+│    █                                                                                        █    │
+└────█  Twitter: @paritybot                                                                   █    │
+┌─ [4█                                                                                        █    │
+│ Tim█  ──────────────────────────────────────────────────────────────────────────────────    █    │
+│    █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█    │
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█─────────┘
+█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ Paste lin
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbbbba
+aaaaac......................................................................................ddcaaaaa
+eeeeec..ffffffffffggggggggggggggggggggg.....................................................ddchhhhh
+eijiic......................................................................................ddckkkkh
+ellllc..mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm..ddcnnnnh
+eooooc......................................................................................ddckkpph
+eooooc....ggggggggggggggggggggggffffffffffggggggggggggggggg.................................ddckkpph
+eooooc......................................................................................ddckkpph
+eooooc....ggggggqqqqqqqqggggggggggggggggg...................................................ddckkpph
+ekkkkc......................................................................................ddckkpph
+ekkkkc......................................................................................ddckkpph
+eeeeec..mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm..ddckkpph
+hhhhhc......................................................................................ddckkpph
+hrrrrc..ffffffffgggggggggggg................................................................ddckkpph
+hkkkkc......................................................................................ssckkpph
+hkkkkc..fffffffffgggggggggg.................................................................ttckkpph
+hhhhhc......................................................................................ttckkuuh
+hhhhhc..ffffffggggggggggggggggg.............................................................ttckkvvh
+hrrrrc......................................................................................ttckkvvh
+hkkkkc..fffffggggggggggggggggggggggggggggggg................................................ttckkvvh
+hkkkkc......................................................................................ttckkvvh
+hhhhhc..ffffffffggggggggggg.................................................................ttckkvvh
+hhhhhc......................................................................................ttckkvvh
+hrrrrc..mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm..ttckkvvh
+hwwwwcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccckkvvh
+hkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkhhkkbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbkkkkkkvvh
+hkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkhhkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkvvh
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccchhhhhhhhhh
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccxyyyyyyyyy
+--- legend
+. bg=#2d2d2d
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#121212 bg=#2d2d2d
+d fg=#003054 bg=#2d2d2d inverse
+e fg=#2a5738 bg=#121212
+f fg=#e0e0e0 bg=#2d2d2d bold
+g fg=#e0e0e0 bg=#2d2d2d
+h fg=#365270 bg=#121212
+i fg=#646464 bg=#1c2024 bold
+j fg=#476419 bg=#1c2024 bold
+k fg=#e0e0e0 bg=#121212
+l fg=#63696e bg=#0b3a5f bold
+m fg=#004578 bg=#2d2d2d
+n fg=#1a1a1a bg=#121212
+o fg=#646464 bg=#1a1a1a
+p fg=#0a1e2c bg=#121212 inverse
+q fg=#f5bc6f bg=#3d362c
+r fg=#646464 bg=#191d21 bold
+s fg=#003054 bg=#000000 inverse
+t fg=#e0e0e0 bg=#000000
+u fg=#0a1e2c bg=#0a0a0a inverse
+v fg=#646464 bg=#0a0a0a
+w fg=#0a1e2c bg=#161616 inverse
+x fg=#704d1c bg=#191d21 bold
+y fg=#646464 bg=#191d21

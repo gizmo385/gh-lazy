@@ -1,0 +1,98 @@
+version = 1
+description = "Lookup repository modal (O): the switch, an empty, an invalid and an unknown name (error toasts, the modal stays), and a found repo added to the table and selected"
+gate = false
+parity_rows = [
+    "repositories.lookup",
+    "modals.lookup-dialog",
+    "modals.lookup-repository",
+    "modals.form-switch",
+    "keybindings.repositories-lookup",
+]
+
+[env]
+fixtures = ["repo-lookup", "base"]
+
+[[step]]
+wait = { text = "dotfiles", timeout_ms = 15000 }
+
+[[step]]
+keys = ["O"]
+
+[[step]]
+wait = { text = "Repository (owner/name):" }
+
+# The switch: tab focuses it, space turns it on.
+[[step]]
+keys = ["tab", "space"]
+
+[[step]]
+capture = "switch-on"
+
+# Lookup with nothing typed.
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+capture = "empty"
+
+# A name that isn't owner/name.
+[[step]]
+keys = ["shift+tab", "shift+tab"]
+
+[[step]]
+type = "nope"
+
+[[step]]
+keys = ["tab", "tab", "enter"]
+
+[[step]]
+capture = "invalid"
+
+# A name GitHub doesn't know.
+[[step]]
+keys = ["shift+tab", "shift+tab"]
+
+[[step]]
+type = "parity-org/missing"
+
+[[step]]
+keys = ["tab", "tab", "enter"]
+
+[[step]]
+wait = { text = "Could not find repo!" }
+
+[[step]]
+capture = "not-found"
+
+# A repo that exists: the modal closes, the repo joins the table and is selected.
+[[step]]
+keys = ["shift+tab", "shift+tab"]
+
+[[step]]
+type = "parity-org/lookup-me"
+
+[[step]]
+keys = ["tab", "tab", "enter"]
+
+[[step]]
+wait = { gone = "Repository (owner/name):" }
+
+[[step]]
+wait = { text = "Current repo: parity-org/lookup-me" }
+
+[[step]]
+capture = "found"
+
+[expect.switch-on]
+contains = ["Continue tracking this repo?"]
+footer = ["shift+⏎ Submit", "q Close"]
+
+[expect.empty]
+contains = ["Validation Error", "You must enter a repo name!"]
+
+[expect.not-found]
+contains = ["Could not find repo!"]
+
+[expect.found]
+contains = ["Current repo: parity-org/lookup-me", "[5] parity-org/lookup-me Details"]
+not_contains = ["Repository (owner/name):", "Traceback"]

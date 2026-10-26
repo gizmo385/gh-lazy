@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/cache-fixture/readme",
+    "accept": "raw"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain; charset=utf-8"
+    },
+    "body_text": "# cache-fixture\n\nRows from the local cache.\n"
+  },
+  "note": "hand-written: a short README"
+}

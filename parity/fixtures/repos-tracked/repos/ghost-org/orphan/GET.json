@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/ghost-org/orphan"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "id": 2000103,
+      "node_id": "R_parity2000103",
+      "name": "orphan",
+      "full_name": "ghost-org/orphan",
+      "private": false,
+      "owner": {
+        "login": "ghost-org",
+        "id": 1000013,
+        "node_id": "U_parity1000013",
+        "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+        "url": "https://api.github.com/users/ghost-org",
+        "html_url": "https://github.com/ghost-org",
+        "type": "Organization",
+        "site_admin": false
+      },
+      "html_url": "https://github.com/ghost-org/orphan",
+      "description": "Its owner's profile can't be loaded.",
+      "fork": false,
+      "url": "https://api.github.com/repos/ghost-org/orphan",
+      "created_at": "2024-02-01T10:00:00Z",
+      "updated_at": "2026-09-30T08:00:00Z",
+      "pushed_at": "2026-09-30T08:00:00Z",
+      "default_branch": "main",
+      "archived": false,
+      "visibility": "public",
+      "permissions": {
+        "admin": false,
+        "maintain": false,
+        "push": false,
+        "triage": false,
+        "pull": true
+      }
+    }
+  },
+  "note": "hand-written: a tracked repo whose owner 404s on /users (user-profile)"
+}

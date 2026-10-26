@@ -1,0 +1,99 @@
+version = 1
+description = "User profile (u) from the Pull Requests and Issues tables: the highlighted author's profile, a picked repo selected without joining the repos table, and the error toasts on empty tables"
+gate = false
+parity_rows = [
+    "pull-requests.user-profile",
+    "issues.user-profile",
+    "toasts.nothing-selected",
+]
+
+[env]
+fixtures = ["user-profile-authors", "user-profile", "repo-lists", "repo-selected-empty", "base"]
+
+[[step]]
+wait = { text = "browse-fixture", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Browse fixture pull request 99", timeout_ms = 15000 }
+
+# The first PR's author.
+[[step]]
+keys = ["2", "u"]
+
+[[step]]
+wait = { text = "Parity Bot (@parity-bot)" }
+
+[[step]]
+capture = "pr-author"
+checks = ["titles", "rows"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Parity Bot (@parity-bot)" }
+
+# The third issue's author, then the one repo on their profile.
+[[step]]
+keys = ["3", "j", "j", "u"]
+
+[[step]]
+wait = { text = "Parity Friend (@parity-friend)" }
+
+[[step]]
+capture = "issue-author"
+checks = ["titles", "rows"]
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-friend/friend-tools" }
+
+[[step]]
+capture = "picked"
+checks = ["titles", "rows", "focus"]
+ignore = { boxes = ["Details"] }
+
+# A repo with no PRs or issues: both tables toast.
+[[step]]
+keys = ["1", "j", "enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/dotfiles" }
+
+[[step]]
+wait = { text = "[2] Pull Requests (empty)" }
+
+[[step]]
+keys = ["2", "u"]
+
+[[step]]
+wait = { text = "No pull request currently selected" }
+
+[[step]]
+keys = ["3", "u"]
+
+[[step]]
+wait = { text = "No issue currently selected" }
+
+[[step]]
+capture = "empty-tables"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details"] }
+
+[expect.pr-author]
+contains = ["Parity Bot (@parity-bot) — user"]
+
+[expect.issue-author]
+contains = ["Parity Friend (@parity-friend) — user", "friend-tools"]
+
+[expect.picked]
+contains = ["Current repo: parity-friend/friend-tools", "[5] parity-friend/friend-tools Details"]
+not_contains = ["Recent repositories"]
+
+[expect.empty-tables]
+contains = ["No pull request currently selected", "No issue currently selected"]

@@ -2,7 +2,8 @@ version = 1
 description = "Logged out of gh with no cached auth check: the GitHub Authentication screen"
 gate = true
 parity_rows = ["startup-auth.not-logged-in-screen"]
-sizes = [[160, 48], [100, 30]]
+# One size: the checks are the title, the footer and the message, which fits on one row at 100 columns too.
+sizes = [[160, 48]]
 
 # The spec's `config_overrides.cache.auth_last_checked = null` can't be written in TOML, which has no null. The default
 # config has no `auth_last_checked`, which is the same: the check runs.

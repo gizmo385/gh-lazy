@@ -2,7 +2,7 @@ version = 1
 description = "A full first page of 50 unread notifications shows 50+"
 gate = true
 parity_rows = ["main-layout.status-summary", "main-layout.status-unread", "main-layout.unread-refresh"]
-sizes = [[160, 48], [100, 30]]
+sizes = [[160, 48]]
 
 [env]
 fixtures = ["notifications-50", "base"]

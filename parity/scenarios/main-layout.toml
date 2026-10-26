@@ -1,13 +1,31 @@
 version = 1
-description = "Main screen layout with the default config: status box, four sections, details with the Introduction tab"
+description = "Main screen with the default config: status bar, four sections and the Introduction tab, then focus keys 2-6 and the Tab ring: each section's border and the footer follow focus, 5 twice stays on Details, 6 without the log does nothing"
 gate = true
 parity_rows = [
     "main-layout.layout",
     "main-layout.section-order",
     "main-layout.section-titles",
+    "main-layout.status-summary",
+    "main-layout.status-current-repo",
+    "main-layout.status-unread",
     "repositories.introduction-tab",
     "repositories.introduction-version",
+    "main-layout.focus-switching",
+    "main-layout.focus-ring",
+    "main-layout.details-tabs-focused",
+    "main-layout.footer",
+    "main-layout.command-log",
+    "keybindings.main-pull-requests-focus",
+    "keybindings.main-issues-focus",
+    "keybindings.main-workflows-focus",
+    "keybindings.main-details-focus",
+    "keybindings.main-command-log-focus",
+    "keybindings.app-quit",
+    "keybindings.app-maximize-widget",
+    "keybindings.app-open-help",
+    "keybindings.common-table-search",
 ]
+# The section sizes change with the screen, and the footer is cut off at a different item at each size.
 sizes = [[160, 48], [100, 30]]
 
 [env]
@@ -16,15 +34,125 @@ fixtures = ["base"]
 [[step]]
 wait = { text = "Repositories", timeout_ms = 15000 }
 
-# Table headers and rows arrive with #78 and M2, the footer with #76.
+[[step]]
+wait = { text = "No repository selected" }
+
+# Table headers and rows arrive with M2. The footer is cut off at "^p Comman" (160) and "^v Paste lin" (100), in
+# both apps. A cut item only has to start the expected one, so the list runs to the end.
 [[step]]
 capture = "start"
+checks = ["titles", "tabs", "focus", "footer"]
+
+# From here on the `^p` item shows at 160 columns far enough to tell "Pallete" (Python) from "Palette" (Rust): Py
+# bug B14, fixed on purpose. So these captures leave out the cross-app footer check and match the footer's text with
+# `contains`: the whole row as shown at 100 columns, which both apps show the same at both sizes.
+[[step]]
+keys = ["2"]
+
+[[step]]
+capture = "prs"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["3"]
+
+[[step]]
+capture = "issues"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["4"]
+
+[[step]]
+capture = "workflows"
+checks = ["titles", "tabs", "focus"]
+
+# B14: the whole `^p` item shows at both sizes.
+[[step]]
+keys = ["5"]
+
+[[step]]
+capture = "details"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["5"]
+
+[[step]]
+capture = "details-again"
+checks = ["titles", "tabs", "focus"]
+
+# The command log isn't displayed, so 6 does nothing.
+[[step]]
+keys = ["6"]
+
+[[step]]
+capture = "no-log"
+checks = ["titles", "tabs", "focus"]
+
+# Tab from the tab strip goes to the details content, then wraps to the repos table; Shift+Tab goes back.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+capture = "tab-content"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+capture = "tab-wrap"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["shift+tab"]
+
+[[step]]
+capture = "shift-tab"
 checks = ["titles", "tabs", "focus"]
 
 # Box titles in pre-order by (row, col), as the structural check lists them: Details shares the Repositories row.
+# Notifications are off, so the status bar's right half is blank.
 [expect.start]
 pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
 focused = ["[1] Repositories"]
 tabs = { box = "Details", names = ["Introduction"], active = "Introduction" }
 contains = ["No repository selected"]
-not_contains = ["Traceback"]
+not_contains = ["Unread", "unread", "Traceback"]
+footer =["/ Search", "^f Toggle Favorite", "O Lookup Repository", "u View User", "I New Issue", "P New PR", "^v Paste link", "f Follow link", "F Follow link (browser)", "q Quit", "^p Command Palette", "M Maximize", "? Keybindings"]
+
+[expect.prs]
+focused = ["[2] Pull Requests"]
+contains = [" / Search  O Lookup Pull Request  E Edit PR  u View User  I New Issue  P New PR  ^v Paste link  f Fo"]
+
+[expect.issues]
+focused = ["[3] Issues"]
+contains = [" / Search  O Lookup Issue  E Edit Issue  u View User  I New Issue  P New PR  ^v Paste link  f Follow"]
+
+[expect.workflows]
+focused = ["[4] Workflows"]
+contains = [" / Search  T Trigger Workflow  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (b"]
+
+[expect.details]
+focused = ["[5] Details"]
+tabs = { box = "Details", names = ["Introduction"], active = "Introduction" }
+contains = [" ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pal", "  M Maximize  ? Ke"]
+
+[expect.details-again]
+focused = ["[5] Details"]
+
+[expect.no-log]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
+focused = ["[5] Details"]
+not_contains = ["Command Log", "Traceback"]
+
+[expect.tab-content]
+focused = ["[5] Details"]
+tabs = { box = "Details", names = ["Introduction"], active = "Introduction" }
+
+[expect.tab-wrap]
+focused = ["[1] Repositories"]
+
+[expect.shift-tab]
+focused = ["[5] Details"]

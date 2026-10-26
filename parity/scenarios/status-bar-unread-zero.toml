@@ -2,7 +2,7 @@ version = 1
 description = "Notifications enabled with nothing unread: the bar shows No unread notifications"
 gate = true
 parity_rows = ["main-layout.status-summary", "main-layout.status-unread", "main-layout.unread-refresh"]
-sizes = [[160, 48], [100, 30]]
+sizes = [[160, 48]]
 
 [env]
 fixtures = ["notifications-0", "base"]

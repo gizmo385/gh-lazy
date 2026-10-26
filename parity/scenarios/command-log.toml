@@ -1,7 +1,8 @@
 version = 1
-description = "The command log shows the logged-out notifications error, and 6 focuses it"
+description = "Notifications enabled while logged out of gh: the not-logged-in error toast, the error line in the command log, and 6 focuses the log"
 gate = true
-parity_rows = ["main-layout.command-log"]
+parity_rows = ["main-layout.command-log", "main-layout.toasts", "toasts.notifications-login"]
+# The toast wraps differently at 100 columns, where it also covers the log until the log is focused.
 sizes = [[160, 48], [100, 30]]
 
 [env]
@@ -13,18 +14,10 @@ appearance = { show_command_log = true }
 notifications = { enabled = true }
 cache = { auth_last_checked = "2099-01-01T00:00:00" }
 
-# The error toast is raised with the line, and at 100x30 it covers the log, so wait for it to come and go first.
-# "Failed to Load Notifi" matches both titles (Py bug B14: Python's is "Notifiations").
+# A recent `auth_last_checked` skips the startup auth check, as in Python, so the main screen comes up logged out.
+# "Failed to Load Notifi" matches both toast titles (Py bug B14: Python's is "Notifiations").
 [[step]]
 wait = { text = "Failed to Load Notifi", timeout_ms = 15000 }
-
-[[step]]
-wait = { gone = "Failed to Load Notifi", timeout_ms = 15000 }
-
-# The full line is "... - please login to the gh CLI: gh auth login", but it's wider than the log at both sizes and
-# doesn't wrap, so only its start is on screen.
-[[step]]
-wait = { regex = "ERROR \\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d - Cannot load notifications -", timeout_ms = 15000 }
 
 # Wall-clock timestamps differ between the two runs, so the log's rows aren't compared. The section tables are M2,
 # so no rows are compared yet.
@@ -33,16 +26,27 @@ capture = "shown"
 checks = ["titles", "tabs", "focus"]
 ignore = { boxes = ["Command Log"] }
 
+# The toast doesn't wait out its timeout here: `toast-maximize` checks toast expiry. At 100x30 the toast covers the
+# log's first line until 6 grows the log to 40%.
 [[step]]
 keys = ["6"]
+
+# The full line is "... - please login to the gh CLI: gh auth login", but it's wider than the log at both sizes and
+# doesn't wrap, so only its start is on screen.
+[[step]]
+wait = { regex = "ERROR \\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d - Cannot load notifications -", timeout_ms = 15000 }
 
 [[step]]
 capture = "focused"
 checks = ["titles", "tabs", "focus"]
 ignore = { boxes = ["Command Log"] }
 
+# The toast's title differs by design (Py bug B14), so it isn't asserted. `contains` is matched per row, and the
+# message wraps at both sizes: after "CLI:" at 160 columns, after "to" at 100. The log line is cut off before
+# "gh auth login", so that part can only come from the toast.
 [expect.shown]
 focused = ["[1] Repositories"]
+contains = ["Cannot load notifications - please login to", "gh auth login"]
 not_contains = ["Traceback"]
 
 [expect.focused]

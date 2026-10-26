@@ -1,8 +1,10 @@
 version = 1
-description = "The View Maximized toast: raised by M, drawn bottom-right over the maximized widget, gone after its 5 s timeout"
+description = "The View Maximized toast goes away after its 5 s timeout, and the next maximize raises no new one"
 gate = true
-parity_rows = ["main-layout.toasts", "toasts.view-maximized"]
-sizes = [[160, 48], [100, 30]]
+parity_rows = ["main-layout.toasts", "toasts.view-maximized", "main-layout.maximize"]
+# The one scenario that waits out this toast's timer, so it runs at one size (parity/README.md, "Keeping the suite
+# fast"). `maximize` captures the toast itself, at both sizes.
+sizes = [[160, 48]]
 
 [env]
 fixtures = ["base"]
@@ -14,18 +16,34 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 keys = ["1", "M"]
 
 [[step]]
-capture = "toast"
+wait = { text = "View Maximized" }
 
 [[step]]
-sleep_ms = 5500
+wait = { gone = "View Maximized", timeout_ms = 8000 }
 
 [[step]]
 capture = "expired"
 
-# `contains` is matched per row, and at 100 columns the message wraps before "return." (46 content columns).
-[expect.toast]
-contains = ["View Maximized", "Current view maximized. Press escape to"]
-not_contains = ["Traceback"]
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[1] Repositories" }
+
+# The toast is once per session.
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { gone = "[1] Repositories" }
+
+[[step]]
+capture = "max-again"
+checks = ["titles", "focus"]
 
 [expect.expired]
 not_contains = ["View Maximized", "Traceback"]
+
+[expect.max-again]
+pane_titles = []
+not_contains = ["[1] Repositories", "View Maximized", "Traceback"]

@@ -1,7 +1,8 @@
 version = 1
-description = "M maximizes the focused widget over the whole screen, escape restores it, 5 then M maximizes the details tabs, and M on the details content does nothing"
+description = "M maximizes the focused widget over the whole screen with the View Maximized toast, escape restores it, and 5 then M maximizes the details tabs"
 gate = true
-parity_rows = ["main-layout.maximize", "keybindings.app-maximize-widget", "main-layout.details-tabs-focused"]
+parity_rows = ["main-layout.maximize", "keybindings.app-maximize-widget", "main-layout.details-tabs-focused", "main-layout.toasts", "toasts.view-maximized"]
+# The maximized widget fills the screen at each size, and the toast's message wraps differently at 100 columns.
 sizes = [[160, 48], [100, 30]]
 
 [env]
@@ -16,9 +17,10 @@ keys = ["M"]
 [[step]]
 wait = { gone = "[1] Repositories" }
 
+# The first maximize raises the toast, drawn bottom-right over the maximized table. `toast-maximize` checks that it
+# expires and that the next maximize raises none, so this scenario doesn't wait out its timer.
 [[step]]
 capture = "max"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["escape"]
@@ -32,31 +34,8 @@ wait = { text = "[1] Repositories" }
 wait = { regex = "╸━+╺" }
 
 [[step]]
-wait = { stable_ms = 1000 }
-
-[[step]]
 capture = "restored"
 checks = ["titles", "tabs", "focus"]
-
-# Past the toast's 5 s timeout, so the second maximize shows that no new toast came.
-[[step]]
-sleep_ms = 5500
-
-[[step]]
-keys = ["M"]
-
-[[step]]
-wait = { gone = "[1] Repositories" }
-
-[[step]]
-capture = "max-again"
-checks = ["titles", "focus"]
-
-[[step]]
-keys = ["escape"]
-
-[[step]]
-wait = { text = "[5] Details" }
 
 [[step]]
 keys = ["5", "M"]
@@ -68,31 +47,7 @@ wait = { gone = "[5] Details" }
 capture = "max-details"
 checks = ["titles", "tabs", "focus"]
 
-[[step]]
-keys = ["escape"]
-
-[[step]]
-wait = { text = "[5] Details" }
-
-# The details content is a Textual `VerticalScroll`, which isn't maximizable: M leaves the layout and focus alone.
-[[step]]
-keys = ["5", "tab"]
-
-[[step]]
-wait = { stable_ms = 800 }
-
-[[step]]
-keys = ["M"]
-
-[[step]]
-wait = { stable_ms = 1200 }
-
-[[step]]
-capture = "content-max-noop"
-checks = ["titles", "focus"]
-
-# The first maximize raises the toast. `contains` is matched per row, and at 100 columns the message wraps before
-# "return.".
+# `contains` is matched per row, and at 100 columns the message wraps before "return." (46 content columns).
 [expect.max]
 pane_titles = []
 focused = []
@@ -102,15 +57,7 @@ not_contains = ["[1] Repositories", "Traceback"]
 [expect.restored]
 focused = ["[1] Repositories"]
 
-[expect.max-again]
-pane_titles = []
-not_contains = ["[1] Repositories", "View Maximized"]
-
 [expect.max-details]
 pane_titles = []
 contains = ["Introduction"]
 not_contains = ["[5] Details"]
-
-[expect.content-max-noop]
-focused = ["[5] Details"]
-contains = ["[1] Repositories", "[5] Details"]

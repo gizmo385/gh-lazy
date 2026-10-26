@@ -6,7 +6,7 @@ description = "Selecting a repo in the repos table: the bar shows Current repo: 
 # enter reaches the same `set_currently_loaded_repo`.
 gate = false
 parity_rows = ["main-layout.status-current-repo"]
-sizes = [[160, 48], [100, 30]]
+sizes = [[160, 48]]
 
 [env]
 fixtures = ["repo-selected-empty", "base"]

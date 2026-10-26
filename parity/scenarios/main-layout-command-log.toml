@@ -1,7 +1,7 @@
 version = 1
-description = "Main screen layout with appearance.show_command_log: the command log docked under details"
+description = "Main screen layout with appearance.show_command_log: the command log docked under details, and 6 focuses it and grows its pane to 40%"
 gate = true
-parity_rows = ["main-layout.layout", "main-layout.command-log"]
+parity_rows = ["main-layout.layout", "main-layout.command-log", "main-layout.focus-switching", "keybindings.main-command-log-focus"]
 sizes = [[160, 48], [100, 30]]
 
 [env]
@@ -17,9 +17,21 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 capture = "start"
 checks = ["titles", "tabs", "focus"]
 
+[[step]]
+keys = ["6"]
+
+[[step]]
+capture = "log"
+checks = ["titles", "tabs", "focus"]
+
 # Pre-order by (row, col): the log's top row is below the Workflows title at both sizes.
 [expect.start]
 pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows", "[6] Command Log"]
 focused = ["[1] Repositories"]
 tabs = { box = "Details", names = ["Introduction"], active = "Introduction" }
 not_contains = ["Traceback"]
+
+[expect.log]
+# The log grows to 40% when focused, so its title row is above the Workflows title.
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[6] Command Log", "[4] Workflows"]
+focused = ["[6] Command Log"]

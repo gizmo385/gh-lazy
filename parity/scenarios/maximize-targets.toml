@@ -14,17 +14,17 @@ appearance = { show_command_log = true }
 [[step]]
 wait = { text = "Repositories", timeout_ms = 15000 }
 
+# The footer drops the repos table's bindings once 5 has moved focus to the details. The tab to the content after
+# it has no signal of its own, but keys are handled in order, so M reaches the content.
 [[step]]
 keys = ["5", "tab"]
 
 [[step]]
-wait = { stable_ms = 800 }
+wait = { gone = "Toggle Favorite" }
 
+# A no-op draws nothing to wait for. If M did maximize here, `repos-max` below would miss the one-time toast.
 [[step]]
 keys = ["M"]
-
-[[step]]
-wait = { stable_ms = 1200 }
 
 [[step]]
 capture = "content-noop"

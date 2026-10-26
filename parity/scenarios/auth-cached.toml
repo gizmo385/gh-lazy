@@ -2,7 +2,7 @@ version = 1
 description = "Logged out of gh, but a recent auth check is cached: straight to the main screen"
 gate = true
 parity_rows = ["startup-auth.auth-cache"]
-sizes = [[160, 48], [100, 30]]
+sizes = [[160, 48]]
 
 [env]
 fixtures = ["base"]

@@ -511,6 +511,22 @@ mod tests {
         async fn repo_readme(&self, _full_name: &str) -> Result<Option<String>, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }
+
+        async fn list_workflows(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _page: lazy_github_core::github::PageQuery,
+        ) -> Result<Vec<lazy_github_core::models::Workflow>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
+        async fn list_workflow_runs(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _page: lazy_github_core::github::PageQuery,
+        ) -> Result<Vec<lazy_github_core::models::WorkflowRun>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
     }
 
     /// Runs the loop on a `TestBackend` with `effect` already started, and returns how it ended.

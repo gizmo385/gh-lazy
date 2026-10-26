@@ -6,8 +6,8 @@ use std::time::Duration;
 use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
-use lazy_github_core::github::{Github, IssueListQuery, RepoListQuery};
-use lazy_github_core::models::{IssueListItem, RepoName, Repository, User};
+use lazy_github_core::github::{Github, IssueListQuery, PageQuery, RepoListQuery};
+use lazy_github_core::models::{IssueListItem, RepoName, Repository, User, Workflow, WorkflowRun};
 
 /// Something the runtime does on the app's behalf.
 #[derive(Debug, Clone, PartialEq)]
@@ -104,6 +104,20 @@ pub enum GithubRequest {
     UnreadNotificationCount,
     /// [`Github::repo_readme`] of the repo with this full name.
     RepoReadme(String),
+    /// [`Github::list_workflows`].
+    ListWorkflows {
+        /// The repo whose workflows to list.
+        repo: Box<Repository>,
+        /// The page.
+        page: PageQuery,
+    },
+    /// [`Github::list_workflow_runs`].
+    ListWorkflowRuns {
+        /// The repo whose runs to list.
+        repo: Box<Repository>,
+        /// The page.
+        page: PageQuery,
+    },
 }
 
 /// The result of a [`GithubRequest`], in the variant of the same name.
@@ -121,6 +135,10 @@ pub enum GithubResponse {
     UnreadNotificationCount(Result<usize, GhError>),
     /// [`Github::repo_readme`].
     RepoReadme(Result<Option<String>, GhError>),
+    /// [`Github::list_workflows`].
+    ListWorkflows(Result<Vec<Workflow>, GhError>),
+    /// [`Github::list_workflow_runs`].
+    ListWorkflowRuns(Result<Vec<WorkflowRun>, GhError>),
 }
 
 impl GithubRequest {
@@ -137,6 +155,12 @@ impl GithubRequest {
                 GithubResponse::UnreadNotificationCount(gh.unread_notification_count().await)
             }
             GithubRequest::RepoReadme(full_name) => GithubResponse::RepoReadme(gh.repo_readme(&full_name).await),
+            GithubRequest::ListWorkflows { repo, page } => {
+                GithubResponse::ListWorkflows(gh.list_workflows(&repo, page).await)
+            }
+            GithubRequest::ListWorkflowRuns { repo, page } => {
+                GithubResponse::ListWorkflowRuns(gh.list_workflow_runs(&repo, page).await)
+            }
         }
     }
 }

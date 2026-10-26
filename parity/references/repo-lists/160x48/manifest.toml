@@ -4,8 +4,8 @@ size = "160x48"
 captures = ["loaded", "issues-page-2", "issues-page-3", "prs-maximized", "prs-page-2"]
 
 [inputs]
-scenario = "102866aaf914d7ab14440a5a1c251f80364c3e7b"
-fixtures = "a8f027b797c3e0a40d1994cf9a377dd25998b6bc"
+scenario = "dfc8a5e9467fd5b93387548c39cbee6a3886e0fe"
+fixtures = "58dea907841051dbcdd466eed2d8b9efa9035993"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "a42709a8f63e18b6ffbf05888ac70df13205cac1"
 

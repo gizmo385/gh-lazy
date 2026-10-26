@@ -77,10 +77,11 @@ impl Layout {
         }
     }
 
-    /// The header row.
+    /// The header row. A horizontal scrollbar takes the last row first, so in a table one row high it hides the
+    /// header, as in Textual.
     pub(crate) fn header(self) -> Rect {
         Rect {
-            height: self.table.height.min(1),
+            height: self.content_height().min(1),
             width: self.viewport_width_u16(),
             ..self.table
         }
@@ -101,11 +102,14 @@ impl Layout {
         u16::try_from(self.viewport_width).unwrap_or(self.table.width)
     }
 
+    /// The rows above any horizontal scrollbar: the header and the body.
     fn content_height(self) -> u16 {
-        // `body_height + 1` is at most the table's height.
-        u16::try_from(self.body_height + 1)
-            .unwrap_or(self.table.height)
-            .min(self.table.height)
+        let hbar = if self.horizontal_bar {
+            scrollbar::HORIZONTAL_HEIGHT
+        } else {
+            0
+        };
+        self.table.height.saturating_sub(hbar)
     }
 
     fn vertical_bar_rect(self) -> Rect {
@@ -373,6 +377,23 @@ mod tests {
         let layout = Layout::new(Rect::new(0, 0, 20, 4), 19, 10);
         assert!(layout.vertical_bar && layout.horizontal_bar);
         assert_eq!((layout.viewport_width, layout.body_height), (18, 2));
+    }
+
+    #[test]
+    fn a_horizontal_scrollbar_in_one_row_hides_the_header() {
+        // A compact section's one interior row, with columns wider than it: Textual draws only the scrollbar.
+        let layout = Layout::new(Rect::new(1, 26, 38, 1), 60, 0);
+        assert!(layout.horizontal_bar);
+        assert_eq!(layout.table, Rect::new(1, 26, 38, 1));
+        assert_eq!(layout.header().height, 0);
+        assert_eq!(
+            layout.horizontal_bar_rect(),
+            Rect::new(1, 26, layout.viewport_width_u16(), 1)
+        );
+        // With room for it, the header is above the scrollbar.
+        let layout = Layout::new(Rect::new(1, 26, 38, 2), 60, 0);
+        assert_eq!(layout.header(), Rect::new(1, 26, 38, 1));
+        assert_eq!(layout.horizontal_bar_rect(), Rect::new(1, 27, 38, 1));
     }
 
     #[test]

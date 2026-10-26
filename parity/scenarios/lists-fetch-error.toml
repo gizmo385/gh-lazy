@@ -1,11 +1,13 @@
 version = 1
-description = "The first issues-endpoint page fails: the PR table's loading overlay, then an empty, compact section and one error line in the command log, with no toast"
+description = "The first issues-endpoint page, the workflows and the runs fail: the loading overlays, then empty, compact PR, Issues and Workflows sections and one error line per failed request in the command log, with no toast"
 gate = true
 parity_rows = [
   "pull-requests.loading",
   "issues.loading",
   "main-layout.empty-section-collapse",
   "main-layout.loading-spinner",
+  "workflows.loading",
+  "workflows.list-workflows",
 ]
 sizes = [[160, 48]]
 
@@ -25,24 +27,37 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Loading...", timeout_ms = 15000 }
 
-# The Workflows box is #173's; the last of #171, #172 and #173 adds `titles`. The log's lines carry the time, which
-# differs between the apps, so the expectations check the line.
+# The log's lines carry the time, which differs between the apps, so the expectations check the line.
 [[step]]
 capture = "loading"
-checks = ["headers", "rows", "focus"]
-ignore = { boxes = ["Details", "Workflows", "Command Log"] }
+checks = ["titles", "headers", "rows", "focus"]
+ignore = { boxes = ["Details", "Command Log"] }
 
 [[step]]
 wait = { regex = 'ERROR \d{4}-\d\d-\d\d \d\d:\d\d:\d\d - API Error fetching issues and PRs from Github API', timeout_ms = 15000 }
 
+# The workflows and the runs fail together, in either order.
+[[step]]
+wait = { regex = 'ERROR \d{4}-\d\d-\d\d \d\d:\d\d:\d\d - Error retrieving actions from the Github API', timeout_ms = 15000 }
+
+[[step]]
+wait = { regex = 'ERROR \d{4}-\d\d-\d\d \d\d:\d\d:\d\d - Error retrieving action runs from the Github API', timeout_ms = 15000 }
+
 [[step]]
 capture = "error"
-checks = ["headers", "rows", "focus"]
-ignore = { boxes = ["Details", "Workflows", "Command Log"] }
+checks = ["titles", "headers", "rows", "focus"]
+ignore = { boxes = ["Details", "Command Log"] }
 
 [expect.loading]
 contains = ["Loading..."]
 
 [expect.error]
-contains = ["[2] Pull Requests (empty)", "[3] Issues (empty)", "API Error fetching issues and PRs from Github API"]
+contains = [
+  "[2] Pull Requests (empty)",
+  "[3] Issues (empty)",
+  "[4] Workflows (empty)",
+  "API Error fetching issues and PRs from Github API",
+  "Error retrieving actions from the Github API",
+  "Error retrieving action runs from the Github API",
+]
 not_contains = ["Traceback"]

@@ -122,7 +122,7 @@ fn borders_follow_focus() {
         [fg(&mut screen, 0, 3), fg(&mut screen, 40, 3), fg(&mut screen, 0, 9)],
         [unfocused, success, unfocused]
     );
-    screen.set_focus(FocusTarget::Search(SectionId::Workflows));
+    screen.set_focus(FocusTarget::Table(SectionId::Workflows));
     assert_eq!(fg(&mut screen, 0, 22), success);
 }
 
@@ -898,10 +898,19 @@ fn table_keys_move_the_cursor_quietly_and_select_selects() {
     assert_eq!(out, "INFO Selected repo parity-bot/lazy-demo\n");
     // The columns fit, so `l` falls through the whole chain.
     assert!(app.app_mut().action_for(Event::Key(key_event("l"))).is_none());
-    // The only effects are the selection's PR and issue first page, and the overview's README.
+    // The only effects are the selection's PR and issue first page, the workflows and runs, and the overview's
+    // README.
     let [
         Effect::Github {
             request: GithubRequest::ListIssues { repo, query },
+            ..
+        },
+        Effect::Github {
+            request: GithubRequest::ListWorkflows { .. },
+            ..
+        },
+        Effect::Github {
+            request: GithubRequest::ListWorkflowRuns { .. },
             ..
         },
         Effect::Github {
@@ -1690,7 +1699,6 @@ fn the_current_directory_match_ignores_ascii_case() {
     assert!(app.screen(100, 30).contains("Current repo: parity-bot/dotfiles"));
 }
 
-/// A stub section marked compact: three rows, titled with a dim ` (empty)`.
 /// A repo selected whose first page is empty, so the PR section is compact.
 fn compact_prs() -> TestApp {
     let mut app = with_repos(Config::default(), octo_repos());
@@ -1887,4 +1895,87 @@ fn issues_focus_key_focuses_the_table() {
     app.press(&["j"]);
     let issues = app.app().main_screen().unwrap().issue_lists.issues_table();
     assert_eq!(issues.selected().map(|issue| issue.number), Some(7));
+}
+
+// The workflows section (#173).
+
+use super::workflows::run;
+
+/// `octo/one` selected, with an in-progress, a completed and a queued run.
+fn runs_loaded() -> TestApp {
+    let repo = repos::repo("octo", "one", false);
+    let mut queued = run(&repo, 3, "Lint", 7, "2026-10-19T23:59:00Z", None, "Queued lint");
+    queued.status = "queued".into();
+    let page = vec![
+        run(&repo, 1, "CI", 13, "2026-10-21T09:00:05Z", None, "In flight"),
+        run(
+            &repo,
+            2,
+            "CI",
+            12,
+            "2026-10-20T10:15:00Z",
+            Some("success"),
+            "Fix the thing",
+        ),
+        queued,
+    ];
+    let gh = FakeGithub::new()
+        .with_repositories(octo_repos())
+        .with_run_page("octo/one", 1, Ok(page));
+    let mut app = TestApp::with_github(Config::default(), gh);
+    app.press(&["enter"]);
+    settle_logged(&mut app);
+    app
+}
+
+#[test]
+fn workflows_section_100x30() {
+    let mut app = runs_loaded();
+    // Maximized, every column shows.
+    app.press(&["4", "M"]);
+    app.advance(std::time::Duration::from_secs(5));
+    let maximized = app.screen(100, 30);
+    for row in [
+        "Time              Result       Job Name  Run Name       Run #",
+        "2026-10-21 09:00  in_progress  CI        In flight      13",
+        "2026-10-20 10:15  success      CI        Fix the thing  12",
+        "2026-10-19 23:59  queued       Lint      Queued lint    7",
+    ] {
+        assert!(maximized.contains(row), "{row}\n{maximized}");
+    }
+    app.press(&["escape"]);
+    let screen = app.screen(100, 30);
+    assert!(screen.contains("┌─ [4] Workflows ──"), "{screen}");
+    assert!(!screen.contains("Workflows (empty)"), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn workflows_compact_100x30() {
+    // `octo/two` has no runs.
+    let gh = FakeGithub::new().with_repositories(octo_repos());
+    let mut app = TestApp::with_github(Config::default(), gh);
+    app.press(&["j", "enter"]);
+    settle_logged(&mut app);
+    let screen = app.screen(100, 30);
+    assert!(screen.contains("┌─ [4] Workflows (empty) ──"), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn workflows_loading_100x30() {
+    let gh = FakeGithub::new().with_repositories(octo_repos());
+    let mut app = TestApp::with_github(Config::default(), gh);
+    app.press(&["enter"]);
+    let screen = app.screen(100, 30);
+    let rows: Vec<&str> = screen.lines().collect();
+    let title = rows
+        .iter()
+        .position(|row| row.starts_with("┌─ [4] Workflows"))
+        .expect("the Workflows box");
+    assert!(
+        rows[title + 1..].iter().take(5).any(|row| row.contains("Loading...")),
+        "{screen}"
+    );
+    insta::assert_snapshot!(screen);
 }

@@ -8,8 +8,10 @@ mod issue;
 mod repo_name;
 mod repository;
 mod user;
+mod workflow;
 
 pub use issue::{Issue, IssueListItem, IssueState, PartialPullRequest};
 pub use repo_name::RepoName;
 pub use repository::{Repository, RepositoryPermission};
 pub use user::User;
+pub use workflow::{Workflow, WorkflowRun, WorkflowState};

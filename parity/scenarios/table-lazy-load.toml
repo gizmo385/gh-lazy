@@ -13,9 +13,7 @@ sizes = [[160, 48]]
 [env]
 # prs-70's /user/repos page 1 is base's three repos plus parity-bot/lazy-fixture.
 fixtures = ["prs-70", "base"]
-# Workflows is hidden so the PR box is as tall in both apps: Python collapses an empty section, and Rust's stub
-# section can't until #173, which removes this override. prs-70's first page is all PRs, so Issues is ` (empty)`.
-config_overrides = { appearance = { show_workflows = false } }
+# prs-70's first page is all PRs and lazy-fixture has no runs, so Issues and Workflows are ` (empty)`.
 
 [[step]]
 wait = { text = "Pull Requests", timeout_ms = 15000 }

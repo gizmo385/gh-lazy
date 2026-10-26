@@ -14,21 +14,21 @@ expression: screen
 │                                      ││  ────────────────────────────────────────────────────    │
 │                                      ││                                                          │
 │                                      ││  Name Value                                              │
-└──────────────────────────────────────┘│                                                          │
-┌─ [2] Pull Requests (empty) ──────────┐│  a 1                                                     │
+│                                      ││                                                          │
+│                                      ││  a 1                                                     │
+│                                      ││                                                          │
+│                                      ││  Options                                                 │
+│                                      ││                                                          │
+│                                      ││  Option Description                                      │
+│                                      ││                                                        ▂▂│
+└──────────────────────────────────────┘│  --verbose Prints every request and response while it    │
+┌─ [2] Pull Requests (empty) ──────────┐│  runs, which is a lot of output for a long session.      │
 │ #  Status  Author  Title             ││                                                          │
-└──────────────────────────────────────┘│  Options                                                 │
+└──────────────────────────────────────┘│  -q Quiet.                                               │
 ┌─ [3] Issues (empty) ─────────────────┐│                                                          │
-│ #  Status  Author  Title             ││  Option Description                                      │
-└──────────────────────────────────────┘│                                                        ▂▂│
-┌─ [4] Workflows ──────────────────────┐│  --verbose Prints every request and response while it    │
-│                                      ││  runs, which is a lot of output for a long session.      │
-│                                      ││                                                          │
-│                                      ││  -q Quiet.                                               │
-│                                      ││                                                          │
-│                                      ││  Notes                                                   │
-│                                      ││                                                          │
-│                                      ││  The last paragraph.                                     │
-│                                      ││                                                          │
+│ #  Status  Author  Title             ││  Notes                                                   │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows (empty) ──────────────┐│  The last paragraph.                                     │
+│                               ▋      ││                                                          │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  ? Ke

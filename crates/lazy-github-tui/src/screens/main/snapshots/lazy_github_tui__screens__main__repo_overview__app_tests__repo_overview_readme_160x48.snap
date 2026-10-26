@@ -23,14 +23,14 @@ expression: "app.screen(160, 48)"
 │                                                              ││  A first repository for trying things out, with bold, italic, inline code and a link.        │
 │                                                              ││  This line continues the same paragraph.                                                     │
 │                                                              ││                                                                                              │
-└──────────────────────────────────────────────────────────────┘│                                                                                              │
-┌─ [2] Pull Requests (empty) ──────────────────────────────────┐│  Install                                                                                     │
-│ #  Status  Author  Title                                     ││                                                                                              │
-└──────────────────────────────────────────────────────────────┘│   1. Clone the repo                                                                          │
-┌─ [3] Issues (empty) ─────────────────────────────────────────┐│   2. Run make install                                                                        │
-│ #  Status  Author  Title                                     ││                                                                                              │
-└──────────────────────────────────────────────────────────────┘│  • one                                                                                       │
-┌─ [4] Workflows ──────────────────────────────────────────────┐│  • two                                                                                       │
+│                                                              ││                                                                                              │
+│                                                              ││  Install                                                                                     │
+│                                                              ││                                                                                              │
+│                                                              ││   1. Clone the repo                                                                          │
+│                                                              ││   2. Run make install                                                                        │
+│                                                              ││                                                                                              │
+│                                                              ││  • one                                                                                       │
+│                                                              ││  • two                                                                                       │
 │                                                              ││    ▪ nested under two                                                                        │
 │                                                              ││                                                                                              │
 │                                                              ││  ▌ A quoted line.                                                                            │
@@ -39,14 +39,14 @@ expression: "app.screen(160, 48)"
 │                                                              ││    echo hello                                                                                │
 │                                                              ││    echo world                                                                                │
 │                                                              ││                                                                                            ▁▁│
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││  ────────────────────────────────────────────────────────────────────────────────────────    │
-│                                                              ││                                                                                              │
-│                                                              ││  Name Value                                                                                  │
-│                                                              ││                                                                                              │
-│                                                              ││  a 1                                                                                         │
-│                                                              ││                                                                                              │
-│                                                              ││  Options                                                                                     │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [2] Pull Requests (empty) ──────────────────────────────────┐│                                                                                              │
+│ #  Status  Author  Title                                     ││  ────────────────────────────────────────────────────────────────────────────────────────    │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [3] Issues (empty) ─────────────────────────────────────────┐│  Name Value                                                                                  │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│  a 1                                                                                         │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││  Options                                                                                     │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Comman

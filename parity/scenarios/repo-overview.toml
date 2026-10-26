@@ -1,10 +1,11 @@
 version = 1
 description = "Repo Overview tab: header lines, the README rendered as markdown, its loading state, scrolling, and the no-README fallback"
-# Flipped to true by #219, the Repo Overview tab. No capture checks `tabs`: after a selection, Python
-# sometimes draws the Details tab underline zero-width (#209), which isn't even read as a tab bar, so the tab name is
-# in [expect] `contains` instead. The cross-app check doesn't compare markdown text, so [expect] carries the README's
-# content, and the renderer's own tests compare it cell by cell against these references.
-gate = false
+# Gated once #172 and #173 drew the empty Issues and Workflows sections as ` (empty)`, as the titles check needs. No
+# capture checks `tabs`: after a selection, Python sometimes draws the Details tab underline zero-width (#209), which
+# isn't even read as a tab bar, so the tab name is in [expect] `contains` instead. The cross-app check doesn't compare
+# markdown text, so [expect] carries the README's content, and the renderer's own tests compare it cell by cell against
+# these references.
+gate = true
 parity_rows = [
     "repositories.overview-tab",
     "repositories.overview-readme-loading",

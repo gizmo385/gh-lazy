@@ -293,6 +293,14 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
 - `lists-error/`: `parity-bot/dotfiles`' `issues` page 1 (`state=all`), `actions/workflows` page 1 and `actions/runs`
   page 1, each answered with a 500 (`{"message": "Server Error"}`) after 1.5 s. Listed before `repo-selected-empty`
   (the README) and `base`, for the `lists-fetch-error` scenario. Hand-written.
+- `workflow-runs/`: the repo `parity-bot/ci-fixture`, listed first on base's `GET /user/repos` page, with 38 workflow
+  runs, newest first, over `GET /repos/parity-bot/ci-fixture/actions/runs` pages of 30 (30, 8, then an empty page 3)
+  and three workflows (`CI`, `Lint`, `Release`) on `actions/workflows` page 1. Run numbers are unique across the
+  workflows (CI from 101, Lint from 201, Release from 301). The newest run, `Ship the workflow runs table`, is
+  `in_progress` and the next `queued`, both with a null `conclusion`; the rest mix `success`, `failure`, `cancelled`
+  and `skipped`. On page 1 the 5th and 6th runs share a minute, the earlier second listed first, which pins the sort to
+  the `Time` string. Plus its README and an empty issues page 1. Listed before `base`, for the `workflow-runs`
+  scenario. Hand-written.
 
 ## Recording fixtures
 

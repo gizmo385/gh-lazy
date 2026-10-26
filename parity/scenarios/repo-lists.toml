@@ -17,9 +17,6 @@ sizes = [[160, 48]]
 # repo-lists adds parity-bot/browse-fixture as the first repo: numbers 100 to 36 over three issues-endpoint pages, where
 # a number divisible by 3 is a pull request and the rest are issues.
 fixtures = ["repo-lists", "base"]
-# Workflows is hidden so the PR box is as tall in both apps: Python collapses an empty section, and Rust's stub
-# section can't until #173, which removes this override.
-config_overrides = { appearance = { show_workflows = false } }
 
 [[step]]
 wait = { text = "browse-fixture", timeout_ms = 15000 }
@@ -30,11 +27,10 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Browse fixture pull request 99", timeout_ms = 15000 }
 
-# Python sometimes draws the Details tab underline zero-width after a selection (#209). `titles` stays out until #173
-# lands and adds it.
+# Python sometimes draws the Details tab underline zero-width after a selection (#209).
 [[step]]
 capture = "loaded"
-checks = ["headers", "rows", "cursor", "focus"]
+checks = ["titles", "headers", "rows", "cursor", "focus"]
 ignore = { boxes = ["Details"] }
 
 # The Issues table's 20 issues from the shared first page: G puts the cursor on issue 71 (row 20 of 20), which asks for

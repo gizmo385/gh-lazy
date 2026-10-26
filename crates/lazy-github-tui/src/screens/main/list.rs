@@ -44,10 +44,6 @@ pub(super) enum PageFailure {
     Retry,
     /// The failure counts as an empty last page, which ends paging: Python's workflow fetchers return `[]` on an
     /// HTTP error.
-    #[cfg_attr(
-        not(test),
-        expect(dead_code, reason = "#173's workflow sections end paging on a failed page")
-    )]
     End,
 }
 

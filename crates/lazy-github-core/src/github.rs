@@ -15,7 +15,7 @@ use tokio::sync::OnceCell;
 
 use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts};
-use crate::models::{IssueListItem, Repository, User};
+use crate::models::{IssueListItem, Repository, User, Workflow, WorkflowRun};
 
 #[cfg(any(test, feature = "test-util"))]
 mod fake;
@@ -72,6 +72,58 @@ pub trait Github: Clone + Send + Sync + 'static {
     ///
     /// Fails on any other HTTP error status or `gh` failure.
     fn repo_readme(&self, full_name: &str) -> impl Future<Output = Result<Option<String>, GhError>> + Send;
+
+    /// One page of `repo`'s Actions workflows, in API order. Never cached.
+    ///
+    /// A body without a `workflows` list (missing or `null`) is an empty page. Fails on an HTTP error status, or with
+    /// [`GhError::Decode`] when the body or any workflow doesn't decode.
+    fn list_workflows(
+        &self,
+        repo: &Repository,
+        page: PageQuery,
+    ) -> impl Future<Output = Result<Vec<Workflow>, GhError>> + Send;
+
+    /// One page of `repo`'s workflow runs, newest first as the API lists them. Never cached.
+    ///
+    /// A body without a `workflow_runs` list (missing or `null`) is an empty page. Fails on an HTTP error status, or
+    /// with [`GhError::Decode`] when the body or any run doesn't decode.
+    fn list_workflow_runs(
+        &self,
+        repo: &Repository,
+        page: PageQuery,
+    ) -> impl Future<Output = Result<Vec<WorkflowRun>, GhError>> + Send;
+}
+
+/// Page size for the paged endpoints that take a [`PageQuery`]: Python's default `per_page`.
+pub const DEFAULT_PER_PAGE: u32 = 30;
+
+/// Which page of a paged endpoint to fetch.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PageQuery {
+    /// The page, from 1.
+    pub page: u32,
+    /// Items per page.
+    pub per_page: u32,
+}
+
+impl Default for PageQuery {
+    /// Page 1 of [`DEFAULT_PER_PAGE`] items.
+    fn default() -> Self {
+        Self {
+            page: 1,
+            per_page: DEFAULT_PER_PAGE,
+        }
+    }
+}
+
+impl PageQuery {
+    /// The `page` and `per_page` query parameters, in that order.
+    fn params(self) -> Vec<(String, String)> {
+        vec![
+            ("page".to_owned(), self.page.to_string()),
+            ("per_page".to_owned(), self.per_page.to_string()),
+        ]
+    }
 }
 
 /// Which repositories [`Github::list_repositories`] returns, by the user's relationship to them.
@@ -361,6 +413,13 @@ impl GhCli {
         request
     }
 
+    /// One page of `GET /repos/{owner}/{repo}/actions/{what}`, uncached: Python sends no `Cache-Control` here.
+    fn actions_request(repo: &Repository, what: &str, page: PageQuery) -> GhRequest {
+        let mut request = GhRequest::get(format!("/repos/{}/{}/actions/{what}", repo.owner.login, repo.name));
+        request.query = page.params();
+        request
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -425,6 +484,46 @@ impl Github for GhCli {
     async fn repo_readme(&self, full_name: &str) -> Result<Option<String>, GhError> {
         readme_text(self.inner.runner.request(self.repo_readme_request(full_name)).await)
     }
+
+    async fn list_workflows(&self, repo: &Repository, page: PageQuery) -> Result<Vec<Workflow>, GhError> {
+        let response = self
+            .inner
+            .runner
+            .request(Self::actions_request(repo, "workflows", page))
+            .await?;
+        workflows(&response)
+    }
+
+    async fn list_workflow_runs(&self, repo: &Repository, page: PageQuery) -> Result<Vec<WorkflowRun>, GhError> {
+        let response = self
+            .inner
+            .runner
+            .request(Self::actions_request(repo, "runs", page))
+            .await?;
+        workflow_runs(&response)
+    }
+}
+
+/// The `workflows` body of `GET .../actions/workflows`.
+#[derive(serde::Deserialize)]
+struct WorkflowsBody {
+    #[serde(default)]
+    workflows: Option<Vec<Workflow>>,
+}
+
+/// The `workflow_runs` body of `GET .../actions/runs`.
+#[derive(serde::Deserialize)]
+struct WorkflowRunsBody {
+    #[serde(default)]
+    workflow_runs: Option<Vec<WorkflowRun>>,
+}
+
+fn workflows(response: &GhResponse) -> Result<Vec<Workflow>, GhError> {
+    Ok(response.json::<WorkflowsBody>()?.workflows.unwrap_or_default())
+}
+
+fn workflow_runs(response: &GhResponse) -> Result<Vec<WorkflowRun>, GhError> {
+    Ok(response.json::<WorkflowRunsBody>()?.workflow_runs.unwrap_or_default())
 }
 
 /// A README response as the README: the body verbatim, `None` for a 404.
@@ -951,6 +1050,128 @@ mod tests {
                 "-H",
                 "Accept: application/vnd.github.raw",
                 "/repos/parity-bot/dotfiles/readme"
+            ]
+        );
+    }
+
+    #[test]
+    fn list_workflows_and_runs_argv() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        let argv = |what: &str, page: PageQuery| {
+            strings(GhCli::actions_request(&lazy_fixture(), what, page).argv(gh.runner().hostname(), false))
+        };
+        // No `--cache` and no `--paginate`: Python sends no `Cache-Control`, and tables page themselves.
+        assert_eq!(
+            argv("workflows", PageQuery::default()),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/lazy-fixture/actions/workflows?page=1&per_page=30"
+            ]
+        );
+        assert_eq!(
+            argv("runs", PageQuery { page: 2, per_page: 30 }),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/lazy-fixture/actions/runs?page=2&per_page=30"
+            ]
+        );
+    }
+
+    #[test]
+    fn empty_missing_and_null_workflow_lists_are_empty() {
+        let runs = parity_response(
+            "prs-70",
+            "repos/parity-bot/lazy-fixture/actions/runs/GET.page-1_per_page-30.json",
+        );
+        assert!(workflow_runs(&runs).unwrap().is_empty());
+        let listed = parity_response(
+            "prs-70",
+            "repos/parity-bot/lazy-fixture/actions/workflows/GET.page-1_per_page-30.json",
+        );
+        assert!(workflows(&listed).unwrap().is_empty());
+        for body in [r#"{"total_count": 0}"#, r#"{"workflow_runs": null, "workflows": null}"#] {
+            assert!(workflow_runs(&api_response(body)).unwrap().is_empty(), "{body}");
+            assert!(workflows(&api_response(body)).unwrap().is_empty(), "{body}");
+        }
+        assert!(matches!(
+            workflow_runs(&api_response(r#""text""#)),
+            Err(GhError::Decode(_))
+        ));
+        assert!(matches!(
+            workflow_runs(&api_response(r#"{"workflow_runs": [{"id": 1}]}"#)),
+            Err(GhError::Decode(_))
+        ));
+    }
+
+    #[test]
+    fn workflow_runs_page_decodes() {
+        let path = "repos/parity-bot/ci-fixture/actions";
+        let runs = workflow_runs(&parity_response(
+            "workflow-runs",
+            &format!("{path}/runs/GET.page-1_per_page-30.json"),
+        ))
+        .unwrap();
+        assert_eq!(runs.len(), 30);
+        let newest = &runs[0];
+        assert_eq!(newest.display_title, "Ship runs table");
+        assert_eq!(newest.name, "CI");
+        assert_eq!(newest.status, "in_progress");
+        assert_eq!(newest.conclusion, None);
+        assert_eq!(newest.run_attempt, Some(1));
+        assert_eq!(newest.actor.login, "parity-bot");
+        assert_eq!(newest.repository.full_name, "parity-bot/ci-fixture");
+        assert_eq!(newest.created_at.to_string(), "2026-10-22T18:30:00Z");
+        assert_eq!(runs[1].status, "queued");
+        assert_eq!(runs[2].conclusion.as_deref(), Some("success"));
+        let page_2 = workflow_runs(&parity_response(
+            "workflow-runs",
+            &format!("{path}/runs/GET.page-2_per_page-30.json"),
+        ))
+        .unwrap();
+        assert_eq!(page_2.len(), 8);
+        let page_3 = workflow_runs(&parity_response(
+            "workflow-runs",
+            &format!("{path}/runs/GET.page-3_per_page-30.json"),
+        ))
+        .unwrap();
+        assert!(page_3.is_empty());
+
+        let listed = workflows(&parity_response(
+            "workflow-runs",
+            &format!("{path}/workflows/GET.page-1_per_page-30.json"),
+        ))
+        .unwrap();
+        let names: Vec<&str> = listed.iter().map(|workflow| workflow.name.as_str()).collect();
+        assert_eq!(names, ["CI", "Lint", "Release"]);
+        assert_eq!(listed[0].state, crate::models::WorkflowState::Active);
+        assert_eq!(listed[0].path, ".github/workflows/ci.yml");
+    }
+
+    #[test]
+    fn workflow_states_use_the_api_spelling() {
+        use crate::models::WorkflowState;
+        let states: Vec<WorkflowState> = serde_json::from_str(
+            r#"["active", "deleted", "disabled_fork", "disabled_inactivity", "disabled_manually"]"#,
+        )
+        .unwrap();
+        assert_eq!(
+            states,
+            [
+                WorkflowState::Active,
+                WorkflowState::Deleted,
+                WorkflowState::DisabledFork,
+                WorkflowState::DisabledInactivity,
+                WorkflowState::DisabledManually,
             ]
         );
     }

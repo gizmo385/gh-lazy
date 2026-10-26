@@ -26,7 +26,7 @@ expression: "screen(Config::default(), 50, 30)"
 │                  ││  issues, pull requests,    │
 └──────────────────┘│  and action workflows      │
 ┌─ [4] Workflows ──┐│  will be retrieved and     │
-│                  ││  displayed below it.       │
+│ Time  Result  Job││  displayed below it.       │
 │                  ││                            │
 │                  ││  Issues, pull requests,    │
 │                  ││  and action lists can      │

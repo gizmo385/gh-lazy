@@ -11,6 +11,7 @@ mod repo_overview;
 mod repos;
 mod section_table;
 mod sections;
+mod workflows;
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::AppearanceSettings;
@@ -39,6 +40,7 @@ use layout::{LayoutInput, layout};
 pub use repos::{RepoCells, ReposSection};
 use section_table::{SectionEvent, SectionTable, earliest_deadline};
 use sections::{EMPTY_SUFFIX, titled_box};
+use workflows::WorkflowsPane;
 
 /// The four selection sections, top to bottom.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -215,10 +217,6 @@ pub const LOG_BINDINGS: &[BindingId] = &[
     BindingId::TextualScrollPageRight,
 ];
 
-/// The rows an empty `DataTable` draws: its header row. The sections without a table yet take clicks on this row
-/// only, and maximized they're this tall. The last of #171, #172 and #173 to mount its table deletes it.
-const EMPTY_TABLE_HEIGHT: u16 = 1;
-
 /// The main screen.
 #[derive(Debug)]
 pub struct MainScreen {
@@ -232,7 +230,8 @@ pub struct MainScreen {
     command_log: CommandLog,
     repos: ReposSection,
     issue_lists: IssueLists,
-    /// Where each mounted section's table component was drawn in the last frame, by [`SectionId::index`]: the box's
+    workflows: WorkflowsPane,
+    /// Where each section's table component was drawn in the last frame, by [`SectionId::index`]: the box's
     /// interior, or the maximized rect. `None` when it wasn't drawn.
     table_areas: [Option<Rect>; 4],
     /// Where each focus target was drawn last, for clicks: the interiors of the boxes, not their borders.
@@ -291,6 +290,7 @@ impl MainScreen {
             command_log: CommandLog::new(appearance.show_command_log),
             repos: ReposSection::new(theme, options),
             issue_lists: IssueLists::new(options),
+            workflows: WorkflowsPane::new(options),
             table_areas: [None; 4],
             hits: Vec::new(),
         }
@@ -309,7 +309,7 @@ impl MainScreen {
             self.issue_lists.load_repo(repo, cx);
         }
         if self.section(SectionId::Workflows).shown() {
-            // #173: workflows and runs.
+            self.workflows.load_repo(repo, cx);
         }
         self.details.show_repo(repo, cx);
         self.details_title = format!(
@@ -344,11 +344,11 @@ impl MainScreen {
     }
 
     /// Takes a response to one of the screen's requests, and hands back any other: the repos section is offered it
-    /// first, then each mounted section's pane.
+    /// first, then each section's pane.
     pub fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
-        // #173 offers what's left to the workflows pane.
         let response = self.repos.on_response(id, response, cx)?;
         let response = self.issue_lists.on_response(id, response, cx)?;
+        let response = self.workflows.on_response(id, response, cx)?;
         self.details.on_response(id, response)
     }
 
@@ -357,9 +357,9 @@ impl MainScreen {
         &self.repos
     }
 
-    /// The next animation frame on the screen, if anything animates: the earliest over every mounted table.
+    /// The next animation frame on the screen, if anything animates: the earliest over every table.
     pub fn next_deadline(&self, now: Instant) -> Option<Instant> {
-        earliest_deadline(SectionId::ALL.into_iter().filter_map(|id| self.table(id)), now)
+        earliest_deadline(SectionId::ALL.into_iter().map(|id| self.table(id)), now)
     }
 
     /// What has focus.
@@ -380,47 +380,44 @@ impl MainScreen {
             return true;
         }
         if let FocusTarget::Search(id) = target
-            && let Some(table) = self.table_mut(id)
-            && !table.focus_search()
+            && !self.table_mut(id).focus_search()
         {
             return false;
         }
-        if let FocusTarget::Search(id) = self.focus
-            && let Some(table) = self.table_mut(id)
-        {
-            table.focus_table();
+        if let FocusTarget::Search(id) = self.focus {
+            self.table_mut(id).focus_table();
         }
         self.focus = target;
         true
     }
 
-    /// The section's table, once it's mounted. #173 mounts the workflows one.
-    fn table_mut(&mut self, id: SectionId) -> Option<&mut dyn SectionTable> {
+    /// The section's table.
+    fn table_mut(&mut self, id: SectionId) -> &mut dyn SectionTable {
         match id {
-            SectionId::Repos => Some(&mut self.repos.table),
-            SectionId::PullRequests => Some(self.issue_lists.prs_table_mut()),
-            SectionId::Issues => Some(self.issue_lists.issues_table_mut()),
-            SectionId::Workflows => None,
+            SectionId::Repos => &mut self.repos.table,
+            SectionId::PullRequests => self.issue_lists.prs_table_mut(),
+            SectionId::Issues => self.issue_lists.issues_table_mut(),
+            SectionId::Workflows => self.workflows.runs_table_mut(),
         }
     }
 
-    fn table(&self, id: SectionId) -> Option<&dyn SectionTable> {
+    fn table(&self, id: SectionId) -> &dyn SectionTable {
         match id {
-            SectionId::Repos => Some(&self.repos.table),
-            SectionId::PullRequests => Some(self.issue_lists.prs_table()),
-            SectionId::Issues => Some(self.issue_lists.issues_table()),
-            SectionId::Workflows => None,
+            SectionId::Repos => &self.repos.table,
+            SectionId::PullRequests => self.issue_lists.prs_table(),
+            SectionId::Issues => self.issue_lists.issues_table(),
+            SectionId::Workflows => self.workflows.runs_table(),
         }
     }
 
-    /// Whether a section is compact: a mounted list section's own flag, as of its last `refresh_compact`, else the
-    /// stored one.
+    /// Whether a section is compact: a list section's own flag, as of its last `refresh_compact`, else the stored
+    /// one (the repos section's).
     fn compact(&self, id: SectionId) -> bool {
         match id {
             SectionId::PullRequests => self.issue_lists.prs_compact(),
             SectionId::Issues => self.issue_lists.issues_compact(),
-            // #173 reads its section's flag here.
-            SectionId::Repos | SectionId::Workflows => self.sections[id.index()].compact,
+            SectionId::Workflows => self.workflows.compact(),
+            SectionId::Repos => self.sections[id.index()].compact,
         }
     }
 
@@ -429,29 +426,27 @@ impl MainScreen {
         match section {
             SectionId::PullRequests => self.issue_lists.load_more_prs(generation, page, per_page, cx),
             SectionId::Issues => self.issue_lists.load_more_issues(generation, page, per_page, cx),
-            // The repos table isn't lazy; #173 routes its sections' asks here.
-            SectionId::Repos | SectionId::Workflows => {}
+            SectionId::Workflows => self.workflows.load_more(generation, page, per_page, cx),
+            // The repos table isn't lazy.
+            SectionId::Repos => {}
         }
     }
 
     /// Where the table itself (not its search box) was drawn in the last frame, which takes clicks.
     pub(crate) fn drawn_table_rect(&self, id: SectionId) -> Option<Rect> {
         let area = self.table_areas[id.index()]?;
-        Some(self.table(id)?.drawn_table_rect(area))
+        Some(self.table(id).drawn_table_rect(area))
     }
 
     /// `common.table.search`: shows the section's search box and focuses it, keeping its text.
     fn open_search(&mut self, id: SectionId) {
-        if let Some(table) = self.table_mut(id) {
-            table.open_search();
-        }
+        self.table_mut(id).open_search();
         self.move_focus(FocusTarget::Search(id));
     }
 
     /// Follows a change the table made to its own focus (a submit, a click), through [`Self::move_focus`].
     fn sync_table_focus(&mut self, id: SectionId) {
-        let Some(table) = self.table(id) else { return };
-        let target = match table.focus() {
+        let target = match self.table(id).focus() {
             TableFocus::Search => FocusTarget::Search(id),
             TableFocus::Table if self.focus == FocusTarget::Search(id) => FocusTarget::Table(id),
             TableFocus::Table => return,
@@ -464,7 +459,7 @@ impl MainScreen {
         let FocusTarget::Search(id) = self.focus else {
             return None;
         };
-        let table = self.table_mut(id)?;
+        let table = self.table_mut(id);
         if !table.consumes_key(key, keymap) {
             return None;
         }
@@ -479,7 +474,7 @@ impl MainScreen {
         let FocusTarget::Search(id) = self.focus else {
             return None;
         };
-        let handled = self.table_mut(id)?.handle_paste(text);
+        let handled = self.table_mut(id).handle_paste(text);
         handled.is_handled().then_some(Action::Consumed)
     }
 
@@ -537,10 +532,7 @@ impl MainScreen {
             .into_iter()
             .filter(|id| self.sections[id.index()].shown())
             .flat_map(|id| {
-                let search = self
-                    .table(id)
-                    .is_some_and(SectionTable::search_visible)
-                    .then_some(FocusTarget::Search(id));
+                let search = self.table(id).search_visible().then_some(FocusTarget::Search(id));
                 search.into_iter().chain([FocusTarget::Table(id)])
             });
         let details = self
@@ -587,14 +579,12 @@ impl MainScreen {
         let at = Position::new(mouse.column, mouse.row);
         let over = SectionId::ALL
             .into_iter()
-            .find(|&id| self.table_areas[id.index()].is_some_and(|area| area.contains(at)) && self.table(id).is_some());
+            .find(|&id| self.table_areas[id.index()].is_some_and(|area| area.contains(at)));
         // Moves elsewhere still reach the other tables, so their hover clears when the pointer leaves.
         if mouse.kind == MouseEventKind::Moved {
             for id in SectionId::ALL.into_iter().filter(|&id| Some(id) != over) {
                 let area = self.table_areas[id.index()].unwrap_or_default();
-                if let Some(table) = self.table_mut(id) {
-                    let _ = table.handle_mouse(mouse, area);
-                }
+                let _ = self.table_mut(id).handle_mouse(mouse, area);
             }
         }
         if let Some(id) = over {
@@ -606,7 +596,7 @@ impl MainScreen {
         }
     }
 
-    /// A mouse event over a mounted section's interior. A left press on the search box or the table focuses it: the
+    /// A mouse event over a section's interior. A left press on the search box or the table focuses it: the
     /// table moves its own focus, and the screen follows it.
     fn table_mouse(&mut self, id: SectionId, mouse: MouseEvent, at: Position) -> Option<Action> {
         let on_table = self.drawn_table_rect(id).is_some_and(|rect| rect.contains(at));
@@ -615,7 +605,7 @@ impl MainScreen {
             return None;
         }
         let area = self.table_areas[id.index()].unwrap_or_default();
-        let table = self.table_mut(id)?;
+        let table = self.table_mut(id);
         let overlay = table.overlay_shown();
         let handled = table.handle_mouse(mouse, area);
         let focus = table.focus();
@@ -696,7 +686,7 @@ impl MainScreen {
             }
             Owner::CommandLog => Scroll::from_binding(id).map(|scroll| Action::Main(MainAction::ScrollLog(scroll))),
             // The table is plain state, so it applies the binding now, as Textual runs the binding's action.
-            Owner::Table(section) if let Some(table) = self.table_mut(section) => match table.on_binding(id) {
+            Owner::Table(section) => match self.table_mut(section).on_binding(id) {
                 Handled::Event(SectionEvent::Selected) if section == SectionId::Repos => self
                     .repos
                     .table
@@ -706,18 +696,16 @@ impl MainScreen {
                     .or(Some(Action::Consumed)),
                 handled => table_outcome(section, handled),
             },
-            Owner::SearchableTable(section) if id == BindingId::TableSearch && self.table(section).is_some() => {
+            Owner::SearchableTable(section) if id == BindingId::TableSearch => {
                 self.open_search(section);
                 Some(Action::Consumed)
             }
             // `handle_focused_key` already gave the box every key it binds.
             Owner::SearchInput(_) => Some(Action::Consumed),
             // Not built yet: the key is still consumed, as in Python. With one tab, switching tabs is a no-op.
-            Owner::Table(_)
-            | Owner::SearchableTable(_)
-            | Owner::Section(_)
-            | Owner::SelectionsPane
-            | Owner::DetailsTabs => Some(Action::Unimplemented(id)),
+            Owner::SearchableTable(_) | Owner::Section(_) | Owner::SelectionsPane | Owner::DetailsTabs => {
+                Some(Action::Unimplemented(id))
+            }
             Owner::App | Owner::Screen(ScreenKind::Auth | ScreenKind::Modal(_)) | Owner::DialogField(..) => None,
         }
     }
@@ -754,10 +742,7 @@ impl MainScreen {
     pub fn render_maximized(&mut self, frame: &mut Frame<'_>, area: Rect, maximized: FocusTarget, cx: &RenderCx<'_>) {
         let theme = cx.theme;
         let natural_height = match maximized {
-            FocusTarget::Table(id) => Some(
-                self.table(id)
-                    .map_or(EMPTY_TABLE_HEIGHT, |table| table.bare_table_rect(area).height),
-            ),
+            FocusTarget::Table(id) => Some(self.table(id).bare_table_rect(area).height),
             FocusTarget::Search(_) => Some(text_input::HEIGHT),
             FocusTarget::DetailsTabs | FocusTarget::DetailsContent | FocusTarget::CommandLog => None,
         };
@@ -786,16 +771,15 @@ impl MainScreen {
                     focus_within: within,
                     ..*cx
                 };
-                if let Some(table) = self.table_mut(id) {
-                    if matches!(maximized, FocusTarget::Table(_)) {
-                        // Only the `DataTable`: the search box is outside it, even while it has focus. No loading
-                        // overlay either: Python's belongs to the container around it.
-                        table.render_table(frame, rect, &table_cx);
-                        self.table_areas[id.index()] = Some(rect);
-                    } else {
-                        // Only the `Input` (#156).
-                        table.render_search(frame, rect, &table_cx);
-                    }
+                let table = self.table_mut(id);
+                if matches!(maximized, FocusTarget::Table(_)) {
+                    // Only the `DataTable`: the search box is outside it, even while it has focus. No loading
+                    // overlay either: Python's belongs to the container around it.
+                    table.render_table(frame, rect, &table_cx);
+                    self.table_areas[id.index()] = Some(rect);
+                } else {
+                    // Only the `Input` (#156).
+                    table.render_search(frame, rect, &table_cx);
                 }
                 self.hits.push((rect, maximized));
             }
@@ -907,24 +891,16 @@ impl Component for MainScreen {
             frame.render_widget(title, rect);
             // Only the rows the `DataTable` draws take a click: below them is its unfocusable container.
             let inner = interior(rect);
-            let table_rect = match self.table_mut(id) {
-                Some(table) => {
-                    // The table draws the box or itself focused, by its own `TableFocus`.
-                    let cx = RenderCx {
-                        focused,
-                        focus_within: focused,
-                        ..*cx
-                    };
-                    table.render(frame, inner, &cx);
-                    let table_rect = table.table_rect(inner);
-                    self.table_areas[id.index()] = Some(inner);
-                    table_rect
-                }
-                None => Rect {
-                    height: inner.height.min(EMPTY_TABLE_HEIGHT),
-                    ..inner
-                },
+            // The table draws the box or itself focused, by its own `TableFocus`.
+            let table_cx = RenderCx {
+                focused,
+                focus_within: focused,
+                ..*cx
             };
+            let table = self.table_mut(id);
+            table.render(frame, inner, &table_cx);
+            let table_rect = table.table_rect(inner);
+            self.table_areas[id.index()] = Some(inner);
             self.hits.push((table_rect, FocusTarget::Table(id)));
         }
 

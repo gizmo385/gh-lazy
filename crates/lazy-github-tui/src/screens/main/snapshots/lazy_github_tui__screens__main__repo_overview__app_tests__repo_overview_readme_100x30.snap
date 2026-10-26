@@ -14,21 +14,21 @@ expression: "app.screen(100, 30)"
 │                                      ││                                                          │
 │                                      ││A first repository for trying things out.                 │
 │                                      ││                                                          │
-└──────────────────────────────────────┘│────────────────────────────────────────────────────────  │
-┌─ [2] Pull Requests (empty) ──────────┐│                                                          │
+│                                      ││────────────────────────────────────────────────────────  │
+│                                      ││                                                          │
+│                                      ││                                                          │
+│                                      ││                                                        ▆▆│
+│                                      ││                      Hello World                         │
+│                                      ││                                                          │
+│                                      ││  A first repository for trying things out, with bold,    │
+└──────────────────────────────────────┘│  italic, inline code and a link. This line continues     │
+┌─ [2] Pull Requests (empty) ──────────┐│  the same paragraph.                                     │
 │ #  Status  Author  Title             ││                                                          │
-└──────────────────────────────────────┘│                                                        ▆▆│
-┌─ [3] Issues (empty) ─────────────────┐│                      Hello World                         │
+└──────────────────────────────────────┘│                                                          │
+┌─ [3] Issues (empty) ─────────────────┐│  Install                                                 │
 │ #  Status  Author  Title             ││                                                          │
-└──────────────────────────────────────┘│  A first repository for trying things out, with bold,    │
-┌─ [4] Workflows ──────────────────────┐│  italic, inline code and a link. This line continues     │
-│                                      ││  the same paragraph.                                     │
-│                                      ││                                                          │
-│                                      ││                                                          │
-│                                      ││  Install                                                 │
-│                                      ││                                                          │
-│                                      ││   1. Clone the repo                                      │
-│                                      ││   2. Run make install                                    │
-│                                      ││                                                          │
+└──────────────────────────────────────┘│   1. Clone the repo                                      │
+┌─ [4] Workflows (empty) ──────────────┐│   2. Run make install                                    │
+│                               ▋      ││                                                          │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
  / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste lin

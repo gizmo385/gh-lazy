@@ -26,7 +26,7 @@ expression: "styled(&mut app, 100, 30)"
 │                   █                                                          █                   │
 └───────────────────█            ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔             █                   │
 ┌─ [4] Workflows ───█                 Lookup           Cancel                  █ its details,      │
-│                   █            ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁             █g in any active    │
+│ Time  Result  Job █            ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁             █g in any active    │
 │                   █                                                          █u can also         │
 │                   █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ected repo.        │
 │                                      ││                                                          │
@@ -57,12 +57,12 @@ eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddb
 eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaBBe
 eeeeeeeeeeeeeeeeeeeebddddddddddddCCCCCCCCCCCCCCCCdDDDDDDDDDDDDDDDDdddddddddddddbaaaaaaaaaaaaaaaaaBBe
 eeeeeeeeeeeeeeeeeeeebddddddddddddEEEEFFFFFFFFEEEEdGGGGHHHHHHHHGGGGdddddddddddddbaaaaaaaaaaaaaaaaaBBe
-eaaaaaaaaaaaaaaaaaaabddddddddddddIIIIIIIIIIIIIIIIdJJJJJJJJJJJJJJJJdddddddddddddbaaaaaaaaaaaaaaaaaBBe
-eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaBBe
+esssssssssssssssssssbddddddddddddIIIIIIIIIIIIIIIIdJJJJJJJJJJJJJJJJdddddddddddddbaaaaaaaaaaaaaaaaaBBe
+eKKKKKKKKKKKKKKKKKKKbddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaBBe
 eaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaBBe
 eaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBBe
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-KKKKKKKKKLLLLLLLKKKLLLLLLMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+LLLLLLLLLMMMMMMMLLLMMMMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
 --- legend
 . fg=#0e1a22 bg=#121212
 a fg=#323232 bg=#121212
@@ -101,6 +101,7 @@ G fg=#6c6668 bg=#54222f
 H fg=#6c6668 bg=#54222f BOLD
 I fg=#0a3e21 bg=#2a5738
 J fg=#3a0a1a bg=#54222f
-K fg=#ffa62b bg=#242f38 BOLD
-L fg=#e0e0e0 bg=#242f38
-M fg=Reset bg=#242f38
+K fg=#0e161c bg=#131313 REVERSED
+L fg=#ffa62b bg=#242f38 BOLD
+M fg=#e0e0e0 bg=#242f38
+N fg=Reset bg=#242f38

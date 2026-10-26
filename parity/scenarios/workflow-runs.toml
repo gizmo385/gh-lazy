@@ -1,0 +1,66 @@
+version = 1
+description = "Selecting a repo fills the Workflows section with its runs, newest first, and G pages in the rest until an empty page"
+gate = true
+parity_rows = [
+  "workflows.runs-table",
+  "workflows.columns",
+  "workflows.loading",
+  "workflows.list-workflows",
+  "searchable-tables.lazy-loading",
+]
+sizes = [[160, 48]]
+
+[env]
+# workflow-runs adds parity-bot/ci-fixture as the first repo: 38 runs over two runs pages (30, 8) and an empty third,
+# newest first, two of them in the same minute; three workflows; no issues or pull requests, so those sections are
+# ` (empty)`.
+fixtures = ["workflow-runs", "base"]
+
+[[step]]
+wait = { text = "ci-fixture", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Ship runs table", timeout_ms = 15000 }
+
+# Python sometimes draws the Details tab underline zero-width after a selection (#209).
+[[step]]
+capture = "loaded"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+ignore = { boxes = ["Details"] }
+
+# The bottom row (30 of 30) asks for page 2.
+[[step]]
+keys = ["4", "G"]
+
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/ci-fixture/actions/runs", query = { page = "2", per_page = "30" } }, timeout_ms = 15000 }
+
+[[step]]
+capture = "runs-page-2"
+checks = ["rows", "cursor"]
+ignore = { boxes = ["Details"] }
+
+# The new bottom row (38 of 38) asks for page 3, which is empty and ends paging.
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/ci-fixture/actions/runs", query = { page = "3", per_page = "30" } }, timeout_ms = 15000 }
+
+[[step]]
+capture = "runs-end"
+checks = ["rows", "cursor"]
+ignore = { boxes = ["Details"] }
+
+[expect.loaded]
+contains = ["Ship runs table", "in_progress", "queued", "[4] Workflows"]
+not_contains = ["[4] Workflows (empty)", "Traceback"]
+
+[expect.runs-page-2]
+not_contains = ["Traceback"]
+
+[expect.runs-end]
+not_contains = ["Traceback"]

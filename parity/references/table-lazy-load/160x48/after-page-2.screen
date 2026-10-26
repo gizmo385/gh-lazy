@@ -23,20 +23,17 @@ cursor 1 4 hidden
 │                                                              ││  Seventy pull requests over three pages.                                                     │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
 │ #   Status  Author      Title                                ││                                                                                              │
-│ 58  open    parity-bot  Lazy fixture pull request 58         ││                                                                                              │
-│ 57  open    parity-bot  Lazy fixture pull request 57         ││                                                                                              │
-│ 56  open    parity-bot  Lazy fixture pull request 56       ▃▃││                                                                                              │
+│ 56  open    parity-bot  Lazy fixture pull request 56         ││                                                                                              │
 │ 55  open    parity-bot  Lazy fixture pull request 55         ││                                                                                              │
-│ 54  open    parity-bot  Lazy fixture pull request 54         ││                                                                                              │
+│ 54  open    parity-bot  Lazy fixture pull request 54       ▁▁││                                                                                              │
 │ 53  open    parity-bot  Lazy fixture pull request 53         ││                                                                                              │
 │ 52  open    parity-bot  Lazy fixture pull request 52         ││                                                                                              │
 │ 51  open    parity-bot  Lazy fixture pull request 51         ││                                                                                              │
-│ 50  open    parity-bot  Lazy fixture pull request 50       ▃▃││                                                                                              │
-│ 49  open    parity-bot  Lazy fixture pull request 49         ││                                                                                              │
+│ 50  open    parity-bot  Lazy fixture pull request 50         ││                                                                                              │
+│ 49  open    parity-bot  Lazy fixture pull request 49       ▃▃││                                                                                              │
 │ 48  open    parity-bot  Lazy fixture pull request 48         ││                                                                                              │
 │ 47  open    parity-bot  Lazy fixture pull request 47         ││                                                                                              │
 │ 46  open    parity-bot  Lazy fixture pull request 46         ││                                                                                              │
@@ -48,6 +45,9 @@ cursor 1 4 hidden
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [3] Issues (empty) ─────────────────────────────────────────┐│                                                                                              │
 │ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  / Search  O Lookup Pull Request  E Edit PR  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palle
 --- styles
@@ -72,14 +72,12 @@ d..............................................................dd...............
 d..............................................................dd..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.....................................................d
 d..............................................................dd..............................................................................................d
 d..............................................................dd..............................................................................................d
-d..............................................................dd..............................................................................................d
 ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
 ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooood..............................................................................................d
 oppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqod..............................................................................................d
 orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
 orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
 orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrssod..............................................................................................d
-orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttod..............................................................................................d
 orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttod..............................................................................................d
 orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttod..............................................................................................d
 orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttod..............................................................................................d
@@ -92,10 +90,12 @@ orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod...............
 orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
 orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
 orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
-orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqod..............................................................................................d
 ovvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvqqod..............................................................................................d
 ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooood..............................................................................................d
 ddddddddddddddwwwwwwwdddddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
+deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd..............................................................................................d
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
+dddddddddddddddddwwwwwwwddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
 deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd..............................................................................................d
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 xxxyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyxxxyyyyyyyyxxxyyyyyyyyyyxxxyyyyyyyyyyxxxyyyyyyyxxxxyyyyyyyyyyyxxxyyyyyyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyyyxxxyyyyyxxxxyyyyyyyyyyyyy

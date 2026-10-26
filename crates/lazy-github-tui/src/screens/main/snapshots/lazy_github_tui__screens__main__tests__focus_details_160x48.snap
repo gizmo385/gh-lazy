@@ -39,7 +39,7 @@ expression: "app.screen(160, 48)"
 │                                                              ││  Github action and workflow support is pretty limited. It currently only supports listing    │
 └──────────────────────────────────────────────────────────────┘│  the workflows and the most recent runs across all actions on the currently selected repo,   │
 ┌─ [4] Workflows ──────────────────────────────────────────────┐│  as well as kicking off a workflow that supports manual triggers.                            │
-│                                                              ││                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │

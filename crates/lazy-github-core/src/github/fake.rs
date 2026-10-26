@@ -7,14 +7,14 @@ use std::time::Duration;
 
 use serde::de::Error as _;
 
-use super::{Github, IssueListQuery, RepoListQuery};
+use super::{Github, IssueListQuery, PageQuery, RepoListQuery};
 use crate::gh::GhError;
-use crate::models::{IssueListItem, Repository, User};
+use crate::models::{IssueListItem, Repository, User, Workflow, WorkflowRun};
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues` returns an empty page, `repo_readme` finds no README, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -40,6 +40,20 @@ pub enum GithubCall {
     },
     /// [`Github::repo_readme`], with the repo's full name.
     RepoReadme(String),
+    /// [`Github::list_workflows`].
+    ListWorkflows {
+        /// The repository listed.
+        repo: Repository,
+        /// The page.
+        page: PageQuery,
+    },
+    /// [`Github::list_workflow_runs`].
+    ListWorkflowRuns {
+        /// The repository listed.
+        repo: Repository,
+        /// The page.
+        page: PageQuery,
+    },
 }
 
 #[derive(Debug, Default)]
@@ -52,6 +66,10 @@ struct State {
     issue_pages: HashMap<(String, u32), Result<Vec<IssueListItem>, GhError>>,
     /// Keyed by `full_name`.
     readmes: HashMap<String, Result<Option<String>, GhError>>,
+    /// Keyed by `full_name` and page.
+    workflow_pages: HashMap<(String, u32), Result<Vec<Workflow>, GhError>>,
+    /// Keyed by `full_name` and page.
+    run_pages: HashMap<(String, u32), Result<Vec<WorkflowRun>, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -116,6 +134,24 @@ impl FakeGithub {
     #[must_use]
     pub fn with_readme(self, full_name: &str, readme: Result<Option<String>, GhError>) -> Self {
         self.lock().readmes.insert(full_name.to_owned(), readme);
+        self
+    }
+
+    /// `list_workflows` returns `page` for page `page_number` of the repository named `full_name`. Pages not set are
+    /// empty.
+    #[must_use]
+    pub fn with_workflow_page(self, full_name: &str, page_number: u32, page: Result<Vec<Workflow>, GhError>) -> Self {
+        self.lock()
+            .workflow_pages
+            .insert((full_name.to_owned(), page_number), page);
+        self
+    }
+
+    /// `list_workflow_runs` returns `page` for page `page_number` of the repository named `full_name`. Pages not set
+    /// are empty.
+    #[must_use]
+    pub fn with_run_page(self, full_name: &str, page_number: u32, page: Result<Vec<WorkflowRun>, GhError>) -> Self {
+        self.lock().run_pages.insert((full_name.to_owned(), page_number), page);
         self
     }
 
@@ -234,6 +270,34 @@ impl Github for FakeGithub {
             }
         })
         .await
+    }
+
+    async fn list_workflows(&self, repo: &Repository, page: PageQuery) -> Result<Vec<Workflow>, GhError> {
+        let key = (repo.full_name.clone(), page.page);
+        let call = GithubCall::ListWorkflows {
+            repo: repo.clone(),
+            page,
+        };
+        self.respond(call, |state| canned_page(state.workflow_pages.get(&key)))
+            .await
+    }
+
+    async fn list_workflow_runs(&self, repo: &Repository, page: PageQuery) -> Result<Vec<WorkflowRun>, GhError> {
+        let key = (repo.full_name.clone(), page.page);
+        let call = GithubCall::ListWorkflowRuns {
+            repo: repo.clone(),
+            page,
+        };
+        self.respond(call, |state| canned_page(state.run_pages.get(&key))).await
+    }
+}
+
+/// A canned page, or an empty one when none was set.
+fn canned_page<T: Clone>(page: Option<&Result<Vec<T>, GhError>>) -> Result<Vec<T>, GhError> {
+    match page {
+        Some(Ok(items)) => Ok(items.clone()),
+        Some(Err(error)) => Err(duplicate(error)),
+        None => Ok(Vec::new()),
     }
 }
 
@@ -456,6 +520,59 @@ mod tests {
         ));
         assert_eq!(github.repo_readme("octocat/c").await.unwrap(), None);
         assert_eq!(github.calls()[0], GithubCall::RepoReadme("octocat/a".into()));
+    }
+
+    #[tokio::test]
+    async fn workflow_and_run_pages_by_repo_and_page() {
+        let github = FakeGithub::new().with_run_page(
+            "octocat/a",
+            2,
+            Err(GhError::Http {
+                status: 500,
+                message: "Server Error".into(),
+                body: Vec::new(),
+            }),
+        );
+        let second = PageQuery {
+            page: 2,
+            ..PageQuery::default()
+        };
+        // Unset pages are empty.
+        assert!(
+            github
+                .list_workflows(&repo("a"), PageQuery::default())
+                .await
+                .unwrap()
+                .is_empty()
+        );
+        assert!(
+            github
+                .list_workflow_runs(&repo("a"), PageQuery::default())
+                .await
+                .unwrap()
+                .is_empty()
+        );
+        assert!(matches!(
+            github.list_workflow_runs(&repo("a"), second).await,
+            Err(GhError::Http { status: 500, .. })
+        ));
+        assert_eq!(
+            github.calls(),
+            [
+                GithubCall::ListWorkflows {
+                    repo: repo("a"),
+                    page: PageQuery::default()
+                },
+                GithubCall::ListWorkflowRuns {
+                    repo: repo("a"),
+                    page: PageQuery::default()
+                },
+                GithubCall::ListWorkflowRuns {
+                    repo: repo("a"),
+                    page: second
+                },
+            ]
+        );
     }
 
     #[test]

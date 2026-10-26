@@ -26,8 +26,8 @@ expression: "styled(&mut app, 100, 30)"
 │                                      ││  Pull Requests                                           │
 └──────────────────────────────────────┘│                                                          │
 ┌─ [4] Workflows ──────────────────────┐│  You can interact with a PR by viewing its details,      │
-│                                      ││  viewing the PR diff, and participating in any active    │
-│                                      ││  conversations happening on the PR. You can also         │
+│ Time  Result  Job Name  Run Name  Run││  viewing the PR diff, and participating in any active    │
+│                                   ▎  ││  conversations happening on the PR. You can also         │
 │                                      ││  create a new PR for the currently selected repo.        │
 │                                      ││                                                          │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
@@ -57,12 +57,12 @@ caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaxxxxxxxxxxxxxaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
 cccccccccccccccccccccccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
 cccccccccccccccccccccccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
+cllllllllllllllllllllllllllllllllllllllccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
+cyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyzwwccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-yyyzzzzyyyzzzyyyzzzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAABBBBAAABBBAAABBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 --- legend
 . fg=#0a263a bg=#121212
 a fg=#646464 bg=#121212
@@ -89,6 +89,8 @@ u fg=#004295 bg=#0c7dd4
 v fg=#780028 bg=#b93c5b
 w fg=#646464 bg=#0a0a0a
 x fg=#0b3a5f bg=#121212 UNDERLINED
-y fg=#ffa62b bg=#242f38 BOLD
-z fg=#e0e0e0 bg=#242f38
-A fg=Reset bg=#242f38
+y fg=#0a1e2c bg=#161616 REVERSED
+z fg=#0a1e2c bg=#0a0a0a
+A fg=#ffa62b bg=#242f38 BOLD
+B fg=#e0e0e0 bg=#242f38
+C fg=Reset bg=#242f38

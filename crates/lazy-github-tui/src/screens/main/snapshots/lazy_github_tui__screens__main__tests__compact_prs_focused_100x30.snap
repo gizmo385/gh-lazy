@@ -10,11 +10,15 @@ expression: "app.screen(100, 30)"
 │ ☆  octo   one   ✘                    ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
 │ ☆  octo   two   ✘                    ││octo/one • Public                                         │
 │                                      ││Owned by octo                                             │
-└──────────────────────────────────────┘│Default branch: main                                      │
-┌─ [2] Pull Requests (empty) ──────────┐│                                                          │
-│ #  Status  Author  Title             ││──────────────────────────────────────────────────────────│
+│                                      ││Default branch: main                                      │
 │                                      ││                                                          │
-│                                      ││  No README found.                                        │
+│                                      ││──────────────────────────────────────────────────────────│
+└──────────────────────────────────────┘│                                                          │
+┌─ [2] Pull Requests (empty) ──────────┐│  No README found.                                        │
+│ #  Status  Author  Title             ││                                                          │
+│                                      ││                                                          │
+│                                      ││                                                          │
+│                                      ││                                                          │
 │                                      ││                                                          │
 │                                      ││                                                          │
 │                                      ││                                                          │
@@ -24,11 +28,7 @@ expression: "app.screen(100, 30)"
 ┌─ [3] Issues (empty) ─────────────────┐│                                                          │
 │ #  Status  Author  Title             ││                                                          │
 └──────────────────────────────────────┘│                                                          │
-┌─ [4] Workflows ──────────────────────┐│                                                          │
-│                                      ││                                                          │
-│                                      ││                                                          │
-│                                      ││                                                          │
-│                                      ││                                                          │
-│                                      ││                                                          │
+┌─ [4] Workflows (empty) ──────────────┐│                                                          │
+│                               ▋      ││                                                          │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
  / Search  O Lookup Pull Request  E Edit PR  u View User  I New Issue  P New PR  ^v Paste link  f Fo

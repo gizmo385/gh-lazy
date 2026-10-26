@@ -30,7 +30,7 @@ use crate::theme::Theme;
 use crate::toast::{Severity, Toast, Toasts};
 
 /// The bindings on the app link of every non-modal chain, in Textual order: its built-ins, then `LazyGithub.BINDINGS`.
-const APP_BINDINGS: &[BindingId] = &[
+pub const APP_BINDINGS: &[BindingId] = &[
     BindingId::TextualQuit,
     BindingId::TextualHelpQuit,
     BindingId::AppQuit,

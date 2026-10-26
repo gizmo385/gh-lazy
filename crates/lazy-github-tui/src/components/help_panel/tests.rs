@@ -180,6 +180,26 @@ fn hidden_groups_are_absent_and_unshown_ones_present() {
     );
 }
 
+/// `" , "` leaves `app.open_help` on the key `""`: Textual's panel still lists "Keybindings", with no key (#158).
+#[test]
+fn a_comma_only_override_is_listed_with_no_key() {
+    let mut config = Config::default();
+    config.bindings.overrides.insert("app.open_help".into(), " , ".into());
+    let rows: Vec<HelpRow> = sections_after(config, &[])
+        .into_iter()
+        .flat_map(|section| section.rows)
+        .filter(|row| row.description == "Keybindings")
+        .collect();
+    assert_eq!(
+        rows,
+        [HelpRow {
+            keys: vec![String::new()],
+            description: "Keybindings",
+            tooltip: "Toggle this window",
+        }]
+    );
+}
+
 #[test]
 fn one_action_is_one_row_per_link() {
     // The workflow runs table: `workflows.view_run_details` and `common.table.select` are both `select_cursor`.

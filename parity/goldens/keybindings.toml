@@ -1,7 +1,34 @@
 version = 1
-description = "Binding registry: every id's default keys, action, label, tooltip, show and key_display"
+description = "Bindings: every id's defaults and flags, each class's merged bindings in Textual's order, and how default keys and override spellings parse and display"
 generator = "crates/lazy-github-tui/tests/fixtures/generate_bindings.py"
-golden = ["crates/lazy-github-tui/tests/fixtures/bindings.json"]
+golden = [
+    "crates/lazy-github-tui/tests/fixtures/bindings.json",
+    "crates/lazy-github-tui/tests/fixtures/contexts.json",
+    "crates/lazy-github-tui/tests/fixtures/keys.json",
+]
 test = "crates/lazy-github-tui/tests/registry.rs"
 fresh_test = "bindings_goldens_are_fresh"
-parity_rows = ["keybindings.all-ids"]
+parity_rows = [
+    "keybindings.all-ids",
+    "keybindings.app-quit",
+    "keybindings.app-open-help",
+    "keybindings.app-maximize-widget",
+    "keybindings.common-table-select",
+    "keybindings.common-table-search",
+    "keybindings.common-table-cursor-down",
+    "keybindings.common-table-page-down",
+    "keybindings.common-table-cursor-up",
+    "keybindings.common-table-page-up",
+    "keybindings.common-table-scroll-right",
+    "keybindings.common-table-page-right",
+    "keybindings.common-table-scroll-left",
+    "keybindings.common-table-page-left",
+    "keybindings.common-table-scroll-top",
+    "keybindings.common-table-scroll-bottom",
+    "keybindings.main-repos-focus",
+    "keybindings.main-pull-requests-focus",
+    "keybindings.main-issues-focus",
+    "keybindings.main-workflows-focus",
+    "keybindings.main-details-focus",
+    "keybindings.main-command-log-focus",
+]

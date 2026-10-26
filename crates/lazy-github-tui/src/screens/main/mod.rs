@@ -19,7 +19,7 @@ use crate::component::{BindingState, ChainLink, Component, Cx, Owner, RenderCx, 
 use crate::components::command_log::{CommandLog, Wheel};
 use crate::components::hatch::Hatch;
 use crate::components::info::{INFO_BINDINGS, Scroll};
-use crate::components::table::{Handled, TABLE_BINDINGS, TableEvent};
+use crate::components::table::{Handled, SEARCHABLE_BINDINGS, TABLE_BINDINGS, TableEvent};
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::{BindingId, Keymap};
 use crate::options::AppOptions;
@@ -162,7 +162,7 @@ impl SectionState {
 }
 
 /// `MainViewPane.BINDINGS`: the focus keys.
-const MAIN_VIEW_BINDINGS: &[BindingId] = &[
+pub const MAIN_VIEW_BINDINGS: &[BindingId] = &[
     BindingId::MainReposFocus,
     BindingId::MainPullRequestsFocus,
     BindingId::MainIssuesFocus,
@@ -172,11 +172,11 @@ const MAIN_VIEW_BINDINGS: &[BindingId] = &[
 ];
 
 /// `SelectionsPane.BINDINGS`.
-const SELECTIONS_BINDINGS: &[BindingId] = &[BindingId::IssueNew, BindingId::PullRequestNew];
+pub const SELECTIONS_BINDINGS: &[BindingId] = &[BindingId::IssueNew, BindingId::PullRequestNew];
 
 /// Textual's `Screen` built-ins, then `LazyGithubMainScreen.BINDINGS`: Textual merges a subclass's bindings after
 /// the ones it inherits, and the help panel lists them in that order.
-const SCREEN_BINDINGS: &[BindingId] = &[
+pub const SCREEN_BINDINGS: &[BindingId] = &[
     BindingId::TextualFocusNext,
     BindingId::TextualFocusPrevious,
     BindingId::TextualCopyText,
@@ -186,14 +186,11 @@ const SCREEN_BINDINGS: &[BindingId] = &[
     BindingId::LinkFollowExternal,
 ];
 
-/// `SearchableDataTable.BINDINGS`.
-const SEARCHABLE_BINDINGS: &[BindingId] = &[BindingId::TableSearch];
-
 /// Textual's `Tabs` bindings.
-const TABS_BINDINGS: &[BindingId] = &[BindingId::TextualTabsPrevious, BindingId::TextualTabsNext];
+pub const TABS_BINDINGS: &[BindingId] = &[BindingId::TextualTabsPrevious, BindingId::TextualTabsNext];
 
 /// Textual's `ScrollableContainer` bindings, which the command log's `Log` has.
-const LOG_BINDINGS: &[BindingId] = &[
+pub const LOG_BINDINGS: &[BindingId] = &[
     BindingId::TextualScrollUp,
     BindingId::TextualScrollDown,
     BindingId::TextualScrollLeft,

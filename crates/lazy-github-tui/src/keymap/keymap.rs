@@ -19,8 +19,10 @@ impl Keymap {
     /// Every binding on its default keys, with `overrides` (`bindings.overrides`: id to key list) on top.
     ///
     /// - An overridden binding answers only to its override keys, and its `key_display` is dropped.
-    /// - An empty or blank override is ignored, so the binding keeps its defaults. One made only of commas (`" , "`)
-    ///   unbinds it, as in Textual, where it isn't blank.
+    /// - An empty or blank override is ignored, so the binding keeps its defaults.
+    /// - Each comma-separated token is a key, once, as in Textual's key-to-bindings map. An empty token is the key
+    ///   `""`, which never matches: one made only of commas (`" , "`) leaves the binding with that key alone, so the
+    ///   footer and help panel still list it, with no key text.
     /// - An override for an id that doesn't exist is ignored. It stays in the config file.
     /// - A token that isn't a key never matches, but it's displayed as written.
     pub fn new(overrides: &IndexMap<String, String>) -> Self {
@@ -40,7 +42,7 @@ impl Keymap {
             if value.trim().is_empty() {
                 continue;
             }
-            let parsed = KeySpec::parse_list(value);
+            let parsed = parse_override(value);
             for (token, spec) in &parsed {
                 if matches!(spec, KeySpec::Unknown(_)) {
                     tracing::warn!("Unknown key {token:?} in bindings.overrides for {config_id}");
@@ -160,6 +162,19 @@ impl Keymap {
     pub fn priority_ids(&self) -> impl Iterator<Item = BindingId> {
         BindingId::ALL.iter().copied().filter(|id| id.is_priority())
     }
+}
+
+/// An override's keys, as Textual's `apply_keymap` reads them once `_normalize_keymap` has trimmed each token: every
+/// token, empty ones included, with a repeated key kept only at its first place.
+fn parse_override(value: &str) -> Vec<(String, KeySpec)> {
+    let mut keys: Vec<(String, KeySpec)> = Vec::new();
+    for token in value.split(',').map(str::trim) {
+        let spec = KeySpec::parse(token);
+        if !keys.iter().any(|(_, seen)| *seen == spec) {
+            keys.push((token.to_owned(), spec));
+        }
+    }
+    keys
 }
 
 impl Default for Keymap {
@@ -399,12 +414,28 @@ mod tests {
         );
     }
     #[test]
-    fn a_comma_only_override_unbinds() {
+    fn a_comma_only_override_leaves_an_empty_key() {
         let keymap = keymap(&[("main.repos.focus", " , ")]);
         assert!(keymap.is_overridden(BindingId::MainReposFocus));
-        assert_eq!(keymap.keys(BindingId::MainReposFocus), []);
+        assert_eq!(
+            keymap.keys(BindingId::MainReposFocus),
+            [(String::new(), KeySpec::Unknown(String::new()))]
+        );
+        assert_eq!(keymap.key_displays(BindingId::MainReposFocus), [""]);
         assert_eq!(keymap.match_in(MAIN_FOCUS, &key("1")), None);
         assert_eq!(keymap.title_key(BindingId::MainReposFocus), " , ");
+    }
+
+    #[test]
+    fn a_repeated_override_key_is_kept_once() {
+        // Textual normalizes both to `question_mark`, one entry of its key-to-bindings map.
+        let keymap = keymap(&[("app.open_help", "?, question_mark, x, ,")]);
+        let tokens: Vec<&str> = keymap
+            .keys(BindingId::AppOpenHelp)
+            .iter()
+            .map(|(token, _)| token.as_str())
+            .collect();
+        assert_eq!(tokens, ["?", "x", ""]);
     }
 
     #[test]

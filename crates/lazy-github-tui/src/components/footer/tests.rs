@@ -95,6 +95,30 @@ fn overrides_change_keys_and_the_table_takes_h() {
     );
 }
 
+fn comma_only_help() -> Config {
+    let mut config = Config::default();
+    config.bindings.overrides.insert("app.open_help".into(), " , ".into());
+    config
+}
+
+/// `" , "` binds `app.open_help` to the key `""`, which Textual's footer lists with no key text: Python's footer
+/// ends `q Quit   Keybindings` (#158).
+#[test]
+fn a_comma_only_override_is_listed_with_no_key() {
+    assert_eq!(
+        footer_after(comma_only_help(), &["5"]),
+        " ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize   Keybindings"
+    );
+}
+
+#[test]
+fn footer_comma_only_override_120x30() {
+    let mut app = TestApp::new(comma_only_help());
+    app.press(&["5"]);
+    let screen = app.screen(120, 30);
+    insta::assert_snapshot!(screen.lines().last().unwrap_or_default());
+}
+
 #[test]
 fn the_auth_screen_shows_only_quit() {
     let chain = [ChainLink {
@@ -252,7 +276,7 @@ fn clicking_maximize_maximizes() {
 fn the_footer_is_hidden_while_maximized() {
     let mut app = TestApp::new(Config::default());
     app.press(&["5", "M"]);
-    let screen = app.screen(100, 30);
+    let screen = app.screen(120, 30);
     assert!(!screen.contains("Keybindings"), "{screen}");
     // Its old cells take no clicks: this would have been `q Quit`'s place.
     app.click(60, 29);

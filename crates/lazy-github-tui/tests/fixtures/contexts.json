@@ -1,0 +1,3016 @@
+[
+  {
+    "class": "lazy_github.ui.app.LazyGithub",
+    "bindings": [
+      {
+        "key": "ctrl+q",
+        "id": null,
+        "action": "quit",
+        "description": "Quit",
+        "show": false,
+        "priority": true,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Quit the app and return to the command prompt."
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "help_quit",
+        "description": "",
+        "show": false,
+        "priority": false,
+        "system": true,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "q",
+        "id": "app.quit",
+        "action": "quit",
+        "description": "Quit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Exit LazyGithub"
+      },
+      {
+        "key": "ctrl+p",
+        "id": "app.command_palette",
+        "action": "command_palette",
+        "description": "Command Pallete",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "M",
+        "id": "app.maximize_widget",
+        "action": "maximize",
+        "description": "Maximize",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Fullscreen the currently focused element"
+      },
+      {
+        "key": "question_mark",
+        "id": "app.open_help",
+        "action": "open_help",
+        "description": "Keybindings",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": "?",
+        "tooltip": "Toggle this window"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.add_reactions_modal.AddReactionsModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.auth.AuthenticationModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "q",
+        "id": "app.quit",
+        "action": "quit",
+        "description": "Quit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Exit LazyGithub"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.confirm.ConfirmDialog",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "y",
+        "id": "confirm.yes",
+        "action": "confirm_yes",
+        "description": "Yes",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "n",
+        "id": "confirm.no",
+        "action": "confirm_no",
+        "description": "No",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.create_or_edit_pull_request.CreateOrEditPullRequestContainer",
+    "bindings": [
+      {
+        "key": "up",
+        "id": null,
+        "action": "scroll_up",
+        "description": "Scroll Up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "down",
+        "id": null,
+        "action": "scroll_down",
+        "description": "Scroll Down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "left",
+        "id": null,
+        "action": "scroll_left",
+        "description": "Scroll Left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "right",
+        "id": null,
+        "action": "scroll_right",
+        "description": "Scroll Right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "home",
+        "id": null,
+        "action": "scroll_home",
+        "description": "Scroll Home",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "end",
+        "id": null,
+        "action": "scroll_end",
+        "description": "Scroll End",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pageup",
+        "id": null,
+        "action": "page_up",
+        "description": "Page Up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pagedown",
+        "id": null,
+        "action": "page_down",
+        "description": "Page Down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+pageup",
+        "id": null,
+        "action": "page_left",
+        "description": "Page Left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+pagedown",
+        "id": null,
+        "action": "page_right",
+        "description": "Page Right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+enter",
+        "id": "modal.submit",
+        "action": "submit",
+        "description": "Submit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Submit whatever is being created in the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.create_or_edit_pull_request.CreateOrEditPullRequestModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.debug.DebugModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+enter",
+        "id": "modal.submit",
+        "action": "submit",
+        "description": "Submit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Submit whatever is being created in the current dialog"
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.edit_issue.EditIssueModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "shift+enter",
+        "id": "modal.submit",
+        "action": "submit",
+        "description": "Submit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Submit whatever is being created in the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.link_paste.PasteLinkModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+enter",
+        "id": "modal.submit",
+        "action": "submit",
+        "description": "Submit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Submit whatever is being created in the current dialog"
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.lookup_issue.LookupIssueModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+enter",
+        "id": "modal.submit",
+        "action": "submit",
+        "description": "Submit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Submit whatever is being created in the current dialog"
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.lookup_pull_request.LookupPullRequestModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+enter",
+        "id": "modal.submit",
+        "action": "submit",
+        "description": "Submit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Submit whatever is being created in the current dialog"
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.lookup_repository.LookupRepositoryModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+enter",
+        "id": "modal.submit",
+        "action": "submit",
+        "description": "Submit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Submit whatever is being created in the current dialog"
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.new_comment.NewCommentModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.new_issue.NewIssueContainer",
+    "bindings": [
+      {
+        "key": "shift+enter",
+        "id": "modal.submit",
+        "action": "submit",
+        "description": "Submit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Submit whatever is being created in the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.new_issue.NewIssueModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.notifications.NotificationsContainer",
+    "bindings": [
+      {
+        "key": "r",
+        "id": "notifications.view_read",
+        "action": "view_read",
+        "description": "View Read Notifications",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Swap to the viewed notifications tab"
+      },
+      {
+        "key": "u",
+        "id": "notifications.view_unread",
+        "action": "view_unread",
+        "description": "View Unread Notifications",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Swap to the viewed notifications tab"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.notifications.NotificationsModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.notifications.UnreadNotificationTabPane",
+    "bindings": [
+      {
+        "key": "R",
+        "id": "notifications.mark_read",
+        "action": "mark_read",
+        "description": "Mark as Read",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Mark a single notification as read"
+      },
+      {
+        "key": "ctrl+r",
+        "id": "notifications.mark_all_as_read",
+        "action": "mark_all_read",
+        "description": "Mark all as read",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Mark all unread notifications as read"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.primary.LazyGithubMainScreen",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+n",
+        "id": "notifications.open",
+        "action": "view_notifications",
+        "description": "Notifications",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Open the notifications modal"
+      },
+      {
+        "key": "ctrl+v",
+        "id": "link.paste",
+        "action": "open_link_paste_modal",
+        "description": "Paste link",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "f",
+        "id": "link.follow",
+        "action": "follow_link",
+        "description": "Follow link",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Show hints on visible links and pick one"
+      },
+      {
+        "key": "F",
+        "id": "link.follow_external",
+        "action": "follow_link_external",
+        "description": "Follow link (browser)",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Show hints on visible links and open the pick in the system browser"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.primary.MainViewPane",
+    "bindings": [
+      {
+        "key": "1",
+        "id": "main.repos.focus",
+        "action": "focus_section('#repos_table')",
+        "description": "Focus repos table",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Focus the table of accessible repositories"
+      },
+      {
+        "key": "2",
+        "id": "main.pull_requests.focus",
+        "action": "focus_section('#pull_requests_table')",
+        "description": "Focus PRs table",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Focus the table of pull requests for the repo"
+      },
+      {
+        "key": "3",
+        "id": "main.issues.focus",
+        "action": "focus_section('#issues_table')",
+        "description": "Focus issues table",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Focus the table of issues for the repo"
+      },
+      {
+        "key": "4",
+        "id": "main.workflows.focus",
+        "action": "focus_workflow_tabs",
+        "description": "Focus workflows table",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Focus and swap between the workflow tabs"
+      },
+      {
+        "key": "5",
+        "id": "main.details.focus",
+        "action": "focus_tabs",
+        "description": "Focus details tabs",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Focus and swap between the selection detail tabs on the right"
+      },
+      {
+        "key": "6",
+        "id": "main.command_log.focus",
+        "action": "focus_section('LazyGithubCommandLog')",
+        "description": "Focus command log",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Focus the command log, where actions taken by LazyGithub are shown"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.primary.SelectionsPane",
+    "bindings": [
+      {
+        "key": "I",
+        "id": "issue.new",
+        "action": "open_issue",
+        "description": "New Issue",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Open a new issue in the current repository"
+      },
+      {
+        "key": "P",
+        "id": "pull_request.new",
+        "action": "open_pull_request",
+        "description": "New PR",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Open a new pull request in the current repository"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.settings.SettingsContainer",
+    "bindings": [
+      {
+        "key": "shift+enter",
+        "id": "modal.submit",
+        "action": "submit",
+        "description": "Submit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Submit whatever is being created in the current dialog"
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "slash",
+        "id": "modal.search",
+        "action": "search",
+        "description": "Search",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Search within a dialog window"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.trigger_workflow.TriggerWorkflowModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+enter",
+        "id": "modal.submit",
+        "action": "submit",
+        "description": "Submit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Submit whatever is being created in the current dialog"
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.screens.user_profile.UserProfileModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.common.SearchableDataTable",
+    "bindings": [
+      {
+        "key": "slash",
+        "id": "common.table.search",
+        "action": "focus_search",
+        "description": "Search",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Search in the table"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.common._VimLikeDataTable",
+    "bindings": [
+      {
+        "key": "up",
+        "id": null,
+        "action": "cursor_up",
+        "description": "Cursor up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "down",
+        "id": null,
+        "action": "cursor_down",
+        "description": "Cursor down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "left",
+        "id": null,
+        "action": "cursor_left",
+        "description": "Cursor left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "right",
+        "id": null,
+        "action": "cursor_right",
+        "description": "Cursor right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "home",
+        "id": null,
+        "action": "scroll_home",
+        "description": "Home",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "end",
+        "id": null,
+        "action": "scroll_end",
+        "description": "End",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pageup",
+        "id": null,
+        "action": "page_up",
+        "description": "Page up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pagedown",
+        "id": null,
+        "action": "page_down",
+        "description": "Page down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+pageup",
+        "id": null,
+        "action": "page_left",
+        "description": "Page Left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+pagedown",
+        "id": null,
+        "action": "page_right",
+        "description": "Page Right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "enter",
+        "id": "common.table.select",
+        "action": "select_cursor",
+        "description": "Select table entry",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+home",
+        "id": null,
+        "action": "scroll_top",
+        "description": "Top",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+end",
+        "id": null,
+        "action": "scroll_bottom",
+        "description": "Bottom",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "space",
+        "id": "common.table.select",
+        "action": "select_cursor",
+        "description": "Select table entry",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "j",
+        "id": "common.table.cursor_down",
+        "action": "cursor_down",
+        "description": "Table cursor down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "J",
+        "id": "common.table.page_down",
+        "action": "page_down",
+        "description": "Table page down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "k",
+        "id": "common.table.cursor_up",
+        "action": "cursor_up",
+        "description": "Table cursor up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "K",
+        "id": "common.table.page_up",
+        "action": "page_up",
+        "description": "Table page up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "l",
+        "id": "common.table.scroll_right",
+        "action": "scroll_right",
+        "description": "Table scroll right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "dollar_sign",
+        "id": "common.table.page_right",
+        "action": "page_right",
+        "description": "Table page right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": "$",
+        "tooltip": ""
+      },
+      {
+        "key": "dollar_sign",
+        "id": "common.table.page_right",
+        "action": "page_right",
+        "description": "Table page right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": "$",
+        "tooltip": ""
+      },
+      {
+        "key": "h",
+        "id": "common.table.scroll_left",
+        "action": "scroll_left",
+        "description": "Table scroll left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "circumflex_accent",
+        "id": "common.table.page_left",
+        "action": "page_left",
+        "description": "Table page left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": "^",
+        "tooltip": ""
+      },
+      {
+        "key": "circumflex_accent",
+        "id": "common.table.page_left",
+        "action": "page_left",
+        "description": "Table page left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": "^",
+        "tooltip": ""
+      },
+      {
+        "key": "g",
+        "id": "common.table.scroll_top",
+        "action": "scroll_top",
+        "description": "Table scroll to top",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "G",
+        "id": "common.table.scroll_bottom",
+        "action": "scroll_bottom",
+        "description": "Table scroll to bottom",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.conversations.IssueCommentContainer",
+    "bindings": [
+      {
+        "key": "r",
+        "id": "conversation.comment.reply",
+        "action": "reply_to_individual_comment",
+        "description": "Reply to Comment",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Reply to the selected Github comment"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.conversations.ReviewContainer",
+    "bindings": [
+      {
+        "key": "r",
+        "id": "conversation.review.reply",
+        "action": "reply_to_review",
+        "description": "Reply to Review",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Reply to the selected Github review"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.issues.IssueConversationTabPane",
+    "bindings": [
+      {
+        "key": "n",
+        "id": "conversation.comment.new",
+        "action": "new_comment",
+        "description": "New Comment",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Create a new comment in the thread"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.issues.IssueOverviewTabPane",
+    "bindings": [
+      {
+        "key": "E",
+        "id": "issue.edit",
+        "action": "edit_issue",
+        "description": "Edit Issue",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Edit the selected issue"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.issues.IssuesContainer",
+    "bindings": [
+      {
+        "key": "O",
+        "id": "issue.lookup",
+        "action": "lookup_issue",
+        "description": "Lookup Issue",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Lookup an issue in the current repository"
+      },
+      {
+        "key": "E",
+        "id": "issue.edit",
+        "action": "edit_issue",
+        "description": "Edit Issue",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Edit the selected issue"
+      },
+      {
+        "key": "u",
+        "id": "user.view_profile",
+        "action": "view_user_profile",
+        "description": "View User",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Open the GitHub profile for the author/owner of the highlighted row"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.pull_requests.PrConversationTabPane",
+    "bindings": [
+      {
+        "key": "n",
+        "id": "conversation.comment.new",
+        "action": "new_comment",
+        "description": "New Comment",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Create a new comment in the thread"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.pull_requests.PrOverviewTabPane",
+    "bindings": [
+      {
+        "key": "ctrl+m",
+        "id": "pull_request.merge",
+        "action": "merge_pull_request",
+        "description": "Merge PR",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Merge the selected pull request"
+      },
+      {
+        "key": "E",
+        "id": "pull_request.edit",
+        "action": "edit_pull_request",
+        "description": "Edit PR",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Edit the selected pull request"
+      },
+      {
+        "key": "R",
+        "id": "react.add",
+        "action": "add_reaction",
+        "description": "Add reaction",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.pull_requests.PullRequestsContainer",
+    "bindings": [
+      {
+        "key": "O",
+        "id": "pull_request.lookup",
+        "action": "lookup_pull_request",
+        "description": "Lookup Pull Request",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Lookup a pull request in the current repository"
+      },
+      {
+        "key": "E",
+        "id": "pull_request.edit",
+        "action": "edit_pull_request",
+        "description": "Edit PR",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Edit the selected pull request"
+      },
+      {
+        "key": "u",
+        "id": "user.view_profile",
+        "action": "view_user_profile",
+        "description": "View User",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Open the GitHub profile for the author/owner of the highlighted row"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.repositories.ReposContainer",
+    "bindings": [
+      {
+        "key": "ctrl+f",
+        "id": "repositories.favorite",
+        "action": "toggle_favorite_repo",
+        "description": "Toggle Favorite",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Mark/unmark a repository as favorited, which are displayed at the top of the repos table"
+      },
+      {
+        "key": "O",
+        "id": "repositories.lookup",
+        "action": "lookup_repository",
+        "description": "Lookup Repository",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "u",
+        "id": "user.view_profile",
+        "action": "view_user_profile",
+        "description": "View User",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Open the GitHub profile for the author/owner of the highlighted row"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.split_diff_viewer.AddCommentModal",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+enter",
+        "id": "modal.submit",
+        "action": "submit",
+        "description": "Submit",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Submit whatever is being created in the current dialog"
+      },
+      {
+        "key": "q",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      },
+      {
+        "key": "escape",
+        "id": "modal.close",
+        "action": "close",
+        "description": "Close",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": "Close the current dialog"
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.split_diff_viewer.SplitDiffViewer",
+    "bindings": [
+      {
+        "key": "J",
+        "id": "diff.next_hunk",
+        "action": "next_hunk",
+        "description": "Next Hunk",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "K",
+        "id": "diff.previous_hunk",
+        "action": "previous_hunk",
+        "description": "Previous Hunk",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "slash",
+        "id": "diff.filter_files",
+        "action": "focus_file_filter",
+        "description": "Filter Files",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.split_diff_viewer.UnifiedDiffPane",
+    "bindings": [
+      {
+        "key": "j",
+        "id": null,
+        "action": "line_down",
+        "description": "Line down",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "k",
+        "id": null,
+        "action": "line_up",
+        "description": "Line up",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "c",
+        "id": "diff.add_comment",
+        "action": "add_comment",
+        "description": "Add Comment",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.workflow_run_details.WorkflowRunJobsTabPane",
+    "bindings": [
+      {
+        "key": "l",
+        "id": "workflows.view_job_logs",
+        "action": "view_logs",
+        "description": "View Job Logs",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  },
+  {
+    "class": "lazy_github.ui.widgets.workflows.WorkflowsContainer",
+    "bindings": [
+      {
+        "key": "T",
+        "id": "workflows.trigger",
+        "action": "trigger_workflow",
+        "description": "Trigger Workflow",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  },
+  {
+    "class": "textual.containers.VerticalScroll",
+    "bindings": [
+      {
+        "key": "up",
+        "id": null,
+        "action": "scroll_up",
+        "description": "Scroll Up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "down",
+        "id": null,
+        "action": "scroll_down",
+        "description": "Scroll Down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "left",
+        "id": null,
+        "action": "scroll_left",
+        "description": "Scroll Left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "right",
+        "id": null,
+        "action": "scroll_right",
+        "description": "Scroll Right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "home",
+        "id": null,
+        "action": "scroll_home",
+        "description": "Scroll Home",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "end",
+        "id": null,
+        "action": "scroll_end",
+        "description": "Scroll End",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pageup",
+        "id": null,
+        "action": "page_up",
+        "description": "Page Up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pagedown",
+        "id": null,
+        "action": "page_down",
+        "description": "Page Down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+pageup",
+        "id": null,
+        "action": "page_left",
+        "description": "Page Left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+pagedown",
+        "id": null,
+        "action": "page_right",
+        "description": "Page Right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  },
+  {
+    "class": "textual.widgets.Input",
+    "bindings": [
+      {
+        "key": "up",
+        "id": null,
+        "action": "scroll_up",
+        "description": "Scroll Up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "down",
+        "id": null,
+        "action": "scroll_down",
+        "description": "Scroll Down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "left",
+        "id": null,
+        "action": "cursor_left",
+        "description": "Move cursor left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "right",
+        "id": null,
+        "action": "cursor_right",
+        "description": "Move cursor right or accept the completion suggestion",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "home",
+        "id": null,
+        "action": "home",
+        "description": "Go to start",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "end",
+        "id": null,
+        "action": "end",
+        "description": "Go to end",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pageup",
+        "id": null,
+        "action": "page_up",
+        "description": "Page Up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pagedown",
+        "id": null,
+        "action": "page_down",
+        "description": "Page Down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+pageup",
+        "id": null,
+        "action": "page_left",
+        "description": "Page Left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+pagedown",
+        "id": null,
+        "action": "page_right",
+        "description": "Page Right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+left",
+        "id": null,
+        "action": "cursor_left(True)",
+        "description": "Move cursor left and select",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+left",
+        "id": null,
+        "action": "cursor_left_word",
+        "description": "Move cursor left a word",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+shift+left",
+        "id": null,
+        "action": "cursor_left_word(True)",
+        "description": "Move cursor left a word and select",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+right",
+        "id": null,
+        "action": "cursor_right(True)",
+        "description": "Move cursor right and select",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+right",
+        "id": null,
+        "action": "cursor_right_word",
+        "description": "Move cursor right a word",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+shift+right",
+        "id": null,
+        "action": "cursor_right_word(True)",
+        "description": "Move cursor right a word and select",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "backspace",
+        "id": null,
+        "action": "delete_left",
+        "description": "Delete character left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+shift+a",
+        "id": null,
+        "action": "select_all",
+        "description": "Select all",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+a",
+        "id": null,
+        "action": "home",
+        "description": "Go to start",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+e",
+        "id": null,
+        "action": "end",
+        "description": "Go to end",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+home",
+        "id": null,
+        "action": "home(True)",
+        "description": "Select line start",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+end",
+        "id": null,
+        "action": "end(True)",
+        "description": "Select line end",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "delete",
+        "id": null,
+        "action": "delete_right",
+        "description": "Delete character right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+d",
+        "id": null,
+        "action": "delete_right",
+        "description": "Delete character right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "enter",
+        "id": null,
+        "action": "submit",
+        "description": "Submit",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+w",
+        "id": null,
+        "action": "delete_left_word",
+        "description": "Delete left to start of word",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+u",
+        "id": null,
+        "action": "delete_left_all",
+        "description": "Delete all to the left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+f",
+        "id": null,
+        "action": "delete_right_word",
+        "description": "Delete right to start of word",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+k",
+        "id": null,
+        "action": "delete_right_all",
+        "description": "Delete all to the right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+x",
+        "id": null,
+        "action": "cut",
+        "description": "Cut selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "copy",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "copy",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+v",
+        "id": null,
+        "action": "paste",
+        "description": "Paste text from the clipboard",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  },
+  {
+    "class": "textual.widgets.Log",
+    "bindings": [
+      {
+        "key": "up",
+        "id": null,
+        "action": "scroll_up",
+        "description": "Scroll Up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "down",
+        "id": null,
+        "action": "scroll_down",
+        "description": "Scroll Down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "left",
+        "id": null,
+        "action": "scroll_left",
+        "description": "Scroll Left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "right",
+        "id": null,
+        "action": "scroll_right",
+        "description": "Scroll Right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "home",
+        "id": null,
+        "action": "scroll_home",
+        "description": "Scroll Home",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "end",
+        "id": null,
+        "action": "scroll_end",
+        "description": "Scroll End",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pageup",
+        "id": null,
+        "action": "page_up",
+        "description": "Page Up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pagedown",
+        "id": null,
+        "action": "page_down",
+        "description": "Page Down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+pageup",
+        "id": null,
+        "action": "page_left",
+        "description": "Page Left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+pagedown",
+        "id": null,
+        "action": "page_right",
+        "description": "Page Right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  },
+  {
+    "class": "textual.widgets.Tabs",
+    "bindings": [
+      {
+        "key": "left",
+        "id": null,
+        "action": "previous_tab",
+        "description": "Previous tab",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "right",
+        "id": null,
+        "action": "next_tab",
+        "description": "Next tab",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  }
+]

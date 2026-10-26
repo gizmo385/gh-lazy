@@ -23,7 +23,7 @@ use crate::theme::{Accent, Theme};
 pub const AUTH_POLL_INTERVAL: Duration = Duration::from_secs(5);
 
 /// The screen's only binding. The screen is modal, so the app's other bindings don't reach past it.
-const AUTH_BINDINGS: &[BindingId] = &[BindingId::AppQuit];
+pub const AUTH_BINDINGS: &[BindingId] = &[BindingId::AppQuit];
 
 /// Textual's `border: ascii`.
 const ASCII_BORDER: border::Set<'static> = border::Set {

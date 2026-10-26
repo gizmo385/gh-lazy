@@ -1,5 +1,5 @@
 //! The binding registry matches the Python app's, dumped to `fixtures/bindings.json` by
-//! `fixtures/generate_bindings.py`.
+//! `fixtures/generate_bindings.py`. `contexts.rs` and `keys.rs` check the generator's other two goldens.
 
 use std::collections::HashSet;
 use std::path::Path;
@@ -45,6 +45,8 @@ fn every_python_binding_exists_with_the_same_defaults() {
         assert_eq!(def.action, text(binding, "action"), "{id} action");
         assert_eq!(def.tooltip, text(binding, "tooltip"), "{id} tooltip");
         assert_eq!(def.key_display, binding["key_display"].as_str(), "{id} key_display");
+        assert_eq!(Some(def.priority), binding["priority"].as_bool(), "{id} priority");
+        assert_eq!(Some(def.system), binding["system"].as_bool(), "{id} system");
 
         let description = DESCRIPTION_DIFFS
             .iter()
@@ -86,8 +88,8 @@ fn the_registry_keeps_python_order() {
     assert_eq!(rust, python);
 }
 
-/// Regenerates `bindings.json` with the Python app and checks the committed copy matches (the golden manifest is
-/// `parity/goldens/keybindings.toml`).
+/// Regenerates `bindings.json`, `contexts.json` and `keys.json` with the Python app and checks the committed copies
+/// match (the golden manifest is `parity/goldens/keybindings.toml`).
 #[test]
 #[ignore = "needs uv and the Python app"]
 fn bindings_goldens_are_fresh() {
@@ -95,7 +97,11 @@ fn bindings_goldens_are_fresh() {
     let home = tempfile::tempdir().unwrap();
     assert_goldens_fresh(
         "crates/lazy-github-tui/tests/fixtures/generate_bindings.py",
-        &["crates/lazy-github-tui/tests/fixtures/bindings.json"],
+        &[
+            "crates/lazy-github-tui/tests/fixtures/bindings.json",
+            "crates/lazy-github-tui/tests/fixtures/contexts.json",
+            "crates/lazy-github-tui/tests/fixtures/keys.json",
+        ],
         home.path(),
         "HOME=$(mktemp -d) uv run python crates/lazy-github-tui/tests/fixtures/generate_bindings.py",
     );

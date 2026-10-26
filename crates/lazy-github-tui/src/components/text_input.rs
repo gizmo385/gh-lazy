@@ -24,16 +24,17 @@ static WORD: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"[\p{L}\p{N}_]").expect("valid pattern")
 });
 
-/// The input's bindings, in Textual's `Input.BINDINGS` order. Selection (`shift+…`, `ctrl+shift+a`) and the
-/// clipboard (`ctrl+x`, `ctrl+c`, `ctrl+v`) come with the M3 shared input.
+/// The input's bindings, in Textual's merged order: `left`, `right`, `home` and `end` keep the places of the
+/// `ScrollView` keys they replace, then the rest of `Input.BINDINGS` follows. Selection (`shift+…`, `ctrl+shift+a`),
+/// the clipboard (`ctrl+x`, `ctrl+c`, `ctrl+v`) and the inherited scroll keys come with the M3 shared input (#145).
 pub const INPUT_BINDINGS: &[BindingId] = &[
     BindingId::TextualInputCursorLeft,
-    BindingId::TextualInputCursorLeftWord,
     BindingId::TextualInputCursorRight,
-    BindingId::TextualInputCursorRightWord,
-    BindingId::TextualInputDeleteLeft,
     BindingId::TextualInputHome,
     BindingId::TextualInputEnd,
+    BindingId::TextualInputCursorLeftWord,
+    BindingId::TextualInputCursorRightWord,
+    BindingId::TextualInputDeleteLeft,
     BindingId::TextualInputDeleteRight,
     BindingId::TextualInputSubmit,
     BindingId::TextualInputDeleteLeftWord,

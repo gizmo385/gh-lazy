@@ -1,0 +1,1002 @@
+{
+  "defaults": [
+    {
+      "raw": "$",
+      "keys": [
+        "dollar_sign"
+      ],
+      "display": [
+        "$"
+      ]
+    },
+    {
+      "raw": "/",
+      "keys": [
+        "slash"
+      ],
+      "display": [
+        "/"
+      ]
+    },
+    {
+      "raw": "1",
+      "keys": [
+        "1"
+      ],
+      "display": [
+        "1"
+      ]
+    },
+    {
+      "raw": "2",
+      "keys": [
+        "2"
+      ],
+      "display": [
+        "2"
+      ]
+    },
+    {
+      "raw": "3",
+      "keys": [
+        "3"
+      ],
+      "display": [
+        "3"
+      ]
+    },
+    {
+      "raw": "4",
+      "keys": [
+        "4"
+      ],
+      "display": [
+        "4"
+      ]
+    },
+    {
+      "raw": "5",
+      "keys": [
+        "5"
+      ],
+      "display": [
+        "5"
+      ]
+    },
+    {
+      "raw": "6",
+      "keys": [
+        "6"
+      ],
+      "display": [
+        "6"
+      ]
+    },
+    {
+      "raw": "?",
+      "keys": [
+        "question_mark"
+      ],
+      "display": [
+        "?"
+      ]
+    },
+    {
+      "raw": "E",
+      "keys": [
+        "E"
+      ],
+      "display": [
+        "E"
+      ]
+    },
+    {
+      "raw": "F",
+      "keys": [
+        "F"
+      ],
+      "display": [
+        "F"
+      ]
+    },
+    {
+      "raw": "G",
+      "keys": [
+        "G"
+      ],
+      "display": [
+        "G"
+      ]
+    },
+    {
+      "raw": "I",
+      "keys": [
+        "I"
+      ],
+      "display": [
+        "I"
+      ]
+    },
+    {
+      "raw": "J",
+      "keys": [
+        "J"
+      ],
+      "display": [
+        "J"
+      ]
+    },
+    {
+      "raw": "K",
+      "keys": [
+        "K"
+      ],
+      "display": [
+        "K"
+      ]
+    },
+    {
+      "raw": "M",
+      "keys": [
+        "M"
+      ],
+      "display": [
+        "M"
+      ]
+    },
+    {
+      "raw": "O",
+      "keys": [
+        "O"
+      ],
+      "display": [
+        "O"
+      ]
+    },
+    {
+      "raw": "P",
+      "keys": [
+        "P"
+      ],
+      "display": [
+        "P"
+      ]
+    },
+    {
+      "raw": "R",
+      "keys": [
+        "R"
+      ],
+      "display": [
+        "R"
+      ]
+    },
+    {
+      "raw": "T",
+      "keys": [
+        "T"
+      ],
+      "display": [
+        "T"
+      ]
+    },
+    {
+      "raw": "^",
+      "keys": [
+        "circumflex_accent"
+      ],
+      "display": [
+        "^"
+      ]
+    },
+    {
+      "raw": "backspace",
+      "keys": [
+        "backspace"
+      ],
+      "display": [
+        "⌫"
+      ]
+    },
+    {
+      "raw": "c",
+      "keys": [
+        "c"
+      ],
+      "display": [
+        "c"
+      ]
+    },
+    {
+      "raw": "circumflex_accent",
+      "keys": [
+        "circumflex_accent"
+      ],
+      "display": [
+        "^"
+      ]
+    },
+    {
+      "raw": "ctrl+a",
+      "keys": [
+        "ctrl+a"
+      ],
+      "display": [
+        "^a"
+      ]
+    },
+    {
+      "raw": "ctrl+c",
+      "keys": [
+        "ctrl+c"
+      ],
+      "display": [
+        "^c"
+      ]
+    },
+    {
+      "raw": "ctrl+d",
+      "keys": [
+        "ctrl+d"
+      ],
+      "display": [
+        "^d"
+      ]
+    },
+    {
+      "raw": "ctrl+e",
+      "keys": [
+        "ctrl+e"
+      ],
+      "display": [
+        "^e"
+      ]
+    },
+    {
+      "raw": "ctrl+end",
+      "keys": [
+        "ctrl+end"
+      ],
+      "display": [
+        "^end"
+      ]
+    },
+    {
+      "raw": "ctrl+f",
+      "keys": [
+        "ctrl+f"
+      ],
+      "display": [
+        "^f"
+      ]
+    },
+    {
+      "raw": "ctrl+home",
+      "keys": [
+        "ctrl+home"
+      ],
+      "display": [
+        "^home"
+      ]
+    },
+    {
+      "raw": "ctrl+k",
+      "keys": [
+        "ctrl+k"
+      ],
+      "display": [
+        "^k"
+      ]
+    },
+    {
+      "raw": "ctrl+left",
+      "keys": [
+        "ctrl+left"
+      ],
+      "display": [
+        "^←"
+      ]
+    },
+    {
+      "raw": "ctrl+m",
+      "keys": [
+        "ctrl+m"
+      ],
+      "display": [
+        "^m"
+      ]
+    },
+    {
+      "raw": "ctrl+n",
+      "keys": [
+        "ctrl+n"
+      ],
+      "display": [
+        "^n"
+      ]
+    },
+    {
+      "raw": "ctrl+p",
+      "keys": [
+        "ctrl+p"
+      ],
+      "display": [
+        "^p"
+      ]
+    },
+    {
+      "raw": "ctrl+pagedown",
+      "keys": [
+        "ctrl+pagedown"
+      ],
+      "display": [
+        "^pgdn"
+      ]
+    },
+    {
+      "raw": "ctrl+pageup",
+      "keys": [
+        "ctrl+pageup"
+      ],
+      "display": [
+        "^pgup"
+      ]
+    },
+    {
+      "raw": "ctrl+q",
+      "keys": [
+        "ctrl+q"
+      ],
+      "display": [
+        "^q"
+      ]
+    },
+    {
+      "raw": "ctrl+r",
+      "keys": [
+        "ctrl+r"
+      ],
+      "display": [
+        "^r"
+      ]
+    },
+    {
+      "raw": "ctrl+right",
+      "keys": [
+        "ctrl+right"
+      ],
+      "display": [
+        "^→"
+      ]
+    },
+    {
+      "raw": "ctrl+shift+a",
+      "keys": [
+        "ctrl+shift+a"
+      ],
+      "display": [
+        "shift+^a"
+      ]
+    },
+    {
+      "raw": "ctrl+shift+left",
+      "keys": [
+        "ctrl+shift+left"
+      ],
+      "display": [
+        "shift+^←"
+      ]
+    },
+    {
+      "raw": "ctrl+shift+right",
+      "keys": [
+        "ctrl+shift+right"
+      ],
+      "display": [
+        "shift+^→"
+      ]
+    },
+    {
+      "raw": "ctrl+u",
+      "keys": [
+        "ctrl+u"
+      ],
+      "display": [
+        "^u"
+      ]
+    },
+    {
+      "raw": "ctrl+v",
+      "keys": [
+        "ctrl+v"
+      ],
+      "display": [
+        "^v"
+      ]
+    },
+    {
+      "raw": "ctrl+w",
+      "keys": [
+        "ctrl+w"
+      ],
+      "display": [
+        "^w"
+      ]
+    },
+    {
+      "raw": "ctrl+x",
+      "keys": [
+        "ctrl+x"
+      ],
+      "display": [
+        "^x"
+      ]
+    },
+    {
+      "raw": "delete",
+      "keys": [
+        "delete"
+      ],
+      "display": [
+        "del"
+      ]
+    },
+    {
+      "raw": "dollar_sign",
+      "keys": [
+        "dollar_sign"
+      ],
+      "display": [
+        "$"
+      ]
+    },
+    {
+      "raw": "down",
+      "keys": [
+        "down"
+      ],
+      "display": [
+        "↓"
+      ]
+    },
+    {
+      "raw": "end",
+      "keys": [
+        "end"
+      ],
+      "display": [
+        "end"
+      ]
+    },
+    {
+      "raw": "enter",
+      "keys": [
+        "enter"
+      ],
+      "display": [
+        "⏎"
+      ]
+    },
+    {
+      "raw": "enter,space",
+      "keys": [
+        "enter",
+        "space"
+      ],
+      "display": [
+        "⏎",
+        "space"
+      ]
+    },
+    {
+      "raw": "escape",
+      "keys": [
+        "escape"
+      ],
+      "display": [
+        "esc"
+      ]
+    },
+    {
+      "raw": "f",
+      "keys": [
+        "f"
+      ],
+      "display": [
+        "f"
+      ]
+    },
+    {
+      "raw": "g",
+      "keys": [
+        "g"
+      ],
+      "display": [
+        "g"
+      ]
+    },
+    {
+      "raw": "h",
+      "keys": [
+        "h"
+      ],
+      "display": [
+        "h"
+      ]
+    },
+    {
+      "raw": "home",
+      "keys": [
+        "home"
+      ],
+      "display": [
+        "home"
+      ]
+    },
+    {
+      "raw": "j",
+      "keys": [
+        "j"
+      ],
+      "display": [
+        "j"
+      ]
+    },
+    {
+      "raw": "k",
+      "keys": [
+        "k"
+      ],
+      "display": [
+        "k"
+      ]
+    },
+    {
+      "raw": "l",
+      "keys": [
+        "l"
+      ],
+      "display": [
+        "l"
+      ]
+    },
+    {
+      "raw": "left",
+      "keys": [
+        "left"
+      ],
+      "display": [
+        "←"
+      ]
+    },
+    {
+      "raw": "n",
+      "keys": [
+        "n"
+      ],
+      "display": [
+        "n"
+      ]
+    },
+    {
+      "raw": "pagedown",
+      "keys": [
+        "pagedown"
+      ],
+      "display": [
+        "pgdn"
+      ]
+    },
+    {
+      "raw": "pageup",
+      "keys": [
+        "pageup"
+      ],
+      "display": [
+        "pgup"
+      ]
+    },
+    {
+      "raw": "q",
+      "keys": [
+        "q"
+      ],
+      "display": [
+        "q"
+      ]
+    },
+    {
+      "raw": "q, escape",
+      "keys": [
+        "q",
+        "escape"
+      ],
+      "display": [
+        "q",
+        "esc"
+      ]
+    },
+    {
+      "raw": "question_mark",
+      "keys": [
+        "question_mark"
+      ],
+      "display": [
+        "?"
+      ]
+    },
+    {
+      "raw": "r",
+      "keys": [
+        "r"
+      ],
+      "display": [
+        "r"
+      ]
+    },
+    {
+      "raw": "right",
+      "keys": [
+        "right"
+      ],
+      "display": [
+        "→"
+      ]
+    },
+    {
+      "raw": "shift+end",
+      "keys": [
+        "shift+end"
+      ],
+      "display": [
+        "shift+end"
+      ]
+    },
+    {
+      "raw": "shift+enter",
+      "keys": [
+        "shift+enter"
+      ],
+      "display": [
+        "shift+⏎"
+      ]
+    },
+    {
+      "raw": "shift+home",
+      "keys": [
+        "shift+home"
+      ],
+      "display": [
+        "shift+home"
+      ]
+    },
+    {
+      "raw": "shift+left",
+      "keys": [
+        "shift+left"
+      ],
+      "display": [
+        "shift+←"
+      ]
+    },
+    {
+      "raw": "shift+right",
+      "keys": [
+        "shift+right"
+      ],
+      "display": [
+        "shift+→"
+      ]
+    },
+    {
+      "raw": "shift+tab",
+      "keys": [
+        "shift+tab"
+      ],
+      "display": [
+        "shift+tab"
+      ]
+    },
+    {
+      "raw": "slash",
+      "keys": [
+        "slash"
+      ],
+      "display": [
+        "/"
+      ]
+    },
+    {
+      "raw": "space",
+      "keys": [
+        "space"
+      ],
+      "display": [
+        "space"
+      ]
+    },
+    {
+      "raw": "super+c",
+      "keys": [
+        "super+c"
+      ],
+      "display": [
+        "super+c"
+      ]
+    },
+    {
+      "raw": "tab",
+      "keys": [
+        "tab"
+      ],
+      "display": [
+        "tab"
+      ]
+    },
+    {
+      "raw": "u",
+      "keys": [
+        "u"
+      ],
+      "display": [
+        "u"
+      ]
+    },
+    {
+      "raw": "up",
+      "keys": [
+        "up"
+      ],
+      "display": [
+        "↑"
+      ]
+    },
+    {
+      "raw": "y",
+      "keys": [
+        "y"
+      ],
+      "display": [
+        "y"
+      ]
+    }
+  ],
+  "overrides": [
+    {
+      "raw": "?",
+      "normalized": "question_mark",
+      "keys": [
+        "question_mark"
+      ],
+      "display": [
+        "?"
+      ]
+    },
+    {
+      "raw": "question_mark",
+      "normalized": "question_mark",
+      "keys": [
+        "question_mark"
+      ],
+      "display": [
+        "?"
+      ]
+    },
+    {
+      "raw": "/",
+      "normalized": "slash",
+      "keys": [
+        "slash"
+      ],
+      "display": [
+        "/"
+      ]
+    },
+    {
+      "raw": "slash",
+      "normalized": "slash",
+      "keys": [
+        "slash"
+      ],
+      "display": [
+        "/"
+      ]
+    },
+    {
+      "raw": "$",
+      "normalized": "dollar_sign",
+      "keys": [
+        "dollar_sign"
+      ],
+      "display": [
+        "$"
+      ]
+    },
+    {
+      "raw": "dollar_sign",
+      "normalized": "dollar_sign",
+      "keys": [
+        "dollar_sign"
+      ],
+      "display": [
+        "$"
+      ]
+    },
+    {
+      "raw": "^",
+      "normalized": "circumflex_accent",
+      "keys": [
+        "circumflex_accent"
+      ],
+      "display": [
+        "^"
+      ]
+    },
+    {
+      "raw": "circumflex_accent",
+      "normalized": "circumflex_accent",
+      "keys": [
+        "circumflex_accent"
+      ],
+      "display": [
+        "^"
+      ]
+    },
+    {
+      "raw": "ctrl+t",
+      "normalized": "ctrl+t",
+      "keys": [
+        "ctrl+t"
+      ],
+      "display": [
+        "^t"
+      ]
+    },
+    {
+      "raw": "x, ctrl+t",
+      "normalized": "x,ctrl+t",
+      "keys": [
+        "x",
+        "ctrl+t"
+      ],
+      "display": [
+        "x",
+        "^t"
+      ]
+    },
+    {
+      "raw": "x,ctrl+t",
+      "normalized": "x,ctrl+t",
+      "keys": [
+        "x",
+        "ctrl+t"
+      ],
+      "display": [
+        "x",
+        "^t"
+      ]
+    },
+    {
+      "raw": "q, escape",
+      "normalized": "q,escape",
+      "keys": [
+        "q",
+        "escape"
+      ],
+      "display": [
+        "q",
+        "esc"
+      ]
+    },
+    {
+      "raw": "9",
+      "normalized": "9",
+      "keys": [
+        "9"
+      ],
+      "display": [
+        "9"
+      ]
+    },
+    {
+      "raw": "M",
+      "normalized": "M",
+      "keys": [
+        "M"
+      ],
+      "display": [
+        "M"
+      ]
+    },
+    {
+      "raw": "bogus",
+      "normalized": "bogus",
+      "keys": [
+        "bogus"
+      ],
+      "display": [
+        "bogus"
+      ]
+    },
+    {
+      "raw": "Enter",
+      "normalized": "Enter",
+      "keys": [
+        "Enter"
+      ],
+      "display": [
+        "Enter"
+      ]
+    },
+    {
+      "raw": "ctrl+",
+      "normalized": "ctrl+",
+      "keys": [
+        "ctrl+"
+      ],
+      "display": [
+        "^"
+      ]
+    },
+    {
+      "raw": "shift+1",
+      "normalized": "shift+1",
+      "keys": [
+        "shift+1"
+      ],
+      "display": [
+        "shift+1"
+      ]
+    },
+    {
+      "raw": "comma",
+      "normalized": "comma",
+      "keys": [
+        "comma"
+      ],
+      "display": [
+        ","
+      ]
+    },
+    {
+      "raw": "shift+enter",
+      "normalized": "shift+enter",
+      "keys": [
+        "shift+enter"
+      ],
+      "display": [
+        "shift+⏎"
+      ]
+    },
+    {
+      "raw": "ctrl+m",
+      "normalized": "ctrl+m",
+      "keys": [
+        "ctrl+m"
+      ],
+      "display": [
+        "^m"
+      ]
+    },
+    {
+      "raw": "",
+      "normalized": "",
+      "keys": [
+        "question_mark"
+      ],
+      "display": [
+        "?"
+      ]
+    },
+    {
+      "raw": " , ",
+      "normalized": ",",
+      "keys": [
+        ""
+      ],
+      "display": [
+        ""
+      ]
+    }
+  ]
+}

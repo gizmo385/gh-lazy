@@ -725,3 +725,125 @@ fn a_theme_change_recolors_the_same_document() {
     assert_eq!(dark[(2, 2)].fg, rgb(0x0178D4));
     assert_eq!(nord[(2, 2)].fg, rgb(0x88C0D0));
 }
+
+/// A row's cells in `columns`: `(symbol, fg, modifier)` for each.
+fn code_cells(
+    rendered: &Rendered,
+    width: u16,
+    row: u16,
+    columns: std::ops::Range<u16>,
+) -> Vec<(String, Color, Modifier)> {
+    let buf = buffer(rendered, width);
+    columns
+        .map(|x| {
+            let cell = &buf[(x, row)];
+            (cell.symbol().to_owned(), cell.fg, cell.modifier)
+        })
+        .collect()
+}
+
+#[test]
+fn sh_fences_color_echo_as_python_does() {
+    // `parity/references/repo-overview/160x48/readme.screen`: `echo` is `#ffc473` and its argument `#ffffff`.
+    let rendered = render("```sh\necho hello\n```", 40);
+    let cells = code_cells(&rendered, 40, 2, 4..14);
+    assert!(cells[..4].iter().all(|(_, fg, _)| *fg == rgb(0xFFC473)), "{cells:?}");
+    assert!(cells[4..].iter().all(|(_, fg, _)| *fg == rgb(0xFFFFFF)), "{cells:?}");
+    let buf = buffer(&rendered, 40);
+    assert_eq!(buf[(4, 2)].bg, rgb(0x101010));
+}
+
+#[test]
+fn python_fences_take_the_highlight_themes_colors() {
+    // Each color as Textual 8.2.5 draws the same token on `textual-dark`.
+    let source = "```python\n# note\ndef foo(x):\n    return \"s\" + 'c' and None\n```";
+    let rendered = render(source, 60);
+    let buf = buffer(&rendered, 60);
+    let at = |x: u16, y: u16| (buf[(x, y)].symbol().to_owned(), buf[(x, y)].fg, buf[(x, y)].modifier);
+    // `$text 60%`.
+    assert_eq!(at(4, 2), ("#".to_owned(), rgb(0x9F9F9F), Modifier::empty()));
+    // `$text-accent`, then `$text-warning underline`, then `$text-primary`, and `$text` between.
+    assert_eq!(at(4, 3), ("d".to_owned(), rgb(0xFFC473), Modifier::empty()));
+    assert_eq!(at(8, 3), ("f".to_owned(), rgb(0xFFC473), Modifier::UNDERLINED));
+    assert_eq!(at(12, 3), ("x".to_owned(), rgb(0x57A5E2), Modifier::empty()));
+    assert_eq!(at(11, 3), ("(".to_owned(), rgb(0xFFFFFF), Modifier::empty()));
+    // `$text-success 90%` for double quotes, `$text-success` for single, `bold $text-error` for `and`, and
+    // `bold $text-success 80%` for `None`.
+    assert_eq!(at(15, 4), ("\"".to_owned(), rgb(0x7DC092), Modifier::empty()));
+    assert_eq!(at(21, 4), ("'".to_owned(), rgb(0x8AD4A1), Modifier::empty()));
+    assert_eq!(at(25, 4), ("a".to_owned(), rgb(0xD17E92), Modifier::BOLD));
+    assert_eq!(at(29, 4), ("N".to_owned(), rgb(0x71AC84), Modifier::BOLD));
+}
+
+#[test]
+fn unknown_unlabeled_and_indented_code_is_plain_text() {
+    for source in [
+        "```klingon\nfn main() { 1 }\n```",
+        "```\nfn main() { 1 }\n```",
+        "    fn main() { 1 }",
+        // Pygments takes the whole info string as the language name.
+        "```rust ignore\nfn main() { 1 }\n```",
+    ] {
+        let cells = code_cells(&render(source, 40), 40, 2, 4..19);
+        assert!(
+            cells.iter().all(|(_, fg, m)| *fg == rgb(0xFFFFFF) && m.is_empty()),
+            "{source}: {cells:?}"
+        );
+    }
+}
+
+#[test]
+fn tabs_expand_before_highlighting() {
+    let rendered = render("```sh\n\techo x\n```", 40);
+    assert_eq!(rows(&rendered)[2], "            echo x");
+    let cells = code_cells(&rendered, 40, 2, 12..16);
+    assert!(cells.iter().all(|(_, fg, _)| *fg == rgb(0xFFC473)), "{cells:?}");
+}
+
+#[test]
+fn ansi_themes_use_the_ansi_highlight_themes() {
+    // As Textual 8.2.5 draws it on both ANSI themes.
+    let source = "```python\ndef f(): return 'c' + \"d\" + 1\n```";
+    for (name, number) in [
+        ("ansi-dark", (Color::Yellow, Modifier::empty())),
+        ("ansi-light", (Color::Blue, Modifier::BOLD)),
+    ] {
+        let rendered = Markdown::parse(source).layout(40, &theme(name));
+        let buf = buffer(&rendered, 40);
+        // No fence padding or margin: the code starts at the document's padding, on the first row.
+        assert_eq!(buf[(2, 1)].symbol(), "d", "{name}");
+        assert_eq!(
+            (buf[(2, 1)].fg, buf[(2, 1)].modifier),
+            (Color::Magenta, Modifier::BOLD),
+            "{name}"
+        );
+        // `ansi_greenb` doesn't parse, so single-quoted strings are plain; double-quoted ones are green.
+        assert_eq!(buf[(18, 1)].fg, Color::Reset, "{name}");
+        assert_eq!(buf[(24, 1)].fg, Color::Green, "{name}");
+        assert_eq!((buf[(30, 1)].fg, buf[(30, 1)].modifier), number, "{name}");
+    }
+}
+
+#[test]
+fn a_theme_change_recolors_the_highlighting() {
+    let markdown = Markdown::parse("```sh\necho hello\n```");
+    let dark = buffer(&markdown.layout(20, &dark()), 20);
+    let light = buffer(&markdown.layout(20, &theme("textual-light")), 20);
+    assert_eq!(dark[(4, 2)].fg, rgb(0xFFC473));
+    assert_ne!(light[(4, 2)].fg, dark[(4, 2)].fg);
+    assert_ne!(light[(4, 2)].fg, light[(9, 2)].fg);
+}
+
+#[test]
+fn markdown_code_rust() {
+    let source = "```rust\n/// Doc.\n#[derive(Debug)]\npub struct Point { x: i32 }\n\nfn main() {\n    let p = \"point\"; // note\n    println!(\"{p} {}\", 42);\n}\n```";
+    let rendered = Markdown::parse(source).layout(50, &dark());
+    insta::assert_debug_snapshot!(buffer(&rendered, 50));
+}
+
+#[test]
+fn markdown_code_sh_ansi_dark() {
+    let source = "```sh\n# install\nexport PATH=\"$HOME/bin:$PATH\"\nif [ -f x ]; then echo 'ok' 42; fi\n```";
+    let rendered = Markdown::parse(source).layout(50, &theme("ansi-dark"));
+    insta::assert_debug_snapshot!(buffer(&rendered, 50));
+}

@@ -29,7 +29,8 @@ futures-util = { version = "0.3", default-features = false }
 # with ratatui 0.30 above. See https://github.com/gizmo385/gh-lazy/issues/85.
 # `default-features = false`: the markdown renderer (#215) uses only the event iterator, not the HTML writer.
 pulldown-cmark = { version = "0.13", default-features = false }
-syntect = "5.3"
+# `default-features = false`: crates pick the pure-Rust regex engine (`regex-fancy`) rather than Oniguruma's C library.
+syntect = { version = "5.3", default-features = false }
 nucleo-matcher = "0.3"
 
 # Runtime, serialization, CLI, errors

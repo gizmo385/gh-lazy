@@ -21,6 +21,8 @@ jiff = { workspace = true }
 lazy-github-core = { workspace = true }
 # The markdown renderer's parser (PLAN §4, #215).
 pulldown-cmark = { workspace = true }
+# Fence syntax colors (PLAN §4, #217): the bundled grammars, parsed with the pure-Rust regex engine.
+syntect = { workspace = true, features = ["default-syntaxes", "regex-fancy"] }
 ratatui = { workspace = true }
 # Python's `str.isprintable` by general category, for the table search's `repr` of a row (#101).
 regex = { workspace = true }

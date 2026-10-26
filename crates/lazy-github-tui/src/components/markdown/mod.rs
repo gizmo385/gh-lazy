@@ -4,8 +4,9 @@
 //! [`Markdown::layout`] lays the tree out at a width in a theme's colors, as [`Rendered`] lines plus the cells every
 //! link covers. Layout is pure, so a view keeps the parsed document and caches the layout for its width and theme.
 //!
-//! Not drawn yet, with the issues that add them: syntax colors in fenced code (#217) and links for bare URLs (#218).
+//! Not drawn yet: links for bare URLs (#218).
 
+mod highlight;
 mod layout;
 mod parse;
 mod table;
@@ -118,7 +119,7 @@ enum Block {
         items: Vec<Vec<Block>>,
     },
     Quote(Vec<Block>),
-    /// Fenced or indented code. `language` is a fence's info string, for the highlighting #217 adds.
+    /// Fenced or indented code. `language` is a fence's info string, which picks its syntax colors.
     Code {
         language: Option<String>,
         text: String,

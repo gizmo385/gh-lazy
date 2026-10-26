@@ -8,6 +8,7 @@ use std::sync::Arc;
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 
+use super::highlight;
 use super::wrap::{self, Cell};
 use super::{Block, Inline, LinkSpan, Rendered};
 use crate::theme::{Paint, Theme, ThemeColor};
@@ -22,7 +23,7 @@ const QUOTE_BAR: &str = "▌";
 const QUOTE_INSET: usize = 3;
 /// A fence's `& > Label { padding: 1 2 }` columns (none under ANSI themes).
 const FENCE_PADDING: usize = 2;
-/// Pygments' `tabsize`, which Textual's highlighter passes.
+/// Pygments' `tabsize`, which Textual's highlighter passes: tabs expand before the code is tokenized.
 const TAB_SIZE: usize = 8;
 
 pub(super) fn layout(blocks: &[Block], width: u16, theme: &Theme) -> Rendered {
@@ -169,7 +170,7 @@ impl Painter<'_> {
             Block::Paragraph(text) => self.inlines(text, width, self.text_style(scope.under), scope.under),
             Block::List { start, items } => self.list(*start, items, width, scope),
             Block::Quote(blocks) => self.quote(blocks, width, scope),
-            Block::Code { text, .. } => self.code(text, width, scope.under),
+            Block::Code { language, text } => self.code(language.as_deref(), text, width, scope.under),
             Block::Rule => vec![
                 Row::default(),
                 Row {
@@ -285,8 +286,9 @@ impl Painter<'_> {
             .collect()
     }
 
-    /// A fenced or indented code block: never wrapped, long lines cut at the edge. #217 colors its tokens.
-    fn code(&self, text: &str, width: usize, under: Paint) -> Vec<Row> {
+    /// A fenced or indented code block, its tokens in the highlight theme's colors: never wrapped, long lines cut at
+    /// the edge.
+    fn code(&self, language: Option<&str>, text: &str, width: usize, under: Paint) -> Vec<Row> {
         let p = self.palette();
         let ansi = self.theme.ansi;
         let background = self.theme.markdown_fence_background().over(under);
@@ -295,12 +297,8 @@ impl Painter<'_> {
         } else {
             Style::new().bg(self.theme.paint(background))
         };
-        // The highlighter puts `$text` under every token, and Textual resolves that `auto` color at full strength.
-        let text_color = match p.text {
-            ThemeColor::Auto { .. } => ThemeColor::Auto { alpha: 1.0 },
-            other => other,
-        };
-        let style = bg.fg(self.theme.color(text_color, background));
+        // The highlighter puts `$text` under every token.
+        let style = bg.fg(self.theme.color(highlight::full_text(p.text), background));
         let padding = if ansi { 0 } else { FENCE_PADDING };
         let blank = || {
             if ansi {
@@ -314,14 +312,24 @@ impl Painter<'_> {
         };
 
         let mut rows = vec![blank()];
-        for line in code_lines(text) {
-            let visible = cut(&line, width.saturating_sub(padding));
-            let used = padding + Span::raw(visible.as_str()).width();
+        let lines = code_lines(text);
+        let tokens = highlight::highlight(language, &lines);
+        for (line, tokens) in lines.iter().zip(tokens) {
             let mut spans = Vec::new();
             if padding > 0 {
                 spans.push(Span::styled(" ".repeat(padding), bg));
             }
-            spans.push(Span::styled(visible, style));
+            let mut used = padding;
+            for (piece, token) in pieces(line, &tokens) {
+                let visible = cut(piece, width.saturating_sub(used));
+                used += Span::raw(visible.as_str()).width();
+                let whole = visible.len() == piece.len();
+                let piece_style = token.map_or(style, |token| self.token_style(token, style, background));
+                spans.push(Span::styled(visible, piece_style));
+                if !whole {
+                    break;
+                }
+            }
             if !ansi && used < width {
                 spans.push(Span::styled(" ".repeat(width - used), bg));
             }
@@ -513,6 +521,26 @@ fn expand_tabs(line: &str) -> String {
         }
     }
     out
+}
+
+/// `line` split at its tokens' edges, every piece with its token or none, covering the whole line in order.
+fn pieces<'a>(
+    line: &'a str,
+    tokens: &[(Range<usize>, highlight::Token)],
+) -> impl Iterator<Item = (&'a str, Option<highlight::Token>)> {
+    let mut pieces = Vec::new();
+    let mut at = 0;
+    for (range, token) in tokens {
+        if range.start > at {
+            pieces.push((&line[at..range.start], None));
+        }
+        pieces.push((&line[range.clone()], Some(*token)));
+        at = range.end;
+    }
+    if at < line.len() || pieces.is_empty() {
+        pieces.push((&line[at..], None));
+    }
+    pieces.into_iter()
 }
 
 /// The graphemes of `line` that fit in `width` cells.

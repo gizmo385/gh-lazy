@@ -1,0 +1,39 @@
+---
+source: crates/lazy-github-tui/src/components/markdown/tests.rs
+expression: "buffer(&rendered, 50)"
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 50, height: 5 },
+    content: [
+        "                                                  ",
+        "  # install                                       ",
+        "  export PATH="$HOME/bin:$PATH"                   ",
+        "  if [ -f x ]; then echo 'ok' 42; fi              ",
+        "                                                  ",
+    ],
+    styles: [
+        x: 0, y: 0, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 2, y: 1, fg: Reset, bg: Reset, underline: Reset, modifier: DIM | ITALIC,
+        x: 11, y: 1, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 2, y: 2, fg: Magenta, bg: Reset, underline: Reset, modifier: BOLD,
+        x: 8, y: 2, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 14, y: 2, fg: Green, bg: Reset, underline: Reset, modifier: NONE,
+        x: 16, y: 2, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 20, y: 2, fg: Green, bg: Reset, underline: Reset, modifier: NONE,
+        x: 26, y: 2, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 30, y: 2, fg: Green, bg: Reset, underline: Reset, modifier: NONE,
+        x: 31, y: 2, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 2, y: 3, fg: Magenta, bg: Reset, underline: Reset, modifier: BOLD,
+        x: 4, y: 3, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 5, y: 3, fg: Cyan, bg: Reset, underline: Reset, modifier: NONE,
+        x: 6, y: 3, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 12, y: 3, fg: Cyan, bg: Reset, underline: Reset, modifier: NONE,
+        x: 13, y: 3, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 15, y: 3, fg: Magenta, bg: Reset, underline: Reset, modifier: BOLD,
+        x: 19, y: 3, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 20, y: 3, fg: Cyan, bg: Reset, underline: Reset, modifier: NONE,
+        x: 24, y: 3, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        x: 34, y: 3, fg: Magenta, bg: Reset, underline: Reset, modifier: BOLD,
+        x: 36, y: 3, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+    ]
+}

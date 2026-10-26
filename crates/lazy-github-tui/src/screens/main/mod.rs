@@ -6,6 +6,7 @@ mod issue_lists;
 pub mod layout;
 mod list;
 mod pull_requests;
+mod repo_overview;
 mod repos;
 mod section_table;
 mod sections;
@@ -246,6 +247,8 @@ pub enum MainAction {
     ScrollLog(Scroll),
     /// A wheel notch over the command log, focused or not.
     WheelLog(Wheel),
+    /// A wheel notch over the details content, focused or not.
+    WheelDetails(Wheel),
     /// A click on the repos table's cursor cell: focus the table, then select the repo, in that order.
     ClickSelect(Box<Repository>),
     /// A section's lazy table asked for `page` (a cursor key, a click or a search submit): its section requests it.
@@ -307,7 +310,6 @@ impl MainScreen {
         if self.section(SectionId::Workflows).shown() {
             // #173: workflows and runs.
         }
-        // #174 fills the Repo Overview body.
         self.details.show_repo(repo, cx);
         self.details_title = format!(
             "[{}] {} Details",
@@ -345,7 +347,8 @@ impl MainScreen {
     pub fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
         // #173 offers what's left to the workflows pane.
         let response = self.repos.on_response(id, response, cx)?;
-        self.issue_lists.on_response(id, response, cx)
+        let response = self.issue_lists.on_response(id, response, cx)?;
+        self.details.on_response(id, response)
     }
 
     /// The repos section.
@@ -640,11 +643,14 @@ impl MainScreen {
     }
 
     /// What a mouse wheel event means: Textual scrolls the widget under the pointer, focused or not. The repos table
-    /// takes its own in [`Self::handle_mouse`]; here it's the command log.
+    /// takes its own in [`Self::handle_mouse`]; here it's the command log or the details content.
     pub fn wheel(&self, mouse: &MouseEvent) -> Option<Action> {
         let wheel = Wheel::from_mouse(mouse)?;
-        (self.hit(mouse.column, mouse.row) == Some(FocusTarget::CommandLog))
-            .then_some(Action::Main(MainAction::WheelLog(wheel)))
+        match self.hit(mouse.column, mouse.row)? {
+            FocusTarget::CommandLog => Some(Action::Main(MainAction::WheelLog(wheel))),
+            FocusTarget::DetailsContent => Some(Action::Main(MainAction::WheelDetails(wheel))),
+            _ => None,
+        }
     }
 
     /// The binding chain for the current focus, innermost first, up to and including the screen. Python's widget
@@ -866,6 +872,7 @@ impl Component for MainScreen {
             MainAction::ScrollDetails(scroll) => self.details.scroll(scroll),
             MainAction::ScrollLog(scroll) => self.command_log.scroll(scroll),
             MainAction::WheelLog(wheel) => self.command_log.wheel(wheel),
+            MainAction::WheelDetails(wheel) => self.details.wheel(wheel),
             MainAction::ClickSelect(repo) => {
                 self.try_focus(FocusTarget::Table(SectionId::Repos));
                 cx.dispatch(Action::SelectRepo(repo));

@@ -1,0 +1,70 @@
+---
+source: crates/lazy-github-tui/src/screens/main/repo_overview.rs
+expression: buffer_to_styled_string(terminal.backend().buffer())
+---
+parity-bot/hello-world • Public
+Owned by parity-bot
+Default branch: main
+
+A first repository for trying things out.
+
+──────────────────────────────────────────────────────────
+
+
+
+                       Hello World                        ▁▁
+
+  A first repository for trying things out, with bold,
+  italic, inline code and a link. This line continues
+  the same paragraph.
+
+
+  Install
+
+   1. Clone the repo
+   2. Run make install
+
+  • one
+  • two
+--- styles
+......................aaabbbbbbcccccccccccccccccccccccccccdd
+aaaaaaaaaeeeeeeeeeecccccccccccccccccccccccccccccccccccccccdd
+aaaaaaaaaaaaaaaaffffccccccccccccccccccccccccccccccccccccccdd
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdd
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccccccccccccdd
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdd
+ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggdd
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdd
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdd
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdd
+cchhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhccii
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccjj
+ccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffffaccccjj
+cckkkkkkaalllllllllllaaaaaaammmmaaaaaaaaaaaaaaaaaaaaacccccjj
+ccaaaaaaaaaaaaaaaaaaacccccccccccccccccccccccccccccccccccccjj
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccjj
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccjj
+ccnnnnnnncccccccccccccccccccccccccccccccccccccccccccccccccjj
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccjj
+ccooooaaaaaaaaaaaaaaccccccccccccccccccccccccccccccccccccccjj
+ccooooaaaallllllllllllccccccccccccccccccccccccccccccccccccjj
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccjj
+ccooaaacccccccccccccccccccccccccccccccccccccccccccccccccccjj
+ccooaaacccccccccccccccccccccccccccccccccccccccccccccccccccjj
+--- legend
+. fg=#1f1f1f bg=Reset BOLD | UNDERLINED
+a fg=#1f1f1f bg=Reset
+b fg=#adff2f bg=Reset
+c fg=Reset bg=Reset
+d fg=#7994a9 bg=Reset REVERSED
+e fg=#1f1f1f bg=Reset UNDERLINED
+f fg=#1f1f1f bg=Reset BOLD
+g fg=#0178d4 bg=Reset
+h fg=#004578 bg=Reset BOLD
+i fg=#7994a9 bg=#cacaca REVERSED
+j fg=#1f1f1f bg=#cacaca
+k fg=#1f1f1f bg=Reset ITALIC
+l fg=#7e2f43 bg=#ddd8d9
+m fg=#1d1d1d bg=Reset UNDERLINED
+n fg=#004578 bg=Reset UNDERLINED
+o fg=#004f8b bg=Reset

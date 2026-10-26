@@ -8,11 +8,11 @@ expression: screen
 ┌─ [1] Repositories ───────────────────┐┌─ [5] octo/one Details ───────────────────────────────────┐
 │ ★  Owner  Name  Private              ││ Repo Overview                                            │
 │ ☆  octo   one   ✘                    ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
-│ ☆  octo   two   ✘                    ││                                                          │
+│ ☆  octo   two   ✘                    ││octo/one • Public                                         │
+│                                      ││Owned by octo                                             │
+│                                      ││Default branch: main                                      │
 │                                      ││                                                          │
-│                                      ││                                                          │
-│                                      ││                                                          │
-│                                      ││                                                          │
+│                                      ││──────────────────────────────────────────────────────────│
 │                                      ││                                                          │
 └──────────────────────────────────────┘│                                                          │
 ┌─ [2] Pull Requests ──────────────────┐│                                                          │

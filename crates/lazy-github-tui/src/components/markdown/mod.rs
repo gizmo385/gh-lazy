@@ -17,6 +17,7 @@ mod tests;
 use std::ops::Range;
 use std::sync::Arc;
 
+use ratatui::style::Style;
 use ratatui::text::Line;
 
 use crate::theme::Theme;
@@ -41,6 +42,43 @@ impl Markdown {
     /// Lays the document out `width` cells wide in `theme`'s colors. A width of 0 gives no lines.
     pub fn layout(&self, width: u16, theme: &Theme) -> Rendered {
         layout::layout(&self.blocks, width, theme)
+    }
+}
+
+/// Plain styled text, not markdown, wrapped to `width` cells the way a paragraph wraps, with no padding or margins.
+/// A `\n` starts a new row, and each line takes at least one. Textual's `Label` with wrapping text.
+pub fn wrap_text(runs: &[TextRun], width: u16) -> Rendered {
+    layout::plain(runs, width)
+}
+
+/// A run of plain text in one style, for [`wrap_text`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextRun {
+    /// The text, shown as is.
+    pub text: String,
+    /// Its style.
+    pub style: Style,
+    /// Where it links to, if it's a link.
+    pub link: Option<Arc<str>>,
+}
+
+impl TextRun {
+    /// `text` in `style`, not a link.
+    pub fn new(text: impl Into<String>, style: Style) -> Self {
+        TextRun {
+            text: text.into(),
+            style,
+            link: None,
+        }
+    }
+
+    /// `text` in `style`, linking to `target`.
+    pub fn link(text: impl Into<String>, style: Style, target: impl Into<Arc<str>>) -> Self {
+        TextRun {
+            text: text.into(),
+            style,
+            link: Some(target.into()),
+        }
     }
 }
 

@@ -1,0 +1,52 @@
+---
+source: crates/lazy-github-tui/src/screens/main/repo_overview.rs
+expression: "app.screen(160, 48)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/hello-world                                                                                                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-bot/hello-world Details ─────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Repo Overview                                                                                │
+│ ☆  parity-bot  dotfiles     ✘                                ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  ✘                                ││parity-bot/hello-world • Public                                                               │
+│ ☆  parity-bot  lazy-demo    ✘                                ││Owned by parity-bot                                                                           │
+│                                                              ││Default branch: main                                                                          │
+│                                                              ││                                                                                              │
+│                                                              ││A first repository for trying things out.                                                     │
+│                                                              ││                                                                                              │
+│                                                              ││────────────────────────────────────────────────────────────────────────────────────────────  │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                        Hello World                                           │
+│                                                              ││                                                                                              │
+│                                                              ││  A first repository for trying things out, with bold, italic, inline code and a link.        │
+└──────────────────────────────────────────────────────────────┘│  This line continues the same paragraph.                                                     │
+┌─ [2] Pull Requests (empty) ──────────────────────────────────┐│                                                                                              │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│  Install                                                                                     │
+┌─ [3] Issues ─────────────────────────────────────────────────┐│                                                                                              │
+│                                                              ││   1. Clone the repo                                                                          │
+│                                                              ││   2. Run make install                                                                        │
+│                                                              ││                                                                                              │
+│                                                              ││  • one                                                                                       │
+│                                                              ││  • two                                                                                       │
+│                                                              ││    ▪ nested under two                                                                        │
+│                                                              ││                                                                                              │
+│                                                              ││  ▌ A quoted line.                                                                            │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│    echo hello                                                                                │
+┌─ [4] Workflows ──────────────────────────────────────────────┐│    echo world                                                                                │
+│                                                              ││                                                                                            ▁▁│
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││  ────────────────────────────────────────────────────────────────────────────────────────    │
+│                                                              ││                                                                                              │
+│                                                              ││  Name Value                                                                                  │
+│                                                              ││                                                                                              │
+│                                                              ││  a 1                                                                                         │
+│                                                              ││                                                                                              │
+│                                                              ││  Options                                                                                     │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Comman

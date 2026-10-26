@@ -14,7 +14,7 @@ use crate::models::{IssueListItem, Repository, User};
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues` returns an empty page, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues` returns an empty page, `repo_readme` finds no README, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -38,6 +38,8 @@ pub enum GithubCall {
         /// The filters and page.
         query: IssueListQuery,
     },
+    /// [`Github::repo_readme`], with the repo's full name.
+    RepoReadme(String),
 }
 
 #[derive(Debug, Default)]
@@ -48,6 +50,8 @@ struct State {
     unread_count: Option<Result<usize, GhError>>,
     /// Keyed by `full_name` and page.
     issue_pages: HashMap<(String, u32), Result<Vec<IssueListItem>, GhError>>,
+    /// Keyed by `full_name`.
+    readmes: HashMap<String, Result<Option<String>, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -105,6 +109,13 @@ impl FakeGithub {
         self.lock()
             .issue_pages
             .insert((full_name.to_owned(), page_number), page);
+        self
+    }
+
+    /// `repo_readme` returns `readme` for the repository named `full_name`. Repos not set have no README.
+    #[must_use]
+    pub fn with_readme(self, full_name: &str, readme: Result<Option<String>, GhError>) -> Self {
+        self.lock().readmes.insert(full_name.to_owned(), readme);
         self
     }
 
@@ -210,6 +221,17 @@ impl Github for FakeGithub {
             Some(Ok(items)) => Ok(items.clone()),
             Some(Err(error)) => Err(duplicate(error)),
             None => Ok(Vec::new()),
+        })
+        .await
+    }
+
+    async fn repo_readme(&self, full_name: &str) -> Result<Option<String>, GhError> {
+        self.respond(GithubCall::RepoReadme(full_name.to_owned()), |state| {
+            match state.readmes.get(full_name) {
+                Some(Ok(readme)) => Ok(readme.clone()),
+                Some(Err(error)) => Err(duplicate(error)),
+                None => Ok(None),
+            }
         })
         .await
     }
@@ -415,6 +437,25 @@ mod tests {
             ]
         );
         assert_eq!(github.calls().len(), 4);
+    }
+
+    #[tokio::test]
+    async fn readmes_by_repo() {
+        let github = FakeGithub::new()
+            .with_readme("octocat/a", Ok(Some("# A\n".into())))
+            .with_readme(
+                "octocat/b",
+                Err(GhError::Timeout {
+                    after: Duration::from_secs(1),
+                }),
+            );
+        assert_eq!(github.repo_readme("octocat/a").await.unwrap().as_deref(), Some("# A\n"));
+        assert!(matches!(
+            github.repo_readme("octocat/b").await,
+            Err(GhError::Timeout { .. })
+        ));
+        assert_eq!(github.repo_readme("octocat/c").await.unwrap(), None);
+        assert_eq!(github.calls()[0], GithubCall::RepoReadme("octocat/a".into()));
     }
 
     #[test]

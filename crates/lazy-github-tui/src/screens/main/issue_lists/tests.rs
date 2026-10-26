@@ -53,11 +53,13 @@ fn issue_requests(app: &TestApp) -> Vec<(RequestId, String, IssueListQuery)> {
         .collect()
 }
 
+/// The cancelled issue-list requests (the README request a selection also cancels is the overview's).
 fn cancels(app: &TestApp) -> Vec<RequestId> {
+    let issue_ids: Vec<RequestId> = issue_requests(app).iter().map(|(id, ..)| *id).collect();
     app.effects()
         .iter()
         .filter_map(|effect| match effect {
-            Effect::Cancel(id) => Some(*id),
+            Effect::Cancel(id) if issue_ids.contains(id) => Some(*id),
             _ => None,
         })
         .collect()

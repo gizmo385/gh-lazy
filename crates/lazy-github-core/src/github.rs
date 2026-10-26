@@ -14,7 +14,7 @@ use std::time::Duration;
 use tokio::sync::OnceCell;
 
 use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
-use crate::gh::{self, GhError, GhRequest, GhResponse, GhTimeouts};
+use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts};
 use crate::models::{IssueListItem, Repository, User};
 
 #[cfg(any(test, feature = "test-util"))]
@@ -67,6 +67,11 @@ pub trait Github: Clone + Send + Sync + 'static {
         repo: &Repository,
         query: IssueListQuery,
     ) -> impl Future<Output = Result<Vec<IssueListItem>, GhError>> + Send;
+
+    /// The README of `full_name` as raw markdown, verbatim, or `None` when the repo has none (404).
+    ///
+    /// Fails on any other HTTP error status or `gh` failure.
+    fn repo_readme(&self, full_name: &str) -> impl Future<Output = Result<Option<String>, GhError>> + Send;
 }
 
 /// Which repositories [`Github::list_repositories`] returns, by the user's relationship to them.
@@ -348,6 +353,14 @@ impl GhCli {
         request
     }
 
+    /// `GET /repos/{full_name}/readme` as raw markdown, cached for the default TTL as Python does.
+    fn repo_readme_request(&self, full_name: &str) -> GhRequest {
+        let mut request = GhRequest::get(format!("/repos/{full_name}/readme"));
+        request.accept = Accept::Raw;
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -407,6 +420,19 @@ impl Github for GhCli {
         let request = self.list_issues_request(repo, query, creator.as_deref());
         let response = self.inner.runner.request(request).await?;
         issue_list_items(&response, repo)
+    }
+
+    async fn repo_readme(&self, full_name: &str) -> Result<Option<String>, GhError> {
+        readme_text(self.inner.runner.request(self.repo_readme_request(full_name)).await)
+    }
+}
+
+/// A README response as the README: the body verbatim, `None` for a 404.
+fn readme_text(response: Result<GhResponse, GhError>) -> Result<Option<String>, GhError> {
+    match response {
+        Ok(response) => Ok(Some(response.text())),
+        Err(GhError::Http { status: 404, .. }) => Ok(None),
+        Err(error) => Err(error),
     }
 }
 
@@ -905,5 +931,56 @@ mod tests {
             Err(GhError::Decode(_))
         ));
         assert!(issue_list_items(&api_response("[]"), &repo).unwrap().is_empty());
+    }
+
+    #[test]
+    fn repo_readme_argv() {
+        let gh = GhCli::default();
+        assert_eq!(
+            strings(
+                gh.repo_readme_request("parity-bot/dotfiles")
+                    .argv(gh.runner().hostname(), false)
+            ),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--cache",
+                "600s",
+                "-H",
+                "Accept: application/vnd.github.raw",
+                "/repos/parity-bot/dotfiles/readme"
+            ]
+        );
+    }
+
+    fn raw_response(status: &str, body: &str) -> Result<GhResponse, GhError> {
+        let stdout = format!("HTTP/2.0 {status}\r\nContent-Type: application/vnd.github.raw\r\n\r\n{body}");
+        let exit = i32::from(!status.starts_with('2'));
+        gh::interpret(Some(exit), stdout.as_bytes(), b"", false)
+    }
+
+    #[test]
+    fn a_missing_readme_is_none_and_other_failures_are_errors() {
+        let not_found = raw_response("404 Not Found", r#"{"message":"Not Found"}"#);
+        assert_eq!(readme_text(not_found).unwrap(), None);
+        let server = raw_response("500 Internal Server Error", r#"{"message":"boom"}"#);
+        assert!(matches!(readme_text(server), Err(GhError::Http { status: 500, .. })));
+        assert!(matches!(
+            readme_text(Err(GhError::NotInstalled)),
+            Err(GhError::NotInstalled)
+        ));
+    }
+
+    #[test]
+    fn a_readme_comes_back_verbatim() {
+        // Blank lines and a header-shaped line survive (Py bug B47).
+        let body = "# Title\n\n\nNote: kept\n\nlast\n";
+        assert_eq!(
+            readme_text(raw_response("200 OK", body)).unwrap().as_deref(),
+            Some(body)
+        );
+        assert_eq!(readme_text(raw_response("200 OK", "")).unwrap().as_deref(), Some(""));
     }
 }

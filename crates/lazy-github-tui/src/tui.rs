@@ -507,6 +507,10 @@ mod tests {
         ) -> Result<Vec<lazy_github_core::models::IssueListItem>, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }
+
+        async fn repo_readme(&self, _full_name: &str) -> Result<Option<String>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
     }
 
     /// Runs the loop on a `TestBackend` with `effect` already started, and returns how it ended.

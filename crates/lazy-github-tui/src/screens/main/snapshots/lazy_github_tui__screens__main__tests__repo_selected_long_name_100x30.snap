@@ -8,12 +8,12 @@ expression: screen
 ┌─ [1] Repositories ───────────────────┐┌─ [5] octo/a-repository-with-a-name-far-too-long-for-th… ─┐
 │ ★  Owner  Name                       ││ Repo Overview                                            │
 │ ☆  octo   a-repository-with-a-name-fa││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
-│                  ▏                   ││                                                          │
+│                  ▏                   ││octo/a-repository-with-a-name-far-too-long-for-the-details│
+│                                      ││-title • Public                                           │
+│                                      ││Owned by octo                                             │
+│                                      ││Default branch: main                                      │
 │                                      ││                                                          │
-│                                      ││                                                          │
-│                                      ││                                                          │
-│                                      ││                                                          │
-│                                      ││                                                          │
+│                                      ││──────────────────────────────────────────────────────────│
 └──────────────────────────────────────┘│                                                          │
 ┌─ [2] Pull Requests ──────────────────┐│                                                          │
 │                                      ││                                                          │

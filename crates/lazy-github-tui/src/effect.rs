@@ -102,6 +102,8 @@ pub enum GithubRequest {
     },
     /// [`Github::unread_notification_count`].
     UnreadNotificationCount,
+    /// [`Github::repo_readme`] of the repo with this full name.
+    RepoReadme(String),
 }
 
 /// The result of a [`GithubRequest`], in the variant of the same name.
@@ -117,6 +119,8 @@ pub enum GithubResponse {
     ListIssues(Result<Vec<IssueListItem>, GhError>),
     /// [`Github::unread_notification_count`].
     UnreadNotificationCount(Result<usize, GhError>),
+    /// [`Github::repo_readme`].
+    RepoReadme(Result<Option<String>, GhError>),
 }
 
 impl GithubRequest {
@@ -132,6 +136,7 @@ impl GithubRequest {
             GithubRequest::UnreadNotificationCount => {
                 GithubResponse::UnreadNotificationCount(gh.unread_notification_count().await)
             }
+            GithubRequest::RepoReadme(full_name) => GithubResponse::RepoReadme(gh.repo_readme(&full_name).await),
         }
     }
 }

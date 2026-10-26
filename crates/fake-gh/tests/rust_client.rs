@@ -470,3 +470,44 @@ async fn child_list_issues_mine_no_user() {
     let error = gh.list_issues(&lazy_fixture(), query).await.unwrap_err();
     assert!(matches!(error, GhError::Http { status: 404, .. }), "{error:?}");
 }
+
+#[test]
+fn repo_readmes_are_raw_and_verbatim() {
+    let log = run_child("child_repo_readmes", "logged-in", &["repo-overview"]);
+    assert_eq!(log.len(), 3, "{log:#?}");
+    assert!(log.iter().all(|line| line["miss"] == false), "{log:#?}");
+    assert_eq!(
+        strings(&log[0]["argv"]),
+        [
+            "api",
+            "-i",
+            "-X",
+            "GET",
+            "--cache",
+            "600s",
+            "-H",
+            "Accept: application/vnd.github.raw",
+            "/repos/parity-bot/hello-world/readme"
+        ]
+    );
+    let statuses: Vec<&Value> = log.iter().map(|line| &line["status"]).collect();
+    assert_eq!(statuses, [200, 404, 200]);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_repo_readmes() {
+    let Some(gh) = client() else { return };
+    let hello = gh.repo_readme("parity-bot/hello-world").await.unwrap().unwrap();
+    assert!(hello.starts_with("# Hello World\n\nA first repository"), "{hello}");
+    assert!(hello.contains("| `-q` | Quiet. |\n"), "{hello}");
+    assert_eq!(gh.repo_readme("parity-bot/lazy-demo").await.unwrap(), None);
+    // Blank lines and the header-shaped line survive (Py bug B47).
+    assert_eq!(
+        gh.repo_readme("parity-bot/dotfiles").await.unwrap().as_deref(),
+        Some(
+            "# dotfiles\n\nThe first paragraph.\n\nA second paragraph, after a blank line.\n\nNote: a line shaped like \
+             an HTTP header.\n\n```sh\necho one\n\necho two\n```\n"
+        )
+    );
+}

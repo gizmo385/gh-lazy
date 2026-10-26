@@ -8,6 +8,7 @@ pub mod help_panel;
 pub mod info;
 pub mod loading;
 pub mod markdown;
+pub mod scroll_view;
 pub mod scrollbar;
 pub mod status_bar;
 pub mod table;

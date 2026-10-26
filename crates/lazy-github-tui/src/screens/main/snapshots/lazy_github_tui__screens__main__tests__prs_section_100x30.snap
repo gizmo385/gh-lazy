@@ -8,13 +8,13 @@ expression: screen
 ┌─ [1] Repositories ───────────────────┐┌─ [5] octo/one Details ───────────────────────────────────┐
 │ ★  Owner  Name  Private              ││ Repo Overview                                            │
 │ ☆  octo   one   ✘                    ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
-│ ☆  octo   two   ✘                    ││                                                          │
+│ ☆  octo   two   ✘                    ││octo/one • Public                                         │
+│                                      ││Owned by octo                                             │
+│                                      ││Default branch: main                                      │
 │                                      ││                                                          │
+│                                      ││──────────────────────────────────────────────────────────│
 │                                      ││                                                          │
-│                                      ││                                                          │
-│                                      ││                                                          │
-│                                      ││                                                          │
-└──────────────────────────────────────┘│                                                          │
+└──────────────────────────────────────┘│  No README found.                                        │
 ┌─ [2] Pull Requests ──────────────────┐│                                                          │
 │ #   Status  Author      Title        ││                                                          │
 │ 13  open    parity-bot  PR 13        ││                                                          │

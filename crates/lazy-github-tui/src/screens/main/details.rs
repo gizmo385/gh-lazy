@@ -7,11 +7,14 @@ use ratatui::Frame;
 use ratatui::layout::Rect;
 
 use crate::component::Cx;
+use crate::components::command_log::Wheel;
 use crate::components::info::{InfoView, Scroll};
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
+use crate::effect::{GithubResponse, RequestId};
 use crate::theme::Theme;
 
 use super::FocusTarget;
+use super::repo_overview::RepoOverview;
 
 /// The details pane's content.
 #[derive(Debug)]
@@ -26,7 +29,7 @@ enum Body {
     /// The Introduction tab, before any selection.
     Intro(InfoView),
     /// The selected repo's Repo Overview tab.
-    Repo(RepoOverview),
+    Repo(Box<RepoOverview>),
 }
 
 impl Default for DetailsPane {
@@ -35,24 +38,6 @@ impl Default for DetailsPane {
             tabs: TabStrip::new(["Introduction"]),
             body: Body::Intro(InfoView::default()),
         }
-    }
-}
-
-/// The Repo Overview tab of the selected repo. Its body is #174's; until then it draws nothing.
-#[derive(Debug)]
-pub(super) struct RepoOverview {
-    repo: Repository,
-}
-
-impl RepoOverview {
-    /// The overview of `repo`. Takes the context so it can start its own requests (the README, #219).
-    pub(super) fn new(repo: &Repository, _cx: &mut Cx<'_>) -> Self {
-        Self { repo: repo.clone() }
-    }
-
-    /// The repo shown.
-    pub(super) fn repo(&self) -> &Repository {
-        &self.repo
     }
 }
 
@@ -65,8 +50,11 @@ impl DetailsPane {
     /// Replaces the tabs with the one active Repo Overview tab of `repo`, scrolled to the top: Python clears the
     /// panes and adds a new one on every selection, the same repo included.
     pub(super) fn show_repo(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
+        if let Body::Repo(old) = &self.body {
+            old.close(cx);
+        }
         self.tabs = TabStrip::new(["Repo Overview"]);
-        self.body = Body::Repo(RepoOverview::new(repo, cx));
+        self.body = Body::Repo(Box::new(RepoOverview::new(repo, cx)));
     }
 
     /// The tab strip.
@@ -82,11 +70,40 @@ impl DetailsPane {
         }
     }
 
+    /// Takes the overview's README response, and hands back any other. A README response for an overview that's
+    /// gone is dropped.
+    pub(super) fn on_response(&mut self, id: RequestId, response: GithubResponse) -> Option<GithubResponse> {
+        let GithubResponse::RepoReadme(result) = response else {
+            return Some(response);
+        };
+        match &mut self.body {
+            Body::Repo(overview) if overview.pending() == Some(id) => overview.on_readme(result),
+            _ => tracing::debug!("Dropping the README response {id} of a repo no longer shown"),
+        }
+        None
+    }
+
     pub(super) fn scroll(&mut self, scroll: Scroll) {
         match &mut self.body {
             Body::Intro(info) => info.scroll(scroll),
-            // Nothing to scroll until #174 draws the overview.
-            Body::Repo(_) => {}
+            Body::Repo(overview) => overview.scroll(scroll),
+        }
+    }
+
+    /// A wheel notch over the active tab's body.
+    pub(super) fn wheel(&mut self, wheel: Wheel) {
+        match &mut self.body {
+            Body::Intro(info) => info.wheel(wheel),
+            Body::Repo(overview) => overview.wheel(wheel),
+        }
+    }
+
+    /// The overview showing, if any.
+    #[cfg(test)]
+    pub(super) fn overview(&self) -> Option<&RepoOverview> {
+        match &self.body {
+            Body::Intro(_) => None,
+            Body::Repo(overview) => Some(overview),
         }
     }
 
@@ -112,7 +129,7 @@ impl DetailsPane {
         };
         match &mut self.body {
             Body::Intro(info) => info.render(frame, body, theme),
-            Body::Repo(_) => {}
+            Body::Repo(overview) => overview.render(frame, body, theme),
         }
         [(tabs, FocusTarget::DetailsTabs), (body, FocusTarget::DetailsContent)]
     }

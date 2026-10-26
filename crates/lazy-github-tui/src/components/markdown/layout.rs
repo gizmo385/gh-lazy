@@ -345,31 +345,15 @@ impl Painter<'_> {
     /// Inline runs wrapped to `width`, over `base`: a `\n` (a hard break) starts a row, and each line takes at
     /// least one.
     fn inlines(&self, text: &[Inline], width: usize, base: Style, under: Paint) -> Vec<Row> {
-        let styles: Vec<Style> = text.iter().map(|run| self.inline_style(base, under, run)).collect();
-        let mut rows = Vec::new();
-        let mut line: Vec<Cell<'_>> = Vec::new();
-        let mut finish = |line: &mut Vec<Cell<'_>>| {
-            let cells = std::mem::take(line);
-            let ranges = wrap::rows(&cells, width);
-            if ranges.is_empty() {
-                rows.push(Row::default());
-            }
-            for range in ranges {
-                rows.push(row_of(&cells[range], text, &styles));
-            }
-        };
-        for (index, run) in text.iter().enumerate() {
-            let mut pieces = run.text.split('\n');
-            if let Some(first) = pieces.next() {
-                line.extend(wrap::cells(first, index));
-            }
-            for piece in pieces {
-                finish(&mut line);
-                line.extend(wrap::cells(piece, index));
-            }
-        }
-        finish(&mut line);
-        rows
+        let runs: Vec<StyledRun<'_>> = text
+            .iter()
+            .map(|run| StyledRun {
+                text: &run.text,
+                style: self.inline_style(base, under, run),
+                link: run.link.as_ref(),
+            })
+            .collect();
+        wrap_runs(&runs, width)
     }
 
     fn inline_style(&self, base: Style, under: Paint, run: &Inline) -> Style {
@@ -418,12 +402,74 @@ impl Painter<'_> {
     }
 }
 
+/// Plain styled text wrapped to `width`, laid out with no padding: [`super::wrap_text`].
+pub(super) fn plain(runs: &[super::TextRun], width: u16) -> Rendered {
+    let runs: Vec<StyledRun<'_>> = runs
+        .iter()
+        .map(|run| StyledRun {
+            text: &run.text,
+            style: run.style,
+            link: run.link.as_ref(),
+        })
+        .collect();
+    let mut rendered = Rendered::default();
+    if width == 0 {
+        return rendered;
+    }
+    for (index, row) in wrap_runs(&runs, usize::from(width)).into_iter().enumerate() {
+        rendered
+            .links
+            .extend(row.links.into_iter().map(|(columns, target)| LinkSpan {
+                row: index,
+                columns: column(columns.start)..column(columns.end),
+                target,
+            }));
+        rendered.lines.push(Line::from(row.spans));
+    }
+    rendered
+}
+
+/// A run of text in its final style.
+struct StyledRun<'a> {
+    text: &'a str,
+    style: Style,
+    link: Option<&'a Arc<str>>,
+}
+
+/// Runs wrapped to `width`: a `\n` (a hard break) starts a row, and each line takes at least one.
+fn wrap_runs(runs: &[StyledRun<'_>], width: usize) -> Vec<Row> {
+    let mut rows = Vec::new();
+    let mut line: Vec<Cell<'_>> = Vec::new();
+    let mut finish = |line: &mut Vec<Cell<'_>>| {
+        let cells = std::mem::take(line);
+        let ranges = wrap::rows(&cells, width);
+        if ranges.is_empty() {
+            rows.push(Row::default());
+        }
+        for range in ranges {
+            rows.push(row_of(&cells[range], runs));
+        }
+    };
+    for (index, run) in runs.iter().enumerate() {
+        let mut pieces = run.text.split('\n');
+        if let Some(first) = pieces.next() {
+            line.extend(wrap::cells(first, index));
+        }
+        for piece in pieces {
+            finish(&mut line);
+            line.extend(wrap::cells(piece, index));
+        }
+    }
+    finish(&mut line);
+    rows
+}
+
 fn paragraph_margins(scope: Scope) -> (usize, usize) {
     if scope.root { (0, 1) } else { (0, 0) }
 }
 
 /// One wrapped row's cells as spans, one per run they come from, and the columns of its links.
-fn row_of(cells: &[Cell<'_>], runs: &[Inline], styles: &[Style]) -> Row {
+fn row_of(cells: &[Cell<'_>], runs: &[StyledRun<'_>]) -> Row {
     let mut row = Row::default();
     let mut column = 0;
     let mut i = 0;
@@ -436,7 +482,7 @@ fn row_of(cells: &[Cell<'_>], runs: &[Inline], styles: &[Style]) -> Row {
             column += cells[i].width;
             i += 1;
         }
-        if let Some(target) = &runs[run].link {
+        if let Some(target) = runs[run].link {
             // A link's runs are contiguous, so a run that continues the last link's columns extends it.
             match row.links.last_mut() {
                 Some((columns, last)) if Arc::ptr_eq(last, target) && columns.end == start => {
@@ -445,7 +491,7 @@ fn row_of(cells: &[Cell<'_>], runs: &[Inline], styles: &[Style]) -> Row {
                 _ => row.links.push((start..column, Arc::clone(target))),
             }
         }
-        row.spans.push(Span::styled(text, styles[run]));
+        row.spans.push(Span::styled(text, runs[run].style));
     }
     row
 }

@@ -46,20 +46,22 @@ wait = { text = "Hello World", timeout_ms = 15000 }
 capture = "readme"
 checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
 
-# Focus the details tab strip, then the content under it, and scroll to its end.
+# Focus the details tab strip, then the content under it, and scroll to its end. With the content focused, the footer
+# is short enough to show `^p Command Pallete` (Python) against `^p Command Palette` (Rust): Py bug B14, fixed on
+# purpose. So these two captures leave out the cross-app footer check and match the footer's text with `contains`.
 [[step]]
 keys = ["5", "tab"]
 
 [[step]]
 capture = "content-focused"
-checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [[step]]
 keys = ["end"]
 
 [[step]]
 capture = "scrolled"
-checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # lazy-demo is the third row: archived, no description, and no README.
 [[step]]
@@ -93,11 +95,11 @@ contains = ["Repo Overview", "Hello World", "Install", "1. Clone the repo", "2. 
 not_contains = ["No README found.", "Traceback"]
 
 [expect.content-focused]
-contains = ["Repo Overview"]
+contains = ["Repo Overview", " ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pal", "  M Maximize  ? Ke"]
 not_contains = ["Traceback"]
 
 [expect.scrolled]
-contains = ["Repo Overview", "Notes", "The last paragraph.", "Quiet."]
+contains = ["Repo Overview", "Notes", "The last paragraph.", "Quiet.", " ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pal", "  M Maximize  ? Ke"]
 not_contains = ["Traceback"]
 
 [expect.no-readme]

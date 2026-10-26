@@ -19,7 +19,7 @@ use crate::theme::Theme;
 const TAB_SIZE: usize = 8;
 /// Textual's `App.scroll_sensitivity_x` and `scroll_sensitivity_y`: how far one wheel notch scrolls.
 const WHEEL_COLUMNS: usize = 4;
-const WHEEL_ROWS: usize = 2;
+pub(crate) const WHEEL_ROWS: usize = 2;
 /// `Log:focus { background-tint: $foreground 5% }`.
 const FOCUS_TINT_PERCENT: f64 = 5.0;
 

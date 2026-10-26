@@ -898,10 +898,14 @@ fn table_keys_move_the_cursor_quietly_and_select_selects() {
     assert_eq!(out, "INFO Selected repo parity-bot/lazy-demo\n");
     // The columns fit, so `l` falls through the whole chain.
     assert!(app.app_mut().action_for(Event::Key(key_event("l"))).is_none());
-    // The only effect is the selection's PR and issue first page.
+    // The only effects are the selection's PR and issue first page, and the overview's README.
     let [
         Effect::Github {
             request: GithubRequest::ListIssues { repo, query },
+            ..
+        },
+        Effect::Github {
+            request: GithubRequest::RepoReadme(_),
             ..
         },
     ] = app.effects()

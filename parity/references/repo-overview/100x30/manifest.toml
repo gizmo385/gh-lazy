@@ -4,7 +4,7 @@ size = "100x30"
 captures = ["loading", "readme", "content-focused", "scrolled", "no-readme", "py-bug-b47"]
 
 [inputs]
-scenario = "8f3c6dd26560858dd445adf663a47aa3056a9245"
+scenario = "f10da74213f370c7766a8d1f42f64b2f38046bdb"
 fixtures = "3436a8e257932d165c6448dd9c5e89ccddd3d9b6"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "a42709a8f63e18b6ffbf05888ac70df13205cac1"

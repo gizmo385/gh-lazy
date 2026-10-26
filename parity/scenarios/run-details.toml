@@ -1,0 +1,230 @@
+version = 1
+description = "Workflow run details: selecting a run opens its Overview, Jobs and Logs tabs; the job tree, a job's logs with l, a job without logs, the aggregated logs, an in-progress run and a run without jobs"
+# The run details issues flip this to true. The Details box's text isn't compared across apps, so [expect] carries
+# it, picking text both apps show while Py bugs B62 (the Overview's fields run together) and B63 (the Jobs tab's `?`
+# for a queued job) are open. The footer is left out of the cross-app checks wherever it isn't cut off: Python spells
+# `^p Command Pallete` (Py bug B14).
+gate = false
+parity_rows = [
+    "workflows.select",
+    "workflows.details",
+    "workflows.run-overview",
+    "workflows.overview-commit-info",
+    "workflows.overview-jobs-summary",
+    "workflows.overview-actions-shown",
+    "workflows.jobs-tab",
+    "workflows.jobs-tree-keys",
+    "workflows.job-logs",
+    "workflows.logs-tab",
+    "keybindings.workflows-view-job-logs",
+    "main-layout.details-title",
+]
+
+[env]
+# run-details: the repo parity-bot/run-fixture, listed first, with runs 42 (failed: build, test, a skipped lint
+# without logs, a cancelled deploy), 41 (in progress: one running job, one queued) and 40 (no jobs).
+fixtures = ["run-details", "base"]
+
+[[step]]
+wait = { text = "run-fixture", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+# The runs, the short first page's page 2 and the README have all arrived, so nothing redraws under the next keys.
+[[step]]
+wait = { text = "Fix the flaky test", timeout_ms = 15000 }
+
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/run-fixture/actions/runs", query = { page = "2", per_page = "30" } } }
+
+[[step]]
+wait = { text = "Workflow runs with jobs and logs.", timeout_ms = 15000 }
+
+[[step]]
+keys = ["4"]
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "deploy (9s)", timeout_ms = 15000 }
+
+[[step]]
+capture = "overview"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "Jobs for Run #42", timeout_ms = 15000 }
+
+[[step]]
+capture = "jobs"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
+
+# Tab: the tab's scroll area, then the tree. Down puts the cursor on the first job, enter expands it.
+[[step]]
+keys = ["tab", "tab", "down", "enter"]
+
+[[step]]
+wait = { text = "Run cargo build (completed)", timeout_ms = 15000 }
+
+[[step]]
+capture = "job-expanded"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["l"]
+
+[[step]]
+wait = { text = "Finished dev profile", timeout_ms = 15000 }
+
+[[step]]
+capture = "job-logs"
+checks = ["titles", "tabs", "focus"]
+
+# Down to test, space expands it, down to its first step: l on a step shows its job's logs.
+[[step]]
+keys = ["down", "down", "down", "down", "space", "down", "l"]
+
+[[step]]
+wait = { text = "exit code 101", timeout_ms = 15000 }
+
+[[step]]
+capture = "step-logs"
+checks = ["titles", "tabs", "focus"]
+
+# Down past test's three steps to lint, whose logs answer 404.
+[[step]]
+keys = ["down", "down", "down", "l"]
+
+[[step]]
+wait = { text = "No logs available or failed to fetch logs.", timeout_ms = 15000 }
+
+[[step]]
+capture = "no-logs"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["5", "right"]
+
+[[step]]
+wait = { text = "The operation was canceled.", timeout_ms = 15000 }
+
+[[step]]
+capture = "logs"
+checks = ["titles", "tabs", "focus"]
+
+# Run 41, in progress.
+[[step]]
+keys = ["4", "j", "enter"]
+
+[[step]]
+wait = { text = "test (Not started)", timeout_ms = 15000 }
+
+[[step]]
+capture = "in-progress"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "Jobs for Run #41", timeout_ms = 15000 }
+
+[[step]]
+capture = "in-progress-jobs"
+checks = ["titles", "tabs", "focus"]
+
+# Run 40, without jobs: each tab says so.
+[[step]]
+keys = ["4", "j", "enter"]
+
+[[step]]
+wait = { text = "Nothing to run (#40)", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "No jobs found", timeout_ms = 15000 }
+
+[[step]]
+capture = "no-jobs"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "Jobs for Run #40", timeout_ms = 15000 }
+
+[[step]]
+capture = "no-jobs-tree"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "No jobs found for this workflow run.", timeout_ms = 15000 }
+
+[[step]]
+capture = "no-jobs-logs"
+checks = ["titles", "tabs", "focus"]
+
+[expect.overview]
+pane_titles = ["", "[1] Repositories", "[5] Workflow Run #42 Details", "[2] Pull Requests (empty)", "[3] Issues (empty)", "[4] Workflows"]
+focused = ["[5] Workflow Run #42 Details"]
+# Not `tabs`: right after a selection Python sometimes draws the tab underline zero-width (#209).
+contains = ["Overview  Jobs  Logs", "✗ Failure Fix the flaky test (#42)", "Run Number: 42", "Event: push", "Branch: main", "Status: completed", "Conclusion: failure", "Attempt: 2", "Created: 2026-03-04 05:06:07", "Updated: 2026-03-04 07:20:00", "Commit Information", "SHA: 0123456 (0123456789abcdef0123456789abcdef01234567)", "Triggered by: parity-friend", "Jobs Summary", "✓ build (1m 5s)", "✗ test (2h 3m)", "− lint (0s)", "○ deploy (9s)", "Actions", "Re-run Workflow", "Re-run Failed Jobs"]
+not_contains = ["Traceback"]
+
+[expect.jobs]
+tabs = { box = "Details", names = ["Overview", "Jobs", "Logs"], active = "Jobs" }
+contains = ["Jobs for Run #42", "▶ ✓ build (completed)", "▶ ✗ test (completed)", "▶ − lint (completed)", "▶ ○ deploy (completed)", "Job Logs", "Select a job and press"]
+not_contains = ["Traceback", "Set up job"]
+
+[expect.job-expanded]
+contains = ["▼ ✓ build (completed)", "├── ✓ Set up job (completed)", "├── ✓ Run cargo build (completed)", "└── ✓ Complete job (completed)", "▶ ✗ test (completed)", " l View Job Logs  ^v Paste link"]
+not_contains = ["Traceback"]
+
+[expect.job-logs]
+contains = ["Logs for Job: build", "2026-03-04T05:06:10.0000000Z ##[group]Run cargo build", "2026-03-04T05:06:14.0000000Z     Finished dev profile in 61.2s"]
+not_contains = ["Traceback", "Select a job and press"]
+
+[expect.step-logs]
+contains = ["▼ ✗ test (completed)", "├── ✓ Set up job (completed)", "├── ✗ Run cargo test (completed)", "└── − Upload results (completed)", "Logs for Job: test", "##[error]Process completed with exit code 101."]
+not_contains = ["Traceback", "Finished dev profile"]
+
+[expect.no-logs]
+contains = ["Logs for Job: lint", "No logs available or failed to fetch logs."]
+not_contains = ["Traceback"]
+
+[expect.logs]
+tabs = { box = "Details", names = ["Overview", "Jobs", "Logs"], active = "Logs" }
+contains = ["Full Logs for Run #42", "================================================================================", "Job: build (Status: completed, Conclusion: success)", "Job: test (Status: completed, Conclusion: failure)", "Job: lint (Status: completed, Conclusion: skipped)", "(No logs available for this job)", "Job: deploy (Status: completed, Conclusion: cancelled)", "2026-03-04T05:06:14.0000000Z     Finished dev profile in 61.2s", "##[error]The operation was canceled."]
+not_contains = ["Traceback"]
+
+[expect.in-progress]
+pane_titles = ["", "[1] Repositories", "[5] Workflow Run #41 Details", "[2] Pull Requests (empty)", "[3] Issues (empty)", "[4] Workflows"]
+focused = ["[5] Workflow Run #41 Details"]
+# Not `tabs` (#209).
+contains = ["Overview  Jobs  Logs", "⋯ In Progress Add the run details (#41)", "Status: in_progress", "Attempt: 1", "SHA: fedcba9 (fedcba9876543210fedcba9876543210fedcba98)", "⋯ build (In progress)", "⋯ test (Not started)", "Re-run Workflow"]
+not_contains = ["Traceback", "Conclusion:", "Re-run Failed Jobs"]
+
+[expect.in-progress-jobs]
+contains = ["Jobs for Run #41", "▶ ⋯ build (in_progress)", "test (queued)"]
+not_contains = ["Traceback"]
+
+[expect.no-jobs]
+pane_titles = ["", "[1] Repositories", "[5] Workflow Run #40 Details", "[2] Pull Requests (empty)", "[3] Issues (empty)", "[4] Workflows"]
+contains = ["Overview  Jobs  Logs", "✓ Success Nothing to run (#40)", "Event: workflow_dispatch", "No jobs found", "Re-run Workflow"]
+not_contains = ["Traceback", "Re-run Failed Jobs"]
+
+[expect.no-jobs-tree]
+contains = ["Jobs for Run #40", "No jobs found"]
+not_contains = ["Traceback"]
+
+[expect.no-jobs-logs]
+contains = ["Full Logs for Run #40", "No jobs found for this workflow run."]
+not_contains = ["Traceback"]

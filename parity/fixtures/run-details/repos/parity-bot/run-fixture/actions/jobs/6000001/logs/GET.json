@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/run-fixture/actions/jobs/6000001/logs"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain; charset=utf-8"
+    },
+    "body_text": "2026-03-04T05:06:10.0000000Z ##[group]Run cargo build\n2026-03-04T05:06:11.0000000Z cargo build --workspace\n2026-03-04T05:06:12.0000000Z ##[endgroup]\n2026-03-04T05:06:13.0000000Z    Compiling lazy-github v0.1.0\n2026-03-04T05:06:14.0000000Z     Finished dev profile in 61.2s\n"
+  },
+  "note": "hand-written: the text GitHub's log redirect ends at"
+}

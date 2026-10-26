@@ -1,0 +1,171 @@
+version = 1
+description = "Issue details: selecting an issue opens its Overview and Comments tabs; switching tabs, the comment blocks, focus inside the Comments tab, no body, no comments and the comments loading state"
+# The issue details issues flip this to true once both tabs draw. The Details box's text isn't compared across apps,
+# so [expect] carries the Overview and comment text. The footer is left out of the cross-app checks wherever it isn't
+# cut off at the right edge: Python spells `^p Command Pallete` (Py bug B14), and Rust fixes the spelling on purpose.
+gate = false
+parity_rows = [
+    "issues.select",
+    "issues.details",
+    "issues.overview-tab",
+    "issues.comments-tab",
+    "issues.comments-focus",
+    "issues.comments-loading",
+    "issues.comments-empty",
+    "main-layout.details-title",
+]
+sizes = [[160, 48]]
+
+[env]
+# issue-details: the repo parity-bot/issue-fixture, listed first, with issues 12 (a body with references, a fence and
+# a quote; three comments, one from a deleted account), 11 (closed, no body, no comments), 10 (its comments answer
+# after 2 s), 9 (its comments answer 500, which crashes Python: Py bug B60) and pull request 8.
+fixtures = ["issue-details", "base"]
+
+[[step]]
+wait = { text = "issue-fixture", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+# The Issues table has filled, and the README has arrived, so nothing redraws under the next keys.
+[[step]]
+wait = { text = "Comments that fail to load", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Issues with bodies and comments.", timeout_ms = 15000 }
+
+[[step]]
+keys = ["3"]
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Workaround: delete the file", timeout_ms = 15000 }
+
+[[step]]
+capture = "overview"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+# The Overview's content: `E Edit Issue` joins the footer.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+capture = "overview-content"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+# Back to the tab strip, and right to Comments.
+[[step]]
+keys = ["5"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "A comment from a deleted account.", timeout_ms = 15000 }
+
+[[step]]
+capture = "comments"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
+
+# Tab: the comments' scroll area, then the first comment, drawn with a dashed border.
+[[step]]
+keys = ["tab", "tab"]
+
+[[step]]
+capture = "comment-focused"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
+
+# Right from the strip wraps around to Overview.
+[[step]]
+keys = ["5", "right"]
+
+[[step]]
+capture = "wrapped"
+checks = ["titles", "tabs", "focus"]
+
+# Issue 11: closed, no body, no comments.
+[[step]]
+keys = ["3", "j", "enter"]
+
+[[step]]
+wait = { text = "Closed without a body (#11)", timeout_ms = 15000 }
+
+[[step]]
+capture = "no-body"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "No comments available", timeout_ms = 15000 }
+
+[[step]]
+capture = "no-comments"
+checks = ["titles", "tabs", "focus"]
+
+# Issue 10: its comments take 2 s, so the Comments tab shows the loading overlay first.
+[[step]]
+keys = ["3", "j", "enter"]
+
+[[step]]
+wait = { text = "Comments that load slowly (#10)", timeout_ms = 15000 }
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "Loading...", timeout_ms = 15000 }
+
+[[step]]
+capture = "comments-loading"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+wait = { text = "This one took a while.", timeout_ms = 15000 }
+
+[[step]]
+capture = "comments-loaded"
+checks = ["titles", "tabs", "focus"]
+
+[expect.overview]
+contains = ["Overview  Comments", "Open Crash when the config file is empty (#12) by parity-friend", "Steps to reproduce", "Create an empty config.json", "parity-bot/dotfiles#3", "Error: the config file is empty (see #9)", "Workaround: delete the file and start again."]
+not_contains = ["Traceback", "Thanks @parity-friend"]
+# Not `tabs`: right after a selection Python sometimes draws the tab underline zero-width (#209).
+
+[expect.overview-content]
+contains = ["Overview  Comments", " E Edit Issue  ^v Paste link  f Follow link"]
+not_contains = ["Traceback"]
+
+[expect.comments]
+contains = ["Thanks @parity-friend, I can reproduce it on main.", "parity-bot • Tue Feb  3 10:15:30 2026", "A comment from a deleted account.", "Unknown • Wed Feb  4 11:00:00 2026", "The second paragraph.", "parity-friend • Tue Feb 10 08:45:00 2026"]
+not_contains = ["Traceback", "Steps to reproduce"]
+tabs = { box = "Details", names = ["Overview", "Comments"], active = "Comments" }
+
+[expect.comment-focused]
+contains = [" r Reply to Comment  n New Comment  ^v Paste link"]
+not_contains = ["Traceback"]
+
+[expect.wrapped]
+tabs = { box = "Details", names = ["Overview", "Comments"], active = "Overview" }
+contains = ["Steps to reproduce"]
+
+[expect.no-body]
+contains = ["Overview  Comments", "Closed Closed without a body (#11) by parity-bot"]
+not_contains = ["Traceback", "Steps to reproduce"]
+
+[expect.no-comments]
+contains = ["No comments available"]
+not_contains = ["Traceback"]
+tabs = { box = "Details", names = ["Overview", "Comments"], active = "Comments" }
+
+[expect.comments-loading]
+contains = ["Loading..."]
+not_contains = ["Traceback", "This one took a while."]
+
+[expect.comments-loaded]
+contains = ["This one took a while.", "parity-friend • Sun Feb  1 12:00:00 2026"]
+not_contains = ["Traceback", "Loading..."]

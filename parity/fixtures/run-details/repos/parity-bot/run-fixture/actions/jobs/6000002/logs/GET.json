@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/run-fixture/actions/jobs/6000002/logs"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain; charset=utf-8"
+    },
+    "body_text": "2026-03-04T05:07:22.0000000Z ##[group]Run cargo test\n2026-03-04T05:07:23.0000000Z cargo test --workspace\n2026-03-04T05:07:24.0000000Z ##[endgroup]\n2026-03-04T05:07:25.0000000Z test parity::flaky ... FAILED\n2026-03-04T05:07:26.0000000Z test result: FAILED. 41 passed; 1 failed\n2026-03-04T05:07:27.0000000Z ##[error]Process completed with exit code 101.\n"
+  },
+  "note": "hand-written: the text GitHub's log redirect ends at"
+}

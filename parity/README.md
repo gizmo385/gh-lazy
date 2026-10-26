@@ -327,6 +327,21 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   `parity-bot/dotfiles`' issues have been served (`when.after`), its issues and runs page 1 answer 500, so selecting it
   again leaves the rows restored from the cache. Listed before `repo-selected-empty` and `base`, for the
   `table-caches` scenario. Hand-written.
+- `issue-details/`: the repo `parity-bot/issue-fixture`, listed first on base's `GET /user/repos` page, with its
+  README, empty workflows and runs, and `GET /repos/parity-bot/issue-fixture/issues` page 1 (`state=all`): issues 12
+  (open; a body with `#N`, `owner/repo#N` and `@user` references, inline code, a fence and a quote), 11 (closed, no
+  body), 10, 9 and pull request 8, then an empty page 2. Each issue's `GET .../issues/<n>/comments` (as Python
+  requests `comments_url`, no query): three comments on 12 (one with a `null` user), none on 11, one on 10 after
+  2 s, a 500 on 9 (it crashes Python: Py bug B60). `GET .../issues/<n>` for 3 (not on the listed page), 8 (a pull
+  request) and 12, and a 404 for 404. Listed before `base`, for the `issue-details` and `issue-lookup` scenarios.
+  Hand-written.
+- `run-details/`: the repo `parity-bot/run-fixture`, listed first on base's `GET /user/repos` page, with its README,
+  empty issues, one workflow and three runs of it on `actions/runs` page 1 (then an empty page 2): 42 (completed,
+  failure, attempt 2), 41 (in progress) and 40 (completed, success). `GET .../actions/runs/<id>/jobs` (no query):
+  four jobs with steps on 42 (success, failure, a skipped job and a cancelled one), two on 41 (one in progress, one
+  queued) and none on 40. `GET .../actions/jobs/<id>/logs` (plain text, every line timestamped, so Py bug B47 doesn't
+  show): a 404 for 42's skipped job and 41's queued job. Listed before `base`, for the `run-details` scenario.
+  Hand-written.
 
 ## Recording fixtures
 

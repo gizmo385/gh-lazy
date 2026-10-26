@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/issue-fixture/issues/10/comments"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "url": "https://api.github.com/repos/parity-bot/issue-fixture/issues/comments/9100010",
+        "html_url": "https://github.com/parity-bot/issue-fixture/issues/10#issuecomment-9100010",
+        "issue_url": "https://api.github.com/repos/parity-bot/issue-fixture/issues/10",
+        "id": 9100010,
+        "node_id": "IC_kwDOIssue9100010",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDOAA1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        },
+        "created_at": "2026-02-01T12:00:00Z",
+        "updated_at": "2026-02-01T12:00:00Z",
+        "author_association": "CONTRIBUTOR",
+        "body": "This one took a while."
+      }
+    ],
+    "delay_ms": 2000
+  },
+  "note": "hand-written"
+}

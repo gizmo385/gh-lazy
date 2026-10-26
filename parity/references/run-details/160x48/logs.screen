@@ -1,0 +1,134 @@
+lazy-github-screen 1
+size 160x48
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/run-fixture                                                                                                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] Workflow Run #42 Details ───────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Overview  Jobs  Logs                                                                         │
+│ ☆  parity-bot  run-fixture  ✘                                ││━━━━━━━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     ✘                                ││Full Logs for Run #42                                                                         │
+│ ☆  parity-bot  hello-world  ✘                                ││                                                                                              │
+│ ☆  parity-bot  lazy-demo    ✘                                ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││    ================================================================================          │
+│                                                              ││    Job: build (Status: completed, Conclusion: success)                                       │
+│                                                              ││    ================================================================================          │
+│                                                              ││                                                                                              │
+│                                                              ││    2026-03-04T05:06:10.0000000Z ##[group]Run cargo build                                     │
+│                                                              ││    2026-03-04T05:06:11.0000000Z cargo build --workspace                                      │
+│                                                              ││    2026-03-04T05:06:12.0000000Z ##[endgroup]                                                 │
+│                                                              ││    2026-03-04T05:06:13.0000000Z    Compiling lazy-github v0.1.0                              │
+│                                                              ││    2026-03-04T05:06:14.0000000Z     Finished dev profile in 61.2s                            │
+│                                                              ││                                                                                              │
+│                                                              ││    ================================================================================          │
+└──────────────────────────────────────────────────────────────┘│    Job: test (Status: completed, Conclusion: failure)                                        │
+┌─ [2] Pull Requests (empty) ──────────────────────────────────┐│    ================================================================================          │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│    2026-03-04T05:07:22.0000000Z ##[group]Run cargo test                                      │
+┌─ [3] Issues (empty) ─────────────────────────────────────────┐│    2026-03-04T05:07:23.0000000Z cargo test --workspace                                       │
+│ #  Status  Author  Title                                     ││    2026-03-04T05:07:24.0000000Z ##[endgroup]                                                 │
+└──────────────────────────────────────────────────────────────┘│    2026-03-04T05:07:25.0000000Z test parity::flaky ... FAILED                                │
+┌─ [4] Workflows ──────────────────────────────────────────────┐│    2026-03-04T05:07:26.0000000Z test result: FAILED. 41 passed; 1 failed                     │
+│ Time              Result       Job Name  Run Name            ││    2026-03-04T05:07:27.0000000Z ##[error]Process completed with exit code 101.               │
+│ 2026-03-04 05:06  failure      CI        Fix the flaky test  ││                                                                                              │
+│ 2026-03-03 10:00  in_progress  CI        Add the run details ││    ================================================================================          │
+│ 2026-03-02 08:00  success      CI        Nothing to run      ││    Job: lint (Status: completed, Conclusion: skipped)                                        │
+│                                                       ▊      ││    ================================================================================          │
+│                                                              ││                                                                                              │
+│                                                              ││    (No logs available for this job)                                                          │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││    ================================================================================          │
+│                                                              ││    Job: deploy (Status: completed, Conclusion: cancelled)                                    │
+│                                                              ││    ================================================================================          │
+│                                                              ││                                                                                              │
+│                                                              ││    2026-03-04T07:10:50.0000000Z ##[error]The operation was canceled.                         │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pallete  M Maximize  ? Keybindings
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbccccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+dfgffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde.hhhhhhhh..hhhh.ijjjji........................................................................e
+dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkdelllllllllllllllllmmmmllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllle
+dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnndeooooooooooooooooooooo.........................................................................e
+dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnde..............................................................................................e
+dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnde..pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp..e
+d..............................................................de..ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..pprrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrppqqqqqq..e
+d..............................................................de..ppsssttsssssttssssssttsssssssssttssssssssssttssssssstpppppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..pprrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrppqqqqqq..e
+d..............................................................de..ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..ppuuuuruuruussstuuvuuuuuuuuuustvvrsssssrssstssssstssssspppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..ppuuuuruuruussstuuvuuuuuuuuuustssssstssssstwwwwwwwwwwwppppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..ppuuuuruuruussstuuvuuuuuuuuuustvvrssssssssrpppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..ppuuuuruuruussstuuvuuuuuuuuuusttttssssssssstssssrsssssstssuuuuppppppppppppppppppppppqqqqqq..e
+d..............................................................de..ppuuuuruuruussstuuvuuuuuuuuuustttttsssssssstssstssssssstxxtuuuusppppppppppppppppppppqqqqqq..e
+d..............................................................de..ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..pprrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrppqqqqqq..e
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..ppsssttssssttssssssttsssssssssttssssssssssttssssssstppppppppppppppppppppppppppppppppqqqqqq..e
+dddddddddddddddddddddyyyyyyydddddddddddddddddddddddddddddddddddde..pprrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrppqqqqqq..e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..ppuuuuruuruussstuuvuuuuuuuuuustvvrsssssrssstssssstssssppppppppppppppppppppppppppppppqqqqqq..e
+ddddddddddddddyyyyyyyddddddddddddddddddddddddddddddddddddddddddde..ppuuuuruuruussstuuvuuuuuuuuuustssssstsssstwwwwwwwwwwwpppppppppppppppppppppppppppppppqqqqqq..e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..ppuuuuruuruussstuuvuuuuuuuuuustvvrssssssssrpppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..ppuuuuruuruussstuuvuuuuuuuuuustsssstsssssstvssssstttttssssssppppppppppppppppppppppppqqqqqq..e
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..ppuuuuruuruussstuuvuuuuuuuuuustsssstuuuuuuvtssssssttuutssssssttutsssssspppppppppppppqqqqqq..e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..ppuuuuruuruussstuuvuuuuuuuuuustvvrsssssrssssssstssssssssstuuuutuuuutsssstuuuupppppppqqqqqq..e
+dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkde..ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnde..pprrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrppqqqqqq..e
+dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnde..ppsssttssssttssssssttsssssssssttssssssssssttssssssstppppppppppppppppppppppppppppppppqqqqqq..e
+dzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzABBBBBBde..pprrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrppqqqqqq..e
+d..............................................................de..ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..pptuutsssstssssssssstuuutsssstssstppppppppppppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..pprrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrppqqqqqq..e
+d..............................................................de..ppsssttssssssttssssssttsssssssssttssssssssssttssssssssstppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..pprrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrppqqqqqq..e
+d..............................................................de..ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..ppuuuuruuruussstuuvuuuuuuuuuustvvrsssssrssstuuuuuuuuutssstsssssssstpppppppppppppppppqqqqqq..e
+d..............................................................de..ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqqqqq..e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+CCCCDDDDDDDDDDDCCCDDDDDDDDDDDDCCCDDDDDDDDDDDDDDDDDDDDDDCCCDDDDDCCCCDDDDDDDDDDDDDDDDCCCDDDDDDDDDCCCDDDDDDDDDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#adff2f bg=#121212
+d fg=#6db2ff bg=#121212
+e fg=#4ebf71 bg=#121212
+f fg=#e0e0e0 bg=#242f38 bold
+g fg=#98e024 bg=#242f38 bold
+h fg=#797979 bg=#121212
+i bg=#0178d4
+j fg=#ddedf9 bg=#0178d4 bold
+k fg=#e0e0e0 bg=#153854
+l fg=#4f4f4f bg=#121212
+m fg=#0178d4 bg=#121212
+n fg=#e0e0e0 bg=#1e1e1e
+o fg=#e0e0e0 bg=#121212 bold
+p bg=#101010
+q fg=#d2d2d2 bg=#101010
+r fg=#ffffff bg=#101010 bold
+s fg=#57a5e2 bg=#101010
+t fg=#ffffff bg=#101010
+u fg=#ffc473 bg=#101010
+v fg=#d17e92 bg=#441e27
+w fg=#9f9f9f bg=#101010
+x fg=#d17e92 bg=#101010 bold
+y fg=#4e7bae bg=#121212
+z fg=#003054 bg=#1e1e1e inverse
+A fg=#003054 bg=#000000
+B fg=#e0e0e0 bg=#000000
+C fg=#ffa62b bg=#242f38 bold
+D fg=#e0e0e0 bg=#242f38
+E bg=#242f38

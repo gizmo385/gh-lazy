@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/issue-fixture/issues/12/comments"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "url": "https://api.github.com/repos/parity-bot/issue-fixture/issues/comments/9100001",
+        "html_url": "https://github.com/parity-bot/issue-fixture/issues/12#issuecomment-9100001",
+        "issue_url": "https://api.github.com/repos/parity-bot/issue-fixture/issues/12",
+        "id": 9100001,
+        "node_id": "IC_kwDOIssue9100001",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDOAA1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "created_at": "2026-02-03T10:15:30Z",
+        "updated_at": "2026-02-03T10:15:30Z",
+        "author_association": "OWNER",
+        "body": "Thanks @parity-friend, I can reproduce it on `main`."
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/issue-fixture/issues/comments/9100002",
+        "html_url": "https://github.com/parity-bot/issue-fixture/issues/12#issuecomment-9100002",
+        "issue_url": "https://api.github.com/repos/parity-bot/issue-fixture/issues/12",
+        "id": 9100002,
+        "node_id": "IC_kwDOIssue9100002",
+        "user": null,
+        "created_at": "2026-02-04T11:00:00Z",
+        "updated_at": "2026-02-04T11:00:00Z",
+        "author_association": "NONE",
+        "body": "A comment from a deleted account."
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/issue-fixture/issues/comments/9100003",
+        "html_url": "https://github.com/parity-bot/issue-fixture/issues/12#issuecomment-9100003",
+        "issue_url": "https://api.github.com/repos/parity-bot/issue-fixture/issues/12",
+        "id": 9100003,
+        "node_id": "IC_kwDOIssue9100003",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDOAA1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        },
+        "created_at": "2026-02-10T08:45:00Z",
+        "updated_at": "2026-02-10T08:45:00Z",
+        "author_association": "CONTRIBUTOR",
+        "body": "Fixed in #13. The fix reads the file first and falls back to the defaults when it is empty, which is what the documentation already promised, so nothing else changes for people who never had the problem.\n\nThe second paragraph."
+      }
+    ]
+  },
+  "note": "hand-written"
+}

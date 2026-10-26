@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/issue-fixture/issues/3/comments"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": []
+  },
+  "note": "hand-written"
+}

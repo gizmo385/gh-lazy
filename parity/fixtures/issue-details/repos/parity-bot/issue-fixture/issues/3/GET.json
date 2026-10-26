@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/issue-fixture/issues/3"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "url": "https://api.github.com/repos/parity-bot/issue-fixture/issues/3",
+      "repository_url": "https://api.github.com/repos/parity-bot/issue-fixture",
+      "comments_url": "https://api.github.com/repos/parity-bot/issue-fixture/issues/3/comments",
+      "html_url": "https://github.com/parity-bot/issue-fixture/issues/3",
+      "id": 8100003,
+      "node_id": "I_kwDOIssue0003",
+      "number": 3,
+      "title": "An old issue on no listed page",
+      "user": {
+        "login": "parity-friend",
+        "id": 1000002,
+        "node_id": "U_kgDOAA1000002",
+        "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+        "url": "https://api.github.com/users/parity-friend",
+        "html_url": "https://github.com/parity-friend",
+        "type": "User",
+        "site_admin": false
+      },
+      "labels": [],
+      "state": "closed",
+      "locked": false,
+      "assignee": null,
+      "assignees": [],
+      "milestone": null,
+      "comments": 0,
+      "created_at": "2025-12-01T09:00:00Z",
+      "updated_at": "2025-12-01T09:00:00Z",
+      "closed_at": "2025-12-02T09:00:00Z",
+      "author_association": "CONTRIBUTOR",
+      "body": "Found only by **number**.",
+      "closed_by": null
+    }
+  },
+  "note": "hand-written: the single-issue endpoint"
+}

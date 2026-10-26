@@ -1,0 +1,180 @@
+version = 1
+description = "Lookup issue (O from the Issues table): the dialog, an empty or invalid number, an unknown issue, an issue not in the table (added and selected), one already in it, a pull request's number (Py bug B61) and escape"
+# The issue lookup issue flips this to true. The dialog's thick border isn't a box to the extractor, so its text is
+# checked with [expect]. Toasts stay up for 5 s and stack bottom-right over the Details box, inside its border, so
+# they don't hide any box the checks compare.
+gate = false
+parity_rows = [
+    "issues.lookup",
+    "issues.lookup-pull-request",
+    "modals.lookup-issue",
+    "keybindings.issue-lookup",
+]
+
+[env]
+fixtures = ["issue-details", "base"]
+
+[[step]]
+wait = { text = "issue-fixture", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Comments that fail to load", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Issues with bodies and comments.", timeout_ms = 15000 }
+
+[[step]]
+keys = ["3"]
+
+[[step]]
+keys = ["O"]
+
+[[step]]
+wait = { text = "Search for an issue by number:", timeout_ms = 10000 }
+
+[[step]]
+capture = "open"
+checks = ["titles", "footer"]
+
+# Lookup with nothing typed: the number doesn't parse.
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "Must enter a valid issue number!", timeout_ms = 10000 }
+
+[[step]]
+capture = "invalid"
+checks = ["titles", "footer"]
+
+# An issue that doesn't exist (a 404).
+[[step]]
+keys = ["shift+tab"]
+
+[[step]]
+type = "404"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "Could not find issue!", timeout_ms = 10000 }
+
+[[step]]
+capture = "not-found"
+checks = ["titles", "footer"]
+
+# Issue 3 isn't on the listed page: it's added to the table and selected.
+[[step]]
+keys = ["shift+tab", "backspace", "backspace", "backspace"]
+
+[[step]]
+type = "3"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "An old issue on no listed page (#3)", timeout_ms = 10000 }
+
+[[step]]
+capture = "looked-up"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+# Issue 12 is in the table already: selected, not added twice.
+[[step]]
+keys = ["3", "O"]
+
+[[step]]
+wait = { text = "Search for an issue by number:", timeout_ms = 10000 }
+
+[[step]]
+type = "12"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "Crash when the config file is empty (#12)", timeout_ms = 10000 }
+
+[[step]]
+capture = "existing"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+# 8 is a pull request. Python shows it as an issue and adds it to the Issues table (Py bug B61), so only the titles
+# and focus are compared.
+[[step]]
+keys = ["3", "O"]
+
+[[step]]
+wait = { text = "Search for an issue by number:", timeout_ms = 10000 }
+
+[[step]]
+type = "8"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "A pull request among the issues (#8)", timeout_ms = 10000 }
+
+[[step]]
+capture = "py-bug-b61"
+checks = ["titles", "focus"]
+
+# Escape closes the dialog; focus goes back to the Issues table.
+[[step]]
+keys = ["3", "O"]
+
+[[step]]
+wait = { text = "Search for an issue by number:", timeout_ms = 10000 }
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Search for an issue by number:", timeout_ms = 10000 }
+
+[[step]]
+capture = "closed"
+checks = ["titles", "focus"]
+
+[expect.open]
+contains = ["Search for an issue by number:", "Issue Number:", "Issue number", "Lookup", "Cancel"]
+footer = ["shift+⏎ Submit", "esc Close"]
+not_contains = ["Traceback"]
+
+[expect.invalid]
+contains = ["Invalid Issue Number", "Must enter a valid issue number!", "Search for an issue by number:"]
+footer = ["shift+⏎ Submit", "q Close"]
+not_contains = ["Traceback"]
+
+[expect.not-found]
+contains = ["Unknown Issue", "Could not find issue!", "Search for an issue by number:"]
+footer = ["shift+⏎ Submit", "q Close"]
+not_contains = ["Traceback"]
+
+[expect.looked-up]
+pane_titles = ["", "[1] Repositories", "[5] Issue #3 Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows (empty)"]
+focused = ["[5] Issue #3 Details"]
+contains = ["Overview  Comments", "Closed An old issue on no listed page (#3) by parity-friend", "Found only by number."]
+not_contains = ["Traceback", "Search for an issue by number:"]
+# Not `tabs` (#209).
+
+[expect.existing]
+pane_titles = ["", "[1] Repositories", "[5] Issue #12 Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows (empty)"]
+focused = ["[5] Issue #12 Details"]
+not_contains = ["Traceback", "Search for an issue by number:"]
+
+[expect.py-bug-b61]
+pane_titles = ["", "[1] Repositories", "[5] Issue #8 Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows (empty)"]
+focused = ["[5] Issue #8 Details"]
+contains = ["Open A pull request among the issues (#8) by parity-bot"]
+not_contains = ["Traceback"]
+
+[expect.closed]
+focused = ["[3] Issues"]
+not_contains = ["Traceback", "Search for an issue by number:"]

@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/run-fixture/actions/runs/5000042/jobs"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "total_count": 4,
+      "jobs": [
+        {
+          "id": 6000001,
+          "run_id": 5000042,
+          "workflow_name": "CI",
+          "head_branch": "main",
+          "run_url": "https://api.github.com/repos/parity-bot/run-fixture/actions/runs/5000042",
+          "run_attempt": 2,
+          "node_id": "CR_kwJob6000001",
+          "head_sha": "0123456789abcdef0123456789abcdef01234567",
+          "url": "https://api.github.com/repos/parity-bot/run-fixture/actions/jobs/6000001",
+          "html_url": "https://github.com/parity-bot/run-fixture/actions/runs/5000042/job/6000001",
+          "status": "completed",
+          "conclusion": "success",
+          "created_at": "2026-03-04T05:06:10Z",
+          "started_at": "2026-03-04T05:06:10Z",
+          "completed_at": "2026-03-04T05:07:15Z",
+          "name": "build",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1,
+              "started_at": "2026-03-04T05:06:10Z",
+              "completed_at": "2026-03-04T05:06:12Z"
+            },
+            {
+              "name": "Run cargo build",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2,
+              "started_at": "2026-03-04T05:06:12Z",
+              "completed_at": "2026-03-04T05:07:14Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3,
+              "started_at": "2026-03-04T05:07:14Z",
+              "completed_at": "2026-03-04T05:07:15Z"
+            }
+          ],
+          "check_run_url": "https://api.github.com/repos/parity-bot/run-fixture/check-runs/6000001",
+          "labels": [
+            "ubuntu-latest"
+          ],
+          "runner_id": 1,
+          "runner_name": "GitHub Actions 1",
+          "runner_group_id": 1,
+          "runner_group_name": "GitHub Actions"
+        },
+        {
+          "id": 6000002,
+          "run_id": 5000042,
+          "workflow_name": "CI",
+          "head_branch": "main",
+          "run_url": "https://api.github.com/repos/parity-bot/run-fixture/actions/runs/5000042",
+          "run_attempt": 2,
+          "node_id": "CR_kwJob6000002",
+          "head_sha": "0123456789abcdef0123456789abcdef01234567",
+          "url": "https://api.github.com/repos/parity-bot/run-fixture/actions/jobs/6000002",
+          "html_url": "https://github.com/parity-bot/run-fixture/actions/runs/5000042/job/6000002",
+          "status": "completed",
+          "conclusion": "failure",
+          "created_at": "2026-03-04T05:07:20Z",
+          "started_at": "2026-03-04T05:07:20Z",
+          "completed_at": "2026-03-04T07:10:45Z",
+          "name": "test",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1,
+              "started_at": "2026-03-04T05:07:20Z",
+              "completed_at": "2026-03-04T05:07:22Z"
+            },
+            {
+              "name": "Run cargo test",
+              "status": "completed",
+              "conclusion": "failure",
+              "number": 2,
+              "started_at": "2026-03-04T05:07:22Z",
+              "completed_at": "2026-03-04T07:10:44Z"
+            },
+            {
+              "name": "Upload results",
+              "status": "completed",
+              "conclusion": "skipped",
+              "number": 3,
+              "started_at": null,
+              "completed_at": null
+            }
+          ],
+          "check_run_url": "https://api.github.com/repos/parity-bot/run-fixture/check-runs/6000002",
+          "labels": [
+            "ubuntu-latest"
+          ],
+          "runner_id": 1,
+          "runner_name": "GitHub Actions 1",
+          "runner_group_id": 1,
+          "runner_group_name": "GitHub Actions"
+        },
+        {
+          "id": 6000003,
+          "run_id": 5000042,
+          "workflow_name": "CI",
+          "head_branch": "main",
+          "run_url": "https://api.github.com/repos/parity-bot/run-fixture/actions/runs/5000042",
+          "run_attempt": 2,
+          "node_id": "CR_kwJob6000003",
+          "head_sha": "0123456789abcdef0123456789abcdef01234567",
+          "url": "https://api.github.com/repos/parity-bot/run-fixture/actions/jobs/6000003",
+          "html_url": "https://github.com/parity-bot/run-fixture/actions/runs/5000042/job/6000003",
+          "status": "completed",
+          "conclusion": "skipped",
+          "created_at": "2026-03-04T05:07:20Z",
+          "started_at": "2026-03-04T05:07:20Z",
+          "completed_at": "2026-03-04T05:07:20Z",
+          "name": "lint",
+          "steps": [],
+          "check_run_url": "https://api.github.com/repos/parity-bot/run-fixture/check-runs/6000003",
+          "labels": [
+            "ubuntu-latest"
+          ],
+          "runner_id": 1,
+          "runner_name": "GitHub Actions 1",
+          "runner_group_id": 1,
+          "runner_group_name": "GitHub Actions"
+        },
+        {
+          "id": 6000004,
+          "run_id": 5000042,
+          "workflow_name": "CI",
+          "head_branch": "main",
+          "run_url": "https://api.github.com/repos/parity-bot/run-fixture/actions/runs/5000042",
+          "run_attempt": 2,
+          "node_id": "CR_kwJob6000004",
+          "head_sha": "0123456789abcdef0123456789abcdef01234567",
+          "url": "https://api.github.com/repos/parity-bot/run-fixture/actions/jobs/6000004",
+          "html_url": "https://github.com/parity-bot/run-fixture/actions/runs/5000042/job/6000004",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "created_at": "2026-03-04T07:10:50Z",
+          "started_at": "2026-03-04T07:10:50Z",
+          "completed_at": "2026-03-04T07:10:59Z",
+          "name": "deploy",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "cancelled",
+              "number": 1,
+              "started_at": "2026-03-04T07:10:50Z",
+              "completed_at": "2026-03-04T07:10:59Z"
+            }
+          ],
+          "check_run_url": "https://api.github.com/repos/parity-bot/run-fixture/check-runs/6000004",
+          "labels": [
+            "ubuntu-latest"
+          ],
+          "runner_id": 1,
+          "runner_name": "GitHub Actions 1",
+          "runner_group_id": 1,
+          "runner_group_name": "GitHub Actions"
+        }
+      ]
+    }
+  },
+  "note": "hand-written"
+}

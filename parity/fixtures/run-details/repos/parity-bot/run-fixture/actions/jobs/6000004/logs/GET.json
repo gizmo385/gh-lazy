@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/run-fixture/actions/jobs/6000004/logs"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain; charset=utf-8"
+    },
+    "body_text": "2026-03-04T07:10:50.0000000Z ##[error]The operation was canceled.\n"
+  },
+  "note": "hand-written: the text GitHub's log redirect ends at"
+}

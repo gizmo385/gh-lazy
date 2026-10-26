@@ -65,7 +65,7 @@ process spawning.
 | TUI rendering | `ratatui` | The de-facto Rust TUI library; immediate-mode rendering, `TestBackend` for snapshot tests. |
 | Terminal backend | `crossterm` | Works on macOS, Linux and Windows; supports bracketed paste, mouse, key release events. |
 | Async runtime | `tokio` | `tokio::process` to drive `gh`, timers for notification polling, channels for the event loop. |
-| Text input | `tui-textarea` | Multi-line editors for issue/PR/comment bodies. Single-line inputs too. |
+| Text input | `ratatui-textarea` (multi-line), in-house `TextInput` (single-line) | Multi-line editors for issue/PR/comment bodies, with Textual's TextArea keys mapped on top. `tui-textarea` 0.7 needs ratatui 0.29 (#85). |
 | Markdown | `pulldown-cmark` → our own ratatui renderer | Issue/PR bodies and comments. We own the renderer so links can be hint-targeted. |
 | Diff highlighting | `syntect` (or `two-face` for bundled syntaxes) | Split diff viewer syntax colors. |
 | Fuzzy matching | `nucleo-matcher` | Command palette, table search, file filter in diff view. |
@@ -74,7 +74,7 @@ process spawning.
 | Errors | `thiserror` in `core`, `color-eyre` in the binary | Typed errors where they're handled, pretty reports where they aren't. |
 | Logging | `tracing`, `tracing-subscriber`, `tracing-appender` | Rolling file log at the configured `logfile_path`; the in-app command log is a tracing layer. |
 | Paths | `etcetera` | Lets us keep `~/.config/lazy-github` on macOS and Linux (config compatibility) and use the native dir on Windows. |
-| Browser / clipboard | `open`, `arboard` | "Open in browser" and copying links. |
+| Browser / clipboard | `$BROWSER`-aware opener; OSC 52 plus an in-app buffer | Opening links honors `$BROWSER` as Python's `webbrowser` does, falling back to the platform opener, so the parity harness can record what was opened. Copy uses OSC 52 and `ctrl+v` pastes an in-app clipboard, as Textual does; no `arboard`. |
 | Time | `jiff` (or `chrono`) | Relative timestamps in tables. |
 | Tests | `insta` snapshots of `TestBackend` buffers, `rstest`, `assert_cmd` | Unit, snapshot and CLI tests. |
 | PTY harness | `portable-pty` + `vt100` | Drives either app in a real pseudo-terminal for parity capture (see §6). |
@@ -219,3 +219,9 @@ Recorded 2026-10-25 by Chris:
    mouse pointer shape, Kitty OSC 22) is acceptable. Don't file issues to copy such details, and don't block a row
    on them. Note them in the row's Notes as "Textual-only cosmetic detail, not reproduced (PLAN §10.8)". Behavior
    that users rely on, such as a key doing nothing, a toast appearing or text being cut off, is still parity work.
+9. Links open through a `$BROWSER`-aware opener that falls back to the platform opener, not the `open` crate (§4).
+10. The clipboard follows Textual: copy writes OSC 52, and `ctrl+v` in an input pastes an in-app buffer. `arboard` is
+    dropped (§4).
+11. Multi-line editors use `ratatui-textarea`, with Textual's TextArea keys mapped on top. Single-line inputs stay
+    on the in-house `TextInput` (#85).
+12. The modal dialog frame (#178) moves to M2, since M2's lookup and user-profile modals need it.

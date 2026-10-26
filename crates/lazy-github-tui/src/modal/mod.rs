@@ -5,6 +5,7 @@
 //! binding chain is the focused field's links, then its screen link, and only priority bindings from the app link
 //! (`ctrl+q`). Drawing dims everything below each dialog, then draws its frame, its interior and its footer.
 
+mod confirm;
 mod focus;
 mod frame;
 mod stack;
@@ -19,6 +20,7 @@ use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::BindingId;
 use crate::theme::{Palette, ThemeColor};
 
+pub use confirm::{ConfirmAction, ConfirmDialog};
 pub use focus::{FocusMove, FocusRing};
 pub use frame::{DIM_FACTOR, DialogFrame, dim, frame_rect};
 pub use stack::ModalEntry;
@@ -38,8 +40,6 @@ pub const MODAL_SCREEN_BINDINGS: &[BindingId] = &[
 ///     dialog_bindings![ModalSubmit, ModalClose]
 /// }
 /// ```
-// Only the test dialog uses it until Confirm (#214) lands.
-#[cfg_attr(not(any(test, feature = "test-util")), allow(unused_macros))]
 macro_rules! dialog_bindings {
     ($($id:ident),* $(,)?) => {
         &[
@@ -50,15 +50,16 @@ macro_rules! dialog_bindings {
         ]
     };
 }
-#[cfg_attr(not(any(test, feature = "test-util")), allow(unused_imports))]
 pub(crate) use dialog_bindings;
 
 /// Which modal a dialog is: for [`crate::component::ScreenKind::Modal`] and for routing [`DialogAction`]s. Each
 /// dialog adds its variant as it lands.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ModalKind {
+    /// [`ConfirmDialog`]: a yes/no question.
+    Confirm,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
-    /// app opens one. It keeps the enum inhabited until the first real dialog (Confirm, #214) lands.
+    /// app opens one.
     Test(u8),
 }
 
@@ -86,6 +87,8 @@ impl FieldKind {
 /// A dialog's own action, wrapped for [`Action::Dialog`]. Each dialog adds a variant holding its action enum.
 #[derive(Debug)]
 pub enum DialogAction {
+    /// [`ConfirmDialog`]'s.
+    Confirm(ConfirmAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -94,6 +97,7 @@ impl DialogAction {
     /// The kind of dialog the action is for: `App` hands it to the topmost open dialog of that kind.
     pub fn kind(&self) -> ModalKind {
         match *self {
+            DialogAction::Confirm(_) => ModalKind::Confirm,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }

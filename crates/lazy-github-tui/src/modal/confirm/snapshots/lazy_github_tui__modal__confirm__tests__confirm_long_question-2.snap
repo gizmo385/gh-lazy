@@ -1,0 +1,94 @@
+---
+source: crates/lazy-github-tui/src/modal/confirm/tests.rs
+expression: "styled(&mut app, 100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Details ────────────────────────────────────────────┐
+│ ★  Owner  Name  Private              ││ Introduction                                             │
+│                                      ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                      ││                                                          │
+│                                      ││                                                          │
+│                                      ││      LazyGithub: A Terminal UI For GitHub (0.1.0)        │
+│                        █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                        │
+│                        █  word word word word word word word word word  █interacting with        │
+│                        █  word word word word word word word word word  █electing one of the     │
+└────────────────────────█  word word word word word word word word word  █ on the left. Once      │
+┌─ [2] Pull Requests ────█  word word word word word word word word word  █any issues, pull        │
+│ #  Status  Author  Titl█  word word word word word word word word word  █ill be retrieved and    │
+│                        █                                                █                        │
+│                        █ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔        ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔       █                        │
+└────────────────────────█       Yes                      No              █n lists can also be   ▁▁│
+┌─ [3] Issues ───────────█ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁        ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁       █                        │
+│                        █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                        │
+│                                      ││                                                          │
+│                                      ││  Pull Requests                                           │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows ──────────────────────┐│  You can interact with a PR by viewing its details,      │
+│                                      ││  viewing the PR diff, and participating in any active    │
+│                                      ││  conversations happening on the PR. You can also         │
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ y Yes  n No  q Close
+--- styles
+....................................................................................................
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+....................................................................................................
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+bdeddddddddddddddddddddddddddddddddddddbcaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcfggggggggggggfffffffffffffffffffffffffffffffffffffffffffffc
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaahhc
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaahhc
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcaaiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiaahhc
+baaaaaaaaaaaaaaaaaaaaaaaajjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjaaaaaaaaaaaaaaaaaaaaaahhc
+baaaaaaaaaaaaaaaaaaaaaaaajkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkjaaaaaaaaaaaaaaaaaaaaaahhc
+baaaaaaaaaaaaaaaaaaaaaaaajkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkjaaaaaaaaaaaaaaaaaaaaaahhc
+bbbbbbbbbbbbbbbbbbbbbbbbbjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkjaaaaaaaaaaaaaaaaaaaaaahhc
+cccccccccccccccccccccccccjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkjaaaaaaaaaaaaaaaaaaaaaahhc
+clllllllllllllllllllllllljkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkjaaaaaaaaaaaaaaaaaaaaaahhc
+caaaaaaaaaaaaaaaaaaaaaaaajkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkjaaaaaaaaaaaaaaaaaaaaaahhc
+caaaaaaaaaaaaaaaaaaaaaaaajkmmmmmmmmmmmmmmmmkkkkkkkknnnnnnnnnnnnnnnnkkkkkkkjaaaaaaaaaaaaaaaaaaaaaahhc
+cccccccccccccccccccccccccjkooooopppppooooookkkkkkkkqqqqqqrrrrqqqqqqkkkkkkkjsssssssssssssssssssaaattc
+cccccccccccccccccccccccccjkuuuuuuuuuuuuuuuukkkkkkkkvvvvvvvvvvvvvvvvkkkkkkkjaaaaaaaaaaaaaaaaaaaaaawwc
+caaaaaaaaaaaaaaaaaaaaaaaajjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjaaaaaaaaaaaaaaaaaaaaaawwc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaxxxxxxxxxxxxxaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
+cccccccccccccccccccccccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
+cccccccccccccccccccccccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+yyyzzzzyyyzzzyyyzzzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+--- legend
+. fg=#0a263a bg=#121212
+a fg=#646464 bg=#121212
+b fg=#2a5738 bg=#121212
+c fg=#365270 bg=#121212
+d fg=#646464 bg=#1c2024 BOLD
+e fg=#476419 bg=#1c2024 BOLD
+f fg=#1a1a1a bg=#121212
+g fg=#0b3a5f bg=#121212
+h fg=#0a1e2c bg=#121212 REVERSED
+i fg=#0b3a5f bg=#121212 BOLD
+j fg=#121212 bg=#4f4f4f
+k fg=#e0e0e0 bg=#4f4f4f
+l fg=#646464 bg=#191d21 BOLD
+m fg=#6db2ff bg=#0c7dd4
+n fg=#e76580 bg=#b93c5b
+o fg=#dfeef9 bg=#0c7dd4
+p fg=#dfeef9 bg=#0c7dd4 BOLD | REVERSED
+q fg=#f5e5e9 bg=#b93c5b
+r fg=#f5e5e9 bg=#b93c5b BOLD
+s fg=#646464 bg=#121212 BOLD
+t fg=#0a1e2c bg=#0a0a0a REVERSED
+u fg=#004295 bg=#0c7dd4
+v fg=#780028 bg=#b93c5b
+w fg=#646464 bg=#0a0a0a
+x fg=#0b3a5f bg=#121212 UNDERLINED
+y fg=#ffa62b bg=#242f38 BOLD
+z fg=#e0e0e0 bg=#242f38
+A fg=Reset bg=#242f38

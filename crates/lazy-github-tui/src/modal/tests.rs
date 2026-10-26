@@ -24,7 +24,9 @@ fn reply_toast(id: u8, output: Option<&str>) -> Action {
 
 /// Opens `dialog`, whose reply raises [`reply_toast`].
 fn open(app: &mut TestApp, dialog: TestDialog) {
-    let ModalKind::Test(id) = super::Dialog::kind(&dialog);
+    let ModalKind::Test(id) = super::Dialog::kind(&dialog) else {
+        unreachable!("a test dialog's kind is Test")
+    };
     app.with_cx(|cx| cx.open_dialog(dialog, move |output| reply_toast(id, output.as_deref())));
 }
 

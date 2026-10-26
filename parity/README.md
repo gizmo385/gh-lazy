@@ -10,7 +10,7 @@ data with no network. See `docs/rust-rewrite/PLAN.md` §6.2.
 - [Recording fixtures](#recording-fixtures): `cargo xtask record-fixtures`, the scope rules, the scrub rules and
   `cargo xtask check-fixtures`.
 - [The parity harness](#the-parity-harness-cargo-xtask-parity): running scenarios, flags, the isolated environment,
-  the scenario format, screen dumps, structure extraction, the checks and results.
+  the scenario format, keeping the suite fast, screen dumps, structure extraction, the checks and results.
 
 ## fake-gh
 
@@ -591,6 +591,26 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
 - `[expect.<capture>]` keys must name a capture in the scenario. All of them are optional. `pane_titles` and `focused`
   are exact ordered lists. `footer` is an exact ordered list of `"<key> <label>"`.
 - `checks`, `ignore` and `[expect]` are evaluated by the structural check, below.
+
+### Keeping the suite fast
+
+Every scenario runs in CI on every PR, once per size and per app, and Actions minutes are the limit. Startup
+dominates a run (about 2.5 s for Python and 0.4 s for Rust), so the number of runs matters most. Before adding a
+scenario:
+
+- **Add captures, not scenarios.** If an existing scenario already has the env your rows need (fixtures, config,
+  `gh_auth`, `git_remote`), add steps and captures to it and list the new rows in its `parity_rows`. The report and
+  the checks are per capture, so a failure still names the exact screen. A new scenario is for a new env, or for a
+  flow whose earlier steps would change the screen your rows are about.
+- **One size by default.** Add `[100, 30]` (or another size) only for rows about layout, clipping or wrapping: pane
+  sizes, a footer or header cut at the edge, text that wraps. Focus, content, counts and key dispatch don't change
+  with the size.
+- **Wait on a signal.** Before a capture, wait for `text`, `gone`, `regex` or `log` on the thing the capture is
+  about. Don't add `stable_ms` waits or `sleep_ms` to cover a slow redraw: the capture's own `capture_stable_ms`
+  wait already runs, and a concrete wait ends as soon as the screen is ready. A `gone` wait also beats `sleep_ms`
+  for a timer (`gone = "View Maximized"`, not `sleep_ms = 5500`).
+- **One timer per behavior.** Checks that wait out a timer (a toast expiring, a refresh interval) cost their whole
+  duration in every run. Check each timer in one scenario at one size, and keep other scenarios from waiting for it.
 
 ### How a run works
 

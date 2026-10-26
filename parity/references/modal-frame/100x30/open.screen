@@ -1,0 +1,113 @@
+lazy-github-screen 1
+size 100x30
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└───────────────────█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█───────────────────┘
+┌─ [1] Repositories █                                                          █───────────────────┐
+│ ★  Owner       Nam█                                                          █                   │
+│ ☆  parity-bot  dot█             Search for a repository by name:             █━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hel█                                                          █                   │
+│ ☆  parity-bot  laz█Repository (owner/name):                                  █                   │
+│                   █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█Hub (0.6.6)        │
+│                   █▊  Repository name                                       ▎█                   │
+│                   █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█acting with        │
+│                   █                                                          █ing one of the     │
+└───────────────────█──────────────────────────────────────────────────────────█he left. Once      │
+┌─ [2] Pull Requests█                                                          █ssues, pull        │
+│ #  Status  Author █Continue tracking this repo?                              █e retrieved and    │
+│                   █▊▔▔▔▔▔▔▔▔▎                                                █                   │
+│                   █▊        ▎                                                █                   │
+└───────────────────█▊▁▁▁▁▁▁▁▁▎                                                █ts can also be   ▁▁│
+┌─ [3] Issues ──────█                                                          █                   │
+│ #  Status  Author █──────────────────────────────────────────────────────────█                   │
+│                   █                                                          █                   │
+│                   █                                                          █                   │
+└───────────────────█            ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔             █                   │
+┌─ [4] Workflows ───█                 Lookup           Cancel                  █ its details,      │
+│ Time  Result  Job █            ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁             █g in any active    │
+│                   █                                                          █u can also         │
+│                   █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ shift+⏎ Submit  esc Close
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddc..........................................................ceeeeeeeeeeeeeeeeeeee
+dfgfffffffffffffffffc..........................................................chhhhhhhhhhhhhhhhhhhe
+diiiiiiiiiiiiiiiiiiic..jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj..ckkkkkkkkkkkkkkkkkkke
+dlllllllllllllllllllc..........................................................chhhhhhhhhhhhhhhhhmme
+dlllllllllllllllllllcnnnnnnnnnnnnnnnnnnnnnnnn..................................chhhhhhhhhhhhhhhhhmme
+dhhhhhhhhhhhhhhhhhhhcoppppppppppppppppppppppppppppppppppppppppppppppppppppppppqcrrrrrrrrrrrrrrrhhmme
+dhhhhhhhhhhhhhhhhhhhcosstuuuuuuuuuuuuuuvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvssqchhhhhhhhhhhhhhhhhmme
+dhhhhhhhhhhhhhhhhhhhcoppppppppppppppppppppppppppppppppppppppppppppppppppppppppqcbbbbbbbbbbbhhhhhhmme
+dhhhhhhhhhhhhhhhhhhhc..........................................................cbbbbbbbbbbbbbbhhhmme
+ddddddddddddddddddddcwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwcbbbbbbbbbbbbbhhhhmme
+eeeeeeeeeeeeeeeeeeeec..........................................................cbbbbbbbbbbbhhhhhhmme
+exxxxxxxxxxxxxxxxxxxcyyyyyyyyyyyyyyyyyyyyyyyyyyyy..............................cbbbbbbbbbbbbbbbhhmme
+ehhhhhhhhhhhhhhhhhhhczAAAAAAAAB................................................chhhhhhhhhhhhhhhhhmme
+ehhhhhhhhhhhhhhhhhhhczCCDDEECCB................................................chhhhhhhhhhhhhhhhhmme
+eeeeeeeeeeeeeeeeeeeeczAAAAAAAAB................................................cFFFFFFFFFFFFFFhhhGGe
+eeeeeeeeeeeeeeeeeeeec..........................................................chhhhhhhhhhhhhhhhhHHe
+exxxxxxxxxxxxxxxxxxxcwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwchhhhhhhhhhhhhhhhhHHe
+ehhhhhhhhhhhhhhhhhhhc..........................................................chhhhhhhhhhhhhhhhhHHe
+ehhhhhhhhhhhhhhhhhhhc..........................................................chhhhhhhhhhhhhhhhhHHe
+eeeeeeeeeeeeeeeeeeeec............IIIIIIIIIIIIIIII.JJJJJJJJJJJJJJJJ.............chhhhhhhhhhhhhhhhhHHe
+eeeeeeeeeeeeeeeeeeeec............KKKKLLLLLLLLKKKK.MMMMNNNNNNNNMMMM.............cbbbbbbbbbbbbbhhhhHHe
+exxxxxxxxxxxxxxxxxxxc............OOOOOOOOOOOOOOOO.PPPPPPPPPPPPPPPP.............cbbbbbbbbbbbbbbbhhHHe
+eQQQQQQQQQQQQQQQQQQQc..........................................................cbbbbbbbbbbhhhhhhhHHe
+ehhhhhhhhhhhhhhhhhhhccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbbbbbbbbbbbhhhhhhHHe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhHHe
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+RRRRRRRRRSSSSSSSRRRRRSSSSSSTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+--- legend
+. bg=#4f4f4f
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#121212 bg=#4f4f4f
+d fg=#2a5738 bg=#121212
+e fg=#365270 bg=#121212
+f fg=#646464 bg=#1c2024 bold
+g fg=#476419 bg=#1c2024 bold
+h fg=#e0e0e0 bg=#121212
+i fg=#63696e bg=#0b3a5f bold
+j fg=#0178d4 bg=#4f4f4f bold
+k fg=#1a1a1a bg=#121212
+l fg=#646464 bg=#1a1a1a
+m fg=#0a1e2c bg=#121212 inverse
+n fg=#e0e0e0 bg=#4f4f4f bold
+o fg=#0178d4 bg=#4f4f4f inverse
+p fg=#0178d4 bg=#272727
+q fg=#0178d4 bg=#4f4f4f
+r fg=#0b3a5f bg=#121212 bold
+s bg=#272727
+t fg=#121212 bg=#e0e0e0
+u fg=#797979 bg=#272727
+v fg=#e0e0e0 bg=#272727
+w fg=#004578 bg=#4f4f4f
+x fg=#646464 bg=#191d21 bold
+y fg=#e0e0e0 bg=#4f4f4f
+z fg=#191919 bg=#4f4f4f inverse
+A fg=#191919 bg=#1e1e1e
+B fg=#191919 bg=#4f4f4f
+C bg=#1e1e1e
+D fg=#242f38 bg=#1e1e1e inverse
+E fg=#e0e0e0 bg=#000f18
+F fg=#646464 bg=#121212 bold
+G fg=#0a1e2c bg=#0a0a0a inverse
+H fg=#646464 bg=#0a0a0a
+I fg=#7ae998 bg=#4ebf71
+J fg=#e76580 bg=#b93c5b
+K bg=#4ebf71
+L fg=#0a180e bg=#4ebf71 bold
+M bg=#b93c5b
+N fg=#f5e5e9 bg=#b93c5b bold
+O fg=#008139 bg=#4ebf71
+P fg=#780028 bg=#b93c5b
+Q fg=#0a1e2c bg=#161616 inverse
+R fg=#ffa62b bg=#242f38 bold
+S fg=#e0e0e0 bg=#242f38
+T bg=#242f38

@@ -1,0 +1,92 @@
+version = 1
+description = "Dialog frame, through the Lookup repository modal: centered over the dimmed main screen, its own footer, focus on the first field, tab order through fields and buttons, q typing in a field, escape and q closing"
+# The frame is #178's; the first modal that uses it is the Lookup repository modal, whose issue flips this to true.
+gate = false
+parity_rows = [
+    "modals.dialog-frame",
+    "modals.dialog-focus-order",
+    "modals.dialog-footer",
+    "keybindings.modal-close",
+    "terminal-caveats.q-in-inputs",
+]
+sizes = [[160, 48], [100, 30]]
+
+[[step]]
+wait = { text = "dotfiles", timeout_ms = 15000 }
+
+[[step]]
+keys = ["O"]
+
+[[step]]
+wait = { text = "Repository (owner/name):", timeout_ms = 10000 }
+
+[[step]]
+capture = "open"
+
+# In the input, q types a q instead of closing.
+[[step]]
+keys = ["q"]
+
+[[step]]
+capture = "q-typed"
+checks = ["rows", "footer"]
+
+# Tab: the switch, then each button in turn, then around to the input.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+capture = "switch-focused"
+checks = ["footer"]
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+capture = "submit-focused"
+checks = ["footer"]
+
+[[step]]
+keys = ["tab", "tab"]
+
+[[step]]
+capture = "wrapped"
+checks = ["footer"]
+
+# Back on the switch, q closes.
+[[step]]
+keys = ["tab", "q"]
+
+[[step]]
+wait = { gone = "Repository (owner/name):", timeout_ms = 10000 }
+
+[[step]]
+capture = "closed-with-q"
+
+# escape closes from the input.
+[[step]]
+keys = ["O"]
+
+[[step]]
+wait = { text = "Repository (owner/name):", timeout_ms = 10000 }
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Repository (owner/name):", timeout_ms = 10000 }
+
+[[step]]
+capture = "closed-with-escape"
+
+[expect.open]
+contains = ["Search for a repository by name:", "Repository (owner/name):", "Continue tracking this repo?", "Lookup", "Cancel"]
+not_contains = ["Traceback"]
+
+[expect.closed-with-q]
+contains = ["[1] Repositories"]
+not_contains = ["Repository (owner/name):", "Traceback"]
+
+[expect.closed-with-escape]
+contains = ["[1] Repositories"]
+not_contains = ["Repository (owner/name):", "Traceback"]

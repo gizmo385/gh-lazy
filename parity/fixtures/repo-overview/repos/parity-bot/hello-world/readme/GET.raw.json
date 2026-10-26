@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/hello-world/readme",
+    "accept": "raw"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/vnd.github.raw; charset=utf-8"
+    },
+    "body_text": "# Hello World\n\nA first repository for trying things out, with **bold**, *italic*, `inline code` and a [link](https://example.com/docs).\nThis line continues the same paragraph.\n\n## Install\n\n1. Clone the repo\n2. Run `make install`\n\n- one\n- two\n  - nested under two\n\n> A quoted line.\n\n```sh\necho hello\necho world\n```\n\n---\n\n| Name | Value |\n| ---- | ----- |\n| a    | 1     |\n\n### Options\n\n| Option | Description |\n| ------ | ----------- |\n| `--verbose` | Prints every request and response while it runs, which is a lot of output for a long session. |\n| `-q` | Quiet. |\n\n### Notes\n\nThe last paragraph.\n",
+    "delay_ms": 1500
+  },
+  "note": "hand-written: a README using most CommonMark and GFM blocks, served after 1.5 s so the loading state can be captured"
+}

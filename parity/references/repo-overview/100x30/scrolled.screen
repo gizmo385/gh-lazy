@@ -1,0 +1,89 @@
+lazy-github-screen 1
+size 100x30
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/hello-world                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] parity-bot/hello-world Details ─────────────────────┐
+│ ★  Owner       Name         Private  ││ Repo Overview                                            │
+│ ☆  parity-bot  dotfiles     ✘        ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  ✘        ││  ┌──────────────────────┬───────────────────────────┐    │
+│ ☆  parity-bot  lazy-demo    ✘        ││  │ Name                 │ Value                     │    │
+│                                      ││  ├──────────────────────┼───────────────────────────┤    │
+│                                      ││  │ a                    │ 1                         │    │
+│                                      ││  └──────────────────────┴───────────────────────────┘    │
+│                                      ││                                                          │
+│                                      ││  Options                                                 │
+│                                      ││                                                          │
+│                                      ││  ┌───────────┬──────────────────────────────────────┐    │
+│                                      ││  │ Option    │ Description                          │    │
+│                                      ││  ├───────────┼──────────────────────────────────────┤    │
+│                                      ││  │ --verbose │ Prints every request and response    │    │
+│                                      ││  │           │ while it runs, which is a lot of     │    │
+└──────────────────────────────────────┘│  │           │ output for a long session.           │  ▃▃│
+┌─ [2] Pull Requests (empty) ──────────┐│  ├───────────┼──────────────────────────────────────┤    │
+│ #  Status  Author  Title             ││  │ -q        │ Quiet.                               │    │
+└──────────────────────────────────────┘│  └───────────┴──────────────────────────────────────┘    │
+┌─ [3] Issues (empty) ─────────────────┐│                                                          │
+│ #  Status  Author  Title             ││  Notes                                                   │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows (empty) ──────────────┐│  The last paragraph.                                     │
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pallete  M Maximize  ? Ke
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbccccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+dfgffffffffffffffffffffffffffffffffffffde.bbbbbbbbbbbbb............................................e
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdeijjjjjjjjjjjjjiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiie
+dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkde..llllllllllllllllllllllllllllllllllllllllllllllllllll..mme
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhde..l.jjjjjjjjjjjjjjjjjjjj.l.jjjjjjjjjjjjjjjjjjjjjjjjj.l..mme
+d......................................de..llllllllllllllllllllllllllllllllllllllllllllllllllll..mme
+d......................................de..l.b....................l.b.........................l..mme
+d......................................de..llllllllllllllllllllllllllllllllllllllllllllllllllll..mme
+d......................................de........................................................mme
+d......................................de..nnnnnnn...............................................mme
+d......................................de........................................................mme
+d......................................de..llllllllllllllllllllllllllllllllllllllllllllllllllll..mme
+d......................................de..l.jjjjjjjjj.l.jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj.l..mme
+d......................................de..llllllllllllllllllllllllllllllllllllllllllllllllllll..mme
+d......................................de..l.ooooooooo.l.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb....l..mme
+d......................................de..l.bbbbbbbbb.l.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.....l..mme
+dddddddddddddddddddddddddddddddddddddddde..l.bbbbbbbbb.l.bbbbbbbbbbbbbbbbbbbbbbbbbb...........l..ppe
+dddddddddddddddddddddqqqqqqqdddddddddddde..llllllllllllllllllllllllllllllllllllllllllllllllllll..rre
+dffffffffffffffffffffffffffffffffffffffde..l.oo........l.bbbbbb...............................l..rre
+dddddddddddddddddddddddddddddddddddddddde..llllllllllllllllllllllllllllllllllllllllllllllllllll..rre
+ddddddddddddddqqqqqqqddddddddddddddddddde........................................................rre
+dffffffffffffffffffffffffffffffffffffffde..nnnnn.................................................rre
+dddddddddddddddddddddddddddddddddddddddde........................................................rre
+dddddddddddddddddqqqqqqqdddddddddddddddde..bbbbbbbbbbbbbbbbbbb...................................rre
+dssssssssssssssssssssssssssssssspmmmmttde........................................................rre
+ddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+uuuuvvvvvvvvvvvuuuvvvvvvvvvvvvuuuvvvvvvvvvvvvvvvvvvvvvvuuuvvvvvuuuuvvvvvvvvvvvvvvvvuuuvvvvvvvvvuuuvv
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#adff2f bg=#121212
+d fg=#6db2ff bg=#121212
+e fg=#4ebf71 bg=#121212
+f fg=#e0e0e0 bg=#242f38 bold
+g fg=#98e024 bg=#242f38 bold
+h fg=#e0e0e0 bg=#1e1e1e
+i fg=#262626 bg=#121212
+j fg=#0178d4 bg=#121212
+k fg=#e0e0e0 bg=#153854
+l fg=#3b3b3b bg=#121212
+m fg=#e0e0e0 bg=#000000
+n fg=#0178d4 bg=#121212 bold
+o fg=#f4bb6e bg=#241d13
+p fg=#003054 bg=#000000
+q fg=#4e7bae bg=#121212
+r fg=#003054 bg=#121212 inverse
+s fg=#003054 bg=#1e1e1e inverse
+t bg=#000000
+u fg=#ffa62b bg=#242f38 bold
+v fg=#e0e0e0 bg=#242f38

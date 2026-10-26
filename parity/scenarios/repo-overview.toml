@@ -1,0 +1,109 @@
+version = 1
+description = "Repo Overview tab: header lines, the README rendered as markdown, its loading state, scrolling, and the no-README fallback"
+# Flipped to true by #219, the Repo Overview tab. No capture checks `tabs`: after a selection, Python
+# sometimes draws the Details tab underline zero-width (#209), which isn't even read as a tab bar, so the tab name is
+# in [expect] `contains` instead. The cross-app check doesn't compare markdown text, so [expect] carries the README's
+# content, and the renderer's own tests compare it cell by cell against these references.
+gate = false
+parity_rows = [
+    "repositories.overview-tab",
+    "repositories.overview-readme-loading",
+    "repositories.overview-no-readme",
+    "repositories.overview-scroll",
+    "repositories.introduction-replaced-on-select",
+    "markdown-links.rendering",
+    "main-layout.details-title",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+# repo-overview's /user/repos page is base's three repos with lazy-demo archived and without a description (the
+# fixture scrub check forbids private repos, so Private is unit-tested only);
+# hello-world's README arrives after 1.5 s, lazy-demo has none (404), and dotfiles' has the blank lines Python drops
+# (Py bug B47). repo-selected-empty has dotfiles' empty issues and workflows.
+fixtures = ["repo-overview", "repo-selected-empty", "base"]
+
+# The repo is picked by hand rather than with `git_remote`: Python keeps the `.git` of the harness's HTTPS remote
+# (Py bug B5), so it never selects the current-directory repo. hello-world is the second row.
+[[step]]
+wait = { text = "hello-world", timeout_ms = 15000 }
+
+[[step]]
+keys = ["j", "enter"]
+
+# The header lines are drawn at once; the README follows its 1.5 s delay.
+[[step]]
+wait = { text = "Owned by parity-bot", timeout_ms = 15000 }
+
+[[step]]
+capture = "loading"
+checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+
+[[step]]
+wait = { text = "Hello World", timeout_ms = 15000 }
+
+[[step]]
+capture = "readme"
+checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+
+# Focus the details tab strip, then the content under it, and scroll to its end.
+[[step]]
+keys = ["5", "tab"]
+
+[[step]]
+capture = "content-focused"
+checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+
+[[step]]
+keys = ["end"]
+
+[[step]]
+capture = "scrolled"
+checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+
+# lazy-demo is the third row: archived, no description, and no README.
+[[step]]
+keys = ["1", "j", "enter"]
+
+[[step]]
+wait = { text = "No README found.", timeout_ms = 15000 }
+
+[[step]]
+capture = "no-readme"
+checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+
+# dotfiles is the first row. Python drops the README's blank lines and its header-shaped line before rendering
+# (Py bug B47), so only the titles are compared.
+[[step]]
+keys = ["k", "k", "enter"]
+
+[[step]]
+wait = { text = "The first paragraph.", timeout_ms = 15000 }
+
+[[step]]
+capture = "py-bug-b47"
+checks = ["titles", "focus"]
+
+[expect.loading]
+contains = ["Repo Overview", "parity-bot/hello-world • Public", "Owned by parity-bot", "Default branch: main"]
+not_contains = ["Hello World", "No README found.", "Traceback"]
+
+[expect.readme]
+contains = ["Repo Overview", "Hello World", "Install", "1. Clone the repo", "2. Run make install"]
+not_contains = ["No README found.", "Traceback"]
+
+[expect.content-focused]
+contains = ["Repo Overview"]
+not_contains = ["Traceback"]
+
+[expect.scrolled]
+contains = ["Repo Overview", "Notes", "The last paragraph.", "Quiet."]
+not_contains = ["Traceback"]
+
+[expect.no-readme]
+contains = ["Repo Overview", "parity-bot/lazy-demo • Public • Archived", "Owned by parity-bot", "No README found."]
+not_contains = ["Hello World", "Traceback"]
+
+[expect.py-bug-b47]
+contains = ["Repo Overview", "parity-bot/dotfiles • Public", "The first paragraph.", "echo two"]
+not_contains = ["Traceback"]

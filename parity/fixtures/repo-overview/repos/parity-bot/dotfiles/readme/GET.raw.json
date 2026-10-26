@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/dotfiles/readme",
+    "accept": "raw"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/vnd.github.raw; charset=utf-8"
+    },
+    "body_text": "# dotfiles\n\nThe first paragraph.\n\nA second paragraph, after a blank line.\n\nNote: a line shaped like an HTTP header.\n\n```sh\necho one\n\necho two\n```\n"
+  },
+  "note": "hand-written: blank lines and a header-shaped line, which the Python app drops (Py bug B47)"
+}

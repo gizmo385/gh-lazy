@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/lazy-demo/actions/workflows",
+    "query": {
+      "page": "1",
+      "per_page": "30"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "total_count": 0,
+      "workflows": []
+    }
+  },
+  "note": "hand-written: parity-bot/lazy-demo has none"
+}

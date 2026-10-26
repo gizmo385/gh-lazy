@@ -1,0 +1,95 @@
+lazy-github-screen 1
+size 100x30
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/hello-world                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] parity-bot/hello-world Details ─────────────────────┐
+│ ★  Owner       Name         Private  ││ Repo Overview                                            │
+│ ☆  parity-bot  dotfiles     ✘        ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  ✘        ││parity-bot/hello-world • Public                           │
+│ ☆  parity-bot  lazy-demo    ✘        ││Owned by parity-bot                                       │
+│                                      ││Default branch: main                                      │
+│                                      ││                                                          │
+│                                      ││A first repository for trying things out.                 │
+│                                      ││                                                          │
+│                                      ││────────────────────────────────────────────────────────  │
+│                                      ││                                                          │
+│                                      ││                                                        ▅▅│
+│                                      ││                                                          │
+│                                      ││                      Hello World                         │
+│                                      ││                                                          │
+│                                      ││  A first repository for trying things out, with bold,    │
+└──────────────────────────────────────┘│  italic, inline code and a link. This line continues     │
+┌─ [2] Pull Requests (empty) ──────────┐│  the same paragraph.                                     │
+│ #  Status  Author  Title             ││                                                          │
+└──────────────────────────────────────┘│                                                          │
+┌─ [3] Issues (empty) ─────────────────┐│  Install                                                 │
+│ #  Status  Author  Title             ││                                                          │
+└──────────────────────────────────────┘│   1. Clone the repo                                      │
+┌─ [4] Workflows (empty) ──────────────┐│   2. Run make install                                    │
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pallete  M Maximize  ? Ke
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbccccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+dfgffffffffffffffffffffffffffffffffffffde.bbbbbbbbbbbbb............................................e
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdeijjjjjjjjjjjjjiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiie
+dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkdellllllllllllllllllllllbbbcccccc.........................mme
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdebbbbbbbbbnnnnnnnnnn.....................................mme
+d......................................debbbbbbbbbbbbbbbboooo....................................mme
+d......................................de........................................................mme
+d......................................debbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...............mme
+d......................................de........................................................mme
+d......................................deaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaamme
+d......................................de........................................................mme
+d......................................de........................................................ppe
+d......................................de........................................................qqe
+d......................................de..rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr..qqe
+d......................................de........................................................qqe
+d......................................de..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbboooob..qqe
+dddddddddddddddddddddddddddddddddddddddde..ssssssbbtttttttttttbbbbbbbnnnnbbbbbbbbbbbbbbbbbbbbb...qqe
+ddddddddddddddddddddduuuuuuudddddddddddde..bbbbbbbbbbbbbbbbbbb...................................qqe
+dffffffffffffffffffffffffffffffffffffffde........................................................qqe
+dddddddddddddddddddddddddddddddddddddddde........................................................qqe
+dddddddddddddduuuuuuuddddddddddddddddddde..vvvvvvv...............................................qqe
+dffffffffffffffffffffffffffffffffffffffde........................................................qqe
+dddddddddddddddddddddddddddddddddddddddde..wwwwbbbbbbbbbbbbbb....................................qqe
+ddddddddddddddddduuuuuuudddddddddddddddde..wwwwbbbbtttttttttttt..................................qqe
+dxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyqqqqzzde........................................................qqe
+ddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+AAAABBBBBBBBBBBAAABBBBBBBBBBBBAAABBBBBBBBBBBBBBBBBBBBBBAAABBBBBAAAABBBBBBBBBBBBBBBBAAABBBBBBBBBAAABB
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#adff2f bg=#121212
+d fg=#6db2ff bg=#121212
+e fg=#4ebf71 bg=#121212
+f fg=#e0e0e0 bg=#242f38 bold
+g fg=#98e024 bg=#242f38 bold
+h fg=#e0e0e0 bg=#1e1e1e
+i fg=#262626 bg=#121212
+j fg=#0178d4 bg=#121212
+k fg=#e0e0e0 bg=#153854
+l fg=#e0e0e0 bg=#121212 bold underline
+m fg=#003054 bg=#121212 inverse
+n fg=#e0e0e0 bg=#121212 underline
+o fg=#e0e0e0 bg=#121212 bold
+p fg=#003054 bg=#000000 inverse
+q fg=#e0e0e0 bg=#000000
+r fg=#0178d4 bg=#121212 bold
+s fg=#e0e0e0 bg=#121212 italic
+t fg=#f4bb6e bg=#241d13
+u fg=#4e7bae bg=#121212
+v fg=#0178d4 bg=#121212 underline
+w fg=#57a5e2 bg=#121212
+x fg=#003054 bg=#1e1e1e inverse
+y fg=#003054 bg=#000000
+z bg=#000000
+A fg=#ffa62b bg=#242f38 bold
+B fg=#e0e0e0 bg=#242f38

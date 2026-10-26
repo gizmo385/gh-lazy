@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
-use crate::fixture::{FORMAT_VERSION, Fixture, RequestKey, normalize_path};
+use crate::fixture::{FORMAT_VERSION, Fixture, RequestKey, normalize_path, normalize_query};
 use crate::log::RequestLog;
 
 /// A fixture file read from a set.
@@ -250,6 +250,7 @@ fn load_file(path: &Path) -> Result<Fixture, LoadError> {
     // Lenient on load; `lint` reports keys that weren't written normalized.
     fixture.request.method = fixture.request.method.to_ascii_uppercase();
     fixture.request.path = normalize_path(&fixture.request.path);
+    normalize_query(&fixture.request.method, &mut fixture.request.query);
     Ok(fixture)
 }
 
@@ -448,6 +449,33 @@ mod tests {
         key.query = query_from_pairs([("page", "1")]);
         key.accept = Accept::Json;
         assert!(matches!(store.lookup(&Request { key, body: None }, &log), Lookup::Miss));
+    }
+
+    #[test]
+    fn per_page_without_page_loads_as_page_one() {
+        let tmp = TempDir::new();
+        let set = tmp.path().join("base");
+        write(
+            &set,
+            "x/GET.page-1_per_page-2.json",
+            &fixture("GET", "/x", r#","query":{"per_page":"2"}"#, 200),
+        );
+        let store = FixtureStore::load(std::slice::from_ref(&set)).unwrap();
+        let log = RequestLog::disabled();
+        for url in ["/x?per_page=2", "/x?page=1&per_page=2"] {
+            let req = Request {
+                key: RequestKey::from_url("GET", url, &[], Accept::Json).unwrap(),
+                body: None,
+            };
+            assert!(matches!(store.lookup(&req, &log), Lookup::Hit(_)), "{url}");
+        }
+
+        write(
+            &set,
+            "x/GET.page-1_per_page-2.2.json",
+            &fixture("GET", "/x", r#","query":{"page":"1","per_page":"2"}"#, 200),
+        );
+        assert!(matches!(FixtureStore::load(&[set]), Err(LoadError::Duplicate { .. })));
     }
 
     #[test]

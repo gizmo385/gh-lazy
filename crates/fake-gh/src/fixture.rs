@@ -287,6 +287,8 @@ impl RequestKey {
     ///
     /// `url` can be a path (`/user/repos`, `user/repos`), a path with a query, or an absolute
     /// `https://api.github.com/...` URL. `extra_query` (from `-F`/`-f` on GET) is appended after the URL's own query.
+    /// The merged query then goes through [`normalize_query`], so a GET with `per_page` but no `page` is keyed as
+    /// `page=1`.
     pub fn from_url(
         method: &str,
         url: &str,
@@ -319,12 +321,26 @@ impl RequestKey {
             .collect();
         pairs.extend(extra_query.iter().cloned());
 
+        let method = method.to_ascii_uppercase();
+        let mut query = query_from_pairs(pairs);
+        normalize_query(&method, &mut query);
         Ok(RequestKey {
-            method: method.to_ascii_uppercase(),
+            method,
             path: normalize_path(raw_path),
-            query: query_from_pairs(pairs),
+            query,
             accept,
         })
+    }
+}
+
+/// A paged GET with `per_page` but no `page` is the first page: add `page = "1"`.
+///
+/// `gh api --paginate` sends the first page without `page`, while Python sends `page=1`; this makes both hit the
+/// same fixture. An explicit `page` (any value), a query without `per_page` and non-GET methods are left alone.
+/// `method` is compared case-insensitively.
+pub fn normalize_query(method: &str, query: &mut Query) {
+    if method.eq_ignore_ascii_case("GET") && query.contains_key("per_page") && !query.contains_key("page") {
+        query.insert("page".to_owned(), QueryValue::One("1".to_owned()));
     }
 }
 
@@ -552,6 +568,37 @@ mod tests {
         );
         assert_eq!(k.query["page"], QueryValue::Many(vec!["2".into(), "3".into()]));
         assert_eq!(k.query["type"], QueryValue::One("all".into()));
+    }
+
+    #[test]
+    fn per_page_without_page_is_page_one() {
+        let want = query_from_pairs([("page", "1"), ("per_page", "50")]);
+        assert_eq!(key("/user/repos?per_page=50", &[]).query, want);
+        assert_eq!(key("/user/repos", &[("per_page", "50")]).query, want);
+        assert_eq!(
+            file_name_for(&key("/user/repos?per_page=50", &[])),
+            "GET.page-1_per_page-50.json"
+        );
+    }
+
+    #[test]
+    fn explicit_page_or_no_per_page_or_non_get_is_unchanged() {
+        assert_eq!(
+            key("/user/repos?page=2&per_page=50", &[]).query,
+            query_from_pairs([("page", "2"), ("per_page", "50")])
+        );
+        assert_eq!(
+            key("/user/repos?page=&per_page=50", &[]).query,
+            query_from_pairs([("page", ""), ("per_page", "50")])
+        );
+        assert_eq!(
+            key("/user/repos?page=2&page=3&per_page=50", &[]).query,
+            query_from_pairs([("page", "2"), ("page", "3"), ("per_page", "50")])
+        );
+        assert!(key("/user", &[]).query.is_empty());
+        assert_eq!(key("/user?sort=x", &[]).query, query_from_pairs([("sort", "x")]));
+        let post = RequestKey::from_url("POST", "/user/repos?per_page=50", &[], Accept::Json).unwrap();
+        assert_eq!(post.query, query_from_pairs([("per_page", "50")]));
     }
 
     #[test]

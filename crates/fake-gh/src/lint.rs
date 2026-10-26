@@ -3,7 +3,7 @@
 use std::fmt;
 use std::path::{Path, PathBuf};
 
-use crate::fixture::{Fixture, dir_for, file_name_for, normalize_path};
+use crate::fixture::{Fixture, dir_for, file_name_for, normalize_path, normalize_query};
 use crate::store::{LoadedFixture, find_duplicates, scan_set};
 
 /// One problem found by [`lint_sets`].
@@ -43,7 +43,7 @@ pub fn lint_sets(sets: &[PathBuf]) -> Report {
 fn check_canonical(f: &LoadedFixture) -> Vec<Problem> {
     let mut problems = Vec::new();
     let problem = |msg: String| Problem(format!("{}: {msg}", f.display));
-    // The store normalizes method and path on load; read the file as written to check them.
+    // The store normalizes method, path and query on load; read the file as written to check them.
     if let Some(raw) = std::fs::read_to_string(&f.file)
         .ok()
         .and_then(|t| serde_json::from_str::<Fixture>(&t).ok())
@@ -57,6 +57,13 @@ fn check_canonical(f: &LoadedFixture) -> Vec<Problem> {
                 "path {:?} should be written as {path:?}",
                 raw.request.path
             )));
+        }
+        let mut query = raw.request.query.clone();
+        normalize_query(&raw.request.method, &mut query);
+        if query != raw.request.query {
+            problems.push(problem(
+                r#"query has per_page but no page; write "page": "1""#.to_owned(),
+            ));
         }
     }
 
@@ -157,6 +164,23 @@ mod tests {
         assert!(
             text.iter().any(|p| p.contains(r#"should be written as "/x""#)),
             "{text:?}"
+        );
+    }
+
+    #[test]
+    fn per_page_without_page_is_reported() {
+        let tmp = TempDir::new();
+        let set = tmp.path().join("base");
+        write(
+            &set,
+            "x/GET.page-1_per_page-2.json",
+            r#"{"version":1,"request":{"method":"GET","path":"/x","query":{"per_page":"2"}},"response":{"status":200}}"#,
+        );
+        let report = lint_sets(&[set]);
+        let text: Vec<String> = report.problems.iter().map(ToString::to_string).collect();
+        assert_eq!(
+            text,
+            [r#"base/x/GET.page-1_per_page-2.json: query has per_page but no page; write "page": "1""#]
         );
     }
 

@@ -3,7 +3,7 @@
 
 use std::path::{Path, PathBuf};
 
-use fake_gh::fixture::{Accept, Query, RequestKey, normalize_path};
+use fake_gh::fixture::{Accept, Query, RequestKey, normalize_path, normalize_query};
 use fake_gh::log::LogEntry;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -60,12 +60,15 @@ impl RecipeEntry {
         }
     }
 
-    /// The normalized fixture key.
+    /// The normalized fixture key. A `per_page` query with no `page` gets `page = "1"`, as fake-gh keys it.
     pub fn key(&self) -> RequestKey {
+        let method = self.method.to_ascii_uppercase();
+        let mut query = self.query.clone();
+        normalize_query(&method, &mut query);
         RequestKey {
-            method: self.method.to_ascii_uppercase(),
+            method,
             path: normalize_path(&self.path),
-            query: self.query.clone(),
+            query,
             accept: self.accept.clone(),
         }
     }
@@ -325,6 +328,18 @@ mod tests {
         ] {
             assert_eq!(r.check_scope(&key("GET", path)), Ok(()), "{path}");
         }
+    }
+
+    #[test]
+    fn per_page_without_page_keys_as_page_one() {
+        let entry = RecipeEntry {
+            query: query_from_pairs([("per_page", "30"), ("state", "all")]),
+            ..RecipeEntry::get("/repos/gizmo385/gh-lazy/issues")
+        };
+        assert_eq!(
+            entry.key().query,
+            query_from_pairs([("page", "1"), ("per_page", "30"), ("state", "all")])
+        );
     }
 
     #[test]

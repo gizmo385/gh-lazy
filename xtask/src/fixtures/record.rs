@@ -917,6 +917,42 @@ accept = "raw"
     }
 
     #[test]
+    fn per_page_without_page_is_recorded_as_page_one() {
+        let s = setup();
+        let recipe = RECIPE.replace(
+            r#"query = { state = "all", page = "1", per_page = "30" }"#,
+            r#"query = { state = "all", per_page = "30" }"#,
+        );
+        assert_ne!(recipe, RECIPE);
+        write(&s.set, "recipe.toml", &recipe);
+        let gh = stub();
+        let outcome = s.run(&gh, Mode::Write, &[]).unwrap();
+        assert_eq!(outcome.problems, Vec::<String>::new());
+        assert!(
+            outcome.files.iter().any(|f| f.path
+                == ["repos", "o", "r", "issues", "GET.page-1_per_page-30_state-all.json"]
+                    .iter()
+                    .collect::<PathBuf>()),
+            "{:?}",
+            outcome.files
+        );
+        assert!(
+            gh.calls
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|(_, endpoint)| endpoint == "/repos/o/r/issues?page=1&per_page=30&state=all"),
+            "{:?}",
+            gh.calls.lock().unwrap()
+        );
+        let issues = read_fixture(&s.set.join("repos/o/r/issues/GET.page-1_per_page-30_state-all.json"));
+        assert_eq!(
+            issues["request"]["query"],
+            json!({"page": "1", "per_page": "30", "state": "all"})
+        );
+    }
+
+    #[test]
     fn check_right_after_recording_reports_no_changes() {
         let s = setup();
         s.run(&stub(), Mode::Write, &[]).unwrap();

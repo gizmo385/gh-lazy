@@ -10,7 +10,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::fixture::{Accept, LoggedRequestMatcher, Query};
+use crate::fixture::{Accept, LoggedRequestMatcher, Query, normalize_query};
 
 /// One line of the request log. Field order is the order they're written in.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -52,9 +52,12 @@ impl LogEntry {
         self.is_served()
             && self.method.as_deref() == Some(m.method.as_str())
             && self.path.as_ref() == Some(&m.path)
-            && m.query
-                .as_ref()
-                .is_none_or(|q| self.query.as_ref().unwrap_or(&empty) == q)
+            && m.query.as_ref().is_none_or(|q| {
+                // Logged queries are normalized keys, so a matcher written as the app sends it must be too.
+                let mut q = q.clone();
+                normalize_query(&m.method, &mut q);
+                self.query.as_ref().unwrap_or(&empty) == &q
+            })
             && m.accept
                 .as_ref()
                 .is_none_or(|a| self.accept.as_deref().map(Accept::normalize).unwrap_or_default() == *a)
@@ -190,6 +193,18 @@ mod tests {
         m.accept = Some(Accept::Diff);
         assert!(log.has_served(&m));
         m.query = Some(query_from_pairs([("page", "2")]));
+        assert!(!log.has_served(&m));
+    }
+
+    #[test]
+    fn matcher_query_without_page_is_page_one() {
+        let mut e = served("GET", "/x");
+        e.query = Some(query_from_pairs([("page", "1"), ("per_page", "30")]));
+        let log = RequestLog::from_entries(vec![e]);
+        let mut m = matcher("GET", "/x");
+        m.query = Some(query_from_pairs([("per_page", "30")]));
+        assert!(log.has_served(&m));
+        m.query = Some(query_from_pairs([("page", "2"), ("per_page", "30")]));
         assert!(!log.has_served(&m));
     }
 }

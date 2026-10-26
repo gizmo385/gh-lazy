@@ -211,6 +211,8 @@ fake-gh applies this to incoming requests, and the recorder applies it to record
   fields (URL query first, then fields in order), percent-decode, then ensure a leading `/` and no trailing `/`.
 - Query: keys are compared exactly. Values are the strings gh would send. A key repeated in the request becomes an array
   in request order. Map comparison ignores key order. In the URL's own query, `+` decodes to a space.
+- Paging: a GET whose query has `per_page` but no `page` is treated as `page=1` (gh `--paginate` sends the first page
+  without `page`; Python sends `page=1`).
 - Accept (`Accept::normalize`), the last `Accept` header winning, compared case-insensitively:
   - missing, `application/vnd.github+json`, `application/vnd.github.v3+json` or `application/json` → `json`
   - `application/vnd.github.diff` or `application/vnd.github.v3.diff` → `diff`

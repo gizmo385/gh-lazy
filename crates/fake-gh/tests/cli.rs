@@ -103,6 +103,34 @@ fn paginate_prints_pages_back_to_back_and_slurp_wraps_them() {
 }
 
 #[test]
+fn paginate_without_page_starts_at_page_one() {
+    let s = setup("paginate-no-page");
+    for (page, next, body) in [
+        (1, Some(2), json!([1, 2])),
+        (2, Some(3), json!([3, 4])),
+        (3, None, json!([5])),
+    ] {
+        write(
+            &s.set,
+            &format!("repos/o/r/issues/GET.page-{page}_per_page-2.json"),
+            &page_fixture(page, next, &body),
+        );
+    }
+    // Real gh's --paginate sends the first URL as given, with no page.
+    let out = s.run(&["api", "--paginate", "/repos/o/r/issues?per_page=2"]);
+    assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
+    assert_eq!(stdout(&out), "[1,2,3,4,5]");
+    let log = read_log(&s.log);
+    assert_eq!(log.len(), 1);
+    assert_eq!(log[0]["query"], json!({"page": "1", "per_page": "2"}));
+    assert_eq!(log[0]["fixture"], "base/repos/o/r/issues/GET.page-1_per_page-2.json");
+    assert_eq!(
+        log[0]["argv"],
+        json!(["api", "--paginate", "/repos/o/r/issues?per_page=2"])
+    );
+}
+
+#[test]
 fn paginate_prints_non_array_pages_back_to_back() {
     let s = setup("paginate-objects");
     let page = |page: u32, next: Option<u32>, body: &Value| {

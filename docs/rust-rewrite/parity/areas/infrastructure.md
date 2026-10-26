@@ -10,7 +10,7 @@ this file.
 | `infrastructure.config-load-save` | Config load/save compatible with `config.json` (see [Config](./config.md)) | `lib/config.py` `Config.load_config`, `Config.save` | M0 | not started | #64 | Must also accept values the Python Settings modal wrote as strings (Py bug B2). |
 | `infrastructure.gh-client` | `Github` trait, `gh` CLI client, auth check | `lib/github/client.py`, `lib/github/backends/cli.py`, `lib/github/auth.py` `is_logged_in_to_cli` | M0 | not started | #65 | |
 | `infrastructure.log-file` | Rolling log file at `core.logfile_path` (`LEVEL YYYY-mm-dd HH:MM:SS - message`) | `lib/logging.py` `LazyGithubLogFormatter`, `lib/context.py` `_setup_logging_handler` | M0 | not started | #66 | Rotates at `logfile_max_bytes`, keeps `logfile_count` files. |
-| `infrastructure.fake-gh` | `fake-gh` and fixture format | n/a | M0 | not started | #67 | |
+| `infrastructure.fake-gh` | `fake-gh` and fixture format | n/a | M0 | not started | #67, #109 | |
 | `infrastructure.fixture-recorder` | Fixture record/scrub xtask | n/a | M0 | not started | #68 | |
 | `infrastructure.parity-harness` | Parity harness (PTY runner, scenarios, structural check, report) | n/a | M0 | not started | #69 | |
 | `infrastructure.parity-ci` | Parity check on every PR into `rust-main` | n/a | M0 | not started | #70 | |

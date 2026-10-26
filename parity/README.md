@@ -418,6 +418,8 @@ cargo xtask parity [SCENARIO...] [--all] [--python-only | --rust-only] [--size C
                    [--out DIR] [--keep-home] [--no-build] [--no-sync] [--python PATH]
                    [--retries N] [--jobs N] [--ci] [--validate]
 cargo xtask parity --check-references [SCENARIO...] [--all] [--ci]
+cargo xtask parity --record [--force] [SCENARIO...] [--all] [--jobs N] [--python PATH] [--no-sync] [--no-build]
+                   [--out DIR] [--keep-home]
 ```
 
 ```sh
@@ -451,6 +453,8 @@ cargo xtask parity --validate              # check every scenario file, run noth
 | `--ci` | Running in CI: `--retries 1` unless `--retries` is given, each condition `wait` capped at 3 s in runs that can't fail the gate (the Rust side of a `gate = false` scenario, which usually times out waiting for something it can't draw yet; stability waits aren't capped), `--color never` for the nested `cargo build` and `uv sync`, and GitHub Actions annotations at the end of the output (see [CI](#ci)). |
 | `--validate` | Parse and validate the scenario files (all, or the ones named) and exit. |
 | `--check-references` | Check the [recorded references](#recorded-references) of the scenarios (all, or the ones named) against the current inputs and exit: `0` when all are fresh, `1` otherwise. Builds and runs nothing. Takes only scenario names, `--all` and `--ci`. |
+| `--record` | [Record](#recording) the stale and missing references of the scenarios (all, or the ones named) by running Python, and delete orphans. Builds only `fake-gh`. Run dumps go to `--out`, default `parity/reports/record/` (wiped first). Conflicts with `--python-only`, `--rust-only`, `--size`, `--retries`, `--ci`, `--validate` and `--check-references`. |
+| `--force` | With `--record`: re-record fresh references too. |
 
 Exit codes:
 
@@ -624,6 +628,10 @@ scenario:
   for a timer (`gone = "View Maximized"`, not `sleep_ms = 5500`).
 - **One timer per behavior.** Checks that wait out a timer (a toast expiring, a refresh interval) cost their whole
   duration in every run. Check each timer in one scenario at one size, and keep other scenarios from waiting for it.
+- **Re-record only what you changed.** `cargo xtask parity --record <scenario>` records just that scenario's
+  [references](#recording), and skips fresh ones. `--record --force` with no names runs Python at least once for
+  every reference, and twice where the screen changed (about 30 s to a minute today with 4 jobs); a harness or
+  Python-app change makes every reference stale anyway, so a plain `--record` does the same then.
 
 ### How a run works
 
@@ -1032,8 +1040,8 @@ parity gate too. The name predates the merged job and is kept so branch protecti
 
 A recorded reference is the Python side of one scenario at one size, checked into the repo like an `insta`
 snapshot, so a parity run can compare the Rust app against it without starting Python (#150). They are separate from
-the data goldens in `parity/goldens/` (#157). `cargo xtask parity --record` writes them (#163) and a normal run reads
-them (#164); this section covers what's there today: the layout, the manifest and the freshness check.
+the data goldens in `parity/goldens/` (#157). `cargo xtask parity --record` writes them and `--check-references`
+checks them. Until #164 lands, a normal run still starts Python and doesn't read them.
 
 ```
 parity/references/<scenario>/<cols>x<rows>/
@@ -1101,15 +1109,60 @@ takes well under a second.
 stale reference: startup/160x48: fixtures, python_app changed; run cargo xtask parity --record startup
 missing reference: startup/100x30; run cargo xtask parity --record startup
 orphaned reference: parity/references/old-name/ (no such scenario); cargo xtask parity --record deletes it
-invalid reference: startup/160x48/main.screen:1: expected "lazy-github-screen 1", got "..."
+invalid reference: startup/160x48/main.screen:1: expected `lazy-github-screen 1`, found "..."
 ```
 
 A stale reference names every changed input, in the order `scenario, fixtures, python_app, harness`. A reference is
 invalid when `manifest.toml` doesn't parse, has another `format` or `size`, or lists other captures than the
-scenario, or when a `.screen` or `requests.jsonl` is missing or doesn't parse. Orphaned directories of other
-scenarios are reported only when checking all of them. With `--ci`, each problem is also an `::error` on the
-scenario file. `xtask/tests/references.rs` runs the same check in `cargo test`, and fails on any stale, orphaned or
-invalid reference. It allows missing ones until #163 records every scenario.
+scenario, or when a `.screen` or `requests.jsonl` is missing or doesn't parse (a `.screen` is fully parsed, and the
+error names its line). Orphaned directories of other scenarios are reported only when checking all of them. With
+`--ci`, each problem is also an `::error` on the scenario file. `xtask/tests/references.rs` runs the same check in
+`cargo test` and fails on any problem, missing references included, so a scenario change made without a re-record
+fails the pre-push checks the way an outdated `insta` snapshot does.
+
+#### Recording
+
+`cargo xtask parity --record [SCENARIO...]` (no names means every scenario) builds `fake-gh`, runs
+`uv sync --frozen --quiet` unless `--no-sync`, and then, for each scenario that runs Python, at each of its `sizes`:
+
+- A fresh reference is skipped (`startup 160x48: fresh`) unless `--force`.
+- Otherwise Python runs with **no retries and no wait caps**:
+  1. If an old reference exists and this run agrees with it, the manifest is rewritten and each old `.screen` is kept
+     when it's identical outside ignored boxes (every cell's text and style is equal except inside the interior of a
+     box whose title contains one of the capture's `ignore.boxes`, in both screens). A re-record that changes nothing
+     leaves only `recorded_with` in the diff: `startup 160x48: unchanged (1 run, 3.0s)`.
+  2. Otherwise Python runs a second time, and run 1 is written if the two agree:
+     `startup 160x48: recorded (2 runs, 6.2s)`.
+  3. Otherwise nothing is written, and the first disagreement is printed with a unified diff of what it's about:
+     `startup 160x48: not recorded: run 2 differs from run 1: main: rows [[1] Repositories]: ...`. A run that fails
+     on its own isn't run again: `not recorded: run 1 timeout at step 3 (15.1s)` or
+     `not recorded: run 1 [expect] main: contains: no row contains "..."`.
+
+**Agree** means both runs passed (status `ok`, no fixture misses or errors), both pass the scenario's `[expect]`,
+they produced the same captures, `check::compare` finds nothing between them for each capture's `checks` and
+`ignore` (the cross-app check, between two Python runs; in its messages `python` is the first run and `rust` the
+second), and they served the same request keys. `reference::agree` implements it, and #164's drift check reuses it.
+A failed run is never written and nothing is retried, so a flaky Python run shows up once, at record time, instead
+of being stored.
+
+A reference is written to `<size>.tmp/` and renamed into place, then checked for freshness. Afterwards `--record`
+deletes orphans: with no names, directories of scenarios that don't exist or don't run Python; for each selected
+scenario, sizes it doesn't list and `.screen` files of captures it doesn't have. Both runs' dumps stay in
+`<out>/<scenario>/<size>/run-1/` and `run-2/` (the runner's usual files) for debugging. The exit code is `0` when
+every selected reference is fresh at the end, `1` when some couldn't be recorded (the others are still written) and
+`2` for a harness error or an invalid scenario.
+
+**When a scenario won't record**, fix the scenario, not the tolerance: wait for a signal that follows the redraw
+the capture races with, or add the box to `ignore.boxes` when the capture doesn't check its contents. Read the two
+dumps first; a disagreement between two Python runs is a race the Rust side would be compared against too. Under
+load (other parity runs at the same time), rerun with `--jobs 1` before changing anything.
+
+Known races that record anyway, because no capture checks them: the Details tab underline after selecting a repo is
+sometimes drawn zero-width (`table-lazy-load`, `status-bar-current-repo`), and the hidden cursor position varies.
+Each re-record of such a scenario can flip the stored screen between the two forms.
+
+Re-record a scenario, and commit `parity/references/`, whenever its env, steps, `checks` or `ignore` change. Flipping
+`gate`, editing `parity_rows` or editing `[expect]` needs no re-record.
 
 ### Testing the harness
 

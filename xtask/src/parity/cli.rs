@@ -11,6 +11,7 @@ use std::time::Duration;
 use super::check;
 use super::ci::{self, Finding};
 use super::env::{self, Paths};
+use super::record;
 use super::reference;
 use super::report;
 use super::runner::{self, AppRunStatus};
@@ -87,6 +88,19 @@ pub struct ParityArgs {
         ]
     )]
     pub check_references: bool,
+    /// Record the Python references in parity/references/ that are stale or missing (all, or the named
+    /// scenarios'): run Python with no retries, twice, and write a reference only when both runs pass and agree.
+    /// Builds only fake-gh. Run dumps go to --out [default: parity/reports/record, wiped first].
+    #[arg(
+        long,
+        conflicts_with_all = [
+            "python_only", "rust_only", "sizes", "retries", "ci", "validate", "check_references",
+        ]
+    )]
+    pub record: bool,
+    /// With --record: re-record fresh references too.
+    #[arg(long, requires = "record")]
+    pub force: bool,
     /// Read fixture sets from this directory instead of parity/fixtures/. For tests that need a modified set.
     #[arg(long, value_name = "DIR", hide = true)]
     pub fixtures_dir: Option<PathBuf>,
@@ -140,6 +154,9 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     if args.check_references {
         return check_references(&repo, &scenarios, &roots, args);
     }
+    if args.record {
+        return record_references(&repo, &scenarios, roots, args);
+    }
 
     let requested: Vec<App> = if args.python_only {
         vec![App::Python]
@@ -150,36 +167,9 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     };
     let needs_python = scenarios.iter().any(|s| s.apps.contains(&App::Python)) && requested.contains(&App::Python);
 
-    build_and_sync(&repo, args, needs_python)?;
-
-    // `cargo xtask` runs target/<profile>/xtask, next to the binaries the build above produced.
-    let exe = std::env::current_exe().context("finding the xtask binary")?;
-    let profile_dir = exe
-        .parent()
-        .ok_or_else(|| HarnessError("xtask binary has no parent dir".into()))?;
-    let paths = Paths {
-        fake_gh: profile_dir.join(format!("fake-gh{}", std::env::consts::EXE_SUFFIX)),
-        rust_app: profile_dir.join(format!("lazy-github{}", std::env::consts::EXE_SUFFIX)),
-        python: args.python.clone().unwrap_or_else(|| venv_python(&repo)),
-        roots,
-    };
-    if !paths.fake_gh.is_file() {
-        return Err(HarnessError(format!(
-            "{} doesn't exist; build it with `cargo build -p fake-gh` or drop --no-build",
-            paths.fake_gh.display()
-        )));
-    }
-
-    let out = if let Some(out) = &args.out {
-        absolute(out)?
-    } else {
-        let latest = repo.join("parity/reports/latest");
-        if latest.exists() {
-            std::fs::remove_dir_all(&latest).with_context(|| format!("wiping {}", latest.display()))?;
-        }
-        latest
-    };
-    std::fs::create_dir_all(&out).with_context(|| format!("creating {}", out.display()))?;
+    build_and_sync(&repo, args, &["lazy-github", "fake-gh"], needs_python)?;
+    let paths = paths(&repo, args, roots)?;
+    let out = report_dir(&repo, args, "latest")?;
     let themes = Themes::load(&repo.join("parity/themes.toml"))?;
 
     let options = RunOptions {
@@ -216,6 +206,103 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     }
 
     Ok(exit_code(&summary))
+}
+
+/// The binaries and resources runs need. `cargo xtask` runs target/<profile>/xtask, next to the binaries
+/// `cargo build` produces.
+fn paths(repo: &Path, args: &ParityArgs, roots: Roots) -> Result<Paths> {
+    let exe = std::env::current_exe().context("finding the xtask binary")?;
+    let profile_dir = exe
+        .parent()
+        .ok_or_else(|| HarnessError("xtask binary has no parent dir".into()))?;
+    let paths = Paths {
+        fake_gh: profile_dir.join(format!("fake-gh{}", std::env::consts::EXE_SUFFIX)),
+        rust_app: profile_dir.join(format!("lazy-github{}", std::env::consts::EXE_SUFFIX)),
+        python: args.python.clone().unwrap_or_else(|| venv_python(repo)),
+        roots,
+    };
+    if !paths.fake_gh.is_file() {
+        return Err(HarnessError(format!(
+            "{} doesn't exist; build it with `cargo build -p fake-gh` or drop --no-build",
+            paths.fake_gh.display()
+        )));
+    }
+    Ok(paths)
+}
+
+/// `--out`, or `parity/reports/<default>/` wiped first. Created either way.
+fn report_dir(repo: &Path, args: &ParityArgs, default: &str) -> Result<PathBuf> {
+    let out = if let Some(out) = &args.out {
+        absolute(out)?
+    } else {
+        let dir = repo.join("parity/reports").join(default);
+        if dir.exists() {
+            std::fs::remove_dir_all(&dir).with_context(|| format!("wiping {}", dir.display()))?;
+        }
+        dir
+    };
+    std::fs::create_dir_all(&out).with_context(|| format!("creating {}", out.display()))?;
+    Ok(out)
+}
+
+/// `--record`: builds fake-gh, syncs the venv, records, deletes orphans and prints a count. Exit 0 when every
+/// selected reference is fresh at the end, 1 when some couldn't be recorded.
+fn record_references(repo: &Path, scenarios: &[Scenario], roots: Roots, args: &ParityArgs) -> Result<u8> {
+    let needs_python = scenarios.iter().any(|s| s.apps.contains(&App::Python));
+    build_and_sync(repo, args, &["fake-gh"], needs_python)?;
+    let paths = paths(repo, args, roots)?;
+    let python_version = if needs_python {
+        python_version(&paths.python)?
+    } else {
+        String::new()
+    };
+    let out = report_dir(repo, args, "record")?;
+    let themes = Themes::load(&repo.join("parity/themes.toml"))?;
+    let options = record::Options {
+        force: args.force,
+        all: args.all || args.scenarios.is_empty(),
+        jobs: jobs(args.jobs),
+        keep_home: args.keep_home,
+        themes: &themes,
+        python_version,
+    };
+    let report = record::record(repo, scenarios, &paths, &out, &options)?;
+    println!();
+    for problem in &report.remaining.problems {
+        println!("{problem}");
+    }
+    println!("parity: {}", report.counts());
+    println!("run dumps: {}", out.display());
+    Ok(if report.remaining.problems.is_empty() {
+        EXIT_OK
+    } else {
+        EXIT_FAILED
+    })
+}
+
+/// `<python> --version`'s version number, for `recorded_with.python`.
+fn python_version(python: &Path) -> Result<String> {
+    let output = Command::new(python)
+        .arg("--version")
+        .output()
+        .with_context(|| format!("running {} --version", python.display()))?;
+    if !output.status.success() {
+        return Err(HarnessError(format!(
+            "{} --version failed ({}): {}",
+            python.display(),
+            output.status,
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+    // Python 2 wrote its version to stderr.
+    let text = [output.stdout, output.stderr].concat();
+    Ok(parse_python_version(&String::from_utf8_lossy(&text)))
+}
+
+/// `Python 3.11.14` -> `3.11.14`; anything else is kept as printed.
+fn parse_python_version(text: &str) -> String {
+    let line = text.lines().map(str::trim).find(|l| !l.is_empty()).unwrap_or_default();
+    line.strip_prefix("Python ").unwrap_or(line).to_owned()
 }
 
 /// `--check-references`: one line per problem (and, with `--ci`, an `::error` on the scenario file), then a count.
@@ -346,12 +433,16 @@ fn exit_code(summary: &Summary) -> u8 {
     }
 }
 
-/// Builds the binaries and syncs the venv, unless the flags say not to. `--ci` asks both tools for plain output.
-fn build_and_sync(repo: &Path, args: &ParityArgs, needs_python: bool) -> Result<()> {
+/// Builds `packages` and syncs the venv, unless the flags say not to. `--ci` asks both tools for plain output.
+fn build_and_sync(repo: &Path, args: &ParityArgs, packages: &[&str], needs_python: bool) -> Result<()> {
     let color: &[&str] = if args.ci { &["--color", "never"] } else { &[] };
     if !args.no_build {
         let cargo = std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
-        let build = [&["build", "-p", "lazy-github", "-p", "fake-gh"], color].concat();
+        let mut build = vec!["build"];
+        for package in packages {
+            build.extend(["-p", package]);
+        }
+        build.extend(color);
         run_tool(repo, &cargo, &build)?;
     }
     if needs_python && !args.no_sync {
@@ -409,15 +500,15 @@ fn resolve_scenarios(repo: &Path, args: &ParityArgs) -> Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-struct RunOptions<'a> {
-    apps: &'a [App],
+pub(super) struct RunOptions<'a> {
+    pub(super) apps: &'a [App],
     /// Overrides the scenarios' sizes when not empty.
-    sizes: &'a [Size],
-    retries: u32,
-    keep_home: bool,
+    pub(super) sizes: &'a [Size],
+    pub(super) retries: u32,
+    pub(super) keep_home: bool,
     /// Cap the waits of runs that can't fail the gate at [`UNGATED_WAIT_CAP`].
-    cap_ungated_waits: bool,
-    themes: &'a Themes,
+    pub(super) cap_ungated_waits: bool,
+    pub(super) themes: &'a Themes,
 }
 
 /// A scenario's summary and its structural mismatches.
@@ -431,34 +522,41 @@ fn run_all(
     options: &RunOptions<'_>,
     jobs: usize,
 ) -> Vec<ScenarioRun> {
+    parallel_map(scenarios, jobs, |scenario| run_scenario(scenario, paths, out, options))
+        .into_iter()
+        .zip(scenarios)
+        .map(|(result, scenario)| {
+            result.unwrap_or_else(|| {
+                let summary = ScenarioSummary {
+                    error: Some("the scenario's worker thread panicked".into()),
+                    ..empty_summary(scenario)
+                };
+                (summary, Vec::new())
+            })
+        })
+        .collect()
+}
+
+/// Calls `f` on every item from up to `jobs` threads, taking items in order, and returns the results in input
+/// order. `None` for an item whose call panicked.
+pub(super) fn parallel_map<T: Sync, R: Send>(items: &[T], jobs: usize, f: impl Fn(&T) -> R + Sync) -> Vec<Option<R>> {
     let next = AtomicUsize::new(0);
-    let results: Vec<Mutex<Option<ScenarioRun>>> = scenarios.iter().map(|_| Mutex::new(None)).collect();
+    let results: Vec<Mutex<Option<R>>> = items.iter().map(|_| Mutex::new(None)).collect();
     std::thread::scope(|scope| {
-        for _ in 0..jobs.min(scenarios.len()) {
+        for _ in 0..jobs.min(items.len()) {
             scope.spawn(|| {
                 loop {
                     let i = next.fetch_add(1, Ordering::Relaxed);
-                    let Some(scenario) = scenarios.get(i) else { break };
-                    let run = run_scenario(scenario, paths, out, options);
-                    *results[i].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(run);
+                    let Some(item) = items.get(i) else { break };
+                    let result = f(item);
+                    *results[i].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
                 }
             });
         }
     });
     results
         .into_iter()
-        .zip(scenarios)
-        .map(|(slot, scenario)| {
-            slot.into_inner()
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .unwrap_or_else(|| {
-                    let summary = ScenarioSummary {
-                        error: Some("the scenario's worker thread panicked".into()),
-                        ..empty_summary(scenario)
-                    };
-                    (summary, Vec::new())
-                })
-        })
+        .map(|slot| slot.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner))
         .collect()
 }
 
@@ -551,7 +649,7 @@ const DEFAULT_MAX_JOBS: usize = 4;
 
 /// Runs one app at one size, retrying a failure up to `options.retries` times. A run whose failure can't fail the
 /// gate (Rust in an ungated scenario) isn't retried: the retry would only cost time.
-fn run_app(
+pub(super) fn run_app(
     scenario: &Scenario,
     app: App,
     size: Size,
@@ -676,6 +774,62 @@ mod tests {
                 "{command:?}: {err}"
             );
         }
+    }
+
+    #[test]
+    fn record_takes_its_flags_but_no_run_flags() {
+        let args = parse(&[
+            "startup",
+            "--record",
+            "--force",
+            "--jobs",
+            "2",
+            "--python",
+            "python3",
+            "--no-sync",
+            "--no-build",
+            "--out",
+            "x",
+            "--keep-home",
+        ])
+        .unwrap();
+        assert!(args.record && args.force && args.no_sync && args.no_build && args.keep_home);
+        assert_eq!(args.scenarios, ["startup"]);
+        assert!(parse(&["--record", "--all"]).unwrap().all);
+        for flag in [
+            &["--python-only"][..],
+            &["--rust-only"],
+            &["--size", "100x30"],
+            &["--retries", "1"],
+            &["--ci"],
+            &["--validate"],
+            &["--check-references"],
+        ] {
+            let command = [&["--record"][..], flag].concat();
+            let err = parse(&command).map(|_| ()).expect_err(&command.join(" "));
+            assert_eq!(
+                err.kind(),
+                clap::error::ErrorKind::ArgumentConflict,
+                "{command:?}: {err}"
+            );
+        }
+        let err = parse(&["--force"]).map(|_| ()).expect_err("--force alone");
+        assert_eq!(err.kind(), clap::error::ErrorKind::MissingRequiredArgument, "{err}");
+    }
+
+    #[test]
+    fn reads_the_python_version() {
+        assert_eq!(parse_python_version("Python 3.11.14\n"), "3.11.14");
+        assert_eq!(parse_python_version("\nPython 3.14.7"), "3.14.7");
+        assert_eq!(parse_python_version("echo_tui 1.0\n"), "echo_tui 1.0");
+    }
+
+    #[test]
+    fn parallel_map_keeps_input_order() {
+        let items: Vec<u32> = (0..20).collect();
+        let doubled = parallel_map(&items, 4, |&n| n * 2);
+        assert_eq!(doubled, items.iter().map(|n| Some(n * 2)).collect::<Vec<_>>());
+        assert_eq!(parallel_map(&[] as &[u32], 4, |&n| n), Vec::<Option<u32>>::new());
     }
 
     #[test]

@@ -14,15 +14,19 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 
 use fake_gh::argv;
-use fake_gh::fixture::{Accept, LoggedRequestMatcher, RequestKey};
+use fake_gh::fixture::{Accept, LoggedRequestMatcher, QueryValue, RequestKey};
 use fake_gh::log::{LogEntry, RequestLog};
 use fake_gh::output::Rendered;
 use fake_gh::store::{FixtureStore, LoadedFixture};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use super::check::{self, Mismatch};
 use super::env;
+use super::grid::{Grid, Line, Style};
 use super::scenario::{App, Check, Ignore, Roots, Scenario, Size, Step, WaitFor};
+use super::screen;
+use super::structure::{self, ThemeColors};
 use super::{Context, HarnessError, Result};
 
 /// Bump when capture semantics change outside [`HARNESS_INPUTS`], e.g. a new env var set in a file that isn't
@@ -365,8 +369,8 @@ fn freshness_with(
         let Some(text) = read_optional(&dir.join(&file))? else {
             return invalid(format!("{}: missing", at(&file)));
         };
-        if let Err((line, message)) = validate_screen(&text) {
-            return invalid(format!("{}:{line}: {message}", at(&file)));
+        if let Err(e) = screen::parse(&text) {
+            return invalid(format!("{}:{}: {}", at(&file), e.line, e.message));
         }
     }
     let Some(text) = read_optional(&dir.join(REQUESTS_FILE))? else {
@@ -386,20 +390,9 @@ fn freshness_with(
     })
 }
 
-/// The smallest check of a `.screen` file this module needs: the header line. #161 adds `screen::parse`, which
-/// replaces this with the full lossless parse (and its line-numbered errors).
-fn validate_screen(text: &str) -> std::result::Result<(), (usize, String)> {
-    const HEADER: &str = "lazy-github-screen 1";
-    match text.lines().next() {
-        Some(HEADER) => Ok(()),
-        Some(other) => Err((1, format!("expected {HEADER:?}, got {other:?}"))),
-        None => Err((1, format!("empty file; expected {HEADER:?}"))),
-    }
-}
-
 /// Parses `requests.jsonl` strictly: unlike [`RequestLog::parse`], a line that doesn't parse is an error, since the
 /// fixtures hash would silently skip it.
-fn parse_requests(text: &str) -> std::result::Result<RequestLog, (usize, String)> {
+pub fn parse_requests(text: &str) -> std::result::Result<RequestLog, (usize, String)> {
     let mut entries = Vec::new();
     for (i, line) in text.lines().enumerate() {
         if line.trim().is_empty() {
@@ -501,6 +494,254 @@ fn display_entry(repo: &Path, path: &Path) -> String {
     } else {
         relative(repo, path)
     }
+}
+
+/// One side of an agreement check: a Python run, or a stored reference.
+#[derive(Debug, Clone)]
+pub struct Side {
+    /// How messages name it: `run 1`, `the reference`.
+    pub label: String,
+    /// Why the run didn't pass ([`AppRunStatus::describe`](super::runner::AppRunStatus::describe)), or `None`.
+    pub failure: Option<String>,
+    /// The captures it produced, in step order.
+    pub captures: Vec<(String, Grid)>,
+    /// Its request log as `requests.jsonl` holds it ([`screen::normalize_log`]).
+    pub requests: String,
+}
+
+impl Side {
+    /// The grid of capture `name`, if the side has it.
+    pub fn capture(&self, name: &str) -> Option<&Grid> {
+        self.captures.iter().find(|(n, _)| n == name).map(|(_, g)| g)
+    }
+
+    fn capture_names(&self) -> Vec<String> {
+        self.captures.iter().map(|(n, _)| n.clone()).collect()
+    }
+}
+
+/// Why two sides don't agree, or why one of them can't be a reference at all.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Disagreement {
+    /// The run didn't pass: a timeout, an early exit, fixture problems.
+    Failed { run: String, detail: String },
+    /// The run fails the scenario's `[expect.<capture>]`.
+    Expect {
+        run: String,
+        capture: String,
+        mismatch: Mismatch,
+    },
+    /// The two sides produced different captures.
+    Captures {
+        a: String,
+        b: String,
+        a_names: Vec<String>,
+        b_names: Vec<String>,
+    },
+    /// A check the capture asks for differs. In the mismatch, `python` is side `a` and `rust` is side `b`.
+    Check {
+        a: String,
+        b: String,
+        capture: String,
+        mismatch: Mismatch,
+    },
+    /// The sets of served request keys differ.
+    Requests {
+        a: String,
+        b: String,
+        only_a: Vec<String>,
+        only_b: Vec<String>,
+    },
+}
+
+impl Disagreement {
+    /// The capture it's about, when there is one.
+    pub fn capture(&self) -> Option<&str> {
+        match self {
+            Disagreement::Expect { capture, .. } | Disagreement::Check { capture, .. } => Some(capture),
+            _ => None,
+        }
+    }
+}
+
+impl fmt::Display for Disagreement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Disagreement::Failed { run, detail } => write!(f, "{run} {detail}"),
+            Disagreement::Expect { run, capture, mismatch } => {
+                write!(f, "{run} [expect] {capture}: {}", mismatch.describe())
+            }
+            Disagreement::Captures { a, b, a_names, b_names } => {
+                write!(f, "{b} differs from {a}: captures {b_names:?}, not {a_names:?}")
+            }
+            Disagreement::Check {
+                a,
+                b,
+                capture,
+                mismatch,
+            } => {
+                write!(f, "{b} differs from {a}: {capture}: {}", mismatch.describe())
+            }
+            Disagreement::Requests { a, b, only_a, only_b } => {
+                write!(f, "{b} differs from {a}: served requests differ")?;
+                if !only_a.is_empty() {
+                    write!(f, "; only in {a}: {}", only_a.join(", "))?;
+                }
+                if !only_b.is_empty() {
+                    write!(f, "; only in {b}: {}", only_b.join(", "))?;
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+/// Why `side` can't be a reference on its own: it didn't pass, or it fails the scenario's `[expect]`. Empty when it
+/// can.
+pub fn verify(scenario: &Scenario, theme: &ThemeColors, side: &Side) -> Vec<Disagreement> {
+    if let Some(detail) = &side.failure {
+        return vec![Disagreement::Failed {
+            run: side.label.clone(),
+            detail: detail.clone(),
+        }];
+    }
+    let mut out = Vec::new();
+    for (name, grid) in &side.captures {
+        let Some(expect) = scenario.expect.get(name) else {
+            continue;
+        };
+        let found = check::check_expect(App::Python, &structure::extract(grid, theme), expect);
+        out.extend(found.into_iter().map(|mismatch| Disagreement::Expect {
+            run: side.label.clone(),
+            capture: name.clone(),
+            mismatch,
+        }));
+    }
+    out
+}
+
+/// Whether `a` and `b` agree: both pass [`verify`], they produced the same captures, every capture's `checks` find
+/// nothing between them (outside its `ignore`d boxes, as in the cross-app check), and they served the same request
+/// keys. Recording uses it between two Python runs, or a run and the old reference; the drift check (#164) between
+/// a live run and a reference. Empty when they agree; the first entry is the one to show.
+pub fn agree(scenario: &Scenario, theme: &ThemeColors, a: &Side, b: &Side) -> Vec<Disagreement> {
+    let mut out = verify(scenario, theme, a);
+    out.extend(verify(scenario, theme, b));
+    if a.failure.is_some() || b.failure.is_some() {
+        return out;
+    }
+    let (a_names, b_names) = (a.capture_names(), b.capture_names());
+    if a_names != b_names {
+        out.push(Disagreement::Captures {
+            a: a.label.clone(),
+            b: b.label.clone(),
+            a_names,
+            b_names,
+        });
+    }
+    for step in &scenario.steps {
+        let Step::Capture(capture) = step else { continue };
+        let (Some(ga), Some(gb)) = (a.capture(&capture.name), b.capture(&capture.name)) else {
+            continue;
+        };
+        let (sa, sb) = (structure::extract(ga, theme), structure::extract(gb, theme));
+        out.extend(
+            check::compare(&sa, &sb, &capture.checks, &capture.ignore)
+                .into_iter()
+                .map(|mismatch| Disagreement::Check {
+                    a: a.label.clone(),
+                    b: b.label.clone(),
+                    capture: capture.name.clone(),
+                    mismatch,
+                }),
+        );
+    }
+    let (keys_a, keys_b) = (served_keys(&a.requests), served_keys(&b.requests));
+    if keys_a != keys_b {
+        out.push(Disagreement::Requests {
+            a: a.label.clone(),
+            b: b.label.clone(),
+            only_a: keys_a.difference(&keys_b).cloned().collect(),
+            only_b: keys_b.difference(&keys_a).cloned().collect(),
+        });
+    }
+    out
+}
+
+/// The served requests in a request log, each as `GET /path?k=v (json)`, or as its command (`auth status`) when it
+/// isn't an API request.
+pub fn served_keys(requests: &str) -> BTreeSet<String> {
+    RequestLog::parse(requests)
+        .entries()
+        .iter()
+        .filter(|e| e.is_served())
+        .map(|e| match logged_key(e) {
+            Some(key) => {
+                let query: Vec<String> = key
+                    .query
+                    .iter()
+                    .flat_map(|(k, v)| match v {
+                        QueryValue::One(v) => vec![format!("{k}={v}")],
+                        QueryValue::Many(vs) => vs.iter().map(|v| format!("{k}={v}")).collect(),
+                    })
+                    .collect();
+                let query = if query.is_empty() {
+                    String::new()
+                } else {
+                    format!("?{}", query.join("&"))
+                };
+                format!("{} {}{query} ({})", key.method, key.path, key.accept)
+            }
+            None => e.command.clone().unwrap_or_else(|| e.argv.join(" ")),
+        })
+        .collect()
+}
+
+/// Whether two grids are equal cell for cell (text and style) outside the interiors of boxes whose title contains
+/// one of `ignore.boxes` in both grids. Recording keeps an old `.screen` when this holds, so a re-record that only
+/// moves a Command Log timestamp leaves the file alone. The cursor isn't compared: no check reads it.
+pub fn identical_outside_ignored(a: &Grid, b: &Grid, ignore: &Ignore, theme: &ThemeColors) -> bool {
+    if (a.cols, a.rows) != (b.cols, b.rows) || a.lines.len() != b.lines.len() {
+        return false;
+    }
+    let interiors = |grid: &Grid| -> Vec<[usize; 4]> {
+        if ignore.boxes.is_empty() {
+            return Vec::new();
+        }
+        structure::extract(grid, theme)
+            .boxes
+            .iter()
+            .filter(|p| ignore.boxes.iter().any(|i| p.title.contains(i.as_str())))
+            .map(|p| p.rect.map(usize::from))
+            .collect()
+    };
+    let (ia, ib) = (interiors(a), interiors(b));
+    // `[col, row, width, height]` of the border; the interior is everything strictly inside it.
+    let inside = |rects: &[[usize; 4]], row: usize, col: usize| {
+        rects
+            .iter()
+            .any(|&[c, r, w, h]| row > r && row + 1 < r + h && col > c && col + 1 < c + w)
+    };
+    a.lines.iter().zip(&b.lines).enumerate().all(|(row, (la, lb))| {
+        if la == lb {
+            return true;
+        }
+        let (sa, sb) = (cell_styles(la), cell_styles(lb));
+        if la.cells.len() != lb.cells.len() || sa.len() != sb.len() {
+            return false;
+        }
+        (0..la.cells.len()).all(|col| {
+            (la.cells[col] == lb.cells[col] && sa[col] == sb[col]) || (inside(&ia, row, col) && inside(&ib, row, col))
+        })
+    })
+}
+
+/// Each cell's style in a row.
+fn cell_styles(line: &Line) -> Vec<&Style> {
+    line.runs
+        .iter()
+        .flat_map(|run| std::iter::repeat_n(&run.style, usize::from(run.len)))
+        .collect()
 }
 
 /// Computes hashes in one repo, remembering the two that don't depend on the scenario.
@@ -1001,11 +1242,32 @@ mod tests {
         repo.write(&format!("{dir}/{MANIFEST_FILE}"), &manifest.render());
         repo.write(&format!("{dir}/{REQUESTS_FILE}"), &jsonl(entries));
         for capture in scenario.capture_names() {
-            repo.write(
-                &format!("{dir}/{capture}.screen"),
-                &format!("lazy-github-screen 1\nsize {size}\n"),
-            );
+            repo.write(&format!("{dir}/{capture}.screen"), &blank_screen(size));
         }
+    }
+
+    /// A valid `.screen` of an empty screen.
+    fn blank_screen(size: Size) -> String {
+        let line = Line {
+            cells: vec![" ".to_owned(); usize::from(size.cols)],
+            runs: vec![super::super::grid::Run {
+                col: 0,
+                len: size.cols,
+                style: Style::default(),
+            }],
+        };
+        screen::render(&Grid {
+            version: super::super::grid::GRID_VERSION,
+            cols: size.cols,
+            rows: size.rows,
+            cursor: super::super::grid::Cursor {
+                row: 0,
+                col: 0,
+                visible: false,
+            },
+            lines: vec![line; usize::from(size.rows)],
+        })
+        .unwrap()
     }
 
     fn user_log() -> Vec<LogEntry> {
@@ -1579,7 +1841,7 @@ contains = ["Hi"]
         assert!(invalid(&repo, &demo).starts_with("demo/80x24/main.screen:1: "));
         repo.remove(&format!("{dir}/main.screen"));
         assert_eq!(invalid(&repo, &demo), "demo/80x24/main.screen: missing");
-        repo.write(&format!("{dir}/main.screen"), "lazy-github-screen 1\n");
+        repo.write(&format!("{dir}/main.screen"), &blank_screen(SIZE));
 
         repo.write(&format!("{dir}/{REQUESTS_FILE}"), &(jsonl(&user_log()) + "{oops\n"));
         assert!(invalid(&repo, &demo).starts_with("demo/80x24/requests.jsonl:2: "));
@@ -1588,5 +1850,228 @@ contains = ["Hi"]
 
         repo.remove(&manifest);
         assert_eq!(invalid(&repo, &demo), "demo/80x24: no manifest.toml");
+    }
+
+    #[test]
+    fn a_screen_that_doesnt_parse_is_invalid_at_its_line() {
+        let (repo, demo) = fresh_demo();
+        let path = format!("{REFERENCES_DIR}/demo/80x24/main.screen");
+        let good = std::fs::read_to_string(repo.path().join(&path)).unwrap();
+        // Line 5 is the first text row; a 24-row screen can't end there.
+        let short: String = good.lines().take(5).flat_map(|l| [l, "\n"]).collect();
+        repo.write(&path, &short);
+        assert_eq!(
+            invalid(&repo, &demo),
+            "demo/80x24/main.screen:6: expected 24 text rows, found 1"
+        );
+    }
+
+    // ---- agreement ----
+
+    /// A table pane and a Command Log under it.
+    const LOGGED: &str = "\
+┌─ [1] Repositories ──────┐
+│ Owner       Name        │
+│ parity-bot  alpha       │
+│ gizmo       beta        │
+└─────────────────────────┘
+┌─ Command Log ───────────┐
+│ 04:08:08 loaded         │
+└─────────────────────────┘
+--- styles
+
+.hhhhhhhhhhhhhhhhhhhhhhhhh.
+.rrrrrrrrrrrrrrrrrrrrrrrrr.
+.ccccccccccccccccccccccccc.
+--- legend
+h fg=#e0e0e0 bg=#2d3740 bold
+r fg=#e0e0e0 bg=#272727
+c fg=#ddedf9 bg=#0178d4 bold
+";
+
+    fn logged(from: &str, to: &str) -> Grid {
+        assert!(LOGGED.contains(from), "{from:?}");
+        crate::parity::test_grid::parse(&LOGGED.replacen(from, to, 1))
+    }
+
+    fn agreeing_scenario(capture: &str, expect: &str) -> Scenario {
+        let (_dir, roots) = key_roots();
+        let source =
+            format!("version = 1\n[env]\nfixtures = [\"base\"]\n\n[[step]]\ncapture = \"main\"\n{capture}\n{expect}");
+        Scenario::parse(Path::new("parity/scenarios/agree.toml"), &source, &roots).unwrap_or_else(|e| panic!("{e}"))
+    }
+
+    fn side(label: &str, grid: Grid, requests: &[LogEntry]) -> Side {
+        Side {
+            label: label.into(),
+            failure: None,
+            captures: vec![("main".into(), grid)],
+            requests: jsonl(requests),
+        }
+    }
+
+    fn disagreements(scenario: &Scenario, a: &Side, b: &Side) -> Vec<String> {
+        agree(scenario, &ThemeColors::default(), a, b)
+            .iter()
+            .map(ToString::to_string)
+            .collect()
+    }
+
+    const IGNORE_LOG: &str = "ignore = { boxes = [\"Command Log\"] }";
+
+    #[test]
+    fn the_synthetic_grid_has_a_table_with_rows() {
+        let s = structure::extract(&logged("", ""), &ThemeColors::default());
+        let titles: Vec<&str> = s.boxes.iter().map(|b| b.title.as_str()).collect();
+        assert_eq!(titles, ["[1] Repositories", "Command Log"]);
+        assert_eq!(s.boxes[0].tables[0].rows.len(), 2, "{s:#?}");
+    }
+
+    #[test]
+    fn grids_identical_apart_from_an_ignored_box_agree() {
+        let scenario = agreeing_scenario(IGNORE_LOG, "");
+        let a = side("run 1", logged("", ""), &user_log());
+        let b = side("run 2", logged("04:08:08", "04:09:10"), &user_log());
+        assert_eq!(disagreements(&scenario, &a, &b), Vec::<String>::new());
+    }
+
+    #[test]
+    fn a_differing_row_in_a_checked_table_disagrees() {
+        let scenario = agreeing_scenario(IGNORE_LOG, "");
+        let a = side("run 1", logged("", ""), &user_log());
+        let b = side("run 2", logged("alpha", "alphA"), &user_log());
+        let found = disagreements(&scenario, &a, &b);
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(
+            found[0].starts_with("run 2 differs from run 1: main: rows [[1] Repositories]: "),
+            "{found:?}"
+        );
+    }
+
+    #[test]
+    fn the_same_difference_agrees_when_only_titles_are_checked() {
+        let scenario = agreeing_scenario("checks = [\"titles\"]", "");
+        let a = side("run 1", logged("", ""), &user_log());
+        let b = side("run 2", logged("alpha", "alphA"), &user_log());
+        assert_eq!(disagreements(&scenario, &a, &b), Vec::<String>::new());
+    }
+
+    #[test]
+    fn a_differing_hidden_cursor_agrees() {
+        let scenario = agreeing_scenario("", "");
+        let a = side("run 1", logged("", ""), &user_log());
+        let mut moved = logged("", "");
+        moved.cursor.row = 5;
+        moved.cursor.col = 7;
+        let b = side("run 2", moved, &user_log());
+        assert_eq!(disagreements(&scenario, &a, &b), Vec::<String>::new());
+    }
+
+    #[test]
+    fn differing_served_requests_disagree() {
+        let scenario = agreeing_scenario("", "");
+        let a = side("run 1", logged("", ""), &user_log());
+        let mut miss = served("/nope", "base/nope/GET.json");
+        miss.miss = true;
+        miss.fixture = None;
+        // A miss isn't a served request, so it doesn't count.
+        let b = side("run 2", logged("", ""), &[user_log(), vec![miss]].concat());
+        assert_eq!(disagreements(&scenario, &a, &b), Vec::<String>::new());
+
+        let b = side(
+            "run 2",
+            logged("", ""),
+            &[user_log(), vec![served("/user/repos", "base/user/repos/GET.json")]].concat(),
+        );
+        assert_eq!(
+            disagreements(&scenario, &a, &b),
+            ["run 2 differs from run 1: served requests differ; only in run 2: GET /user/repos (json)"]
+        );
+    }
+
+    #[test]
+    fn a_failed_expect_or_run_disagrees() {
+        let scenario = agreeing_scenario("", "[expect.main]\ncontains = [\"gamma\"]\n");
+        let a = side("run 1", logged("", ""), &user_log());
+        let b = side("run 2", logged("beta", "gamma"), &user_log());
+        let found = disagreements(&scenario, &a, &b);
+        assert_eq!(
+            found.first().map(String::as_str),
+            Some("run 1 [expect] main: contains: no row contains \"gamma\"")
+        );
+        assert_eq!(
+            verify(&scenario, &ThemeColors::default(), &a)[0].capture(),
+            Some("main")
+        );
+
+        let failed = Side {
+            failure: Some("timeout at step 3 (15.1s)".into()),
+            captures: Vec::new(),
+            ..b.clone()
+        };
+        assert_eq!(
+            disagreements(&scenario, &b, &failed),
+            ["run 2 timeout at step 3 (15.1s)"]
+        );
+    }
+
+    #[test]
+    fn different_capture_lists_disagree() {
+        let scenario = agreeing_scenario("", "");
+        let a = side("run 1", logged("", ""), &user_log());
+        let mut b = a.clone();
+        b.label = "run 2".into();
+        b.captures.push(("extra".into(), logged("", "")));
+        assert_eq!(
+            disagreements(&scenario, &a, &b),
+            ["run 2 differs from run 1: captures [\"main\", \"extra\"], not [\"main\"]"]
+        );
+    }
+
+    #[test]
+    fn a_timestamp_inside_an_ignored_box_counts_as_identical() {
+        let ignore = Ignore {
+            boxes: vec!["Command Log".into()],
+        };
+        let theme = ThemeColors::default();
+        let (a, b) = (logged("", ""), logged("04:08:08", "04:09:10"));
+        assert!(identical_outside_ignored(&a, &b, &ignore, &theme));
+        assert!(!identical_outside_ignored(&a, &b, &Ignore::default(), &theme));
+        // The box's title is outside its interior.
+        let renamed = logged("Command Log ─", "Command Logs ");
+        assert!(!identical_outside_ignored(&a, &renamed, &ignore, &theme));
+    }
+
+    #[test]
+    fn a_style_change_outside_an_ignored_box_counts_as_different() {
+        let ignore = Ignore {
+            boxes: vec!["Command Log".into()],
+        };
+        let theme = ThemeColors::default();
+        let a = logged("", "");
+        assert!(identical_outside_ignored(&a, &a.clone(), &ignore, &theme));
+        // The selected row's style on one more cell, with the same text.
+        let restyled = logged(".ccccccccccccccccccccccccc.", ".cccccccccccccccccccccccccc");
+        assert!(!identical_outside_ignored(&a, &restyled, &ignore, &theme));
+        let mut moved = a.clone();
+        moved.cursor.row = 3;
+        assert!(
+            identical_outside_ignored(&a, &moved, &ignore, &theme),
+            "the cursor isn't compared"
+        );
+    }
+
+    #[test]
+    fn served_keys_name_api_requests_and_commands() {
+        let auth = LogEntry {
+            argv: vec!["auth".into(), "status".into()],
+            command: Some("auth status".into()),
+            fixture: Some("base/auth.json".into()),
+            ..LogEntry::default()
+        };
+        let mut paged = served("/items", "base/items/GET.json");
+        paged.query = Some(fake_gh::fixture::query_from_pairs([("page", "2"), ("per_page", "50")]));
+        let keys: Vec<String> = served_keys(&jsonl(&[auth, paged])).into_iter().collect();
+        assert_eq!(keys, ["GET /items?page=2&per_page=50 (json)", "auth status"]);
     }
 }

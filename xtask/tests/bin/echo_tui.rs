@@ -7,7 +7,9 @@
 //! - row 2: `size <cols>x<rows>`
 //! - row 3: `keys: ...`, each key as its char or `<Name>`
 //!
-//! Ctrl+D exits with code 3.
+//! Ctrl+B draws a box titled with the process id at rows 5 to 7, so two runs differ (`tests/record.rs`). Ctrl+D
+//! exits with code 3. `--version` prints a version and exits, as fake-gh's installer and `--record` expect of the
+//! programs it stands in for.
 
 use std::io::{self, Write};
 use std::time::Duration;
@@ -35,6 +37,10 @@ fn key_name(code: KeyCode, mods: KeyModifiers) -> String {
 }
 
 fn main() -> io::Result<()> {
+    if std::env::args().any(|a| a == "--version") {
+        println!("echo_tui 1.0");
+        return Ok(());
+    }
     terminal::enable_raw_mode()?;
     let mut out = io::stdout();
     execute!(out, terminal::Clear(terminal::ClearType::All), cursor::MoveTo(7, 0))?;
@@ -58,6 +64,14 @@ fn main() -> io::Result<()> {
                 if key.code == KeyCode::Char('d') && key.modifiers.contains(KeyModifiers::CONTROL) {
                     terminal::disable_raw_mode()?;
                     std::process::exit(3);
+                }
+                if key.code == KeyCode::Char('b') && key.modifiers.contains(KeyModifiers::CONTROL) {
+                    let title = format!("┌─ pid {} ", std::process::id());
+                    let pad = 23usize.saturating_sub(title.chars().count());
+                    line(&mut out, 5, &format!("{title}{}┐", "─".repeat(pad)))?;
+                    line(&mut out, 6, &format!("│{:22}│", " boxed"))?;
+                    line(&mut out, 7, &format!("└{}┘", "─".repeat(22)))?;
+                    continue;
                 }
                 keys.push_str(&key_name(key.code, key.modifiers));
                 line(&mut out, 3, &keys)?;

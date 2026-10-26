@@ -52,6 +52,23 @@ const STYLES: &str = "--- styles";
 const LEGEND: &str = "--- legend";
 const CELLS: &str = "--- cells";
 
+/// A `.screen` file that doesn't parse, located by line.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[error("line {line}: {message}")]
+pub struct ParseError {
+    /// 1-based. One past the last line when the file ends early.
+    pub line: usize,
+    pub message: String,
+}
+
+impl From<ParseError> for HarnessError {
+    fn from(e: ParseError) -> Self {
+        HarnessError(e.to_string())
+    }
+}
+
+type ParseResult<T> = std::result::Result<T, ParseError>;
+
 /// Writes `grid` as a `.screen` file. Fails if the grid is inconsistent (rows, cells or runs that don't match its
 /// size), has more distinct styles than there are symbols, or for any other reason wouldn't parse back to `grid`.
 pub fn render(grid: &Grid) -> Result<String> {
@@ -169,7 +186,7 @@ pub fn render(grid: &Grid) -> Result<String> {
 }
 
 /// Reads a `.screen` file. Errors name the 1-based line they're about.
-pub fn parse(text: &str) -> Result<Grid> {
+pub fn parse(text: &str) -> ParseResult<Grid> {
     let body = text.strip_suffix('\n').unwrap_or(text);
     let mut reader = Reader {
         lines: body.split('\n').collect(),
@@ -219,7 +236,7 @@ pub fn parse(text: &str) -> Result<Grid> {
             let runs = row_runs(style_rows.get(r), &legend, cols)?;
             Ok(Line { cells, runs })
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<ParseResult<Vec<_>>>()?;
 
     Ok(Grid {
         version: GRID_VERSION,
@@ -231,7 +248,7 @@ pub fn parse(text: &str) -> Result<Grid> {
 }
 
 /// The `lazy-github-screen`, `size` and `cursor` lines: `(cols, rows, cursor)`.
-fn parse_header(reader: &mut Reader<'_>) -> Result<(u16, u16, Cursor)> {
+fn parse_header(reader: &mut Reader<'_>) -> ParseResult<(u16, u16, Cursor)> {
     let (n, header) = reader.expect("the header")?;
     let version = header
         .strip_prefix(MAGIC)
@@ -268,7 +285,7 @@ struct Legend {
     entries: Vec<(char, Style)>,
 }
 
-fn parse_legend(reader: &mut Reader<'_>) -> Result<Legend> {
+fn parse_legend(reader: &mut Reader<'_>) -> ParseResult<Legend> {
     let line = reader.header(LEGEND)?;
     let mut entries: Vec<(char, Style)> = Vec::new();
     while let Some((n, text)) = reader.take_until(CELLS)? {
@@ -290,7 +307,7 @@ fn parse_legend(reader: &mut Reader<'_>) -> Result<Legend> {
 }
 
 /// The optional `--- cells` section: each listed row's cells.
-fn parse_cells(reader: &mut Reader<'_>, cols: u16, rows: u16) -> Result<Vec<Option<Vec<String>>>> {
+fn parse_cells(reader: &mut Reader<'_>, cols: u16, rows: u16) -> ParseResult<Vec<Option<Vec<String>>>> {
     let mut cells_rows = vec![None; usize::from(rows)];
     if reader.peek().is_none() {
         return Ok(cells_rows);
@@ -323,7 +340,7 @@ fn parse_cells(reader: &mut Reader<'_>, cols: u16, rows: u16) -> Result<Vec<Opti
 }
 
 /// Row `r`'s cells: its `--- cells` entry if it has one (which must agree with the text), otherwise one per `char`.
-fn row_cells(r: usize, (n, text): (usize, &str), entry: Option<Vec<String>>, cols: u16) -> Result<Vec<String>> {
+fn row_cells(r: usize, (n, text): (usize, &str), entry: Option<Vec<String>>, cols: u16) -> ParseResult<Vec<String>> {
     if let Some(cells) = entry {
         if cells.concat().trim_end_matches(' ') != text {
             return Err(at(n, format!("text row {r} doesn't match its `--- cells` entry")));
@@ -344,7 +361,7 @@ fn row_cells(r: usize, (n, text): (usize, &str), entry: Option<Vec<String>>, col
 }
 
 /// A row's runs from its style row (missing when it was trimmed), padded with `.`.
-fn row_runs(style_row: Option<&(usize, Vec<char>)>, legend: &Legend, cols: u16) -> Result<Vec<Run>> {
+fn row_runs(style_row: Option<&(usize, Vec<char>)>, legend: &Legend, cols: u16) -> ParseResult<Vec<Run>> {
     let symbols = style_row.map(|(_, s)| s.as_slice()).unwrap_or_default();
     let mut runs: Vec<Run> = Vec::new();
     for col in 0..cols {
@@ -551,8 +568,11 @@ fn number(s: &str) -> Option<u16> {
     s.parse().ok().filter(|n: &u16| n.to_string() == s)
 }
 
-fn at(line: usize, message: impl Display) -> HarnessError {
-    HarnessError(format!("line {line}: {message}"))
+fn at(line: usize, message: impl Display) -> ParseError {
+    ParseError {
+        line,
+        message: message.to_string(),
+    }
 }
 
 fn first_difference(want: &Grid, got: &Grid) -> String {
@@ -590,7 +610,7 @@ impl<'a> Reader<'a> {
 
     /// The next line of a section that ends at the header `stop` or the end of the file. Any other header is an
     /// error: no style or legend line starts with `-`.
-    fn take_until(&mut self, stop: &str) -> Result<Option<(usize, &'a str)>> {
+    fn take_until(&mut self, stop: &str) -> ParseResult<Option<(usize, &'a str)>> {
         match self.peek() {
             None => Ok(None),
             Some(l) if l == stop => Ok(None),
@@ -599,14 +619,14 @@ impl<'a> Reader<'a> {
         }
     }
 
-    fn expect(&mut self, what: &str) -> Result<(usize, &'a str)> {
+    fn expect(&mut self, what: &str) -> ParseResult<(usize, &'a str)> {
         let n = self.line_number();
         self.take()
             .ok_or_else(|| at(n, format!("expected {what}, found the end of the file")))
     }
 
     /// Consumes the section header `name` and returns its line number.
-    fn header(&mut self, name: &str) -> Result<usize> {
+    fn header(&mut self, name: &str) -> ParseResult<usize> {
         let (n, line) = self.expect(&format!("`{name}`"))?;
         if line == name {
             Ok(n)

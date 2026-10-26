@@ -1,6 +1,6 @@
 //! The recorded Python references in `parity/references/` match the current inputs, as `insta` snapshots must match
 //! their tests: a scenario, fixture, Python-app or harness edit made without `cargo xtask parity --record` fails
-//! here. Needs only `git`; nothing is built or run.
+//! here, and so does a new scenario without a reference. Needs only `git`; nothing is built or run.
 
 use std::path::Path;
 
@@ -26,13 +26,7 @@ fn recorded_references_are_fresh() {
         .collect();
 
     let report = reference::check(repo, &scenarios, &roots, true).unwrap_or_else(|e| panic!("{e}"));
-    // Missing references are allowed until #163 records every scenario; #163 makes this strict.
-    let problems: Vec<String> = report
-        .problems
-        .iter()
-        .filter(|p| !p.is_missing())
-        .map(ToString::to_string)
-        .collect();
+    let problems: Vec<String> = report.problems.iter().map(ToString::to_string).collect();
     assert!(
         problems.is_empty(),
         "{} problem(s) with recorded references:\n{}",

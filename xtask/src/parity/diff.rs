@@ -6,10 +6,16 @@ use similar::TextDiff;
 /// A unified diff (3 lines of context) of the Python capture against the Rust one, headed `--- python` and
 /// `+++ rust`. Empty when the two are identical.
 pub fn text_diff(py: &str, rs: &str) -> String {
-    TextDiff::from_lines(py, rs)
+    labeled_diff(py, rs, "python", "rust")
+}
+
+/// A unified diff (3 lines of context) of `a` against `b`, headed `--- <a_label>` and `+++ <b_label>`. Empty when
+/// the two are identical.
+pub fn labeled_diff(a: &str, b: &str, a_label: &str, b_label: &str) -> String {
+    TextDiff::from_lines(a, b)
         .unified_diff()
         .context_radius(3)
-        .header("python", "rust")
+        .header(a_label, b_label)
         .to_string()
 }
 

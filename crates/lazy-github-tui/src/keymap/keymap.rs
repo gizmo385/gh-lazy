@@ -337,6 +337,30 @@ mod tests {
     }
 
     #[test]
+    fn an_override_leaves_a_shared_default_key_on_the_other_binding() {
+        // Two bindings that share `r` by default, as if in one component (in Python they're on nested blocks).
+        // Textual's `apply_keymap` would take `r` from both; Rust takes it only from the one overridden.
+        // Decision: docs/rust-rewrite/parity/decisions/override-strips-only-its-own-keys.md (#119).
+        let keymap = keymap(&[("conversation.review.reply", "z")]);
+        let ids = [BindingId::ConversationReviewReply, BindingId::ConversationCommentReply];
+        assert_eq!(
+            keymap.matches_in(&ids, &key("r")).collect::<Vec<_>>(),
+            [BindingId::ConversationCommentReply]
+        );
+        assert_eq!(
+            keymap.match_in(&ids, &key("z")),
+            Some(BindingId::ConversationReviewReply)
+        );
+        assert_eq!(
+            keymap.effective_keys(&ids),
+            [
+                (BindingId::ConversationCommentReply, key("r")),
+                (BindingId::ConversationReviewReply, key("z")),
+            ]
+        );
+    }
+
+    #[test]
     fn matches_in_puts_overrides_after_defaults() {
         let keymap = keymap(&[("common.table.select", "enter")]);
         let table = [

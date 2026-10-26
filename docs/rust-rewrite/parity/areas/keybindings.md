@@ -9,6 +9,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | Id | Binding id | Default key | Description | Context | Milestone | Status | Issue | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `keybindings.all-ids` | (all ids) | | Registered with defaults and `bindings.overrides` | keymap | M1 | not started | #73 | Ids below whose feature lands later are still registered in M1 so overrides round-trip. |
+| `keybindings.override-keeps-shared-keys` | (all ids) | | Overriding a binding removes only that binding's default keys, not other bindings' in the same component that share them | keymap | M1 | intentional diff | #119 | Textual's `apply_keymap` drops the whole key entry, so they lose it too. No two bindings in one component share a default key today, so nothing visible differs. Decision: [override-strips-only-its-own-keys](../decisions/override-strips-only-its-own-keys.md). |
 | `keybindings.app-quit` | `app.quit` | `q` | Quit | app | M1 | not started | #73, #106 | Also on the auth screen. |
 | `keybindings.app-command-palette` | `app.command_palette` | `ctrl+p` | Command Pallete | app | M4 | not started | | Description typo is Python's (Py bug B14). Shown in the footer as `^p Command Pallete`, after `q Quit` (#107). |
 | `keybindings.app-maximize-widget` | `app.maximize_widget` | `M` | Maximize | app | M1 | parity | #75 | |

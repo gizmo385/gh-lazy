@@ -408,6 +408,8 @@ fn an_override_replaces_the_vim_key_but_not_textuals() {
 #[test]
 fn rebinding_select_takes_enter_with_it() {
     // `common.table.select` replaced `DataTable`'s own `enter` binding, so rebinding it leaves `enter` unbound.
+    // Python does the same: the merged table has no other binding on `enter`, so Rust's rule that an override
+    // strips only its own keys (decisions/override-strips-only-its-own-keys.md, #119) changes nothing here.
     let overrides: IndexMap<String, String> = [("common.table.select".to_owned(), "o".to_owned())].into();
     let keymap = Keymap::new(&overrides);
     let mut table = twelve();

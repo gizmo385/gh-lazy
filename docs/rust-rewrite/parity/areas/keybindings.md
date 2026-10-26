@@ -27,7 +27,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.repositories-favorite` | `repositories.favorite` | `ctrl+f` | Toggle Favorite | repos table | M2 | not started | | |
 | `keybindings.repositories-lookup` | `repositories.lookup` | `O` | Lookup Repository | repos table | M2 | not started | | |
 | `keybindings.user-view-profile` | `user.view_profile` | `u` | View User | repos, PR and issues tables | M2 | not started | | |
-| `keybindings.common-table-select` | `common.table.select` | `enter,space` | Select table entry | tables | M1 | not started | #78, #100, #158, #170 | |
+| `keybindings.common-table-select` | `common.table.select` | `enter,space` | Select table entry | tables | M1 | in progress | #78, #100, #158, #170 | |
 | `keybindings.common-table-search` | `common.table.search` | `/` | Search | tables | M1 | in progress | #78, #101, #158, #169 | Override may be saved as `slash`. Rust (#101): `SEARCHABLE_BINDINGS` in `components/table/`, checked after the table's own bindings. |
 | `keybindings.common-table-cursor-down` | `common.table.cursor_down` | `j` | Table cursor down | tables | M1 | not started | #78, #100, #158 | |
 | `keybindings.common-table-page-down` | `common.table.page_down` | `J` | Table page down | tables | M1 | not started | #78, #100, #158 | |

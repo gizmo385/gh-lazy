@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use crossterm::event::{KeyEvent, MouseEvent};
 use lazy_github_core::config::Config;
+use lazy_github_core::models::{RepoName, Repository};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use tokio::time::Instant;
@@ -186,6 +187,17 @@ impl ScreenKind {
     }
 }
 
+/// What LazyGithub knows of the repo of the directory it was launched in. Python's
+/// `LazyGithubContext.current_directory_repo`.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub enum LocalRepo {
+    /// Git hasn't answered yet.
+    #[default]
+    Unknown,
+    /// Git answered: the `origin` repo, or `None` when there's no current-directory repo, whatever the reason.
+    Known(Option<RepoName>),
+}
+
 /// The state every component may read, owned by `App`.
 pub(crate) struct Shared {
     pub(crate) config: Config,
@@ -193,6 +205,10 @@ pub(crate) struct Shared {
     pub(crate) theme: Theme,
     pub(crate) options: AppOptions,
     pub(crate) clock: Arc<dyn Clock>,
+    /// The selected repo. Only `App` writes it, when it applies `Action::SelectRepo`.
+    pub(crate) current_repo: Option<Repository>,
+    /// The current-directory repo, once git has answered.
+    pub(crate) local_repo: LocalRepo,
     next_request: u64,
     config_dirty: bool,
 }
@@ -211,6 +227,8 @@ impl Shared {
             theme,
             options,
             clock,
+            current_repo: None,
+            local_repo: LocalRepo::Unknown,
             next_request: 1,
             config_dirty: false,
         }
@@ -259,6 +277,17 @@ impl<'a> Cx<'a> {
     /// The theme.
     pub fn theme(&self) -> &Theme {
         &self.shared.theme
+    }
+
+    /// The selected repo, if any: the one the PR, issue and workflow sections show. Python's
+    /// `LazyGithubContext.current_repo`.
+    pub fn current_repo(&self) -> Option<&Repository> {
+        self.shared.current_repo.as_ref()
+    }
+
+    /// The repo of the directory LazyGithub was launched in, as far as git has said.
+    pub fn local_repo(&self) -> &LocalRepo {
+        &self.shared.local_repo
     }
 
     /// Monotonic time from the app's clock.

@@ -423,7 +423,7 @@ mod tests {
     }
 
     #[test]
-    fn set_current_repo_logs_and_shows_it() {
+    fn selecting_a_repo_logs_and_shows_it() {
         let mut app = TestApp::new(Config::default());
         assert!(status_row(&mut app).starts_with("│No repository selected "));
         let repo = Repository {
@@ -441,7 +441,9 @@ mod tests {
             description: None,
             permissions: None,
         };
-        let out = logs(|| app.app_mut().set_current_repo(repo.clone()));
+        let out = logs(|| {
+            app.app_mut().update(Action::SelectRepo(Box::new(repo.clone())));
+        });
         assert_eq!(out, "INFO Selected repo parity-bot/lazy-fixture\n");
         assert_eq!(app.app().current_repo(), Some(&repo));
         assert!(status_row(&mut app).starts_with("│Current repo: parity-bot/lazy-fixture "));

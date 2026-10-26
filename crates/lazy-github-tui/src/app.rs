@@ -14,11 +14,13 @@ use tokio::time::Instant;
 
 use crate::action::Action;
 use crate::clock::Clock;
-use crate::component::{BindingState, ChainLink, Component, Cx, Outbox, Owner, RenderCx, ScreenKind, Shared};
+use crate::component::{
+    BindingState, ChainLink, Component, Cx, LocalRepo, Outbox, Owner, RenderCx, ScreenKind, Shared,
+};
 use crate::components::footer::{Footer, FooterHit, footer_items};
 use crate::components::help_panel::{HelpPanel, help_sections, help_width};
 use crate::components::status_bar::{StatusBar, UnreadState};
-use crate::effect::{Effect, GitResponse, GithubResponse, RequestId, TimerId};
+use crate::effect::{Effect, GitRequest, GitResponse, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
 use crate::notifications::NotificationPoll;
@@ -72,8 +74,8 @@ pub struct App {
     /// layout, as Textual re-checks hover after each layout change. Terminals don't report the pointer leaving the
     /// window, so it stays at its last cell.
     mouse: Option<Position>,
-    /// The repo the PR, issue and workflow sections show. Python's `LazyGithubContext.current_repo`.
-    current_repo: Option<Repository>,
+    /// The `OriginRepo` request asked when the main screen was entered, until git answers it.
+    local_repo_request: Option<RequestId>,
     /// The unread count in the status box.
     notifications: NotificationPoll,
     should_quit: bool,
@@ -94,7 +96,7 @@ impl App {
             help_open: false,
             footer_hits: Vec::new(),
             mouse: None,
-            current_repo: None,
+            local_repo_request: None,
             notifications: NotificationPoll::default(),
             should_quit: false,
         }
@@ -122,7 +124,8 @@ impl App {
     }
 
     /// Replaces the base screen with a new main screen, unmaximized and focused on repos, starts loading the repos
-    /// and starts the notifications poll, as the Python widgets' `on_mount`s do (children first).
+    /// and starts the notifications poll, as the Python widgets' `on_mount`s do (children first). The first time, it
+    /// also asks git for the current-directory repo, which the repos section selects once both have arrived.
     fn enter_main(&mut self, out: &mut Outbox) {
         self.maximized = None;
         let mut main = Box::new(MainScreen::new(
@@ -131,7 +134,11 @@ impl App {
             &self.shared.theme,
             self.shared.options,
         ));
-        main.start(&mut Cx::new(&mut self.shared, out));
+        let mut cx = Cx::new(&mut self.shared, out);
+        main.start(&mut cx);
+        if *cx.local_repo() == LocalRepo::Unknown && self.local_repo_request.is_none() {
+            self.local_repo_request = Some(cx.git(GitRequest::OriginRepo));
+        }
         self.base = BaseScreen::Main(main);
         self.notifications.start(&mut Cx::new(&mut self.shared, out));
     }
@@ -382,6 +389,7 @@ impl App {
                 self.enter_main(out);
             }
             Action::RefreshNotifications => self.notifications.refresh(&mut Cx::new(&mut self.shared, out)),
+            Action::SelectRepo(repo) => self.select_repo(&repo, out),
             Action::Auth(action) => {
                 if let BaseScreen::Auth(auth) = &mut self.base {
                     auth.update(action, &mut Cx::new(&mut self.shared, out));
@@ -390,7 +398,7 @@ impl App {
                 }
             }
             Action::Github(id, response) => self.route_response(id, response, out),
-            Action::Git(id, response) => Self::route_git(id, &response),
+            Action::Git(id, response) => self.route_git(id, response, out),
             Action::ConfigSaved(Ok(())) => tracing::debug!("Saved the config"),
             Action::ConfigSaved(Err(message)) => {
                 tracing::error!("Failed to save config: {message}");
@@ -443,16 +451,19 @@ impl App {
         self.help_open
     }
 
-    /// Makes `repo` the current repo, shown in the status box. Python's `set_currently_loaded_repo`; M2's repo
-    /// selection and M4's bug report call it.
-    pub fn set_current_repo(&mut self, repo: Repository) {
+    /// `Action::SelectRepo`: makes `repo` the current repo, shown in the status box, and has the main screen load
+    /// it. Python's `handle_repo_selection`. Selecting the current repo again does it all again.
+    fn select_repo(&mut self, repo: &Repository, out: &mut Outbox) {
         tracing::info!("Selected repo {}", repo.full_name);
-        self.current_repo = Some(repo);
+        self.shared.current_repo = Some(repo.clone());
+        if let BaseScreen::Main(main) = &mut self.base {
+            main.on_repo_selected(repo, &mut Cx::new(&mut self.shared, out));
+        }
     }
 
     /// The current repo, if one is selected.
     pub fn current_repo(&self) -> Option<&Repository> {
-        self.current_repo.as_ref()
+        self.shared.current_repo.as_ref()
     }
 
     /// The unread count the status box shows.
@@ -465,10 +476,19 @@ impl App {
         self.notifications.is_refreshing()
     }
 
-    /// Hands a git response to whatever is waiting for it. Nothing asks git anything yet (#170 will claim
-    /// `OriginRepo` here), so every response is dropped.
-    fn route_git(id: RequestId, _response: &GitResponse) {
-        tracing::debug!("Dropping the response to request {id}: nothing is waiting for it");
+    /// Hands a git response to whatever is waiting for it: the current-directory repo is kept for every component,
+    /// and the main screen may select it.
+    fn route_git(&mut self, id: RequestId, response: GitResponse, out: &mut Outbox) {
+        if self.local_repo_request != Some(id) {
+            tracing::debug!("Dropping the response to request {id}: nothing is waiting for it");
+            return;
+        }
+        let GitResponse::OriginRepo(repo) = response;
+        self.local_repo_request = None;
+        self.shared.local_repo = LocalRepo::Known(repo);
+        if let BaseScreen::Main(main) = &mut self.base {
+            main.on_local_repo(&mut Cx::new(&mut self.shared, out));
+        }
     }
 
     /// Hands a response to the screen waiting for it.
@@ -582,7 +602,7 @@ impl App {
                 } else {
                     main.render(frame, area, &cx);
                     let status = StatusBar {
-                        repo: self.current_repo.as_ref(),
+                        repo: self.shared.current_repo.as_ref(),
                         unread: self.notifications.unread(),
                         theme,
                     };

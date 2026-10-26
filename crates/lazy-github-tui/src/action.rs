@@ -1,6 +1,7 @@
 //! What happened, in app terms. `App::update` turns each one into state changes and effects.
 
 use lazy_github_core::logging::LogLine;
+use lazy_github_core::models::Repository;
 
 use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
 use crate::keymap::BindingId;
@@ -39,6 +40,10 @@ pub enum Action {
     /// Refresh the unread notification count now: the poll's timer, and in M4 the command palette, a Settings save
     /// and closing the Notifications modal. Skipped while a refresh runs; blanks the count when notifications are off.
     RefreshNotifications,
+    /// Make this repo the current one: the status box, the sections and the details follow. Every source of a
+    /// selection dispatches it (the repos table, the current-directory default, and later lookups and links), and
+    /// selecting the current repo again reloads everything. Boxed: a `Repository` is big.
+    SelectRepo(Box<Repository>),
 
     // Screens.
     /// The authentication screen's own actions.

@@ -6,7 +6,8 @@ use ratatui::layout::Rect;
 use ratatui::style::{Color, Style};
 use ratatui::text::Span;
 
-use crate::component::Cx;
+use crate::action::Action;
+use crate::component::{Cx, LocalRepo};
 use crate::components::table::{Cell, CellValue, Column, SearchableTable, SortSpec, TableItem};
 use crate::effect::{GithubRequest, GithubResponse, RequestId};
 use crate::options::AppOptions;
@@ -128,7 +129,10 @@ impl ReposSection {
         };
         self.pending = None;
         match result {
-            Ok(repos) => self.table.replace_all(repos, &RepoCells::from_cx(cx)),
+            Ok(repos) => {
+                self.table.replace_all(repos, &RepoCells::from_cx(cx));
+                self.check_current_directory_repo(cx);
+            }
             Err(error) => {
                 tracing::error!("Error fetching repositories from Github API");
                 tracing::debug!("Fetching repositories failed: {error}");
@@ -136,6 +140,23 @@ impl ReposSection {
         }
         self.table.set_loading(false);
         None
+    }
+
+    /// Python's `check_current_directory_repo`: when nothing is selected yet and the current-directory repo is in
+    /// the table, selects it as `enter` would, without moving the cursor. Called when the rows land and when git
+    /// answers, so it works whichever comes first. The match ignores ASCII case (Py bug B42).
+    pub fn check_current_directory_repo(&self, cx: &mut Cx<'_>) {
+        let LocalRepo::Known(Some(name)) = cx.local_repo() else {
+            return;
+        };
+        if cx.current_repo().is_some() {
+            return;
+        }
+        let Some(repo) = self.table.items().find(|repo| name.matches(&repo.full_name)) else {
+            return;
+        };
+        let action = Action::SelectRepo(Box::new(repo.clone()));
+        cx.dispatch(action);
     }
 
     /// The table, for reading its rows and cursor.

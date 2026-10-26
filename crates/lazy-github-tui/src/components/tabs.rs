@@ -29,6 +29,11 @@ impl TabStrip {
         }
     }
 
+    /// The tab names, in order.
+    pub fn names(&self) -> &[String] {
+        &self.names
+    }
+
     /// The active tab's index.
     pub fn active(&self) -> usize {
         self.active

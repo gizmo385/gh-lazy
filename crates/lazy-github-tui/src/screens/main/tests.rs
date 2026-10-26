@@ -832,7 +832,7 @@ fn an_empty_list_draws_the_header_and_keeps_the_section() {
 fn only_the_pending_response_fills_the_table() {
     let mut app = TestApp::loading(Config::default(), FakeGithub::new());
     let pending = match app.effects() {
-        [Effect::Github { id, .. }] => *id,
+        [Effect::Github { id, .. }, Effect::Git { .. }] => *id,
         other => panic!("{other:?}"),
     };
     // A response to another request, even a repos list, is dropped.
@@ -875,7 +875,7 @@ fn only_the_pending_response_fills_the_table() {
 }
 
 #[test]
-fn table_keys_move_the_cursor_quietly_and_select_is_unimplemented() {
+fn table_keys_move_the_cursor_quietly_and_select_selects() {
     let mut app = with_repos(Config::default(), base_repos());
     app.render(100, 30);
     assert!(matches!(
@@ -890,12 +890,12 @@ fn table_keys_move_the_cursor_quietly_and_select_is_unimplemented() {
     assert_eq!(repos_table(&app).cursor(), 2);
     assert!(matches!(
         app.app_mut().action_for(Event::Key(key_event("enter"))),
-        Some(Action::Unimplemented(BindingId::TableSelect))
+        Some(Action::SelectRepo(repo)) if repo.full_name == "parity-bot/lazy-demo"
     ));
     let out = logs(|| {
         app.press(&["space"]);
     });
-    assert_eq!(out, "DEBUG TableSelect is not implemented yet\n");
+    assert_eq!(out, "INFO Selected repo parity-bot/lazy-demo\n");
     // The columns fit, so `l` falls through the whole chain.
     assert!(app.app_mut().action_for(Event::Key(key_event("l"))).is_none());
     assert_eq!(app.effects(), []);
@@ -915,7 +915,7 @@ fn a_click_on_a_row_focuses_the_table_and_moves_the_cursor() {
     let out = logs(|| {
         app.click(10, 6);
     });
-    assert_eq!(out, "DEBUG TableSelect is not implemented yet\n");
+    assert_eq!(out, "INFO Selected repo parity-bot/hello-world\n");
 }
 
 #[test]
@@ -1297,4 +1297,371 @@ fn a_rebound_maximize_maximizes_the_search_box() {
     app.press(&["escape"]);
     assert_eq!(app.app().maximized(), None);
     assert_eq!(focus(&app), SEARCH);
+}
+
+// Selecting a repo, and the current-directory default (#170).
+
+use lazy_github_core::models::RepoName;
+
+use crate::component::{Cx, LocalRepo, Outbox, Shared};
+use crate::effect::GitResponse;
+
+fn octo_repos() -> Vec<Repository> {
+    vec![repos::repo("octo", "one", false), repos::repo("octo", "two", false)]
+}
+
+fn current_repo(app: &TestApp) -> Option<&str> {
+    app.app().current_repo().map(|repo| repo.full_name.as_str())
+}
+
+fn details_title(app: &TestApp) -> &str {
+    app.app().main_screen().unwrap().details_title()
+}
+
+fn details_tabs(app: &TestApp) -> Vec<String> {
+    app.app().main_screen().unwrap().details_tabs().to_vec()
+}
+
+/// Applies `Action::SelectRepo(repo)`, and returns what that logged.
+fn select(app: &mut TestApp, repo: Repository) -> String {
+    logs(|| {
+        app.app_mut().update(Action::SelectRepo(Box::new(repo)));
+    })
+}
+
+/// The `Selected repo` lines in `out`.
+fn selected_lines(out: &str) -> Vec<&str> {
+    out.lines().filter(|line| line.contains("Selected repo")).collect()
+}
+
+/// A directory whose `origin` is `full_name`, cloned over SSH.
+fn local(full_name: &str) -> Option<RepoName> {
+    RepoName::from_remote_url(&format!("git@github.com:{full_name}.git"))
+}
+
+/// The id of the main screen's `OriginRepo` request in `app`'s effects.
+fn origin_request(app: &TestApp) -> RequestId {
+    app.effects()
+        .iter()
+        .find_map(|effect| match effect {
+            Effect::Git { id, .. } => Some(*id),
+            _ => None,
+        })
+        .expect("the main screen asks git for the current-directory repo")
+}
+
+#[test]
+fn enter_and_space_select_the_cursor_repo() {
+    for key in ["enter", "space"] {
+        let mut app = with_repos(Config::default(), octo_repos());
+        app.press(&["j"]);
+        assert!(
+            matches!(
+                app.app_mut().action_for(Event::Key(key_event(key))),
+                Some(Action::SelectRepo(repo)) if repo.full_name == "octo/two"
+            ),
+            "{key}"
+        );
+        // The cursor stays where it was.
+        assert_eq!(repos_table(&app).cursor(), 1);
+    }
+}
+
+#[test]
+fn select_cursor_selects_the_cursor_repo() {
+    // `textual.table.select_cursor` is shadowed by `common.table.select` in the chain, but means the same.
+    let theme = Theme::default();
+    let keymap = Keymap::new(&indexmap::IndexMap::new());
+    let mut screen = MainScreen::new(&AppearanceSettings::default(), &keymap, &theme, AppOptions::default());
+    let cells = repos::RepoCells {
+        favorites: Vec::new(),
+        star: Color::Reset,
+    };
+    screen.repos.table.replace_all(octo_repos(), &cells);
+    let clock = std::sync::Arc::new(crate::clock::FakeClock::new());
+    let mut shared = Shared::new(Config::default(), keymap, theme, AppOptions::default(), clock);
+    let mut out = Outbox::default();
+    let cx = Cx::new(&mut shared, &mut out);
+    let action = screen.on_link_binding(Owner::Table(SectionId::Repos), BindingId::TextualTableSelect, &cx);
+    assert!(matches!(action, Some(Action::SelectRepo(repo)) if repo.full_name == "octo/one"));
+}
+
+#[test]
+fn nothing_is_selected_while_the_table_is_loading_or_empty() {
+    let mut loading = TestApp::loading(Config::default(), FakeGithub::new().with_repositories(octo_repos()));
+    let mut empty = TestApp::new(Config::default());
+    for app in [&mut loading, &mut empty] {
+        for key in ["enter", "space"] {
+            assert!(
+                matches!(
+                    app.app_mut().action_for(Event::Key(key_event(key))),
+                    Some(Action::Consumed)
+                ),
+                "{key}"
+            );
+        }
+        let out = logs(|| {
+            app.press(&["enter", "space"]);
+        });
+        assert_eq!(out, "");
+        assert_eq!(current_repo(app), None);
+    }
+}
+
+#[test]
+fn selecting_logs_and_publishes_the_repo() {
+    let mut app = with_repos(Config::default(), octo_repos());
+    assert_eq!(app.with_cx(|cx| cx.current_repo().cloned()), None);
+    let out = select(&mut app, octo_repos()[0].clone());
+    assert_eq!(out, "INFO Selected repo octo/one\n");
+    assert_eq!(
+        app.with_cx(|cx| cx.current_repo().map(|repo| repo.full_name.clone())),
+        Some("octo/one".into())
+    );
+    assert_eq!(current_repo(&app), Some("octo/one"));
+    assert_eq!(details_title(&app), "[5] octo/one Details");
+    assert_eq!(details_tabs(&app), ["Repo Overview"]);
+    let shown = app
+        .app()
+        .main_screen()
+        .unwrap()
+        .details_repo()
+        .map(|repo| repo.full_name.as_str());
+    assert_eq!(shown, Some("octo/one"));
+    // Nothing to fetch yet: #171 to #174 add the loads.
+    assert_eq!(app.effects(), []);
+}
+
+#[test]
+fn selecting_the_same_repo_again_does_it_all_again() {
+    let mut app = with_repos(Config::default(), octo_repos());
+    let out = logs(|| {
+        app.press(&["enter", "enter"]);
+    });
+    assert_eq!(out, "INFO Selected repo octo/one\n".repeat(2));
+    assert_eq!(details_tabs(&app), ["Repo Overview"]);
+}
+
+#[test]
+fn selecting_another_repo_replaces_the_title_and_tab() {
+    let mut app = with_repos(Config::default(), octo_repos());
+    app.press(&["enter", "j", "enter"]);
+    assert_eq!(current_repo(&app), Some("octo/two"));
+    assert_eq!(details_title(&app), "[5] octo/two Details");
+    assert_eq!(details_tabs(&app), ["Repo Overview"]);
+    let screen = app.screen(100, 30);
+    assert!(screen.contains("Current repo: octo/two"), "{screen}");
+    assert!(screen.contains("[5] octo/two Details"), "{screen}");
+    assert!(!screen.contains("octo/one Details"), "{screen}");
+}
+
+#[test]
+fn the_details_title_takes_its_key_from_the_overrides() {
+    let mut config = Config::default();
+    config
+        .bindings
+        .overrides
+        .insert("main.details.focus".into(), "f5".into());
+    let mut app = with_repos(config, octo_repos());
+    app.press(&["enter"]);
+    assert_eq!(details_title(&app), "[f5] octo/one Details");
+}
+
+#[test]
+fn a_click_on_the_cursor_cell_focuses_the_repos_table_and_selects() {
+    let mut app = with_repos(Config::default(), octo_repos());
+    app.press(&["2"]);
+    app.render(100, 30);
+    // The header is the rect's first row and the cursor's cell, column 0 of row 0, is under it.
+    let rect = app.app().main_screen().unwrap().repos().table_rect().unwrap();
+    let out = logs(|| {
+        app.click(rect.x + 1, rect.y + 1);
+    });
+    assert_eq!(selected_lines(&out), ["INFO Selected repo octo/one"]);
+    assert_eq!(focus(&app), REPOS);
+    assert_eq!(current_repo(&app), Some("octo/one"));
+}
+
+#[test]
+fn a_click_on_another_row_moves_the_cursor_without_selecting() {
+    let mut app = with_repos(Config::default(), octo_repos());
+    app.press(&["2"]);
+    app.render(100, 30);
+    let rect = app.app().main_screen().unwrap().repos().table_rect().unwrap();
+    let out = logs(|| {
+        app.click(rect.x + 10, rect.y + 2);
+    });
+    assert_eq!(out, "");
+    assert_eq!(focus(&app), REPOS);
+    assert_eq!(repos_table(&app).cursor(), 1);
+    assert_eq!(current_repo(&app), None);
+}
+
+#[test]
+fn focus_in_the_details_content_moves_to_the_tab_strip() {
+    let mut app = with_repos(with_log(), octo_repos());
+    app.press(&["5", "tab"]);
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    select(&mut app, octo_repos()[0].clone());
+    assert_eq!(focus(&app), FocusTarget::DetailsTabs);
+    // Everywhere else, focus stays.
+    for (keys, target) in [
+        (&["5"][..], FocusTarget::DetailsTabs),
+        (&["6"], FocusTarget::CommandLog),
+        (&["1"], REPOS),
+    ] {
+        app.press(keys);
+        select(&mut app, octo_repos()[1].clone());
+        assert_eq!(focus(&app), target);
+    }
+}
+
+#[test]
+fn a_maximized_widget_stays_maximized() {
+    let mut app = with_repos(Config::default(), octo_repos());
+    app.press(&["M", "enter"]);
+    assert_eq!(current_repo(&app), Some("octo/one"));
+    assert_eq!(app.app().maximized(), Some(Maximized { target: REPOS }));
+}
+
+#[test]
+fn repo_selected_100x30() {
+    let mut app = with_repos(Config::default(), octo_repos());
+    app.press(&["enter"]);
+    let screen = app.screen(100, 30);
+    let rows: Vec<&str> = screen.lines().collect();
+    assert!(rows[1].starts_with("│Current repo: octo/one"), "{}", rows[1]);
+    assert!(rows[3].contains("[5] octo/one Details"), "{}", rows[3]);
+    assert!(rows[4].contains("│ Repo Overview "), "{}", rows[4]);
+    assert!(!screen.contains("Introduction"), "{screen}");
+    assert!(!screen.contains("LazyGithub: A Terminal UI"), "{screen}");
+    assert_eq!(focus(&app), REPOS);
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn repo_selected_long_name_100x30() {
+    let repo = repos::repo(
+        "octo",
+        "a-repository-with-a-name-far-too-long-for-the-details-title",
+        false,
+    );
+    let mut app = with_repos(Config::default(), vec![repo]);
+    app.press(&["enter"]);
+    let screen = app.screen(100, 30);
+    let title_row = screen.lines().nth(3).unwrap();
+    assert!(title_row.contains("[5] octo/a-repository-with"), "{title_row}");
+    assert!(title_row.contains("… ─┐"), "{title_row}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn repo_selected_from_the_details_content_tabs_styled() {
+    let mut app = with_repos(Config::default(), octo_repos());
+    app.press(&["5", "tab"]);
+    select(&mut app, octo_repos()[0].clone());
+    let buffer = app.render(100, 30);
+    // The details box's tab strip: its two rows inside the border.
+    let screen = crate::test_util::buffer_to_string(&buffer);
+    let (row, line) = screen
+        .lines()
+        .enumerate()
+        .find(|(_, line)| line.contains("Repo Overview"))
+        .unwrap();
+    // The box's left border is the `│` before the label; its right border is the screen's last column.
+    let byte = line.find("│ Repo Overview").unwrap();
+    let x = u16::try_from(line[..byte].chars().count()).unwrap() + 1;
+    let area = ratatui::layout::Rect::new(x, u16::try_from(row).unwrap(), 99 - x, 2);
+    let mut strip = ratatui::buffer::Buffer::empty(area);
+    for y in area.top()..area.bottom() {
+        for x in area.left()..area.right() {
+            strip[(x, y)] = buffer[(x, y)].clone();
+        }
+    }
+    // The active label in the block cursor colors: focus moved to the strip.
+    assert_eq!(strip[(area.x + 1, area.y)].bg, Color::Rgb(0x01, 0x78, 0xd4));
+    insta::assert_debug_snapshot!(strip);
+}
+
+#[test]
+fn the_current_directory_repo_is_selected_when_git_answers_after_the_rows() {
+    let mut app = with_repos(Config::default(), base_repos());
+    let out = logs(|| app.set_local_repo(local("parity-bot/hello-world")));
+    assert_eq!(selected_lines(&out), ["INFO Selected repo parity-bot/hello-world"]);
+    assert_eq!(current_repo(&app), Some("parity-bot/hello-world"));
+    assert_eq!(details_title(&app), "[5] parity-bot/hello-world Details");
+    assert_eq!(details_tabs(&app), ["Repo Overview"]);
+    assert_eq!(focus(&app), REPOS);
+    // The cursor doesn't move.
+    assert_eq!(repos_table(&app).cursor(), 0);
+}
+
+#[test]
+fn the_current_directory_repo_is_selected_when_git_answers_before_the_rows() {
+    let mut app = TestApp::loading(Config::default(), FakeGithub::new().with_repositories(base_repos()));
+    let id = origin_request(&app);
+    app.send(Event::Git {
+        id,
+        response: GitResponse::OriginRepo(local("parity-bot/lazy-demo")),
+    });
+    assert_eq!(current_repo(&app), None);
+    assert_eq!(
+        app.with_cx(|cx| cx.local_repo().clone()),
+        LocalRepo::Known(local("parity-bot/lazy-demo"))
+    );
+    let out = settle_logged(&mut app);
+    assert_eq!(selected_lines(&out), ["INFO Selected repo parity-bot/lazy-demo"]);
+    assert_eq!(current_repo(&app), Some("parity-bot/lazy-demo"));
+    assert_eq!(repos_table(&app).cursor(), 0);
+}
+
+#[test]
+fn the_rows_then_the_git_answer_select_once() {
+    // `loading` answers the repos list first, then git.
+    let mut app = TestApp::loading(Config::default(), FakeGithub::new().with_repositories(base_repos()))
+        .with_local_repo(local("parity-bot/dotfiles"));
+    let out = settle_logged(&mut app);
+    assert_eq!(selected_lines(&out), ["INFO Selected repo parity-bot/dotfiles"]);
+    assert_eq!(current_repo(&app), Some("parity-bot/dotfiles"));
+}
+
+#[test]
+fn no_current_directory_repo_selects_nothing() {
+    for repo in [local("someone/else"), None] {
+        let mut app = with_repos(with_log(), base_repos());
+        let out = logs(|| app.set_local_repo(repo.clone()));
+        assert_eq!(out, "", "{repo:?}");
+        assert_eq!(current_repo(&app), None);
+        assert_eq!(details_title(&app), "[5] Details");
+        assert!(app.app().toasts().is_empty());
+        assert!(app.app().main_screen().unwrap().command_log().lines().is_empty());
+    }
+}
+
+#[test]
+fn a_failed_fetch_selects_nothing() {
+    let gh = FakeGithub::new().with_repositories_error(server_error());
+    let mut app = TestApp::loading(Config::default(), gh).with_local_repo(local("parity-bot/dotfiles"));
+    let out = settle_logged(&mut app);
+    assert!(selected_lines(&out).is_empty(), "{out}");
+    assert_eq!(current_repo(&app), None);
+}
+
+#[test]
+fn a_repo_selected_by_hand_before_the_git_answer_stays() {
+    let mut app = with_repos(Config::default(), base_repos());
+    app.press(&["j", "enter"]);
+    assert_eq!(current_repo(&app), Some("parity-bot/hello-world"));
+    let out = logs(|| app.set_local_repo(local("parity-bot/dotfiles")));
+    assert_eq!(out, "");
+    assert_eq!(current_repo(&app), Some("parity-bot/hello-world"));
+}
+
+/// Py bug B42: a clone of `Parity-Bot/DOTFILES` selects the table's `parity-bot/dotfiles`, spelled as the API does.
+#[test]
+fn the_current_directory_match_ignores_ascii_case() {
+    let mut app = with_repos(Config::default(), base_repos());
+    app.set_local_repo(local("Parity-Bot/DOTFILES"));
+    assert_eq!(current_repo(&app), Some("parity-bot/dotfiles"));
+    assert!(app.screen(100, 30).contains("Current repo: parity-bot/dotfiles"));
 }

@@ -1,11 +1,16 @@
 version = 1
 description = "Selecting a repo in the repos table: the bar shows Current repo: owner/name"
-# The Rust side needs M2's repos table and repo selection; the M2 repos-table issue flips this.
-# The spec's `git_remote` auto-select can't work on the Python side: the harness's remote is
-# `https://github.com/<owner>/<name>.git`, and Python keeps the `.git` (Py bug B5), so no repo matches. Selecting with
-# enter reaches the same `set_currently_loaded_repo`.
-gate = false
-parity_rows = ["main-layout.status-current-repo"]
+# The harness's HTTPS remote never auto-selects on the Python side: Python keeps the `.git` (Py bug B5), so no repo
+# matches. Selecting with enter reaches the same `set_currently_loaded_repo`; `repo-auto-select` covers the
+# current-directory default with an SSH remote.
+gate = true
+parity_rows = [
+    "main-layout.status-current-repo",
+    "repositories.select",
+    "main-layout.details-title",
+    "repositories.introduction-replaced-on-select",
+    "keybindings.common-table-select",
+]
 sizes = [[160, 48]]
 
 [env]
@@ -20,13 +25,17 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Current repo: parity-bot/dotfiles", timeout_ms = 15000 }
 
-# Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and no wait settles it.
-# Only titles are checked, which `ignore` leaves alone; ignoring the Details box lets a re-record keep the stored screen.
+# Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and no wait settles it,
+# so the Details box is ignored: a re-record keeps the stored screen. `titles` waits for #171, #172 and #173: Python
+# collapses the empty sections to `[2] Pull Requests (empty)` and so on, which Rust doesn't draw yet.
 [[step]]
 capture = "selected"
-checks = ["titles"]
-ignore = { boxes = ["Details"] }
+checks = ["headers", "rows", "cursor", "focus"]
+ignore = { boxes = ["Details", "Pull Requests", "Issues", "Workflows"] }
 
+# No `tabs`: with the zero-width underline (#209) Python's strip isn't read as a tab bar at all, which happens in most
+# runs of this scenario, so the tab name is in `contains` instead, as in `repo-overview`.
 [expect.selected]
-contains = ["Current repo: parity-bot/dotfiles"]
-not_contains = ["Traceback"]
+contains = ["Current repo: parity-bot/dotfiles", "[5] parity-bot/dotfiles Details", "Repo Overview"]
+focused = ["[1] Repositories"]
+not_contains = ["Traceback", "Introduction"]

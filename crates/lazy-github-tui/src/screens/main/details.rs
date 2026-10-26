@@ -1,9 +1,12 @@
-//! Inside the Details box: a tab strip with the Introduction tab, and the intro under it. Python's
-//! `SelectionDetailsContainer` with `LazyGithubInfoTabPane`.
+//! Inside the Details box: a tab strip, and the active tab's body under it. Before a repo is selected that's the
+//! Introduction tab; afterwards the selected repo's Repo Overview. Python's `SelectionDetailsContainer`, with
+//! `LazyGithubInfoTabPane` or `RepoOverviewTabPane`.
 
+use lazy_github_core::models::Repository;
 use ratatui::Frame;
 use ratatui::layout::Rect;
 
+use crate::component::Cx;
 use crate::components::info::{InfoView, Scroll};
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
 use crate::theme::Theme;
@@ -14,15 +17,42 @@ use super::FocusTarget;
 #[derive(Debug)]
 pub(super) struct DetailsPane {
     tabs: TabStrip,
-    info: InfoView,
+    body: Body,
+}
+
+/// The active tab's body.
+#[derive(Debug)]
+enum Body {
+    /// The Introduction tab, before any selection.
+    Intro(InfoView),
+    /// The selected repo's Repo Overview tab.
+    Repo(RepoOverview),
 }
 
 impl Default for DetailsPane {
     fn default() -> Self {
         Self {
             tabs: TabStrip::new(["Introduction"]),
-            info: InfoView::default(),
+            body: Body::Intro(InfoView::default()),
         }
+    }
+}
+
+/// The Repo Overview tab of the selected repo. Its body is #174's; until then it draws nothing.
+#[derive(Debug)]
+pub(super) struct RepoOverview {
+    repo: Repository,
+}
+
+impl RepoOverview {
+    /// The overview of `repo`. Takes the context so it can start its own requests (the README, #219).
+    pub(super) fn new(repo: &Repository, _cx: &mut Cx<'_>) -> Self {
+        Self { repo: repo.clone() }
+    }
+
+    /// The repo shown.
+    pub(super) fn repo(&self) -> &Repository {
+        &self.repo
     }
 }
 
@@ -32,8 +62,32 @@ impl DetailsPane {
         !self.tabs.is_empty()
     }
 
+    /// Replaces the tabs with the one active Repo Overview tab of `repo`, scrolled to the top: Python clears the
+    /// panes and adds a new one on every selection, the same repo included.
+    pub(super) fn show_repo(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
+        self.tabs = TabStrip::new(["Repo Overview"]);
+        self.body = Body::Repo(RepoOverview::new(repo, cx));
+    }
+
+    /// The tab strip.
+    pub(super) fn tabs(&self) -> &TabStrip {
+        &self.tabs
+    }
+
+    /// The repo whose overview is showing, if any.
+    pub(super) fn repo(&self) -> Option<&Repository> {
+        match &self.body {
+            Body::Intro(_) => None,
+            Body::Repo(overview) => Some(overview.repo()),
+        }
+    }
+
     pub(super) fn scroll(&mut self, scroll: Scroll) {
-        self.info.scroll(scroll);
+        match &mut self.body {
+            Body::Intro(info) => info.scroll(scroll),
+            // Nothing to scroll until #174 draws the overview.
+            Body::Repo(_) => {}
+        }
     }
 
     /// Draws the tabs and the active tab's content into `area`, and returns where each focus target landed, for
@@ -56,7 +110,10 @@ impl DetailsPane {
             height: area.height - tabs_height,
             ..area
         };
-        self.info.render(frame, body, theme);
+        match &mut self.body {
+            Body::Intro(info) => info.render(frame, body, theme),
+            Body::Repo(_) => {}
+        }
         [(tabs, FocusTarget::DetailsTabs), (body, FocusTarget::DetailsContent)]
     }
 }

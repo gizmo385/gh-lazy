@@ -228,7 +228,7 @@ pub struct MainScreen {
 }
 
 /// The main screen's own actions.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MainAction {
     /// Scroll the details content (`textual.scroll.*` while it has focus).
     ScrollDetails(Scroll),
@@ -236,6 +236,8 @@ pub enum MainAction {
     ScrollLog(Scroll),
     /// A wheel notch over the command log, focused or not.
     WheelLog(Wheel),
+    /// A click on the repos table's cursor cell: focus the table, then select the repo, in that order.
+    ClickSelect(Box<Repository>),
 }
 
 impl MainScreen {
@@ -270,6 +272,49 @@ impl MainScreen {
     /// What the screen does once it's shown: load the repos, under the loading overlay.
     pub fn start(&mut self, cx: &mut Cx<'_>) {
         self.repos.start(cx);
+    }
+
+    /// A repo was selected (`Action::SelectRepo`, applied by `App`): every pane shows it, in Python's order (the
+    /// sections, then the details). A pane that loads per repo adds one line here; see #170's "What a selection
+    /// publishes" for the contract of its `load_repo`.
+    pub fn on_repo_selected(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
+        if self.section(SectionId::PullRequests).shown() || self.section(SectionId::Issues).shown() {
+            // #171: one shared first-page request feeding both tables; #172 adds the issues side.
+        }
+        if self.section(SectionId::Workflows).shown() {
+            // #173: workflows and runs.
+        }
+        // #174 fills the Repo Overview body.
+        self.details.show_repo(repo, cx);
+        self.details_title = format!(
+            "[{}] {} Details",
+            cx.keymap().title_key(BindingId::MainDetailsFocus),
+            repo.full_name
+        );
+        // Python removes the focused content along with the old tab, and Textual moves focus to the tab strip.
+        if self.focus == FocusTarget::DetailsContent {
+            self.move_focus(FocusTarget::DetailsTabs);
+        }
+    }
+
+    /// Git said what the current-directory repo is: the repos section may select it.
+    pub fn on_local_repo(&mut self, cx: &mut Cx<'_>) {
+        self.repos.check_current_directory_repo(cx);
+    }
+
+    /// The details box's title.
+    pub fn details_title(&self) -> &str {
+        &self.details_title
+    }
+
+    /// The details tab names, in order.
+    pub fn details_tabs(&self) -> &[String] {
+        self.details.tabs().names()
+    }
+
+    /// The repo the details pane shows, if any.
+    pub fn details_repo(&self) -> Option<&Repository> {
+        self.details.repo()
     }
 
     /// Takes a response to one of the screen's requests, and hands back any other.
@@ -513,7 +558,17 @@ impl MainScreen {
                     None
                 }
             }
-            _ => table_outcome(&handled),
+            // A click on the cursor's cell: the press focused the table, and this release selects.
+            _ => match handled {
+                Handled::Event(TableEvent::Selected(key)) => self
+                    .repos
+                    .table
+                    .get(&key)
+                    .map(|repo| Action::Main(MainAction::ClickSelect(Box::new(repo.clone()))))
+                    // The key is the cursor row's, so it's always there.
+                    .or(Some(Action::Consumed)),
+                handled => table_outcome(&handled),
+            },
         }
     }
 
@@ -563,7 +618,16 @@ impl MainScreen {
             }
             Owner::CommandLog => Scroll::from_binding(id).map(|scroll| Action::Main(MainAction::ScrollLog(scroll))),
             // The table is plain state, so it applies the binding now, as Textual runs the binding's action.
-            Owner::Table(SectionId::Repos) => table_outcome(&self.repos.table.on_binding(id)),
+            Owner::Table(SectionId::Repos) => match self.repos.table.on_binding(id) {
+                Handled::Event(TableEvent::Selected(key)) => self
+                    .repos
+                    .table
+                    .get(&key)
+                    .map(|repo| Action::SelectRepo(Box::new(repo.clone())))
+                    // The key is the cursor row's, so it's always there.
+                    .or(Some(Action::Consumed)),
+                handled => table_outcome(&handled),
+            },
             Owner::SearchableTable(SectionId::Repos) if id == BindingId::TableSearch => {
                 self.open_search(SectionId::Repos);
                 Some(Action::Consumed)
@@ -673,7 +737,7 @@ fn table_outcome<K>(handled: &Handled<TableEvent<K>>) -> Option<Action> {
         Handled::Ignored => None,
         // Only lazy tables ask for pages, and none is mounted yet (#171).
         Handled::Consumed | Handled::Event(TableEvent::LoadMore { .. }) => Some(Action::Consumed),
-        // #170 makes selecting a repo do something.
+        // The repos table's selections are taken before this; the other tables' select issues take theirs.
         Handled::Event(TableEvent::Selected(_)) => Some(Action::Unimplemented(BindingId::TableSelect)),
     }
 }
@@ -717,11 +781,15 @@ impl Component for MainScreen {
         }
     }
 
-    fn update(&mut self, action: MainAction, _cx: &mut Cx<'_>) {
+    fn update(&mut self, action: MainAction, cx: &mut Cx<'_>) {
         match action {
             MainAction::ScrollDetails(scroll) => self.details.scroll(scroll),
             MainAction::ScrollLog(scroll) => self.command_log.scroll(scroll),
             MainAction::WheelLog(wheel) => self.command_log.wheel(wheel),
+            MainAction::ClickSelect(repo) => {
+                self.try_focus(FocusTarget::Table(SectionId::Repos));
+                cx.dispatch(Action::SelectRepo(repo));
+            }
         }
     }
 

@@ -11,7 +11,7 @@ use lazy_github_core::github::{FakeGithub, GithubCall, RepoListQuery};
 use crate::app::App;
 use crate::clock::{Clock as _, FakeClock};
 use crate::component::ScreenKind;
-use crate::effect::{Effect, GithubRequest, TimerId};
+use crate::effect::{Effect, GitRequest, GithubRequest, TimerId};
 use crate::screens::auth::{AUTH_POLL_INTERVAL, AuthReason};
 use crate::test_util::TestApp;
 
@@ -79,13 +79,19 @@ fn a_fresh_cache_goes_straight_to_main() {
     let mut app = TestApp::on_startup(config_checked(Some(1.hour())), FakeGithub::new());
     settle(&mut app);
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
-    // Only the main screen's repos list.
+    // Only the main screen's repos list and the current-directory repo.
     assert!(matches!(
         app.effects(),
-        [Effect::Github {
-            request: GithubRequest::ListRepositories(_),
-            ..
-        }]
+        [
+            Effect::Github {
+                request: GithubRequest::ListRepositories(_),
+                ..
+            },
+            Effect::Git {
+                request: GitRequest::OriginRepo,
+                ..
+            }
+        ]
     ));
     assert_eq!(app.gh().calls(), [GithubCall::ListRepositories(RepoListQuery::all())]);
 }
@@ -116,8 +122,8 @@ fn a_stale_cache_checks_then_saves_once_and_shows_main() {
     let now = app.clock().local_now().datetime();
     assert_eq!(saved[0].cache.auth_last_checked, Some(now));
     assert!(!saved[0].core.first_start);
-    // The check, the repos list and the save.
-    assert_eq!(app.effects().len(), 3);
+    // The check, the repos list, the current-directory repo and the save.
+    assert_eq!(app.effects().len(), 4);
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
 }
 
@@ -164,7 +170,7 @@ fn the_poll_rechecks_and_moves_on_without_saving() {
     settle(&mut app);
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
     assert_eq!(saved_configs(&app), Vec::<&Config>::new());
-    let last = &app.effects()[app.effects().len() - 2..];
+    let last = &app.effects()[app.effects().len() - 3..];
     assert!(
         matches!(
             last,
@@ -172,6 +178,10 @@ fn the_poll_rechecks_and_moves_on_without_saving() {
                 Effect::CancelTimer(TimerId::AuthPoll),
                 Effect::Github {
                     request: GithubRequest::ListRepositories(_),
+                    ..
+                },
+                Effect::Git {
+                    request: GitRequest::OriginRepo,
                     ..
                 }
             ]

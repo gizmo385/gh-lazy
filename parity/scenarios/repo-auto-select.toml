@@ -1,0 +1,41 @@
+version = 1
+description = "Started in a clone of a repo in the table: that repo is selected with no key pressed"
+# With the harness's HTTPS remote Python never selects (it keeps the `.git`, Py bug B5), so `origin` is spelled over
+# SSH, which both apps parse.
+gate = true
+parity_rows = [
+    "repositories.auto-select-cwd-repo",
+    "main-layout.status-current-repo",
+    "infrastructure.git-detection",
+    "infrastructure.parity-git-remote-protocol",
+    "cli.original-pwd",
+]
+sizes = [[160, 48]]
+
+[env]
+fixtures = ["repo-selected-empty", "base"]
+git_remote = "parity-bot/dotfiles"
+git_remote_protocol = "ssh"
+config_overrides = { appearance = { show_command_log = true } }
+
+# No key is pressed: the selection comes from the current directory once the repos fill the table.
+[[step]]
+wait = { text = "Current repo: parity-bot/dotfiles", timeout_ms = 15000 }
+
+# Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and the command log's
+# timestamps differ run to run, so both boxes are ignored. The sections wait for #171, #172 and #173: Python collapses
+# the empty ones to `[2] Pull Requests (empty)` and so on, which Rust doesn't draw yet, so `titles` isn't checked.
+[[step]]
+capture = "auto"
+checks = ["headers", "rows", "cursor", "focus"]
+ignore = { boxes = ["Details", "Pull Requests", "Issues", "Workflows", "Command Log"] }
+
+[expect.auto]
+contains = [
+    "Current repo: parity-bot/dotfiles",
+    "[5] parity-bot/dotfiles Details",
+    "Selected repo parity-bot/dotfiles",
+]
+focused = ["[1] Repositories"]
+tabs = { box = "Details", names = ["Repo Overview"], active = "Repo Overview" }
+not_contains = ["Traceback"]

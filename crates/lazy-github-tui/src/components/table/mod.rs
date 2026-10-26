@@ -134,7 +134,9 @@ impl TableAction {
     fn from_binding(id: BindingId) -> Option<Self> {
         use BindingId as B;
         Some(match id {
-            B::TableSelect => Self::Select,
+            // Both run `select_cursor`. The chain never routes `textual.table.select_cursor` (see [`TABLE_BINDINGS`]),
+            // but it means the same.
+            B::TableSelect | B::TextualTableSelect => Self::Select,
             B::TableCursorDown | B::TextualTableCursorDown => Self::CursorDown,
             B::TableCursorUp | B::TextualTableCursorUp => Self::CursorUp,
             B::TablePageDown | B::TextualTablePageDown => Self::PageDown,

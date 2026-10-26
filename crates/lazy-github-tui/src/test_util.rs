@@ -36,6 +36,9 @@ pub struct TestApp {
     gh: FakeGithub,
     /// The working directory's `origin` repo, `None` for "not a repo".
     local_repo: Option<RepoName>,
+    /// The main screen's `OriginRepo` request, held back at setup until [`Self::with_local_repo`] or
+    /// [`Self::settle`] answers it.
+    setup_git: Option<(RequestId, GitRequest)>,
     clock: FakeClock,
     effects: Vec<Effect>,
     queued: VecDeque<Effect>,
@@ -52,7 +55,9 @@ impl TestApp {
     /// The startup auth check is skipped; [`Self::on_startup`] runs it. The repos list the main screen asks for is
     /// answered at once (the fake has no repos unless `gh` says otherwise), so the screen is loaded; [`Self::loading`]
     /// leaves it pending. That request is setup: it's in the fake's call log but not in [`Self::effects`], which
-    /// starts with the other startup effects, such as the notifications poll.
+    /// starts with the other startup effects, such as the notifications poll. The git request for the
+    /// current-directory repo is setup too, answered by [`Self::with_local_repo`] (or [`Self::settle`]), after the
+    /// repos.
     ///
     /// Animations are off, as under the parity harness's `TEXTUAL_ANIMATIONS=none`, so loading overlays are still.
     pub fn new(config: Config) -> Self {
@@ -63,10 +68,12 @@ impl TestApp {
     pub fn with_github(config: Config, gh: FakeGithub) -> Self {
         let mut test = Self::loading(config, gh);
         test.answer_repos();
+        test.hold_setup_git();
         test
     }
 
-    /// Like [`Self::with_github`], with the main screen's repos list still in flight: [`Self::settle`] answers it.
+    /// Like [`Self::with_github`], with the main screen's repos list and git request still in flight, in
+    /// [`Self::effects`]: [`Self::settle`] answers them, repos first.
     pub fn loading(config: Config, gh: FakeGithub) -> Self {
         Self::entered(config, Theme::default(), gh, TEST_OPTIONS)
     }
@@ -75,6 +82,7 @@ impl TestApp {
     pub fn with_theme(config: Config, theme: Theme) -> Self {
         let mut test = Self::entered(config, theme, FakeGithub::new(), TEST_OPTIONS);
         test.answer_repos();
+        test.hold_setup_git();
         test
     }
 
@@ -106,6 +114,7 @@ impl TestApp {
             app,
             gh,
             local_repo: None,
+            setup_git: None,
             clock,
             effects: Vec::new(),
             queued: VecDeque::new(),
@@ -134,6 +143,33 @@ impl TestApp {
                     .expect("the fake answers the repos list at once");
                 self.send(Event::Github { id, response });
             }
+        }
+    }
+
+    /// Takes the queued `OriginRepo` request out of [`Self::effects`] and the queue, as setup.
+    fn hold_setup_git(&mut self) {
+        let position = self.queued.iter().position(|effect| {
+            matches!(
+                effect,
+                Effect::Git {
+                    request: GitRequest::OriginRepo,
+                    ..
+                }
+            )
+        });
+        let Some(Effect::Git { id, request }) = position.and_then(|i| self.queued.remove(i)) else {
+            return;
+        };
+        self.effects
+            .retain(|effect| !matches!(effect, Effect::Git { id: held, .. } if *held == id));
+        self.setup_git = Some((id, request));
+    }
+
+    /// Answers the held setup git request from [`Self::with_local_repo`], if it's still held.
+    fn answer_setup_git(&mut self) {
+        if let Some((id, request)) = self.setup_git.take() {
+            let response = self.answer_git(&request);
+            self.send(Event::Git { id, response });
         }
     }
 
@@ -170,11 +206,18 @@ impl TestApp {
     }
 
     /// This app with its working directory in a git repo whose `origin` is `repo`; `None` (the default) means the
-    /// directory isn't a repo. Git requests are answered from it in [`Self::settle`].
+    /// directory isn't a repo. The main screen's setup request is answered from it now, after the repos list, and
+    /// later git requests in [`Self::settle`].
     #[must_use]
     pub fn with_local_repo(mut self, repo: Option<RepoName>) -> Self {
-        self.local_repo = repo;
+        self.set_local_repo(repo);
         self
+    }
+
+    /// [`Self::with_local_repo`] on a borrowed app.
+    pub fn set_local_repo(&mut self, repo: Option<RepoName>) {
+        self.local_repo = repo;
+        self.answer_setup_git();
     }
 
     /// What git would answer `request` with in the [`Self::with_local_repo`] directory.
@@ -187,6 +230,7 @@ impl TestApp {
     /// Runs queued GitHub requests on the [`FakeGithub`], answers queued git requests from
     /// [`Self::with_local_repo`] and completes queued config saves, feeding each result back, until nothing is left.
     pub async fn settle(&mut self) {
+        self.answer_setup_git();
         while let Some(effect) = self.queued.pop_front() {
             let event = match effect {
                 Effect::Github { id, request } => Event::Github {

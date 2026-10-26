@@ -181,8 +181,8 @@ pub const DEFAULT_THEME: &str = "textual-dark";
 #[serde(default)]
 #[allow(clippy::struct_excessive_bools)] // One bool per setting, mirroring the file.
 pub struct AppearanceSettings {
-    /// The Textual theme name, one of [`TEXTUAL_THEMES`] once loaded: an unknown name or a non-string value loads as
-    /// [`DEFAULT_THEME`], as in Python, so the next save writes that.
+    /// The Textual theme name, one of [`TEXTUAL_THEMES`] once loaded: an unknown name or a scalar loads as
+    /// [`DEFAULT_THEME`], as in Python, so the next save writes that. A list or an object is rejected (Py bug B39).
     #[serde(deserialize_with = "lax::theme")]
     pub theme: String,
     /// Whether the command log is shown on startup.

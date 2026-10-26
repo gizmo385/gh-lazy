@@ -144,13 +144,17 @@ where
 }
 
 /// A theme name. Python's `mode="before"` validator looks the value up in Textual's built-in themes and falls back to
-/// `textual-dark`, so an unknown name (matched exactly, case included) or a non-string loads as `textual-dark`, which
-/// the next save writes back.
+/// `textual-dark`, so an unknown name (matched exactly, case included), a number, a bool or `null` loads as
+/// `textual-dark`, which the next save writes back. A list or an object is a field error: Python's lookup raises
+/// `TypeError` on it and crashes at startup (Py bug B39).
 pub(super) fn theme<'de, D: Deserializer<'de>>(deserializer: D) -> Result<String, D::Error> {
-    Ok(match serde_json::Value::deserialize(deserializer)? {
-        serde_json::Value::String(name) if super::TEXTUAL_THEMES.contains(&name.as_str()) => name,
-        _ => super::DEFAULT_THEME.to_owned(),
-    })
+    const EXPECTING: &str = "a theme name";
+    match serde_json::Value::deserialize(deserializer)? {
+        serde_json::Value::String(name) if super::TEXTUAL_THEMES.contains(&name.as_str()) => Ok(name),
+        serde_json::Value::Array(_) => Err(de::Error::invalid_type(de::Unexpected::Seq, &EXPECTING)),
+        serde_json::Value::Object(_) => Err(de::Error::invalid_type(de::Unexpected::Map, &EXPECTING)),
+        _ => Ok(super::DEFAULT_THEME.to_owned()),
+    }
 }
 
 /// A path. An empty string becomes `.`, which is what Python's `Path("")` does; `~` is not expanded.

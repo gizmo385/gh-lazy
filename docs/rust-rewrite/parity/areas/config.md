@@ -10,7 +10,7 @@ accept negative values, as pydantic does: they load and save unchanged, and act 
 
 | Id | Section | Field | Default | Python reference | Milestone | Status | Issue | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `config.appearance-theme` | `appearance` | `theme` | `"textual-dark"` | `lib/config.py` `AppearanceSettings` | M0 | not started | #64, #159 | Unknown name (or any non-string) → `textual-dark`, which the next save writes back. A list or object crashes Python (Py bug B39); Rust loads it as `textual-dark`. Applied in #77. |
+| `config.appearance-theme` | `appearance` | `theme` | `"textual-dark"` | `lib/config.py` `AppearanceSettings` | M0 | not started | #64, #159 | Unknown name (or any non-string) → `textual-dark`, which the next save writes back. A list or object crashes Python (Py bug B39); Rust rejects it with the broken-config error. Applied in #77. |
 | `config.appearance-show-command-log` | `appearance` | `show_command_log` | `false` | `lib/config.py` | M0 | not started | #64, #159 | Used by #74/#80. |
 | `config.appearance-show-workflows` | `appearance` | `show_workflows` | `true` | `lib/config.py` | M0 | not started | #64, #159 | |
 | `config.appearance-show-issues` | `appearance` | `show_issues` | `true` | `lib/config.py` | M0 | not started | #64, #159 | |

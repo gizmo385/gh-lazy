@@ -372,6 +372,8 @@ enum Expected {
     Saved(&'static str),
     /// Loads as this instant in local civil time, which a save writes naive (whole seconds only).
     LocalTime(&'static str),
+    /// The file is rejected at this field.
+    Rejected(&'static str),
 }
 
 impl Expected {
@@ -385,6 +387,7 @@ impl Expected {
                     .to_zoned(jiff::tz::TimeZone::system());
                 Outcome::Saved(local.strftime("%Y-%m-%dT%H:%M:%S").to_string().into())
             }
+            Expected::Rejected(field) => Outcome::Error(field.to_owned()),
         }
     }
 }
@@ -413,8 +416,9 @@ const PARSE_DIFFS: &[(&str, &str, Expected, &str)] = &[
     (
         "appearance.theme",
         r#"{"name": "nord"}"#,
-        Expected::Saved(r#""textual-dark""#),
-        "B39: Python's theme validator raises TypeError for an unhashable value, which crashes startup",
+        Expected::Rejected("appearance.theme"),
+        "B39: Python's theme validator raises TypeError for an unhashable value, which crashes startup; Rust reports \
+         the field instead",
     ),
 ];
 
@@ -564,6 +568,18 @@ fn a_null_section_reports_the_section() {
     let (_tmp, _paths, result) = load_text(r#"{"issues":null}"#);
     match result {
         Err(ConfigError::Invalid { field, .. }) => assert_eq!(field, "issues"),
+        other => panic!("expected an invalid-value error, got {other:?}"),
+    }
+}
+
+/// Py bug B39: Python crashes on these, so Rust reports the field (the broken-config error) instead.
+#[rstest]
+#[case::list(r#"["nord"]"#)]
+#[case::object(r#"{"name": "nord"}"#)]
+fn a_list_or_object_theme_is_rejected(#[case] theme: &str) {
+    let (_tmp, _paths, result) = load_text(&format!(r#"{{"appearance":{{"theme":{theme}}}}}"#));
+    match result {
+        Err(ConfigError::Invalid { field, .. }) => assert_eq!(field, "appearance.theme"),
         other => panic!("expected an invalid-value error, got {other:?}"),
     }
 }

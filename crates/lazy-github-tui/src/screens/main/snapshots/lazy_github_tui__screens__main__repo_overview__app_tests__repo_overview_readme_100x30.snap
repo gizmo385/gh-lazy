@@ -16,8 +16,8 @@ expression: "app.screen(100, 30)"
 │                                      ││                                                          │
 │                                      ││────────────────────────────────────────────────────────  │
 │                                      ││                                                          │
+│                                      ││                                                        ▅▅│
 │                                      ││                                                          │
-│                                      ││                                                        ▆▆│
 │                                      ││                      Hello World                         │
 │                                      ││                                                          │
 │                                      ││  A first repository for trying things out, with bold,    │

@@ -72,18 +72,18 @@ fn column(x: usize) -> u16 {
 
 /// One laid-out row, with the links in it by column from its left edge.
 #[derive(Debug, Default)]
-struct Row {
-    spans: Vec<Span<'static>>,
-    links: Vec<(Range<usize>, Arc<str>)>,
+pub(super) struct Row {
+    pub(super) spans: Vec<Span<'static>>,
+    pub(super) links: Vec<(Range<usize>, Arc<str>)>,
 }
 
 impl Row {
-    fn width(&self) -> usize {
+    pub(super) fn width(&self) -> usize {
         self.spans.iter().map(Span::width).sum()
     }
 
     /// `self` after `prefix`, with its links moved over.
-    fn after(mut self, prefix: Vec<Span<'static>>) -> Row {
+    pub(super) fn after(mut self, prefix: Vec<Span<'static>>) -> Row {
         let shift: usize = prefix.iter().map(Span::width).sum();
         for (columns, _) in &mut self.links {
             *columns = columns.start + shift..columns.end + shift;
@@ -116,8 +116,8 @@ impl Scope {
     }
 }
 
-struct Painter<'t> {
-    theme: &'t Theme,
+pub(super) struct Painter<'t> {
+    pub(super) theme: &'t Theme,
 }
 
 impl Painter<'_> {
@@ -133,15 +133,6 @@ impl Painter<'_> {
             margin = Some(bottom);
         };
         for block in blocks {
-            if let Block::Table { head, rows: body } = block {
-                // Until #216: each table row reads as a paragraph of its cells' text.
-                for cells in iter::once(head).chain(body) {
-                    let text = table_row_text(cells);
-                    let block_rows = self.inlines(&text, width, self.text_style(scope.under), scope.under);
-                    stack(&mut rows, paragraph_margins(scope), block_rows);
-                }
-                continue;
-            }
             let block_rows = self.block(block, width, scope);
             stack(&mut rows, self.margins(block, scope), block_rows);
         }
@@ -156,7 +147,9 @@ impl Painter<'_> {
             // `MarkdownHeader { margin: 2 0 1 0 }`, and `margin: 1 0` from H3 down.
             Block::Heading { level: 1 | 2, .. } => (2, 1),
             Block::Heading { .. } => (1, 1),
-            Block::Paragraph(_) | Block::Table { .. } => paragraph_margins(scope),
+            Block::Paragraph(_) => paragraph_margins(scope),
+            // `MarkdownTable { margin-bottom: 1 }`, wherever it is.
+            Block::Table { .. } => (0, 1),
             // `MarkdownBulletList`/`MarkdownOrderedList { margin: 0 0 1 0 }`, but `MarkdownList MarkdownList`
             // has none.
             Block::List { .. } if scope.in_list => (0, 0),
@@ -187,8 +180,7 @@ impl Painter<'_> {
                     links: Vec::new(),
                 },
             ],
-            // Laid out by `blocks`.
-            Block::Table { .. } => Vec::new(),
+            Block::Table { head, rows } => self.table(head, rows, width, scope.under),
         }
     }
 
@@ -344,7 +336,7 @@ impl Painter<'_> {
 
     /// Inline runs wrapped to `width`, over `base`: a `\n` (a hard break) starts a row, and each line takes at
     /// least one.
-    fn inlines(&self, text: &[Inline], width: usize, base: Style, under: Paint) -> Vec<Row> {
+    pub(super) fn inlines(&self, text: &[Inline], width: usize, base: Style, under: Paint) -> Vec<Row> {
         let runs: Vec<StyledRun<'_>> = text
             .iter()
             .map(|run| StyledRun {
@@ -356,7 +348,7 @@ impl Painter<'_> {
         wrap_runs(&runs, width)
     }
 
-    fn inline_style(&self, base: Style, under: Paint, run: &Inline) -> Style {
+    pub(super) fn inline_style(&self, base: Style, under: Paint, run: &Inline) -> Style {
         let p = self.palette();
         let mut style = base;
         if run.style.strong {
@@ -389,15 +381,15 @@ impl Painter<'_> {
         style
     }
 
-    fn text_style(&self, under: Paint) -> Style {
+    pub(super) fn text_style(&self, under: Paint) -> Style {
         self.fg(self.palette().foreground, under)
     }
 
-    fn fg(&self, color: ThemeColor, under: Paint) -> Style {
+    pub(super) fn fg(&self, color: ThemeColor, under: Paint) -> Style {
         Style::new().fg(self.theme.color(color, under))
     }
 
-    fn palette(&self) -> &'static crate::theme::Palette {
+    pub(super) fn palette(&self) -> &'static crate::theme::Palette {
         self.theme.palette
     }
 }
@@ -494,22 +486,6 @@ fn row_of(cells: &[Cell<'_>], runs: &[StyledRun<'_>]) -> Row {
         row.spans.push(Span::styled(text, runs[run].style));
     }
     row
-}
-
-/// A table row's cells as one run list, a space between cells.
-fn table_row_text(cells: &[Vec<Inline>]) -> Vec<Inline> {
-    let mut text = Vec::new();
-    for (index, cell) in cells.iter().enumerate() {
-        if index > 0 {
-            text.push(Inline {
-                text: " ".to_owned(),
-                style: super::InlineStyle::default(),
-                link: None,
-            });
-        }
-        text.extend(cell.iter().cloned());
-    }
-    text
 }
 
 /// A code block's lines as Textual shows them: trailing whitespace (blank lines included) stripped from the end, tabs

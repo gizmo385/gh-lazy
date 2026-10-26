@@ -4,11 +4,11 @@
 //! [`Markdown::layout`] lays the tree out at a width in a theme's colors, as [`Rendered`] lines plus the cells every
 //! link covers. Layout is pure, so a view keeps the parsed document and caches the layout for its width and theme.
 //!
-//! Not drawn yet, with the issues that add them: tables as tables (#216, until then a table's rows read as
-//! paragraphs), syntax colors in fenced code (#217) and links for bare URLs (#218).
+//! Not drawn yet, with the issues that add them: syntax colors in fenced code (#217) and links for bare URLs (#218).
 
 mod layout;
 mod parse;
+mod table;
 mod wrap;
 
 #[cfg(test)]
@@ -124,7 +124,7 @@ enum Block {
         text: String,
     },
     Rule,
-    /// A GFM table: its header row and body rows, each a list of cells. #216 lays it out as a table.
+    /// A GFM table: its header row and body rows, each a list of cells, every row as many as the header.
     Table {
         head: Vec<Vec<Inline>>,
         rows: Vec<Vec<Vec<Inline>>>,

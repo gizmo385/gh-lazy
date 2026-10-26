@@ -8,23 +8,23 @@ expression: screen
 ┌─ [1] Repositories ───────────────────┐┌─ [5] parity-bot/hello-world Details ─────────────────────┐
 │ ★  Owner       Name         Private  ││ Repo Overview                                            │
 │ ☆  parity-bot  dotfiles     ✘        ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
-│ ☆  parity-bot  hello-world  ✘        ││                                                          │
-│ ☆  parity-bot  lazy-demo    ✘        ││                                                          │
-│                                      ││                                                          │
-│                                      ││  ────────────────────────────────────────────────────    │
-│                                      ││                                                          │
-│                                      ││  Name Value                                              │
-│                                      ││                                                          │
-│                                      ││  a 1                                                     │
+│ ☆  parity-bot  hello-world  ✘        ││  ┌──────────────────────┬───────────────────────────┐    │
+│ ☆  parity-bot  lazy-demo    ✘        ││  │ Name                 │ Value                     │    │
+│                                      ││  ├──────────────────────┼───────────────────────────┤    │
+│                                      ││  │ a                    │ 1                         │    │
+│                                      ││  └──────────────────────┴───────────────────────────┘    │
 │                                      ││                                                          │
 │                                      ││  Options                                                 │
 │                                      ││                                                          │
-│                                      ││  Option Description                                      │
-│                                      ││                                                        ▂▂│
-└──────────────────────────────────────┘│  --verbose Prints every request and response while it    │
-┌─ [2] Pull Requests (empty) ──────────┐│  runs, which is a lot of output for a long session.      │
-│ #  Status  Author  Title             ││                                                          │
-└──────────────────────────────────────┘│  -q Quiet.                                               │
+│                                      ││  ┌───────────┬──────────────────────────────────────┐    │
+│                                      ││  │ Option    │ Description                          │    │
+│                                      ││  ├───────────┼──────────────────────────────────────┤    │
+│                                      ││  │ --verbose │ Prints every request and response    │    │
+│                                      ││  │           │ while it runs, which is a lot of     │    │
+└──────────────────────────────────────┘│  │           │ output for a long session.           │  ▃▃│
+┌─ [2] Pull Requests (empty) ──────────┐│  ├───────────┼──────────────────────────────────────┤    │
+│ #  Status  Author  Title             ││  │ -q        │ Quiet.                               │    │
+└──────────────────────────────────────┘│  └───────────┴──────────────────────────────────────┘    │
 ┌─ [3] Issues (empty) ─────────────────┐│                                                          │
 │ #  Status  Author  Title             ││  Notes                                                   │
 └──────────────────────────────────────┘│                                                          │

@@ -313,11 +313,217 @@ fn h1_is_centered_with_its_whole_row_styled() {
 }
 
 #[test]
-fn tables_read_as_a_paragraph_per_row_until_216() {
+fn tables_have_keylines_between_every_cell() {
     assert_eq!(
-        text("| a | b |\n|---|---|\n| [c](u) | d |", 20),
-        ["  a b", "", "  c d", ""]
+        text("| a | b |\n|---|---|\n| [c](u) | d |\n\nafter", 20),
+        [
+            "  ┌──────┬───────┐",
+            "  │ a    │ b     │",
+            "  ├──────┼───────┤",
+            "  │ c    │ d     │",
+            "  └──────┴───────┘",
+            "",
+            "  after",
+            "",
+        ]
     );
+}
+
+#[test]
+fn table_cells_keep_their_links_and_styles() {
+    let rendered = render("| h |\n|---|\n| x [**c**](https://e.x) `k` |", 20);
+    assert_eq!(rendered.links.len(), 1);
+    assert_eq!(rendered.links[0].row, 3);
+    // Two columns of padding, the keyline and a cell's padding before "x c".
+    assert_eq!(rendered.links[0].columns, 6..7);
+    assert_eq!(&*rendered.links[0].target, "https://e.x");
+    let buf = buffer(&rendered, 20);
+    // Keylines are `$foreground 20%`, the header `$primary`, body text `$foreground`.
+    assert_eq!(buf[(2, 0)].fg, rgb(0x3B3B3B));
+    assert_eq!(buf[(4, 1)].fg, rgb(0x0178D4));
+    assert_eq!(buf[(4, 3)].fg, rgb(0xE0E0E0));
+    assert_eq!(buf[(6, 3)].modifier, Modifier::BOLD | Modifier::UNDERLINED);
+    // Inline code shows without its backticks.
+    assert_eq!(buf[(8, 3)].symbol(), "k");
+    assert_eq!(buf[(8, 3)].fg, rgb(0xF4BB6E));
+}
+
+#[test]
+fn ragged_table_rows_are_padded_and_cut_to_the_header() {
+    // As Textual 8.2.5 draws it.
+    assert_eq!(
+        text("| a | b |\n|---|---|\n| one |\n| p | q | r |", 20),
+        [
+            "  ┌────────┬─────┐",
+            "  │ a      │ b   │",
+            "  ├────────┼─────┤",
+            "  │ one    │     │",
+            "  ├────────┼─────┤",
+            "  │ p      │ q   │",
+            "  └────────┴─────┘",
+            "",
+        ]
+    );
+}
+
+#[test]
+fn a_wrapped_header_sits_at_the_bottom_of_its_row() {
+    // Checked against Textual 8.2.5 at 30 columns: the long header gives up width down to 20, and `b` drops to the
+    // header row's last line (`content-align: left bottom`).
+    assert_eq!(
+        text("| Long header that wraps around | b |\n| --- | --- |\n| x | y |", 30),
+        [
+            "  ┌────────────────────┬───┐",
+            "  │ Long header that   │   │",
+            "  │ wraps around       │ b │",
+            "  ├────────────────────┼───┤",
+            "  │ x                  │ y │",
+            "  └────────────────────┴───┘",
+            "",
+        ]
+    );
+}
+
+#[test]
+fn light_tables_have_their_own_background() {
+    let rendered = Markdown::parse("| Name | Value |\n|---|---|\n| a | 1 |").layout(30, &theme("textual-light"));
+    let buf = buffer(&rendered, 30);
+    // As Textual draws it: `white 30%` under the table, the keylines `$foreground 20%` over that.
+    assert_eq!((buf[(2, 0)].fg, buf[(2, 0)].bg), (rgb(0xC0C0C0), rgb(0xE9E9E9)));
+    assert_eq!((buf[(4, 1)].fg, buf[(4, 1)].bg), (rgb(0x004578), rgb(0xE9E9E9)));
+    assert_eq!((buf[(4, 3)].fg, buf[(4, 3)].bg), (rgb(0x1F1F1F), rgb(0xE9E9E9)));
+}
+
+/// The hello-world README's two tables.
+const README_TABLES: &str = "| Name | Value |
+| ---- | ----- |
+| a    | 1     |
+
+| Option | Description |
+| ------ | ----------- |
+| `--verbose` | Prints every request and response while it runs, which is a lot of output for a long session. |
+| `-q` | Quiet. |
+";
+
+const OPTIONS_DESCRIPTION: &str =
+    "Prints every request and response while it runs, which is a lot of output for a long session.";
+
+#[rstest::rstest]
+// The 2 x 2 table: natural widths 6 and 7, spread over the 85 or 49 columns between the keylines.
+#[case::small_wide(&[6, 7], &[6, 7], 88, &[39, 46])]
+#[case::small_narrow(&[6, 7], &[6, 7], 52, &[22, 27])]
+// The Options table: the description gives up width and wraps, the first column keeps its natural 11.
+#[case::options_wide(&[11, OPTIONS_DESCRIPTION.len() + 2], &[11, 13], 88, &[11, 74])]
+#[case::options_narrow(&[11, OPTIONS_DESCRIPTION.len() + 2], &[11, 13], 52, &[11, 38])]
+#[case::one_column(&[5], &[5], 20, &[18])]
+#[case::exact_fit(&[6, 7], &[6, 7], 16, &[6, 7])]
+// Every column over its minimum: the first gives up what it can, then all shrink in proportion.
+#[case::below_minimums(&[10, 10], &[8, 8], 15, &[6, 6])]
+#[case::narrower_than_padding(&[6, 7], &[6, 7], 3, &[0, 0])]
+#[case::no_width(&[6, 7], &[6, 7], 0, &[0, 0])]
+fn column_widths_resolve_as_textual(
+    #[case] natural: &[usize],
+    #[case] minimums: &[usize],
+    #[case] width: usize,
+    #[case] expected: &[usize],
+) {
+    assert_eq!(table::column_widths(natural, minimums, width), expected);
+}
+
+#[test]
+fn narrow_tables_do_not_panic() {
+    let markdown = Markdown::parse(README_TABLES);
+    for width in 0..30 {
+        markdown.layout(width, &dark());
+    }
+}
+
+/// The tables part of a `repo-overview` `scrolled` capture: from the first table's top keyline to the second's
+/// bottom one.
+fn python_tables(size: &str, width: usize) -> Vec<String> {
+    let path = repo_root()
+        .join("parity/references/repo-overview")
+        .join(size)
+        .join("scrolled.screen");
+    let screen = std::fs::read_to_string(path).unwrap();
+    let rows: Vec<&str> = screen
+        .lines()
+        .skip_while(|line| *line != "--- text")
+        .skip(1)
+        .take_while(|line| !line.starts_with("--- "))
+        .collect();
+    let left = rows
+        .iter()
+        .find_map(|row| Some(row[..row.find("┌─ [5]")?].chars().count() + 1))
+        .unwrap();
+    let pane: Vec<String> = rows
+        .iter()
+        .map(|row| {
+            row.chars()
+                .skip(left)
+                .take(width)
+                .collect::<String>()
+                .trim_end()
+                .to_owned()
+        })
+        .collect();
+    let first = pane.iter().position(|row| row.starts_with("  ┌")).unwrap();
+    let last = pane.iter().rposition(|row| row.starts_with("  └")).unwrap();
+    pane[first..=last].to_vec()
+}
+
+#[rstest::rstest]
+#[case::wide("160x48", 92)]
+#[case::narrow("100x30", 56)]
+fn the_readme_tables_match_python(#[case] size: &str, #[case] width: u16) {
+    let python = python_tables(size, usize::from(width));
+    assert!(python.len() > 10, "{python:?}");
+    let ours = text(&hello_world_readme(), width);
+    let first = ours.iter().position(|row| row.starts_with("  ┌")).unwrap();
+    assert_eq!(ours[first..first + python.len()], python[..]);
+}
+
+#[test]
+fn markdown_table_92() {
+    let rendered = Markdown::parse(README_TABLES).layout(92, &dark());
+    insta::assert_debug_snapshot!(buffer(&rendered, 92));
+}
+
+#[test]
+fn markdown_table_56() {
+    let rendered = Markdown::parse(README_TABLES).layout(56, &dark());
+    insta::assert_debug_snapshot!(buffer(&rendered, 56));
+}
+
+/// Alignment colons are ignored: every cell is left-aligned, as in Textual.
+const WRAPPING_TABLE: &str =
+    "| Long header that wraps | `k` |\n| :-- | --: |\n| a [link that wraps](https://example.com) | **b** |";
+
+#[test]
+fn wrapped_cells_grow_their_row_and_keep_their_links() {
+    // As Textual 8.2.5 draws it at 24 columns.
+    let rendered = render(WRAPPING_TABLE, 24);
+    assert_eq!(
+        rows(&rendered),
+        [
+            "  ┌──────────────┬───┐",
+            "  │ Long header  │   │",
+            "  │ that wraps   │ k │",
+            "  ├──────────────┼───┤",
+            "  │ a link that  │ b │",
+            "  │ wraps        │   │",
+            "  └──────────────┴───┘",
+            "",
+        ]
+    );
+    let spans: Vec<_> = rendered.links.iter().map(|l| (l.row, l.columns.clone())).collect();
+    assert_eq!(spans, [(4, 6..15), (5, 4..9)]);
+}
+
+#[test]
+fn markdown_table_wrapping() {
+    let rendered = Markdown::parse(WRAPPING_TABLE).layout(24, &dark());
+    insta::assert_debug_snapshot!(buffer(&rendered, 24));
 }
 
 #[test]

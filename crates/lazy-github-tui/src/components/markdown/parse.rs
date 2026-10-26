@@ -147,6 +147,10 @@ impl<'a> BlockParser<'a> {
                 _ => {}
             }
         }
+        // As GFM: every row has the header's cells, short rows padded with empty ones and extra cells dropped.
+        for row in &mut rows {
+            row.resize_with(head.len(), Vec::new);
+        }
         Block::Table { head, rows }
     }
 

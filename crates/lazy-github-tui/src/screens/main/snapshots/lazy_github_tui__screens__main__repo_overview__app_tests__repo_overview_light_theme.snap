@@ -12,7 +12,7 @@ A first repository for trying things out.
 
 
 
-                       Hello World                        ▁▁
+                       Hello World
 
   A first repository for trying things out, with bold,
   italic, inline code and a link. This line continues
@@ -38,19 +38,19 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdd
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdd
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdd
 cchhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhccii
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccjj
-ccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffffaccccjj
-cckkkkkkaalllllllllllaaaaaaammmmaaaaaaaaaaaaaaaaaaaaacccccjj
-ccaaaaaaaaaaaaaaaaaaacccccccccccccccccccccccccccccccccccccjj
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccjj
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccjj
-ccnnnnnnncccccccccccccccccccccccccccccccccccccccccccccccccjj
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccjj
-ccooooaaaaaaaaaaaaaaccccccccccccccccccccccccccccccccccccccjj
-ccooooaaaallllllllllllccccccccccccccccccccccccccccccccccccjj
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccjj
-ccooaaacccccccccccccccccccccccccccccccccccccccccccccccccccjj
-ccooaaacccccccccccccccccccccccccccccccccccccccccccccccccccjj
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccii
+ccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffffaccccii
+ccjjjjjjaakkkkkkkkkkkaaaaaaallllaaaaaaaaaaaaaaaaaaaaacccccii
+ccaaaaaaaaaaaaaaaaaaacccccccccccccccccccccccccccccccccccccii
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccii
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccii
+ccmmmmmmmcccccccccccccccccccccccccccccccccccccccccccccccccii
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccii
+ccnnnnaaaaaaaaaaaaaaccccccccccccccccccccccccccccccccccccccii
+ccnnnnaaaakkkkkkkkkkkkccccccccccccccccccccccccccccccccccccii
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccii
+ccnnaaacccccccccccccccccccccccccccccccccccccccccccccccccccii
+ccnnaaacccccccccccccccccccccccccccccccccccccccccccccccccccii
 --- legend
 . fg=#1f1f1f bg=Reset BOLD | UNDERLINED
 a fg=#1f1f1f bg=Reset
@@ -61,10 +61,9 @@ e fg=#1f1f1f bg=Reset UNDERLINED
 f fg=#1f1f1f bg=Reset BOLD
 g fg=#0178d4 bg=Reset
 h fg=#004578 bg=Reset BOLD
-i fg=#7994a9 bg=#cacaca REVERSED
-j fg=#1f1f1f bg=#cacaca
-k fg=#1f1f1f bg=Reset ITALIC
-l fg=#7e2f43 bg=#ddd8d9
-m fg=#1d1d1d bg=Reset UNDERLINED
-n fg=#004578 bg=Reset UNDERLINED
-o fg=#004f8b bg=Reset
+i fg=#1f1f1f bg=#cacaca
+j fg=#1f1f1f bg=Reset ITALIC
+k fg=#7e2f43 bg=#ddd8d9
+l fg=#1d1d1d bg=Reset UNDERLINED
+m fg=#004578 bg=Reset UNDERLINED
+n fg=#004f8b bg=Reset

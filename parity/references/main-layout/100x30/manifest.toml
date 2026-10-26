@@ -7,7 +7,7 @@ captures = ["start", "prs", "issues", "workflows", "details", "details-again", "
 scenario = "0b33d9a69cc751e38f4a50687c21a7cf74aca73c"
 fixtures = "152ce9bbfa49430b36bca9ef5e2ae1189ea76b00"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "b3659445b74981b1bdfd0465f7e2a5db78df0aa5"
+harness = "a42709a8f63e18b6ffbf05888ac70df13205cac1"
 
 [recorded_with]
 python = "3.14.7"

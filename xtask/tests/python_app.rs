@@ -85,7 +85,10 @@ fn a_fixture_miss_fails_the_run() {
     let source = std::fs::read_to_string(repo().join("parity/scenarios/startup.toml")).unwrap();
     std::fs::write(
         &scenario,
-        source.replace("sizes = [[160, 48], [100, 30]]", "sizes = [[160, 48]]"),
+        source
+            .replace("sizes = [[160, 48], [100, 30]]", "sizes = [[160, 48]]")
+            // Without /user/repos no repo row ever shows, so the run would time out instead of reaching its capture.
+            .replace("[[step]]\nwait = { text = \"dotfiles\" }\n", ""),
     )
     .unwrap();
     let out = tmp.path().join("out");

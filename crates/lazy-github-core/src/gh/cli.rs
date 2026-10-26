@@ -34,7 +34,7 @@ impl Default for GhTimeouts {
         Self {
             auth_status: Duration::from_secs(20),
             request: Duration::from_secs(30),
-            paginate: Duration::from_secs(180),
+            paginate: Duration::from_mins(3),
         }
     }
 }
@@ -297,16 +297,16 @@ mod tests {
             GhTimeouts {
                 auth_status: Duration::from_secs(20),
                 request: Duration::from_secs(30),
-                paginate: Duration::from_secs(180),
+                paginate: Duration::from_mins(3),
             }
         );
         assert_eq!(timeouts.limit(CallKind::AuthStatus, None), Duration::from_secs(20));
         assert_eq!(timeouts.limit(CallKind::Request, None), Duration::from_secs(30));
-        assert_eq!(timeouts.limit(CallKind::Paginate, None), Duration::from_secs(180));
+        assert_eq!(timeouts.limit(CallKind::Paginate, None), Duration::from_mins(3));
 
-        let long = Some(Duration::from_secs(600));
-        assert_eq!(timeouts.limit(CallKind::Request, long), Duration::from_secs(600));
-        assert_eq!(timeouts.limit(CallKind::Paginate, long), Duration::from_secs(600));
+        let long = Some(Duration::from_mins(10));
+        assert_eq!(timeouts.limit(CallKind::Request, long), Duration::from_mins(10));
+        assert_eq!(timeouts.limit(CallKind::Paginate, long), Duration::from_mins(10));
         // `auth status` has no request to carry an override.
         assert_eq!(timeouts.limit(CallKind::AuthStatus, long), Duration::from_secs(20));
     }

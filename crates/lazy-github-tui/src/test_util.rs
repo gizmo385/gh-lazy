@@ -11,15 +11,20 @@ use lazy_github_core::models::RepoName;
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
-use ratatui::layout::Rect;
+use ratatui::layout::{Alignment, Rect};
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::widgets::Paragraph;
 use tokio::time::Instant;
 
+use crate::action::Action;
 use crate::app::App;
 use crate::clock::{Clock as _, FakeClock};
-use crate::component::{Component, Cx, RenderCx};
+use crate::component::{ChainLink, Component, Cx, Owner, RenderCx};
+use crate::components::text_input::{self, INPUT_BINDINGS, InputOutcome, TextInput};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
-use crate::keymap::KeySpec;
+use crate::keymap::{BindingId, KeyChord, KeySpec, Keymap};
+use crate::modal::{Dialog, DialogAction, FieldKind, ModalKind, TestDialogAction, dialog_bindings};
 use crate::options::AppOptions;
 use crate::theme::Theme;
 
@@ -467,6 +472,274 @@ impl Component for LatestWins {
     }
 
     fn render(&mut self, _frame: &mut ratatui::Frame<'_>, _area: Rect, _cx: &RenderCx<'_>) {}
+}
+
+/// The test dialog's two fields.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TestField {
+    /// A text input, which types `q`.
+    Input,
+    /// A field without bindings, like a switch.
+    Plain,
+}
+
+/// A dialog for testing the modal stack: a text input and a plain field, `modal.submit` and `modal.close`. Its
+/// output is the input's text on submit, or `None` on close. By default it's Lookup repository's 60 x 25 with its
+/// input focused.
+#[derive(Debug)]
+pub struct TestDialog {
+    id: u8,
+    size: (u16, u16),
+    footer: bool,
+    focus: TestField,
+    input: TextInput,
+    // The outer `Option` is whether it's done, the inner the dialog's output.
+    #[allow(clippy::option_option)]
+    output: Option<Option<String>>,
+    /// Mouse events that reached the dialog.
+    pub mouse_events: usize,
+}
+
+/// The test dialog's screen bindings.
+const TEST_DIALOG_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
+
+/// The rows of the test dialog's interior that each field takes, from the interior's top.
+const INPUT_ROW: u16 = 4;
+const PLAIN_ROW: u16 = 8;
+
+impl TestDialog {
+    /// The dialog with id `id`: [`ModalKind::Test`]`(id)`.
+    pub fn new(id: u8) -> Self {
+        Self {
+            id,
+            size: (60, 25),
+            footer: true,
+            focus: TestField::Input,
+            input: TextInput::new("Name"),
+            output: None,
+            mouse_events: 0,
+        }
+    }
+
+    /// This dialog at a fixed outer size.
+    #[must_use]
+    pub fn with_size(mut self, width: u16, height: u16) -> Self {
+        self.size = (width, height);
+        self
+    }
+
+    /// This dialog with its plain field focused.
+    #[must_use]
+    pub fn focused_on_plain(mut self) -> Self {
+        self.focus = TestField::Plain;
+        self
+    }
+
+    /// This dialog without a footer, as Create PR has none.
+    #[must_use]
+    pub fn without_footer(mut self) -> Self {
+        self.footer = false;
+        self
+    }
+
+    fn action(&self, action: TestDialogAction) -> Action {
+        Action::Dialog(DialogAction::Test(self.id, action))
+    }
+}
+
+impl Component for TestDialog {
+    type Action = TestDialogAction;
+
+    fn bindings(&self) -> &'static [BindingId] {
+        TEST_DIALOG_BINDINGS
+    }
+
+    fn on_binding(&mut self, id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
+        match id {
+            BindingId::ModalClose => Some(self.action(TestDialogAction::Close)),
+            BindingId::ModalSubmit => Some(self.action(TestDialogAction::Submit)),
+            BindingId::TextualFocusNext | BindingId::TextualFocusPrevious => {
+                self.focus = match self.focus {
+                    TestField::Input => TestField::Plain,
+                    TestField::Plain => TestField::Input,
+                };
+                Some(Action::Consumed)
+            }
+            _ => None,
+        }
+    }
+
+    fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
+        self.focus == TestField::Input && self.input.consumes_key(key, keymap)
+    }
+
+    fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action> {
+        let chord = KeyChord::from_event(&key)?;
+        match self.input.handle_key(&chord, cx.keymap()) {
+            InputOutcome::Changed => Some(Action::Consumed),
+            InputOutcome::Submitted => Some(self.action(TestDialogAction::Submit)),
+            InputOutcome::Ignored => None,
+        }
+    }
+
+    fn handle_mouse(&mut self, event: MouseEvent, area: Rect, _cx: &Cx<'_>) -> Option<Action> {
+        self.mouse_events += 1;
+        if event.kind != MouseEventKind::Down(MouseButton::Left) {
+            return None;
+        }
+        let row = event.row - area.y;
+        if (INPUT_ROW..INPUT_ROW + text_input::HEIGHT).contains(&row) {
+            self.focus = TestField::Input;
+        } else if row == PLAIN_ROW {
+            self.focus = TestField::Plain;
+        }
+        Some(Action::Consumed)
+    }
+
+    fn update(&mut self, action: TestDialogAction, _cx: &mut Cx<'_>) {
+        match action {
+            TestDialogAction::Close => self.output = Some(None),
+            TestDialogAction::Submit => self.output = Some(Some(self.input.value().to_owned())),
+            TestDialogAction::Replied(reply) => self.input.set_value(reply.unwrap_or_default()),
+        }
+    }
+
+    fn render(&mut self, frame: &mut ratatui::Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
+        let theme = cx.theme;
+        let under = self.background(theme.palette).over(theme.background());
+        let text = Style::new().fg(theme.color(theme.palette.foreground, under));
+        let row = |offset: u16| Rect {
+            y: area.y + offset,
+            height: 1,
+            ..area
+        };
+        let rows = |offset: u16, height: u16| {
+            Rect {
+                y: area.y + offset,
+                height,
+                ..area
+            }
+            .intersection(area)
+        };
+        frame.render_widget(
+            Paragraph::new("Test dialog").style(text).alignment(Alignment::Center),
+            row(1).intersection(area),
+        );
+        frame.render_widget(
+            Paragraph::new("Name:").style(text),
+            row(INPUT_ROW - 1).intersection(area),
+        );
+        let input_area = rows(INPUT_ROW, text_input::HEIGHT);
+        self.input.render(
+            frame.buffer_mut(),
+            input_area,
+            theme,
+            under,
+            self.focus == TestField::Input,
+        );
+        let plain = if self.focus == TestField::Plain {
+            text.add_modifier(Modifier::REVERSED)
+        } else {
+            text
+        };
+        frame.render_widget(
+            Paragraph::new("Plain field").style(plain),
+            row(PLAIN_ROW).intersection(area),
+        );
+    }
+}
+
+impl Dialog for TestDialog {
+    type Output = Option<String>;
+
+    fn kind(&self) -> ModalKind {
+        ModalKind::Test(self.id)
+    }
+
+    fn own_action(&self, action: DialogAction) -> Option<TestDialogAction> {
+        match action {
+            DialogAction::Test(id, action) if id == self.id => Some(action),
+            DialogAction::Test(..) => None,
+        }
+    }
+
+    fn size(&self, _available: Rect) -> (u16, u16) {
+        self.size
+    }
+
+    fn shows_footer(&self) -> bool {
+        self.footer
+    }
+
+    fn take_output(&mut self) -> Option<Option<String>> {
+        self.output.take()
+    }
+
+    fn field_chain(&self) -> Vec<ChainLink> {
+        match self.focus {
+            TestField::Input => vec![ChainLink::new(
+                Owner::DialogField(self.kind(), FieldKind::TextInput),
+                INPUT_BINDINGS,
+            )],
+            TestField::Plain => Vec::new(),
+        }
+    }
+
+    fn on_field_binding(&mut self, _field: FieldKind, _id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
+        // `consumes_key` already gave the input every key it binds.
+        Some(Action::Consumed)
+    }
+
+    fn handle_paste(&mut self, text: &str) -> Option<Action> {
+        (self.focus == TestField::Input).then(|| {
+            self.input.handle_paste(text);
+            Action::Consumed
+        })
+    }
+}
+
+/// The characters of `buffer` as [`buffer_to_string`] gives them, then each cell's style as a letter, then what each
+/// letter stands for: the parity harness's `.screen` layout, for snapshots where colors matter.
+pub fn buffer_to_styled_string(buffer: &Buffer) -> String {
+    const LETTERS: &str = ".abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let area = buffer.area;
+    let mut legend: Vec<String> = Vec::new();
+    let mut grid = String::new();
+    for y in area.top()..area.bottom() {
+        for x in area.left()..area.right() {
+            let cell = &buffer[(x, y)];
+            let style = describe_style(cell.fg, cell.bg, cell.modifier);
+            let index = legend.iter().position(|seen| *seen == style).unwrap_or_else(|| {
+                legend.push(style);
+                legend.len() - 1
+            });
+            grid.push(LETTERS.chars().nth(index).unwrap_or('?'));
+        }
+        grid.push('\n');
+    }
+    let mut out = buffer_to_string(buffer);
+    out.push_str("--- styles\n");
+    out.push_str(&grid);
+    out.push_str("--- legend\n");
+    out.extend(
+        LETTERS
+            .chars()
+            .zip(&legend)
+            .map(|(letter, style)| format!("{letter} {style}\n")),
+    );
+    out
+}
+
+fn describe_style(fg: Color, bg: Color, modifier: Modifier) -> String {
+    let color = |color: Color| match color {
+        Color::Rgb(r, g, b) => format!("#{r:02x}{g:02x}{b:02x}"),
+        other => format!("{other:?}"),
+    };
+    let mut parts = vec![format!("fg={}", color(fg)), format!("bg={}", color(bg))];
+    if !modifier.is_empty() {
+        parts.push(format!("{modifier:?}"));
+    }
+    parts.join(" ")
 }
 
 #[cfg(test)]

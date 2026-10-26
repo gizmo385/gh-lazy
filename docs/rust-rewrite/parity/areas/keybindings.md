@@ -55,7 +55,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.notifications-view-read` | `notifications.view_read` | `r` | View Read Notifications | notifications modal | M4 | not started | #189 | |
 | `keybindings.notifications-view-unread` | `notifications.view_unread` | `u` | View Unread Notifications | notifications modal | M4 | not started | #189 | |
 | `keybindings.modal-submit` | `modal.submit` | `shift+enter` | Submit | most modals | M2 | not started | #213 | TERM: needs the kitty keyboard protocol (crossterm `PushKeyboardEnhancementFlags`); legacy terminals send plain Enter. Buttons are the fallback. |
-| `keybindings.modal-close` | `modal.close` | `q, escape` | Close | all modals | M2 | not started | #212 | Inactive while a text input has focus (Textual inputs consume `q`). |
+| `keybindings.modal-close` | `modal.close` | `q, escape` | Close | all modals | M2 | in progress | #212 | Inactive while a text input has focus (Textual inputs consume `q`). |
 | `keybindings.modal-search` | `modal.search` | `/` | Search | Settings | M4 | not started | #193 | |
 | `keybindings.confirm-yes` | `confirm.yes` | `y` | Yes | Confirm | M3 | not started | #214, #184 | |
 | `keybindings.confirm-no` | `confirm.no` | `n` | No | Confirm | M3 | not started | #214, #184 | |

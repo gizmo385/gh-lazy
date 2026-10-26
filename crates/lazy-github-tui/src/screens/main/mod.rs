@@ -640,7 +640,7 @@ impl MainScreen {
             | Owner::Section(_)
             | Owner::SelectionsPane
             | Owner::DetailsTabs => Some(Action::Unimplemented(id)),
-            Owner::App | Owner::Screen(ScreenKind::Auth) => None,
+            Owner::App | Owner::Screen(ScreenKind::Auth | ScreenKind::Modal(_)) | Owner::DialogField(..) => None,
         }
     }
 

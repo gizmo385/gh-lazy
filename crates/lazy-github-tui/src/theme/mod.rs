@@ -144,6 +144,22 @@ impl Theme {
         }
     }
 
+    /// `color`, already drawn, seen through a modal screen's `background: $background 60%`: blended `factor` of the
+    /// way toward [`Theme::background`]. Unchanged on the ANSI themes, whose modal background is `transparent`, and
+    /// for the terminal's default color, which Textual can't blend.
+    ///
+    /// Textual blends before Rich reduces colors to the terminal's depth; a reduced color is blended as the RGB it
+    /// stands for, and reduced again.
+    pub fn dim(&self, color: Color, factor: f64) -> Color {
+        if self.ansi {
+            return color;
+        }
+        let (Some(rgb), Paint::Rgb(background)) = (depth::rgb_of(color), self.background()) else {
+            return color;
+        };
+        self.paint(Paint::Rgb(rgb.blend(background, factor)))
+    }
+
     /// A fixed markup color, the same in every theme.
     pub fn accent(&self, a: Accent) -> Color {
         self.paint(a.rgb().into())

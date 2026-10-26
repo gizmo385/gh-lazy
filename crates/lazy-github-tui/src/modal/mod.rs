@@ -1,0 +1,157 @@
+//! Modal dialogs: the screen stack above the base screen, the frame every dialog is drawn in, and the [`Dialog`]
+//! trait each modal implements. Textual's `ModalScreen`, `push_screen_wait` and `dismiss`.
+//!
+//! `App` keeps the open dialogs bottom to top. While one is open, the top one has the keyboard and the mouse: its
+//! binding chain is the focused field's links, then its screen link, and only priority bindings from the app link
+//! (`ctrl+q`). Drawing dims everything below each dialog, then draws its frame, its interior and its footer.
+
+mod frame;
+mod stack;
+
+use ratatui::layout::Rect;
+
+use crate::action::Action;
+use crate::component::{BindingState, ChainLink, Component, Cx};
+use crate::effect::{GithubResponse, RequestId};
+use crate::keymap::BindingId;
+use crate::theme::{Palette, ThemeColor};
+
+pub use frame::{DIM_FACTOR, DialogFrame, dim, frame_rect};
+pub use stack::ModalEntry;
+
+/// Textual's `Screen.BINDINGS`, which every modal screen has before the dialog's own: `tab`, `shift+tab` and the
+/// `ctrl+c` copy. A dialog's [`Component::bindings`] starts with these; [`dialog_bindings!`] writes them.
+pub const MODAL_SCREEN_BINDINGS: &[BindingId] = &[
+    BindingId::TextualFocusNext,
+    BindingId::TextualFocusPrevious,
+    BindingId::TextualCopyText,
+];
+
+/// A dialog's screen bindings: [`MODAL_SCREEN_BINDINGS`], then the dialog's own, in Textual's merged order.
+///
+/// ```ignore
+/// fn bindings(&self) -> &'static [BindingId] {
+///     dialog_bindings![ModalSubmit, ModalClose]
+/// }
+/// ```
+// Only the test dialog uses it until Confirm (#214) lands.
+#[cfg_attr(not(any(test, feature = "test-util")), allow(unused_macros))]
+macro_rules! dialog_bindings {
+    ($($id:ident),* $(,)?) => {
+        &[
+            $crate::keymap::BindingId::TextualFocusNext,
+            $crate::keymap::BindingId::TextualFocusPrevious,
+            $crate::keymap::BindingId::TextualCopyText,
+            $($crate::keymap::BindingId::$id,)*
+        ]
+    };
+}
+#[cfg_attr(not(any(test, feature = "test-util")), allow(unused_imports))]
+pub(crate) use dialog_bindings;
+
+/// Which modal a dialog is: for [`crate::component::ScreenKind::Modal`] and for routing [`DialogAction`]s. Each
+/// dialog adds its variant as it lands.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ModalKind {
+    /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
+    /// app opens one. It keeps the enum inhabited until the first real dialog (Confirm, #214) lands.
+    Test(u8),
+}
+
+/// The kinds of focusable field a dialog has, for [`crate::component::Owner::DialogField`]. #213 adds the rest.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum FieldKind {
+    /// Textual's `Input`: it types text, so the keys it types are gone from the links behind it.
+    TextInput,
+}
+
+/// A dialog's own action, wrapped for [`Action::Dialog`]. Each dialog adds a variant holding its action enum.
+#[derive(Debug)]
+pub enum DialogAction {
+    /// The test dialog's actions, by the dialog's id.
+    Test(u8, TestDialogAction),
+}
+
+impl DialogAction {
+    /// The kind of dialog the action is for: `App` hands it to the topmost open dialog of that kind.
+    pub fn kind(&self) -> ModalKind {
+        match *self {
+            DialogAction::Test(id, _) => ModalKind::Test(id),
+        }
+    }
+}
+
+/// The test dialog's actions (`test_util::TestDialog`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TestDialogAction {
+    /// `modal.close`: done, with no result.
+    Close,
+    /// `modal.submit`: done, with the input's text.
+    Submit,
+    /// The reply from a dialog it opened, as a dialog lower in the stack gets one.
+    Replied(Option<String>),
+}
+
+/// A modal dialog: a [`Component`] the stack draws in a frame, with a result for whoever opened it.
+///
+/// The component's [`Component::bindings`] are its modal screen's link and must start with
+/// [`MODAL_SCREEN_BINDINGS`] ([`dialog_bindings!`]). Its `on_binding`, `binding_state`, `consumes_key`, `handle_key`,
+/// `handle_mouse`, `update` and `render` work as for any component: `render` and `handle_mouse` get the frame's
+/// interior, and `consumes_key` and `handle_key` see keys while the dialog is on top.
+pub trait Dialog: Component + Send + 'static {
+    /// What the opener gets back: Confirm's `bool`, Lookup's `Option<Repository>`.
+    type Output: Send + 'static;
+
+    /// Which modal this is, for [`crate::component::ScreenKind::Modal`] and for routing [`Action::Dialog`].
+    fn kind(&self) -> ModalKind;
+
+    /// Its own action out of a routed [`DialogAction`] of its [`Self::kind`]. `None` drops it.
+    fn own_action(&self, action: DialogAction) -> Option<Self::Action>;
+
+    /// The frame's outer size, border included, for a screen whose area above the footer row is `available`. A
+    /// size larger than `available` is clipped to it.
+    fn size(&self, available: Rect) -> (u16, u16);
+
+    /// The interior's background: `$surface-lighten-3` unless the dialog says otherwise.
+    fn background(&self, palette: &Palette) -> ThemeColor {
+        palette.surface_lighten_3
+    }
+
+    /// Whether the bottom row shows the dialog's footer. False for Create/Edit PR.
+    fn shows_footer(&self) -> bool {
+        true
+    }
+
+    /// Set once the dialog is done (a button, `modal.close`, a finished lookup). The stack checks after every
+    /// action, closes the dialog and dispatches the opener's reply.
+    fn take_output(&mut self) -> Option<Self::Output>;
+
+    /// The links of the focused field, innermost first, in front of the screen link: an
+    /// [`crate::component::Owner::DialogField`] for each. Empty when the focused field binds nothing.
+    fn field_chain(&self) -> Vec<ChainLink> {
+        Vec::new()
+    }
+
+    /// A binding matched at one of [`Self::field_chain`]'s links. `None` lets the key fall through.
+    fn on_field_binding(&mut self, _field: FieldKind, _id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
+        None
+    }
+
+    /// How the footer and help panel show a binding of one of [`Self::field_chain`]'s links.
+    fn field_binding_state(&self, _field: FieldKind, _id: BindingId, _cx: &Cx<'_>) -> BindingState {
+        BindingState::Enabled
+    }
+
+    /// A bracketed paste while the dialog is on top.
+    fn handle_paste(&mut self, _text: &str) -> Option<Action> {
+        None
+    }
+
+    /// Takes a response to one of the dialog's requests, and hands back any other.
+    fn on_response(&mut self, _id: RequestId, response: GithubResponse, _cx: &mut Cx<'_>) -> Option<GithubResponse> {
+        Some(response)
+    }
+}
+
+#[cfg(test)]
+mod tests;

@@ -5,6 +5,7 @@ use lazy_github_core::models::Repository;
 
 use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
 use crate::keymap::BindingId;
+use crate::modal::{DialogAction, ModalEntry};
 use crate::screens::auth::AuthAction;
 use crate::screens::main::{FocusTarget, MainAction};
 use crate::toast::Toast;
@@ -50,6 +51,12 @@ pub enum Action {
     Auth(AuthAction),
     /// The main screen's own actions.
     Main(MainAction),
+
+    // Dialogs.
+    /// Push a dialog onto the modal stack, from [`Cx::open_dialog`](crate::component::Cx::open_dialog).
+    OpenDialog(ModalEntry),
+    /// A dialog's own action, for the topmost open dialog of its kind.
+    Dialog(DialogAction),
 
     // Plumbing: results of effects and other runtime inputs, routed to their owner.
     /// A GitHub request finished.

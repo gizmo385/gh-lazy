@@ -14,6 +14,7 @@ use crate::action::Action;
 use crate::clock::Clock;
 use crate::effect::{Effect, GitRequest, GithubRequest, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
+use crate::modal::{Dialog, FieldKind, ModalEntry, ModalKind};
 use crate::options::AppOptions;
 use crate::screens::main::SectionId;
 use crate::theme::Theme;
@@ -46,8 +47,8 @@ pub trait Component {
     }
 
     /// The focused component sees a key before the binding chain only when this returns true. Text inputs claim
-    /// printable keys, so `q` types a q instead of quitting.
-    fn consumes_key(&self, _key: &KeyChord) -> bool {
+    /// printable keys, so `q` types a q instead of quitting, and the editing keys `keymap` binds for them.
+    fn consumes_key(&self, _key: &KeyChord, _keymap: &Keymap) -> bool {
         false
     }
 
@@ -144,6 +145,9 @@ pub enum Owner {
     DetailsContent,
     /// The command log.
     CommandLog,
+    /// A field of an open dialog, which [`Dialog::field_chain`](crate::modal::Dialog::field_chain) puts in front of
+    /// the dialog's screen link while it has focus.
+    DialogField(ModalKind, FieldKind),
 }
 
 impl Owner {
@@ -151,7 +155,7 @@ impl Owner {
     /// `Input` has one.
     pub fn group_title(self) -> Option<&'static str> {
         match self {
-            Owner::SearchInput(_) => Some("Input"),
+            Owner::SearchInput(_) | Owner::DialogField(_, FieldKind::TextInput) => Some("Input"),
             Owner::App
             | Owner::Screen(_)
             | Owner::MainView
@@ -167,23 +171,28 @@ impl Owner {
 
     /// Whether the owner is a text input, which takes the keys it types from every link further out.
     pub fn types_text(self) -> bool {
-        matches!(self, Owner::SearchInput(_))
+        matches!(
+            self,
+            Owner::SearchInput(_) | Owner::DialogField(_, FieldKind::TextInput)
+        )
     }
 }
 
-/// The base screens.
+/// The screens: the base screens, and the dialogs on the modal stack above them.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ScreenKind {
     /// The "GitHub Authentication" screen.
     Auth,
     /// The main screen.
     Main,
+    /// A dialog on the modal stack.
+    Modal(ModalKind),
 }
 
 impl ScreenKind {
     /// Whether the binding chain stops at this screen (Textual's `ModalScreen`).
     pub fn is_modal(self) -> bool {
-        matches!(self, ScreenKind::Auth)
+        matches!(self, ScreenKind::Auth | ScreenKind::Modal(_))
     }
 }
 
@@ -335,6 +344,13 @@ impl<'a> Cx<'a> {
     /// Shows a toast.
     pub fn notify(&mut self, toast: Toast) {
         self.dispatch(Action::Notify(toast));
+    }
+
+    /// Opens `dialog` on top of everything showing, Textual's `push_screen_wait`. Once the dialog has an output
+    /// ([`Dialog::take_output`]) it closes, and `reply` turns the output into the opener's own action, which is then
+    /// dispatched.
+    pub fn open_dialog<D: Dialog>(&mut self, dialog: D, reply: impl FnOnce(D::Output) -> Action + Send + 'static) {
+        self.dispatch(Action::OpenDialog(ModalEntry::new(dialog, reply)));
     }
 }
 

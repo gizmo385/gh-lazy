@@ -117,6 +117,31 @@ pub fn downsample(rgb: Rgb, mode: ColorMode) -> Color {
     }
 }
 
+/// The RGB a terminal color stands for: exact for RGB, the xterm-256 cube or gray ramp for an index from
+/// [`downsample`], and Rich's [`STANDARD_PALETTE`] for the 16 named colors. `None` for the terminal's default color.
+///
+/// This undoes [`downsample`] closely enough to blend a color that's already been drawn.
+pub(crate) fn rgb_of(color: Color) -> Option<Rgb> {
+    const CUBE: [u8; 6] = [0, 95, 135, 175, 215, 255];
+    match color {
+        Color::Rgb(r, g, b) => Some(Rgb::new(r, g, b)),
+        Color::Indexed(i @ 16..=231) => {
+            let i = usize::from(i - 16);
+            Some(Rgb::new(CUBE[i / 36], CUBE[i / 6 % 6], CUBE[i % 6]))
+        }
+        Color::Indexed(i @ 232..=255) => {
+            let gray = 8 + 10 * (i - 232);
+            Some(Rgb::new(gray, gray, gray))
+        }
+        Color::Indexed(i) => Some(STANDARD_PALETTE[usize::from(i)].1),
+        Color::Reset => None,
+        named => STANDARD_PALETTE
+            .iter()
+            .find(|&&(ansi, _)| Color::from(ansi) == named)
+            .map(|&(_, rgb)| rgb),
+    }
+}
+
 /// Textual's `Color.monochrome`.
 fn monochrome(c: Rgb) -> Rgb {
     // Python's `round` rounds half to even. The weights sum to 1, so the result is in 0..=255 and `as` can't wrap.

@@ -1,0 +1,89 @@
+---
+source: crates/lazy-github-tui/src/modal/tests.rs
+expression: "styled(&mut app, 100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└───────────────────█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█───────────────────┘
+┌─ [1] Repositories █                                                          █───────────────────┐
+│ ★  Owner  Name  Pr█                        Test dialog                       █                   │
+│                   █                                                          █━━━━━━━━━━━━━━━━━━━│
+│                   █Name:                                                     █                   │
+│                   █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█                   │
+│                   █▊  Name                                                  ▎█Hub (0.1.0)        │
+│                   █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█                   │
+│                   █                                                          █acting with        │
+│                   █Plain field                                               █ing one of the     │
+└───────────────────█                                                          █he left. Once      │
+┌─ [2] Pull Requests█                                                          █ssues, pull        │
+│                   █                                                          █e retrieved and    │
+│                   █                                                          █                   │
+│                   █                                                          █                   │
+└───────────────────█                                                          █ts can also be   ▁▁│
+┌─ [3] Issues ──────█                                                          █                   │
+│                   █                                                          █                   │
+│                   █                                                          █                   │
+│                   █                                                          █                   │
+└───────────────────█                                                          █                   │
+┌─ [4] Workflows ───█                                                          █ its details,      │
+│                   █                                                          █g in any active    │
+│                   █                                                          █u can also         │
+│                   █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ shift+⏎ Submit  esc Close
+--- styles
+....................................................................................................
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+....................bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb....................
+ccccccccccccccccccccbddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbeeeeeeeeeeeeeeeeeeee
+cfgfffffffffffffffffbddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaaae
+caaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbhhhhhhhhhhhhhhhhhhhe
+caaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaiie
+caaaaaaaaaaaaaaaaaaabjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkklbaaaaaaaaaaaaaaaaaiie
+caaaaaaaaaaaaaaaaaaabjmmnooommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmlbpppppppppppppppaaiie
+caaaaaaaaaaaaaaaaaaabjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkklbaaaaaaaaaaaaaaaaaiie
+caaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaiie
+caaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaiie
+ccccccccccccccccccccbddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaiie
+eeeeeeeeeeeeeeeeeeeebddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaiie
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaiie
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaiie
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaiie
+eeeeeeeeeeeeeeeeeeeebddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbqqqqqqqqqqqqqqaaarre
+eeeeeeeeeeeeeeeeeeeebddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
+eeeeeeeeeeeeeeeeeeeebddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
+eeeeeeeeeeeeeeeeeeeebddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaasse
+eaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaasse
+eaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasse
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+tttttttttuuuuuuutttttuuuuuuvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+--- legend
+. fg=#0a263a bg=#121212
+a fg=#646464 bg=#121212
+b fg=#121212 bg=#4f4f4f
+c fg=#2a5738 bg=#121212
+d fg=#e0e0e0 bg=#4f4f4f
+e fg=#365270 bg=#121212
+f fg=#646464 bg=#1c2024 BOLD
+g fg=#476419 bg=#1c2024 BOLD
+h fg=#1a1a1a bg=#121212
+i fg=#0a1e2c bg=#121212 REVERSED
+j fg=#0178d4 bg=#4f4f4f REVERSED
+k fg=#0178d4 bg=#272727
+l fg=#0178d4 bg=#4f4f4f
+m fg=#e0e0e0 bg=#272727
+n fg=#121212 bg=#e0e0e0
+o fg=#797979 bg=#272727
+p fg=#0b3a5f bg=#121212 BOLD
+q fg=#646464 bg=#121212 BOLD
+r fg=#0a1e2c bg=#0a0a0a REVERSED
+s fg=#646464 bg=#0a0a0a
+t fg=#ffa62b bg=#242f38 BOLD
+u fg=#e0e0e0 bg=#242f38
+v fg=Reset bg=#242f38

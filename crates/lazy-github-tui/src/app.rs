@@ -9,7 +9,7 @@ use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::Block;
+use ratatui::widgets::{Block, Clear};
 use tokio::time::Instant;
 
 use crate::action::Action;
@@ -23,6 +23,7 @@ use crate::components::status_bar::{StatusBar, UnreadState};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
+use crate::modal::{DialogFrame, ModalEntry, ModalKind, dim, frame_rect};
 use crate::notifications::NotificationPoll;
 use crate::options::AppOptions;
 use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
@@ -61,6 +62,8 @@ enum BaseScreen {
 /// The whole UI. One value owns all state; [`App::update`] is synchronous and does no I/O.
 pub struct App {
     base: BaseScreen,
+    /// The open dialogs above `base`, bottom to top. The top one has the keyboard and the mouse.
+    modals: Vec<ModalEntry>,
     shared: Shared,
     toasts: Toasts,
     maximized: Option<Maximized>,
@@ -89,6 +92,7 @@ impl App {
         let keymap = Keymap::new(&config.bindings.overrides);
         Self {
             base: BaseScreen::Startup(StartupScreen::default()),
+            modals: Vec::new(),
             shared: Shared::new(config, keymap, theme, options, Arc::new(clock)),
             toasts: Toasts::default(),
             maximized: None,
@@ -154,10 +158,11 @@ impl App {
                 return Vec::new();
             }
         }
-        match self.action_for(event) {
-            Some(action) => self.update(action),
-            None => Vec::new(),
-        }
+        // Drained even without an action: a key or click may have finished a dialog by itself.
+        let mut out = Outbox::default();
+        out.actions.extend(self.action_for(event));
+        self.drain(&mut out);
+        out.effects
     }
 
     /// The action an event stands for, if any.
@@ -174,10 +179,11 @@ impl App {
                 Some(Action::Quit)
             }
             Event::Mouse(mouse) => self.action_for_mouse(mouse),
-            // A bracketed paste goes to the focused search box, and nowhere else.
-            Event::Paste(text) => match &mut self.base {
-                BaseScreen::Main(main) => main.handle_paste(&text),
-                _ => None,
+            // A bracketed paste goes to the top dialog, or else to the focused search box, and nowhere else.
+            Event::Paste(text) => match (self.modals.last_mut(), &mut self.base) {
+                (Some(top), _) => top.handle_paste(&text),
+                (None, BaseScreen::Main(main)) => main.handle_paste(&text),
+                (None, _) => None,
             },
             // Resizes need no state: the next draw uses the new size. A deadline only needs the redraw that follows
             // every event: animations take their frame from the clock.
@@ -189,26 +195,37 @@ impl App {
     fn action_for_key(&mut self, key: KeyEvent) -> Option<Action> {
         // 1. Normalize; releases are ignored.
         let chord = KeyChord::from_event(&key)?;
-        // 2. Escape minimizes a maximized widget before any binding (Textual's `ESCAPE_TO_MINIMIZE`).
-        if self.maximized.is_some() && chord == KeyChord::new(KeyCode::Esc, KeyModifiers::NONE) {
+        // 2. Escape minimizes a maximized widget before any binding (Textual's `ESCAPE_TO_MINIMIZE`). That belongs to
+        //    the main screen, so not while a dialog has the keyboard.
+        if self.modals.is_empty()
+            && self.maximized.is_some()
+            && chord == KeyChord::new(KeyCode::Esc, KeyModifiers::NONE)
+        {
             return Some(Action::Minimize);
         }
-        let chain = self.binding_chain();
+        let full = self.full_binding_chain();
         // 3. Priority bindings, from the app link inward, past any modal screen. The clash rule sees the whole link,
         //    as in Textual.
-        for link in self.full_binding_chain().iter().rev() {
+        for link in full.iter().rev() {
             let matches = self.shared.keymap.link_priority_matches(link, &chord);
             if let Some(action) = self.route_first(link.owner, matches) {
                 return Some(action);
             }
         }
-        // 4. A focused component that consumes the key: the search box types printable keys and takes its editing
+        // 4. A focused component that consumes the key: a text input types printable keys and takes its editing
         //    keys (Textual's `Input._on_key`, then the input's own bindings, innermost in the chain).
-        if let BaseScreen::Main(main) = &mut self.base
+        if let Some(top) = self.modals.last_mut() {
+            if top.consumes_key(&chord, &self.shared.keymap) {
+                let mut scratch = Outbox::default();
+                let cx = Cx::new(&mut self.shared, &mut scratch);
+                return Some(top.handle_key(key, &cx).unwrap_or(Action::Consumed));
+            }
+        } else if let BaseScreen::Main(main) = &mut self.base
             && let Some(action) = main.handle_focused_key(&chord, &self.shared.keymap)
         {
             return Some(action);
         }
+        let chain = truncate_at_modal(full);
         // 5. The chain, innermost first. Within a link, each binding the key fires is tried in turn; the first link
         //    whose component accepts one wins. Behind the search box, the keys it types are gone from every link.
         for link in &chain {
@@ -223,6 +240,8 @@ impl App {
 
     /// A left click on a footer item runs its binding, or rings the bell if it's disabled, as Textual's `FooterKey`
     /// does; elsewhere it focuses the target under the pointer, and the wheel scrolls it. All as of the last frame.
+    /// While a dialog is open the footer is the dialog's, and every other event goes to the dialog alone, which only
+    /// sees the ones inside its frame.
     fn action_for_mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
         if mouse.kind == MouseEventKind::Down(MouseButton::Left) {
             let position = Position::new(mouse.column, mouse.row);
@@ -232,6 +251,10 @@ impl App {
                 }
                 return self.route_binding(hit.owner, hit.id);
             }
+        }
+        if let Some(top) = self.modals.last_mut() {
+            let mut scratch = Outbox::default();
+            return top.handle_mouse(mouse, &Cx::new(&mut self.shared, &mut scratch));
         }
         let BaseScreen::Main(main) = &mut self.base else {
             return None;
@@ -247,31 +270,40 @@ impl App {
     /// The binding chain for the current focus, innermost first, ending at a modal screen as Textual's
     /// `_modal_binding_chain` does. Otherwise the app link comes last.
     pub fn binding_chain(&self) -> Vec<ChainLink> {
-        let mut chain = self.full_binding_chain();
-        let is_modal = |link: &ChainLink| matches!(link.owner, Owner::Screen(kind) if kind.is_modal());
-        if let Some(end) = chain.iter().position(is_modal) {
-            chain.truncate(end + 1);
-        }
-        chain
+        truncate_at_modal(self.full_binding_chain())
     }
 
-    /// The whole chain, modal screens included, which priority bindings are looked up in. On the main screen it's
-    /// the focus chain from [`MainScreen::binding_chain`].
+    /// The whole chain, modal screens included, which priority bindings are looked up in: the top dialog's while
+    /// one is open, else the base screen's. On the main screen it's the focus chain from
+    /// [`MainScreen::binding_chain`].
     fn full_binding_chain(&self) -> Vec<ChainLink> {
-        let mut chain = match &self.base {
+        match self.modals.last() {
+            Some(top) => with_app_link(top.chain()),
+            None => self.base_full_chain(),
+        }
+    }
+
+    /// [`Self::full_binding_chain`] for the base screen, as it stands under any dialogs.
+    fn base_full_chain(&self) -> Vec<ChainLink> {
+        with_app_link(match &self.base {
             BaseScreen::Startup(_) => Vec::new(),
             BaseScreen::Auth(auth) => vec![ChainLink::new(Owner::Screen(ScreenKind::Auth), auth.bindings())],
             BaseScreen::Main(main) => main.binding_chain(),
-        };
-        chain.push(ChainLink::new(Owner::App, APP_BINDINGS));
-        ChainLink::filter_behind_inputs(&mut chain);
-        chain
+        })
     }
 
     /// How the footer and help panel (#76) show binding `id` of the chain link `owner`.
     pub fn binding_state(&mut self, owner: Owner, id: BindingId) -> BindingState {
         let mut scratch = Outbox::default();
         let cx = Cx::new(&mut self.shared, &mut scratch);
+        if let Some(kind) = modal_owner(owner) {
+            return self
+                .modals
+                .iter()
+                .rev()
+                .find(|entry| entry.kind() == kind)
+                .map_or(BindingState::Enabled, |entry| entry.binding_state(owner, id, &cx));
+        }
         match (&self.base, owner) {
             (_, Owner::App) => BindingState::Enabled,
             (BaseScreen::Main(main), owner) => main.link_binding_state(owner, id, &cx),
@@ -280,11 +312,17 @@ impl App {
         }
     }
 
-    /// The keys active for the current focus, for the footer and help panel, read fresh each frame.
+    /// The keys active for the current focus, for the footer and help panel, read fresh each frame: the top
+    /// dialog's while one is open.
     pub fn active_bindings(&mut self) -> Vec<ActiveBinding> {
         let chain = self.binding_chain();
+        self.chain_bindings(&chain)
+    }
+
+    /// The active keys of `chain`, as [`Self::active_bindings`] reads them.
+    fn chain_bindings(&mut self, chain: &[ChainLink]) -> Vec<ActiveBinding> {
         let mut states = Vec::new();
-        for link in &chain {
+        for link in chain {
             for &id in link.bindings {
                 states.push((link.owner, id, self.binding_state(link.owner, id)));
             }
@@ -295,7 +333,7 @@ impl App {
                 .find(|&&(o, i, _)| o == owner && i == id)
                 .map_or(BindingState::Enabled, |&(_, _, state)| state)
         };
-        active_bindings(&chain, &self.shared.keymap, state)
+        active_bindings(chain, &self.shared.keymap, state)
     }
 
     /// Asks the owner of a matched binding what it means right now.
@@ -311,6 +349,10 @@ impl App {
             owner => {
                 let mut scratch = Outbox::default();
                 let cx = Cx::new(&mut self.shared, &mut scratch);
+                if let Some(kind) = modal_owner(owner) {
+                    let entry = self.modals.iter_mut().rev().find(|entry| entry.kind() == kind)?;
+                    return entry.on_binding(owner, id, &cx);
+                }
                 match (&mut self.base, owner) {
                     (BaseScreen::Main(main), owner) => main.on_link_binding(owner, id, &cx),
                     (BaseScreen::Auth(auth), Owner::Screen(ScreenKind::Auth)) => auth.on_binding(id, &cx),
@@ -338,8 +380,10 @@ impl App {
     }
 
     fn drain(&mut self, out: &mut Outbox) {
+        self.close_finished(out);
         while let Some(action) = out.actions.pop_front() {
             self.apply(action, out);
+            self.close_finished(out);
         }
         // Toasts raised by this action time out from now.
         self.toasts.stamp(self.shared.clock.now());
@@ -347,6 +391,20 @@ impl App {
         if self.shared.take_config_dirty() {
             out.effects
                 .push(Effect::SaveConfig(Box::new(self.shared.config.clone())));
+        }
+    }
+
+    /// Closes every dialog that has its output, top first, and queues the opener's reply to each. This is where
+    /// Python's `push_screen_wait` callers continue.
+    fn close_finished(&mut self, out: &mut Outbox) {
+        let mut index = self.modals.len();
+        while index > 0 {
+            index -= 1;
+            if let Some(reply) = self.modals[index].take_reply() {
+                let entry = self.modals.remove(index);
+                tracing::debug!("Closed {:?}", entry.kind());
+                out.actions.push_back(reply);
+            }
         }
     }
 
@@ -387,6 +445,18 @@ impl App {
                     out.effects.push(Effect::CancelTimer(TimerId::AuthPoll));
                 }
                 self.enter_main(out);
+            }
+            Action::OpenDialog(entry) => {
+                tracing::debug!("Opened {:?}", entry.kind());
+                self.modals.push(entry);
+            }
+            Action::Dialog(action) => {
+                let kind = action.kind();
+                if let Some(entry) = self.modals.iter_mut().rev().find(|entry| entry.kind() == kind) {
+                    entry.update(action, &mut Cx::new(&mut self.shared, out));
+                } else {
+                    tracing::debug!("Dropping {action:?}: no {kind:?} dialog is open");
+                }
             }
             Action::RefreshNotifications => self.notifications.refresh(&mut Cx::new(&mut self.shared, out)),
             Action::SelectRepo(repo) => self.select_repo(&repo, out),
@@ -500,6 +570,13 @@ impl App {
         else {
             return;
         };
+        // Open dialogs, top first, then the base screen.
+        for entry in self.modals.iter_mut().rev() {
+            let Some(unclaimed) = entry.on_response(id, response, &mut Cx::new(&mut self.shared, out)) else {
+                return;
+            };
+            response = unclaimed;
+        }
         if let BaseScreen::Main(main) = &mut self.base {
             let Some(unclaimed) = main.on_response(id, response, &mut Cx::new(&mut self.shared, out)) else {
                 return;
@@ -539,17 +616,21 @@ impl App {
         }
     }
 
-    /// Draws the whole UI: the base screen, then (later) modals and toasts.
+    /// Draws the whole UI: the base screen, then the dialogs and the toasts.
     pub fn render(&mut self, frame: &mut Frame<'_>) {
         self.render_screens(frame);
+        self.render_modals(frame);
         // `handle_event` already dropped the expired ones: the loop wakes for each deadline.
         self.toasts.render(frame, frame.area(), &self.shared.theme);
     }
 
-    /// The base screen and (later) modals.
+    /// The base screen, with the footer and help panel it has under any dialogs.
     fn render_screens(&mut self, frame: &mut Frame<'_>) {
         let area = frame.area();
-        let active = self.active_bindings();
+        let base_chain = truncate_at_modal(self.base_full_chain());
+        let active = self.chain_bindings(&base_chain);
+        // The screen below a dialog gets no mouse events, so nothing on it is hovered.
+        let mouse = if self.modals.is_empty() { self.mouse } else { None };
         let theme = &self.shared.theme;
         // Textual's `Screen`: `background: $background; color: $foreground`.
         let screen = theme.background();
@@ -621,14 +702,84 @@ impl App {
                 };
                 let hits = footer.hits(footer_area);
                 // Hits are in item order, so the hit's index is the item's.
-                footer.hovered = self
-                    .mouse
-                    .and_then(|mouse| hits.iter().position(|hit| hit.rect.contains(mouse)));
+                footer.hovered = mouse.and_then(|mouse| hits.iter().position(|hit| hit.rect.contains(mouse)));
                 frame.render_widget(footer, footer_area);
                 hits
             }
             None => Vec::new(),
         };
+    }
+
+    /// Each dialog, bottom to top, over everything drawn before it, dimmed: its frame centered above the bottom row,
+    /// its interior, and its footer on the bottom row. Only the top footer's items take clicks.
+    fn render_modals(&mut self, frame: &mut Frame<'_>) {
+        if self.modals.is_empty() {
+            return;
+        }
+        let area = frame.area();
+        let actives: Vec<Vec<ActiveBinding>> = (0..self.modals.len())
+            .map(|index| {
+                let chain = truncate_at_modal(with_app_link(self.modals[index].chain()));
+                self.chain_bindings(&chain)
+            })
+            .collect();
+        let theme = self.shared.theme;
+        let cx = RenderCx {
+            theme: &theme,
+            keymap: &self.shared.keymap,
+            now: self.shared.clock.now(),
+            focused: true,
+            focus_within: true,
+        };
+        let available = Rect {
+            height: area.height.saturating_sub(1),
+            ..area
+        };
+        let footer_area = Rect {
+            y: available.bottom(),
+            height: area.height.min(1),
+            ..area
+        };
+        let top = self.modals.len() - 1;
+        let mut hits = Vec::new();
+        for (index, (entry, active)) in self.modals.iter_mut().zip(&actives).enumerate() {
+            dim(frame.buffer_mut(), area, &theme);
+            let rect = frame_rect(area, entry.size(available));
+            let background = entry.background(theme.palette);
+            frame.render_widget(
+                DialogFrame {
+                    theme: &theme,
+                    background,
+                },
+                rect,
+            );
+            entry.interior = DialogFrame::interior(rect);
+            entry.render(frame, entry.interior, &cx);
+            if entry.shows_footer() {
+                let items = footer_items(active);
+                let mut footer = Footer {
+                    items: &items,
+                    hovered: None,
+                    theme: &theme,
+                };
+                let footer_hits = footer.hits(footer_area);
+                if index == top {
+                    footer.hovered = self
+                        .mouse
+                        .and_then(|mouse| footer_hits.iter().position(|hit| hit.rect.contains(mouse)));
+                    hits = footer_hits;
+                }
+                // The footer paints its row's background but not its symbols, and the main footer is under it.
+                frame.render_widget(Clear, footer_area);
+                frame.render_widget(footer, footer_area);
+            }
+        }
+        self.footer_hits = hits;
+    }
+
+    /// The open dialogs' kinds, bottom to top.
+    pub fn modals(&self) -> Vec<ModalKind> {
+        self.modals.iter().map(ModalEntry::kind).collect()
     }
 
     /// The main screen, while it's the base screen.
@@ -687,6 +838,30 @@ impl App {
     /// The config as the app currently holds it.
     pub fn config(&self) -> &Config {
         &self.shared.config
+    }
+}
+
+/// `chain` with the app link appended, and every link behind a text input marked so.
+fn with_app_link(mut chain: Vec<ChainLink>) -> Vec<ChainLink> {
+    chain.push(ChainLink::new(Owner::App, APP_BINDINGS));
+    ChainLink::filter_behind_inputs(&mut chain);
+    chain
+}
+
+/// `chain` up to and including its first modal screen, as Textual's `_modal_binding_chain` ends it.
+fn truncate_at_modal(mut chain: Vec<ChainLink>) -> Vec<ChainLink> {
+    let is_modal = |link: &ChainLink| matches!(link.owner, Owner::Screen(kind) if kind.is_modal());
+    if let Some(end) = chain.iter().position(is_modal) {
+        chain.truncate(end + 1);
+    }
+    chain
+}
+
+/// The dialog a chain link belongs to, if it's a dialog's.
+fn modal_owner(owner: Owner) -> Option<ModalKind> {
+    match owner {
+        Owner::DialogField(kind, _) | Owner::Screen(ScreenKind::Modal(kind)) => Some(kind),
+        _ => None,
     }
 }
 

@@ -1267,11 +1267,11 @@ fn slash_while_maximized_filters_the_maximized_table() {
     assert_eq!(screen.lines().nth(13), Some(" ★  Owner       Name         Private"));
     app.press(&["enter"]);
     assert_eq!(focus(&app), REPOS);
-    // The header and one row, re-centered: rows 14-15.
+    // The header and one row, re-centered: rows 14-15. The columns keep the widths of the rows the search hid.
     let screen = app.screen(100, 30);
     let rows: Vec<&str> = screen.lines().collect();
-    assert_eq!(rows[14], " ★  Owner       Name      Private");
-    assert_eq!(rows[15], " ☆  parity-bot  dotfiles  ✘");
+    assert_eq!(rows[14], " ★  Owner       Name         Private");
+    assert_eq!(rows[15], " ☆  parity-bot  dotfiles     ✘");
     insta::assert_snapshot!(screen);
 }
 

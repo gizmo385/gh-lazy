@@ -242,6 +242,28 @@ fn begin_cancels_a_page_in_flight_and_clears_the_rows() {
     assert!(!section.compact());
 }
 
+/// Python clears the `DataTable` but keeps its columns, so after a repo switch the columns stay as wide as the last
+/// repo's rows until wider ones arrive.
+#[test]
+fn a_new_repo_keeps_the_last_repos_column_widths() {
+    let mut app = TestApp::new(Config::default());
+    let mut section: Section = loaded(&mut app, numbered(1000..=1002));
+    let wide = section.table().widths().to_vec();
+    assert_eq!(wide, ["1000".len() + 2]);
+
+    app.with_cx(|cx| section.begin(&repo("octo", "other", false), cx));
+    assert_eq!(section.table().widths(), wide);
+    app.with_cx(|cx| section.first_page(Some(numbered(1..=3).into()), cx));
+    assert_eq!(section.table().widths(), wide);
+    app.with_cx(|cx| section.begin(&repo("octo", "empty", false), cx));
+    app.with_cx(|cx| section.first_page(Some(Vec::new().into()), cx));
+    assert_eq!(section.table().widths(), wide);
+
+    app.with_cx(|cx| section.begin(&repo("octo", "wider", false), cx));
+    app.with_cx(|cx| section.first_page(Some(numbered(100_000..=100_001).into()), cx));
+    assert_eq!(section.table().widths(), ["100000".len() + 2]);
+}
+
 #[test]
 fn a_short_first_page_turns_paging_on_and_asks_for_page_two_at_once() {
     let mut app = TestApp::new(Config::default());

@@ -238,33 +238,28 @@ fn refresh_rows_keeps_the_cursor_index_and_the_scroll() {
     assert_eq!((table.cursor(), table.scroll()), before);
 }
 
+/// Textual's `Column.content_width` only grows as rows are added: removing, clearing and searching keep it.
 #[test]
-fn cached_widths_follow_every_mutation() {
-    #[track_caller]
-    fn assert_fresh(table: &SearchableTable<Item>) -> Vec<usize> {
-        let cached = table.widths().to_vec();
-        assert_eq!(cached, render::column_widths(&table.columns, &table.rows));
-        cached
-    }
-    let title = |widths: &[usize]| widths[2];
+fn widths_are_a_high_water_mark_over_every_added_row() {
+    let title = |table: &SearchableTable<Item>| table.widths()[2];
     let mut table = SearchableTable::new(columns(), SortSpec::ascending(3));
-    let empty = assert_fresh(&table);
+    let empty = table.widths().to_vec();
+    assert_eq!(empty, render::column_widths(&table.columns, &table.rows));
 
     let _ = table.insert(item(1, false), &CX);
-    let short = assert_fresh(&table);
-    assert!(title(&short) > title(&empty));
+    let short = title(&table);
+    assert!(short > empty[2]);
     let _ = table.insert_many([item(2, false), item(3, false)], &CX);
-    let long = assert_fresh(&table);
-    assert_eq!(title(&long), LONG_TITLE.len() + 2);
-    assert!(table.remove(&3).is_some());
-    assert_eq!(title(&assert_fresh(&table)), title(&short));
+    let long = table.widths().to_vec();
+    assert_eq!(long[2], LONG_TITLE.len() + 2);
 
-    let _ = table.insert(item(3, false), &CX);
-    assert_eq!(assert_fresh(&table), long);
+    assert!(table.remove(&3).is_some());
+    assert_eq!(table.widths(), long, "removing a row keeps its width");
     table.clear();
-    assert_eq!(assert_fresh(&table), empty);
-    table.replace_all([item(3, false)], &CX);
-    assert_eq!(title(&assert_fresh(&table)), LONG_TITLE.len() + 2);
+    assert_eq!(table.widths(), long, "clearing keeps the columns' widths");
+    table.replace_all([item(1, false)], &CX);
+    assert_eq!(title(&table), long[2]);
+    assert_eq!(render::column_widths(&table.columns, &table.rows)[2], short);
 }
 
 #[test]

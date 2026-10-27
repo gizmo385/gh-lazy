@@ -9,29 +9,31 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Widget};
 
-use super::model::{Column, RowEntry};
+use super::model::{Cell, Column, RowEntry};
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
 use crate::theme::{AnsiColor, Paint, Theme};
 
 /// Textual's `DataTable.cell_padding`: one space each side of every cell.
 const CELL_PADDING: usize = 1;
 
-/// Each column's width: its widest cell or header, plus the padding. Columns are never truncated or stretched.
+/// Each column's width over `rows`: its widest cell or header, plus the padding. Columns are never truncated or
+/// stretched.
 pub(crate) fn column_widths<K>(columns: &[Column], rows: &[RowEntry<K>]) -> Vec<usize> {
     columns
         .iter()
         .enumerate()
         .map(|(i, column)| {
-            let widest = rows
-                .iter()
+            rows.iter()
                 .filter_map(|row| row.cells.get(i))
-                .map(|cell| cell.display.width())
-                .chain(std::iter::once(column.header.width()))
-                .max()
-                .unwrap_or(0);
-            widest + 2 * CELL_PADDING
+                .map(cell_width)
+                .fold(column.header.width() + 2 * CELL_PADDING, usize::max)
         })
         .collect()
+}
+
+/// The width a column needs for `cell`, padding included.
+pub(crate) fn cell_width(cell: &Cell) -> usize {
+    cell.display.width() + 2 * CELL_PADDING
 }
 
 /// Where everything goes for a table of `content_width` columns and `rows` rows drawn in an area.

@@ -3,7 +3,6 @@
 //! Nothing here renders. The arithmetic is plain functions over counts and offsets, so it's tested without a
 //! terminal.
 
-use std::cell::OnceCell;
 use std::fmt::Debug;
 use std::hash::Hash;
 
@@ -127,33 +126,80 @@ pub(crate) fn sort_rows<K>(rows: &mut [RowEntry<K>], sort: SortSpec) {
     });
 }
 
-/// The shown rows, with their column widths cached. Reads go through `Deref`; every change goes through
-/// [`Rows::edit`], which drops the cache, so no mutation can leave stale widths behind.
+/// The shown rows and each column's width. Reads go through `Deref`; every change goes through a method here, so
+/// the widths can't miss one.
+///
+/// The widths are Textual's `Column.content_width` plus the padding: a high-water mark over the header and every row
+/// ever added. Removing rows, clearing the table or filtering it with a search never narrows a column, so after a
+/// repo switch the tables keep the previous repo's widths until wider rows arrive, as Python's do. Only
+/// [`Rows::refresh_cells`], Textual's `update_cell`, measures a changed column again over the rows shown.
 #[derive(Debug)]
 pub(crate) struct Rows<K> {
     entries: Vec<RowEntry<K>>,
-    widths: OnceCell<Vec<usize>>,
+    widths: Vec<usize>,
 }
 
 impl<K> Rows<K> {
-    pub(crate) fn new() -> Self {
+    /// No rows: each column as wide as its header.
+    pub(crate) fn new(columns: &[Column]) -> Self {
         Self {
             entries: Vec::new(),
-            widths: OnceCell::new(),
+            widths: super::render::column_widths::<K>(columns, &[]),
         }
     }
 
-    /// The rows, for changing; the next [`Rows::widths`] measures them again.
-    pub(crate) fn edit(&mut self) -> &mut Vec<RowEntry<K>> {
-        self.widths.take();
-        &mut self.entries
+    /// Appends `entry`, widening any column its cells don't fit.
+    pub(crate) fn push(&mut self, entry: RowEntry<K>) {
+        for (width, cell) in self.widths.iter_mut().zip(&entry.cells) {
+            *width = (*width).max(super::render::cell_width(cell));
+        }
+        self.entries.push(entry);
     }
 
-    /// Each column's width over these rows: measured on first use after a change, then cached. `columns` must be the
-    /// same on every call, as a table's columns are.
-    pub(crate) fn widths(&self, columns: &[Column]) -> &[usize] {
-        self.widths
-            .get_or_init(|| super::render::column_widths(columns, &self.entries))
+    /// Removes the row at `index`. The widths stay.
+    pub(crate) fn remove(&mut self, index: usize) -> RowEntry<K> {
+        self.entries.remove(index)
+    }
+
+    /// Removes every row. The widths stay, as Textual's `clear()` keeps its columns.
+    pub(crate) fn clear(&mut self) {
+        self.entries.clear();
+    }
+
+    /// Takes every row out, for putting some back with [`Rows::push`]. The widths stay.
+    pub(crate) fn drain(&mut self) -> std::vec::Drain<'_, RowEntry<K>> {
+        self.entries.drain(..)
+    }
+
+    /// Sorts the rows by `sort`.
+    pub(crate) fn sort(&mut self, sort: SortSpec) {
+        sort_rows(&mut self.entries, sort);
+    }
+
+    /// Lets `update` change each row's cells, then measures every column whose cells changed again over the rows
+    /// shown and its header, which can narrow it: Textual's `update_cell`. Other columns keep their widths.
+    pub(crate) fn refresh_cells(&mut self, columns: &[Column], mut update: impl FnMut(&mut RowEntry<K>)) {
+        let mut changed = vec![false; self.widths.len()];
+        for row in &mut self.entries {
+            let before = row.cells.clone();
+            update(row);
+            for (i, flag) in changed.iter_mut().enumerate() {
+                *flag |= before.get(i) != row.cells.get(i);
+            }
+        }
+        if changed.contains(&true) {
+            let measured = super::render::column_widths(columns, &self.entries);
+            for ((width, fresh), changed) in self.widths.iter_mut().zip(measured).zip(changed) {
+                if changed {
+                    *width = fresh;
+                }
+            }
+        }
+    }
+
+    /// Each column's width, padding included.
+    pub(crate) fn widths(&self) -> &[usize] {
+        &self.widths
     }
 }
 

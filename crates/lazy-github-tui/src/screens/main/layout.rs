@@ -147,7 +147,9 @@ fn section_heights(total: u16, sections: &[SectionState; 4], focused: Option<Sec
             fixed += height;
         }
     }
-    let rest = total_exact.saturating_sub(fixed);
+    // Textual's `resolve_box_models` gives the `1fr` sections the whole rows the fixed ones leave: it floors their
+    // sum first, so a focused compact section's 17.6 rows beside two 3-row ones leave 21 rows to share, not 20.4.
+    let rest = total_exact.saturating_sub(fixed / SUBROWS * SUBROWS);
     let flexible: Vec<usize> = (0..4)
         .filter(|&i| sections[i].shown() && !sections[i].compact)
         .collect();
@@ -316,6 +318,18 @@ mod tests {
         assert_eq!(
             got.sections.map(rows),
             [Some((3, 8)), Some((9, 18)), Some((19, 21)), Some((22, 28))]
+        );
+    }
+
+    /// `user-profile-authors`' `picked`: at 160x48 the focused, empty Issues section takes 17.6 rows beside two other
+    /// compact ones, the fixed 23.6 rows leave 21 to the repos, and Issues ends at the floor of 41.6.
+    #[test]
+    fn a_focused_compact_section_leaves_the_whole_rows_to_the_others() {
+        let sections = [SHOWN, COMPACT, COMPACT, COMPACT];
+        let got = run((160, 48), sections, FocusTarget::Table(SectionId::Issues), false);
+        assert_eq!(
+            got.sections.map(rows),
+            [Some((3, 23)), Some((24, 26)), Some((27, 43)), Some((44, 46))]
         );
     }
 

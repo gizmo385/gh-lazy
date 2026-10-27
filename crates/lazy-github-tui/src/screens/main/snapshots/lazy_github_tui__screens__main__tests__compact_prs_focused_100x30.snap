@@ -13,10 +13,10 @@ expression: "app.screen(100, 30)"
 │                                      ││Default branch: main                                      │
 │                                      ││                                                          │
 │                                      ││──────────────────────────────────────────────────────────│
-└──────────────────────────────────────┘│                                                          │
-┌─ [2] Pull Requests (empty) ──────────┐│  No README found.                                        │
-│ #  Status  Author  Title             ││                                                          │
 │                                      ││                                                          │
+└──────────────────────────────────────┘│  No README found.                                        │
+┌─ [2] Pull Requests (empty) ──────────┐│                                                          │
+│ #  Status  Author  Title             ││                                                          │
 │                                      ││                                                          │
 │                                      ││                                                          │
 │                                      ││                                                          │

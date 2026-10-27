@@ -7,7 +7,7 @@ cursor 1 4 hidden
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-bot/pr-details Details ──────────────────────────────────────────────────────────┐
 │ ★  Owner       Name         Private                          ││ Repo Overview                                                                                │
-│ ☆  parity-bot  pr-details   ✘                                ││╸╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  pr-details   ✘                                ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
 │ ☆  parity-bot  dotfiles     ✘                                ││parity-bot/pr-details • Public                                                                │
 │ ☆  parity-bot  hello-world  ✘                                ││Owned by parity-bot                                                                           │
 │ ☆  parity-bot  lazy-demo    ✘                                ││Default branch: main                                                                          │
@@ -26,9 +26,9 @@ cursor 1 4 hidden
 │                                                              ││  Mail user@example.com or mailto:user@example.com, and see //cdn.example.com/lib.js as       │
 │                                                              ││  well. Trailing punctuation stays out (https://example.com/end), https://example.com/q? and  │
 │                                                              ││  "https://example.com/quoted". Not in code https://example.com/code or in a named link to    │
-└──────────────────────────────────────────────────────────────┘│  www.example.net.                                                                            │
-┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
-│ #  Status  Author         Title                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│  www.example.net. Emphasis doesn't split http://example.com/*wiki* or                        │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│  https://example.com/em, and targets are normalized: https://bücher.example/ä,               │
+│ #  Status  Author         Title                              ││  www.bücher.de and https://example.com/a[1]|b.                                               │
 │ 5  open    parity-friend  Add a cursor to the viewer         ││                                                                                              │
 │ 4  closed  parity-bot     Drop the legacy renderer           ││                                                                                              │
 │ 3  closed  parity-bot     Release 0.2.0                      ││                                                                                              │
@@ -56,10 +56,10 @@ abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 dfgffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde.bbbbbbbbbbbbb................................................................................e
-dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdeiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiie
-djjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjdekkkkkkkkkkkkkkkkkkkkkbbbcccccc................................................................e
-djjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjdebbbbbbbbbllllllllll...........................................................................e
-djjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjdebbbbbbbbbbbbbbbbmmmm..........................................................................e
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdeijjjjjjjjjjjjjiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiie
+dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkdelllllllllllllllllllllbbbcccccc................................................................e
+dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkdebbbbbbbbbmmmmmmmmmm...........................................................................e
+dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkdebbbbbbbbbbbbbbbbnnnn..........................................................................e
 d..............................................................de..............................................................................................e
 d..............................................................debbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...e
 d..............................................................de..............................................................................................e
@@ -67,21 +67,21 @@ d..............................................................deaaaaaaaaaaaaaaa
 d..............................................................de..............................................................................................e
 d..............................................................de..............................................................................................e
 d..............................................................de..............................................................................................e
-d..............................................................de..nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn..e
+d..............................................................de..oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo..e
 d..............................................................de..............................................................................................e
 d..............................................................de..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.................................e
-d..............................................................de..llllllllllllllllllllllllllllllbbllllllllllllllllllllllllbbbbblllllllllllllllllllllllllllb...e
-d..............................................................de..bbbbbbbbbbblllllllllllllllbblllllllllllllllllllllbbbbbbbbbbbbbblllllllllbbbbbbbbbbbbbbbbbb..e
-d..............................................................de..bbbbbllllllllllllllllbbbblllllllllllllllllllllllbbbbbbbbbbllllllllllllllllllllllllbbb.......e
-d..............................................................de..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbblllllllllllllllllllllllbbblllllllllllllllllllllbbbbb..e
-d..............................................................de..bllllllllllllllllllllllllllbbbbbbbbbbbbbbboooooooooooooooooooooooobbbbbbbbbllllllllllbbb....e
-dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..lllllllllllllllb............................................................................e
-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..............................................................................................e
-eppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppee..............................................................................................e
-eqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqee..............................................................................................e
-errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrree..............................................................................................e
-errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrree..............................................................................................e
-errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrree..............................................................................................e
+d..............................................................de..mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmbbmmmmmmmmmmmmmmmmmmmmmmmmbbbbbmmmmmmmmmmmmmmmmmmmmmmmmmmmb...e
+d..............................................................de..bbbbbbbbbbbmmmmmmmmmmmmmmmbbmmmmmmmmmmmmmmmmmmmmmbbbbbbbbbbbbbbmmmmmmmmmbbbbbbbbbbbbbbbbbb..e
+d..............................................................de..bbbbbmmmmmmmmmmmmmmmmbbbbmmmmmmmmmmmmmmmmmmmmmmmbbbbbbbbbbmmmmmmmmmmmmmmmmmmmmmmmmbbb.......e
+d..............................................................de..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbmmmmmmmmmmmmmmmmmmmmmmmbbbmmmmmmmmmmmmmmmmmmmmmbbbbb..e
+d..............................................................de..bmmmmmmmmmmmmmmmmmmmmmmmmmmbbbbbbbbbbbbbbbppppppppppppppppppppppppbbbbbbbbbmmmmmmmmmmbbb....e
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..mmmmmmmmmmmmmmmbbbbbbbbbbbbbbbbbbbbbbbbbmmmmmmmmmmmmmmmmmmmmmmmmbbbb........................e
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..qqqqqqqqqqqqqqqqqqqqqqbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbmmmmmmmmmmmmmmmmmmmmmmmmb...............e
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrree..mmmmmmmmmmmmmbbbbbmmmmmmmmmmmmmmmmmmmmmmmmmmb...............................................e
+essssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssee..............................................................................................e
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttee..............................................................................................e
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttee..............................................................................................e
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttee..............................................................................................e
 e..............................................................ee..............................................................................................e
 e..............................................................ee..............................................................................................e
 e..............................................................ee..............................................................................................e
@@ -98,7 +98,7 @@ e..............................................................ee...............
 e..............................................................ee..............................................................................................e
 e..............................................................ee..............................................................................................e
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ssstttttttssssttttttttttttttttsssttttttttttttttttttsssttttttttttsssttttttttttssstttttttsssstttttttttttsssttttttttttttsssttttttttttttttttttttttssstttttsssstttttt
+uuuvvvvvvvuuuuvvvvvvvvvvvvvvvvuuuvvvvvvvvvvvvvvvvvvuuuvvvvvvvvvvuuuvvvvvvvvvvuuuvvvvvvvuuuuvvvvvvvvvvvuuuvvvvvvvvvvvvuuuvvvvvvvvvvvvvvvvvvvvvvuuuvvvvvuuuuvvvvvv
 --- legend
 . bg=#121212
 a fg=#004578 bg=#121212
@@ -110,14 +110,16 @@ f fg=#e0e0e0 bg=#2d3740 bold
 g fg=#98e024 bg=#2d3740 bold
 h fg=#ddedf9 bg=#0178d4 bold
 i fg=#262626 bg=#121212
-j fg=#e0e0e0 bg=#272727
-k fg=#e0e0e0 bg=#121212 bold underline
-l fg=#e0e0e0 bg=#121212 underline
-m fg=#e0e0e0 bg=#121212 bold
-n fg=#0178d4 bg=#121212 bold
-o fg=#f4bb6e bg=#241d13
-p fg=#e0e0e0 bg=#242f38 bold
-q fg=#e0e0e0 bg=#153854
-r fg=#e0e0e0 bg=#1e1e1e
-s fg=#ffa62b bg=#242f38 bold
-t fg=#e0e0e0 bg=#242f38
+j fg=#0178d4 bg=#121212
+k fg=#e0e0e0 bg=#272727
+l fg=#e0e0e0 bg=#121212 bold underline
+m fg=#e0e0e0 bg=#121212 underline
+n fg=#e0e0e0 bg=#121212 bold
+o fg=#0178d4 bg=#121212 bold
+p fg=#f4bb6e bg=#241d13
+q fg=#e0e0e0 bg=#121212 italic underline
+r fg=#e0e0e0 bg=#242f38 bold
+s fg=#e0e0e0 bg=#153854
+t fg=#e0e0e0 bg=#1e1e1e
+u fg=#ffa62b bg=#242f38 bold
+v fg=#e0e0e0 bg=#242f38

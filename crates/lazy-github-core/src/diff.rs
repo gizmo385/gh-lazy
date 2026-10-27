@@ -167,8 +167,9 @@ impl Hunk {
             })
     }
 
-    /// The hunk's title: `Line <c>` when the new side is one line long, else `Lines <c>-<c+d-1>`, then the counts,
-    /// then ` • <context>`. A header that doesn't parse is the title as is, without counts.
+    /// The hunk's title: `Line <c>` when the new side is one line long, else `Lines <c>-<c+d-1>`, taken from the old
+    /// side when the new side is empty (Py bug B65); then the counts, then ` • <context>`. A header that doesn't parse
+    /// is the title as is, without counts.
     pub fn label(&self) -> Label {
         let Some(range) = self.range else {
             return Label {
@@ -177,12 +178,16 @@ impl Hunk {
                 suffix: String::new(),
             };
         };
-        let text = if range.new_count == 1 {
-            format!("Line {}", range.new_start)
+        // A hunk with an empty new side names its old lines; Python's `Lines 0--1` is Py bug B65.
+        let (start, count) = if range.new_count == 0 {
+            (range.old_start, range.old_count)
         } else {
-            // Signed, as Python computes it: a deleted file's `+0,0` range reads `Lines 0--1`.
-            let end = i64::from(range.new_start) + i64::from(range.new_count) - 1;
-            format!("Lines {}-{end}", range.new_start)
+            (range.new_start, range.new_count)
+        };
+        let text = if count == 1 {
+            format!("Line {start}")
+        } else {
+            format!("Lines {start}-{}", start + count.saturating_sub(1))
         };
         let suffix = if self.context.is_empty() {
             String::new()

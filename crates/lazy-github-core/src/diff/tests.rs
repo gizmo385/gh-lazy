@@ -176,8 +176,8 @@ fn pr_5_labels() {
     assert_eq!(hunk_label(2, 0), "Lines 1-4 (+1)");
     assert_eq!(hunk_label(4, 0), "Lines 1-8 (+2)");
     assert_eq!(hunk_label(4, 1), "Lines 22-28 (+3 -2) • impl Viewer {");
-    // A deleted file's `+0,0` range reads as Python computes it.
-    assert_eq!(hunk_label(3, 0), "Lines 0--1 (-3)");
+    // A deleted file's `+0,0` range is titled from its old side (Py bug B65; Python shows `Lines 0--1`).
+    assert_eq!(hunk_label(3, 0), "Lines 1-3 (-3)");
 }
 
 #[test]
@@ -216,7 +216,9 @@ fn hunk_labels() {
         label(&format!("{section}@@ -4,2 +4,2 @@  fn x()  \n a\n b\n")),
         "Lines 4-5 • fn x()"
     );
-    assert_eq!(label(&format!("{section}@@ -9 +9,0 @@\n-a\n")), "Lines 9-8 (-1)");
+    // An empty new side is titled from the old side (Py bug B65; Python shows `Lines 9-8`).
+    assert_eq!(label(&format!("{section}@@ -9 +9,0 @@\n-a\n")), "Line 9 (-1)");
+    assert_eq!(label(&format!("{section}@@ -12,2 +11,0 @@\n-a\n-b\n")), "Lines 12-13 (-2)");
     // Not a header the label can read: shown as is, without counts.
     assert_eq!(label(&format!("{section}@@@ -1 -1 +1 @@@\n+x\n")), "@@@ -1 -1 +1 @@@");
     assert_eq!(label(&format!("{section}@@ -1 +x @@\n+x\n")), "@@ -1 +x @@");

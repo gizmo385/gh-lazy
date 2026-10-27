@@ -1,0 +1,223 @@
+version = 1
+description = "Diff review: c on a hunk line opens Add Comment, an empty comment is refused, the comment goes to Pending Comments, the Submit review form (Review Status, summary) posts the review with the remaining comment's diff position; the PR author's form has only the summary and Add Comments"
+# Python shows a pending comment's line as the hunk-relative index (README.md:3) and Rust the line's real number
+# (README.md:5, Py bug B22's recommendation), and after the submit Rust refetches the PR (B15), so neither is in
+# [expect]. shift+enter is sent as CSI 13;2 u, which both apps read.
+gate = false
+parity_rows = [
+    "diff-viewer.add-comment",
+    "diff-viewer.pending-comments",
+    "diff-viewer.submit-review",
+    "keybindings.diff-add-comment",
+    "toasts.comment-empty",
+    "toasts.comment-review-added",
+]
+sizes = [[160, 48]]
+
+[env]
+# pr-write over pr-details: POST .../pulls/5/reviews answers the review only for the body this scenario submits
+# (APPROVE, PR 5's head sha, "Looks good." and the README.md comment at diff position 4).
+fixtures = ["pr-write", "pr-details", "base"]
+config_overrides.appearance.show_issues = false
+config_overrides.appearance.show_workflows = false
+
+[[step]]
+wait.text = "pr-details"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "parity-friend"
+wait.timeout_ms = 15000
+
+# Python drops an enter that follows a focus key at once, so the PR table gets a moment to take focus.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Opened on"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait.text = "README.md"
+
+# The scroll area, the filter, README.md's title, its hunk's title: enter opens the hunk; tab into its pane and down
+# to its fourth line, `+Run ...`.
+[[step]]
+keys = ["tab", "tab", "tab", "tab", "enter"]
+
+[[step]]
+wait.text = "Line: 1/6"
+
+[[step]]
+keys = ["tab", "j", "j", "j"]
+
+[[step]]
+wait.text = "Line: 4/6"
+
+[[step]]
+keys = ["c"]
+
+[[step]]
+wait.text = "Commenting on:"
+
+# The dialog has no footer of its own: the dimmed screen below keeps its footer, as in Python.
+[[step]]
+capture = "add-open"
+checks = ["titles", "focus"]
+
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+wait.text = "Comment cannot be empty!"
+
+[[step]]
+capture = "add-empty"
+checks = ["titles", "focus"]
+
+[[step]]
+type = "Mention the arrow keys too."
+
+# Python sometimes drops an enter that follows the tab at once.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "New comment added"
+
+[[step]]
+wait.gone = "Commenting on:"
+
+[[step]]
+capture = "pending"
+checks = ["titles", "focus"]
+
+# Review Status: open the list (Commented is highlighted), up twice to Approved.
+[[step]]
+keys = ["1"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["shift+tab", "shift+tab", "shift+tab"]
+
+[[step]]
+capture = "status-focused"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["enter", "up", "up", "enter"]
+
+[[step]]
+wait.text = "Approved"
+
+# Python drops keys that come while the select's list is still closing.
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+type = "Looks good."
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/pulls/5/reviews"
+wait.log.body.event = "APPROVE"
+wait.log.body.commit_id = "c0ffee5555555555555555555555555555555555"
+wait.log.body.body = "Looks good."
+wait.log.body.comments = [ { path = "README.md", body = "Mention the arrow keys too.", position = 4 } ]
+
+[[step]]
+wait.text = "New review created!"
+
+[[step]]
+capture = "submitted"
+checks = ["titles", "focus"]
+
+# PR 3 is parity-bot's own: the form has only the summary and Add Comments.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["j", "j", "enter"]
+
+[[step]]
+wait.text = "Merged Release 0.2.0 (#3)"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait.text = "Add Comments"
+
+[[step]]
+keys = ["1"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["shift+tab"]
+
+[[step]]
+capture = "author-form"
+checks = ["titles", "focus"]
+
+[expect.add-open]
+contains = ["Add Comment", "Commenting on:", "+Run `viewer FILE`, then press `j` and `k` to move.", "Comment:", "Cancel"]
+
+[expect.add-empty]
+contains = ["Comment cannot be empty!", "Commenting on:"]
+
+[expect.pending]
+focused = ["[5] PR #5 Details"]
+contains = ["New comment added"]
+not_contains = ["Commenting on:", "Traceback"]
+
+[expect.status-focused]
+contains = ["Review Status:", "Commented", "Review summary", "Submit Review", "Pending Comments:", "Mention the arrow keys too."]
+
+[expect.submitted]
+contains = ["New review created!"]
+not_contains = ["Traceback"]
+
+[expect.author-form]
+contains = ["Review summary", "Add Comments"]
+not_contains = ["Review Status:", "Submit Review", "Traceback"]

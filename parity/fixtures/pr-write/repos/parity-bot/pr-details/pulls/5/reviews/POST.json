@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "request": {
+    "method": "POST",
+    "path": "/repos/parity-bot/pr-details/pulls/5/reviews",
+    "body": {
+      "event": "APPROVE",
+      "commit_id": "c0ffee5555555555555555555555555555555555",
+      "body": "Looks good.",
+      "comments": [
+        {
+          "path": "README.md",
+          "body": "Mention the arrow keys too.",
+          "position": 4
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "id": 508,
+      "node_id": "PRR_kwDOPr508",
+      "user": {
+        "login": "parity-bot",
+        "id": 1000001,
+        "node_id": "U_kgDOAA1000001",
+        "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+        "url": "https://api.github.com/users/parity-bot",
+        "html_url": "https://github.com/parity-bot",
+        "type": "User",
+        "site_admin": false
+      },
+      "body": "Looks good.",
+      "state": "APPROVED",
+      "html_url": "https://github.com/parity-bot/pr-details/pull/5#pullrequestreview-508",
+      "pull_request_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+      "author_association": "OWNER",
+      "commit_id": "c0ffee5555555555555555555555555555555555",
+      "submitted_at": "2026-03-06T10:00:00Z"
+    }
+  },
+  "note": "hand-written: the review the pr-review scenario submits on PR 5"
+}

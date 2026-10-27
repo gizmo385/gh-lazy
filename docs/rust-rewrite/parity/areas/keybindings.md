@@ -42,7 +42,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.workflows-trigger` | `workflows.trigger` | `T` | Trigger Workflow | workflows section | M3 | not started | #188, #264 | |
 | `keybindings.workflows-view-run-details` | `workflows.view_run_details` | `enter` | View Run Details | (unused) | M2 | parity | | Defined, rebindable in Settings, never bound (Py bug B9). Keybindings golden (`parity/goldens/keybindings.toml`). |
 | `keybindings.workflows-view-job-logs` | `workflows.view_job_logs` | `l` | View Job Logs | Jobs tab | M2 | parity | #243 | |
-| `keybindings.diff-add-comment` | `diff.add_comment` | `c` | Add Comment | hunk pane | M3 | not started | #187 | |
+| `keybindings.diff-add-comment` | `diff.add_comment` | `c` | Add Comment | hunk pane | M3 | not started | #187, #272 | |
 | `keybindings.diff-cursor-down` | `diff.cursor_down` | `j` | cursor_down | (unused) | M2 | parity | #236 | Hunk pane hard-codes `j` (Py bug B9). Rust (#236): bound in the hunk pane, labeled "Line down". |
 | `keybindings.diff-cursor-up` | `diff.cursor_up` | `k` | cursor_up | (unused) | M2 | parity | #236 | Hunk pane hard-codes `k` (Py bug B9). Rust (#236): bound in the hunk pane, labeled "Line up". |
 | `keybindings.diff-clear-selection` | `diff.clear_selection` | `escape` | Clear Selection | (unused) | M2 | parity | #236 | Never bound (Py bug B9). Keybindings golden (`parity/goldens/keybindings.toml`). |

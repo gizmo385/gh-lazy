@@ -356,7 +356,8 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   `PATCH .../issues/12` renames and closes issue 12 after 1.5 s, and `POST .../issues/12/comments` answers a new
   comment for each of the two bodies `issue-comment` posts. Hand-written.
 - `pr-write/`: write requests for `parity-bot/pr-details`, listed before `pr-details` and `base`, for the `pr-merge`,
-  `pr-reactions` and `pr-comment` scenarios (M3, #182, #183). `PUT .../pulls/5/merge` for the squash method and PR 5's
+  `pr-reactions`, `pr-comment` and `pr-review` scenarios (M3, #182, #183, #187). `POST .../pulls/5/reviews` for the
+  review `pr-review` submits; `PUT .../pulls/5/merge` for the squash method and PR 5's
   head sha (merged), `GET .../pulls/5` merged once that was served (`when.after`, for Rust's refetch), `PUT
   .../pulls/4/merge` (405); `POST .../issues/5/reactions` answering 201 for five kinds; `POST
   .../pulls/5/comments/9001/replies` and `POST .../issues/5/comments` for the bodies `pr-comment` posts, with

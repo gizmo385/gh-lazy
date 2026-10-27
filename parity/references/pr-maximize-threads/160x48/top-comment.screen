@@ -1,0 +1,129 @@
+lazy-github-screen 1
+size 160x48
+cursor 1 4 hidden
+--- text
+ Overview  Diff  Conversation
+━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    │ │ Should the cursor wrap at the end?
+    │ │
+    │ │ parity-bot • Mon Feb  2 10:00:00 2026                                                                                                                 ▃▃
+    │ │
+    │
+    │ │ No, it stops at the last line.
+    │ │
+    │ │ parity-friend • Mon Feb  2 11:00:00 2026
+    │ │
+    │
+
+
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+  ▶ Review from parity-reviewer (Approved)
+
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+  ▶ Review from parity-carol (Dismissed)
+
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+  ▼ Review from parity-bot (Changes Requested)
+
+      Please add a test for the cursor.
+
+    │ │ This needs a test.
+    │ │
+    │ │ parity-bot • Tue Feb  3 09:00:00 2026
+    │ │
+    │
+
+
+ │ Rebased on main. @parity-bot ready for another look.
+ │
+ │ parity-friend • Tue Feb  3 12:00:00 2026
+ │
+ │▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+ │  ▶ 👍 1 | 🚀 1
+ │
+
+ ┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍┓
+ ╏ Is this related to #4?                                                                                                                                    ╏
+ ╏                                                                                                ▌
+ ╏ Unknown • Tue Feb  3 13:30:00 2026                                                             ▌ View Maximized
+ ╏                                                                                                ▌ Current view maximized. Press escape to return.
+ ┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍▌
+
+--- styles
+abbbbbbbbaabbbbaaccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+dddddddddddddddddeeeeeeeeeeeeddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+..............................................................................................................................................................ff
+....g.g.hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh....................................................................................................................ff
+....g.g.......................................................................................................................................................ff
+....g.g.iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii.................................................................................................................jj
+....g.g.......................................................................................................................................................kk
+....g.........................................................................................................................................................kk
+....g.g.hhhhhhhhhhhhhhhhhhhhhhhhhhhhhh........................................................................................................................kk
+....g.g.......................................................................................................................................................kk
+....g.g.iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii..............................................................................................................kk
+....g.g.......................................................................................................................................................kk
+....g.........................................................................................................................................................kk
+..............................................................................................................................................................kk
+..............................................................................................................................................................kk
+llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllkk
+..hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhmmmmmmmmh....................................................................................................................kk
+..............................................................................................................................................................kk
+llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllkk
+..hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh......................................................................................................................kk
+..............................................................................................................................................................kk
+llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllkk
+..hhhhhhhhhhhhhhhhhhhhhhhhhhnnnnnnnnnnnnnnnnnh................................................................................................................kk
+..............................................................................................................................................................kk
+......hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh.......................................................................................................................kk
+..............................................................................................................................................................kk
+....g.g.hhhhhhhhhhhhhhhhhh....................................................................................................................................kk
+....g.g.......................................................................................................................................................kk
+....g.g.iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii.................................................................................................................kk
+....g.g.......................................................................................................................................................kk
+....g.........................................................................................................................................................kk
+..............................................................................................................................................................kk
+..............................................................................................................................................................kk
+aoacccccccccccccccccpppppppppppccccccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaakk
+aoaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaakk
+aoaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaakk
+aoaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaakk
+aollllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllkk
+ao..hhhrhhhhhhrhh.............................................................................................................................................kk
+ao............................................................................................................................................................kk
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaakk
+assssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssskk
+asacccccccccccccccccccppcaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaskk
+asaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaatuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuukk
+asaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaatuvvvvvvvvvvvvvvuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuukk
+asaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaatuwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwxxxxxxwwwwwwwwwwwuuuuuuuuuuukk
+assssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssstuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuukk
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaakk
+--- legend
+. bg=#1e1e1e
+a bg=#121212
+b fg=#797979 bg=#121212
+c fg=#e0e0e0 bg=#121212
+d fg=#262626 bg=#121212
+e fg=#0178d4 bg=#121212
+f fg=#e0e0e0 bg=#000000
+g fg=#333b42 bg=#1e1e1e
+h fg=#e0e0e0 bg=#1e1e1e
+i fg=#a5a5a5 bg=#1e1e1e
+j fg=#003054 bg=#000000
+k fg=#003054 bg=#121212 inverse
+l fg=#121212 bg=#1e1e1e
+m fg=#adff2f bg=#1e1e1e
+n fg=#ff0000 bg=#1e1e1e
+o fg=#333b42 bg=#121212
+p fg=#e0e0e0 bg=#121212 underline
+q fg=#a0a0a0 bg=#121212
+r default
+s fg=#4ebf71 bg=#121212
+t fg=#4ebf71 bg=#343f49
+u bg=#343f49
+v fg=#8ad4a1 bg=#343f49 bold
+w fg=#e0e0e0 bg=#343f49
+x fg=#e0e0e0 bg=#343f49 bold
+--- cells
+38 [" ","│"," "," ","▶"," ","👍",""," ","1"," ","|"," ","🚀",""," ","1"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "]

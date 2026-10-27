@@ -1,0 +1,295 @@
+version = 1
+description = "M in the PR Conversation and Diff tabs: the scroll areas do nothing; a review's title or a comment in it maximizes the review; a comment's reactions title its reactions; a comment outside a review the details tab area; the diff filter types M; a file's or hunk's title, or the hunk pane, maximizes that section"
+# A maximized section has no boxes, tables or tabs, so those captures are checked through [expect] `contains` and
+# `not_contains`. The footer is hidden while maximized.
+gate = false
+parity_rows = ["pull-requests.collapsible", "main-layout.maximize"]
+sizes = [[160, 48]]
+
+[env]
+fixtures = ["pr-details", "base"]
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Add a cursor to the viewer", timeout_ms = 15000 }
+
+# Python drops an enter that follows a focus key at once, so the PR table gets a moment to take focus.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Opened on", timeout_ms = 15000 }
+
+[[step]]
+keys = ["right", "right"]
+
+[[step]]
+wait = { text = "Review from parity-bot", timeout_ms = 5000 }
+
+# The comments' reactions arrive after the conversation, below the fold, and the last comment's adds a focus stop.
+# Nothing on screen changes, so this waits out the requests.
+[[step]]
+wait = { stable_ms = 1000 }
+
+# Python applies a focus move only after keys already queued behind it, so each M below waits for the screen to settle
+# after the tab before it.
+#
+# The scroll area: a no-op, with nothing to wait for (a maximize here would take the toast from `review-title`).
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+capture = "conversation-noop"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "review-title"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[5] PR #5 Details" }
+
+# The review's first comment: its nearest maximizable ancestor is the review's section.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "review-comment"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[5] PR #5 Details" }
+
+# From the repos table, shift+tab enters the details content at its last stop: the last comment outside a review,
+# whose nearest maximizable ancestor is the details tab area.
+[[step]]
+keys = ["1", "shift+tab"]
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "top-comment"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[5] PR #5 Details" }
+
+# The stop before it: the previous comment's reactions title, which maximizes the reactions section.
+[[step]]
+keys = ["shift+tab"]
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "comment-reactions"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[5] PR #5 Details" }
+
+# The Diff tab.
+[[step]]
+keys = ["5", "left"]
+
+[[step]]
+wait = { text = "README.md", timeout_ms = 15000 }
+
+# The scroll area, then the file filter (whose chain adds `/ Filter Files` to the footer): an Input, which types the
+# M, as the table search box does (Py bug B38).
+[[step]]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { text = "/ Filter Files" }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { text = "▊  M" }
+
+[[step]]
+capture = "filter-types"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["backspace"]
+
+[[step]]
+wait = { text = "Filter files (press '/' to focus, ESC to clear)" }
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "file-title"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[5] PR #5 Details" }
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "hunk-title"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[5] PR #5 Details" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Line: 1/6", timeout_ms = 5000 }
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "hunk-pane"
+checks = ["titles", "focus"]
+
+[expect.conversation-noop]
+focused = ["[5] PR #5 Details"]
+contains = ["n New Comment"]
+not_contains = ["View Maximized"]
+
+[expect.review-title]
+pane_titles = []
+contains = ["  ▼ Review from parity-bot (Commented)", "      Looks close. One question inline.", "No, it stops at the last line.", "View Maximized"]
+not_contains = ["parity-reviewer", "Overview  Diff  Conversation"]
+
+[expect.review-comment]
+pane_titles = []
+contains = ["  ▼ Review from parity-bot (Commented)", "╏ Should the cursor wrap at the end?"]
+not_contains = ["parity-reviewer", "Overview  Diff  Conversation"]
+
+[expect.top-comment]
+pane_titles = []
+contains = ["Overview  Diff  Conversation", "╏ Is this related to #4?"]
+not_contains = ["[5] PR #5 Details", "Quit"]
+
+[expect.comment-reactions]
+pane_titles = []
+contains = ["  ▶ 👍 1 | 🚀 1"]
+not_contains = ["Rebased on main", "Overview  Diff  Conversation"]
+
+[expect.filter-types]
+focused = ["[5] PR #5 Details"]
+contains = ["▊  M"]
+not_contains = ["View Maximized"]
+
+[expect.file-title]
+pane_titles = []
+contains = ["  ▼ 📄 README.md (+3 -1)", "      ▶ Lines 3-7 (+3 -1) • A tiny pager."]
+not_contains = ["app.css", "Filter files"]
+
+[expect.hunk-title]
+pane_titles = []
+contains = ["  ▶ Lines 3-7 (+3 -1) • A tiny pager."]
+not_contains = ["README.md", "app.css"]
+
+[expect.hunk-pane]
+pane_titles = [""]
+contains = ["  ▼ Lines 3-7 (+3 -1) • A tiny pager.", "## Usage"]
+not_contains = ["README.md", "app.css"]

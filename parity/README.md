@@ -279,6 +279,15 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   `parity-bot/dotfiles` (blank lines and a header-shaped line, Py bug B47); empty issues, workflows and runs for
   hello-world and lazy-demo. Listed before `repo-selected-empty` (dotfiles' issues and workflows) and `base`.
   Hand-written.
+- `pr-details/`: the repo `parity-bot/pr-details`, listed first on base's `GET /user/repos` page, for the
+  `pr-details`, `pr-diff` and `pr-lookup` scenarios (#230). Its issues page 1 (`state=all`) has PRs 5 (open), 4
+  (closed), 3 (merged) and 2 (draft), and page 2 is empty. The full PRs 5 (served after 1 s), 4, 3 and 9 (not on the
+  issues page, for the lookup), a 500 for PR 2 and a 404 for PR 42; each PR's commit status and check runs
+  (`page=1`, `per_page=100`), reactions, reviews and review comments, issue comments and comment reactions (also
+  the 404s Python gets asking for review comments' reactions on the issue-comment endpoint, Py bug B54); and the
+  diffs (`GET .../pulls/<n>` with accept `diff`, which `gh pr diff` reads too): PR 5's five files, PR 3's and PR
+  9's small ones, and a 406 for PR 4. Plus its README and empty workflows and runs. Listed before `base`.
+  Hand-written, generated once by a throwaway script; edit the JSON directly.
 - `prs-70/`: the repo `parity-bot/lazy-fixture`, added to base's `GET /user/repos` page, with 70 pull requests over
   `GET /repos/parity-bot/lazy-fixture/issues` pages of 30 (`state=all`, as `list_issues` sends them: 30, 30, 10, then
   an empty page 4), plus its README and empty workflows and runs. Listed before `base`, for the `table-lazy-load`

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/5",
+    "accept": "diff"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain; charset=utf-8"
+    },
+    "body_text": "diff --git a/README.md b/README.md\nindex 7777777..8888888 100644\n--- a/README.md\n+++ b/README.md\n@@ -3,3 +3,5 @@ A tiny pager.\n ## Usage\n \n-Run `viewer FILE`.\n+Run `viewer FILE`, then press `j` and `k` to move.\n+\n+The current line is marked with `>`.\ndiff --git a/assets/app.css b/assets/app.css\nnew file mode 100644\nindex 0000000..6666666\n--- /dev/null\n+++ b/assets/app.css\n@@ -0,0 +1,3 @@\n+.cursor {\n+  color: yellow;\n+}\ndiff --git a/build.rs b/build.rs\nindex 3333333..4444444 100644\n--- a/build.rs\n+++ b/build.rs\n@@ -1,3 +1,4 @@\n fn main() {\n     println!(\"cargo:rerun-if-changed=build.rs\");\n+    println!(\"cargo:rerun-if-changed=assets\");\n }\ndiff --git a/docs/old.md b/docs/old.md\ndeleted file mode 100644\nindex 5555555..0000000\n--- a/docs/old.md\n+++ /dev/null\n@@ -1,3 +0,0 @@\n-# Old notes\n-\n-These notes moved to the README.\ndiff --git a/src/viewer.rs b/src/viewer.rs\nindex 1111111..2222222 100644\n--- a/src/viewer.rs\n+++ b/src/viewer.rs\n@@ -1,6 +1,8 @@\n use std::io;\n+use std::fmt;\n \n pub struct Viewer {\n     lines: Vec<String>,\n+    cursor: usize,\n }\n \n@@ -20,6 +22,7 @@ impl Viewer {\n     pub fn render(&self) -> io::Result<()> {\n-        for line in &self.lines {\n-            println!(\"{line}\");\n+        for (i, line) in self.lines.iter().enumerate() {\n+            let marker = if i == self.cursor { \">\" } else { \" \" };\n+            println!(\"{marker} {line}\");\n         }\n         Ok(())\n     }\n"
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup). Five files: modified, added, deleted, two hunks, and build.rs, whose name Python mangles (Py bug B55)."
+}

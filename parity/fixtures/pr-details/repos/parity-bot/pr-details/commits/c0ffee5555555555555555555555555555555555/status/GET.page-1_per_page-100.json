@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/commits/c0ffee5555555555555555555555555555555555/status",
+    "query": {
+      "page": "1",
+      "per_page": "100"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "state": "pending",
+      "statuses": [
+        {
+          "url": "https://api.github.com/repos/parity-bot/pr-details/statuses/c0ffee5555555555555555555555555555555555",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "id": 9100001,
+          "node_id": "SC_kwDO9100001",
+          "state": "success",
+          "description": "Lint passed",
+          "target_url": "https://ci.example.com/lint/5",
+          "context": "ci/lint",
+          "created_at": "2026-02-01T09:00:00Z",
+          "updated_at": "2026-02-01T09:05:00Z"
+        },
+        {
+          "url": "https://api.github.com/repos/parity-bot/pr-details/statuses/c0ffee5555555555555555555555555555555555",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "id": 9100002,
+          "node_id": "SC_kwDO9100002",
+          "state": "pending",
+          "description": "Building docs",
+          "target_url": null,
+          "context": "ci/docs",
+          "created_at": "2026-02-01T09:00:00Z",
+          "updated_at": "2026-02-01T09:05:00Z"
+        }
+      ],
+      "sha": "c0ffee5555555555555555555555555555555555",
+      "total_count": 2,
+      "repository": {
+        "id": 2000300,
+        "full_name": "parity-bot/pr-details"
+      },
+      "commit_url": "https://api.github.com/repos/parity-bot/pr-details/commits/c0ffee5555555555555555555555555555555555",
+      "url": "https://api.github.com/repos/parity-bot/pr-details/commits/c0ffee5555555555555555555555555555555555/status"
+    }
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup)."
+}

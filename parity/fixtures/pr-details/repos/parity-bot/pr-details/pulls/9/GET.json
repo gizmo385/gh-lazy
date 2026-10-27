@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/9"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/9",
+      "comments_url": "https://api.github.com/repos/parity-bot/pr-details/issues/9/comments",
+      "html_url": "https://github.com/parity-bot/pr-details/pull/9",
+      "id": 8300009,
+      "node_id": "PR_kwDOPrDetails0009",
+      "number": 9,
+      "title": "Clamp the cursor to the last line",
+      "user": {
+        "login": "parity-friend",
+        "id": 1000002,
+        "node_id": "U_kgDO1000002",
+        "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/parity-friend",
+        "html_url": "https://github.com/parity-friend",
+        "type": "User",
+        "site_admin": false
+      },
+      "state": "open",
+      "locked": false,
+      "assignee": null,
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-05T07:15:00Z",
+      "updated_at": "2026-02-05T07:15:00Z",
+      "closed_at": null,
+      "author_association": "CONTRIBUTOR",
+      "draft": false,
+      "body": "Fixes a crash when the file is empty.",
+      "diff_url": "https://github.com/parity-bot/pr-details/pull/9.diff",
+      "patch_url": "https://github.com/parity-bot/pr-details/pull/9.patch",
+      "issue_url": "https://api.github.com/repos/parity-bot/pr-details/issues/9",
+      "commits_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/9/commits",
+      "review_comments_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/9/comments",
+      "statuses_url": "https://api.github.com/repos/parity-bot/pr-details/statuses/c0ffee9999999999999999999999999999999999",
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "requested_reviewers": [],
+      "head": {
+        "label": "parity-friend:clamp",
+        "ref": "clamp",
+        "sha": "c0ffee9999999999999999999999999999999999",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDO1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        }
+      },
+      "base": {
+        "label": "parity-bot:main",
+        "ref": "main",
+        "sha": "0000000000000000000000000000000000000000",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        }
+      },
+      "merged": false,
+      "mergeable": null,
+      "comments": 0,
+      "review_comments": 0,
+      "commits": 1,
+      "additions": 2,
+      "deletions": 0,
+      "changed_files": 1
+    }
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup)."
+}

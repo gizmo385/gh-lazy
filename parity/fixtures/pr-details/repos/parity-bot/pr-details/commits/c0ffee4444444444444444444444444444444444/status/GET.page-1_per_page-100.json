@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/commits/c0ffee4444444444444444444444444444444444/status",
+    "query": {
+      "page": "1",
+      "per_page": "100"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "state": "pending",
+      "statuses": [],
+      "sha": "c0ffee4444444444444444444444444444444444",
+      "total_count": 0,
+      "repository": {
+        "id": 2000300,
+        "full_name": "parity-bot/pr-details"
+      },
+      "commit_url": "https://api.github.com/repos/parity-bot/pr-details/commits/c0ffee4444444444444444444444444444444444",
+      "url": "https://api.github.com/repos/parity-bot/pr-details/commits/c0ffee4444444444444444444444444444444444/status"
+    }
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup)."
+}

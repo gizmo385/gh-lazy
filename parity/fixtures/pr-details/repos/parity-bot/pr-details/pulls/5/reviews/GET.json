@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/5/reviews"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "id": 501,
+        "node_id": "PRR_kwDO501",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "body": "Looks close. One question inline.",
+        "state": "COMMENTED",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#pullrequestreview-501",
+        "pull_request_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+        "author_association": "OWNER",
+        "commit_id": "c0ffee5555555555555555555555555555555555",
+        "submitted_at": "2026-02-02T10:00:00Z"
+      },
+      {
+        "id": 502,
+        "node_id": "PRR_kwDO502",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDO1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        },
+        "body": "",
+        "state": "COMMENTED",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#pullrequestreview-502",
+        "pull_request_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+        "author_association": "CONTRIBUTOR",
+        "commit_id": "c0ffee5555555555555555555555555555555555",
+        "submitted_at": "2026-02-02T11:00:00Z"
+      },
+      {
+        "id": 503,
+        "node_id": "PRR_kwDO503",
+        "user": {
+          "login": "parity-reviewer",
+          "id": 1000003,
+          "node_id": "U_kgDO1000003",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-reviewer",
+          "html_url": "https://github.com/parity-reviewer",
+          "type": "User",
+          "site_admin": false
+        },
+        "body": "",
+        "state": "APPROVED",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#pullrequestreview-503",
+        "pull_request_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+        "author_association": "CONTRIBUTOR",
+        "commit_id": "c0ffee5555555555555555555555555555555555",
+        "submitted_at": "2026-02-02T12:00:00Z"
+      },
+      {
+        "id": 504,
+        "node_id": "PRR_kwDO504",
+        "user": {
+          "login": "parity-carol",
+          "id": 1000004,
+          "node_id": "U_kgDO1000004",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-carol",
+          "html_url": "https://github.com/parity-carol",
+          "type": "User",
+          "site_admin": false
+        },
+        "body": "Blocking until the tests pass.",
+        "state": "DISMISSED",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#pullrequestreview-504",
+        "pull_request_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+        "author_association": "CONTRIBUTOR",
+        "commit_id": "c0ffee5555555555555555555555555555555555",
+        "submitted_at": "2026-02-01T09:00:00Z"
+      },
+      {
+        "id": 505,
+        "node_id": "PRR_kwDO505",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "body": "Please add a test for the cursor.",
+        "state": "CHANGES_REQUESTED",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#pullrequestreview-505",
+        "pull_request_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+        "author_association": "OWNER",
+        "commit_id": "c0ffee5555555555555555555555555555555555",
+        "submitted_at": "2026-02-03T09:00:00Z"
+      },
+      {
+        "id": 506,
+        "node_id": "PRR_kwDO506",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "body": "",
+        "state": "PENDING",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#pullrequestreview-506",
+        "pull_request_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+        "author_association": "OWNER",
+        "commit_id": "c0ffee5555555555555555555555555555555555"
+      }
+    ]
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup). 502 is a body-less comment review (Py bug B10 hides it); 506 is pending, so its comments are never fetched."
+}

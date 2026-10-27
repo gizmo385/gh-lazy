@@ -1,0 +1,137 @@
+lazy-github-screen 1
+size 160x48
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                                                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Overview  Diff  Conversation                                                                 │
+│ ☆  parity-bot  pr-details   ✘                                ││━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     ✘                                ││┌──────────────────────────────────────────────────────────────────────────────────────────┐  │
+│ ☆  parity-bot  hello-world  ✘                                │││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│  │
+│ ☆  parity-bot  lazy-demo    ✘                                │││  ▼ Review from parity-bot (Commented)                                                    │  │
+│                                                              │││                                                                                          │  │
+│                                                              │││      Looks close. One question inline.                                                   │  │
+│                                                              │││                                                                                          │  │
+│                                                              │││    │ │ Should the cursor wrap at the end?                                                │  │
+│                                                              │││    │ │                                                                                   │  │
+│                                                              │││    │ │ parity-bot • Mon Feb  2 10:00:00 2026                                             │  │
+│                                                              │││    │ │                                                                                   │  │
+│                                                              │││    │                                                                                     │  │
+│                                                              │││    │ │ No, it stops at the last line.                                                    │  │
+│                                                              │││    │ │                                                                                   │  │
+│                                                              │││    │ │ parity-friend • Mon Feb  2 11:00:00 2026                                          │  │
+│                                                              │││    │ │                                                                                   │  │
+│                                                              │││    │                                                                                     │  │
+│                                                              │││                                                                                          │  │
+│                                                              │││                                                                                          │  │
+└──────────────────────────────────────────────────────────────┘│└──────────────────────────────────────────────────────────────────────────────────────────┘  │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│ #  Status  Author         Title                              ││  ▶ Review from parity-reviewer (Approved)                                                    │
+│ 5  open    parity-friend  Add a cursor to the viewer         ││                                                                                              │
+│ 4  closed  parity-bot     Drop the legacy renderer           ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│ 3  closed  parity-bot     Release 0.2.0                      ││  ▶ Review from parity-carol (Dismissed)                                                      │
+│ 2  open    parity-friend  Try a faster parser                ││                                                                                              │
+│                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│                                                              ││  ▼ Review from parity-bot (Changes Requested)                                                │
+│                                                              ││                                                                                              │
+│                                                              ││      Please add a test for the cursor.                                                       │
+│                                                              ││                                                                                              │
+│                                                              ││    │ │ This needs a test.                                                                    │
+│                                                              ││    │ │                                                                                       │
+│                                                              ││    │ │ parity-bot • Tue Feb  3 09:00:00 2026                                                 │
+│                                                              ││    │ │                                                                                       │
+│                                                              ││    │                                                                                         │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││ │ Rebased on main. @parity-bot ready for another look.                                       │
+│                                                              ││ │                                                                                            │
+│                                                              ││ │ parity-friend • Tue Feb  3 12:00:00 2026                                                   │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ r Reply to Review  n New Comment  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pallete  M Maximize  ? Keybindings
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+dfgffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde.hhhhhhhh..hhhh..bbbbbbbbbbbb.................................................................e
+diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiidejjjjjjjjjjjjjjjjjkkkkkkkkkkkkjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjje
+dlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnne
+dlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldemoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooomnne
+dlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldempqrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrqpppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................demppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................demppppppssssssssssssssssssssssssssssssssspppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................demppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................dempppptptpssssssssssssssssssssssssssssssssssppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................dempppptptpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................dempppptptpuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuupppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................dempppptptpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................dempppptpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................dempppptptpssssssssssssssssssssssssssssssppppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................dempppptptpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................dempppptptpuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................dempppptptpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................dempppptpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................demppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+d..............................................................demppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppmnne
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnne
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvnne
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdewwlllllllllllllllllllllllllllllllxxxxxxxxlwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwnne
+diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiidewwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwnne
+dlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvnne
+dlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldewwllllllllllllllllllllllllllllllllllllllwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwnne
+dlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldewwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwnne
+d..............................................................devvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvnne
+d..............................................................dewwllllllllllllllllllllllllllyyyyyyyyyyyyyyyyylwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwnne
+d..............................................................dewwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwnne
+d..............................................................dewwwwwwlllllllllllllllllllllllllllllllllwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwnne
+d..............................................................dewwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwnne
+d..............................................................dewwwwzwzwllllllllllllllllllwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwnne
+d..............................................................dewwwwzwzwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwnne
+d..............................................................dewwwwzwzwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwBBe
+d..............................................................dewwwwzwzwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwBBe
+d..............................................................dewwwwzwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwBBe
+d..............................................................dewwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwBBe
+d..............................................................dewwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwBBe
+d..............................................................de.C.bbbbbbbbbbbbbbbbbDDDDDDDDDDDbbbbbbbbbbbbbbbbbbbbbbbb.....................................BBe
+d..............................................................de.C..........................................................................................BBe
+d..............................................................de.C.EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE.................................................BBe
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+FFFGGGGGGGGGGGGGGGGFFFGGGGGGGGGGGGFFFFGGGGGGGGGGGFFFGGGGGGGGGGGGFFFGGGGGGGGGGGGGGGGGGGGGGFFFGGGGGFFFFGGGGGGGGGGGGGGGGFFFGGGGGGGGGFFFGGGGGGGGGGGGHHHHHHHHHHHHHHHH
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#adff2f bg=#121212
+d fg=#6db2ff bg=#121212
+e fg=#4ebf71 bg=#121212
+f fg=#e0e0e0 bg=#242f38 bold
+g fg=#98e024 bg=#242f38 bold
+h fg=#797979 bg=#121212
+i fg=#e0e0e0 bg=#153854
+j fg=#262626 bg=#121212
+k fg=#0178d4 bg=#121212
+l fg=#e0e0e0 bg=#1e1e1e
+m fg=#8fffac bg=#121212
+n fg=#003054 bg=#121212 inverse
+o fg=#121212 bg=#272727
+p bg=#272727
+q bg=#0178d4
+r fg=#ddedf9 bg=#0178d4 bold
+s fg=#e0e0e0 bg=#272727
+t fg=#333b42 bg=#272727
+u fg=#a8a8a8 bg=#272727
+v fg=#121212 bg=#1e1e1e
+w bg=#1e1e1e
+x fg=#adff2f bg=#1e1e1e
+y fg=#ff0000 bg=#1e1e1e
+z fg=#333b42 bg=#1e1e1e
+A fg=#a5a5a5 bg=#1e1e1e
+B fg=#e0e0e0 bg=#000000
+C fg=#333b42 bg=#121212
+D fg=#e0e0e0 bg=#121212 underline
+E fg=#a0a0a0 bg=#121212
+F fg=#ffa62b bg=#242f38 bold
+G fg=#e0e0e0 bg=#242f38
+H bg=#242f38

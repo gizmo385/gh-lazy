@@ -1,0 +1,14 @@
+# Written by `cargo xtask parity --record`. Don't edit.
+format = 1
+size = "160x48"
+captures = ["dialog", "empty-number", "unknown-number", "found"]
+
+[inputs]
+scenario = "dc1f4679c1c5dd3f37c5115f26ee43ccaf283664"
+fixtures = "610579837ec714ed44798c7cc6bb36acdd482add"
+python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
+harness = "a42709a8f63e18b6ffbf05888ac70df13205cac1"
+
+[recorded_with]
+python = "3.14.7"
+os = "linux"

@@ -1,0 +1,123 @@
+version = 1
+description = "PR Diff tab: the file filter, one section per file (modified, added, deleted), collapsed hunk sections, a hunk pane with the line cursor, and filtering by path"
+# Rust needs the diff viewer issues before this can gate.
+gate = false
+parity_rows = [
+    "pull-requests.diff-tab",
+    "diff-viewer.viewer",
+    "diff-viewer.file-filter",
+    "diff-viewer.file-header",
+    "diff-viewer.hunk-header",
+    "diff-viewer.hunk-pane",
+    "diff-viewer.line-cursor",
+    "diff-viewer.focus-ring",
+    "diff-viewer.diff-parser",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+# PR 5's diff: README.md (one hunk), assets/app.css (added), build.rs (Python shows it as uild.rs, Py bug B55),
+# docs/old.md (deleted) and src/viewer.rs (two hunks).
+fixtures = ["pr-details", "base"]
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "parity-friend", timeout_ms = 15000 }
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Opened on", timeout_ms = 15000 }
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "README.md", timeout_ms = 15000 }
+
+[[step]]
+capture = "files"
+
+# Tab: the diff's scroll area, the filter, the README.md section's title, its hunk's title; enter opens the hunk.
+[[step]]
+keys = ["tab", "tab", "tab", "tab", "enter"]
+
+[[step]]
+wait = { text = "Line: 1/6", timeout_ms = 5000 }
+
+[[step]]
+capture = "hunk-open"
+
+# Tab: the hunk pane. j moves the current line down twice, k up once.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+capture = "hunk-focused"
+
+[[step]]
+keys = ["j", "j", "k"]
+
+[[step]]
+wait = { text = "Line: 2/6", timeout_ms = 5000 }
+
+[[step]]
+capture = "line-cursor"
+
+# / focuses the filter; typing keeps only the files whose path contains the text.
+[[step]]
+keys = ["/"]
+
+[[step]]
+type = "view"
+
+[[step]]
+wait = { gone = "README.md", timeout_ms = 5000 }
+
+[[step]]
+capture = "filtered"
+
+# Escape clears the filter and leaves it.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "README.md", timeout_ms = 5000 }
+
+[[step]]
+capture = "filter-cleared"
+
+[expect.files]
+tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Diff" }
+contains = [
+    "Filter files (press '/' to focus, ESC to clear)",
+    "▼ 📄 README.md (+3 -1)",
+    "▶ Lines 3-7 (+3 -1) • A tiny pager.",
+    "▼ 📄 app.css (+3)",
+    "▶ Lines 1-3 (+3)",
+    "uild.rs (+1)",
+]
+not_contains = ["Traceback"]
+
+[expect.hunk-open]
+contains = ["▼ Lines 3-7 (+3 -1) • A tiny pager.", "## Usage", "Line: 1/6"]
+
+[expect.hunk-focused]
+contains = ["j Line down", "k Line up"]
+
+[expect.filtered]
+contains = ["▼ 📄 viewer.rs (+5 -2)"]
+not_contains = ["README.md", "app.css"]

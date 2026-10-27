@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/9",
+    "accept": "diff"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain; charset=utf-8"
+    },
+    "body_text": "diff --git a/src/viewer.rs b/src/viewer.rs\nindex 2222222..9999999 100644\n--- a/src/viewer.rs\n+++ b/src/viewer.rs\n@@ -30,3 +30,5 @@ impl Viewer {\n     pub fn down(&mut self) {\n-        self.cursor += 1;\n+        if self.cursor + 1 < self.lines.len() {\n+            self.cursor += 1;\n+        }\n     }\n"
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup)."
+}

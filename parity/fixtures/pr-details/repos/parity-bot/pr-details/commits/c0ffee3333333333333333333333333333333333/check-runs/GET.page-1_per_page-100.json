@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/commits/c0ffee3333333333333333333333333333333333/check-runs",
+    "query": {
+      "page": "1",
+      "per_page": "100"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "total_count": 2,
+      "check_runs": [
+        {
+          "id": 9300011,
+          "name": "build",
+          "node_id": "CR_kwDO9300011",
+          "head_sha": "c0ffee3333333333333333333333333333333333",
+          "external_id": "",
+          "url": "https://api.github.com/repos/parity-bot/pr-details/check-runs/9300011",
+          "html_url": "https://github.com/parity-bot/pr-details/runs/9300011",
+          "details_url": "https://github.com/parity-bot/pr-details/runs/9300011",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-02-01T09:00:00Z",
+          "completed_at": "2026-02-01T09:04:00Z",
+          "output": {
+            "title": null,
+            "summary": null,
+            "text": null,
+            "annotations_count": 0,
+            "annotations_url": ""
+          },
+          "check_suite": {
+            "id": 9200000
+          },
+          "app": null,
+          "pull_requests": []
+        },
+        {
+          "id": 9300012,
+          "name": "test",
+          "node_id": "CR_kwDO9300012",
+          "head_sha": "c0ffee3333333333333333333333333333333333",
+          "external_id": "",
+          "url": "https://api.github.com/repos/parity-bot/pr-details/check-runs/9300012",
+          "html_url": "https://github.com/parity-bot/pr-details/runs/9300012",
+          "details_url": "https://github.com/parity-bot/pr-details/runs/9300012",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-02-01T09:00:00Z",
+          "completed_at": "2026-02-01T09:04:00Z",
+          "output": {
+            "title": null,
+            "summary": null,
+            "text": null,
+            "annotations_count": 0,
+            "annotations_url": ""
+          },
+          "check_suite": {
+            "id": 9200000
+          },
+          "app": null,
+          "pull_requests": []
+        }
+      ]
+    }
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup)."
+}

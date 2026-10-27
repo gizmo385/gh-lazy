@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/3/reviews"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "id": 301,
+        "node_id": "PRR_kwDO301",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDO1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        },
+        "body": "Ship it.",
+        "state": "APPROVED",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/3#pullrequestreview-301",
+        "pull_request_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/3",
+        "author_association": "CONTRIBUTOR",
+        "commit_id": "c0ffee3333333333333333333333333333333333",
+        "submitted_at": "2026-01-12T15:00:00Z"
+      }
+    ]
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup)."
+}

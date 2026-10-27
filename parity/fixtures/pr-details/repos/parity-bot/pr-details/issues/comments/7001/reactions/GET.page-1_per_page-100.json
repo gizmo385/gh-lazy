@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/issues/comments/7001/reactions",
+    "query": {
+      "page": "1",
+      "per_page": "100"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "id": 21,
+        "node_id": "REA_21",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "content": "+1",
+        "created_at": "2026-02-02T08:00:00Z"
+      },
+      {
+        "id": 22,
+        "node_id": "REA_22",
+        "user": {
+          "login": "parity-reviewer",
+          "id": 1000003,
+          "node_id": "U_kgDO1000003",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-reviewer",
+          "html_url": "https://github.com/parity-reviewer",
+          "type": "User",
+          "site_admin": false
+        },
+        "content": "rocket",
+        "created_at": "2026-02-02T08:00:00Z"
+      }
+    ]
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup)."
+}

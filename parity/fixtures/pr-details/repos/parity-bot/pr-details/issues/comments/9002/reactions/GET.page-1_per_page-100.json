@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/issues/comments/9002/reactions",
+    "query": {
+      "page": "1",
+      "per_page": "100"
+    }
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "message": "Not Found",
+      "documentation_url": "https://docs.github.com/rest/reactions/reactions",
+      "status": "404"
+    }
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup). Python asks for a review comment's reactions on the issue-comment endpoint, where its id doesn't exist (Py bug B54)."
+}

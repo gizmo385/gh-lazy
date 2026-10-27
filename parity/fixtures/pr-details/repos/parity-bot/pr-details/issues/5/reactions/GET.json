@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/issues/5/reactions"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "id": 1,
+        "node_id": "REA_1",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "content": "+1",
+        "created_at": "2026-02-02T08:00:00Z"
+      },
+      {
+        "id": 2,
+        "node_id": "REA_2",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDO1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        },
+        "content": "+1",
+        "created_at": "2026-02-02T08:00:00Z"
+      },
+      {
+        "id": 3,
+        "node_id": "REA_3",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "content": "hooray",
+        "created_at": "2026-02-02T08:00:00Z"
+      },
+      {
+        "id": 4,
+        "node_id": "REA_4",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "content": "eyes",
+        "created_at": "2026-02-02T08:00:00Z"
+      },
+      {
+        "id": 5,
+        "node_id": "REA_5",
+        "user": {
+          "login": "parity-reviewer",
+          "id": 1000003,
+          "node_id": "U_kgDO1000003",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-reviewer",
+          "html_url": "https://github.com/parity-reviewer",
+          "type": "User",
+          "site_admin": false
+        },
+        "content": "eyes",
+        "created_at": "2026-02-02T08:00:00Z"
+      },
+      {
+        "id": 6,
+        "node_id": "REA_6",
+        "user": {
+          "login": "parity-carol",
+          "id": 1000004,
+          "node_id": "U_kgDO1000004",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-carol",
+          "html_url": "https://github.com/parity-carol",
+          "type": "User",
+          "site_admin": false
+        },
+        "content": "eyes",
+        "created_at": "2026-02-02T08:00:00Z"
+      },
+      {
+        "id": 7,
+        "node_id": "REA_7",
+        "user": {
+          "login": "parity-dave",
+          "id": 1000005,
+          "node_id": "U_kgDO1000005",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-dave",
+          "html_url": "https://github.com/parity-dave",
+          "type": "User",
+          "site_admin": false
+        },
+        "content": "eyes",
+        "created_at": "2026-02-02T08:00:00Z"
+      }
+    ]
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup). Users in ascending id order: Python lists them in set order, which is the same here."
+}

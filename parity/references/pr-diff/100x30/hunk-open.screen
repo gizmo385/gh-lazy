@@ -1,0 +1,116 @@
+lazy-github-screen 1
+size 100x30
+cursor 7 45 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────┐
+│ ★  Owner       Name         Private  ││ Overview  Diff  Conversation                             │
+│ ☆  parity-bot  pr-details   ✘        ││━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     ✘        ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  │
+│ ☆  parity-bot  hello-world  ✘        ││▊  Filter files (press '/' to focus, ESC to clear)     ▎  │
+│ ☆  parity-bot  lazy-demo    ✘        ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  │
+│                                      ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│                                      ││  ▼ 📄 README.md (+3 -1)                                  │
+│                                      ││                                                          │
+│                                      ││    ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│                                      ││      ▼ Lines 3-7 (+3 -1) • A tiny pager.               ▅▅│
+│                                      ││                                                          │
+└──────────────────────────────────────┘│                                                          │
+┌─ [2] Pull Requests ──────────────────┐│        ┌──────────────────────────────────────────────┐  │
+│ #  Status  Author         Title      ││        │►    1 │ ## Usage                             │  │
+│ 5  open    parity-friend  Add a curso││        │     2 │                                      │  │
+│ 4  closed  parity-bot     Drop the le││        │     3 │ Run `viewer FILE`.                   │  │
+│ 3  closed  parity-bot     Release 0.2││        │     4 │ Run `viewer FILE`, then press `j` a  │  │
+│ 2  open    parity-friend  Try a faste││        │     5 │                                      │  │
+│                          ▊           ││        │     6 │ The current line is marked with `>`  │  │
+│                                      ││        │         ▍                                    │  │
+│                                      ││        │                                    Line: 1/6 │  │
+│                                      ││        └──────────────────────────────────────────────┘  │
+│                                      ││                                                          │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link  f Follow link  F Follow link (browser)
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+dfgffffffffffffffffffffffffffffffffffffde.hhhhhhhh..bbbb..hhhhhhhhhhhh.............................e
+diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiidejjjjjjjjjjjkkkkjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjje
+dlllllllllllllllllllllllllllllllllllllldemnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnoppe
+dlllllllllllllllllllllllllllllllllllllldemqqrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrlllqqoppe
+dlllllllllllllllllllllllllllllllllllllldemnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnoppe
+d......................................dessssssssssssssssssssssssssssssssssssssssssssssssssssssssppe
+d......................................dettuuuvuuuuuuuuuuuuwwuxxuttttttttttttttttttttttttttttttttppe
+d......................................dettttttttttttttttttttttttttttttttttttttttttttttttttttttttppe
+d......................................dettttssssssssssssssssssssssssssssssssssssssssssssssssssssppe
+d......................................detttttyzzzzzzzzzzzzzAAzBBzzzzzzzzzzzzzzzzzyttttttttttttttCCe
+d......................................dettttttttttttttttttttttttttttttttttttttttttttttttttttttttDDe
+ddddddddddddddddddddddddddddddddddddddddettttttttttttttttttttttttttttttttttttttttttttttttttttttttDDe
+ddddddddddddddddddddddddddddddddddddddddettttttttEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEDDe
+dffffffffffffffffffffffffffffffffffffffdettttttttElllllllllFFFFFFFFGGGGGGGGGGGGGGGGGGGGGGGGGGGDDEDDe
+diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiidettttttttElllllllllHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHDDEDDe
+dlllllllllllllllllllllllllllllllllllllldettttttttElllllllllIIIIJJJJJJJJJJJJJIKKKKKKKKKKKKKKKKKDDEDDe
+dlllllllllllllllllllllllllllllllllllllldettttttttElllllllllLLLLMMMMMMMMMMMMMLLLLLLLLLLLLLMMMLLDDEDDe
+dlllllllllllllllllllllllllllllllllllllldettttttttElllllllllNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNDDEDDe
+dOOOOOOOOOOOOOOOOOOOOOOOOOOPDDDDDDDDDDDdettttttttElllllllllLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLMMMDDEDDe
+d......................................dettttttttEOOOOOOOOOPDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDQQEDDe
+d......................................dettttttttERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRSSSSSSSSSREDDe
+d......................................dettttttttEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEDDe
+d......................................dettttttttttttttttttttttttttttttttttttttttttttttttttttttttDDe
+d......................................dettttttttttttttttttttttttttttttttttttttttttttttttttttttttDDe
+ddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+TTTUUUUUUUUUUTTTUUUUUUUUUUUUUUTTTUUUUUUUUUUUUUTTTTUUUUUUUUUUUTTTUUUUUUUUUUUUTTTUUUUUUUUUUUUUUUUUUUUU
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#adff2f bg=#121212
+d fg=#6db2ff bg=#121212
+e fg=#4ebf71 bg=#121212
+f fg=#e0e0e0 bg=#242f38 bold
+g fg=#98e024 bg=#242f38 bold
+h fg=#797979 bg=#121212
+i fg=#e0e0e0 bg=#153854
+j fg=#262626 bg=#121212
+k fg=#0178d4 bg=#121212
+l fg=#e0e0e0 bg=#1e1e1e
+m fg=#191919 bg=#121212 inverse
+n fg=#191919 bg=#1e1e1e
+o fg=#191919 bg=#121212
+p fg=#003054 bg=#121212 inverse
+q bg=#1e1e1e
+r fg=#737373 bg=#1e1e1e
+s fg=#121212 bg=#272727
+t bg=#272727
+u fg=#e0e0e0 bg=#272727
+v default
+w fg=#98e024 bg=#272727
+x fg=#f4005f bg=#272727
+y bg=#0178d4
+z fg=#ddedf9 bg=#0178d4 bold
+A fg=#98e024 bg=#0178d4 bold
+B fg=#f4005f bg=#0178d4 bold
+C fg=#003054 bg=#000000 inverse
+D fg=#e0e0e0 bg=#000000
+E fg=#368ae9 bg=#272727
+F fg=#959077 bg=#fd971f
+G fg=#e0e0e0 bg=#fd971f
+H fg=#e0e0e0 bg=#272822
+I fg=#f8f8f2 bg=#3a0a0a
+J fg=#e6db74 bg=#3a0a0a
+K fg=#e0e0e0 bg=#3a0a0a
+L fg=#f8f8f2 bg=#0a3a0a
+M fg=#e6db74 bg=#0a3a0a
+N fg=#e0e0e0 bg=#0a3a0a
+O fg=#003054 bg=#1e1e1e inverse
+P fg=#003054 bg=#000000
+Q bg=#000000
+R bg=#fea62b
+S fg=#211505 bg=#fea62b
+T fg=#ffa62b bg=#242f38 bold
+U fg=#e0e0e0 bg=#242f38
+--- cells
+10 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│"," "," ","▼"," ","📄",""," ","R","E","A","D","M","E",".","m","d"," ","(","+","3"," ","-","1",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/4",
+    "accept": "diff"
+  },
+  "response": {
+    "status": 406,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "message": "Sorry, the diff exceeded the maximum number of lines (20000)",
+      "errors": [
+        {
+          "resource": "PullRequest",
+          "field": "diff",
+          "code": "too_large"
+        }
+      ],
+      "documentation_url": "https://docs.github.com/rest/pulls/pulls#get-a-pull-request",
+      "status": "406"
+    }
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup). PR 4's diff is too large: Python's gh backend shows Error fetching diff (0) (Py bug B56)."
+}

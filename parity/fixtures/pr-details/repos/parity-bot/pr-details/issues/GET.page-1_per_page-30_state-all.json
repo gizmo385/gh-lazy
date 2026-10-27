@@ -1,0 +1,189 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/issues",
+    "query": {
+      "page": "1",
+      "per_page": "30",
+      "state": "all"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/issues/5",
+        "repository_url": "https://api.github.com/repos/parity-bot/pr-details",
+        "comments_url": "https://api.github.com/repos/parity-bot/pr-details/issues/5/comments",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5",
+        "id": 8300005,
+        "node_id": "PR_kwDOPrDetails0005",
+        "number": 5,
+        "title": "Add a cursor to the viewer",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDO1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        },
+        "labels": [],
+        "state": "open",
+        "locked": false,
+        "assignee": null,
+        "assignees": [],
+        "milestone": null,
+        "comments": 0,
+        "created_at": "2026-02-01T08:30:00Z",
+        "updated_at": "2026-02-01T08:30:00Z",
+        "closed_at": null,
+        "author_association": "CONTRIBUTOR",
+        "draft": false,
+        "pull_request": {
+          "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+          "html_url": "https://github.com/parity-bot/pr-details/pull/5",
+          "diff_url": "https://github.com/parity-bot/pr-details/pull/5.diff",
+          "patch_url": "https://github.com/parity-bot/pr-details/pull/5.patch",
+          "merged_at": null
+        },
+        "body": "Adds a cursor to the viewer, as discussed in #3.\n\n- `j` and `k` move it\n- the current line is marked with `>`\n\nThanks @parity-bot for the first review!\n",
+        "closed_by": null
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/issues/4",
+        "repository_url": "https://api.github.com/repos/parity-bot/pr-details",
+        "comments_url": "https://api.github.com/repos/parity-bot/pr-details/issues/4/comments",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/4",
+        "id": 8300004,
+        "node_id": "PR_kwDOPrDetails0004",
+        "number": 4,
+        "title": "Drop the legacy renderer",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "labels": [],
+        "state": "closed",
+        "locked": false,
+        "assignee": null,
+        "assignees": [],
+        "milestone": null,
+        "comments": 0,
+        "created_at": "2026-01-20T09:00:00Z",
+        "updated_at": "2026-01-25T17:45:00Z",
+        "closed_at": "2026-01-25T17:45:00Z",
+        "author_association": "OWNER",
+        "draft": false,
+        "pull_request": {
+          "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/4",
+          "html_url": "https://github.com/parity-bot/pr-details/pull/4",
+          "diff_url": "https://github.com/parity-bot/pr-details/pull/4.diff",
+          "patch_url": "https://github.com/parity-bot/pr-details/pull/4.patch",
+          "merged_at": null
+        },
+        "body": "Superseded by the new renderer.",
+        "closed_by": null
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/issues/3",
+        "repository_url": "https://api.github.com/repos/parity-bot/pr-details",
+        "comments_url": "https://api.github.com/repos/parity-bot/pr-details/issues/3/comments",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/3",
+        "id": 8300003,
+        "node_id": "PR_kwDOPrDetails0003",
+        "number": 3,
+        "title": "Release 0.2.0",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "labels": [],
+        "state": "closed",
+        "locked": false,
+        "assignee": null,
+        "assignees": [],
+        "milestone": null,
+        "comments": 0,
+        "created_at": "2026-01-10T14:00:00Z",
+        "updated_at": "2026-01-12T16:20:00Z",
+        "closed_at": "2026-01-12T16:20:00Z",
+        "author_association": "OWNER",
+        "draft": false,
+        "pull_request": {
+          "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/3",
+          "html_url": "https://github.com/parity-bot/pr-details/pull/3",
+          "diff_url": "https://github.com/parity-bot/pr-details/pull/3.diff",
+          "patch_url": "https://github.com/parity-bot/pr-details/pull/3.patch",
+          "merged_at": "2026-01-12T16:20:00Z"
+        },
+        "body": null,
+        "closed_by": null
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/issues/2",
+        "repository_url": "https://api.github.com/repos/parity-bot/pr-details",
+        "comments_url": "https://api.github.com/repos/parity-bot/pr-details/issues/2/comments",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/2",
+        "id": 8300002,
+        "node_id": "PR_kwDOPrDetails0002",
+        "number": 2,
+        "title": "Try a faster parser",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDO1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        },
+        "labels": [],
+        "state": "open",
+        "locked": false,
+        "assignee": null,
+        "assignees": [],
+        "milestone": null,
+        "comments": 0,
+        "created_at": "2026-01-05T11:00:00Z",
+        "updated_at": "2026-01-05T11:00:00Z",
+        "closed_at": null,
+        "author_association": "CONTRIBUTOR",
+        "draft": true,
+        "pull_request": {
+          "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/2",
+          "html_url": "https://github.com/parity-bot/pr-details/pull/2",
+          "diff_url": "https://github.com/parity-bot/pr-details/pull/2.diff",
+          "patch_url": "https://github.com/parity-bot/pr-details/pull/2.patch",
+          "merged_at": null
+        },
+        "body": null,
+        "closed_by": null
+      }
+    ]
+  },
+  "note": "Hand-written for the PR details scenarios (pr-overview, pr-diff, pr-lookup). Page 1 of list_issues: PRs 5 (open), 4 (closed), 3 (merged) and 2 (draft). PR 9 is missing on purpose, as if opened after the list was fetched: pr-lookup looks it up."
+}

@@ -1,0 +1,243 @@
+version = 1
+description = "PR details: selecting a PR shows the Overview, Diff and Conversation tabs; the Overview's header, collapsible reactions, checks and reviews; the Conversation's reviews, threads and comments; a closed PR with nothing; a PR that fails to load"
+# Rust needs the PR details issues (tracking issue in the parity matrix rows below) before this can gate.
+gate = false
+parity_rows = [
+    "pull-requests.select",
+    "pull-requests.select-loading",
+    "pull-requests.details-tabs",
+    "pull-requests.overview-header",
+    "pull-requests.overview-change-summary",
+    "pull-requests.overview-dates",
+    "pull-requests.overview-body",
+    "pull-requests.overview-reactions",
+    "pull-requests.overview-checks",
+    "pull-requests.overview-reviews",
+    "pull-requests.overview-focus",
+    "pull-requests.collapsible",
+    "pull-requests.conversation-tab",
+    "pull-requests.conversation-focus",
+    "pull-requests.comment-block",
+    "pull-requests.comment-reactions",
+    "pull-requests.diff-tab",
+    "main-layout.details-title",
+    "toasts.error-fetching-pr",
+]
+sizes = [[160, 48]]
+
+[env]
+# pr-details adds parity-bot/pr-details as the first repo, with PRs 5 (open: checks, reactions, reviews, comments), 4
+# (closed, with nothing), 3 (merged) and 2 (fails to load). Issues and Workflows are hidden so the boxes match while
+# Rust's sections are still stubs, as in repo-lists.
+fixtures = ["pr-details", "base"]
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Add a cursor to the viewer", timeout_ms = 15000 }
+
+# Python drops an enter that follows a focus key at once, so the PR table gets a moment to take focus.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["enter"]
+
+# The full PR arrives after 1 s. Then the reactions, checks and reviews titles replace their placeholders as each
+# request answers. Python sometimes cuts a replaced title to its placeholder's width (Py bug B57), so the waits and
+# [expect] only look at the start of each title.
+[[step]]
+wait = { text = "PR Reviews", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Status checks:", timeout_ms = 5000 }
+
+[[step]]
+wait = { text = "👍 2", timeout_ms = 5000 }
+
+# The tab strip has focus. No capture checks `tabs` right after a selection: Python sometimes draws the Details tab
+# underline zero-width then (#209), so the tab names are in [expect] `contains`.
+[[step]]
+capture = "overview"
+checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+
+# Tab: the body, then the reactions title; enter opens it. (Further stops depend on load order in Python, so the
+# scenario stops here; the unit tests cover the rest of the ring.)
+[[step]]
+keys = ["tab", "tab", "enter"]
+
+[[step]]
+wait = { text = "👀: parity-bot", timeout_ms = 5000 }
+
+[[step]]
+capture = "overview-expanded"
+checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+
+[[step]]
+keys = ["5", "right", "right"]
+
+[[step]]
+wait = { text = "Review from parity-bot", timeout_ms = 5000 }
+
+[[step]]
+capture = "conversation"
+
+# Tab: the conversation's scroll area, then the first review's title, which draws a border around the review.
+[[step]]
+keys = ["tab", "tab"]
+
+[[step]]
+capture = "conversation-review-focused"
+
+# Then the first comment of its thread.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+capture = "conversation-comment-focused"
+
+# PR 4: closed, no checks, reactions or reviews, a diff too large to fetch, no conversation.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait = { text = "Drop the legacy renderer (#4)", timeout_ms = 15000 }
+
+[[step]]
+capture = "overview-closed"
+checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+
+[[step]]
+keys = ["right"]
+
+# Python shows "Error fetching diff (0)" for any failure with the gh backend; Rust shows "Diff too large" (Py bug B56).
+[[step]]
+wait = { regex = "Error fetching diff|Diff too large", timeout_ms = 5000 }
+
+[[step]]
+capture = "diff-error"
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "No reviews or comments available", timeout_ms = 5000 }
+
+[[step]]
+capture = "conversation-empty"
+
+# PR 3: merged, checks passed, approved.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait = { text = "Merged Release 0.2.0 (#3)", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "PR Reviews", timeout_ms = 5000 }
+
+[[step]]
+wait = { text = "Status checks:", timeout_ms = 5000 }
+
+[[step]]
+capture = "overview-merged"
+checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+
+# PR 2 fails to load: a toast, and the details keep showing PR 3.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait = { text = "Error fetching pull request!", timeout_ms = 15000 }
+
+[[step]]
+capture = "fetch-error"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+[expect.overview]
+contains = [
+    "Overview  Diff  Conversation",
+    "Open Add a cursor to the viewer (#5) by parity-friend",
+    "3 commits • 5 files changed • +12 • -6 • parity-friend:cursor → parity-bot:main",
+    "Opened on Sun Feb  1 08:30:00 2026",
+    "▶ 👍 2 | 🎉 1 | 👀 4",
+    "▶ Status checks:",
+    "▶ PR Reviews",
+    "Adds a cursor to the viewer, as discussed in #3.",
+]
+not_contains = ["Traceback"]
+
+[expect.overview-expanded]
+contains = [
+    "▼ 👍 2 | 🎉 1 | 👀 4",
+    "👍: parity-bot, parity-friend",
+    "👀: parity-bot, parity-reviewer, parity-carol, and 1 more",
+    "▶ Status checks:",
+]
+
+[expect.conversation]
+tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Conversation" }
+contains = [
+    "▼ Review from parity-bot (Commented)",
+    "Looks close. One question inline.",
+    "Should the cursor wrap at the end?",
+    "parity-bot • Mon Feb  2 10:00:00 2026",
+    "No, it stops at the last line.",
+    "▶ Review from parity-reviewer (Approved)",
+    "▶ Review from parity-carol (Dismissed)",
+]
+
+[expect.conversation-comment-focused]
+contains = ["r Reply to Comment", "n New Comment"]
+
+[expect.overview-closed]
+contains = [
+    "closed Drop the legacy renderer (#4) by parity-bot",
+    "1 commit • 1 file changed • +0 • -12 • parity-bot:drop-legacy → parity-bot:main",
+    "Superseded by the new renderer.",
+]
+not_contains = ["Status checks", "PR Reviews"]
+
+[expect.diff-error]
+tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Diff" }
+
+[expect.conversation-empty]
+tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Conversation" }
+
+[expect.overview-merged]
+contains = [
+    "Merged Release 0.2.0 (#3) by parity-bot",
+    "Opened on Sat Jan 10 14:00:00 2026 • Merged on Mon Jan 12 16:20:00 2026",
+    "▶ 🎉 2",
+    "▶ Status checks:",
+    "▶ PR Reviews",
+]
+
+[expect.fetch-error]
+contains = ["API Error", "[5] PR #3 Details"]

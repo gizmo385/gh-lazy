@@ -10,13 +10,16 @@ mod focus;
 mod frame;
 mod lookup;
 mod stack;
+mod user_profile;
 
 use ratatui::layout::Rect;
 
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Component, Cx, Owner};
 use crate::components::button::BUTTON_BINDINGS;
+use crate::components::info::INFO_BINDINGS;
 use crate::components::switch::SWITCH_BINDINGS;
+use crate::components::table::TABLE_BINDINGS;
 use crate::components::text_input::INPUT_BINDINGS;
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::BindingId;
@@ -27,6 +30,7 @@ pub use focus::{FocusMove, FocusRing};
 pub use frame::{DIM_FACTOR, DialogFrame, dim, frame_rect};
 pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup};
 pub use stack::ModalEntry;
+pub use user_profile::{UserProfileAction, UserProfileDialog};
 
 /// Textual's `Screen.BINDINGS`, which every modal screen has before the dialog's own: `tab`, `shift+tab` and the
 /// `ctrl+c` copy. A dialog's [`Component::bindings`] starts with these; [`dialog_bindings!`] writes them.
@@ -63,6 +67,8 @@ pub enum ModalKind {
     Confirm,
     /// A [`LookupDialog`], by what it looks up.
     Lookup(LookupTarget),
+    /// [`UserProfileDialog`]: a user's profile and recent repos.
+    UserProfile,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -78,6 +84,10 @@ pub enum FieldKind {
     Button,
     /// Textual's `Switch`: `enter` or `space` toggles it.
     Switch,
+    /// Textual's `ScrollableContainer`: the scroll keys scroll it.
+    Scroll,
+    /// Textual's `DataTable`, with the vim keys: `enter` selects the cursor's row.
+    Table,
 }
 
 impl FieldKind {
@@ -87,6 +97,8 @@ impl FieldKind {
             FieldKind::TextInput => INPUT_BINDINGS,
             FieldKind::Button => BUTTON_BINDINGS,
             FieldKind::Switch => SWITCH_BINDINGS,
+            FieldKind::Scroll => INFO_BINDINGS,
+            FieldKind::Table => TABLE_BINDINGS,
         };
         ChainLink::new(Owner::DialogField(kind, self), bindings)
     }
@@ -99,6 +111,8 @@ pub enum DialogAction {
     Confirm(ConfirmAction),
     /// A [`LookupDialog`]'s, by what it looks up.
     Lookup(LookupTarget, LookupAction),
+    /// [`UserProfileDialog`]'s.
+    UserProfile(UserProfileAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -109,6 +123,7 @@ impl DialogAction {
         match *self {
             DialogAction::Confirm(_) => ModalKind::Confirm,
             DialogAction::Lookup(target, _) => ModalKind::Lookup(target),
+            DialogAction::UserProfile(_) => ModalKind::UserProfile,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }

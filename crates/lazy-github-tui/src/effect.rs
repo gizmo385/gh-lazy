@@ -8,7 +8,7 @@ use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
-use lazy_github_core::models::{IssueListItem, RepoName, Repository, User, Workflow, WorkflowRun};
+use lazy_github_core::models::{FullUser, IssueListItem, RepoName, Repository, User, Workflow, WorkflowRun};
 
 /// Something the runtime does on the app's behalf.
 #[derive(Debug, Clone, PartialEq)]
@@ -144,6 +144,10 @@ pub enum GithubRequest {
         /// The pull request's number.
         number: u64,
     },
+    /// [`Github::user`] with this login.
+    User(String),
+    /// [`Github::user_repos`] with this login.
+    UserRepos(String),
 }
 
 /// The result of a [`GithubRequest`], in the variant of the same name.
@@ -169,6 +173,10 @@ pub enum GithubResponse {
     ListWorkflowRuns(Result<Vec<WorkflowRun>, GhError>),
     /// [`Github::pull_request_diff`].
     PullRequestDiff(Result<String, DiffFetchError>),
+    /// [`Github::user`], boxed to keep this enum small.
+    User(Result<Box<FullUser>, GhError>),
+    /// [`Github::user_repos`].
+    UserRepos(Result<Vec<Repository>, GhError>),
 }
 
 impl GithubRequest {
@@ -197,6 +205,8 @@ impl GithubRequest {
             GithubRequest::PullRequestDiff { repo, number } => {
                 GithubResponse::PullRequestDiff(gh.pull_request_diff(&repo, number).await)
             }
+            GithubRequest::User(login) => GithubResponse::User(gh.user(&login).await.map(Box::new)),
+            GithubRequest::UserRepos(login) => GithubResponse::UserRepos(gh.user_repos(&login).await),
         }
     }
 }

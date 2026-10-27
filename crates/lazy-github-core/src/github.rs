@@ -15,7 +15,7 @@ use tokio::sync::OnceCell;
 
 use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts};
-use crate::models::{IssueListItem, Repository, User, Workflow, WorkflowRun};
+use crate::models::{FullUser, IssueListItem, Repository, User, Workflow, WorkflowRun};
 
 #[cfg(any(test, feature = "test-util"))]
 mod fake;
@@ -110,6 +110,18 @@ pub trait Github: Clone + Send + Sync + 'static {
         repo: &Repository,
         number: u64,
     ) -> impl Future<Output = Result<String, DiffFetchError>> + Send;
+
+    /// The whole profile of the user or organization `login`. Never cached.
+    ///
+    /// Fails on any HTTP error status (a 404 for an unknown login) or `gh` failure, or with [`GhError::Decode`] when
+    /// the body doesn't decode.
+    fn user(&self, login: &str) -> impl Future<Output = Result<FullUser, GhError>> + Send;
+
+    /// The first page of `login`'s public repositories, most recently updated first ([`DEFAULT_PER_PAGE`] of them).
+    /// Cached for `cache.list_repos_ttl`.
+    ///
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when any repository doesn't decode.
+    fn user_repos(&self, login: &str) -> impl Future<Output = Result<Vec<Repository>, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -491,6 +503,24 @@ impl GhCli {
         request
     }
 
+    /// `GET /users/{login}`, uncached: Python sends no `Cache-Control` here.
+    fn user_request(login: &str) -> GhRequest {
+        GhRequest::get(format!("/users/{login}"))
+    }
+
+    /// `GET /users/{login}/repos`, one page, cached for `cache.list_repos_ttl` as Python's `list_repos_for_user`.
+    fn user_repos_request(&self, login: &str) -> GhRequest {
+        let mut request = GhRequest::get(format!("/users/{login}/repos"));
+        // Python's order, so both apps' request logs read the same.
+        request.query = vec![
+            ("sort".to_owned(), RepoSort::Updated.as_str().to_owned()),
+            ("direction".to_owned(), SortDirection::Desc.as_str().to_owned()),
+            ("per_page".to_owned(), DEFAULT_PER_PAGE.to_string()),
+        ];
+        request.cache = Some(self.inner.ttls.list_repos);
+        request
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -581,6 +611,14 @@ impl Github for GhCli {
     async fn pull_request_diff(&self, repo: &Repository, number: u64) -> Result<String, DiffFetchError> {
         let request = self.pull_request_diff_request(repo, number);
         diff_text(self.inner.runner.request(request).await)
+    }
+
+    async fn user(&self, login: &str) -> Result<FullUser, GhError> {
+        self.inner.runner.request(Self::user_request(login)).await?.json()
+    }
+
+    async fn user_repos(&self, login: &str) -> Result<Vec<Repository>, GhError> {
+        self.inner.runner.request(self.user_repos_request(login)).await?.json()
     }
 }
 
@@ -1371,8 +1409,52 @@ mod tests {
         );
     }
 
+    #[test]
+    fn user_argv_has_no_cache() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        assert_eq!(
+            strings(GhCli::user_request("parity-bot").argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/users/parity-bot"
+            ]
+        );
+    }
+
+    #[test]
+    fn user_repos_argv_in_python_order_with_the_list_repos_ttl() {
+        let mut config = Config::default();
+        config.cache.list_repos_ttl = 120;
+        let gh = GhCli::new(GhCliOptions::from(&config));
+        assert_eq!(
+            strings(gh.user_repos_request("parity-bot").argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--cache",
+                "120s",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/users/parity-bot/repos?sort=updated&direction=desc&per_page=30"
+            ]
+        );
+    }
+
     fn diff_response(status: &str, body: &str) -> Result<GhResponse, GhError> {
         let stdout = format!("HTTP/2.0 {status}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n{body}");
+        let exit = i32::from(!status.starts_with('2'));
+        gh::interpret(Some(exit), stdout.as_bytes(), b"", false)
+    }
+
+    fn json_response(status: &str, body: &str) -> Result<GhResponse, GhError> {
+        let stdout = format!("HTTP/2.0 {status}\r\nContent-Type: application/json\r\n\r\n{body}");
         let exit = i32::from(!status.starts_with('2'));
         gh::interpret(Some(exit), stdout.as_bytes(), b"", false)
     }
@@ -1407,5 +1489,50 @@ mod tests {
             diff_text(Err(GhError::NotInstalled)),
             Err(DiffFetchError::Gh(GhError::NotInstalled))
         ));
+    }
+
+    #[test]
+    fn user_responses() {
+        let decode = |response: Result<GhResponse, GhError>| response.and_then(|response| response.json::<FullUser>());
+        let user = decode(Ok(parity_response("user-profile", "users/parity-bot/GET.json"))).unwrap();
+        assert_eq!(user.user.login, "parity-bot");
+        assert!(matches!(
+            decode(json_response("404 Not Found", r#"{"message":"Not Found"}"#)),
+            Err(GhError::Http { status: 404, .. })
+        ));
+        assert!(matches!(
+            decode(json_response("500 Internal Server Error", r#"{"message":"boom"}"#)),
+            Err(GhError::Http { status: 500, .. })
+        ));
+        assert!(matches!(
+            decode(json_response("200 OK", r#"{"login": 1}"#)),
+            Err(GhError::Decode(_))
+        ));
+    }
+
+    #[test]
+    fn user_repos_responses() {
+        let decode =
+            |response: Result<GhResponse, GhError>| response.and_then(|response| response.json::<Vec<Repository>>());
+        let repos = decode(Ok(parity_response(
+            "user-profile",
+            "users/parity-bot/repos/GET.direction-desc_page-1_per_page-30_sort-updated.json",
+        )))
+        .unwrap();
+        let names: Vec<&str> = repos.iter().map(|repo| repo.name.as_str()).collect();
+        assert_eq!(names, ["dotfiles", "profile-only", "hello-world", "lazy-demo"]);
+        assert!(matches!(
+            decode(json_response("404 Not Found", r#"{"message":"Not Found"}"#)),
+            Err(GhError::Http { status: 404, .. })
+        ));
+        assert!(matches!(
+            decode(json_response("500 Internal Server Error", "{}")),
+            Err(GhError::Http { status: 500, .. })
+        ));
+        assert!(matches!(
+            decode(json_response("200 OK", r#"[{"name": 1}]"#)),
+            Err(GhError::Decode(_))
+        ));
+        assert!(matches!(decode(json_response("200 OK", "{}")), Err(GhError::Decode(_))));
     }
 }

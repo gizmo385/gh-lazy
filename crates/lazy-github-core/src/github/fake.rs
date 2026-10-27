@@ -9,12 +9,12 @@ use serde::de::Error as _;
 
 use super::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
 use crate::gh::GhError;
-use crate::models::{IssueListItem, Repository, User, Workflow, WorkflowRun};
+use crate::models::{FullUser, IssueListItem, Repository, User, Workflow, WorkflowRun};
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `user` finds no user (a 404), `user_repos` returns none, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -63,6 +63,10 @@ pub enum GithubCall {
         /// The pull request's number.
         number: u64,
     },
+    /// [`Github::user`], with the login asked for.
+    User(String),
+    /// [`Github::user_repos`], with the login asked for.
+    UserRepos(String),
 }
 
 #[derive(Debug, Default)]
@@ -83,6 +87,10 @@ struct State {
     run_pages: HashMap<(String, u32), Result<Vec<WorkflowRun>, GhError>>,
     /// Keyed by `full_name` and pull request number.
     diffs: HashMap<(String, u64), Result<String, DiffFetchError>>,
+    /// Keyed by login.
+    profiles: HashMap<String, Result<FullUser, GhError>>,
+    /// Keyed by login.
+    user_repos: HashMap<String, Result<Vec<Repository>, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -180,6 +188,20 @@ impl FakeGithub {
     #[must_use]
     pub fn with_pull_request_diff(self, full_name: &str, number: u64, diff: Result<String, DiffFetchError>) -> Self {
         self.lock().diffs.insert((full_name.to_owned(), number), diff);
+        self
+    }
+
+    /// `user` returns `profile` for `login`. Logins not set get a 404.
+    #[must_use]
+    pub fn with_profile(self, login: &str, profile: Result<FullUser, GhError>) -> Self {
+        self.lock().profiles.insert(login.to_owned(), profile);
+        self
+    }
+
+    /// `user_repos` returns `repos` for `login`. Logins not set have none.
+    #[must_use]
+    pub fn with_user_repos(self, login: &str, repos: Result<Vec<Repository>, GhError>) -> Self {
+        self.lock().user_repos.insert(login.to_owned(), repos);
         self
     }
 
@@ -340,6 +362,28 @@ impl Github for FakeGithub {
             Some(Ok(diff)) => Ok(diff.clone()),
             Some(Err(error)) => Err(duplicate_diff_error(error)),
             None => Err(DiffFetchError::NotFound),
+        })
+        .await
+    }
+
+    async fn user(&self, login: &str) -> Result<FullUser, GhError> {
+        self.respond(GithubCall::User(login.to_owned()), |state| {
+            match state.profiles.get(login) {
+                Some(Ok(profile)) => Ok(profile.clone()),
+                Some(Err(error)) => Err(duplicate(error)),
+                None => Err(GhError::Http {
+                    status: 404,
+                    message: "Not Found".to_owned(),
+                    body: Vec::new(),
+                }),
+            }
+        })
+        .await
+    }
+
+    async fn user_repos(&self, login: &str) -> Result<Vec<Repository>, GhError> {
+        self.respond(GithubCall::UserRepos(login.to_owned()), |state| {
+            canned_page(state.user_repos.get(login))
         })
         .await
     }

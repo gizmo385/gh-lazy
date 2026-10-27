@@ -1,0 +1,52 @@
+---
+source: crates/lazy-github-tui/src/modal/user_profile/tests.rs
+expression: "app.screen(160, 48)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                                                                                        │
+└──────────────────────────────────█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█──────────────────────────────────┘
+┌─ [1] Repositories ───────────────█                                                                                        █──────────────────────────────────┐
+│ ★  Owner  Name  Private          █  Parity Bot (@parity-bot) — user                                                       █                                  │
+│                                  █                                                                                        █━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                  █  ────────────────────────────────────────────────────────────────────────────────────  █                                  │
+│                                  █                                                                                        █                                  │
+│                                  █    Fictional account for LazyGithub parity fixtures.                                   █b (0.1.0)                         │
+│                                  █                                                                                        █                                  │
+│                                  █    Keeps dotfiles and a few demos.                                                     █ou can get started by selecting   │
+│                                  █                                                                                        █nce you have selected a           │
+│                                  █                                                                                        █s will be retrieved and           │
+│                                  █  ────────────────────────────────────────────────────────────────────────────────────  █                                  │
+│                                  █                                                                                        █                                  │
+│                                  █  Company: @parity-org                                                                  █cted with!                        │
+│                                  █                                                                                        █                                  │
+│                                  █  Location: Testville                                                                   █                                  │
+│                                  █                                                                                        █                                  │
+└──────────────────────────────────█  Email: user@example.com                                                               █                                  │
+┌─ [2] Pull Requests ──────────────█                                                                                        █ the PR diff, and participating   │
+│ #  Status  Author  Title         █  Blog: https://example.com/parity-bot                                                  █lso create a new PR for the       │
+│                                  █                                                                                        █                                  │
+│                                  █  Twitter: @paritybot                                                                   █                                  │
+│                                  █                                                                                        █                                  │
+│                                  █  ────────────────────────────────────────────────────────────────────────────────────  █                                  │
+│                                  █                                                                                        █                                  │
+│                                  █  Public repos: 4    Gists: 2    Followers: 12    Following: 3                          █tipcating in any activate         │
+└──────────────────────────────────█                                                                                        █ssue itself. This means that you  │
+┌─ [3] Issues ─────────────────────█  Joined: 2024-01-02                                                                    █                                  │
+│ #  Status  Author  Title         █                                                                                        █                                  │
+│                                  █  ────────────────────────────────────────────────────────────────────────────────────  █                                  │
+│                                  █                                                                                        █                                  │
+│                                  █  Recent repositories (showing 4 of 4, press enter to open)                             █                                  │
+│                                  █                                                                                        █urrently only supports listing    │
+│                                  █   Owner       Name          Private  Description                                       █on the currently selected repo,   │
+│                                  █   parity-bot  dotfiles      ✘        Shell configuration, kept in one place.           █ggers.                            │
+└──────────────────────────────────█   parity-bot  profile-only  ✘        Only reachable from the profile modal.            █                                  │
+┌─ [4] Workflows ──────────────────█   parity-bot  hello-world   ✘                                                          █                                  │
+│ Time  Result  Job Name  Run Name █   parity-bot  lazy-demo     ✘        A demo repository with a description long enough  █                                  │
+│                                  █                                                      ▊                                 █                                  │
+│                                  █                                                                                        █                                  │
+│                                  █                                                                                        █                                  │
+│                                  █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                                  │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ q Close

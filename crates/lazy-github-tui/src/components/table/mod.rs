@@ -18,6 +18,7 @@ use std::time::Duration;
 use crossterm::event::{KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use indexmap::IndexMap;
 use ratatui::Frame;
+use ratatui::buffer::Buffer;
 use ratatui::layout::{Position as CellPosition, Rect};
 use tokio::time::Instant;
 
@@ -861,16 +862,22 @@ impl<T: TableItem> SearchableTable<T> {
         if let Some(search) = search {
             self.draw_search(frame, search, cx);
         }
-        self.draw_table(frame, table, reveal, cx);
+        self.draw_table(frame.buffer_mut(), table, reveal, cx);
     }
 
     /// The table alone in all of `area`, without the search box or the loading overlay: the maximized `DataTable`,
     /// which leaves the box outside it even while the box has focus. Typing into the box still filters this table.
     pub fn render_table(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
+        self.render_table_into(frame.buffer_mut(), area, cx);
+    }
+
+    /// [`Self::render_table`] into any buffer: a view that scrolls the table with other content draws it whole off
+    /// screen, then copies the rows that show.
+    pub fn render_table_into(&mut self, buf: &mut Buffer, area: Rect, cx: &RenderCx<'_>) {
         self.area = area;
         self.drawn = Drawn::TableAlone;
         self.overlay_hidden = self.loading;
-        self.draw_table(frame, area, false, cx);
+        self.draw_table(buf, area, false, cx);
     }
 
     /// The search box alone in `area`, as a maximized `Input` draws it. Clicks on it don't reach the table.
@@ -886,7 +893,7 @@ impl<T: TableItem> SearchableTable<T> {
     }
 
     /// The table laid out in `area`. With `reveal`, the view first scrolls the cursor's row into view.
-    fn draw_table(&mut self, frame: &mut Frame<'_>, area: Rect, reveal: bool, cx: &RenderCx<'_>) {
+    fn draw_table(&mut self, buf: &mut Buffer, area: Rect, reveal: bool, cx: &RenderCx<'_>) {
         let widths = self.rows.widths(&self.columns);
         let layout = Layout::new(area, widths.iter().sum(), self.rows.len());
         // Rows may have gone since the last frame; the view never scrolls past the end.
@@ -908,7 +915,7 @@ impl<T: TableItem> SearchableTable<T> {
         );
         let styles = Styles::new(cx.theme, cx.focused && self.focus == TableFocus::Table);
         render::draw(
-            frame.buffer_mut(),
+            buf,
             &render::Frame {
                 columns: &self.columns,
                 rows: &self.rows,

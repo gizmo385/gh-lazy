@@ -6,6 +6,7 @@ mod issue_lists;
 mod issues;
 pub mod layout;
 mod list;
+mod profile;
 mod pull_requests;
 mod repo_overview;
 mod repos;
@@ -34,10 +35,13 @@ use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::modal::{LookupDialog, RepoLookup};
 use crate::options::AppOptions;
 use crate::theme::Theme;
+use crate::toast::Toast;
 
 use details::DetailsPane;
 use issue_lists::IssueLists;
 use layout::{LayoutInput, layout};
+use profile::ProfileFetch;
+pub use profile::ProfileOrigin;
 pub use repos::{RepoCells, ReposSection};
 use section_table::{SectionEvent, SectionTable, earliest_deadline};
 use sections::{EMPTY_SUFFIX, titled_box};
@@ -232,6 +236,7 @@ pub struct MainScreen {
     repos: ReposSection,
     issue_lists: IssueLists,
     workflows: WorkflowsPane,
+    profile: ProfileFetch,
     /// Where each section's table component was drawn in the last frame, by [`SectionId::index`]: the box's
     /// interior, or the maximized rect. `None` when it wasn't drawn.
     table_areas: [Option<Rect>; 4],
@@ -258,6 +263,10 @@ pub enum MainAction {
     LookupRepository,
     /// The Lookup repository dialog closed: with the repo it found, or `None` when it was cancelled.
     RepoLookedUp(Option<Box<Repository>>),
+    /// `user.view_profile` in a table: open the profile of the highlighted row's user.
+    ViewProfile(ProfileOrigin),
+    /// The User profile dialog closed, with the repo picked there, if any.
+    ProfilePicked(ProfileOrigin, Option<Box<Repository>>),
     /// A section's lazy table asked for `page` (a cursor key, a click or a search submit): its section requests it.
     LoadMore {
         /// The section whose table asked.
@@ -298,6 +307,7 @@ impl MainScreen {
             repos: ReposSection::new(theme, options),
             issue_lists: IssueLists::new(options),
             workflows: WorkflowsPane::new(options),
+            profile: ProfileFetch::default(),
             table_areas: [None; 4],
             hits: Vec::new(),
         }
@@ -353,6 +363,7 @@ impl MainScreen {
     /// Takes a response to one of the screen's requests, and hands back any other: the repos section is offered it
     /// first, then each section's pane.
     pub fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
+        let response = self.profile.on_response(id, response, cx)?;
         let response = self.repos.on_response(id, response, cx)?;
         let response = self.issue_lists.on_response(id, response, cx)?;
         let response = self.workflows.on_response(id, response, cx)?;
@@ -727,6 +738,9 @@ impl MainScreen {
             Owner::Section(SectionId::Repos) if id == BindingId::RepositoriesLookup => {
                 Some(Action::Main(MainAction::LookupRepository))
             }
+            Owner::Section(SectionId::Repos) if id == BindingId::UserViewProfile => {
+                Some(Action::Main(MainAction::ViewProfile(ProfileOrigin::Repos)))
+            }
             // Not built yet: the key is still consumed, as in Python. With one tab, switching tabs is a no-op.
             Owner::SearchableTable(_) | Owner::Section(_) | Owner::SelectionsPane | Owner::DetailsTabs => {
                 Some(Action::Unimplemented(id))
@@ -901,7 +915,18 @@ impl Component for MainScreen {
                 self.repos.add((*repo).clone(), cx);
                 cx.dispatch(Action::SelectRepo(repo));
             }
-            MainAction::RepoLookedUp(None) => {}
+            // A cancelled lookup or a profile closed with nothing picked.
+            MainAction::RepoLookedUp(None) | MainAction::ProfilePicked(_, None) => {}
+            MainAction::ViewProfile(ProfileOrigin::Repos) => match self.repos.table.selected() {
+                Some(repo) => self.profile.open(repo.owner.login.clone(), ProfileOrigin::Repos, cx),
+                None => cx.notify(Toast::error("No repository currently selected")),
+            },
+            MainAction::ProfilePicked(ProfileOrigin::Repos, Some(repo)) => {
+                if self.repos.table.get(&repo.full_name).is_none() {
+                    self.repos.add((*repo).clone(), cx);
+                }
+                cx.dispatch(Action::SelectRepo(repo));
+            }
             MainAction::LoadMore {
                 section,
                 generation,

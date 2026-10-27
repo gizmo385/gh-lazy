@@ -91,6 +91,20 @@ impl ScrollView {
         .min(self.max_offset());
     }
 
+    /// Scrolls as little as possible to show the content lines `rows`, as of the last draw's size: Textual's
+    /// `scroll_to_widget` when focus moves to a widget inside the view. When they don't all fit, the first ones show.
+    pub fn reveal(&mut self, rows: std::ops::Range<usize>) {
+        let window = self.last.1;
+        let mut offset = self.offset;
+        if rows.end > offset + window {
+            offset = rows.end.saturating_sub(window);
+        }
+        if rows.start < offset {
+            offset = rows.start;
+        }
+        self.offset = offset.min(self.max_offset());
+    }
+
     /// A wheel notch, as many rows as the command log's.
     pub fn wheel(&mut self, wheel: Wheel) {
         self.offset = match wheel {

@@ -1,6 +1,6 @@
 version = 1
 description = "User profile (u) on an empty repos table: the error toast, and no request"
-gate = false
+gate = true
 parity_rows = [
     "repositories.user-profile",
     "toasts.nothing-selected",

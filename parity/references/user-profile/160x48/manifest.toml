@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["open", "tabbed", "picked", "organization", "unknown-user"]
 
 [inputs]
-scenario = "ee16e5cfd3907c64f9cf396ab1fecb11bf3171da"
+scenario = "a4ac19d141d0e674c0e410c6659d75526615a7d7"
 fixtures = "08d101f02ca7f9f9d24b79c3dad6e3c144c0fbf1"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "a42709a8f63e18b6ffbf05888ac70df13205cac1"

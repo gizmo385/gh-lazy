@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/modal/user_profile/tests.rs
+expression: "app.screen(100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No r█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█    │
+└────█                                                                                        █────┘
+┌─ [1█  Email: user@example.com                                                               █────┐
+│ ★  █                                                                                        █    │
+│    █  Blog: https://example.com/parity-bot                                                  █━━━━│
+│    █                                                                                        █    │
+│    █  Twitter: @paritybot                                                                   █    │
+│    █                                                                                        █    │
+│    █  ──────────────────────────────────────────────────────────────────────────────────    █    │
+│    █                                                                                        █    │
+│    █  Public repos: 4    Gists: 2    Followers: 12    Following: 3                        ▇▇█    │
+└────█                                                                                        █    │
+┌─ [2█  Joined: 2024-01-02                                                                    █    │
+│ #  █                                                                                        █    │
+│    █  ──────────────────────────────────────────────────────────────────────────────────    █    │
+│    █                                                                                        █    │
+└────█  Recent repositories (showing 4 of 4, press enter to open)                             █  ▁▁│
+┌─ [3█                                                                                        █    │
+│ #  █   Owner       Name          Private  Description                                       █    │
+│    █   parity-bot  dotfiles      ✘        Shell configuration, kept in one place.           █    │
+│    █   parity-bot  profile-only  ✘        Only reachable from the profile modal.            █    │
+└────█   parity-bot  hello-world   ✘                                                          █    │
+┌─ [4█   parity-bot  lazy-demo     ✘        A demo repository with a description long enou    █    │
+│ Tim█                                                    ▎                                   █    │
+│    █                                                                                        █    │
+│    █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█    │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ q Close

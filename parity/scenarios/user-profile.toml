@@ -1,6 +1,6 @@
 version = 1
 description = "User profile modal (u) from the repos table: a user with every field and four repos, picking a repo that isn't listed yet, an organization with none, and an owner whose profile 404s"
-gate = false
+gate = true
 parity_rows = [
     "repositories.user-profile",
     "modals.user-profile",
@@ -54,9 +54,11 @@ keys = ["j", "j", "j", "u"]
 [[step]]
 wait = { text = "No public repositories." }
 
+# Not the titles: at 160x48 Python's footer strip (Py bug B50) covers the Workflows box's bottom border, so its
+# title isn't read there, while Rust draws the usual footer row below it.
 [[step]]
 capture = "organization"
-checks = ["titles", "rows"]
+checks = ["rows"]
 
 [[step]]
 keys = ["escape"]

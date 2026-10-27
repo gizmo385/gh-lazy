@@ -424,7 +424,7 @@ impl<K: LookupKind> Dialog for LookupDialog<K> {
     fn own_action(&self, action: DialogAction) -> Option<LookupAction> {
         match action {
             DialogAction::Lookup(target, action) if target == K::TARGET => Some(action),
-            DialogAction::Lookup(..) | DialogAction::Confirm(_) | DialogAction::Test(..) => None,
+            _ => None,
         }
     }
 

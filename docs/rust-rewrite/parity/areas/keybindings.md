@@ -19,43 +19,43 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.conversation-comment-reply` | `conversation.comment.reply` | `r` | Reply to Comment | comment block | M3 | not started | #182 | |
 | `keybindings.issue-new` | `issue.new` | `I` | New Issue | selections pane | M3 | not started | #181 | |
 | `keybindings.issue-edit` | `issue.edit` | `E` | Edit Issue | issues table, Issue Overview | M3 | not started | #181 | |
-| `keybindings.issue-lookup` | `issue.lookup` | `O` | Lookup Issue | issues table | M2 | in progress | #247 | |
+| `keybindings.issue-lookup` | `issue.lookup` | `O` | Lookup Issue | issues table | M2 | parity | #247 | |
 | `keybindings.pull-request-new` | `pull_request.new` | `P` | New PR | selections pane | M3 | not started | #184 | |
 | `keybindings.pull-request-merge` | `pull_request.merge` | `ctrl+m` | Merge PR | PR Overview | M3 | not started | #183 | TERM: `ctrl+m` sends CR, same as Enter, without the kitty protocol. Must never fire on plain Enter (Py bug B30). |
 | `keybindings.pull-request-edit` | `pull_request.edit` | `E` | Edit PR | PR table, PR Overview | M3 | not started | #185 | |
-| `keybindings.pull-request-lookup` | `pull_request.lookup` | `O` | Lookup Pull Request | PR table | M2 | in progress | #238 | |
-| `keybindings.repositories-favorite` | `repositories.favorite` | `ctrl+f` | Toggle Favorite | repos table | M2 | in progress | #222 | |
-| `keybindings.repositories-lookup` | `repositories.lookup` | `O` | Lookup Repository | repos table | M2 | in progress | #224 | |
-| `keybindings.user-view-profile` | `user.view_profile` | `u` | View User | repos, PR and issues tables | M2 | in progress | #225, #226 | Rust (#225): the repos table; the PR and issues tables are #226. |
-| `keybindings.common-table-select` | `common.table.select` | `enter,space` | Select table entry | tables | M1 | in progress | #78, #100, #158, #170 | |
-| `keybindings.common-table-search` | `common.table.search` | `/` | Search | tables | M1 | in progress | #78, #101, #158, #169 | Override may be saved as `slash`. Rust (#101): `SEARCHABLE_BINDINGS` in `components/table/`, checked after the table's own bindings. |
-| `keybindings.common-table-cursor-down` | `common.table.cursor_down` | `j` | Table cursor down | tables | M1 | not started | #78, #100, #158 | |
-| `keybindings.common-table-page-down` | `common.table.page_down` | `J` | Table page down | tables | M1 | not started | #78, #100, #158 | |
-| `keybindings.common-table-cursor-up` | `common.table.cursor_up` | `k` | Table cursor up | tables | M1 | not started | #78, #100, #158 | |
-| `keybindings.common-table-page-up` | `common.table.page_up` | `K` | Table page up | tables | M1 | not started | #78, #100, #158 | |
-| `keybindings.common-table-scroll-right` | `common.table.scroll_right` | `l` | Table scroll right | tables | M1 | not started | #78, #100, #158 | |
-| `keybindings.common-table-page-right` | `common.table.page_right` | `$` | Table page right | tables | M1 | not started | #78, #100, #158 | An earlier `L` definition is shadowed (Py bug B9). Override may be saved as `dollar_sign`. |
-| `keybindings.common-table-scroll-left` | `common.table.scroll_left` | `h` | Table scroll left | tables | M1 | not started | #78, #100, #158 | |
-| `keybindings.common-table-page-left` | `common.table.page_left` | `^` | Table page left | tables | M1 | not started | #78, #100, #158 | An earlier `H` definition is shadowed (Py bug B9). Override may be saved as `circumflex_accent`. |
-| `keybindings.common-table-scroll-top` | `common.table.scroll_top` | `g` | Table scroll to top | tables | M1 | not started | #78, #100, #158 | |
-| `keybindings.common-table-scroll-bottom` | `common.table.scroll_bottom` | `G` | Table scroll to bottom | tables | M1 | not started | #78, #100, #158 | |
+| `keybindings.pull-request-lookup` | `pull_request.lookup` | `O` | Lookup Pull Request | PR table | M2 | parity | #238 | |
+| `keybindings.repositories-favorite` | `repositories.favorite` | `ctrl+f` | Toggle Favorite | repos table | M2 | parity | #222 | |
+| `keybindings.repositories-lookup` | `repositories.lookup` | `O` | Lookup Repository | repos table | M2 | parity | #224 | |
+| `keybindings.user-view-profile` | `user.view_profile` | `u` | View User | repos, PR and issues tables | M2 | parity | #225, #226 | Rust (#225): the repos table; the PR and issues tables are #226. |
+| `keybindings.common-table-select` | `common.table.select` | `enter,space` | Select table entry | tables | M1 | parity | #78, #100, #158, #170 | |
+| `keybindings.common-table-search` | `common.table.search` | `/` | Search | tables | M1 | parity | #78, #101, #158, #169 | Override may be saved as `slash`. Rust (#101): `SEARCHABLE_BINDINGS` in `components/table/`, checked after the table's own bindings. |
+| `keybindings.common-table-cursor-down` | `common.table.cursor_down` | `j` | Table cursor down | tables | M1 | parity | #78, #100, #158 | |
+| `keybindings.common-table-page-down` | `common.table.page_down` | `J` | Table page down | tables | M1 | parity | #78, #100, #158 | |
+| `keybindings.common-table-cursor-up` | `common.table.cursor_up` | `k` | Table cursor up | tables | M1 | parity | #78, #100, #158 | |
+| `keybindings.common-table-page-up` | `common.table.page_up` | `K` | Table page up | tables | M1 | parity | #78, #100, #158 | |
+| `keybindings.common-table-scroll-right` | `common.table.scroll_right` | `l` | Table scroll right | tables | M1 | parity | #78, #100, #158 | |
+| `keybindings.common-table-page-right` | `common.table.page_right` | `$` | Table page right | tables | M1 | parity | #78, #100, #158 | An earlier `L` definition is shadowed (Py bug B9). Override may be saved as `dollar_sign`. |
+| `keybindings.common-table-scroll-left` | `common.table.scroll_left` | `h` | Table scroll left | tables | M1 | parity | #78, #100, #158 | |
+| `keybindings.common-table-page-left` | `common.table.page_left` | `^` | Table page left | tables | M1 | parity | #78, #100, #158 | An earlier `H` definition is shadowed (Py bug B9). Override may be saved as `circumflex_accent`. |
+| `keybindings.common-table-scroll-top` | `common.table.scroll_top` | `g` | Table scroll to top | tables | M1 | parity | #78, #100, #158 | |
+| `keybindings.common-table-scroll-bottom` | `common.table.scroll_bottom` | `G` | Table scroll to bottom | tables | M1 | parity | #78, #100, #158 | |
 | `keybindings.workflows-trigger` | `workflows.trigger` | `T` | Trigger Workflow | workflows section | M3 | not started | #188 | |
-| `keybindings.workflows-view-run-details` | `workflows.view_run_details` | `enter` | View Run Details | (unused) | M2 | not started | | Defined, rebindable in Settings, never bound (Py bug B9). |
-| `keybindings.workflows-view-job-logs` | `workflows.view_job_logs` | `l` | View Job Logs | Jobs tab | M2 | in progress | #243 | |
+| `keybindings.workflows-view-run-details` | `workflows.view_run_details` | `enter` | View Run Details | (unused) | M2 | in progress | | Defined, rebindable in Settings, never bound (Py bug B9). Audit (M2, 2026-10-26): the id is in `keymap/ids.rs` and the keybindings golden's `bindings.json`, but the golden manifest's `parity_rows` doesn't name this row. |
+| `keybindings.workflows-view-job-logs` | `workflows.view_job_logs` | `l` | View Job Logs | Jobs tab | M2 | parity | #243 | |
 | `keybindings.diff-add-comment` | `diff.add_comment` | `c` | Add Comment | hunk pane | M3 | not started | #187 | |
-| `keybindings.diff-cursor-down` | `diff.cursor_down` | `j` | cursor_down | (unused) | M2 | in progress | #236 | Hunk pane hard-codes `j` (Py bug B9). Rust (#236): bound in the hunk pane, labeled "Line down". |
-| `keybindings.diff-cursor-up` | `diff.cursor_up` | `k` | cursor_up | (unused) | M2 | in progress | #236 | Hunk pane hard-codes `k` (Py bug B9). Rust (#236): bound in the hunk pane, labeled "Line up". |
-| `keybindings.diff-clear-selection` | `diff.clear_selection` | `escape` | Clear Selection | (unused) | M2 | not started | #236 | Never bound (Py bug B9). |
-| `keybindings.diff-next-hunk` | `diff.next_hunk` | `J` | Next Hunk | diff viewer | M2 | in progress | #236 | Py bug B8. Rust (#236): see `diff-viewer.hunk-navigation`. |
-| `keybindings.diff-previous-hunk` | `diff.previous_hunk` | `K` | Previous Hunk | diff viewer | M2 | in progress | #236 | Py bug B8. Rust (#236): see `diff-viewer.hunk-navigation`. |
-| `keybindings.diff-filter-files` | `diff.filter_files` | `/` | Filter Files | diff viewer | M2 | in progress | #236 | Rust (#236): focuses the filter from anywhere in the viewer. |
+| `keybindings.diff-cursor-down` | `diff.cursor_down` | `j` | cursor_down | (unused) | M2 | parity | #236 | Hunk pane hard-codes `j` (Py bug B9). Rust (#236): bound in the hunk pane, labeled "Line down". |
+| `keybindings.diff-cursor-up` | `diff.cursor_up` | `k` | cursor_up | (unused) | M2 | parity | #236 | Hunk pane hard-codes `k` (Py bug B9). Rust (#236): bound in the hunk pane, labeled "Line up". |
+| `keybindings.diff-clear-selection` | `diff.clear_selection` | `escape` | Clear Selection | (unused) | M2 | in progress | #236 | Never bound (Py bug B9). Audit (M2, 2026-10-26): the id is in `keymap/ids.rs` and the keybindings golden's `bindings.json`, but the golden manifest's `parity_rows` doesn't name this row. |
+| `keybindings.diff-next-hunk` | `diff.next_hunk` | `J` | Next Hunk | diff viewer | M2 | in progress | #236 | Py bug B8. Rust (#236): see `diff-viewer.hunk-navigation`. Audit (M2, 2026-10-26): unit tests only: no scenario presses `J`/`K` (Python does nothing, B8). |
+| `keybindings.diff-previous-hunk` | `diff.previous_hunk` | `K` | Previous Hunk | diff viewer | M2 | in progress | #236 | Py bug B8. Rust (#236): see `diff-viewer.hunk-navigation`. Audit (M2, 2026-10-26): unit tests only: no scenario presses `J`/`K` (Python does nothing, B8). |
+| `keybindings.diff-filter-files` | `diff.filter_files` | `/` | Filter Files | diff viewer | M2 | parity | #236 | Rust (#236): focuses the filter from anywhere in the viewer. |
 | `keybindings.notifications-open` | `notifications.open` | `ctrl+n` | Notifications | main screen | M4 | not started | #75, #190 | Shown in footer only when enabled at startup (Py bug B7). Rust (#75): hidden and inactive while `notifications.enabled` is false, re-read on config change; the key falls through. |
 | `keybindings.notifications-mark-all-as-read` | `notifications.mark_all_as_read` | `ctrl+r` | Mark all as read | Unread tab | M4 | not started | #189 | |
 | `keybindings.notifications-mark-read` | `notifications.mark_read` | `R` | Mark as Read | Unread tab | M4 | not started | #189 | |
 | `keybindings.notifications-view-read` | `notifications.view_read` | `r` | View Read Notifications | notifications modal | M4 | not started | #189 | |
 | `keybindings.notifications-view-unread` | `notifications.view_unread` | `u` | View Unread Notifications | notifications modal | M4 | not started | #189 | |
-| `keybindings.modal-submit` | `modal.submit` | `shift+enter` | Submit | most modals | M2 | in progress | #213 | TERM: needs the kitty keyboard protocol (crossterm `PushKeyboardEnhancementFlags`); legacy terminals send plain Enter. Buttons are the fallback. |
-| `keybindings.modal-close` | `modal.close` | `q, escape` | Close | all modals | M2 | in progress | #212 | Inactive while a text input has focus (Textual inputs consume `q`). |
+| `keybindings.modal-submit` | `modal.submit` | `shift+enter` | Submit | most modals | M2 | in progress | #213 | TERM: needs the kitty keyboard protocol (crossterm `PushKeyboardEnhancementFlags`); legacy terminals send plain Enter. Buttons are the fallback. Audit (M2, 2026-10-26): no scenario presses `shift+enter`. |
+| `keybindings.modal-close` | `modal.close` | `q, escape` | Close | all modals | M2 | parity | #212 | Inactive while a text input has focus (Textual inputs consume `q`). |
 | `keybindings.modal-search` | `modal.search` | `/` | Search | Settings | M4 | not started | #193 | |
 | `keybindings.confirm-yes` | `confirm.yes` | `y` | Yes | Confirm | M3 | in progress | #214, #184 | |
 | `keybindings.confirm-no` | `confirm.no` | `n` | No | Confirm | M3 | in progress | #214, #184 | |

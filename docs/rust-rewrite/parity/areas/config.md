@@ -10,33 +10,33 @@ accept negative values, as pydantic does: they load and save unchanged, and act 
 
 | Id | Section | Field | Default | Python reference | Milestone | Status | Issue | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `config.appearance-theme` | `appearance` | `theme` | `"textual-dark"` | `lib/config.py` `AppearanceSettings` | M0 | not started | #64, #159 | Unknown name (or any non-string) → `textual-dark`, which the next save writes back. A list or object crashes Python (Py bug B39); Rust rejects it with the broken-config error. Applied in #77. |
-| `config.appearance-show-command-log` | `appearance` | `show_command_log` | `false` | `lib/config.py` | M0 | not started | #64, #159 | Used by #74/#80. |
-| `config.appearance-show-workflows` | `appearance` | `show_workflows` | `true` | `lib/config.py` | M0 | not started | #64, #159 | |
-| `config.appearance-show-issues` | `appearance` | `show_issues` | `true` | `lib/config.py` | M0 | not started | #64, #159 | |
-| `config.appearance-show-pull-requests` | `appearance` | `show_pull_requests` | `true` | `lib/config.py` | M0 | not started | #64, #159 | |
-| `config.notifications-enabled` | `notifications` | `enabled` | `false` | `lib/config.py` `NotificationSettings` | M0 | not started | #64, #159 | |
-| `config.notifications-mark-notification-as-read-when-selected` | `notifications` | `mark_notification_as_read_when_selected` | `true` | `lib/config.py` | M0 | not started | #64, #159 | |
-| `config.bindings-overrides` | `bindings` | `overrides` | `{}` | `lib/config.py` `BindingsSettings` | M0 | not started | #64, #159 | Map of binding id → key string; applied in #73. |
-| `config.repositories-additional-repos-to-track` | `repositories` | `additional_repos_to_track` | `[]` | `lib/config.py` `RepositorySettings` | M0 | not started | #64, #159 | |
-| `config.repositories-favorites` | `repositories` | `favorites` | `[]` | `lib/config.py` | M0 | not started | #64, #159 | |
-| `config.pull-requests-state-filter` | `pull_requests` | `state_filter` | `"all"` (`all`/`open`/`closed`) | `lib/config.py` `PullRequestSettings`, `lib/constants.py` `IssueStateFilter` | M0 | not started | #64, #159 | |
-| `config.pull-requests-owner-filter` | `pull_requests` | `owner_filter` | `"all"` (`all`/`mine`) | `lib/config.py`, `lib/constants.py` `IssueOwnerFilter` | M0 | not started | #64, #159 | |
-| `config.pull-requests-preferred-merge-method` | `pull_requests` | `preferred_merge_method` | `"squash"` (`merge`/`squash`/`rebase`) | `lib/config.py` `MergeMethod` | M0 | not started | #64, #159 | |
-| `config.pull-requests-additional-suggested-pr-reviewers` | `pull_requests` | `additional_suggested_pr_reviewers` | `[]` | `lib/config.py` | M0 | not started | #64, #159 | |
-| `config.pull-requests-preload-pull-request-for-current-commit` | `pull_requests` | `preload_pull_request_for_current_commit` | `false` | `lib/config.py` | M0 | not started | #64, #159, #198 | |
-| `config.pull-requests-pull-request-template` | `pull_requests` | `pull_request_template` | `null` (path) | `lib/config.py` | M0 | not started | #64, #159 | |
-| `config.issues-state-filter` | `issues` | `state_filter` | `"all"` | `lib/config.py` `IssueSettings` | M0 | not started | #64, #159 | |
-| `config.issues-owner-filter` | `issues` | `owner_filter` | `"all"` | `lib/config.py` | M0 | not started | #64, #159 | |
-| `config.cache-auth-cache-duration` | `cache` | `auth_cache_duration` | `86400` | `lib/config.py` `CacheSettings` | M0 | not started | #64, #159 | Seconds. |
-| `config.cache-auth-last-checked` | `cache` | `auth_last_checked` | `null` (ISO datetime) | `lib/config.py` | M0 | not started | #64, #159 | Python writes naive local time. A `"None"` string can appear (Py bug B2). A timestamp with an offset, or a Unix timestamp (number or numeric string), loads in Python but crashes the auth check (Py bug B37). |
-| `config.cache-cache-directory` | `cache` | `cache_directory` | `~/.config/lazy-github/.cache` | `lib/config.py` | M0 | not started | #64, #159 | Absolute path is written. |
-| `config.cache-default-ttl` | `cache` | `default_ttl` | `600` | `lib/config.py` | M0 | not started | #64, #159 | |
-| `config.cache-list-repos-ttl` | `cache` | `list_repos_ttl` | `86400` | `lib/config.py` | M0 | not started | #64, #159 | |
-| `config.cache-list-issues-ttl` | `cache` | `list_issues_ttl` | `3600` | `lib/config.py` | M0 | not started | #64, #159 | Never read by the Python app. |
-| `config.core-first-start` | `core` | `first_start` | `true` | `lib/config.py` `CoreConfig` | M0 | not started | #64, #159 | Rust writes `false` after the gh check (no picker). |
-| `config.core-logfile-path` | `core` | `logfile_path` | `~/.config/lazy-github/lazy_github.log` | `lib/config.py` | M0 | not started | #64, #66, #159 | |
-| `config.core-logfile-max-bytes` | `core` | `logfile_max_bytes` | `5000000` | `lib/config.py` | M0 | not started | #64, #66, #159 | |
-| `config.core-logfile-count` | `core` | `logfile_count` | `5` | `lib/config.py` | M0 | not started | #64, #66, #159 | |
-| `config.api-base-url` | `api` | `base_url` | `"https://api.github.com"` | `lib/config.py` `ApiConfig` | M0 | not started | #64, #157 | Preserved, not acted on: Python's gh backend ignores it too. Mapping it to `gh --hostname` would be new behavior. |
+| `config.appearance-theme` | `appearance` | `theme` | `"textual-dark"` | `lib/config.py` `AppearanceSettings` | M0 | parity | #64, #159 | Unknown name (or any non-string) → `textual-dark`, which the next save writes back. A list or object crashes Python (Py bug B39); Rust rejects it with the broken-config error. Applied in #77. |
+| `config.appearance-show-command-log` | `appearance` | `show_command_log` | `false` | `lib/config.py` | M0 | parity | #64, #159 | Used by #74/#80. |
+| `config.appearance-show-workflows` | `appearance` | `show_workflows` | `true` | `lib/config.py` | M0 | parity | #64, #159 | |
+| `config.appearance-show-issues` | `appearance` | `show_issues` | `true` | `lib/config.py` | M0 | parity | #64, #159 | |
+| `config.appearance-show-pull-requests` | `appearance` | `show_pull_requests` | `true` | `lib/config.py` | M0 | parity | #64, #159 | |
+| `config.notifications-enabled` | `notifications` | `enabled` | `false` | `lib/config.py` `NotificationSettings` | M0 | parity | #64, #159 | |
+| `config.notifications-mark-notification-as-read-when-selected` | `notifications` | `mark_notification_as_read_when_selected` | `true` | `lib/config.py` | M0 | parity | #64, #159 | |
+| `config.bindings-overrides` | `bindings` | `overrides` | `{}` | `lib/config.py` `BindingsSettings` | M0 | parity | #64, #159 | Map of binding id → key string; applied in #73. |
+| `config.repositories-additional-repos-to-track` | `repositories` | `additional_repos_to_track` | `[]` | `lib/config.py` `RepositorySettings` | M0 | parity | #64, #159 | |
+| `config.repositories-favorites` | `repositories` | `favorites` | `[]` | `lib/config.py` | M0 | parity | #64, #159 | |
+| `config.pull-requests-state-filter` | `pull_requests` | `state_filter` | `"all"` (`all`/`open`/`closed`) | `lib/config.py` `PullRequestSettings`, `lib/constants.py` `IssueStateFilter` | M0 | parity | #64, #159 | |
+| `config.pull-requests-owner-filter` | `pull_requests` | `owner_filter` | `"all"` (`all`/`mine`) | `lib/config.py`, `lib/constants.py` `IssueOwnerFilter` | M0 | parity | #64, #159 | |
+| `config.pull-requests-preferred-merge-method` | `pull_requests` | `preferred_merge_method` | `"squash"` (`merge`/`squash`/`rebase`) | `lib/config.py` `MergeMethod` | M0 | parity | #64, #159 | |
+| `config.pull-requests-additional-suggested-pr-reviewers` | `pull_requests` | `additional_suggested_pr_reviewers` | `[]` | `lib/config.py` | M0 | parity | #64, #159 | |
+| `config.pull-requests-preload-pull-request-for-current-commit` | `pull_requests` | `preload_pull_request_for_current_commit` | `false` | `lib/config.py` | M0 | not started | #64, #159, #198 | Audit (M2, 2026-10-26): load and save covered by golden `config`; the behavior waits for #198. |
+| `config.pull-requests-pull-request-template` | `pull_requests` | `pull_request_template` | `null` (path) | `lib/config.py` | M0 | parity | #64, #159 | |
+| `config.issues-state-filter` | `issues` | `state_filter` | `"all"` | `lib/config.py` `IssueSettings` | M0 | parity | #64, #159 | |
+| `config.issues-owner-filter` | `issues` | `owner_filter` | `"all"` | `lib/config.py` | M0 | parity | #64, #159 | |
+| `config.cache-auth-cache-duration` | `cache` | `auth_cache_duration` | `86400` | `lib/config.py` `CacheSettings` | M0 | parity | #64, #159 | Seconds. |
+| `config.cache-auth-last-checked` | `cache` | `auth_last_checked` | `null` (ISO datetime) | `lib/config.py` | M0 | parity | #64, #159 | Python writes naive local time. A `"None"` string can appear (Py bug B2). A timestamp with an offset, or a Unix timestamp (number or numeric string), loads in Python but crashes the auth check (Py bug B37). |
+| `config.cache-cache-directory` | `cache` | `cache_directory` | `~/.config/lazy-github/.cache` | `lib/config.py` | M0 | parity | #64, #159 | Absolute path is written. |
+| `config.cache-default-ttl` | `cache` | `default_ttl` | `600` | `lib/config.py` | M0 | parity | #64, #159 | |
+| `config.cache-list-repos-ttl` | `cache` | `list_repos_ttl` | `86400` | `lib/config.py` | M0 | parity | #64, #159 | |
+| `config.cache-list-issues-ttl` | `cache` | `list_issues_ttl` | `3600` | `lib/config.py` | M0 | parity | #64, #159 | Never read by the Python app. |
+| `config.core-first-start` | `core` | `first_start` | `true` | `lib/config.py` `CoreConfig` | M0 | parity | #64, #159 | Rust writes `false` after the gh check (no picker). |
+| `config.core-logfile-path` | `core` | `logfile_path` | `~/.config/lazy-github/lazy_github.log` | `lib/config.py` | M0 | parity | #64, #66, #159 | |
+| `config.core-logfile-max-bytes` | `core` | `logfile_max_bytes` | `5000000` | `lib/config.py` | M0 | parity | #64, #66, #159 | |
+| `config.core-logfile-count` | `core` | `logfile_count` | `5` | `lib/config.py` | M0 | parity | #64, #66, #159 | |
+| `config.api-base-url` | `api` | `base_url` | `"https://api.github.com"` | `lib/config.py` `ApiConfig` | M0 | parity | #64, #157 | Preserved, not acted on: Python's gh backend ignores it too. Mapping it to `gh --hostname` would be new behavior. |
 | `config.api-client-type` | `api` | `client_type` | `"RAW_HTTP"` (ignored, gh only) | `lib/config.py`, `lib/github/backends/protocol.py` `BackendType` | M0 | intentional diff (gh only) | #64, #157 | Preserved on save, not acted on. Decision: [gh-only-backend](../decisions/gh-only-backend.md). |

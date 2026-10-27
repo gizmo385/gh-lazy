@@ -5,7 +5,7 @@
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
-use ratatui::style::Style;
+use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Widget};
 
@@ -93,6 +93,7 @@ impl TabStrip {
         // Textual's `Tab`: `padding: 0 1`, `$foreground 50%`, and `$foreground` when active. In a focused `Tabs`,
         // the active tab is `$block-cursor-foreground` on `$block-cursor-background` with its text style, padding
         // included.
+        // On ANSI themes (`Tab:ansi`), labels are dim and the active one is bold instead.
         let (active_label, active_padding) = if focused {
             let style = palette.block_cursor_text_style.apply(theme.fg_on(
                 palette.block_cursor_foreground,
@@ -102,9 +103,20 @@ impl TabStrip {
             let padding = Style::new().bg(theme.color(palette.block_cursor_background, under));
             (style, padding)
         } else {
-            (Style::new().fg(theme.color(palette.foreground, under)), Style::new())
+            let style = Style::new().fg(theme.color(palette.foreground, under));
+            let style = if theme.ansi {
+                style.add_modifier(Modifier::BOLD)
+            } else {
+                style
+            };
+            (style, Style::new())
         };
         let label = Style::new().fg(theme.color(palette.foreground.multiply_alpha(0.5), under));
+        let label = if theme.ansi {
+            label.add_modifier(Modifier::DIM)
+        } else {
+            label
+        };
         let mut spans = Vec::new();
         let mut highlight = (0, 0);
         let mut x = 0;
@@ -130,12 +142,17 @@ impl TabStrip {
         frame.render_widget(Paragraph::new(Line::from(spans)), labels);
 
         if area.height >= TAB_STRIP_HEIGHT {
-            // Textual's `Underline`: `$block-cursor-background` on a `$foreground 10%` bar, `30%` when focused.
-            let bar_alpha = if focused { 0.3 } else { 0.1 };
+            // Textual's `Underline`: `$block-cursor-background` on a `$foreground 10%` bar, `30%` when focused. On ANSI
+            // themes the bar is `$border-blurred`, focused or not.
+            let bar_color = if theme.ansi {
+                palette.border_blurred
+            } else {
+                palette.foreground.multiply_alpha(if focused { 0.3 } else { 0.1 })
+            };
             let bar = UnderlineBar {
                 highlight,
                 highlight_style: Style::new().fg(theme.color(palette.block_cursor_background, under)),
-                style: Style::new().fg(theme.color(palette.foreground.multiply_alpha(bar_alpha), under)),
+                style: Style::new().fg(theme.color(bar_color, under)),
             };
             frame.render_widget(
                 bar,
@@ -183,18 +200,39 @@ mod tests {
     use ratatui::backend::TestBackend;
 
     use super::*;
-    use crate::test_util::buffer_to_string;
+    use crate::test_util::{buffer_to_string, buffer_to_styled_string};
 
     fn draw(strip: &TabStrip, width: u16) -> Buffer {
         draw_focused(strip, width, false)
     }
 
     fn draw_focused(strip: &TabStrip, width: u16, focused: bool) -> Buffer {
+        draw_themed(strip, width, focused, &Theme::default())
+    }
+
+    fn draw_themed(strip: &TabStrip, width: u16, focused: bool, theme: &Theme) -> Buffer {
         let mut terminal = Terminal::new(TestBackend::new(width, 2)).unwrap();
         terminal
-            .draw(|frame| strip.render(frame, frame.area(), &Theme::default(), focused))
+            .draw(|frame| strip.render(frame, frame.area(), theme, focused))
             .unwrap();
         terminal.backend().buffer().clone()
+    }
+
+    /// Python's Details tab strip under `ansi-dark` (`theme-ansi`, and a PR's tabs): labels dim and the active one
+    /// bold, the active segment in ANSI white on an ANSI black bar; focused, the active tab in the block cursor and
+    /// the bar still ANSI black.
+    #[test]
+    fn ansi_dark_matches_textual() {
+        let theme = Theme::by_name("ansi-dark").unwrap();
+        let strip = TabStrip::new(["Overview", "Diff", "Conversation"]);
+        insta::assert_snapshot!(
+            "ansi_dark_blurred",
+            buffer_to_styled_string(&draw_themed(&strip, 36, false, &theme))
+        );
+        insta::assert_snapshot!(
+            "ansi_dark_focused",
+            buffer_to_styled_string(&draw_themed(&strip, 36, true, &theme))
+        );
     }
 
     #[test]

@@ -1,0 +1,89 @@
+---
+source: crates/lazy-github-tui/src/modal/tests.rs
+assertion_line: 389
+expression: buffer_to_styled_string(&over)
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└───────────────────█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█───────────────────┘
+┌─ [1] Repositories █                                                          █───────────────────┐
+│ ★  Owner  Name  Pr█                        Test dialog                       █                   │
+│                   █                                                          █━━━━━━━━━━━━━━━━━━━│
+│                   █Name:                                                     █                   │
+│                   █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█                   │
+│                   █▊  Name                                                  ▎█Hub (0.1.0)        │
+│                   █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█                   │
+│                   █                                                          █acting with        │
+│                   █                                                          █ing one of the     │
+└───────────────────█                                                          █he left. Once      │
+┌─ [2] Pull Requests█                                                          █ssues, pull        │
+│ #  Status  Author █                                                          █e retrieved and    │
+│                   █▊▔▔▔▔▔▔▔▔▎                                                █                   │
+│                   █▊        ▎                                                █                   │
+└───────────────────█▊▁▁▁▁▁▁▁▁▎                                                █ts can also be   ▁▁│
+┌─ [3] Issues ──────█                                                          █                   │
+│ #  Status  Author █                                                          █                   │
+│                   █                                                          █                   │
+│                   █                                                          █                   │
+└───────────────────█            ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎             █                   │
+┌─ [4] Workflows ───█            ▊    Lookup    ▎ ▊    Cancel    ▎             █ its details,      │
+│ Time  Result  Job █            ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎ ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎             █g in any active    │
+│                   █                                                          █u can also         │
+│                   █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ shift+⏎ Submit  esc Close
+--- styles
+....................................................................................................
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+....................aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa....................
+bbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccccccccccccccc
+bdedddddddddddddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaafffffffffffffffffffc
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaggc
+baaaaaaaaaaaaaaaaaaaahiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiaaaaaaaaaaaaaaaaaaggc
+baaaaaaaaaaaaaaaaaaaahaajkkkaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaialllllllllllllllaaggc
+baaaaaaaaaaaaaaaaaaaahiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiaaaaaaaaaaaaaaaaaaggc
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaggc
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaggc
+bbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaggc
+ccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaggc
+cdddddddddddddddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaggc
+caaaaaaaaaaaaaaaaaaaamfffffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaggc
+caaaaaaaaaaaaaaaaaaaamaannaaaafaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaggc
+ccccccccccccccccccccamfffffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaooooooooooooooaaappc
+ccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+cdddddddddddddddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+ccccccccccccccccccccaaaaaaaaaaaaarbbbbbbbbbbbbbbbansssssssssssssssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+ccccccccccccccccccccaaaaaaaaaaaaaraaattttttttaaabanaaauuuuuuuuaaasaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+cdddddddddddddddddddaaaaaaaaaaaaarbbbbbbbbbbbbbbbansssssssssssssssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+cgggggggggggggggggggaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+lllllllllaaaaaaalllllaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+--- legend
+. fg=Cyan bg=Reset
+a fg=Reset bg=Reset
+b fg=Green bg=Reset
+c fg=Blue bg=Reset
+d fg=Reset bg=LightBlue BOLD
+e fg=Green bg=LightBlue BOLD
+f fg=Black bg=Reset
+g fg=Blue bg=Reset REVERSED
+h fg=Magenta bg=Reset REVERSED
+i fg=Magenta bg=Reset
+j fg=Black bg=Gray DIM
+k fg=Reset bg=Reset DIM
+l fg=Magenta bg=Reset BOLD
+m fg=Black bg=Reset REVERSED
+n fg=Red bg=Reset REVERSED
+o fg=Reset bg=Reset BOLD
+p fg=Blue bg=Black REVERSED
+q fg=Reset bg=Black
+r fg=Green bg=Reset REVERSED
+s fg=Red bg=Reset
+t fg=Green bg=Reset BOLD
+u fg=Red bg=Reset BOLD

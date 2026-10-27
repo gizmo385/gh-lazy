@@ -1,0 +1,15 @@
+---
+source: crates/lazy-github-tui/src/components/tabs.rs
+expression: "buffer_to_styled_string(&draw_themed(&strip, 36, false, &theme))"
+---
+ Overview  Diff  Conversation
+╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━
+--- styles
+.aaaaaaaa..bbbb..bbbbbbbbbbbb.......
+cddddddddccccccccccccccccccccccccccc
+--- legend
+. fg=Reset bg=Reset
+a fg=Reset bg=Reset BOLD
+b fg=Reset bg=Reset DIM
+c fg=Black bg=Reset
+d fg=Gray bg=Reset

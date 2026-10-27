@@ -170,3 +170,6 @@ AGENTS.md
 # Rust
 /target/
 parity/reports/
+
+# Parity seed files mirror a test HOME, whose cache directory is named .cache (#229).
+!/parity/seeds/**/.cache/

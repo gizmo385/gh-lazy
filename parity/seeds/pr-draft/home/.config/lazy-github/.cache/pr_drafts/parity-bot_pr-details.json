@@ -1,0 +1,11 @@
+{
+  "repo_full_name": "parity-bot/pr-details",
+  "title": "Restored draft title",
+  "description": "Restored draft body.\n\nSecond paragraph.",
+  "base_ref": "main",
+  "head_ref": "feature/restored",
+  "is_draft": true,
+  "reviewers": [
+    "parity-friend"
+  ]
+}

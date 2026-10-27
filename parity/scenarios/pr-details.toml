@@ -1,10 +1,8 @@
 version = 1
 description = "PR details: selecting a PR shows the Overview, Diff and Conversation tabs; the Overview's header, collapsible reactions, checks and reviews; the Conversation's reviews, threads and comments; a closed PR with nothing; a PR that fails to load"
-# Not gated yet: after PR 5's Diff tab, the Diff tab's deleted-file icon (`🗑️`) leaves its terminal row out of step with
-# ratatui's buffer, so the conversation captures' row 31 keeps stale cells and loses the Details box's right border.
 # The footer is left out of the cross-app checks: at 160 columns it isn't cut off, and Python spells
 # `^p Command Pallete` (Py bug B14), which Rust fixes on purpose.
-gate = false
+gate = true
 parity_rows = [
     "pull-requests.select",
     "pull-requests.select-loading",

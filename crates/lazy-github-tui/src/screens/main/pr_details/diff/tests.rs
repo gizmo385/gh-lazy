@@ -9,6 +9,7 @@ use lazy_github_core::github::{DiffFetchError, FakeGithub};
 use lazy_github_core::models::IssueListItem;
 use serde_json::Value;
 
+use crate::backend::tests::VtTerminal;
 use crate::components::diff_view::{DiffStop, DiffView};
 use crate::effect::{Effect, GithubRequest, GithubResponse};
 use crate::event::Event;
@@ -412,4 +413,40 @@ fn the_tab_keeps_its_state_across_tabs_and_a_new_pr_resets_it() {
     app.press(&["right"]);
     assert_eq!(stop(&app), DiffStop::Scroll);
     assert!(!view(&app).is_hunk_open(README, 0));
+}
+
+#[test]
+fn the_deleted_file_row_keeps_its_border_on_a_terminal_and_leaves_nothing_behind() {
+    // The `pr-details` parity scenario's frames, each drawn over the last on a terminal that widens `🗑️` (#249):
+    // `draw` checks every row against ratatui's buffer. With the reactions open, the Overview has body text where
+    // the Diff tab puts the icon's second cell, so ratatui writes that cell again.
+    let gh = crate::screens::main::pr_details::tests::gh().with_pull_request_diff(NAME, 5, Ok(diff_text(5)));
+    let mut terminal = VtTerminal::new(160, 48);
+    let mut app = TestApp::with_github(config(), gh);
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["2", "enter"]);
+    settle(&mut app);
+    terminal.draw(|frame| app.app_mut().render(frame));
+    app.press(&["tab", "tab", "enter"]);
+    settle(&mut app);
+    terminal.draw(|frame| app.app_mut().render(frame));
+    app.press(&["5", "right"]);
+    settle(&mut app);
+    let rows = terminal.draw(|frame| app.app_mut().render(frame));
+    let deleted = rows.iter().find(|row| row.contains("old.md (deleted)")).unwrap();
+    assert!(
+        deleted.ends_with(
+            "││  ▶ 🗑️  old.md (deleted)                                                                      │"
+        ),
+        "{deleted}"
+    );
+    app.press(&["right"]);
+    settle(&mut app);
+    let rows = terminal.draw(|frame| app.app_mut().render(frame));
+    assert!(
+        rows.iter().any(|row| row.contains("Review from parity-bot")),
+        "{rows:#?}"
+    );
+    assert!(rows.iter().all(|row| !row.contains("(deleted)")), "{rows:#?}");
 }

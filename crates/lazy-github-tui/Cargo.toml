@@ -43,6 +43,8 @@ similar = { workspace = true }
 tempfile = { workspace = true }
 tokio = { workspace = true, features = ["test-util"] }
 tracing-subscriber = { workspace = true, features = ["fmt", "std"] }
+# What a terminal makes of the bytes `backend::WideEmojiBackend` writes (#249).
+vt100 = { workspace = true }
 
 [lints]
 workspace = true

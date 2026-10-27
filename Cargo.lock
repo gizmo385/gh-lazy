@@ -1098,6 +1098,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "two-face",
+ "vt100",
 ]
 
 [[package]]

@@ -23,6 +23,7 @@ use ratatui::backend::{Backend, CrosstermBackend};
 use tokio::sync::mpsc;
 
 use crate::app::App;
+use crate::backend::WideEmojiBackend;
 use crate::event::{Event, Signal};
 use crate::runtime::Runtime;
 
@@ -230,7 +231,7 @@ pub async fn run<G: Github>(
         // Tokio catches panics in spawned tasks, so without this the loop would carry on.
         let _ = panic_tx.send(());
     });
-    let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
+    let mut terminal = Terminal::new(WideEmojiBackend::new(CrosstermBackend::new(io::stdout())))?;
     terminal.clear()?;
 
     let (tx, mut rx) = mpsc::unbounded_channel();

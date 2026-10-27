@@ -354,6 +354,16 @@ impl MainScreen {
         self.details.on_response(id, response)
     }
 
+    /// Takes the result of one of the screen's cache reads, and hands back any other.
+    pub fn on_cache_read(
+        &mut self,
+        id: RequestId,
+        result: Result<Option<String>, String>,
+        cx: &mut Cx<'_>,
+    ) -> Option<Result<Option<String>, String>> {
+        self.repos.on_cache_read(id, result, cx)
+    }
+
     /// The repos section.
     pub fn repos(&self) -> &ReposSection {
         &self.repos

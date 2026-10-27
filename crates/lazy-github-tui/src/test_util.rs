@@ -2,6 +2,7 @@
 //! terminal or a tokio runtime of its own.
 
 use std::collections::{HashMap, VecDeque};
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use crossterm::event::{KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
@@ -39,7 +40,8 @@ const TEST_OPTIONS: AppOptions = AppOptions { animations: false };
 ///
 /// Effects are recorded in [`Self::effects`] and performed against fakes: GitHub requests run on [`FakeGithub`] and
 /// git requests are answered from [`Self::with_local_repo`] in [`Self::settle`], config saves succeed without
-/// touching the disk, and timers fire from [`Self::advance`].
+/// touching the disk, cache files are read from and written to an in-memory store ([`Self::with_cache_file`],
+/// [`Self::cache_file`]), and timers fire from [`Self::advance`].
 pub struct TestApp {
     app: App,
     gh: FakeGithub,
@@ -48,6 +50,11 @@ pub struct TestApp {
     /// The main screen's `OriginRepo` request, held back at setup until [`Self::with_local_repo`] or
     /// [`Self::settle`] answers it.
     setup_git: Option<(RequestId, GitRequest)>,
+    /// The main screen's startup cache reads, held back at setup until [`Self::answer_setup_cache`] or
+    /// [`Self::settle`] answers them.
+    setup_cache: Vec<(RequestId, PathBuf)>,
+    /// The fake cache files, by path.
+    cache_files: HashMap<PathBuf, String>,
     clock: FakeClock,
     effects: Vec<Effect>,
     queued: VecDeque<Effect>,
@@ -66,7 +73,8 @@ impl TestApp {
     /// leaves it pending. That request is setup: it's in the fake's call log but not in [`Self::effects`], which
     /// starts with the other startup effects, such as the notifications poll. The git request for the
     /// current-directory repo is setup too, answered by [`Self::with_local_repo`] (or [`Self::settle`]), after the
-    /// repos.
+    /// repos. So are the startup cache reads, answered before the repos from the (empty) fake cache, and the cache
+    /// writes the repos list makes.
     ///
     /// Animations are off, as under the parity harness's `TEXTUAL_ANIMATIONS=none`, so loading overlays are still.
     pub fn new(config: Config) -> Self {
@@ -76,13 +84,16 @@ impl TestApp {
     /// Like [`Self::new`], with requests answered by `gh`.
     pub fn with_github(config: Config, gh: FakeGithub) -> Self {
         let mut test = Self::loading(config, gh);
+        test.answer_setup_cache();
         test.answer_repos();
+        test.drop_setup_cache_writes();
         test.hold_setup_git();
         test
     }
 
     /// Like [`Self::with_github`], with the main screen's repos list and git request still in flight, in
-    /// [`Self::effects`]: [`Self::settle`] answers them, repos first.
+    /// [`Self::effects`]: [`Self::settle`] answers them, repos first. The startup cache reads are held as setup, out
+    /// of [`Self::effects`]: [`Self::answer_setup_cache`] answers them, and so does [`Self::settle`], first.
     pub fn loading(config: Config, gh: FakeGithub) -> Self {
         Self::entered(config, Theme::default(), gh, TEST_OPTIONS)
     }
@@ -90,7 +101,9 @@ impl TestApp {
     /// Like [`Self::new`], drawn with `theme` (for example one reduced to a 256-color terminal).
     pub fn with_theme(config: Config, theme: Theme) -> Self {
         let mut test = Self::entered(config, theme, FakeGithub::new(), TEST_OPTIONS);
+        test.answer_setup_cache();
         test.answer_repos();
+        test.drop_setup_cache_writes();
         test.hold_setup_git();
         test
     }
@@ -104,6 +117,7 @@ impl TestApp {
         let mut test = Self::build(config, theme, gh, options);
         let effects = test.app.skip_startup();
         test.perform(effects);
+        test.hold_setup_cache();
         test
     }
 
@@ -124,6 +138,8 @@ impl TestApp {
             gh,
             local_repo: None,
             setup_git: None,
+            setup_cache: Vec::new(),
+            cache_files: HashMap::new(),
             clock,
             effects: Vec::new(),
             queued: VecDeque::new(),
@@ -131,8 +147,50 @@ impl TestApp {
         }
     }
 
+    /// Takes the queued cache reads out of [`Self::effects`] and the queue, as setup.
+    fn hold_setup_cache(&mut self) {
+        let (reads, rest): (VecDeque<Effect>, VecDeque<Effect>) = std::mem::take(&mut self.queued)
+            .into_iter()
+            .partition(|effect| matches!(effect, Effect::ReadCache { .. }));
+        self.queued = rest;
+        self.effects.retain(|effect| !reads.contains(effect));
+        self.setup_cache
+            .extend(reads.into_iter().filter_map(|effect| match effect {
+                Effect::ReadCache { id, path } => Some((id, path)),
+                _ => None,
+            }));
+    }
+
+    /// The cache writes the setup repos list made aren't the test's effects.
+    fn drop_setup_cache_writes(&mut self) {
+        self.effects
+            .retain(|effect| !matches!(effect, Effect::WriteCache { .. }));
+    }
+
+    /// Answers the held startup cache reads from the fake cache files ([`Self::with_cache_file`]).
+    pub fn answer_setup_cache(&mut self) -> &mut Self {
+        for (id, path) in std::mem::take(&mut self.setup_cache) {
+            let result = Ok(self.cache_files.get(&path).cloned());
+            self.send(Event::CacheRead { id, result });
+        }
+        self
+    }
+
+    /// This app with the fake cache file `path` holding `text`, for reads still to be answered (such as the held
+    /// startup ones of [`Self::loading`]).
+    #[must_use]
+    pub fn with_cache_file(mut self, path: impl Into<PathBuf>, text: impl Into<String>) -> Self {
+        self.cache_files.insert(path.into(), text.into());
+        self
+    }
+
+    /// The fake cache file at `path`, as the last write left it.
+    pub fn cache_file(&self, path: &Path) -> Option<&str> {
+        self.cache_files.get(path).map(String::as_str)
+    }
+
     /// Answers the queued repos list requests on the fake, leaving every other queued effect in place.
-    fn answer_repos(&mut self) {
+    pub fn answer_repos(&mut self) {
         let (repos, rest): (VecDeque<Effect>, VecDeque<Effect>) =
             std::mem::take(&mut self.queued).into_iter().partition(|effect| {
                 matches!(
@@ -246,6 +304,7 @@ impl TestApp {
     /// Runs queued GitHub requests on the [`FakeGithub`], answers queued git requests from
     /// [`Self::with_local_repo`] and completes queued config saves, feeding each result back, until nothing is left.
     pub async fn settle(&mut self) {
+        self.answer_setup_cache();
         self.answer_setup_git();
         while let Some(effect) = self.queued.pop_front() {
             let event = match effect {
@@ -258,6 +317,10 @@ impl TestApp {
                     response: self.answer_git(&request),
                 },
                 Effect::SaveConfig(_) => Event::ConfigSaved(Ok(())),
+                Effect::ReadCache { id, path } => Event::CacheRead {
+                    id,
+                    result: Ok(self.cache_files.get(&path).cloned()),
+                },
                 _ => continue,
             };
             self.send(event);
@@ -356,11 +419,18 @@ impl TestApp {
     fn perform(&mut self, effects: Vec<Effect>) {
         for effect in effects {
             match &effect {
-                Effect::Github { .. } | Effect::Git { .. } | Effect::SaveConfig(_) => {
+                Effect::Github { .. } | Effect::Git { .. } | Effect::SaveConfig(_) | Effect::ReadCache { .. } => {
                     self.queued.push_back(effect.clone());
                 }
+                Effect::WriteCache { path, text } => {
+                    self.cache_files.insert(path.clone(), text.clone());
+                }
                 Effect::Cancel(id) => self.queued.retain(|queued| {
-                    !matches!(queued, Effect::Github { id: queued, .. } | Effect::Git { id: queued, .. } if queued == id)
+                    !matches!(
+                        queued,
+                        Effect::Github { id: queued, .. } | Effect::Git { id: queued, .. } | Effect::ReadCache { id: queued, .. }
+                        if queued == id
+                    )
                 }),
                 Effect::StartInterval { id, every } => {
                     let next = self.clock.now() + *every;
@@ -401,31 +471,56 @@ pub fn buffer_to_string(buffer: &Buffer) -> String {
 /// What `f` logs at `DEBUG` and above, as `LEVEL message` lines.
 #[cfg(test)]
 pub fn logs(f: impl FnOnce()) -> String {
-    #[derive(Clone, Default)]
-    struct Capture(std::sync::Arc<std::sync::Mutex<Vec<u8>>>);
-    impl std::io::Write for Capture {
-        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-            self.0.lock().unwrap().extend_from_slice(buf);
-            Ok(buf.len())
+    let capture = LogCapture::start();
+    f();
+    capture.text()
+}
+
+/// Captures what this thread logs at `DEBUG` and above until it's dropped. For async tests on a current-thread
+/// runtime, where [`logs`] can't wrap the awaits.
+#[cfg(test)]
+pub struct LogCapture {
+    buf: std::sync::Arc<std::sync::Mutex<Vec<u8>>>,
+    _guard: tracing::subscriber::DefaultGuard,
+}
+
+#[cfg(test)]
+impl LogCapture {
+    /// Starts capturing.
+    pub fn start() -> Self {
+        #[derive(Clone, Default)]
+        struct Capture(std::sync::Arc<std::sync::Mutex<Vec<u8>>>);
+        impl std::io::Write for Capture {
+            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+                self.0.lock().unwrap().extend_from_slice(buf);
+                Ok(buf.len())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
         }
-        fn flush(&mut self) -> std::io::Result<()> {
-            Ok(())
+        let capture = Capture::default();
+        let writer = capture.clone();
+        let subscriber = tracing_subscriber::fmt()
+            .with_max_level(tracing::Level::DEBUG)
+            .without_time()
+            .with_target(false)
+            .with_writer(move || writer.clone())
+            .finish();
+        Self {
+            buf: capture.0,
+            _guard: tracing::subscriber::set_default(subscriber),
         }
     }
-    let capture = Capture::default();
-    let writer = capture.clone();
-    let subscriber = tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
-        .without_time()
-        .with_target(false)
-        .with_writer(move || writer.clone())
-        .finish();
-    tracing::subscriber::with_default(subscriber, f);
-    let out = String::from_utf8(capture.0.lock().unwrap().clone()).unwrap();
-    // The fmt layer pads levels to five columns.
-    out.lines()
-        .map(|line| line.split_whitespace().collect::<Vec<_>>().join(" ") + "\n")
-        .collect()
+
+    /// What was logged so far, as `LEVEL message` lines.
+    pub fn text(&self) -> String {
+        let out = String::from_utf8(self.buf.lock().unwrap().clone()).unwrap();
+        // The fmt layer pads levels to five columns.
+        out.lines()
+            .map(|line| line.split_whitespace().collect::<Vec<_>>().join(" ") + "\n")
+            .collect()
+    }
 }
 
 /// The key event a terminal sends for `key`, in Textual key syntax ([`KeySpec::parse`]).

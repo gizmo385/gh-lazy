@@ -79,20 +79,26 @@ fn a_fresh_cache_goes_straight_to_main() {
     let mut app = TestApp::on_startup(config_checked(Some(1.hour())), FakeGithub::new());
     settle(&mut app);
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
-    // Only the main screen's repos list and the current-directory repo.
-    assert!(matches!(
-        app.effects(),
-        [
-            Effect::Github {
-                request: GithubRequest::ListRepositories(_),
-                ..
-            },
-            Effect::Git {
-                request: GitRequest::OriginRepo,
-                ..
-            }
-        ]
-    ));
+    // Only the main screen's repos list, its `repos.json` read and write, and the current-directory repo.
+    assert!(
+        matches!(
+            app.effects(),
+            [
+                Effect::Github {
+                    request: GithubRequest::ListRepositories(_),
+                    ..
+                },
+                Effect::ReadCache { .. },
+                Effect::Git {
+                    request: GitRequest::OriginRepo,
+                    ..
+                },
+                Effect::WriteCache { .. },
+            ]
+        ),
+        "{:?}",
+        app.effects()
+    );
     assert_eq!(app.gh().calls(), [GithubCall::ListRepositories(RepoListQuery::all())]);
 }
 
@@ -122,8 +128,9 @@ fn a_stale_cache_checks_then_saves_once_and_shows_main() {
     let now = app.clock().local_now().datetime();
     assert_eq!(saved[0].cache.auth_last_checked, Some(now));
     assert!(!saved[0].core.first_start);
-    // The check, the repos list, the current-directory repo and the save.
-    assert_eq!(app.effects().len(), 4);
+    // The check, the repos list, the `repos.json` read, the current-directory repo, the save and the `repos.json`
+    // write.
+    assert_eq!(app.effects().len(), 6, "{:?}", app.effects());
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
 }
 
@@ -170,7 +177,7 @@ fn the_poll_rechecks_and_moves_on_without_saving() {
     settle(&mut app);
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
     assert_eq!(saved_configs(&app), Vec::<&Config>::new());
-    let last = &app.effects()[app.effects().len() - 3..];
+    let last = &app.effects()[app.effects().len() - 5..];
     assert!(
         matches!(
             last,
@@ -180,10 +187,12 @@ fn the_poll_rechecks_and_moves_on_without_saving() {
                     request: GithubRequest::ListRepositories(_),
                     ..
                 },
+                Effect::ReadCache { .. },
                 Effect::Git {
                     request: GitRequest::OriginRepo,
                     ..
-                }
+                },
+                Effect::WriteCache { .. },
             ]
         ),
         "{last:?}"

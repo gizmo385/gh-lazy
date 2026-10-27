@@ -1,5 +1,8 @@
 //! The repositories section: the user's repos in a searchable table, favorites first. Python's `ReposContainer`.
 
+use std::path::PathBuf;
+
+use lazy_github_core::cache::{self, CacheScope};
 use lazy_github_core::gh::GhError;
 use lazy_github_core::github::RepoListQuery;
 use lazy_github_core::models::Repository;
@@ -9,7 +12,7 @@ use ratatui::text::Span;
 use crate::action::Action;
 use crate::component::{Cx, LocalRepo};
 use crate::components::table::{Cell, CellValue, Column, SearchableTable, SortSpec, TableItem};
-use crate::effect::{GithubRequest, GithubResponse, RequestId};
+use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::options::AppOptions;
 use crate::theme::{RichAnsi, Theme};
 
@@ -24,6 +27,11 @@ const NOT_FAVORITE: &str = "☆";
 const PRIVATE: &str = "✓";
 /// Python's `private_string(False)`.
 const PUBLIC: &str = "✘";
+
+/// The repos table's cache: `repos.json`, app-wide.
+const CACHE_NAME: &str = "repos";
+/// The model's name in the Python app, for the cache's schema warning.
+const CACHE_TYPE: &str = "Repository";
 
 /// What a repo's cells need besides the repo.
 #[derive(Debug, Clone)]
@@ -75,10 +83,13 @@ impl TableItem for Repository {
     }
 }
 
-/// The repos section's state: the table and the load in flight.
+/// The repos section's state: the table, the load in flight and the `repos.json` read in flight.
 pub struct ReposSection {
     pub(super) table: SearchableTable<Repository>,
     load: Load,
+    cache_read: Option<(RequestId, PathBuf)>,
+    /// The list (with the tracked repos) has filled the rows, so the cached ones are stale.
+    listed: bool,
 }
 
 /// Where loading the rows is.
@@ -166,6 +177,8 @@ impl std::fmt::Debug for ReposSection {
             .field("rows", &self.table.row_count())
             .field("loading", &self.table.is_loading())
             .field("load", &self.load)
+            .field("cache_read", &self.cache_read)
+            .field("listed", &self.listed)
             .finish_non_exhaustive()
     }
 }
@@ -182,20 +195,67 @@ impl ReposSection {
         Self {
             table: SearchableTable::new(columns, SortSpec::ascending(0)).with_options(options),
             load: Load::Idle,
+            cache_read: None,
+            listed: false,
         }
     }
 
-    /// Python's `on_mount`: the loading overlay, and the request for every repo.
+    /// Python's `on_mount`: the loading overlay, the request for every repo, and the read of `repos.json` to show
+    /// under the overlay until the list arrives.
     pub fn start(&mut self, cx: &mut Cx<'_>) {
         self.table.set_loading(true);
         self.load = Load::Listing(cx.request(GithubRequest::ListRepositories(RepoListQuery::all())));
+        let path = cache_file(cx);
+        self.cache_read = Some((cx.read_cache(path.clone()), path));
+    }
+
+    /// Takes the result of the `repos.json` read, and hands back any other.
+    ///
+    /// Python's `initialize_from_cache` in `load_repos`: the cached repos replace the rows, and the current-directory
+    /// check runs on them. Python restores before it asks for the list; here the two race, so a read that lands once
+    /// the list and every tracked repo have filled the rows is dropped rather than drawing older rows over newer
+    /// ones. One that lands after a failed list still shows, as the cached rows stay in Python then.
+    pub fn on_cache_read(
+        &mut self,
+        id: RequestId,
+        result: Result<Option<String>, String>,
+        cx: &mut Cx<'_>,
+    ) -> Option<Result<Option<String>, String>> {
+        let Some((_, path)) = self.cache_read.take_if(|(pending, _)| *pending == id) else {
+            return Some(result);
+        };
+        if self.listed {
+            tracing::debug!("Dropping the cached repos: the list already arrived");
+            return None;
+        }
+        let repos: Vec<Repository> = cache::load(&path, result, CACHE_TYPE);
+        self.table.replace_all(repos, &RepoCells::from_cx(cx));
+        self.check_current_directory_repo(cx);
+        None
+    }
+
+    /// Adds `repo` to the table (or replaces the row with its name) and rewrites `repos.json` with it, so it shows at
+    /// the next start until the list replaces it. Python's `add_item`, for a repo from the Lookup repository modal or
+    /// a profile.
+    pub fn add(&mut self, repo: Repository, cx: &mut Cx<'_>) {
+        // The repos table isn't lazy, so adding rows never asks for a page.
+        let _ = self.table.insert(repo, &RepoCells::from_cx(cx));
+        self.save_cache(cx);
+    }
+
+    /// Python's `save_to_cache`: writes every repo in the table, in insertion order, to `repos.json`.
+    fn save_cache(&self, cx: &mut Cx<'_>) {
+        let text = cache::to_json(self.table.items());
+        let path = cache_file(cx);
+        cx.effect(Effect::WriteCache { path, text });
     }
 
     /// Takes the responses to the pending list and tracked-repo requests, and hands back any other.
     ///
     /// Python's `load_repos`: once every page has arrived, each of `repositories.additional_repos_to_track` is
     /// fetched at once, and when all have answered the listed repos, then the found tracked ones, replace whatever
-    /// was there. A failed list is logged, with no toast, fetches nothing tracked and leaves the table empty.
+    /// was there (the cached repos included) and are written to `repos.json`. A failed list is logged, with no toast,
+    /// fetches nothing tracked and leaves the rows (the cached ones, if any) and the file as they were.
     pub fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
         match &mut self.load {
             Load::Listing(pending) if *pending == id => {
@@ -248,9 +308,12 @@ impl ReposSection {
         self.load = Load::Tracking(TrackedFetch { listed, slots });
     }
 
-    /// Replaces the rows with `repos`, drops the overlay, and offers the current-directory repo the new rows.
+    /// Replaces the rows with `repos`, writes them to `repos.json`, drops the overlay, and offers the
+    /// current-directory repo the new rows.
     fn show(&mut self, repos: impl IntoIterator<Item = Repository>, cx: &mut Cx<'_>) {
         self.table.replace_all(repos, &RepoCells::from_cx(cx));
+        self.listed = true;
+        self.save_cache(cx);
         self.table.set_loading(false);
         self.check_current_directory_repo(cx);
     }
@@ -296,6 +359,11 @@ impl ReposSection {
     }
 }
 
+/// The repos table's cache file, under the config's cache directory.
+fn cache_file(cx: &Cx<'_>) -> PathBuf {
+    cache::cache_path(&cx.config().cache.cache_directory, CacheScope::App, CACHE_NAME)
+}
+
 /// A repo for tests: public unless `private`, owned by the user `owner`.
 #[cfg(test)]
 pub(super) fn repo(owner: &str, name: &str, private: bool) -> Repository {
@@ -315,6 +383,9 @@ pub(super) fn repo(owner: &str, name: &str, private: bool) -> Repository {
         permissions: None,
     }
 }
+
+#[cfg(test)]
+mod cache_tests;
 
 #[cfg(test)]
 mod tests {

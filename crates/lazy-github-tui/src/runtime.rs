@@ -2,7 +2,10 @@
 
 use std::collections::HashMap;
 use std::io::{self, Write};
+use std::path::PathBuf;
 
+use indexmap::IndexMap;
+use lazy_github_core::cache;
 use lazy_github_core::config::{Config, ConfigPaths};
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::Github;
@@ -22,6 +25,7 @@ pub struct Runtime<G: Github> {
     tasks: HashMap<RequestId, AbortHandle>,
     timers: HashMap<TimerId, AbortHandle>,
     saver: ConfigSaver,
+    cache_writer: CacheWriter,
     /// The terminal, for the bell.
     terminal: Box<dyn Write + Send>,
 }
@@ -31,6 +35,7 @@ impl<G: Github> Runtime<G> {
     /// `tx` and saves the config to `paths`. Must be called inside a tokio runtime.
     pub fn new(gh: G, git: GitCli, tx: mpsc::UnboundedSender<Event>, paths: ConfigPaths) -> Self {
         let saver = ConfigSaver::spawn(paths, tx.clone());
+        let cache_writer = CacheWriter::spawn();
         Self {
             gh,
             git,
@@ -38,6 +43,7 @@ impl<G: Github> Runtime<G> {
             tasks: HashMap::new(),
             timers: HashMap::new(),
             saver,
+            cache_writer,
             terminal: Box::new(io::stdout()),
         }
     }
@@ -81,6 +87,18 @@ impl<G: Github> Runtime<G> {
                 }
             }
             Effect::SaveConfig(config) => self.saver.save(config),
+            Effect::ReadCache { id, path } => {
+                let tx = self.tx.clone();
+                let task = tokio::spawn(async move {
+                    let result = match tokio::task::spawn_blocking(move || cache::read(&path)).await {
+                        Ok(read) => read.map_err(|e| e.to_string()),
+                        Err(e) => Err(format!("the read task failed: {e}")),
+                    };
+                    let _ = tx.send(Event::CacheRead { id, result });
+                });
+                self.tasks.insert(id, task.abort_handle());
+            }
+            Effect::WriteCache { path, text } => self.cache_writer.write(path, text),
             Effect::StartInterval { id, every } => {
                 if self.timers.contains_key(&id) {
                     return;
@@ -133,12 +151,13 @@ impl<G: Github> Runtime<G> {
     }
 
     /// Aborts every request (killing their `gh` and `git` children) and timer, then waits for the config saver to write the
-    /// newest pending save.
+    /// newest pending save and the cache writer to write every pending file.
     pub async fn shutdown(self) {
         for task in self.tasks.into_values().chain(self.timers.into_values()) {
             task.abort();
         }
         self.saver.finish().await;
+        self.cache_writer.finish().await;
     }
 }
 
@@ -178,6 +197,61 @@ impl ConfigSaver {
         drop(self.tx);
         if let Err(e) = self.task.await {
             tracing::error!("The config saver failed: {e}");
+        }
+    }
+}
+
+/// One task that writes cache files, one at a time. A write to a path that arrives while an older write to it is
+/// still pending replaces that one, so each path gets its newest text next. A write that fails is logged as a warning;
+/// the app carries on with its rows.
+struct CacheWriter {
+    tx: mpsc::UnboundedSender<(PathBuf, String)>,
+    task: JoinHandle<()>,
+}
+
+impl CacheWriter {
+    fn spawn() -> Self {
+        let (tx, mut rx) = mpsc::unbounded_channel::<(PathBuf, String)>();
+        let task = tokio::spawn(async move {
+            // Pending writes, oldest path first. `insert` keeps a path's place and replaces its text.
+            let mut pending: IndexMap<PathBuf, String> = IndexMap::new();
+            loop {
+                if pending.is_empty() {
+                    // `None` once `finish` drops the sender and everything sent before is taken.
+                    let Some((path, text)) = rx.recv().await else { break };
+                    pending.insert(path, text);
+                }
+                while let Ok((path, text)) = rx.try_recv() {
+                    pending.insert(path, text);
+                }
+                let Some((path, text)) = pending.shift_remove_index(0) else {
+                    continue;
+                };
+                let written = tokio::task::spawn_blocking({
+                    let path = path.clone();
+                    move || cache::write(&path, &text)
+                })
+                .await;
+                let error = match written {
+                    Ok(Ok(())) => continue,
+                    Ok(Err(e)) => e.to_string(),
+                    Err(e) => format!("the write task failed: {e}"),
+                };
+                tracing::warn!("Failed to write cache file '{}': {error}", path.display());
+            }
+        });
+        Self { tx, task }
+    }
+
+    fn write(&self, path: PathBuf, text: String) {
+        // The receiver lives as long as the task, which only ends after `finish` drops the sender.
+        let _ = self.tx.send((path, text));
+    }
+
+    async fn finish(self) {
+        drop(self.tx);
+        if let Err(e) = self.task.await {
+            tracing::error!("The cache writer failed: {e}");
         }
     }
 }
@@ -418,6 +492,100 @@ mod tests {
             Event::ConfigSaved(Err(message)) => assert!(message.starts_with("failed to write "), "{message}"),
             other => panic!("unexpected {other:?}"),
         }
+    }
+
+    async fn cache_read(rx: &mut mpsc::UnboundedReceiver<Event>) -> (RequestId, Result<Option<String>, String>) {
+        match tokio::time::timeout(Duration::from_secs(10), rx.recv())
+            .await
+            .unwrap()
+            .unwrap()
+        {
+            Event::CacheRead { id, result } => (id, result),
+            other => panic!("unexpected {other:?}"),
+        }
+    }
+
+    // Not on a paused clock: the reads run on blocking threads.
+    #[tokio::test(flavor = "current_thread")]
+    async fn cache_reads_answer_with_the_text_or_none() {
+        let dir = TempDir::new();
+        let (mut runtime, mut rx) = runtime(FakeGithub::new(), &dir);
+        let path = dir.0.join("cache").join("repos.json");
+        runtime.execute(Effect::ReadCache {
+            id: RequestId::new(4),
+            path: path.clone(),
+        });
+        assert_eq!(cache_read(&mut rx).await, (RequestId::new(4), Ok(None)));
+
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, "[]").unwrap();
+        runtime.execute(Effect::ReadCache {
+            id: RequestId::new(5),
+            path: path.clone(),
+        });
+        assert_eq!(cache_read(&mut rx).await, (RequestId::new(5), Ok(Some("[]".into()))));
+
+        // Text that isn't UTF-8 can't be read; the error comes back as text.
+        std::fs::write(&path, [0xff, 0xfe]).unwrap();
+        runtime.execute(Effect::ReadCache {
+            id: RequestId::new(6),
+            path,
+        });
+        let (id, result) = cache_read(&mut rx).await;
+        assert_eq!(id, RequestId::new(6));
+        assert!(result.is_err(), "{result:?}");
+        runtime.shutdown().await;
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn cache_writes_create_the_directory_and_the_newest_wins() {
+        let dir = TempDir::new();
+        let (mut runtime, _rx) = runtime(FakeGithub::new(), &dir);
+        let path = dir.0.join("nested").join(".cache").join("repos.json");
+        let other = dir.0.join("nested").join(".cache").join("o_r_issues.json");
+        for text in ["[1]", "[2]", "[3]"] {
+            runtime.execute(Effect::WriteCache {
+                path: path.clone(),
+                text: text.into(),
+            });
+        }
+        runtime.execute(Effect::WriteCache {
+            path: other.clone(),
+            text: "[]".into(),
+        });
+        runtime.shutdown().await;
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "[3]");
+        assert_eq!(std::fs::read_to_string(&other).unwrap(), "[]");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn pending_writes_to_one_path_collapse_and_a_failed_write_logs_a_warning() {
+        let capture = crate::test_util::LogCapture::start();
+        let dir = TempDir::new();
+        // A file where the cache folder should be makes every write fail.
+        let blocker = dir.0.join("cache");
+        std::fs::write(&blocker, "").unwrap();
+        let path = blocker.join("repos.json");
+        let (mut runtime, _rx) = runtime(FakeGithub::new(), &dir);
+        // All three are queued before the writer first runs, so it takes only the newest.
+        for text in ["[1]", "[2]", "[3]"] {
+            runtime.execute(Effect::WriteCache {
+                path: path.clone(),
+                text: text.into(),
+            });
+        }
+        runtime.shutdown().await;
+        let warnings: Vec<String> = capture
+            .text()
+            .lines()
+            .filter(|line| line.starts_with("WARN"))
+            .map(str::to_owned)
+            .collect();
+        let [warning] = warnings.as_slice() else {
+            panic!("{warnings:?}");
+        };
+        let prefix = format!("WARN Failed to write cache file '{}': ", path.display());
+        assert!(warning.starts_with(&prefix), "{warning}");
     }
 
     #[tokio::test(flavor = "current_thread", start_paused = true)]

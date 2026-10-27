@@ -171,6 +171,7 @@ impl App {
             Event::Key(key) => self.action_for_key(key),
             Event::Github { id, response } => Some(Action::Github(id, response)),
             Event::Git { id, response } => Some(Action::Git(id, response)),
+            Event::CacheRead { id, result } => Some(Action::CacheRead(id, result)),
             Event::ConfigSaved(result) => Some(Action::ConfigSaved(result)),
             Event::Timer(id) => Some(Action::Timer(id)),
             Event::CommandLog(line) => Some(Action::CommandLog(line)),
@@ -469,6 +470,15 @@ impl App {
             }
             Action::Github(id, response) => self.route_response(id, response, out),
             Action::Git(id, response) => self.route_git(id, response, out),
+            Action::CacheRead(id, result) => {
+                let unclaimed = match &mut self.base {
+                    BaseScreen::Main(main) => main.on_cache_read(id, result, &mut Cx::new(&mut self.shared, out)),
+                    _ => Some(result),
+                };
+                if unclaimed.is_some() {
+                    tracing::debug!("Dropping the cache read {id}: nothing is waiting for it");
+                }
+            }
             Action::ConfigSaved(Ok(())) => tracing::debug!("Saved the config"),
             Action::ConfigSaved(Err(message)) => {
                 tracing::error!("Failed to save config: {message}");

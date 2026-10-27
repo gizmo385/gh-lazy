@@ -2,6 +2,7 @@
 //!
 //! This crate has no UI dependencies, so all GitHub and config logic is testable without a terminal.
 
+pub mod cache;
 pub mod config;
 pub mod gh;
 pub mod git;

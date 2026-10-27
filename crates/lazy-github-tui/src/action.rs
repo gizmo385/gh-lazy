@@ -63,6 +63,8 @@ pub enum Action {
     Github(RequestId, GithubResponse),
     /// A git request finished.
     Git(RequestId, GitResponse),
+    /// A cache file read finished: its text, `None` when there's no file, or the error as text.
+    CacheRead(RequestId, Result<Option<String>, String>),
     /// A config save finished.
     ConfigSaved(Result<(), String>),
     /// A timer ticked.

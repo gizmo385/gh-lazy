@@ -34,6 +34,13 @@ pub enum Event {
         /// Its result.
         response: GitResponse,
     },
+    /// An `Effect::ReadCache` finished: the file's text, `None` when there's no file, or the error as text.
+    CacheRead {
+        /// The id from the `Effect::ReadCache` that started it.
+        id: RequestId,
+        /// Its result.
+        result: Result<Option<String>, String>,
+    },
     /// An `Effect::SaveConfig` finished. The error is already rendered as text.
     ConfigSaved(Result<(), String>),
     /// A timer ticked.

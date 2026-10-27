@@ -1,6 +1,7 @@
 //! The `Component` trait every pane, tab and modal implements, and the contexts passed into it.
 
 use std::collections::VecDeque;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use crossterm::event::{KeyEvent, MouseEvent};
@@ -323,6 +324,14 @@ impl<'a> Cx<'a> {
     pub fn git(&mut self, request: GitRequest) -> RequestId {
         let id = self.next_request_id();
         self.out.effects.push(Effect::Git { id, request });
+        id
+    }
+
+    /// Reads the cache file at `path` in the background and returns the read's id. The text comes back as
+    /// [`Action::CacheRead`] with that id. Ids come from the same counter as [`Self::request`]'s.
+    pub fn read_cache(&mut self, path: PathBuf) -> RequestId {
+        let id = self.next_request_id();
+        self.out.effects.push(Effect::ReadCache { id, path });
         id
     }
 

@@ -1,6 +1,7 @@
 //! Side effects as data. `App::update` returns them and only the [`Runtime`](crate::runtime::Runtime) performs them.
 
 use std::fmt;
+use std::path::PathBuf;
 use std::time::Duration;
 
 use lazy_github_core::config::Config;
@@ -32,6 +33,22 @@ pub enum Effect {
     Cancel(RequestId),
     /// Save this snapshot of the config. Saves happen in order, and a newer pending save replaces an older one.
     SaveConfig(Box<Config>),
+    /// Read a table cache file (`lazy_github_core::cache::read`) off the async threads. The text comes back as
+    /// `Event::CacheRead` with the same `id`, `None` when there's no file.
+    ReadCache {
+        /// Which read this is, from the same counter as GitHub requests.
+        id: RequestId,
+        /// The file.
+        path: PathBuf,
+    },
+    /// Write a table cache file (`lazy_github_core::cache::write`), creating its directory. Writes to one path happen
+    /// in order, and a newer pending write replaces an older one. A failed write is logged as a warning.
+    WriteCache {
+        /// The file.
+        path: PathBuf,
+        /// Its new text, from `lazy_github_core::cache::to_json`.
+        text: String,
+    },
     /// Send `Event::Timer(id)` every `every`, first at `+every` (Textual's `set_interval`). A no-op if `id` is
     /// already running.
     StartInterval {

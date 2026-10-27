@@ -534,6 +534,14 @@ mod tests {
         ) -> Result<Vec<lazy_github_core::models::WorkflowRun>, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }
+
+        async fn pull_request_diff(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _number: u64,
+        ) -> Result<String, lazy_github_core::github::DiffFetchError> {
+            std::future::pending().await
+        }
     }
 
     /// Runs the loop on a `TestBackend` with `effect` already started, and returns how it ended.

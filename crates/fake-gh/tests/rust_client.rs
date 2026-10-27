@@ -511,3 +511,84 @@ async fn child_repo_readmes() {
         )
     );
 }
+
+/// `parity-bot/pr-details`, as `pr-details` lists it.
+fn pr_details_repo() -> Repository {
+    let path = common::repo_root().join(
+        "parity/fixtures/pr-details/user/repos/GET.direction-asc_page-1_per_page-50_sort-full_name_type-all.json",
+    );
+    let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let repos: Vec<Repository> = serde_json::from_value(fixture["response"]["body"].clone()).unwrap();
+    repos
+        .into_iter()
+        .find(|repo| repo.full_name == "parity-bot/pr-details")
+        .unwrap()
+}
+
+#[test]
+fn pull_request_diffs_through_gh_api() {
+    let log = run_child("child_pull_request_diffs", "logged-in", &["pr-details"]);
+    assert_eq!(log.len(), 4, "{log:#?}");
+    assert!(log.iter().all(|line| line["miss"] == false), "{log:#?}");
+    assert_eq!(
+        strings(&log[0]["argv"]),
+        [
+            "api",
+            "-i",
+            "-X",
+            "GET",
+            "--cache",
+            "600s",
+            "-H",
+            "Accept: application/vnd.github.diff",
+            "/repos/parity-bot/pr-details/pulls/5"
+        ]
+    );
+    let fixtures: Vec<&str> = log.iter().map(|line| line["fixture"].as_str().unwrap()).collect();
+    let pulls = "pr-details/repos/parity-bot/pr-details/pulls";
+    assert_eq!(
+        fixtures,
+        [5, 3, 9, 4].map(|number| format!("{pulls}/{number}/GET.diff.json"))
+    );
+    let statuses: Vec<&Value> = log.iter().map(|line| &line["status"]).collect();
+    assert_eq!(statuses, [200, 200, 200, 406]);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_pull_request_diffs() {
+    use lazy_github_core::diff;
+    use lazy_github_core::github::DiffFetchError;
+
+    let Some(gh) = client() else { return };
+    let repo = pr_details_repo();
+    let paths = |text: &str| -> Vec<String> {
+        diff::parse(text)
+            .unwrap()
+            .files
+            .into_iter()
+            .map(|file| file.path)
+            .collect()
+    };
+    let pr_5 = gh.pull_request_diff(&repo, 5).await.unwrap();
+    assert!(pr_5.starts_with("diff --git a/README.md b/README.md\nindex 7777777..8888888 100644\n"));
+    assert!(pr_5.ends_with("         Ok(())\n     }\n"), "{pr_5}");
+    assert_eq!(
+        paths(&pr_5),
+        [
+            "README.md",
+            "assets/app.css",
+            "build.rs",
+            "docs/old.md",
+            "src/viewer.rs"
+        ]
+    );
+    assert_eq!(
+        paths(&gh.pull_request_diff(&repo, 3).await.unwrap()),
+        ["Cargo.toml", "CHANGELOG.md"]
+    );
+    assert_eq!(paths(&gh.pull_request_diff(&repo, 9).await.unwrap()), ["src/viewer.rs"]);
+    let too_large = gh.pull_request_diff(&repo, 4).await.unwrap_err();
+    assert!(matches!(too_large, DiffFetchError::TooLarge), "{too_large:?}");
+    assert_eq!(too_large.message(), "Diff too large");
+}

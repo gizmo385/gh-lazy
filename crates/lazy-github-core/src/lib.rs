@@ -4,6 +4,7 @@
 
 pub mod cache;
 pub mod config;
+pub mod diff;
 pub mod gh;
 pub mod git;
 pub mod github;

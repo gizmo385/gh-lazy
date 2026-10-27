@@ -7,7 +7,7 @@ use std::time::Duration;
 use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
-use lazy_github_core::github::{Github, IssueListQuery, PageQuery, RepoListQuery};
+use lazy_github_core::github::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
 use lazy_github_core::models::{IssueListItem, RepoName, Repository, User, Workflow, WorkflowRun};
 
 /// Something the runtime does on the app's behalf.
@@ -137,6 +137,13 @@ pub enum GithubRequest {
         /// The page.
         page: PageQuery,
     },
+    /// [`Github::pull_request_diff`].
+    PullRequestDiff {
+        /// The pull request's repo.
+        repo: Box<Repository>,
+        /// The pull request's number.
+        number: u64,
+    },
 }
 
 /// The result of a [`GithubRequest`], in the variant of the same name.
@@ -160,6 +167,8 @@ pub enum GithubResponse {
     ListWorkflows(Result<Vec<Workflow>, GhError>),
     /// [`Github::list_workflow_runs`].
     ListWorkflowRuns(Result<Vec<WorkflowRun>, GhError>),
+    /// [`Github::pull_request_diff`].
+    PullRequestDiff(Result<String, DiffFetchError>),
 }
 
 impl GithubRequest {
@@ -184,6 +193,9 @@ impl GithubRequest {
             }
             GithubRequest::ListWorkflowRuns { repo, page } => {
                 GithubResponse::ListWorkflowRuns(gh.list_workflow_runs(&repo, page).await)
+            }
+            GithubRequest::PullRequestDiff { repo, number } => {
+                GithubResponse::PullRequestDiff(gh.pull_request_diff(&repo, number).await)
             }
         }
     }

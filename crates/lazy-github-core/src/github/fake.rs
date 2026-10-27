@@ -7,14 +7,14 @@ use std::time::Duration;
 
 use serde::de::Error as _;
 
-use super::{Github, IssueListQuery, PageQuery, RepoListQuery};
+use super::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
 use crate::gh::GhError;
 use crate::models::{IssueListItem, Repository, User, Workflow, WorkflowRun};
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -56,6 +56,13 @@ pub enum GithubCall {
         /// The page.
         page: PageQuery,
     },
+    /// [`Github::pull_request_diff`].
+    PullRequestDiff {
+        /// The pull request's repository.
+        repo: Repository,
+        /// The pull request's number.
+        number: u64,
+    },
 }
 
 #[derive(Debug, Default)]
@@ -74,6 +81,8 @@ struct State {
     workflow_pages: HashMap<(String, u32), Result<Vec<Workflow>, GhError>>,
     /// Keyed by `full_name` and page.
     run_pages: HashMap<(String, u32), Result<Vec<WorkflowRun>, GhError>>,
+    /// Keyed by `full_name` and pull request number.
+    diffs: HashMap<(String, u64), Result<String, DiffFetchError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -163,6 +172,14 @@ impl FakeGithub {
     #[must_use]
     pub fn with_run_page(self, full_name: &str, page_number: u32, page: Result<Vec<WorkflowRun>, GhError>) -> Self {
         self.lock().run_pages.insert((full_name.to_owned(), page_number), page);
+        self
+    }
+
+    /// `pull_request_diff` returns `diff` for pull request `number` of the repository named `full_name`. Pull requests
+    /// not set have no diff ([`DiffFetchError::NotFound`]).
+    #[must_use]
+    pub fn with_pull_request_diff(self, full_name: &str, number: u64, diff: Result<String, DiffFetchError>) -> Self {
+        self.lock().diffs.insert((full_name.to_owned(), number), diff);
         self
     }
 
@@ -311,6 +328,30 @@ impl Github for FakeGithub {
             page,
         };
         self.respond(call, |state| canned_page(state.run_pages.get(&key))).await
+    }
+
+    async fn pull_request_diff(&self, repo: &Repository, number: u64) -> Result<String, DiffFetchError> {
+        let key = (repo.full_name.clone(), number);
+        let call = GithubCall::PullRequestDiff {
+            repo: repo.clone(),
+            number,
+        };
+        self.respond(call, |state| match state.diffs.get(&key) {
+            Some(Ok(diff)) => Ok(diff.clone()),
+            Some(Err(error)) => Err(duplicate_diff_error(error)),
+            None => Err(DiffFetchError::NotFound),
+        })
+        .await
+    }
+}
+
+/// A copy of `error`, as [`duplicate`] makes for a [`GhError`].
+fn duplicate_diff_error(error: &DiffFetchError) -> DiffFetchError {
+    match error {
+        DiffFetchError::NotFound => DiffFetchError::NotFound,
+        DiffFetchError::TooLarge => DiffFetchError::TooLarge,
+        DiffFetchError::Http(status) => DiffFetchError::Http(*status),
+        DiffFetchError::Gh(error) => DiffFetchError::Gh(duplicate(error)),
     }
 }
 
@@ -609,6 +650,41 @@ mod tests {
                 },
             ]
         );
+    }
+
+    #[tokio::test]
+    async fn pull_request_diffs_by_repo_and_number() {
+        let github = FakeGithub::new()
+            .with_pull_request_diff("octocat/a", 5, Ok("diff --git a/f b/f\n".into()))
+            .with_pull_request_diff("octocat/a", 4, Err(DiffFetchError::TooLarge))
+            .with_pull_request_diff("octocat/a", 6, Err(DiffFetchError::Gh(GhError::NotInstalled)));
+        for _ in 0..2 {
+            assert_eq!(
+                github.pull_request_diff(&repo("a"), 5).await.unwrap(),
+                "diff --git a/f b/f\n"
+            );
+            assert!(matches!(
+                github.pull_request_diff(&repo("a"), 4).await,
+                Err(DiffFetchError::TooLarge)
+            ));
+            assert!(matches!(
+                github.pull_request_diff(&repo("a"), 6).await,
+                Err(DiffFetchError::Gh(GhError::NotInstalled))
+            ));
+        }
+        // Unset pull requests have no diff.
+        assert!(matches!(
+            github.pull_request_diff(&repo("b"), 5).await,
+            Err(DiffFetchError::NotFound)
+        ));
+        assert_eq!(
+            github.calls()[0],
+            GithubCall::PullRequestDiff {
+                repo: repo("a"),
+                number: 5
+            }
+        );
+        assert_eq!(github.calls().len(), 7);
     }
 
     #[test]

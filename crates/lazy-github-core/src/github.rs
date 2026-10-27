@@ -98,6 +98,55 @@ pub trait Github: Clone + Send + Sync + 'static {
         repo: &Repository,
         page: PageQuery,
     ) -> impl Future<Output = Result<Vec<WorkflowRun>, GhError>> + Send;
+
+    /// The diff of pull request `number` in `repo`, verbatim, for [`crate::diff::parse`]. Cached for
+    /// `cache.default_ttl`.
+    ///
+    /// Fails with [`DiffFetchError::NotFound`] for a 404, [`DiffFetchError::TooLarge`] for a 406 (over GitHub's
+    /// 20,000-line limit), [`DiffFetchError::Http`] for any other HTTP error status and [`DiffFetchError::Gh`] when
+    /// `gh` fails without one.
+    fn pull_request_diff(
+        &self,
+        repo: &Repository,
+        number: u64,
+    ) -> impl Future<Output = Result<String, DiffFetchError>> + Send;
+}
+
+/// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
+#[derive(Debug, thiserror::Error)]
+pub enum DiffFetchError {
+    /// The pull request or its diff doesn't exist (HTTP 404).
+    #[error("No diff contents found")]
+    NotFound,
+    /// The diff is over GitHub's 20,000-line limit (HTTP 406).
+    #[error("Diff too large")]
+    TooLarge,
+    /// Any other HTTP error status.
+    #[error("Error fetching diff ({0})")]
+    Http(u16),
+    /// `gh` failed without an HTTP status: not installed, logged out, timed out, offline.
+    #[error("Error fetching diff (0)")]
+    Gh(#[source] GhError),
+}
+
+impl DiffFetchError {
+    /// The line the Diff tab shows in place of the diff: the same text as `Display`.
+    pub fn message(&self) -> String {
+        self.to_string()
+    }
+}
+
+impl From<GhError> for DiffFetchError {
+    /// Tells apart the HTTP statuses the Diff tab words differently; any other failure keeps its [`GhError`] for the
+    /// log.
+    fn from(error: GhError) -> Self {
+        match error {
+            GhError::Http { status: 404, .. } => DiffFetchError::NotFound,
+            GhError::Http { status: 406, .. } => DiffFetchError::TooLarge,
+            GhError::Http { status, .. } => DiffFetchError::Http(status),
+            error => DiffFetchError::Gh(error),
+        }
+    }
 }
 
 /// Page size for the paged endpoints that take a [`PageQuery`]: Python's default `per_page`.
@@ -433,6 +482,15 @@ impl GhCli {
         request
     }
 
+    /// `GET /repos/{owner}/{repo}/pulls/{number}` as a diff, through `gh api` rather than `gh pr diff` so the HTTP
+    /// status is known (Py bug B56). Cached for the default TTL.
+    fn pull_request_diff_request(&self, repo: &Repository, number: u64) -> GhRequest {
+        let mut request = GhRequest::get(format!("/repos/{}/{}/pulls/{number}", repo.owner.login, repo.name));
+        request.accept = Accept::Diff;
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -519,6 +577,16 @@ impl Github for GhCli {
             .await?;
         workflow_runs(&response)
     }
+
+    async fn pull_request_diff(&self, repo: &Repository, number: u64) -> Result<String, DiffFetchError> {
+        let request = self.pull_request_diff_request(repo, number);
+        diff_text(self.inner.runner.request(request).await)
+    }
+}
+
+/// A diff response as the diff text, verbatim, or the error the Diff tab shows.
+fn diff_text(response: Result<GhResponse, GhError>) -> Result<String, DiffFetchError> {
+    Ok(response?.text())
 }
 
 /// The `workflows` body of `GET .../actions/workflows`.
@@ -1270,6 +1338,74 @@ mod tests {
         assert!(matches!(
             found_repository(Ok(api_response(r#"{"name": 1}"#))),
             Err(GhError::Decode(_))
+        ));
+    }
+
+    #[test]
+    fn pull_request_diff_argv() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        let repos: Vec<Repository> = parity_response(
+            "pr-details",
+            "user/repos/GET.direction-asc_page-1_per_page-50_sort-full_name_type-all.json",
+        )
+        .json()
+        .unwrap();
+        let repo = &repos[0];
+        assert_eq!(repo.full_name, "parity-bot/pr-details");
+        assert_eq!(
+            strings(
+                gh.pull_request_diff_request(repo, 5)
+                    .argv(gh.runner().hostname(), false)
+            ),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--cache",
+                "600s",
+                "-H",
+                "Accept: application/vnd.github.diff",
+                "/repos/parity-bot/pr-details/pulls/5"
+            ]
+        );
+    }
+
+    fn diff_response(status: &str, body: &str) -> Result<GhResponse, GhError> {
+        let stdout = format!("HTTP/2.0 {status}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n{body}");
+        let exit = i32::from(!status.starts_with('2'));
+        gh::interpret(Some(exit), stdout.as_bytes(), b"", false)
+    }
+
+    #[test]
+    fn a_diff_comes_back_verbatim() {
+        // Blank lines and a header-shaped line survive (Py bug B47).
+        let body = "diff --git a/f b/f\n--- a/f\n+++ b/f\n@@ -1,3 +1,3 @@\n \n-Note: x\n+Note: y\n \n";
+        assert_eq!(diff_text(diff_response("200 OK", body)).unwrap(), body);
+    }
+
+    #[test]
+    fn diff_errors_read_as_the_tab_shows_them() {
+        let error = |status: &str| diff_text(diff_response(status, r#"{"message":"x"}"#)).unwrap_err();
+        let not_found = error("404 Not Found");
+        assert!(matches!(not_found, DiffFetchError::NotFound));
+        assert_eq!(not_found.message(), "No diff contents found");
+        let too_large = error("406 Not Acceptable");
+        assert!(matches!(too_large, DiffFetchError::TooLarge));
+        assert_eq!(too_large.message(), "Diff too large");
+        let server = error("500 Internal Server Error");
+        assert!(matches!(server, DiffFetchError::Http(500)));
+        assert_eq!(server.message(), "Error fetching diff (500)");
+        let offline = diff_text(Err(GhError::Command {
+            code: Some(1),
+            stderr: "error connecting to api.github.com".into(),
+        }))
+        .unwrap_err();
+        assert!(matches!(offline, DiffFetchError::Gh(GhError::Command { .. })));
+        assert_eq!(offline.message(), "Error fetching diff (0)");
+        assert!(matches!(
+            diff_text(Err(GhError::NotInstalled)),
+            Err(DiffFetchError::Gh(GhError::NotInstalled))
         ));
     }
 }

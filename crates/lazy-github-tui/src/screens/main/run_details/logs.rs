@@ -205,6 +205,9 @@ impl Layout for Body {
 /// job in order, a header between two lines of `=` and its logs verbatim or `(No logs available for this job)`, all
 /// in one fenced block, cut after [`MAX_LOG_CHARS`] characters with a note after a blank line. Without jobs, `No jobs
 /// found for this workflow run.`
+///
+/// A log's last line ending is its terminator, not a blank row: one blank row follows a job's logs, as in Python,
+/// whose gh backend drops it (Py bug B47). Blank and header-shaped lines inside the logs stay, per B47's answer.
 pub(super) fn full_logs_markdown(jobs: &[WorkflowJob], logs: &HashMap<u64, Option<String>>) -> String {
     if jobs.is_empty() {
         return NO_JOBS.to_owned();
@@ -214,8 +217,8 @@ pub(super) fn full_logs_markdown(jobs: &[WorkflowJob], logs: &HashMap<u64, Optio
     for job in jobs {
         // Python's `str(None)` for a job without a conclusion.
         let conclusion = job.conclusion.as_ref().map_or("None", |conclusion| conclusion.as_str());
-        let text = match logs.get(&job.id) {
-            Some(Some(text)) if !text.is_empty() => text.as_str(),
+        let text = match logs.get(&job.id).and_then(Option::as_deref).map(without_terminator) {
+            Some(text) if !text.is_empty() => text,
             _ => "(No logs available for this job)\n",
         };
         // Writing to a `String` can't fail.
@@ -231,6 +234,12 @@ pub(super) fn full_logs_markdown(jobs: &[WorkflowJob], logs: &HashMap<u64, Optio
         all.push_str("\n\n... (logs truncated, too long to display)");
     }
     format!("```\n{all}\n```")
+}
+
+/// `text` without the line ending of its last line.
+fn without_terminator(text: &str) -> &str {
+    let text = text.strip_suffix('\n').unwrap_or(text);
+    text.strip_suffix('\r').unwrap_or(text)
 }
 
 #[cfg(test)]
@@ -253,13 +262,35 @@ mod tests {
         let rule = "=".repeat(80);
         let expected = format!(
             "```\n\
-             \n{rule}\nJob: build (Status: completed, Conclusion: success)\n{rule}\n\nbuild line 1\nbuild line 2\n\n\
-             \n{rule}\nJob: test (Status: completed, Conclusion: failure)\n{rule}\n\ntest line\n\n\
+             \n{rule}\nJob: build (Status: completed, Conclusion: success)\n{rule}\n\nbuild line 1\nbuild line 2\n\
+             \n{rule}\nJob: test (Status: completed, Conclusion: failure)\n{rule}\n\ntest line\n\
              \n{rule}\nJob: lint (Status: completed, Conclusion: skipped)\n{rule}\n\n(No logs available for this job)\n\n\
-             \n{rule}\nJob: deploy (Status: completed, Conclusion: cancelled)\n{rule}\n\ndeploy line\n\n\
+             \n{rule}\nJob: deploy (Status: completed, Conclusion: cancelled)\n{rule}\n\ndeploy line\n\
              \n```"
         );
         assert_eq!(full_logs_markdown(&jobs, &build_logs()), expected);
+    }
+
+    /// `run-details`' `logs`: one blank row between a job's last log line and the next job's rule, as Python shows.
+    #[test]
+    fn a_logs_last_line_ending_isnt_a_blank_row() {
+        let jobs = &fixture_jobs(5_000_042)[..1];
+        let rule = "=".repeat(80);
+        let header = format!("```\n\n{rule}\nJob: build (Status: completed, Conclusion: success)\n{rule}\n\n");
+        for (text, shown) in [
+            ("a\nb\n", "a\nb\n"),
+            ("a\r\nb\r\n", "a\r\nb\n"),
+            ("a\nb", "a\nb\n"),
+            // Blank lines inside the logs, the last one included, stay (B47's answer).
+            ("a\n\nb\n\n", "a\n\nb\n\n"),
+        ] {
+            let logs = HashMap::from([(6_000_001, Some(text.to_owned()))]);
+            assert_eq!(
+                full_logs_markdown(jobs, &logs),
+                format!("{header}{shown}\n```"),
+                "{text:?}"
+            );
+        }
     }
 
     #[test]
@@ -267,7 +298,8 @@ mod tests {
         let jobs = &fixture_jobs(5_000_042)[..1];
         let none = HashMap::new();
         let empty = HashMap::from([(6_000_001, Some(String::new()))]);
-        for logs in [none, empty] {
+        let newline = HashMap::from([(6_000_001, Some("\n".to_owned()))]);
+        for logs in [none, empty, newline] {
             let markdown = full_logs_markdown(jobs, &logs);
             assert!(
                 markdown.ends_with("\n\n(No logs available for this job)\n\n\n```"),

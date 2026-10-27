@@ -1,0 +1,7 @@
+version = 1
+description = "Text input keys: Textual's Input playing key sequences (moves, selection, deletes, typing, paste of the empty in-app clipboard), with its value, cursor and selection after each key, replayed on the Rust text input"
+generator = "crates/lazy-github-tui/tests/fixtures/generate_input_keys.py"
+golden = ["crates/lazy-github-tui/tests/fixtures/input_keys.json"]
+test = "crates/lazy-github-tui/tests/input_keys.rs"
+fresh_test = "input_keys_golden_is_fresh"
+parity_rows = ["modals.text-input-selection"]

@@ -1,12 +1,12 @@
-//! A single-line text input: Textual's `Input` with its default look (a tall border, `padding: 0 2`) and its editing
-//! keys. Its only selection is select-on-focus (`select_all`); the selection keys and the clipboard come with the M3
-//! shared input.
+//! A single-line text input: Textual's `Input` with its default look (a tall border, `padding: 0 2`), its editing and
+//! selection keys, and mouse-drag selection. The clipboard keys come with #251.
 //!
 //! `tui-textarea` (PLAN §4) is for the multi-line editors. A one-line box is small enough to own, which lets it match
 //! Textual's styling and word rules exactly; the M3 lookup modals can reuse it.
 
 use std::sync::LazyLock;
 
+use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
@@ -25,16 +25,23 @@ static WORD: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 /// The input's bindings, in Textual's merged order: `left`, `right`, `home` and `end` keep the places of the
-/// `ScrollView` keys they replace, then the rest of `Input.BINDINGS` follows. Selection (`shift+…`, `ctrl+shift+a`),
-/// copy and cut (`ctrl+c`, `ctrl+x`) and the inherited scroll keys come with the M3 shared input (#145).
+/// `ScrollView` keys they replace, then the rest of `Input.BINDINGS` follows. Copy and cut (`ctrl+c`, `ctrl+x`) come
+/// with #251 and the inherited scroll keys with #252.
 pub const INPUT_BINDINGS: &[BindingId] = &[
     BindingId::TextualInputCursorLeft,
     BindingId::TextualInputCursorRight,
     BindingId::TextualInputHome,
     BindingId::TextualInputEnd,
+    BindingId::TextualInputCursorLeftSelect,
     BindingId::TextualInputCursorLeftWord,
+    BindingId::TextualInputCursorLeftWordSelect,
+    BindingId::TextualInputCursorRightSelect,
     BindingId::TextualInputCursorRightWord,
+    BindingId::TextualInputCursorRightWordSelect,
     BindingId::TextualInputDeleteLeft,
+    BindingId::TextualInputSelectAll,
+    BindingId::TextualInputHomeSelect,
+    BindingId::TextualInputEndSelect,
     BindingId::TextualInputDeleteRight,
     BindingId::TextualInputSubmit,
     BindingId::TextualInputDeleteLeftWord,
@@ -71,8 +78,12 @@ pub struct TextInput {
     value: String,
     /// A char index into `value`, from 0 to its length. It's the selection's end, as in Textual.
     cursor: usize,
-    /// Where the selection started, while there is one. Every key but `enter` clears it.
+    /// Where the selection started, while there is one. An anchor equal to the cursor selects nothing. The select
+    /// keys keep or set it; every other key but `enter` clears it.
     anchor: Option<usize>,
+    /// Where the input was drawn when a left press landed on it, while the button is still down: drags move the
+    /// cursor against it (Textual's `_selecting`).
+    selecting: Option<Rect>,
     placeholder: &'static str,
     /// The first text cell shown, which follows the cursor.
     scroll: usize,
@@ -89,6 +100,7 @@ impl TextInput {
             value: String::new(),
             cursor: 0,
             anchor: None,
+            selecting: None,
             placeholder,
             scroll: 0,
             invalid: false,
@@ -139,6 +151,18 @@ impl TextInput {
         self.cursor = self.len();
     }
 
+    /// The selection's fixed end: where it started, or the cursor when nothing is selected. With
+    /// [`Self::cursor`], it's Textual's `Selection(start, end)`.
+    pub fn anchor(&self) -> usize {
+        self.anchor.unwrap_or(self.cursor)
+    }
+
+    /// Moves the cursor to char `index`, or the end when it's past it, and drops any selection.
+    pub fn set_cursor(&mut self, index: usize) {
+        self.cursor = index.min(self.len());
+        self.anchor = None;
+    }
+
     /// The selected chars as `(start, end)` with `start < end`, when anything is selected.
     pub fn selection(&self) -> Option<(usize, usize)> {
         let anchor = self.anchor?;
@@ -175,6 +199,9 @@ impl TextInput {
             // copy into it until #145 adds copy and cut, so it's always empty and this deletes the selection, as
             // pasting an empty clipboard does in Python.
             self.replace_selection("");
+            return InputOutcome::Changed;
+        }
+        if self.select(id) {
             return InputOutcome::Changed;
         }
         // Every other key ends the selection. With one, left and right collapse it to its start or end and the delete
@@ -226,6 +253,27 @@ impl TextInput {
         InputOutcome::Changed
     }
 
+    /// The select keys: Textual's `action_*(select=True)` and `select_all`. A select move keeps the anchor (the
+    /// cursor, when nothing was selected) and moves the cursor; `shift+home` and `shift+end` re-anchor at the cursor
+    /// first (`Selection(cursor_position, 0)`). False for any other binding.
+    fn select(&mut self, id: BindingId) -> bool {
+        use BindingId as B;
+        let len = self.len();
+        let (anchor, cursor) = match id {
+            B::TextualInputCursorLeftSelect => (self.anchor(), self.cursor.saturating_sub(1)),
+            B::TextualInputCursorRightSelect => (self.anchor(), (self.cursor + 1).min(len)),
+            B::TextualInputCursorLeftWordSelect => (self.anchor(), self.word_start_before()),
+            B::TextualInputCursorRightWordSelect => (self.anchor(), self.word_start_after().unwrap_or(len)),
+            B::TextualInputHomeSelect => (self.cursor, 0),
+            B::TextualInputEndSelect => (self.cursor, len),
+            B::TextualInputSelectAll => (0, len),
+            _ => return false,
+        };
+        self.anchor = Some(anchor);
+        self.cursor = cursor;
+        true
+    }
+
     /// A bracketed paste: only its first line goes in, as Textual's `Input._on_paste` does with `splitlines()[0]`.
     pub fn handle_paste(&mut self, text: &str) {
         let line = text.split(is_line_break).next().unwrap_or_default();
@@ -237,24 +285,67 @@ impl TextInput {
     }
 
     /// A left press at `column` in an input drawn in `area`: the cursor goes to the char under it, or the nearest end,
-    /// and any selection ends (Textual's `_on_mouse_down`, which runs after the focus that selected everything).
+    /// any selection ends, and a drag starts there (Textual's `_on_mouse_down`, which runs after the focus that
+    /// selected everything). The owner keeps the mouse for the input until [`Self::release`].
     pub fn press(&mut self, area: Rect, column: u16) {
-        // A press left of the text, on the border or the padding, goes to the start.
-        let target = column.checked_sub(area.x + 1 + PADDING).map_or(0, |offset| {
-            let offset = usize::from(offset);
-            let offset = offset + self.scroll;
-            let mut left = 0;
-            for (index, c) in self.value.chars().enumerate() {
-                let right = left + char_width(c);
-                if (left..right).contains(&offset) {
-                    return index;
-                }
-                left = right;
+        self.cursor = self.index_at(area, column);
+        self.anchor = Some(self.cursor);
+        self.selecting = Some(area);
+    }
+
+    /// The pointer moved to `column` with the button still down: the cursor follows it and the anchor stays where the
+    /// press was (Textual's `_on_mouse_move`). The pointer may be outside the input: left of the text is the start
+    /// and right of it the end, and the view scrolls to the cursor when it's next drawn. Nothing happens unless a
+    /// press on the input started a drag.
+    pub fn drag(&mut self, column: u16) {
+        if let Some(area) = self.selecting {
+            self.cursor = self.index_at(area, column);
+        }
+    }
+
+    /// The left button went up: the drag ends and the selection stays (Textual's `_end_selecting`).
+    pub fn release(&mut self) {
+        self.selecting = None;
+    }
+
+    /// Whether a press started a drag that hasn't been released: the owner keeps the mouse for the input until then
+    /// and hands it [`Self::captured_mouse`].
+    pub fn is_selecting(&self) -> bool {
+        self.selecting.is_some()
+    }
+
+    /// A mouse event while the input has the mouse, wherever the pointer is: a left drag moves the cursor
+    /// ([`Self::drag`]) and the left release ends the drag ([`Self::release`]). Returns whether it took the event,
+    /// which it never does without a drag.
+    pub fn captured_mouse(&mut self, event: MouseEvent) -> bool {
+        if !self.is_selecting() {
+            return false;
+        }
+        match event.kind {
+            MouseEventKind::Drag(MouseButton::Left) => self.drag(event.column),
+            MouseEventKind::Up(MouseButton::Left) => self.release(),
+            _ => return false,
+        }
+        true
+    }
+
+    /// The char under `column` in an input drawn in `area`, scrolled as last drawn (Textual's
+    /// `_cell_offset_to_index`). Columns left of the text are 0, and columns right of it are the end.
+    fn index_at(&self, area: Rect, column: u16) -> usize {
+        let text_x = usize::from(area.x) + 1 + usize::from(PADDING);
+        // Left of the text, which starts `scroll` cells before the text area, the offset would be negative.
+        let Some(offset) = (usize::from(column) + self.scroll).checked_sub(text_x) else {
+            return 0;
+        };
+        let mut left = 0;
+        for (index, c) in self.value.chars().enumerate() {
+            let right = left + char_width(c);
+            if (left..right).contains(&offset) {
+                return index;
             }
-            offset.min(self.len())
-        });
-        self.anchor = None;
-        self.cursor = target;
+            left = right;
+        }
+        offset.min(self.len())
     }
 
     fn byte_at(&self, char_index: usize) -> usize {
@@ -738,6 +829,175 @@ mod tests {
             input.press(area, column);
             assert_eq!((input.cursor(), input.selection()), (cursor, None), "column {column}");
         }
+    }
+
+    /// Presses each key in `keys`, all of which the input takes.
+    fn press_all(input: &mut TextInput, keys: &[&str]) {
+        for key in keys {
+            assert_eq!(press(input, key), InputOutcome::Changed, "{key}");
+        }
+    }
+
+    // `foo-bar baz`: words start at 0, 4 and 8. Each case is the keys, the cursor before them, and the anchor and
+    // cursor after: Textual's `Selection(start, end)`.
+    #[rstest]
+    #[case::shift_left(&["shift+left"], 5, (5, 4))]
+    #[case::shift_left_repeated(&["shift+left", "shift+left", "shift+left"], 5, (5, 2))]
+    #[case::shift_left_at_start(&["shift+left"], 0, (0, 0))]
+    #[case::shift_left_past_start(&["shift+left", "shift+left"], 1, (1, 0))]
+    #[case::shift_right(&["shift+right"], 5, (5, 6))]
+    #[case::shift_right_repeated(&["shift+right", "shift+right", "shift+right"], 5, (5, 8))]
+    #[case::shift_right_at_end(&["shift+right"], 11, (11, 11))]
+    #[case::shift_right_past_end(&["shift+right", "shift+right"], 10, (10, 11))]
+    #[case::shift_right_back_across_the_anchor(&["shift+left", "shift+right", "shift+right"], 5, (5, 6))]
+    #[case::word_left_select(&["ctrl+shift+left", "ctrl+shift+left"], 11, (11, 4))]
+    #[case::word_left_select_from_inside(&["ctrl+shift+left", "ctrl+shift+left"], 6, (6, 0))]
+    #[case::word_right_select(&["ctrl+shift+right", "ctrl+shift+right"], 0, (0, 8))]
+    #[case::word_right_select_to_end(&["ctrl+shift+right", "ctrl+shift+right"], 6, (6, 11))]
+    #[case::word_moves_select_both_ways(&["ctrl+shift+left", "ctrl+shift+right"], 6, (6, 8))]
+    // `shift+home` and `shift+end` select from the cursor, whatever the anchor was.
+    #[case::shift_home(&["shift+home"], 5, (5, 0))]
+    #[case::shift_home_reanchors(&["shift+left", "shift+home"], 5, (4, 0))]
+    #[case::shift_end(&["shift+end"], 5, (5, 11))]
+    #[case::shift_end_reanchors(&["shift+right", "shift+end"], 5, (6, 11))]
+    #[case::shift_end_after_shift_left(&["shift+left", "shift+end"], 5, (4, 11))]
+    #[case::select_all(&["ctrl+shift+a"], 5, (0, 11))]
+    #[case::select_all_then_shift_left(&["ctrl+shift+a", "shift+left"], 5, (0, 10))]
+    fn select_keys_move_the_cursor_and_keep_the_anchor(
+        #[case] keys: &[&str],
+        #[case] from: usize,
+        #[case] selection: (usize, usize),
+    ) {
+        let mut input = input("foo-bar baz", from);
+        press_all(&mut input, keys);
+        assert_eq!((input.anchor(), input.cursor()), selection);
+        assert_eq!(input.value(), "foo-bar baz");
+    }
+
+    #[rstest]
+    fn keys_after_a_select_key_act_on_its_selection(
+        #[values(
+            &["shift+left", "shift+left"][..],
+            &["shift+right", "shift+right"][..],
+            &["ctrl+shift+left"][..],
+            &["ctrl+shift+right"][..],
+            &["shift+left", "shift+home"][..],
+            &["shift+right", "shift+end"][..],
+            &["ctrl+shift+a"][..],
+        )]
+        keys: &[&str],
+    ) {
+        let selected = || {
+            let mut input = input("foo-bar baz", 6);
+            press_all(&mut input, keys);
+            input
+        };
+        let (start, end) = selected().selection().expect("the keys select something");
+        let mut left = selected();
+        let _ = press(&mut left, "left");
+        assert_eq!((left.cursor(), left.selection()), (start, None), "left");
+        let mut right = selected();
+        let _ = press(&mut right, "right");
+        assert_eq!((right.cursor(), right.selection()), (end, None), "right");
+        let mut typed = selected();
+        let _ = press(&mut typed, "x");
+        let chars: Vec<char> = "foo-bar baz".chars().collect();
+        let expected: String = chars[..start].iter().chain(&['x']).chain(&chars[end..]).collect();
+        assert_eq!(
+            (typed.value(), typed.cursor()),
+            (expected.as_str(), start + 1),
+            "typing"
+        );
+    }
+
+    #[test]
+    fn select_keys_count_chars_not_bytes() {
+        let mut input = input("héllo wörld", 11);
+        press_all(&mut input, &["ctrl+shift+left", "shift+left"]);
+        assert_eq!(input.selection(), Some((5, 11)));
+        let _ = press(&mut input, "x");
+        assert_eq!((input.value(), input.cursor()), ("héllox", 6));
+        press_all(&mut input, &["shift+home", "shift+right", "shift+right"]);
+        assert_eq!((input.anchor(), input.cursor()), (6, 2));
+        let _ = press(&mut input, "y");
+        assert_eq!((input.value(), input.cursor()), ("héy", 3));
+    }
+
+    /// `foo-bar baz` in a 30-wide input at x = 10, so the text starts at column 13.
+    const AREA: Rect = Rect::new(10, 0, 30, HEIGHT);
+
+    #[rstest]
+    #[case::right(17, 20, (4, 7))]
+    #[case::left(17, 14, (4, 1))]
+    #[case::onto_the_press(17, 17, (4, 4))]
+    // Past either end of the text: the border, beyond the input, the end of the text, the right border.
+    #[case::past_the_start(17, 11, (4, 0))]
+    #[case::left_of_the_input(17, 2, (4, 0))]
+    #[case::past_the_end(17, 30, (4, 11))]
+    #[case::right_of_the_input(17, 60, (4, 11))]
+    fn a_drag_selects_from_the_press(#[case] at: u16, #[case] to: u16, #[case] selection: (usize, usize)) {
+        let mut input = selected();
+        input.press(AREA, at);
+        assert!(input.is_selecting());
+        input.drag(to);
+        assert_eq!((input.anchor(), input.cursor()), selection);
+        input.release();
+        assert!(!input.is_selecting());
+        assert_eq!(
+            (input.anchor(), input.cursor()),
+            selection,
+            "the release keeps the selection"
+        );
+    }
+
+    #[test]
+    fn a_drag_in_a_scrolled_view_counts_the_scroll() {
+        let mut input = input("abcdefghijklmnopqrstuvwxyz0123456789", 30);
+        input.scroll = 10;
+        // The first text cell shows `k`.
+        input.press(AREA, 13);
+        assert_eq!(input.cursor(), 10);
+        // Left of the text area, the scrolled-off text is still there: two cells left is `i`.
+        input.drag(11);
+        assert_eq!((input.anchor(), input.cursor()), (10, 8));
+        input.drag(0);
+        assert_eq!(input.cursor(), 0);
+        input.drag(20);
+        assert_eq!((input.anchor(), input.cursor()), (10, 17));
+        input.drag(70);
+        assert_eq!(input.cursor(), 36);
+    }
+
+    #[test]
+    fn a_press_without_a_drag_selects_nothing() {
+        let mut input = selected();
+        input.press(AREA, 17);
+        input.release();
+        assert_eq!((input.cursor(), input.selection()), (4, None));
+        // Without a press, a drag does nothing.
+        input.drag(20);
+        assert_eq!((input.cursor(), input.selection()), (4, None));
+        // A select key extends from the press.
+        let _ = press(&mut input, "shift+right");
+        assert_eq!(input.selection(), Some((4, 5)));
+    }
+
+    #[test]
+    fn the_captured_mouse_drags_and_releases() {
+        use crossterm::event::KeyModifiers;
+        let event = |kind, column| MouseEvent {
+            kind,
+            column,
+            row: 40,
+            modifiers: KeyModifiers::NONE,
+        };
+        let mut input = selected();
+        assert!(!input.captured_mouse(event(MouseEventKind::Drag(MouseButton::Left), 20)));
+        input.press(AREA, 17);
+        assert!(input.captured_mouse(event(MouseEventKind::Drag(MouseButton::Left), 20)));
+        assert!(!input.captured_mouse(event(MouseEventKind::ScrollDown, 20)));
+        assert!(input.captured_mouse(event(MouseEventKind::Up(MouseButton::Left), 25)));
+        assert_eq!((input.selection(), input.is_selecting()), (Some((4, 7)), false));
     }
 
     /// An input that only holds what a number input may.

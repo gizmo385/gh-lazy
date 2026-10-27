@@ -325,6 +325,10 @@ impl<K: LookupKind> Component for LookupDialog<K> {
     }
 
     fn handle_mouse(&mut self, event: MouseEvent, area: Rect, cx: &Cx<'_>) -> Option<Action> {
+        // A drag that started on the input, wherever the pointer is now.
+        if self.input.captured_mouse(event) {
+            return Some(Action::Consumed);
+        }
         if let Some((button, outcome)) = self.buttons.handle_mouse(&event, cx.now()) {
             return Some(match outcome {
                 ButtonMouse::Focus => {
@@ -475,6 +479,10 @@ impl<K: LookupKind> Dialog for LookupDialog<K> {
             // `consumes_key` already gave the input every key it binds.
             _ => Some(Action::Consumed),
         }
+    }
+
+    fn captures_mouse(&self) -> bool {
+        self.input.is_selecting()
     }
 
     fn handle_paste(&mut self, text: &str) -> Option<Action> {

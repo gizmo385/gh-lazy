@@ -492,6 +492,19 @@ fn search_reopened_selected() {
 }
 
 #[test]
+fn search_partial_selection() {
+    let mut table = table();
+    let _ = press(&mut table, "slash");
+    assert_eq!(table.handle_paste("foo-bar baz"), Handled::Consumed);
+    // `foo-[bar] baz`, the cursor after the `r`.
+    for key in ["home", "ctrl+right", "shift+right", "shift+right", "shift+right"] {
+        assert_eq!(press(&mut table, key), Handled::Consumed, "{key}");
+    }
+    let buffer = draw(&mut table, true);
+    insta::assert_debug_snapshot!(buffer);
+}
+
+#[test]
 fn search_submitted_filtered() {
     let mut table = table();
     search(&mut table, "lazy");

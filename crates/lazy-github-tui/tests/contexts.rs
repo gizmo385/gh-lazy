@@ -63,8 +63,8 @@ const CONTEXT_DIFFS: &[ContextDiff] = &[
         ],
         extra: &[],
     },
-    // #145: selection, copy and cut, and the scroll keys `Input` inherits from `ScrollView`, come with the M3 shared
-    // input. Paste is here (#169), so `ctrl+v` in the search box doesn't reach `link.paste`.
+    // The scroll keys `Input` inherits from `ScrollView` come with #252, and copy and cut with #251. Paste is here
+    // (#169), so `ctrl+v` in the search box doesn't reach `link.paste`.
     ContextDiff {
         class: "textual.widgets.Input",
         missing: &[
@@ -74,13 +74,6 @@ const CONTEXT_DIFFS: &[ContextDiff] = &[
             ("pagedown", "page_down"),
             ("ctrl+pageup", "page_left"),
             ("ctrl+pagedown", "page_right"),
-            ("shift+left", "cursor_left(True)"),
-            ("ctrl+shift+left", "cursor_left_word(True)"),
-            ("shift+right", "cursor_right(True)"),
-            ("ctrl+shift+right", "cursor_right_word(True)"),
-            ("ctrl+shift+a", "select_all"),
-            ("shift+home", "home(True)"),
-            ("shift+end", "end(True)"),
             ("ctrl+x", "cut"),
             ("ctrl+c", "copy"),
             ("super+c", "copy"),

@@ -59,6 +59,8 @@ pub(super) trait SectionTable {
     fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Handled<SectionEvent>;
     fn handle_mouse(&mut self, event: MouseEvent, area: Rect) -> Handled<SectionEvent>;
     fn handle_paste(&mut self, text: &str) -> Handled<SectionEvent>;
+    fn search_captures_mouse(&self) -> bool;
+    fn search_captured_mouse(&mut self, event: MouseEvent) -> bool;
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool;
     fn focus(&self) -> TableFocus;
     fn focus_search(&mut self) -> bool;
@@ -90,6 +92,14 @@ impl<T: TableItem> SectionTable for SearchableTable<T> {
 
     fn handle_paste(&mut self, text: &str) -> Handled<SectionEvent> {
         erase(SearchableTable::handle_paste(self, text))
+    }
+
+    fn search_captures_mouse(&self) -> bool {
+        SearchableTable::search_captures_mouse(self)
+    }
+
+    fn search_captured_mouse(&mut self, event: MouseEvent) -> bool {
+        SearchableTable::search_captured_mouse(self, event)
     }
 
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {

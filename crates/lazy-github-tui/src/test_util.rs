@@ -265,6 +265,27 @@ impl TestApp {
         self
     }
 
+    /// Sends one mouse event of `kind` at `(col, row)`.
+    pub fn mouse(&mut self, kind: MouseEventKind, col: u16, row: u16) -> &mut Self {
+        self.send(Event::Mouse(MouseEvent {
+            kind,
+            column: col,
+            row,
+            modifiers: KeyModifiers::NONE,
+        }))
+    }
+
+    /// Presses the left button at `from`, drags it through each of `path` and releases it at the last cell of the
+    /// path (or at `from`, without one).
+    pub fn drag(&mut self, from: (u16, u16), path: &[(u16, u16)]) -> &mut Self {
+        self.mouse(MouseEventKind::Down(MouseButton::Left), from.0, from.1);
+        for &(col, row) in path {
+            self.mouse(MouseEventKind::Drag(MouseButton::Left), col, row);
+        }
+        let (col, row) = path.last().copied().unwrap_or(from);
+        self.mouse(MouseEventKind::Up(MouseButton::Left), col, row)
+    }
+
     /// Applies one action and performs the effects it returns.
     pub fn dispatch(&mut self, action: Action) -> &mut Self {
         let effects = self.app.update(action);

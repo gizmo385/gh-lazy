@@ -698,6 +698,19 @@ impl<T: TableItem> SearchableTable<T> {
         self.focus == TableFocus::Search && self.search.input.consumes_key(key, keymap)
     }
 
+    /// Whether a left press on the search box started a drag that hasn't been released: the owner keeps the mouse
+    /// for the box until then ([`Self::search_captured_mouse`]).
+    pub fn search_captures_mouse(&self) -> bool {
+        self.search.input.is_selecting()
+    }
+
+    /// A mouse event while the search box has the mouse, wherever the pointer is: a left drag selects and the
+    /// release ends the drag ([`TextInput::captured_mouse`](crate::components::text_input::TextInput::captured_mouse)).
+    /// Returns whether the box took it.
+    pub fn search_captured_mouse(&mut self, event: MouseEvent) -> bool {
+        self.search.input.captured_mouse(event)
+    }
+
     /// A bracketed paste: its first line goes into the search box while the box has focus.
     pub fn handle_paste(&mut self, text: &str) -> Handled<TableEvent<T::Key>> {
         if self.focus != TableFocus::Search {

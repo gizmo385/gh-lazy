@@ -93,6 +93,17 @@ impl ModalEntry {
             .flatten()
     }
 
+    /// Whether a field of the dialog has the mouse ([`Dialog::captures_mouse`]).
+    pub(crate) fn captures_mouse(&self) -> bool {
+        self.dialog.captures_mouse()
+    }
+
+    /// A mouse event while a field of the dialog has the mouse: it reaches the dialog wherever it is, even outside
+    /// the interior, as Textual routes every mouse event to the widget that captured the mouse.
+    pub(crate) fn captured_mouse(&mut self, event: MouseEvent, cx: &Cx<'_>) -> Option<Action> {
+        self.dialog.handle_mouse(event, self.interior, cx)
+    }
+
     pub(crate) fn handle_paste(&mut self, text: &str) -> Option<Action> {
         self.dialog.handle_paste(text)
     }
@@ -160,6 +171,7 @@ trait AnyDialog: Send {
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool;
     fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action>;
     fn handle_mouse(&mut self, event: MouseEvent, area: Rect, cx: &Cx<'_>) -> Option<Action>;
+    fn captures_mouse(&self) -> bool;
     fn handle_paste(&mut self, text: &str) -> Option<Action>;
     fn update(&mut self, action: DialogAction, cx: &mut Cx<'_>);
     fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse>;
@@ -213,6 +225,10 @@ impl<D: Dialog> AnyDialog for Open<D> {
 
     fn handle_mouse(&mut self, event: MouseEvent, area: Rect, cx: &Cx<'_>) -> Option<Action> {
         self.dialog.handle_mouse(event, area, cx)
+    }
+
+    fn captures_mouse(&self) -> bool {
+        self.dialog.captures_mouse()
     }
 
     fn handle_paste(&mut self, text: &str) -> Option<Action> {

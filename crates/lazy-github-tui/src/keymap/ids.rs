@@ -238,17 +238,28 @@ registry! {
     // `Tabs`: the details tab strip (#74).
     TextualTabsPrevious("textual.tabs.previous_tab", "left", "previous_tab", "Previous tab").hidden();
     TextualTabsNext("textual.tabs.next_tab", "right", "next_tab", "Next tab").hidden();
-    // `Input`: the table's search box (#101). Selection, copy and cut come with the M3 shared input (#145).
+    // `Input`: every single-line text input (#101, #250). Copy and cut come with #251.
     TextualInputCursorLeft("textual.input.cursor_left", "left", "cursor_left", "Move cursor left").hidden();
+    TextualInputCursorLeftSelect("textual.input.cursor_left_select", "shift+left", "cursor_left(True)", "Move cursor left and select")
+        .hidden();
     TextualInputCursorLeftWord("textual.input.cursor_left_word", "ctrl+left", "cursor_left_word", "Move cursor left a word")
+        .hidden();
+    TextualInputCursorLeftWordSelect("textual.input.cursor_left_word_select", "ctrl+shift+left", "cursor_left_word(True)", "Move cursor left a word and select")
         .hidden();
     TextualInputCursorRight("textual.input.cursor_right", "right", "cursor_right", "Move cursor right or accept the completion suggestion")
         .hidden();
+    TextualInputCursorRightSelect("textual.input.cursor_right_select", "shift+right", "cursor_right(True)", "Move cursor right and select")
+        .hidden();
     TextualInputCursorRightWord("textual.input.cursor_right_word", "ctrl+right", "cursor_right_word", "Move cursor right a word")
         .hidden();
+    TextualInputCursorRightWordSelect("textual.input.cursor_right_word_select", "ctrl+shift+right", "cursor_right_word(True)", "Move cursor right a word and select")
+        .hidden();
     TextualInputDeleteLeft("textual.input.delete_left", "backspace", "delete_left", "Delete character left").hidden();
+    TextualInputSelectAll("textual.input.select_all", "ctrl+shift+a", "select_all", "Select all").hidden();
     TextualInputHome("textual.input.home", "home,ctrl+a", "home", "Go to start").hidden();
     TextualInputEnd("textual.input.end", "end,ctrl+e", "end", "Go to end").hidden();
+    TextualInputHomeSelect("textual.input.home_select", "shift+home", "home(True)", "Select line start").hidden();
+    TextualInputEndSelect("textual.input.end_select", "shift+end", "end(True)", "Select line end").hidden();
     TextualInputDeleteRight("textual.input.delete_right", "delete,ctrl+d", "delete_right", "Delete character right")
         .hidden();
     TextualInputSubmit("textual.input.submit", "enter", "submit", "Submit").hidden();

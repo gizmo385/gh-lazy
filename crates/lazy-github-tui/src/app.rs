@@ -60,6 +60,18 @@ enum BaseScreen {
     Main(Box<MainScreen>),
 }
 
+/// Who has the mouse between a left press on a text input and the release (Textual's `capture_mouse`). The owner
+/// knows which of its inputs it is: the one whose drag is in progress ([`TextInput::is_selecting`]).
+///
+/// [`TextInput::is_selecting`]: crate::components::text_input::TextInput::is_selecting
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MouseCapture {
+    /// An input on the base screen: a section's search box.
+    Base,
+    /// An input in the dialog at this depth of the stack.
+    Dialog(usize),
+}
+
 /// The whole UI. One value owns all state; [`App::update`] is synchronous and does no I/O.
 pub struct App {
     base: BaseScreen,
@@ -80,6 +92,8 @@ pub struct App {
     /// layout, as Textual re-checks hover after each layout change. Terminals don't report the pointer leaving the
     /// window, so it stays at its last cell.
     mouse: Option<Position>,
+    /// Who has the mouse from a left press on a text input until the release.
+    mouse_capture: Option<MouseCapture>,
     /// The `OriginRepo` request asked when the main screen was entered, until git answers it.
     local_repo_request: Option<RequestId>,
     /// The unread count in the status box.
@@ -104,6 +118,7 @@ impl App {
             help_scroll: HelpScroll::default(),
             footer_hits: Vec::new(),
             mouse: None,
+            mouse_capture: None,
             local_repo_request: None,
             notifications: NotificationPoll::default(),
             should_quit: false,
@@ -158,7 +173,8 @@ impl App {
         self.toasts.expire(self.shared.clock.now());
         if let Event::Mouse(mouse) = &event {
             self.mouse = Some(Position::new(mouse.column, mouse.row));
-            if self.toasts.handle_mouse(mouse) {
+            // Toasts sit over the screen, but not over a drag that a text input has the mouse for.
+            if self.mouse_capture.is_none() && self.toasts.handle_mouse(mouse) {
                 return Vec::new();
             }
         }
@@ -243,11 +259,75 @@ impl App {
         None
     }
 
+    /// A mouse event. While a text input has the mouse, its left drags and the release go to it wherever they are
+    /// (Textual's `capture_mouse`); a left press that lands on one gives it the mouse. Anything else is routed by
+    /// position ([`Self::route_mouse`]).
+    fn action_for_mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
+        let dragging = matches!(
+            mouse.kind,
+            MouseEventKind::Drag(MouseButton::Left) | MouseEventKind::Up(MouseButton::Left)
+        );
+        if dragging && let Some(target) = self.mouse_capture {
+            if mouse.kind == MouseEventKind::Up(MouseButton::Left) {
+                self.mouse_capture = None;
+            }
+            if let Some(action) = self.captured_mouse(target, mouse) {
+                return Some(action);
+            }
+            // The input that had the mouse is gone: it's an ordinary event.
+            self.mouse_capture = None;
+        }
+        let press = mouse.kind == MouseEventKind::Down(MouseButton::Left);
+        if press {
+            // The release went missing (terminals report none outside the window), so the drag ends here.
+            self.end_mouse_capture();
+        }
+        let action = self.route_mouse(mouse);
+        if press {
+            self.mouse_capture = match (self.modals.last(), &self.base) {
+                (Some(top), _) => top
+                    .captures_mouse()
+                    .then(|| MouseCapture::Dialog(self.modals.len() - 1)),
+                (None, BaseScreen::Main(main)) => main.captures_mouse().then_some(MouseCapture::Base),
+                (None, _) => None,
+            };
+        }
+        action
+    }
+
+    /// Hands a mouse event to the input that has the mouse. `None` when it's gone, or no longer has it.
+    fn captured_mouse(&mut self, target: MouseCapture, mouse: MouseEvent) -> Option<Action> {
+        match target {
+            MouseCapture::Base => match &mut self.base {
+                BaseScreen::Main(main) => main.captured_mouse(mouse),
+                _ => None,
+            },
+            MouseCapture::Dialog(depth) => {
+                let entry = self.modals.get_mut(depth).filter(|entry| entry.captures_mouse())?;
+                let mut scratch = Outbox::default();
+                entry.captured_mouse(mouse, &Cx::new(&mut self.shared, &mut scratch))
+            }
+        }
+    }
+
+    /// Ends a drag whose release never came: the input that had the mouse gets one.
+    fn end_mouse_capture(&mut self) {
+        if let Some(target) = self.mouse_capture.take() {
+            let release = MouseEvent {
+                kind: MouseEventKind::Up(MouseButton::Left),
+                column: 0,
+                row: 0,
+                modifiers: KeyModifiers::NONE,
+            };
+            let _ = self.captured_mouse(target, release);
+        }
+    }
+
     /// A left click on a footer item runs its binding, or rings the bell if it's disabled, as Textual's `FooterKey`
     /// does; elsewhere it focuses the target under the pointer, and the wheel scrolls it. All as of the last frame.
     /// While a dialog is open the footer is the dialog's, and every other event goes to the dialog alone, which only
     /// sees the ones inside its frame.
-    fn action_for_mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
+    fn route_mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
         if mouse.kind == MouseEventKind::Down(MouseButton::Left) {
             let position = Position::new(mouse.column, mouse.row);
             if let Some(hit) = self.footer_hits.iter().find(|hit| hit.rect.contains(position)).copied() {

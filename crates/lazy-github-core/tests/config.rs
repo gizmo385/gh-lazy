@@ -88,7 +88,7 @@ fn config_goldens_are_fresh() {
 }
 
 /// Runs `generator` (relative to the repository root) with `--out <tempdir>` and `HOME` set to `home`, and fails with
-/// a diff unless each of `goldens` is byte for byte the file it wrote. `lazy-github-tui/tests/registry.rs` has the same
+/// a diff unless each of `goldens` is byte for byte the file it wrote. `lazy-github-tui/tests/common/mod.rs` has the same
 /// helper: two short copies are simpler than a shared test crate.
 #[cfg(unix)]
 fn assert_goldens_fresh(generator: &str, goldens: &[&str], home: &Path, regenerate: &str) {

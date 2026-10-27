@@ -671,7 +671,7 @@ fn the_maximized_command_log_fills_the_screen() {
 
 // The repos table (#168).
 
-use crossterm::event::{KeyModifiers, MouseEvent, MouseEventKind};
+use crossterm::event::{KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::gh::GhError;
 use lazy_github_core::github::FakeGithub;
 use lazy_github_core::models::Repository;
@@ -1128,6 +1128,42 @@ fn the_focus_path_keeps_the_table_in_step() {
     app.click(10, 9);
     assert_eq!(focus(&app), REPOS);
     assert_focus_in_step(&app);
+}
+
+/// Where `text` starts on screen row `row`.
+fn column_of(screen: &str, row: usize, text: &str) -> u16 {
+    let line = screen.lines().nth(row).unwrap();
+    let byte = line
+        .find(text)
+        .unwrap_or_else(|| panic!("{text:?} isn't on row {row}: {line:?}"));
+    u16::try_from(line[..byte].chars().count()).unwrap()
+}
+
+#[test]
+fn a_drag_from_the_search_box_keeps_the_mouse_until_the_release() {
+    let mut app = with_repos(with_log(), base_repos());
+    app.press(&["/"]);
+    app.send(Event::Paste("foo-bar baz".into()));
+    // The box takes rows 4-6; its text is on row 5.
+    let screen = app.screen(100, 30);
+    let bar = column_of(&screen, 5, "foo-bar baz") + 4;
+    // Pressed on the `b` of `bar`, dragged right out of the Repositories box over the Pull Requests table and back
+    // left over the rows below the box, and released down there: the release clicks no row.
+    let cursor = repos_table(&app).cursor();
+    app.drag((bar, 5), &[(90, 12), (bar + 3, 9)]);
+    assert_eq!(focus(&app), SEARCH);
+    assert_eq!(repos_table(&app).cursor(), cursor);
+    type_text(&mut app, "x");
+    assert_eq!(repos_table(&app).search_text(), "foo-x baz");
+    // The release ended the drag: moves with the button down select nothing until the next press.
+    app.mouse(MouseEventKind::Drag(MouseButton::Left), bar, 5);
+    type_text(&mut app, "y");
+    assert_eq!(repos_table(&app).search_text(), "foo-xy baz");
+    // A drag past the box's left edge selects to the start.
+    app.render(100, 30);
+    app.drag((bar, 5), &[(0, 20)]);
+    type_text(&mut app, "z");
+    assert_eq!(repos_table(&app).search_text(), "zxy baz");
 }
 
 #[test]

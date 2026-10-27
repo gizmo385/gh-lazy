@@ -220,6 +220,34 @@ fn focusing_the_input_selects_its_text() {
     assert_eq!(lookups(&app), ["o/found"]);
 }
 
+#[test]
+fn a_drag_from_the_input_keeps_the_mouse_outside_the_frame() {
+    use crossterm::event::{MouseButton, MouseEventKind};
+    let mut app = opened();
+    type_text(&mut app, "o/missing");
+    // The input's text row is the seventh of the interior, which starts at (51, 12).
+    let screen = app.screen(160, 48);
+    let line = screen.lines().nth(18).unwrap();
+    let at = u16::try_from(line[..line.find("o/missing").unwrap()].chars().count()).unwrap();
+    // Pressed on the `m`, dragged out of the frame over the dimmed screen, and released there: past the right end of
+    // the text, so it selects to the end.
+    app.drag((at + 2, 18), &[(5, 3), (150, 40)]);
+    assert!(is_open(&app), "the release outside the frame doesn't close anything");
+    type_text(&mut app, "found");
+    app.press(&["shift+enter"]);
+    assert_eq!(lookups(&app), ["o/found"]);
+    // The release ended the drag.
+    let mut app = opened();
+    type_text(&mut app, "o/missing");
+    app.render(160, 48);
+    app.drag((at + 2, 18), &[]);
+    app.mouse(MouseEventKind::Drag(MouseButton::Left), 150, 40);
+    type_text(&mut app, "found");
+    assert_eq!(lookups(&app), Vec::<String>::new());
+    app.press(&["ctrl+k", "shift+enter"]);
+    assert_eq!(lookups(&app), ["o/found"]);
+}
+
 // Submitting.
 
 #[test]

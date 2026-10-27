@@ -194,6 +194,13 @@ pub trait Dialog: Component + Send + 'static {
         BindingState::Enabled
     }
 
+    /// Whether one of the dialog's fields has the mouse: a left press on a text input started a drag that hasn't been
+    /// released (Textual's `capture_mouse`). While it does, `App` hands the left drags and the release to
+    /// [`Component::handle_mouse`] wherever they are, even outside the interior.
+    fn captures_mouse(&self) -> bool {
+        false
+    }
+
     /// A bracketed paste while the dialog is on top.
     fn handle_paste(&mut self, _text: &str) -> Option<Action> {
         None

@@ -1,0 +1,1188 @@
+[
+  {
+    "name": "left-right",
+    "value": "foo-bar baz",
+    "cursor": 5,
+    "steps": [
+      {
+        "key": "left",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          4,
+          4
+        ]
+      },
+      {
+        "key": "left",
+        "value": "foo-bar baz",
+        "cursor": 3,
+        "selection": [
+          3,
+          3
+        ]
+      },
+      {
+        "key": "right",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          4,
+          4
+        ]
+      },
+      {
+        "key": "home",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "left",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "end",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          11,
+          11
+        ]
+      },
+      {
+        "key": "right",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          11,
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "name": "home-end-aliases",
+    "value": "foo-bar baz",
+    "cursor": 5,
+    "steps": [
+      {
+        "key": "ctrl+a",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "ctrl+e",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          11,
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "name": "word-moves",
+    "value": "foo-bar baz",
+    "cursor": 0,
+    "steps": [
+      {
+        "key": "ctrl+right",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          4,
+          4
+        ]
+      },
+      {
+        "key": "ctrl+right",
+        "value": "foo-bar baz",
+        "cursor": 8,
+        "selection": [
+          8,
+          8
+        ]
+      },
+      {
+        "key": "ctrl+right",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          11,
+          11
+        ]
+      },
+      {
+        "key": "ctrl+right",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          11,
+          11
+        ]
+      },
+      {
+        "key": "ctrl+left",
+        "value": "foo-bar baz",
+        "cursor": 8,
+        "selection": [
+          8,
+          8
+        ]
+      },
+      {
+        "key": "ctrl+left",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          4,
+          4
+        ]
+      }
+    ]
+  },
+  {
+    "name": "word-moves-inside",
+    "value": "foo-bar baz",
+    "cursor": 6,
+    "steps": [
+      {
+        "key": "ctrl+left",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          4,
+          4
+        ]
+      },
+      {
+        "key": "ctrl+left",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "ctrl+left",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shift-left",
+    "value": "foo-bar baz",
+    "cursor": 2,
+    "steps": [
+      {
+        "key": "shift+left",
+        "value": "foo-bar baz",
+        "cursor": 1,
+        "selection": [
+          2,
+          1
+        ]
+      },
+      {
+        "key": "shift+left",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          2,
+          0
+        ]
+      },
+      {
+        "key": "shift+left",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          2,
+          0
+        ]
+      },
+      {
+        "key": "right",
+        "value": "foo-bar baz",
+        "cursor": 2,
+        "selection": [
+          2,
+          2
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shift-right",
+    "value": "foo-bar baz",
+    "cursor": 9,
+    "steps": [
+      {
+        "key": "shift+right",
+        "value": "foo-bar baz",
+        "cursor": 10,
+        "selection": [
+          9,
+          10
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          9,
+          11
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          9,
+          11
+        ]
+      },
+      {
+        "key": "left",
+        "value": "foo-bar baz",
+        "cursor": 9,
+        "selection": [
+          9,
+          9
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shift-across-anchor",
+    "value": "foo-bar baz",
+    "cursor": 5,
+    "steps": [
+      {
+        "key": "shift+left",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          5,
+          4
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "foo-bar baz",
+        "cursor": 5,
+        "selection": [
+          5,
+          5
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "foo-bar baz",
+        "cursor": 6,
+        "selection": [
+          5,
+          6
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "foo-bar baz",
+        "cursor": 7,
+        "selection": [
+          5,
+          7
+        ]
+      }
+    ]
+  },
+  {
+    "name": "word-select-left",
+    "value": "foo-bar baz",
+    "cursor": 11,
+    "steps": [
+      {
+        "key": "ctrl+shift+left",
+        "value": "foo-bar baz",
+        "cursor": 8,
+        "selection": [
+          11,
+          8
+        ]
+      },
+      {
+        "key": "ctrl+shift+left",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          11,
+          4
+        ]
+      },
+      {
+        "key": "ctrl+shift+left",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          11,
+          0
+        ]
+      },
+      {
+        "key": "ctrl+shift+left",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          11,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "word-select-right",
+    "value": "foo-bar baz",
+    "cursor": 0,
+    "steps": [
+      {
+        "key": "ctrl+shift+right",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          0,
+          4
+        ]
+      },
+      {
+        "key": "ctrl+shift+right",
+        "value": "foo-bar baz",
+        "cursor": 8,
+        "selection": [
+          0,
+          8
+        ]
+      },
+      {
+        "key": "ctrl+shift+right",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          0,
+          11
+        ]
+      },
+      {
+        "key": "x",
+        "value": "x",
+        "cursor": 1,
+        "selection": [
+          1,
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "name": "word-select-both-ways",
+    "value": "foo-bar baz",
+    "cursor": 6,
+    "steps": [
+      {
+        "key": "ctrl+shift+left",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          6,
+          4
+        ]
+      },
+      {
+        "key": "ctrl+shift+right",
+        "value": "foo-bar baz",
+        "cursor": 8,
+        "selection": [
+          6,
+          8
+        ]
+      },
+      {
+        "key": "ctrl+shift+right",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          6,
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shift-home-reanchors",
+    "value": "foo-bar baz",
+    "cursor": 5,
+    "steps": [
+      {
+        "key": "shift+left",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          5,
+          4
+        ]
+      },
+      {
+        "key": "shift+home",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          4,
+          0
+        ]
+      },
+      {
+        "key": "shift+end",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          0,
+          11
+        ]
+      },
+      {
+        "key": "left",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "shift-end-reanchors",
+    "value": "foo-bar baz",
+    "cursor": 5,
+    "steps": [
+      {
+        "key": "shift+right",
+        "value": "foo-bar baz",
+        "cursor": 6,
+        "selection": [
+          5,
+          6
+        ]
+      },
+      {
+        "key": "shift+end",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          6,
+          11
+        ]
+      },
+      {
+        "key": "shift+home",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          11,
+          0
+        ]
+      },
+      {
+        "key": "right",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          11,
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "name": "select-all",
+    "value": "foo-bar baz",
+    "cursor": 5,
+    "steps": [
+      {
+        "key": "ctrl+shift+a",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          0,
+          11
+        ]
+      },
+      {
+        "key": "shift+left",
+        "value": "foo-bar baz",
+        "cursor": 10,
+        "selection": [
+          0,
+          10
+        ]
+      },
+      {
+        "key": "ctrl+shift+a",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          0,
+          11
+        ]
+      },
+      {
+        "key": "home",
+        "value": "foo-bar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "select-all-end",
+    "value": "foo-bar baz",
+    "cursor": 5,
+    "steps": [
+      {
+        "key": "ctrl+shift+a",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          0,
+          11
+        ]
+      },
+      {
+        "key": "end",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          11,
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "name": "select-all-word-left",
+    "value": "foo-bar baz",
+    "cursor": 5,
+    "steps": [
+      {
+        "key": "ctrl+shift+a",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          0,
+          11
+        ]
+      },
+      {
+        "key": "ctrl+left",
+        "value": "foo-bar baz",
+        "cursor": 8,
+        "selection": [
+          8,
+          8
+        ]
+      }
+    ]
+  },
+  {
+    "name": "select-then-word-right",
+    "value": "foo-bar baz",
+    "cursor": 2,
+    "steps": [
+      {
+        "key": "shift+left",
+        "value": "foo-bar baz",
+        "cursor": 1,
+        "selection": [
+          2,
+          1
+        ]
+      },
+      {
+        "key": "ctrl+right",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          4,
+          4
+        ]
+      }
+    ]
+  },
+  {
+    "name": "select-then-type",
+    "value": "foo-bar baz",
+    "cursor": 4,
+    "steps": [
+      {
+        "key": "shift+right",
+        "value": "foo-bar baz",
+        "cursor": 5,
+        "selection": [
+          4,
+          5
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "foo-bar baz",
+        "cursor": 6,
+        "selection": [
+          4,
+          6
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "foo-bar baz",
+        "cursor": 7,
+        "selection": [
+          4,
+          7
+        ]
+      },
+      {
+        "key": "x",
+        "value": "foo-x baz",
+        "cursor": 5,
+        "selection": [
+          5,
+          5
+        ]
+      },
+      {
+        "key": "y",
+        "value": "foo-xy baz",
+        "cursor": 6,
+        "selection": [
+          6,
+          6
+        ]
+      }
+    ]
+  },
+  {
+    "name": "delete-left",
+    "value": "foo-bar baz",
+    "cursor": 4,
+    "steps": [
+      {
+        "key": "backspace",
+        "value": "foobar baz",
+        "cursor": 3,
+        "selection": [
+          3,
+          3
+        ]
+      },
+      {
+        "key": "backspace",
+        "value": "fobar baz",
+        "cursor": 2,
+        "selection": [
+          2,
+          2
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "fobar baz",
+        "cursor": 3,
+        "selection": [
+          2,
+          3
+        ]
+      },
+      {
+        "key": "backspace",
+        "value": "foar baz",
+        "cursor": 2,
+        "selection": [
+          2,
+          2
+        ]
+      },
+      {
+        "key": "home",
+        "value": "foar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "backspace",
+        "value": "foar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "delete-right",
+    "value": "foo-bar baz",
+    "cursor": 3,
+    "steps": [
+      {
+        "key": "delete",
+        "value": "foobar baz",
+        "cursor": 3,
+        "selection": [
+          3,
+          3
+        ]
+      },
+      {
+        "key": "ctrl+d",
+        "value": "fooar baz",
+        "cursor": 3,
+        "selection": [
+          3,
+          3
+        ]
+      },
+      {
+        "key": "shift+left",
+        "value": "fooar baz",
+        "cursor": 2,
+        "selection": [
+          3,
+          2
+        ]
+      },
+      {
+        "key": "delete",
+        "value": "foar baz",
+        "cursor": 2,
+        "selection": [
+          2,
+          2
+        ]
+      },
+      {
+        "key": "end",
+        "value": "foar baz",
+        "cursor": 8,
+        "selection": [
+          8,
+          8
+        ]
+      },
+      {
+        "key": "delete",
+        "value": "foar baz",
+        "cursor": 8,
+        "selection": [
+          8,
+          8
+        ]
+      }
+    ]
+  },
+  {
+    "name": "delete-left-word",
+    "value": "foo-bar baz",
+    "cursor": 11,
+    "steps": [
+      {
+        "key": "ctrl+w",
+        "value": "foo-bar ",
+        "cursor": 8,
+        "selection": [
+          8,
+          8
+        ]
+      },
+      {
+        "key": "ctrl+w",
+        "value": "foo-",
+        "cursor": 4,
+        "selection": [
+          4,
+          4
+        ]
+      },
+      {
+        "key": "shift+left",
+        "value": "foo-",
+        "cursor": 3,
+        "selection": [
+          4,
+          3
+        ]
+      },
+      {
+        "key": "ctrl+w",
+        "value": "foo",
+        "cursor": 3,
+        "selection": [
+          3,
+          3
+        ]
+      }
+    ]
+  },
+  {
+    "name": "delete-right-word",
+    "value": "foo-bar baz",
+    "cursor": 0,
+    "steps": [
+      {
+        "key": "ctrl+f",
+        "value": "bar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "bar baz",
+        "cursor": 1,
+        "selection": [
+          0,
+          1
+        ]
+      },
+      {
+        "key": "ctrl+f",
+        "value": "ar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "ctrl+f",
+        "value": "baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "delete-all",
+    "value": "foo-bar baz",
+    "cursor": 4,
+    "steps": [
+      {
+        "key": "ctrl+u",
+        "value": "bar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "bar baz",
+        "cursor": 1,
+        "selection": [
+          0,
+          1
+        ]
+      },
+      {
+        "key": "ctrl+u",
+        "value": "ar baz",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "ctrl+k",
+        "value": "",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "delete-all-right-with-selection",
+    "value": "foo-bar baz",
+    "cursor": 4,
+    "steps": [
+      {
+        "key": "shift+left",
+        "value": "foo-bar baz",
+        "cursor": 3,
+        "selection": [
+          4,
+          3
+        ]
+      },
+      {
+        "key": "ctrl+k",
+        "value": "foobar baz",
+        "cursor": 3,
+        "selection": [
+          3,
+          3
+        ]
+      }
+    ]
+  },
+  {
+    "name": "delete-all-left-with-selection",
+    "value": "foo-bar baz",
+    "cursor": 4,
+    "steps": [
+      {
+        "key": "shift+end",
+        "value": "foo-bar baz",
+        "cursor": 11,
+        "selection": [
+          4,
+          11
+        ]
+      },
+      {
+        "key": "ctrl+u",
+        "value": "foo-",
+        "cursor": 4,
+        "selection": [
+          4,
+          4
+        ]
+      }
+    ]
+  },
+  {
+    "name": "paste-empty-clipboard",
+    "value": "foo-bar baz",
+    "cursor": 4,
+    "steps": [
+      {
+        "key": "ctrl+v",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          4,
+          4
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "foo-bar baz",
+        "cursor": 5,
+        "selection": [
+          4,
+          5
+        ]
+      },
+      {
+        "key": "ctrl+v",
+        "value": "foo-ar baz",
+        "cursor": 4,
+        "selection": [
+          4,
+          4
+        ]
+      }
+    ]
+  },
+  {
+    "name": "enter-keeps-selection",
+    "value": "foo-bar baz",
+    "cursor": 4,
+    "steps": [
+      {
+        "key": "shift+left",
+        "value": "foo-bar baz",
+        "cursor": 3,
+        "selection": [
+          4,
+          3
+        ]
+      },
+      {
+        "key": "enter",
+        "value": "foo-bar baz",
+        "cursor": 3,
+        "selection": [
+          4,
+          3
+        ]
+      }
+    ]
+  },
+  {
+    "name": "unicode",
+    "value": "héllo wörld",
+    "cursor": 11,
+    "steps": [
+      {
+        "key": "ctrl+shift+left",
+        "value": "héllo wörld",
+        "cursor": 6,
+        "selection": [
+          11,
+          6
+        ]
+      },
+      {
+        "key": "shift+left",
+        "value": "héllo wörld",
+        "cursor": 5,
+        "selection": [
+          11,
+          5
+        ]
+      },
+      {
+        "key": "x",
+        "value": "héllox",
+        "cursor": 6,
+        "selection": [
+          6,
+          6
+        ]
+      },
+      {
+        "key": "shift+home",
+        "value": "héllox",
+        "cursor": 0,
+        "selection": [
+          6,
+          0
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "héllox",
+        "cursor": 1,
+        "selection": [
+          6,
+          1
+        ]
+      },
+      {
+        "key": "y",
+        "value": "hy",
+        "cursor": 2,
+        "selection": [
+          2,
+          2
+        ]
+      },
+      {
+        "key": "ctrl+left",
+        "value": "hy",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "empty",
+    "value": "",
+    "cursor": 0,
+    "steps": [
+      {
+        "key": "shift+left",
+        "value": "",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "shift+right",
+        "value": "",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "ctrl+shift+a",
+        "value": "",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "shift+home",
+        "value": "",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "shift+end",
+        "value": "",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      },
+      {
+        "key": "backspace",
+        "value": "",
+        "cursor": 0,
+        "selection": [
+          0,
+          0
+        ]
+      }
+    ]
+  }
+]

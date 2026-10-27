@@ -146,6 +146,8 @@ pub enum Owner {
     DetailsContent,
     /// A PR's Overview tab (`PrOverviewTabPane`): merge, edit and react, in front of the content's scroll link.
     PrOverview,
+    /// An issue's Overview tab (`IssueOverviewTabPane`): edit, in front of the content's scroll link.
+    IssueOverview,
     /// The command log.
     CommandLog,
     /// A field of an open dialog, which [`Dialog::field_chain`](crate::modal::Dialog::field_chain) puts in front of
@@ -169,6 +171,7 @@ impl Owner {
             | Owner::DetailsTabs
             | Owner::DetailsContent
             | Owner::PrOverview
+            | Owner::IssueOverview
             | Owner::CommandLog
             | Owner::DialogField(_, FieldKind::Button | FieldKind::Switch | FieldKind::Scroll | FieldKind::Table) => {
                 None

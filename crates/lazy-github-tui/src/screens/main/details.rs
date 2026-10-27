@@ -7,7 +7,7 @@
 //! variant, a `DetailsPane::show_*` one-liner, and a [`DetailsBody`] impl; nothing else here changes.
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
-use lazy_github_core::models::{FullPullRequest, Repository};
+use lazy_github_core::models::{FullPullRequest, Issue, Repository};
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
 
@@ -21,6 +21,7 @@ use crate::keymap::{BindingId, Keymap};
 use crate::theme::Theme;
 
 use super::FocusTarget;
+use super::issue_details::IssueDetails;
 use super::pr_details::PullRequestDetails;
 use super::repo_overview::RepoOverview;
 
@@ -110,6 +111,8 @@ enum Body {
     Repo(Box<RepoOverview>),
     /// The selected pull request's Overview, Diff and Conversation tabs.
     PullRequest(Box<PullRequestDetails>),
+    /// The selected issue's Overview and Comments tabs.
+    Issue(Box<IssueDetails>),
     /// A body for testing the pane's hooks.
     #[cfg(test)]
     Test(Box<tests::TestBody>),
@@ -121,6 +124,7 @@ impl Body {
             Body::Intro(intro) => intro,
             Body::Repo(overview) => overview.as_ref(),
             Body::PullRequest(details) => details.as_ref(),
+            Body::Issue(details) => details.as_ref(),
             #[cfg(test)]
             Body::Test(body) => body.as_ref(),
         }
@@ -131,6 +135,7 @@ impl Body {
             Body::Intro(intro) => intro,
             Body::Repo(overview) => overview.as_mut(),
             Body::PullRequest(details) => details.as_mut(),
+            Body::Issue(details) => details.as_mut(),
             #[cfg(test)]
             Body::Test(body) => body.as_mut(),
         }
@@ -182,6 +187,12 @@ impl DetailsPane {
         self.show(Body::PullRequest(Box::new(details)), cx);
     }
 
+    /// Shows `issue`'s Overview and Comments tabs, which both start loading now, as Textual mounts every pane at once.
+    pub(super) fn show_issue(&mut self, issue: Issue, cx: &mut Cx<'_>) {
+        let details = IssueDetails::new(issue, cx);
+        self.show(Body::Issue(Box::new(details)), cx);
+    }
+
     /// Switches tabs, and tells the body about a tab that became active. Says whether the active tab changed: with
     /// one tab, `left` and `right` do nothing.
     pub(super) fn switch_tab(&mut self, switch: TabSwitch, cx: &mut Cx<'_>) -> bool {
@@ -228,6 +239,14 @@ impl DetailsPane {
     pub(super) fn pull_request(&self) -> Option<&PullRequestDetails> {
         match &self.body {
             Body::PullRequest(details) => Some(details),
+            _ => None,
+        }
+    }
+
+    /// The issue whose tabs are showing, if any.
+    pub(super) fn issue(&self) -> Option<&IssueDetails> {
+        match &self.body {
+            Body::Issue(details) => Some(details),
             _ => None,
         }
     }

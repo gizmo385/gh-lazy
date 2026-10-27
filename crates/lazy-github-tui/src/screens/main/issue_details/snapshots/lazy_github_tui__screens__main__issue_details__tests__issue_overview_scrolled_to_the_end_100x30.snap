@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/screens/main/issue_details/tests.rs
+expression: screen
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/issue-fixture                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Issue #12 Details ──────────────────────────────────┐
+│ ★  Owner       Name           Private││ Overview  Comments                                       │
+│ ☆  parity-bot  issue-fixture  ✘      ││╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                     ▏││  @parity-bot                                             │
+│                                      ││                                                          │
+│                                      ││                                                          │
+└──────────────────────────────────────┘│    Error: the config file is empty (see #9)              │
+┌─ [2] Pull Requests ──────────────────┐│                                                          │
+│ #  Status  Author      Title         ││                                                          │
+│ 8  open    parity-bot  A pull request││  ▌ Workaround: delete the file and start again.          │
+│                         ▉            ││                                                          │
+│                                      ││  More detail.                                          ▄▄│
+│                                      ││                                                          │
+│                                      ││  More detail.                                            │
+└──────────────────────────────────────┘│                                                          │
+┌─ [3] Issues ─────────────────────────┐│  More detail.                                            │
+│ #   Status  Author         Title     ││                                                          │
+│ 12  open    parity-friend  Crash when││  More detail.                                            │
+│ 11  closed  parity-bot     Closed wit││                                                          │
+│ 10  open    parity-bot     Comments t││  More detail.                                            │
+│ 9   open    parity-friend  Comments t││                                                          │
+│                      ▋               ││  More detail.                                            │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows (empty) ──────────────┐│  The last line.                                          │
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ E Edit Issue  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M

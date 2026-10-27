@@ -2,6 +2,7 @@
 //! command log) on the right, and the footer row. Python's `LazyGithubMainScreen`.
 
 mod details;
+mod issue_details;
 mod issue_lists;
 mod issues;
 pub mod layout;
@@ -19,7 +20,7 @@ mod workflows;
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::AppearanceSettings;
 use lazy_github_core::gh::GhError;
-use lazy_github_core::models::{FullPullRequest, Repository};
+use lazy_github_core::models::{FullPullRequest, Issue, Repository};
 use ratatui::Frame;
 use ratatui::layout::{Margin, Position, Rect};
 use ratatui::style::Style;
@@ -290,6 +291,9 @@ pub enum MainAction {
         /// Whether the tab strip takes focus.
         focus: bool,
     },
+    /// Show an issue's details, focusing the tab strip: Python's `IssueSelected`, from the Issues table, the issue
+    /// lookup (#247) and, later, links.
+    OpenIssue(Box<Issue>),
     /// Switch the details tabs (`textual.tabs.*` with the strip focused).
     SwitchDetailsTab(TabSwitch),
     /// A click on a details tab: focus the strip, then activate the tab.
@@ -402,6 +406,15 @@ impl MainScreen {
         self.details_shown(&label, focus, cx);
     }
 
+    /// `MainAction::OpenIssue`: the issue comes whole from where it was picked, so it shows at once. Python's
+    /// `MainViewPane.load_issue`.
+    fn open_issue(&mut self, issue: Issue, cx: &mut Cx<'_>) {
+        self.cancel_pending_selection(cx);
+        let label = format!("Issue #{}", issue.number);
+        self.details.show_issue(issue, cx);
+        self.details_shown(&label, true, cx);
+    }
+
     /// Takes the answer to the pending pull request selection, and hands back any other response. A failure leaves
     /// everything as it was, with Python's log line and toast; an answer to a selection since replaced is dropped.
     fn on_pull_request(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
@@ -443,6 +456,11 @@ impl MainScreen {
     /// The pull request the details pane shows, if any.
     pub fn details_pull_request(&self) -> Option<&FullPullRequest> {
         self.details.pull_request().map(pr_details::PullRequestDetails::pr)
+    }
+
+    /// The issue the details pane shows, if any.
+    pub fn details_issue(&self) -> Option<&Issue> {
+        self.details.issue().map(issue_details::IssueDetails::issue)
     }
 
     /// Takes a response to one of the screen's requests, and hands back any other: the repos section is offered it
@@ -763,6 +781,7 @@ impl MainScreen {
                 Handled::Event(SectionEvent::Selected) if id == SectionId::PullRequests => {
                     Some(self.select_pull_request())
                 }
+                Handled::Event(SectionEvent::Selected) if id == SectionId::Issues => Some(self.select_issue()),
                 handled => table_outcome(id, handled),
             },
         }
@@ -779,6 +798,16 @@ impl MainScreen {
             target: PullRequestTarget::Partial(Box::new(pr.clone())),
             focus: true,
         })
+    }
+
+    /// `enter`, `space` or a click on the cursor row of the Issues table: Python's `issue_selected`.
+    fn select_issue(&self) -> Action {
+        let Some(issue) = self.issue_lists.issues_table().selected() else {
+            // The event is for the cursor's row, so it's always there.
+            return Action::Consumed;
+        };
+        tracing::info!("Selected Issue: #{}", issue.number);
+        Action::Main(MainAction::OpenIssue(Box::new(issue.clone())))
     }
 
     /// What a mouse wheel event means: Textual scrolls the widget under the pointer, focused or not. The repos table
@@ -845,6 +874,7 @@ impl MainScreen {
                 Handled::Event(SectionEvent::Selected) if section == SectionId::PullRequests => {
                     Some(self.select_pull_request())
                 }
+                Handled::Event(SectionEvent::Selected) if section == SectionId::Issues => Some(self.select_issue()),
                 handled => table_outcome(section, handled),
             },
             Owner::DetailsTabs => {
@@ -855,7 +885,7 @@ impl MainScreen {
                 };
                 Some(Action::Main(MainAction::SwitchDetailsTab(switch)))
             }
-            Owner::PrOverview => self.details.on_binding(owner, id),
+            Owner::PrOverview | Owner::IssueOverview => self.details.on_binding(owner, id),
             Owner::SearchableTable(section) if id == BindingId::TableSearch => {
                 self.open_search(section);
                 Some(Action::Consumed)
@@ -1083,6 +1113,7 @@ impl Component for MainScreen {
                 cx.dispatch(Action::SelectRepo(repo));
             }
             MainAction::OpenPullRequest { target, focus } => self.open_pull_request(target, focus, cx),
+            MainAction::OpenIssue(issue) => self.open_issue(*issue, cx),
             MainAction::SwitchDetailsTab(switch) => {
                 self.details.switch_tab(switch, cx);
             }

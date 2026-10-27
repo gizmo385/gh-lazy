@@ -43,12 +43,12 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.workflows-view-run-details` | `workflows.view_run_details` | `enter` | View Run Details | (unused) | M2 | not started | | Defined, rebindable in Settings, never bound (Py bug B9). |
 | `keybindings.workflows-view-job-logs` | `workflows.view_job_logs` | `l` | View Job Logs | Jobs tab | M2 | in progress | #243 | |
 | `keybindings.diff-add-comment` | `diff.add_comment` | `c` | Add Comment | hunk pane | M3 | not started | #187 | |
-| `keybindings.diff-cursor-down` | `diff.cursor_down` | `j` | cursor_down | (unused) | M2 | not started | #236 | Hunk pane hard-codes `j` (Py bug B9). |
-| `keybindings.diff-cursor-up` | `diff.cursor_up` | `k` | cursor_up | (unused) | M2 | not started | #236 | Hunk pane hard-codes `k` (Py bug B9). |
+| `keybindings.diff-cursor-down` | `diff.cursor_down` | `j` | cursor_down | (unused) | M2 | in progress | #236 | Hunk pane hard-codes `j` (Py bug B9). Rust (#236): bound in the hunk pane, labeled "Line down". |
+| `keybindings.diff-cursor-up` | `diff.cursor_up` | `k` | cursor_up | (unused) | M2 | in progress | #236 | Hunk pane hard-codes `k` (Py bug B9). Rust (#236): bound in the hunk pane, labeled "Line up". |
 | `keybindings.diff-clear-selection` | `diff.clear_selection` | `escape` | Clear Selection | (unused) | M2 | not started | #236 | Never bound (Py bug B9). |
-| `keybindings.diff-next-hunk` | `diff.next_hunk` | `J` | Next Hunk | diff viewer | M2 | not started | #236 | Py bug B8. |
-| `keybindings.diff-previous-hunk` | `diff.previous_hunk` | `K` | Previous Hunk | diff viewer | M2 | not started | #236 | Py bug B8. |
-| `keybindings.diff-filter-files` | `diff.filter_files` | `/` | Filter Files | diff viewer | M2 | not started | #236 | |
+| `keybindings.diff-next-hunk` | `diff.next_hunk` | `J` | Next Hunk | diff viewer | M2 | in progress | #236 | Py bug B8. Rust (#236): see `diff-viewer.hunk-navigation`. |
+| `keybindings.diff-previous-hunk` | `diff.previous_hunk` | `K` | Previous Hunk | diff viewer | M2 | in progress | #236 | Py bug B8. Rust (#236): see `diff-viewer.hunk-navigation`. |
+| `keybindings.diff-filter-files` | `diff.filter_files` | `/` | Filter Files | diff viewer | M2 | in progress | #236 | Rust (#236): focuses the filter from anywhere in the viewer. |
 | `keybindings.notifications-open` | `notifications.open` | `ctrl+n` | Notifications | main screen | M4 | not started | #75, #190 | Shown in footer only when enabled at startup (Py bug B7). Rust (#75): hidden and inactive while `notifications.enabled` is false, re-read on config change; the key falls through. |
 | `keybindings.notifications-mark-all-as-read` | `notifications.mark_all_as_read` | `ctrl+r` | Mark all as read | Unread tab | M4 | not started | #189 | |
 | `keybindings.notifications-mark-read` | `notifications.mark_read` | `R` | Mark as Read | Unread tab | M4 | not started | #189 | |

@@ -1,7 +1,10 @@
 version = 1
 description = "PR Diff tab: the file filter, one section per file (modified, added, deleted), collapsed hunk sections, a hunk pane with the line cursor, and filtering by path"
-# Rust needs the diff viewer issues before this can gate.
-gate = false
+# The footer is left out of the cross-app checks wherever `^p Command Pallete` shows whole: Python's spelling is Py bug
+# B14, which Rust fixes on purpose. Those captures match the footer's text before it with `contains`. After the
+# filtered files Python shows the review form (`Submit Review` reads as a table), which is #187 (M3), so `filtered`
+# leaves out the table checks.
+gate = true
 parity_rows = [
     "pull-requests.diff-tab",
     "diff-viewer.viewer",
@@ -12,6 +15,9 @@ parity_rows = [
     "diff-viewer.line-cursor",
     "diff-viewer.focus-ring",
     "diff-viewer.diff-parser",
+    "keybindings.diff-cursor-down",
+    "keybindings.diff-cursor-up",
+    "keybindings.diff-filter-files",
 ]
 sizes = [[160, 48], [100, 30]]
 
@@ -50,6 +56,7 @@ wait = { text = "README.md", timeout_ms = 15000 }
 
 [[step]]
 capture = "files"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # Tab: the diff's scroll area, the filter, the README.md section's title, its hunk's title; enter opens the hunk.
 [[step]]
@@ -60,6 +67,7 @@ wait = { text = "Line: 1/6", timeout_ms = 5000 }
 
 [[step]]
 capture = "hunk-open"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # Tab: the hunk pane. j moves the current line down twice, k up once.
 [[step]]
@@ -89,6 +97,7 @@ wait = { gone = "README.md", timeout_ms = 5000 }
 
 [[step]]
 capture = "filtered"
+checks = ["titles", "tabs", "focus"]
 
 # Escape clears the filter and leaves it.
 [[step]]
@@ -99,6 +108,7 @@ wait = { text = "README.md", timeout_ms = 5000 }
 
 [[step]]
 capture = "filter-cleared"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 [expect.files]
 tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Diff" }
@@ -109,15 +119,28 @@ contains = [
     "▼ 📄 app.css (+3)",
     "▶ Lines 1-3 (+3)",
     "uild.rs (+1)",
+    # The tab strip has focus: the screen's keys only.
+    "^v Paste link  f Follow link  F Follow link (browser)",
 ]
-not_contains = ["Traceback"]
+not_contains = ["Traceback", "Next Hunk"]
 
 [expect.hunk-open]
-contains = ["▼ Lines 3-7 (+3 -1) • A tiny pager.", "## Usage", "Line: 1/6"]
+contains = [
+    "▼ Lines 3-7 (+3 -1) • A tiny pager.",
+    "## Usage",
+    "Line: 1/6",
+    "J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link",
+]
 
 [expect.hunk-focused]
 contains = ["j Line down", "k Line up"]
 
 [expect.filtered]
-contains = ["▼ 📄 viewer.rs (+5 -2)"]
-not_contains = ["README.md", "app.css"]
+# With the filter focused, only its key and the palette's.
+contains = ["▼ 📄 viewer.rs (+5 -2)", " / Filter Files  ^p Command Pal"]
+not_contains = ["README.md", "app.css", "Next Hunk"]
+
+# The scroll area has focus: the viewer's keys aren't listed, as the area is outside the viewer that binds them.
+[expect.filter-cleared]
+contains = ["Filter files (press '/' to focus, ESC to clear)", "^v Paste link  f Follow link  F Follow link (browser)"]
+not_contains = ["Next Hunk"]

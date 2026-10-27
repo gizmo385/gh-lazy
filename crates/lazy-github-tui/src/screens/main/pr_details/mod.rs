@@ -1,6 +1,7 @@
 //! A pull request's details: the Overview, Diff and Conversation tabs. Python's `PrOverviewTabPane`, `PrDiffTabPane`
 //! and `PrConversationTabPane`, which `MainViewPane.load_pull_request` puts in the details pane.
 
+mod diff;
 mod overview;
 
 use std::sync::Arc;
@@ -10,14 +11,15 @@ use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
 
 use crate::action::Action;
-use crate::component::{ChainLink, Cx, Owner};
+use crate::component::{BindingState, ChainLink, Cx, Owner};
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
 use crate::effect::{GithubResponse, RequestId};
-use crate::keymap::BindingId;
+use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::Theme;
 
 use super::details::{BodyRenderCx, DetailsBody};
+pub(super) use diff::PrDiff;
 pub(super) use overview::PrOverview;
 #[cfg(test)]
 pub(super) use overview::{OverviewStop, SectionKind};
@@ -69,12 +71,12 @@ impl PrTab {
     }
 }
 
-/// One pull request's tabs. The Diff tab (#235, #236) and the Conversation tab (#233, #234) are empty until they
-/// land, and add their bodies here.
+/// One pull request's tabs. The Conversation tab (#233, #234) is empty until it lands, and adds its body here.
 #[derive(Debug)]
 pub(in crate::screens::main) struct PullRequestDetails {
     pr: Arc<FullPullRequest>,
     overview: PrOverview,
+    diff: PrDiff,
 }
 
 impl PullRequestDetails {
@@ -83,6 +85,7 @@ impl PullRequestDetails {
         let pr = Arc::new(pr);
         Self {
             overview: PrOverview::new(Arc::clone(&pr), cx),
+            diff: PrDiff::new(&pr, cx),
             pr,
         }
     }
@@ -97,6 +100,12 @@ impl PullRequestDetails {
     pub(in crate::screens::main) fn overview(&self) -> &PrOverview {
         &self.overview
     }
+
+    /// The Diff tab.
+    #[cfg(test)]
+    pub(in crate::screens::main) fn diff(&self) -> &PrDiff {
+        &self.diff
+    }
 }
 
 impl DetailsBody for PullRequestDetails {
@@ -105,24 +114,28 @@ impl DetailsBody for PullRequestDetails {
     }
 
     fn on_response(&mut self, id: RequestId, response: GithubResponse, _cx: &mut Cx<'_>) -> Option<GithubResponse> {
-        self.overview.on_response(id, response)
+        let response = self.overview.on_response(id, response)?;
+        self.diff.on_response(id, response)
     }
 
     fn close(&self, cx: &mut Cx<'_>) {
         self.overview.close(cx);
+        self.diff.close(cx);
     }
 
     fn scroll(&mut self, tab: usize, scroll: Scroll) {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.scroll(scroll),
-            PrTab::Diff | PrTab::Conversation => {}
+            PrTab::Diff => self.diff.scroll(scroll),
+            PrTab::Conversation => {}
         }
     }
 
     fn wheel(&mut self, tab: usize, wheel: Wheel) {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.wheel(wheel),
-            PrTab::Diff | PrTab::Conversation => {}
+            PrTab::Diff => self.diff.wheel(wheel),
+            PrTab::Conversation => {}
         }
     }
 
@@ -140,58 +153,90 @@ impl DetailsBody for PullRequestDetails {
     fn render_timed(&mut self, tab: usize, frame: &mut Frame<'_>, area: Rect, cx: &BodyRenderCx<'_>) {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.render(frame, area, cx),
-            PrTab::Diff | PrTab::Conversation => {}
+            PrTab::Diff => self.diff.render(frame, area, cx),
+            PrTab::Conversation => {}
         }
     }
 
     fn next_deadline(&self, tab: usize, now: tokio::time::Instant, animations: bool) -> Option<tokio::time::Instant> {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.next_deadline(now, animations),
-            PrTab::Diff | PrTab::Conversation => None,
+            PrTab::Diff => self.diff.next_deadline(now, animations),
+            PrTab::Conversation => None,
         }
     }
 
     fn focus_step(&mut self, tab: usize, forward: bool) -> bool {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.focus_step(forward),
-            PrTab::Diff | PrTab::Conversation => false,
+            PrTab::Diff => self.diff.focus_step(forward),
+            PrTab::Conversation => false,
         }
     }
 
     fn focus_first(&mut self, tab: usize) {
-        if PrTab::at(tab) == PrTab::Overview {
-            self.overview.focus_first();
+        match PrTab::at(tab) {
+            PrTab::Overview => self.overview.focus_first(),
+            PrTab::Diff => self.diff.focus_first(),
+            PrTab::Conversation => {}
         }
     }
 
     fn focus_last(&mut self, tab: usize) {
-        if PrTab::at(tab) == PrTab::Overview {
-            self.overview.focus_last();
+        match PrTab::at(tab) {
+            PrTab::Overview => self.overview.focus_last(),
+            PrTab::Diff => self.diff.focus_last(),
+            PrTab::Conversation => {}
         }
     }
 
     fn click(&mut self, tab: usize, position: Position) {
-        if PrTab::at(tab) == PrTab::Overview {
-            self.overview.click(position);
+        match PrTab::at(tab) {
+            PrTab::Overview => self.overview.click(position),
+            PrTab::Diff => self.diff.click(position),
+            PrTab::Conversation => {}
         }
     }
 
     fn chain(&self, tab: usize) -> Vec<ChainLink> {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.chain(),
-            PrTab::Diff | PrTab::Conversation => Vec::new(),
+            PrTab::Diff => self.diff.chain(),
+            PrTab::Conversation => Vec::new(),
         }
     }
 
     /// A section title's or list's key applies to the Overview; merge (#183), edit (#185) and add a reaction aren't
     /// built yet: the key is consumed, as in Python.
     fn on_binding(&mut self, tab: usize, owner: Owner, id: BindingId) -> Option<Action> {
+        // The diff viewer's titles, pane, filter and keys.
+        if PrTab::at(tab) == PrTab::Diff {
+            return self.diff.on_binding(owner, id);
+        }
         match owner {
             Owner::CollapsibleTitle | Owner::ListView => {
                 (PrTab::at(tab) == PrTab::Overview && self.overview.on_binding(id)).then_some(Action::Consumed)
             }
             _ => Some(Action::Unimplemented(id)),
         }
+    }
+
+    fn binding_state(&self, tab: usize, owner: Owner, id: BindingId) -> BindingState {
+        match PrTab::at(tab) {
+            PrTab::Diff => self.diff.binding_state(owner, id),
+            PrTab::Overview | PrTab::Conversation => BindingState::Enabled,
+        }
+    }
+
+    fn handle_focused_key(&mut self, tab: usize, key: &KeyChord, keymap: &Keymap) -> Option<Action> {
+        match PrTab::at(tab) {
+            PrTab::Diff => self.diff.handle_key(key, keymap),
+            PrTab::Overview | PrTab::Conversation => None,
+        }
+    }
+
+    fn handle_paste(&mut self, tab: usize, text: &str) -> bool {
+        PrTab::at(tab) == PrTab::Diff && self.diff.handle_paste(text)
     }
 }
 

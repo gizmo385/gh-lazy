@@ -132,8 +132,10 @@ keys = ["right"]
 [[step]]
 wait = { regex = "Error fetching diff|Diff too large", timeout_ms = 5000 }
 
+# The footer isn't cut off: Python spells `^p Command Pallete` (Py bug B14).
 [[step]]
 capture = "diff-error"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 [[step]]
 keys = ["right"]

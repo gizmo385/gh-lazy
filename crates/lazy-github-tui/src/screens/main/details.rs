@@ -13,12 +13,12 @@ use ratatui::layout::{Position, Rect};
 use tokio::time::Instant;
 
 use crate::action::Action;
-use crate::component::{ChainLink, Cx, Owner, RenderCx};
+use crate::component::{BindingState, ChainLink, Cx, Owner, RenderCx};
 use crate::components::command_log::Wheel;
 use crate::components::info::{InfoView, Scroll};
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
 use crate::effect::{GithubResponse, RequestId};
-use crate::keymap::{BindingId, Keymap};
+use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::options::AppOptions;
 use crate::theme::Theme;
 
@@ -101,6 +101,23 @@ pub(super) trait DetailsBody {
     /// A mouse event over tab `tab`'s content other than a press (a release, a move, the wheel), for a widget inside
     /// it that takes its own (a tree). Says whether it took the event; the pane handles any other.
     fn mouse(&mut self, _tab: usize, _mouse: MouseEvent) -> bool {
+        false
+    }
+
+    /// How the footer and help panel show binding `id` of [`Self::chain`]'s link `owner` in tab `tab`.
+    fn binding_state(&self, _tab: usize, _owner: Owner, _id: BindingId) -> BindingState {
+        BindingState::Enabled
+    }
+
+    /// A key before the binding chain, with focus inside tab `tab`'s content: a text input inside it (the diff
+    /// viewer's file filter) takes the keys it types and its editing keys, as the table's search box does. `None`
+    /// passes the key on.
+    fn handle_focused_key(&mut self, _tab: usize, _key: &KeyChord, _keymap: &Keymap) -> Option<Action> {
+        None
+    }
+
+    /// A bracketed paste with focus inside tab `tab`'s content. Says whether a text input inside it took it.
+    fn handle_paste(&mut self, _tab: usize, _text: &str) -> bool {
         false
     }
 
@@ -360,6 +377,10 @@ impl DetailsPane {
                 tracing::debug!("Dropping the comments response {id} no longer awaited");
                 None
             }
+            GithubResponse::PullRequestDiff(_) => {
+                tracing::debug!("Dropping the diff response {id} of a pull request no longer shown");
+                None
+            }
             other => Some(other),
         }
     }
@@ -382,6 +403,21 @@ impl DetailsPane {
     /// [`DetailsBody::mouse`] in the active tab.
     pub(super) fn mouse(&mut self, mouse: MouseEvent) -> bool {
         self.body.get_mut().mouse(self.tabs.active(), mouse)
+    }
+
+    /// [`DetailsBody::binding_state`] in the active tab.
+    pub(super) fn binding_state(&self, owner: Owner, id: BindingId) -> BindingState {
+        self.body.get().binding_state(self.tabs.active(), owner, id)
+    }
+
+    /// [`DetailsBody::handle_focused_key`] in the active tab.
+    pub(super) fn handle_focused_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Option<Action> {
+        self.body.get_mut().handle_focused_key(self.tabs.active(), key, keymap)
+    }
+
+    /// [`DetailsBody::handle_paste`] in the active tab.
+    pub(super) fn handle_paste(&mut self, text: &str) -> bool {
+        self.body.get_mut().handle_paste(self.tabs.active(), text)
     }
 
     /// [`DetailsBody::focus_step`] in the active tab.

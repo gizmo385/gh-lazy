@@ -22,6 +22,16 @@ impl ActiveBinding {
     pub fn def(&self) -> &'static BindingDef {
         self.id.def()
     }
+
+    /// What the footer and help panel call it: the link's label for it, else its description.
+    pub fn label(&self) -> &'static str {
+        self.owner.binding_label(self.id).unwrap_or(self.def().description)
+    }
+
+    /// Whether the footer lists it: a binding with a description, or one its link labels.
+    pub fn shown(&self) -> bool {
+        self.def().show || self.owner.binding_label(self.id).is_some()
+    }
 }
 
 /// The active keys of `chain` (innermost first), in Textual's `Screen.active_bindings` order.

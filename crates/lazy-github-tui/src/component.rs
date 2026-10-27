@@ -161,6 +161,13 @@ pub enum Owner {
     Tree,
     /// A run's Jobs tab (`WorkflowRunJobsTabPane`): view job logs, in front of the content's scroll link.
     RunJobs,
+    /// The diff viewer (`SplitDiffViewer`, #236): next and previous hunk, and the file filter key, while focus is
+    /// anywhere in the PR Diff tab.
+    DiffViewer,
+    /// A focused hunk pane in the diff viewer (`UnifiedDiffPane`): the line cursor and add comment.
+    HunkPane,
+    /// The diff viewer's focused file filter (`FileFilterInput`, an `Input`).
+    DiffFilter,
     /// The command log.
     CommandLog,
     /// A field of an open dialog, which [`Dialog::field_chain`](crate::modal::Dialog::field_chain) puts in front of
@@ -173,7 +180,7 @@ impl Owner {
     /// `Input` and `CollapsibleTitle` have one.
     pub fn group_title(self) -> Option<&'static str> {
         match self {
-            Owner::SearchInput(_) | Owner::DialogField(_, FieldKind::TextInput) => Some("Input"),
+            Owner::SearchInput(_) | Owner::DiffFilter | Owner::DialogField(_, FieldKind::TextInput) => Some("Input"),
             Owner::CollapsibleTitle => Some("Collapsible"),
             Owner::App
             | Owner::Screen(_)
@@ -191,6 +198,8 @@ impl Owner {
             | Owner::CommentBlock
             | Owner::Tree
             | Owner::RunJobs
+            | Owner::DiffViewer
+            | Owner::HunkPane
             | Owner::CommandLog
             | Owner::DialogField(_, FieldKind::Button | FieldKind::Switch | FieldKind::Scroll | FieldKind::Table) => {
                 None
@@ -202,8 +211,19 @@ impl Owner {
     pub fn types_text(self) -> bool {
         matches!(
             self,
-            Owner::SearchInput(_) | Owner::DialogField(_, FieldKind::TextInput)
+            Owner::SearchInput(_) | Owner::DiffFilter | Owner::DialogField(_, FieldKind::TextInput)
         )
+    }
+
+    /// The label the footer and help panel give binding `id` at this link, when it isn't the binding's own
+    /// description. The hunk pane labels the line cursor keys as Python's pane labels its own `j` / `k` (Py bug B9),
+    /// since `diff.cursor_down` and `diff.cursor_up` have no description.
+    pub fn binding_label(self, id: BindingId) -> Option<&'static str> {
+        match (self, id) {
+            (Owner::HunkPane, BindingId::DiffCursorDown) => Some("Line down"),
+            (Owner::HunkPane, BindingId::DiffCursorUp) => Some("Line up"),
+            _ => None,
+        }
     }
 }
 

@@ -630,6 +630,10 @@ impl MainScreen {
 
     /// Step 4 of key dispatch: a key the focused search box takes before the binding chain. `None` passes it on.
     pub fn handle_focused_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Option<Action> {
+        // An input inside the details content (the diff viewer's file filter) takes its keys the same way.
+        if self.focus == FocusTarget::DetailsContent {
+            return self.details.handle_focused_key(key, keymap);
+        }
         let FocusTarget::Search(id) = self.focus else {
             return None;
         };
@@ -643,8 +647,11 @@ impl MainScreen {
         Some(table_outcome(id, handled).unwrap_or(Action::Consumed))
     }
 
-    /// A bracketed paste, which only the focused search box takes.
+    /// A bracketed paste, which only a focused text input takes: a search box, or the diff viewer's file filter.
     pub fn handle_paste(&mut self, text: &str) -> Option<Action> {
+        if self.focus == FocusTarget::DetailsContent {
+            return self.details.handle_paste(text).then_some(Action::Consumed);
+        }
         let FocusTarget::Search(id) = self.focus else {
             return None;
         };
@@ -961,7 +968,10 @@ impl MainScreen {
             | Owner::ListView
             | Owner::CommentBlock
             | Owner::Tree
-            | Owner::RunJobs => self.details.on_binding(owner, id),
+            | Owner::RunJobs
+            | Owner::DiffViewer
+            | Owner::HunkPane
+            | Owner::DiffFilter => self.details.on_binding(owner, id),
             Owner::SearchableTable(section) if id == BindingId::TableSearch => {
                 self.open_search(section);
                 Some(Action::Consumed)
@@ -999,6 +1009,7 @@ impl MainScreen {
     pub fn link_binding_state(&self, owner: Owner, id: BindingId, cx: &Cx<'_>) -> BindingState {
         match owner {
             Owner::Screen(ScreenKind::Main) => self.binding_state(id, cx),
+            Owner::DiffViewer => self.details.binding_state(owner, id),
             _ => BindingState::Enabled,
         }
     }

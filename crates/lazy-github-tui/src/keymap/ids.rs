@@ -261,6 +261,9 @@ registry! {
     TextualInputDeleteRightAll("textual.input.delete_right_all", "ctrl+k", "delete_right_all", "Delete all to the right")
         .hidden();
     TextualInputPaste("textual.input.paste", "ctrl+v", "paste", "Paste text from the clipboard").hidden();
+    // LazyGithub's `FileFilterInput`, the diff viewer's file filter (#236), takes `escape` in `on_key` before any
+    // binding: it clears the filter and leaves it. Python has no id for it.
+    TextualFileFilterClear("textual.file_filter.clear", "escape", "clear", "Clear filter").hidden();
     // `Button`: the dialogs' buttons (#213).
     TextualButtonPress("textual.button.press", "enter", "press", "Press button").hidden();
     // `Switch`: the dialogs' switches (#223).

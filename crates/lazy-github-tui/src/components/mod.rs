@@ -4,6 +4,7 @@ pub mod button;
 pub mod collapsible;
 pub mod command_log;
 pub mod comment;
+pub mod diff_view;
 pub mod footer;
 pub mod hatch;
 pub mod help_panel;

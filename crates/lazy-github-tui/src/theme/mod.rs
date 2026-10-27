@@ -193,6 +193,8 @@ impl Theme {
         let paint = if self.ansi {
             match c {
                 RichAnsi::Green => Paint::Ansi(AnsiColor::Green),
+                RichAnsi::Red => Paint::Ansi(AnsiColor::Red),
+                RichAnsi::Yellow => Paint::Ansi(AnsiColor::Yellow),
             }
         } else if self.dark {
             c.dark().into()

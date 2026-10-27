@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/screens/main/pr_details/diff/tests.rs
+expression: screen
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────┐
+│ ★  Owner       Name        Private   ││ Overview  Diff  Conversation                             │
+│ ☆  parity-bot  pr-details  ✘         ││━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                      ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  │
+│                                      ││▊  Filter files (press '/' to focus, ESC to clear)     ▎  │
+│                                      ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  │
+│                                      ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│                                      ││  ▼ 📄  README.md (+3 -1)                                  │
+│                                      ││                                                          │
+│                                      ││    ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│                                      ││      ▼ Lines 3-7 (+3 -1) • A tiny pager.                 │
+│                                      ││                                                          │
+└──────────────────────────────────────┘│                                                        ▂▂│
+┌─ [2] Pull Requests ──────────────────┐│        ┌──────────────────────────────────────────────┐  │
+│ #  Status  Author         Title      ││        │     3 │ ## Usage                             │  │
+│ 5  open    parity-friend  Add a curso││        │►    4 │                                      │  │
+│ 4  closed  parity-bot     Drop the le││        │     5 │ Run `viewer FILE`.                   │  │
+│ 3  closed  parity-bot     Release 0.2││        │     5 │ Run `viewer FILE`, then press `j` and│  │
+│ 2  open    parity-friend  Try a faste││        │     6 │                                      │  │
+│                          ▊           ││        │     7 │ The current line is marked with `>`. │  │
+│                                      ││        │                                   ▉          │  │
+│                                      ││        │                                    Line: 2/6 │  │
+│                                      ││        └──────────────────────────────────────────────┘  │
+│                                      ││                                                          │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link

@@ -57,7 +57,7 @@ pub fn help_sections(active: &[ActiveBinding]) -> Vec<HelpSection> {
                         def.action,
                         HelpRow {
                             keys: vec![binding.key.clone()],
-                            description: def.description,
+                            description: binding.label(),
                             tooltip: def.tooltip,
                         },
                     )),

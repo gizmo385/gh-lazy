@@ -54,7 +54,7 @@ pub struct FooterHit {
 /// picks them: the `show` bindings grouped by action across the whole chain, each item at its action's first key.
 pub fn footer_items(active: &[ActiveBinding]) -> Vec<FooterItem> {
     let mut items: Vec<FooterItem> = Vec::new();
-    for binding in active.iter().filter(|binding| binding.def().show) {
+    for binding in active.iter().filter(|binding| binding.shown()) {
         let def = binding.def();
         if items.iter().any(|item| item.id.def().action == def.action) {
             continue;
@@ -63,7 +63,7 @@ pub fn footer_items(active: &[ActiveBinding]) -> Vec<FooterItem> {
             owner: binding.owner,
             id: binding.id,
             key: binding.key.clone(),
-            description: def.description,
+            description: binding.label(),
             enabled: binding.enabled,
         });
     }

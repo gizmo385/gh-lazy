@@ -9,7 +9,8 @@ use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
 use lazy_github_core::models::{
-    FullPullRequest, FullUser, IssueListItem, RepoName, Repository, User, Workflow, WorkflowJob, WorkflowRun,
+    CheckRun, CombinedStatus, FullPullRequest, FullUser, IssueListItem, Reactions, RepoName, Repository, User,
+    Workflow, WorkflowJob, WorkflowRun,
 };
 
 /// Something the runtime does on the app's behalf.
@@ -164,6 +165,27 @@ pub enum GithubRequest {
         /// The run's id.
         run_id: u64,
     },
+    /// [`Github::commit_status`].
+    CommitStatus {
+        /// The commit's repo.
+        repo: Box<Repository>,
+        /// The commit.
+        sha: String,
+    },
+    /// [`Github::check_runs`].
+    CheckRuns {
+        /// The commit's repo.
+        repo: Box<Repository>,
+        /// The commit.
+        sha: String,
+    },
+    /// [`Github::issue_reactions`].
+    IssueReactions {
+        /// The issue's or pull request's repo.
+        repo: Box<Repository>,
+        /// Its number.
+        number: u64,
+    },
 }
 
 /// The result of a [`GithubRequest`], in the variant of the same name.
@@ -197,6 +219,12 @@ pub enum GithubResponse {
     PullRequest(Result<Box<FullPullRequest>, GhError>),
     /// [`Github::workflow_run_jobs`].
     WorkflowRunJobs(Result<Vec<WorkflowJob>, GhError>),
+    /// [`Github::commit_status`].
+    CommitStatus(Result<CombinedStatus, GhError>),
+    /// [`Github::check_runs`].
+    CheckRuns(Result<Vec<CheckRun>, GhError>),
+    /// [`Github::issue_reactions`].
+    IssueReactions(Result<Reactions, GhError>),
 }
 
 impl GithubRequest {
@@ -232,6 +260,13 @@ impl GithubRequest {
             }
             GithubRequest::WorkflowRunJobs { repo, run_id } => {
                 GithubResponse::WorkflowRunJobs(gh.workflow_run_jobs(&repo, run_id).await)
+            }
+            GithubRequest::CommitStatus { repo, sha } => {
+                GithubResponse::CommitStatus(gh.commit_status(&repo, &sha).await)
+            }
+            GithubRequest::CheckRuns { repo, sha } => GithubResponse::CheckRuns(gh.check_runs(&repo, &sha).await),
+            GithubRequest::IssueReactions { repo, number } => {
+                GithubResponse::IssueReactions(gh.issue_reactions(&repo, number).await)
             }
         }
     }

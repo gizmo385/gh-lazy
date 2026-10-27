@@ -7,17 +7,20 @@ use std::sync::Arc;
 
 use lazy_github_core::models::{FullPullRequest, PartialPullRequest};
 use ratatui::Frame;
-use ratatui::layout::Rect;
+use ratatui::layout::{Position, Rect};
 
 use crate::action::Action;
 use crate::component::{ChainLink, Cx, Owner};
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
+use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::BindingId;
 use crate::theme::Theme;
 
-use super::details::DetailsBody;
+use super::details::{BodyRenderCx, DetailsBody};
 pub(super) use overview::PrOverview;
+#[cfg(test)]
+pub(super) use overview::{OverviewStop, SectionKind};
 
 /// `PrOverviewTabPane.BINDINGS`: merge (#183), edit (#185) and add a reaction, in the footer while the Overview's
 /// content has focus.
@@ -76,10 +79,10 @@ pub(in crate::screens::main) struct PullRequestDetails {
 
 impl PullRequestDetails {
     /// The tabs of `pr`. Each tab starts its requests here, as Textual mounts every pane at once.
-    pub(super) fn new(pr: FullPullRequest, _cx: &mut Cx<'_>) -> Self {
+    pub(super) fn new(pr: FullPullRequest, cx: &mut Cx<'_>) -> Self {
         let pr = Arc::new(pr);
         Self {
-            overview: PrOverview::new(Arc::clone(&pr)),
+            overview: PrOverview::new(Arc::clone(&pr), cx),
             pr,
         }
     }
@@ -101,6 +104,14 @@ impl DetailsBody for PullRequestDetails {
         PrTab::NAMES
     }
 
+    fn on_response(&mut self, id: RequestId, response: GithubResponse, _cx: &mut Cx<'_>) -> Option<GithubResponse> {
+        self.overview.on_response(id, response)
+    }
+
+    fn close(&self, cx: &mut Cx<'_>) {
+        self.overview.close(cx);
+    }
+
     fn scroll(&mut self, tab: usize, scroll: Scroll) {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.scroll(scroll),
@@ -115,23 +126,72 @@ impl DetailsBody for PullRequestDetails {
         }
     }
 
-    fn render(&mut self, tab: usize, frame: &mut Frame<'_>, area: Rect, theme: &Theme, _focused: bool) {
+    /// The pane draws through [`Self::render_timed`]; this fallback draws any loading overlay as static text.
+    fn render(&mut self, tab: usize, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool) {
+        let cx = BodyRenderCx {
+            theme,
+            now: tokio::time::Instant::now(),
+            animations: false,
+            focused,
+        };
+        self.render_timed(tab, frame, area, &cx);
+    }
+
+    fn render_timed(&mut self, tab: usize, frame: &mut Frame<'_>, area: Rect, cx: &BodyRenderCx<'_>) {
         match PrTab::at(tab) {
-            PrTab::Overview => self.overview.render(frame, area, theme),
+            PrTab::Overview => self.overview.render(frame, area, cx),
             PrTab::Diff | PrTab::Conversation => {}
+        }
+    }
+
+    fn next_deadline(&self, tab: usize, now: tokio::time::Instant, animations: bool) -> Option<tokio::time::Instant> {
+        match PrTab::at(tab) {
+            PrTab::Overview => self.overview.next_deadline(now, animations),
+            PrTab::Diff | PrTab::Conversation => None,
+        }
+    }
+
+    fn focus_step(&mut self, tab: usize, forward: bool) -> bool {
+        match PrTab::at(tab) {
+            PrTab::Overview => self.overview.focus_step(forward),
+            PrTab::Diff | PrTab::Conversation => false,
+        }
+    }
+
+    fn focus_first(&mut self, tab: usize) {
+        if PrTab::at(tab) == PrTab::Overview {
+            self.overview.focus_first();
+        }
+    }
+
+    fn focus_last(&mut self, tab: usize) {
+        if PrTab::at(tab) == PrTab::Overview {
+            self.overview.focus_last();
+        }
+    }
+
+    fn click(&mut self, tab: usize, position: Position) {
+        if PrTab::at(tab) == PrTab::Overview {
+            self.overview.click(position);
         }
     }
 
     fn chain(&self, tab: usize) -> Vec<ChainLink> {
         match PrTab::at(tab) {
-            PrTab::Overview => vec![ChainLink::new(Owner::PrOverview, PR_OVERVIEW_BINDINGS)],
+            PrTab::Overview => self.overview.chain(),
             PrTab::Diff | PrTab::Conversation => Vec::new(),
         }
     }
 
-    /// Merge (#183), edit (#185) and add a reaction aren't built yet: the key is consumed, as in Python.
-    fn on_binding(&mut self, _tab: usize, _owner: Owner, id: BindingId) -> Option<Action> {
-        Some(Action::Unimplemented(id))
+    /// A section title's or list's key applies to the Overview; merge (#183), edit (#185) and add a reaction aren't
+    /// built yet: the key is consumed, as in Python.
+    fn on_binding(&mut self, tab: usize, owner: Owner, id: BindingId) -> Option<Action> {
+        match owner {
+            Owner::CollapsibleTitle | Owner::ListView => {
+                (PrTab::at(tab) == PrTab::Overview && self.overview.on_binding(id)).then_some(Action::Consumed)
+            }
+            _ => Some(Action::Unimplemented(id)),
+        }
     }
 }
 

@@ -572,6 +572,30 @@ mod tests {
         ) -> Result<Vec<lazy_github_core::models::WorkflowJob>, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }
+
+        async fn commit_status(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _sha: &str,
+        ) -> Result<lazy_github_core::models::CombinedStatus, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
+        async fn check_runs(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _sha: &str,
+        ) -> Result<Vec<lazy_github_core::models::CheckRun>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
+        async fn issue_reactions(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _number: u64,
+        ) -> Result<lazy_github_core::models::Reactions, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
     }
 
     /// Runs the loop on a `TestBackend` with `effect` already started, and returns how it ended.

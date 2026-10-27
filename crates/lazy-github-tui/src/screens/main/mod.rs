@@ -343,7 +343,7 @@ impl MainScreen {
             section_titles: SectionId::ALL.map(|id| title(id.focus_binding(), id.label())),
             details_title: title(BindingId::MainDetailsFocus, "Details"),
             command_log_title: title(BindingId::MainCommandLogFocus, "Command Log"),
-            details: DetailsPane::default(),
+            details: DetailsPane::default().with_options(options),
             command_log: CommandLog::new(appearance.show_command_log),
             repos: ReposSection::new(theme, options),
             issue_lists: IssueLists::new(options),
@@ -521,9 +521,10 @@ impl MainScreen {
         &self.repos
     }
 
-    /// The next animation frame on the screen, if anything animates: the earliest over every table.
+    /// The next animation frame on the screen, if anything animates: the earliest over every table and the details.
     pub fn next_deadline(&self, now: Instant) -> Option<Instant> {
-        earliest_deadline(SectionId::ALL.into_iter().map(|id| self.table(id)), now)
+        let tables = earliest_deadline(SectionId::ALL.into_iter().map(|id| self.table(id)), now);
+        [tables, self.details.next_deadline(now)].into_iter().flatten().min()
     }
 
     /// What has focus.
@@ -937,7 +938,11 @@ impl MainScreen {
                 };
                 Some(Action::Main(MainAction::SwitchDetailsTab(switch)))
             }
-            Owner::PrOverview | Owner::IssueOverview | Owner::DetailsButton => self.details.on_binding(owner, id),
+            Owner::PrOverview
+            | Owner::IssueOverview
+            | Owner::DetailsButton
+            | Owner::CollapsibleTitle
+            | Owner::ListView => self.details.on_binding(owner, id),
             Owner::SearchableTable(section) if id == BindingId::TableSearch => {
                 self.open_search(section);
                 Some(Action::Consumed)
@@ -1043,7 +1048,7 @@ impl MainScreen {
             }
             // `DetailsContent` is maximized from a button inside it (see `Self::can_maximize`): the tab area shows.
             FocusTarget::DetailsTabs | FocusTarget::DetailsContent => {
-                let hits = self.details.render(frame, rect, theme, self.focus);
+                let hits = self.details.render(frame, rect, cx, self.focus);
                 self.hits.extend(hits);
             }
             FocusTarget::CommandLog => {
@@ -1241,7 +1246,7 @@ impl Component for MainScreen {
         );
         let inner = details.inner(boxes.details);
         frame.render_widget(details, boxes.details);
-        let hits = self.details.render(frame, inner, theme, self.focus);
+        let hits = self.details.render(frame, inner, cx, self.focus);
         self.hits.extend(hits);
 
         if let Some(rect) = boxes.command_log {

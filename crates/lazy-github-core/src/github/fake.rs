@@ -9,12 +9,15 @@ use serde::de::Error as _;
 
 use super::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
 use crate::gh::GhError;
-use crate::models::{FullPullRequest, FullUser, IssueListItem, Repository, User, Workflow, WorkflowJob, WorkflowRun};
+use crate::models::{
+    CheckRun, CheckState, CombinedStatus, FullPullRequest, FullUser, IssueListItem, Reactions, Repository, User,
+    Workflow, WorkflowJob, WorkflowRun,
+};
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs` and `issue_reactions` find none, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -76,6 +79,27 @@ pub enum GithubCall {
     },
     /// [`Github::workflow_run_jobs`], with the run's id.
     WorkflowRunJobs(u64),
+    /// [`Github::commit_status`].
+    CommitStatus {
+        /// The repository's full name.
+        full_name: String,
+        /// The commit.
+        sha: String,
+    },
+    /// [`Github::check_runs`].
+    CheckRuns {
+        /// The repository's full name.
+        full_name: String,
+        /// The commit.
+        sha: String,
+    },
+    /// [`Github::issue_reactions`].
+    IssueReactions {
+        /// The repository's full name.
+        full_name: String,
+        /// The issue's or pull request's number.
+        number: u64,
+    },
 }
 
 #[derive(Debug, Default)]
@@ -104,6 +128,12 @@ struct State {
     pull_requests: HashMap<(String, u64), Result<FullPullRequest, GhError>>,
     /// Keyed by run id.
     run_jobs: HashMap<u64, Result<Vec<WorkflowJob>, GhError>>,
+    /// Keyed by `full_name` and sha.
+    commit_statuses: HashMap<(String, String), Result<CombinedStatus, GhError>>,
+    /// Keyed by `full_name` and sha.
+    check_runs: HashMap<(String, String), Result<Vec<CheckRun>, GhError>>,
+    /// Keyed by `full_name` and number.
+    issue_reactions: HashMap<(String, u64), Result<Reactions, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -237,6 +267,35 @@ impl FakeGithub {
     #[must_use]
     pub fn with_run_jobs(self, run_id: u64, jobs: Result<Vec<WorkflowJob>, GhError>) -> Self {
         self.lock().run_jobs.insert(run_id, jobs);
+        self
+    }
+
+    /// `commit_status` returns `status` for commit `sha` of the repository named `full_name`. Commits not set have no
+    /// statuses (and GitHub's `pending` state).
+    #[must_use]
+    pub fn with_commit_status(self, full_name: &str, sha: &str, status: Result<CombinedStatus, GhError>) -> Self {
+        self.lock()
+            .commit_statuses
+            .insert((full_name.to_owned(), sha.to_owned()), status);
+        self
+    }
+
+    /// `check_runs` returns `runs` for commit `sha` of the repository named `full_name`. Commits not set have none.
+    #[must_use]
+    pub fn with_check_runs(self, full_name: &str, sha: &str, runs: Result<Vec<CheckRun>, GhError>) -> Self {
+        self.lock()
+            .check_runs
+            .insert((full_name.to_owned(), sha.to_owned()), runs);
+        self
+    }
+
+    /// `issue_reactions` returns `reactions` for number `number` of the repository named `full_name`. Numbers not set
+    /// have none.
+    #[must_use]
+    pub fn with_issue_reactions(self, full_name: &str, number: u64, reactions: Result<Reactions, GhError>) -> Self {
+        self.lock()
+            .issue_reactions
+            .insert((full_name.to_owned(), number), reactions);
         self
     }
 
@@ -444,6 +503,47 @@ impl Github for FakeGithub {
     async fn workflow_run_jobs(&self, _repo: &Repository, run_id: u64) -> Result<Vec<WorkflowJob>, GhError> {
         self.respond(GithubCall::WorkflowRunJobs(run_id), |state| {
             canned_page(state.run_jobs.get(&run_id))
+        })
+        .await
+    }
+
+    async fn commit_status(&self, repo: &Repository, sha: &str) -> Result<CombinedStatus, GhError> {
+        let key = (repo.full_name.clone(), sha.to_owned());
+        let call = GithubCall::CommitStatus {
+            full_name: repo.full_name.clone(),
+            sha: sha.to_owned(),
+        };
+        self.respond(call, |state| match state.commit_statuses.get(&key) {
+            Some(Ok(status)) => Ok(status.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Ok(CombinedStatus {
+                state: CheckState::Pending,
+                statuses: Vec::new(),
+            }),
+        })
+        .await
+    }
+
+    async fn check_runs(&self, repo: &Repository, sha: &str) -> Result<Vec<CheckRun>, GhError> {
+        let key = (repo.full_name.clone(), sha.to_owned());
+        let call = GithubCall::CheckRuns {
+            full_name: repo.full_name.clone(),
+            sha: sha.to_owned(),
+        };
+        self.respond(call, |state| canned_page(state.check_runs.get(&key)))
+            .await
+    }
+
+    async fn issue_reactions(&self, repo: &Repository, number: u64) -> Result<Reactions, GhError> {
+        let key = (repo.full_name.clone(), number);
+        let call = GithubCall::IssueReactions {
+            full_name: repo.full_name.clone(),
+            number,
+        };
+        self.respond(call, |state| match state.issue_reactions.get(&key) {
+            Some(Ok(reactions)) => Ok(reactions.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Ok(Reactions::default()),
         })
         .await
     }
@@ -864,5 +964,64 @@ mod tests {
         for error in &errors {
             assert_eq!(duplicate(error).to_string(), error.to_string());
         }
+    }
+
+    #[tokio::test]
+    async fn checks_and_reactions_by_repo_and_key() {
+        use crate::models::{CheckRunStatus, Reaction, ReactionKind};
+
+        let run = CheckRun {
+            id: 1,
+            name: "build".into(),
+            status: CheckRunStatus::Queued,
+            conclusion: None,
+            html_url: None,
+        };
+        let status = CombinedStatus {
+            state: CheckState::Success,
+            statuses: Vec::new(),
+        };
+        let reactions: Reactions = [Reaction {
+            kind: ReactionKind::Eyes,
+            user: octocat(),
+        }]
+        .into_iter()
+        .collect();
+        let github = FakeGithub::new()
+            .with_commit_status("octocat/a", "abc", Ok(status.clone()))
+            .with_commit_status("octocat/a", "bad", Err(GhError::NotInstalled))
+            .with_check_runs("octocat/a", "abc", Ok(vec![run.clone()]))
+            .with_issue_reactions("octocat/a", 5, Ok(reactions.clone()))
+            .with_issue_reactions("octocat/a", 6, Err(GhError::NotInstalled));
+        assert_eq!(github.commit_status(&repo("a"), "abc").await.unwrap(), status);
+        assert!(github.commit_status(&repo("a"), "bad").await.is_err());
+        let unset = github.commit_status(&repo("b"), "abc").await.unwrap();
+        assert_eq!((unset.state, unset.statuses.len()), (CheckState::Pending, 0));
+        assert_eq!(github.check_runs(&repo("a"), "abc").await.unwrap(), [run]);
+        assert!(github.check_runs(&repo("a"), "def").await.unwrap().is_empty());
+        assert_eq!(github.issue_reactions(&repo("a"), 5).await.unwrap(), reactions);
+        assert!(github.issue_reactions(&repo("a"), 6).await.is_err());
+        assert!(github.issue_reactions(&repo("a"), 7).await.unwrap().is_empty());
+        assert_eq!(
+            github.calls()[..3],
+            [
+                GithubCall::CommitStatus {
+                    full_name: "octocat/a".into(),
+                    sha: "abc".into()
+                },
+                GithubCall::CommitStatus {
+                    full_name: "octocat/a".into(),
+                    sha: "bad".into()
+                },
+                GithubCall::CommitStatus {
+                    full_name: "octocat/b".into(),
+                    sha: "abc".into()
+                },
+            ]
+        );
+        assert!(github.calls().contains(&GithubCall::IssueReactions {
+            full_name: "octocat/a".into(),
+            number: 7
+        }));
     }
 }

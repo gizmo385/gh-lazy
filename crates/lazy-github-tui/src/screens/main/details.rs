@@ -10,14 +10,16 @@ use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::models::{FullPullRequest, Issue, Repository, WorkflowRun};
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
+use tokio::time::Instant;
 
 use crate::action::Action;
-use crate::component::{ChainLink, Cx, Owner};
+use crate::component::{ChainLink, Cx, Owner, RenderCx};
 use crate::components::command_log::Wheel;
 use crate::components::info::{InfoView, Scroll};
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::{BindingId, Keymap};
+use crate::options::AppOptions;
 use crate::theme::Theme;
 
 use super::FocusTarget;
@@ -91,6 +93,30 @@ pub(super) trait DetailsBody {
     fn on_binding(&mut self, _tab: usize, _owner: Owner, id: BindingId) -> Option<Action> {
         Some(Action::Unimplemented(id))
     }
+
+    /// [`Self::render`] with the frame's time and the animation switch, which a body with loading overlays (the PR
+    /// Overview's sections) needs. The pane always draws through this; the default hands over to [`Self::render`].
+    fn render_timed(&mut self, tab: usize, frame: &mut Frame<'_>, area: Rect, cx: &BodyRenderCx<'_>) {
+        self.render(tab, frame, area, cx.theme, cx.focused);
+    }
+
+    /// When tab `tab`'s next animation frame is due, while something in it animates (a loading overlay).
+    fn next_deadline(&self, _tab: usize, _now: Instant, _animations: bool) -> Option<Instant> {
+        None
+    }
+}
+
+/// What a body's draw knows, for [`DetailsBody::render_timed`].
+#[derive(Debug, Clone, Copy)]
+pub(super) struct BodyRenderCx<'a> {
+    /// The theme.
+    pub(super) theme: &'a Theme,
+    /// The time this frame is drawn at.
+    pub(super) now: Instant,
+    /// Whether loading overlays animate.
+    pub(super) animations: bool,
+    /// Whether focus is inside the content ([`FocusTarget::DetailsContent`]).
+    pub(super) focused: bool,
 }
 
 /// A tab switch: `textual.tabs.next_tab`, `textual.tabs.previous_tab` or a click on a tab.
@@ -111,6 +137,8 @@ pub(super) struct DetailsPane {
     body: Body,
     /// Where the strip was drawn last, for clicks.
     tabs_area: Rect,
+    /// Whether the bodies' loading overlays animate.
+    animations: bool,
 }
 
 /// The selection whose tabs show.
@@ -164,6 +192,7 @@ impl Default for DetailsPane {
             tabs: TabStrip::new(body.get().tab_names().iter().copied()),
             body,
             tabs_area: Rect::default(),
+            animations: true,
         }
     }
 }
@@ -175,6 +204,18 @@ pub(super) fn details_title(keymap: &Keymap, label: &str) -> String {
 }
 
 impl DetailsPane {
+    /// The pane with the startup options applied: whether loading overlays animate.
+    #[must_use]
+    pub(super) fn with_options(mut self, options: AppOptions) -> Self {
+        self.animations = options.animations;
+        self
+    }
+
+    /// When the active tab's next animation frame is due, while something in it animates.
+    pub(super) fn next_deadline(&self, now: Instant) -> Option<Instant> {
+        self.body.get().next_deadline(self.tabs.active(), now, self.animations)
+    }
+
     /// Whether the tab strip can take focus: Python's `action_focus_tabs` needs at least one tab.
     pub(super) fn has_tabs(&self) -> bool {
         !self.tabs.is_empty()
@@ -297,6 +338,10 @@ impl DetailsPane {
                 tracing::debug!("Dropping the jobs response {id} of a workflow run no longer shown");
                 None
             }
+            GithubResponse::CommitStatus(_) | GithubResponse::CheckRuns(_) | GithubResponse::IssueReactions(_) => {
+                tracing::debug!("Dropping the Overview section response {id} no longer awaited");
+                None
+            }
             other => Some(other),
         }
     }
@@ -361,9 +406,10 @@ impl DetailsPane {
         &mut self,
         frame: &mut Frame<'_>,
         area: Rect,
-        theme: &Theme,
+        cx: &RenderCx<'_>,
         focus: FocusTarget,
     ) -> [(Rect, FocusTarget); 2] {
+        let theme = cx.theme;
         let tabs_height = area.height.min(TAB_STRIP_HEIGHT);
         let tabs = Rect {
             height: tabs_height,
@@ -377,8 +423,13 @@ impl DetailsPane {
             ..area
         };
         let tab = self.tabs.active();
-        let focused = focus == FocusTarget::DetailsContent;
-        self.body.get_mut().render(tab, frame, body, theme, focused);
+        let body_cx = BodyRenderCx {
+            theme,
+            now: cx.now,
+            animations: self.animations,
+            focused: focus == FocusTarget::DetailsContent,
+        };
+        self.body.get_mut().render_timed(tab, frame, body, &body_cx);
         [(tabs, FocusTarget::DetailsTabs), (body, FocusTarget::DetailsContent)]
     }
 }

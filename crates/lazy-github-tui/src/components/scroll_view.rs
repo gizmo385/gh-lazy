@@ -115,6 +115,20 @@ impl ScrollView {
         .min(self.max_offset());
     }
 
+    /// Lays `text` out as [`Self::render`] would in `area` and takes its size, without drawing, so a view can
+    /// [`Self::reveal`] what changed since the last draw before the next one. Returns the width the text gets: the
+    /// area's, less the scrollbar when it overflows.
+    pub fn measure(&mut self, area: Rect, theme: &Theme, text: &mut impl Layout) -> u16 {
+        let window = usize::from(area.height);
+        let width = if text.layout(area.width, theme).lines.len() > window {
+            area.width.saturating_sub(SCROLLBAR_WIDTH)
+        } else {
+            area.width
+        };
+        self.last = (text.layout(width, theme).lines.len(), window);
+        width
+    }
+
     /// Draws `text`, with a scrollbar in the last two columns when it overflows.
     pub fn render(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, text: &mut impl Layout) {
         self.draw(frame, area, theme, text, true);
@@ -269,6 +283,20 @@ mod tests {
         assert_eq!(view.offset(), 2);
         draw(&mut view, &mut text, 20);
         assert_eq!(view.offset(), 0);
+    }
+
+    #[test]
+    fn measure_takes_the_size_without_drawing() {
+        let mut view = ScrollView::default();
+        let theme = Theme::default();
+        assert_eq!(view.measure(Rect::new(0, 0, 10, 5), &theme, &mut Numbered::new(10)), 8);
+        assert_eq!(view.last_size(), (10, 5));
+        view.reveal(7..8);
+        assert_eq!(view.offset(), 3);
+        assert_eq!(
+            view.measure(Rect::new(0, 0, 10, 20), &theme, &mut Numbered::new(10)),
+            10
+        );
     }
 
     #[test]

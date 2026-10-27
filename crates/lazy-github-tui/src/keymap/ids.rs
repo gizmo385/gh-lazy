@@ -279,6 +279,13 @@ registry! {
         .hidden();
     TextualTreeCursorUp("textual.tree.cursor_up", "up", "cursor_up", "Cursor Up").hidden();
     TextualTreeCursorDown("textual.tree.cursor_down", "down", "cursor_down", "Cursor Down").hidden();
+    // `CollapsibleTitle`: the PR Overview's sections (#232) and every collapsible after them.
+    TextualCollapsibleToggle("textual.collapsible.toggle_collapsible", "enter", "toggle_collapsible", "Toggle collapsible")
+        .hidden();
+    // `ListView`: the lists inside the PR Overview's sections (#232).
+    TextualListSelect("textual.list_view.select_cursor", "enter", "select_cursor", "Select").hidden();
+    TextualListCursorUp("textual.list_view.cursor_up", "up", "cursor_up", "Cursor up").hidden();
+    TextualListCursorDown("textual.list_view.cursor_down", "down", "cursor_down", "Cursor down").hidden();
 }
 
 impl BindingId {

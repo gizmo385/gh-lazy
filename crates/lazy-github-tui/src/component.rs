@@ -151,6 +151,10 @@ pub enum Owner {
     /// A button inside the active details tab's content with focus (the run Overview's re-run buttons), in front of
     /// the content's scroll link.
     DetailsButton,
+    /// A focused collapsible section's title inside the details content (Textual's `CollapsibleTitle`).
+    CollapsibleTitle,
+    /// A focused list inside the details content, such as a section's (Textual's `ListView`).
+    ListView,
     /// The command log.
     CommandLog,
     /// A field of an open dialog, which [`Dialog::field_chain`](crate::modal::Dialog::field_chain) puts in front of
@@ -160,10 +164,11 @@ pub enum Owner {
 
 impl Owner {
     /// The heading the help panel draws over this link's keys: Textual's `BINDING_GROUP_TITLE`. Only Textual's
-    /// `Input` has one.
+    /// `Input` and `CollapsibleTitle` have one.
     pub fn group_title(self) -> Option<&'static str> {
         match self {
             Owner::SearchInput(_) | Owner::DialogField(_, FieldKind::TextInput) => Some("Input"),
+            Owner::CollapsibleTitle => Some("Collapsible"),
             Owner::App
             | Owner::Screen(_)
             | Owner::MainView
@@ -176,6 +181,7 @@ impl Owner {
             | Owner::PrOverview
             | Owner::IssueOverview
             | Owner::DetailsButton
+            | Owner::ListView
             | Owner::CommandLog
             | Owner::DialogField(_, FieldKind::Button | FieldKind::Switch | FieldKind::Scroll | FieldKind::Table) => {
                 None

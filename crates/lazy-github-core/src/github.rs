@@ -15,7 +15,10 @@ use tokio::sync::OnceCell;
 
 use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts};
-use crate::models::{FullPullRequest, FullUser, IssueListItem, Repository, User, Workflow, WorkflowJob, WorkflowRun};
+use crate::models::{
+    CheckRun, CombinedStatus, FullPullRequest, FullUser, IssueListItem, Reactions, Repository, User, Workflow,
+    WorkflowJob, WorkflowRun,
+};
 
 #[cfg(any(test, feature = "test-util"))]
 mod fake;
@@ -144,6 +147,33 @@ pub trait Github: Clone + Send + Sync + 'static {
         repo: &Repository,
         run_id: u64,
     ) -> impl Future<Output = Result<Vec<WorkflowJob>, GhError>> + Send;
+
+    /// The combined status of commit `sha` in `repo`: its first [`CHECKS_PER_PAGE`] commit statuses and GitHub's
+    /// overall state. Cached for `cache.default_ttl`.
+    ///
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body doesn't decode.
+    fn commit_status(
+        &self,
+        repo: &Repository,
+        sha: &str,
+    ) -> impl Future<Output = Result<CombinedStatus, GhError>> + Send;
+
+    /// The first [`CHECKS_PER_PAGE`] check runs of commit `sha` in `repo`, in API order. Cached for
+    /// `cache.default_ttl`.
+    ///
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body or any run doesn't
+    /// decode.
+    fn check_runs(&self, repo: &Repository, sha: &str) -> impl Future<Output = Result<Vec<CheckRun>, GhError>> + Send;
+
+    /// The reactions on issue or pull request `number` of `repo`: GitHub's first page of them (30, as Python asks for
+    /// no more). Cached for `cache.default_ttl`. A reaction of a kind this build doesn't know is skipped.
+    ///
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body doesn't decode.
+    fn issue_reactions(
+        &self,
+        repo: &Repository,
+        number: u64,
+    ) -> impl Future<Output = Result<Reactions, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -182,6 +212,9 @@ impl From<GhError> for DiffFetchError {
         }
     }
 }
+
+/// Page size for a commit's statuses and check runs: Python's `per_page` there. Only the first page is fetched.
+pub const CHECKS_PER_PAGE: u32 = 100;
 
 /// Page size for the paged endpoints that take a [`PageQuery`]: Python's default `per_page`.
 pub const DEFAULT_PER_PAGE: u32 = 30;
@@ -559,6 +592,33 @@ impl GhCli {
         ))
     }
 
+    /// `GET /repos/{owner}/{repo}/commits/{sha}/{what}`, the first page of [`CHECKS_PER_PAGE`], cached for the default
+    /// TTL as Python's `github_headers()` asks.
+    fn commit_checks_request(&self, repo: &Repository, sha: &str, what: &str) -> GhRequest {
+        let mut request = GhRequest::get(format!(
+            "/repos/{}/{}/commits/{sha}/{what}",
+            repo.owner.login, repo.name
+        ));
+        request.query = PageQuery {
+            page: 1,
+            per_page: CHECKS_PER_PAGE,
+        }
+        .params();
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
+    /// `GET /repos/{owner}/{repo}/issues/{number}/reactions`, without page parameters as Python sends it, cached for
+    /// the default TTL.
+    fn issue_reactions_request(&self, repo: &Repository, number: u64) -> GhRequest {
+        let mut request = GhRequest::get(format!(
+            "/repos/{}/{}/issues/{number}/reactions",
+            repo.owner.login, repo.name
+        ));
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -676,6 +736,40 @@ impl Github for GhCli {
             .await?;
         Ok(workflow_jobs(pages))
     }
+
+    async fn commit_status(&self, repo: &Repository, sha: &str) -> Result<CombinedStatus, GhError> {
+        let request = self.commit_checks_request(repo, sha, "status");
+        self.inner.runner.request(request).await?.json()
+    }
+
+    async fn check_runs(&self, repo: &Repository, sha: &str) -> Result<Vec<CheckRun>, GhError> {
+        let request = self.commit_checks_request(repo, sha, "check-runs");
+        check_run_list(&self.inner.runner.request(request).await?)
+    }
+
+    async fn issue_reactions(&self, repo: &Repository, number: u64) -> Result<Reactions, GhError> {
+        let response = self
+            .inner
+            .runner
+            .request(self.issue_reactions_request(repo, number))
+            .await?;
+        reactions(&response)
+    }
+}
+
+/// The `check_runs` body of `GET .../commits/{sha}/check-runs`.
+#[derive(serde::Deserialize)]
+struct CheckRunsBody {
+    check_runs: Vec<CheckRun>,
+}
+
+fn check_run_list(response: &GhResponse) -> Result<Vec<CheckRun>, GhError> {
+    Ok(response.json::<CheckRunsBody>()?.check_runs)
+}
+
+/// A reactions endpoint body, its unknown kinds skipped.
+fn reactions(response: &GhResponse) -> Result<Reactions, GhError> {
+    Ok(Reactions::from_api(response.json()?)?)
 }
 
 /// A diff response as the diff text, verbatim, or the error the Diff tab shows.
@@ -1817,5 +1911,146 @@ mod tests {
             .map(|job| job.name)
             .collect();
         assert_eq!(names, ["a", "b", "c"]);
+    }
+
+    #[test]
+    fn commit_checks_argv_ask_for_the_first_hundred_with_the_default_ttl() {
+        let mut config = Config::default();
+        config.cache.default_ttl = 42;
+        let gh = GhCli::new(GhCliOptions::from(&config));
+        let sha = "c0ffee5555555555555555555555555555555555";
+        for what in ["status", "check-runs"] {
+            assert_eq!(
+                strings(
+                    gh.commit_checks_request(&pr_details_repo(), sha, what)
+                        .argv(gh.runner().hostname(), false)
+                ),
+                [
+                    "api",
+                    "-i",
+                    "-X",
+                    "GET",
+                    "--cache",
+                    "42s",
+                    "-H",
+                    "Accept: application/vnd.github+json",
+                    &format!("/repos/parity-bot/pr-details/commits/{sha}/{what}?page=1&per_page=100"),
+                ]
+            );
+        }
+    }
+
+    #[test]
+    fn issue_reactions_argv_has_no_page_parameters() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        assert_eq!(
+            strings(
+                gh.issue_reactions_request(&pr_details_repo(), 5)
+                    .argv(gh.runner().hostname(), false)
+            ),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--cache",
+                "600s",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/pr-details/issues/5/reactions"
+            ]
+        );
+    }
+
+    fn commit_fixture(number: u64, what: &str) -> GhResponse {
+        let sha = format!("c0ffee{}", number.to_string().repeat(34));
+        parity_response(
+            "pr-details",
+            &format!("repos/parity-bot/pr-details/commits/{sha}/{what}/GET.page-1_per_page-100.json"),
+        )
+    }
+
+    #[test]
+    fn commit_checks_decode_from_the_pr_details_fixtures() {
+        use crate::models::{CheckConclusion, CheckRunStatus, CheckState};
+
+        let status: CombinedStatus = commit_fixture(5, "status").json().unwrap();
+        assert_eq!(status.state, CheckState::Pending);
+        let statuses: Vec<(&str, CheckState, Option<&str>)> = status
+            .statuses
+            .iter()
+            .map(|s| (s.context.as_str(), s.state, s.target_url.as_deref()))
+            .collect();
+        assert_eq!(
+            statuses,
+            [
+                ("ci/lint", CheckState::Success, Some("https://ci.example.com/lint/5")),
+                ("ci/docs", CheckState::Pending, None),
+            ]
+        );
+        let runs = check_run_list(&commit_fixture(5, "check-runs")).unwrap();
+        let runs: Vec<(&str, CheckRunStatus, Option<CheckConclusion>)> = runs
+            .iter()
+            .map(|run| (run.name.as_str(), run.status, run.conclusion))
+            .collect();
+        assert_eq!(
+            runs,
+            [
+                ("build", CheckRunStatus::Completed, Some(CheckConclusion::Success)),
+                ("test", CheckRunStatus::Completed, Some(CheckConclusion::Failure)),
+                ("deploy", CheckRunStatus::InProgress, None),
+            ]
+        );
+
+        let none: CombinedStatus = commit_fixture(4, "status").json().unwrap();
+        assert!(none.statuses.is_empty());
+        assert!(check_run_list(&commit_fixture(4, "check-runs")).unwrap().is_empty());
+
+        let merged: CombinedStatus = commit_fixture(3, "status").json().unwrap();
+        assert!(merged.statuses.is_empty());
+        let runs = check_run_list(&commit_fixture(3, "check-runs")).unwrap();
+        assert_eq!(runs.len(), 2);
+        assert!(runs.iter().all(|run| run.state() == CheckState::Success));
+
+        assert!(matches!(
+            check_run_list(&api_response(r#"{"check_runs": [{"id": 1}]}"#)),
+            Err(GhError::Decode(_))
+        ));
+    }
+
+    #[test]
+    fn issue_reactions_decode_from_the_pr_details_fixtures() {
+        use crate::models::ReactionKind;
+
+        let decode = |number: u64| {
+            reactions(&parity_response(
+                "pr-details",
+                &format!("repos/parity-bot/pr-details/issues/{number}/reactions/GET.json"),
+            ))
+            .unwrap()
+        };
+        let open = decode(5);
+        let got: Vec<(ReactionKind, Vec<&str>)> = open
+            .by_kind()
+            .map(|(kind, users)| (kind, users.iter().map(|u| u.login.as_str()).collect()))
+            .collect();
+        assert_eq!(
+            got,
+            [
+                (ReactionKind::ThumbsUp, vec!["parity-bot", "parity-friend"]),
+                (ReactionKind::Hooray, vec!["parity-bot"]),
+                (
+                    ReactionKind::Eyes,
+                    vec!["parity-bot", "parity-reviewer", "parity-carol", "parity-dave"]
+                ),
+            ]
+        );
+        assert!(decode(4).is_empty());
+        let merged: Vec<(ReactionKind, usize)> = decode(3).by_kind().map(|(kind, users)| (kind, users.len())).collect();
+        assert_eq!(merged, [(ReactionKind::Hooray, 2)]);
+        assert!(matches!(
+            reactions(&api_response(r#"{"message": "x"}"#)),
+            Err(GhError::Decode(_))
+        ));
     }
 }

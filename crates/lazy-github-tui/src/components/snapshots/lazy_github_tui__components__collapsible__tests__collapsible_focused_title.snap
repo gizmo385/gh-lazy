@@ -1,0 +1,24 @@
+---
+source: crates/lazy-github-tui/src/components/collapsible.rs
+expression: buffer_to_styled_string(&buf)
+---
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+  ▼ Status checks: ✘ Failed
+
+    ✘ Failed test
+    ✓ Passed build
+
+--- styles
+................................
+abcccccccccccccccccddddddddbaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaeeeeeeeeeeeeeeeeeeeeeeeeeeee
+aaaaeeeeeeeeeeeeeeeeeeeeeeeeeeee
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+--- legend
+. fg=#121212 bg=#272727
+a fg=Reset bg=#272727
+b fg=Reset bg=#0178d4
+c fg=#ddedf9 bg=#0178d4 BOLD
+d fg=#ff0000 bg=#0178d4 BOLD
+e fg=#e0e0e0 bg=#1e1e1e

@@ -14,7 +14,7 @@ use crate::models::{IssueListItem, Repository, User, Workflow, WorkflowRun};
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -40,6 +40,8 @@ pub enum GithubCall {
     },
     /// [`Github::repo_readme`], with the repo's full name.
     RepoReadme(String),
+    /// [`Github::repository`], with the full name asked for.
+    Repository(String),
     /// [`Github::list_workflows`].
     ListWorkflows {
         /// The repository listed.
@@ -66,6 +68,8 @@ struct State {
     issue_pages: HashMap<(String, u32), Result<Vec<IssueListItem>, GhError>>,
     /// Keyed by `full_name`.
     readmes: HashMap<String, Result<Option<String>, GhError>>,
+    /// Keyed by `full_name`.
+    repository: HashMap<String, Result<Option<Repository>, GhError>>,
     /// Keyed by `full_name` and page.
     workflow_pages: HashMap<(String, u32), Result<Vec<Workflow>, GhError>>,
     /// Keyed by `full_name` and page.
@@ -134,6 +138,13 @@ impl FakeGithub {
     #[must_use]
     pub fn with_readme(self, full_name: &str, readme: Result<Option<String>, GhError>) -> Self {
         self.lock().readmes.insert(full_name.to_owned(), readme);
+        self
+    }
+
+    /// `repository` returns `repository` for the name `full_name`. Names not set find no repository.
+    #[must_use]
+    pub fn with_repository(self, full_name: &str, repository: Result<Option<Repository>, GhError>) -> Self {
+        self.lock().repository.insert(full_name.to_owned(), repository);
         self
     }
 
@@ -265,6 +276,17 @@ impl Github for FakeGithub {
         self.respond(GithubCall::RepoReadme(full_name.to_owned()), |state| {
             match state.readmes.get(full_name) {
                 Some(Ok(readme)) => Ok(readme.clone()),
+                Some(Err(error)) => Err(duplicate(error)),
+                None => Ok(None),
+            }
+        })
+        .await
+    }
+
+    async fn repository(&self, full_name: &str) -> Result<Option<Repository>, GhError> {
+        self.respond(GithubCall::Repository(full_name.to_owned()), |state| {
+            match state.repository.get(full_name) {
+                Some(Ok(repository)) => Ok(repository.clone()),
                 Some(Err(error)) => Err(duplicate(error)),
                 None => Ok(None),
             }
@@ -520,6 +542,20 @@ mod tests {
         ));
         assert_eq!(github.repo_readme("octocat/c").await.unwrap(), None);
         assert_eq!(github.calls()[0], GithubCall::RepoReadme("octocat/a".into()));
+    }
+
+    #[tokio::test]
+    async fn repositories_by_name() {
+        let github = FakeGithub::new()
+            .with_repository("octocat/a", Ok(Some(repo("a"))))
+            .with_repository("octocat/b", Err(GhError::NotInstalled));
+        assert_eq!(github.repository("octocat/a").await.unwrap(), Some(repo("a")));
+        assert!(matches!(
+            github.repository("octocat/b").await,
+            Err(GhError::NotInstalled)
+        ));
+        assert_eq!(github.repository("octocat/c").await.unwrap(), None);
+        assert_eq!(github.calls()[0], GithubCall::Repository("octocat/a".into()));
     }
 
     #[tokio::test]

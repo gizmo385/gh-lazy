@@ -512,6 +512,13 @@ mod tests {
             std::future::pending().await
         }
 
+        async fn repository(
+            &self,
+            _full_name: &str,
+        ) -> Result<Option<lazy_github_core::models::Repository>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
         async fn list_workflows(
             &self,
             _repo: &lazy_github_core::models::Repository,

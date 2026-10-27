@@ -73,6 +73,12 @@ pub trait Github: Clone + Send + Sync + 'static {
     /// Fails on any other HTTP error status or `gh` failure.
     fn repo_readme(&self, full_name: &str) -> impl Future<Output = Result<Option<String>, GhError>> + Send;
 
+    /// The repository named `full_name` (`owner/name`, used verbatim in the path), or `None` when there's none
+    /// (404). Cached for `cache.default_ttl`.
+    ///
+    /// Fails on any other HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body doesn't decode.
+    fn repository(&self, full_name: &str) -> impl Future<Output = Result<Option<Repository>, GhError>> + Send;
+
     /// One page of `repo`'s Actions workflows, in API order. Never cached.
     ///
     /// A body without a `workflows` list (missing or `null`) is an empty page. Fails on an HTTP error status, or with
@@ -413,6 +419,13 @@ impl GhCli {
         request
     }
 
+    /// `GET /repos/{full_name}`, cached for the default TTL as Python's `github_headers()` asks.
+    fn repository_request(&self, full_name: &str) -> GhRequest {
+        let mut request = GhRequest::get(format!("/repos/{full_name}"));
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
     /// One page of `GET /repos/{owner}/{repo}/actions/{what}`, uncached: Python sends no `Cache-Control` here.
     fn actions_request(repo: &Repository, what: &str, page: PageQuery) -> GhRequest {
         let mut request = GhRequest::get(format!("/repos/{}/{}/actions/{what}", repo.owner.login, repo.name));
@@ -485,6 +498,10 @@ impl Github for GhCli {
         readme_text(self.inner.runner.request(self.repo_readme_request(full_name)).await)
     }
 
+    async fn repository(&self, full_name: &str) -> Result<Option<Repository>, GhError> {
+        found_repository(self.inner.runner.request(self.repository_request(full_name)).await)
+    }
+
     async fn list_workflows(&self, repo: &Repository, page: PageQuery) -> Result<Vec<Workflow>, GhError> {
         let response = self
             .inner
@@ -530,6 +547,15 @@ fn workflow_runs(response: &GhResponse) -> Result<Vec<WorkflowRun>, GhError> {
 fn readme_text(response: Result<GhResponse, GhError>) -> Result<Option<String>, GhError> {
     match response {
         Ok(response) => Ok(Some(response.text())),
+        Err(GhError::Http { status: 404, .. }) => Ok(None),
+        Err(error) => Err(error),
+    }
+}
+
+/// A repository response as the repository: `None` for a 404.
+fn found_repository(response: Result<GhResponse, GhError>) -> Result<Option<Repository>, GhError> {
+    match response {
+        Ok(response) => Ok(Some(response.json()?)),
         Err(GhError::Http { status: 404, .. }) => Ok(None),
         Err(error) => Err(error),
     }
@@ -1203,5 +1229,47 @@ mod tests {
             Some(body)
         );
         assert_eq!(readme_text(raw_response("200 OK", "")).unwrap().as_deref(), Some(""));
+    }
+
+    #[test]
+    fn repository_argv() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        assert_eq!(
+            strings(gh.repository_request("o/r").argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--cache",
+                "600s",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/o/r"
+            ]
+        );
+    }
+
+    #[test]
+    fn a_found_repository_decodes_and_a_missing_one_is_none() {
+        let found = found_repository(Ok(parity_response(
+            "repos-tracked",
+            "repos/parity-org/tracked-tool/GET.json",
+        )))
+        .unwrap()
+        .unwrap();
+        assert_eq!(found.full_name, "parity-org/tracked-tool");
+
+        let not_found = raw_response("404 Not Found", r#"{"message":"Not Found"}"#);
+        assert_eq!(found_repository(not_found).unwrap(), None);
+        let server = raw_response("500 Internal Server Error", r#"{"message":"boom"}"#);
+        assert!(matches!(
+            found_repository(server),
+            Err(GhError::Http { status: 500, .. })
+        ));
+        assert!(matches!(
+            found_repository(Ok(api_response(r#"{"name": 1}"#))),
+            Err(GhError::Decode(_))
+        ));
     }
 }

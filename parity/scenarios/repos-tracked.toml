@@ -1,6 +1,6 @@
 version = 1
 description = "Tracked repos (repositories.additional_repos_to_track): fetched after the user's repos and appended, a tracked favorite first, a tracked repo already listed replaced, and one that 404s left out"
-gate = false
+gate = true
 parity_rows = [
     "repositories.rows",
     "repositories.tracked-repos",

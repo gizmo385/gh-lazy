@@ -104,6 +104,8 @@ pub enum GithubRequest {
     UnreadNotificationCount,
     /// [`Github::repo_readme`] of the repo with this full name.
     RepoReadme(String),
+    /// [`Github::repository`] with this full name.
+    Repository(String),
     /// [`Github::list_workflows`].
     ListWorkflows {
         /// The repo whose workflows to list.
@@ -135,6 +137,8 @@ pub enum GithubResponse {
     UnreadNotificationCount(Result<usize, GhError>),
     /// [`Github::repo_readme`].
     RepoReadme(Result<Option<String>, GhError>),
+    /// [`Github::repository`], boxed to keep this enum small.
+    Repository(Result<Option<Box<Repository>>, GhError>),
     /// [`Github::list_workflows`].
     ListWorkflows(Result<Vec<Workflow>, GhError>),
     /// [`Github::list_workflow_runs`].
@@ -155,6 +159,9 @@ impl GithubRequest {
                 GithubResponse::UnreadNotificationCount(gh.unread_notification_count().await)
             }
             GithubRequest::RepoReadme(full_name) => GithubResponse::RepoReadme(gh.repo_readme(&full_name).await),
+            GithubRequest::Repository(full_name) => {
+                GithubResponse::Repository(gh.repository(&full_name).await.map(|found| found.map(Box::new)))
+            }
             GithubRequest::ListWorkflows { repo, page } => {
                 GithubResponse::ListWorkflows(gh.list_workflows(&repo, page).await)
             }

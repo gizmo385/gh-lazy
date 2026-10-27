@@ -19,6 +19,7 @@ pub mod status_bar;
 pub mod switch;
 pub mod table;
 pub mod tabs;
+pub mod text_editor;
 pub mod text_input;
 pub mod toasts;
 pub mod tree;

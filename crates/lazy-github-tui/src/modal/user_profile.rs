@@ -405,7 +405,7 @@ impl Dialog for UserProfileDialog {
                 let handled = self.body.table.as_mut()?.on_binding(id);
                 self.table_outcome(handled)
             }
-            FieldKind::TextInput | FieldKind::Button | FieldKind::Switch => None,
+            FieldKind::TextInput | FieldKind::TextEditor | FieldKind::Button | FieldKind::Switch => None,
         }
     }
 }

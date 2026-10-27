@@ -1,0 +1,7 @@
+version = 1
+description = "Text editor keys: Textual's TextArea (the code editor wrapping at 40 columns and the plain one at 20) playing movement, typing, delete and paste cases, with the text, the selection and the scroll after each, replayed on the Rust text editor drawn at the same size"
+generator = "crates/lazy-github-tui/tests/fixtures/generate_editor_keys.py"
+golden = ["crates/lazy-github-tui/tests/fixtures/editor_keys.json"]
+test = "crates/lazy-github-tui/tests/editor_keys.rs"
+fresh_test = "editor_keys_golden_is_fresh"
+parity_rows = ["modals.text-editor"]

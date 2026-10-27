@@ -442,7 +442,13 @@ impl TextInput {
             return;
         }
         let styles = Styles::new(theme, under, focused, self.invalid);
-        draw_tall_border(buf, area, &styles);
+        let border = TallBorder {
+            left: styles.left,
+            inner: styles.inner,
+            right: styles.right,
+            fill: styles.text,
+        };
+        border.draw(buf, area);
 
         // The text row, between the border and the padding.
         if area.height < 2 || area.width <= 2 * (PADDING + 1) {
@@ -503,7 +509,7 @@ impl TextInput {
 
 /// The character a key types, when it's printable: no modifier but SHIFT (so not `ctrl+…`, `alt+…` or the kitty
 /// protocol's `super+c`), and printable by Python's `str.isprintable`.
-fn printable(key: &KeyChord) -> Option<char> {
+pub(crate) fn printable(key: &KeyChord) -> Option<char> {
     use crossterm::event::{KeyCode, KeyModifiers};
     match key.code {
         KeyCode::Char(c) if key.mods.difference(KeyModifiers::SHIFT).is_empty() && is_printable(c) => Some(c),
@@ -511,7 +517,7 @@ fn printable(key: &KeyChord) -> Option<char> {
     }
 }
 
-fn is_word(c: char) -> bool {
+pub(crate) fn is_word(c: char) -> bool {
     WORD.is_match(c.encode_utf8(&mut [0; 4]))
 }
 
@@ -616,30 +622,46 @@ impl Styles {
     }
 }
 
-/// Textual's `tall` border: `▊▔▎` / `▊ ▎` / `▊▁▎`, with the inside filled with the text style.
-fn draw_tall_border(buf: &mut Buffer, area: Rect, styles: &Styles) {
-    let last_row = area.height - 1;
-    for dy in 0..area.height {
-        let y = area.y + dy;
-        let fill = if dy == 0 {
-            "▔"
-        } else if dy == last_row && area.height == HEIGHT {
-            "▁"
-        } else {
-            " "
-        };
-        for dx in 0..area.width {
-            let x = area.x + dx;
-            let (symbol, style) = if dx == 0 {
-                ("▊", styles.left)
-            } else if dx == area.width - 1 {
-                ("▎", styles.right)
-            } else if fill == " " {
-                (" ", styles.text)
+/// Textual's `tall` border, which the text input and the text editor draw: `▊▔▎` / `▊ ▎` / `▊▁▎`.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct TallBorder {
+    /// `▊` on the left: the parent's background over the border color, reversed (Textual's border location 2).
+    pub(crate) left: Style,
+    /// `▔` and `▁`: the border color over the widget's background (location 0).
+    pub(crate) inner: Style,
+    /// `▎` on the right: the border color over the parent's background (location 1).
+    pub(crate) right: Style,
+    /// The inside.
+    pub(crate) fill: Style,
+}
+
+impl TallBorder {
+    /// Draws the border around `area`, the inside filled with spaces in [`Self::fill`]. The bottom edge is drawn on
+    /// the last row once `area` is at least [`HEIGHT`] tall; a shorter area is cut off before it.
+    pub(crate) fn draw(&self, buf: &mut Buffer, area: Rect) {
+        let last_row = area.height - 1;
+        for dy in 0..area.height {
+            let y = area.y + dy;
+            let fill = if dy == 0 {
+                "▔"
+            } else if dy == last_row && area.height >= HEIGHT {
+                "▁"
             } else {
-                (fill, styles.inner)
+                " "
             };
-            buf[(x, y)].set_symbol(symbol).set_style(style);
+            for dx in 0..area.width {
+                let x = area.x + dx;
+                let (symbol, style) = if dx == 0 {
+                    ("▊", self.left)
+                } else if dx == area.width - 1 {
+                    ("▎", self.right)
+                } else if fill == " " {
+                    (" ", self.fill)
+                } else {
+                    (fill, self.inner)
+                };
+                buf[(x, y)].set_symbol(symbol).set_style(style);
+            }
         }
     }
 }

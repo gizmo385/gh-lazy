@@ -274,6 +274,39 @@ registry! {
     TextualInputCut("textual.input.cut", "ctrl+x", "cut", "Cut selected text").hidden();
     TextualInputCopy("textual.input.copy", "ctrl+c,super+c", "copy", "Copy selected text").hidden();
     TextualInputPaste("textual.input.paste", "ctrl+v", "paste", "Paste text from the clipboard").hidden();
+    // `TextArea`: the multi-line editors (#256). Selection, the clipboard, undo and redo act with #257.
+    TextualTextAreaCursorUp("textual.text_area.cursor_up", "up", "cursor_up", "Cursor up").hidden();
+    TextualTextAreaCursorDown("textual.text_area.cursor_down", "down", "cursor_down", "Cursor down").hidden();
+    TextualTextAreaCursorLeft("textual.text_area.cursor_left", "left", "cursor_left", "Cursor left").hidden();
+    TextualTextAreaCursorRight("textual.text_area.cursor_right", "right", "cursor_right", "Cursor right").hidden();
+    TextualTextAreaCursorWordLeft("textual.text_area.cursor_word_left", "ctrl+left", "cursor_word_left", "Cursor word left").hidden();
+    TextualTextAreaCursorWordRight("textual.text_area.cursor_word_right", "ctrl+right", "cursor_word_right", "Cursor word right").hidden();
+    TextualTextAreaCursorLineStart("textual.text_area.cursor_line_start", "home,ctrl+a", "cursor_line_start", "Cursor line start").hidden();
+    TextualTextAreaCursorLineEnd("textual.text_area.cursor_line_end", "end,ctrl+e", "cursor_line_end", "Cursor line end").hidden();
+    TextualTextAreaCursorPageUp("textual.text_area.cursor_page_up", "pageup", "cursor_page_up", "Cursor page up").hidden();
+    TextualTextAreaCursorPageDown("textual.text_area.cursor_page_down", "pagedown", "cursor_page_down", "Cursor page down").hidden();
+    TextualTextAreaCursorWordLeftSelect("textual.text_area.cursor_word_left_select", "ctrl+shift+left", "cursor_word_left(True)", "Cursor left word select").hidden();
+    TextualTextAreaCursorWordRightSelect("textual.text_area.cursor_word_right_select", "ctrl+shift+right", "cursor_word_right(True)", "Cursor right word select").hidden();
+    TextualTextAreaCursorLineStartSelect("textual.text_area.cursor_line_start_select", "shift+home", "cursor_line_start(True)", "Cursor line start select").hidden();
+    TextualTextAreaCursorLineEndSelect("textual.text_area.cursor_line_end_select", "shift+end", "cursor_line_end(True)", "Cursor line end select").hidden();
+    TextualTextAreaCursorUpSelect("textual.text_area.cursor_up_select", "shift+up", "cursor_up(True)", "Cursor up select").hidden();
+    TextualTextAreaCursorDownSelect("textual.text_area.cursor_down_select", "shift+down", "cursor_down(True)", "Cursor down select").hidden();
+    TextualTextAreaCursorLeftSelect("textual.text_area.cursor_left_select", "shift+left", "cursor_left(True)", "Cursor left select").hidden();
+    TextualTextAreaCursorRightSelect("textual.text_area.cursor_right_select", "shift+right", "cursor_right(True)", "Cursor right select").hidden();
+    TextualTextAreaSelectLine("textual.text_area.select_line", "f6", "select_line", "Select line").hidden();
+    TextualTextAreaSelectAll("textual.text_area.select_all", "f7", "select_all", "Select all").hidden();
+    TextualTextAreaDeleteLeft("textual.text_area.delete_left", "backspace", "delete_left", "Delete character left").hidden();
+    TextualTextAreaDeleteWordLeft("textual.text_area.delete_word_left", "ctrl+w", "delete_word_left", "Delete left to start of word").hidden();
+    TextualTextAreaDeleteRight("textual.text_area.delete_right", "delete,ctrl+d", "delete_right", "Delete character right").hidden();
+    TextualTextAreaDeleteWordRight("textual.text_area.delete_word_right", "ctrl+f", "delete_word_right", "Delete right to start of word").hidden();
+    TextualTextAreaCut("textual.text_area.cut", "ctrl+x", "cut", "Cut").hidden();
+    TextualTextAreaCopy("textual.text_area.copy", "ctrl+c,super+c", "copy", "Copy").hidden();
+    TextualTextAreaPaste("textual.text_area.paste", "ctrl+v", "paste", "Paste").hidden();
+    TextualTextAreaDeleteToStartOfLine("textual.text_area.delete_to_start_of_line", "ctrl+u", "delete_to_start_of_line", "Delete to line start").hidden();
+    TextualTextAreaDeleteToEndOfLineOrDeleteLine("textual.text_area.delete_to_end_of_line_or_delete_line", "ctrl+k", "delete_to_end_of_line_or_delete_line", "Delete to line end").hidden();
+    TextualTextAreaDeleteLine("textual.text_area.delete_line", "ctrl+shift+k", "delete_line", "Delete line").hidden();
+    TextualTextAreaUndo("textual.text_area.undo", "ctrl+z", "undo", "Undo").hidden();
+    TextualTextAreaRedo("textual.text_area.redo", "ctrl+y", "redo", "Redo").hidden();
     // LazyGithub's `FileFilterInput`, the diff viewer's file filter (#236), takes `escape` in `on_key` before any
     // binding: it clears the filter and leaves it. Python has no id for it.
     TextualFileFilterClear("textual.file_filter.clear", "escape", "clear", "Clear filter").hidden();

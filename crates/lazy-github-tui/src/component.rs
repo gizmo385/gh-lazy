@@ -210,9 +210,11 @@ impl Owner {
             | Owner::DiffViewer
             | Owner::HunkPane
             | Owner::CommandLog
-            | Owner::DialogField(_, FieldKind::Button | FieldKind::Switch | FieldKind::Scroll | FieldKind::Table) => {
-                None
-            }
+            // Textual's `TextArea` has no group title: its keys are an untitled section.
+            | Owner::DialogField(
+                _,
+                FieldKind::TextEditor | FieldKind::Button | FieldKind::Switch | FieldKind::Scroll | FieldKind::Table,
+            ) => None,
         }
     }
 
@@ -220,7 +222,9 @@ impl Owner {
     pub fn types_text(self) -> bool {
         matches!(
             self,
-            Owner::SearchInput(_) | Owner::DiffFilter | Owner::DialogField(_, FieldKind::TextInput)
+            Owner::SearchInput(_)
+                | Owner::DiffFilter
+                | Owner::DialogField(_, FieldKind::TextInput | FieldKind::TextEditor)
         )
     }
 

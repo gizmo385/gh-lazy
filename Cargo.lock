@@ -1087,6 +1087,7 @@ dependencies = [
  "lazy-github-core",
  "pulldown-cmark",
  "ratatui",
+ "ratatui-textarea",
  "regex",
  "rstest",
  "serde",
@@ -1736,6 +1737,18 @@ checksum = "faf03e0380b7744054d6cb74224fe3adf062a029754933f575ca1e3b4c2ce977"
 dependencies = [
  "ratatui-core",
  "termwiz",
+]
+
+[[package]]
+name = "ratatui-textarea"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78cdce79220909bec1bb8307c29fad7d0df7434280da6ecaf44cb208393bed00"
+dependencies = [
+ "ratatui-core",
+ "ratatui-widgets",
+ "unicode-segmentation",
+ "unicode-width",
 ]
 
 [[package]]

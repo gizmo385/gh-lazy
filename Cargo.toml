@@ -25,8 +25,9 @@ ratatui = "0.30"
 crossterm = "0.29"
 # `StreamExt` over crossterm's `EventStream` in the event loop (#72).
 futures-util = { version = "0.3", default-features = false }
-# Text input (`tui-textarea`) is not declared yet: its latest release (0.7.0) requires ratatui 0.29, which conflicts
-# with ratatui 0.30 above. See https://github.com/gizmo385/gh-lazy/issues/85.
+# The multi-line editor's buffer (lines, cursor, selection, edits); the app draws it and maps Textual's keys (#256).
+# `default-features = false`: no `crossterm` feature, since the app never calls `TextArea::input`.
+ratatui-textarea = { version = "0.9", default-features = false }
 # `default-features = false`: the markdown renderer (#215) uses only the event iterator, not the HTML writer.
 pulldown-cmark = { version = "0.13", default-features = false }
 # `default-features = false`: crates pick the pure-Rust regex engine (`regex-fancy`) rather than Oniguruma's C library.

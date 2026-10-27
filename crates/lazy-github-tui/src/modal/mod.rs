@@ -20,6 +20,7 @@ use crate::components::button::BUTTON_BINDINGS;
 use crate::components::info::INFO_BINDINGS;
 use crate::components::switch::SWITCH_BINDINGS;
 use crate::components::table::TABLE_BINDINGS;
+use crate::components::text_editor::TEXT_EDITOR_BINDINGS;
 use crate::components::text_input::INPUT_BINDINGS;
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::BindingId;
@@ -74,12 +75,14 @@ pub enum ModalKind {
     Test(u8),
 }
 
-/// The kinds of focusable field a dialog has, for [`crate::component::Owner::DialogField`]. Selects and editors come
-/// with #179 and #180.
+/// The kinds of focusable field a dialog has, for [`crate::component::Owner::DialogField`]. Selects come with #179.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum FieldKind {
     /// Textual's `Input`: it types text, so the keys it types are gone from the links behind it.
     TextInput,
+    /// Textual's `TextArea` ([`crate::components::text_editor::TextEditor`]): a multi-line editor, which types text
+    /// as the input does.
+    TextEditor,
     /// Textual's `Button`: `enter` presses it.
     Button,
     /// Textual's `Switch`: `enter` or `space` toggles it.
@@ -95,6 +98,7 @@ impl FieldKind {
     pub fn link(self, kind: ModalKind) -> ChainLink {
         let bindings = match self {
             FieldKind::TextInput => INPUT_BINDINGS,
+            FieldKind::TextEditor => TEXT_EDITOR_BINDINGS,
             FieldKind::Button => BUTTON_BINDINGS,
             FieldKind::Switch => SWITCH_BINDINGS,
             FieldKind::Scroll => INFO_BINDINGS,

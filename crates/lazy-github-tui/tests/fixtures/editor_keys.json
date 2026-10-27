@@ -1,0 +1,5252 @@
+[
+  {
+    "name": "up-down-wrapped",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      1,
+      0
+    ],
+    "steps": [
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            40
+          ],
+          [
+            0,
+            40
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            40
+          ],
+          [
+            0,
+            40
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            80
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            80
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            39
+          ],
+          [
+            0,
+            39
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "up-down-from-end",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      0,
+      79
+    ],
+    "steps": [
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            39
+          ],
+          [
+            0,
+            39
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            79
+          ],
+          [
+            0,
+            79
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            80
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "up-down-lines",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      12
+    ],
+    "steps": [
+      {
+        "key": "up",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            12
+          ],
+          [
+            1,
+            12
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            12
+          ],
+          [
+            1,
+            12
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "up-down-remember-column",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      0,
+      9
+    ],
+    "steps": [
+      {
+        "key": "down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            9
+          ],
+          [
+            1,
+            9
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "left",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            15
+          ],
+          [
+            1,
+            15
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "up-down-plain",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      0,
+      30
+    ],
+    "steps": [
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            30
+          ],
+          [
+            0,
+            30
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            50
+          ],
+          [
+            0,
+            50
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            64
+          ],
+          [
+            0,
+            64
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            80
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            64
+          ],
+          [
+            0,
+            64
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            50
+          ],
+          [
+            0,
+            50
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            30
+          ],
+          [
+            0,
+            30
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "up-down-cjk",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+    "cursor": [
+      0,
+      22
+    ],
+    "steps": [
+      {
+        "key": "up",
+        "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            22
+          ],
+          [
+            0,
+            22
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            26
+          ],
+          [
+            0,
+            26
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            6
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "up-down-cjk-plain",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+    "cursor": [
+      0,
+      3
+    ],
+    "steps": [
+      {
+        "key": "down",
+        "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            13
+          ],
+          [
+            0,
+            13
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            23
+          ],
+          [
+            0,
+            23
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            13
+          ],
+          [
+            0,
+            13
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "right",
+        "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            14
+          ],
+          [
+            0,
+            14
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            24
+          ],
+          [
+            0,
+            24
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "left-right",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      0
+    ],
+    "steps": [
+      {
+        "key": "left",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "left",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            9
+          ],
+          [
+            0,
+            9
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "left-at-start",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      0,
+      0
+    ],
+    "steps": [
+      {
+        "key": "left",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "right-at-end",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      3,
+      3
+    ],
+    "steps": [
+      {
+        "key": "right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "left",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            3
+          ],
+          [
+            3,
+            3
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "left-right-wide",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "héllo wörld\nnaïve café",
+    "cursor": [
+      0,
+      10
+    ],
+    "steps": [
+      {
+        "key": "right",
+        "text": "héllo wörld\nnaïve café",
+        "selection": [
+          [
+            0,
+            11
+          ],
+          [
+            0,
+            11
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "right",
+        "text": "héllo wörld\nnaïve café",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "left",
+        "text": "héllo wörld\nnaïve café",
+        "selection": [
+          [
+            0,
+            11
+          ],
+          [
+            0,
+            11
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "left",
+        "text": "héllo wörld\nnaïve café",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "word-right",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      0,
+      0
+    ],
+    "steps": [
+      {
+        "key": "ctrl+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            7
+          ],
+          [
+            0,
+            7
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            8
+          ],
+          [
+            0,
+            8
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            11
+          ],
+          [
+            0,
+            11
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            14
+          ],
+          [
+            0,
+            14
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            17
+          ],
+          [
+            0,
+            17
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            1,
+            8
+          ],
+          [
+            1,
+            8
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "word-left",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      2,
+      3
+    ],
+    "steps": [
+      {
+        "key": "ctrl+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            1,
+            16
+          ],
+          [
+            1,
+            16
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            1,
+            11
+          ],
+          [
+            1,
+            11
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            17
+          ],
+          [
+            0,
+            17
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            14
+          ],
+          [
+            0,
+            14
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            11
+          ],
+          [
+            0,
+            11
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            8
+          ],
+          [
+            0,
+            8
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "word-moves-accent",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "héllo wörld\nnaïve café",
+    "cursor": [
+      0,
+      0
+    ],
+    "steps": [
+      {
+        "key": "ctrl+right",
+        "text": "héllo wörld\nnaïve café",
+        "selection": [
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            5
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "héllo wörld\nnaïve café",
+        "selection": [
+          [
+            0,
+            11
+          ],
+          [
+            0,
+            11
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "héllo wörld\nnaïve café",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "héllo wörld\nnaïve café",
+        "selection": [
+          [
+            0,
+            11
+          ],
+          [
+            0,
+            11
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "word-moves-cjk",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+    "cursor": [
+      0,
+      5
+    ],
+    "steps": [
+      {
+        "key": "ctrl+right",
+        "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            26
+          ],
+          [
+            0,
+            26
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "smart-home",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      8
+    ],
+    "steps": [
+      {
+        "key": "home",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "home",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "home",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "home",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+a",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+a",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "smart-home-before-text",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      1
+    ],
+    "steps": [
+      {
+        "key": "home",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            15
+          ],
+          [
+            1,
+            15
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+e",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            15
+          ],
+          [
+            1,
+            15
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "home",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "home-end-wrapped",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      0,
+      50
+    ],
+    "steps": [
+      {
+        "key": "home",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            40
+          ],
+          [
+            0,
+            40
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            80
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            80
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "home",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            40
+          ],
+          [
+            0,
+            40
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            80
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            80
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "home",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            40
+          ],
+          [
+            0,
+            40
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "home-end-wrapped-plain",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      0,
+      25
+    ],
+    "steps": [
+      {
+        "key": "home",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            39
+          ],
+          [
+            0,
+            39
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            19
+          ],
+          [
+            0,
+            19
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            19
+          ],
+          [
+            0,
+            19
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+a",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+e",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            19
+          ],
+          [
+            0,
+            19
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "home-end-long-word",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa end",
+    "cursor": [
+      0,
+      30
+    ],
+    "steps": [
+      {
+        "key": "home",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa end",
+        "selection": [
+          [
+            0,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa end",
+        "selection": [
+          [
+            0,
+            39
+          ],
+          [
+            0,
+            39
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa end",
+        "selection": [
+          [
+            0,
+            54
+          ],
+          [
+            0,
+            54
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa end",
+        "selection": [
+          [
+            0,
+            54
+          ],
+          [
+            0,
+            54
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "home",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa end",
+        "selection": [
+          [
+            0,
+            40
+          ],
+          [
+            0,
+            40
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa end",
+        "selection": [
+          [
+            0,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "home-end-tabs",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "a\tb\tc d\te",
+    "cursor": [
+      0,
+      5
+    ],
+    "steps": [
+      {
+        "key": "home",
+        "text": "a\tb\tc d\te",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "a\tb\tc d\te",
+        "selection": [
+          [
+            0,
+            9
+          ],
+          [
+            0,
+            9
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "left",
+        "text": "a\tb\tc d\te",
+        "selection": [
+          [
+            0,
+            8
+          ],
+          [
+            0,
+            8
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "a\tb\tc d\te",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "a\tb\tc d\te",
+        "selection": [
+          [
+            0,
+            9
+          ],
+          [
+            0,
+            9
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "page-down-up",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+    "cursor": [
+      0,
+      3
+    ],
+    "steps": [
+      {
+        "key": "pagedown",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            6,
+            3
+          ],
+          [
+            6,
+            3
+          ]
+        ],
+        "scroll": 6
+      },
+      {
+        "key": "pagedown",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            11,
+            3
+          ],
+          [
+            11,
+            3
+          ]
+        ],
+        "scroll": 6
+      },
+      {
+        "key": "pagedown",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            11,
+            3
+          ],
+          [
+            11,
+            3
+          ]
+        ],
+        "scroll": 6
+      },
+      {
+        "key": "pageup",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            5,
+            3
+          ],
+          [
+            5,
+            3
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "pageup",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "pageup",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "page-down-wrapped",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home\nline 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+    "cursor": [
+      0,
+      4
+    ],
+    "steps": [
+      {
+        "key": "pagedown",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home\nline 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            2,
+            4
+          ],
+          [
+            2,
+            4
+          ]
+        ],
+        "scroll": 6
+      },
+      {
+        "key": "pagedown",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home\nline 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            8,
+            4
+          ],
+          [
+            8,
+            4
+          ]
+        ],
+        "scroll": 11
+      },
+      {
+        "key": "pageup",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home\nline 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            2,
+            4
+          ],
+          [
+            2,
+            4
+          ]
+        ],
+        "scroll": 5
+      },
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home\nline 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            3,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 5
+      }
+    ]
+  },
+  {
+    "name": "down-scrolls",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+    "cursor": [
+      0,
+      0
+    ],
+    "steps": [
+      {
+        "key": "down",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            5,
+            0
+          ],
+          [
+            5,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            0
+          ]
+        ],
+        "scroll": 1
+      },
+      {
+        "key": "down",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            7,
+            0
+          ],
+          [
+            7,
+            0
+          ]
+        ],
+        "scroll": 2
+      },
+      {
+        "key": "up",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            0
+          ]
+        ],
+        "scroll": 2
+      },
+      {
+        "key": "up",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            5,
+            0
+          ],
+          [
+            5,
+            0
+          ]
+        ],
+        "scroll": 2
+      },
+      {
+        "key": "up",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            0
+          ]
+        ],
+        "scroll": 2
+      },
+      {
+        "key": "up",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 2
+      },
+      {
+        "key": "up",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 2
+      },
+      {
+        "key": "up",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 1
+      },
+      {
+        "key": "up",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "type",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      0,
+      5
+    ],
+    "steps": [
+      {
+        "key": "x",
+        "text": "firstx line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            6
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "space",
+        "text": "firstx  line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            7
+          ],
+          [
+            0,
+            7
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "é",
+        "text": "firstx é line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            8
+          ],
+          [
+            0,
+            8
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "中",
+        "text": "firstx é中 line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            9
+          ],
+          [
+            0,
+            9
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "enter",
+        "text": "firstx é中\n line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "q",
+        "text": "firstx é中\nq line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "enter",
+        "text": "firstx é中\nq\n line\n  indented line\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "enter",
+        "text": "firstx é中\nq\n\n line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "type-wraps",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "abcdefghijklmnopqrs",
+    "cursor": [
+      0,
+      19
+    ],
+    "steps": [
+      {
+        "key": "t",
+        "text": "abcdefghijklmnopqrst",
+        "selection": [
+          [
+            0,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "u",
+        "text": "abcdefghijklmnopqrstu",
+        "selection": [
+          [
+            0,
+            21
+          ],
+          [
+            0,
+            21
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "space",
+        "text": "abcdefghijklmnopqrstu ",
+        "selection": [
+          [
+            0,
+            22
+          ],
+          [
+            0,
+            22
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "v",
+        "text": "abcdefghijklmnopqrstu v",
+        "selection": [
+          [
+            0,
+            23
+          ],
+          [
+            0,
+            23
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "backspace",
+        "text": "abcdefghijklmnopqrstu ",
+        "selection": [
+          [
+            0,
+            22
+          ],
+          [
+            0,
+            22
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "backspace",
+        "text": "abcdefghijklmnopqrstu",
+        "selection": [
+          [
+            0,
+            21
+          ],
+          [
+            0,
+            21
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "backspace-joins",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      0
+    ],
+    "steps": [
+      {
+        "key": "backspace",
+        "text": "first line  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "backspace",
+        "text": "first lin  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            9
+          ],
+          [
+            0,
+            9
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "first lin  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            24
+          ],
+          [
+            0,
+            24
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "backspace",
+        "text": "first lin  indented lin\n\nlast",
+        "selection": [
+          [
+            0,
+            23
+          ],
+          [
+            0,
+            23
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "backspace-at-start",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      0,
+      0
+    ],
+    "steps": [
+      {
+        "key": "backspace",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-joins",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      0,
+      10
+    ],
+    "steps": [
+      {
+        "key": "delete",
+        "text": "first line  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+d",
+        "text": "first line indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "first line indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            24
+          ],
+          [
+            0,
+            24
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "delete",
+        "text": "first line indented line\nlast",
+        "selection": [
+          [
+            0,
+            24
+          ],
+          [
+            0,
+            24
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "delete",
+        "text": "first line indented linelast",
+        "selection": [
+          [
+            0,
+            24
+          ],
+          [
+            0,
+            24
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-at-end",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      3,
+      4
+    ],
+    "steps": [
+      {
+        "key": "delete",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+d",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-wide",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "中文字符测试中文字符测试中文字符测试中文字符测试中文",
+    "cursor": [
+      0,
+      1
+    ],
+    "steps": [
+      {
+        "key": "delete",
+        "text": "中字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "backspace",
+        "text": "字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "right",
+        "text": "字符测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "delete",
+        "text": "字测试中文字符测试中文字符测试中文字符测试中文",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-word-left",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      0,
+      17
+    ],
+    "steps": [
+      {
+        "key": "ctrl+w",
+        "text": "foo.bar(baz)  \n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            14
+          ],
+          [
+            0,
+            14
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+w",
+        "text": "foo.bar(baz\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            11
+          ],
+          [
+            0,
+            11
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+w",
+        "text": "foo.bar(\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            8
+          ],
+          [
+            0,
+            8
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+w",
+        "text": "foo.bar\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            7
+          ],
+          [
+            0,
+            7
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+w",
+        "text": "foo.\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+w",
+        "text": "foo\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-word-left-lines",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      1,
+      2
+    ],
+    "steps": [
+      {
+        "key": "ctrl+w",
+        "text": "foo.bar(baz)  qux\nspaced   out  \nend",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+w",
+        "text": "foo.bar(baz)  quxspaced   out  \nend",
+        "selection": [
+          [
+            0,
+            17
+          ],
+          [
+            0,
+            17
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+w",
+        "text": "foo.bar(baz)  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            14
+          ],
+          [
+            0,
+            14
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-word-left-at-start",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      0,
+      0
+    ],
+    "steps": [
+      {
+        "key": "ctrl+w",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-word-right",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      0,
+      0
+    ],
+    "steps": [
+      {
+        "key": "ctrl+f",
+        "text": ".bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": "bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": "(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": "baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": ")  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": "qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": "\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-word-right-spaces",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      1,
+      0
+    ],
+    "steps": [
+      {
+        "key": "ctrl+f",
+        "text": "foo.bar(baz)  qux\nspaced   out  \nend",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": "foo.bar(baz)  qux\n   out  \nend",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": "foo.bar(baz)  qux\nout  \nend",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": "foo.bar(baz)  qux\n  \nend",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": "foo.bar(baz)  qux\n\nend",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-word-right-at-end",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      2,
+      3
+    ],
+    "steps": [
+      {
+        "key": "ctrl+f",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            2,
+            3
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-word-right-line-end",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      0,
+      17
+    ],
+    "steps": [
+      {
+        "key": "ctrl+f",
+        "text": "foo.bar(baz)  qux  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            17
+          ],
+          [
+            0,
+            17
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": "foo.bar(baz)  quxspaced   out  \nend",
+        "selection": [
+          [
+            0,
+            17
+          ],
+          [
+            0,
+            17
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-to-start",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      9
+    ],
+    "steps": [
+      {
+        "key": "ctrl+u",
+        "text": "first line\nd line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+u",
+        "text": "first line\nd line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "first line\nd line\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+u",
+        "text": "first line\nd line\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-to-start-wrapped",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      0,
+      30
+    ],
+    "steps": [
+      {
+        "key": "ctrl+u",
+        "text": "The quick brown fox  the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+u",
+        "text": "The quick brown  the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            16
+          ],
+          [
+            0,
+            16
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-to-end",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      4
+    ],
+    "steps": [
+      {
+        "key": "ctrl+k",
+        "text": "first line\n  in\n\nlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            4
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+k",
+        "text": "first line\n  in\nlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            4
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+k",
+        "text": "first line\n  inlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            4
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+k",
+        "text": "first line\n  in",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            4
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-to-end-empty-line",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      2,
+      0
+    ],
+    "steps": [
+      {
+        "key": "ctrl+k",
+        "text": "first line\n  indented line\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+k",
+        "text": "first line\n  indented line\n",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-to-end-wrapped",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      0,
+      25
+    ],
+    "steps": [
+      {
+        "key": "ctrl+k",
+        "text": "The quick brown fox jumps dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            25
+          ],
+          [
+            0,
+            25
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+k",
+        "text": "The quick brown fox jumps running far away from home",
+        "selection": [
+          [
+            0,
+            25
+          ],
+          [
+            0,
+            25
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+k",
+        "text": "The quick brown fox jumps away from home",
+        "selection": [
+          [
+            0,
+            25
+          ],
+          [
+            0,
+            25
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-line",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      6
+    ],
+    "steps": [
+      {
+        "key": "ctrl+shift+k",
+        "text": "first line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+shift+k",
+        "text": "first line\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+shift+k",
+        "text": "first line\n",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+shift+k",
+        "text": "first line\n",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-line-keeps-column",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+    "cursor": [
+      4,
+      5
+    ],
+    "steps": [
+      {
+        "key": "ctrl+shift+k",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            4,
+            5
+          ],
+          [
+            4,
+            5
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            3,
+            5
+          ],
+          [
+            3,
+            5
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+shift+k",
+        "text": "line 1\nline 2\nline 3\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            3,
+            5
+          ],
+          [
+            3,
+            5
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-line-last",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      3,
+      2
+    ],
+    "steps": [
+      {
+        "key": "ctrl+shift+k",
+        "text": "first line\n  indented line\n\n",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+shift+k",
+        "text": "first line\n  indented line\n\n",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "paste-lines",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      0,
+      5
+    ],
+    "steps": [
+      {
+        "paste": "a\r\nb\nc",
+        "text": "firsta\nb\nc line\n  indented line\n\nlast",
+        "selection": [
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "x",
+        "text": "firsta\nb\ncx line\n  indented line\n\nlast",
+        "selection": [
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "paste": "end\n",
+        "text": "firsta\nb\ncxend\n line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "paste-wrapping",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "",
+    "cursor": [
+      0,
+      0
+    ],
+    "steps": [
+      {
+        "paste": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            80
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            63
+          ],
+          [
+            0,
+            63
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "paste": "\n",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running f\nar away from home",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "paste-gutter-grows",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      3,
+      4
+    ],
+    "steps": [
+      {
+        "paste": "p\npp\nppp\npppp\nppppp\npppppp\nppppppp\npppppppp",
+        "text": "first line\n  indented line\n\nlastp\npp\nppp\npppp\nppppp\npppppp\nppppppp\npppppppp",
+        "selection": [
+          [
+            10,
+            8
+          ],
+          [
+            10,
+            8
+          ]
+        ],
+        "scroll": 5
+      },
+      {
+        "key": "up",
+        "text": "first line\n  indented line\n\nlastp\npp\nppp\npppp\nppppp\npppppp\nppppppp\npppppppp",
+        "selection": [
+          [
+            9,
+            7
+          ],
+          [
+            9,
+            7
+          ]
+        ],
+        "scroll": 5
+      }
+    ]
+  },
+  {
+    "name": "word-moves-blank-lines",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "a  \n   \n\n  b",
+    "cursor": [
+      3,
+      3
+    ],
+    "steps": [
+      {
+        "key": "ctrl+left",
+        "text": "a  \n   \n\n  b",
+        "selection": [
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            2
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "a  \n   \n\n  b",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "a  \n   \n\n  b",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "a  \n   \n\n  b",
+        "selection": [
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "a  \n   \n\n  b",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "a  \n   \n\n  b",
+        "selection": [
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "a  \n   \n\n  b",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "a  \n   \n\n  b",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "a  \n   \n\n  b",
+        "selection": [
+          [
+            3,
+            3
+          ],
+          [
+            3,
+            3
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "a  \n   \n\n  b",
+        "selection": [
+          [
+            3,
+            3
+          ],
+          [
+            3,
+            3
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-word-left-blank",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "ab  \n   \ncd",
+    "cursor": [
+      2,
+      0
+    ],
+    "steps": [
+      {
+        "key": "ctrl+w",
+        "text": "ab  \n   cd",
+        "selection": [
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+w",
+        "text": "ab  \ncd",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+w",
+        "text": "ab  cd",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+w",
+        "text": "cd",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "up-down-tabs",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "\tab\tcd\tef\tgh\tij\n\t\tx",
+    "cursor": [
+      0,
+      6
+    ],
+    "steps": [
+      {
+        "key": "down",
+        "text": "\tab\tcd\tef\tgh\tij\n\t\tx",
+        "selection": [
+          [
+            0,
+            15
+          ],
+          [
+            0,
+            15
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "\tab\tcd\tef\tgh\tij\n\t\tx",
+        "selection": [
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "\tab\tcd\tef\tgh\tij\n\t\tx",
+        "selection": [
+          [
+            0,
+            15
+          ],
+          [
+            0,
+            15
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "\tab\tcd\tef\tgh\tij\n\t\tx",
+        "selection": [
+          [
+            0,
+            6
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "\tab\tcd\tef\tgh\tij\n\t\tx",
+        "selection": [
+          [
+            0,
+            12
+          ],
+          [
+            0,
+            12
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "\tab\tcd\tef\tgh\tij\n\t\tx",
+        "selection": [
+          [
+            0,
+            15
+          ],
+          [
+            0,
+            15
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "paste-carriage-returns",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "xy",
+    "cursor": [
+      0,
+      1
+    ],
+    "steps": [
+      {
+        "paste": "1\r2\r",
+        "text": "x1\n2\ny",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "paste": " z",
+        "text": "x1\n2\n\nzy",
+        "selection": [
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            1
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "fold-delete",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa end",
+    "cursor": [
+      0,
+      25
+    ],
+    "steps": [
+      {
+        "key": "ctrl+w",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaa end",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": " end",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+u",
+        "text": " end",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+k",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+k",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "type-at-wrap",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx yy",
+    "cursor": [
+      0,
+      39
+    ],
+    "steps": [
+      {
+        "key": "z",
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxz yy",
+        "selection": [
+          [
+            0,
+            40
+          ],
+          [
+            0,
+            40
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "space",
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxz  yy",
+        "selection": [
+          [
+            0,
+            41
+          ],
+          [
+            0,
+            41
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "left",
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxz  yy",
+        "selection": [
+          [
+            0,
+            40
+          ],
+          [
+            0,
+            40
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "backspace",
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  yy",
+        "selection": [
+          [
+            0,
+            39
+          ],
+          [
+            0,
+            39
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  yy",
+        "selection": [
+          [
+            0,
+            43
+          ],
+          [
+            0,
+            43
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "up",
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  yy",
+        "selection": [
+          [
+            0,
+            39
+          ],
+          [
+            0,
+            39
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "page-plain-long",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home The quick brown fox jumps over the lazy dog and keeps running far away from home\nThe quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      0,
+      0
+    ],
+    "steps": [
+      {
+        "key": "pagedown",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home The quick brown fox jumps over the lazy dog and keeps running far away from home\nThe quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            97
+          ],
+          [
+            0,
+            97
+          ]
+        ],
+        "scroll": 6
+      },
+      {
+        "key": "pagedown",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home The quick brown fox jumps over the lazy dog and keeps running far away from home\nThe quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            1,
+            31
+          ],
+          [
+            1,
+            31
+          ]
+        ],
+        "scroll": 9
+      },
+      {
+        "key": "pagedown",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home The quick brown fox jumps over the lazy dog and keeps running far away from home\nThe quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            1,
+            66
+          ],
+          [
+            1,
+            66
+          ]
+        ],
+        "scroll": 9
+      },
+      {
+        "key": "pageup",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home The quick brown fox jumps over the lazy dog and keeps running far away from home\nThe quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            129
+          ],
+          [
+            0,
+            129
+          ]
+        ],
+        "scroll": 3
+      },
+      {
+        "key": "pageup",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home The quick brown fox jumps over the lazy dog and keeps running far away from home\nThe quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            31
+          ],
+          [
+            0,
+            31
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "pageup",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home The quick brown fox jumps over the lazy dog and keeps running far away from home\nThe quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-line-wrapped",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home\nnext",
+    "cursor": [
+      0,
+      45
+    ],
+    "steps": [
+      {
+        "key": "ctrl+shift+k",
+        "text": "next",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+shift+k",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "delete-to-end-wrapped-middle",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      0,
+      20
+    ],
+    "steps": [
+      {
+        "key": "ctrl+k",
+        "text": "The quick brown fox  dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "The quick brown fox  dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            34
+          ],
+          [
+            0,
+            34
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+k",
+        "text": "The quick brown fox  dog and keepsrunning far away from home",
+        "selection": [
+          [
+            0,
+            34
+          ],
+          [
+            0,
+            34
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "home",
+        "text": "The quick brown fox  dog and keepsrunning far away from home",
+        "selection": [
+          [
+            0,
+            29
+          ],
+          [
+            0,
+            29
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+u",
+        "text": "The quick brown fox  dog and keepsrunning far away from home",
+        "selection": [
+          [
+            0,
+            29
+          ],
+          [
+            0,
+            29
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  },
+  {
+    "name": "empty",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "",
+    "cursor": [
+      0,
+      0
+    ],
+    "steps": [
+      {
+        "key": "up",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "down",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "left",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "right",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "home",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "end",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+left",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+right",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "backspace",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "delete",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+w",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+f",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+u",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+k",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "ctrl+shift+k",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "pageup",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "pagedown",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0
+      },
+      {
+        "key": "a",
+        "text": "a",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0
+      }
+    ]
+  }
+]

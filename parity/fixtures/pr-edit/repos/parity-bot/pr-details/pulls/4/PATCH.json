@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "request": {
+    "method": "PATCH",
+    "path": "/repos/parity-bot/pr-details/pulls/4",
+    "body": {
+      "title": "Drop the old renderer",
+      "body": "Superseded by the new renderer.",
+      "base": "main"
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "message": "Must have admin rights to Repository.",
+      "documentation_url": "https://docs.github.com/rest/pulls/pulls#update-a-pull-request",
+      "status": "403"
+    },
+    "delay_ms": 1000
+  },
+  "note": "hand-written for pr-edit: updating PR 4 is refused, after 1 s"
+}

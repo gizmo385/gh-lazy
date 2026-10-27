@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/4/requested_reviewers"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "users": [],
+      "teams": []
+    }
+  },
+  "note": "hand-written for pr-edit: PR 4 has no requested reviewers"
+}

@@ -1,0 +1,14 @@
+# Written by `cargo xtask parity --record`. Don't edit.
+format = 1
+size = "160x48"
+captures = ["already-merged", "open-pr4", "update-failed", "open", "reviewers", "already-reviewer", "unknown-user", "suggestion", "added", "list-focused", "removed", "updated", "from-overview", "overview-updated"]
+
+[inputs]
+scenario = "25fdb128f4befd596a82170e6434b6d2f690764b"
+fixtures = "ce8c0777dd3180606bb2d2a5deca57a8c7bf08e1"
+python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
+harness = "a42709a8f63e18b6ffbf05888ac70df13205cac1"
+
+[recorded_with]
+python = "3.14.7"
+os = "linux"

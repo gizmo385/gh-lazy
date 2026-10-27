@@ -1,0 +1,350 @@
+version = 1
+description = "Edit PR (E): a merged PR from the table (warning, no dialog), a refused update of PR 4, then PR 5: a new title, the Reviewers input (already a reviewer, an unknown user, a suggestion accepted and added), the existing reviewer removed, Update (PATCH, then only the new reviewer requested), and E again from the PR Overview with nothing changed"
+# shift+enter is sent in the kitty keyboard protocol's encoding (CSI 13;2 u), which both apps read
+# (terminal-caveats.shift-enter). Python drops a key that follows a focus key at once, hence the stable waits.
+gate = false
+parity_rows = [
+    "modals.edit-pr",
+    "modals.pr-reviewers",
+    "modals.form-widgets",
+    "modals.input-suggestions",
+    "modals.text-editor",
+    "pull-requests.edit-from-table",
+    "pull-requests.overview-edit",
+    "keybindings.pull-request-edit",
+    "toasts.edit-pr-already-merged",
+]
+sizes = [[160, 48]]
+timeout_ms = 90000
+
+[env]
+# pr-edit over pr-details: requested reviewers of PRs 4 and 5, collaborators, two users, the branches Python lists,
+# PATCH .../pulls/4 refused (403 after 1 s), PATCH .../pulls/5 for the new title (after 1.5 s), and POST
+# .../pulls/5/requested_reviewers for ["parity-friend"] and for [].
+fixtures = ["pr-edit", "pr-details", "base"]
+config_overrides.appearance.show_issues = false
+config_overrides.appearance.show_workflows = false
+config_overrides.pull_requests.additional_suggested_pr_reviewers = ["octo-reviewer"]
+
+[[step]]
+wait.text = "pr-details"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Add a cursor to the viewer"
+wait.timeout_ms = 15000
+
+# PR 3 is merged: a warning, and no dialog.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["j", "j", "E"]
+
+[[step]]
+wait.text = "This PR has already been merged!"
+
+[[step]]
+capture = "already-merged"
+checks = ["titles", "focus"]
+
+# PR 4: a new title, refused by GitHub.
+[[step]]
+keys = ["k", "E"]
+
+[[step]]
+wait.text = "Editing PR 4"
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+capture = "open-pr4"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+type = "Drop the old renderer"
+
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+wait.text = "Updating PR..."
+
+[[step]]
+wait.log.method = "PATCH"
+wait.log.path = "/repos/parity-bot/pr-details/pulls/4"
+wait.log.body.title = "Drop the old renderer"
+wait.log.body.body = "Superseded by the new renderer."
+wait.log.body.base = "main"
+
+[[step]]
+wait.text = "Unexpected error while attempting to update PR"
+
+[[step]]
+capture = "update-failed"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait.gone = "Editing PR 4"
+
+[[step]]
+wait.stable_ms = 500
+
+# PR 5: the dialog opens once the pull request and its requested reviewers are fetched.
+[[step]]
+keys = ["k", "E"]
+
+[[step]]
+wait.text = "Editing PR 5"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+capture = "open"
+checks = ["titles", "focus", "footer"]
+
+# The title is focused with its text selected, so typing replaces it.
+[[step]]
+type = "Add a cursor to the diff viewer"
+
+# The description, then the Reviewers input, scrolled into view.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait.text = "Current Reviewers - Click/Select them to remove"
+
+[[step]]
+capture = "reviewers"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+type = "Parity-Reviewer"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Already a reviewer!"
+
+[[step]]
+capture = "already-reviewer"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["ctrl+u"]
+
+[[step]]
+type = "nobody-here"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Could not find user"
+
+[[step]]
+capture = "unknown-user"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["ctrl+u"]
+
+[[step]]
+type = "parity-fr"
+
+[[step]]
+wait.text = "parity-friend"
+
+[[step]]
+capture = "suggestion"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["right", "enter"]
+
+[[step]]
+wait.log.method = "GET"
+wait.log.path = "/users/parity-friend"
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+capture = "added"
+checks = ["titles", "focus"]
+
+# Into the list. It was empty when built, so nothing is highlighted until `down` highlights its first row,
+# parity-reviewer (the existing request); toggling it takes it off the list.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+capture = "list-focused"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["down", "space"]
+
+[[step]]
+wait.text = "Removing parity-reviewer"
+
+[[step]]
+capture = "removed"
+checks = ["titles", "focus"]
+
+# Update: the title changed, so PATCH; then only the reviewer not already requested.
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+wait.text = "Updating PR..."
+
+[[step]]
+wait.log.method = "PATCH"
+wait.log.path = "/repos/parity-bot/pr-details/pulls/5"
+wait.log.body.title = "Add a cursor to the diff viewer"
+wait.log.body.body = "Adds a cursor to the viewer, as discussed in #3.\n\n- `j` and `k` move it\n- the current line is marked with `>`\n\nThanks @parity-bot for the first review!\n"
+wait.log.body.base = "main"
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/pulls/5/requested_reviewers"
+wait.log.body.reviewers = ["parity-friend"]
+
+[[step]]
+wait.text = "Successfully updated PR!"
+
+[[step]]
+wait.gone = "Editing PR 5"
+
+[[step]]
+wait.text = "PR #5 Details"
+
+[[step]]
+wait.gone = "Could not find user"
+
+[[step]]
+wait.text = "Add a cursor to the diff viewer    "
+
+[[step]]
+wait.stable_ms = 1000
+
+[[step]]
+capture = "updated"
+# Python races the dialog handing focus back to the table against the reselected PR focusing its details, so
+# focus isn't checked here; Rust focuses the details, as a selection from the table does.
+checks = ["titles", "headers", "rows", "cursor"]
+
+# From the PR Overview's content: nothing changed, so no PATCH; both reviewers are requested already, and Python
+# requests an empty list.
+[[step]]
+wait.text = "Status checks:"
+
+[[step]]
+keys = ["5"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["E"]
+
+[[step]]
+wait.text = "Editing PR 5"
+
+[[step]]
+wait.text = "parity-friend"
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+capture = "from-overview"
+checks = ["titles", "focus"]
+
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/pulls/5/requested_reviewers"
+wait.log.body.reviewers = []
+
+[[step]]
+wait.text = "Successfully updated PR!"
+
+[[step]]
+wait.gone = "Editing PR 5"
+
+[[step]]
+capture = "overview-updated"
+checks = ["titles"]
+
+[expect.already-merged]
+focused = ["[2] Pull Requests"]
+contains = ["This PR has already been merged!"]
+not_contains = ["Editing PR"]
+
+[expect.open-pr4]
+contains = ["Editing PR 4", "Base", "Compare", "Draft", "Title", "Drop the legacy renderer", "Description", "Superseded by the new renderer."]
+
+[expect.update-failed]
+contains = ["Editing PR 4", "Error updating pull request", "Unexpected error while attempting to update PR"]
+
+[expect.open]
+contains = ["Editing PR 5", "Title", "Add a cursor to the viewer", "Description", "Adds a cursor to the viewer, as discussed in #3."]
+
+[expect.reviewers]
+contains = ["Reviewers", "Current Reviewers - Click/Select them to remove", "parity-reviewer", "Update", "Cancel"]
+
+[expect.already-reviewer]
+contains = ["Already a reviewer!"]
+
+[expect.unknown-user]
+contains = ["Could not find user nobody-here"]
+
+[expect.suggestion]
+contains = ["parity-friend"]
+
+[expect.added]
+contains = ["parity-reviewer", "parity-friend"]
+not_contains = ["Could not find user parity-friend"]
+
+[expect.removed]
+contains = ["Removing parity-reviewer", "parity-friend"]
+
+[expect.updated]
+contains = ["Successfully updated PR!", "Add a cursor to the diff viewer"]
+not_contains = ["Editing PR", "Traceback"]
+
+[expect.from-overview]
+contains = ["Editing PR 5", "Add a cursor to the diff viewer"]
+
+[expect.overview-updated]
+contains = ["Successfully updated PR!", "Add a cursor to the diff viewer (#5)"]
+not_contains = ["Editing PR", "Traceback"]

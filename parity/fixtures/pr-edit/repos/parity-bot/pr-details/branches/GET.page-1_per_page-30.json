@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/branches",
+    "query": {
+      "page": "1",
+      "per_page": "30"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "name": "cursor",
+        "commit": {
+          "sha": "c0ffee5555555555555555555555555555555555",
+          "url": "https://api.github.com/repos/parity-bot/pr-details/commits/c0ffee5555555555555555555555555555555555"
+        },
+        "protected": false
+      },
+      {
+        "name": "drop-legacy",
+        "commit": {
+          "sha": "c0ffee4444444444444444444444444444444444",
+          "url": "https://api.github.com/repos/parity-bot/pr-details/commits/c0ffee4444444444444444444444444444444444"
+        },
+        "protected": false
+      },
+      {
+        "name": "main",
+        "commit": {
+          "sha": "c0ffee9999999999999999999999999999999999",
+          "url": "https://api.github.com/repos/parity-bot/pr-details/commits/c0ffee9999999999999999999999999999999999"
+        },
+        "protected": false
+      }
+    ]
+  },
+  "note": "hand-written for pr-edit: Python lists the branches even for Edit PR, whose branch inputs are disabled"
+}

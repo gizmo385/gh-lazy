@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/5/requested_reviewers"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "users": [
+        {
+          "login": "parity-reviewer",
+          "id": 1000003,
+          "node_id": "U_kgDO1000003",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-reviewer",
+          "html_url": "https://github.com/parity-reviewer",
+          "type": "User",
+          "site_admin": false
+        }
+      ],
+      "teams": []
+    }
+  },
+  "note": "hand-written for pr-edit: PR 5 has a review requested from parity-reviewer"
+}

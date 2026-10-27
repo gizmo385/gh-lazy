@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "request": {
+    "method": "POST",
+    "path": "/repos/parity-bot/run-fixture/actions/workflows/7000001/dispatches",
+    "body": {
+      "ref": "main"
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "message": "Workflow does not have 'workflow_dispatch' trigger",
+      "documentation_url": "https://docs.github.com/rest/actions/workflows#create-a-workflow-dispatch-event",
+      "status": "422"
+    }
+  },
+  "note": "hand-written: CI has no workflow_dispatch trigger"
+}

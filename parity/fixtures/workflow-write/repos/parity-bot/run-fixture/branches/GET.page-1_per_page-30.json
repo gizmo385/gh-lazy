@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/run-fixture/branches",
+    "query": {
+      "page": "1",
+      "per_page": "30"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "name": "main",
+        "commit": {
+          "sha": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "url": "https://api.github.com/repos/parity-bot/run-fixture/commits/a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+        },
+        "protected": false
+      },
+      {
+        "name": "release",
+        "commit": {
+          "sha": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+          "url": "https://api.github.com/repos/parity-bot/run-fixture/commits/b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2"
+        },
+        "protected": false
+      },
+      {
+        "name": "run-details",
+        "commit": {
+          "sha": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+          "url": "https://api.github.com/repos/parity-bot/run-fixture/commits/c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3"
+        },
+        "protected": false
+      }
+    ]
+  },
+  "note": "hand-written: the repo's branches"
+}

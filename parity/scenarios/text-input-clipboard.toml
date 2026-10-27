@@ -1,0 +1,74 @@
+version = 1
+description = "Single-line input clipboard keys in the Lookup repository modal: focusing the input selects its text, ctrl+x cuts it, ctrl+v pastes the in-app clipboard back, and ctrl+v again pastes at the cursor"
+# The scenario can't send shift+arrow keys, so it selects through select-on-focus. Selection keys are checked by the
+# text-input-keys golden instead (#145).
+gate = false
+parity_rows = ["modals.text-input-clipboard"]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait.text = "dotfiles"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["O"]
+
+[[step]]
+wait.text = "Repository (owner/name):"
+
+[[step]]
+type = "parity-bot/dotfiles"
+
+# Away to the switch and back: the input selects all its text when it gets focus.
+[[step]]
+keys = ["tab", "shift+tab"]
+
+[[step]]
+capture = "selected"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["ctrl+x"]
+
+[[step]]
+wait.gone = "parity-bot/dotfiles"
+
+[[step]]
+capture = "cut"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["ctrl+v"]
+
+[[step]]
+wait.text = "parity-bot/dotfiles"
+
+[[step]]
+capture = "pasted"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["ctrl+v"]
+
+[[step]]
+wait.text = "parity-bot/dotfilesparity-bot/dotfiles"
+
+[[step]]
+capture = "pasted-twice"
+checks = ["titles", "focus", "footer"]
+
+[expect.selected]
+contains = ["parity-bot/dotfiles", "Repository (owner/name):"]
+
+[expect.cut]
+contains = ["Repository name", "Repository (owner/name):"]
+not_contains = ["parity-bot/dotfiles"]
+
+[expect.pasted]
+contains = ["parity-bot/dotfiles"]
+not_contains = ["parity-bot/dotfilesparity-bot"]
+
+[expect.pasted-twice]
+contains = ["parity-bot/dotfilesparity-bot/dotfiles"]

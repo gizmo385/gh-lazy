@@ -1,0 +1,101 @@
+version = 1
+description = "Run Overview re-run buttons: Re-run Failed Jobs and Re-run Workflow each post their request, toast Re-run Started and reload the run"
+# shift+tab from the Repositories table wraps to the last focus stop on the screen, the Overview's last button, in both
+# apps (the stops before the buttons differ: owner decision on #241). After a re-run Rust refetches the run (Py bug
+# B15's recommendation) and Python reloads the stale one.
+gate = false
+parity_rows = [
+    "workflows.overview-actions",
+    "toasts.rerun-started",
+]
+sizes = [[160, 48]]
+
+[env]
+# workflow-write over run-details: POST .../runs/5000042/rerun and .../rerun-failed-jobs answer 201, and GET
+# .../runs/5000042 answers the run for Rust's refetch.
+fixtures = ["workflow-write", "run-details", "base"]
+
+[[step]]
+wait.text = "run-fixture"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Fix the flaky test"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.text = "Workflow runs with jobs and logs."
+wait.timeout_ms = 15000
+
+# Run 42 failed, so both buttons show once its jobs are in. (Python drops an enter that follows a focus key at once,
+# so the Workflows table gets a moment to take focus.)
+[[step]]
+keys = ["4"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Workflow Run #42 Details"
+
+[[step]]
+wait.text = "deploy (9s)"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["1", "shift+tab"]
+
+[[step]]
+capture = "failed-jobs-focused"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/run-fixture/actions/runs/5000042/rerun-failed-jobs"
+
+[[step]]
+wait.text = "Failed jobs queued for re-run"
+
+[[step]]
+wait.text = "deploy (9s)"
+
+[[step]]
+capture = "failed-jobs-rerun"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["1", "shift+tab", "shift+tab", "enter"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/run-fixture/actions/runs/5000042/rerun"
+
+[[step]]
+wait.text = "Workflow run queued for re-run"
+
+[[step]]
+capture = "workflow-rerun"
+checks = ["titles", "focus"]
+
+[expect.failed-jobs-focused]
+focused = ["[5] Workflow Run #42 Details"]
+contains = ["Re-run Workflow", "Re-run Failed Jobs"]
+
+[expect.failed-jobs-rerun]
+focused = ["[5] Workflow Run #42 Details"]
+contains = ["Re-run Started", "Failed jobs queued for re-run"]
+not_contains = ["Traceback"]
+
+[expect.workflow-rerun]
+focused = ["[5] Workflow Run #42 Details"]
+contains = ["Re-run Started", "Workflow run queued for re-run"]
+not_contains = ["Traceback"]

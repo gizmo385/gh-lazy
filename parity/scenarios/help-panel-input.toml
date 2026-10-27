@@ -1,0 +1,65 @@
+version = 1
+description = "The keybindings panel with the table's search box focused: an Input group with every Input binding, the inherited scroll keys first, then the table's Search, the screen's and the app's keys"
+gate = false
+parity_rows = ["keybindings.textual-input-group"]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait.text = "Repositories"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["?"]
+
+[[step]]
+wait.text = "Cursor up"
+
+[[step]]
+keys = ["/"]
+
+[[step]]
+wait.text = "Move cursor left and select"
+
+# The panel's lines are compared through [expect]: the order of the Input group and the key spellings. The rows
+# below the group hold Py bugs B7 (`^n` listed while notifications are off) and B14 ("Command Pallete").
+[[step]]
+capture = "input-group"
+checks = ["titles", "focus"]
+
+[expect.input-group]
+focused = ["[1] Repositories"]
+contains = [
+    "▏             Input",
+    "▏           ↑ Scroll Up",
+    "▏           ↓ Scroll Down",
+    "▏           ← Move cursor left",
+    "▏           → Move cursor right or accept the",
+    "▏     home ^a Go to start",
+    "▏      end ^e Go to end",
+    "▏        pgup Page Up",
+    "▏        pgdn Page Down",
+    "▏       ^pgup Page Left",
+    "▏       ^pgdn Page Right",
+    "▏     shift+← Move cursor left and select",
+    "▏          ^← Move cursor left a word",
+    "▏    shift+^← Move cursor left a word and select",
+    "▏     shift+→ Move cursor right and select",
+    "▏          ^→ Move cursor right a word",
+    "▏    shift+^→ Move cursor right a word and select",
+    "▏           ⌫ Delete character left",
+    "▏    shift+^a Select all",
+    "▏  shift+home Select line start",
+    "▏   shift+end Select line end",
+    "▏      del ^d Delete character right",
+    "▏           ⏎ Submit",
+    "▏          ^w Delete left to start of word",
+    "▏          ^u Delete all to the left",
+    "▏          ^f Delete right to start of word",
+    "▏          ^k Delete all to the right",
+    "▏          ^x Cut selected text",
+    "▏  ^c super+c Copy selected text",
+    "▏          ^v Paste text from the clipboard",
+    "▏           / Search Search in the table",
+]

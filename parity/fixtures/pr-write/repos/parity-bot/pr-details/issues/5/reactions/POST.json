@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "request": {
+    "method": "POST",
+    "path": "/repos/parity-bot/pr-details/issues/5/reactions",
+    "body": {
+      "content": "heart"
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "id": 7700001,
+      "node_id": "REA_7700001",
+      "user": {
+        "login": "parity-bot",
+        "id": 1000001,
+        "node_id": "U_kgDOAA1000001",
+        "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+        "url": "https://api.github.com/users/parity-bot",
+        "html_url": "https://github.com/parity-bot",
+        "type": "User",
+        "site_admin": false
+      },
+      "content": "heart",
+      "created_at": "2026-03-04T10:00:00Z"
+    }
+  },
+  "note": "hand-written: Add reaction heart"
+}

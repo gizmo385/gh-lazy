@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "request": {
+    "method": "POST",
+    "path": "/repos/parity-bot/run-fixture/actions/runs/5000042/rerun"
+  },
+  "response": {
+    "status": 201
+  },
+  "note": "hand-written: re-run run 42"
+}

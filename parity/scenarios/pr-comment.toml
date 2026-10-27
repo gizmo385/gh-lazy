@@ -1,0 +1,152 @@
+version = 1
+description = "PR Conversation: r on a review comment opens the reply modal and posts through the review-reply API; n opens New comment, posts an issue comment and reloads the conversation"
+# The modal's footer isn't compared (Rust binds `modal.submit` there, Py bug B17). After the reply Rust reloads the
+# conversation (Py bug B18's recommendation) and Python doesn't, so the reply's text is only in [expect] after the
+# reload that `n` causes in both apps.
+gate = false
+parity_rows = [
+    "pull-requests.conversation-new-comment",
+    "pull-requests.conversation-reply",
+    "modals.new-comment",
+    "keybindings.conversation-comment-new",
+    "keybindings.conversation-comment-reply",
+]
+sizes = [[160, 48]]
+
+[env]
+# pr-write over pr-details: POST .../pulls/5/comments/9001/replies and POST .../issues/5/comments answer the new
+# comments, and the conversation's GETs include them once they were posted.
+fixtures = ["pr-write", "pr-details", "base"]
+config_overrides.appearance.show_issues = false
+config_overrides.appearance.show_workflows = false
+
+[[step]]
+wait.text = "pr-details"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Add a cursor to the viewer"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "PR Reviews"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.text = "Status checks:"
+
+[[step]]
+wait.text = "👍 2"
+
+[[step]]
+keys = ["5", "right", "right"]
+
+[[step]]
+wait.text = "Review from parity-bot"
+
+# Let the comments' reactions arrive (Python adds their sections below the fold, out of a wait's sight), so nothing
+# redraws under the next keys.
+[[step]]
+wait.stable_ms = 1000
+
+# The scroll area, the first review's title, then the first comment of its thread.
+[[step]]
+keys = ["tab", "tab", "tab"]
+
+[[step]]
+capture = "comment-focused"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["r"]
+
+[[step]]
+wait.text = "Replying to comment from parity-bot"
+
+[[step]]
+capture = "reply-open"
+checks = ["titles", "focus"]
+
+[[step]]
+type = "It stops, yes."
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/pulls/5/comments/9001/replies"
+wait.log.body.body = "It stops, yes."
+
+[[step]]
+wait.gone = "Replying to comment"
+
+[[step]]
+capture = "replied"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["n"]
+
+[[step]]
+wait.text = "Post Comment"
+
+[[step]]
+capture = "new-open"
+checks = ["titles", "focus"]
+
+[[step]]
+type = "Ship it."
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/issues/5/comments"
+wait.log.body.body = "Ship it."
+
+[[step]]
+wait.gone = "Post Comment"
+
+# The reloaded conversation has the new comment (below the fold): its reactions are asked for.
+[[step]]
+wait.log.method = "GET"
+wait.log.path = "/repos/parity-bot/pr-details/issues/comments/7004/reactions"
+
+[[step]]
+wait.text = "It stops, yes."
+
+[[step]]
+capture = "reloaded"
+checks = ["titles", "tabs", "focus"]
+
+# Not the footer: Python sometimes hasn't redrawn it yet when the screen settles here.
+[expect.comment-focused]
+contains = ["Should the cursor wrap at the end?"]
+
+[expect.reply-open]
+contains = ["Replying to comment from parity-bot at Mon Feb  2 10:00:00 2026", "Should the cursor wrap at the end?", "New comment", "Preview"]
+
+[expect.replied]
+not_contains = ["Replying to comment", "Traceback"]
+
+[expect.new-open]
+contains = ["New comment", "Preview", "Post Comment"]
+not_contains = ["Replying to comment"]
+
+[expect.reloaded]
+contains = ["It stops, yes."]
+not_contains = ["Post Comment", "Traceback"]

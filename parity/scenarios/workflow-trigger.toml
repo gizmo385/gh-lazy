@@ -1,0 +1,173 @@
+version = 1
+description = "Trigger workflow modal (T): without a repo; the Workflow select opened and Release picked; an empty branch rejected; a branch typed with its suggestion accepted with right; the dispatch sent and the success toast; q closes the modal"
+# Not exercised, because the two apps differ on purpose: Trigger with no workflow picked crashes Python (Py bug B67),
+# and a dispatch GitHub refuses still reports success in Python (Py bug B68).
+gate = false
+parity_rows = [
+    "workflows.trigger",
+    "modals.trigger-workflow",
+    "modals.form-widgets",
+    "modals.input-suggestions",
+    "keybindings.workflows-trigger",
+    "toasts.workflow-nothing-to-trigger",
+    "toasts.workflow-triggered",
+]
+sizes = [[160, 48]]
+
+[env]
+# workflow-write over run-details: the repo parity-bot/run-fixture with the workflows CI (7000001) and Release
+# (7000002), the branches main, release and run-details, and POST .../workflows/7000002/dispatches answering 204 for
+# the ref release.
+fixtures = ["workflow-write", "run-details", "base"]
+
+[[step]]
+wait.text = "run-fixture"
+wait.timeout_ms = 15000
+
+# No repo selected yet.
+[[step]]
+keys = ["4", "T"]
+
+[[step]]
+wait.text = "No repository selected"
+
+[[step]]
+capture = "no-repo"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["1", "enter"]
+
+[[step]]
+wait.text = "Fix the flaky test"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.text = "Workflow runs with jobs and logs."
+wait.timeout_ms = 15000
+
+# "Trigger Workflow" is also in the footer, so wait on the select's prompt.
+[[step]]
+keys = ["4", "T"]
+
+[[step]]
+wait.text = "Select a workflow"
+
+[[step]]
+capture = "open"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Release"
+
+[[step]]
+capture = "select-open"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["down", "down", "enter"]
+
+[[step]]
+capture = "selected"
+checks = ["titles", "focus", "footer"]
+
+# The branch input selects `main` when it gets focus; backspace empties it, and Trigger refuses.
+[[step]]
+keys = ["tab", "backspace", "tab", "enter"]
+
+[[step]]
+wait.text = "You must enter a branch!"
+
+[[step]]
+capture = "no-branch"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["shift+tab"]
+
+[[step]]
+type = "rel"
+
+[[step]]
+capture = "suggested"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+capture = "accepted"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/run-fixture/actions/workflows/7000002/dispatches"
+wait.log.body.ref = "release"
+
+[[step]]
+wait.text = "Successfully triggered workflow"
+
+[[step]]
+capture = "triggered"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+# Again, and close it with q while the select has focus.
+[[step]]
+keys = ["4", "T"]
+
+[[step]]
+wait.text = "Select a workflow"
+
+[[step]]
+keys = ["q"]
+
+[[step]]
+wait.gone = "Select a workflow"
+
+[[step]]
+capture = "closed"
+checks = ["titles", "focus"]
+
+[expect.no-repo]
+contains = ["No repository selected"]
+not_contains = ["Select a workflow"]
+
+[expect.open]
+contains = ["Trigger Workflow", "Workflow", "Select a workflow", "Branch", "main", "Trigger", "Cancel"]
+footer = ["shift+⏎ Submit", "q Close"]
+
+[expect.select-open]
+contains = ["Select a workflow", "CI", "Release"]
+footer = ["esc Dismiss menu", "shift+⏎ Submit"]
+
+[expect.selected]
+contains = ["Release"]
+not_contains = ["Select a workflow"]
+footer = ["shift+⏎ Submit", "q Close"]
+
+[expect.no-branch]
+contains = ["Validation Error", "You must enter a branch!"]
+footer = ["shift+⏎ Submit", "q Close"]
+
+[expect.suggested]
+contains = ["release"]
+footer = ["shift+⏎ Submit", "esc Close"]
+
+[expect.accepted]
+contains = ["release"]
+footer = ["shift+⏎ Submit", "esc Close"]
+
+[expect.triggered]
+focused = ["[4] Workflows"]
+contains = ["Successfully triggered workflow"]
+not_contains = ["Select a workflow", "Traceback"]
+
+[expect.closed]
+focused = ["[4] Workflows"]
+not_contains = ["Select a workflow", "Traceback"]

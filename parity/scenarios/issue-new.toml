@@ -1,0 +1,154 @@
+version = 1
+description = "New issue modal (I): without a repo, the empty modal, an empty title, typing a title and a two-line description, submitting with shift+enter, and the created issue added to the Issues table and opened; then Cancel"
+# The toast after `I` without a repo is titled "Cannot open new pull request" in Python and "Cannot open new issue"
+# in Rust (Py bug B14, answered), so [expect] only checks its message. The empty-body toast (Py bug B25) isn't
+# exercised: Rust follows B25's recommendation and creates an issue with an empty body.
+gate = false
+parity_rows = [
+    "modals.new-issue",
+    "modals.text-editor",
+    "keybindings.issue-new",
+    "keybindings.modal-submit",
+    "toasts.select-repository-first",
+]
+sizes = [[160, 48]]
+
+[env]
+# issue-write over issue-details: POST /repos/parity-bot/issue-fixture/issues answers issue 13 after 1 s, only for
+# the title and body this scenario types.
+fixtures = ["issue-write", "issue-details", "base"]
+
+[[step]]
+wait.text = "issue-fixture"
+wait.timeout_ms = 15000
+
+# No repo selected yet.
+[[step]]
+keys = ["I"]
+
+[[step]]
+wait.text = "Please select a repository first!"
+
+[[step]]
+capture = "no-repo"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Comments that fail to load"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.text = "Issues with bodies and comments."
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["3", "I"]
+
+[[step]]
+wait.text = "Description"
+
+# The modal's scroll area has focus, so the footer offers `q Close`.
+[[step]]
+capture = "open"
+checks = ["titles", "focus", "footer"]
+
+# Tab to the title, the description and Save, and press it with an empty title.
+[[step]]
+keys = ["tab", "tab", "tab", "enter"]
+
+[[step]]
+wait.text = "Must have a non-empty issue title!"
+
+[[step]]
+capture = "empty-title"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["shift+tab", "shift+tab"]
+
+[[step]]
+type = "Parity title"
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+type = "First line"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+type = "Second line"
+
+# The description editor has focus: `q` would type, so the footer offers `esc Close`.
+[[step]]
+capture = "typed"
+checks = ["titles", "focus", "footer"]
+
+# shift+enter, in the kitty keyboard protocol's encoding (CSI 13;2 u), which both apps read.
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+wait.text = "Creating new issue..."
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/issue-fixture/issues"
+wait.log.body.title = "Parity title"
+wait.log.body.body = "First line\nSecond line"
+
+[[step]]
+wait.text = "Successfully created issue #13"
+
+[[step]]
+wait.text = "Parity title (#13)"
+
+[[step]]
+capture = "created"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+# Open it again and cancel with the button.
+[[step]]
+keys = ["3", "I"]
+
+[[step]]
+wait.text = "Description"
+
+[[step]]
+keys = ["tab", "tab", "tab", "tab", "enter"]
+
+[[step]]
+wait.gone = "Description"
+
+[[step]]
+capture = "cancelled"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+[expect.no-repo]
+contains = ["Please select a repository first!"]
+not_contains = ["Description"]
+
+[expect.open]
+contains = ["Title", "Description", "Save", "Cancel"]
+footer = ["shift+⏎ Submit", "q Close"]
+
+[expect.empty-title]
+contains = ["Must have a non-empty issue title!"]
+footer = ["shift+⏎ Submit", "q Close"]
+
+[expect.typed]
+contains = ["Parity title", "First line", "Second line"]
+footer = ["shift+⏎ Submit", "esc Close"]
+
+[expect.created]
+focused = ["[5] Issue #13 Details"]
+contains = ["Creating new issue...", "Successfully created issue #13", "Open Parity title (#13) by parity-bot", "13  open    parity-bot     Parity title"]
+not_contains = ["Description", "Traceback"]
+
+[expect.cancelled]
+not_contains = ["Description", "Traceback"]

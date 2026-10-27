@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "request": {
+    "method": "POST",
+    "path": "/repos/parity-bot/issue-fixture/issues/12/comments",
+    "body": {
+      "body": "A **new** comment"
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "url": "https://api.github.com/repos/parity-bot/issue-fixture/issues/comments/9100099",
+      "html_url": "https://github.com/parity-bot/issue-fixture/issues/12#issuecomment-9100099",
+      "issue_url": "https://api.github.com/repos/parity-bot/issue-fixture/issues/12",
+      "id": 9100099,
+      "node_id": "IC_kwDOIssue9100099",
+      "user": {
+        "login": "parity-bot",
+        "id": 1000001,
+        "node_id": "U_kgDOAA1000001",
+        "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+        "url": "https://api.github.com/users/parity-bot",
+        "html_url": "https://github.com/parity-bot",
+        "type": "User",
+        "site_admin": false
+      },
+      "created_at": "2026-03-03T09:00:00Z",
+      "updated_at": "2026-03-03T09:00:00Z",
+      "author_association": "OWNER",
+      "body": "A **new** comment"
+    }
+  },
+  "note": "hand-written: New comment on issue 12"
+}

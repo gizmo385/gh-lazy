@@ -1,0 +1,119 @@
+version = 1
+description = "PR Overview add reaction (R): the Add reaction modal lists the reactions the current user hasn't given, space and enter check two, Submit posts each, and q closes the modal without posting"
+# After posting, Python's reactions summary doesn't show a reaction kind nobody had given before (Py bug B66), and
+# Rust follows the recommendation and does, so the summary after Submit isn't in [expect].
+gate = false
+parity_rows = [
+    "pull-requests.overview-add-reaction",
+    "modals.add-reaction",
+    "modals.form-widgets",
+    "keybindings.react-add",
+]
+sizes = [[160, 48]]
+
+[env]
+# pr-write over pr-details: POST .../issues/5/reactions answers 201 for each reaction this scenario can post.
+# parity-bot already gave PR 5 a 👍, a 🎉 and a 👀.
+fixtures = ["pr-write", "pr-details", "base"]
+config_overrides.appearance.show_issues = false
+config_overrides.appearance.show_workflows = false
+
+[[step]]
+wait.text = "pr-details"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Add a cursor to the viewer"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "PR Reviews"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.text = "👍 2"
+
+[[step]]
+keys = ["tab", "R"]
+
+[[step]]
+wait.text = "Add a new reaction"
+
+# The list has focus, its first row highlighted.
+[[step]]
+capture = "open"
+checks = ["titles", "focus", "footer"]
+
+# 😄 with space, 🚀 with enter.
+[[step]]
+keys = ["down", "space", "down", "down", "down", "enter"]
+
+[[step]]
+capture = "checked"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/issues/5/reactions"
+wait.log.body.content = "laugh"
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/issues/5/reactions"
+wait.log.body.content = "rocket"
+
+[[step]]
+wait.gone = "Add a new reaction"
+
+[[step]]
+capture = "submitted"
+checks = ["titles", "focus"]
+
+# Again, and close it with q: nothing is posted.
+[[step]]
+keys = ["R"]
+
+[[step]]
+wait.text = "Add a new reaction"
+
+[[step]]
+keys = ["q"]
+
+[[step]]
+wait.gone = "Add a new reaction"
+
+[[step]]
+capture = "closed"
+checks = ["titles", "focus"]
+
+[expect.open]
+contains = ["Add a new reaction", "▐X▌ 👎", "▐X▌ 😄", "▐X▌ 😕", "▐X▌ ❤️", "▐X▌ 🚀", "Submit", "Cancel"]
+not_contains = ["▐X▌ 👍", "▐X▌ 🎉", "▐X▌ 👀"]
+footer = ["q Close"]
+
+[expect.checked]
+footer = ["q Close"]
+
+[expect.submitted]
+focused = ["[5] PR #5 Details"]
+contains = ["👍 2"]
+not_contains = ["Add a new reaction", "Traceback"]
+
+[expect.closed]
+focused = ["[5] PR #5 Details"]
+not_contains = ["Add a new reaction", "Traceback"]

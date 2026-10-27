@@ -350,6 +350,25 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   queued) and none on 40. `GET .../actions/jobs/<id>/logs` (plain text, every line timestamped, so Py bug B47 doesn't
   show): a 404 for 42's skipped job and 41's queued job. Listed before `base`, for the `run-details` scenario.
   Hand-written.
+- `issue-write/`: write requests for `parity-bot/issue-fixture`, listed before `issue-details` and `base`, for the
+  `issue-new`, `issue-edit` and `issue-comment` scenarios (M3, #181, #182). Each write matches only the body its
+  scenario sends: `POST .../issues` creates issue 13 after 1 s (and `GET .../issues/13/comments` has none),
+  `PATCH .../issues/12` renames and closes issue 12 after 1.5 s, and `POST .../issues/12/comments` answers a new
+  comment for each of the two bodies `issue-comment` posts. Hand-written.
+- `pr-write/`: write requests for `parity-bot/pr-details`, listed before `pr-details` and `base`, for the `pr-merge`,
+  `pr-reactions` and `pr-comment` scenarios (M3, #182, #183). `PUT .../pulls/5/merge` for the squash method and PR 5's
+  head sha (merged), `GET .../pulls/5` merged once that was served (`when.after`, for Rust's refetch), `PUT
+  .../pulls/4/merge` (405); `POST .../issues/5/reactions` answering 201 for five kinds; `POST
+  .../pulls/5/comments/9001/replies` and `POST .../issues/5/comments` for the bodies `pr-comment` posts, with
+  `GET .../issues/5/comments` and `GET .../pulls/5/reviews/501/comments` including the new comments once they were
+  posted, and the new comments' reactions (the 404 Python gets on the issue-comment path for the review reply, B54).
+  Hand-written.
+- `workflow-write/`: for `parity-bot/run-fixture`, listed before `run-details` and `base`, for the `workflow-trigger`
+  and `workflow-rerun` scenarios (M3, #188). Two workflows on `actions/workflows` page 1 (CI 7000001, Release
+  7000002), the branches `main`, `release` and `run-details` (`page=1`, `per_page=30`), `POST
+  .../workflows/7000002/dispatches` for `release` (204) and `.../workflows/7000001/dispatches` for `main` (422),
+  `POST .../runs/5000042/rerun` and `.../rerun-failed-jobs` (201), and `GET .../runs/5000042` (for Rust's refetch;
+  Python never asks). Hand-written.
 
 ## Recording fixtures
 

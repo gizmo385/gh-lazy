@@ -1,0 +1,151 @@
+lazy-github-screen 1
+size 160x48
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                                                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Overview  Diff  Conversation                                                                 │
+│ ☆  parity-bot  pr-details   ✘                                ││╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     ✘                                ││Open Add a cursor to the viewer (#5) by parity-friend                                         │
+│ ☆  parity-bot  hello-world  ✘                                ││3 commits • 5 files changed • +12 • -6 • parity-friend:cursor → parity-bot:main               │
+│ ☆  parity-bot  lazy-demo    ✘                                ││                                                                                              │
+│                                                              ││Opened on Sun Feb  1 08:30:00 2026                                                            │
+│                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
+│                                                              ││  ▶ 👍 2 | 🎉 1 | 👀 4                                                                        │
+│                                                              ││                                                                                              │
+│                                                      █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
+│                                                      █                                                █                                                      │
+│                                                      █                                                █                                                      │
+│                                                      █                                                █▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
+│                                                      █               Add a new reaction               █                                                      │
+│                                                      █                                                █                                                      │
+│                                                      █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█                                                      │
+│                                                      █▊ ▐X▌ 👎                                       ▎█──────────────────────────────────────────────────────│
+│                                                      █▊ ▐X▌ 😄                                       ▎█                                                      │
+│                                                      █▊ ▐X▌ 😕                                       ▎█sed in #3.                                            │
+│                                                      █▊ ▐X▌ ❤️                                       ▎█                                                      │
+└──────────────────────────────────────────────────────█▊ ▐X▌ 🚀                                       ▎█                                                      │
+┌─ [2] Pull Requests ──────────────────────────────────█▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█                                                      │
+│ #  Status  Author         Title                      █                                                █                                                      │
+│ 5  open    parity-friend  Add a cursor to the viewer █       ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔        █w!                                                    │
+│ 4  closed  parity-bot     Drop the legacy renderer   █            Submit           Cancel             █                                                      │
+│ 3  closed  parity-bot     Release 0.2.0              █       ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁        █                                                      │
+│ 2  open    parity-friend  Try a faster parser        █                                                █                                                      │
+│                                                      █                                                █                                                      │
+│                                                      █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                                                      │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ q Close
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+dfgffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde.bbbbbbbb..hhhh..hhhhhhhhhhhh.................................................................e
+diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiidejkkkkkkkkjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjje
+dlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldeccccbmmmmmmmmmmmmmmmmmmmmmmmmmmbnnnnbbbbnnnnnnnnnnnnn.........................................e
+dlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldebbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccbbboobbbmmmmmmmmmmmmmmmmmmmmbbbmmmmmmmmmmmmmmm...............e
+dllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllde..............................................................................................e
+d..............................................................debbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb............................................................e
+d..............................................................deppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppe
+d..............................................................deqqlllrllllllrllllllrllqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe
+d..............................................................deqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe
+d......................................................ssssssssssssssssssssssssssssssssssssssssssssssssssppppppppppppppppppppppppppppppppppppppppppppppppppppppe
+d......................................................sttttttttttttttttttttttttttttttttttttttttttttttttsqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe
+d......................................................sttttttttttttttttttttttttttttttttttttttttttttttttsqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe
+d......................................................sttttttttttttttttttttttttttttttttttttttttttttttttsppppppppppppppppppppppppppppppppppppppppppppppppppppppe
+d......................................................sttuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuttsqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe
+d......................................................sttttttttttttttttttttttttttttttttttttttttttttttttsqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe
+d......................................................svwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwxs......................................................e
+d......................................................svyzAzBBrBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBByxsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaae
+d......................................................svyCACDDrDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDyxs......................................................e
+d......................................................svyCACDDrDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDyxsbbbbbbbnnb............................................e
+d......................................................svyCACDDrDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDyxs......................................................e
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddsvyCACDDrDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDyxs......................................................e
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddsvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwxs......................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffstttttttttttttttttttttttttttttttttttttttttttttttts......................................................e
+diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiistttttttEEEEEEEEEEEEEEEEtFFFFFFFFFFFFFFFFttttttttsbb....................................................e
+dllllllllllllllllllllllllllllllllllllllllllllllllllllllstttttttGGGGHHHHHHHHGGGGtIIIIJJJJJJJJIIIItttttttts......................................................e
+dllllllllllllllllllllllllllllllllllllllllllllllllllllllstttttttKKKKKKKKKKKKKKKKtLLLLLLLLLLLLLLLLtttttttts......................................................e
+dllllllllllllllllllllllllllllllllllllllllllllllllllllllstttttttttttttttttttttttttttttttttttttttttttttttts......................................................e
+d......................................................stttttttttttttttttttttttttttttttttttttttttttttttts......................................................e
+d......................................................ssssssssssssssssssssssssssssssssssssssssssssssssss......................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+MMMNNNNNNOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#50701d bg=#121212
+d fg=#365270 bg=#121212
+e fg=#2a5738 bg=#121212
+f fg=#646464 bg=#191d21 bold
+g fg=#476419 bg=#191d21 bold
+h fg=#3b3b3b bg=#121212
+i fg=#646464 bg=#13212c
+j fg=#1a1a1a bg=#121212
+k fg=#0b3a5f bg=#121212
+l fg=#646464 bg=#161616
+m fg=#646464 bg=#121212 bold
+n fg=#646464 bg=#121212 underline
+o fg=#700a0a bg=#121212
+p fg=#121212 bg=#161616
+q fg=#e0e0e0 bg=#161616
+r default
+s fg=#121212 bg=#4f4f4f
+t bg=#4f4f4f
+u fg=#0178d4 bg=#4f4f4f bold
+v fg=#0178d4 bg=#4f4f4f inverse
+w fg=#0178d4 bg=#272727
+x fg=#0178d4 bg=#4f4f4f
+y bg=#272727
+z fg=#242f38 bg=#0178d4
+A fg=#000f18 bg=#242f38
+B fg=#ddedf9 bg=#0178d4 bold
+C fg=#242f38 bg=#272727
+D fg=#e0e0e0 bg=#272727
+E fg=#7ae998 bg=#4ebf71
+F fg=#e76580 bg=#b93c5b
+G bg=#4ebf71
+H fg=#0a180e bg=#4ebf71 bold
+I bg=#b93c5b
+J fg=#f5e5e9 bg=#b93c5b bold
+K fg=#008139 bg=#4ebf71
+L fg=#780028 bg=#b93c5b
+M fg=#ffa62b bg=#242f38 bold
+N fg=#e0e0e0 bg=#242f38
+O bg=#242f38
+--- cells
+11 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│"," "," ","▶"," ","👍",""," ","2"," ","|"," ","🎉",""," ","1"," ","|"," ","👀",""," ","4"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+20 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","█","▊"," ","▐","X","▌"," ","👎",""," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","▎","█","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","│"]
+21 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","█","▊"," ","▐","X","▌"," ","😄",""," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","▎","█"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+22 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","█","▊"," ","▐","X","▌"," ","😕",""," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","▎","█","s","e","d"," ","i","n"," ","#","3","."," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+23 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","█","▊"," ","▐","X","▌"," ","❤️",""," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","▎","█"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+24 ["└","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","█","▊"," ","▐","X","▌"," ","🚀",""," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","▎","█"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

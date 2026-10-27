@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "request": {
+    "method": "POST",
+    "path": "/repos/parity-bot/run-fixture/actions/workflows/7000002/dispatches",
+    "body": {
+      "ref": "release"
+    }
+  },
+  "response": {
+    "status": 204
+  },
+  "note": "hand-written: Release dispatched on release"
+}

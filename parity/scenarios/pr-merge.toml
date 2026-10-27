@@ -1,0 +1,156 @@
+version = 1
+description = "PR Overview merge (ctrl+m): a PR GitHub refuses to merge (error), an already-merged PR (warning, no request), and an open PR merged with the preferred method and its head sha"
+# ctrl+m is sent in the kitty keyboard protocol's encoding (CSI 109;5 u), which both apps read; a terminal without the
+# protocol sends Enter for it (terminal-caveats.ctrl-m-enter). After the merge Rust refetches the PR (Py bug B15's
+# recommendation) and Python redraws the stale one, so the Overview text after the merge isn't in [expect].
+gate = false
+parity_rows = [
+    "pull-requests.overview-merge",
+    "keybindings.pull-request-merge",
+    "toasts.merge-already-merged",
+    "toasts.pr-merged",
+    "toasts.pr-merge-failed",
+]
+sizes = [[160, 48]]
+
+[env]
+# pr-write over pr-details: PUT .../pulls/5/merge answers merged for the squash method and PR 5's head sha, GET
+# .../pulls/5 answers the merged PR once the merge was served, and PUT .../pulls/4/merge answers 405.
+fixtures = ["pr-write", "pr-details", "base"]
+config_overrides.appearance.show_issues = false
+config_overrides.appearance.show_workflows = false
+
+[[step]]
+wait.text = "pr-details"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Add a cursor to the viewer"
+wait.timeout_ms = 15000
+
+# PR 4 is closed: GitHub answers 405. (Python drops a key that follows a focus key at once, so the PR table gets a
+# moment to take focus before each selection.)
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait.text = "Drop the legacy renderer (#4)"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.text = "Superseded by the new renderer."
+
+# Into the Overview's content, where the merge key is bound.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+capture = "overview-content"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+type = "\u001b[109;5u"
+
+[[step]]
+wait.log.method = "PUT"
+wait.log.path = "/repos/parity-bot/pr-details/pulls/4/merge"
+
+[[step]]
+wait.text = "Pull request 4 could not be merged"
+
+[[step]]
+capture = "merge-failed"
+checks = ["titles", "focus"]
+
+# PR 3 is already merged: a warning, and nothing is sent.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait.text = "Merged Release 0.2.0 (#3)"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.text = "Status checks:"
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+type = "\u001b[109;5u"
+
+[[step]]
+wait.text = "PR has already been merged!"
+
+[[step]]
+capture = "already-merged"
+checks = ["titles", "focus"]
+
+# PR 5 is open: merged with squash and its head sha.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["k", "k", "enter"]
+
+[[step]]
+wait.text = "Open Add a cursor to the viewer (#5)"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.text = "PR Reviews"
+
+[[step]]
+wait.text = "Status checks:"
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+type = "\u001b[109;5u"
+
+[[step]]
+wait.log.method = "PUT"
+wait.log.path = "/repos/parity-bot/pr-details/pulls/5/merge"
+wait.log.body.merge_method = "squash"
+wait.log.body.sha = "c0ffee5555555555555555555555555555555555"
+
+[[step]]
+wait.text = "PR Merged"
+
+[[step]]
+capture = "merged"
+checks = ["titles", "focus"]
+
+[expect.overview-content]
+focused = ["[5] PR #4 Details"]
+contains = ["Drop the legacy renderer (#4)"]
+footer = ["^m Merge PR", "E Edit PR", "R Add reaction", "^v Paste link", "f Follow link", "F Follow link (browser)", "q Quit", "^p Command Pallete", "M Maximize", "? Keybindings"]
+
+[expect.merge-failed]
+contains = ["Error Merging PR", "Pull request 4 could not be merged"]
+
+[expect.already-merged]
+contains = ["Already Merged", "PR has already been merged!"]
+
+[expect.merged]
+focused = ["[5] PR #5 Details"]
+contains = ["PR Merged", "Pull request 5 merged. Note some cached information on"]

@@ -1,0 +1,157 @@
+version = 1
+description = "Edit issue modal (E) from the Issues table: the prefilled title, Status select and description; a new title, Closed picked in the select, Save, and the updated row replacing the old one; then E on the Issue Overview, closed with escape"
+gate = false
+parity_rows = [
+    "modals.edit-issue",
+    "modals.form-widgets",
+    "modals.text-editor",
+    "issues.edit-from-table",
+    "issues.overview-edit",
+    "keybindings.issue-edit",
+]
+sizes = [[160, 48]]
+
+[env]
+# issue-write over issue-details: PATCH /repos/parity-bot/issue-fixture/issues/12 answers after 1.5 s, only for the
+# title, body and state this scenario sends.
+fixtures = ["issue-write", "issue-details", "base"]
+
+[[step]]
+wait.text = "issue-fixture"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Comments that fail to load"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.text = "Issues with bodies and comments."
+wait.timeout_ms = 15000
+
+# The Issues table's cursor is on issue 12.
+[[step]]
+keys = ["3", "E"]
+
+[[step]]
+wait.text = "Status"
+
+[[step]]
+capture = "open"
+checks = ["titles", "focus", "footer"]
+
+# The title input selects its text when it gets focus, so typing replaces it.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+type = "Crash when the config file is blank"
+
+[[step]]
+capture = "title-typed"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait.text = "Closed"
+
+[[step]]
+capture = "status-open"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["down", "enter"]
+
+[[step]]
+capture = "status-closed"
+checks = ["titles", "focus", "footer"]
+
+# The description, then Save.
+[[step]]
+keys = ["tab", "tab", "enter"]
+
+# Python never shows "Saving..." (Py bug B69): [expect] checks only the progress toast.
+[[step]]
+wait.text = "Updating issue #12..."
+
+[[step]]
+capture = "saving"
+checks = ["titles", "focus"]
+
+[[step]]
+wait.log.method = "PATCH"
+wait.log.path = "/repos/parity-bot/issue-fixture/issues/12"
+wait.log.body.title = "Crash when the config file is blank"
+wait.log.body.body = "## Steps to reproduce\n\n1. Create an empty `config.json`\n2. Run `lazy-github` and press `#5`\n\nIt fails the same way as #7, and parity-bot/dotfiles#3 has the same error. cc @parity-bot\n\n```text\nError: the config file is empty (see #9)\n```\n\n> Workaround: delete the file and start again.\n"
+wait.log.body.state = "closed"
+
+[[step]]
+wait.text = "Successfully updated issue #12"
+
+[[step]]
+capture = "updated"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+# From the Issue Overview: select issue 11, move into the Overview's content and press E.
+[[step]]
+keys = ["3", "j", "enter"]
+
+[[step]]
+wait.text = "Closed without a body (#11)"
+
+[[step]]
+keys = ["tab", "E"]
+
+[[step]]
+wait.text = "Status"
+
+[[step]]
+capture = "from-overview"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait.gone = "Description"
+
+[[step]]
+capture = "overview-closed"
+checks = ["titles", "focus"]
+
+[expect.open]
+contains = ["Title", "Crash when the config file is empty", "Status", "Open", "Description", "## Steps to reproduce", "Save", "Cancel"]
+footer = ["q Close", "shift+⏎ Submit"]
+
+[expect.title-typed]
+contains = ["Crash when the config file is blank"]
+not_contains = ["Crash when the config file is empty"]
+footer = ["esc Close", "shift+⏎ Submit"]
+
+[expect.status-open]
+contains = ["Select", "Open", "Closed"]
+footer = ["esc Dismiss menu", "shift+⏎ Submit"]
+
+[expect.status-closed]
+contains = ["Closed"]
+footer = ["q Close", "shift+⏎ Submit"]
+
+[expect.saving]
+contains = ["Updating issue #12..."]
+
+[expect.updated]
+focused = ["[3] Issues"]
+contains = ["12  closed  parity-friend  Crash when the config file is blan", "Successfully updated issue #12"]
+not_contains = ["Saving...", "Traceback"]
+
+[expect.from-overview]
+contains = ["Closed without a body", "Status", "Closed", "Save"]
+footer = ["q Close", "shift+⏎ Submit"]
+
+[expect.overview-closed]
+focused = ["[5] Issue #11 Details"]
+not_contains = ["Description", "Traceback"]

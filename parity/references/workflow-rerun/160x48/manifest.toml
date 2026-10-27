@@ -1,0 +1,14 @@
+# Written by `cargo xtask parity --record`. Don't edit.
+format = 1
+size = "160x48"
+captures = ["failed-jobs-focused", "failed-jobs-rerun", "workflow-rerun"]
+
+[inputs]
+scenario = "32326e0131a437d8a9d8901f9ef5897827125ff8"
+fixtures = "b2eeaef0851a0d300220aad7c54545670990a155"
+python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
+harness = "a42709a8f63e18b6ffbf05888ac70df13205cac1"
+
+[recorded_with]
+python = "3.14.7"
+os = "linux"

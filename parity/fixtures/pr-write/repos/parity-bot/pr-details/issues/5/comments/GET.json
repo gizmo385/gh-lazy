@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/issues/5/comments",
+    "when": {
+      "after": [
+        {
+          "method": "POST",
+          "path": "/repos/parity-bot/pr-details/issues/5/comments"
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/issues/comments/7001",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#issuecomment-7001",
+        "issue_url": "https://api.github.com/repos/parity-bot/pr-details/issues/5",
+        "id": 7001,
+        "node_id": "IC_kwDO7001",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDO1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        },
+        "created_at": "2026-02-03T12:00:00Z",
+        "updated_at": "2026-02-03T12:00:00Z",
+        "author_association": "CONTRIBUTOR",
+        "body": "Rebased on main. @parity-bot ready for another look."
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/issues/comments/7002",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#issuecomment-7002",
+        "issue_url": "https://api.github.com/repos/parity-bot/pr-details/issues/5",
+        "id": 7002,
+        "node_id": "IC_kwDO7002",
+        "user": null,
+        "created_at": "2026-02-03T13:30:00Z",
+        "updated_at": "2026-02-03T13:30:00Z",
+        "author_association": "NONE",
+        "body": "Is this related to #4?"
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/issues/comments/7003",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#issuecomment-7003",
+        "issue_url": "https://api.github.com/repos/parity-bot/pr-details/issues/5",
+        "id": 7003,
+        "node_id": "IC_kwDO7003",
+        "user": {
+          "login": "parity-carol",
+          "id": 1000004,
+          "node_id": "U_kgDO1000004",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-carol",
+          "html_url": "https://github.com/parity-carol",
+          "type": "User",
+          "site_admin": false
+        },
+        "created_at": "2026-02-03T14:00:00Z",
+        "updated_at": "2026-02-03T14:00:00Z",
+        "author_association": "CONTRIBUTOR",
+        "body": ""
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/issues/comments/7004",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#issuecomment-7004",
+        "issue_url": "https://api.github.com/repos/parity-bot/pr-details/issues/5",
+        "id": 7004,
+        "node_id": "IC_kwDOPr7004",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDOAA1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "created_at": "2026-03-05T09:00:00Z",
+        "updated_at": "2026-03-05T09:00:00Z",
+        "author_association": "OWNER",
+        "body": "Ship it."
+      }
+    ]
+  },
+  "note": "hand-written: PR 5's comments once the new comment was posted"
+}

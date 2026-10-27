@@ -251,6 +251,8 @@ pub enum MainAction {
     WheelDetails(Wheel),
     /// A click on the repos table's cursor cell: focus the table, then select the repo, in that order.
     ClickSelect(Box<Repository>),
+    /// Favorite or unfavorite the repo under the repos table's cursor (`repositories.favorite`).
+    ToggleFavorite,
     /// A section's lazy table asked for `page` (a cursor key, a click or a search submit): its section requests it.
     LoadMore {
         /// The section whose table asked.
@@ -702,6 +704,9 @@ impl MainScreen {
             }
             // `handle_focused_key` already gave the box every key it binds.
             Owner::SearchInput(_) => Some(Action::Consumed),
+            Owner::Section(SectionId::Repos) if id == BindingId::RepositoriesFavorite => {
+                Some(Action::Main(MainAction::ToggleFavorite))
+            }
             // Not built yet: the key is still consumed, as in Python. With one tab, switching tabs is a no-op.
             Owner::SearchableTable(_) | Owner::Section(_) | Owner::SelectionsPane | Owner::DetailsTabs => {
                 Some(Action::Unimplemented(id))
@@ -866,6 +871,7 @@ impl Component for MainScreen {
                 self.try_focus(FocusTarget::Table(SectionId::Repos));
                 cx.dispatch(Action::SelectRepo(repo));
             }
+            MainAction::ToggleFavorite => self.repos.toggle_favorite(cx),
             MainAction::LoadMore {
                 section,
                 generation,

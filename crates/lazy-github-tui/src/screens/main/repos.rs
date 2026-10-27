@@ -272,6 +272,24 @@ impl ReposSection {
         cx.dispatch(action);
     }
 
+    /// Python's `action_toggle_favorite_repo`: adds the repo under the cursor to `repositories.favorites`, or
+    /// removes it, then re-sorts. The cursor keeps its row index, so the repo under it can change. Rows a search
+    /// hides get their stars from the config too. Nothing happens on an empty table (Py bug B13).
+    pub fn toggle_favorite(&mut self, cx: &mut Cx<'_>) {
+        let Some(name) = self.table.selected().map(|repo| repo.full_name.clone()) else {
+            return;
+        };
+        let favorites = &mut cx.config_mut().repositories.favorites;
+        if favorites.contains(&name) {
+            tracing::info!("Unfavoriting repo {name}");
+            favorites.retain(|favorite| *favorite != name);
+        } else {
+            tracing::info!("Favoriting repo {name}");
+            favorites.push(name);
+        }
+        self.table.refresh_rows(&RepoCells::from_cx(cx));
+    }
+
     /// The table, for reading its rows and cursor.
     pub fn table(&self) -> &SearchableTable<Repository> {
         &self.table
@@ -362,7 +380,7 @@ mod tests {
     }
 }
 
-/// The section in the app: loading the list and the tracked repos.
+/// The section in the app: loading the list and the tracked repos, and toggling favorites.
 #[cfg(test)]
 mod app_tests {
     use lazy_github_core::config::Config;
@@ -603,6 +621,150 @@ mod app_tests {
         let screen = app.screen(100, 30);
         let rows: Vec<&str> = screen.lines().collect();
         assert!(rows[5].starts_with("│ ★  parity-org  tracked-tool"), "{}", rows[5]);
+        insta::assert_snapshot!(screen);
+    }
+
+    /// The favorites in each config save among the app's effects, oldest first.
+    fn saved_favorites(app: &TestApp) -> Vec<Vec<String>> {
+        app.effects()
+            .iter()
+            .filter_map(|effect| match effect {
+                Effect::SaveConfig(config) => Some(config.repositories.favorites.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Presses `keys`, and returns what that logged.
+    fn press_logged(app: &mut TestApp, keys: &[&str]) -> String {
+        logs(|| {
+            app.press(keys);
+        })
+    }
+
+    fn stars(app: &mut TestApp) -> Vec<String> {
+        app.screen(100, 30)
+            .lines()
+            .skip(5)
+            .take(3)
+            .map(|line| line.chars().skip(2).take(30).collect::<String>().trim_end().to_owned())
+            .collect()
+    }
+
+    #[test]
+    fn toggling_favorites_saves_logs_and_resorts_as_the_scenario_does() {
+        let mut app = TestApp::with_github(Config::default(), FakeGithub::new().with_repositories(base_repos()));
+        let favorites = |app: &mut TestApp| app.with_cx(|cx| cx.config().repositories.favorites.clone());
+
+        // first: the first row, which stays where it is.
+        let out = press_logged(&mut app, &["ctrl+f"]);
+        assert_eq!(out, "INFO Favoriting repo parity-bot/dotfiles\n");
+        assert_eq!(favorites(&mut app), ["parity-bot/dotfiles"]);
+        assert_eq!(saved_favorites(&app), [vec!["parity-bot/dotfiles".to_owned()]]);
+        assert_eq!(
+            row_keys(&app),
+            ["parity-bot/dotfiles", "parity-bot/hello-world", "parity-bot/lazy-demo"]
+        );
+        assert_eq!(section(&app).table().cursor(), 0);
+
+        // second: the third row moves up; the cursor stays on the third row, now hello-world.
+        let out = press_logged(&mut app, &["j", "j", "ctrl+f"]);
+        assert_eq!(out, "INFO Favoriting repo parity-bot/lazy-demo\n");
+        assert_eq!(favorites(&mut app), ["parity-bot/dotfiles", "parity-bot/lazy-demo"]);
+        assert_eq!(saved_favorites(&app).len(), 2);
+        assert_eq!(
+            row_keys(&app),
+            ["parity-bot/dotfiles", "parity-bot/lazy-demo", "parity-bot/hello-world"]
+        );
+        assert_eq!(section(&app).table().cursor(), 2);
+
+        // unfavorite: the first row drops to the top of the rest.
+        let out = press_logged(&mut app, &["k", "k", "ctrl+f"]);
+        assert_eq!(out, "INFO Unfavoriting repo parity-bot/dotfiles\n");
+        assert_eq!(favorites(&mut app), ["parity-bot/lazy-demo"]);
+        assert_eq!(
+            row_keys(&app),
+            ["parity-bot/lazy-demo", "parity-bot/dotfiles", "parity-bot/hello-world"]
+        );
+        assert_eq!(section(&app).table().cursor(), 0);
+
+        // none-left: back to the order the rows were added, not the order shown.
+        let out = press_logged(&mut app, &["ctrl+f"]);
+        assert_eq!(out, "INFO Unfavoriting repo parity-bot/lazy-demo\n");
+        assert_eq!(favorites(&mut app), Vec::<String>::new());
+        assert_eq!(
+            row_keys(&app),
+            ["parity-bot/dotfiles", "parity-bot/hello-world", "parity-bot/lazy-demo"]
+        );
+        assert_eq!(section(&app).table().cursor(), 0);
+
+        // One save per toggle, each with the favorites as they were then.
+        assert_eq!(
+            saved_favorites(&app),
+            [
+                vec!["parity-bot/dotfiles".to_owned()],
+                vec!["parity-bot/dotfiles".to_owned(), "parity-bot/lazy-demo".to_owned()],
+                vec!["parity-bot/lazy-demo".to_owned()],
+                vec![],
+            ]
+        );
+        assert!(app.app().toasts().is_empty());
+    }
+
+    #[test]
+    fn toggling_on_an_empty_table_does_nothing() {
+        let mut app = TestApp::new(Config::default());
+        let out = press_logged(&mut app, &["ctrl+f"]);
+        assert_eq!(out, "");
+        assert_eq!(saved_favorites(&app), Vec::<Vec<String>>::new());
+        assert!(app.app().toasts().is_empty());
+    }
+
+    #[test]
+    fn with_a_search_filter_hidden_rows_take_their_stars_from_the_config() {
+        let mut config = Config::default();
+        config.repositories.favorites = vec!["parity-bot/lazy-demo".into()];
+        let mut app = TestApp::with_github(config, FakeGithub::new().with_repositories(base_repos()));
+        app.press(&["/", "d", "o", "t", "enter"]);
+        assert_eq!(row_keys(&app), ["parity-bot/dotfiles"]);
+        let out = press_logged(&mut app, &["ctrl+f"]);
+        assert_eq!(out, "INFO Favoriting repo parity-bot/dotfiles\n");
+        assert_eq!(row_keys(&app), ["parity-bot/dotfiles"]);
+        // Clearing the search shows every row, starred from the config, favorites first in the order added.
+        app.press(&["/", "ctrl+u", "enter"]);
+        assert_eq!(
+            row_keys(&app),
+            ["parity-bot/dotfiles", "parity-bot/lazy-demo", "parity-bot/hello-world"]
+        );
+        assert_eq!(
+            stars(&mut app),
+            [
+                "★  parity-bot  dotfiles     ✘",
+                "★  parity-bot  lazy-demo    ✘",
+                "☆  parity-bot  hello-world  ✘"
+            ]
+        );
+    }
+
+    #[test]
+    fn ctrl_f_in_the_search_box_edits_the_box() {
+        let mut app = TestApp::with_github(Config::default(), FakeGithub::new().with_repositories(base_repos()));
+        app.press(&["/", "a", "b", "home"]);
+        let out = press_logged(&mut app, &["ctrl+f"]);
+        assert_eq!(out, "");
+        assert_eq!(section(&app).table().search_text(), "");
+        assert_eq!(saved_favorites(&app), Vec::<Vec<String>>::new());
+    }
+
+    #[test]
+    fn repos_favorite_toggled_100x30() {
+        let mut app = TestApp::with_github(Config::default(), FakeGithub::new().with_repositories(base_repos()));
+        app.press(&["j", "j", "ctrl+f", "j"]);
+        let buffer = app.render(100, 30);
+        // The star is Rich's green, now that the cursor is off its row.
+        assert_eq!(buffer[(2, 5)].symbol(), "★");
+        assert_eq!(buffer[(2, 5)].fg, Color::Rgb(0x98, 0xe0, 0x24));
+        let screen = crate::test_util::buffer_to_string(&buffer);
         insta::assert_snapshot!(screen);
     }
 }

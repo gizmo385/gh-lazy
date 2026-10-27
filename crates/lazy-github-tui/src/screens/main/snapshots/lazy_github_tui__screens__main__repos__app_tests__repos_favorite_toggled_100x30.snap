@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/screens/main/repos.rs
+expression: screen
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Details ────────────────────────────────────────────┐
+│ ★  Owner       Name         Private  ││ Introduction                                             │
+│ ★  parity-bot  lazy-demo    ✘        ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     ✘        ││                                                          │
+│ ☆  parity-bot  hello-world  ✘        ││                                                          │
+│                                      ││      LazyGithub: A Terminal UI For GitHub (0.1.0)        │
+│                                      ││                                                          │
+│                                      ││  LazyGithub is a terminal UI for interacting with        │
+│                                      ││  GitHub. You can get started by selecting one of the     │
+└──────────────────────────────────────┘│  repositories listed in the table on the left. Once      │
+┌─ [2] Pull Requests ──────────────────┐│  you have selected a repository, any issues, pull        │
+│ #  Status  Author  Title             ││  requests, and action workflows will be retrieved and    │
+│                                      ││  displayed below it.                                     │
+│                                      ││                                                          │
+└──────────────────────────────────────┘│  Issues, pull requests, and action lists can also be   ▁▁│
+┌─ [3] Issues ─────────────────────────┐│  interacted with!                                        │
+│ #  Status  Author  Title             ││                                                          │
+│                                      ││                                                          │
+│                                      ││  Pull Requests                                           │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows ──────────────────────┐│  You can interact with a PR by viewing its details,      │
+│ Time  Result  Job Name  Run Name  Run││  viewing the PR diff, and participating in any active    │
+│                                   ▎  ││  conversations happening on the PR. You can also         │
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste lin

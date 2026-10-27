@@ -94,7 +94,7 @@ fn by_id() -> SearchableTable<Item> {
     SearchableTable::new(columns(), SortSpec::ascending(3))
 }
 
-fn draw(table: &mut SearchableTable<Item>, focused: bool, width: u16, height: u16) -> Buffer {
+fn draw<T: TableItem>(table: &mut SearchableTable<T>, focused: bool, width: u16, height: u16) -> Buffer {
     let theme = Theme::default();
     let keymap = Keymap::defaults();
     let mut terminal = Terminal::new(TestBackend::new(width, height)).unwrap();
@@ -125,7 +125,7 @@ fn chord(key: &str) -> KeyChord {
     }
 }
 
-fn press(table: &mut SearchableTable<Item>, keymap: &Keymap, key: &str) -> Handled<TableEvent<i64>> {
+fn press<T: TableItem>(table: &mut SearchableTable<T>, keymap: &Keymap, key: &str) -> Handled<TableEvent<T::Key>> {
     table.handle_key(&chord(key), keymap)
 }
 
@@ -184,28 +184,58 @@ fn a_reinserted_key_goes_to_the_end_of_its_tie_group_and_keeps_its_item_slot() {
     assert_eq!(ids(&table), [1, 3, 4, 2]);
 }
 
+/// The favorites, by id: what [`Repo`]'s star comes from, as the repos table's comes from the config.
+struct Favs(Vec<i64>);
+
+/// A row whose star follows [`Favs`], so [`SearchableTable::refresh_rows`] can change it.
+#[derive(Debug)]
+struct Repo(i64);
+
+impl TableItem for Repo {
+    type Key = i64;
+    type Ctx = Favs;
+    fn key(&self) -> i64 {
+        self.0
+    }
+    fn cells(&self, cx: &Favs) -> Vec<Cell> {
+        let star = if cx.0.contains(&self.0) { "[green]★[/]" } else { "☆" };
+        vec![Cell::text(star), Cell::int(self.0)]
+    }
+}
+
+fn starred(n: i64) -> SearchableTable<Repo> {
+    let mut table = SearchableTable::new(vec![Column::new("★"), Column::new("#")], SortSpec::ascending(0));
+    let _ = table.insert_many((1..=n).map(Repo), &Favs(vec![]));
+    table
+}
+
 #[test]
 fn refresh_rows_recomputes_cells_and_resorts() {
-    struct Favs(Vec<i64>);
-    #[derive(Debug)]
-    struct Repo(i64);
-    impl TableItem for Repo {
-        type Key = i64;
-        type Ctx = Favs;
-        fn key(&self) -> i64 {
-            self.0
-        }
-        fn cells(&self, cx: &Favs) -> Vec<Cell> {
-            let star = if cx.0.contains(&self.0) { "[green]★[/]" } else { "☆" };
-            vec![Cell::text(star), Cell::int(self.0)]
-        }
-    }
-    let mut table = SearchableTable::new(vec![Column::new("★"), Column::new("#")], SortSpec::ascending(0));
-    let _ = table.insert_many((1..=4).map(Repo), &Favs(vec![]));
+    let mut table = starred(4);
     table.refresh_rows(&Favs(vec![3]));
     assert_eq!(table.row_keys().copied().collect::<Vec<_>>(), [3, 1, 2, 4]);
     table.refresh_rows(&Favs(vec![]));
     assert_eq!(table.row_keys().copied().collect::<Vec<_>>(), [1, 2, 3, 4]);
+}
+
+#[test]
+fn refresh_rows_keeps_the_cursor_index_and_the_scroll() {
+    let keymap = Keymap::defaults();
+    let mut table = starred(12);
+    // Seven body rows: the cursor on row 9 scrolls the body down three.
+    draw(&mut table, true, 40, 8);
+    for _ in 0..9 {
+        let _ = press(&mut table, &keymap, "j");
+    }
+    let before = (table.cursor(), table.scroll());
+    assert_eq!(before, (9, (3, 0)));
+    assert_eq!(table.selected().map(|repo| repo.0), Some(10));
+    // Favoriting the row under the cursor moves it to the top; the cursor stays on row 9, now the 9th id.
+    table.refresh_rows(&Favs(vec![10]));
+    assert_eq!((table.cursor(), table.scroll()), before);
+    assert_eq!(table.selected().map(|repo| repo.0), Some(9));
+    draw(&mut table, true, 40, 8);
+    assert_eq!((table.cursor(), table.scroll()), before);
 }
 
 #[test]

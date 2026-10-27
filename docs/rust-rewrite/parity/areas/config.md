@@ -24,7 +24,7 @@ accept negative values, as pydantic does: they load and save unchanged, and act 
 | `config.pull-requests-owner-filter` | `pull_requests` | `owner_filter` | `"all"` (`all`/`mine`) | `lib/config.py`, `lib/constants.py` `IssueOwnerFilter` | M0 | parity | #64, #159 | |
 | `config.pull-requests-preferred-merge-method` | `pull_requests` | `preferred_merge_method` | `"squash"` (`merge`/`squash`/`rebase`) | `lib/config.py` `MergeMethod` | M0 | parity | #64, #159 | |
 | `config.pull-requests-additional-suggested-pr-reviewers` | `pull_requests` | `additional_suggested_pr_reviewers` | `[]` | `lib/config.py` | M0 | parity | #64, #159 | |
-| `config.pull-requests-preload-pull-request-for-current-commit` | `pull_requests` | `preload_pull_request_for_current_commit` | `false` | `lib/config.py` | M0 | not started | #64, #159, #198 | Audit (M2, 2026-10-26): load and save covered by golden `config`; the behavior waits for #198. |
+| `config.pull-requests-preload-pull-request-for-current-commit` | `pull_requests` | `preload_pull_request_for_current_commit` | `false` | `lib/config.py` | M4 | not started | #64, #159, #198 | Audit (M2, 2026-10-26): load and save covered by golden `config`; the behavior waits for #198. Moved to M4 (2026-10-26): the behavior is #198, an M4 issue. |
 | `config.pull-requests-pull-request-template` | `pull_requests` | `pull_request_template` | `null` (path) | `lib/config.py` | M0 | parity | #64, #159 | |
 | `config.issues-state-filter` | `issues` | `state_filter` | `"all"` | `lib/config.py` `IssueSettings` | M0 | parity | #64, #159 | |
 | `config.issues-owner-filter` | `issues` | `owner_filter` | `"all"` | `lib/config.py` | M0 | parity | #64, #159 | |

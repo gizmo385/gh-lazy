@@ -7,7 +7,7 @@ this file.
 
 | Id | Command | Python reference | Milestone | Status | Issue | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| `cli.run` | `run [--auth-backend]` | `cli.py` | M1 | not started | #199 | Bare launch in M1; `--auth-backend` (env `AUTH_BACKEND`) writes `api.client_type` to config, M4. Audit (M2, 2026-10-26): the bare launch is in every scenario; `--auth-backend` waits for #199. |
+| `cli.run` | `run [--auth-backend]` | `cli.py` | M4 | not started | #199 | Bare launch in M1; `--auth-backend` (env `AUTH_BACKEND`) writes `api.client_type` to config, M4. Audit (M2, 2026-10-26): the bare launch is in every scenario; `--auth-backend` waits for #199. Moved to M4 (2026-10-26): the bare launch is done, and what's left is `--auth-backend`, #199 in M4. |
 | `cli.dump-config` | `dump-config` | `cli.py` | M4 | not started | #199 | Prints "Config file location: <path> (exists => True/False)" then the config as pretty JSON. |
 | `cli.clear-auth` | `clear-auth` | `cli.py` | M4 | intentional diff (defer to `gh auth logout`) | #199 | Decision: [clear-auth-defers-to-gh](../decisions/clear-auth-defers-to-gh.md). |
 | `cli.clear-config` | `clear-config [--no-confirm]` | `cli.py` | M4 | not started | #199 | Prompt "Confirm deletion your LazyGithub settings"; prints "Your settings have been cleared" or "Canceling". |

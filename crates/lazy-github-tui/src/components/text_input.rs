@@ -1,5 +1,5 @@
 //! A single-line text input: Textual's `Input` with its default look (a tall border, `padding: 0 2`), its editing and
-//! selection keys, and mouse-drag selection. The clipboard keys come with #251.
+//! selection keys, its clipboard keys, and mouse-drag selection.
 //!
 //! `tui-textarea` (PLAN §4) is for the multi-line editors. A one-line box is small enough to own, which lets it match
 //! Textual's styling and word rules exactly; the M3 lookup modals can reuse it.
@@ -25,8 +25,7 @@ static WORD: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 /// The input's bindings, in Textual's merged order: `left`, `right`, `home` and `end` keep the places of the
-/// `ScrollView` keys they replace, then the rest of `Input.BINDINGS` follows. Copy and cut (`ctrl+c`, `ctrl+x`) come
-/// with #251 and the inherited scroll keys with #252.
+/// `ScrollView` keys they replace, then the rest of `Input.BINDINGS` follows. The inherited scroll keys come with #252.
 pub const INPUT_BINDINGS: &[BindingId] = &[
     BindingId::TextualInputCursorLeft,
     BindingId::TextualInputCursorRight,
@@ -48,6 +47,8 @@ pub const INPUT_BINDINGS: &[BindingId] = &[
     BindingId::TextualInputDeleteLeftAll,
     BindingId::TextualInputDeleteRightWord,
     BindingId::TextualInputDeleteRightAll,
+    BindingId::TextualInputCut,
+    BindingId::TextualInputCopy,
     BindingId::TextualInputPaste,
 ];
 
@@ -61,13 +62,16 @@ const PADDING: u16 = 2;
 const INVALID_BLURRED_ALPHA: f64 = 0.6;
 
 /// What a key did to the input.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[must_use]
 pub enum InputOutcome {
     /// Taken: the text or the cursor may have changed.
     Changed,
     /// `enter`: the owner acts on [`TextInput::value`].
     Submitted,
+    /// `ctrl+c` with a selection, or `ctrl+x` with or without one (which may have deleted it): the owner puts the
+    /// text on the clipboard with [`Action::Copy`](crate::action::Action::Copy).
+    Copied(String),
     /// Not the input's: the owner passes it on.
     Ignored,
 }
@@ -169,37 +173,63 @@ impl TextInput {
         (anchor != self.cursor).then(|| (anchor.min(self.cursor), anchor.max(self.cursor)))
     }
 
-    /// Whether the input takes `key` before any binding: printable characters, which Textual's `Input` consumes
-    /// (`check_consume_key`), and its own bindings, which are innermost in the chain.
-    pub fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
-        printable(key).is_some() || keymap.match_in(INPUT_BINDINGS, key).is_some()
+    /// The selected text, when anything is selected.
+    pub fn selected_text(&self) -> Option<&str> {
+        let (start, end) = self.selection()?;
+        Some(&self.value[self.byte_at(start)..self.byte_at(end)])
     }
 
-    /// A key: a printable character is typed, an editing key edits, `enter` submits, and anything else is
-    /// [`InputOutcome::Ignored`].
-    pub fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap) -> InputOutcome {
+    /// Whether the input takes `key` before any binding: printable characters, which Textual's `Input` consumes
+    /// (`check_consume_key`), and its own bindings, which are innermost in the chain. Copy with nothing selected
+    /// isn't the input's: Textual's `action_copy` skips, so the key goes on down the chain.
+    pub fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
+        printable(key).is_some()
+            || keymap
+                .match_in(INPUT_BINDINGS, key)
+                .is_some_and(|id| id != BindingId::TextualInputCopy || self.selection().is_some())
+    }
+
+    /// A key: a printable character is typed, an editing key edits, `enter` submits, copy and cut hand back the
+    /// selected text, paste types `clipboard` (the in-app clipboard, [`Cx::clipboard`](crate::component::Cx::clipboard)),
+    /// and anything else is [`InputOutcome::Ignored`].
+    pub fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> InputOutcome {
         if let Some(c) = printable(key) {
             self.replace_selection(c.encode_utf8(&mut [0; 4]));
             return InputOutcome::Changed;
         }
         match keymap.match_in(INPUT_BINDINGS, key) {
-            Some(id) => self.on_binding(id),
+            Some(id) => self.on_binding(id, clipboard),
             None => InputOutcome::Ignored,
         }
     }
 
-    fn on_binding(&mut self, id: BindingId) -> InputOutcome {
+    fn on_binding(&mut self, id: BindingId, clipboard: &str) -> InputOutcome {
         use BindingId as B;
         let len = self.len();
-        if id == B::TextualInputSubmit {
-            return InputOutcome::Submitted;
-        }
-        if id == B::TextualInputPaste {
-            // Textual's `action_paste` types the app's own clipboard over the selection (PLAN §10.10). Nothing can
-            // copy into it until #145 adds copy and cut, so it's always empty and this deletes the selection, as
-            // pasting an empty clipboard does in Python.
-            self.replace_selection("");
-            return InputOutcome::Changed;
+        match id {
+            B::TextualInputSubmit => return InputOutcome::Submitted,
+            // Textual's `action_paste`: the whole in-app clipboard over the selection, line breaks and all (PLAN
+            // §10.10). A filter may refuse the result.
+            B::TextualInputPaste => {
+                self.replace_selection(clipboard);
+                return InputOutcome::Changed;
+            }
+            // `action_copy` copies the selection and keeps it; without one it skips, which `consumes_key` already
+            // said.
+            B::TextualInputCopy => {
+                return self
+                    .selected_text()
+                    .map_or(InputOutcome::Ignored, |text| InputOutcome::Copied(text.to_owned()));
+            }
+            // `action_cut` copies even an empty selection, so the clipboard empties, and deletes what's selected.
+            B::TextualInputCut => {
+                let text = self.selected_text().unwrap_or_default().to_owned();
+                if self.selection().is_some() {
+                    self.replace_selection("");
+                }
+                return InputOutcome::Copied(text);
+            }
+            _ => {}
         }
         if self.select(id) {
             return InputOutcome::Changed;
@@ -471,13 +501,12 @@ impl TextInput {
     }
 }
 
-/// The character a key types, when it's printable: no CTRL or ALT, and printable by Python's `str.isprintable`.
+/// The character a key types, when it's printable: no modifier but SHIFT (so not `ctrl+…`, `alt+…` or the kitty
+/// protocol's `super+c`), and printable by Python's `str.isprintable`.
 fn printable(key: &KeyChord) -> Option<char> {
     use crossterm::event::{KeyCode, KeyModifiers};
     match key.code {
-        KeyCode::Char(c) if !key.mods.intersects(KeyModifiers::CONTROL | KeyModifiers::ALT) && is_printable(c) => {
-            Some(c)
-        }
+        KeyCode::Char(c) if key.mods.difference(KeyModifiers::SHIFT).is_empty() && is_printable(c) => Some(c),
         _ => None,
     }
 }
@@ -638,7 +667,7 @@ mod tests {
     }
 
     fn press(input: &mut TextInput, key: &str) -> InputOutcome {
-        input.handle_key(&chord(key), &Keymap::defaults())
+        input.handle_key(&chord(key), &Keymap::defaults(), "")
     }
 
     #[test]
@@ -666,6 +695,81 @@ mod tests {
         assert!(input.consumes_key(&chord("q"), &keymap));
         assert!(input.consumes_key(&chord("ctrl+f"), &keymap));
         assert!(input.consumes_key(&chord("enter"), &keymap));
+    }
+
+    /// Presses `key` with `clipboard` as the in-app clipboard.
+    fn press_with(input: &mut TextInput, key: &str, clipboard: &str) -> InputOutcome {
+        input.handle_key(&chord(key), &Keymap::defaults(), clipboard)
+    }
+
+    /// `foo-[bar] baz`, the cursor after the `r`.
+    fn bar_selected() -> TextInput {
+        let mut input = input("foo-bar baz", 4);
+        press_all(&mut input, &["shift+right", "shift+right", "shift+right"]);
+        assert_eq!(input.selected_text(), Some("bar"));
+        input
+    }
+
+    #[test]
+    fn cut_copies_and_deletes_the_selection() {
+        let mut input = bar_selected();
+        assert_eq!(press(&mut input, "ctrl+x"), InputOutcome::Copied("bar".into()));
+        assert_eq!(
+            (input.value(), input.cursor(), input.selection()),
+            ("foo- baz", 4, None)
+        );
+    }
+
+    #[test]
+    fn cut_without_a_selection_copies_nothing_and_deletes_nothing() {
+        let mut input = input("foo-bar baz", 4);
+        assert!(input.consumes_key(&chord("ctrl+x"), &Keymap::defaults()));
+        assert_eq!(press(&mut input, "ctrl+x"), InputOutcome::Copied(String::new()));
+        assert_eq!((input.value(), input.cursor()), ("foo-bar baz", 4));
+    }
+
+    #[rstest]
+    fn copy_copies_the_selection_and_keeps_it(#[values("ctrl+c", "super+c")] key: &str) {
+        let mut input = bar_selected();
+        assert!(input.consumes_key(&chord(key), &Keymap::defaults()));
+        assert_eq!(press(&mut input, key), InputOutcome::Copied("bar".into()));
+        assert_eq!((input.value(), input.selection()), ("foo-bar baz", Some((4, 7))));
+    }
+
+    #[rstest]
+    fn copy_without_a_selection_isnt_the_inputs(#[values("ctrl+c", "super+c")] key: &str) {
+        let mut input = input("foo-bar baz", 4);
+        assert!(!input.consumes_key(&chord(key), &Keymap::defaults()));
+        assert_eq!(press(&mut input, key), InputOutcome::Ignored);
+        assert_eq!((input.value(), input.cursor()), ("foo-bar baz", 4));
+    }
+
+    #[test]
+    fn paste_types_the_clipboard_over_the_selection() {
+        let mut input = bar_selected();
+        assert_eq!(press_with(&mut input, "ctrl+v", "lazy"), InputOutcome::Changed);
+        assert_eq!(
+            (input.value(), input.cursor(), input.selection()),
+            ("foo-lazy baz", 8, None)
+        );
+        let _ = press_with(&mut input, "ctrl+v", "é");
+        assert_eq!((input.value(), input.cursor()), ("foo-lazyé baz", 9));
+    }
+
+    #[test]
+    fn paste_keeps_the_clipboards_line_breaks() {
+        let mut input = input("xy", 1);
+        let _ = press_with(&mut input, "ctrl+v", "a\nb");
+        assert_eq!((input.value(), input.cursor()), ("xa\nby", 4));
+    }
+
+    #[test]
+    fn a_filter_refuses_a_paste_that_cant_make_a_number() {
+        let mut input = numeric("12");
+        assert_eq!(press_with(&mut input, "ctrl+v", "3a"), InputOutcome::Changed);
+        assert_eq!((input.value(), input.cursor()), ("12", 2));
+        let _ = press_with(&mut input, "ctrl+v", "34");
+        assert_eq!((input.value(), input.cursor()), ("1234", 4));
     }
 
     #[test]

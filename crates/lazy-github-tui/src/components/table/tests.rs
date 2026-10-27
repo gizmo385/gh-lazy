@@ -126,7 +126,7 @@ fn chord(key: &str) -> KeyChord {
 }
 
 fn press<T: TableItem>(table: &mut SearchableTable<T>, keymap: &Keymap, key: &str) -> Handled<TableEvent<T::Key>> {
-    table.handle_key(&chord(key), keymap)
+    table.handle_key(&chord(key), keymap, "")
 }
 
 fn ids(table: &SearchableTable<Item>) -> Vec<i64> {

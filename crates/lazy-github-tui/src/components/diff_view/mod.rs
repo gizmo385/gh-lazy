@@ -80,6 +80,8 @@ const FILTER_BINDINGS: &[BindingId] = &[
     BindingId::TextualInputDeleteLeftAll,
     BindingId::TextualInputDeleteRightWord,
     BindingId::TextualInputDeleteRightAll,
+    BindingId::TextualInputCut,
+    BindingId::TextualInputCopy,
     BindingId::TextualInputPaste,
 ];
 
@@ -417,19 +419,26 @@ impl DiffView {
     }
 
     /// A key before the binding chain: the focused filter takes printable keys and its editing keys. `enter` leaves
-    /// it for the first shown file's first hunk (Py bug B59).
-    pub fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Option<Action> {
+    /// it for the first shown file's first hunk (Py bug B59). Paste types `clipboard`, and copy and cut hand the
+    /// text to the app's clipboard.
+    pub fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Option<Action> {
         let filter = &mut self.body.filter;
         if self.body.stop != DiffStop::Filter || !filter.consumes_key(key, keymap) {
             return None;
         }
-        match filter.handle_key(key, keymap) {
+        let mut action = Action::Consumed;
+        match filter.handle_key(key, keymap, clipboard) {
             InputOutcome::Changed => self.apply_filter(),
             InputOutcome::Submitted => self.leave_filter(),
+            // A cut changes the text, so the filter applies again.
+            InputOutcome::Copied(text) => {
+                self.apply_filter();
+                action = Action::Copy(text);
+            }
             InputOutcome::Ignored => {}
         }
         self.body.layouts.clear();
-        Some(Action::Consumed)
+        Some(action)
     }
 
     /// A bracketed paste: its first line goes into the filter while the filter has focus. Says whether it did.

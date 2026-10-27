@@ -276,6 +276,9 @@ pub(crate) struct Shared {
     pub(crate) current_repo: Option<Repository>,
     /// The current-directory repo, once git has answered.
     pub(crate) local_repo: LocalRepo,
+    /// The in-app clipboard (Textual's `App.clipboard`): the last text copied or cut anywhere in the app. Only `App`
+    /// writes it, when it applies `Action::Copy`.
+    pub(crate) clipboard: String,
     next_request: u64,
     config_dirty: bool,
 }
@@ -296,6 +299,7 @@ impl Shared {
             clock,
             current_repo: None,
             local_repo: LocalRepo::Unknown,
+            clipboard: String::new(),
             next_request: 1,
             config_dirty: false,
         }
@@ -355,6 +359,12 @@ impl<'a> Cx<'a> {
     /// The repo of the directory LazyGithub was launched in, as far as git has said.
     pub fn local_repo(&self) -> &LocalRepo {
         &self.shared.local_repo
+    }
+
+    /// The in-app clipboard, which `ctrl+v` in a text input pastes: the last text copied or cut in the app, empty
+    /// until then. The system clipboard is never read (PLAN §10, decision 10).
+    pub fn clipboard(&self) -> &str {
+        &self.shared.clipboard
     }
 
     /// Monotonic time from the app's clock.

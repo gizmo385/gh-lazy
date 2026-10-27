@@ -110,9 +110,15 @@ pub(super) trait DetailsBody {
     }
 
     /// A key before the binding chain, with focus inside tab `tab`'s content: a text input inside it (the diff
-    /// viewer's file filter) takes the keys it types and its editing keys, as the table's search box does. `None`
-    /// passes the key on.
-    fn handle_focused_key(&mut self, _tab: usize, _key: &KeyChord, _keymap: &Keymap) -> Option<Action> {
+    /// viewer's file filter) takes the keys it types and its editing keys, as the table's search box does, pasting
+    /// `clipboard`. `None` passes the key on.
+    fn handle_focused_key(
+        &mut self,
+        _tab: usize,
+        _key: &KeyChord,
+        _keymap: &Keymap,
+        _clipboard: &str,
+    ) -> Option<Action> {
         None
     }
 
@@ -415,8 +421,10 @@ impl DetailsPane {
     }
 
     /// [`DetailsBody::handle_focused_key`] in the active tab.
-    pub(super) fn handle_focused_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Option<Action> {
-        self.body.get_mut().handle_focused_key(self.tabs.active(), key, keymap)
+    pub(super) fn handle_focused_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Option<Action> {
+        self.body
+            .get_mut()
+            .handle_focused_key(self.tabs.active(), key, keymap, clipboard)
     }
 
     /// [`DetailsBody::handle_paste`] in the active tab.

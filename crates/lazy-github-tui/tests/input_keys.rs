@@ -1,10 +1,10 @@
 //! The text input does with each of its keys what Textual's `Input` does: `fixtures/generate_input_keys.py` plays key
-//! sequences on a headless Textual `Input` and dumps the value, cursor and selection after each key to
-//! `fixtures/input_keys.json`, and this replays them on `TextInput`.
+//! sequences on a headless Textual `Input` and dumps the value, cursor, selection and in-app clipboard after each key to
+//! `fixtures/input_keys.json`, and this replays them on `TextInput`, keeping the clipboard as `App` does.
 
 mod common;
 
-use lazy_github_tui::components::text_input::{INPUT_BINDINGS, TextInput};
+use lazy_github_tui::components::text_input::{INPUT_BINDINGS, InputOutcome, TextInput};
 use lazy_github_tui::keymap::{KeySpec, Keymap};
 use serde::Deserialize;
 
@@ -15,6 +15,7 @@ struct Sequence {
     name: String,
     value: String,
     cursor: usize,
+    clipboard: String,
     steps: Vec<Step>,
 }
 
@@ -25,6 +26,7 @@ struct Step {
     cursor: usize,
     /// Textual's `Selection(start, end)`: the anchor, then the cursor.
     selection: (usize, usize),
+    clipboard: String,
 }
 
 fn sequences() -> Vec<Sequence> {
@@ -38,14 +40,28 @@ fn the_input_matches_textual_key_by_key() {
         let mut input = TextInput::new("");
         input.set_value(sequence.value.as_str());
         input.set_cursor(sequence.cursor);
+        let mut clipboard = sequence.clipboard.clone();
         for (i, step) in sequence.steps.iter().enumerate() {
             let KeySpec::Chord(chord) = KeySpec::parse(&step.key) else {
                 panic!("{}: {:?} isn't a key", sequence.name, step.key);
             };
-            let _ = input.handle_key(&chord, &keymap);
+            // `App` applies `Action::Copy` by setting its clipboard.
+            if let InputOutcome::Copied(text) = input.handle_key(&chord, &keymap, &clipboard) {
+                clipboard = text;
+            }
             assert_eq!(
-                (input.value(), input.cursor(), (input.anchor(), input.cursor())),
-                (step.value.as_str(), step.cursor, step.selection),
+                (
+                    input.value(),
+                    input.cursor(),
+                    (input.anchor(), input.cursor()),
+                    clipboard.as_str()
+                ),
+                (
+                    step.value.as_str(),
+                    step.cursor,
+                    step.selection,
+                    step.clipboard.as_str()
+                ),
                 "{} step {i} ({})",
                 sequence.name,
                 step.key

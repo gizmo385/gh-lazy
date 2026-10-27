@@ -12,7 +12,7 @@ use crate::keymap::{BindingId, KeyChord, Keymap};
 
 /// What a section's table tells the screen, without its key type. On [`SectionEvent::Selected`] the owner reads
 /// its own table's `selected()`, which is the row the event was for.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum SectionEvent {
     /// The row under the cursor was chosen.
     Selected,
@@ -25,6 +25,8 @@ pub(super) enum SectionEvent {
         /// Items per page.
         per_page: u32,
     },
+    /// The search box copied or cut this text: [`TableEvent::Copied`].
+    Copied(String),
 }
 
 impl<K> From<TableEvent<K>> for SectionEvent {
@@ -40,6 +42,7 @@ impl<K> From<TableEvent<K>> for SectionEvent {
                 page,
                 per_page,
             },
+            TableEvent::Copied(text) => SectionEvent::Copied(text),
         }
     }
 }
@@ -56,7 +59,7 @@ fn erase<K>(handled: Handled<TableEvent<K>>) -> Handled<SectionEvent> {
 /// section's table. See [`SearchableTable`] for what each does.
 pub(super) trait SectionTable {
     fn on_binding(&mut self, id: BindingId) -> Handled<SectionEvent>;
-    fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Handled<SectionEvent>;
+    fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Handled<SectionEvent>;
     fn handle_mouse(&mut self, event: MouseEvent, area: Rect) -> Handled<SectionEvent>;
     fn handle_paste(&mut self, text: &str) -> Handled<SectionEvent>;
     fn search_captures_mouse(&self) -> bool;
@@ -82,8 +85,8 @@ impl<T: TableItem> SectionTable for SearchableTable<T> {
         erase(SearchableTable::on_binding(self, id))
     }
 
-    fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Handled<SectionEvent> {
-        erase(SearchableTable::handle_key(self, key, keymap))
+    fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Handled<SectionEvent> {
+        erase(SearchableTable::handle_key(self, key, keymap, clipboard))
     }
 
     fn handle_mouse(&mut self, event: MouseEvent, area: Rect) -> Handled<SectionEvent> {

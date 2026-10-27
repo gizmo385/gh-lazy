@@ -53,7 +53,7 @@ fn press(table: &mut SearchableTable<Pr>, key: &str) -> Handled<TableEvent<i64>>
     let KeySpec::Chord(chord) = KeySpec::parse(key) else {
         panic!("{key:?} isn't a key");
     };
-    table.handle_key(&chord, &Keymap::defaults())
+    table.handle_key(&chord, &Keymap::defaults(), "")
 }
 
 /// Presses `j` until the cursor is at `cursor`, asserting that no move on the way asks for a page.

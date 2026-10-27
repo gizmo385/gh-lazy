@@ -160,8 +160,8 @@ impl PrDiff {
         self.view_mut()?.on_binding(owner, id)
     }
 
-    pub(super) fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Option<Action> {
-        self.view_mut()?.handle_key(key, keymap)
+    pub(super) fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Option<Action> {
+        self.view_mut()?.handle_key(key, keymap, clipboard)
     }
 
     pub(super) fn handle_paste(&mut self, text: &str) -> bool {

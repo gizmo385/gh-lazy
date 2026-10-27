@@ -242,7 +242,7 @@ impl App {
                 return Some(top.handle_key(key, &cx).unwrap_or(Action::Consumed));
             }
         } else if let BaseScreen::Main(main) = &mut self.base
-            && let Some(action) = main.handle_focused_key(&chord, &self.shared.keymap)
+            && let Some(action) = main.handle_focused_key(&chord, &self.shared.keymap, &self.shared.clipboard)
         {
             return Some(action);
         }
@@ -439,6 +439,9 @@ impl App {
                 BindingId::AppOpenHelp => Some(Action::ToggleHelp),
                 other => Some(Action::Unimplemented(other)),
             },
+            // A text input takes `copy` before the chain when it has a selection. Reaching the input's link means it
+            // has none, so the key goes on to the next link (Textual's `SkipAction`).
+            owner if owner.types_text() && id == BindingId::TextualInputCopy => None,
             owner => {
                 let mut scratch = Outbox::default();
                 let cx = Cx::new(&mut self.shared, &mut scratch);
@@ -510,6 +513,10 @@ impl App {
             Action::QuitHint => out.actions.push_back(Action::Notify(quit_hint())),
             Action::Notify(toast) => self.toasts.push(toast),
             Action::Bell => out.effects.push(Effect::Bell),
+            Action::Copy(text) => {
+                self.shared.clipboard.clone_from(&text);
+                out.effects.push(Effect::SetClipboard(text));
+            }
             Action::Focus(target) => {
                 if let BaseScreen::Main(main) = &mut self.base {
                     main.try_focus(target);
@@ -934,6 +941,11 @@ impl App {
             _ => None,
         };
         [self.toasts.next_deadline(), main].into_iter().flatten().min()
+    }
+
+    /// The in-app clipboard: the last text copied or cut in a text input, which `ctrl+v` pastes.
+    pub fn clipboard(&self) -> &str {
+        &self.shared.clipboard
     }
 
     /// The toasts up now.

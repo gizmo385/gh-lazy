@@ -38,7 +38,7 @@ fn press(view: &mut DiffView, keys: &[&str]) {
         let KeySpec::Chord(chord) = KeySpec::parse(key) else {
             panic!("{key} isn't a key");
         };
-        if view.handle_key(&chord, &keymap).is_some() {
+        if view.handle_key(&chord, &keymap, "").is_some() {
             continue;
         }
         let mut chain = view.chain();

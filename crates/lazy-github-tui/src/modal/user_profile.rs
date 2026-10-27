@@ -205,6 +205,7 @@ impl UserProfileDialog {
         match handled {
             Handled::Ignored => None,
             Handled::Consumed | Handled::Event(TableEvent::LoadMore { .. }) => Some(Action::Consumed),
+            Handled::Event(TableEvent::Copied(text)) => Some(Action::Copy(text)),
             Handled::Event(TableEvent::Selected(key)) => {
                 let repo = self.body.table.as_ref()?.get(&key)?.repo.clone();
                 Some(Self::action(UserProfileAction::Pick(Box::new(repo))))

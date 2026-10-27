@@ -238,7 +238,7 @@ registry! {
     // `Tabs`: the details tab strip (#74).
     TextualTabsPrevious("textual.tabs.previous_tab", "left", "previous_tab", "Previous tab").hidden();
     TextualTabsNext("textual.tabs.next_tab", "right", "next_tab", "Next tab").hidden();
-    // `Input`: every single-line text input (#101, #250). Copy and cut come with #251.
+    // `Input`: every single-line text input (#101, #250, #251).
     TextualInputCursorLeft("textual.input.cursor_left", "left", "cursor_left", "Move cursor left").hidden();
     TextualInputCursorLeftSelect("textual.input.cursor_left_select", "shift+left", "cursor_left(True)", "Move cursor left and select")
         .hidden();
@@ -271,6 +271,8 @@ registry! {
         .hidden();
     TextualInputDeleteRightAll("textual.input.delete_right_all", "ctrl+k", "delete_right_all", "Delete all to the right")
         .hidden();
+    TextualInputCut("textual.input.cut", "ctrl+x", "cut", "Cut selected text").hidden();
+    TextualInputCopy("textual.input.copy", "ctrl+c,super+c", "copy", "Copy selected text").hidden();
     TextualInputPaste("textual.input.paste", "ctrl+v", "paste", "Paste text from the clipboard").hidden();
     // LazyGithub's `FileFilterInput`, the diff viewer's file filter (#236), takes `escape` in `on_key` before any
     // binding: it clears the filter and leaves it. Python has no id for it.

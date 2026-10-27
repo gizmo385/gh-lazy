@@ -92,6 +92,8 @@ pub enum TableEvent<K> {
         /// Items per page.
         per_page: u32,
     },
+    /// The search box copied or cut this text: the owner puts it on the clipboard.
+    Copied(String),
 }
 
 /// Whether the table took an input.
@@ -419,10 +421,10 @@ impl<T: TableItem> SearchableTable<T> {
 
     /// A key. While the search box has focus it goes to the box. Otherwise it's matched against [`TABLE_BINDINGS`]
     /// through `keymap`, each binding it fires tried in turn until one applies, and then against
-    /// [`SEARCHABLE_BINDINGS`]. A key that none takes is [`Handled::Ignored`].
-    pub fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Handled<TableEvent<T::Key>> {
+    /// [`SEARCHABLE_BINDINGS`]. A key that none takes is [`Handled::Ignored`]. `clipboard` is what the box pastes.
+    pub fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Handled<TableEvent<T::Key>> {
         if self.focus == TableFocus::Search {
-            return self.search_key(key, keymap);
+            return self.search_key(key, keymap, clipboard);
         }
         for id in keymap.matches_in(TABLE_BINDINGS, key) {
             let handled = self.on_binding(id);
@@ -720,9 +722,10 @@ impl<T: TableItem> SearchableTable<T> {
         Handled::Consumed
     }
 
-    fn search_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Handled<TableEvent<T::Key>> {
-        match self.search.input.handle_key(key, keymap) {
+    fn search_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Handled<TableEvent<T::Key>> {
+        match self.search.input.handle_key(key, keymap, clipboard) {
             InputOutcome::Changed => Handled::Consumed,
+            InputOutcome::Copied(text) => Handled::Event(TableEvent::Copied(text)),
             InputOutcome::Submitted => match self.apply_search() {
                 Some(event) => Handled::Event(event),
                 None => Handled::Consumed,

@@ -75,7 +75,7 @@ fn chord(key: &str) -> KeyChord {
 }
 
 fn press(table: &mut SearchableTable<Repo>, key: &str) -> Handled<TableEvent<i64>> {
-    table.handle_key(&chord(key), &Keymap::defaults())
+    table.handle_key(&chord(key), &Keymap::defaults(), "")
 }
 
 /// Types `text` one key per character, as a terminal sends it.
@@ -83,7 +83,7 @@ fn type_text(table: &mut SearchableTable<Repo>, text: &str) {
     for c in text.chars() {
         let key = KeyChord::new(crossterm::event::KeyCode::Char(c), crossterm::event::KeyModifiers::NONE);
         assert!(table.consumes_key(&key, &Keymap::defaults()), "{c:?}");
-        assert_eq!(table.handle_key(&key, &Keymap::defaults()), Handled::Consumed);
+        assert_eq!(table.handle_key(&key, &Keymap::defaults(), ""), Handled::Consumed);
     }
 }
 
@@ -140,17 +140,23 @@ fn a_rebound_search_key_opens_the_box() {
         .collect();
     let keymap = Keymap::new(&overrides);
     let mut table = table();
-    assert_eq!(table.handle_key(&chord("slash"), &keymap), Handled::Ignored);
-    assert_eq!(table.handle_key(&chord("question_mark"), &keymap), Handled::Consumed);
+    assert_eq!(table.handle_key(&chord("slash"), &keymap, ""), Handled::Ignored);
+    assert_eq!(
+        table.handle_key(&chord("question_mark"), &keymap, ""),
+        Handled::Consumed
+    );
     assert_eq!(table.focus(), TableFocus::Search);
     // Inside the box a printable search key types, and one that isn't printable stays the component's.
-    assert_eq!(table.handle_key(&chord("question_mark"), &keymap), Handled::Consumed);
+    assert_eq!(
+        table.handle_key(&chord("question_mark"), &keymap, ""),
+        Handled::Consumed
+    );
     assert_eq!(table.search_text(), "?");
     let overrides = [("common.table.search".to_owned(), "f2".to_owned())]
         .into_iter()
         .collect();
     let keymap = Keymap::new(&overrides);
-    assert_eq!(table.handle_key(&chord("f2"), &keymap), Handled::Consumed);
+    assert_eq!(table.handle_key(&chord("f2"), &keymap, ""), Handled::Consumed);
     assert_eq!(table.focus(), TableFocus::Search);
 }
 

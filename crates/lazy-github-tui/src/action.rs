@@ -23,6 +23,9 @@ pub enum Action {
     Notify(Toast),
     /// Ring the terminal bell (Textual's `App.bell`): a click on a disabled footer item.
     Bell,
+    /// Put this text on the in-app clipboard and offer it to the terminal's (Textual's `App.copy_to_clipboard`): a
+    /// text input's copy or cut.
+    Copy(String),
     /// Move focus to a target on the main screen, from a focus key or a click. The screen applies Python's rules:
     /// a section hidden by a runtime toggle or a hidden command log doesn't take focus.
     Focus(FocusTarget),

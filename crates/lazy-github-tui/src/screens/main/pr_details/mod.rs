@@ -241,9 +241,9 @@ impl DetailsBody for PullRequestDetails {
         }
     }
 
-    fn handle_focused_key(&mut self, tab: usize, key: &KeyChord, keymap: &Keymap) -> Option<Action> {
+    fn handle_focused_key(&mut self, tab: usize, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Option<Action> {
         match PrTab::at(tab) {
-            PrTab::Diff => self.diff.handle_key(key, keymap),
+            PrTab::Diff => self.diff.handle_key(key, keymap, clipboard),
             PrTab::Overview | PrTab::Conversation => None,
         }
     }

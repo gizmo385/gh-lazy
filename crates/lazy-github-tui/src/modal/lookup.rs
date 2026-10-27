@@ -265,9 +265,9 @@ impl<K: LookupKind> LookupDialog<K> {
         let before = self.input.value().to_owned();
         let outcome = edit(&mut self.input);
         match outcome {
-            InputOutcome::Changed if self.input.value() != before => self.validate(),
+            InputOutcome::Changed | InputOutcome::Copied(_) if self.input.value() != before => self.validate(),
             InputOutcome::Submitted => self.validate(),
-            InputOutcome::Changed | InputOutcome::Ignored => {}
+            InputOutcome::Changed | InputOutcome::Copied(_) | InputOutcome::Ignored => {}
         }
         outcome
     }
@@ -318,8 +318,9 @@ impl<K: LookupKind> Component for LookupDialog<K> {
     fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action> {
         let chord = KeyChord::from_event(&key)?;
         // `enter` in the input only checks it; looking up is `modal.submit` or the Lookup button.
-        match self.edit(|input| input.handle_key(&chord, cx.keymap())) {
+        match self.edit(|input| input.handle_key(&chord, cx.keymap(), cx.clipboard())) {
             InputOutcome::Changed | InputOutcome::Submitted => Some(Action::Consumed),
+            InputOutcome::Copied(text) => Some(Action::Copy(text)),
             InputOutcome::Ignored => None,
         }
     }

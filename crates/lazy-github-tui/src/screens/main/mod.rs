@@ -629,10 +629,10 @@ impl MainScreen {
     }
 
     /// Step 4 of key dispatch: a key the focused search box takes before the binding chain. `None` passes it on.
-    pub fn handle_focused_key(&mut self, key: &KeyChord, keymap: &Keymap) -> Option<Action> {
+    pub fn handle_focused_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Option<Action> {
         // An input inside the details content (the diff viewer's file filter) takes its keys the same way.
         if self.focus == FocusTarget::DetailsContent {
-            return self.details.handle_focused_key(key, keymap);
+            return self.details.handle_focused_key(key, keymap, clipboard);
         }
         let FocusTarget::Search(id) = self.focus else {
             return None;
@@ -641,7 +641,7 @@ impl MainScreen {
         if !table.consumes_key(key, keymap) {
             return None;
         }
-        let handled = table.handle_key(key, keymap);
+        let handled = table.handle_key(key, keymap, clipboard);
         // A submit moved the table's focus to the table.
         self.sync_table_focus(id);
         Some(table_outcome(id, handled).unwrap_or(Action::Consumed))
@@ -1128,6 +1128,7 @@ fn table_outcome(section: SectionId, handled: Handled<SectionEvent>) -> Option<A
             page,
             per_page,
         })),
+        Handled::Event(SectionEvent::Copied(text)) => Some(Action::Copy(text)),
         // The repos table's selections are taken before this; the other tables' select issues take theirs.
         Handled::Event(SectionEvent::Selected) => Some(Action::Unimplemented(BindingId::TableSelect)),
     }

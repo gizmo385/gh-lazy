@@ -467,7 +467,7 @@ impl TestApp {
                 Effect::CancelTimer(id) => {
                     self.timers.remove(id);
                 }
-                Effect::Bell | Effect::Quit => {}
+                Effect::Bell | Effect::SetClipboard(_) | Effect::Quit => {}
             }
             self.effects.push(effect);
         }
@@ -762,9 +762,10 @@ impl Component for TestDialog {
 
     fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action> {
         let chord = KeyChord::from_event(&key)?;
-        match self.input.handle_key(&chord, cx.keymap()) {
+        match self.input.handle_key(&chord, cx.keymap(), cx.clipboard()) {
             // Like Python's dialogs, `enter` in a single-line input doesn't submit.
             InputOutcome::Changed | InputOutcome::Submitted => Some(Action::Consumed),
+            InputOutcome::Copied(text) => Some(Action::Copy(text)),
             InputOutcome::Ignored => None,
         }
     }

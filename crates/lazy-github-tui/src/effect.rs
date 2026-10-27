@@ -75,6 +75,9 @@ pub enum Effect {
     CancelTimer(TimerId),
     /// Ring the terminal bell (Textual's `App.bell`). Terminals may beep, flash, or do nothing.
     Bell,
+    /// Ask the terminal to put this text on the system clipboard with OSC 52, as Textual's `copy_to_clipboard` does.
+    /// Terminals without OSC 52 ignore it.
+    SetClipboard(String),
     /// Stop the event loop after the current batch of events.
     Quit,
 }

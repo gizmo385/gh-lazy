@@ -1,9 +1,9 @@
 """Dumps what Textual's `Input` does with each of its keys, for the Rust text input's golden test: input_keys.json.
 
-A headless Textual app with one focused `Input` plays each sequence below: it sets the value and the cursor, then
-presses the keys one at a time and records `value`, `cursor_position` and `selection` (start, end) after each. The
-in-app clipboard is empty, so `ctrl+v` pastes nothing over the selection. `crates/lazy-github-tui/tests/input_keys.rs`
-replays the sequences on `TextInput`.
+A headless Textual app with one focused `Input` plays each sequence below: it sets the value, the cursor and the in-app
+clipboard (`App.copy_to_clipboard`), then presses the keys one at a time and records `value`, `cursor_position`,
+`selection` (start, end) and `App.clipboard` after each. `crates/lazy-github-tui/tests/input_keys.rs` replays the
+sequences on `TextInput`.
 
 Run from the repository root:
 
@@ -24,7 +24,8 @@ from textual.widgets import Input
 TEXT = "foo-bar baz"
 UNICODE = "héllo wörld"
 
-# (name, value, cursor, keys). Every key `INPUT_BINDINGS` binds is pressed at least once, with and without a selection.
+# (name, value, cursor, keys), with an empty clipboard. Every key `INPUT_BINDINGS` binds is pressed at least once, with
+# and without a selection.
 SEQUENCES: list[tuple[str, str, int, list[str]]] = [
     ("left-right", TEXT, 5, ["left", "left", "right", "home", "left", "end", "right"]),
     ("home-end-aliases", TEXT, 5, ["ctrl+a", "ctrl+e"]),
@@ -54,6 +55,18 @@ SEQUENCES: list[tuple[str, str, int, list[str]]] = [
     ("enter-keeps-selection", TEXT, 4, ["shift+left", "enter"]),
     ("unicode", UNICODE, 11, ["ctrl+shift+left", "shift+left", "x", "shift+home", "shift+right", "y", "ctrl+left"]),
     ("empty", "", 0, ["shift+left", "shift+right", "ctrl+shift+a", "shift+home", "shift+end", "backspace"]),
+    ("copy-and-paste", TEXT, 4, ["shift+right", "shift+right", "shift+right", "ctrl+c", "end", "ctrl+v", "ctrl+v"]),
+    ("copy-without-selection", TEXT, 4, ["ctrl+c", "super+c"]),
+    ("super-c-copies", TEXT, 0, ["ctrl+shift+right", "super+c", "ctrl+e", "ctrl+v"]),
+    ("cut-and-paste", TEXT, 7, ["shift+home", "ctrl+x", "end", "ctrl+v", "ctrl+v"]),
+    ("cut-without-selection", TEXT, 4, ["ctrl+x", "ctrl+v"]),
+    ("cut-unicode", UNICODE, 6, ["shift+end", "ctrl+x", "home", "ctrl+v"]),
+]
+
+# (name, value, cursor, clipboard, keys): pasting a clipboard copied elsewhere, line breaks and all.
+CLIPBOARD_SEQUENCES: list[tuple[str, str, int, str, list[str]]] = [
+    ("paste-clipboard", TEXT, 4, "XY", ["ctrl+v", "shift+left", "shift+left", "ctrl+v"]),
+    ("paste-line-breaks", TEXT, 4, "a\nb", ["ctrl+v", "ctrl+shift+a", "ctrl+v"]),
 ]
 
 
@@ -62,8 +75,13 @@ class InputApp(App[None]):
         yield Input()
 
 
-def state(input: Input) -> dict[str, Any]:
-    return {"value": input.value, "cursor": input.cursor_position, "selection": list(input.selection)}
+def state(app: App[None], input: Input) -> dict[str, Any]:
+    return {
+        "value": input.value,
+        "cursor": input.cursor_position,
+        "selection": list(input.selection),
+        "clipboard": app.clipboard,
+    }
 
 
 async def play() -> list[dict[str, Any]]:
@@ -73,15 +91,19 @@ async def play() -> list[dict[str, Any]]:
         input = app.query_one(Input)
         input.focus()
         await pilot.pause()
-        for name, value, cursor, keys in SEQUENCES:
+        plain = [(name, value, cursor, "", keys) for name, value, cursor, keys in SEQUENCES]
+        for name, value, cursor, clipboard, keys in plain + CLIPBOARD_SEQUENCES:
             input.value = value
             input.cursor_position = cursor
+            app.copy_to_clipboard(clipboard)
             await pilot.pause()
             steps = []
             for key in keys:
                 await pilot.press(key)
-                steps.append({"key": key} | state(input))
-            sequences.append({"name": name, "value": value, "cursor": cursor, "steps": steps})
+                steps.append({"key": key} | state(app, input))
+            sequences.append(
+                {"name": name, "value": value, "cursor": cursor, "clipboard": clipboard, "steps": steps}
+            )
     return sequences
 
 

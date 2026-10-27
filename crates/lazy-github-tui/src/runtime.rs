@@ -26,7 +26,7 @@ pub struct Runtime<G: Github> {
     timers: HashMap<TimerId, AbortHandle>,
     saver: ConfigSaver,
     cache_writer: CacheWriter,
-    /// The terminal, for the bell.
+    /// The terminal, for the bell and the clipboard.
     terminal: Box<dyn Write + Send>,
 }
 
@@ -48,7 +48,7 @@ impl<G: Github> Runtime<G> {
         }
     }
 
-    /// Sends the bell to `terminal` instead of stdout.
+    /// Sends the bell and the clipboard to `terminal` instead of stdout.
     #[cfg(test)]
     fn with_terminal(mut self, terminal: impl Write + Send + 'static) -> Self {
         self.terminal = Box::new(terminal);
@@ -138,6 +138,16 @@ impl<G: Github> Runtime<G> {
                     tracing::debug!("Failed to ring the bell: {err}");
                 }
             }
+            // Between frames too, for the same reason.
+            Effect::SetClipboard(text) => {
+                if let Err(err) = self
+                    .terminal
+                    .write_all(&osc52(&text))
+                    .and_then(|()| self.terminal.flush())
+                {
+                    tracing::debug!("Failed to write the clipboard: {err}");
+                }
+            }
             // `App` already stopped the loop; there's nothing to perform.
             Effect::Quit => {}
         }
@@ -159,6 +169,37 @@ impl<G: Github> Runtime<G> {
         self.saver.finish().await;
         self.cache_writer.finish().await;
     }
+}
+
+/// The OSC 52 sequence that asks the terminal to put `text` on the system clipboard: `ESC ] 52 ; c ; <base64> BEL`,
+/// as Textual's `App.copy_to_clipboard` writes it.
+fn osc52(text: &str) -> Vec<u8> {
+    let mut out = b"\x1b]52;c;".to_vec();
+    out.extend_from_slice(base64(text.as_bytes()).as_bytes());
+    out.push(0x07);
+    out
+}
+
+/// Standard base64 (RFC 4648): the `A-Z a-z 0-9 + /` alphabet, `=` padding, no line breaks. Small enough not to need
+/// a crate.
+fn base64(bytes: &[u8]) -> String {
+    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
+    for chunk in bytes.chunks(3) {
+        let b = [
+            chunk[0],
+            chunk.get(1).copied().unwrap_or(0),
+            chunk.get(2).copied().unwrap_or(0),
+        ];
+        let n = u32::from(b[0]) << 16 | u32::from(b[1]) << 8 | u32::from(b[2]);
+        // Each index is 6 bits, so always in the alphabet.
+        let sextet = |shift: u32| char::from(ALPHABET[((n >> shift) & 0x3f) as usize]);
+        out.push(sextet(18));
+        out.push(sextet(12));
+        out.push(if chunk.len() > 1 { sextet(6) } else { '=' });
+        out.push(if chunk.len() > 2 { sextet(0) } else { '=' });
+    }
+    out
 }
 
 /// One task that writes config snapshots in order. A snapshot that arrives while a save is running waits, and a newer
@@ -412,6 +453,34 @@ mod tests {
         runtime.execute(Effect::Bell);
         runtime.execute(Effect::Bell);
         assert_eq!(*terminal.0.lock().unwrap(), b"\x07\x07");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn set_clipboard_writes_osc_52_to_the_terminal() {
+        let dir = TempDir::new();
+        let (runtime, _rx) = runtime(FakeGithub::new(), &dir);
+        let terminal = SharedBuf::default();
+        let mut runtime = runtime.with_terminal(terminal.clone());
+        runtime.execute(Effect::SetClipboard("héllo".into()));
+        runtime.execute(Effect::SetClipboard(String::new()));
+        assert_eq!(*terminal.0.lock().unwrap(), b"\x1b]52;c;aMOpbGxv\x07\x1b]52;c;\x07");
+    }
+
+    #[test]
+    fn base64_follows_rfc_4648() {
+        // The RFC's test vectors.
+        for (text, encoded) in [
+            ("", ""),
+            ("f", "Zg=="),
+            ("fo", "Zm8="),
+            ("foo", "Zm9v"),
+            ("foob", "Zm9vYg=="),
+            ("fooba", "Zm9vYmE="),
+            ("foobar", "Zm9vYmFy"),
+        ] {
+            assert_eq!(base64(text.as_bytes()), encoded, "{text:?}");
+        }
+        assert_eq!(base64(&[0xfb, 0xff, 0xbf]), "+/+/");
     }
 
     #[tokio::test(flavor = "current_thread", start_paused = true)]

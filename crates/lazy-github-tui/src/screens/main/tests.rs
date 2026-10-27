@@ -1166,6 +1166,41 @@ fn a_drag_from_the_search_box_keeps_the_mouse_until_the_release() {
     assert_eq!(repos_table(&app).search_text(), "zxy baz");
 }
 
+/// The titles of the toasts up now.
+fn toast_titles(app: &TestApp) -> Vec<Option<String>> {
+    app.app().toasts().iter().map(|toast| toast.title.clone()).collect()
+}
+
+fn clipboard_writes(app: &TestApp) -> Vec<&str> {
+    app.effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::SetClipboard(text) => Some(text.as_str()),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn ctrl_c_in_the_search_box_copies_a_selection_or_else_hints_at_quitting() {
+    let mut app = with_repos(with_log(), base_repos());
+    app.press(&["/"]);
+    app.send(Event::Paste("foo-bar baz".into()));
+    // Nothing selected: the key isn't the box's, and reaches the app's `help_quit`.
+    app.press(&["ctrl+c"]);
+    assert_eq!(toast_titles(&app), [Some("Do you want to quit?".to_owned())]);
+    assert_eq!((app.app().clipboard(), clipboard_writes(&app)), ("", vec![]));
+    // With a selection the box copies it, keeps it, and nothing else sees the key.
+    app.press(&["shift+left", "shift+left", "shift+left", "ctrl+c"]);
+    assert_eq!(toast_titles(&app).len(), 1);
+    assert_eq!((app.app().clipboard(), clipboard_writes(&app)), ("baz", vec!["baz"]));
+    assert_eq!(focus(&app), SEARCH);
+    // Cut and paste it back twice.
+    app.press(&["ctrl+x", "ctrl+v", "ctrl+v"]);
+    assert_eq!(repos_table(&app).search_text(), "foo-bar bazbaz");
+    assert_eq!(clipboard_writes(&app), ["baz", "baz"]);
+}
+
 #[test]
 fn the_ring_has_the_box_before_its_table_while_it_is_shown() {
     let mut app = with_repos(Config::default(), base_repos());

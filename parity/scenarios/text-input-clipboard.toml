@@ -2,7 +2,7 @@ version = 1
 description = "Single-line input clipboard keys in the Lookup repository modal: focusing the input selects its text, ctrl+x cuts it, ctrl+v pastes the in-app clipboard back, and ctrl+v again pastes at the cursor"
 # The scenario can't send shift+arrow keys, so it selects through select-on-focus. Selection keys are checked by the
 # text-input-keys golden instead (#145).
-gate = false
+gate = true
 parity_rows = ["modals.text-input-clipboard"]
 
 [env]

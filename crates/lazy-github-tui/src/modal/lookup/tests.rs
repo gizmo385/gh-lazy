@@ -248,6 +248,32 @@ fn a_drag_from_the_input_keeps_the_mouse_outside_the_frame() {
     assert_eq!(lookups(&app), ["o/found"]);
 }
 
+#[test]
+fn text_cut_in_the_dialog_pastes_in_the_search_box() {
+    let mut app = opened();
+    type_text(&mut app, "o/found");
+    // Nothing selected: ctrl+c isn't the input's, and the dialog's `copy_text` has nothing to copy either.
+    app.press(&["ctrl+c"]);
+    assert!(toasts(&app).is_empty());
+    assert!(is_open(&app));
+    // Focusing the input again selects its text.
+    app.press(&["tab", "shift+tab", "ctrl+x"]);
+    assert_eq!(app.app().clipboard(), "o/found");
+    assert!(app.effects().contains(&Effect::SetClipboard("o/found".into())));
+    app.press(&["ctrl+v", "escape"]);
+    assert!(!is_open(&app));
+    app.press(&["slash", "ctrl+v"]);
+    let search = app
+        .app()
+        .main_screen()
+        .unwrap()
+        .repos()
+        .table()
+        .search_text()
+        .to_owned();
+    assert_eq!(search, "o/found");
+}
+
 // Submitting.
 
 #[test]
@@ -530,7 +556,7 @@ fn typed(text: &str) -> LookupDialog<RepoLookup> {
     let keymap = Keymap::defaults();
     for c in text.chars() {
         let chord = KeyChord::new(crossterm::event::KeyCode::Char(c), crossterm::event::KeyModifiers::NONE);
-        let _ = dialog.edit(|input| input.handle_key(&chord, &keymap));
+        let _ = dialog.edit(|input| input.handle_key(&chord, &keymap, ""));
     }
     dialog
 }

@@ -11,13 +11,13 @@ use super::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
 use crate::gh::GhError;
 use crate::models::{
     CheckRun, CheckState, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
-    Reactions, Repository, User, Workflow, WorkflowJob, WorkflowRun,
+    Reactions, Repository, Review, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments` and `comment_reactions` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -118,6 +118,13 @@ pub enum GithubCall {
     },
     /// [`Github::job_logs`], with the job's id.
     JobLogs(u64),
+    /// [`Github::pull_request_reviews`].
+    PullRequestReviews {
+        /// The repository's full name.
+        full_name: String,
+        /// The pull request's number.
+        number: u64,
+    },
 }
 
 #[derive(Debug, Default)]
@@ -160,6 +167,8 @@ struct State {
     comment_reactions: HashMap<(String, CommentRef), Result<Reactions, GhError>>,
     /// Keyed by job id.
     job_logs: HashMap<u64, Result<Option<String>, GhError>>,
+    /// Keyed by `full_name` and pull request number.
+    reviews: HashMap<(String, u64), Result<Vec<Review>, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -360,6 +369,19 @@ impl FakeGithub {
         self.lock()
             .comment_reactions
             .insert((full_name.to_owned(), comment), reactions);
+        self
+    }
+
+    /// `pull_request_reviews` returns `reviews` for pull request `number` of the repository named `full_name`, as
+    /// given: the caller leaves pending ones out and fills in the comments. Numbers not set have none.
+    #[must_use]
+    pub fn with_pull_request_reviews(
+        self,
+        full_name: &str,
+        number: u64,
+        reviews: Result<Vec<Review>, GhError>,
+    ) -> Self {
+        self.lock().reviews.insert((full_name.to_owned(), number), reviews);
         self
     }
 
@@ -657,6 +679,16 @@ impl Github for FakeGithub {
         .await
     }
 
+    async fn pull_request_reviews(&self, pr: &FullPullRequest) -> Result<Vec<Review>, GhError> {
+        let full_name = pr.pr.issue.repo.full_name.clone();
+        let key = (full_name.clone(), pr.number());
+        let call = GithubCall::PullRequestReviews {
+            full_name,
+            number: pr.number(),
+        };
+        self.respond(call, |state| canned_page(state.reviews.get(&key))).await
+    }
+
     async fn job_logs(&self, _repo: &Repository, job_id: u64) -> Result<Option<String>, GhError> {
         self.respond(GithubCall::JobLogs(job_id), |state| match state.job_logs.get(&job_id) {
             Some(Ok(logs)) => Ok(logs.clone()),
@@ -936,6 +968,40 @@ mod tests {
                 number: 5
             }
         );
+    }
+
+    #[tokio::test]
+    async fn reviews_by_repo_and_number() {
+        use crate::models::ReviewState;
+
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../parity/fixtures/pr-details/repos/parity-bot/pr-details/pulls/5/GET.json");
+        let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let pr = FullPullRequest::from_api(fixture["response"]["body"].clone(), &repo("a")).unwrap();
+        let other = FullPullRequest::from_api(fixture["response"]["body"].clone(), &repo("b")).unwrap();
+        let review = Review {
+            id: 1,
+            user: octocat(),
+            body: "ok".into(),
+            state: ReviewState::Approved,
+            submitted_at: None,
+            comments: Vec::new(),
+        };
+        let github = FakeGithub::new().with_pull_request_reviews("octocat/a", 5, Ok(vec![review.clone()]));
+        assert_eq!(github.pull_request_reviews(&pr).await.unwrap(), [review]);
+        assert!(github.pull_request_reviews(&other).await.unwrap().is_empty());
+        assert_eq!(
+            github.calls()[0],
+            GithubCall::PullRequestReviews {
+                full_name: "octocat/a".into(),
+                number: 5
+            }
+        );
+        let failing = FakeGithub::new().with_pull_request_reviews("octocat/a", 5, Err(GhError::NotInstalled));
+        assert!(matches!(
+            failing.pull_request_reviews(&pr).await,
+            Err(GhError::NotInstalled)
+        ));
     }
 
     #[tokio::test]

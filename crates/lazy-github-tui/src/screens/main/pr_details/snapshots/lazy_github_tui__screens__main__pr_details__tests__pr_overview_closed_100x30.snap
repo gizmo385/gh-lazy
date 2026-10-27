@@ -14,12 +14,12 @@ expression: "app.screen(100, 30)"
 │                                      ││                                                          │
 │                                      ││Opened on Tue Jan 20 09:00:00 2026                        │
 │                                      ││                                                          │
-│                                      ││                        Loading...                        │
+│                                      ││──────────────────────────────────────────────────────────│
 │                                      ││                                                          │
-│                                      ││                                                          │
-└──────────────────────────────────────┘│──────────────────────────────────────────────────────────│
+│                                      ││  Superseded by the new renderer.                         │
+└──────────────────────────────────────┘│                                                          │
 ┌─ [2] Pull Requests ──────────────────┐│                                                          │
-│ #  Status  Author         Title      ││  Superseded by the new renderer.                         │
+│ #  Status  Author         Title      ││                                                          │
 │ 5  open    parity-friend  Add a curso││                                                          │
 │ 4  closed  parity-bot     Drop the le││                                                          │
 │ 3  closed  parity-bot     Release 0.2││                                                          │

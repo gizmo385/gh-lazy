@@ -10,7 +10,7 @@ use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
 use lazy_github_core::models::{
     CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, Reactions,
-    RepoName, Repository, User, Workflow, WorkflowJob, WorkflowRun,
+    RepoName, Repository, Review, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 /// Something the runtime does on the app's behalf.
@@ -212,6 +212,11 @@ pub enum GithubRequest {
         /// The job's id.
         job_id: u64,
     },
+    /// [`Github::pull_request_reviews`].
+    PullRequestReviews {
+        /// The pull request whose reviews are listed.
+        pr: Box<FullPullRequest>,
+    },
 }
 
 /// The result of a [`GithubRequest`], in the variant of the same name.
@@ -259,6 +264,8 @@ pub enum GithubResponse {
     CommentReactions(Result<Reactions, GhError>),
     /// [`Github::job_logs`].
     JobLogs(Result<Option<String>, GhError>),
+    /// [`Github::pull_request_reviews`].
+    PullRequestReviews(Result<Vec<Review>, GhError>),
 }
 
 impl GithubRequest {
@@ -308,6 +315,9 @@ impl GithubRequest {
                 GithubResponse::CommentReactions(gh.comment_reactions(&repo, comment).await)
             }
             GithubRequest::JobLogs { repo, job_id } => GithubResponse::JobLogs(gh.job_logs(&repo, job_id).await),
+            GithubRequest::PullRequestReviews { pr } => {
+                GithubResponse::PullRequestReviews(gh.pull_request_reviews(&pr).await)
+            }
         }
     }
 }

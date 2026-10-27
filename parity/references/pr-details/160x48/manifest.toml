@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["overview", "overview-expanded", "conversation", "conversation-review-focused", "conversation-comment-focused", "overview-closed", "diff-error", "conversation-empty", "overview-merged", "fetch-error"]
 
 [inputs]
-scenario = "c9c04bcad483efe016a755372c531c03baba378d"
+scenario = "33163debfca9cbbbb91900e169f170ce225a1bb3"
 fixtures = "aa3270156f79a0655fc96fc28d5b1b56de8c430e"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "a42709a8f63e18b6ffbf05888ac70df13205cac1"

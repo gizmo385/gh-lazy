@@ -1,6 +1,7 @@
 //! A pull request's details: the Overview, Diff and Conversation tabs. Python's `PrOverviewTabPane`, `PrDiffTabPane`
 //! and `PrConversationTabPane`, which `MainViewPane.load_pull_request` puts in the details pane.
 
+mod conversation;
 mod diff;
 mod overview;
 
@@ -19,6 +20,7 @@ use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::Theme;
 
 use super::details::{BodyRenderCx, DetailsBody};
+pub(super) use conversation::PrConversation;
 pub(super) use diff::PrDiff;
 pub(super) use overview::PrOverview;
 #[cfg(test)]
@@ -71,12 +73,13 @@ impl PrTab {
     }
 }
 
-/// One pull request's tabs. The Conversation tab (#233, #234) is empty until it lands, and adds its body here.
+/// One pull request's tabs.
 #[derive(Debug)]
 pub(in crate::screens::main) struct PullRequestDetails {
     pr: Arc<FullPullRequest>,
     overview: PrOverview,
     diff: PrDiff,
+    conversation: PrConversation,
 }
 
 impl PullRequestDetails {
@@ -86,6 +89,7 @@ impl PullRequestDetails {
         Self {
             overview: PrOverview::new(Arc::clone(&pr), cx),
             diff: PrDiff::new(&pr, cx),
+            conversation: PrConversation::new(Arc::clone(&pr), cx),
             pr,
         }
     }
@@ -106,6 +110,12 @@ impl PullRequestDetails {
     pub(in crate::screens::main) fn diff(&self) -> &PrDiff {
         &self.diff
     }
+
+    /// The Conversation tab.
+    #[cfg(test)]
+    pub(in crate::screens::main) fn conversation(&self) -> &PrConversation {
+        &self.conversation
+    }
 }
 
 impl DetailsBody for PullRequestDetails {
@@ -113,21 +123,23 @@ impl DetailsBody for PullRequestDetails {
         PrTab::NAMES
     }
 
-    fn on_response(&mut self, id: RequestId, response: GithubResponse, _cx: &mut Cx<'_>) -> Option<GithubResponse> {
+    fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
         let response = self.overview.on_response(id, response)?;
-        self.diff.on_response(id, response)
+        let response = self.diff.on_response(id, response)?;
+        self.conversation.on_response(id, response, &mut self.overview, cx)
     }
 
     fn close(&self, cx: &mut Cx<'_>) {
         self.overview.close(cx);
         self.diff.close(cx);
+        self.conversation.close(cx);
     }
 
     fn scroll(&mut self, tab: usize, scroll: Scroll) {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.scroll(scroll),
             PrTab::Diff => self.diff.scroll(scroll),
-            PrTab::Conversation => {}
+            PrTab::Conversation => self.conversation.scroll(scroll),
         }
     }
 
@@ -135,7 +147,7 @@ impl DetailsBody for PullRequestDetails {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.wheel(wheel),
             PrTab::Diff => self.diff.wheel(wheel),
-            PrTab::Conversation => {}
+            PrTab::Conversation => self.conversation.wheel(wheel),
         }
     }
 
@@ -154,7 +166,7 @@ impl DetailsBody for PullRequestDetails {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.render(frame, area, cx),
             PrTab::Diff => self.diff.render(frame, area, cx),
-            PrTab::Conversation => {}
+            PrTab::Conversation => self.conversation.render(frame, area, cx),
         }
     }
 
@@ -162,7 +174,7 @@ impl DetailsBody for PullRequestDetails {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.next_deadline(now, animations),
             PrTab::Diff => self.diff.next_deadline(now, animations),
-            PrTab::Conversation => None,
+            PrTab::Conversation => self.conversation.next_deadline(now, animations),
         }
     }
 
@@ -170,7 +182,7 @@ impl DetailsBody for PullRequestDetails {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.focus_step(forward),
             PrTab::Diff => self.diff.focus_step(forward),
-            PrTab::Conversation => false,
+            PrTab::Conversation => self.conversation.focus_step(forward),
         }
     }
 
@@ -178,7 +190,7 @@ impl DetailsBody for PullRequestDetails {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.focus_first(),
             PrTab::Diff => self.diff.focus_first(),
-            PrTab::Conversation => {}
+            PrTab::Conversation => self.conversation.focus_first(),
         }
     }
 
@@ -186,7 +198,7 @@ impl DetailsBody for PullRequestDetails {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.focus_last(),
             PrTab::Diff => self.diff.focus_last(),
-            PrTab::Conversation => {}
+            PrTab::Conversation => self.conversation.focus_last(),
         }
     }
 
@@ -194,7 +206,7 @@ impl DetailsBody for PullRequestDetails {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.click(position),
             PrTab::Diff => self.diff.click(position),
-            PrTab::Conversation => {}
+            PrTab::Conversation => self.conversation.click(position),
         }
     }
 
@@ -202,7 +214,7 @@ impl DetailsBody for PullRequestDetails {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.chain(),
             PrTab::Diff => self.diff.chain(),
-            PrTab::Conversation => Vec::new(),
+            PrTab::Conversation => self.conversation.chain(),
         }
     }
 
@@ -210,13 +222,14 @@ impl DetailsBody for PullRequestDetails {
     /// built yet: the key is consumed, as in Python.
     fn on_binding(&mut self, tab: usize, owner: Owner, id: BindingId) -> Option<Action> {
         // The diff viewer's titles, pane, filter and keys.
-        if PrTab::at(tab) == PrTab::Diff {
-            return self.diff.on_binding(owner, id);
+        match PrTab::at(tab) {
+            PrTab::Diff => return self.diff.on_binding(owner, id),
+            // Its titles, blocks and reactions, and the replies and new comments that aren't built yet (#182).
+            PrTab::Conversation => return self.conversation.on_binding(owner, id),
+            PrTab::Overview => {}
         }
         match owner {
-            Owner::CollapsibleTitle | Owner::ListView => {
-                (PrTab::at(tab) == PrTab::Overview && self.overview.on_binding(id)).then_some(Action::Consumed)
-            }
+            Owner::CollapsibleTitle | Owner::ListView => self.overview.on_binding(id).then_some(Action::Consumed),
             _ => Some(Action::Unimplemented(id)),
         }
     }

@@ -3,15 +3,16 @@
 //! `PrOverviewTabPane`.
 //!
 //! The sections load after the pull request: the reactions and both checks requests start with the tab, and the
-//! reviews arrive with the Conversation tab's (#234). Inside the tab, focus walks the body itself, then each shown
+//! reviews arrive with the Conversation tab's. Inside the tab, focus walks the body itself, then each shown
 //! section's title and, when it's open, its list.
 
 use std::ops::Range;
 use std::sync::Arc;
 
 use lazy_github_core::gh::GhError;
+use lazy_github_core::models::review_summary;
 use lazy_github_core::models::{CheckRow, CheckRun, CheckState, CombinedStatus, FullPullRequest, Reactions};
-use lazy_github_core::models::{check_rows, overall_state};
+use lazy_github_core::models::{Review, ReviewState, ReviewSummary, ReviewVerdict, check_rows, overall_state};
 use lazy_github_core::{references, time};
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
@@ -50,7 +51,7 @@ pub(in crate::screens::main) enum SectionKind {
     Reactions,
     /// The head commit's statuses and check runs.
     Checks,
-    /// The latest review of each reviewer (#234).
+    /// The latest review of each reviewer.
     Reviews,
 }
 
@@ -105,6 +106,7 @@ enum SectionState {
 enum Loaded {
     Reactions(ReactionsSummary),
     Checks { overall: CheckState, rows: Vec<CheckRow> },
+    Reviews(ReviewSummary),
 }
 
 impl Section {
@@ -126,6 +128,7 @@ impl Section {
         match &self.state {
             SectionState::Loaded(Loaded::Reactions(summary)) => summary.rows.len(),
             SectionState::Loaded(Loaded::Checks { rows, .. }) => rows.len(),
+            SectionState::Loaded(Loaded::Reviews(summary)) => summary.rows.len(),
             SectionState::Loading | SectionState::Failed | SectionState::Hidden => 0,
         }
     }
@@ -357,6 +360,20 @@ impl PrOverview {
         };
         self.requests.checks = None;
         self.body.settle(SectionKind::Checks, state);
+    }
+
+    /// The Conversation tab's reviews arrived: Python's `add_reviews`. Each author's latest review shows as a row,
+    /// and without any reviews the section isn't shown.
+    pub(super) fn set_reviews(&mut self, reviews: &[Review]) {
+        let state = review_summary(reviews).map_or(SectionState::Hidden, |summary| {
+            SectionState::Loaded(Loaded::Reviews(summary))
+        });
+        self.body.settle(SectionKind::Reviews, state);
+    }
+
+    /// The Conversation tab's requests failed, which it logs: the section says so (Py bug B16).
+    pub(super) fn reviews_failed(&mut self) {
+        self.body.settle(SectionKind::Reviews, SectionState::Failed);
     }
 
     // Focus.
@@ -763,6 +780,18 @@ fn section_title(kind: SectionKind, state: &SectionState, theme: &Theme) -> Vec<
             title.push(check_state(*overall, theme));
             title
         }
+        (SectionKind::Reviews, SectionState::Loaded(Loaded::Reviews(summary))) => match summary.verdict {
+            ReviewVerdict::Mixed => plain("PR Reviews Summary"),
+            ReviewVerdict::Approved | ReviewVerdict::ChangesRequested => {
+                let state = match summary.verdict {
+                    ReviewVerdict::Approved => ReviewState::Approved,
+                    _ => ReviewState::ChangesRequested,
+                };
+                let mut title = plain("PR Reviews: ");
+                title.push(review_state(state, theme));
+                title
+            }
+        },
         (SectionKind::Reactions, SectionState::Failed) => plain("Reactions: failed to load"),
         (SectionKind::Checks, SectionState::Failed) => plain("Status checks: failed to load"),
         (SectionKind::Reviews, SectionState::Failed) => plain("PR Reviews: failed to load"),
@@ -781,6 +810,16 @@ fn section_items(state: &SectionState, theme: &Theme) -> Vec<Vec<TextRun>> {
             .map(|row| vec![TextRun::new(row.as_str(), Style::new())])
             .collect(),
         SectionState::Loaded(Loaded::Checks { rows, .. }) => rows.iter().map(|row| check_row(row, theme)).collect(),
+        SectionState::Loaded(Loaded::Reviews(summary)) => summary
+            .rows
+            .iter()
+            .map(|(login, state)| {
+                vec![
+                    TextRun::new(format!("{login}: "), Style::new()),
+                    review_state(*state, theme),
+                ]
+            })
+            .collect(),
         SectionState::Loading | SectionState::Failed | SectionState::Hidden => Vec::new(),
     }
 }
@@ -812,6 +851,18 @@ fn check_state(state: CheckState, theme: &Theme) -> TextRun {
         CheckState::Error => ("✘ Errored", Accent::Red),
     };
     TextRun::new(text, accent(theme, color))
+}
+
+/// Python's `ReviewState.to_display`: approved and changes requested with a mark in their color, the rest
+/// title-cased.
+fn review_state(state: ReviewState, theme: &Theme) -> TextRun {
+    match state {
+        ReviewState::Approved => TextRun::new("✓ Approved", accent(theme, Accent::GreenYellow)),
+        ReviewState::ChangesRequested => TextRun::new("✘ Changes Requested", accent(theme, Accent::Red)),
+        ReviewState::Commented | ReviewState::Dismissed | ReviewState::Pending => {
+            TextRun::new(state.title(), Style::new())
+        }
+    }
 }
 
 /// `1 commit`, `3 commits`.

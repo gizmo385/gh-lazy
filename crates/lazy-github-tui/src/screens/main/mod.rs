@@ -968,6 +968,8 @@ impl MainScreen {
             | Owner::CollapsibleTitle
             | Owner::ListView
             | Owner::CommentBlock
+            | Owner::PrConversation
+            | Owner::ConversationReview
             | Owner::Tree
             | Owner::RunJobs
             | Owner::DiffViewer

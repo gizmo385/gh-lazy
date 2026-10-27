@@ -381,6 +381,10 @@ impl DetailsPane {
                 tracing::debug!("Dropping the diff response {id} of a pull request no longer shown");
                 None
             }
+            GithubResponse::PullRequestReviews(_) => {
+                tracing::debug!("Dropping the reviews response {id} of a pull request no longer shown");
+                None
+            }
             other => Some(other),
         }
     }

@@ -8,45 +8,45 @@ expression: "app.screen(160, 48)"
 ┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐
 │ ★  Owner       Name        Private                           ││ Overview  Diff  Conversation                                                                 │
 │ ☆  parity-bot  pr-details  ✘                                 ││━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│                                                              ││  ▼ Review from parity-bot (Commented)                                                        │
 │                                                              ││                                                                                              │
+│                                                              ││      Looks close. One question inline.                                                       │
 │                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
+│                                                              ││    │ │ Should the cursor wrap at the end?                                                    │
+│                                                              ││    │ │                                                                                       │
+│                                                              ││    │ │ parity-bot • Mon Feb  2 10:00:00 2026                                                 │
+│                                                              ││    │ │                                                                                       │
+│                                                              ││    │ │▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│                                                              ││    │ │  ▶ 👀  1                                                                               │
+│                                                              ││    │ │                                                                                       │
+│                                                              ││    │                                                                                         │
+│                                                              ││    │ │ No, it stops at the last line.                                                        │
+│                                                              ││    │ │                                                                                       │
+│                                                              ││    │ │ parity-friend • Mon Feb  2 11:00:00 2026                                              │
+│                                                              ││    │ │                                                                                       │
+│                                                              ││    │                                                                                         │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
-│ #  Status  Author         Title                              ││                                                                                              │
-│ 5  open    parity-friend  Add a cursor to the viewer         ││                                                                                              │
+│ #  Status  Author         Title                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│ 5  open    parity-friend  Add a cursor to the viewer         ││  ▶ Review from parity-reviewer (Approved)                                                    │
 │ 4  closed  parity-bot     Drop the legacy renderer           ││                                                                                              │
-│ 3  closed  parity-bot     Release 0.2.0                      ││                                                                                              │
-│ 2  open    parity-friend  Try a faster parser                ││                                                                                              │
+│ 3  closed  parity-bot     Release 0.2.0                      ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│ 2  open    parity-friend  Try a faster parser                ││  ▶ Review from parity-carol (Dismissed)                                                      │
+│                                                              ││                                                                                              │
+│                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│                                                              ││  ▼ Review from parity-bot (Changes Requested)                                                │
+│                                                              ││                                                                                              │
+│                                                              ││      Please add a test for the cursor.                                                       │
+│                                                              ││                                                                                              │
+│                                                              ││    │ │ This needs a test.                                                                  ▅▅│
+│                                                              ││    │ │                                                                                       │
+│                                                              ││    │ │ parity-bot • Tue Feb  3 09:00:00 2026                                                 │
+│                                                              ││    │ │                                                                                       │
+│                                                              ││    │                                                                                         │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
+│                                                              ││ │ Rebased on main. @parity-bot ready for another look.                                       │
+│                                                              ││ │                                                                                            │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  ? Keybindings

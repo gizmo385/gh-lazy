@@ -1,6 +1,7 @@
 version = 1
 description = "PR details: selecting a PR shows the Overview, Diff and Conversation tabs; the Overview's header, collapsible reactions, checks and reviews; the Conversation's reviews, threads and comments; a closed PR with nothing; a PR that fails to load"
-# Rust needs the PR details issues (tracking issue in the parity matrix rows below) before this can gate.
+# Not gated yet: after PR 5's Diff tab, the Diff tab's deleted-file icon (`🗑️`) leaves its terminal row out of step with
+# ratatui's buffer, so the conversation captures' row 31 keeps stale cells and loses the Details box's right border.
 # The footer is left out of the cross-app checks: at 160 columns it isn't cut off, and Python spells
 # `^p Command Pallete` (Py bug B14), which Rust fixes on purpose.
 gate = false
@@ -93,6 +94,7 @@ wait = { text = "Review from parity-bot", timeout_ms = 5000 }
 
 [[step]]
 capture = "conversation"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # Tab: the conversation's scroll area, then the first review's title, which draws a border around the review.
 [[step]]
@@ -100,6 +102,7 @@ keys = ["tab", "tab"]
 
 [[step]]
 capture = "conversation-review-focused"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # Then the first comment of its thread.
 [[step]]
@@ -107,6 +110,7 @@ keys = ["tab"]
 
 [[step]]
 capture = "conversation-comment-focused"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # PR 4: closed, no checks, reactions or reviews, a diff too large to fetch, no conversation.
 [[step]]
@@ -145,6 +149,7 @@ wait = { text = "No reviews or comments available", timeout_ms = 5000 }
 
 [[step]]
 capture = "conversation-empty"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # PR 3: merged, checks passed, approved.
 [[step]]

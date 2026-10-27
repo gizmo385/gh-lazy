@@ -5,7 +5,10 @@ use std::path::{Path, PathBuf};
 use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::github::{FakeGithub, GithubCall};
-use lazy_github_core::models::{CheckRun, CombinedStatus, FullPullRequest, IssueListItem, Reactions, Repository};
+use lazy_github_core::models::{
+    CheckRun, CombinedStatus, CommentRef, FullPullRequest, IssueComment, IssueListItem, Reactions, Repository, Review,
+    ReviewState,
+};
 use serde_json::Value;
 
 use crate::action::Action;
@@ -53,7 +56,7 @@ fn issues_page() -> Vec<IssueListItem> {
         .collect()
 }
 
-fn server_error() -> GhError {
+pub(super) fn server_error() -> GhError {
     GhError::Http {
         status: 500,
         message: "Server Error".into(),
@@ -75,16 +78,53 @@ fn check_runs(number: u64) -> Vec<CheckRun> {
     serde_json::from_value(fixture_body(&path)["check_runs"].clone()).unwrap()
 }
 
+/// The submitted reviews of pull request `number`, each with its comments, as `pull_request_reviews` gives them.
+pub(super) fn reviews(number: u64) -> Vec<Review> {
+    let path = format!("repos/parity-bot/pr-details/pulls/{number}/reviews/GET.json");
+    let all: Vec<Review> = serde_json::from_value(fixture_body(&path)).unwrap();
+    all.into_iter()
+        .filter(|review| review.state != ReviewState::Pending)
+        .map(|mut review| {
+            let path = format!(
+                "repos/parity-bot/pr-details/pulls/{number}/reviews/{}/comments/GET.json",
+                review.id
+            );
+            review.comments = serde_json::from_value(fixture_body(&path)).unwrap();
+            review
+        })
+        .collect()
+}
+
+/// The comments on pull request `number`.
+pub(super) fn comments(number: u64) -> Vec<IssueComment> {
+    let path = format!("repos/parity-bot/pr-details/issues/{number}/comments/GET.json");
+    serde_json::from_value(fixture_body(&path)).unwrap()
+}
+
+/// The reactions on `comment`, from its own endpoint.
+pub(super) fn comment_reactions(comment: CommentRef) -> Reactions {
+    let kind = match comment {
+        CommentRef::Issue(_) => "issues",
+        CommentRef::Review(_) => "pulls",
+    };
+    let path = format!(
+        "repos/parity-bot/pr-details/{kind}/comments/{}/reactions/GET.page-1_per_page-100.json",
+        comment.id()
+    );
+    Reactions::from_api(fixture_body(&path)).unwrap()
+}
+
 /// The reactions on pull request `number`.
 fn reactions(number: u64) -> Reactions {
     let path = format!("repos/parity-bot/pr-details/issues/{number}/reactions/GET.json");
     Reactions::from_api(fixture_body(&path)).unwrap()
 }
 
-const NAME: &str = "parity-bot/pr-details";
+pub(super) const NAME: &str = "parity-bot/pr-details";
 
-/// The fake with the `pr-details` repo, its PRs, and their checks and reactions.
-fn gh() -> FakeGithub {
+/// The fake with the `pr-details` repo, its PRs, their checks, reactions, reviews and comments, and the comments'
+/// reactions.
+pub(super) fn gh() -> FakeGithub {
     let mut gh = FakeGithub::new()
         .with_repositories(vec![fixture_repo()])
         .with_issue_page(NAME, 1, Ok(issues_page()))
@@ -95,7 +135,16 @@ fn gh() -> FakeGithub {
             .with_pull_request(NAME, number, Ok(fixture_pr(number)))
             .with_commit_status(NAME, &sha, Ok(commit_status(number)))
             .with_check_runs(NAME, &sha, Ok(check_runs(number)))
-            .with_issue_reactions(NAME, number, Ok(reactions(number)));
+            .with_issue_reactions(NAME, number, Ok(reactions(number)))
+            .with_pull_request_reviews(NAME, number, Ok(reviews(number)))
+            .with_issue_comments(NAME, number, Ok(comments(number)));
+    }
+    for comment in [7001, 7002, 7003]
+        .map(CommentRef::Issue)
+        .into_iter()
+        .chain([9001, 9002, 9003].map(CommentRef::Review))
+    {
+        gh = gh.with_comment_reactions(NAME, comment, Ok(comment_reactions(comment)));
     }
     gh
 }
@@ -108,12 +157,12 @@ fn config() -> Config {
     config
 }
 
-fn settle(app: &mut TestApp) -> String {
+pub(super) fn settle(app: &mut TestApp) -> String {
     logs(|| futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once"))
 }
 
 /// The app with `parity-bot/pr-details` selected and its PRs listed, the PR table focused on PR 5.
-fn app() -> TestApp {
+pub(super) fn app() -> TestApp {
     let mut app = TestApp::with_github(config(), gh());
     app.press(&["enter"]);
     settle(&mut app);
@@ -122,7 +171,7 @@ fn app() -> TestApp {
 }
 
 /// The pull request requests among the app's effects, by number.
-fn pr_requests(app: &TestApp) -> Vec<(RequestId, u64)> {
+pub(super) fn pr_requests(app: &TestApp) -> Vec<(RequestId, u64)> {
     app.effects()
         .iter()
         .filter_map(|effect| match effect {
@@ -135,7 +184,7 @@ fn pr_requests(app: &TestApp) -> Vec<(RequestId, u64)> {
         .collect()
 }
 
-fn cancels(app: &TestApp) -> Vec<RequestId> {
+pub(super) fn cancels(app: &TestApp) -> Vec<RequestId> {
     app.effects()
         .iter()
         .filter_map(|effect| match effect {
@@ -145,11 +194,11 @@ fn cancels(app: &TestApp) -> Vec<RequestId> {
         .collect()
 }
 
-fn main(app: &TestApp) -> &crate::screens::main::MainScreen {
+pub(super) fn main(app: &TestApp) -> &crate::screens::main::MainScreen {
     app.app().main_screen().unwrap()
 }
 
-fn focus(app: &TestApp) -> FocusTarget {
+pub(super) fn focus(app: &TestApp) -> FocusTarget {
     main(app).focus()
 }
 
@@ -167,7 +216,7 @@ fn shown_pr(app: &TestApp) -> Option<u64> {
 }
 
 /// The row of the screen whose text contains `needle`.
-fn row_of(app: &mut TestApp, needle: &str) -> u16 {
+pub(super) fn row_of(app: &mut TestApp, needle: &str) -> u16 {
     let screen = app.screen(160, 48);
     let row = screen.lines().position(|line| line.contains(needle)).unwrap();
     u16::try_from(row).unwrap()
@@ -523,7 +572,7 @@ fn pr_details_tabs_switched() {
 // The Overview's sections (#232).
 
 /// The app on `gh` with the PR table focused on PR 5.
-fn app_on(gh: FakeGithub) -> TestApp {
+pub(super) fn app_on(gh: FakeGithub) -> TestApp {
     let mut app = TestApp::with_github(config(), gh);
     app.press(&["enter"]);
     settle(&mut app);
@@ -532,14 +581,14 @@ fn app_on(gh: FakeGithub) -> TestApp {
 }
 
 /// The app showing the PR `keys` select from the table, every request answered, the tab strip focused.
-fn shown(keys: &[&str]) -> TestApp {
+pub(super) fn shown(keys: &[&str]) -> TestApp {
     let mut app = app();
     app.press(keys);
     settle(&mut app);
     app
 }
 
-fn overview(app: &TestApp) -> &PrOverview {
+pub(super) fn overview(app: &TestApp) -> &PrOverview {
     main(app).details.pull_request().unwrap().overview()
 }
 
@@ -567,7 +616,7 @@ fn section_requests(app: &TestApp) -> Vec<(RequestId, GithubRequest)> {
 }
 
 /// Selects PR 5 and answers only its pull request request, so the sections are still loading.
-fn loading_sections() -> TestApp {
+pub(super) fn loading_sections() -> TestApp {
     let mut app = app();
     app.press(&["enter"]);
     let (id, _) = pr_requests(&app)[0];
@@ -631,11 +680,10 @@ fn sections_with_nothing_are_not_shown() {
     let mut app = shown(&["j", "enter"]);
     let screen = app.screen(160, 48);
     assert!(screen.contains("Drop the legacy renderer (#4)"), "{screen}");
-    for absent in ["Status checks", "Reactions", "👍"] {
+    for absent in ["Status checks", "Reactions", "👍", "Reviews"] {
         assert!(!screen.contains(absent), "{absent}: {screen}");
     }
-    // Only the reviews placeholder still loads (#234).
-    assert_eq!(screen.matches("Loading...").count(), 1, "{screen}");
+    assert!(!screen.contains("Loading..."), "{screen}");
     // The body is the only stop.
     app.press(&["tab"]);
     assert_eq!(
@@ -677,11 +725,11 @@ fn a_failed_checks_request_says_so_and_leaves_the_rest() {
     let out = settle(&mut app);
     assert_eq!(out.matches("ERROR Error loading status checks").count(), 1, "{out}");
     assert!(app.screen(160, 48).contains("▶ Status checks: failed to load "));
-    // The failed section's title is a stop; its empty list isn't, even open.
+    // The failed section's title is a stop; its empty list isn't, even open: the reviews title is next.
     app.press(&["tab", "tab", "tab"]);
     assert_eq!(stop(&app), OverviewStop::Title(SectionKind::Checks));
     app.press(&["enter", "tab"]);
-    assert_ne!(focus(&app), FocusTarget::DetailsContent);
+    assert_eq!(stop(&app), OverviewStop::Title(SectionKind::Reviews));
 }
 
 #[test]
@@ -760,17 +808,25 @@ fn the_focus_ring_walks_the_titles_and_open_lists() {
     assert_eq!(stop(&app), OverviewStop::List(SectionKind::Reactions));
     app.press(&["tab"]);
     assert_eq!(stop(&app), OverviewStop::Title(SectionKind::Checks));
-    // The reviews are still loading (#234), so the checks title is the last stop: focus moves on, round to the repos
-    // table as the command log is hidden.
+    app.press(&["tab", "enter", "tab"]);
+    assert_eq!(stop(&app), OverviewStop::List(SectionKind::Reviews));
+    // The reviews list is the last stop: focus moves on, round to the repos table as the command log is hidden.
     app.press(&["tab"]);
     assert_eq!(focus(&app), FocusTarget::Table(SectionId::Repos));
     // And back, from the last stop.
     app.press(&["shift+tab"]);
     assert_eq!(
         (focus(&app), stop(&app)),
-        (FocusTarget::DetailsContent, OverviewStop::Title(SectionKind::Checks))
+        (FocusTarget::DetailsContent, OverviewStop::List(SectionKind::Reviews))
     );
-    app.press(&["shift+tab", "shift+tab", "shift+tab", "shift+tab"]);
+    app.press(&[
+        "shift+tab",
+        "shift+tab",
+        "shift+tab",
+        "shift+tab",
+        "shift+tab",
+        "shift+tab",
+    ]);
     assert_eq!(focus(&app), FocusTarget::DetailsTabs);
 }
 

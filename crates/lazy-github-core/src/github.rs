@@ -17,7 +17,7 @@ use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts};
 use crate::models::{
     CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, Reactions,
-    Repository, User, Workflow, WorkflowJob, WorkflowRun,
+    Repository, Review, ReviewComment, ReviewState, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 #[cfg(any(test, feature = "test-util"))]
@@ -203,6 +203,14 @@ pub trait Github: Clone + Send + Sync + 'static {
         repo: &Repository,
         comment: CommentRef,
     ) -> impl Future<Output = Result<Reactions, GhError>> + Send;
+
+    /// The submitted reviews of `pr`, in API order, each with its inline comments: every page of
+    /// `GET .../pulls/{n}/reviews`, pending reviews dropped, then every page of each kept review's
+    /// `.../reviews/{id}/comments`, one review after another. All cached for `cache.default_ttl`.
+    ///
+    /// Fails as a whole, as Python's does, on any HTTP error status or `gh` failure of any of the requests, or with
+    /// [`GhError::Decode`] when a review or a comment doesn't decode.
+    fn pull_request_reviews(&self, pr: &FullPullRequest) -> impl Future<Output = Result<Vec<Review>, GhError>> + Send;
 
     /// The logs of job `job_id` in `repo`, as plain text, verbatim: GitHub answers with a redirect to the text, which
     /// `gh` follows. `None` for an empty body. Never cached.
@@ -708,6 +716,28 @@ impl GhCli {
         request
     }
 
+    /// `GET /repos/{owner}/{repo}/pulls/{number}/reviews`, without page parameters as Python sends it (gh then
+    /// follows each page's `Link: rel="next"`), cached for the default TTL.
+    fn pull_request_reviews_request(&self, repo: &Repository, number: u64) -> GhRequest {
+        let mut request = GhRequest::get(format!(
+            "/repos/{}/{}/pulls/{number}/reviews",
+            repo.owner.login, repo.name
+        ));
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
+    /// `GET /repos/{owner}/{repo}/pulls/{number}/reviews/{review_id}/comments`, without page parameters as Python
+    /// sends it, cached for the default TTL.
+    fn review_comments_request(&self, repo: &Repository, number: u64, review_id: u64) -> GhRequest {
+        let mut request = GhRequest::get(format!(
+            "/repos/{}/{}/pulls/{number}/reviews/{review_id}/comments",
+            repo.owner.login, repo.name
+        ));
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -868,9 +898,38 @@ impl Github for GhCli {
         reactions(&response?)
     }
 
+    async fn pull_request_reviews(&self, pr: &FullPullRequest) -> Result<Vec<Review>, GhError> {
+        let repo = &pr.pr.issue.repo;
+        let number = pr.number();
+        let runner = &self.inner.runner;
+        let reviews = runner.paginate(self.pull_request_reviews_request(repo, number)).await?;
+        with_review_comments(reviews, |review_id| {
+            runner.paginate(self.review_comments_request(repo, number, review_id))
+        })
+        .await
+    }
+
     async fn job_logs(&self, repo: &Repository, job_id: u64) -> Result<Option<String>, GhError> {
         job_log_text(self.inner.runner.request(Self::job_logs_request(repo, job_id)).await)
     }
+}
+
+/// `reviews` without the pending ones, each with the comments `fetch` gets for its id, one review after another. The
+/// first failure fails the whole list, and the reviews after it aren't asked about.
+async fn with_review_comments<F, Fut>(reviews: Vec<Review>, mut fetch: F) -> Result<Vec<Review>, GhError>
+where
+    F: FnMut(u64) -> Fut,
+    Fut: Future<Output = Result<Vec<ReviewComment>, GhError>>,
+{
+    let mut kept = Vec::with_capacity(reviews.len());
+    for mut review in reviews {
+        if review.state == ReviewState::Pending {
+            continue;
+        }
+        review.comments = fetch(review.id).await?;
+        kept.push(review);
+    }
+    Ok(kept)
 }
 
 /// A job logs response as the logs: the body verbatim, `None` when it's empty.
@@ -2455,5 +2514,146 @@ mod tests {
         // Python's B54 request: the review comment's id on the issue-comment endpoint is a 404, an error.
         let not_found = json_response("404 Not Found", r#"{"message":"Not Found"}"#).and_then(|r| reactions(&r));
         assert!(matches!(not_found, Err(GhError::Http { status: 404, .. })));
+    }
+
+    /// Pull request `number` of `parity-bot/pr-details`.
+    fn pr_details_pr(number: u64) -> FullPullRequest {
+        let body: serde_json::Value = parity_response(
+            "pr-details",
+            &format!("repos/parity-bot/pr-details/pulls/{number}/GET.json"),
+        )
+        .json()
+        .unwrap();
+        FullPullRequest::from_api(body, &pr_details_repo()).unwrap()
+    }
+
+    #[test]
+    fn pull_request_reviews_argv_pages_with_the_default_ttl() {
+        let mut config = Config::default();
+        config.cache.default_ttl = 42;
+        let gh = GhCli::new(GhCliOptions::from(&config));
+        let argv = |request: GhRequest| strings(request.argv(gh.runner().hostname(), true));
+        let expected = |path: &str| {
+            [
+                "api",
+                "-X",
+                "GET",
+                "--cache",
+                "42s",
+                "--paginate",
+                "-H",
+                "Accept: application/vnd.github+json",
+                path,
+            ]
+            .map(str::to_owned)
+        };
+        // Every page, the first one keyed as Python asks for it: no query.
+        assert_eq!(
+            argv(gh.pull_request_reviews_request(&pr_details_repo(), 5)),
+            expected("/repos/parity-bot/pr-details/pulls/5/reviews")
+        );
+        assert_eq!(
+            argv(gh.review_comments_request(&pr_details_repo(), 5, 501)),
+            expected("/repos/parity-bot/pr-details/pulls/5/reviews/501/comments")
+        );
+    }
+
+    /// The `pr-details` reviews of PR `number`, through [`with_review_comments`] over the fixtures, and the reviews
+    /// whose comments were asked for.
+    async fn fixture_reviews(number: u64) -> (Result<Vec<Review>, GhError>, Vec<u64>) {
+        let reviews: Vec<Review> = parity_response(
+            "pr-details",
+            &format!("repos/parity-bot/pr-details/pulls/{number}/reviews/GET.json"),
+        )
+        .json()
+        .unwrap();
+        let mut asked = Vec::new();
+        let result = with_review_comments(reviews, |id| {
+            asked.push(id);
+            let comments = parity_response(
+                "pr-details",
+                &format!("repos/parity-bot/pr-details/pulls/{number}/reviews/{id}/comments/GET.json"),
+            )
+            .json::<Vec<ReviewComment>>();
+            std::future::ready(comments)
+        })
+        .await;
+        (result, asked)
+    }
+
+    /// A review's id, author, state and comments (each its id and what it answers).
+    type ReviewOutline<'a> = (u64, &'a str, ReviewState, Vec<(u64, Option<u64>)>);
+
+    #[tokio::test]
+    async fn pull_request_reviews_decode_from_the_pr_details_fixtures() {
+        assert_eq!(pr_details_pr(5).number(), 5);
+        let (reviews, asked) = fixture_reviews(5).await;
+        let reviews = reviews.unwrap();
+        // The pending 506 is dropped, and its comments never asked for.
+        assert_eq!(asked, [501, 502, 503, 504, 505]);
+        let got: Vec<ReviewOutline<'_>> = reviews
+            .iter()
+            .map(|review| {
+                (
+                    review.id,
+                    review.user.login.as_str(),
+                    review.state,
+                    review
+                        .comments
+                        .iter()
+                        .map(|c| (c.comment.id, c.in_reply_to_id))
+                        .collect(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            got,
+            [
+                (501, "parity-bot", ReviewState::Commented, vec![(9001, None)]),
+                (502, "parity-friend", ReviewState::Commented, vec![(9002, Some(9001))]),
+                (503, "parity-reviewer", ReviewState::Approved, vec![]),
+                (504, "parity-carol", ReviewState::Dismissed, vec![]),
+                (505, "parity-bot", ReviewState::ChangesRequested, vec![(9003, None)]),
+            ]
+        );
+        assert_eq!(reviews[0].body, "Looks close. One question inline.");
+        assert_eq!(
+            reviews[0].comments[0].comment.body,
+            "Should the cursor wrap at the end?"
+        );
+        assert_eq!(reviews[0].comments[0].pull_request_review_id, 501);
+        assert_eq!(reviews[0].comments[0].path, "src/viewer.rs");
+
+        let (reviews, asked) = fixture_reviews(3).await;
+        let reviews = reviews.unwrap();
+        assert_eq!(asked, [301]);
+        assert_eq!(
+            (reviews[0].state, reviews[0].body.as_str()),
+            (ReviewState::Approved, "Ship it.")
+        );
+
+        let (reviews, asked) = fixture_reviews(4).await;
+        assert!(reviews.unwrap().is_empty());
+        assert!(asked.is_empty());
+    }
+
+    #[tokio::test]
+    async fn a_failed_comments_request_fails_the_reviews() {
+        let reviews: Vec<Review> =
+            parity_response("pr-details", "repos/parity-bot/pr-details/pulls/5/reviews/GET.json")
+                .json()
+                .unwrap();
+        let mut asked = Vec::new();
+        let result = with_review_comments(reviews, |id| {
+            asked.push(id);
+            std::future::ready(if id == 502 {
+                json_response("500 Internal Server Error", r#"{"message":"boom"}"#).and_then(|r| r.json())
+            } else {
+                Ok(Vec::new())
+            })
+        })
+        .await;
+        assert!(matches!(result, Err(GhError::Http { status: 500, .. })));
+        assert_eq!(asked, [501, 502]);
     }
 }

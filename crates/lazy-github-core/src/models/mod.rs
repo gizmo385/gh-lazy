@@ -11,6 +11,7 @@ mod pull_request;
 mod reaction;
 mod repo_name;
 mod repository;
+mod review;
 mod user;
 mod workflow;
 
@@ -24,5 +25,9 @@ pub use pull_request::{FullPullRequest, GitRef};
 pub use reaction::{Reaction, ReactionKind, Reactions};
 pub use repo_name::RepoName;
 pub use repository::{Repository, RepositoryPermission};
+pub use review::{
+    Review, ReviewComment, ReviewState, ReviewSummary, ReviewVerdict, Thread, summary as review_summary,
+    threads as review_threads,
+};
 pub use user::{FullUser, User};
 pub use workflow::{JobConclusion, JobStatus, Workflow, WorkflowJob, WorkflowRun, WorkflowState, WorkflowStep};

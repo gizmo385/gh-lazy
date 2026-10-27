@@ -159,6 +159,10 @@ pub enum Owner {
     ListView,
     /// A comment block with focus on it or inside it (`IssueCommentContainer`): reply.
     CommentBlock,
+    /// A PR's Conversation tab (`PrConversationTabPane`): new comment, in front of the content's scroll link.
+    PrConversation,
+    /// A review in the PR Conversation tab with focus on its title or inside it (`ReviewContainer`): reply.
+    ConversationReview,
     /// A focused tree inside the details content (Textual's `Tree`), such as a run's jobs.
     Tree,
     /// A run's Jobs tab (`WorkflowRunJobsTabPane`): view job logs, in front of the content's scroll link.
@@ -199,6 +203,8 @@ impl Owner {
             | Owner::DetailsButton
             | Owner::ListView
             | Owner::CommentBlock
+            | Owner::PrConversation
+            | Owner::ConversationReview
             | Owner::Tree
             | Owner::RunJobs
             | Owner::DiffViewer

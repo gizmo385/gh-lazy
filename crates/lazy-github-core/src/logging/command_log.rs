@@ -79,6 +79,7 @@ mod tests {
     #[test]
     fn app_events_at_info_and_above_arrive_in_order() {
         let (layer, mut rx, _) = command_log_layer(fixed_clock());
+        crate::test_log::keep_callsites_interested();
         tracing::subscriber::with_default(tracing_subscriber::registry().with(layer), || {
             tracing::info!(target: "lazy_github_tui", "Selected repo foo/bar");
             tracing::debug!(target: "lazy_github_tui", "not shown");
@@ -119,6 +120,7 @@ mod tests {
 
         let (layer, mut rx, _) = command_log_layer(fixed_clock());
         let err = Outer(std::io::Error::other("inner"));
+        crate::test_log::keep_callsites_interested();
         tracing::subscriber::with_default(tracing_subscriber::registry().with(layer), || {
             tracing::error!(
                 target: "lazy_github_core",
@@ -132,6 +134,7 @@ mod tests {
     #[test]
     fn a_full_channel_drops_lines_without_blocking() {
         let (layer, mut rx, dropped) = command_log_layer(fixed_clock());
+        crate::test_log::keep_callsites_interested();
         tracing::subscriber::with_default(tracing_subscriber::registry().with(layer), || {
             for n in 0..COMMAND_LOG_CAPACITY + 10 {
                 tracing::info!(target: "lazy_github_core", "line {n}");

@@ -255,6 +255,7 @@ mod tests {
                 Ok(())
             }
         }
+        lazy_github_core::test_log::keep_callsites_interested();
         let capture = Capture::default();
         let writer = capture.clone();
         let subscriber = tracing_subscriber::fmt()

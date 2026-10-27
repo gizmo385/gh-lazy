@@ -158,6 +158,7 @@ mod tests {
     struct Inner;
 
     fn render(f: impl FnOnce()) -> String {
+        crate::test_log::keep_callsites_interested();
         let out = CaptureWriter::default();
         let layer = tracing_subscriber::fmt::layer()
             .event_format(FileFormat { clock: fixed_clock() })

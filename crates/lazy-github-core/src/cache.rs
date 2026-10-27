@@ -298,6 +298,7 @@ mod tests {
                 Ok(())
             }
         }
+        crate::test_log::keep_callsites_interested();
         let capture = Capture::default();
         let writer = capture.clone();
         let subscriber = tracing_subscriber::fmt()

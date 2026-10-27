@@ -11,4 +11,6 @@ pub mod github;
 pub mod logging;
 pub mod models;
 pub mod references;
+#[cfg(any(test, feature = "test-util"))]
+pub mod test_log;
 pub mod time;

@@ -255,6 +255,7 @@ mod tests {
         let path = tmp.path().join("lazy_github.log");
         let writer = RotatingFileWriter::open(&path, 0, 0).unwrap();
         let (writer, guard) = tracing_appender::non_blocking(writer);
+        crate::test_log::keep_callsites_interested();
         let subscriber = tracing_subscriber::registry().with(file_layer(writer, fixed_clock(), filter));
         tracing::subscriber::with_default(subscriber, f);
         drop(guard); // Flushes the worker.
@@ -307,6 +308,7 @@ mod tests {
             .unwrap();
         let writer = RotatingFileWriter::open(&path, 5_000_000, 5).unwrap();
         let (writer, guard) = tracing_appender::non_blocking(writer);
+        crate::test_log::keep_callsites_interested();
         let subscriber = tracing_subscriber::registry().with(file_layer(writer, fixed_clock(), file_filter(None).0));
         tracing::subscriber::with_default(subscriber, || tracing::info!(target: "lazy_github", "from Rust"));
         drop(guard);

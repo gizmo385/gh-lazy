@@ -7,16 +7,19 @@ use lazy_github_core::gh::GhError;
 use lazy_github_core::models::Repository;
 use ratatui::Frame;
 use ratatui::layout::Rect;
-use ratatui::style::{Modifier, Style};
-use ratatui::text::{Line, Span};
+use ratatui::style::Modifier;
+use ratatui::text::Line;
 
 use crate::component::Cx;
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
-use crate::components::markdown::{self, Markdown, Rendered, TextRun};
+use crate::components::markdown::{Markdown, Rendered, TextRun};
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
-use crate::effect::{Effect, GithubRequest, RequestId};
+use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::theme::{Accent, Theme};
+
+use super::details::DetailsBody;
+use super::overview_text::{HeaderStyles, accent, append, push_label, push_rule};
 
 /// What shows below the rule when there's no README, or it couldn't be fetched: Python's `*No README found.*`.
 static NO_README: LazyLock<Markdown> = LazyLock::new(|| Markdown::parse("*No README found.*"));
@@ -113,6 +116,38 @@ impl RepoOverview {
     }
 }
 
+impl DetailsBody for RepoOverview {
+    fn tab_names(&self) -> &'static [&'static str] {
+        &["Repo Overview"]
+    }
+
+    fn on_response(&mut self, id: RequestId, response: GithubResponse, _cx: &mut Cx<'_>) -> Option<GithubResponse> {
+        match response {
+            GithubResponse::RepoReadme(result) if self.pending() == Some(id) => {
+                self.on_readme(result);
+                None
+            }
+            other => Some(other),
+        }
+    }
+
+    fn close(&self, cx: &mut Cx<'_>) {
+        RepoOverview::close(self, cx);
+    }
+
+    fn scroll(&mut self, _tab: usize, scroll: Scroll) {
+        RepoOverview::scroll(self, scroll);
+    }
+
+    fn wheel(&mut self, _tab: usize, wheel: Wheel) {
+        RepoOverview::wheel(self, wheel);
+    }
+
+    fn render(&mut self, _tab: usize, frame: &mut Frame<'_>, area: Rect, theme: &Theme, _focused: bool) {
+        RepoOverview::render(self, frame, area, theme);
+    }
+}
+
 impl Layout for Body {
     fn layout(&mut self, width: u16, theme: &Theme) -> &Rendered {
         let Body { repo, readme, layouts } = self;
@@ -126,8 +161,7 @@ fn overview(repo: &Repository, readme: &Readme, width: u16, theme: &Theme) -> Re
     if width == 0 {
         return out;
     }
-    let text = Style::new().fg(theme.color(theme.palette.foreground, theme.background()));
-    let link = text.add_modifier(Modifier::UNDERLINED);
+    let HeaderStyles { text, link } = HeaderStyles::new(theme);
 
     let mut title = vec![
         TextRun::link(
@@ -138,43 +172,38 @@ fn overview(repo: &Repository, readme: &Readme, width: u16, theme: &Theme) -> Re
         TextRun::new(" • ", text),
     ];
     title.push(if repo.private {
-        TextRun::new("Private", Style::new().fg(theme.accent(Accent::Red)))
+        TextRun::new("Private", accent(theme, Accent::Red))
     } else {
-        TextRun::new("Public", Style::new().fg(theme.accent(Accent::GreenYellow)))
+        TextRun::new("Public", accent(theme, Accent::GreenYellow))
     });
     if repo.archived == Some(true) {
         title.push(TextRun::new(" • ", text));
-        title.push(TextRun::new("Archived", Style::new().fg(theme.accent(Accent::Orchid))));
+        title.push(TextRun::new("Archived", accent(theme, Accent::Orchid)));
     }
-    append(&mut out, markdown::wrap_text(&title, width));
+    push_label(&mut out, &title, width);
 
     let owner = &repo.owner;
     let owned_by = [
         TextRun::new("Owned by ", text),
         TextRun::link(owner.login.clone(), link, owner.html_url.clone()),
     ];
-    append(&mut out, markdown::wrap_text(&owned_by, width));
+    push_label(&mut out, &owned_by, width);
 
     if let Some(branch) = repo.default_branch.as_deref().filter(|branch| !branch.is_empty()) {
         let branch_line = [
             TextRun::new("Default branch: ", text),
             TextRun::new(branch, text.add_modifier(Modifier::BOLD)),
         ];
-        append(&mut out, markdown::wrap_text(&branch_line, width));
+        push_label(&mut out, &branch_line, width);
     }
 
     // Literal text, not markup (Py bug B48).
     if let Some(description) = repo.description.as_deref().filter(|d| !d.is_empty()) {
         out.lines.push(Line::default());
-        append(&mut out, markdown::wrap_text(&[TextRun::new(description, text)], width));
+        push_label(&mut out, &[TextRun::new(description, text)], width);
     }
 
-    // `Rule { color: $secondary; margin: 1 0 }`.
-    let rule = Style::new().fg(theme.color(theme.palette.secondary, theme.background()));
-    out.lines.push(Line::default());
-    out.lines
-        .push(Line::from(Span::styled("─".repeat(usize::from(width)), rule)));
-    out.lines.push(Line::default());
+    push_rule(&mut out, width, theme);
 
     match readme {
         Readme::Loading(_) => {}
@@ -182,16 +211,6 @@ fn overview(repo: &Repository, readme: &Readme, width: u16, theme: &Theme) -> Re
         Readme::Missing => append(&mut out, NO_README.layout(width, theme)),
     }
     out
-}
-
-/// Adds `more` below what's in `out`, moving its links down with it.
-fn append(out: &mut Rendered, more: Rendered) {
-    let shift = out.lines.len();
-    out.links.extend(more.links.into_iter().map(|mut span| {
-        span.row += shift;
-        span
-    }));
-    out.lines.extend(more.lines);
 }
 
 #[cfg(test)]
@@ -353,7 +372,6 @@ mod app_tests {
 
     use super::super::repos;
     use super::*;
-    use crate::effect::GithubResponse;
     use crate::event::Event;
     use crate::screens::main::{FocusTarget, SectionId};
     use crate::test_util::{TestApp, buffer_to_styled_string, logs};

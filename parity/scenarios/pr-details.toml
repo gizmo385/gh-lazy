@@ -1,6 +1,8 @@
 version = 1
 description = "PR details: selecting a PR shows the Overview, Diff and Conversation tabs; the Overview's header, collapsible reactions, checks and reviews; the Conversation's reviews, threads and comments; a closed PR with nothing; a PR that fails to load"
 # Rust needs the PR details issues (tracking issue in the parity matrix rows below) before this can gate.
+# The footer is left out of the cross-app checks: at 160 columns it isn't cut off, and Python spells
+# `^p Command Pallete` (Py bug B14), which Rust fixes on purpose.
 gate = false
 parity_rows = [
     "pull-requests.select",
@@ -21,6 +23,8 @@ parity_rows = [
     "pull-requests.comment-reactions",
     "pull-requests.diff-tab",
     "main-layout.details-title",
+    "main-layout.details-tab-switching",
+    "markdown-links.reference-expansion",
     "toasts.error-fetching-pr",
 ]
 sizes = [[160, 48]]
@@ -67,7 +71,7 @@ wait = { text = "👍 2", timeout_ms = 5000 }
 # underline zero-width then (#209), so the tab names are in [expect] `contains`.
 [[step]]
 capture = "overview"
-checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Tab: the body, then the reactions title; enter opens it. (Further stops depend on load order in Python, so the
 # scenario stops here; the unit tests cover the rest of the ring.)
@@ -79,7 +83,7 @@ wait = { text = "👀: parity-bot", timeout_ms = 5000 }
 
 [[step]]
 capture = "overview-expanded"
-checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [[step]]
 keys = ["5", "right", "right"]
@@ -119,7 +123,7 @@ wait = { text = "Drop the legacy renderer (#4)", timeout_ms = 15000 }
 
 [[step]]
 capture = "overview-closed"
-checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [[step]]
 keys = ["right"]
@@ -161,7 +165,7 @@ wait = { text = "Status checks:", timeout_ms = 5000 }
 
 [[step]]
 capture = "overview-merged"
-checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # PR 2 fails to load: a toast, and the details keep showing PR 3.
 [[step]]

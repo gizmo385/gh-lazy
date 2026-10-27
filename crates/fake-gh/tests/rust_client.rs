@@ -592,3 +592,45 @@ async fn child_pull_request_diffs() {
     assert!(matches!(too_large, DiffFetchError::TooLarge), "{too_large:?}");
     assert_eq!(too_large.message(), "Diff too large");
 }
+
+#[test]
+fn pull_requests_are_cached_for_the_default_ttl() {
+    let log = run_child("child_pull_requests", "logged-in", &["pr-details", "base"]);
+    assert_eq!(log.len(), 5, "{log:#?}");
+    assert!(log.iter().all(|line| line["miss"] == false), "{log:#?}");
+    assert_eq!(
+        strings(&log[0]["argv"]),
+        [
+            "api",
+            "-i",
+            "-X",
+            "GET",
+            "--cache",
+            "600s",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "/repos/parity-bot/pr-details/pulls/5"
+        ]
+    );
+    let statuses: Vec<&Value> = log.iter().map(|line| &line["status"]).collect();
+    assert_eq!(statuses, [200, 200, 200, 200, 500]);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_pull_requests() {
+    let Some(gh) = client() else { return };
+    let repo = pr_details_repo();
+    let open = gh.pull_request(&repo, 5).await.unwrap();
+    assert_eq!(open.pr.issue.title, "Add a cursor to the viewer");
+    assert_eq!(open.pr.issue.repo, repo);
+    assert_eq!((open.commits, open.changed_files), (3, 5));
+    assert_eq!(open.merged_at, None);
+    let closed = gh.pull_request(&repo, 4).await.unwrap();
+    assert!(closed.pr.issue.closed_at.is_some() && closed.merged_at.is_none());
+    let merged = gh.pull_request(&repo, 3).await.unwrap();
+    assert!(merged.merged_at.is_some());
+    assert_eq!(gh.pull_request(&repo, 9).await.unwrap().head.name, "clamp");
+    let error = gh.pull_request(&repo, 2).await.unwrap_err();
+    assert!(matches!(error, GhError::Http { status: 500, .. }), "{error:?}");
+}

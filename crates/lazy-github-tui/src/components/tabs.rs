@@ -1,5 +1,6 @@
 //! A tab strip drawn like Textual's `Tabs`: a label row, and under it an underline bar with the active tab's segment
-//! highlighted. Focused, the active label takes the block cursor and the bar brightens. M2 adds switching tabs.
+//! highlighted. Focused, the active label takes the block cursor and the bar brightens. `left` and `right` switch
+//! tabs, wrapping, and a click on a label selects it, as in Textual.
 
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
@@ -37,6 +38,47 @@ impl TabStrip {
     /// The active tab's index.
     pub fn active(&self) -> usize {
         self.active
+    }
+
+    /// Makes tab `index` the active one, and says whether that changed anything. An index past the end does nothing.
+    pub fn select(&mut self, index: usize) -> bool {
+        if index >= self.names.len() || index == self.active {
+            return false;
+        }
+        self.active = index;
+        true
+    }
+
+    /// Activates the next tab, wrapping from the last to the first (`textual.tabs.next_tab`). Says whether the active
+    /// tab changed: with one tab or none, it doesn't.
+    pub fn select_next(&mut self) -> bool {
+        match self.names.len() {
+            0 => false,
+            len => self.select((self.active + 1) % len),
+        }
+    }
+
+    /// Activates the previous tab, wrapping from the first to the last (`textual.tabs.previous_tab`). Says whether the
+    /// active tab changed.
+    pub fn select_previous(&mut self) -> bool {
+        match self.names.len() {
+            0 => false,
+            len => self.select((self.active + len - 1) % len),
+        }
+    }
+
+    /// The tab whose label, padding included, is drawn `column` cells right of the strip's left edge.
+    pub fn hit(&self, column: u16) -> Option<usize> {
+        let column = usize::from(column);
+        let mut x = 0;
+        for (i, name) in self.names.iter().enumerate() {
+            let width = Span::raw(name.as_str()).width() + 2;
+            if (x..x + width).contains(&column) {
+                return Some(i);
+            }
+            x += width;
+        }
+        None
     }
 
     /// Whether there are no tabs, so the strip can't take focus.
@@ -203,6 +245,42 @@ mod tests {
         assert_eq!(buffer_to_string(&buffer), " A  Bee\n━━━╸━━━╺━━━━\n");
         assert_eq!(buffer[(1, 0)].fg, ratatui::style::Color::Rgb(0x79, 0x79, 0x79));
         assert_eq!(buffer[(4, 1)].fg, ratatui::style::Color::Rgb(0x01, 0x78, 0xd4));
+    }
+
+    #[test]
+    fn next_and_previous_wrap() {
+        let mut strip = TabStrip::new(["Overview", "Diff", "Conversation"]);
+        assert!(strip.select_next());
+        assert_eq!(strip.active(), 1);
+        assert!(strip.select_next());
+        assert!(strip.select_next());
+        assert_eq!(strip.active(), 0);
+        assert!(strip.select_previous());
+        assert_eq!(strip.active(), 2);
+        assert!(strip.select(1));
+        assert!(!strip.select(1));
+        assert!(!strip.select(3));
+        assert_eq!(strip.active(), 1);
+    }
+
+    #[test]
+    fn one_tab_or_none_never_changes() {
+        let mut one = TabStrip::new(["Introduction"]);
+        assert!(!one.select_next());
+        assert!(!one.select_previous());
+        assert_eq!(one.active(), 0);
+        let mut none = TabStrip::new(Vec::<String>::new());
+        assert!(!none.select_next());
+        assert!(!none.select_previous());
+        assert_eq!(none.hit(0), None);
+    }
+
+    #[test]
+    fn hits_cover_each_label_and_its_padding() {
+        // ` Overview  Diff  Conversation `
+        let strip = TabStrip::new(["Overview", "Diff", "Conversation"]);
+        let hits: Vec<Option<usize>> = [0, 9, 10, 15, 16, 29, 30].into_iter().map(|x| strip.hit(x)).collect();
+        assert_eq!(hits, [Some(0), Some(0), Some(1), Some(1), Some(2), Some(2), None]);
     }
 
     #[test]

@@ -1060,6 +1060,7 @@ dependencies = [
  "form_urlencoded",
  "indexmap",
  "jiff",
+ "regex",
  "rstest",
  "serde",
  "serde_json",

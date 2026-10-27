@@ -6,6 +6,8 @@ mod issue_lists;
 mod issues;
 pub mod layout;
 mod list;
+mod overview_text;
+mod pr_details;
 mod profile;
 mod pull_requests;
 mod repo_overview;
@@ -16,7 +18,8 @@ mod workflows;
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::AppearanceSettings;
-use lazy_github_core::models::Repository;
+use lazy_github_core::gh::GhError;
+use lazy_github_core::models::{FullPullRequest, Repository};
 use ratatui::Frame;
 use ratatui::layout::{Margin, Position, Rect};
 use ratatui::style::Style;
@@ -30,16 +33,18 @@ use crate::components::hatch::Hatch;
 use crate::components::info::{INFO_BINDINGS, Scroll};
 use crate::components::table::{Handled, SEARCHABLE_BINDINGS, TABLE_BINDINGS, TableFocus};
 use crate::components::text_input::{self, INPUT_BINDINGS};
-use crate::effect::{GithubResponse, RequestId};
+use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::modal::{LookupDialog, RepoLookup};
 use crate::options::AppOptions;
 use crate::theme::Theme;
 use crate::toast::Toast;
 
-use details::DetailsPane;
+pub use details::TabSwitch;
+use details::{DetailsPane, details_title};
 use issue_lists::IssueLists;
 use layout::{LayoutInput, layout};
+pub use pr_details::PullRequestTarget;
 use profile::ProfileFetch;
 pub use profile::ProfileOrigin;
 pub use repos::{RepoCells, ReposSection};
@@ -242,6 +247,16 @@ pub struct MainScreen {
     table_areas: [Option<Rect>; 4],
     /// Where each focus target was drawn last, for clicks: the interiors of the boxes, not their borders.
     hits: Vec<(Rect, FocusTarget)>,
+    /// The selected pull request's request, while it's in flight. Only the latest selection is ever shown.
+    pending_pr: Option<PendingPullRequest>,
+}
+
+/// A pull request selection waiting for the full pull request.
+#[derive(Debug, Clone, Copy)]
+struct PendingPullRequest {
+    id: RequestId,
+    /// Whether the tab strip takes focus once it shows.
+    focus: bool,
 }
 
 /// The main screen's own actions.
@@ -267,6 +282,18 @@ pub enum MainAction {
     ViewProfile(ProfileOrigin),
     /// The User profile dialog closed, with the repo picked there, if any.
     ProfilePicked(ProfileOrigin, Option<Box<Repository>>),
+    /// Show a pull request's details: fetch it first if `target` is a table row. `focus` moves focus to the tab
+    /// strip once they show (Python's `focus_pr_details`, false only for M4's preload, #198).
+    OpenPullRequest {
+        /// The pull request.
+        target: PullRequestTarget,
+        /// Whether the tab strip takes focus.
+        focus: bool,
+    },
+    /// Switch the details tabs (`textual.tabs.*` with the strip focused).
+    SwitchDetailsTab(TabSwitch),
+    /// A click on a details tab: focus the strip, then activate the tab.
+    ClickDetailsTab(usize),
     /// A section's lazy table asked for `page` (a cursor key, a click or a search submit): its section requests it.
     LoadMore {
         /// The section whose table asked.
@@ -310,6 +337,7 @@ impl MainScreen {
             profile: ProfileFetch::default(),
             table_areas: [None; 4],
             hits: Vec::new(),
+            pending_pr: None,
         }
     }
 
@@ -322,6 +350,7 @@ impl MainScreen {
     /// sections, then the details). A pane that loads per repo adds one line here; see #170's "What a selection
     /// publishes" for the contract of its `load_repo`.
     pub fn on_repo_selected(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
+        self.cancel_pending_selection(cx);
         if self.section(SectionId::PullRequests).shown() || self.section(SectionId::Issues).shown() {
             self.issue_lists.load_repo(repo, cx);
         }
@@ -329,15 +358,66 @@ impl MainScreen {
             self.workflows.load_repo(repo, cx);
         }
         self.details.show_repo(repo, cx);
-        self.details_title = format!(
-            "[{}] {} Details",
-            cx.keymap().title_key(BindingId::MainDetailsFocus),
-            repo.full_name
-        );
-        // Python removes the focused content along with the old tab, and Textual moves focus to the tab strip.
-        if self.focus == FocusTarget::DetailsContent {
+        self.details_shown(&repo.full_name, false, cx);
+    }
+
+    /// The details pane shows a new selection labelled `label` (`PR #5`): the title follows, and focus moves to the
+    /// tab strip when `focus` says so, or when it was in the content that just went away (Python removes the focused
+    /// content along with the old tab, and Textual moves focus to the strip). Every selection that replaces the
+    /// details tabs ends here.
+    fn details_shown(&mut self, label: &str, focus: bool, cx: &Cx<'_>) {
+        self.details_title = details_title(cx.keymap(), label);
+        if focus || self.focus == FocusTarget::DetailsContent {
             self.move_focus(FocusTarget::DetailsTabs);
         }
+    }
+
+    /// A new selection replaces any still loading: the pending pull request request is cancelled, and its answer, if
+    /// it comes anyway, is dropped. Every selection calls this first.
+    fn cancel_pending_selection(&mut self, cx: &mut Cx<'_>) {
+        if let Some(pending) = self.pending_pr.take() {
+            cx.effect(Effect::Cancel(pending.id));
+        }
+    }
+
+    /// `MainAction::OpenPullRequest`: a table row is fetched first, and nothing changes until it arrives; a full pull
+    /// request shows at once. Python's `MainViewPane.load_pull_request`.
+    fn open_pull_request(&mut self, target: PullRequestTarget, focus: bool, cx: &mut Cx<'_>) {
+        self.cancel_pending_selection(cx);
+        match target {
+            PullRequestTarget::Partial(pr) => {
+                let id = cx.request(GithubRequest::PullRequest {
+                    repo: Box::new(pr.issue.repo),
+                    number: pr.issue.number,
+                });
+                self.pending_pr = Some(PendingPullRequest { id, focus });
+            }
+            PullRequestTarget::Full(pr) => self.show_pull_request(*pr, focus, cx),
+        }
+    }
+
+    fn show_pull_request(&mut self, pr: FullPullRequest, focus: bool, cx: &mut Cx<'_>) {
+        let label = format!("PR #{}", pr.number());
+        self.details.show_pull_request(pr, cx);
+        self.details_shown(&label, focus, cx);
+    }
+
+    /// Takes the answer to the pending pull request selection, and hands back any other response. A failure leaves
+    /// everything as it was, with Python's log line and toast; an answer to a selection since replaced is dropped.
+    fn on_pull_request(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
+        let GithubResponse::PullRequest(result) = response else {
+            return Some(response);
+        };
+        let Some(pending) = self.pending_pr.filter(|pending| pending.id == id) else {
+            tracing::debug!("Dropping the pull request response {id} of a selection no longer current");
+            return None;
+        };
+        self.pending_pr = None;
+        match result {
+            Ok(pr) => self.show_pull_request(*pr, pending.focus, cx),
+            Err(error) => pull_request_failed(&error, cx),
+        }
+        None
     }
 
     /// Git said what the current-directory repo is: the repos section may select it.
@@ -360,6 +440,11 @@ impl MainScreen {
         self.details.repo()
     }
 
+    /// The pull request the details pane shows, if any.
+    pub fn details_pull_request(&self) -> Option<&FullPullRequest> {
+        self.details.pull_request().map(pr_details::PullRequestDetails::pr)
+    }
+
     /// Takes a response to one of the screen's requests, and hands back any other: the repos section is offered it
     /// first, then each section's pane.
     pub fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
@@ -367,7 +452,8 @@ impl MainScreen {
         let response = self.repos.on_response(id, response, cx)?;
         let response = self.issue_lists.on_response(id, response, cx)?;
         let response = self.workflows.on_response(id, response, cx)?;
-        self.details.on_response(id, response)
+        let response = self.on_pull_request(id, response, cx)?;
+        self.details.on_response(id, response, cx)
     }
 
     /// Takes the result of one of the screen's cache reads, and hands back any other.
@@ -582,6 +668,10 @@ impl MainScreen {
     /// Moves focus one step around [`Self::focus_ring`], wrapping. From a target outside the ring (a section
     /// hidden by config, focused with its key), both directions go to the ring's first entry, as in Textual.
     pub fn focus_step(&mut self, forward: bool, maximized: Option<FocusTarget>) {
+        // The stops inside the details content come first, and focus leaves the content past either end.
+        if self.focus == FocusTarget::DetailsContent && self.details.focus_step(forward) {
+            return;
+        }
         let ring = self.focus_ring(maximized);
         let Some(&first) = ring.first() else { return };
         let target = match ring.iter().position(|&target| target == self.focus) {
@@ -589,7 +679,9 @@ impl MainScreen {
             Some(i) => ring[(i + ring.len() - 1) % ring.len()],
             None => first,
         };
-        self.move_focus(target);
+        if self.move_focus(target) && target == FocusTarget::DetailsContent {
+            self.details.focus_enter(forward);
+        }
     }
 
     /// The target drawn at a cell in the last frame, if any. Borders, titles, the status box and the footer have
@@ -619,6 +711,12 @@ impl MainScreen {
         }
         if let Some(id) = over {
             return self.table_mouse(id, mouse, at);
+        }
+        // Only a strip drawn in the last frame takes a click.
+        if self.hit(mouse.column, mouse.row) == Some(FocusTarget::DetailsTabs)
+            && let Some(tab) = self.details.tab_at(mouse)
+        {
+            return Some(Action::Main(MainAction::ClickDetailsTab(tab)));
         }
         match mouse.kind {
             MouseEventKind::Down(MouseButton::Left) => self.hit(mouse.column, mouse.row).map(Action::Focus),
@@ -662,9 +760,25 @@ impl MainScreen {
                     .map(|repo| Action::Main(MainAction::ClickSelect(Box::new(repo.clone()))))
                     // The event is for the cursor's row, so it's always there.
                     .or(Some(Action::Consumed)),
+                Handled::Event(SectionEvent::Selected) if id == SectionId::PullRequests => {
+                    Some(self.select_pull_request())
+                }
                 handled => table_outcome(id, handled),
             },
         }
+    }
+
+    /// `enter`, `space` or a click on the cursor row of the Pull Requests table: Python's `pr_selected`.
+    fn select_pull_request(&self) -> Action {
+        let Some(pr) = self.issue_lists.prs_table().selected() else {
+            // The event is for the cursor's row, so it's always there.
+            return Action::Consumed;
+        };
+        tracing::info!("Selected PR: #{}", pr.issue.number);
+        Action::Main(MainAction::OpenPullRequest {
+            target: PullRequestTarget::Partial(Box::new(pr.clone())),
+            focus: true,
+        })
     }
 
     /// What a mouse wheel event means: Textual scrolls the widget under the pointer, focused or not. The repos table
@@ -697,7 +811,11 @@ impl MainScreen {
                 link(Owner::SelectionsPane, SELECTIONS_BINDINGS),
             ],
             FocusTarget::DetailsTabs => vec![link(Owner::DetailsTabs, TABS_BINDINGS)],
-            FocusTarget::DetailsContent => vec![link(Owner::DetailsContent, INFO_BINDINGS)],
+            FocusTarget::DetailsContent => {
+                let mut links = self.details.content_chain();
+                links.push(link(Owner::DetailsContent, INFO_BINDINGS));
+                links
+            }
             FocusTarget::CommandLog => vec![link(Owner::CommandLog, LOG_BINDINGS)],
         };
         chain.push(link(Owner::MainView, MAIN_VIEW_BINDINGS));
@@ -724,8 +842,20 @@ impl MainScreen {
                     .map(|repo| Action::SelectRepo(Box::new(repo.clone())))
                     // The event is for the cursor's row, so it's always there.
                     .or(Some(Action::Consumed)),
+                Handled::Event(SectionEvent::Selected) if section == SectionId::PullRequests => {
+                    Some(self.select_pull_request())
+                }
                 handled => table_outcome(section, handled),
             },
+            Owner::DetailsTabs => {
+                let switch = match id {
+                    BindingId::TextualTabsNext => TabSwitch::Next,
+                    BindingId::TextualTabsPrevious => TabSwitch::Previous,
+                    _ => return None,
+                };
+                Some(Action::Main(MainAction::SwitchDetailsTab(switch)))
+            }
+            Owner::PrOverview => self.details.on_binding(owner, id),
             Owner::SearchableTable(section) if id == BindingId::TableSearch => {
                 self.open_search(section);
                 Some(Action::Consumed)
@@ -741,10 +871,8 @@ impl MainScreen {
             Owner::Section(SectionId::Repos) if id == BindingId::UserViewProfile => {
                 Some(Action::Main(MainAction::ViewProfile(ProfileOrigin::Repos)))
             }
-            // Not built yet: the key is still consumed, as in Python. With one tab, switching tabs is a no-op.
-            Owner::SearchableTable(_) | Owner::Section(_) | Owner::SelectionsPane | Owner::DetailsTabs => {
-                Some(Action::Unimplemented(id))
-            }
+            // Not built yet: the key is still consumed, as in Python.
+            Owner::SearchableTable(_) | Owner::Section(_) | Owner::SelectionsPane => Some(Action::Unimplemented(id)),
             Owner::App | Owner::Screen(ScreenKind::Auth | ScreenKind::Modal(_)) | Owner::DialogField(..) => None,
         }
     }
@@ -856,6 +984,13 @@ fn table_outcome(section: SectionId, handled: Handled<SectionEvent>) -> Option<A
     }
 }
 
+/// A pull request that couldn't be fetched: Python's `load_pull_request` on `GithubApiRequestFailed`.
+fn pull_request_failed(error: &GhError, cx: &mut Cx<'_>) {
+    tracing::error!("API error loading PR!");
+    tracing::debug!("Fetching the pull request failed: {error}");
+    cx.notify(Toast::error("Error fetching pull request!").with_title("API Error"));
+}
+
 /// The target a focus key moves to.
 fn focus_key_target(id: BindingId) -> Option<FocusTarget> {
     Some(match id {
@@ -926,6 +1061,14 @@ impl Component for MainScreen {
                     self.repos.add((*repo).clone(), cx);
                 }
                 cx.dispatch(Action::SelectRepo(repo));
+            }
+            MainAction::OpenPullRequest { target, focus } => self.open_pull_request(target, focus, cx),
+            MainAction::SwitchDetailsTab(switch) => {
+                self.details.switch_tab(switch, cx);
+            }
+            MainAction::ClickDetailsTab(tab) => {
+                self.try_focus(FocusTarget::DetailsTabs);
+                self.details.switch_tab(TabSwitch::To(tab), cx);
             }
             MainAction::LoadMore {
                 section,

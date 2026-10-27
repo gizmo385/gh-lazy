@@ -144,6 +144,8 @@ pub enum Owner {
     DetailsTabs,
     /// The content of the active details tab.
     DetailsContent,
+    /// A PR's Overview tab (`PrOverviewTabPane`): merge, edit and react, in front of the content's scroll link.
+    PrOverview,
     /// The command log.
     CommandLog,
     /// A field of an open dialog, which [`Dialog::field_chain`](crate::modal::Dialog::field_chain) puts in front of
@@ -166,6 +168,7 @@ impl Owner {
             | Owner::SearchableTable(_)
             | Owner::DetailsTabs
             | Owner::DetailsContent
+            | Owner::PrOverview
             | Owner::CommandLog
             | Owner::DialogField(_, FieldKind::Button | FieldKind::Switch | FieldKind::Scroll | FieldKind::Table) => {
                 None

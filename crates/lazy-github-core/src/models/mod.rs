@@ -5,12 +5,14 @@
 //! produce, so local table caches stay readable by both apps.
 
 mod issue;
+mod pull_request;
 mod repo_name;
 mod repository;
 mod user;
 mod workflow;
 
 pub use issue::{Issue, IssueListItem, IssueState, PartialPullRequest};
+pub use pull_request::{FullPullRequest, GitRef};
 pub use repo_name::RepoName;
 pub use repository::{Repository, RepositoryPermission};
 pub use user::{FullUser, User};

@@ -15,7 +15,7 @@ use tokio::sync::OnceCell;
 
 use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts};
-use crate::models::{FullUser, IssueListItem, Repository, User, Workflow, WorkflowRun};
+use crate::models::{FullPullRequest, FullUser, IssueListItem, Repository, User, Workflow, WorkflowRun};
 
 #[cfg(any(test, feature = "test-util"))]
 mod fake;
@@ -122,6 +122,17 @@ pub trait Github: Clone + Send + Sync + 'static {
     ///
     /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when any repository doesn't decode.
     fn user_repos(&self, login: &str) -> impl Future<Output = Result<Vec<Repository>, GhError>> + Send;
+
+    /// Pull request `number` of `repo`, from the pull request endpoint, carrying `repo`. Cached for
+    /// `cache.default_ttl`.
+    ///
+    /// Fails on any HTTP error status (a 404 included) or `gh` failure, or with [`GhError::Decode`] when the body
+    /// doesn't decode.
+    fn pull_request(
+        &self,
+        repo: &Repository,
+        number: u64,
+    ) -> impl Future<Output = Result<FullPullRequest, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -521,6 +532,13 @@ impl GhCli {
         request
     }
 
+    /// `GET /repos/{owner}/{repo}/pulls/{number}`, cached for the default TTL as Python's `github_headers()` asks.
+    fn pull_request_request(&self, repo: &Repository, number: u64) -> GhRequest {
+        let mut request = GhRequest::get(format!("/repos/{}/{}/pulls/{number}", repo.owner.login, repo.name));
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -620,11 +638,25 @@ impl Github for GhCli {
     async fn user_repos(&self, login: &str) -> Result<Vec<Repository>, GhError> {
         self.inner.runner.request(self.user_repos_request(login)).await?.json()
     }
+
+    async fn pull_request(&self, repo: &Repository, number: u64) -> Result<FullPullRequest, GhError> {
+        let response = self
+            .inner
+            .runner
+            .request(self.pull_request_request(repo, number))
+            .await?;
+        full_pull_request(&response, repo)
+    }
 }
 
 /// A diff response as the diff text, verbatim, or the error the Diff tab shows.
 fn diff_text(response: Result<GhResponse, GhError>) -> Result<String, DiffFetchError> {
     Ok(response?.text())
+}
+
+/// A pull request endpoint body, carrying `repo`.
+fn full_pull_request(response: &GhResponse, repo: &Repository) -> Result<FullPullRequest, GhError> {
+    Ok(FullPullRequest::from_api(response.json()?, repo)?)
 }
 
 /// The `workflows` body of `GET .../actions/workflows`.
@@ -1534,5 +1566,67 @@ mod tests {
             Err(GhError::Decode(_))
         ));
         assert!(matches!(decode(json_response("200 OK", "{}")), Err(GhError::Decode(_))));
+    }
+
+    /// `parity-bot/pr-details`, first on the `pr-details` set's repos page.
+    fn pr_details_repo() -> Repository {
+        let page: Vec<Repository> = parity_response(
+            "pr-details",
+            "user/repos/GET.direction-asc_page-1_per_page-50_sort-full_name_type-all.json",
+        )
+        .json()
+        .unwrap();
+        page.into_iter().next().unwrap()
+    }
+
+    #[test]
+    fn pull_request_argv() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        assert_eq!(
+            strings(
+                gh.pull_request_request(&pr_details_repo(), 5)
+                    .argv(gh.runner().hostname(), false)
+            ),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--cache",
+                "600s",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/pr-details/pulls/5"
+            ]
+        );
+    }
+
+    #[test]
+    fn pull_requests_decode_with_their_repo() {
+        let repo = pr_details_repo();
+        let pr = |number: u64| {
+            let response = parity_response(
+                "pr-details",
+                &format!("repos/parity-bot/pr-details/pulls/{number}/GET.json"),
+            );
+            full_pull_request(&response, &repo).unwrap()
+        };
+        let open = pr(5);
+        assert_eq!(open.number(), 5);
+        assert_eq!(open.pr.issue.repo, repo);
+        assert_eq!(open.pr.issue.state, crate::models::IssueState::Open);
+        assert_eq!(open.merged_at, None);
+        let closed = pr(4);
+        assert_eq!(closed.pr.issue.state, crate::models::IssueState::Closed);
+        assert!(closed.pr.issue.closed_at.is_some());
+        assert_eq!(closed.merged_at, None);
+        let merged = pr(3);
+        assert!(merged.merged_at.is_some());
+        assert_eq!(merged.pr.issue.body, None);
+        assert_eq!(pr(9).head.name, "clamp");
+        assert!(matches!(
+            full_pull_request(&api_response(r#"{"number": 5}"#), &repo),
+            Err(GhError::Decode(_))
+        ));
     }
 }

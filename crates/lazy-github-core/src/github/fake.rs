@@ -9,12 +9,12 @@ use serde::de::Error as _;
 
 use super::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
 use crate::gh::GhError;
-use crate::models::{FullUser, IssueListItem, Repository, User, Workflow, WorkflowRun};
+use crate::models::{FullPullRequest, FullUser, IssueListItem, Repository, User, Workflow, WorkflowRun};
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `user` finds no user (a 404), `user_repos` returns none, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -67,6 +67,13 @@ pub enum GithubCall {
     User(String),
     /// [`Github::user_repos`], with the login asked for.
     UserRepos(String),
+    /// [`Github::pull_request`].
+    PullRequest {
+        /// The repository's full name.
+        full_name: String,
+        /// The pull request's number.
+        number: u64,
+    },
 }
 
 #[derive(Debug, Default)]
@@ -91,6 +98,8 @@ struct State {
     profiles: HashMap<String, Result<FullUser, GhError>>,
     /// Keyed by login.
     user_repos: HashMap<String, Result<Vec<Repository>, GhError>>,
+    /// Keyed by `full_name` and number.
+    pull_requests: HashMap<(String, u64), Result<FullPullRequest, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -202,6 +211,21 @@ impl FakeGithub {
     #[must_use]
     pub fn with_user_repos(self, login: &str, repos: Result<Vec<Repository>, GhError>) -> Self {
         self.lock().user_repos.insert(login.to_owned(), repos);
+        self
+    }
+
+    /// `pull_request` returns `pull_request` for number `number` of the repository named `full_name`. Numbers not set
+    /// fail with a 404.
+    #[must_use]
+    pub fn with_pull_request(
+        self,
+        full_name: &str,
+        number: u64,
+        pull_request: Result<FullPullRequest, GhError>,
+    ) -> Self {
+        self.lock()
+            .pull_requests
+            .insert((full_name.to_owned(), number), pull_request);
         self
     }
 
@@ -384,6 +408,24 @@ impl Github for FakeGithub {
     async fn user_repos(&self, login: &str) -> Result<Vec<Repository>, GhError> {
         self.respond(GithubCall::UserRepos(login.to_owned()), |state| {
             canned_page(state.user_repos.get(login))
+        })
+        .await
+    }
+
+    async fn pull_request(&self, repo: &Repository, number: u64) -> Result<FullPullRequest, GhError> {
+        let key = (repo.full_name.clone(), number);
+        let call = GithubCall::PullRequest {
+            full_name: repo.full_name.clone(),
+            number,
+        };
+        self.respond(call, |state| match state.pull_requests.get(&key) {
+            Some(Ok(pull_request)) => Ok(pull_request.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Err(GhError::Http {
+                status: 404,
+                message: "Not Found".to_owned(),
+                body: Vec::new(),
+            }),
         })
         .await
     }
@@ -627,6 +669,33 @@ mod tests {
         ));
         assert_eq!(github.repo_readme("octocat/c").await.unwrap(), None);
         assert_eq!(github.calls()[0], GithubCall::RepoReadme("octocat/a".into()));
+    }
+
+    #[tokio::test]
+    async fn pull_requests_by_repo_and_number() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../parity/fixtures/pr-details/repos/parity-bot/pr-details/pulls/5/GET.json");
+        let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let pr = FullPullRequest::from_api(fixture["response"]["body"].clone(), &repo("a")).unwrap();
+        let github = FakeGithub::new()
+            .with_pull_request("octocat/a", 5, Ok(pr.clone()))
+            .with_pull_request("octocat/a", 2, Err(GhError::NotInstalled));
+        assert_eq!(github.pull_request(&repo("a"), 5).await.unwrap(), pr);
+        assert!(matches!(
+            github.pull_request(&repo("a"), 2).await,
+            Err(GhError::NotInstalled)
+        ));
+        assert!(matches!(
+            github.pull_request(&repo("b"), 5).await,
+            Err(GhError::Http { status: 404, .. })
+        ));
+        assert_eq!(
+            github.calls()[0],
+            GithubCall::PullRequest {
+                full_name: "octocat/a".into(),
+                number: 5
+            }
+        );
     }
 
     #[tokio::test]

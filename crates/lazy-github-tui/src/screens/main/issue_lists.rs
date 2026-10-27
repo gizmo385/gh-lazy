@@ -182,6 +182,11 @@ impl IssueLists {
         self.prs.insert_if_missing(pr, cx);
     }
 
+    /// Adds a looked-up issue to the Issues table unless it's there: [`ListSection::insert_if_missing`].
+    pub(super) fn insert_issue_if_missing(&mut self, issue: Issue, cx: &mut Cx<'_>) {
+        self.issues.insert_if_missing(issue, cx);
+    }
+
     /// Requests the page the PR table asked for.
     pub(super) fn load_more_prs(&mut self, generation: u64, page: u32, per_page: u32, cx: &mut Cx<'_>) {
         self.prs.load_more(generation, page, per_page, cx);

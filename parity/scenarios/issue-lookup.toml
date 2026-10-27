@@ -1,9 +1,8 @@
 version = 1
 description = "Lookup issue (O from the Issues table): the dialog, an empty or invalid number, an unknown issue, an issue not in the table (added and selected), one already in it, a pull request's number (Py bug B61) and escape"
-# The issue lookup issue flips this to true. The dialog's thick border isn't a box to the extractor, so its text is
-# checked with [expect]. Toasts stay up for 5 s and stack bottom-right over the Details box, inside its border, so
-# they don't hide any box the checks compare.
-gate = false
+# The dialog's thick border isn't a box to the extractor, so its text is checked with [expect]. Toasts stay up for 5 s
+# and stack bottom-right over the Details box, inside its border, so they don't hide any box the checks compare.
+gate = true
 parity_rows = [
     "issues.lookup",
     "issues.lookup-pull-request",

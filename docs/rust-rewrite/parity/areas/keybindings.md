@@ -19,7 +19,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.conversation-comment-reply` | `conversation.comment.reply` | `r` | Reply to Comment | comment block | M3 | not started | #182 | |
 | `keybindings.issue-new` | `issue.new` | `I` | New Issue | selections pane | M3 | not started | #181 | |
 | `keybindings.issue-edit` | `issue.edit` | `E` | Edit Issue | issues table, Issue Overview | M3 | not started | #181 | |
-| `keybindings.issue-lookup` | `issue.lookup` | `O` | Lookup Issue | issues table | M2 | not started | #247 | |
+| `keybindings.issue-lookup` | `issue.lookup` | `O` | Lookup Issue | issues table | M2 | in progress | #247 | |
 | `keybindings.pull-request-new` | `pull_request.new` | `P` | New PR | selections pane | M3 | not started | #184 | |
 | `keybindings.pull-request-merge` | `pull_request.merge` | `ctrl+m` | Merge PR | PR Overview | M3 | not started | #183 | TERM: `ctrl+m` sends CR, same as Enter, without the kitty protocol. Must never fire on plain Enter (Py bug B30). |
 | `keybindings.pull-request-edit` | `pull_request.edit` | `E` | Edit PR | PR table, PR Overview | M3 | not started | #185 | |

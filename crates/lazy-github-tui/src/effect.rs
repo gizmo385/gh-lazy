@@ -186,6 +186,13 @@ pub enum GithubRequest {
         /// Its number.
         number: u64,
     },
+    /// [`Github::issue`].
+    Issue {
+        /// The repo the issue is in.
+        repo: Box<Repository>,
+        /// Its number.
+        number: u64,
+    },
 }
 
 /// The result of a [`GithubRequest`], in the variant of the same name.
@@ -225,6 +232,8 @@ pub enum GithubResponse {
     CheckRuns(Result<Vec<CheckRun>, GhError>),
     /// [`Github::issue_reactions`].
     IssueReactions(Result<Reactions, GhError>),
+    /// [`Github::issue`], boxed to keep this enum small.
+    Issue(Result<Box<IssueListItem>, GhError>),
 }
 
 impl GithubRequest {
@@ -268,6 +277,7 @@ impl GithubRequest {
             GithubRequest::IssueReactions { repo, number } => {
                 GithubResponse::IssueReactions(gh.issue_reactions(&repo, number).await)
             }
+            GithubRequest::Issue { repo, number } => GithubResponse::Issue(gh.issue(&repo, number).await.map(Box::new)),
         }
     }
 }

@@ -17,7 +17,7 @@ use crate::models::{
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs` and `issue_reactions` find none, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs` and `issue_reactions` find none, `issue` fails with a 404, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -100,6 +100,8 @@ pub enum GithubCall {
         /// The issue's or pull request's number.
         number: u64,
     },
+    /// [`Github::issue`], with the number asked for.
+    Issue(u64),
 }
 
 #[derive(Debug, Default)]
@@ -126,6 +128,8 @@ struct State {
     user_repos: HashMap<String, Result<Vec<Repository>, GhError>>,
     /// Keyed by `full_name` and number.
     pull_requests: HashMap<(String, u64), Result<FullPullRequest, GhError>>,
+    /// Keyed by `full_name` and number.
+    issues: HashMap<(String, u64), Result<IssueListItem, GhError>>,
     /// Keyed by run id.
     run_jobs: HashMap<u64, Result<Vec<WorkflowJob>, GhError>>,
     /// Keyed by `full_name` and sha.
@@ -260,6 +264,14 @@ impl FakeGithub {
         self.lock()
             .pull_requests
             .insert((full_name.to_owned(), number), pull_request);
+        self
+    }
+
+    /// `issue` returns `item` for number `number` of the repository named `full_name`. Numbers not set fail with a
+    /// 404.
+    #[must_use]
+    pub fn with_issue(self, full_name: &str, number: u64, item: Result<IssueListItem, GhError>) -> Self {
+        self.lock().issues.insert((full_name.to_owned(), number), item);
         self
     }
 
@@ -547,6 +559,20 @@ impl Github for FakeGithub {
         })
         .await
     }
+
+    async fn issue(&self, repo: &Repository, number: u64) -> Result<IssueListItem, GhError> {
+        let key = (repo.full_name.clone(), number);
+        self.respond(GithubCall::Issue(number), |state| match state.issues.get(&key) {
+            Some(Ok(item)) => Ok(item.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Err(GhError::Http {
+                status: 404,
+                message: "Not Found".to_owned(),
+                body: Vec::new(),
+            }),
+        })
+        .await
+    }
 }
 
 /// A copy of `error`, as [`duplicate`] makes for a [`GhError`].
@@ -814,6 +840,20 @@ mod tests {
                 number: 5
             }
         );
+    }
+
+    #[tokio::test]
+    async fn issues_by_repo_and_number() {
+        let github = FakeGithub::new()
+            .with_issue("octocat/a", 3, Ok(issue_item(3)))
+            .with_issue("octocat/a", 2, Err(GhError::NotInstalled));
+        assert_eq!(github.issue(&repo("a"), 3).await.unwrap(), issue_item(3));
+        assert!(matches!(github.issue(&repo("a"), 2).await, Err(GhError::NotInstalled)));
+        assert!(matches!(
+            github.issue(&repo("b"), 3).await,
+            Err(GhError::Http { status: 404, .. })
+        ));
+        assert_eq!(github.calls()[0], GithubCall::Issue(3));
     }
 
     #[tokio::test]

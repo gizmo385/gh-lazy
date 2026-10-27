@@ -4,6 +4,7 @@
 mod details;
 mod issue_details;
 mod issue_lists;
+mod issue_lookup;
 mod issues;
 pub mod layout;
 mod list;
@@ -22,7 +23,7 @@ mod workflows;
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::AppearanceSettings;
 use lazy_github_core::gh::GhError;
-use lazy_github_core::models::{FullPullRequest, Issue, Repository, WorkflowRun};
+use lazy_github_core::models::{FullPullRequest, Issue, IssueListItem, Repository, WorkflowRun};
 use ratatui::Frame;
 use ratatui::layout::{Margin, Position, Rect};
 use ratatui::style::Style;
@@ -46,6 +47,7 @@ use crate::toast::Toast;
 pub use details::TabSwitch;
 use details::{DetailsPane, details_title};
 use issue_lists::IssueLists;
+use issue_lookup::IssueLookup;
 use layout::{LayoutInput, layout};
 pub use pr_details::PullRequestTarget;
 use pr_lookup::{PrLookup, select_repository_first};
@@ -286,6 +288,10 @@ pub enum MainAction {
     LookupPullRequest,
     /// The Lookup pull request dialog found a pull request. A cancelled lookup sends nothing.
     PullRequestLookedUp(Box<FullPullRequest>),
+    /// Open the Lookup issue dialog (`issue.lookup`), or toast without a selected repo.
+    LookupIssue,
+    /// The Lookup issue dialog found an issue, or a pull request by its number. A cancelled lookup sends nothing.
+    IssueLookedUp(Box<IssueListItem>),
     /// `user.view_profile` in a table: open the profile of the highlighted row's user.
     ViewProfile(ProfileOrigin),
     /// The User profile dialog closed, with the repo picked there, if any.
@@ -958,6 +964,9 @@ impl MainScreen {
             Owner::Section(SectionId::PullRequests) if id == BindingId::PullRequestLookup => {
                 Some(Action::Main(MainAction::LookupPullRequest))
             }
+            Owner::Section(SectionId::Issues) if id == BindingId::IssueLookup => {
+                Some(Action::Main(MainAction::LookupIssue))
+            }
             Owner::Section(SectionId::Repos) if id == BindingId::UserViewProfile => {
                 Some(Action::Main(MainAction::ViewProfile(ProfileOrigin::Repos)))
             }
@@ -1173,7 +1182,9 @@ impl Component for MainScreen {
                 cx.dispatch(Action::SelectRepo(repo));
             }
             // Python opens the dialog and fails an `assert` at submit (Py bug B12).
-            MainAction::LookupPullRequest if cx.current_repo().is_none() => cx.notify(select_repository_first()),
+            MainAction::LookupPullRequest | MainAction::LookupIssue if cx.current_repo().is_none() => {
+                cx.notify(select_repository_first());
+            }
             MainAction::LookupPullRequest => cx.open_dialog(LookupDialog::<PrLookup>::new(), |found| {
                 found.map_or(Action::Consumed, |pr| {
                     Action::Main(MainAction::PullRequestLookedUp(Box::new(pr)))
@@ -1188,6 +1199,24 @@ impl Component for MainScreen {
                     target: PullRequestTarget::Full(pr),
                     focus: true,
                 }));
+            }
+            MainAction::LookupIssue => cx.open_dialog(LookupDialog::<IssueLookup>::new(), |found| {
+                found.map_or(Action::Consumed, |item| {
+                    Action::Main(MainAction::IssueLookedUp(Box::new(item)))
+                })
+            }),
+            // Python's `action_lookup_issue`: added unless its number is in the table, then selected as from the
+            // table. A pull request is selected as an issue but kept out of the Issues table (Py bug B61).
+            MainAction::IssueLookedUp(item) => {
+                let issue = match *item {
+                    IssueListItem::Issue(issue) => {
+                        self.issue_lists.insert_issue_if_missing(issue.clone(), cx);
+                        issue
+                    }
+                    IssueListItem::PullRequest(pr) => pr.issue,
+                };
+                tracing::info!("Looked up Issue #{}", issue.number);
+                cx.dispatch(Action::Main(MainAction::OpenIssue(Box::new(issue))));
             }
             MainAction::OpenPullRequest { target, focus } => self.open_pull_request(target, focus, cx),
             MainAction::OpenIssue(issue) => self.open_issue(*issue, cx),

@@ -174,6 +174,15 @@ pub trait Github: Clone + Send + Sync + 'static {
         repo: &Repository,
         number: u64,
     ) -> impl Future<Output = Result<Reactions, GhError>> + Send;
+
+    /// Issue `number` of `repo`, from the issues endpoint, carrying `repo`. Cached for `cache.default_ttl`.
+    ///
+    /// The endpoint answers for pull requests too; [`IssueListItem::from_api_item`] tells them apart, so the caller
+    /// sees which it got.
+    ///
+    /// Fails on any HTTP error status (a 404 included) or `gh` failure, or with [`GhError::Decode`] when the body
+    /// doesn't decode.
+    fn issue(&self, repo: &Repository, number: u64) -> impl Future<Output = Result<IssueListItem, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -619,6 +628,13 @@ impl GhCli {
         request
     }
 
+    /// `GET /repos/{owner}/{repo}/issues/{number}`, cached for the default TTL as Python's `get_issue_by_number` asks.
+    fn issue_request(&self, repo: &Repository, number: u64) -> GhRequest {
+        let mut request = GhRequest::get(format!("/repos/{}/{}/issues/{number}", repo.owner.login, repo.name));
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -643,6 +659,11 @@ fn issue_list_items(response: &GhResponse, repo: &Repository) -> Result<Vec<Issu
         .into_iter()
         .map(|item| Ok(IssueListItem::from_api_item(item, repo)?))
         .collect()
+}
+
+/// One issues-endpoint item, an issue or a pull request, tagged with `repo`.
+fn issue_list_item(response: &GhResponse, repo: &Repository) -> Result<IssueListItem, GhError> {
+    Ok(IssueListItem::from_api_item(response.json()?, repo)?)
 }
 
 impl Github for GhCli {
@@ -754,6 +775,11 @@ impl Github for GhCli {
             .request(self.issue_reactions_request(repo, number))
             .await?;
         reactions(&response)
+    }
+
+    async fn issue(&self, repo: &Repository, number: u64) -> Result<IssueListItem, GhError> {
+        let response = self.inner.runner.request(self.issue_request(repo, number)).await?;
+        issue_list_item(&response, repo)
     }
 }
 
@@ -1764,6 +1790,67 @@ mod tests {
         assert_eq!(pr(9).head.name, "clamp");
         assert!(matches!(
             full_pull_request(&api_response(r#"{"number": 5}"#), &repo),
+            Err(GhError::Decode(_))
+        ));
+    }
+
+    /// `parity-bot/issue-fixture`, first on the `issue-details` set's repos page.
+    fn issue_fixture_repo() -> Repository {
+        let page: Vec<Repository> = parity_response(
+            "issue-details",
+            "user/repos/GET.direction-asc_page-1_per_page-50_sort-full_name_type-all.json",
+        )
+        .json()
+        .unwrap();
+        page.into_iter().next().unwrap()
+    }
+
+    #[test]
+    fn issue_argv() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        assert_eq!(
+            strings(
+                gh.issue_request(&issue_fixture_repo(), 3)
+                    .argv(gh.runner().hostname(), false)
+            ),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--cache",
+                "600s",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/issue-fixture/issues/3"
+            ]
+        );
+    }
+
+    #[test]
+    fn an_issue_decodes_as_an_issue_or_a_pull_request() {
+        let repo = issue_fixture_repo();
+        let item = |number: u64| {
+            let response = parity_response(
+                "issue-details",
+                &format!("repos/parity-bot/issue-fixture/issues/{number}/GET.json"),
+            );
+            issue_list_item(&response, &repo).unwrap()
+        };
+        let IssueListItem::Issue(issue) = item(3) else {
+            panic!("issue 3 is an issue");
+        };
+        assert_eq!(issue.number, 3);
+        assert_eq!(issue.repo, repo);
+        let IssueListItem::PullRequest(pr) = item(8) else {
+            panic!("8 is a pull request");
+        };
+        assert_eq!(pr.issue.number, 8);
+        let not_found = json_response("404 Not Found", r#"{"message":"Not Found"}"#)
+            .and_then(|response| issue_list_item(&response, &repo));
+        assert!(matches!(not_found, Err(GhError::Http { status: 404, .. })));
+        assert!(matches!(
+            issue_list_item(&api_response(r#"{"number": 3}"#), &repo),
             Err(GhError::Decode(_))
         ));
     }

@@ -1038,6 +1038,7 @@ mod tests {
         let roots = Roots {
             fixtures: repo.join("parity/fixtures"),
             configs: repo.join("parity/configs"),
+            seeds: repo.join("parity/seeds"),
         };
         let source = "version = 1\ngate = false\n[[step]]\ncapture = \"main\"\nchecks = [\"rows\"]\n";
         let scenario = Scenario::parse(Path::new("drifty.toml"), source, &roots).unwrap();

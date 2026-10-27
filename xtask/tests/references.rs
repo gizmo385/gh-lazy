@@ -13,6 +13,7 @@ fn recorded_references_are_fresh() {
     let roots = Roots {
         fixtures: repo.join("parity/fixtures"),
         configs: repo.join("parity/configs"),
+        seeds: repo.join("parity/seeds"),
     };
     let mut files: Vec<_> = std::fs::read_dir(repo.join("parity/scenarios"))
         .unwrap()

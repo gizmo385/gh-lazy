@@ -98,6 +98,7 @@ impl Repo {
         Roots {
             fixtures: self.path().join("parity/fixtures"),
             configs: self.path().join("parity/configs"),
+            seeds: self.path().join("parity/seeds"),
         }
     }
 

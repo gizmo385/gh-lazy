@@ -9,6 +9,7 @@ use clap::Parser;
 use xtask::parity::cli::{self, EXIT_FAILED, EXIT_HARNESS, EXIT_OK, ParityArgs};
 use xtask::parity::env::Paths;
 use xtask::parity::record::{self, Options, Outcome};
+use xtask::parity::reference;
 use xtask::parity::scenario::{Roots, Scenario};
 use xtask::parity::structure::Themes;
 
@@ -54,6 +55,12 @@ const STEADY: &str = "parity/references/steady/80x24";
 
 impl Repo {
     fn recorded() -> Self {
+        Self::recorded_with("")
+    }
+
+    /// [`Repo::recorded`] with `env` (TOML lines) in the scenario's `[env]` table, and a seed `s` holding
+    /// `home/.cache/repos.json`.
+    fn recorded_with(env: &str) -> Self {
         let repo = Self {
             dir: tempfile::tempdir().unwrap(),
         };
@@ -70,10 +77,13 @@ impl Repo {
         );
         repo.write("parity/configs/default.json", "{}\n");
         std::fs::create_dir_all(repo.path().join("parity/fixtures/base")).unwrap();
+        repo.write("parity/seeds/s/home/.cache/repos.json", "[]\n");
         repo.write(
             "parity/scenarios/steady.toml",
-            "version = 1\nsizes = [[80, 24]]\n\n[[step]]\nwait = { text = \"settled\" }\n\n\
-             [[step]]\ncapture = \"main\"\n\n[expect.main]\ncontains = [\"size 80x24\"]\n",
+            &format!(
+                "version = 1\nsizes = [[80, 24]]\n\n[env]\n{env}\n[[step]]\nwait = {{ text = \"settled\" }}\n\n\
+                 [[step]]\ncapture = \"main\"\n\n[expect.main]\ncontains = [\"size 80x24\"]\n"
+            ),
         );
 
         let options = Options {
@@ -113,6 +123,7 @@ impl Repo {
         Roots {
             fixtures: self.path().join("parity/fixtures"),
             configs: self.path().join("parity/configs"),
+            seeds: self.path().join("parity/seeds"),
         }
     }
 
@@ -260,6 +271,24 @@ fn a_stale_reference_exits_2_before_anything_runs() {
     assert_eq!(code, EXIT_OK);
     let check = read_json(&out.join("steady/80x24/main.check.json"));
     assert!(check.get("drift").is_none(), "{check:#}");
+}
+
+/// A seed is a capture input: editing one of its files makes the scenario's reference stale.
+#[test]
+fn a_changed_seed_file_makes_the_reference_stale() {
+    let repo = Repo::recorded_with("seed = \"s\"\n");
+    let fresh = reference::check(repo.path(), &repo.scenarios(), &repo.roots(), true).unwrap();
+    assert_eq!(fresh.problems, [], "{fresh:?}");
+
+    repo.write("parity/seeds/s/home/.cache/repos.json", "[{}]\n");
+    let report = reference::check(repo.path(), &repo.scenarios(), &repo.roots(), true).unwrap();
+    let problems: Vec<String> = report.problems.iter().map(ToString::to_string).collect();
+    assert_eq!(
+        problems,
+        ["stale reference: steady/80x24: scenario changed; run cargo xtask parity --record steady"]
+    );
+    let (code, _) = repo.run(&[], PathBuf::from("/nonexistent/python"));
+    assert_eq!(code, EXIT_HARNESS);
 }
 
 /// The binary against the real repo: a copy of `startup` with one more step has stale references, and the run

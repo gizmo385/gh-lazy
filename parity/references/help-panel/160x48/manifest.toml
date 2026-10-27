@@ -7,7 +7,7 @@ captures = ["start", "open", "details", "escape-kept", "closed", "maximized", "m
 scenario = "e25d14af17c63c02fab85d35c284e9bc9e6304d9"
 fixtures = "152ce9bbfa49430b36bca9ef5e2ae1189ea76b00"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "a42709a8f63e18b6ffbf05888ac70df13205cac1"
+harness = "d40dac32aacaaea9cd02642bf388d6d6f854e0ee"
 
 [recorded_with]
 python = "3.14.7"

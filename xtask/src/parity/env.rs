@@ -131,6 +131,18 @@ pub fn prepare(
         init_git_repo(&work, &home, &url, &scenario.env.git_branch)?;
     }
 
+    // After `git init`, so the parity commit stays empty (its SHA never changes) and seeded `work/` files are
+    // untracked; after `config.json`, which a seed can't hold.
+    if let Some(seed) = &scenario.env.seed {
+        let seed_dir = paths.roots.seed_dir(seed);
+        for (tree, dest) in [("home", &home), ("work", &work)] {
+            let from = seed_dir.join(tree);
+            if from.is_dir() {
+                copy_dir(&from, dest).with_context(|| format!("copying seed {seed}'s {tree}/"))?;
+            }
+        }
+    }
+
     let log = out.join("fake-gh.log");
     let fixtures = std::env::join_paths(scenario.env.fixtures.iter().map(|set| paths.roots.fixtures.join(set)))
         .map_err(|e| HarnessError(format!("fixture set paths can't be joined: {e}")))?;
@@ -324,6 +336,66 @@ mod tests {
     fn the_origin_url_follows_the_protocol() {
         assert_eq!(origin_for(GitRemoteProtocol::Ssh), "git@github.com:o/n.git");
         assert_eq!(origin_for(GitRemoteProtocol::Https), "https://github.com/o/n.git");
+    }
+
+    #[test]
+    fn a_seed_is_copied_in_after_the_config_and_the_git_repo() {
+        let dir = tempfile::tempdir().unwrap();
+        let parity = Path::new(env!("CARGO_MANIFEST_DIR")).join("../parity");
+        let seeds = dir.path().join("seeds");
+        for (rel, contents) in [
+            ("s/home/.config/lazy-github/.cache/repos.json", "[]"),
+            ("s/work/pr_template.md", "template"),
+        ] {
+            let path = seeds.join(rel);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(path, contents).unwrap();
+        }
+        let roots = Roots {
+            fixtures: parity.join("fixtures"),
+            configs: parity.join("configs"),
+            seeds,
+        };
+        let source = "version = 1\n[env]\ngit_remote = \"o/n\"\nseed = \"s\"\n";
+        let scenario = Scenario::parse(Path::new("seeded.toml"), source, &roots).unwrap();
+        // Any file will do as fake-gh: nothing runs it.
+        let fake_gh = dir.path().join("fake-gh");
+        std::fs::write(&fake_gh, "").unwrap();
+        let paths = Paths {
+            fake_gh: fake_gh.clone(),
+            rust_app: fake_gh.clone(),
+            python: fake_gh,
+            roots,
+        };
+        let out = dir.path().join("out");
+        let run = prepare(&scenario, App::Rust, Size { cols: 80, rows: 24 }, &paths, &out, false).unwrap();
+        let root = run.run_dir.as_ref().unwrap().path();
+        let (home, work) = (root.join("home"), root.join("work"));
+        assert_eq!(
+            std::fs::read_to_string(home.join(".config/lazy-github/.cache/repos.json")).unwrap(),
+            "[]"
+        );
+        assert!(home.join(".config/lazy-github/config.json").is_file());
+        assert_eq!(
+            std::fs::read_to_string(work.join("pr_template.md")).unwrap(),
+            "template"
+        );
+
+        let git = |args: &[&str]| {
+            let output = Command::new("git")
+                .args(args)
+                .current_dir(&work)
+                .env("HOME", &home)
+                .env("GIT_CONFIG_NOSYSTEM", "1")
+                .output()
+                .unwrap();
+            assert!(output.status.success(), "{output:?}");
+            String::from_utf8(output.stdout).unwrap()
+        };
+        // The parity commit is empty, and the seeded file is untracked.
+        assert_eq!(git(&["ls-tree", "-r", "--name-only", "HEAD"]), "");
+        assert_eq!(git(&["status", "--porcelain"]), "?? pr_template.md\n");
+        run.finish().unwrap();
     }
 
     #[test]

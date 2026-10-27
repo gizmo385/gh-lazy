@@ -202,6 +202,9 @@ pub struct EnvSpec {
     pub git_branch: String,
     /// Deep-merged over the config file. Always a JSON object.
     pub config_overrides: Value,
+    /// A seed name under the seeds root, whose `home/` and `work/` trees are copied into the run before the app
+    /// starts.
+    pub seed: Option<String>,
 }
 
 /// What a `wait` step waits for.
@@ -325,12 +328,81 @@ pub struct Roots {
     pub fixtures: PathBuf,
     /// Holds `<name>.json` config files (`parity/configs`).
     pub configs: PathBuf,
+    /// Holds the seeds (`parity/seeds`).
+    pub seeds: PathBuf,
 }
 
 impl Roots {
     pub fn config_file(&self, name: &str) -> PathBuf {
         self.configs.join(format!("{name}.json"))
     }
+
+    pub fn seed_dir(&self, name: &str) -> PathBuf {
+        self.seeds.join(name)
+    }
+}
+
+/// The trees a seed may hold, mirroring the run's `home/` and `work/`.
+pub const SEED_TREES: [&str; 2] = ["home", "work"];
+/// The one file a seed may not hold: the harness writes it from `config` and `config_overrides`.
+const SEED_OWNED_CONFIG: &str = "home/.config/lazy-github/config.json";
+
+/// The files of the seed at `dir`, as `/`-separated paths relative to it, sorted. Fails, with a message naming the
+/// problem, on anything at the top level other than `home/` and `work/`, a symlink anywhere, the harness-owned
+/// `config.json`, or no files at all.
+pub fn seed_files(dir: &Path) -> Result<Vec<String>, String> {
+    let mut files = Vec::new();
+    let entries = std::fs::read_dir(dir).map_err(|e| format!("can't read {}: {e}", dir.display()))?;
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("can't read {}: {e}", dir.display()))?;
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        let kind = entry
+            .file_type()
+            .map_err(|e| format!("{}: {e}", entry.path().display()))?;
+        if !SEED_TREES.contains(&name.as_ref()) || !kind.is_dir() || kind.is_symlink() {
+            return Err(format!(
+                "{} holds {name:?}; a seed holds only home/ and work/ directories",
+                dir.display()
+            ));
+        }
+        walk_seed(&entry.path(), &name, &mut files)?;
+    }
+    if files.is_empty() {
+        return Err(format!("{} holds no files", dir.display()));
+    }
+    if files.iter().any(|f| f == SEED_OWNED_CONFIG) {
+        return Err(format!(
+            "{} holds {SEED_OWNED_CONFIG}, which the harness writes; use `config` or `config_overrides`",
+            dir.display()
+        ));
+    }
+    files.sort();
+    Ok(files)
+}
+
+fn walk_seed(dir: &Path, rel: &str, files: &mut Vec<String>) -> Result<(), String> {
+    let entries = std::fs::read_dir(dir).map_err(|e| format!("can't read {}: {e}", dir.display()))?;
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("can't read {}: {e}", dir.display()))?;
+        let path = entry.path();
+        let name = entry.file_name();
+        let name = name
+            .to_str()
+            .ok_or_else(|| format!("{}: the name isn't valid UTF-8", path.display()))?;
+        let rel = format!("{rel}/{name}");
+        let kind = entry.file_type().map_err(|e| format!("{}: {e}", path.display()))?;
+        if kind.is_symlink() {
+            return Err(format!("{} is a symlink; seeds can't hold symlinks", path.display()));
+        } else if kind.is_dir() {
+            walk_seed(&path, &rel, files)?;
+        } else if kind.is_file() {
+            files.push(rel);
+        } else {
+            return Err(format!("{} isn't a regular file or directory", path.display()));
+        }
+    }
+    Ok(())
 }
 
 #[derive(Deserialize)]
@@ -367,6 +439,7 @@ struct RawEnv {
     git_remote_protocol: Option<Spanned<GitRemoteProtocol>>,
     git_branch: Option<String>,
     config_overrides: Option<toml::Table>,
+    seed: Option<Spanned<String>>,
 }
 
 #[derive(Deserialize)]
@@ -610,6 +683,25 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
         Some(table) => serde_json::to_value(table).map_err(|e| loc.at(0, format!("env.config_overrides: {e}")))?,
     };
 
+    let seed = match raw.seed {
+        None => None,
+        Some(seed) => {
+            let name = seed.get_ref();
+            if !is_scenario_name(name) {
+                return Err(loc.at_span(&seed, format!("seed name {name:?} must match [a-z0-9][a-z0-9-]*")));
+            }
+            let dir = roots.seed_dir(name);
+            if !dir.is_dir() {
+                return Err(loc.at_span(
+                    &seed,
+                    format!("seed {name:?} isn't a directory under {}", roots.seeds.display()),
+                ));
+            }
+            seed_files(&dir).map_err(|e| loc.at_span(&seed, format!("seed {name:?}: {e}")))?;
+            Some(seed.into_inner())
+        }
+    };
+
     Ok(EnvSpec {
         fixtures,
         config,
@@ -618,6 +710,7 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
         git_remote_protocol,
         git_branch: raw.git_branch.unwrap_or_else(|| "main".to_owned()),
         config_overrides,
+        seed,
     })
 }
 
@@ -757,6 +850,7 @@ mod tests {
         Roots {
             fixtures: parity.join("fixtures"),
             configs: parity.join("configs"),
+            seeds: parity.join("seeds"),
         }
     }
 
@@ -906,6 +1000,74 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
         assert_eq!(s.env.git_remote, None);
         assert_eq!(s.env.git_remote_protocol, GitRemoteProtocol::Https);
         assert_eq!(s.env.git_branch, "main");
+        assert_eq!(s.env.seed, None);
+    }
+
+    /// Roots whose seeds dir is a temp dir, for building bad seeds.
+    fn seed_roots() -> (tempfile::TempDir, Roots) {
+        let dir = tempfile::tempdir().unwrap();
+        let roots = Roots {
+            seeds: dir.path().to_owned(),
+            ..roots()
+        };
+        (dir, roots)
+    }
+
+    fn write_seed_file(root: &Path, rel: &str) {
+        let path = root.join(rel);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, "x").unwrap();
+    }
+
+    /// Asserts that `[env] seed = "<name>"` fails on line 3 with a message containing `needle`.
+    #[track_caller]
+    fn assert_seed_error(roots: &Roots, name: &str, needle: &str) {
+        let source = format!("version = 1\n[env]\nseed = {name:?}\n");
+        let err = Scenario::parse(Path::new("parity/scenarios/test.toml"), &source, roots)
+            .expect_err("scenario should be invalid");
+        assert_eq!(err.line, 3, "{err}");
+        assert!(err.message.contains(needle), "{err:?} should mention {needle:?}");
+    }
+
+    #[test]
+    fn parses_a_seed() {
+        let s = parse("version = 1\n[env]\nseed = \"repos-cache\"\n").unwrap();
+        assert_eq!(s.env.seed.as_deref(), Some("repos-cache"));
+        let (dir, roots) = seed_roots();
+        write_seed_file(dir.path(), "both/work/b.md");
+        write_seed_file(dir.path(), "both/home/.cache/z.json");
+        write_seed_file(dir.path(), "both/home/a.json");
+        assert_eq!(
+            seed_files(&dir.path().join("both")).unwrap(),
+            ["home/.cache/z.json", "home/a.json", "work/b.md"]
+        );
+        let source = "version = 1\n[env]\nseed = \"both\"\n";
+        Scenario::parse(Path::new("t.toml"), source, &roots).unwrap();
+    }
+
+    #[test]
+    fn rejects_bad_seeds() {
+        let (dir, roots) = seed_roots();
+        assert_seed_error(&roots, "Repos", "[a-z0-9][a-z0-9-]*");
+        assert_seed_error(&roots, "../x", "[a-z0-9][a-z0-9-]*");
+        assert_seed_error(&roots, "missing", "isn't a directory");
+
+        write_seed_file(dir.path(), "extra/home/a.json");
+        write_seed_file(dir.path(), "extra/notes.md");
+        assert_seed_error(&roots, "extra", "only home/ and work/");
+
+        std::fs::create_dir_all(dir.path().join("empty/home/.cache")).unwrap();
+        assert_seed_error(&roots, "empty", "no files");
+
+        write_seed_file(dir.path(), "config/home/.config/lazy-github/config.json");
+        assert_seed_error(&roots, "config", "which the harness writes");
+
+        #[cfg(unix)]
+        {
+            write_seed_file(dir.path(), "linked/home/a.json");
+            std::os::unix::fs::symlink("a.json", dir.path().join("linked/home/b.json")).unwrap();
+            assert_seed_error(&roots, "linked", "symlink");
+        }
     }
 
     #[test]

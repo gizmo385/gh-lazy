@@ -1,0 +1,122 @@
+lazy-github-screen 1
+size 160x48
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/dotfiles                                                                                                                             │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-bot/dotfiles Details ────────────────────────────────────────────────────────────┐
+│                                                              ││ Repo Overview                                                                                │
+│                                                              ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                                              ││parity-bot/dotfiles • Public                                                                  │
+│                                                              ││Owned by parity-bot                                                                           │
+│                                                              ││Default branch: main                                                                          │
+│                                                              ││                                                                                              │
+│                                                              ││Shell configuration, kept in one place.                                                       │
+│                                                              ││                                                                                              │
+│                                                              ││──────────────────────────────────────────────────────────────────────────────────────────────│
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                           dotfiles                                           │
+│                                                              ││                                                                                              │
+│                                                              ││  Configuration files.                                                                        │
+│                                                              ││                                                                                              │
+│                          Loading...                          ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [2] Pull Requests (empty) ──────────────────────────────────┐└──────────────────────────────────────────────────────────────────────────────────────────────┘
+│ #  Status  Author  Title                                     │┌─ [6] Command Log ────────────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────┘│INFO 2026-10-27 22:25:55 - Selected repo parity-bot/dotfiles                                  │
+┌─ [3] Issues (empty) ─────────────────────────────────────────┐│                                                                                              │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Comman
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde.bbbbbbbbbbbbb................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdeghhhhhhhhhhhhhgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggge
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdeiiiiiiiiiiiiiiiiiiibbbcccccc..................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdebbbbbbbbbjjjjjjjjjj...........................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdebbbbbbbbbbbbbbbbkkkk..........................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdebbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.......................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaae
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll..e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..bbbbbbbbbbbbbbbbbbbb........................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..............................................................................................e
+eeeeeeeeeeeeeeeeeeeeemmmmmmmeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ennnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnneeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooppe
+eeeeeeeeeeeeeemmmmmmmeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooppe
+ennnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnneeooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooppe
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooppe
+eeeeeeeeeeeeeeeeemmmmmmmeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooppe
+ennnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnneeppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqe
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+rrrsssssssrrrrssssssssssssssssrrrssssssssssssssssssrrrssssssssssrrrssssssssssrrrsssssssrrrrsssssssssssrrrssssssssssssrrrssssssssssssssssssssssrrrsssssrrrrssssss
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#adff2f bg=#121212
+d fg=#4ebf71 bg=#121212
+e fg=#6db2ff bg=#121212
+f fg=#0178d4 bg=#1b1b1b
+g fg=#262626 bg=#121212
+h fg=#0178d4 bg=#121212
+i fg=#e0e0e0 bg=#121212 bold underline
+j fg=#e0e0e0 bg=#121212 underline
+k fg=#e0e0e0 bg=#121212 bold
+l fg=#0178d4 bg=#121212 bold
+m fg=#4e7bae bg=#121212
+n fg=#e0e0e0 bg=#242f38 bold
+o fg=#e1e1e1 bg=#1e1e1e
+p fg=#e1e1e1 bg=#000000
+q bg=#000000
+r fg=#ffa62b bg=#242f38 bold
+s fg=#e0e0e0 bg=#242f38

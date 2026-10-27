@@ -31,6 +31,7 @@ fn scenario(steps: &str) -> Scenario {
     let roots = Roots {
         fixtures: parity.join("fixtures"),
         configs: parity.join("configs"),
+        seeds: parity.join("seeds"),
     };
     let source = format!("version = 1\nsizes = [[80, 24]]\ntimeout_ms = 15000\n{steps}");
     Scenario::parse(Path::new("echo.toml"), &source, &roots).unwrap_or_else(|e| panic!("{e}"))

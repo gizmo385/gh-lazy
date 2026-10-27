@@ -1,0 +1,44 @@
+version = 1
+description = "A seeded repos.json at startup: the cached rows stay hidden under the loading overlay, the current-directory repo is selected from them, then the list replaces them"
+gate = true
+parity_rows = [
+    "caches-drafts.repos-json",
+    "repositories.loading",
+    "repositories.auto-select-cwd-repo",
+    "infrastructure.parity-seed-files",
+]
+sizes = [[160, 48]]
+
+[env]
+# repos-slow answers the repos list after 2 s, so the selection can only come from the cached rows.
+fixtures = ["repos-slow", "repo-selected-empty", "base"]
+seed = "repos-cache"
+git_remote = "parity-bot/dotfiles"
+git_remote_protocol = "ssh"
+config_overrides = { appearance = { show_command_log = true } }
+
+[[step]]
+wait = { text = "Current repo: parity-bot/dotfiles", timeout_ms = 15000 }
+
+# Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and the command log's
+# timestamps differ run to run, so both boxes are ignored.
+[[step]]
+capture = "cached"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details", "Command Log"] }
+
+[[step]]
+wait = { text = "lazy-demo", timeout_ms = 15000 }
+
+[[step]]
+capture = "fetched"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+ignore = { boxes = ["Details", "Command Log"] }
+
+[expect.cached]
+contains = ["Loading...", "Current repo: parity-bot/dotfiles"]
+not_contains = ["cached-only", "Traceback"]
+
+[expect.fetched]
+contains = ["Current repo: parity-bot/dotfiles"]
+not_contains = ["cached-only", "Traceback"]

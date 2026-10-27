@@ -1,0 +1,36 @@
+version = 1
+description = "A truncated repos.json at startup: one WARNING line in the command log, then the list fills the table"
+gate = true
+parity_rows = ["caches-drafts.all-or-nothing-load"]
+sizes = [[160, 48]]
+
+[env]
+# repos-slow answers the repos list after 2 s, so the warning shows before the rows do.
+fixtures = ["repos-slow", "base"]
+seed = "repos-cache-corrupt"
+config_overrides = { appearance = { show_command_log = true } }
+
+# The line names the run's temp path, so only its start is matched, and the Command Log box is ignored.
+[[step]]
+wait = { regex = 'WARNING \d{4}-\d\d-\d\d \d\d:\d\d:\d\d - Failed to parse cache file ', timeout_ms = 15000 }
+
+[[step]]
+capture = "warning"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Command Log"] }
+
+[[step]]
+wait = { text = "lazy-demo", timeout_ms = 15000 }
+
+[[step]]
+capture = "fetched"
+checks = ["titles", "headers", "rows"]
+ignore = { boxes = ["Command Log"] }
+
+[expect.warning]
+contains = ["Failed to parse cache file"]
+not_contains = ["Traceback"]
+
+[expect.fetched]
+contains = ["lazy-demo"]
+not_contains = ["Traceback"]

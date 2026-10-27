@@ -26,7 +26,7 @@ use super::check::{self, Mismatch};
 use super::env;
 use super::grid::{Grid, Line, Style};
 use super::runner::{self, AppRunStatus};
-use super::scenario::{App, Check, Ignore, Roots, Scenario, Size, Step, WaitFor};
+use super::scenario::{self, App, Check, Ignore, Roots, Scenario, Size, Step, WaitFor};
 use super::screen;
 use super::structure::{self, ThemeColors};
 use super::{Context, HarnessError, Result};
@@ -1055,6 +1055,28 @@ struct CaptureKey<'a> {
     capture_stable_ms: u64,
     size: String,
     steps: Vec<KeyStep<'a>>,
+    /// Left out without a seed, so keys from before the field existed don't change.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    seed: Option<SeedKey<'a>>,
+}
+
+/// A seed in the capture key: its name and each file's `[path relative to the seed dir, blob id]`, sorted by path.
+#[derive(Serialize)]
+struct SeedKey<'a> {
+    name: &'a str,
+    files: Vec<(String, String)>,
+}
+
+/// The [`SeedKey`] of the seed `name`, with blob ids computed in `repo`.
+fn seed_key<'a>(repo: &Path, name: &'a str, roots: &Roots) -> Result<SeedKey<'a>> {
+    let dir = roots.seed_dir(name);
+    let files = scenario::seed_files(&dir).map_err(|e| HarnessError(format!("seed {name:?}: {e}")))?;
+    let paths: Vec<String> = files.iter().map(|f| relative(repo, &dir.join(f))).collect();
+    let blobs = blob_ids(repo, &paths)?;
+    Ok(SeedKey {
+        name,
+        files: files.into_iter().zip(blobs).collect(),
+    })
 }
 
 #[derive(Serialize)]
@@ -1088,9 +1110,10 @@ fn millis(d: Duration) -> u64 {
     u64::try_from(d.as_millis()).unwrap_or(u64::MAX)
 }
 
-/// The capture key as JSON: the scenario's resolved config, env, timing, `size` and steps. It leaves out
-/// `description`, `gate`, `parity_rows`, `[expect]`, timeouts and `apps`, which don't change what Python draws.
-pub fn capture_key(scenario: &Scenario, size: Size, roots: &Roots) -> Result<String> {
+/// The capture key as JSON: the scenario's resolved config, env (with the seed's files, hashed in `repo`), timing,
+/// `size` and steps. It leaves out `description`, `gate`, `parity_rows`, `[expect]`, timeouts and `apps`, which
+/// don't change what Python draws.
+pub fn capture_key(repo: &Path, scenario: &Scenario, size: Size, roots: &Roots) -> Result<String> {
     let steps = scenario
         .steps
         .iter()
@@ -1126,13 +1149,17 @@ pub fn capture_key(scenario: &Scenario, size: Size, roots: &Roots) -> Result<Str
         capture_stable_ms: millis(scenario.timing.capture_stable),
         size: size.to_string(),
         steps,
+        seed: match &scenario.env.seed {
+            Some(name) => Some(seed_key(repo, name, roots)?),
+            None => None,
+        },
     };
     serde_json::to_string(&key).context("serializing the capture key")
 }
 
 /// The `scenario` hash: the [`capture_key`].
 pub fn scenario_hash(repo: &Path, scenario: &Scenario, size: Size, roots: &Roots) -> Result<String> {
-    hash_bytes(repo, capture_key(scenario, size, roots)?.as_bytes())
+    hash_bytes(repo, capture_key(repo, scenario, size, roots)?.as_bytes())
 }
 
 /// The `fixtures` hash: every fixture in the scenario's sets whose request key equals a served request in
@@ -1483,6 +1510,7 @@ mod tests {
             Roots {
                 fixtures: self.path().join("parity/fixtures"),
                 configs: self.path().join("parity/configs"),
+                seeds: self.path().join("parity/seeds"),
             }
         }
 
@@ -1638,6 +1666,7 @@ contains = ["Hi"]
         let roots = Roots {
             fixtures: dir.path().join("fixtures"),
             configs: dir.path().join("configs"),
+            seeds: dir.path().join("seeds"),
         };
         (dir, roots)
     }
@@ -1645,7 +1674,9 @@ contains = ["Hi"]
     fn key_of(source: &str, size: Size, roots: &Roots) -> String {
         let scenario = Scenario::parse(Path::new("parity/scenarios/keyed.toml"), source, roots)
             .unwrap_or_else(|e| panic!("{e}\n{source}"));
-        capture_key(&scenario, size, roots).unwrap()
+        // The seeds dir sits next to the configs, in the key roots' temp dir.
+        let repo = roots.configs.parent().unwrap();
+        capture_key(repo, &scenario, size, roots).unwrap()
     }
 
     /// `KEYED` with `from` replaced by `to`; `from` must occur in it.
@@ -1718,6 +1749,45 @@ contains = ["Hi"]
         let ssh = with("git_remote_protocol = \"ssh\"\n");
         assert_ne!(ssh, https);
         assert!(ssh.contains(r#""git_remote_protocol":"ssh""#), "{ssh}");
+    }
+
+    #[test]
+    fn the_capture_key_has_the_seed_only_when_set() {
+        let (dir, roots) = key_roots();
+        let unseeded = key_of(KEYED, SIZE, &roots);
+        assert!(!unseeded.contains("seed"), "{unseeded}");
+
+        let file = dir.path().join("seeds/s/home/.cache/repos.json");
+        std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+        std::fs::write(&file, "[]").unwrap();
+        let seeded = variant("[env]\n", "[env]\nseed = \"s\"\n");
+        let key: Value = serde_json::from_str(&key_of(&seeded, SIZE, &roots)).unwrap();
+        assert_eq!(
+            key["seed"],
+            serde_json::json!({
+                "name": "s",
+                // `git hash-object` of `[]`.
+                "files": [["home/.cache/repos.json", "0637a088a01e8ddab3bf3fa98dbe804cbde1a0dc"]],
+            })
+        );
+    }
+
+    #[test]
+    fn changing_a_seed_file_changes_the_scenario_hash() {
+        let repo = Repo::new();
+        repo.write("parity/configs/default.json", "{}\n");
+        std::fs::create_dir_all(repo.path().join("parity/fixtures/base")).unwrap();
+        repo.write("parity/seeds/s/home/.cache/repos.json", "[]\n");
+        repo.write("parity/scenarios/seeded.toml", "version = 1\n[env]\nseed = \"s\"\n");
+        let hash = || scenario_hash(repo.path(), &repo.scenario("seeded"), SIZE, &repo.roots()).unwrap();
+        let before = hash();
+        assert_eq!(hash(), before, "deterministic");
+        repo.write("parity/seeds/s/home/.cache/repos.json", "[{}]\n");
+        assert_ne!(hash(), before, "a changed file");
+        repo.write("parity/seeds/s/home/.cache/repos.json", "[]\n");
+        assert_eq!(hash(), before);
+        repo.write("parity/seeds/s/work/pr_template.md", "t\n");
+        assert_ne!(hash(), before, "an added file");
     }
 
     #[test]

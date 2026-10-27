@@ -266,8 +266,11 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   `table-navigation` and `table-search` scenarios: on the first page, three `parity-bot` names contain `lazy` and two
   start with `gh`. Hand-written: only the fields the apps read are kept.
 - `repos-error/`: base's `GET /user/repos` page 1 answered with a 500 (`{"message": "Server Error"}`) after 1.5 s,
-  long enough to capture the loading overlay. Listed before `base`, for the `repos-fetch-error` scenario.
-  Hand-written.
+  long enough to capture the loading overlay. Listed before `base`, for the `repos-fetch-error` and
+  `repos-cache-error` scenarios. Hand-written.
+- `repos-slow/`: base's `GET /user/repos` page 1 answered after 2 s (`delay_ms = 2000`), so what the apps show before
+  the list arrives (a seeded `repos.json`, its warning) can be captured. Listed before `base`, for the `repos-cache`
+  and `repos-cache-corrupt` scenarios. Hand-written.
 - `notifications-0/`, `notifications-3/`, `notifications-50/`: `GET /notifications` (`all=false`, `page=1`,
   `per_page=50`) answered with 0, 3 or 50 unread notifications (50 is a full first page) for repos in `base`. Listed
   before `base`, for the `status-bar-unread-*` scenarios. Hand-written.
@@ -377,6 +380,24 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   .../workflows/7000002/dispatches` for `release` (204) and `.../workflows/7000001/dispatches` for `main` (422),
   `POST .../runs/5000042/rerun` and `.../rerun-failed-jobs` (201), and `GET .../runs/5000042` (for Rust's refetch;
   Python never asks). Hand-written.
+
+## Seeds
+
+A seed is a directory `parity/seeds/<name>/` holding a `home/` tree, a `work/` tree or both, named by a scenario's
+`[env] seed` (see [the isolated environment](#the-isolated-environment)). `home/` mirrors the test `HOME`, `work/` the
+app's working directory. The root `.gitignore` ignores `.cache` everywhere, so `!/parity/seeds/**/.cache/` re-includes
+the seeds' cache directories.
+
+- `repos-cache/`: `home/.config/lazy-github/.cache/repos.json` in Python's compact format with two repos,
+  `parity-bot/cached-only` (only in the cache) then `parity-bot/dotfiles`. For the `repos-cache` and
+  `repos-cache-error` scenarios.
+- `repos-cache-corrupt/`: a `repos.json` cut off inside its first entry, so it isn't valid JSON. For the
+  `repos-cache-corrupt` scenario.
+- `pr-draft/`: a saved draft for `parity-bot/pr-details`
+  (`home/.config/lazy-github/.cache/pr_drafts/parity-bot_pr-details.json`: title, body, base and head, draft, one
+  reviewer) and a `work/pr_template.md`. For #186's draft-restore scenario.
+- `pr-draft-corrupt/`: the same paths with a draft that has only `repo_full_name` and `title`, so it fails the
+  schema. For #186's corrupt-draft scenario.
 
 ## Recording fixtures
 
@@ -621,6 +642,13 @@ Every scenario × size × app gets a temp dir `<run>` holding `home/`, `bin/` an
   The Python app keeps everything (config, log, table cache, PR drafts) under `$HOME/.config/lazy-github`, so a fresh
   `HOME` also means no cached tables are shown before the first fetch.
 - `bin/gh` (`gh.exe` on Windows) is fake-gh, installed with `fake_gh::install`.
+- With `seed = "<name>"`, `parity/seeds/<name>/home/` is copied into `home/` and `work/` into `work/` before the app
+  starts: after `config.json` is written and after the git repo below is made. Copying after `git init` keeps the
+  parity commit empty, so its SHA doesn't change, and seeded `work/` files are untracked. Each app run gets a fresh
+  copy, so a file one run rewrites never reaches the next. A seed is rejected (with `file:line`, by `--validate` and
+  every run) when its name isn't `[a-z0-9][a-z0-9-]*`, its directory is missing, it holds anything at the top level
+  other than `home/` and `work/`, it holds no files, it holds a symlink anywhere, or it holds
+  `home/.config/lazy-github/config.json`, which the harness owns (use `config` and `config_overrides`).
 - `work/` is the app's working directory. When the scenario sets `git_remote = "owner/name"`, it's made a git repo:
   - `git init -q -b <git_branch, default main>`
   - `git remote add origin https://github.com/owner/name.git`, or `git@github.com:owner/name.git` with
@@ -671,6 +699,7 @@ gh_auth = "logged-in"            # or "logged-out"; default "logged-in"
 git_remote = "gizmo385/gh-lazy"  # optional; omit = CWD is not a git repo
 git_remote_protocol = "https"    # or "ssh" (origin is git@github.com:...); default "https"; needs git_remote
 git_branch = "main"              # optional, default "main"
+seed = "repos-cache"             # optional: parity/seeds/<name>/, copied into home/ and work/ (see Seeds)
 
 [env.config_overrides]           # optional, deep-merged over the config file
 appearance = { show_command_log = true }
@@ -1284,7 +1313,7 @@ Each input is a git object id from `git hash-object`, run in the repo with a cle
 
 | Input | What it hashes |
 | --- | --- |
-| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `key_delay_ms`, `capture_stable_ms`, the size and every step. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore`. |
+| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `key_delay_ms`, `capture_stable_ms`, the size, every step and, only when the scenario sets one, the seed: its name and its files as sorted `[<path relative to the seed dir>, <blob>]` pairs. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore`. |
 | `fixtures` | Every fixture in the scenario's sets whose request key (method, path, query, accept) equals a served entry in `requests.jsonl`, plus its `body_file`, as sorted `<set>/<relpath> <blob>` lines. For a `--paginate` request, the pages its `Link: rel="next"` headers lead to as well. |
 | `python_app` | `lazy_github/`, `pyproject.toml` and `uv.lock`. |
 | `harness` | `crates/fake-gh/src/`, `crates/fake-gh/Cargo.toml`, `xtask/src/parity/{env,runner,keys,grid}.rs`, `CAPTURE_VERSION` and the `vt100` and `portable-pty` versions in `Cargo.lock`. |
@@ -1301,6 +1330,7 @@ for example a new env var set in a file that isn't hashed.
 | --- | --- |
 | Merging `main` into `rust-main` with changes to `lazy_github/`, `pyproject.toml` or `uv.lock` | all |
 | A scenario's env, steps, `checks` or `ignore`, or the config file it uses | that scenario's |
+| A file in a scenario's seed (`parity/seeds/<name>/`), added, changed or removed | that scenario's (`scenario changed`) |
 | Adding or changing fixtures | those whose Python run requested a changed key |
 | `crates/fake-gh/src/`, `env.rs`, `runner.rs`, `keys.rs` or `grid.rs`, a pinned crate, or `CAPTURE_VERSION` | all |
 | `[expect]`, `gate`, `parity_rows`, `description`, timeouts, `apps`, `check.rs`, `structure.rs`, `report.rs` or `themes.toml` | none |

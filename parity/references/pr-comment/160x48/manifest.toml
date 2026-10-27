@@ -7,7 +7,7 @@ captures = ["comment-focused", "reply-open", "replied", "new-open", "reloaded"]
 scenario = "a646a30066dc0cab7c31137827d699dce164ba47"
 fixtures = "35b6d9cae2c8f277b15f3cba83584f276adbb3cf"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "a42709a8f63e18b6ffbf05888ac70df13205cac1"
+harness = "d40dac32aacaaea9cd02642bf388d6d6f854e0ee"
 
 [recorded_with]
 python = "3.14.7"

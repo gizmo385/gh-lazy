@@ -7,7 +7,7 @@ captures = ["loaded", "page-2"]
 scenario = "15246d9f4eb3e9c42080c9a2e5b22fbb496fa88c"
 fixtures = "f12c80ea7d996d47c9d52b8d1cef78f20f1c03a6"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "a42709a8f63e18b6ffbf05888ac70df13205cac1"
+harness = "d40dac32aacaaea9cd02642bf388d6d6f854e0ee"
 
 [recorded_with]
 python = "3.14.7"

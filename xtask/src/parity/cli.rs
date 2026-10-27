@@ -182,6 +182,7 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
             .clone()
             .unwrap_or_else(|| repo.join("parity/fixtures")),
         configs: repo.join("parity/configs"),
+        seeds: repo.join("parity/seeds"),
     };
 
     let files = resolve_scenarios(&repo, args)?;
@@ -1081,6 +1082,7 @@ mod tests {
         let roots = Roots {
             fixtures: repo.join("parity/fixtures"),
             configs: repo.join("parity/configs"),
+            seeds: repo.join("parity/seeds"),
         };
         let load = |name: &str, source: &str| Scenario::parse(Path::new(&format!("{name}.toml")), source, &roots);
         let mut scenarios: Vec<Scenario> = ["a", "b", "c"]
@@ -1271,6 +1273,7 @@ mod tests {
         let roots = Roots {
             fixtures: repo.join("parity/fixtures"),
             configs: repo.join("parity/configs"),
+            seeds: repo.join("parity/seeds"),
         };
         let path = repo.join("parity/scenarios/startup.toml");
         let startup = Scenario::parse(&path, "version = 1\n", &roots).unwrap();
@@ -1309,6 +1312,7 @@ mod tests {
         let roots = Roots {
             fixtures: repo.join("parity/fixtures"),
             configs: repo.join("parity/configs"),
+            seeds: repo.join("parity/seeds"),
         };
         let load = |path: &str| Scenario::parse(Path::new(path), "version = 1\n", &roots).unwrap();
         let scenarios = [

@@ -1,9 +1,11 @@
+use crossterm::event::{KeyModifiers, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 
 use super::*;
 use crate::component::{BindingState, ChainLink, Owner, ScreenKind};
+use crate::event::Event;
 use crate::keymap::{BindingId, Keymap, active_bindings};
 use crate::screens::main::SectionId;
 use crate::test_util::TestApp;
@@ -266,6 +268,11 @@ fn a_group_title_heads_its_section() {
 fn panel(keys: &[&str], cols: u16, rows: u16) -> String {
     let mut app = TestApp::new(Config::default());
     app.press(keys);
+    panel_of(&mut app, cols, rows)
+}
+
+/// [`panel`] for an app already set up.
+fn panel_of(app: &mut TestApp, cols: u16, rows: u16) -> String {
     let buffer = app.render(cols, rows);
     let x = cols - help_width(cols);
     (0..rows)
@@ -311,12 +318,13 @@ fn help_panel_styles() {
     let mut terminal = Terminal::new(TestBackend::new(34, 5)).unwrap();
     terminal
         .draw(|frame| {
-            frame.render_widget(
+            frame.render_stateful_widget(
                 HelpPanel {
                     sections: &sections,
                     theme: &theme,
                 },
                 frame.area(),
+                &mut HelpScroll::default(),
             );
         })
         .unwrap();
@@ -341,4 +349,88 @@ fn an_overflowing_panel_makes_room_for_a_scrollbar() {
         screen.contains("\n▏           1 Focus repos table Focus the table of\n"),
         "{screen}"
     );
+}
+
+fn wheel(app: &mut TestApp, kind: MouseEventKind, column: u16, row: u16) {
+    app.send(Event::Mouse(MouseEvent {
+        kind,
+        column,
+        row,
+        modifiers: KeyModifiers::NONE,
+    }));
+}
+
+/// The text of the panel's rows at 100x30, between the border and padding and the scrollbar, trimmed.
+fn rows_100x30(app: &mut TestApp) -> Vec<String> {
+    let buffer = app.render(100, 30);
+    (0..30)
+        .map(|y| {
+            (69..97)
+                .map(|x| buffer[(x, y)].symbol())
+                .collect::<String>()
+                .trim()
+                .to_owned()
+        })
+        .collect()
+}
+
+/// `help-panel`'s `open` at 100x30: with `^n` listed (B7 drops it while notifications are off), the panel holds
+/// Python's 117 rows, and the thumb fills rows 0 to 6 and ends in `▂` on row 7, as Python's does.
+#[test]
+fn the_scrollbar_matches_python_at_100x30() {
+    let mut app = TestApp::new(notifications_on());
+    app.press(&["?"]);
+    let buffer = app.render(100, 30);
+    for x in [97, 98] {
+        let thumb: Vec<u16> = (0..30)
+            .filter(|&y| buffer[(x, y)].modifier.contains(Modifier::REVERSED))
+            .collect();
+        assert_eq!(thumb, (0..8).collect::<Vec<_>>());
+        assert_eq!(buffer[(x, 7)].symbol(), "▂");
+    }
+}
+
+/// Python's `KeyPanel` at 100x30, measured headless: each wheel notch over it scrolls two rows, the offset stays
+/// through a change of focus, clamped to the shorter content, and a panel opened again starts at the top.
+#[test]
+fn the_wheel_scrolls_the_panel_two_rows_a_notch() {
+    let mut app = TestApp::new(Config::default());
+    app.press(&["?"]);
+    let top = rows_100x30(&mut app);
+    assert_eq!(top[1], "↑ k Cursor up");
+    wheel(&mut app, MouseEventKind::ScrollDown, 80, 5);
+    wheel(&mut app, MouseEventKind::ScrollDown, 80, 5);
+    let scrolled = rows_100x30(&mut app);
+    assert_eq!(scrolled[0], "→ Cursor right");
+    assert_eq!(scrolled[1..26], top[5..30]);
+    // The thumb moved down with the text: 113 rows in a 30-row window, scrolled 4 of 83, fill rows 1 to 8.
+    let buffer = app.render(100, 30);
+    let thumb: Vec<u16> = (0..30)
+        .filter(|&y| buffer[(98, y)].modifier.contains(Modifier::REVERSED))
+        .collect();
+    assert_eq!(thumb, (1..9).collect::<Vec<_>>());
+    wheel(&mut app, MouseEventKind::ScrollUp, 80, 5);
+    assert_eq!(rows_100x30(&mut app)[0], "↓ j Cursor down");
+
+    // The border and the padding aren't the scrolling part.
+    wheel(&mut app, MouseEventKind::ScrollDown, 67, 5);
+    wheel(&mut app, MouseEventKind::ScrollDown, 68, 5);
+    assert_eq!(rows_100x30(&mut app)[0], "↓ j Cursor down");
+
+    // To the bottom and no further: the last line, then the table's blank bottom edge, end the window.
+    for _ in 0..100 {
+        wheel(&mut app, MouseEventKind::ScrollDown, 80, 5);
+    }
+    let bottom = rows_100x30(&mut app);
+    assert_eq!(bottom[28..], ["window", ""]);
+
+    // A change of focus keeps the offset, clamped to the details' shorter content.
+    app.press(&["5"]);
+    let details = rows_100x30(&mut app);
+    assert_ne!(details[1], "← Previous tab");
+    assert_eq!(details[28..], ["window", ""]);
+
+    // Closed and opened again, it starts at the top.
+    app.press(&["?", "?"]);
+    assert_eq!(rows_100x30(&mut app)[1], "← Previous tab");
 }

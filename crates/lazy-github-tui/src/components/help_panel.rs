@@ -5,11 +5,12 @@
 //! either side, a right-aligned key column and a wrapping description column, and a blank row between chain links.
 
 use ratatui::buffer::Buffer;
-use ratatui::layout::Rect;
+use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Paragraph, Widget};
+use ratatui::widgets::{Block, Paragraph, StatefulWidget, Widget};
 
+use crate::components::command_log::{WHEEL_ROWS, Wheel};
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
 use crate::keymap::ActiveBinding;
 use crate::theme::{AnsiColor, Paint, Theme, ThemeColor};
@@ -211,9 +212,44 @@ fn wrap(words: &[(&'static str, Style)], width: usize) -> Vec<Vec<Span<'static>>
     lines
 }
 
-/// The panel, drawn into the area [`help_width`] gives it. Content past the bottom is cut off; Python scrolls it with
-/// the mouse wheel, which isn't built yet. As in Textual, a scrollbar takes the last two content columns when the
-/// content overflows, and the text wraps narrower to make room.
+/// How far the panel is scrolled: Textual's `KeyPanel`, a `VerticalScroll` that can't take focus, so only the mouse
+/// wheel over it scrolls it. The offset outlives a frame and a change of focus, clamped to the new content, and a
+/// panel opened again starts at the top, as Textual mounts a new one.
+#[derive(Debug, Default)]
+pub struct HelpScroll {
+    /// The first visible line.
+    offset: usize,
+    /// Content and window heights at the last draw, which the wheel is clamped to.
+    last: (usize, usize),
+    /// Where the scrolling part (the `KeyPanel`, inside the border and padding) was drawn last.
+    area: Rect,
+}
+
+impl HelpScroll {
+    /// The first visible line.
+    pub fn offset(&self) -> usize {
+        self.offset
+    }
+
+    /// Whether the last frame drew the scrolling part at `position`, so the wheel there scrolls it.
+    pub fn contains(&self, position: Position) -> bool {
+        self.area.contains(position)
+    }
+
+    /// A wheel notch over the panel: Textual's scroll sensitivity, as of the last draw. Nothing scrolls sideways.
+    pub fn wheel(&mut self, wheel: Wheel) {
+        let (content, window) = self.last;
+        self.offset = match wheel {
+            Wheel::Up => self.offset.saturating_sub(WHEEL_ROWS),
+            Wheel::Down => self.offset + WHEEL_ROWS,
+            Wheel::Left | Wheel::Right => self.offset,
+        }
+        .min(content.saturating_sub(window));
+    }
+}
+
+/// The panel, drawn into the area [`help_width`] gives it, scrolled by its [`HelpScroll`]. As in Textual, a scrollbar
+/// takes the last two content columns when the content overflows, and the text wraps narrower to make room.
 pub struct HelpPanel<'a> {
     /// The sections, from [`help_sections`].
     pub sections: &'a [HelpSection],
@@ -221,8 +257,10 @@ pub struct HelpPanel<'a> {
     pub theme: &'a Theme,
 }
 
-impl Widget for HelpPanel<'_> {
-    fn render(self, area: Rect, buf: &mut Buffer) {
+impl StatefulWidget for HelpPanel<'_> {
+    type State = HelpScroll;
+
+    fn render(self, area: Rect, buf: &mut Buffer, scroll: &mut HelpScroll) {
         let theme = self.theme;
         let palette = theme.palette;
         let bg = theme.background();
@@ -248,15 +286,20 @@ impl Widget for HelpPanel<'_> {
             width: area.width.saturating_sub(3),
             ..area
         };
+        scroll.area = content;
         if content.is_empty() {
+            scroll.last = (0, 0);
+            scroll.offset = 0;
             return;
         }
         let styles = HelpStyles::new(theme);
         let mut lines = help_lines(self.sections, content.width, &styles);
-        let overflows = lines.len() > usize::from(content.height);
+        let window = usize::from(content.height);
+        let overflows = lines.len() > window;
         if overflows && content.width > scrollbar::VERTICAL_WIDTH {
             content.width -= scrollbar::VERTICAL_WIDTH;
             lines = help_lines(self.sections, content.width, &styles);
+            scroll.offset = scroll.offset.min(lines.len().saturating_sub(window));
             let back = palette.scrollbar_background.over(bg);
             let colors = ScrollbarColors {
                 bar: theme.paint(palette.scrollbar.over(back)),
@@ -271,12 +314,15 @@ impl Widget for HelpPanel<'_> {
             };
             let state = ScrollbarState {
                 content: lines.len(),
-                window: usize::from(content.height),
-                position: 0,
+                window,
+                position: scroll.offset,
             };
             scrollbar::render(buf, bar, Axis::Vertical, state, colors);
+        } else {
+            scroll.offset = 0;
         }
-        Paragraph::new(lines).render(content, buf);
+        scroll.last = (lines.len(), window);
+        Paragraph::new(lines.split_off(scroll.offset.min(lines.len()))).render(content, buf);
     }
 }
 

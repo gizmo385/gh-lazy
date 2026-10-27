@@ -17,8 +17,9 @@ use crate::clock::Clock;
 use crate::component::{
     BindingState, ChainLink, Component, Cx, LocalRepo, Outbox, Owner, RenderCx, ScreenKind, Shared,
 };
+use crate::components::command_log::Wheel;
 use crate::components::footer::{Footer, FooterHit, footer_items};
-use crate::components::help_panel::{HelpPanel, help_sections, help_width};
+use crate::components::help_panel::{HelpPanel, HelpScroll, help_sections, help_width};
 use crate::components::status_bar::{StatusBar, UnreadState};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
@@ -71,6 +72,8 @@ pub struct App {
     has_shown_maximize_toast: bool,
     /// Whether the keybindings panel is open. It's drawn only on the main screen, maximized or not. Never saved.
     help_open: bool,
+    /// How far the open panel is scrolled.
+    help_scroll: HelpScroll,
     /// The footer items drawn in the last frame, for clicks.
     footer_hits: Vec<FooterHit>,
     /// Where the mouse was at the last mouse event, for hover highlights. Each frame checks it against that frame's
@@ -98,6 +101,7 @@ impl App {
             maximized: None,
             has_shown_maximize_toast: false,
             help_open: false,
+            help_scroll: HelpScroll::default(),
             footer_hits: Vec::new(),
             mouse: None,
             local_repo_request: None,
@@ -260,6 +264,14 @@ impl App {
         let BaseScreen::Main(main) = &mut self.base else {
             return None;
         };
+        // The panel docks over the screen's right edge, and the wheel over it scrolls it.
+        if self.help_open
+            && self.help_scroll.contains(Position::new(mouse.column, mouse.row))
+            && let Some(wheel) = Wheel::from_mouse(&mouse)
+        {
+            self.help_scroll.wheel(wheel);
+            return Some(Action::Consumed);
+        }
         main.handle_mouse(mouse)
     }
 
@@ -433,7 +445,10 @@ impl App {
             // Python's `action_open_help`: only this closes the panel, and it doesn't move focus.
             // Only the main screen has the panel: Python mounts it on the startup screen, which the main screen
             // then covers.
-            Action::ToggleHelp if matches!(self.base, BaseScreen::Main(_)) => self.help_open = !self.help_open,
+            Action::ToggleHelp if matches!(self.base, BaseScreen::Main(_)) => {
+                self.help_open = !self.help_open;
+                self.help_scroll = HelpScroll::default();
+            }
             // `Consumed` was applied where it was produced.
             Action::ToggleHelp | Action::Consumed => {}
             Action::Main(action) => {
@@ -678,12 +693,13 @@ impl App {
                         ..area
                     };
                     let sections = help_sections(&active);
-                    frame.render_widget(
+                    frame.render_stateful_widget(
                         HelpPanel {
                             sections: &sections,
                             theme,
                         },
                         panel,
+                        &mut self.help_scroll,
                     );
                 }
                 // While maximized, the widget replaces the rest of the screen, footer included.

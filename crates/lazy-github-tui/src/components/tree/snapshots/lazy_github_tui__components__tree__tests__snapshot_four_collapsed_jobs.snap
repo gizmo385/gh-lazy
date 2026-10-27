@@ -1,0 +1,23 @@
+---
+source: crates/lazy-github-tui/src/components/tree/tests.rs
+expression: "styled(&mut jobs(), 40, 6, false)"
+---
+▶ ✓ build (completed)
+▶ ✗ test (completed)
+▶ − lint (completed)
+▶ ○ deploy (completed)
+
+
+--- styles
+..a.....................................
+..b.....................................
+..c.....................................
+..d.....................................
+........................................
+........................................
+--- legend
+. fg=#e0e0e0 bg=#1e1e1e
+a fg=#adff2f bg=#1e1e1e
+b fg=Red bg=#1e1e1e
+c fg=DarkGray bg=#1e1e1e
+d fg=Yellow bg=#1e1e1e

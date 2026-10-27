@@ -16,3 +16,4 @@ pub mod table;
 pub mod tabs;
 pub mod text_input;
 pub mod toasts;
+pub mod tree;

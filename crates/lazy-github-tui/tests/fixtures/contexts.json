@@ -3055,5 +3055,197 @@
         "tooltip": ""
       }
     ]
+  },
+  {
+    "class": "textual.widgets.Tree",
+    "bindings": [
+      {
+        "key": "up",
+        "id": null,
+        "action": "cursor_up",
+        "description": "Cursor Up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "down",
+        "id": null,
+        "action": "cursor_down",
+        "description": "Cursor Down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "left",
+        "id": null,
+        "action": "scroll_left",
+        "description": "Scroll Left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "right",
+        "id": null,
+        "action": "scroll_right",
+        "description": "Scroll Right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "home",
+        "id": null,
+        "action": "scroll_home",
+        "description": "Scroll Home",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "end",
+        "id": null,
+        "action": "scroll_end",
+        "description": "Scroll End",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pageup",
+        "id": null,
+        "action": "page_up",
+        "description": "Page Up",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pagedown",
+        "id": null,
+        "action": "page_down",
+        "description": "Page Down",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+pageup",
+        "id": null,
+        "action": "page_left",
+        "description": "Page Left",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+pagedown",
+        "id": null,
+        "action": "page_right",
+        "description": "Page Right",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+left",
+        "id": null,
+        "action": "cursor_parent",
+        "description": "Cursor to parent",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+right",
+        "id": null,
+        "action": "cursor_parent_next_sibling",
+        "description": "Cursor to next ancestor",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+up",
+        "id": null,
+        "action": "cursor_previous_sibling",
+        "description": "Cursor to previous sibling",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+down",
+        "id": null,
+        "action": "cursor_next_sibling",
+        "description": "Cursor to next sibling",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "enter",
+        "id": null,
+        "action": "select_cursor",
+        "description": "Select",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "space",
+        "id": null,
+        "action": "toggle_node",
+        "description": "Toggle",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+space",
+        "id": null,
+        "action": "toggle_expand_all",
+        "description": "Expand or collapse all",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
   }
 ]

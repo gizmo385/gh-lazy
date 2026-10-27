@@ -265,6 +265,20 @@ registry! {
     TextualButtonPress("textual.button.press", "enter", "press", "Press button").hidden();
     // `Switch`: the dialogs' switches (#223).
     TextualSwitchToggle("textual.switch.toggle_switch", "enter,space", "toggle_switch", "Toggle").hidden();
+    // `Tree`: the run Jobs tab's tree (#242), in `Tree.BINDINGS` order. It inherits the `textual.scroll.*` keys too.
+    TextualTreeCursorParent("textual.tree.cursor_parent", "shift+left", "cursor_parent", "Cursor to parent").hidden();
+    TextualTreeCursorParentNextSibling("textual.tree.cursor_parent_next_sibling", "shift+right", "cursor_parent_next_sibling", "Cursor to next ancestor")
+        .hidden();
+    TextualTreeCursorPreviousSibling("textual.tree.cursor_previous_sibling", "shift+up", "cursor_previous_sibling", "Cursor to previous sibling")
+        .hidden();
+    TextualTreeCursorNextSibling("textual.tree.cursor_next_sibling", "shift+down", "cursor_next_sibling", "Cursor to next sibling")
+        .hidden();
+    TextualTreeSelect("textual.tree.select_cursor", "enter", "select_cursor", "Select").hidden();
+    TextualTreeToggle("textual.tree.toggle_node", "space", "toggle_node", "Toggle").hidden();
+    TextualTreeToggleExpandAll("textual.tree.toggle_expand_all", "shift+space", "toggle_expand_all", "Expand or collapse all")
+        .hidden();
+    TextualTreeCursorUp("textual.tree.cursor_up", "up", "cursor_up", "Cursor Up").hidden();
+    TextualTreeCursorDown("textual.tree.cursor_down", "down", "cursor_down", "Cursor Down").hidden();
 }
 
 impl BindingId {

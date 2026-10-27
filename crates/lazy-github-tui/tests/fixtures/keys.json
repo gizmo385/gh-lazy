@@ -644,6 +644,15 @@
       ]
     },
     {
+      "raw": "shift+down",
+      "keys": [
+        "shift+down"
+      ],
+      "display": [
+        "shift+↓"
+      ]
+    },
+    {
       "raw": "shift+end",
       "keys": [
         "shift+end"
@@ -689,12 +698,30 @@
       ]
     },
     {
+      "raw": "shift+space",
+      "keys": [
+        "shift+space"
+      ],
+      "display": [
+        "shift+space"
+      ]
+    },
+    {
       "raw": "shift+tab",
       "keys": [
         "shift+tab"
       ],
       "display": [
         "shift+tab"
+      ]
+    },
+    {
+      "raw": "shift+up",
+      "keys": [
+        "shift+up"
+      ],
+      "display": [
+        "shift+↑"
       ]
     },
     {

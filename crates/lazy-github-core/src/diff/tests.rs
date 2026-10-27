@@ -218,7 +218,10 @@ fn hunk_labels() {
     );
     // An empty new side is titled from the old side (Py bug B65; Python shows `Lines 9-8`).
     assert_eq!(label(&format!("{section}@@ -9 +9,0 @@\n-a\n")), "Line 9 (-1)");
-    assert_eq!(label(&format!("{section}@@ -12,2 +11,0 @@\n-a\n-b\n")), "Lines 12-13 (-2)");
+    assert_eq!(
+        label(&format!("{section}@@ -12,2 +11,0 @@\n-a\n-b\n")),
+        "Lines 12-13 (-2)"
+    );
     // Not a header the label can read: shown as is, without counts.
     assert_eq!(label(&format!("{section}@@@ -1 -1 +1 @@@\n+x\n")), "@@@ -1 -1 +1 @@@");
     assert_eq!(label(&format!("{section}@@ -1 +x @@\n+x\n")), "@@ -1 +x @@");

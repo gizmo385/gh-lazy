@@ -16,6 +16,10 @@ use crate::toast::Toast;
 pub enum ProfileOrigin {
     /// The repos table: the owner of the highlighted repo.
     Repos,
+    /// The Pull Requests table: the author of the highlighted PR.
+    PullRequests,
+    /// The Issues table: the author of the highlighted issue.
+    Issues,
 }
 
 /// The profile fetches in flight. Each `u` makes its own pair of requests and opens its own dialog.

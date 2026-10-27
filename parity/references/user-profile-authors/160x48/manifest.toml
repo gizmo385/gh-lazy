@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["pr-author", "issue-author", "picked", "empty-tables"]
 
 [inputs]
-scenario = "6710af95d03bff8cf4d8a3f7e0b5fd916fe83681"
+scenario = "434fad2c0e7ddeefa2a56fa841ea7ea4b4d75856"
 fixtures = "b78c6e2310e24d8ee3f4cf8f2902928b7f03e438"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "a42709a8f63e18b6ffbf05888ac70df13205cac1"

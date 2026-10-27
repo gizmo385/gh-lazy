@@ -871,6 +871,12 @@ impl MainScreen {
             Owner::Section(SectionId::Repos) if id == BindingId::UserViewProfile => {
                 Some(Action::Main(MainAction::ViewProfile(ProfileOrigin::Repos)))
             }
+            Owner::Section(SectionId::PullRequests) if id == BindingId::UserViewProfile => {
+                Some(Action::Main(MainAction::ViewProfile(ProfileOrigin::PullRequests)))
+            }
+            Owner::Section(SectionId::Issues) if id == BindingId::UserViewProfile => {
+                Some(Action::Main(MainAction::ViewProfile(ProfileOrigin::Issues)))
+            }
             // Not built yet: the key is still consumed, as in Python.
             Owner::SearchableTable(_) | Owner::Section(_) | Owner::SelectionsPane => Some(Action::Unimplemented(id)),
             Owner::App | Owner::Screen(ScreenKind::Auth | ScreenKind::Modal(_)) | Owner::DialogField(..) => None,
@@ -1056,10 +1062,24 @@ impl Component for MainScreen {
                 Some(repo) => self.profile.open(repo.owner.login.clone(), ProfileOrigin::Repos, cx),
                 None => cx.notify(Toast::error("No repository currently selected")),
             },
+            MainAction::ViewProfile(ProfileOrigin::PullRequests) => match self.issue_lists.prs_table().selected() {
+                Some(pr) => self
+                    .profile
+                    .open(pr.issue.user.login.clone(), ProfileOrigin::PullRequests, cx),
+                None => cx.notify(Toast::error("No pull request currently selected")),
+            },
+            MainAction::ViewProfile(ProfileOrigin::Issues) => match self.issue_lists.issues_table().selected() {
+                Some(issue) => self.profile.open(issue.user.login.clone(), ProfileOrigin::Issues, cx),
+                None => cx.notify(Toast::error("No issue currently selected")),
+            },
             MainAction::ProfilePicked(ProfileOrigin::Repos, Some(repo)) => {
                 if self.repos.table.get(&repo.full_name).is_none() {
                     self.repos.add((*repo).clone(), cx);
                 }
+                cx.dispatch(Action::SelectRepo(repo));
+            }
+            // Python's PR and issue containers post `RepoSelected` without `add_item`.
+            MainAction::ProfilePicked(ProfileOrigin::PullRequests | ProfileOrigin::Issues, Some(repo)) => {
                 cx.dispatch(Action::SelectRepo(repo));
             }
             MainAction::OpenPullRequest { target, focus } => self.open_pull_request(target, focus, cx),

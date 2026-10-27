@@ -1,5 +1,5 @@
 version = 1
-description = "Lookup repository modal (O): the switch, an empty, an invalid and an unknown name (error toasts, the modal stays), and a found repo added to the table and selected"
+description = "Lookup repository modal (O): the switch, an empty, an invalid and an unknown name (error toasts, the modal stays; the unknown one submitted with shift+enter), and a found repo added to the table and selected"
 gate = true
 parity_rows = [
     "repositories.lookup",
@@ -9,6 +9,7 @@ parity_rows = [
     "keybindings.repositories-lookup",
     "modals.dialog-buttons",
     "modals.lookup-modals",
+    "keybindings.modal-submit",
 ]
 
 [env]
@@ -50,7 +51,8 @@ keys = ["tab", "tab", "enter"]
 [[step]]
 capture = "invalid"
 
-# A name GitHub doesn't know.
+# A name GitHub doesn't know, submitted from the input with modal.submit: shift+enter, in the kitty keyboard
+# protocol's encoding (CSI 13;2 u), which both apps read.
 [[step]]
 keys = ["shift+tab", "shift+tab"]
 
@@ -58,7 +60,7 @@ keys = ["shift+tab", "shift+tab"]
 type = "parity-org/missing"
 
 [[step]]
-keys = ["tab", "tab", "enter"]
+type = "\u001b[13;2u"
 
 [[step]]
 wait = { text = "Could not find repo!" }
@@ -66,9 +68,10 @@ wait = { text = "Could not find repo!" }
 [[step]]
 capture = "not-found"
 
-# A repo that exists: the modal closes, the repo joins the table and is selected.
+# A repo that exists: the modal closes, the repo joins the table and is selected. The input still has focus; leaving
+# and coming back selects its text, so typing replaces it.
 [[step]]
-keys = ["shift+tab", "shift+tab"]
+keys = ["tab", "shift+tab"]
 
 [[step]]
 type = "parity-org/lookup-me"

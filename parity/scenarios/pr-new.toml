@@ -1,0 +1,256 @@
+version = 1
+description = "Create PR modal (P): without a repo; the empty modal; missing fields; a head GitHub refuses, the push prompt and its failure outside a git repo; a suggested Compare branch, Draft, a two-line description, the created PR added and opened; escape and Cancel close"
+# The working directory is not a git repo, so the push prompt Yes fails ("Error while pushing branch"); a successful
+# push needs a local git remote in the harness and is in pr-new-push (#184 sub-issues). The PR table after the
+# create is not compared: Python cuts the new number 10 to "1" (Py bug B73), so `created` checks only the titles,
+# tabs and focus. The modal hides the boxes under it from the structure, so the modal captures rely on [expect].
+gate = false
+parity_rows = [
+    "modals.create-edit-pr",
+    "modals.create-pr-branches",
+    "modals.create-pr-title-description",
+    "modals.create-pr-submit",
+    "modals.create-pr-push-prompt",
+    "modals.confirm",
+    "modals.input-suggestions",
+    "keybindings.pull-request-new",
+    "keybindings.modal-submit",
+    "keybindings.confirm-yes",
+    "toasts.select-repository-first",
+]
+sizes = [[160, 48]]
+
+[env]
+# pr-create over pr-details: the branches main, new-feature and next-release; the collaborators; POST .../pulls
+# answering 422 for the head missing-branch and draft PR 10 (after 1 s) for the head new-feature; PR 10 details.
+fixtures = ["pr-create", "pr-details", "base"]
+config_overrides.appearance.show_issues = false
+config_overrides.appearance.show_workflows = false
+
+[[step]]
+wait.text = "pr-details"
+wait.timeout_ms = 15000
+
+# No repo selected yet.
+[[step]]
+keys = ["P"]
+
+[[step]]
+wait.text = "Please select a repository first!"
+
+[[step]]
+capture = "no-repo"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Add a cursor to the viewer"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["P"]
+
+[[step]]
+wait.text = "New Pull Request"
+
+# Focus is on the title. The modal has no footer of its own: the main screen footer stays under it.
+[[step]]
+capture = "open"
+checks = ["footer"]
+
+# shift+enter, in the kitty keyboard protocol encoding (CSI 13;2 u), which both apps read. Title and Compare are empty.
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+wait.text = "Missing required fields!"
+
+[[step]]
+capture = "missing-fields"
+checks = ["footer"]
+
+[[step]]
+type = "Parity PR"
+
+# Back past the Draft switch to Compare.
+[[step]]
+keys = ["shift+tab", "shift+tab"]
+
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+type = "missing-branch"
+
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/pulls"
+wait.log.body.title = "Parity PR"
+wait.log.body.draft = false
+wait.log.body.base = "main"
+wait.log.body.head = "parity-bot:missing-branch"
+
+[[step]]
+wait.text = "may not exist"
+
+[[step]]
+capture = "push-prompt"
+checks = ["footer"]
+
+[[step]]
+keys = ["y"]
+
+[[step]]
+wait.text = "Error while pushing branch"
+
+[[step]]
+capture = "push-failed"
+checks = ["footer"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["backspace", "backspace", "backspace", "backspace", "backspace", "backspace", "backspace", "backspace", "backspace", "backspace", "backspace", "backspace", "backspace", "backspace"]
+
+[[step]]
+type = "new"
+
+[[step]]
+capture = "suggested"
+checks = ["footer"]
+
+# Accept the suggestion, turn Draft on, and type a description.
+[[step]]
+keys = ["right", "tab", "space", "tab", "tab"]
+
+[[step]]
+type = "First line"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+type = "Second line"
+
+[[step]]
+capture = "filled"
+checks = ["footer"]
+
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+wait.text = "Creating PR..."
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/pulls"
+wait.log.body.title = "Parity PR"
+wait.log.body.draft = true
+wait.log.body.base = "main"
+wait.log.body.head = "parity-bot:new-feature"
+wait.log.body.body = "First line\nSecond line"
+
+[[step]]
+wait.text = "Successfully created PR!"
+
+[[step]]
+wait.text = "Open Parity PR (#10) by parity-bot"
+wait.timeout_ms = 15000
+
+[[step]]
+capture = "created"
+checks = ["titles", "tabs", "focus"]
+
+# Open it again from the Pull Requests table and close it with escape (the title has focus).
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["P"]
+
+[[step]]
+wait.text = "New Pull Request"
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait.gone = "New Pull Request"
+
+[[step]]
+capture = "escaped"
+checks = ["titles", "focus", "footer"]
+
+# And with Cancel: title, description, reviewer, Create, Cancel.
+[[step]]
+keys = ["P"]
+
+[[step]]
+wait.text = "New Pull Request"
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["tab", "tab", "tab", "tab", "enter"]
+
+[[step]]
+wait.gone = "New Pull Request"
+
+[[step]]
+capture = "cancelled"
+checks = ["titles", "focus", "footer"]
+
+[expect.no-repo]
+contains = ["Cannot open new pull request", "Please select a repository first!"]
+not_contains = ["New Pull Request"]
+
+[expect.open]
+contains = ["New Pull Request", "Base", "main", "← Compare", "Choose a head ref", "Draft", "Title", "Description"]
+not_contains = ["Warning:", "Traceback"]
+
+[expect.missing-fields]
+contains = ["Invalid PR!", "Missing required fields!"]
+
+[expect.push-prompt]
+contains = ["Error creating pull request", "Warning: Branch missing-branch may not exist", "on remote. Do you want to create it?", "Yes", "No"]
+footer = ["y Yes", "n No", "q Close"]
+
+[expect.push-failed]
+contains = ["Error while pushing branch missing-branch to remote", "New Pull Request", "missing-branch"]
+not_contains = ["Do you want to create it?"]
+
+[expect.suggested]
+contains = ["new-feature"]
+
+[expect.filled]
+contains = ["First line", "Second line"]
+
+[expect.created]
+focused = ["[5] PR #10 Details"]
+contains = ["Creating PR...", "Successfully created PR!", "Open Parity PR (#10) by parity-bot", "parity-bot:new-feature → parity-bot:main", "Parity PR"]
+not_contains = ["New Pull Request", "Traceback"]
+
+[expect.escaped]
+focused = ["[2] Pull Requests"]
+not_contains = ["New Pull Request", "Traceback"]
+
+[expect.cancelled]
+focused = ["[2] Pull Requests"]
+not_contains = ["New Pull Request", "Traceback"]

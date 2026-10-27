@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "request": {
+    "method": "POST",
+    "path": "/repos/parity-bot/pr-details/pulls",
+    "body": {
+      "title": "Parity PR",
+      "draft": false,
+      "base": "main",
+      "head": "parity-bot:new-feature"
+    },
+    "when": {
+      "after": [
+        {
+          "method": "POST",
+          "path": "/repos/parity-bot/pr-details/pulls",
+          "body": {
+            "title": "Parity PR",
+            "draft": false,
+            "base": "main",
+            "head": "parity-bot:new-feature"
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/10",
+      "comments_url": "https://api.github.com/repos/parity-bot/pr-details/issues/10/comments",
+      "html_url": "https://github.com/parity-bot/pr-details/pull/10",
+      "id": 8300010,
+      "node_id": "PR_kwDOParity10",
+      "number": 10,
+      "title": "Parity PR",
+      "user": {
+        "login": "parity-bot",
+        "id": 1000001,
+        "node_id": "U_kgDO1000001",
+        "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/parity-bot",
+        "html_url": "https://github.com/parity-bot",
+        "type": "User",
+        "site_admin": false
+      },
+      "state": "open",
+      "locked": false,
+      "assignee": null,
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-02T10:00:00Z",
+      "updated_at": "2026-03-02T10:00:00Z",
+      "closed_at": null,
+      "author_association": "OWNER",
+      "draft": false,
+      "body": null,
+      "diff_url": "https://github.com/parity-bot/pr-details/pull/10.diff",
+      "patch_url": "https://github.com/parity-bot/pr-details/pull/10.patch",
+      "issue_url": "https://api.github.com/repos/parity-bot/pr-details/issues/10",
+      "commits_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/10/commits",
+      "review_comments_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/10/comments",
+      "statuses_url": "https://api.github.com/repos/parity-bot/pr-details/statuses/c0ffeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "requested_reviewers": [],
+      "head": {
+        "label": "parity-bot:new-feature",
+        "ref": "new-feature",
+        "sha": "c0ffeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        }
+      },
+      "base": {
+        "label": "parity-bot:main",
+        "ref": "main",
+        "sha": "0000000000000000000000000000000000000000",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        }
+      },
+      "merged": false,
+      "mergeable": null,
+      "comments": 0,
+      "review_comments": 0,
+      "commits": 1,
+      "additions": 0,
+      "deletions": 0,
+      "changed_files": 0
+    },
+    "delay_ms": 1000
+  },
+  "note": "hand-written for pr-new-push (#184): the same request again, once the refused one was served (after the push), creates PR 10"
+}

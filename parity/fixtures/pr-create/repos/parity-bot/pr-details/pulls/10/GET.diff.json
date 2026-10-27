@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/10",
+    "accept": "diff"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain; charset=utf-8"
+    },
+    "body_text": ""
+  },
+  "note": "hand-written for pr-new (#184): the details of the created PR 10 (no changes yet)"
+}

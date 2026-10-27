@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/branches",
+    "query": {
+      "page": "1",
+      "per_page": "30"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "name": "main",
+        "commit": {
+          "sha": "0000000000000000000000000000000000000000",
+          "url": "https://api.github.com/repos/parity-bot/pr-details/commits/0000000000000000000000000000000000000000"
+        },
+        "protected": false
+      },
+      {
+        "name": "new-feature",
+        "commit": {
+          "sha": "c0ffeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "url": "https://api.github.com/repos/parity-bot/pr-details/commits/c0ffeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "protected": false
+      },
+      {
+        "name": "next-release",
+        "commit": {
+          "sha": "c0ffeebbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "url": "https://api.github.com/repos/parity-bot/pr-details/commits/c0ffeebbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "protected": false
+      }
+    ]
+  },
+  "note": "hand-written for pr-new (#184): the repo branches"
+}

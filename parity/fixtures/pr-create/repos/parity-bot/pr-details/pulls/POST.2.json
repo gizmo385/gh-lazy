@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "request": {
+    "method": "POST",
+    "path": "/repos/parity-bot/pr-details/pulls",
+    "body": {
+      "title": "Parity PR",
+      "draft": false,
+      "base": "main",
+      "head": "parity-bot:missing-branch"
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "message": "Validation Failed",
+      "errors": [
+        {
+          "resource": "PullRequest",
+          "field": "head",
+          "code": "invalid"
+        }
+      ],
+      "documentation_url": "https://docs.github.com/rest/pulls/pulls#create-a-pull-request",
+      "status": "422"
+    }
+  },
+  "note": "hand-written for pr-new (#184): GitHub refuses a head branch it does not have"
+}

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/commits/c0ffeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/check-runs",
+    "query": {
+      "page": "1",
+      "per_page": "100"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "total_count": 0,
+      "check_runs": []
+    }
+  },
+  "note": "hand-written for pr-new (#184): the details of the created PR 10"
+}

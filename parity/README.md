@@ -364,6 +364,13 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   `GET .../issues/5/comments` and `GET .../pulls/5/reviews/501/comments` including the new comments once they were
   posted, and the new comments' reactions (the 404 Python gets on the issue-comment path for the review reply, B54).
   Hand-written.
+- `pr-create/`: for `parity-bot/pr-details`, listed before `pr-details` and `base`, for the `pr-new` and
+  `pr-new-cwd` scenarios and the `pr-new-push` scenario of #280 (M3, #184). The branches `main`, `new-feature` and
+  `next-release` (`page=1`, `per_page=30`), the collaborators (Python asks for them when Create PR opens), and
+  `POST .../pulls` for four bodies: head `missing-branch` (422), the draft from `new-feature` with a two-line body
+  (201, PR 10, after 1 s), and the non-draft from `new-feature` with no body (422, then 201 once the 422 was served,
+  `when.after`). PR 10 itself, its diff (empty), reviews, issue comments, reactions and the status and check runs of
+  its head sha. Hand-written.
 - `workflow-write/`: for `parity-bot/run-fixture`, listed before `run-details` and `base`, for the `workflow-trigger`
   and `workflow-rerun` scenarios (M3, #188). Two workflows on `actions/workflows` page 1 (CI 7000001, Release
   7000002), the branches `main`, `release` and `run-details` (`page=1`, `per_page=30`), `POST

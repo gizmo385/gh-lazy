@@ -1,0 +1,63 @@
+version = 1
+description = "Create PR modal (P) launched in a clone of the selected repo, on a branch with no upstream: Compare prefilled with the local branch and the no-upstream warning; escape closes"
+# The origin is SSH so both apps pick up the current-directory repo (Py bug B5). Nothing is submitted: a failed create
+# would run git ls-remote against the real origin. The push prompt with a local remote is pr-new-push (#184).
+gate = false
+parity_rows = [
+    "modals.create-pr-branches",
+    "modals.create-pr-upstream-warning",
+    "infrastructure.git-branch-commit",
+]
+sizes = [[160, 48]]
+
+[env]
+fixtures = ["pr-create", "pr-details", "base"]
+git_remote = "parity-bot/pr-details"
+git_remote_protocol = "ssh"
+git_branch = "new-feature"
+config_overrides.appearance.show_issues = false
+config_overrides.appearance.show_workflows = false
+
+[[step]]
+wait.text = "Current repo: parity-bot/pr-details"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.text = "Add a cursor to the viewer"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["P"]
+
+[[step]]
+wait.text = "no configured upstream"
+
+[[step]]
+wait.text = "new-feature"
+
+[[step]]
+capture = "open"
+checks = ["footer"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait.gone = "New Pull Request"
+
+[[step]]
+capture = "closed"
+checks = ["titles", "focus", "footer"]
+
+[expect.open]
+contains = ["New Pull Request", "Warning: Current local branch has no configured upstream", "Base", "main", "← Compare", "new-feature", "Draft", "Title", "Description"]
+not_contains = ["Choose a head ref", "Traceback"]
+
+[expect.closed]
+not_contains = ["New Pull Request", "Traceback"]

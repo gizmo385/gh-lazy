@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/collaborators"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {"login": "parity-bot", "id": 1000001, "type": "User", "site_admin": false},
+      {"login": "parity-friend", "id": 1000002, "type": "User", "site_admin": false}
+    ]
+  },
+  "note": "hand-written for pr-new (#184): Create PR asks for the collaborators when it opens (the reviewer suggestions, #185)"
+}

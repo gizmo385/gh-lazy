@@ -20,7 +20,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.issue-new` | `issue.new` | `I` | New Issue | selections pane | M3 | not started | #181, #258 | |
 | `keybindings.issue-edit` | `issue.edit` | `E` | Edit Issue | issues table, Issue Overview | M3 | not started | #181, #259 | |
 | `keybindings.issue-lookup` | `issue.lookup` | `O` | Lookup Issue | issues table | M2 | parity | #247 | |
-| `keybindings.pull-request-new` | `pull_request.new` | `P` | New PR | selections pane | M3 | not started | #184 | |
+| `keybindings.pull-request-new` | `pull_request.new` | `P` | New PR | selections pane | M3 | not started | #278 | |
 | `keybindings.pull-request-merge` | `pull_request.merge` | `ctrl+m` | Merge PR | PR Overview | M3 | not started | #183, #262 | TERM: `ctrl+m` sends CR, same as Enter, without the kitty protocol. Must never fire on plain Enter (Py bug B30). Scenario `pr-merge` sends it as CSI 109;5 u. |
 | `keybindings.pull-request-edit` | `pull_request.edit` | `E` | Edit PR | PR table, PR Overview | M3 | not started | #185 | |
 | `keybindings.pull-request-lookup` | `pull_request.lookup` | `O` | Lookup Pull Request | PR table | M2 | parity | #238 | |
@@ -58,8 +58,8 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.modal-close` | `modal.close` | `q, escape` | Close | all modals | M2 | parity | #212 | Inactive while a text input has focus (Textual inputs consume `q`). |
 | `keybindings.textual-input-group` | (Textual `Input`) | | Help panel "Input" group with a text input focused: the inherited scroll keys (`↑` Scroll Up, `↓` Scroll Down), `←`/`→`, `home ^a`, `end ^e`, `pgup`/`pgdn`, `^pgup`/`^pgdn`, then the rest of `Input.BINDINGS` in order, 29 rows | table search box, dialog inputs | M3 | not started | #145, #252 | The six scroll keys are consumed by the input. Scenario `help-panel-input`. |
 | `keybindings.modal-search` | `modal.search` | `/` | Search | Settings | M4 | not started | #193 | |
-| `keybindings.confirm-yes` | `confirm.yes` | `y` | Yes | Confirm | M3 | in progress | #214, #184 | |
-| `keybindings.confirm-no` | `confirm.no` | `n` | No | Confirm | M3 | in progress | #214, #184 | |
+| `keybindings.confirm-yes` | `confirm.yes` | `y` | Yes | Confirm | M3 | in progress | #214, #279 | |
+| `keybindings.confirm-no` | `confirm.no` | `n` | No | Confirm | M3 | in progress | #214, #279 | |
 | `keybindings.react-add` | `react.add` | `R` | Add reaction | PR Overview | M3 | not started | #183, #263 | |
 | `keybindings.link-paste` | `link.paste` | `ctrl+v` | Paste link | main screen | M4 | not started | #197 | TERM: many terminals turn `ctrl+v` into a paste; consider also opening the modal on a bracketed-paste event on the main screen. |
 | `keybindings.link-follow` | `link.follow` | `f` | Follow link | main screen | M4 | not started | #196 | |

@@ -16,4 +16,4 @@ pub use pull_request::{FullPullRequest, GitRef};
 pub use repo_name::RepoName;
 pub use repository::{Repository, RepositoryPermission};
 pub use user::{FullUser, User};
-pub use workflow::{Workflow, WorkflowRun, WorkflowState};
+pub use workflow::{JobConclusion, JobStatus, Workflow, WorkflowJob, WorkflowRun, WorkflowState, WorkflowStep};

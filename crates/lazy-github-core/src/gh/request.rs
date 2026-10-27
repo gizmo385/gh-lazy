@@ -153,6 +153,20 @@ impl GhRequest {
         args.push(self.path_with_query().into());
         args
     }
+
+    /// The arguments for `gh api --paginate --slurp`: every page's body, objects included, wrapped in one JSON array.
+    /// For endpoints whose pages are objects around the list (`{"total_count": n, "jobs": [...]}`), which plain
+    /// `--paginate` would print back to back.
+    pub fn slurp_argv(&self, hostname: Option<&str>) -> Vec<OsString> {
+        let mut args = self.argv(hostname, true);
+        // `argv` always adds `--paginate` here.
+        let at = args
+            .iter()
+            .position(|arg| arg == "--paginate")
+            .map_or(args.len(), |i| i + 1);
+        args.insert(at, "--slurp".into());
+        args
+    }
 }
 
 #[cfg(test)]

@@ -15,7 +15,7 @@ use tokio::sync::OnceCell;
 
 use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts};
-use crate::models::{FullPullRequest, FullUser, IssueListItem, Repository, User, Workflow, WorkflowRun};
+use crate::models::{FullPullRequest, FullUser, IssueListItem, Repository, User, Workflow, WorkflowJob, WorkflowRun};
 
 #[cfg(any(test, feature = "test-util"))]
 mod fake;
@@ -133,6 +133,17 @@ pub trait Github: Clone + Send + Sync + 'static {
         repo: &Repository,
         number: u64,
     ) -> impl Future<Output = Result<FullPullRequest, GhError>> + Send;
+
+    /// Every job of run `run_id` in `repo`, in API order, from every page (Python stops at the first 30, Py bug B64).
+    /// Never cached.
+    ///
+    /// A page without a `jobs` list (missing or `null`) adds none. Fails on any HTTP error status or `gh` failure, or
+    /// with [`GhError::Decode`] when a page or any job doesn't decode.
+    fn workflow_run_jobs(
+        &self,
+        repo: &Repository,
+        run_id: u64,
+    ) -> impl Future<Output = Result<Vec<WorkflowJob>, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -539,6 +550,15 @@ impl GhCli {
         request
     }
 
+    /// `GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs`, uncached and without a query: Python sends neither, so
+    /// the first page's fixture key is the one Python hits.
+    fn workflow_run_jobs_request(repo: &Repository, run_id: u64) -> GhRequest {
+        GhRequest::get(format!(
+            "/repos/{}/{}/actions/runs/{run_id}/jobs",
+            repo.owner.login, repo.name
+        ))
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -647,6 +667,15 @@ impl Github for GhCli {
             .await?;
         full_pull_request(&response, repo)
     }
+
+    async fn workflow_run_jobs(&self, repo: &Repository, run_id: u64) -> Result<Vec<WorkflowJob>, GhError> {
+        let pages = self
+            .inner
+            .runner
+            .paginate_slurp(Self::workflow_run_jobs_request(repo, run_id))
+            .await?;
+        Ok(workflow_jobs(pages))
+    }
 }
 
 /// A diff response as the diff text, verbatim, or the error the Diff tab shows.
@@ -671,6 +700,21 @@ struct WorkflowsBody {
 struct WorkflowRunsBody {
     #[serde(default)]
     workflow_runs: Option<Vec<WorkflowRun>>,
+}
+
+/// One page of `GET .../actions/runs/{id}/jobs`.
+#[derive(serde::Deserialize)]
+struct JobsPage {
+    #[serde(default)]
+    jobs: Option<Vec<WorkflowJob>>,
+}
+
+/// The jobs of every slurped page, in order.
+fn workflow_jobs(pages: Vec<JobsPage>) -> Vec<WorkflowJob> {
+    pages
+        .into_iter()
+        .flat_map(|page| page.jobs.unwrap_or_default())
+        .collect()
 }
 
 fn workflows(response: &GhResponse) -> Result<Vec<Workflow>, GhError> {
@@ -1628,5 +1672,150 @@ mod tests {
             full_pull_request(&api_response(r#"{"number": 5}"#), &repo),
             Err(GhError::Decode(_))
         ));
+    }
+
+    /// `parity-bot/run-fixture`, first on the `run-details` set's repos page.
+    fn run_fixture_repo() -> Repository {
+        let page: Vec<Repository> = parity_response(
+            "run-details",
+            "user/repos/GET.direction-asc_page-1_per_page-50_sort-full_name_type-all.json",
+        )
+        .json()
+        .unwrap();
+        page.into_iter().next().unwrap()
+    }
+
+    /// The jobs `gh api --paginate --slurp` prints for pages with these bodies.
+    fn slurped(bodies: &[String]) -> Result<Vec<WorkflowJob>, GhError> {
+        let pages: Vec<JobsPage> = api_response(&format!("[{}]", bodies.join(","))).json()?;
+        Ok(workflow_jobs(pages))
+    }
+
+    /// The `response.body` of a `run-details` jobs fixture.
+    fn run_jobs_body(run_id: u64) -> String {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(format!(
+            "../../parity/fixtures/run-details/repos/parity-bot/run-fixture/actions/runs/{run_id}/jobs/GET.json"
+        ));
+        let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        fixture["response"]["body"].to_string()
+    }
+
+    #[test]
+    fn workflow_run_jobs_argv() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        let request = GhCli::workflow_run_jobs_request(&run_fixture_repo(), 5_000_042);
+        // Every page, slurped; no `--cache` and no query, as Python sends neither. `--paginate` drops `-i`.
+        assert_eq!(
+            strings(request.slurp_argv(gh.runner().hostname())),
+            [
+                "api",
+                "-X",
+                "GET",
+                "--paginate",
+                "--slurp",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/run-fixture/actions/runs/5000042/jobs"
+            ]
+        );
+    }
+
+    #[test]
+    fn workflow_run_jobs_decode_from_the_fixtures() {
+        use crate::models::{JobConclusion, JobStatus};
+
+        let jobs = slurped(&[run_jobs_body(5_000_042)]).unwrap();
+        let names: Vec<&str> = jobs.iter().map(|job| job.name.as_str()).collect();
+        assert_eq!(names, ["build", "test", "lint", "deploy"]);
+        let build = &jobs[0];
+        assert_eq!(
+            (build.id, build.run_id, build.run_attempt),
+            (6_000_001, 5_000_042, Some(2))
+        );
+        assert_eq!(build.status, JobStatus::Completed);
+        assert_eq!(build.conclusion, Some(JobConclusion::Success));
+        assert_eq!(build.labels, ["ubuntu-latest"]);
+        assert_eq!(build.steps.len(), 3);
+        assert_eq!(build.steps[1].name, "Run cargo build");
+        assert_eq!(build.steps[1].number, 2);
+        assert!(jobs[1].failed());
+        assert!(!build.failed());
+        assert_eq!(jobs[2].conclusion, Some(JobConclusion::Skipped));
+        assert_eq!(jobs[3].conclusion, Some(JobConclusion::Cancelled));
+
+        let in_progress = slurped(&[run_jobs_body(5_000_041)]).unwrap();
+        assert_eq!(in_progress[0].status, JobStatus::InProgress);
+        assert_eq!(in_progress[0].completed_at, None);
+        assert_eq!(in_progress[0].steps[2].status, JobStatus::Pending);
+        assert_eq!(in_progress[1].status, JobStatus::Queued);
+        assert_eq!(in_progress[1].started_at, None);
+
+        assert!(slurped(&[run_jobs_body(5_000_040)]).unwrap().is_empty());
+    }
+
+    #[test]
+    fn missing_and_null_jobs_are_empty_pages() {
+        assert!(slurped(&[r#"{"total_count": 0}"#.into()]).unwrap().is_empty());
+        assert!(
+            slurped(&[r#"{"total_count": 0, "jobs": null}"#.into()])
+                .unwrap()
+                .is_empty()
+        );
+        assert!(slurped(&[]).unwrap().is_empty());
+        assert!(matches!(
+            slurped(&[r#"{"jobs": [{"id": 1}]}"#.into()]),
+            Err(GhError::Decode(_))
+        ));
+    }
+
+    /// One page's body with a job per `(name, status, conclusion)`, spelled as the API does.
+    fn job_page(jobs: &[(&str, &str, Option<&str>)]) -> String {
+        let jobs: Vec<serde_json::Value> = jobs
+            .iter()
+            .enumerate()
+            .map(|(i, (name, status, conclusion))| {
+                serde_json::json!({
+                    "id": i, "run_id": 1, "name": name, "status": status, "conclusion": conclusion,
+                    "html_url": "https://github.com/o/r/actions/runs/1/job/1",
+                })
+            })
+            .collect();
+        serde_json::json!({ "total_count": jobs.len(), "jobs": jobs }).to_string()
+    }
+
+    #[test]
+    fn unknown_statuses_and_conclusions_decode_to_other() {
+        use crate::models::{JobConclusion, JobStatus};
+
+        let jobs = slurped(&[job_page(&[("a", "stalled", Some("exploded")), ("b", "waiting", None)])]).unwrap();
+        assert_eq!(jobs[0].status, JobStatus::Other("stalled".into()));
+        assert_eq!(jobs[0].conclusion, Some(JobConclusion::Other("exploded".into())));
+        assert_eq!(jobs[0].status.as_str(), "stalled");
+        assert_eq!(jobs[1].status, JobStatus::Waiting);
+        assert!(jobs[1].steps.is_empty());
+        assert!(jobs[1].labels.is_empty());
+        // They serialize back as the API spells them.
+        let json = serde_json::to_value(&jobs[0]).unwrap();
+        assert_eq!(
+            (json["status"].as_str(), json["conclusion"].as_str()),
+            (Some("stalled"), Some("exploded"))
+        );
+        assert_eq!(serde_json::to_value(JobStatus::InProgress).unwrap(), "in_progress");
+        assert_eq!(
+            serde_json::to_value(JobConclusion::ActionRequired).unwrap(),
+            "action_required"
+        );
+    }
+
+    #[test]
+    fn slurped_pages_flatten_in_order() {
+        let first = job_page(&[("a", "completed", Some("success")), ("b", "queued", None)]);
+        let second = job_page(&[("c", "in_progress", None)]);
+        let names: Vec<String> = slurped(&[first, r#"{"total_count": 3}"#.into(), second])
+            .unwrap()
+            .into_iter()
+            .map(|job| job.name)
+            .collect();
+        assert_eq!(names, ["a", "b", "c"]);
     }
 }

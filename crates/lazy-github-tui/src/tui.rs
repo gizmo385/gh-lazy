@@ -564,6 +564,14 @@ mod tests {
         ) -> Result<lazy_github_core::models::FullPullRequest, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }
+
+        async fn workflow_run_jobs(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _run_id: u64,
+        ) -> Result<Vec<lazy_github_core::models::WorkflowJob>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
     }
 
     /// Runs the loop on a `TestBackend` with `effect` already started, and returns how it ended.

@@ -116,6 +116,16 @@ impl GhCli {
         decode_pages(&response.body)
     }
 
+    /// Runs a `GET` with `gh api --paginate --slurp` and returns every page's body, in order, each decoded as `T`.
+    ///
+    /// For endpoints whose pages are objects wrapping the list, such as a run's jobs.
+    pub async fn paginate_slurp<T: DeserializeOwned>(&self, req: GhRequest) -> Result<Vec<T>, GhError> {
+        let args = req.slurp_argv(self.hostname());
+        let limit = self.inner.timeouts.limit(CallKind::Paginate, req.timeout);
+        let output = self.run(&args, req.body.as_ref(), limit).await?;
+        self.interpret(&output, true)?.json()
+    }
+
     /// Checks `gh auth status [--hostname h]`: `Ok` when logged in, otherwise [`GhError::NotAuthenticated`].
     pub async fn auth_status(&self) -> Result<(), GhError> {
         let limit = self.inner.timeouts.limit(CallKind::AuthStatus, None);

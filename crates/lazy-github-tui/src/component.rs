@@ -148,6 +148,9 @@ pub enum Owner {
     PrOverview,
     /// An issue's Overview tab (`IssueOverviewTabPane`): edit, in front of the content's scroll link.
     IssueOverview,
+    /// A button inside the active details tab's content with focus (the run Overview's re-run buttons), in front of
+    /// the content's scroll link.
+    DetailsButton,
     /// The command log.
     CommandLog,
     /// A field of an open dialog, which [`Dialog::field_chain`](crate::modal::Dialog::field_chain) puts in front of
@@ -172,6 +175,7 @@ impl Owner {
             | Owner::DetailsContent
             | Owner::PrOverview
             | Owner::IssueOverview
+            | Owner::DetailsButton
             | Owner::CommandLog
             | Owner::DialogField(_, FieldKind::Button | FieldKind::Switch | FieldKind::Scroll | FieldKind::Table) => {
                 None

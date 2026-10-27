@@ -9,7 +9,7 @@ use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
 use lazy_github_core::models::{
-    FullPullRequest, FullUser, IssueListItem, RepoName, Repository, User, Workflow, WorkflowRun,
+    FullPullRequest, FullUser, IssueListItem, RepoName, Repository, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 /// Something the runtime does on the app's behalf.
@@ -157,6 +157,13 @@ pub enum GithubRequest {
         /// Its number.
         number: u64,
     },
+    /// [`Github::workflow_run_jobs`].
+    WorkflowRunJobs {
+        /// The repo the run is in.
+        repo: Box<Repository>,
+        /// The run's id.
+        run_id: u64,
+    },
 }
 
 /// The result of a [`GithubRequest`], in the variant of the same name.
@@ -188,6 +195,8 @@ pub enum GithubResponse {
     UserRepos(Result<Vec<Repository>, GhError>),
     /// [`Github::pull_request`], boxed to keep this enum small.
     PullRequest(Result<Box<FullPullRequest>, GhError>),
+    /// [`Github::workflow_run_jobs`].
+    WorkflowRunJobs(Result<Vec<WorkflowJob>, GhError>),
 }
 
 impl GithubRequest {
@@ -220,6 +229,9 @@ impl GithubRequest {
             GithubRequest::UserRepos(login) => GithubResponse::UserRepos(gh.user_repos(&login).await),
             GithubRequest::PullRequest { repo, number } => {
                 GithubResponse::PullRequest(gh.pull_request(&repo, number).await.map(Box::new))
+            }
+            GithubRequest::WorkflowRunJobs { repo, run_id } => {
+                GithubResponse::WorkflowRunJobs(gh.workflow_run_jobs(&repo, run_id).await)
             }
         }
     }

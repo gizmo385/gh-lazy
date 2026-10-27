@@ -511,7 +511,7 @@ impl App {
         }
         let BaseScreen::Main(main) = &self.base else { return };
         let target = main.focus();
-        if !target.maximizable() {
+        if !main.can_maximize() {
             return;
         }
         self.maximized = Some(Maximized { target });

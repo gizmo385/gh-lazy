@@ -9,12 +9,12 @@ use serde::de::Error as _;
 
 use super::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
 use crate::gh::GhError;
-use crate::models::{FullPullRequest, FullUser, IssueListItem, Repository, User, Workflow, WorkflowRun};
+use crate::models::{FullPullRequest, FullUser, IssueListItem, Repository, User, Workflow, WorkflowJob, WorkflowRun};
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -74,6 +74,8 @@ pub enum GithubCall {
         /// The pull request's number.
         number: u64,
     },
+    /// [`Github::workflow_run_jobs`], with the run's id.
+    WorkflowRunJobs(u64),
 }
 
 #[derive(Debug, Default)]
@@ -100,6 +102,8 @@ struct State {
     user_repos: HashMap<String, Result<Vec<Repository>, GhError>>,
     /// Keyed by `full_name` and number.
     pull_requests: HashMap<(String, u64), Result<FullPullRequest, GhError>>,
+    /// Keyed by run id.
+    run_jobs: HashMap<u64, Result<Vec<WorkflowJob>, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -226,6 +230,13 @@ impl FakeGithub {
         self.lock()
             .pull_requests
             .insert((full_name.to_owned(), number), pull_request);
+        self
+    }
+
+    /// `workflow_run_jobs` returns `jobs` for run `run_id`, whatever the repository. Runs not set have no jobs.
+    #[must_use]
+    pub fn with_run_jobs(self, run_id: u64, jobs: Result<Vec<WorkflowJob>, GhError>) -> Self {
+        self.lock().run_jobs.insert(run_id, jobs);
         self
     }
 
@@ -426,6 +437,13 @@ impl Github for FakeGithub {
                 message: "Not Found".to_owned(),
                 body: Vec::new(),
             }),
+        })
+        .await
+    }
+
+    async fn workflow_run_jobs(&self, _repo: &Repository, run_id: u64) -> Result<Vec<WorkflowJob>, GhError> {
+        self.respond(GithubCall::WorkflowRunJobs(run_id), |state| {
+            canned_page(state.run_jobs.get(&run_id))
         })
         .await
     }
@@ -696,6 +714,24 @@ mod tests {
                 number: 5
             }
         );
+    }
+
+    #[tokio::test]
+    async fn run_jobs_by_run_id() {
+        let job: WorkflowJob = serde_json::from_value(serde_json::json!({
+            "id": 7, "run_id": 1, "name": "build", "status": "queued", "html_url": ""
+        }))
+        .unwrap();
+        let github = FakeGithub::new()
+            .with_run_jobs(1, Ok(vec![job.clone()]))
+            .with_run_jobs(2, Err(GhError::NotInstalled));
+        assert_eq!(github.workflow_run_jobs(&repo("a"), 1).await.unwrap(), [job]);
+        assert!(matches!(
+            github.workflow_run_jobs(&repo("a"), 2).await,
+            Err(GhError::NotInstalled)
+        ));
+        assert!(github.workflow_run_jobs(&repo("a"), 3).await.unwrap().is_empty());
+        assert_eq!(github.calls()[0], GithubCall::WorkflowRunJobs(1));
     }
 
     #[tokio::test]

@@ -1,0 +1,32 @@
+---
+source: crates/lazy-github-tui/src/screens/main/run_details/tests.rs
+expression: "crate::test_util::buffer_to_styled_string(&actions)"
+---
+Actions
+
+  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+   Re-run Workflow
+  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+
+  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+   Re-run Failed Jobs
+  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+--- styles
+.......aaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aabbbbbbbbbbbbbbbbbaaaaaaaaaaa
+aacccccccccccccccccaaaaaaaaaaa
+aadddddddddddddddddaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaeeeeeeeeeeeeeeeeeeeeaaaaaaaa
+aaffffffffffffffffffffaaaaaaaa
+aaggggggggggggggggggggaaaaaaaa
+--- legend
+. fg=#e0e0e0 bg=#121212 BOLD
+a fg=#e0e0e0 bg=#121212
+b fg=#6db2ff bg=#0c7dd4
+c fg=#dfeef9 bg=#0c7dd4 BOLD | REVERSED
+d fg=#004295 bg=#0c7dd4
+e fg=#2d2d2d bg=#1e1e1e
+f fg=#e0e0e0 bg=#1e1e1e BOLD
+g fg=#0d0d0d bg=#1e1e1e

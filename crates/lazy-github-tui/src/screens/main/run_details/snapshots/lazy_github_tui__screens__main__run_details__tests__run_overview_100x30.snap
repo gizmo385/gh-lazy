@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/screens/main/run_details/tests.rs
+expression: "app.screen(100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/run-fixture                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Workflow Run #42 Details ───────────────────────────┐
+│ ★  Owner       Name         Private  ││ Overview  Jobs  Logs                                     │
+│ ☆  parity-bot  run-fixture  ✘        ││╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                      ││✗ Failure Fix the flaky test (#42)                        │
+│                                      ││  Run Number: 42                                          │
+│                                      ││  Event: push                                             │
+│                                      ││  Branch: main                                            │
+│                                      ││  Status: completed                                       │
+│                                      ││  Conclusion: failure                                     │
+└──────────────────────────────────────┘│  Attempt: 2                                              │
+┌─ [2] Pull Requests (empty) ──────────┐│  Created: 2026-03-04 05:06:07                            │
+│ #  Status  Author  Title             ││  Updated: 2026-03-04 07:20:00                            │
+└──────────────────────────────────────┘│                                                          │
+┌─ [3] Issues (empty) ─────────────────┐│                                                          │
+│ #  Status  Author  Title             ││────────────────────────────────────────────────────────  │
+└──────────────────────────────────────┘│                                                        ▇▇│
+┌─ [4] Workflows ──────────────────────┐│Commit Information                                        │
+│ Time              Result       Job Na││  SHA: 0123456                                            │
+│ 2026-03-04 05:06  failure      CI    ││  (0123456789abcdef0123456789abcdef01234567)              │
+│ 2026-03-03 10:00  in_progress  CI    ││  Triggered by: parity-friend                             │
+│ 2026-03-02 08:00  success      CI    ││  Actor: parity-bot                                       │
+│                                      ││                                                          │
+│                                      ││                                                          │
+│                                      ││────────────────────────────────────────────────────────  │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  ? Ke

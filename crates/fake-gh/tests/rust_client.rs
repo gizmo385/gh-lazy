@@ -634,3 +634,55 @@ async fn child_pull_requests() {
     let error = gh.pull_request(&repo, 2).await.unwrap_err();
     assert!(matches!(error, GhError::Http { status: 500, .. }), "{error:?}");
 }
+
+/// `parity-bot/run-fixture`, as `run-details` lists it.
+fn run_fixture_repo() -> Repository {
+    let path = common::repo_root().join(
+        "parity/fixtures/run-details/user/repos/GET.direction-asc_page-1_per_page-50_sort-full_name_type-all.json",
+    );
+    let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let repos: Vec<Repository> = serde_json::from_value(fixture["response"]["body"].clone()).unwrap();
+    repos
+        .into_iter()
+        .find(|repo| repo.full_name == "parity-bot/run-fixture")
+        .unwrap()
+}
+
+#[test]
+fn workflow_run_jobs_are_slurped() {
+    let log = run_child("child_workflow_run_jobs", "logged-in", &["run-details"]);
+    assert_eq!(log.len(), 3, "{log:#?}");
+    assert!(log.iter().all(|line| line["miss"] == false), "{log:#?}");
+    assert_eq!(
+        strings(&log[0]["argv"]),
+        [
+            "api",
+            "-X",
+            "GET",
+            "--paginate",
+            "--slurp",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "/repos/parity-bot/run-fixture/actions/runs/5000042/jobs"
+        ]
+    );
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_workflow_run_jobs() {
+    let Some(gh) = client() else { return };
+    let repo = run_fixture_repo();
+    let names = |jobs: Vec<lazy_github_core::models::WorkflowJob>| -> Vec<String> {
+        jobs.into_iter().map(|job| job.name).collect()
+    };
+    assert_eq!(
+        names(gh.workflow_run_jobs(&repo, 5_000_042).await.unwrap()),
+        ["build", "test", "lint", "deploy"]
+    );
+    assert_eq!(
+        names(gh.workflow_run_jobs(&repo, 5_000_041).await.unwrap()),
+        ["build", "test"]
+    );
+    assert!(gh.workflow_run_jobs(&repo, 5_000_040).await.unwrap().is_empty());
+}

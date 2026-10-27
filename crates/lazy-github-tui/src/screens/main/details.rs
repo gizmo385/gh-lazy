@@ -7,7 +7,7 @@
 //! variant, a `DetailsPane::show_*` one-liner, and a [`DetailsBody`] impl; nothing else here changes.
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
-use lazy_github_core::models::{FullPullRequest, Issue, Repository};
+use lazy_github_core::models::{FullPullRequest, Issue, Repository, WorkflowRun};
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
 
@@ -24,6 +24,7 @@ use super::FocusTarget;
 use super::issue_details::IssueDetails;
 use super::pr_details::PullRequestDetails;
 use super::repo_overview::RepoOverview;
+use super::run_details::RunDetails;
 
 /// One selection's tabs, as the details pane drives them. Every method that concerns one tab gets the active tab's
 /// index, in [`Self::tab_names`]' order; the body keeps every tab's state (scroll position, open sections) while
@@ -70,6 +71,16 @@ pub(super) trait DetailsBody {
     /// Focus enters tab `tab`'s content from after it (`shift+tab`): the last stop.
     fn focus_last(&mut self, _tab: usize) {}
 
+    /// A left press at `position` inside tab `tab`'s content, which then takes focus: the stop under it gets focus,
+    /// else the content itself, as Textual focuses the clicked widget or its nearest focusable ancestor.
+    fn click(&mut self, _tab: usize, _position: Position) {}
+
+    /// Whether `M` maximizes the details tab area with focus inside tab `tab`'s content: only from a focused stop
+    /// that allows it (a button), as the scrolling content itself doesn't.
+    fn maximizable(&self, _tab: usize) -> bool {
+        false
+    }
+
     /// The binding chain links of tab `tab`'s content with focus inside it, innermost first, in front of the
     /// content's scroll link: Textual's widgets from the focused stop up to the tab pane.
     fn chain(&self, _tab: usize) -> Vec<ChainLink> {
@@ -113,6 +124,8 @@ enum Body {
     PullRequest(Box<PullRequestDetails>),
     /// The selected issue's Overview and Comments tabs.
     Issue(Box<IssueDetails>),
+    /// The selected workflow run's Overview, Jobs and Logs tabs.
+    Run(Box<RunDetails>),
     /// A body for testing the pane's hooks.
     #[cfg(test)]
     Test(Box<tests::TestBody>),
@@ -125,6 +138,7 @@ impl Body {
             Body::Repo(overview) => overview.as_ref(),
             Body::PullRequest(details) => details.as_ref(),
             Body::Issue(details) => details.as_ref(),
+            Body::Run(details) => details.as_ref(),
             #[cfg(test)]
             Body::Test(body) => body.as_ref(),
         }
@@ -136,6 +150,7 @@ impl Body {
             Body::Repo(overview) => overview.as_mut(),
             Body::PullRequest(details) => details.as_mut(),
             Body::Issue(details) => details.as_mut(),
+            Body::Run(details) => details.as_mut(),
             #[cfg(test)]
             Body::Test(body) => body.as_mut(),
         }
@@ -191,6 +206,12 @@ impl DetailsPane {
     pub(super) fn show_issue(&mut self, issue: Issue, cx: &mut Cx<'_>) {
         let details = IssueDetails::new(issue, cx);
         self.show(Body::Issue(Box::new(details)), cx);
+    }
+
+    /// Shows `run`'s Overview, Jobs and Logs tabs, and requests its jobs, which the three share.
+    pub(super) fn show_run(&mut self, run: WorkflowRun, cx: &mut Cx<'_>) {
+        let details = RunDetails::new(run, cx);
+        self.show(Body::Run(Box::new(details)), cx);
     }
 
     /// Switches tabs, and tells the body about a tab that became active. Says whether the active tab changed: with
@@ -251,6 +272,14 @@ impl DetailsPane {
         }
     }
 
+    /// The workflow run whose tabs are showing, if any.
+    pub(super) fn run(&self) -> Option<&RunDetails> {
+        match &self.body {
+            Body::Run(details) => Some(details),
+            _ => None,
+        }
+    }
+
     /// Takes a response to one of the body's requests, and hands back any other. A README response for an overview
     /// that's gone is dropped.
     pub(super) fn on_response(
@@ -262,6 +291,10 @@ impl DetailsPane {
         match self.body.get_mut().on_response(id, response, cx)? {
             GithubResponse::RepoReadme(_) => {
                 tracing::debug!("Dropping the README response {id} of a repo no longer shown");
+                None
+            }
+            GithubResponse::WorkflowRunJobs(_) => {
+                tracing::debug!("Dropping the jobs response {id} of a workflow run no longer shown");
                 None
             }
             other => Some(other),
@@ -292,6 +325,16 @@ impl DetailsPane {
         } else {
             self.body.get_mut().focus_last(tab);
         }
+    }
+
+    /// [`DetailsBody::click`] in the active tab.
+    pub(super) fn click(&mut self, position: Position) {
+        self.body.get_mut().click(self.tabs.active(), position);
+    }
+
+    /// [`DetailsBody::maximizable`] in the active tab.
+    pub(super) fn maximizable(&self) -> bool {
+        self.body.get().maximizable(self.tabs.active())
     }
 
     pub(super) fn scroll(&mut self, scroll: Scroll) {

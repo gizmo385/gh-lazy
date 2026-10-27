@@ -14,6 +14,7 @@ mod profile;
 mod pull_requests;
 mod repo_overview;
 mod repos;
+mod run_details;
 mod section_table;
 mod sections;
 mod workflows;
@@ -21,7 +22,7 @@ mod workflows;
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::AppearanceSettings;
 use lazy_github_core::gh::GhError;
-use lazy_github_core::models::{FullPullRequest, Issue, Repository};
+use lazy_github_core::models::{FullPullRequest, Issue, Repository, WorkflowRun};
 use ratatui::Frame;
 use ratatui::layout::{Margin, Position, Rect};
 use ratatui::style::Style;
@@ -300,6 +301,9 @@ pub enum MainAction {
     /// Show an issue's details, focusing the tab strip: Python's `IssueSelected`, from the Issues table, the issue
     /// lookup (#247) and, later, links.
     OpenIssue(Box<Issue>),
+    /// Show a workflow run's details and request its jobs, focusing the tab strip: Python's
+    /// `handle_workflow_run_selection`.
+    OpenWorkflowRun(Box<WorkflowRun>),
     /// Switch the details tabs (`textual.tabs.*` with the strip focused).
     SwitchDetailsTab(TabSwitch),
     /// A click on a details tab: focus the strip, then activate the tab.
@@ -421,6 +425,15 @@ impl MainScreen {
         self.details_shown(&label, true, cx);
     }
 
+    /// `MainAction::OpenWorkflowRun`: the run's tabs show at once, and its jobs load. Python's
+    /// `MainViewPane.load_workflow_run`.
+    fn open_workflow_run(&mut self, run: WorkflowRun, cx: &mut Cx<'_>) {
+        self.cancel_pending_selection(cx);
+        let label = format!("Workflow Run #{}", run.run_number);
+        self.details.show_run(run, cx);
+        self.details_shown(&label, true, cx);
+    }
+
     /// Takes the answer to the pending pull request selection, and hands back any other response. A failure leaves
     /// everything as it was, with Python's log line and toast; an answer to a selection since replaced is dropped.
     fn on_pull_request(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
@@ -467,6 +480,17 @@ impl MainScreen {
     /// The issue the details pane shows, if any.
     pub fn details_issue(&self) -> Option<&Issue> {
         self.details.issue().map(issue_details::IssueDetails::issue)
+    }
+
+    /// The workflow run the details pane shows, if any.
+    pub fn details_run(&self) -> Option<&WorkflowRun> {
+        self.details.run().map(run_details::RunDetails::run)
+    }
+
+    /// Whether `M` maximizes something with the current focus: see [`FocusTarget::maximizable`]. Inside the details
+    /// content, a focused button allows it, and maximizes the details tab area.
+    pub fn can_maximize(&self) -> bool {
+        self.focus.maximizable() || (self.focus == FocusTarget::DetailsContent && self.details.maximizable())
     }
 
     /// Takes a response to one of the screen's requests, and hands back any other: the repos section is offered it
@@ -743,7 +767,13 @@ impl MainScreen {
             return Some(Action::Main(MainAction::ClickDetailsTab(tab)));
         }
         match mouse.kind {
-            MouseEventKind::Down(MouseButton::Left) => self.hit(mouse.column, mouse.row).map(Action::Focus),
+            MouseEventKind::Down(MouseButton::Left) => {
+                let target = self.hit(mouse.column, mouse.row);
+                if target == Some(FocusTarget::DetailsContent) {
+                    self.details.click(at);
+                }
+                target.map(Action::Focus)
+            }
             _ => self.wheel(&mouse),
         }
     }
@@ -788,6 +818,9 @@ impl MainScreen {
                     Some(self.select_pull_request())
                 }
                 Handled::Event(SectionEvent::Selected) if id == SectionId::Issues => Some(self.select_issue()),
+                Handled::Event(SectionEvent::Selected) if id == SectionId::Workflows => {
+                    Some(self.select_workflow_run())
+                }
                 handled => table_outcome(id, handled),
             },
         }
@@ -814,6 +847,16 @@ impl MainScreen {
         };
         tracing::info!("Selected Issue: #{}", issue.number);
         Action::Main(MainAction::OpenIssue(Box::new(issue.clone())))
+    }
+
+    /// `enter`, `space` or a click on the cursor row of the Workflows table: Python's `workflow_run_selected`.
+    fn select_workflow_run(&self) -> Action {
+        let Some(run) = self.workflows.runs_table().selected() else {
+            // The event is for the cursor's row, so it's always there.
+            return Action::Consumed;
+        };
+        tracing::info!("Selected workflow run #{}", run.run_number);
+        Action::Main(MainAction::OpenWorkflowRun(Box::new(run.clone())))
     }
 
     /// What a mouse wheel event means: Textual scrolls the widget under the pointer, focused or not. The repos table
@@ -881,6 +924,9 @@ impl MainScreen {
                     Some(self.select_pull_request())
                 }
                 Handled::Event(SectionEvent::Selected) if section == SectionId::Issues => Some(self.select_issue()),
+                Handled::Event(SectionEvent::Selected) if section == SectionId::Workflows => {
+                    Some(self.select_workflow_run())
+                }
                 handled => table_outcome(section, handled),
             },
             Owner::DetailsTabs => {
@@ -891,7 +937,7 @@ impl MainScreen {
                 };
                 Some(Action::Main(MainAction::SwitchDetailsTab(switch)))
             }
-            Owner::PrOverview | Owner::IssueOverview => self.details.on_binding(owner, id),
+            Owner::PrOverview | Owner::IssueOverview | Owner::DetailsButton => self.details.on_binding(owner, id),
             Owner::SearchableTable(section) if id == BindingId::TableSearch => {
                 self.open_search(section);
                 Some(Action::Consumed)
@@ -995,7 +1041,7 @@ impl MainScreen {
                 }
                 self.hits.push((rect, maximized));
             }
-            // `DetailsContent` is never maximized (see `FocusTarget::maximizable`); it's here to keep the match total.
+            // `DetailsContent` is maximized from a button inside it (see `Self::can_maximize`): the tab area shows.
             FocusTarget::DetailsTabs | FocusTarget::DetailsContent => {
                 let hits = self.details.render(frame, rect, theme, self.focus);
                 self.hits.extend(hits);
@@ -1140,6 +1186,7 @@ impl Component for MainScreen {
             }
             MainAction::OpenPullRequest { target, focus } => self.open_pull_request(target, focus, cx),
             MainAction::OpenIssue(issue) => self.open_issue(*issue, cx),
+            MainAction::OpenWorkflowRun(run) => self.open_workflow_run(*run, cx),
             MainAction::SwitchDetailsTab(switch) => {
                 self.details.switch_tab(switch, cx);
             }

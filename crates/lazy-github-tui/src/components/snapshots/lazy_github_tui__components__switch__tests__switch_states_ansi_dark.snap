@@ -1,0 +1,19 @@
+---
+source: crates/lazy-github-tui/src/components/switch.rs
+expression: "states(&Theme::by_name(\"ansi-dark\").unwrap())"
+---
+▊▔▔▔▔▔▔▔▔▎ ▊▔▔▔▔▔▔▔▔▎ ▊▔▔▔▔▔▔▔▔▎ ▊▔▔▔▔▔▔▔▔▎
+▊        ▎ ▊        ▎ ▊        ▎ ▊        ▎
+▊▁▁▁▁▁▁▁▁▎ ▊▁▁▁▁▁▁▁▁▎ ▊▁▁▁▁▁▁▁▁▎ ▊▁▁▁▁▁▁▁▁▎
+--- styles
+.aaaaaaaaabcdddddddddb.aaaaaaaaabcdddddddddb
+.bbeebbbbabcbbeebbbbdb.bbbbffbbabcbbbbffbbdb
+.aaaaaaaaabcdddddddddb.aaaaaaaaabcdddddddddb
+--- legend
+. fg=Black bg=Reset REVERSED
+a fg=Black bg=Reset
+b fg=Reset bg=Reset
+c fg=Magenta bg=Reset REVERSED
+d fg=Magenta bg=Reset
+e fg=Red bg=Reset REVERSED
+f fg=Green bg=Reset REVERSED

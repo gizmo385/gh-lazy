@@ -1,0 +1,26 @@
+---
+source: crates/lazy-github-tui/src/components/switch.rs
+expression: "states(&Theme::by_name(\"textual-light\").unwrap())"
+---
+▊▔▔▔▔▔▔▔▔▎ ▊▔▔▔▔▔▔▔▔▎ ▊▔▔▔▔▔▔▔▔▎ ▊▔▔▔▔▔▔▔▔▎
+▊        ▎ ▊        ▎ ▊        ▎ ▊        ▎
+▊▁▁▁▁▁▁▁▁▎ ▊▁▁▁▁▁▁▁▁▎ ▊▁▁▁▁▁▁▁▁▎ ▊▁▁▁▁▁▁▁▁▎
+--- styles
+.aaaaaaaabcdeeeeeeeefc.aaaaaaaabcdeeeeeeeefc
+.gghhiiggbcdjjkkiijjfc.ggiillggbcdjjiimmjjfc
+.aaaaaaaabcdeeeeeeeefc.aaaaaaaabcdeeeeeeeefc
+--- legend
+. fg=#d0d1d0 bg=#ffffff REVERSED
+a fg=#d0d1d0 bg=#d8d8d8
+b fg=#d0d1d0 bg=#ffffff
+c fg=Reset bg=#ffffff
+d fg=#004578 bg=#ffffff REVERSED
+e fg=#004578 bg=#cecece
+f fg=#004578 bg=#ffffff
+g fg=#1f1f1f bg=#d8d8d8
+h fg=#8d979f bg=#d8d8d8 REVERSED
+i fg=#1f1f1f bg=#a6a6a6
+j fg=#1f1f1f bg=#cecece
+k fg=#8d979f bg=#cecece REVERSED
+l fg=#4ebf71 bg=#d8d8d8 REVERSED
+m fg=#4ebf71 bg=#cecece REVERSED

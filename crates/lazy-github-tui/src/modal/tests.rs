@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use crossterm::event::{KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
 use ratatui::buffer::Buffer;
-use ratatui::style::Color;
+use ratatui::style::{Color, Modifier};
 
 use super::{DialogAction, ModalKind, TestDialogAction};
 use crate::action::Action;
@@ -104,7 +104,7 @@ fn a_reply_can_target_a_dialog_lower_in_the_stack() {
 #[test]
 fn stacked_dialogs_close_top_first() {
     let mut app = app_with(TestDialog::new(1));
-    open(&mut app, TestDialog::new(2).focused_on_plain());
+    open(&mut app, TestDialog::new(2).focused_on_switch());
     app.press(&["q"]);
     assert_eq!(open_kinds(&app), [ModalKind::Test(1)]);
     assert_eq!(replies(&app), ["2: None"]);
@@ -129,8 +129,8 @@ fn an_action_for_a_closed_dialog_is_dropped() {
 // Keys.
 
 #[test]
-fn q_closes_from_a_plain_field_and_types_in_an_input() {
-    let mut app = app_with(TestDialog::new(1).focused_on_plain());
+fn q_closes_from_the_switch_and_types_in_an_input() {
+    let mut app = app_with(TestDialog::new(1).focused_on_switch());
     app.press(&["q"]);
     assert_eq!(open_kinds(&app), []);
     assert_eq!(replies(&app), ["1: None"]);
@@ -145,7 +145,7 @@ fn q_closes_from_a_plain_field_and_types_in_an_input() {
 
 #[test]
 fn escape_closes_from_both_fields() {
-    for dialog in [TestDialog::new(1), TestDialog::new(1).focused_on_plain()] {
+    for dialog in [TestDialog::new(1), TestDialog::new(1).focused_on_switch()] {
         let mut app = app_with(dialog);
         app.press(&["escape"]);
         assert_eq!(open_kinds(&app), []);
@@ -167,7 +167,7 @@ fn an_override_moves_modal_close() {
     config.bindings.overrides.insert("modal.close".into(), "x".into());
 
     let mut app = TestApp::new(config.clone());
-    open(&mut app, TestDialog::new(1).focused_on_plain());
+    open(&mut app, TestDialog::new(1).focused_on_switch());
     app.press(&["q", "escape"]);
     assert_eq!(open_kinds(&app), [ModalKind::Test(1)]);
     app.press(&["x"]);
@@ -183,7 +183,7 @@ fn an_override_moves_modal_close() {
 
 #[test]
 fn ctrl_q_quits_from_a_modal() {
-    for dialog in [TestDialog::new(1), TestDialog::new(1).focused_on_plain()] {
+    for dialog in [TestDialog::new(1), TestDialog::new(1).focused_on_switch()] {
         let mut app = app_with(dialog);
         app.press(&["ctrl+q"]);
         assert_eq!(app.effects().last(), Some(&crate::effect::Effect::Quit));
@@ -193,7 +193,7 @@ fn ctrl_q_quits_from_a_modal() {
 
 #[test]
 fn app_keys_do_nothing_in_a_modal() {
-    let mut app = app_with(TestDialog::new(1).focused_on_plain());
+    let mut app = app_with(TestDialog::new(1).focused_on_switch());
     let before = app.effects().len();
     app.press(&["question_mark", "M", "ctrl+p", "1", "2", "3", "4", "5", "6", "ctrl+c"]);
     assert_eq!(app.effects().len(), before);
@@ -280,7 +280,7 @@ fn mouse(kind: MouseEventKind, column: u16, row: u16) -> Event {
 
 #[test]
 fn a_click_outside_the_frame_does_nothing() {
-    let mut app = app_with(TestDialog::new(1).focused_on_plain());
+    let mut app = app_with(TestDialog::new(1).focused_on_switch());
     app.render(160, 48);
     let before = app.effects().len();
     // The details tabs, right of the frame, and the repos table, left of it.
@@ -289,14 +289,14 @@ fn a_click_outside_the_frame_does_nothing() {
     assert_eq!(app.effects().len(), before);
     assert_eq!(open_kinds(&app), [ModalKind::Test(1)]);
     assert_eq!(main_focus(&app), FocusTarget::Table(SectionId::Repos));
-    // The dialog didn't take focus from a click either: its plain field still has it, so `q` closes.
+    // The dialog didn't take focus from a click either: its switch still has it, so `q` closes.
     app.press(&["q"]);
     assert_eq!(open_kinds(&app), []);
 }
 
 #[test]
 fn a_click_inside_the_frame_reaches_the_dialog() {
-    let mut app = app_with(TestDialog::new(1).focused_on_plain());
+    let mut app = app_with(TestDialog::new(1).focused_on_switch());
     app.render(160, 48);
     // The interior starts at (51, 12): the input's rows are 4 to 6 below that.
     app.click(60, 17);
@@ -398,7 +398,7 @@ fn dialog_frame_clipped_50x20() {
 #[test]
 fn dialog_stacked() {
     let mut app = app_with(TestDialog::new(1));
-    open(&mut app, TestDialog::new(2).with_size(30, 11).focused_on_plain());
+    open(&mut app, TestDialog::new(2).with_size(30, 11).focused_on_switch());
     insta::assert_snapshot!(styled(&mut app, 100, 30));
 }
 
@@ -422,6 +422,8 @@ struct Capture {
     text: Vec<Vec<char>>,
     styles: Vec<Vec<char>>,
     legend: HashMap<char, (Option<String>, Option<String>)>,
+    /// The legend letters whose style is reversed.
+    inverse: Vec<char>,
 }
 
 impl Capture {
@@ -433,9 +435,12 @@ impl Capture {
         let lines: Vec<&str> = file.lines().collect();
         let section = |name: &str| lines.iter().position(|line| *line == name).unwrap();
         let (text, styles, legend) = (section("--- text"), section("--- styles"), section("--- legend"));
-        let legend = lines[legend + 1..]
-            .iter()
-            .take_while(|line| !line.starts_with("---"))
+        let legend_lines = || lines[legend + 1..].iter().take_while(|line| !line.starts_with("---"));
+        let inverse = legend_lines()
+            .filter(|line| line.split(' ').any(|word| word == "inverse"))
+            .filter_map(|line| line.chars().next())
+            .collect();
+        let legend = legend_lines()
             .filter_map(|line| {
                 let mut words = line.split(' ');
                 let letter = words.next()?.chars().next()?;
@@ -458,6 +463,7 @@ impl Capture {
                 .collect(),
             styles: lines[styles + 1..].iter().map(|line| line.chars().collect()).collect(),
             legend,
+            inverse,
         }
     }
 
@@ -467,6 +473,10 @@ impl Capture {
 
     fn colors(&self, x: u16, y: u16) -> &(Option<String>, Option<String>) {
         &self.legend[&self.styles[usize::from(y)][usize::from(x)]]
+    }
+
+    fn reversed(&self, x: u16, y: u16) -> bool {
+        self.inverse.contains(&self.styles[usize::from(y)][usize::from(x)])
     }
 }
 
@@ -561,7 +571,12 @@ fn tab_walks_lookups_order_and_wraps() {
 
 #[test]
 fn shift_enter_submits_from_every_field() {
-    for field in [TestField::Input, TestField::Plain, TestField::Submit, TestField::Cancel] {
+    for field in [
+        TestField::Input,
+        TestField::Switch,
+        TestField::Submit,
+        TestField::Cancel,
+    ] {
         let mut app = app_with(TestDialog::new(1).focused_on(field));
         app.press(&["shift+enter"]);
         assert_eq!(replies(&app), [r#"1: Some("")"#], "{field:?}");
@@ -613,7 +628,7 @@ fn a_disabled_button_is_skipped_and_cant_be_pressed() {
     app.render(160, 48);
     app.click(64, 32);
     assert_eq!(open_kinds(&app), [ModalKind::Test(1)]);
-    // The click didn't focus it: the input still types. Then input, plain, Cancel: enter there cancels.
+    // The click didn't focus it: the input still types. Then the switch, then Cancel: enter there cancels.
     app.press(&["q", "tab", "tab", "enter"]);
     assert_eq!(replies(&app), ["1: None"]);
 }
@@ -667,6 +682,98 @@ fn the_buttons_match_pythons_colors() {
                 {
                     assert_eq!(&hex(cell.fg), fg, "{capture} fg at ({x}, {y})");
                 }
+            }
+        }
+    }
+}
+
+// The switch.
+
+/// Whether the test dialog's switch is drawn on at 160x48: the right half of its slider, at (57, 25) and (58, 25), is
+/// the thumb, a reversed blank.
+fn switch_drawn_on(app: &mut TestApp) -> bool {
+    let buffer = app.render(160, 48);
+    let thumb = |x: u16| buffer[(x, 25)].modifier.contains(Modifier::REVERSED);
+    assert_eq!(thumb(55), !thumb(57), "the thumb is one half of the slider");
+    thumb(57)
+}
+
+#[test]
+fn enter_and_space_toggle_the_focused_switch() {
+    let mut app = app_with(TestDialog::new(1).focused_on_switch());
+    assert!(!switch_drawn_on(&mut app));
+    app.press(&["space"]);
+    assert!(switch_drawn_on(&mut app));
+    app.press(&["enter"]);
+    assert!(!switch_drawn_on(&mut app));
+    app.press(&["enter", "space", "space"]);
+    assert!(switch_drawn_on(&mut app));
+    assert_eq!(open_kinds(&app), [ModalKind::Test(1)]);
+    // The toggle is hidden: the footer is the dialog's alone.
+    assert_eq!(footer(&mut app), ["shift+⏎ Submit", "q Close"]);
+    // q isn't the switch's, so it closes the dialog from there.
+    app.press(&["q"]);
+    assert_eq!(open_kinds(&app), []);
+    assert_eq!(replies(&app), ["1: None"]);
+}
+
+#[test]
+fn space_types_in_the_input_and_leaves_the_switch() {
+    let mut app = app_with(TestDialog::new(1));
+    app.press(&["a", "space", "b"]);
+    assert!(!switch_drawn_on(&mut app));
+    app.press(&["shift+enter"]);
+    assert_eq!(replies(&app), [r#"1: Some("a b")"#]);
+}
+
+#[test]
+fn clicking_the_switch_toggles_and_focuses_it() {
+    let mut app = app_with(TestDialog::new(1));
+    app.render(160, 48);
+    // Its corners: the switch is (51, 24) to (60, 26).
+    app.click(51, 26);
+    assert!(switch_drawn_on(&mut app));
+    app.click(60, 24);
+    assert!(!switch_drawn_on(&mut app));
+    // Right of it is the interior, not the switch.
+    app.click(61, 25);
+    assert!(!switch_drawn_on(&mut app));
+    // The clicks focused it: space toggles and q closes.
+    app.press(&["space"]);
+    assert!(switch_drawn_on(&mut app));
+    app.press(&["q"]);
+    assert_eq!(open_kinds(&app), []);
+}
+
+#[test]
+fn the_switch_matches_pythons_cells() {
+    for (capture, presses) in [
+        ("modal-frame/160x48/open", &[][..]),
+        ("modal-frame/160x48/switch-focused", &["tab"][..]),
+        ("repo-lookup/160x48/switch-on", &["tab", "space"][..]),
+    ] {
+        let python = Capture::read(&format!("parity/references/{capture}.screen"));
+        let mut app = app_with(TestDialog::new(1));
+        app.press(presses);
+        let rust = app.render(160, 48);
+        for y in 24..27 {
+            for x in 51..61 {
+                let (fg, bg) = python.colors(x, y);
+                let cell = &rust[(x, y)];
+                assert_eq!(
+                    cell.symbol().chars().next(),
+                    Some(python.symbol(x, y)),
+                    "{capture} ({x}, {y})"
+                );
+                assert_eq!(bg.as_deref(), Some(hex(cell.bg).as_str()), "{capture} bg at ({x}, {y})");
+                if let Some(fg) = fg {
+                    assert_eq!(&hex(cell.fg), fg, "{capture} fg at ({x}, {y})");
+                }
+                assert_eq!(
+                    cell.modifier.contains(Modifier::REVERSED),
+                    python.reversed(x, y),
+                    "{capture} reversed at ({x}, {y})"
+                );
             }
         }
     }

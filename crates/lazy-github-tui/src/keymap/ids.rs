@@ -263,6 +263,8 @@ registry! {
     TextualInputPaste("textual.input.paste", "ctrl+v", "paste", "Paste text from the clipboard").hidden();
     // `Button`: the dialogs' buttons (#213).
     TextualButtonPress("textual.button.press", "enter", "press", "Press button").hidden();
+    // `Switch`: the dialogs' switches (#223).
+    TextualSwitchToggle("textual.switch.toggle_switch", "enter,space", "toggle_switch", "Toggle").hidden();
 }
 
 impl BindingId {

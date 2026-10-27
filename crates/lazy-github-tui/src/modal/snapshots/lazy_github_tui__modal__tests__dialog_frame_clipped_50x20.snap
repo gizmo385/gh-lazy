@@ -11,13 +11,13 @@ expression: "styled(&mut app, 50, 20)"
 █▊  Name                                        ▎█
 █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█
 █                                                █
-█Plain field                                     █
 █                                                █
 █                                                █
 █                                                █
 █                                                █
-█                                                █
-█                                                █
+█▊▔▔▔▔▔▔▔▔▎                                      █
+█▊        ▎                                      █
+█▊▁▁▁▁▁▁▁▁▎                                      █
 █                                                █
 █                                                █
 █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█
@@ -36,13 +36,13 @@ expression: "styled(&mut app, 50, 20)"
 .aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
 .aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
 .aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
-.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
-.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
-.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.hiiiiiiiijaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.hkkllmmkkjaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.hiiiiiiiijaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
 .aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
 .aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
 ..................................................
-hhhhhhhhhiiiiiiihhhhhiiiiiijjjjjjjjjjjjjjjjjjjjjjj
+nnnnnnnnnooooooonnnnnooooooppppppppppppppppppppppp
 --- legend
 . fg=#121212 bg=#4f4f4f
 a fg=#e0e0e0 bg=#4f4f4f
@@ -52,6 +52,12 @@ d fg=#0178d4 bg=#4f4f4f
 e fg=#e0e0e0 bg=#272727
 f fg=#121212 bg=#e0e0e0
 g fg=#797979 bg=#272727
-h fg=#ffa62b bg=#242f38 BOLD
-i fg=#e0e0e0 bg=#242f38
-j fg=Reset bg=#242f38
+h fg=#191919 bg=#4f4f4f REVERSED
+i fg=#191919 bg=#1e1e1e
+j fg=#191919 bg=#4f4f4f
+k fg=#e0e0e0 bg=#1e1e1e
+l fg=#242f38 bg=#1e1e1e REVERSED
+m fg=#e0e0e0 bg=#000f18
+n fg=#ffa62b bg=#242f38 BOLD
+o fg=#e0e0e0 bg=#242f38
+p fg=Reset bg=#242f38

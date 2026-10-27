@@ -11,6 +11,7 @@ pub mod markdown;
 pub mod scroll_view;
 pub mod scrollbar;
 pub mod status_bar;
+pub mod switch;
 pub mod table;
 pub mod tabs;
 pub mod text_input;

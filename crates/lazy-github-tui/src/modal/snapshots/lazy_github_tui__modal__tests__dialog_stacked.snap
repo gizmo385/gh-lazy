@@ -13,14 +13,14 @@ expression: "styled(&mut app, 100, 30)"
 │                   █▊  Name                                                  ▎█Hub (0.1.0)        │
 │                   █▊▁▁▁▁▁▁▁▁▁▁▁▁▁█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█▁▁▁▁▁▁▁▁▁▁▁▁▁▎█                   │
 │                   █              █                            █              █acting with        │
-│                   █Plain field   █         Test dialog        █              █ing one of the     │
+│                   █              █         Test dialog        █              █ing one of the     │
 └───────────────────█              █                            █              █he left. Once      │
 ┌─ [2] Pull Requests█              █Name:                       █              █ssues, pull        │
 │ #  Status  Author █              █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█              █e retrieved and    │
-│                   █              █▊  Name                    ▎█              █                   │
-│                   █              █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█              █                   │
-└───────────────────█              █                            █              █ts can also be   ▁▁│
-┌─ [3] Issues ──────█              █Plain field                 █              █                   │
+│                   █▊▔▔▔▔▔▔▔▔▎    █▊  Name                    ▎█              █                   │
+│                   █▊        ▎    █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█              █                   │
+└───────────────────█▊▁▁▁▁▁▁▁▁▎    █                            █              █ts can also be   ▁▁│
+┌─ [3] Issues ──────█              █                            █              █                   │
 │ #  Status  Author █              █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█              █                   │
 │                   █                                                          █                   │
 │                   █                                                          █                   │
@@ -48,21 +48,21 @@ caaaaaaaaaaaaaaaaaaabddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddb
 ccccccccccccccccccccbddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddbaaaaaaaaaaaaaaaaaiie
 eeeeeeeeeeeeeeeeeeeebddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddbaaaaaaaaaaaaaaaaaiie
 esssssssssssssssssssbddddddddddddddqtuuuuuuuuuuuuuuuuuuuuuuuuuuvqddddddddddddddbaaaaaaaaaaaaaaaaaiie
-eaaaaaaaaaaaaaaaaaaabddddddddddddddqtwwxxxxwwwwwwwwwwwwwwwwwwwwvqddddddddddddddbaaaaaaaaaaaaaaaaaiie
-eaaaaaaaaaaaaaaaaaaabddddddddddddddqtuuuuuuuuuuuuuuuuuuuuuuuuuuvqddddddddddddddbaaaaaaaaaaaaaaaaaiie
-eeeeeeeeeeeeeeeeeeeebddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddbyyyyyyyyyyyyyyaaazze
-eeeeeeeeeeeeeeeeeeeebddddddddddddddqAAAAAAAAAAAAAAAAAAAAAAAAAAAAqddddddddddddddbaaaaaaaaaaaaaaaaaBBe
-esssssssssssssssssssbddddddddddddddqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqddddddddddddddbaaaaaaaaaaaaaaaaaBBe
-eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaBBe
-eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaBBe
-eeeeeeeeeeeeeeeeeeeebddddddddddddCCCCCCCCCCCCCCCCdDDDDDDDDDDDDDDDDdddddddddddddbaaaaaaaaaaaaaaaaaBBe
-eeeeeeeeeeeeeeeeeeeebddddddddddddEEEEFFFFFFFFEEEEdGGGGHHHHHHHHGGGGdddddddddddddbaaaaaaaaaaaaaaaaaBBe
-esssssssssssssssssssbddddddddddddIIIIIIIIIIIIIIIIdJJJJJJJJJJJJJJJJdddddddddddddbaaaaaaaaaaaaaaaaaBBe
-eKKKKKKKKKKKKKKKKKKKbddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaBBe
-eaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaBBe
-eaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBBe
+eaaaaaaaaaaaaaaaaaaabwxxxxxxxxyddddqtzzAAAAzzzzzzzzzzzzzzzzzzzzvqddddddddddddddbaaaaaaaaaaaaaaaaaiie
+eaaaaaaaaaaaaaaaaaaabwBBCCDDBByddddqtuuuuuuuuuuuuuuuuuuuuuuuuuuvqddddddddddddddbaaaaaaaaaaaaaaaaaiie
+eeeeeeeeeeeeeeeeeeeebwxxxxxxxxyddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddbEEEEEEEEEEEEEEaaaFFe
+eeeeeeeeeeeeeeeeeeeebddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqddddddddddddddbaaaaaaaaaaaaaaaaaGGe
+esssssssssssssssssssbddddddddddddddqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqddddddddddddddbaaaaaaaaaaaaaaaaaGGe
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaGGe
+eaaaaaaaaaaaaaaaaaaabddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaGGe
+eeeeeeeeeeeeeeeeeeeebddddddddddddHHHHHHHHHHHHHHHHdIIIIIIIIIIIIIIIIdddddddddddddbaaaaaaaaaaaaaaaaaGGe
+eeeeeeeeeeeeeeeeeeeebddddddddddddJJJJKKKKKKKKJJJJdLLLLMMMMMMMMLLLLdddddddddddddbaaaaaaaaaaaaaaaaaGGe
+esssssssssssssssssssbddddddddddddNNNNNNNNNNNNNNNNdOOOOOOOOOOOOOOOOdddddddddddddbaaaaaaaaaaaaaaaaaGGe
+ePPPPPPPPPPPPPPPPPPPbddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbaaaaaaaaaaaaaaaaaGGe
+eaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaGGe
+eaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaGGe
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-LLLLLLLLLMMMMMMMLLLMMMMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+QQQQQQQQQRRRRRRRQQQRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 --- legend
 . fg=#0e1a22 bg=#121212
 a fg=#323232 bg=#121212
@@ -87,21 +87,26 @@ s fg=#323232 bg=#141618 BOLD
 t fg=#191919 bg=#4f4f4f REVERSED
 u fg=#191919 bg=#1e1e1e
 v fg=#191919 bg=#4f4f4f
-w fg=#e0e0e0 bg=#1e1e1e
-x fg=#737373 bg=#1e1e1e
-y fg=#323232 bg=#121212 BOLD
-z fg=#0e161c bg=#0e0e0e REVERSED
-A fg=#e0e0e0 bg=#4f4f4f REVERSED
-B fg=#323232 bg=#0e0e0e
-C fg=#3b6847 bg=#2a5738
-D fg=#67333e bg=#54222f
-E fg=#0e1410 bg=#2a5738
-F fg=#0e1410 bg=#2a5738 BOLD
-G fg=#6c6668 bg=#54222f
-H fg=#6c6668 bg=#54222f BOLD
-I fg=#0a3e21 bg=#2a5738
-J fg=#3a0a1a bg=#54222f
-K fg=#0e161c bg=#131313 REVERSED
-L fg=#ffa62b bg=#242f38 BOLD
-M fg=#e0e0e0 bg=#242f38
-N fg=Reset bg=#242f38
+w fg=#141414 bg=#2a2a2a REVERSED
+x fg=#141414 bg=#161616
+y fg=#141414 bg=#2a2a2a
+z fg=#e0e0e0 bg=#1e1e1e
+A fg=#737373 bg=#1e1e1e
+B fg=#646464 bg=#161616
+C fg=#191d21 bg=#161616 REVERSED
+D fg=#646464 bg=#0a1014
+E fg=#323232 bg=#121212 BOLD
+F fg=#0e161c bg=#0e0e0e REVERSED
+G fg=#323232 bg=#0e0e0e
+H fg=#3b6847 bg=#2a5738
+I fg=#67333e bg=#54222f
+J fg=#0e1410 bg=#2a5738
+K fg=#0e1410 bg=#2a5738 BOLD
+L fg=#6c6668 bg=#54222f
+M fg=#6c6668 bg=#54222f BOLD
+N fg=#0a3e21 bg=#2a5738
+O fg=#3a0a1a bg=#54222f
+P fg=#0e161c bg=#131313 REVERSED
+Q fg=#ffa62b bg=#242f38 BOLD
+R fg=#e0e0e0 bg=#242f38
+S fg=Reset bg=#242f38

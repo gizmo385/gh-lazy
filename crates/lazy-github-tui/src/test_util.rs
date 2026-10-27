@@ -21,6 +21,7 @@ use crate::app::App;
 use crate::clock::{Clock as _, FakeClock};
 use crate::component::{ChainLink, Component, Cx, RenderCx};
 use crate::components::button::{ButtonMouse, ButtonRow, Pressed};
+use crate::components::switch::Switch;
 use crate::components::text_input::{self, InputOutcome, TextInput};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
@@ -484,14 +485,13 @@ impl Component for LatestWins {
     fn render(&mut self, _frame: &mut ratatui::Frame<'_>, _area: Rect, _cx: &RenderCx<'_>) {}
 }
 
-/// The test dialog's fields, in Lookup repository's order: the input, another field (Lookup's switch), then the
-/// button row.
+/// The test dialog's fields, in Lookup repository's order: the input, the switch, then the button row.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TestField {
     /// A text input, which types `q`.
     Input,
-    /// A field without bindings, like a switch.
-    Plain,
+    /// A switch, whose only keys are `enter` and `space`: `q` isn't one, so it closes the dialog.
+    Switch,
     /// The submit button.
     Submit,
     /// The Cancel button.
@@ -504,12 +504,12 @@ impl TestField {
         match self {
             TestField::Submit => Some(Pressed::Submit),
             TestField::Cancel => Some(Pressed::Cancel),
-            TestField::Input | TestField::Plain => None,
+            TestField::Input | TestField::Switch => None,
         }
     }
 }
 
-/// A dialog for testing the modal stack: a text input, a plain field and a Lookup/Cancel [`ButtonRow`], with
+/// A dialog for testing the modal stack: a text input, a switch and a Lookup/Cancel [`ButtonRow`], with
 /// `modal.submit` and `modal.close`. Its output is the input's text on submit, or `None` on close. By default it's
 /// Lookup repository's 60 x 25 with its input focused, and its buttons where Lookup's are.
 #[derive(Debug)]
@@ -519,6 +519,7 @@ pub struct TestDialog {
     footer: bool,
     ring: FocusRing<TestField>,
     input: TextInput,
+    switch: Switch,
     buttons: ButtonRow,
     // The outer `Option` is whether it's done, the inner the dialog's output.
     #[allow(clippy::option_option)]
@@ -530,9 +531,20 @@ pub struct TestDialog {
 /// The test dialog's screen bindings.
 const TEST_DIALOG_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
 
+/// Where the test dialog's switch is in its interior `area`, clipped to it.
+fn switch_area(area: Rect) -> Rect {
+    Rect {
+        y: area.y.saturating_add(SWITCH_ROW),
+        height: Switch::HEIGHT,
+        ..area
+    }
+    .intersection(area)
+}
+
 /// The rows of the test dialog's interior that each field takes, from the interior's top.
 const INPUT_ROW: u16 = 4;
-const PLAIN_ROW: u16 = 8;
+/// Lookup's switch: interior rows 12 to 14.
+const SWITCH_ROW: u16 = 12;
 /// Lookup's button row: its buttons are on interior rows 19 to 21.
 const BUTTON_ROW: u16 = 18;
 
@@ -543,8 +555,14 @@ impl TestDialog {
             id,
             size: (60, 25),
             footer: true,
-            ring: FocusRing::new([TestField::Input, TestField::Plain, TestField::Submit, TestField::Cancel]),
+            ring: FocusRing::new([
+                TestField::Input,
+                TestField::Switch,
+                TestField::Submit,
+                TestField::Cancel,
+            ]),
             input: TextInput::new("Name"),
+            switch: Switch::new(false),
             buttons: ButtonRow::new("Lookup"),
             output: None,
             mouse_events: 0,
@@ -558,10 +576,10 @@ impl TestDialog {
         self
     }
 
-    /// This dialog with its plain field focused.
+    /// This dialog with its switch focused.
     #[must_use]
-    pub fn focused_on_plain(self) -> Self {
-        self.focused_on(TestField::Plain)
+    pub fn focused_on_switch(self) -> Self {
+        self.focused_on(TestField::Switch)
     }
 
     /// This dialog with `field` focused.
@@ -653,11 +671,13 @@ impl Component for TestDialog {
         if event.kind != MouseEventKind::Down(MouseButton::Left) {
             return None;
         }
+        if self.switch.handle_mouse(&event, switch_area(area)) {
+            self.ring.focus(TestField::Switch);
+            return Some(Action::Consumed);
+        }
         let row = event.row - area.y;
         if (INPUT_ROW..INPUT_ROW + text_input::HEIGHT).contains(&row) {
             self.ring.focus(TestField::Input);
-        } else if row == PLAIN_ROW {
-            self.ring.focus(TestField::Plain);
         }
         Some(Action::Consumed)
     }
@@ -703,14 +723,12 @@ impl Component for TestDialog {
             under,
             self.ring.is_focused(TestField::Input),
         );
-        let plain = if self.ring.is_focused(TestField::Plain) {
-            text.add_modifier(Modifier::REVERSED)
-        } else {
-            text
-        };
-        frame.render_widget(
-            Paragraph::new("Plain field").style(plain),
-            row(PLAIN_ROW).intersection(area),
+        self.switch.render(
+            frame.buffer_mut(),
+            switch_area(area),
+            theme,
+            under,
+            self.ring.is_focused(TestField::Switch),
         );
         let focused = self.ring.focused().and_then(TestField::button);
         self.buttons
@@ -752,7 +770,8 @@ impl Dialog for TestDialog {
         match self.ring.focused() {
             Some(TestField::Input) => vec![FieldKind::TextInput.link(self.kind())],
             Some(TestField::Submit | TestField::Cancel) => vec![FieldKind::Button.link(self.kind())],
-            Some(TestField::Plain) | None => Vec::new(),
+            Some(TestField::Switch) => vec![FieldKind::Switch.link(self.kind())],
+            None => Vec::new(),
         }
     }
 
@@ -766,6 +785,10 @@ impl Dialog for TestDialog {
                         .press(button, cx.now())
                         .map_or(Action::Consumed, |pressed| self.pressed(pressed)),
                 )
+            }
+            (FieldKind::Switch, BindingId::TextualSwitchToggle) => {
+                self.switch.toggle();
+                Some(Action::Consumed)
             }
             // `consumes_key` already gave the input every key it binds.
             _ => Some(Action::Consumed),

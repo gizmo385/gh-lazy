@@ -166,7 +166,7 @@ impl Owner {
             | Owner::DetailsTabs
             | Owner::DetailsContent
             | Owner::CommandLog
-            | Owner::DialogField(_, FieldKind::Button) => None,
+            | Owner::DialogField(_, FieldKind::Button | FieldKind::Switch) => None,
         }
     }
 

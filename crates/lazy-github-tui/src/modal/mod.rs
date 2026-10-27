@@ -15,6 +15,7 @@ use ratatui::layout::Rect;
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Component, Cx, Owner};
 use crate::components::button::BUTTON_BINDINGS;
+use crate::components::switch::SWITCH_BINDINGS;
 use crate::components::text_input::INPUT_BINDINGS;
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::BindingId;
@@ -63,14 +64,16 @@ pub enum ModalKind {
     Test(u8),
 }
 
-/// The kinds of focusable field a dialog has, for [`crate::component::Owner::DialogField`]. Switches, selects and
-/// editors come with #179 and #180.
+/// The kinds of focusable field a dialog has, for [`crate::component::Owner::DialogField`]. Selects and editors come
+/// with #179 and #180.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum FieldKind {
     /// Textual's `Input`: it types text, so the keys it types are gone from the links behind it.
     TextInput,
     /// Textual's `Button`: `enter` presses it.
     Button,
+    /// Textual's `Switch`: `enter` or `space` toggles it.
+    Switch,
 }
 
 impl FieldKind {
@@ -79,6 +82,7 @@ impl FieldKind {
         let bindings = match self {
             FieldKind::TextInput => INPUT_BINDINGS,
             FieldKind::Button => BUTTON_BINDINGS,
+            FieldKind::Switch => SWITCH_BINDINGS,
         };
         ChainLink::new(Owner::DialogField(kind, self), bindings)
     }

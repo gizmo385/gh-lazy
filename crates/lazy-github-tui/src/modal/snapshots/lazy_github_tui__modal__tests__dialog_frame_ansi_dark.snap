@@ -13,13 +13,13 @@ expression: buffer_to_styled_string(&over)
 │                   █▊  Name                                                  ▎█Hub (0.1.0)        │
 │                   █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█                   │
 │                   █                                                          █acting with        │
-│                   █Plain field                                               █ing one of the     │
+│                   █                                                          █ing one of the     │
 └───────────────────█                                                          █he left. Once      │
 ┌─ [2] Pull Requests█                                                          █ssues, pull        │
 │ #  Status  Author █                                                          █e retrieved and    │
-│                   █                                                          █                   │
-│                   █                                                          █                   │
-└───────────────────█                                                          █ts can also be   ▁▁│
+│                   █▊▔▔▔▔▔▔▔▔▎                                                █                   │
+│                   █▊        ▎                                                █                   │
+└───────────────────█▊▁▁▁▁▁▁▁▁▎                                                █ts can also be   ▁▁│
 ┌─ [3] Issues ──────█                                                          █                   │
 │ #  Status  Author █                                                          █                   │
 │                   █                                                          █                   │
@@ -48,19 +48,19 @@ baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 bbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
 ccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
 cdddddddddddddddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
-ccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaallllllllllllllaaammc
-ccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
-cdddddddddddddddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
-ccccccccccccccccccccaaaaaaaaaaaaaobbbbbbbbbbbbbbbapqqqqqqqqqqqqqqqaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
-ccccccccccccccccccccaaaaaaaaaaaaaoaaarrrrrrrraaabapaaassssssssaaaqaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
-cdddddddddddddddddddaaaaaaaaaaaaaobbbbbbbbbbbbbbbapqqqqqqqqqqqqqqqaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
-cfffffffffffffffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannc
+caaaaaaaaaaaaaaaaaaaalmmmmmmmmmaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
+caaaaaaaaaaaaaaaaaaaalaannaaaamaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaffc
+ccccccccccccccccccccalmmmmmmmmmaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaooooooooooooooaaappc
+ccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+cdddddddddddddddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+ccccccccccccccccccccaaaaaaaaaaaaarbbbbbbbbbbbbbbbansssssssssssssssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+ccccccccccccccccccccaaaaaaaaaaaaaraaattttttttaaabanaaauuuuuuuuaaasaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+cdddddddddddddddddddaaaaaaaaaaaaarbbbbbbbbbbbbbbbansssssssssssssssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+cfffffffffffffffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaqqc
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 kkkkkkkkkaaaaaaakkkkkaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 --- legend
@@ -76,11 +76,13 @@ h fg=Magenta bg=Reset
 i fg=Black bg=Gray DIM
 j fg=Reset bg=Reset DIM
 k fg=Magenta bg=Reset BOLD
-l fg=Reset bg=Reset BOLD
-m fg=Blue bg=Black REVERSED
-n fg=Reset bg=Black
-o fg=Green bg=Reset REVERSED
-p fg=Red bg=Reset REVERSED
-q fg=Red bg=Reset
-r fg=Green bg=Reset BOLD
-s fg=Red bg=Reset BOLD
+l fg=Black bg=Reset REVERSED
+m fg=Black bg=Reset
+n fg=Red bg=Reset REVERSED
+o fg=Reset bg=Reset BOLD
+p fg=Blue bg=Black REVERSED
+q fg=Reset bg=Black
+r fg=Green bg=Reset REVERSED
+s fg=Red bg=Reset
+t fg=Green bg=Reset BOLD
+u fg=Red bg=Reset BOLD

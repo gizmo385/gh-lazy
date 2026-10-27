@@ -3003,6 +3003,33 @@
     ]
   },
   {
+    "class": "textual.widgets.Switch",
+    "bindings": [
+      {
+        "key": "enter",
+        "id": null,
+        "action": "toggle_switch",
+        "description": "Toggle",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "space",
+        "id": null,
+        "action": "toggle_switch",
+        "description": "Toggle",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  },
+  {
     "class": "textual.widgets.Tabs",
     "bindings": [
       {

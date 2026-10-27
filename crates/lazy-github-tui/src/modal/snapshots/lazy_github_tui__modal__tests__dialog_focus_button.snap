@@ -22,13 +22,13 @@ expression: "styled(&mut app, 160, 48)"
 │                                                 █▊  Name                                                  ▎█                                                 │
 │                                                 █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█                                                 │
 └─────────────────────────────────────────────────█                                                          █                                                 │
-┌─ [2] Pull Requests ─────────────────────────────█Plain field                                               █etails, viewing the PR diff, and participating   │
+┌─ [2] Pull Requests ─────────────────────────────█                                                          █etails, viewing the PR diff, and participating   │
 │ #  Status  Author  Title                        █                                                          █e PR. You can also create a new PR for the       │
 │                                                 █                                                          █                                                 │
 │                                                 █                                                          █                                                 │
-│                                                 █                                                          █                                                 │
-│                                                 █                                                          █                                                 │
-│                                                 █                                                          █                                                 │
+│                                                 █▊▔▔▔▔▔▔▔▔▎                                                █                                                 │
+│                                                 █▊        ▎                                                █                                                 │
+│                                                 █▊▁▁▁▁▁▁▁▁▎                                                █                                                 │
 │                                                 █                                                          █ts details, partipcating in any activate         │
 └─────────────────────────────────────────────────█                                                          █y editing the issue itself. This means that you  │
 ┌─ [3] Issues ────────────────────────────────────█                                                          █                                                 │
@@ -75,16 +75,16 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccijjjjjjjjjjjjjjjjjjjjjjjjjjjjj
 cqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaailmmmmmmmmnjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaailoorrssoonjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaailmmmmmmmmnjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 ccccccccccccccccccccccccccccccccccccccccccccccccccijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 ccccccccccccccccccccccccccccccccccccccccccccccccccijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 cqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjrrrrrrrrrrrrrrrrjssssssssssssssssjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjttttuuuuuuuuttttjvvvvwwwwwwwwvvvvjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjxxxxxxxxxxxxxxxxjyyyyyyyyyyyyyyyyjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjttttttttttttttttjuuuuuuuuuuuuuuuujjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjvvvvwwwwwwwwvvvvjxxxxyyyyyyyyxxxxjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjzzzzzzzzzzzzzzzzjAAAAAAAAAAAAAAAAjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
@@ -98,7 +98,7 @@ caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaa
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-zzzzzzzzzAAAAAAAzzzAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+BBBBBBBBBCCCCCCCBBBCCCCCCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 --- legend
 . fg=#0a263a bg=#121212
 a fg=#646464 bg=#121212
@@ -118,14 +118,16 @@ n fg=#191919 bg=#4f4f4f
 o fg=#e0e0e0 bg=#1e1e1e
 p fg=#737373 bg=#1e1e1e
 q fg=#646464 bg=#191d21 BOLD
-r fg=#7ae998 bg=#55c076
-s fg=#e76580 bg=#b93c5b
-t fg=#0b180f bg=#55c076
-u fg=#0b180f bg=#55c076 BOLD | REVERSED
-v fg=#f5e5e9 bg=#b93c5b
-w fg=#f5e5e9 bg=#b93c5b BOLD
-x fg=#008139 bg=#55c076
-y fg=#780028 bg=#b93c5b
-z fg=#ffa62b bg=#242f38 BOLD
-A fg=#e0e0e0 bg=#242f38
-B fg=Reset bg=#242f38
+r fg=#242f38 bg=#1e1e1e REVERSED
+s fg=#e0e0e0 bg=#000f18
+t fg=#7ae998 bg=#55c076
+u fg=#e76580 bg=#b93c5b
+v fg=#0b180f bg=#55c076
+w fg=#0b180f bg=#55c076 BOLD | REVERSED
+x fg=#f5e5e9 bg=#b93c5b
+y fg=#f5e5e9 bg=#b93c5b BOLD
+z fg=#008139 bg=#55c076
+A fg=#780028 bg=#b93c5b
+B fg=#ffa62b bg=#242f38 BOLD
+C fg=#e0e0e0 bg=#242f38
+D fg=Reset bg=#242f38

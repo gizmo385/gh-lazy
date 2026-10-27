@@ -4,6 +4,7 @@ gate = true
 parity_rows = [
     "repositories.rows",
     "repositories.tracked-repos",
+    "searchable-tables.replace-on-readd",
 ]
 
 [env]

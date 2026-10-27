@@ -5,6 +5,8 @@ parity_rows = [
     "pull-requests.lookup",
     "modals.lookup-pr",
     "keybindings.pull-request-lookup",
+    "modals.dialog-buttons",
+    "modals.lookup-modals",
 ]
 sizes = [[160, 48]]
 

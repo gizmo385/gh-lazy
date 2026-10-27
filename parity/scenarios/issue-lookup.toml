@@ -8,6 +8,8 @@ parity_rows = [
     "issues.lookup-pull-request",
     "modals.lookup-issue",
     "keybindings.issue-lookup",
+    "modals.dialog-buttons",
+    "modals.lookup-modals",
 ]
 
 [env]

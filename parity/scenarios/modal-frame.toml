@@ -8,6 +8,7 @@ parity_rows = [
     "modals.dialog-footer",
     "keybindings.modal-close",
     "terminal-caveats.q-in-inputs",
+    "modals.dialog-buttons",
 ]
 sizes = [[160, 48], [100, 30]]
 

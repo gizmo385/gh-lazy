@@ -24,6 +24,8 @@ parity_rows = [
     "keybindings.app-maximize-widget",
     "keybindings.app-open-help",
     "keybindings.common-table-search",
+    "main-layout.focused-section",
+    "main-layout.textual-implicit-keys",
 ]
 # The section sizes change with the screen, and the footer is cut off at a different item at each size.
 sizes = [[160, 48], [100, 30]]

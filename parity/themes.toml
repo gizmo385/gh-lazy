@@ -6,3 +6,15 @@
 
 [textual-dark]
 focus = "#4ebf71"
+
+# Measured from the Python dumps of the theme-* scenarios: the focused "[1] Repositories" border at start.
+[catppuccin-latte]
+focus = "#40a02b"
+
+# ANSI themes draw in the terminal's palette: ANSI green, which the grid dumps as an indexed color.
+[ansi-dark]
+focus = "idx:2"
+
+# An unknown theme name falls back to textual-dark (theme-unknown).
+[no-such-theme]
+focus = "#4ebf71"

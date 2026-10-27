@@ -1,7 +1,7 @@
 version = 1
 description = "A full first page of 50 unread notifications shows 50+"
 gate = true
-parity_rows = ["main-layout.status-summary", "main-layout.status-unread", "main-layout.unread-refresh"]
+parity_rows = ["main-layout.status-summary", "main-layout.status-unread", "main-layout.unread-refresh", "main-layout.fixed-accent-colors"]
 sizes = [[160, 48]]
 
 [env]

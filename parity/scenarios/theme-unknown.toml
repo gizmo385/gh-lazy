@@ -1,0 +1,25 @@
+version = 1
+description = "Main screen with an unknown appearance.theme: both apps fall back to textual-dark"
+gate = true
+parity_rows = ["main-layout.themes"]
+sizes = [[160, 48]]
+
+[env]
+fixtures = ["base"]
+
+[env.config_overrides]
+appearance = { theme = "no-such-theme" }
+
+[[step]]
+wait = { text = "No repository selected", timeout_ms = 15000 }
+
+# parity/themes.toml gives no-such-theme textual-dark's success color, so the focus check fails unless the app falls
+# back to textual-dark.
+[[step]]
+capture = "start"
+checks = ["titles", "tabs", "focus"]
+
+[expect.start]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
+focused = ["[1] Repositories"]
+not_contains = ["Traceback"]

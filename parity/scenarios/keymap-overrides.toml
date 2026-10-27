@@ -1,7 +1,7 @@
 version = 1
 description = "bindings.overrides: rebound pane focus keys in titles and dispatch, a punctuation name and an unknown key in the footer"
 gate = true
-parity_rows = ["keybindings.all-ids", "config.bindings-overrides", "main-layout.section-titles", "main-layout.footer"]
+parity_rows = ["keybindings.all-ids", "config.bindings-overrides", "main-layout.section-titles", "main-layout.footer", "startup-auth.theme-keymap-on-mount"]
 sizes = [[160, 48]]
 
 [env]

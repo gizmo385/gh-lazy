@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/readme",
+    "accept": "raw"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/vnd.github.raw; charset=utf-8"
+    },
+    "body_text": "# pr-details\nPull requests for the PR details tabs, with bare links like https://example.com/docs/start, http://example.org/a?b=1 and ftp://files.example.net/pub.\nHosts like www.example.com, docs.example.io/guide and the file README.md become links too.\nMail user@example.com or mailto:user@example.com, and see //cdn.example.com/lib.js as well.\nTrailing punctuation stays out (https://example.com/end), https://example.com/q? and \"https://example.com/quoted\".\nNot in code `https://example.com/code` or in a [named link](https://example.com/named) to www.example.net.\n"
+  },
+  "note": "Hand-written for the linkify-diff-error scenario: one paragraph of bare URLs, hosts and emails, without blank lines or header-shaped lines, which the Python app drops (Py bug B47)."
+}

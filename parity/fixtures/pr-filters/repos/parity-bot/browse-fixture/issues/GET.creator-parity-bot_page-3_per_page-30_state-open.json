@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/browse-fixture/issues",
+    "query": {
+      "creator": "parity-bot",
+      "page": "3",
+      "per_page": "30",
+      "state": "open"
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": []
+  },
+  "note": "Hand-written for the pr-filters scenario: the browse fixture's open items by parity-bot, as state=open&creator=parity-bot answers them (generated once from repo-lists; edit the JSON directly)."
+}

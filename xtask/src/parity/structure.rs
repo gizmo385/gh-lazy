@@ -118,8 +118,11 @@ impl Themes {
     pub fn parse(source: &str) -> std::result::Result<Self, String> {
         let entries: BTreeMap<String, ThemeEntry> = toml::from_str(source).map_err(|e| e.to_string())?;
         for (name, entry) in &entries {
-            if !is_hex_color(&entry.focus) {
-                return Err(format!("[{name}] focus = {:?} isn't a #rrggbb color", entry.focus));
+            if !is_hex_color(&entry.focus) && !is_indexed_color(&entry.focus) {
+                return Err(format!(
+                    "[{name}] focus = {:?} isn't a #rrggbb or idx:<n> color",
+                    entry.focus
+                ));
             }
         }
         Ok(Self(entries))
@@ -140,6 +143,13 @@ impl Themes {
 
 fn is_hex_color(s: &str) -> bool {
     s.len() == 7 && s.starts_with('#') && s[1..].chars().all(|c| c.is_ascii_hexdigit())
+}
+
+/// An indexed color as the grid dumps it (`idx:2`): Textual's ANSI themes draw in the terminal's own palette.
+fn is_indexed_color(s: &str) -> bool {
+    // Compared as text against the dump, so only the dump's own spelling counts: no `+`, no leading zeros.
+    s.strip_prefix("idx:")
+        .is_some_and(|n| n.parse::<u8>().is_ok_and(|v| v.to_string() == n))
 }
 
 /// Extracts the structure of one screen. Pure: no I/O.
@@ -1215,6 +1225,10 @@ mod tests {
         assert_eq!(themes.colors("textual-dark").focus.as_deref(), Some("#4ebf71"));
         assert_eq!(themes.colors("nord").focus, None);
         assert!(Themes::parse("[x]\nfocus = \"green\"\n").is_err());
+        let ansi = Themes::parse("[ansi-dark]\nfocus = \"idx:2\"\n").unwrap();
+        assert_eq!(ansi.colors("ansi-dark").focus.as_deref(), Some("idx:2"));
+        assert!(Themes::parse("[x]\nfocus = \"idx:256\"\n").is_err());
+        assert!(Themes::parse("[x]\nfocus = \"idx:\"\n").is_err());
         assert!(Themes::parse("[x]\nfocus = \"#000000\"\nother = 1\n").is_err());
         let repo = Themes::load(&crate::parity::cli::repo_root().join("parity/themes.toml")).unwrap();
         assert_eq!(repo.colors(DEFAULT_THEME), dark());

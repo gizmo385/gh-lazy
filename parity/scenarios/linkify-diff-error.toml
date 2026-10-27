@@ -1,0 +1,59 @@
+version = 1
+description = "A README whose bare URLs, www. and fuzzy hosts and emails become links, and a PR whose diff doesn't parse: the Diff tab shows the parse error"
+gate = true
+parity_rows = ["markdown-links.linkify", "diff-viewer.parse-errors"]
+sizes = [[160, 48]]
+
+[env]
+# linkify-diff-error replaces pr-details' README with one paragraph full of bare links (no blank lines or `Word:`
+# lines, which Python drops: Py bug B47), and PR 3's diff with one whose `---` line isn't followed by `+++`.
+fixtures = ["linkify-diff-error", "pr-details", "base"]
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Trailing punctuation", timeout_ms = 15000 }
+
+# The links' styles aren't compared by the checks: the text is, through `contains`. Python sometimes draws the Details
+# tab underline zero-width right after a selection (#209), so `tabs` is left out.
+[[step]]
+capture = "readme"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+# Python drops an enter that follows a focus key at once, so the PR table gets a moment to take focus.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["j", "j", "enter"]
+
+[[step]]
+wait = { text = "Merged Release 0.2.0 (#3)", timeout_ms = 15000 }
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "error parsing diff - please view on github:", timeout_ms = 5000 }
+
+# The reason after the colon differs: Python prints its exception's arguments, Rust its own message (see the row).
+[[step]]
+capture = "diff-parse-error"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
+
+[expect.readme]
+contains = ["https://example.com/docs/start", "www.example.com", "user@example.com"]
+not_contains = ["Traceback"]
+
+[expect.diff-parse-error]
+tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Diff" }
+contains = ["Filter files (press '/' to focus, ESC to clear)", "error parsing diff - please view on github:"]
+not_contains = ["📄", "Traceback"]

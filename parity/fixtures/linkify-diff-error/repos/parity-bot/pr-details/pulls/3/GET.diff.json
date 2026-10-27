@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/3",
+    "accept": "diff"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain; charset=utf-8"
+    },
+    "body_text": "diff --git a/Cargo.toml b/Cargo.toml\nindex aaaaaaa..bbbbbbb 100644\n--- a/Cargo.toml\nversion = \"0.2.0\"\n@@ -1,4 +1,4 @@\n [package]\n"
+  },
+  "note": "Hand-written for the linkify-diff-error scenario: a diff whose `---` line isn't followed by `+++`, which neither app can parse."
+}

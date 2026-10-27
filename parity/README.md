@@ -299,6 +299,14 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   and merged, PR 93 a draft, issues 98 and 80 closed; PR 90's title is `[WIP] Browse fixture pull request 90`. Issue
   authors alternate `parity-bot` and `parity-friend`. Plus its README and empty workflows and runs. Listed before
   `base`, for the `repo-lists` scenario. Hand-written.
+- `pr-filters/`: `parity-bot/browse-fixture`'s issues pages for `state=open&creator=parity-bot`: the 40 open items by
+  `parity-bot` from `repo-lists` (15 PRs and 15 issues on page 1, PRs 48 to 36 and five issues on page 2, then an
+  empty page 3). Listed before `repo-lists` and `base`, for the `pr-filters` scenario. Hand-written, generated once by
+  a throwaway script; edit the JSON directly.
+- `linkify-diff-error/`: `parity-bot/pr-details`' README replaced by one paragraph of bare URLs, `www.` and fuzzy
+  hosts and emails (no blank lines or `Word:` lines, which Python drops: Py bug B47), and PR 3's diff by one whose
+  `---` line isn't followed by `+++`, which neither app parses. Listed before `pr-details` and `base`, for the
+  `linkify-diff-error` scenario. Hand-written.
 - `lists-error/`: `parity-bot/dotfiles`' `issues` page 1 (`state=all`), `actions/workflows` page 1 and `actions/runs`
   page 1, each answered with a 500 (`{"message": "Server Error"}`) after 1.5 s. Listed before `repo-selected-empty`
   (the README) and `base`, for the `lists-fetch-error` scenario. Hand-written.
@@ -909,11 +917,14 @@ from the dumps in `xtask/tests/grids/python/`.
 
 - The focus color comes from `parity/themes.toml`, keyed by the scenario config's `appearance.theme` (default
   `textual-dark`, the Python default). It's Textual's `$success`, measured from the Python startup dump: `#4ebf71` for
-  `textual-dark`.
+  `textual-dark`. A value is `#rrggbb` or, for the ANSI themes, which draw in the terminal's palette, an indexed
+  color as the grid dumps it (`idx:2`).
 - A box is `focused` when its `border_fg` is the focus color, and the top-level `focused` lists the focused boxes'
   titles in pre-order.
 - **Limits.** A theme whose focus color also draws an unfocused border gives false positives. A theme missing from
-  `themes.toml` gives `focused = []` and a `warnings` entry, which is also printed. Only `textual-dark` is measured.
+  `themes.toml` gives `focused = []` and a `warnings` entry, which is also printed. Measured so far: `textual-dark`, and
+  for the `theme-*` scenarios `catppuccin-latte`, `ansi-dark` and `no-such-theme` (an unknown name, which falls back to
+  `textual-dark`). `textual-light`'s `$success` is `textual-dark`'s, so a scenario can't tell those two apart by focus.
 
 #### Inside a box
 

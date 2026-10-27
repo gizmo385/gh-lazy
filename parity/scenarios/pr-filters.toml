@@ -1,0 +1,62 @@
+version = 1
+description = "Non-default PR filters, open and mine, set the same for issues and pull requests: every page of the PR table asks for state=open and creator=<login>"
+gate = true
+parity_rows = ["pull-requests.filters"]
+sizes = [[160, 48]]
+
+[env]
+# pr-filters answers the browse fixture's issues endpoint only for state=open&creator=parity-bot (40 items over pages
+# of 30, then an empty page 3), so a request with other filters is a fixture miss and fails the run. Python fetches the
+# first page with the `issues.*` filters and later pages with `pull_requests.*` (Py bug B3), so the two pairs are set
+# equal: with different ones the apps send different first pages on purpose. Issues and Workflows are hidden so only
+# the PR table asks for later pages.
+fixtures = ["pr-filters", "repo-lists", "base"]
+
+[env.config_overrides]
+appearance = { show_issues = false, show_workflows = false }
+pull_requests = { state_filter = "open", owner_filter = "mine" }
+issues = { state_filter = "open", owner_filter = "mine" }
+
+[[step]]
+wait = { text = "browse-fixture", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Browse fixture pull request 99", timeout_ms = 15000 }
+
+# Python sometimes draws the Details tab underline zero-width after a selection (#209).
+[[step]]
+capture = "loaded"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+ignore = { boxes = ["Details"] }
+
+# Python drops a key that follows a focus key at once, so the PR table gets a moment to take focus. G puts the cursor on
+# the last PR of page 1, which asks for page 2 with the `pull_requests.*` filters.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/browse-fixture/issues", query = { creator = "parity-bot", page = "2", per_page = "30", state = "open" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Browse fixture pull request 48", timeout_ms = 15000 }
+
+[[step]]
+capture = "page-2"
+checks = ["rows", "cursor"]
+ignore = { boxes = ["Details"] }
+
+[expect.loaded]
+contains = ["Browse fixture pull request 51"]
+not_contains = ["Browse fixture pull request 96", "Browse fixture pull request 84", "Traceback"]
+
+[expect.page-2]
+not_contains = ["Traceback"]

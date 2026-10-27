@@ -1,0 +1,35 @@
+version = 1
+description = "Main screen with appearance.theme = catppuccin-latte: the theme applies on mount, and the focused border takes its success color and follows focus"
+gate = true
+parity_rows = ["main-layout.themes", "startup-auth.theme-keymap-on-mount"]
+sizes = [[160, 48]]
+
+[env]
+fixtures = ["base"]
+
+[env.config_overrides]
+appearance = { theme = "catppuccin-latte" }
+
+[[step]]
+wait = { text = "No repository selected", timeout_ms = 15000 }
+
+# The focus check finds the focused border by catppuccin-latte's success color (parity/themes.toml), so it fails if the
+# theme isn't applied.
+[[step]]
+capture = "start"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+capture = "prs"
+checks = ["titles", "tabs", "focus"]
+
+[expect.start]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
+focused = ["[1] Repositories"]
+not_contains = ["Traceback"]
+
+[expect.prs]
+focused = ["[2] Pull Requests"]

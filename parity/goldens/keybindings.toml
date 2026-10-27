@@ -31,4 +31,6 @@ parity_rows = [
     "keybindings.main-workflows-focus",
     "keybindings.main-details-focus",
     "keybindings.main-command-log-focus",
+    "keybindings.workflows-view-run-details",
+    "keybindings.diff-clear-selection",
 ]

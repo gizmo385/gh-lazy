@@ -3,15 +3,19 @@
 //! `MainViewPane.load_workflow_run` puts in the details pane.
 //!
 //! Python asks for the jobs once per tab; here [`RunDetails`] asks once per selection and hands the answer to each
-//! tab as [`RunDetails::jobs`]. The Jobs tab (#243) and the Logs tab (#244) are empty until they land: each adds its
-//! body to [`RunDetails`], takes the jobs in [`RunDetails::on_jobs`], and its own requests through
-//! [`DetailsBody::on_response`] and [`DetailsBody::on_tab_shown`].
+//! tab as [`RunDetails::jobs`]. The Logs tab (#244) is empty until it lands: it adds its body to [`RunDetails`], takes
+//! the jobs in [`RunDetails::on_jobs`], and its own requests through [`DetailsBody::on_response`] and
+//! [`DetailsBody::on_tab_shown`]. The job logs fetched for the selection, [`RunDetails::job_logs`], are shared.
 
+mod jobs;
 mod overview;
 /// The state glyphs and durations, which the Jobs tab (#243) shares.
 pub(in crate::screens::main) mod status;
 
+use std::collections::HashMap;
 use std::sync::Arc;
+
+use crossterm::event::MouseEvent;
 
 use lazy_github_core::gh::GhError;
 use lazy_github_core::models::{WorkflowJob, WorkflowRun};
@@ -23,12 +27,18 @@ use crate::component::{ChainLink, Cx, Owner};
 use crate::components::button::BUTTON_BINDINGS;
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
+use crate::components::tree::TREE_BINDINGS;
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::BindingId;
 use crate::theme::Theme;
 
+use super::MainAction;
 use super::details::DetailsBody;
+pub(super) use jobs::JobsTab;
 pub(super) use overview::RunOverview;
+
+/// The Jobs tab's own bindings (Python's `WorkflowRunJobsTabPane.BINDINGS`), with focus on its body or its tree.
+const JOBS_BINDINGS: &[BindingId] = &[BindingId::WorkflowsViewJobLogs];
 
 /// The three tabs, in strip order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -65,6 +75,10 @@ pub(in crate::screens::main) struct RunDetails {
     run: Arc<WorkflowRun>,
     jobs: Jobs,
     overview: RunOverview,
+    jobs_tab: JobsTab,
+    /// The logs fetched for the selection's jobs, by job id: `None` for a job that had none or whose logs failed to
+    /// load. The Jobs tab shows logs from here without asking again; it asks again for a `None`.
+    job_logs: HashMap<u64, Option<String>>,
 }
 
 impl RunDetails {
@@ -74,11 +88,14 @@ impl RunDetails {
             repo: Box::new(run.repository.clone()),
             run_id: run.id,
         });
+        let jobs_tab = JobsTab::new(run.run_number, cx.keymap());
         let run = Arc::new(run);
         Self {
             overview: RunOverview::new(Arc::clone(&run)),
             run,
             jobs: Jobs::Loading(id),
+            jobs_tab,
+            job_logs: HashMap::new(),
         }
     }
 
@@ -88,10 +105,7 @@ impl RunDetails {
     }
 
     /// The run's jobs, `None` while they load. Empty when the run has none, or when they failed to load.
-    #[cfg_attr(
-        not(test),
-        expect(dead_code, reason = "the Jobs (#243) and Logs (#244) tabs read the shared jobs")
-    )]
+    #[cfg_attr(not(test), expect(dead_code, reason = "the Logs tab (#244) reads the shared jobs"))]
     pub(in crate::screens::main) fn jobs(&self) -> Option<&Arc<[WorkflowJob]>> {
         match &self.jobs {
             Jobs::Loading(_) => None,
@@ -105,9 +119,70 @@ impl RunDetails {
         &self.overview
     }
 
+    /// The Jobs tab.
+    #[cfg(test)]
+    pub(in crate::screens::main) fn jobs_tab(&self) -> &JobsTab {
+        &self.jobs_tab
+    }
+
+    /// The logs fetched for the selection's jobs, by job id.
+    #[cfg_attr(not(test), expect(dead_code, reason = "the Logs tab (#244) reads the shared logs"))]
+    pub(in crate::screens::main) fn job_logs(&self) -> &HashMap<u64, Option<String>> {
+        &self.job_logs
+    }
+
+    /// `workflows.view_job_logs`: the logs of the job under the tree's cursor (or of its step's job), from those
+    /// already fetched or else asked for. Nothing without a cursor or on `No jobs found`. Any request still on its way
+    /// is cancelled.
+    fn view_job_logs(&mut self, cx: &mut Cx<'_>) {
+        let Some(index) = self.jobs_tab.cursor_job() else {
+            return;
+        };
+        let Some(job_id) = self.jobs_tab.job(index).map(|job| job.id) else {
+            return;
+        };
+        if let Some(request) = self.jobs_tab.loading() {
+            cx.effect(Effect::Cancel(request));
+        }
+        if let Some(Some(text)) = self.job_logs.get(&job_id) {
+            self.jobs_tab.set_logs_text(index, Some(text));
+            return;
+        }
+        let request = cx.request(GithubRequest::JobLogs {
+            repo: Box::new(self.run.repository.clone()),
+            job_id,
+        });
+        self.jobs_tab.set_loading(index, request);
+    }
+
+    /// The logs request answered. A failure or an empty body is logged as Python's `get_job_logs` logs a failure,
+    /// without a toast.
+    fn on_job_logs(&mut self, result: Result<Option<String>, GhError>) {
+        let Some(index) = self.jobs_tab.logs_job() else {
+            return;
+        };
+        let Some(job_id) = self.jobs_tab.job(index).map(|job| job.id) else {
+            return;
+        };
+        let logs = match result {
+            Ok(Some(text)) => Some(text),
+            Ok(None) => {
+                tracing::error!("Error retrieving logs for job {job_id}");
+                None
+            }
+            Err(error) => {
+                tracing::error!("Error retrieving logs for job {job_id}");
+                tracing::debug!("Error retrieving logs for job {job_id}: {error}");
+                None
+            }
+        };
+        self.jobs_tab.set_logs_text(index, logs.as_deref());
+        self.job_logs.insert(job_id, logs);
+    }
+
     /// The jobs request answered: every tab gets the jobs. A failure is logged as Python's `get_workflow_jobs` logs
     /// it, without a toast, and leaves no jobs.
-    fn on_jobs(&mut self, result: Result<Vec<WorkflowJob>, GhError>) {
+    fn on_jobs(&mut self, result: Result<Vec<WorkflowJob>, GhError>, theme: &Theme) {
         let jobs: Arc<[WorkflowJob]> = match result {
             Ok(jobs) => jobs.into(),
             Err(error) => {
@@ -121,6 +196,7 @@ impl RunDetails {
             }
         };
         self.overview.set_jobs(Arc::clone(&jobs));
+        self.jobs_tab.set_jobs(Arc::clone(&jobs), theme);
         self.jobs = Jobs::Loaded(jobs);
     }
 }
@@ -130,10 +206,14 @@ impl DetailsBody for RunDetails {
         RunTab::NAMES
     }
 
-    fn on_response(&mut self, id: RequestId, response: GithubResponse, _cx: &mut Cx<'_>) -> Option<GithubResponse> {
+    fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
         match response {
             GithubResponse::WorkflowRunJobs(result) if self.jobs == Jobs::Loading(id) => {
-                self.on_jobs(result);
+                self.on_jobs(result, cx.theme());
+                None
+            }
+            GithubResponse::JobLogs(result) if self.jobs_tab.loading() == Some(id) => {
+                self.on_job_logs(result);
                 None
             }
             other => Some(other),
@@ -144,56 +224,77 @@ impl DetailsBody for RunDetails {
         if let Jobs::Loading(id) = self.jobs {
             cx.effect(Effect::Cancel(id));
         }
+        if let Some(id) = self.jobs_tab.loading() {
+            cx.effect(Effect::Cancel(id));
+        }
     }
 
     fn scroll(&mut self, tab: usize, scroll: Scroll) {
         match RunTab::at(tab) {
             RunTab::Overview => self.overview.scroll(scroll),
-            RunTab::Jobs | RunTab::Logs => {}
+            RunTab::Jobs => self.jobs_tab.scroll(scroll),
+            RunTab::Logs => {}
         }
     }
 
     fn wheel(&mut self, tab: usize, wheel: Wheel) {
         match RunTab::at(tab) {
             RunTab::Overview => self.overview.wheel(wheel),
-            RunTab::Jobs | RunTab::Logs => {}
+            RunTab::Jobs => self.jobs_tab.wheel(wheel),
+            RunTab::Logs => {}
         }
     }
 
     fn render(&mut self, tab: usize, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool) {
         match RunTab::at(tab) {
             RunTab::Overview => self.overview.render(frame, area, theme, focused),
-            RunTab::Jobs | RunTab::Logs => {}
+            RunTab::Jobs => self.jobs_tab.render(frame, area, theme, focused),
+            RunTab::Logs => {}
         }
     }
 
     fn focus_step(&mut self, tab: usize, forward: bool) -> bool {
         match RunTab::at(tab) {
             RunTab::Overview => self.overview.focus_step(forward),
-            RunTab::Jobs | RunTab::Logs => false,
+            RunTab::Jobs => self.jobs_tab.focus_step(forward),
+            RunTab::Logs => false,
         }
     }
 
     fn focus_first(&mut self, tab: usize) {
-        if RunTab::at(tab) == RunTab::Overview {
-            self.overview.focus_first();
+        match RunTab::at(tab) {
+            RunTab::Overview => self.overview.focus_first(),
+            RunTab::Jobs => self.jobs_tab.focus_first(),
+            RunTab::Logs => {}
         }
     }
 
     fn focus_last(&mut self, tab: usize) {
-        if RunTab::at(tab) == RunTab::Overview {
-            self.overview.focus_last();
+        match RunTab::at(tab) {
+            RunTab::Overview => self.overview.focus_last(),
+            RunTab::Jobs => self.jobs_tab.focus_last(),
+            RunTab::Logs => {}
         }
     }
 
     fn click(&mut self, tab: usize, position: Position) {
-        if RunTab::at(tab) == RunTab::Overview {
-            self.overview.click(position);
+        match RunTab::at(tab) {
+            RunTab::Overview => self.overview.click(position),
+            RunTab::Jobs => self.jobs_tab.click(position),
+            RunTab::Logs => {}
         }
     }
 
+    fn mouse(&mut self, tab: usize, mouse: MouseEvent) -> bool {
+        RunTab::at(tab) == RunTab::Jobs && self.jobs_tab.mouse(mouse)
+    }
+
     fn maximizable(&self, tab: usize) -> bool {
-        RunTab::at(tab) == RunTab::Overview && self.overview.button_focused()
+        match RunTab::at(tab) {
+            RunTab::Overview => self.overview.button_focused(),
+            RunTab::Jobs => self.jobs_tab.tree_focused(),
+            RunTab::Logs => false,
+        }
     }
 
     fn chain(&self, tab: usize) -> Vec<ChainLink> {
@@ -201,13 +302,29 @@ impl DetailsBody for RunDetails {
             RunTab::Overview if self.overview.button_focused() => {
                 vec![ChainLink::new(Owner::DetailsButton, BUTTON_BINDINGS)]
             }
-            RunTab::Overview | RunTab::Jobs | RunTab::Logs => Vec::new(),
+            RunTab::Jobs if self.jobs_tab.tree_focused() => vec![
+                ChainLink::new(Owner::Tree, TREE_BINDINGS),
+                ChainLink::new(Owner::RunJobs, JOBS_BINDINGS),
+            ],
+            RunTab::Jobs => vec![ChainLink::new(Owner::RunJobs, JOBS_BINDINGS)],
+            RunTab::Overview | RunTab::Logs => Vec::new(),
         }
     }
 
-    /// Re-running (#188) isn't built yet: `enter` on a button is consumed and does nothing.
-    fn on_binding(&mut self, _tab: usize, _owner: Owner, id: BindingId) -> Option<Action> {
-        Some(Action::Unimplemented(id))
+    /// The tree's keys act at once; `l` asks for logs, so it runs in [`Self::on_command`]. Re-running (#188) isn't
+    /// built yet: `enter` on a button is consumed and does nothing.
+    fn on_binding(&mut self, _tab: usize, owner: Owner, id: BindingId) -> Option<Action> {
+        match owner {
+            Owner::Tree => self.jobs_tab.tree_binding(id).then_some(Action::Consumed),
+            Owner::RunJobs => Some(Action::Main(MainAction::DetailsCommand(owner, id))),
+            _ => Some(Action::Unimplemented(id)),
+        }
+    }
+
+    fn on_command(&mut self, tab: usize, owner: Owner, id: BindingId, cx: &mut Cx<'_>) {
+        if RunTab::at(tab) == RunTab::Jobs && owner == Owner::RunJobs && id == BindingId::WorkflowsViewJobLogs {
+            self.view_job_logs(cx);
+        }
     }
 }
 

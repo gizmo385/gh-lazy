@@ -203,6 +203,12 @@ pub trait Github: Clone + Send + Sync + 'static {
         repo: &Repository,
         comment: CommentRef,
     ) -> impl Future<Output = Result<Reactions, GhError>> + Send;
+
+    /// The logs of job `job_id` in `repo`, as plain text, verbatim: GitHub answers with a redirect to the text, which
+    /// `gh` follows. `None` for an empty body. Never cached.
+    ///
+    /// Fails on any HTTP error status (a 404 for a job without logs, such as a skipped or queued one) or `gh` failure.
+    fn job_logs(&self, repo: &Repository, job_id: u64) -> impl Future<Output = Result<Option<String>, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -640,6 +646,14 @@ impl GhCli {
         request
     }
 
+    /// `GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs`, uncached: Python sends no `Cache-Control` here.
+    fn job_logs_request(repo: &Repository, job_id: u64) -> GhRequest {
+        GhRequest::get(format!(
+            "/repos/{}/{}/actions/jobs/{job_id}/logs",
+            repo.owner.login, repo.name
+        ))
+    }
+
     /// `GET /repos/{owner}/{repo}/issues/{number}/reactions`, without page parameters as Python sends it, cached for
     /// the default TTL.
     fn issue_reactions_request(&self, repo: &Repository, number: u64) -> GhRequest {
@@ -853,6 +867,16 @@ impl Github for GhCli {
             .await;
         reactions(&response?)
     }
+
+    async fn job_logs(&self, repo: &Repository, job_id: u64) -> Result<Option<String>, GhError> {
+        job_log_text(self.inner.runner.request(Self::job_logs_request(repo, job_id)).await)
+    }
+}
+
+/// A job logs response as the logs: the body verbatim, `None` when it's empty.
+fn job_log_text(response: Result<GhResponse, GhError>) -> Result<Option<String>, GhError> {
+    let text = response?.text();
+    Ok((!text.is_empty()).then_some(text))
 }
 
 /// The REST path of an API URL such as an issue's `comments_url`: what follows the API root, which is the host on
@@ -2013,6 +2037,51 @@ mod tests {
         assert_eq!(in_progress[1].started_at, None);
 
         assert!(slurped(&[run_jobs_body(5_000_040)]).unwrap().is_empty());
+    }
+
+    #[test]
+    fn job_logs_argv() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        let request = GhCli::job_logs_request(&run_fixture_repo(), 6_000_001);
+        // No `--cache`: Python sends no `Cache-Control`.
+        assert_eq!(
+            strings(request.argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/run-fixture/actions/jobs/6000001/logs"
+            ]
+        );
+    }
+
+    fn text_response(status: &str, body: &str) -> Result<GhResponse, GhError> {
+        let stdout = format!("HTTP/2.0 {status}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n{body}");
+        let exit = i32::from(!status.starts_with('2'));
+        gh::interpret(Some(exit), stdout.as_bytes(), b"", false)
+    }
+
+    #[test]
+    fn job_logs_are_verbatim_none_when_empty_and_a_404_is_an_error() {
+        // A blank line and a header-shaped line survive.
+        let body = "2026-03-04T05:06:10.0000000Z ##[group]Run cargo build\n\nWord: value\nlast\n";
+        assert_eq!(
+            job_log_text(text_response("200 OK", body)).unwrap().as_deref(),
+            Some(body)
+        );
+        assert_eq!(job_log_text(text_response("200 OK", "")).unwrap(), None);
+        let not_found = text_response("404 Not Found", r#"{"message":"Not Found"}"#);
+        assert!(matches!(
+            job_log_text(not_found),
+            Err(GhError::Http { status: 404, .. })
+        ));
+        assert!(matches!(
+            job_log_text(Err(GhError::NotInstalled)),
+            Err(GhError::NotInstalled)
+        ));
     }
 
     #[test]

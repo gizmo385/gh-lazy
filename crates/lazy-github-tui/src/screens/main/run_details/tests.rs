@@ -65,9 +65,26 @@ fn gh() -> FakeGithub {
         .with_workflow_page(name, 1, Ok(workflows))
         .with_run_page(name, 1, Ok(fixture_runs()));
     for run in fixture_runs() {
+        for job in fixture_jobs(run.id) {
+            gh = gh.with_job_logs(job.id, fixture_logs(job.id));
+        }
         gh = gh.with_run_jobs(run.id, Ok(fixture_jobs(run.id)));
     }
     gh
+}
+
+/// Job `job_id`'s logs fixture: the text, or a 404.
+fn fixture_logs(job_id: u64) -> Result<Option<String>, GhError> {
+    let path = fixtures().join(format!("{ACTIONS}/jobs/{job_id}/logs/GET.json"));
+    let fixture: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    match fixture["response"]["body_text"].as_str() {
+        Some(text) => Ok(Some(text.to_owned())),
+        None => Err(GhError::Http {
+            status: 404,
+            message: "Not Found".into(),
+            body: Vec::new(),
+        }),
+    }
 }
 
 fn settle(app: &mut TestApp) -> String {
@@ -538,4 +555,469 @@ fn run_overview_button_focused_styles() {
         }
     }
     insta::assert_snapshot!(crate::test_util::buffer_to_styled_string(&actions));
+}
+
+// The Jobs tab.
+
+/// [`selected`] with the Jobs tab showing.
+fn jobs_tab(number: u64) -> TestApp {
+    let mut app = selected(number);
+    app.press(&["right"]);
+    app
+}
+
+/// The job logs requests among the app's effects, by job id.
+fn log_requests(app: &TestApp) -> Vec<(RequestId, u64)> {
+    app.effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::Github {
+                id,
+                request: GithubRequest::JobLogs { job_id, .. },
+            } => Some((*id, *job_id)),
+            _ => None,
+        })
+        .collect()
+}
+
+fn log_job_ids(app: &TestApp) -> Vec<u64> {
+    log_requests(app).into_iter().map(|(_, id)| id).collect()
+}
+
+fn log_calls(app: &TestApp) -> Vec<GithubCall> {
+    app.gh()
+        .calls()
+        .into_iter()
+        .filter(|call| matches!(call, GithubCall::JobLogs(_)))
+        .collect()
+}
+
+fn tree_cursor(app: &TestApp) -> Option<usize> {
+    details(app).jobs_tab().tree().cursor_line()
+}
+
+fn tree_focused(app: &TestApp) -> bool {
+    details(app).jobs_tab().tree_focused()
+}
+
+fn footer(app: &mut TestApp) -> String {
+    let screen = app.screen(160, 48);
+    screen.lines().last().unwrap().trim_end().to_owned()
+}
+
+fn mouse(kind: crossterm::event::MouseEventKind, column: u16, row: u16) -> Event {
+    Event::Mouse(crossterm::event::MouseEvent {
+        kind,
+        column,
+        row,
+        modifiers: crossterm::event::KeyModifiers::NONE,
+    })
+}
+
+#[test]
+fn the_tab_shows_the_heading_the_collapsed_tree_and_the_hint() {
+    let mut app = jobs_tab(42);
+    let screen = app.screen(160, 48);
+    for line in [
+        "│Jobs for Run #42",
+        "│▶ ✓ build (completed)",
+        "│▶ ✗ test (completed)",
+        "│▶ − lint (completed)",
+        "│▶ ○ deploy (completed)",
+        "│Job Logs",
+        "│  Select a job and press 'l' to view logs.",
+    ] {
+        assert!(screen.contains(line), "{line}\n{screen}");
+    }
+    assert!(!screen.contains("Set up job"), "{screen}");
+    assert!(log_requests(&app).is_empty());
+}
+
+#[test]
+fn the_tree_is_empty_until_the_jobs_arrive() {
+    let mut app = app();
+    app.press(&["enter", "5", "right"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│Jobs for Run #42"), "{screen}");
+    assert!(!screen.contains("build (completed)"), "{screen}");
+    assert!(!screen.contains("No jobs found"), "{screen}");
+    settle(&mut app);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│▶ ✓ build (completed)"), "{screen}");
+}
+
+#[test]
+fn the_hint_names_the_overridden_key() {
+    let mut config = Config::default();
+    config
+        .bindings
+        .overrides
+        .insert("workflows.view_job_logs".into(), "v".into());
+    let mut app = TestApp::with_github(config, gh());
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["4", "enter"]);
+    settle(&mut app);
+    app.press(&["right"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("Select a job and press 'v' to view logs."), "{screen}");
+    // The key does what `l` did.
+    app.press(&["tab", "tab", "down", "v"]);
+    assert_eq!(log_job_ids(&app), [6_000_001]);
+}
+
+#[test]
+fn tab_walks_the_strip_the_body_and_the_tree() {
+    let mut app = jobs_tab(42);
+    app.render(160, 48);
+    assert_eq!(focus(&app), FocusTarget::DetailsTabs);
+    app.press(&["tab"]);
+    assert_eq!((focus(&app), tree_focused(&app)), (FocusTarget::DetailsContent, false));
+    app.press(&["tab"]);
+    assert_eq!((focus(&app), tree_focused(&app)), (FocusTarget::DetailsContent, true));
+    // Focusing the tree doesn't move its cursor.
+    assert_eq!(tree_cursor(&app), None);
+    app.press(&["tab"]);
+    assert_eq!(focus(&app), FocusTarget::Table(SectionId::Repos));
+    app.press(&["shift+tab"]);
+    assert_eq!((focus(&app), tree_focused(&app)), (FocusTarget::DetailsContent, true));
+    app.press(&["shift+tab"]);
+    assert_eq!((focus(&app), tree_focused(&app)), (FocusTarget::DetailsContent, false));
+    app.press(&["shift+tab"]);
+    assert_eq!(focus(&app), FocusTarget::DetailsTabs);
+}
+
+#[test]
+fn the_tree_keys_move_the_cursor_and_expand() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down"]);
+    assert_eq!(tree_cursor(&app), Some(0));
+    app.press(&["enter"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│▼ ✓ build (completed)"), "{screen}");
+    assert!(screen.contains("│├── ✓ Set up job (completed)"), "{screen}");
+    assert!(screen.contains("│└── ✓ Complete job (completed)"), "{screen}");
+    app.press(&["down"]);
+    assert_eq!(tree_cursor(&app), Some(1));
+    // `end` moves the tree's cursor rather than scrolling the body.
+    app.press(&["end"]);
+    assert_eq!(tree_cursor(&app), Some(6));
+    assert_eq!(details(&app).jobs_tab().offset(), 0);
+}
+
+#[test]
+fn l_on_a_job_shows_its_logs() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "l"]);
+    assert_eq!(log_job_ids(&app), [6_000_001]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│Logs for Job: build"), "{screen}");
+    assert!(screen.contains("│  Loading logs..."), "{screen}");
+    assert!(!screen.contains("Select a job and press"), "{screen}");
+    let out = settle(&mut app);
+    assert!(!out.contains("ERROR"), "{out}");
+    let screen = app.screen(160, 48);
+    assert!(
+        screen.contains("│    2026-03-04T05:06:10.0000000Z ##[group]Run cargo build"),
+        "{screen}"
+    );
+    assert!(
+        screen.contains("│    2026-03-04T05:06:14.0000000Z     Finished dev profile in 61.2s"),
+        "{screen}"
+    );
+    assert!(!screen.contains("Loading logs..."), "{screen}");
+    assert_eq!(
+        details(&app).job_logs().get(&6_000_001).cloned().flatten(),
+        fixture_logs(6_000_001).unwrap()
+    );
+}
+
+#[test]
+fn l_on_a_step_shows_its_jobs_logs() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "down", "space", "down", "down", "l"]);
+    assert_eq!(log_job_ids(&app), [6_000_002]);
+    settle(&mut app);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│Logs for Job: test"), "{screen}");
+    assert!(
+        screen.contains("##[error]Process completed with exit code 101."),
+        "{screen}"
+    );
+}
+
+#[test]
+fn l_without_a_cursor_or_on_no_jobs_found_does_nothing() {
+    // With the body focused and with the tree just focused, no line has the cursor.
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "l", "tab", "l"]);
+    assert!(log_requests(&app).is_empty());
+    assert!(app.screen(160, 48).contains("Select a job and press"));
+
+    let mut app = jobs_tab(40);
+    app.press(&["tab", "tab", "down"]);
+    assert_eq!(tree_cursor(&app), Some(0));
+    app.press(&["l"]);
+    assert!(log_requests(&app).is_empty());
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│No jobs found"), "{screen}");
+    assert!(screen.contains("Select a job and press"), "{screen}");
+}
+
+#[test]
+fn l_from_the_body_uses_the_trees_cursor() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "down", "shift+tab", "l"]);
+    assert_eq!(log_job_ids(&app), [6_000_002]);
+}
+
+#[test]
+fn a_failure_logs_an_error_once_and_shows_the_fallback() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "down", "down", "l"]);
+    let out = settle(&mut app);
+    assert_eq!(
+        out.matches("ERROR Error retrieving logs for job 6000003").count(),
+        1,
+        "{out}"
+    );
+    assert!(out.contains("DEBUG Error retrieving logs for job 6000003: "), "{out}");
+    assert!(app.app().toasts().is_empty());
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│Logs for Job: lint"), "{screen}");
+    assert!(
+        screen.contains("│  No logs available or failed to fetch logs."),
+        "{screen}"
+    );
+    assert_eq!(details(&app).job_logs().get(&6_000_003), Some(&None));
+}
+
+#[test]
+fn an_empty_body_is_no_logs() {
+    let mut app = app_with(gh().with_job_logs(6_000_001, Ok(None)));
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["right", "tab", "tab", "down", "l"]);
+    let out = settle(&mut app);
+    assert_eq!(
+        out.matches("ERROR Error retrieving logs for job 6000001").count(),
+        1,
+        "{out}"
+    );
+    let screen = app.screen(160, 48);
+    assert!(
+        screen.contains("│  No logs available or failed to fetch logs."),
+        "{screen}"
+    );
+}
+
+#[test]
+fn logs_already_fetched_show_without_a_request() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "l"]);
+    settle(&mut app);
+    app.press(&["down", "l"]);
+    settle(&mut app);
+    assert!(app.screen(160, 48).contains("│Logs for Job: test"));
+    app.press(&["up", "l"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│Logs for Job: build"), "{screen}");
+    assert!(screen.contains("Finished dev profile in 61.2s"), "{screen}");
+    assert!(!screen.contains("Loading logs..."), "{screen}");
+    assert_eq!(
+        log_calls(&app),
+        [GithubCall::JobLogs(6_000_001), GithubCall::JobLogs(6_000_002)]
+    );
+    // A job whose logs failed is asked for again.
+    app.press(&["down", "down", "l"]);
+    settle(&mut app);
+    app.press(&["l"]);
+    settle(&mut app);
+    assert_eq!(
+        log_calls(&app)[2..],
+        [GithubCall::JobLogs(6_000_003), GithubCall::JobLogs(6_000_003)]
+    );
+}
+
+#[test]
+fn a_late_answer_to_an_earlier_l_is_dropped() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "l", "down", "l"]);
+    let requests = log_requests(&app);
+    let [(first, 6_000_001), (second, 6_000_002)] = requests[..] else {
+        panic!("{requests:?}");
+    };
+    assert!(cancels(&app).contains(&first));
+    let out = logs(|| {
+        app.send(Event::Github {
+            id: first,
+            response: GithubResponse::JobLogs(Ok(Some("stale\n".into()))),
+        });
+    });
+    assert!(out.contains("DEBUG Dropping the job logs response"), "{out}");
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│Logs for Job: test"), "{screen}");
+    assert!(screen.contains("Loading logs..."), "{screen}");
+    assert!(!screen.contains("stale"), "{screen}");
+    app.send(Event::Github {
+        id: second,
+        response: GithubResponse::JobLogs(Ok(Some("fresh\n".into()))),
+    });
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│    fresh"), "{screen}");
+}
+
+#[test]
+fn another_selection_cancels_the_logs_request() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "l"]);
+    let (pending, _) = log_requests(&app)[0];
+    app.press(&["4", "j", "enter"]);
+    assert!(cancels(&app).contains(&pending));
+    settle(&mut app);
+    assert!(details(&app).job_logs().is_empty());
+}
+
+#[test]
+fn the_footer_shows_l_with_the_body_or_the_tree_focused() {
+    let mut app = jobs_tab(42);
+    let strip = footer(&mut app);
+    assert!(!strip.contains("View Job Logs"), "{strip}");
+    app.press(&["tab"]);
+    let body = footer(&mut app);
+    assert!(body.starts_with(" l View Job Logs  ^v Paste link"), "{body}");
+    app.press(&["tab"]);
+    let tree = footer(&mut app);
+    assert!(tree.starts_with(" l View Job Logs  ^v Paste link"), "{tree}");
+    // Not on the Overview.
+    app.press(&["shift+tab", "shift+tab", "left", "tab"]);
+    let overview = footer(&mut app);
+    assert!(!overview.contains("View Job Logs"), "{overview}");
+}
+
+#[test]
+fn maximize_works_from_the_tree_but_not_the_body() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "M"]);
+    assert!(app.app().maximized().is_none());
+    app.press(&["tab", "M"]);
+    assert_eq!(app.app().maximized().unwrap().target, FocusTarget::DetailsContent);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("▶ ✓ build (completed)"), "{screen}");
+    assert!(!screen.contains("[1] Repositories"), "{screen}");
+}
+
+#[test]
+fn a_click_on_the_tree_focuses_it_and_toggles_the_job() {
+    let mut app = jobs_tab(42);
+    let (row, column) = find(&mut app, "test (completed)");
+    app.click(column, row);
+    assert_eq!((focus(&app), tree_focused(&app)), (FocusTarget::DetailsContent, true));
+    assert_eq!(tree_cursor(&app), Some(1));
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│▼ ✗ test (completed)"), "{screen}");
+    let (row, column) = find(&mut app, "Job Logs");
+    app.click(column, row);
+    assert_eq!((focus(&app), tree_focused(&app)), (FocusTarget::DetailsContent, false));
+}
+
+#[test]
+fn the_body_scrolls_when_the_logs_dont_fit() {
+    let mut app = jobs_tab(42);
+    app.render(100, 30);
+    app.press(&["tab", "tab", "down", "l"]);
+    settle(&mut app);
+    app.render(100, 30);
+    // The wheel off the tree scrolls the body.
+    let screen = app.screen(100, 30);
+    let row = screen
+        .lines()
+        .position(|line| line.contains("Jobs for Run #42"))
+        .unwrap();
+    let (row, column) = (u16::try_from(row).unwrap(), 60);
+    app.send(mouse(crossterm::event::MouseEventKind::ScrollDown, column, row));
+    assert_eq!(details(&app).jobs_tab().offset(), 2);
+    app.press(&["shift+tab", "end"]);
+    app.render(100, 30);
+    assert!(details(&app).jobs_tab().offset() > 0);
+    let screen = app.screen(100, 30);
+    assert!(screen.contains("Finished dev prof"), "{screen}");
+    assert!(!screen.contains("Jobs for Run #42"), "{screen}");
+    // Focusing the tree scrolls the body so it shows from its first row.
+    app.press(&["tab"]);
+    app.render(100, 30);
+    assert_eq!(details(&app).jobs_tab().offset(), 1);
+}
+
+#[test]
+fn the_wheel_scrolls_the_tree_over_it() {
+    // 40 jobs: more lines than the tree's rows.
+    let build = fixture_jobs(5_000_042).remove(0);
+    let jobs = (0..40)
+        .map(|n| WorkflowJob {
+            id: 7_000_000 + n,
+            name: format!("job {n}"),
+            ..build.clone()
+        })
+        .collect();
+    let mut app = app_with(gh().with_run_jobs(5_000_042, Ok(jobs)));
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["right"]);
+    app.render(160, 48);
+    let (row, column) = find(&mut app, "job 0 (completed)");
+    app.send(mouse(crossterm::event::MouseEventKind::ScrollDown, column, row + 1));
+    assert_eq!(details(&app).jobs_tab().tree().scroll_offset().0, 2);
+    assert_eq!(details(&app).jobs_tab().offset(), 0);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│▶ ✓ job 2 (completed)"), "{screen}");
+    assert!(!screen.contains("job 0 (completed)"), "{screen}");
+    // Elsewhere it's the body's (which fits here): the tree stays.
+    let (row, column) = find(&mut app, "Select a job and press");
+    app.send(mouse(crossterm::event::MouseEventKind::ScrollDown, column, row));
+    assert_eq!(details(&app).jobs_tab().tree().scroll_offset().0, 2);
+}
+
+#[test]
+fn run_jobs_160x48() {
+    let mut app = jobs_tab(42);
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+#[test]
+fn run_jobs_logs_160x48() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "enter", "l"]);
+    settle(&mut app);
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+#[test]
+fn run_jobs_no_logs_160x48() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "down", "down", "l"]);
+    settle(&mut app);
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+#[test]
+fn run_jobs_in_progress_160x48() {
+    let mut app = jobs_tab(41);
+    // Both jobs expanded, the queued one's steps included.
+    app.press(&["tab", "tab", "down", "shift+space"]);
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+#[test]
+fn run_jobs_no_jobs_160x48() {
+    let mut app = jobs_tab(40);
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+#[test]
+fn run_jobs_logs_100x30() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "enter", "l"]);
+    settle(&mut app);
+    insta::assert_snapshot!(app.screen(100, 30));
 }

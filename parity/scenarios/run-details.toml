@@ -14,6 +14,7 @@ parity_rows = [
     "workflows.overview-actions-shown",
     "workflows.jobs-tab",
     "workflows.jobs-tree-keys",
+    "workflows.jobs-status-icons",
     "workflows.job-logs",
     "workflows.logs-tab",
     "keybindings.workflows-view-job-logs",

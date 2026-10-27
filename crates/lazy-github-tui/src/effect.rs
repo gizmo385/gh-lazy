@@ -205,6 +205,13 @@ pub enum GithubRequest {
         /// The comment.
         comment: CommentRef,
     },
+    /// [`Github::job_logs`].
+    JobLogs {
+        /// The repo the job's run is in.
+        repo: Box<Repository>,
+        /// The job's id.
+        job_id: u64,
+    },
 }
 
 /// The result of a [`GithubRequest`], in the variant of the same name.
@@ -250,6 +257,8 @@ pub enum GithubResponse {
     IssueComments(Result<Vec<IssueComment>, GhError>),
     /// [`Github::comment_reactions`].
     CommentReactions(Result<Reactions, GhError>),
+    /// [`Github::job_logs`].
+    JobLogs(Result<Option<String>, GhError>),
 }
 
 impl GithubRequest {
@@ -298,6 +307,7 @@ impl GithubRequest {
             GithubRequest::CommentReactions { repo, comment } => {
                 GithubResponse::CommentReactions(gh.comment_reactions(&repo, comment).await)
             }
+            GithubRequest::JobLogs { repo, job_id } => GithubResponse::JobLogs(gh.job_logs(&repo, job_id).await),
         }
     }
 }

@@ -363,13 +363,18 @@ impl<T> Tree<T> {
 
     /// Draws the visible lines into `area`, with scrollbars when the lines overflow it.
     pub fn render(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool) {
+        self.render_to(frame.buffer_mut(), area, theme, focused);
+    }
+
+    /// [`Self::render`] into a buffer: an owner that scrolls the tree with other content draws it whole off screen,
+    /// then copies the rows that show.
+    pub fn render_to(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, focused: bool) {
         let layout = ScrollLayout::new(area, self.content_width, self.lines.len());
         self.viewport = (usize::from(layout.lines.width), usize::from(layout.lines.height));
         self.scroll_y = self.scroll_y.min(self.max_scroll_y());
         self.scroll_x = self.scroll_x.min(self.max_scroll_x());
 
         let styles = Styles::new(theme, focused);
-        let buf = frame.buffer_mut();
         buf.set_style(area.intersection(buf.area), styles.base);
         let scroll_x = u16::try_from(self.scroll_x).unwrap_or(u16::MAX);
         let visible = self.lines.iter().skip(self.scroll_y).take(self.viewport.1);

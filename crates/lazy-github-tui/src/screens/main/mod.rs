@@ -310,6 +310,9 @@ pub enum MainAction {
     /// Show a workflow run's details and request its jobs, focusing the tab strip: Python's
     /// `handle_workflow_run_selection`.
     OpenWorkflowRun(Box<WorkflowRun>),
+    /// A binding inside the details content whose action makes requests (`workflows.view_job_logs`): the body runs
+    /// it here, with the context.
+    DetailsCommand(Owner, BindingId),
     /// Switch the details tabs (`textual.tabs.*` with the strip focused).
     SwitchDetailsTab(TabSwitch),
     /// A click on a details tab: focus the strip, then activate the tab.
@@ -773,6 +776,13 @@ impl MainScreen {
         {
             return Some(Action::Main(MainAction::ClickDetailsTab(tab)));
         }
+        // A widget inside the content that takes its own wheel and clicks (a tree) gets them first.
+        if !matches!(mouse.kind, MouseEventKind::Down(_))
+            && self.hit(mouse.column, mouse.row) == Some(FocusTarget::DetailsContent)
+            && self.details.mouse(mouse)
+        {
+            return Some(Action::Consumed);
+        }
         match mouse.kind {
             MouseEventKind::Down(MouseButton::Left) => {
                 let target = self.hit(mouse.column, mouse.row);
@@ -949,7 +959,9 @@ impl MainScreen {
             | Owner::DetailsButton
             | Owner::CollapsibleTitle
             | Owner::ListView
-            | Owner::CommentBlock => self.details.on_binding(owner, id),
+            | Owner::CommentBlock
+            | Owner::Tree
+            | Owner::RunJobs => self.details.on_binding(owner, id),
             Owner::SearchableTable(section) if id == BindingId::TableSearch => {
                 self.open_search(section);
                 Some(Action::Consumed)
@@ -1142,6 +1154,7 @@ impl Component for MainScreen {
             MainAction::ScrollLog(scroll) => self.command_log.scroll(scroll),
             MainAction::WheelLog(wheel) => self.command_log.wheel(wheel),
             MainAction::WheelDetails(wheel) => self.details.wheel(wheel),
+            MainAction::DetailsCommand(owner, id) => self.details.on_command(owner, id, cx),
             MainAction::ClickSelect(repo) => {
                 self.try_focus(FocusTarget::Table(SectionId::Repos));
                 cx.dispatch(Action::SelectRepo(repo));

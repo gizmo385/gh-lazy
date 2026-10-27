@@ -41,7 +41,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.common-table-scroll-bottom` | `common.table.scroll_bottom` | `G` | Table scroll to bottom | tables | M1 | not started | #78, #100, #158 | |
 | `keybindings.workflows-trigger` | `workflows.trigger` | `T` | Trigger Workflow | workflows section | M3 | not started | #188 | |
 | `keybindings.workflows-view-run-details` | `workflows.view_run_details` | `enter` | View Run Details | (unused) | M2 | not started | | Defined, rebindable in Settings, never bound (Py bug B9). |
-| `keybindings.workflows-view-job-logs` | `workflows.view_job_logs` | `l` | View Job Logs | Jobs tab | M2 | not started | #243 | |
+| `keybindings.workflows-view-job-logs` | `workflows.view_job_logs` | `l` | View Job Logs | Jobs tab | M2 | in progress | #243 | |
 | `keybindings.diff-add-comment` | `diff.add_comment` | `c` | Add Comment | hunk pane | M3 | not started | #187 | |
 | `keybindings.diff-cursor-down` | `diff.cursor_down` | `j` | cursor_down | (unused) | M2 | not started | #236 | Hunk pane hard-codes `j` (Py bug B9). |
 | `keybindings.diff-cursor-up` | `diff.cursor_up` | `k` | cursor_up | (unused) | M2 | not started | #236 | Hunk pane hard-codes `k` (Py bug B9). |

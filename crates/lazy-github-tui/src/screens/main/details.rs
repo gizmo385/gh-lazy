@@ -94,6 +94,16 @@ pub(super) trait DetailsBody {
         Some(Action::Unimplemented(id))
     }
 
+    /// A binding's action that needs the context (it makes requests), as [`Self::on_binding`] asked for with
+    /// [`MainAction::DetailsCommand`](super::MainAction::DetailsCommand).
+    fn on_command(&mut self, _tab: usize, _owner: Owner, _id: BindingId, _cx: &mut Cx<'_>) {}
+
+    /// A mouse event over tab `tab`'s content other than a press (a release, a move, the wheel), for a widget inside
+    /// it that takes its own (a tree). Says whether it took the event; the pane handles any other.
+    fn mouse(&mut self, _tab: usize, _mouse: MouseEvent) -> bool {
+        false
+    }
+
     /// [`Self::render`] with the frame's time and the animation switch, which a body with loading overlays (the PR
     /// Overview's sections) needs. The pane always draws through this; the default hands over to [`Self::render`].
     fn render_timed(&mut self, tab: usize, frame: &mut Frame<'_>, area: Rect, cx: &BodyRenderCx<'_>) {
@@ -338,6 +348,10 @@ impl DetailsPane {
                 tracing::debug!("Dropping the jobs response {id} of a workflow run no longer shown");
                 None
             }
+            GithubResponse::JobLogs(_) => {
+                tracing::debug!("Dropping the job logs response {id} no longer awaited");
+                None
+            }
             GithubResponse::CommitStatus(_) | GithubResponse::CheckRuns(_) | GithubResponse::IssueReactions(_) => {
                 tracing::debug!("Dropping the Overview section response {id} no longer awaited");
                 None
@@ -358,6 +372,16 @@ impl DetailsPane {
     /// A binding matched at one of [`Self::content_chain`]'s links.
     pub(super) fn on_binding(&mut self, owner: Owner, id: BindingId) -> Option<Action> {
         self.body.get_mut().on_binding(self.tabs.active(), owner, id)
+    }
+
+    /// [`DetailsBody::on_command`] in the active tab.
+    pub(super) fn on_command(&mut self, owner: Owner, id: BindingId, cx: &mut Cx<'_>) {
+        self.body.get_mut().on_command(self.tabs.active(), owner, id, cx);
+    }
+
+    /// [`DetailsBody::mouse`] in the active tab.
+    pub(super) fn mouse(&mut self, mouse: MouseEvent) -> bool {
+        self.body.get_mut().mouse(self.tabs.active(), mouse)
     }
 
     /// [`DetailsBody::focus_step`] in the active tab.

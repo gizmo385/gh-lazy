@@ -17,7 +17,7 @@ use crate::models::{
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments` and `comment_reactions` find none, `issue` fails with a 404, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments` and `comment_reactions` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -116,6 +116,8 @@ pub enum GithubCall {
         /// The comment.
         comment: CommentRef,
     },
+    /// [`Github::job_logs`], with the job's id.
+    JobLogs(u64),
 }
 
 #[derive(Debug, Default)]
@@ -156,6 +158,8 @@ struct State {
     issue_comments: HashMap<(String, u64), Result<Vec<IssueComment>, GhError>>,
     /// Keyed by `full_name` and comment.
     comment_reactions: HashMap<(String, CommentRef), Result<Reactions, GhError>>,
+    /// Keyed by job id.
+    job_logs: HashMap<u64, Result<Option<String>, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -356,6 +360,13 @@ impl FakeGithub {
         self.lock()
             .comment_reactions
             .insert((full_name.to_owned(), comment), reactions);
+        self
+    }
+
+    /// `job_logs` returns `logs` for job `job_id`, whatever the repository. Jobs not set have no logs: a 404.
+    #[must_use]
+    pub fn with_job_logs(self, job_id: u64, logs: Result<Option<String>, GhError>) -> Self {
+        self.lock().job_logs.insert(job_id, logs);
         self
     }
 
@@ -642,6 +653,19 @@ impl Github for FakeGithub {
             Some(Ok(reactions)) => Ok(reactions.clone()),
             Some(Err(error)) => Err(duplicate(error)),
             None => Ok(Reactions::default()),
+        })
+        .await
+    }
+
+    async fn job_logs(&self, _repo: &Repository, job_id: u64) -> Result<Option<String>, GhError> {
+        self.respond(GithubCall::JobLogs(job_id), |state| match state.job_logs.get(&job_id) {
+            Some(Ok(logs)) => Ok(logs.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Err(GhError::Http {
+                status: 404,
+                message: "Not Found".to_owned(),
+                body: Vec::new(),
+            }),
         })
         .await
     }
@@ -944,6 +968,25 @@ mod tests {
         ));
         assert!(github.workflow_run_jobs(&repo("a"), 3).await.unwrap().is_empty());
         assert_eq!(github.calls()[0], GithubCall::WorkflowRunJobs(1));
+    }
+
+    #[tokio::test]
+    async fn job_logs_by_job_id() {
+        let github = FakeGithub::new()
+            .with_job_logs(1, Ok(Some("line\n".into())))
+            .with_job_logs(2, Ok(None))
+            .with_job_logs(3, Err(GhError::NotInstalled));
+        assert_eq!(github.job_logs(&repo("a"), 1).await.unwrap().as_deref(), Some("line\n"));
+        assert_eq!(github.job_logs(&repo("a"), 2).await.unwrap(), None);
+        assert!(matches!(
+            github.job_logs(&repo("a"), 3).await,
+            Err(GhError::NotInstalled)
+        ));
+        assert!(matches!(
+            github.job_logs(&repo("a"), 4).await,
+            Err(GhError::Http { status: 404, .. })
+        ));
+        assert_eq!(github.calls()[0], GithubCall::JobLogs(1));
     }
 
     #[tokio::test]

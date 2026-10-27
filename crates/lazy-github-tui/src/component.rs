@@ -157,6 +157,10 @@ pub enum Owner {
     ListView,
     /// A comment block with focus on it or inside it (`IssueCommentContainer`): reply.
     CommentBlock,
+    /// A focused tree inside the details content (Textual's `Tree`), such as a run's jobs.
+    Tree,
+    /// A run's Jobs tab (`WorkflowRunJobsTabPane`): view job logs, in front of the content's scroll link.
+    RunJobs,
     /// The command log.
     CommandLog,
     /// A field of an open dialog, which [`Dialog::field_chain`](crate::modal::Dialog::field_chain) puts in front of
@@ -185,6 +189,8 @@ impl Owner {
             | Owner::DetailsButton
             | Owner::ListView
             | Owner::CommentBlock
+            | Owner::Tree
+            | Owner::RunJobs
             | Owner::CommandLog
             | Owner::DialogField(_, FieldKind::Button | FieldKind::Switch | FieldKind::Scroll | FieldKind::Table) => {
                 None

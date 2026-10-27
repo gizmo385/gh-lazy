@@ -148,6 +148,8 @@ pub enum Owner {
     PrOverview,
     /// An issue's Overview tab (`IssueOverviewTabPane`): edit, in front of the content's scroll link.
     IssueOverview,
+    /// An issue's Comments tab (`IssueConversationTabPane`): new comment, in front of the content's scroll link.
+    IssueComments,
     /// A button inside the active details tab's content with focus (the run Overview's re-run buttons), in front of
     /// the content's scroll link.
     DetailsButton,
@@ -193,6 +195,7 @@ impl Owner {
             | Owner::DetailsContent
             | Owner::PrOverview
             | Owner::IssueOverview
+            | Owner::IssueComments
             | Owner::DetailsButton
             | Owner::ListView
             | Owner::CommentBlock

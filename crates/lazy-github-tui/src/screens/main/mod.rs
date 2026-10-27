@@ -963,6 +963,7 @@ impl MainScreen {
             }
             Owner::PrOverview
             | Owner::IssueOverview
+            | Owner::IssueComments
             | Owner::DetailsButton
             | Owner::CollapsibleTitle
             | Owner::ListView

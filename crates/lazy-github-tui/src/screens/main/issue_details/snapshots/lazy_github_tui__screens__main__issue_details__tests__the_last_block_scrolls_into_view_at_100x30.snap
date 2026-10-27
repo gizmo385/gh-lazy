@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/screens/main/issue_details/tests.rs
+expression: screen
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/issue-fixture                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Issue #12 Details ──────────────────────────────────┐
+│ ★  Owner       Name           Private││ Overview  Comments                                       │
+│ ☆  parity-bot  issue-fixture  ✘      ││━━━━━━━━━━╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                     ▏││ │                                                        │
+│                                      ││ │ The second paragraph.                                  │
+│                                      ││ │                                                        │
+└──────────────────────────────────────┘│ │ parity-friend • Tue Feb 10 08:45:00 2026               │
+┌─ [2] Pull Requests ──────────────────┐│ │                                                        │
+│ #  Status  Author      Title         ││                                                          │
+│ 8  open    parity-bot  A pull request││ │ Thanks @parity-friend, I can reproduce it on main.     │
+│                         ▉            ││ │                                                        │
+│                                      ││ │ parity-bot • Tue Feb  3 10:15:30 2026                ▃▃│
+│                                      ││ │                                                        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘│ │ A comment from a deleted account.                      │
+┌─ [3] Issues ─────────────────────────┐│ │                                                        │
+│ #   Status  Author         Title     ││ │ Unknown • Wed Feb  4 11:00:00 2026                     │
+│ 12  open    parity-friend  Crash when││ │                                                        │
+│ 11  closed  parity-bot     Closed wit││                                                          │
+│ 10  open    parity-bot     Comments t││ ┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍┓  │
+│ 9   open    parity-friend  Comments t││ ╏ The last comment.                                   ╏  │
+│                      ▋               ││ ╏                                                     ╏  │
+└──────────────────────────────────────┘│ ╏ parity-friend • Tue Feb 10 08:45:00 2026            ╏  │
+┌─ [4] Workflows (empty) ──────────────┐│ ╏                                                     ╏  │
+│                               ▋      ││ ┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍┛▅▅│
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ r Reply to Comment  n New Comment  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^

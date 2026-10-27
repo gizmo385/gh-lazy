@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/screens/main/issue_details/tests.rs
+expression: "app.screen(100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/issue-fixture                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Issue #12 Details ──────────────────────────────────┐
+│ ★  Owner       Name           Private││ Overview  Comments                                       │
+│ ☆  parity-bot  issue-fixture  ✘      ││━━━━━━━━━━╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                     ▏││ │ Thanks @parity-friend, I can reproduce it on main.     │
+│                                      ││ │                                                        │
+│                                      ││ │ parity-bot • Tue Feb  3 10:15:30 2026                  │
+└──────────────────────────────────────┘│ │                                                        │
+┌─ [2] Pull Requests ──────────────────┐│                                                          │
+│ #  Status  Author      Title         ││ │ A comment from a deleted account.                      │
+│ 8  open    parity-bot  A pull request││ │                                                        │
+│                         ▉            ││ │ Unknown • Wed Feb  4 11:00:00 2026                     │
+│                                      ││ │                                                        │
+│                                      ││                                                          │
+│                                      ││ │ Fixed in #13. The fix reads the file first and falls   │
+└──────────────────────────────────────┘│ │ back to the defaults when it is empty, which is what   │
+┌─ [3] Issues ─────────────────────────┐│ │ the documentation already promised, so nothing else    │
+│ #   Status  Author         Title     ││ │ changes for people who never had the problem.          │
+│ 12  open    parity-friend  Crash when││ │                                                        │
+│ 11  closed  parity-bot     Closed wit││ │ The second paragraph.                                  │
+│ 10  open    parity-bot     Comments t││ │                                                        │
+│ 9   open    parity-friend  Comments t││ │ parity-friend • Tue Feb 10 08:45:00 2026               │
+│                      ▋               ││ │                                                        │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows (empty) ──────────────┐│                                                          │
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  ? Ke

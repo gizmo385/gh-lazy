@@ -3,13 +3,16 @@
 use std::path::{Path, PathBuf};
 
 use lazy_github_core::config::Config;
+use lazy_github_core::gh::GhError;
 use lazy_github_core::github::FakeGithub;
-use lazy_github_core::models::{Issue, IssueListItem, Repository};
+use lazy_github_core::models::{Issue, IssueComment, IssueListItem, Repository};
 use serde_json::Value;
 
 use crate::action::Action;
 use crate::app::Maximized;
 use crate::component::Owner;
+use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
+use crate::event::Event;
 use crate::keymap::BindingId;
 use crate::screens::main::{FocusTarget, MainAction, SectionId};
 use crate::test_util::{TestApp, logs};
@@ -54,10 +57,20 @@ pub(in crate::screens::main) fn fixture_issue(number: u64) -> Issue {
         .unwrap()
 }
 
+/// Issue `number`'s comments, from the set's fixture.
+fn fixture_comments(number: u64) -> Vec<IssueComment> {
+    serde_json::from_value(fixture_body(&format!(
+        "repos/parity-bot/issue-fixture/issues/{number}/comments/GET.json"
+    )))
+    .unwrap()
+}
+
 fn gh() -> FakeGithub {
     FakeGithub::new()
         .with_repositories(vec![fixture_repo()])
         .with_issue_page("parity-bot/issue-fixture", 1, Ok(issues_page()))
+        .with_issue_comments("parity-bot/issue-fixture", 12, Ok(fixture_comments(12)))
+        .with_issue_comments("parity-bot/issue-fixture", 10, Ok(fixture_comments(10)))
         .with_readme(
             "parity-bot/issue-fixture",
             Ok(Some("Issues with bodies and comments.\n".into())),
@@ -346,5 +359,295 @@ fn issue_overview_scrolled_to_the_end_100x30() {
     let screen = app.screen(100, 30);
     assert!(screen.contains("The last line."), "{screen}");
     assert!(!screen.contains("Open Crash"), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+// The Comments tab.
+
+fn comments(app: &TestApp) -> &super::IssueComments {
+    main(app).details.issue().unwrap().comments()
+}
+
+/// The ids of the comments requests sent so far, oldest first.
+fn comments_requests(app: &TestApp) -> Vec<RequestId> {
+    app.effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::Github {
+                id,
+                request: GithubRequest::IssueComments { .. },
+            } => Some(*id),
+            _ => None,
+        })
+        .collect()
+}
+
+/// [`selected`] on the Comments tab, the strip focused.
+fn on_comments(moves: usize) -> TestApp {
+    let mut app = selected(moves);
+    app.press(&["right"]);
+    app
+}
+
+#[test]
+fn one_comments_request_per_selection_before_the_tab_shows() {
+    let mut app = app();
+    app.press(&["enter"]);
+    assert_eq!(comments_requests(&app).len(), 1);
+    // The Overview shows, and the comments are on their way.
+    assert_eq!(tabs(&app).1, 0);
+    assert!(comments(&app).is_loading());
+    settle(&mut app);
+    assert!(!comments(&app).is_loading());
+    assert_eq!(comments(&app).len(), 3);
+    // Showing the tab sends nothing more.
+    app.press(&["right"]);
+    assert_eq!(comments_requests(&app).len(), 1);
+}
+
+#[test]
+fn a_new_selection_cancels_the_comments_request_and_drops_its_answer() {
+    let mut app = app();
+    app.press(&["enter"]);
+    let first = comments_requests(&app)[0];
+    app.press(&["3", "j", "enter"]);
+    assert!(app.effects().contains(&Effect::Cancel(first)));
+    assert_eq!(comments_requests(&app).len(), 2);
+    assert_eq!(shown_issue(&app), Some(11));
+    // The first issue's comments, answered late, don't land on the second's tab.
+    let out = logs(|| {
+        app.send(Event::Github {
+            id: first,
+            response: GithubResponse::IssueComments(Ok(fixture_comments(12))),
+        });
+    });
+    assert!(out.contains("Dropping the comments response"), "{out}");
+    assert!(comments(&app).is_loading());
+    settle(&mut app);
+    assert_eq!(comments(&app).len(), 0);
+}
+
+#[test]
+fn a_failed_request_logs_an_error_and_shows_no_comments() {
+    let gh = gh().with_issue_comments(
+        "parity-bot/issue-fixture",
+        9,
+        Err(GhError::Http {
+            status: 500,
+            message: "Server Error".into(),
+            body: Vec::new(),
+        }),
+    );
+    let mut app = TestApp::with_github(Config::default(), gh);
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["3", "j", "j", "j", "enter"]);
+    assert_eq!(shown_issue(&app), Some(9));
+    let out = settle(&mut app);
+    assert_eq!(out.matches("ERROR Error retrieving issue comments").count(), 1, "{out}");
+    assert!(out.contains("HTTP 500"), "{out}");
+    assert!(!comments(&app).is_loading());
+    app.press(&["right"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│No comments available"), "{screen}");
+    assert!(!screen.contains("Server Error"), "{screen}");
+    assert!(app.app().toasts().is_empty());
+}
+
+#[test]
+fn focus_walks_the_body_then_each_block_and_back() {
+    let mut app = on_comments(0);
+    app.render(160, 48);
+    app.press(&["tab"]);
+    assert_eq!(
+        (focus(&app), comments(&app).stop()),
+        (FocusTarget::DetailsContent, None)
+    );
+    for block in 0..3 {
+        app.press(&["tab"]);
+        assert_eq!(
+            (focus(&app), comments(&app).stop()),
+            (FocusTarget::DetailsContent, Some(block))
+        );
+    }
+    app.press(&["tab"]);
+    assert_ne!(focus(&app), FocusTarget::DetailsContent);
+    app.press(&["shift+tab"]);
+    assert_eq!(
+        (focus(&app), comments(&app).stop()),
+        (FocusTarget::DetailsContent, Some(2))
+    );
+    app.press(&["shift+tab", "shift+tab", "shift+tab"]);
+    assert_eq!(
+        (focus(&app), comments(&app).stop()),
+        (FocusTarget::DetailsContent, None)
+    );
+    app.press(&["shift+tab"]);
+    assert_eq!(focus(&app), FocusTarget::DetailsTabs);
+    // `5` goes back to the strip from a block.
+    app.press(&["tab", "tab", "5"]);
+    assert_eq!(focus(&app), FocusTarget::DetailsTabs);
+}
+
+#[test]
+fn without_comments_the_body_is_the_only_stop() {
+    let mut app = on_comments(1);
+    app.press(&["tab"]);
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    app.press(&["tab"]);
+    assert_ne!(focus(&app), FocusTarget::DetailsContent);
+    app.press(&["shift+tab"]);
+    assert_eq!(
+        (focus(&app), comments(&app).stop()),
+        (FocusTarget::DetailsContent, None)
+    );
+}
+
+#[test]
+fn the_last_block_scrolls_into_view_at_100x30() {
+    // Issue 12's three comments fit at 100x30: twice as many, the last one changed, overflow.
+    let mut many = fixture_comments(12);
+    many.extend(fixture_comments(12));
+    many.last_mut().unwrap().body = "The last comment.".into();
+    let gh = gh().with_issue_comments("parity-bot/issue-fixture", 12, Ok(many));
+    let mut app = TestApp::with_github(Config::default(), gh);
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["3", "enter"]);
+    settle(&mut app);
+    app.press(&["right"]);
+    let screen = app.screen(100, 30);
+    assert!(!screen.contains("The last comment."), "{screen}");
+    app.press(&["tab"]);
+    for _ in 0..6 {
+        app.press(&["tab"]);
+        app.render(100, 30);
+    }
+    assert_eq!(comments(&app).stop(), Some(5));
+    let screen = app.screen(100, 30);
+    assert!(comments(&app).offset() > 0);
+    assert!(screen.contains("The last comment."), "{screen}");
+    assert!(screen.contains("┗╍"), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn a_click_on_a_block_focuses_it() {
+    let mut app = on_comments(0);
+    let row = row_of(&mut app, "A comment from a deleted account.");
+    app.click(70, row);
+    assert_eq!(
+        (focus(&app), comments(&app).stop()),
+        (FocusTarget::DetailsContent, Some(1))
+    );
+    // The margin row below a block, which focus has boxed, is the body's.
+    let row = row_of(&mut app, "Unknown • Wed Feb  4");
+    app.click(70, row + 3);
+    assert_eq!(
+        (focus(&app), comments(&app).stop()),
+        (FocusTarget::DetailsContent, None)
+    );
+}
+
+#[test]
+fn reply_and_new_comment_are_unimplemented() {
+    let mut app = on_comments(0);
+    app.press(&["tab"]);
+    let out = logs(|| {
+        app.press(&["n"]);
+    });
+    assert!(out.contains("is not implemented yet"), "{out}");
+    app.press(&["tab"]);
+    let out = logs(|| {
+        app.press(&["r"]);
+    });
+    assert!(out.contains("is not implemented yet"), "{out}");
+    let main = app.app_mut().main_screen_mut().unwrap();
+    assert!(matches!(
+        main.details
+            .on_binding(Owner::IssueComments, BindingId::ConversationCommentNew),
+        Some(Action::Unimplemented(BindingId::ConversationCommentNew))
+    ));
+    assert!(matches!(
+        main.details
+            .on_binding(Owner::CommentBlock, BindingId::ConversationCommentReply),
+        Some(Action::Unimplemented(BindingId::ConversationCommentReply))
+    ));
+}
+
+#[test]
+fn the_footer_with_the_body_and_with_a_block_focused() {
+    let mut app = on_comments(0);
+    app.press(&["tab"]);
+    let line = footer(&mut app);
+    assert!(
+        line.starts_with(" n New Comment  ^v Paste link  f Follow link"),
+        "{line}"
+    );
+    app.press(&["tab"]);
+    let line = footer(&mut app);
+    assert!(
+        line.starts_with(" r Reply to Comment  n New Comment  ^v Paste link  f Follow link"),
+        "{line}"
+    );
+}
+
+#[test]
+fn maximize_works_from_a_block_but_not_the_comments_body() {
+    let mut app = on_comments(0);
+    app.press(&["tab", "M"]);
+    assert_eq!(app.app().maximized(), None);
+    app.press(&["tab", "M"]);
+    assert!(app.app().maximized().is_some());
+    let screen = app.screen(160, 48);
+    assert!(!screen.contains("[3] Issues"), "{screen}");
+    assert!(screen.contains("Thanks @parity-friend"), "{screen}");
+}
+
+#[test]
+fn switching_tabs_keeps_the_comments_scroll_position() {
+    let mut app = on_comments(0);
+    app.render(100, 20);
+    app.press(&["tab", "down", "down", "down"]);
+    assert_eq!(comments(&app).offset(), 3);
+    app.press(&["5", "left", "right"]);
+    app.render(100, 20);
+    assert_eq!(comments(&app).offset(), 3);
+}
+
+#[test]
+fn issue_comments_loading() {
+    let mut app = app();
+    app.press(&["enter", "right"]);
+    assert!(comments(&app).is_loading());
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("Loading..."), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn issue_comments_160x48() {
+    let mut app = on_comments(0);
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+#[test]
+fn issue_comments_100x30() {
+    let mut app = on_comments(0);
+    insta::assert_snapshot!(app.screen(100, 30));
+}
+
+#[test]
+fn issue_comments_first_block_focused() {
+    let mut app = on_comments(0);
+    app.press(&["tab", "tab"]);
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+#[test]
+fn issue_comments_none() {
+    let mut app = on_comments(1);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│No comments available"), "{screen}");
     insta::assert_snapshot!(screen);
 }

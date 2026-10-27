@@ -1,9 +1,9 @@
 version = 1
 description = "Issue details: selecting an issue opens its Overview and Comments tabs; switching tabs, the comment blocks, focus inside the Comments tab, no body, no comments and the comments loading state"
-# The issue details issues flip this to true once both tabs draw. The Details box's text isn't compared across apps,
-# so [expect] carries the Overview and comment text. The footer is left out of the cross-app checks wherever it isn't
+# Gated since #246. The Details box's text isn't compared across apps, so [expect] carries the Overview and comment
+# text. The footer is left out of the cross-app checks wherever it isn't
 # cut off at the right edge: Python spells `^p Command Pallete` (Py bug B14), and Rust fixes the spelling on purpose.
-gate = false
+gate = true
 parity_rows = [
     "issues.select",
     "issues.details",

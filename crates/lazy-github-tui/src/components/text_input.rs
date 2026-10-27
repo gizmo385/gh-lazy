@@ -50,6 +50,9 @@ pub const HEIGHT: u16 = 3;
 /// Cells between each side border and the text (`padding: 0 2`).
 const PADDING: u16 = 2;
 
+/// The opacity of an invalid, unfocused input's red border (`tall $error 60%`).
+const INVALID_BLURRED_ALPHA: f64 = 0.6;
+
 /// What a key did to the input.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[must_use]
@@ -73,6 +76,8 @@ pub struct TextInput {
     placeholder: &'static str,
     /// The first text cell shown, which follows the cursor.
     scroll: usize,
+    /// The last validation failed: Textual's `-invalid` class, drawn as a red border.
+    invalid: bool,
 }
 
 impl TextInput {
@@ -84,7 +89,19 @@ impl TextInput {
             anchor: None,
             placeholder,
             scroll: 0,
+            invalid: false,
         }
+    }
+
+    /// Marks the input invalid or valid, as the owner's last check of its text said. An invalid input has a red
+    /// border (Textual's `-invalid` class) until the owner marks it valid again.
+    pub fn set_invalid(&mut self, invalid: bool) {
+        self.invalid = invalid;
+    }
+
+    /// Whether the last check marked it invalid.
+    pub fn is_invalid(&self) -> bool {
+        self.invalid
     }
 
     /// The text.
@@ -283,7 +300,7 @@ impl TextInput {
         if area.is_empty() {
             return;
         }
-        let styles = Styles::new(theme, under, focused);
+        let styles = Styles::new(theme, under, focused, self.invalid);
         draw_tall_border(buf, area, &styles);
 
         // The text row, between the border and the padding.
@@ -388,7 +405,7 @@ struct Styles {
 }
 
 impl Styles {
-    fn new(theme: &Theme, under: Paint, focused: bool) -> Self {
+    fn new(theme: &Theme, under: Paint, focused: bool, invalid: bool) -> Self {
         let p = theme.palette;
         let selection = |bg: Paint| {
             let selected = p.input_selection_background.over(bg);
@@ -400,7 +417,12 @@ impl Styles {
             // `&:ansi`: the terminal's own colors.
             let default = theme.paint(Paint::Ansi(AnsiColor::Default));
             let text = Style::new().fg(default).bg(default);
-            let border = theme.color(if focused { p.border } else { p.border_blurred }, under);
+            // `Input.-invalid:ansi`: `ansi_red`, focused or not.
+            let border = if invalid {
+                theme.paint(Paint::Ansi(AnsiColor::Red))
+            } else {
+                theme.color(if focused { p.border } else { p.border_blurred }, under)
+            };
             return Self {
                 text,
                 placeholder: text.add_modifier(Modifier::DIM),
@@ -420,7 +442,14 @@ impl Styles {
             surface
         };
         let text = Style::new().fg(theme.color(p.foreground, bg)).bg(theme.paint(bg));
-        let border = theme.color(if focused { p.border } else { p.border_blurred }, bg);
+        let border = match (invalid, focused) {
+            // `Input.-invalid { border: tall $error 60% }`, and `$error` while focused. The translucent red is
+            // blended over the parent's background, as Textual draws it.
+            (true, true) => theme.color(p.error, under),
+            (true, false) => theme.color(p.error.multiply_alpha(INVALID_BLURRED_ALPHA), under),
+            (false, true) => theme.color(p.border, bg),
+            (false, false) => theme.color(p.border_blurred, bg),
+        };
         let cursor_bg = p.input_cursor_background.over(bg);
         let cursor = p.input_cursor_text_style.apply(
             Style::new()

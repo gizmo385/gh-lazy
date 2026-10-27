@@ -181,7 +181,7 @@ impl Dialog for ConfirmDialog {
     fn own_action(&self, action: DialogAction) -> Option<ConfirmAction> {
         match action {
             DialogAction::Confirm(action) => Some(action),
-            DialogAction::Test(..) => None,
+            DialogAction::Lookup(..) | DialogAction::Test(..) => None,
         }
     }
 

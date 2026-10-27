@@ -31,6 +31,7 @@ use crate::components::table::{Handled, SEARCHABLE_BINDINGS, TABLE_BINDINGS, Tab
 use crate::components::text_input::{self, INPUT_BINDINGS};
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
+use crate::modal::{LookupDialog, RepoLookup};
 use crate::options::AppOptions;
 use crate::theme::Theme;
 
@@ -253,6 +254,10 @@ pub enum MainAction {
     ClickSelect(Box<Repository>),
     /// Favorite or unfavorite the repo under the repos table's cursor (`repositories.favorite`).
     ToggleFavorite,
+    /// Open the Lookup repository dialog (`repositories.lookup`).
+    LookupRepository,
+    /// The Lookup repository dialog closed: with the repo it found, or `None` when it was cancelled.
+    RepoLookedUp(Option<Box<Repository>>),
     /// A section's lazy table asked for `page` (a cursor key, a click or a search submit): its section requests it.
     LoadMore {
         /// The section whose table asked.
@@ -717,6 +722,9 @@ impl MainScreen {
             Owner::Section(SectionId::Repos) if id == BindingId::RepositoriesFavorite => {
                 Some(Action::Main(MainAction::ToggleFavorite))
             }
+            Owner::Section(SectionId::Repos) if id == BindingId::RepositoriesLookup => {
+                Some(Action::Main(MainAction::LookupRepository))
+            }
             // Not built yet: the key is still consumed, as in Python. With one tab, switching tabs is a no-op.
             Owner::SearchableTable(_) | Owner::Section(_) | Owner::SelectionsPane | Owner::DetailsTabs => {
                 Some(Action::Unimplemented(id))
@@ -882,6 +890,16 @@ impl Component for MainScreen {
                 cx.dispatch(Action::SelectRepo(repo));
             }
             MainAction::ToggleFavorite => self.repos.toggle_favorite(cx),
+            MainAction::LookupRepository => cx.open_dialog(LookupDialog::<RepoLookup>::new(), |found| {
+                Action::Main(MainAction::RepoLookedUp(found.map(Box::new)))
+            }),
+            // Python's `action_lookup_repository`: `add_item`, then `RepoSelected` as for enter. Focus and the cursor
+            // stay where they are.
+            MainAction::RepoLookedUp(Some(repo)) => {
+                self.repos.add((*repo).clone(), cx);
+                cx.dispatch(Action::SelectRepo(repo));
+            }
+            MainAction::RepoLookedUp(None) => {}
             MainAction::LoadMore {
                 section,
                 generation,

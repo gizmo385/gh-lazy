@@ -1,7 +1,7 @@
 version = 1
 description = "Dialog frame, through the Lookup repository modal: centered over the dimmed main screen, its own footer, focus on the first field, tab order through fields and buttons, q typing in a field, escape and q closing"
-# The frame is #178's; the first modal that uses it is the Lookup repository modal, whose issue flips this to true.
-gate = false
+# The frame is #178's, seen through the first modal that uses it: Lookup repository (#224).
+gate = true
 parity_rows = [
     "modals.dialog-frame",
     "modals.dialog-focus-order",

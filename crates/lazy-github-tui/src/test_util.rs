@@ -841,7 +841,7 @@ impl Dialog for TestDialog {
     fn own_action(&self, action: DialogAction) -> Option<TestDialogAction> {
         match action {
             DialogAction::Test(id, action) if id == self.id => Some(action),
-            DialogAction::Test(..) | DialogAction::Confirm(_) => None,
+            DialogAction::Test(..) | DialogAction::Confirm(_) | DialogAction::Lookup(..) => None,
         }
     }
 

@@ -1,0 +1,76 @@
+---
+source: crates/lazy-github-tui/src/modal/lookup/tests.rs
+assertion_line: 520
+expression: draw(&mut dialog)
+---
+█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+█                                                          █
+█                                                          █
+█             Search for a repository by name:             █
+█                                                          █
+█Repository (owner/name):                                  █
+█▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█
+█▊  parity-org/lookup-me                                  ▎█
+█▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█
+█                                                          █
+█──────────────────────────────────────────────────────────█
+█                                                          █
+█Continue tracking this repo?                              █
+█▊▔▔▔▔▔▔▔▔▎                                                █
+█▊        ▎                                                █
+█▊▁▁▁▁▁▁▁▁▎                                                █
+█                                                          █
+█──────────────────────────────────────────────────────────█
+█                                                          █
+█                                                          █
+█            ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔             █
+█                 Lookup           Cancel                  █
+█            ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁             █
+█                                                          █
+█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█
+--- styles
+............................................................
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.ccccccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.
+.dggggggggggggggggggggggggggggggggggggggggggggggggggggggggf.
+.deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.deeeeeeeefaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.dggiijjggfaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.deeeeeeeefaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaakkkkkkkkkkkkkkkkallllllllllllllllaaaaaaaaaaaaa.
+.aaaaaaaaaaaammmmnnnnnnnnmmmmaooooppppppppooooaaaaaaaaaaaaa.
+.aaaaaaaaaaaaqqqqqqqqqqqqqqqqarrrrrrrrrrrrrrrraaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+............................................................
+--- legend
+. fg=#121212 bg=#4f4f4f
+a fg=#e0e0e0 bg=#4f4f4f
+b fg=#0178d4 bg=#4f4f4f BOLD
+c fg=#e0e0e0 bg=#4f4f4f BOLD
+d fg=#191919 bg=#4f4f4f REVERSED
+e fg=#191919 bg=#1e1e1e
+f fg=#191919 bg=#4f4f4f
+g fg=#e0e0e0 bg=#1e1e1e
+h fg=#004578 bg=#4f4f4f
+i fg=#242f38 bg=#1e1e1e REVERSED
+j fg=#e0e0e0 bg=#000f18
+k fg=#7ae998 bg=#55c076
+l fg=#e76580 bg=#b93c5b
+m fg=#0b180f bg=#55c076
+n fg=#0b180f bg=#55c076 BOLD | REVERSED
+o fg=#f5e5e9 bg=#b93c5b
+p fg=#f5e5e9 bg=#b93c5b BOLD
+q fg=#008139 bg=#55c076
+r fg=#780028 bg=#b93c5b

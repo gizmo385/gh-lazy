@@ -1,0 +1,81 @@
+---
+source: crates/lazy-github-tui/src/modal/lookup/tests.rs
+assertion_line: 495
+expression: "draw(&mut typed(\"nope\"))"
+---
+█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+█                                                          █
+█                                                          █
+█             Search for a repository by name:             █
+█                                                          █
+█Repository (owner/name):                                  █
+█▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█
+█▊  nope                                                  ▎█
+█▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█
+█                                                          █
+█──────────────────────────────────────────────────────────█
+█                                                          █
+█Continue tracking this repo?                              █
+█▊▔▔▔▔▔▔▔▔▎                                                █
+█▊        ▎                                                █
+█▊▁▁▁▁▁▁▁▁▎                                                █
+█                                                          █
+█──────────────────────────────────────────────────────────█
+█                                                          █
+█                                                          █
+█            ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔             █
+█                 Lookup           Cancel                  █
+█            ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁             █
+█                                                          █
+█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█
+--- styles
+............................................................
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.ccccccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.
+.dgggggghgggggggggggggggggggggggggggggggggggggggggggggggggf.
+.deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.jkkkkkkkklaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.jmmnnoommlaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.jkkkkkkkklaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaappppppppppppppppaqqqqqqqqqqqqqqqqaaaaaaaaaaaaa.
+.aaaaaaaaaaaarrrrssssssssrrrrattttuuuuuuuuttttaaaaaaaaaaaaa.
+.aaaaaaaaaaaavvvvvvvvvvvvvvvvawwwwwwwwwwwwwwwwaaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+............................................................
+--- legend
+. fg=#121212 bg=#4f4f4f
+a fg=#e0e0e0 bg=#4f4f4f
+b fg=#0178d4 bg=#4f4f4f BOLD
+c fg=#e0e0e0 bg=#4f4f4f BOLD
+d fg=#b93c5b bg=#4f4f4f REVERSED
+e fg=#b93c5b bg=#272727
+f fg=#b93c5b bg=#4f4f4f
+g fg=#e0e0e0 bg=#272727
+h fg=#121212 bg=#e0e0e0
+i fg=#004578 bg=#4f4f4f
+j fg=#191919 bg=#4f4f4f REVERSED
+k fg=#191919 bg=#1e1e1e
+l fg=#191919 bg=#4f4f4f
+m fg=#e0e0e0 bg=#1e1e1e
+n fg=#242f38 bg=#1e1e1e REVERSED
+o fg=#e0e0e0 bg=#000f18
+p fg=#7ae998 bg=#4ebf71
+q fg=#e76580 bg=#b93c5b
+r fg=#0a180e bg=#4ebf71
+s fg=#0a180e bg=#4ebf71 BOLD
+t fg=#f5e5e9 bg=#b93c5b
+u fg=#f5e5e9 bg=#b93c5b BOLD
+v fg=#008139 bg=#4ebf71
+w fg=#780028 bg=#b93c5b

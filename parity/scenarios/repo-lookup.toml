@@ -1,6 +1,6 @@
 version = 1
 description = "Lookup repository modal (O): the switch, an empty, an invalid and an unknown name (error toasts, the modal stays), and a found repo added to the table and selected"
-gate = false
+gate = true
 parity_rows = [
     "repositories.lookup",
     "modals.lookup-dialog",

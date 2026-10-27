@@ -8,6 +8,7 @@
 mod confirm;
 mod focus;
 mod frame;
+mod lookup;
 mod stack;
 
 use ratatui::layout::Rect;
@@ -24,6 +25,7 @@ use crate::theme::{Palette, ThemeColor};
 pub use confirm::{ConfirmAction, ConfirmDialog};
 pub use focus::{FocusMove, FocusRing};
 pub use frame::{DIM_FACTOR, DialogFrame, dim, frame_rect};
+pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup};
 pub use stack::ModalEntry;
 
 /// Textual's `Screen.BINDINGS`, which every modal screen has before the dialog's own: `tab`, `shift+tab` and the
@@ -59,6 +61,8 @@ pub(crate) use dialog_bindings;
 pub enum ModalKind {
     /// [`ConfirmDialog`]: a yes/no question.
     Confirm,
+    /// A [`LookupDialog`], by what it looks up.
+    Lookup(LookupTarget),
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -93,6 +97,8 @@ impl FieldKind {
 pub enum DialogAction {
     /// [`ConfirmDialog`]'s.
     Confirm(ConfirmAction),
+    /// A [`LookupDialog`]'s, by what it looks up.
+    Lookup(LookupTarget, LookupAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -102,6 +108,7 @@ impl DialogAction {
     pub fn kind(&self) -> ModalKind {
         match *self {
             DialogAction::Confirm(_) => ModalKind::Confirm,
+            DialogAction::Lookup(target, _) => ModalKind::Lookup(target),
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }

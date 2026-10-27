@@ -1,0 +1,8 @@
+---
+source: crates/lazy-github-tui/src/components/comment/tests.rs
+expression: "screen(&mut block, 60, None)"
+---
+ │ Is this related to #4?
+ │
+ │ Unknown • Tue Feb  3 12:00:00 2026
+ │

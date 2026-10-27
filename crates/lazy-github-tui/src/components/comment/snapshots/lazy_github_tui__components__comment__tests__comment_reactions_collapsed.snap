@@ -1,0 +1,11 @@
+---
+source: crates/lazy-github-tui/src/components/comment/tests.rs
+expression: "screen(&mut block, 60, None)"
+---
+ │ Rebased on main. @parity-bot ready for another look.
+ │
+ │ parity-friend • Tue Feb  3 12:00:00 2026
+ │
+ │▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+ │  ▶ 👍  1 | 🚀  1
+ │

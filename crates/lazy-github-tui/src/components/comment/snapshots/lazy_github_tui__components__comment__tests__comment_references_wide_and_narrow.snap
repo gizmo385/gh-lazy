@@ -1,0 +1,19 @@
+---
+source: crates/lazy-github-tui/src/components/comment/tests.rs
+expression: "format!(\"{wide}\\n{narrow}\")"
+---
+ │ Rebased on main. @parity-bot ready for another look; see #4 and octo/other#12 too.
+ │
+ │ parity-friend • Tue Feb  3 12:00:00 2026
+ │
+
+
+ ┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍┓
+ ╏ Rebased on main. @parity-bot    ╏
+ ╏ ready for another look; see #4  ╏
+ ╏ and octo/other#12 too.          ╏
+ ╏                                 ╏
+ ╏ parity-friend • Tue Feb  3      ╏
+ ╏ 12:00:00 2026                   ╏
+ ╏                                 ╏
+ ┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍┛

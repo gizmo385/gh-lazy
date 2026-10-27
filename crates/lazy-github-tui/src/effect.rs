@@ -9,8 +9,8 @@ use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
 use lazy_github_core::models::{
-    CheckRun, CombinedStatus, FullPullRequest, FullUser, IssueListItem, Reactions, RepoName, Repository, User,
-    Workflow, WorkflowJob, WorkflowRun,
+    CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, Reactions,
+    RepoName, Repository, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 /// Something the runtime does on the app's behalf.
@@ -193,6 +193,18 @@ pub enum GithubRequest {
         /// Its number.
         number: u64,
     },
+    /// [`Github::issue_comments`].
+    IssueComments {
+        /// The issue or pull request whose comments are listed.
+        issue: Box<Issue>,
+    },
+    /// [`Github::comment_reactions`].
+    CommentReactions {
+        /// The comment's repo.
+        repo: Box<Repository>,
+        /// The comment.
+        comment: CommentRef,
+    },
 }
 
 /// The result of a [`GithubRequest`], in the variant of the same name.
@@ -234,6 +246,10 @@ pub enum GithubResponse {
     IssueReactions(Result<Reactions, GhError>),
     /// [`Github::issue`], boxed to keep this enum small.
     Issue(Result<Box<IssueListItem>, GhError>),
+    /// [`Github::issue_comments`].
+    IssueComments(Result<Vec<IssueComment>, GhError>),
+    /// [`Github::comment_reactions`].
+    CommentReactions(Result<Reactions, GhError>),
 }
 
 impl GithubRequest {
@@ -278,6 +294,10 @@ impl GithubRequest {
                 GithubResponse::IssueReactions(gh.issue_reactions(&repo, number).await)
             }
             GithubRequest::Issue { repo, number } => GithubResponse::Issue(gh.issue(&repo, number).await.map(Box::new)),
+            GithubRequest::IssueComments { issue } => GithubResponse::IssueComments(gh.issue_comments(&issue).await),
+            GithubRequest::CommentReactions { repo, comment } => {
+                GithubResponse::CommentReactions(gh.comment_reactions(&repo, comment).await)
+            }
         }
     }
 }

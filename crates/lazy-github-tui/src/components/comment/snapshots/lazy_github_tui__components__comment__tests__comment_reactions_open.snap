@@ -1,0 +1,43 @@
+---
+source: crates/lazy-github-tui/src/components/comment/tests.rs
+expression: "buffer_to_styled_string(&draw(&layout, 60))"
+---
+ ┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍┓
+ ╏ Rebased on main. @parity-bot ready for another look.    ╏
+ ╏                                                         ╏
+ ╏ parity-friend • Tue Feb  3 12:00:00 2026                ╏
+ ╏                                                         ╏
+ ╏▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔╏
+ ╏  ▼ 👍  1 | 🚀  1                                          ╏
+ ╏                                                         ╏
+ ╏    👍 : parity-bot                                       ╏
+ ╏    🚀 : parity-reviewer                                  ╏
+ ╏                                                         ╏
+ ┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍┛
+
+--- styles
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+.a.bbbbbbbbbbbbbbbbbcccccccccccbbbbbbbbbbbbbbbbbbbbbbbb....a
+.a.........................................................a
+.a.dddddddddddddddddddddddddddddddddddddddd................a
+.a.........................................................a
+.aeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeea
+.afghhhihhhhhhihhgfffffffffffffffffffffffffffffffffffffffffa
+.afffffffffffffffffffffffffffffffffffffffffffffffffffffffffa
+.affffjijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjja
+.affffjijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjja
+.afffffffffffffffffffffffffffffffffffffffffffffffffffffffffa
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+............................................................
+--- legend
+. fg=Reset bg=#121212
+a fg=#4ebf71 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#e0e0e0 bg=#121212 UNDERLINED
+d fg=#a0a0a0 bg=#121212
+e fg=#121212 bg=#272727
+f fg=Reset bg=#272727
+g fg=Reset bg=#0178d4
+h fg=#ddedf9 bg=#0178d4 BOLD
+i fg=Reset bg=Reset
+j fg=#e0e0e0 bg=#1e1e1e

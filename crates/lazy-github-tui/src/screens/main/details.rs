@@ -342,6 +342,10 @@ impl DetailsPane {
                 tracing::debug!("Dropping the Overview section response {id} no longer awaited");
                 None
             }
+            GithubResponse::IssueComments(_) | GithubResponse::CommentReactions(_) => {
+                tracing::debug!("Dropping the comments response {id} no longer awaited");
+                None
+            }
             other => Some(other),
         }
     }

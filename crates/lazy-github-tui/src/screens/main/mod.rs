@@ -948,7 +948,8 @@ impl MainScreen {
             | Owner::IssueOverview
             | Owner::DetailsButton
             | Owner::CollapsibleTitle
-            | Owner::ListView => self.details.on_binding(owner, id),
+            | Owner::ListView
+            | Owner::CommentBlock => self.details.on_binding(owner, id),
             Owner::SearchableTable(section) if id == BindingId::TableSearch => {
                 self.open_search(section);
                 Some(Action::Consumed)

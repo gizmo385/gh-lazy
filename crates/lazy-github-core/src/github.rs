@@ -16,8 +16,8 @@ use tokio::sync::OnceCell;
 use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts};
 use crate::models::{
-    CheckRun, CombinedStatus, FullPullRequest, FullUser, IssueListItem, Reactions, Repository, User, Workflow,
-    WorkflowJob, WorkflowRun,
+    CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, Reactions,
+    Repository, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 #[cfg(any(test, feature = "test-util"))]
@@ -183,6 +183,26 @@ pub trait Github: Clone + Send + Sync + 'static {
     /// Fails on any HTTP error status (a 404 included) or `gh` failure, or with [`GhError::Decode`] when the body
     /// doesn't decode.
     fn issue(&self, repo: &Repository, number: u64) -> impl Future<Output = Result<IssueListItem, GhError>> + Send;
+
+    /// Every comment on `issue` (an issue or a pull request), oldest first, from every page of its `comments_url`
+    /// (Python stops at GitHub's first 30, Py bug B64). Cached for `cache.default_ttl`.
+    ///
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when a page or any comment doesn't
+    /// decode.
+    fn issue_comments(&self, issue: &Issue) -> impl Future<Output = Result<Vec<IssueComment>, GhError>> + Send;
+
+    /// The first [`COMMENT_REACTIONS_PER_PAGE`] reactions on `comment` in `repo`. An issue comment's are asked for on
+    /// `/issues/comments/{id}/reactions` and a review comment's on `/pulls/comments/{id}/reactions` (Python asks for
+    /// both on the first, Py bug B54). Cached for `cache.default_ttl`. A reaction of a kind this build doesn't know is
+    /// skipped.
+    ///
+    /// Fails on any HTTP error status (a 404 for an unknown comment) or `gh` failure, or with [`GhError::Decode`]
+    /// when the body doesn't decode.
+    fn comment_reactions(
+        &self,
+        repo: &Repository,
+        comment: CommentRef,
+    ) -> impl Future<Output = Result<Reactions, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -224,6 +244,9 @@ impl From<GhError> for DiffFetchError {
 
 /// Page size for a commit's statuses and check runs: Python's `per_page` there. Only the first page is fetched.
 pub const CHECKS_PER_PAGE: u32 = 100;
+
+/// Page size for a comment's reactions: Python's `per_page` there. Only the first page is fetched.
+pub const COMMENT_REACTIONS_PER_PAGE: u32 = 100;
 
 /// Page size for the paged endpoints that take a [`PageQuery`]: Python's default `per_page`.
 pub const DEFAULT_PER_PAGE: u32 = 30;
@@ -635,6 +658,42 @@ impl GhCli {
         request
     }
 
+    /// `GET` the path of `issue.comments_url`, without page parameters as Python sends it (gh then follows each
+    /// page's `Link: rel="next"`), cached for the default TTL.
+    fn issue_comments_request(&self, issue: &Issue) -> GhRequest {
+        let path = api_path(&issue.comments_url).unwrap_or_else(|| {
+            format!(
+                "/repos/{}/{}/issues/{}/comments",
+                issue.repo.owner.login, issue.repo.name, issue.number
+            )
+        });
+        let mut request = GhRequest::get(path);
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
+    /// `GET /repos/{owner}/{repo}/{issues|pulls}/comments/{id}/reactions?page=1&per_page=100`, cached for the default
+    /// TTL.
+    fn comment_reactions_request(&self, repo: &Repository, comment: CommentRef) -> GhRequest {
+        let kind = match comment {
+            CommentRef::Issue(_) => "issues",
+            CommentRef::Review(_) => "pulls",
+        };
+        let mut request = GhRequest::get(format!(
+            "/repos/{}/{}/{kind}/comments/{}/reactions",
+            repo.owner.login,
+            repo.name,
+            comment.id()
+        ));
+        request.query = PageQuery {
+            page: 1,
+            per_page: COMMENT_REACTIONS_PER_PAGE,
+        }
+        .params();
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -781,6 +840,28 @@ impl Github for GhCli {
         let response = self.inner.runner.request(self.issue_request(repo, number)).await?;
         issue_list_item(&response, repo)
     }
+
+    async fn issue_comments(&self, issue: &Issue) -> Result<Vec<IssueComment>, GhError> {
+        self.inner.runner.paginate(self.issue_comments_request(issue)).await
+    }
+
+    async fn comment_reactions(&self, repo: &Repository, comment: CommentRef) -> Result<Reactions, GhError> {
+        let response = self
+            .inner
+            .runner
+            .request(self.comment_reactions_request(repo, comment))
+            .await;
+        reactions(&response?)
+    }
+}
+
+/// The REST path of an API URL such as an issue's `comments_url`: what follows the API root, which is the host on
+/// github.com (`https://api.github.com/repos/...`) and `/api/v3` on GitHub Enterprise Server. `None` when the URL
+/// has no `/repos/` path.
+fn api_path(url: &str) -> Option<String> {
+    let after_scheme = url.split_once("://").map_or(url, |(_, rest)| rest);
+    let at = after_scheme.find("/repos/")?;
+    Some(after_scheme[at..].to_owned())
 }
 
 /// The `check_runs` body of `GET .../commits/{sha}/check-runs`.
@@ -2139,5 +2220,171 @@ mod tests {
             reactions(&api_response(r#"{"message": "x"}"#)),
             Err(GhError::Decode(_))
         ));
+    }
+
+    /// Issue or pull request `number` of `parity-bot/pr-details`, from the `pr-details` set's first issues page.
+    fn pr_details_issue(number: u64) -> Issue {
+        let page: Vec<serde_json::Value> = parity_response(
+            "pr-details",
+            "repos/parity-bot/pr-details/issues/GET.page-1_per_page-30_state-all.json",
+        )
+        .json()
+        .unwrap();
+        page.into_iter()
+            .map(|item| IssueListItem::from_api_item(item, &pr_details_repo()).unwrap())
+            .find(|item| item.issue().number == number)
+            .unwrap()
+            .issue()
+            .clone()
+    }
+
+    #[test]
+    fn issue_comments_argv_pages_the_comments_url_with_the_default_ttl() {
+        let mut config = Config::default();
+        config.cache.default_ttl = 42;
+        let gh = GhCli::new(GhCliOptions::from(&config));
+        let issue = pr_details_issue(5);
+        assert_eq!(
+            issue.comments_url,
+            "https://api.github.com/repos/parity-bot/pr-details/issues/5/comments"
+        );
+        // Every page (B64), the first one keyed as Python asks for it: no query.
+        assert_eq!(
+            strings(gh.issue_comments_request(&issue).argv(gh.runner().hostname(), true)),
+            [
+                "api",
+                "-X",
+                "GET",
+                "--cache",
+                "42s",
+                "--paginate",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/pr-details/issues/5/comments"
+            ]
+        );
+    }
+
+    #[test]
+    fn api_paths_drop_the_api_root() {
+        assert_eq!(
+            api_path("https://api.github.com/repos/o/r/issues/5/comments").as_deref(),
+            Some("/repos/o/r/issues/5/comments")
+        );
+        assert_eq!(
+            api_path("https://ghe.example.com/api/v3/repos/o/r/issues/5/comments").as_deref(),
+            Some("/repos/o/r/issues/5/comments")
+        );
+        assert_eq!(
+            api_path("/repos/o/r/issues/5/comments").as_deref(),
+            Some("/repos/o/r/issues/5/comments")
+        );
+        assert_eq!(api_path("https://api.github.com/user"), None);
+
+        // A `comments_url` without a repos path falls back to the issue's own.
+        let gh = GhCli::default();
+        let mut issue = pr_details_issue(5);
+        issue.comments_url = "not a url".into();
+        assert_eq!(
+            gh.issue_comments_request(&issue).path,
+            "/repos/parity-bot/pr-details/issues/5/comments"
+        );
+    }
+
+    #[test]
+    fn comment_reactions_argv_by_kind() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        for (comment, path) in [
+            (CommentRef::Issue(7001), "issues/comments/7001"),
+            (CommentRef::Review(9001), "pulls/comments/9001"),
+        ] {
+            assert_eq!(
+                strings(
+                    gh.comment_reactions_request(&pr_details_repo(), comment)
+                        .argv(gh.runner().hostname(), false)
+                ),
+                [
+                    "api",
+                    "-i",
+                    "-X",
+                    "GET",
+                    "--cache",
+                    "600s",
+                    "-H",
+                    "Accept: application/vnd.github+json",
+                    &format!("/repos/parity-bot/pr-details/{path}/reactions?page=1&per_page=100"),
+                ]
+            );
+        }
+    }
+
+    #[test]
+    fn issue_comments_decode_from_the_pr_details_fixtures() {
+        let comments: Vec<IssueComment> =
+            parity_response("pr-details", "repos/parity-bot/pr-details/issues/5/comments/GET.json")
+                .json()
+                .unwrap();
+        let got: Vec<(u64, Option<&str>, &str)> = comments
+            .iter()
+            .map(|c| (c.id, c.user.as_ref().map(|u| u.login.as_str()), c.body.as_str()))
+            .collect();
+        assert_eq!(
+            got,
+            [
+                (
+                    7001,
+                    Some("parity-friend"),
+                    "Rebased on main. @parity-bot ready for another look."
+                ),
+                (7002, None, "Is this related to #4?"),
+                (7003, Some("parity-carol"), ""),
+            ]
+        );
+        assert_eq!(comments[0].author_association, "CONTRIBUTOR");
+        assert_eq!(
+            comments[1].created_at,
+            "2026-02-03T13:30:00Z".parse::<jiff::Timestamp>().unwrap()
+        );
+        assert!(matches!(
+            json_response("404 Not Found", r#"{"message":"Not Found"}"#),
+            Err(GhError::Http { status: 404, .. })
+        ));
+        assert!(matches!(
+            api_response(r#"[{"id": "x"}]"#).json::<Vec<IssueComment>>(),
+            Err(GhError::Decode(_))
+        ));
+    }
+
+    #[test]
+    fn comment_reactions_decode_from_the_pr_details_fixtures() {
+        use crate::models::ReactionKind;
+
+        let decode = |file: &str| {
+            reactions(&parity_response(
+                "pr-details",
+                &format!("repos/parity-bot/pr-details/{file}/reactions/GET.page-1_per_page-100.json"),
+            ))
+            .unwrap()
+        };
+        let kinds = |reactions: &Reactions| -> Vec<(ReactionKind, Vec<String>)> {
+            reactions
+                .by_kind()
+                .map(|(kind, users)| (kind, users.iter().map(|u| u.login.clone()).collect()))
+                .collect()
+        };
+        assert_eq!(
+            kinds(&decode("issues/comments/7001")),
+            [
+                (ReactionKind::ThumbsUp, vec!["parity-bot".to_owned()]),
+                (ReactionKind::Rocket, vec!["parity-reviewer".to_owned()]),
+            ]
+        );
+        assert_eq!(
+            kinds(&decode("pulls/comments/9001")),
+            [(ReactionKind::Eyes, vec!["parity-friend".to_owned()])]
+        );
+        // Python's B54 request: the review comment's id on the issue-comment endpoint is a 404, an error.
+        let not_found = json_response("404 Not Found", r#"{"message":"Not Found"}"#).and_then(|r| reactions(&r));
+        assert!(matches!(not_found, Err(GhError::Http { status: 404, .. })));
     }
 }

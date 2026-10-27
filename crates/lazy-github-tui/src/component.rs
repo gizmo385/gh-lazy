@@ -155,6 +155,8 @@ pub enum Owner {
     CollapsibleTitle,
     /// A focused list inside the details content, such as a section's (Textual's `ListView`).
     ListView,
+    /// A comment block with focus on it or inside it (`IssueCommentContainer`): reply.
+    CommentBlock,
     /// The command log.
     CommandLog,
     /// A field of an open dialog, which [`Dialog::field_chain`](crate::modal::Dialog::field_chain) puts in front of
@@ -182,6 +184,7 @@ impl Owner {
             | Owner::IssueOverview
             | Owner::DetailsButton
             | Owner::ListView
+            | Owner::CommentBlock
             | Owner::CommandLog
             | Owner::DialogField(_, FieldKind::Button | FieldKind::Switch | FieldKind::Scroll | FieldKind::Table) => {
                 None

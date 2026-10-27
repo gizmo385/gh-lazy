@@ -5,6 +5,7 @@
 //! produce, so local table caches stay readable by both apps.
 
 mod checks;
+mod comment;
 mod issue;
 mod pull_request;
 mod reaction;
@@ -17,6 +18,7 @@ pub use checks::{
     CheckConclusion, CheckRow, CheckRun, CheckRunStatus, CheckState, CombinedStatus, CommitStatus, check_rows,
     overall_state,
 };
+pub use comment::{CommentRef, IssueComment};
 pub use issue::{Issue, IssueListItem, IssueState, PartialPullRequest};
 pub use pull_request::{FullPullRequest, GitRef};
 pub use reaction::{Reaction, ReactionKind, Reactions};

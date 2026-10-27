@@ -10,14 +10,14 @@ use serde::de::Error as _;
 use super::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
 use crate::gh::GhError;
 use crate::models::{
-    CheckRun, CheckState, CombinedStatus, FullPullRequest, FullUser, IssueListItem, Reactions, Repository, User,
-    Workflow, WorkflowJob, WorkflowRun,
+    CheckRun, CheckState, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
+    Reactions, Repository, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs` and `issue_reactions` find none, `issue` fails with a 404, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments` and `comment_reactions` find none, `issue` fails with a 404, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -102,6 +102,20 @@ pub enum GithubCall {
     },
     /// [`Github::issue`], with the number asked for.
     Issue(u64),
+    /// [`Github::issue_comments`].
+    IssueComments {
+        /// The repository's full name.
+        full_name: String,
+        /// The issue's or pull request's number.
+        number: u64,
+    },
+    /// [`Github::comment_reactions`].
+    CommentReactions {
+        /// The repository's full name.
+        full_name: String,
+        /// The comment.
+        comment: CommentRef,
+    },
 }
 
 #[derive(Debug, Default)]
@@ -138,6 +152,10 @@ struct State {
     check_runs: HashMap<(String, String), Result<Vec<CheckRun>, GhError>>,
     /// Keyed by `full_name` and number.
     issue_reactions: HashMap<(String, u64), Result<Reactions, GhError>>,
+    /// Keyed by `full_name` and number.
+    issue_comments: HashMap<(String, u64), Result<Vec<IssueComment>, GhError>>,
+    /// Keyed by `full_name` and comment.
+    comment_reactions: HashMap<(String, CommentRef), Result<Reactions, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -308,6 +326,36 @@ impl FakeGithub {
         self.lock()
             .issue_reactions
             .insert((full_name.to_owned(), number), reactions);
+        self
+    }
+
+    /// `issue_comments` returns `comments` for number `number` of the repository named `full_name`. Numbers not set
+    /// have none.
+    #[must_use]
+    pub fn with_issue_comments(
+        self,
+        full_name: &str,
+        number: u64,
+        comments: Result<Vec<IssueComment>, GhError>,
+    ) -> Self {
+        self.lock()
+            .issue_comments
+            .insert((full_name.to_owned(), number), comments);
+        self
+    }
+
+    /// `comment_reactions` returns `reactions` for `comment` in the repository named `full_name`. Comments not set
+    /// have none.
+    #[must_use]
+    pub fn with_comment_reactions(
+        self,
+        full_name: &str,
+        comment: CommentRef,
+        reactions: Result<Reactions, GhError>,
+    ) -> Self {
+        self.lock()
+            .comment_reactions
+            .insert((full_name.to_owned(), comment), reactions);
         self
     }
 
@@ -570,6 +618,30 @@ impl Github for FakeGithub {
                 message: "Not Found".to_owned(),
                 body: Vec::new(),
             }),
+        })
+        .await
+    }
+
+    async fn issue_comments(&self, issue: &Issue) -> Result<Vec<IssueComment>, GhError> {
+        let key = (issue.repo.full_name.clone(), issue.number);
+        let call = GithubCall::IssueComments {
+            full_name: issue.repo.full_name.clone(),
+            number: issue.number,
+        };
+        self.respond(call, |state| canned_page(state.issue_comments.get(&key)))
+            .await
+    }
+
+    async fn comment_reactions(&self, repo: &Repository, comment: CommentRef) -> Result<Reactions, GhError> {
+        let key = (repo.full_name.clone(), comment);
+        let call = GithubCall::CommentReactions {
+            full_name: repo.full_name.clone(),
+            comment,
+        };
+        self.respond(call, |state| match state.comment_reactions.get(&key) {
+            Some(Ok(reactions)) => Ok(reactions.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Ok(Reactions::default()),
         })
         .await
     }
@@ -1062,6 +1134,90 @@ mod tests {
         assert!(github.calls().contains(&GithubCall::IssueReactions {
             full_name: "octocat/a".into(),
             number: 7
+        }));
+    }
+
+    #[tokio::test]
+    async fn comments_and_comment_reactions_by_repo_and_key() {
+        use crate::models::{Issue, IssueState, Reaction, ReactionKind};
+
+        let issue = |name: &str, number: u64| Issue {
+            id: number,
+            number,
+            locked: false,
+            state: IssueState::Open,
+            title: "t".into(),
+            body: None,
+            user: octocat(),
+            created_at: jiff::Timestamp::UNIX_EPOCH,
+            updated_at: jiff::Timestamp::UNIX_EPOCH,
+            closed_at: None,
+            closed_by: None,
+            assignee: None,
+            assignees: None,
+            comments_url: String::new(),
+            html_url: String::new(),
+            repo: repo(name),
+        };
+        let comment = IssueComment {
+            id: 70,
+            body: "hi".into(),
+            user: None,
+            created_at: jiff::Timestamp::UNIX_EPOCH,
+            updated_at: jiff::Timestamp::UNIX_EPOCH,
+            author_association: "NONE".into(),
+        };
+        let reactions: Reactions = [Reaction {
+            kind: ReactionKind::Rocket,
+            user: octocat(),
+        }]
+        .into_iter()
+        .collect();
+        let github = FakeGithub::new()
+            .with_issue_comments("octocat/a", 5, Ok(vec![comment.clone()]))
+            .with_issue_comments("octocat/a", 6, Err(GhError::NotInstalled))
+            .with_comment_reactions("octocat/a", CommentRef::Review(70), Ok(reactions.clone()))
+            .with_comment_reactions("octocat/a", CommentRef::Issue(71), Err(GhError::NotInstalled));
+        assert_eq!(github.issue_comments(&issue("a", 5)).await.unwrap(), [comment]);
+        assert!(github.issue_comments(&issue("a", 6)).await.is_err());
+        assert!(github.issue_comments(&issue("b", 5)).await.unwrap().is_empty());
+        assert_eq!(
+            github
+                .comment_reactions(&repo("a"), CommentRef::Review(70))
+                .await
+                .unwrap(),
+            reactions
+        );
+        // The same id as an issue comment is a different comment.
+        assert!(
+            github
+                .comment_reactions(&repo("a"), CommentRef::Issue(70))
+                .await
+                .unwrap()
+                .is_empty()
+        );
+        assert!(
+            github
+                .comment_reactions(&repo("a"), CommentRef::Issue(71))
+                .await
+                .is_err()
+        );
+        assert_eq!(
+            github.calls()[..2],
+            [
+                GithubCall::IssueComments {
+                    full_name: "octocat/a".into(),
+                    number: 5
+                },
+                GithubCall::IssueComments {
+                    full_name: "octocat/a".into(),
+                    number: 6
+                },
+            ]
+        );
+        assert!(github.calls().contains(&GithubCall::CommentReactions {
+            full_name: "octocat/a".into(),
+            comment: CommentRef::Issue(71)
         }));
     }
 }

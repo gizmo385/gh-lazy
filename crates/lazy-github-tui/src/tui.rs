@@ -604,6 +604,21 @@ mod tests {
         ) -> Result<lazy_github_core::models::IssueListItem, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }
+
+        async fn issue_comments(
+            &self,
+            _issue: &lazy_github_core::models::Issue,
+        ) -> Result<Vec<lazy_github_core::models::IssueComment>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
+        async fn comment_reactions(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _comment: lazy_github_core::models::CommentRef,
+        ) -> Result<lazy_github_core::models::Reactions, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
     }
 
     /// Runs the loop on a `TestBackend` with `effect` already started, and returns how it ended.

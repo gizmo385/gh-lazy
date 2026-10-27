@@ -1021,3 +1021,218 @@ fn run_jobs_logs_100x30() {
     settle(&mut app);
     insta::assert_snapshot!(app.screen(100, 30));
 }
+
+// The Logs tab.
+
+/// [`selected`] with the Logs tab showing, its requests not yet answered.
+fn logs_tab(number: u64) -> TestApp {
+    let mut app = selected(number);
+    app.press(&["right", "right"]);
+    app
+}
+
+fn logs_state(app: &TestApp) -> super::logs::LogsState {
+    details(app).logs_tab().state()
+}
+
+#[test]
+fn nothing_is_requested_until_the_tab_shows() {
+    let mut app = selected(42);
+    assert_eq!(logs_state(&app), super::logs::LogsState::NotStarted);
+    app.press(&["right"]);
+    settle(&mut app);
+    assert!(log_requests(&app).is_empty());
+    app.press(&["right"]);
+    assert_eq!(log_job_ids(&app), [6_000_001]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│Full Logs for Run #42"), "{screen}");
+    assert!(screen.contains("Loading full workflow logs..."), "{screen}");
+}
+
+#[test]
+fn the_logs_are_requested_one_at_a_time_in_job_order() {
+    let mut app = logs_tab(42);
+    let requests = log_requests(&app);
+    let [(first, 6_000_001)] = requests[..] else {
+        panic!("{requests:?}");
+    };
+    app.send(Event::Github {
+        id: first,
+        response: GithubResponse::JobLogs(fixture_logs(6_000_001)),
+    });
+    assert_eq!(log_job_ids(&app), [6_000_001, 6_000_002]);
+    assert!(app.screen(160, 48).contains("Loading full workflow logs..."));
+    let out = settle(&mut app);
+    assert_eq!(log_job_ids(&app), [6_000_001, 6_000_002, 6_000_003, 6_000_004]);
+    // Lint's logs answer 404: Python's ERROR line, and the fallback in its section.
+    assert_eq!(
+        out.matches("ERROR Error retrieving logs for job 6000003").count(),
+        1,
+        "{out}"
+    );
+    assert!(app.app().toasts().is_empty());
+    let screen = app.screen(160, 48);
+    for line in [
+        "│    Job: build (Status: completed, Conclusion: success)",
+        "│    2026-03-04T05:06:14.0000000Z     Finished dev profile in 61.2s",
+        "│    Job: lint (Status: completed, Conclusion: skipped)",
+        "│    (No logs available for this job)",
+    ] {
+        assert!(screen.contains(line), "{line}\n{screen}");
+    }
+    assert!(!screen.contains("Loading full workflow logs..."), "{screen}");
+    // Showing the tab again asks for nothing more.
+    app.press(&["left", "right"]);
+    assert_eq!(log_requests(&app).len(), 4);
+}
+
+#[test]
+fn a_tab_shown_before_the_jobs_starts_when_they_arrive() {
+    let mut app = app();
+    app.press(&["enter", "5", "right", "right"]);
+    assert!(log_requests(&app).is_empty());
+    assert_eq!(logs_state(&app), super::logs::LogsState::WaitingForJobs);
+    assert!(app.screen(160, 48).contains("Loading full workflow logs..."));
+    settle(&mut app);
+    assert_eq!(log_job_ids(&app), [6_000_001, 6_000_002, 6_000_003, 6_000_004]);
+    assert_eq!(logs_state(&app), super::logs::LogsState::Done);
+}
+
+#[test]
+fn logs_the_jobs_tab_fetched_are_reused_and_the_other_way_round() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "l"]);
+    settle(&mut app);
+    app.press(&["5", "right"]);
+    settle(&mut app);
+    assert_eq!(
+        log_calls(&app),
+        [6_000_001, 6_000_002, 6_000_003, 6_000_004].map(GithubCall::JobLogs)
+    );
+    assert!(app.screen(160, 48).contains("Finished dev profile in 61.2s"));
+    // Back on the Jobs tab, `l` on test shows what the Logs tab fetched.
+    app.press(&["left", "tab", "tab", "down", "l"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│Logs for Job: test"), "{screen}");
+    assert!(!screen.contains("Loading logs..."), "{screen}");
+    assert_eq!(log_calls(&app).len(), 4);
+}
+
+#[test]
+fn a_job_whose_logs_failed_on_the_jobs_tab_is_asked_again() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "down", "down", "l"]);
+    settle(&mut app);
+    app.press(&["5", "right"]);
+    settle(&mut app);
+    assert_eq!(
+        log_calls(&app),
+        [6_000_003, 6_000_001, 6_000_002, 6_000_003, 6_000_004].map(GithubCall::JobLogs)
+    );
+}
+
+#[test]
+fn no_jobs_shows_a_line_and_asks_for_nothing() {
+    let mut app = logs_tab(40);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("│Full Logs for Run #40"), "{screen}");
+    assert!(screen.contains("No jobs found for this workflow run."), "{screen}");
+    assert!(log_requests(&app).is_empty());
+
+    let mut app = app_with(gh().with_run_jobs(
+        5_000_042,
+        Err(GhError::Http {
+            status: 500,
+            message: "Server Error".into(),
+            body: Vec::new(),
+        }),
+    ));
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["right", "right"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("No jobs found for this workflow run."), "{screen}");
+    assert!(log_requests(&app).is_empty());
+}
+
+#[test]
+fn another_selection_cancels_the_logs_tabs_request_and_drops_its_answer() {
+    let mut app = logs_tab(42);
+    let (pending, _) = log_requests(&app)[0];
+    app.press(&["4", "j", "enter"]);
+    assert!(cancels(&app).contains(&pending));
+    let out = logs(|| {
+        app.send(Event::Github {
+            id: pending,
+            response: GithubResponse::JobLogs(Ok(Some("stale\n".into()))),
+        });
+    });
+    assert!(out.contains("DEBUG Dropping the job logs response"), "{out}");
+    assert!(details(&app).job_logs().is_empty());
+    assert_eq!(log_requests(&app).len(), 1);
+    assert_eq!(shown_run(&app), Some(41));
+}
+
+#[test]
+fn tab_goes_to_the_body_with_no_inner_stops_and_m_does_nothing() {
+    let mut app = logs_tab(42);
+    settle(&mut app);
+    app.render(160, 48);
+    assert_eq!(focus(&app), FocusTarget::DetailsTabs);
+    app.press(&["tab"]);
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    app.press(&["M"]);
+    assert!(app.app().maximized().is_none());
+    app.press(&["tab"]);
+    assert_eq!(focus(&app), FocusTarget::Table(SectionId::Repos));
+}
+
+#[test]
+fn the_scroll_keys_and_the_wheel_scroll_the_body() {
+    let mut app = logs_tab(42);
+    settle(&mut app);
+    app.render(100, 30);
+    app.press(&["tab", "down", "down"]);
+    assert_eq!(details(&app).logs_tab().offset(), 2);
+    let screen = app.screen(100, 30);
+    let row = screen.lines().position(|line| line.contains("Job: build")).unwrap();
+    app.send(mouse(
+        crossterm::event::MouseEventKind::ScrollDown,
+        60,
+        u16::try_from(row).unwrap(),
+    ));
+    assert_eq!(details(&app).logs_tab().offset(), 4);
+    app.press(&["end"]);
+    app.render(100, 30);
+    let screen = app.screen(100, 30);
+    assert!(screen.contains("##[error]The operatio"), "{screen}");
+    assert!(!screen.contains("Full Logs for Run #42"), "{screen}");
+}
+
+#[test]
+fn run_logs_loading_160x48() {
+    let mut app = logs_tab(42);
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+#[test]
+fn run_logs_160x48() {
+    let mut app = logs_tab(42);
+    settle(&mut app);
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+#[test]
+fn run_logs_end_100x30() {
+    let mut app = logs_tab(42);
+    settle(&mut app);
+    app.render(100, 30);
+    app.press(&["tab", "end"]);
+    insta::assert_snapshot!(app.screen(100, 30));
+}
+
+#[test]
+fn run_logs_no_jobs_160x48() {
+    let mut app = logs_tab(40);
+    insta::assert_snapshot!(app.screen(160, 48));
+}

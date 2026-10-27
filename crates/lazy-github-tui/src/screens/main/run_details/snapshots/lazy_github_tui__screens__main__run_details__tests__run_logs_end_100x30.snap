@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/screens/main/run_details/tests.rs
+expression: "app.screen(100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/run-fixture                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Workflow Run #42 Details ───────────────────────────┐
+│ ★  Owner       Name         Private  ││ Overview  Jobs  Logs                                     │
+│ ☆  parity-bot  run-fixture  ✘        ││━━━━━━━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                      ││    2026-03-04T05:07:22.0000000Z ##[group]Run cargo te    │
+│                                      ││    2026-03-04T05:07:23.0000000Z cargo test --workspac    │
+│                                      ││    2026-03-04T05:07:24.0000000Z ##[endgroup]             │
+│                                      ││    2026-03-04T05:07:25.0000000Z test parity::flaky ..    │
+│                                      ││    2026-03-04T05:07:26.0000000Z test result: FAILED.     │
+│                                      ││    2026-03-04T05:07:27.0000000Z ##[error]Process comp    │
+└──────────────────────────────────────┘│                                                          │
+┌─ [2] Pull Requests (empty) ──────────┐│                                                          │
+│ #  Status  Author  Title             ││    ==================================================    │
+└──────────────────────────────────────┘│    Job: lint (Status: completed, Conclusion: skipped)    │
+┌─ [3] Issues (empty) ─────────────────┐│    ==================================================  ▇▇│
+│ #  Status  Author  Title             ││                                                          │
+└──────────────────────────────────────┘│    (No logs available for this job)                      │
+┌─ [4] Workflows ──────────────────────┐│                                                          │
+│ Time              Result       Job Na││                                                          │
+│ 2026-03-04 05:06  failure      CI    ││    ==================================================    │
+│ 2026-03-03 10:00  in_progress  CI    ││    Job: deploy (Status: completed, Conclusion: cancel    │
+│ 2026-03-02 08:00  success      CI    ││    ==================================================    │
+│                                      ││                                                          │
+│                                      ││    2026-03-04T07:10:50.0000000Z ##[error]The operatio    │
+│                                      ││                                                          │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  ? Ke

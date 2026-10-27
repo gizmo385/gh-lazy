@@ -3,11 +3,11 @@
 //! `MainViewPane.load_workflow_run` puts in the details pane.
 //!
 //! Python asks for the jobs once per tab; here [`RunDetails`] asks once per selection and hands the answer to each
-//! tab as [`RunDetails::jobs`]. The Logs tab (#244) is empty until it lands: it adds its body to [`RunDetails`], takes
-//! the jobs in [`RunDetails::on_jobs`], and its own requests through [`DetailsBody::on_response`] and
-//! [`DetailsBody::on_tab_shown`]. The job logs fetched for the selection, [`RunDetails::job_logs`], are shared.
+//! tab as [`RunDetails::jobs`]. The job logs fetched for the selection, [`RunDetails::job_logs`], are shared by the Jobs
+//! and Logs tabs: either one's answers are reused by the other.
 
 mod jobs;
+mod logs;
 mod overview;
 /// The state glyphs and durations, which the Jobs tab (#243) shares.
 pub(in crate::screens::main) mod status;
@@ -35,6 +35,8 @@ use crate::theme::Theme;
 use super::MainAction;
 use super::details::DetailsBody;
 pub(super) use jobs::JobsTab;
+pub(super) use logs::LogsTab;
+use logs::Next;
 pub(super) use overview::RunOverview;
 
 /// The Jobs tab's own bindings (Python's `WorkflowRunJobsTabPane.BINDINGS`), with focus on its body or its tree.
@@ -76,6 +78,7 @@ pub(in crate::screens::main) struct RunDetails {
     jobs: Jobs,
     overview: RunOverview,
     jobs_tab: JobsTab,
+    logs_tab: LogsTab,
     /// The logs fetched for the selection's jobs, by job id: `None` for a job that had none or whose logs failed to
     /// load. The Jobs tab shows logs from here without asking again; it asks again for a `None`.
     job_logs: HashMap<u64, Option<String>>,
@@ -89,12 +92,14 @@ impl RunDetails {
             run_id: run.id,
         });
         let jobs_tab = JobsTab::new(run.run_number, cx.keymap());
+        let logs_tab = LogsTab::new(run.run_number);
         let run = Arc::new(run);
         Self {
             overview: RunOverview::new(Arc::clone(&run)),
             run,
             jobs: Jobs::Loading(id),
             jobs_tab,
+            logs_tab,
             job_logs: HashMap::new(),
         }
     }
@@ -105,7 +110,6 @@ impl RunDetails {
     }
 
     /// The run's jobs, `None` while they load. Empty when the run has none, or when they failed to load.
-    #[cfg_attr(not(test), expect(dead_code, reason = "the Logs tab (#244) reads the shared jobs"))]
     pub(in crate::screens::main) fn jobs(&self) -> Option<&Arc<[WorkflowJob]>> {
         match &self.jobs {
             Jobs::Loading(_) => None,
@@ -125,8 +129,14 @@ impl RunDetails {
         &self.jobs_tab
     }
 
+    /// The Logs tab.
+    #[cfg(test)]
+    pub(in crate::screens::main) fn logs_tab(&self) -> &LogsTab {
+        &self.logs_tab
+    }
+
     /// The logs fetched for the selection's jobs, by job id.
-    #[cfg_attr(not(test), expect(dead_code, reason = "the Logs tab (#244) reads the shared logs"))]
+    #[cfg(test)]
     pub(in crate::screens::main) fn job_logs(&self) -> &HashMap<u64, Option<String>> {
         &self.job_logs
     }
@@ -164,25 +174,48 @@ impl RunDetails {
         let Some(job_id) = self.jobs_tab.job(index).map(|job| job.id) else {
             return;
         };
-        let logs = match result {
-            Ok(Some(text)) => Some(text),
-            Ok(None) => {
-                tracing::error!("Error retrieving logs for job {job_id}");
-                None
-            }
-            Err(error) => {
-                tracing::error!("Error retrieving logs for job {job_id}");
-                tracing::debug!("Error retrieving logs for job {job_id}: {error}");
-                None
-            }
-        };
+        let logs = received_logs(job_id, result);
         self.jobs_tab.set_logs_text(index, logs.as_deref());
         self.job_logs.insert(job_id, logs);
     }
 
+    /// The Logs tab's request for its current job answered: the answer joins the cache, and the tab moves on.
+    fn on_logs_tab_job_logs(&mut self, result: Result<Option<String>, GhError>, cx: &mut Cx<'_>) {
+        let Some(jobs) = self.jobs().cloned() else {
+            return;
+        };
+        let Some(job_id) = self
+            .logs_tab
+            .fetching_job()
+            .and_then(|index| jobs.get(index))
+            .map(|job| job.id)
+        else {
+            return;
+        };
+        let logs = received_logs(job_id, result);
+        self.job_logs.insert(job_id, logs);
+        let next = self.logs_tab.on_job_logs(&jobs, &self.job_logs);
+        self.request_for_logs_tab(next, &jobs, cx);
+    }
+
+    /// Asks for the logs the Logs tab wants next, if any.
+    fn request_for_logs_tab(&mut self, next: Next, jobs: &[WorkflowJob], cx: &mut Cx<'_>) {
+        let Next::Request(index) = next else {
+            return;
+        };
+        let Some(job) = jobs.get(index) else {
+            return;
+        };
+        let request = cx.request(GithubRequest::JobLogs {
+            repo: Box::new(self.run.repository.clone()),
+            job_id: job.id,
+        });
+        self.logs_tab.set_fetching(index, request);
+    }
+
     /// The jobs request answered: every tab gets the jobs. A failure is logged as Python's `get_workflow_jobs` logs
     /// it, without a toast, and leaves no jobs.
-    fn on_jobs(&mut self, result: Result<Vec<WorkflowJob>, GhError>, theme: &Theme) {
+    fn on_jobs(&mut self, result: Result<Vec<WorkflowJob>, GhError>, cx: &mut Cx<'_>) {
         let jobs: Arc<[WorkflowJob]> = match result {
             Ok(jobs) => jobs.into(),
             Err(error) => {
@@ -196,8 +229,27 @@ impl RunDetails {
             }
         };
         self.overview.set_jobs(Arc::clone(&jobs));
-        self.jobs_tab.set_jobs(Arc::clone(&jobs), theme);
+        self.jobs_tab.set_jobs(Arc::clone(&jobs), cx.theme());
+        let next = self.logs_tab.on_jobs(&jobs, &self.job_logs);
+        self.request_for_logs_tab(next, &jobs, cx);
         self.jobs = Jobs::Loaded(jobs);
+    }
+}
+
+/// A job's logs as an answer gives them, `None` for none. A failure or an empty body is logged as Python's
+/// `get_job_logs` logs a failure, without a toast.
+fn received_logs(job_id: u64, result: Result<Option<String>, GhError>) -> Option<String> {
+    match result {
+        Ok(Some(text)) => Some(text),
+        Ok(None) => {
+            tracing::error!("Error retrieving logs for job {job_id}");
+            None
+        }
+        Err(error) => {
+            tracing::error!("Error retrieving logs for job {job_id}");
+            tracing::debug!("Error retrieving logs for job {job_id}: {error}");
+            None
+        }
     }
 }
 
@@ -209,11 +261,15 @@ impl DetailsBody for RunDetails {
     fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
         match response {
             GithubResponse::WorkflowRunJobs(result) if self.jobs == Jobs::Loading(id) => {
-                self.on_jobs(result, cx.theme());
+                self.on_jobs(result, cx);
                 None
             }
             GithubResponse::JobLogs(result) if self.jobs_tab.loading() == Some(id) => {
                 self.on_job_logs(result);
+                None
+            }
+            GithubResponse::JobLogs(result) if self.logs_tab.pending() == Some(id) => {
+                self.on_logs_tab_job_logs(result, cx);
                 None
             }
             other => Some(other),
@@ -227,13 +283,27 @@ impl DetailsBody for RunDetails {
         if let Some(id) = self.jobs_tab.loading() {
             cx.effect(Effect::Cancel(id));
         }
+        if let Some(id) = self.logs_tab.pending() {
+            cx.effect(Effect::Cancel(id));
+        }
+    }
+
+    fn on_tab_shown(&mut self, tab: usize, cx: &mut Cx<'_>) {
+        if RunTab::at(tab) != RunTab::Logs {
+            return;
+        }
+        let jobs = self.jobs().cloned();
+        let next = self.logs_tab.on_shown(jobs.as_deref(), &self.job_logs);
+        if let Some(jobs) = jobs {
+            self.request_for_logs_tab(next, &jobs, cx);
+        }
     }
 
     fn scroll(&mut self, tab: usize, scroll: Scroll) {
         match RunTab::at(tab) {
             RunTab::Overview => self.overview.scroll(scroll),
             RunTab::Jobs => self.jobs_tab.scroll(scroll),
-            RunTab::Logs => {}
+            RunTab::Logs => self.logs_tab.scroll(scroll),
         }
     }
 
@@ -241,7 +311,7 @@ impl DetailsBody for RunDetails {
         match RunTab::at(tab) {
             RunTab::Overview => self.overview.wheel(wheel),
             RunTab::Jobs => self.jobs_tab.wheel(wheel),
-            RunTab::Logs => {}
+            RunTab::Logs => self.logs_tab.wheel(wheel),
         }
     }
 
@@ -249,7 +319,7 @@ impl DetailsBody for RunDetails {
         match RunTab::at(tab) {
             RunTab::Overview => self.overview.render(frame, area, theme, focused),
             RunTab::Jobs => self.jobs_tab.render(frame, area, theme, focused),
-            RunTab::Logs => {}
+            RunTab::Logs => self.logs_tab.render(frame, area, theme),
         }
     }
 

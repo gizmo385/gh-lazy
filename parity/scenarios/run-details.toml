@@ -1,10 +1,10 @@
 version = 1
 description = "Workflow run details: selecting a run opens its Overview, Jobs and Logs tabs; the job tree, a job's logs with l, a job without logs, the aggregated logs, an in-progress run and a run without jobs"
-# The run details issues flip this to true. The Details box's text isn't compared across apps, so [expect] carries
+# The Details box's text isn't compared across apps, so [expect] carries
 # it, picking text both apps show while Py bugs B62 (the Overview's fields run together) and B63 (the Jobs tab's `?`
 # for a queued job) are open. The footer is left out of the cross-app checks wherever it isn't cut off: Python spells
 # `^p Command Pallete` (Py bug B14).
-gate = false
+gate = true
 parity_rows = [
     "workflows.select",
     "workflows.details",

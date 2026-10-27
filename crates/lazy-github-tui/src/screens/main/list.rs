@@ -3,10 +3,18 @@
 //!
 //! The section owns the later pages. Its first page belongs to its owner, which requests it (PRs and issues share
 //! theirs) and hands the result to [`ListSection::first_page`].
+//!
+//! The section also keeps the repo's table cache (`<owner>_<repo>_<name>.json`, Python's `cache_name`): the cached
+//! rows show under the loading overlay until the first page answers, and every row is written back after each page.
 
+use std::path::PathBuf;
+
+use lazy_github_core::cache::{self, CacheScope};
 use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::models::Repository;
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 use crate::component::Cx;
 use crate::components::table::{Column, Page, SearchableTable, SortSpec, TableEvent, TableItem};
@@ -19,7 +27,13 @@ pub(super) const PER_PAGE: u32 = 30;
 /// What fills one kind of list section: its columns, its items and how it asks for a page of them.
 pub(super) trait ListSource {
     /// The rows' items.
-    type Item: TableItem<Ctx = ()>;
+    type Item: TableItem<Ctx = ()> + Serialize + DeserializeOwned;
+
+    /// The name of the repo's cache file, `<owner>_<repo>_<CACHE_NAME>.json`: Python's `cache_name`.
+    const CACHE_NAME: &'static str;
+
+    /// The item's model name in the Python app, for the cache's schema warning.
+    const TYPE_NAME: &'static str;
 
     /// The table's columns.
     fn columns() -> Vec<Column>;
@@ -62,6 +76,8 @@ pub(super) struct ListSection<S: ListSource> {
     table: SearchableTable<S::Item>,
     repo: Option<Repository>,
     page: Option<PageRequest>,
+    /// The cache read in flight for the repo.
+    cache: Option<RequestId>,
     compact: bool,
 }
 
@@ -72,6 +88,7 @@ impl<S: ListSource> std::fmt::Debug for ListSection<S> {
             .field("loading", &self.table.is_loading())
             .field("repo", &self.repo.as_ref().map(|repo| &repo.full_name))
             .field("page", &self.page)
+            .field("cache", &self.cache)
             .field("compact", &self.compact)
             .finish()
     }
@@ -84,6 +101,7 @@ impl<S: ListSource> ListSection<S> {
             table: SearchableTable::new(S::columns(), S::sort()).with_options(options),
             repo: None,
             page: None,
+            cache: None,
             compact: false,
         }
     }
@@ -114,27 +132,91 @@ impl<S: ListSource> ListSection<S> {
     /// cancelled, the rows clear (cursor and scroll back to 0, paging off) and the loading overlay shows. `compact`
     /// stays as it was until the first page lands, as in Python.
     ///
-    /// The per-repo cache restore goes here (a later M2 issue).
+    /// Then the repo's cache file is read, for [`Self::on_cache_read`] to show under the overlay: Python's
+    /// `load_cached_*` before the fetch.
     pub(super) fn begin(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
-        if let Some(page) = self.page.take() {
-            cx.effect(Effect::Cancel(page.id));
+        for id in self
+            .page
+            .take()
+            .map(|page| page.id)
+            .into_iter()
+            .chain(self.cache.take())
+        {
+            cx.effect(Effect::Cancel(id));
         }
         self.table.clear();
         self.table.set_loading(true);
+        self.cache = Some(cx.read_cache(cache_file::<S>(repo, cx.config())));
         self.repo = Some(repo.clone());
     }
 
-    /// The first page arrived. Paging turns on first, as `lazy.rs` asks, so a short page asks for page 2 at once, as
-    /// Python's first `RowHighlighted` does. A failure counts as an empty page; the owner logs it.
+    /// Takes the result of the section's cache read, and hands back any other.
+    ///
+    /// Python's `initialize_from_cache`: the cached rows go in under the overlay. Python restores before it fetches;
+    /// here the two race, so a read that lands after the first page is dropped rather than mixing older rows into
+    /// newer ones. A read for an earlier repo was cancelled by [`Self::begin`], and if it still arrives it's handed
+    /// back.
+    pub(super) fn on_cache_read(
+        &mut self,
+        id: RequestId,
+        result: Result<Option<String>, String>,
+        cx: &mut Cx<'_>,
+    ) -> Option<Result<Option<String>, String>> {
+        if self.cache.take_if(|pending| *pending == id).is_none() {
+            return Some(result);
+        }
+        let Some(repo) = &self.repo else {
+            return Some(result);
+        };
+        // Only the first page turns paging on after the clear in `begin`.
+        if self.table.lazy_load().is_some() {
+            tracing::debug!(
+                name = S::CACHE_NAME,
+                "Dropping the cached rows: the first page already arrived"
+            );
+            return None;
+        }
+        let items: Vec<S::Item> = cache::load(&cache_file::<S>(repo, cx.config()), result, S::TYPE_NAME);
+        // Paging is off until the first page, so the first rows ask for nothing.
+        let _ = self.table.insert_many(items, &());
+        None
+    }
+
+    /// The first page arrived, `None` when it failed (the owner logs that).
+    ///
+    /// A page replaces any cached rows (Py bug B53: Python adds it to them); a failure keeps them. Paging then turns
+    /// on, as `lazy.rs` asks before the rows go in, so a short page asks for page 2 at once, as Python's first
+    /// `RowHighlighted` does. Paging counts the kept cached rows, as Python's `remaining` does. Either way every row
+    /// is written to the cache, which after a failure rewrites what was read.
     ///
     /// The first page's [`Page::last`] isn't read: Python only ends paging on a later page, and a first page with no
     /// rows has no cursor to move.
-    pub(super) fn first_page(&mut self, result: Result<Page<S::Item>, GhError>, cx: &mut Cx<'_>) {
-        self.table.enable_lazy_load(PER_PAGE, 1);
-        let items = result.map(|page| page.items).unwrap_or_default();
-        let event = self.table.insert_many(items, &());
-        self.follow(event.as_ref(), cx);
+    pub(super) fn first_page(&mut self, page: Option<Page<S::Item>>, cx: &mut Cx<'_>) {
+        if let Some(page) = page {
+            if self.table.row_count() > 0 {
+                self.table.clear();
+            }
+            self.table.enable_lazy_load(PER_PAGE, 1);
+            let event = self.table.insert_many(page.items, &());
+            self.follow(event.as_ref(), cx);
+        } else {
+            self.table.enable_lazy_load(PER_PAGE, 1);
+        }
         self.table.set_loading(false);
+        self.save_cache(cx);
+    }
+
+    /// Python's `save_to_cache`: writes every item in the table, in insertion order, to the cache file of the repo
+    /// the rows were loaded for.
+    fn save_cache(&self, cx: &mut Cx<'_>) {
+        let Some(repo) = &self.repo else {
+            return;
+        };
+        let path = cache_file::<S>(repo, cx.config());
+        cx.effect(Effect::WriteCache {
+            path,
+            text: cache::to_json(self.table.items()),
+        });
     }
 
     /// Compact exactly when the table has no items. The owner calls it where Python calls `set_compact`.
@@ -189,6 +271,9 @@ impl<S: ListSource> ListSection<S> {
             },
         };
         let loaded = self.table.page_loaded(request.generation, request.page, result, &());
+        if loaded.applied {
+            self.save_cache(cx);
+        }
         self.follow(loaded.event.as_ref(), cx);
         None
     }
@@ -206,5 +291,17 @@ impl<S: ListSource> ListSection<S> {
     }
 }
 
+/// The repo's cache file for `S`, under the config's cache directory.
+fn cache_file<S: ListSource>(repo: &Repository, config: &Config) -> PathBuf {
+    cache::cache_path(
+        &config.cache.cache_directory,
+        CacheScope::Repo(&repo.full_name),
+        S::CACHE_NAME,
+    )
+}
+
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod cache_app_tests;

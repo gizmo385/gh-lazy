@@ -1088,6 +1088,7 @@ dependencies = [
  "ratatui",
  "regex",
  "rstest",
+ "serde",
  "serde_json",
  "similar",
  "syntect",

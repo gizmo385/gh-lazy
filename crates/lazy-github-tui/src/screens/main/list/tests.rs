@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use jiff::Timestamp;
 use lazy_github_core::config::Config;
 use lazy_github_core::github::IssueListQuery;
@@ -12,9 +14,28 @@ use crate::screens::main::repos::repo;
 use crate::screens::main::section_table::{SectionTable, earliest_deadline};
 use crate::test_util::{TestApp, logs};
 
-/// A row keyed by a number.
-#[derive(Debug, Clone, PartialEq)]
+/// A row keyed by a number, cached as `{"number": n}`.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(from = "NumberedJson", into = "NumberedJson")]
 struct Numbered(u64);
+
+/// [`Numbered`] in its cache file: an object, as every cached model is.
+#[derive(serde::Serialize, serde::Deserialize)]
+struct NumberedJson {
+    number: u64,
+}
+
+impl From<NumberedJson> for Numbered {
+    fn from(json: NumberedJson) -> Self {
+        Self(json.number)
+    }
+}
+
+impl From<Numbered> for NumberedJson {
+    fn from(numbered: Numbered) -> Self {
+        Self { number: numbered.0 }
+    }
+}
 
 impl TableItem for Numbered {
     type Key = u64;
@@ -34,6 +55,8 @@ struct TestSource<const END: bool>;
 
 impl<const END: bool> ListSource for TestSource<END> {
     type Item = Numbered;
+    const CACHE_NAME: &'static str = "numbers";
+    const TYPE_NAME: &'static str = "Numbered";
 
     fn columns() -> Vec<Column> {
         vec![Column::new("#")]
@@ -151,7 +174,7 @@ fn loaded<S: ListSource<Item = Numbered>>(app: &mut TestApp, first: Vec<Numbered
     let mut section = ListSection::new(AppOptions { animations: false });
     app.with_cx(|cx| {
         section.begin(&repo("octo", "lists", false), cx);
-        section.first_page(Ok(first.into()), cx);
+        section.first_page(Some(first.into()), cx);
     });
     section.refresh_compact();
     section
@@ -203,8 +226,16 @@ fn begin_cancels_a_page_in_flight_and_clears_the_rows() {
     let [(page_2, ..)] = page_requests(&app)[..] else {
         panic!("one page request: {:?}", page_requests(&app));
     };
+    let read = app.effects().iter().find_map(|effect| match effect {
+        Effect::ReadCache { id, .. } => Some(*id),
+        _ => None,
+    });
     app.with_cx(|cx| section.begin(&repo("octo", "other", false), cx));
-    assert_eq!(cancels(&app), [page_2]);
+    // The first repo's cache read was never answered, so it's cancelled too.
+    assert_eq!(
+        cancels(&app),
+        [Some(page_2), read].into_iter().flatten().collect::<Vec<_>>()
+    );
     assert_eq!(section.table().row_count(), 0);
     assert_eq!((section.table().cursor(), section.table().scroll()), (0, (0, 0)));
     assert!(section.table().is_loading());
@@ -245,14 +276,7 @@ fn a_failed_first_page_is_an_empty_one_and_the_section_logs_nothing() {
     let log = logs(|| {
         app.with_cx(|cx| {
             section.begin(&repo("octo", "lists", false), cx);
-            section.first_page(
-                Err(GhError::Http {
-                    status: 500,
-                    message: "Server Error".into(),
-                    body: Vec::new(),
-                }),
-                cx,
-            );
+            section.first_page(None, cx);
         });
     });
     section.refresh_compact();
@@ -330,7 +354,7 @@ fn a_page_that_arrives_after_begin_is_dropped() {
     let (old, ..) = page_requests(&app)[0];
     app.with_cx(|cx| {
         section.begin(&repo("octo", "other", false), cx);
-        section.first_page(Ok(numbered(101..=130).into()), cx);
+        section.first_page(Some(numbered(101..=130).into()), cx);
     });
     let late = app.with_cx(|cx| section.on_response(old, page_response(31..=60), cx));
     assert!(late.is_some(), "handed back, so the app drops it");
@@ -419,4 +443,209 @@ fn the_screen_deadline_includes_a_loading_section_table() {
     // The screen's own deadline goes through the same function, over every mounted table.
     let screen = app.app().main_screen().expect("on the main screen");
     assert_eq!(screen.next_deadline(now), None);
+}
+
+// The repo's cache file.
+
+fn cache_config() -> Config {
+    let mut config = Config::default();
+    config.cache.cache_directory = PathBuf::from("cache-dir");
+    config
+}
+
+fn cache_path(full_name: &str) -> PathBuf {
+    Path::new("cache-dir").join(format!("{}_numbers.json", full_name.replace('/', "_")))
+}
+
+/// The cache reads among `app`'s effects, oldest first.
+fn cache_reads(app: &TestApp) -> Vec<(RequestId, PathBuf)> {
+    app.effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::ReadCache { id, path } => Some((*id, path.clone())),
+            _ => None,
+        })
+        .collect()
+}
+
+/// The cache writes among `app`'s effects, oldest first, with the numbers each wrote.
+fn cache_writes(app: &TestApp) -> Vec<(PathBuf, Vec<u64>)> {
+    app.effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::WriteCache { path, text } => {
+                let items: Vec<Numbered> = serde_json::from_str(text).unwrap();
+                Some((path.clone(), items.into_iter().map(|item| item.0).collect()))
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+/// The rows' numbers, top to bottom.
+fn rows<S: ListSource<Item = Numbered>>(section: &ListSection<S>) -> Vec<u64> {
+    section.table().row_keys().copied().collect()
+}
+
+/// The cache file's text for `numbers`.
+fn cached_text(numbers: std::ops::RangeInclusive<u64>) -> String {
+    cache::to_json(numbered(numbers))
+}
+
+/// A section begun for `octo/lists`, its cache read answered with `cached`.
+fn restored(app: &mut TestApp, cached: std::ops::RangeInclusive<u64>) -> Section {
+    let mut section = section();
+    app.with_cx(|cx| section.begin(&repo("octo", "lists", false), cx));
+    let (id, _) = cache_reads(app).pop().expect("begin reads the cache");
+    let unclaimed = app.with_cx(|cx| section.on_cache_read(id, Ok(Some(cached_text(cached))), cx));
+    assert!(unclaimed.is_none());
+    section
+}
+
+#[test]
+fn begin_reads_the_repos_cache_file() {
+    let mut app = TestApp::new(cache_config());
+    let mut section = section();
+    app.with_cx(|cx| section.begin(&repo("octo", "lists", false), cx));
+    let [(_, ref path)] = cache_reads(&app)[..] else {
+        panic!("one read: {:?}", cache_reads(&app));
+    };
+    assert_eq!(path, &cache_path("octo/lists"));
+    assert_eq!(cache_writes(&app), []);
+}
+
+#[test]
+fn cached_rows_go_in_under_the_overlay_and_ask_for_nothing() {
+    let mut app = TestApp::new(cache_config());
+    let section = restored(&mut app, 1..=3);
+    assert_eq!(rows(&section), [3, 2, 1]);
+    assert!(section.table().is_loading(), "the overlay stays until the first page");
+    assert_eq!(section.table().lazy_load(), None);
+    assert_eq!(page_requests(&app), []);
+    assert_eq!(cache_writes(&app), [], "restoring writes nothing");
+}
+
+#[test]
+fn a_missing_cache_file_restores_nothing() {
+    let mut app = TestApp::new(cache_config());
+    let mut section = section();
+    app.with_cx(|cx| section.begin(&repo("octo", "lists", false), cx));
+    let (id, _) = cache_reads(&app)[0];
+    let log = logs(|| assert!(app.with_cx(|cx| section.on_cache_read(id, Ok(None), cx)).is_none()));
+    assert_eq!(log, "");
+    assert_eq!(section.table().row_count(), 0);
+    assert!(section.table().is_loading());
+}
+
+#[test]
+fn a_cached_read_after_the_first_page_is_dropped() {
+    let mut app = TestApp::new(cache_config());
+    let mut section = section();
+    app.with_cx(|cx| {
+        section.begin(&repo("octo", "lists", false), cx);
+        section.first_page(Some(numbered(10..=12).into()), cx);
+    });
+    let (id, _) = cache_reads(&app)[0];
+    let unclaimed = app.with_cx(|cx| section.on_cache_read(id, Ok(Some(cached_text(1..=3))), cx));
+    assert!(unclaimed.is_none(), "claimed and dropped");
+    assert_eq!(rows(&section), [12, 11, 10]);
+}
+
+#[test]
+fn a_successful_first_page_replaces_the_cached_rows_and_writes_them() {
+    let mut app = TestApp::new(cache_config());
+    let mut section = restored(&mut app, 1..=3);
+    app.with_cx(|cx| section.first_page(Some(numbered(2..=4).into()), cx));
+    section.refresh_compact();
+    assert_eq!(rows(&section), [4, 3, 2], "row 1 is gone (Py bug B53)");
+    assert!(!section.table().is_loading());
+    assert_eq!(cache_writes(&app), [(cache_path("octo/lists"), vec![2, 3, 4])]);
+    // A short first page asks for page 2 at once, as without a cache.
+    assert_eq!(lazy(&section), (1, true, Some(2)));
+}
+
+#[test]
+fn an_empty_first_page_replaces_the_cached_rows_and_the_section_is_compact() {
+    let mut app = TestApp::new(cache_config());
+    let mut section = restored(&mut app, 1..=3);
+    app.with_cx(|cx| section.first_page(Some(Vec::new().into()), cx));
+    section.refresh_compact();
+    assert_eq!(section.table().row_count(), 0);
+    assert!(section.compact());
+    assert_eq!(cache_writes(&app), [(cache_path("octo/lists"), vec![])]);
+}
+
+#[test]
+fn a_failed_first_page_keeps_the_cached_rows_and_rewrites_them() {
+    let mut app = TestApp::new(cache_config());
+    let mut section = restored(&mut app, 1..=3);
+    app.with_cx(|cx| section.first_page(None, cx));
+    section.refresh_compact();
+    assert_eq!(rows(&section), [3, 2, 1]);
+    assert!(!section.table().is_loading());
+    assert!(!section.compact());
+    assert_eq!(cache_writes(&app), [(cache_path("octo/lists"), vec![1, 2, 3])]);
+    // Paging is on and counts the cached rows: the next cursor move asks for page 2.
+    assert_eq!(lazy(&section), (1, true, None));
+    cursor(&mut app, &mut section, BindingId::TableCursorDown);
+    let pages: Vec<u32> = page_requests(&app).iter().map(|request| request.2).collect();
+    assert_eq!(pages, [2]);
+}
+
+#[test]
+fn each_later_page_writes_every_row() {
+    let mut app = TestApp::new(cache_config());
+    let mut section: Section = loaded(&mut app, numbered(1..=30));
+    cursor(&mut app, &mut section, BindingId::TableScrollBottom);
+    let (id, ..) = page_requests(&app)[0];
+    assert!(
+        app.with_cx(|cx| section.on_response(id, page_response(31..=33), cx))
+            .is_none()
+    );
+    let writes = cache_writes(&app);
+    let [(ref first_path, ref first), (ref path, ref second)] = writes[..] else {
+        panic!("one write per page: {writes:?}");
+    };
+    assert_eq!((first_path, first.len()), (&cache_path("octo/lists"), 30));
+    assert_eq!(path, &cache_path("octo/lists"));
+    assert_eq!(second, &(1..=33).collect::<Vec<_>>());
+}
+
+#[test]
+fn a_failed_later_page_that_retries_writes_nothing() {
+    let mut app = TestApp::new(cache_config());
+    let mut section: Section = loaded(&mut app, numbered(1..=30));
+    cursor(&mut app, &mut section, BindingId::TableScrollBottom);
+    let (id, ..) = page_requests(&app)[0];
+    logs(|| assert!(app.with_cx(|cx| section.on_response(id, http_error(), cx)).is_none()));
+    assert_eq!(cache_writes(&app).len(), 1, "the first page's only");
+}
+
+#[test]
+fn a_read_or_page_for_a_repo_no_longer_selected_is_ignored() {
+    let mut app = TestApp::new(cache_config());
+    let mut section: Section = loaded(&mut app, numbered(1..=30));
+    cursor(&mut app, &mut section, BindingId::TableScrollBottom);
+    let (page_2, ..) = page_requests(&app)[0];
+    app.with_cx(|cx| section.begin(&repo("octo", "other", false), cx));
+    // A third repo before the second's read answers: that read is cancelled, and handed back if it still arrives.
+    let (old_read, _) = cache_reads(&app)[1];
+    app.with_cx(|cx| section.begin(&repo("octo", "third", false), cx));
+    assert!(cancels(&app).contains(&old_read));
+    let late = app.with_cx(|cx| section.on_cache_read(old_read, Ok(Some(cached_text(1..=3))), cx));
+    assert!(late.is_some(), "handed back, so the app drops it");
+    assert_eq!(section.table().row_count(), 0);
+    // The first repo's page 2 was cancelled; if it still arrives it writes nothing.
+    let writes = cache_writes(&app).len();
+    assert!(
+        app.with_cx(|cx| section.on_response(page_2, page_response(31..=33), cx))
+            .is_some()
+    );
+    assert_eq!(cache_writes(&app).len(), writes);
+    // The current repo's own read and first page go to its file.
+    let (read, ref path) = cache_reads(&app)[2];
+    assert_eq!(path, &cache_path("octo/third"));
+    assert!(app.with_cx(|cx| section.on_cache_read(read, Ok(None), cx)).is_none());
+    app.with_cx(|cx| section.first_page(Some(numbered(7..=7).into()), cx));
+    assert_eq!(cache_writes(&app).last(), Some(&(cache_path("octo/third"), vec![7])));
 }

@@ -1,6 +1,6 @@
 version = 1
 description = "Per-repo table caches: a repo's PR, issue and run rows come back from the cache when it's selected again and its live fetches fail"
-gate = false
+gate = true
 parity_rows = [
     "searchable-tables.row-cache",
     "caches-drafts.pull-requests-json",

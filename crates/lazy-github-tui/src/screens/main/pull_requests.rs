@@ -39,6 +39,8 @@ pub(super) struct PullRequestsSource;
 
 impl ListSource for PullRequestsSource {
     type Item = PartialPullRequest;
+    const CACHE_NAME: &'static str = "pull_requests";
+    const TYPE_NAME: &'static str = "PartialPullRequest";
 
     fn columns() -> Vec<Column> {
         issue_columns()

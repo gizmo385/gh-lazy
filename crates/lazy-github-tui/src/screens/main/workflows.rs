@@ -55,6 +55,8 @@ pub(super) struct RunsSource;
 
 impl ListSource for RunsSource {
     type Item = WorkflowRun;
+    const CACHE_NAME: &'static str = "workflow_runs";
+    const TYPE_NAME: &'static str = "WorkflowRun";
 
     fn columns() -> Vec<Column> {
         ["Time", "Result", "Job Name", "Run Name", "Run #"]
@@ -161,6 +163,16 @@ impl WorkflowsPane {
         self.runs.load_more(generation, page, per_page, cx);
     }
 
+    /// Takes the result of the runs table's cache read, and hands back any other.
+    pub(super) fn on_cache_read(
+        &mut self,
+        id: RequestId,
+        result: Result<Option<String>, String>,
+        cx: &mut Cx<'_>,
+    ) -> Option<Result<Option<String>, String>> {
+        self.runs.on_cache_read(id, result, cx)
+    }
+
     /// Takes a response to the workflows, the first runs page or a later runs page, and hands back any other. A
     /// request cancelled by a newer selection is handed back, so the app drops it (Py bug B45).
     pub(super) fn on_response(
@@ -182,7 +194,7 @@ impl WorkflowsPane {
                 if let Err(error) = &result {
                     log_failure(RUNS_ERROR, error);
                 }
-                self.runs.first_page(result.map(Page::from), cx);
+                self.runs.first_page(result.map(Page::from).ok(), cx);
             }
             other => return self.runs.on_response(id, other, cx),
         }

@@ -501,3 +501,74 @@ fn a_failed_later_issues_page_logs_keeps_the_rows_and_asks_again() {
     let pages: Vec<u32> = issue_requests(&app).iter().map(|(.., query)| query.page).collect();
     assert_eq!(pages, [1, 2, 2]);
 }
+
+// The tables' cache files (#228).
+
+fn cache_config() -> Config {
+    let mut config = Config::default();
+    config.cache.cache_directory = std::path::PathBuf::from("cache-dir");
+    config
+}
+
+fn cache_path(name: &str) -> std::path::PathBuf {
+    std::path::Path::new("cache-dir").join(format!("octo_lists_{name}.json"))
+}
+
+/// The cache files' text for `items`: the PRs', then the issues'.
+fn cache_texts(items: Vec<IssueListItem>) -> (String, String) {
+    let (prs, issues): (Vec<_>, Vec<_>) = items
+        .into_iter()
+        .partition(|item| matches!(item, IssueListItem::PullRequest(_)));
+    (
+        lazy_github_core::cache::to_json(pull_requests_page(prs).items),
+        lazy_github_core::cache::to_json(issues_page(issues).items),
+    )
+}
+
+/// An app whose `octo/lists` cache files hold PRs 4 and 2 and issues 3 and 1, with issue pages from `gh`.
+fn cached_app(gh: FakeGithub) -> TestApp {
+    let repo = lists_repo();
+    let (prs, issues) = cache_texts(vec![
+        item(&repo, 4, Kind::OpenPr),
+        item(&repo, 3, Kind::Issue),
+        item(&repo, 2, Kind::DraftPr),
+        item(&repo, 1, Kind::Issue),
+    ]);
+    app(cache_config(), gh)
+        .with_cache_file(cache_path("pull_requests"), prs)
+        .with_cache_file(cache_path("issues"), issues)
+}
+
+#[test]
+fn the_shared_first_page_replaces_each_tables_cached_rows_and_writes_each_file() {
+    let repo = lists_repo();
+    let mixed = vec![
+        item(&repo, 9, Kind::Issue),
+        item(&repo, 8, Kind::ClosedPr),
+        item(&repo, 3, Kind::Issue),
+        item(&repo, 6, Kind::DraftPr),
+    ];
+    let mut app = cached_app(FakeGithub::new().with_issue_page("octo/lists", 1, Ok(mixed.clone())));
+    select(&mut app, repo);
+    assert_eq!(issue_requests(&app).len(), 1, "one request for both tables");
+    assert_eq!(settle(&mut app), "");
+    assert_eq!(pr_numbers(&app), [8, 6]);
+    assert_eq!(issue_numbers(&app), [9, 3]);
+    let (prs, issues) = cache_texts(mixed);
+    assert_eq!(app.cache_file(&cache_path("pull_requests")), Some(prs.as_str()));
+    assert_eq!(app.cache_file(&cache_path("issues")), Some(issues.as_str()));
+}
+
+#[test]
+fn a_failed_shared_first_page_keeps_each_tables_cached_rows() {
+    let gh = FakeGithub::new().with_issue_page("octo/lists", 1, Err(server_error()));
+    let mut app = cached_app(gh);
+    select(&mut app, lists_repo());
+    let out = settle(&mut app);
+    assert_eq!(out.matches("ERROR").count(), 1, "{out}");
+    assert_eq!(pr_numbers(&app), [4, 2]);
+    assert_eq!(issue_numbers(&app), [3, 1]);
+    assert!(!lists(&app).prs_table().is_loading());
+    assert!(!lists(&app).prs_compact());
+    assert!(!lists(&app).issues_compact());
+}

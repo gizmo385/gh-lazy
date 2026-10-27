@@ -366,7 +366,9 @@ impl MainScreen {
         result: Result<Option<String>, String>,
         cx: &mut Cx<'_>,
     ) -> Option<Result<Option<String>, String>> {
-        self.repos.on_cache_read(id, result, cx)
+        let result = self.repos.on_cache_read(id, result, cx)?;
+        let result = self.issue_lists.on_cache_read(id, result, cx)?;
+        self.workflows.on_cache_read(id, result, cx)
     }
 
     /// The repos section.

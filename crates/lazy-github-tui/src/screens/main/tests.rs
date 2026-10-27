@@ -898,13 +898,16 @@ fn table_keys_move_the_cursor_quietly_and_select_selects() {
     assert_eq!(out, "INFO Selected repo parity-bot/lazy-demo\n");
     // The columns fit, so `l` falls through the whole chain.
     assert!(app.app_mut().action_for(Event::Key(key_event("l"))).is_none());
-    // The only effects are the selection's PR and issue first page, the workflows and runs, and the overview's
-    // README.
+    // The only effects are the selection's PR and issue caches and first page, the runs cache, the workflows and
+    // runs, and the overview's README.
     let [
+        Effect::ReadCache { .. },
+        Effect::ReadCache { .. },
         Effect::Github {
             request: GithubRequest::ListIssues { repo, query },
             ..
         },
+        Effect::ReadCache { .. },
         Effect::Github {
             request: GithubRequest::ListWorkflows { .. },
             ..

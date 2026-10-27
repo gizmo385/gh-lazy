@@ -52,6 +52,8 @@ pub(super) struct IssuesSource;
 
 impl ListSource for IssuesSource {
     type Item = Issue;
+    const CACHE_NAME: &'static str = "issues";
+    const TYPE_NAME: &'static str = "Issue";
 
     fn columns() -> Vec<Column> {
         issue_columns()

@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/screens/main/list/cache_app_tests.rs
+expression: screen
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: octo/one                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] octo/one Details ───────────────────────────────────┐
+│ ★  Owner  Name  Private              ││ Repo Overview                                            │
+│ ☆  octo   one   ✘                    ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  octo   two   ✘                    ││octo/one • Public                                         │
+│                                      ││Owned by octo                                             │
+│                                      ││Default branch: main                                      │
+│                                      ││                                                          │
+│                                      ││──────────────────────────────────────────────────────────│
+│                                      ││                                                          │
+└──────────────────────────────────────┘│  No README found.                                        │
+┌─ [2] Pull Requests ──────────────────┐│                                                          │
+│ #  Status  Author      Title         ││                                                          │
+│ 6  open    parity-bot  PR 6          ││                                                          │
+│ 4  open    parity-bot  PR 4        ▆▆││                                                          │
+└──────────────────────────────────────┘│                                                          │
+┌─ [3] Issues ─────────────────────────┐│                                                          │
+│ #  Status  Author      Title         ││                                                          │
+│ 5  open    parity-bot  Issue 5       ││                                                          │
+│ 3  closed  parity-bot  Issue 3     ▆▆││                                                          │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows ──────────────────────┐│                                                          │
+│ Time              Result       Job   ││                                                          │
+│ 2026-10-21 09:00  success      CI    ││                                                          │
+│ 2026-10-20 09:00  failure      CI  ▆▆││                                                          │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste lin

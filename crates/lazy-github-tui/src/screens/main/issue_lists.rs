@@ -202,24 +202,41 @@ impl IssueLists {
             let response = self.prs.on_response(id, GithubResponse::ListIssues(result), cx)?;
             return self.issues.on_response(id, response, cx);
         };
-        // A failure logs once, whichever tables it feeds, and leaves them empty.
-        let items = result.unwrap_or_else(|error| {
-            log_fetch_failure(&error);
-            Vec::new()
-        });
-        // Each table keeps its own kind, in API order. A first page's `last` isn't read, so splitting first is fine.
-        let (prs, issues): (Vec<_>, Vec<_>) = items
-            .into_iter()
-            .partition(|item| matches!(item, IssueListItem::PullRequest(_)));
+        // A failure logs once, whichever tables it feeds, and leaves them with their cached rows.
+        let (prs, issues) = match result {
+            Ok(items) => {
+                // Each table keeps its own kind, in API order. A first page's `last` isn't read, so splitting first
+                // is fine.
+                let (prs, issues): (Vec<_>, Vec<_>) = items
+                    .into_iter()
+                    .partition(|item| matches!(item, IssueListItem::PullRequest(_)));
+                (Some(pull_requests_page(prs)), Some(issues_page(issues)))
+            }
+            Err(error) => {
+                log_fetch_failure(&error);
+                (None, None)
+            }
+        };
         if feeds.prs {
-            self.prs.first_page(Ok(pull_requests_page(prs)), cx);
+            self.prs.first_page(prs, cx);
             self.prs.refresh_compact();
         }
         if feeds.issues {
-            self.issues.first_page(Ok(issues_page(issues)), cx);
+            self.issues.first_page(issues, cx);
             self.issues.refresh_compact();
         }
         None
+    }
+
+    /// Takes the result of either table's cache read, and hands back any other.
+    pub(super) fn on_cache_read(
+        &mut self,
+        id: RequestId,
+        result: Result<Option<String>, String>,
+        cx: &mut Cx<'_>,
+    ) -> Option<Result<Option<String>, String>> {
+        let result = self.prs.on_cache_read(id, result, cx)?;
+        self.issues.on_cache_read(id, result, cx)
     }
 }
 

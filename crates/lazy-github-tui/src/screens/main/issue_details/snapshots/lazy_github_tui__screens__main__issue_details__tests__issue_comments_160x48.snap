@@ -18,9 +18,9 @@ expression: "app.screen(160, 48)"
 │                                                              ││ │ Unknown • Wed Feb  4 11:00:00 2026                                                         │
 │                                                              ││ │                                                                                            │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
-┌─ [2] Pull Requests ──────────────────────────────────────────┐│ │ Fixed in #13. The fix reads the file first and falls back to the defaults when it is       │
-│ #  Status  Author      Title                                 ││ │ empty, which is what the documentation already promised, so nothing else changes for       │
-│ 8  open    parity-bot  A pull request among the issues       ││ │ people who never had the problem.                                                          │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│ │ Fixed in #13. The fix reads the file first and falls back to the defaults when it is empty,│
+│ #  Status  Author      Title                                 ││ │ which is what the documentation already promised, so nothing else changes for people who   │
+│ 8  open    parity-bot  A pull request among the issues       ││ │ never had the problem.                                                                     │
 │                                                              ││ │                                                                                            │
 │                                                              ││ │ The second paragraph.                                                                      │
 │                                                              ││ │                                                                                            │

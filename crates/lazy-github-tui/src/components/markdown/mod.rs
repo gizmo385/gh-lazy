@@ -43,7 +43,13 @@ impl Markdown {
 
     /// Lays the document out `width` cells wide in `theme`'s colors. A width of 0 gives no lines.
     pub fn layout(&self, width: u16, theme: &Theme) -> Rendered {
-        layout::layout(&self.blocks, width, theme)
+        layout::layout(&self.blocks, width, theme, true)
+    }
+
+    /// [`Self::layout`] without the document's `padding: 0 2`, as a comment block's body has it
+    /// (`IssueCommentContainer Markdown { padding-bottom: 0 }`, which Textual stores as `padding: 0`, every edge).
+    pub fn layout_unpadded(&self, width: u16, theme: &Theme) -> Rendered {
+        layout::layout(&self.blocks, width, theme, false)
     }
 }
 

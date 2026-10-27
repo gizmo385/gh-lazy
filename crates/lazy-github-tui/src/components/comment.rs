@@ -44,11 +44,9 @@ const LIST_BINDINGS: &[BindingId] = &[
 const MARGIN: u16 = 1;
 /// Where the reactions section starts: after the margin and the left border.
 const SECTION_LEFT: u16 = 2;
-/// Where the body and the author line start: the margin, the border, and their own `margin-left: 1`.
+/// Where the body and the author line start: the margin, the border, and their own `margin-left: 1`. The body's
+/// markdown has no padding here, so its text runs from this column to the block's right edge.
 const TEXT_LEFT: u16 = 3;
-/// The markdown's own left padding (`Markdown { padding: 0 2 }`), which the block draws as its border and the cell
-/// after it.
-const MARKDOWN_PADDING: u16 = 2;
 
 /// A focus stop inside a block.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -270,14 +268,12 @@ impl CommentBlock {
             rendered.lines.push(frame.horizontal('┏', '┓'));
         }
 
-        // The markdown sits from the border's column, so its left padding covers the border and the cell after it,
-        // and its text starts at `TEXT_LEFT`.
-        let body_width = right - MARGIN;
+        let body_width = right - TEXT_LEFT;
         let body = self
             .body_layouts
-            .get(body_width, theme, || self.body.layout(body_width, theme))
+            .get(body_width, theme, || self.body.layout_unpadded(body_width, theme))
             .clone();
-        frame.push(rendered, without_padding(body), TEXT_LEFT);
+        frame.push(rendered, body, TEXT_LEFT);
 
         let author = markdown::wrap_text(
             &[TextRun::new(
@@ -393,33 +389,6 @@ impl Frame {
         }
         append(out, more, left);
     }
-}
-
-/// A body laid out by [`Markdown::layout`], without its left padding: the block draws its border there.
-fn without_padding(mut body: Rendered) -> Rendered {
-    let padding = " ".repeat(usize::from(MARKDOWN_PADDING));
-    let padded = body
-        .lines
-        .iter()
-        .any(|line| line.spans.first().is_some_and(|span| is_padding(span, &padding)));
-    if !padded {
-        return body;
-    }
-    for line in &mut body.lines {
-        if line.spans.first().is_some_and(|span| is_padding(span, &padding)) {
-            line.spans.remove(0);
-        }
-    }
-    for link in &mut body.links {
-        link.columns =
-            link.columns.start.saturating_sub(MARKDOWN_PADDING)..link.columns.end.saturating_sub(MARKDOWN_PADDING);
-    }
-    body
-}
-
-/// Whether `span` is the markdown's unstyled left padding.
-fn is_padding(span: &Span<'_>, padding: &str) -> bool {
-    span.content == padding && span.style == Style::default()
 }
 
 /// One blank row.

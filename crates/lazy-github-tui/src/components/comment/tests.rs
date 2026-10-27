@@ -124,6 +124,31 @@ fn comment_references_wide_and_narrow() {
     insta::assert_snapshot!(format!("{wide}\n{narrow}"));
 }
 
+/// `issue-details`' `comments`: the body's markdown has no padding in a comment block, so in the 94-column Comments
+/// tab its text wraps at 91 columns, from column 3 to the right edge, as Python's does.
+#[test]
+fn the_body_runs_from_the_text_column_to_the_right_edge() {
+    let body = "Fixed in #13. The fix reads the file first and falls back to the defaults when it is empty, which is \
+                what the documentation already promised, so nothing else changes for people who never had the problem.";
+    let mut block = CommentBlock::new(&comment(body, None), REPO);
+    let text = screen(&mut block, 94, None);
+    let rows: Vec<&str> = text.lines().collect();
+    assert_eq!(
+        rows[0],
+        " │ Fixed in #13. The fix reads the file first and falls back to the defaults when it is empty,"
+    );
+    assert_eq!(
+        rows[1].trim_end(),
+        " │ which is what the documentation already promised, so nothing else changes for people who"
+    );
+    // Focused, the dashed box's right side takes the last column.
+    let focused = screen(&mut block, 94, Some(CommentStop::Block));
+    assert_eq!(
+        focused.lines().nth(1),
+        Some(" ╏ Fixed in #13. The fix reads the file first and falls back to the defaults when it is      ╏")
+    );
+}
+
 #[test]
 fn references_are_links_but_not_in_code() {
     let body = "See #4 and @parity-bot, not `#5`.\n\n```\n#6 @nobody\n```\n";

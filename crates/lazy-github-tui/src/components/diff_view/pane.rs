@@ -1,18 +1,19 @@
 //! A hunk pane: Python's `UnifiedDiffPane`, a box holding one hunk's lines with a gutter, a current line and the
 //! `Line: n/m` row under them.
 //!
-//! The code itself comes from [`code_spans`], once per hunk; the pane only adds the gutter, the line backgrounds and
-//! the cut at its width. Syntax colors (#237) replace [`code_spans`] and nothing else.
+//! The code itself, syntax colored, comes from [`code_spans`], once per hunk, the first time the pane is laid out;
+//! the pane only adds the gutter, the line backgrounds and the cut at its width.
 
-use lazy_github_core::diff::{ChangedFile, DiffLine, Hunk, LineKind};
+use lazy_github_core::diff::{ChangedFile, Hunk, LineKind};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
 
 use super::buffer_line;
+use super::highlight::code_spans;
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
-use crate::theme::{Accent, Paint, RichAnsi, Theme};
+use crate::theme::{Accent, Paint, Rgb, RichAnsi, Theme};
 
 /// The most rows the pane takes, its border included (`max-height: 25`).
 const MAX_HEIGHT: usize = 25;
@@ -22,54 +23,17 @@ const CHROME_ROWS: usize = 3;
 const GUTTER_WIDTH: usize = 9;
 /// How close the current line gets to the pane's top or bottom before the lines scroll.
 const SCROLL_MARGIN: usize = 3;
-/// Rich's `Syntax` expands tabs to 4 columns.
-const TAB_SIZE: usize = 4;
 /// The vertical scrollbar's width, inside the border.
 const VERTICAL_BAR: usize = scrollbar::VERTICAL_WIDTH as usize;
-
-/// The plain code of each of `hunk`'s lines, without its `+`, `-` or space marker, tabs expanded: what the pane draws
-/// after the gutter. Unstyled, so the pane's text color and line backgrounds show.
-///
-/// This is the seam for syntax colors (#237): a highlighter returns the same lines with their tokens' colors, from
-/// `file`'s path and the hunk's text. The pane keeps its line backgrounds over them.
-pub fn code_spans(_file: &ChangedFile, hunk: &Hunk) -> Vec<Line<'static>> {
-    hunk.lines
-        .iter()
-        .map(|line| {
-            let text = match line.kind {
-                // Python shows the marker line as it is in the diff.
-                LineKind::NoNewline => format!("\\ {}", line.text),
-                LineKind::Context | LineKind::Added | LineKind::Removed => line.text.clone(),
-            };
-            Line::from(expand_tabs(&text))
-        })
-        .collect()
-}
-
-/// `text` with each tab replaced by spaces up to the next tab stop.
-fn expand_tabs(text: &str) -> String {
-    if !text.contains('\t') {
-        return text.to_owned();
-    }
-    let mut out = String::with_capacity(text.len());
-    let mut column = 0;
-    for c in text.chars() {
-        if c == '\t' {
-            let spaces = TAB_SIZE - column % TAB_SIZE;
-            out.extend(std::iter::repeat_n(' ', spaces));
-            column += spaces;
-        } else {
-            out.push(c);
-            column += Span::raw(c.encode_utf8(&mut [0; 4]) as &str).width();
-        }
-    }
-    out
-}
 
 /// One hunk's pane: its code, the current line and how far its lines are scrolled.
 #[derive(Debug, Clone)]
 pub struct HunkPane {
-    code: Vec<Line<'static>>,
+    /// The hunk's code, colored the first time the pane is laid out: highlighting can be slow, and most hunks are
+    /// never opened.
+    code: Option<Vec<Line<'static>>>,
+    /// How many lines the hunk has.
+    len: usize,
     /// The current line, an index into the hunk's lines.
     cursor: usize,
     /// The first line shown.
@@ -88,15 +52,15 @@ pub struct PaneLayout {
 }
 
 impl HunkPane {
-    /// The pane of `file`'s `hunk`, its first line current.
-    pub fn new(file: &ChangedFile, hunk: &Hunk) -> Self {
-        let code = code_spans(file, hunk);
-        let viewport = code.len().min(MAX_HEIGHT - CHROME_ROWS);
+    /// The pane of `hunk`, its first line current.
+    pub fn new(hunk: &Hunk) -> Self {
+        let len = hunk.lines.len();
         Self {
-            code,
+            code: None,
+            len,
             cursor: 0,
             scroll: 0,
-            viewport,
+            viewport: len.min(MAX_HEIGHT - CHROME_ROWS),
         }
     }
 
@@ -112,7 +76,7 @@ impl HunkPane {
 
     /// `diff.cursor_down`: the next line, stopping at the last. Says whether it moved.
     pub fn cursor_down(&mut self) -> bool {
-        if self.cursor + 1 >= self.code.len() {
+        if self.cursor + 1 >= self.len {
             return false;
         }
         self.cursor += 1;
@@ -139,7 +103,7 @@ impl HunkPane {
         } else if self.cursor + SCROLL_MARGIN > self.scroll + viewport {
             self.scroll = self.cursor + SCROLL_MARGIN - viewport;
         }
-        self.scroll = self.scroll.min(self.code.len().saturating_sub(viewport));
+        self.scroll = self.scroll.min(self.len.saturating_sub(viewport));
     }
 
     /// Remembers how many lines the last layout showed, which the next cursor move scrolls by.
@@ -147,10 +111,22 @@ impl HunkPane {
         self.viewport = viewport;
     }
 
-    /// Lays the pane out `width` cells wide over `under`, the background of the section holding it: a blank row,
-    /// the box, a blank row (`SplitDiffHunk`'s `margin: 1 0`). `lines` are the hunk's, which the gutter numbers come
-    /// from.
-    pub fn layout(&self, lines: &[DiffLine], width: u16, theme: &Theme, focused: bool, under: Paint) -> PaneLayout {
+    /// Lays out the pane of `file`'s `hunk`, the one it was made for, `width` cells wide over `under`, the
+    /// background of the section holding it: a blank row, the box, a blank row (`SplitDiffHunk`'s `margin: 1 0`).
+    /// Colors the hunk's code the first time.
+    pub fn layout(
+        &mut self,
+        file: &ChangedFile,
+        hunk: &Hunk,
+        width: u16,
+        theme: &Theme,
+        focused: bool,
+        under: Paint,
+    ) -> PaneLayout {
+        if self.code.is_none() {
+            self.code = Some(code_spans(file, hunk));
+        }
+        let code = self.code.as_deref().unwrap_or_default();
         let mut out = PaneLayout::default();
         out.lines.push(Line::default());
         let width = usize::from(width);
@@ -160,8 +136,8 @@ impl HunkPane {
         }
         let styles = Styles::new(theme, focused, under);
         let inner = width - 2;
-        let len = self.code.len();
-        let widest = self.code.iter().map(Line::width).max().unwrap_or(0) + GUTTER_WIDTH;
+        let len = self.len;
+        let widest = code.iter().map(Line::width).max().unwrap_or(0) + GUTTER_WIDTH;
 
         // Each scrollbar narrows or shortens the room for the other, so settle them together.
         let (mut horizontal, mut vertical) = (false, false);
@@ -197,7 +173,7 @@ impl HunkPane {
             bar_rows(Axis::Vertical, VERTICAL_BAR, viewport, state, styles.scrollbar)
         });
         for (row, index) in (scroll..scroll + viewport).enumerate() {
-            let mut spans = self.row(lines, index, text_width, &styles, theme);
+            let mut spans = self.row(hunk, code, index, text_width, &styles, theme);
             if let Some(bar) = &bar {
                 spans.extend(bar[row].spans.iter().cloned());
             }
@@ -233,13 +209,14 @@ impl HunkPane {
     /// Line `index` of the hunk: the gutter, then its code on its background, cut and filled to `width`.
     fn row(
         &self,
-        lines: &[DiffLine],
+        hunk: &Hunk,
+        code: &[Line<'static>],
         index: usize,
         width: usize,
         styles: &Styles,
         theme: &Theme,
     ) -> Vec<Span<'static>> {
-        let line = lines.get(index);
+        let line = hunk.lines.get(index);
         let current = index == self.cursor;
         let marker = if current { "► " } else { "  " };
         // Py bug B22: a removed line shows its old-file number, every other line its new-file number.
@@ -250,17 +227,32 @@ impl HunkPane {
             })
             .map_or_else(|| " ".repeat(4), |n| format!("{n:>4}"));
         let kind = line.map_or(LineKind::Context, |line| line.kind);
-        let code_style = styles.code(kind, current, theme);
+        let code = code.get(index);
+        let background = Styles::background(kind, current, theme);
+        // A context line keeps the highlighter's background (monokai's), as Python's do.
+        let code_style = styles.code(
+            background.or_else(|| code.and_then(|code| code.style.bg).map(|bg| reduce(bg, theme))),
+            theme,
+        );
         let mut spans = vec![Span::styled(format!("{marker}{number} │ "), styles.gutter)];
-        if let Some(code) = self.code.get(index) {
+        if let Some(code) = code {
             spans.extend(code.spans.iter().map(|span| {
-                // The line's background wins over any the highlighter gives, as Python's `stylize` does.
                 let mut style = code_style.patch(span.style);
-                style.bg = code_style.bg;
+                style.fg = style.fg.map(|fg| reduce(fg, theme));
+                // The line's own background wins over any the highlighter gives, as Python's `stylize` does.
+                style.bg = background.or_else(|| style.bg.map(|bg| reduce(bg, theme)));
                 Span::styled(span.content.clone(), style)
             }));
         }
         cut(spans, width, code_style)
+    }
+}
+
+/// A highlighter's exact color reduced to what the terminal shows, as the theme's own colors are.
+fn reduce(color: Color, theme: &Theme) -> Color {
+    match color {
+        Color::Rgb(r, g, b) => theme.paint(Rgb::new(r, g, b).into()),
+        other => other,
     }
 }
 
@@ -369,17 +361,21 @@ impl Styles {
         }
     }
 
-    /// A line's code: the text color on the line's background. Removed and added lines are tinted red and green,
-    /// brighter on the current line; the current context line is yellow, and other context lines have none.
-    fn code(&self, kind: LineKind, current: bool, theme: &Theme) -> Style {
-        let background = match (kind, current) {
+    /// A line's own background. Removed and added lines are tinted red and green, brighter on the current line; the
+    /// current context line is yellow, and other context lines have none.
+    fn background(kind: LineKind, current: bool, theme: &Theme) -> Option<Color> {
+        match (kind, current) {
             (LineKind::Removed, false) => Some(theme.accent(Accent::DiffRemoved)),
             (LineKind::Added, false) => Some(theme.accent(Accent::DiffAdded)),
             (LineKind::Removed, true) => Some(theme.accent(Accent::DiffRemovedCurrent)),
             (LineKind::Added, true) => Some(theme.accent(Accent::DiffAddedCurrent)),
             (LineKind::Context | LineKind::NoNewline, true) => Some(theme.rich_ansi(RichAnsi::Yellow)),
             (LineKind::Context | LineKind::NoNewline, false) => None,
-        };
+        }
+    }
+
+    /// A line's code: the text color on `background`, or on the surface without one.
+    fn code(&self, background: Option<Color>, theme: &Theme) -> Style {
         let palette = theme.palette;
         Style::new()
             .fg(theme.color(palette.foreground, self.surface))
@@ -409,8 +405,15 @@ mod tests {
     #[test]
     fn the_gutter_numbers_removed_lines_from_the_old_file_and_the_rest_from_the_new() {
         let (file, hunk) = hunk(README);
-        let pane = HunkPane::new(&file, &hunk);
-        let layout = pane.layout(&hunk.lines, 70, &Theme::default(), false, Theme::default().background());
+        let mut pane = HunkPane::new(&hunk);
+        let layout = pane.layout(
+            &file,
+            &hunk,
+            70,
+            &Theme::default(),
+            false,
+            Theme::default().background(),
+        );
         assert_eq!(
             text(&layout),
             [
@@ -433,13 +436,85 @@ mod tests {
     #[test]
     fn a_line_wider_than_the_pane_is_cut_over_a_horizontal_scrollbar() {
         let (file, hunk) = hunk(README);
-        let pane = HunkPane::new(&file, &hunk);
-        let layout = pane.layout(&hunk.lines, 40, &Theme::default(), false, Theme::default().background());
+        let mut pane = HunkPane::new(&hunk);
+        let layout = pane.layout(
+            &file,
+            &hunk,
+            40,
+            &Theme::default(),
+            false,
+            Theme::default().background(),
+        );
         let text = text(&layout);
         assert_eq!(text[5], "│     5 │ Run `viewer FILE`, then press│");
         assert_eq!(text.len(), 12, "{text:#?}");
         assert_eq!(text[8].chars().count(), 40, "{text:#?}");
         assert_eq!(text[9], "│                            Line: 1/6 │");
+    }
+
+    /// The backgrounds of row `row`'s code, after the gutter and up to the border, fill included.
+    fn code_backgrounds(layout: &PaneLayout, row: usize) -> Vec<Option<Color>> {
+        let spans = &layout.lines[row].spans;
+        spans[2..spans.len() - 1].iter().map(|span| span.style.bg).collect()
+    }
+
+    #[test]
+    fn context_lines_take_monokai_s_background_and_the_others_keep_their_own() {
+        let (file, hunk) = hunk(README);
+        let theme = Theme::default();
+        let monokai = Some(theme.paint(Rgb::new(0x27, 0x28, 0x22).into()));
+        let mut pane = HunkPane::new(&hunk);
+        pane.cursor_down();
+        let layout = pane.layout(&file, &hunk, 70, &theme, false, theme.background());
+        // Rows from 2: `## Usage` (context), the blank context line (current), the removed line, three added lines.
+        let all = |row: usize, bg: Option<Color>| {
+            let backgrounds = code_backgrounds(&layout, row);
+            assert!(!backgrounds.is_empty());
+            assert!(backgrounds.iter().all(|b| *b == bg), "row {row}: {backgrounds:?}");
+        };
+        all(2, monokai);
+        all(3, Some(theme.rich_ansi(RichAnsi::Yellow)));
+        all(4, Some(theme.accent(Accent::DiffRemoved)));
+        all(5, Some(theme.accent(Accent::DiffAdded)));
+        all(7, Some(theme.accent(Accent::DiffAdded)));
+        // The token colors stay on the tinted lines: `viewer FILE` is a Markdown inline code span.
+        let code = layout.lines[4]
+            .spans
+            .iter()
+            .find(|span| span.content == "`viewer FILE`")
+            .map(|span| span.style.fg);
+        assert_eq!(code, Some(Some(theme.paint(Rgb::new(0xE6, 0xDB, 0x74).into()))));
+
+        // The current line on an added line is the brighter green.
+        pane.cursor_down();
+        pane.cursor_down();
+        let layout = pane.layout(&file, &hunk, 70, &theme, false, theme.background());
+        let backgrounds = code_backgrounds(&layout, 5);
+        assert!(
+            backgrounds
+                .iter()
+                .all(|b| *b == Some(theme.accent(Accent::DiffAddedCurrent))),
+            "{backgrounds:?}"
+        );
+        all(2, monokai);
+    }
+
+    #[test]
+    fn a_file_with_no_grammar_keeps_the_surface_on_context_lines() {
+        let text = "diff --git a/LICENSE b/LICENSE\n--- a/LICENSE\n+++ b/LICENSE\n@@ -1,2 +1,2 @@\n MIT\n-old\n+new\n";
+        let (file, hunk) = hunk(text);
+        let theme = Theme::default();
+        let mut pane = HunkPane::new(&hunk);
+        pane.cursor_down();
+        let layout = pane.layout(&file, &hunk, 40, &theme, false, theme.background());
+        let surface = theme.palette.surface.over(theme.background());
+        let backgrounds = code_backgrounds(&layout, 2);
+        assert!(
+            backgrounds.iter().all(|b| *b == Some(theme.paint(surface))),
+            "{backgrounds:?}"
+        );
+        let foreground = layout.lines[2].spans[2].style.fg;
+        assert_eq!(foreground, Some(theme.color(theme.palette.foreground, surface)));
     }
 
     #[test]
@@ -448,9 +523,9 @@ mod tests {
         let lines = lines.concat();
         let text = format!("diff --git a/f b/f\n--- a/f\n+++ b/f\n@@ -0,0 +1,40 @@\n{lines}");
         let (file, hunk) = hunk(&text);
-        let mut pane = HunkPane::new(&file, &hunk);
+        let mut pane = HunkPane::new(&hunk);
         let theme = Theme::default();
-        let layout = pane.layout(&hunk.lines, 40, &theme, true, theme.background());
+        let layout = pane.layout(&file, &hunk, 40, &theme, true, theme.background());
         // At most 25 rows: the borders, 22 lines and `Line: n/m`.
         assert_eq!(layout.lines.len(), 25 + 2);
         assert_eq!(layout.viewport, 22);
@@ -468,7 +543,7 @@ mod tests {
             pane.cursor_down();
         }
         assert_eq!((pane.cursor(), pane.scroll()), (39, 18));
-        let layout = pane.layout(&hunk.lines, 40, &theme, true, theme.background());
+        let layout = pane.layout(&file, &hunk, 40, &theme, true, theme.background());
         assert!(
             layout.lines[23].to_string().contains("40 │ line 40"),
             "{:#?}",
@@ -479,11 +554,5 @@ mod tests {
             pane.cursor_up();
         }
         assert_eq!((pane.cursor(), pane.scroll()), (20, 17));
-    }
-
-    #[test]
-    fn tabs_expand_to_four_columns() {
-        assert_eq!(expand_tabs("\tx\ty"), "    x   y");
-        assert_eq!(expand_tabs("plain"), "plain");
     }
 }

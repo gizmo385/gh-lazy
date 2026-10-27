@@ -1,0 +1,41 @@
+---
+source: crates/lazy-github-tui/src/components/diff_view/tests.rs
+expression: "pane_screen(README, 0, 1, 64)"
+---
+
+┌──────────────────────────────────────────────────────────────┐
+│     3 │ ## Usage                                             │
+│►    4 │                                                      │
+│     5 │ Run `viewer FILE`.                                   │
+│     5 │ Run `viewer FILE`, then press `j` and `k` to move.   │
+│     6 │                                                      │
+│     7 │ The current line is marked with `>`.                 │
+│                                                    Line: 2/6 │
+└──────────────────────────────────────────────────────────────┘
+
+--- styles
+................................................................
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbccccccccddddddddddddddddddddddddddddddddddddddddddddda
+abbbbbbbbbeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeea
+abbbbbbbbbffffgggggggggggggfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhha
+abbbbbbbbbiiiijjjjjjjjjjjjjiiiiiiiiiiiiijjjiiiiijjjiiiiiiiiikkka
+abbbbbbbbbkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkka
+abbbbbbbbbiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiijjjikkkkkkkkkkkkkkkkka
+alllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllla
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+................................................................
+--- legend
+. fg=Reset bg=Reset
+a fg=#fea62b bg=#121212
+b fg=#e0e0e0 bg=#1e1e1e
+c fg=#959077 bg=#272822
+d fg=#e0e0e0 bg=#272822
+e fg=#e0e0e0 bg=#fd971f
+f fg=#f8f8f2 bg=#3a0a0a
+g fg=#e6db74 bg=#3a0a0a
+h fg=#e0e0e0 bg=#3a0a0a
+i fg=#f8f8f2 bg=#0a3a0a
+j fg=#e6db74 bg=#0a3a0a
+k fg=#e0e0e0 bg=#0a3a0a
+l fg=#211505 bg=#fea62b

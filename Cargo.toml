@@ -31,6 +31,8 @@ futures-util = { version = "0.3", default-features = false }
 pulldown-cmark = { version = "0.13", default-features = false }
 # `default-features = false`: crates pick the pure-Rust regex engine (`regex-fancy`) rather than Oniguruma's C library.
 syntect = { version = "5.3", default-features = false }
+# bat's grammars, a superset of syntect's (TOML, Dockerfile, ...), for the diff viewer's file types (#237).
+two-face = { version = "0.5", default-features = false }
 nucleo-matcher = "0.3"
 
 # Runtime, serialization, CLI, errors

@@ -23,6 +23,8 @@ lazy-github-core = { workspace = true }
 pulldown-cmark = { workspace = true }
 # Fence syntax colors (PLAN §4, #217): the bundled grammars, parsed with the pure-Rust regex engine.
 syntect = { workspace = true, features = ["default-syntaxes", "regex-fancy"] }
+# Hunk pane syntax colors (PLAN §4, #237): bat's grammars, a superset of syntect's, which the fences share.
+two-face = { workspace = true, features = ["syntect-fancy"] }
 ratatui = { workspace = true }
 # Python's `str.isprintable` by general category, for the table search's `repr` of a row (#101).
 regex = { workspace = true }

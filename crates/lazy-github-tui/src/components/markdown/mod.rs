@@ -6,7 +6,7 @@
 //!
 //! Bare URLs, `www.` hosts and emails become links, as markdown-it's linkify makes them.
 
-mod highlight;
+pub(crate) mod highlight;
 mod layout;
 mod linkify;
 mod parse;

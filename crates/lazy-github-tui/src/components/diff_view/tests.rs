@@ -10,7 +10,7 @@ use ratatui::layout::Position;
 
 use super::*;
 use crate::keymap::{KeySpec, Keymap};
-use crate::test_util::buffer_to_string;
+use crate::test_util::{buffer_to_string, buffer_to_styled_string};
 
 /// PR 5's diff: README.md (one hunk), assets/app.css (added), build.rs, docs/old.md (deleted) and src/viewer.rs (two
 /// hunks).
@@ -307,4 +307,39 @@ fn the_viewer_keys_are_hidden_only_at_the_scroll_area() {
     view.focus(DiffStop::Filter);
     assert_eq!(view.binding_state(Owner::DiffViewer, id), BindingState::Enabled);
     assert_eq!(view.binding_state(Owner::DiffFilter, id), BindingState::Enabled);
+}
+
+/// Hunk `h` of file `f`'s pane laid out alone, `width` cells wide, its current line `moves` lines down, with its
+/// colors.
+fn pane_screen(f: usize, h: usize, moves: usize, width: u16) -> String {
+    let parsed = diff::parse(&diff_text()).unwrap();
+    let file = &parsed.files[f];
+    let hunk = &file.hunks[h];
+    let mut pane = HunkPane::new(hunk);
+    for _ in 0..moves {
+        pane.cursor_down();
+    }
+    let theme = Theme::default();
+    let layout = pane.layout(file, hunk, width, &theme, true, theme.background());
+    let mut buf = Buffer::empty(Rect::new(0, 0, width, u16::try_from(layout.lines.len()).unwrap()));
+    for (y, line) in layout.lines.iter().enumerate() {
+        buf.set_line(0, u16::try_from(y).unwrap(), line, width);
+    }
+    buffer_to_styled_string(&buf)
+}
+
+#[test]
+fn pr_diff_hunk_highlighted_rust() {
+    insta::assert_snapshot!(pane_screen(VIEWER, 1, 0, 76));
+}
+
+#[test]
+fn pr_diff_hunk_highlighted_markdown() {
+    insta::assert_snapshot!(pane_screen(README, 0, 1, 64));
+}
+
+#[test]
+fn pr_diff_hunk_current_line_highlighted() {
+    // The current line is the added `let marker = …;`: its tokens on the brighter green.
+    insta::assert_snapshot!(pane_screen(VIEWER, 1, 4, 76));
 }

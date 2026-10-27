@@ -6,6 +6,9 @@
 //! style that through the same tables. The grammars split text differently from Pygments' lexers, so some tokens are
 //! colored differently, and a fence without a language stays plain where Python guesses one: both accepted as an
 //! intentional diff (`docs/rust-rewrite/parity/decisions/markdown-code-highlighting.md`).
+//!
+//! The diff viewer's hunk panes (#237) share the grammars and the scope-to-token table, through [`syntax_for_file`]
+//! and [`tokenize`], and color the tokens with Pygments' monokai style instead.
 
 use std::ops::Range;
 use std::sync::LazyLock;
@@ -17,15 +20,16 @@ use syntect::parsing::{ParseState, ScopeStack, SyntaxReference, SyntaxSet};
 use super::layout::Painter;
 use crate::theme::{AnsiColor, Paint, Palette, ThemeColor};
 
-/// syntect's bundled grammars, loaded on the first fence with a language: about 30 ms in a release build and
-/// 0.35 s in a debug one (see `the_syntax_set_loads_once`), and never if no fence needs it.
-static SYNTAXES: LazyLock<SyntaxSet> = LazyLock::new(SyntaxSet::load_defaults_newlines);
+/// bat's grammars (`two-face`): syntect's bundled ones and more, such as TOML and Dockerfile. Loaded once, on the
+/// first fence with a language or the first hunk pane opened, and never if nothing needs them: with the first
+/// highlight, about 30 ms in a release build and 0.4 s in a debug one (see `the_syntax_set_loads_once`).
+static SYNTAXES: LazyLock<SyntaxSet> = LazyLock::new(two_face::syntax::extra_newlines);
 
 /// The Pygments token types in `HighlightTheme.STYLES` that some scope maps to. Any other Pygments type would fall
 /// back to one of these or to no style, as its parent does in Python. `Keyword.Type`, `Generic.Error` and
 /// `Name.Function.Magic` are left out: no scope in the bundled grammars tells them apart from their parents.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum Token {
+pub(crate) enum Token {
     Comment,
     Error,
     GenericStrong,
@@ -68,6 +72,8 @@ const SCOPES: &[(&str, Token)] = &[
     ("constant.character", Token::String),
     ("constant.language", Token::KeywordConstant),
     ("constant.numeric", Token::Number),
+    // CSS hex colors, which Pygments reads as `Number.Hex`.
+    ("constant.other.color", Token::Number),
     ("entity.name", Token::Name),
     ("entity.name.class", Token::NameClass),
     ("entity.name.enum", Token::NameClass),
@@ -84,10 +90,20 @@ const SCOPES: &[(&str, Token)] = &[
     ("keyword.operator.logical.python", Token::OperatorWord),
     ("keyword.operator.word", Token::OperatorWord),
     ("markup.bold", Token::GenericStrong),
+    // Pygments' Markdown lexer has `#` headings as `Generic.Heading` and deeper ones as `Generic.Subheading`.
     ("markup.heading", Token::GenericHeading),
+    ("markup.heading.2", Token::GenericSubheading),
+    ("markup.heading.3", Token::GenericSubheading),
+    ("markup.heading.4", Token::GenericSubheading),
+    ("markup.heading.5", Token::GenericSubheading),
+    ("markup.heading.6", Token::GenericSubheading),
     ("markup.italic", Token::GenericEmph),
+    // Markdown's inline code, Pygments' `String.Backtick`.
+    ("markup.raw.inline", Token::StringBacktick),
     ("markup.subheading", Token::GenericSubheading),
-    // JSON object keys, which Pygments reads as `Name.Tag`; this outer scope outranks the key's string scope.
+    // JSON object keys, which Pygments reads as `Name.Tag`; this outer scope outranks the key's string scope. The
+    // first is syntect's own JSON grammar, the second bat's.
+    ("meta.mapping.key.json", Token::NameTag),
     ("meta.structure.dictionary.key.json", Token::NameTag),
     ("storage", Token::Keyword),
     ("string", Token::String),
@@ -99,6 +115,8 @@ const SCOPES: &[(&str, Token)] = &[
     ("support.constant", Token::NameConstant),
     ("support.function", Token::NameBuiltin),
     ("support.type", Token::NameBuiltin),
+    // CSS property names, which Pygments reads as `Keyword`.
+    ("support.type.property-name", Token::Keyword),
     ("variable", Token::Name),
     ("variable.annotation", Token::NameDecorator),
     ("variable.language", Token::NameBuiltinPseudo),
@@ -106,8 +124,13 @@ const SCOPES: &[(&str, Token)] = &[
     ("variable.other.readwrite.assignment.shell", Token::NameVariable),
 ];
 
-/// Scopes that decide the token for everything inside them, ahead of the inner scopes.
-const ENCLOSING: &[&str] = &["meta.structure.dictionary.key.json"];
+/// Scopes that decide the token for everything inside them, ahead of the inner scopes. A Markdown heading is one
+/// token in Pygments, its `#`s and its text alike.
+const ENCLOSING: &[&str] = &[
+    "markup.heading",
+    "meta.mapping.key.json",
+    "meta.structure.dictionary.key.json",
+];
 
 /// Fence languages Pygments knows by a name syntect doesn't, as the name syntect knows.
 const ALIASES: &[(&str, &str)] = &[
@@ -158,12 +181,30 @@ fn syntax_for(language: &str) -> Option<&'static SyntaxReference> {
     SYNTAXES.find_syntax_by_token(name)
 }
 
+/// The grammar for a file, from its path, as Pygments' `get_lexer_for_filename` picks a lexer: by the file's whole
+/// name first (`Makefile`, `Dockerfile`), then by its extension. `None` for a file there's no grammar for.
+pub(crate) fn syntax_for_file(path: &str) -> Option<&'static SyntaxReference> {
+    // Diff paths always use `/`, whatever the platform.
+    let name = path.rsplit('/').next().unwrap_or(path);
+    SYNTAXES.find_syntax_by_extension(name).or_else(|| {
+        let (_, extension) = name.rsplit_once('.')?;
+        SYNTAXES.find_syntax_by_extension(extension)
+    })
+}
+
 /// The tokens of each line of a fence, as byte ranges into the line. A line's ranges cover it in order; text with no
 /// token is left out. Without a language, or with one there's no grammar for, there are no tokens.
 pub(super) fn highlight(language: Option<&str>, lines: &[String]) -> Vec<Vec<(Range<usize>, Token)>> {
-    let Some(syntax) = language.and_then(syntax_for) else {
-        return vec![Vec::new(); lines.len()];
-    };
+    match language.and_then(syntax_for) {
+        Some(syntax) => tokenize(syntax, lines),
+        None => vec![Vec::new(); lines.len()],
+    }
+}
+
+/// The tokens of each of `lines` under `syntax`, tokenized in order as one text, so a string or comment one line
+/// opens carries on to the next. Each line's tokens are byte ranges into it, in order; text with no token is left
+/// out. If the grammar fails on some line, that line and the rest have no tokens.
+pub(crate) fn tokenize(syntax: &SyntaxReference, lines: &[String]) -> Vec<Vec<(Range<usize>, Token)>> {
     let mut state = ParseState::new(syntax);
     let mut stack = ScopeStack::new();
     let mut failed = false;
@@ -453,7 +494,7 @@ mod tests {
         let start = Instant::now();
         highlight(Some("sh"), &lines);
         let second = start.elapsed();
-        // Measured: about 0.35 s for the first in a debug build (30 ms in release), under 1 ms after. Another
+        // Measured: about 0.4 s for the first in a debug build (30 ms in release), under 1 ms after. Another
         // test may have loaded the set already, so only the second call's speed is certain.
         eprintln!("first highlight {first:?}, second {second:?}");
         assert!(second.as_millis() < 100, "{second:?}");

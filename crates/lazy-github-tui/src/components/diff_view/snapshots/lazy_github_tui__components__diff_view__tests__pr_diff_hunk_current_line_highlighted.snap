@@ -1,0 +1,61 @@
+---
+source: crates/lazy-github-tui/src/components/diff_view/tests.rs
+expression: "pane_screen(VIEWER, 1, 4, 76)"
+---
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│    22 │     pub fn render(&self) -> io::Result<()> {                     │
+│    21 │         for line in &self.lines {                                │
+│    22 │             println!("{line}");                                  │
+│    23 │         for (i, line) in self.lines.iter().enumerate() {         │
+│►   24 │             let marker = if i == self.cursor { ">" } else { " " }│
+│    25 │             println!("{marker} {line}");                         │
+│    26 │         }                                                        │
+│    27 │         Ok(())                                                   │
+│    28 │     }                                                            │
+│                                                                         ▏│
+│                                                                Line: 5/9 │
+└──────────────────────────────────────────────────────────────────────────┘
+
+--- styles
+............................................................................
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbccccdddcddceeeeeecfcccccccccccccccccccccccccggggggggggggggggggggga
+abbbbbbbbbhhhhhhhhiiihhhhhhjjhjhhhhhhhhhhhhkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkka
+abbbbbbbbbhhhhhhhhhhhhhhhhhhhhhliiiiiilhhkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkka
+abbbbbbbbbmmmmmmmmnnnmmmmmmmmmmmoommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmpppppppppa
+abbbbbbbbbqqqqqqqqqqqqrrrqqqqqqqqsqrrqqqssqqqqqqqqqqqqqqqtttqqqrrrrqqqtttqqa
+abbbbbbbbbmmmmmmmmmmmmmmmmmmmmmunnnnnnnnunnnnnnummpppppppppppppppppppppppppa
+abbbbbbbbbcccccccccgggggggggggggggggggggggggggggggggggggggggggggggggggggggga
+abbbbbbbbbccccccccccccccggggggggggggggggggggggggggggggggggggggggggggggggggga
+abbbbbbbbbcccccgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggga
+avvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvwa
+axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+............................................................................
+--- legend
+. fg=Reset bg=Reset
+a fg=#fea62b bg=#121212
+b fg=#e0e0e0 bg=#1e1e1e
+c fg=#f8f8f2 bg=#272822
+d fg=#66d9ef bg=#272822
+e fg=#a6e22e bg=#272822
+f fg=#ff4689 bg=#272822
+g fg=#e0e0e0 bg=#272822
+h fg=#f8f8f2 bg=#3a0a0a
+i fg=#66d9ef bg=#3a0a0a
+j fg=#ff4689 bg=#3a0a0a
+k fg=#e0e0e0 bg=#3a0a0a
+l fg=#e6db74 bg=#3a0a0a
+m fg=#f8f8f2 bg=#0a3a0a
+n fg=#66d9ef bg=#0a3a0a
+o fg=#ff4689 bg=#0a3a0a
+p fg=#e0e0e0 bg=#0a3a0a
+q fg=#f8f8f2 bg=#006400
+r fg=#66d9ef bg=#006400
+s fg=#ff4689 bg=#006400
+t fg=#e6db74 bg=#006400
+u fg=#e6db74 bg=#0a3a0a
+v fg=#003054 bg=#1e1e1e REVERSED
+w fg=#003054 bg=#000000
+x fg=#211505 bg=#fea62b

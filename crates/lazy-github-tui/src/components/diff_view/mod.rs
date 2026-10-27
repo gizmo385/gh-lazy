@@ -7,6 +7,7 @@
 //! and open, and a text input (the filter) that takes its keys before the binding chain, as the table's search box
 //! does.
 
+mod highlight;
 mod pane;
 
 use std::ops::Range;
@@ -18,7 +19,8 @@ use ratatui::layout::{Position, Rect};
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 
-pub use pane::{HunkPane, PaneLayout, code_spans};
+pub use highlight::code_spans;
+pub use pane::{HunkPane, PaneLayout};
 
 use super::collapsible::{CONTENT_INDENT, Collapsible, Placement, SectionFocus};
 use super::command_log::Wheel;
@@ -194,7 +196,7 @@ impl DiffView {
                     .iter()
                     .map(|hunk| HunkSection {
                         section: Collapsible::new(false),
-                        pane: HunkPane::new(&file, hunk),
+                        pane: HunkPane::new(hunk),
                     })
                     .collect();
                 FileSection {
@@ -754,7 +756,6 @@ fn layout_hunk(
     width: u16,
     theme: &Theme,
 ) -> HunkPlaced {
-    let lines = &changed.hunks[h].lines;
     let focused = focus.pane == Some(h);
     let mut pane_rows = 0..0;
     let mut viewport = None;
@@ -766,7 +767,7 @@ fn layout_hunk(
         width,
         theme,
         |content| {
-            let layout = pane.layout(lines, content.width, theme, focused, content.under);
+            let layout = pane.layout(changed, &changed.hunks[h], content.width, theme, focused, content.under);
             viewport = Some(layout.viewport);
             pane_rows = 0..layout.lines.len();
             Rendered {

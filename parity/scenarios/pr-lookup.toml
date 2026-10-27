@@ -1,7 +1,6 @@
 version = 1
 description = "PR lookup (O on the Pull Requests table): the dialog, an empty number, an unknown number, and a PR missing from the table, which is added and selected"
-# Rust needs the PR lookup issue before this can gate.
-gate = false
+gate = true
 parity_rows = [
     "pull-requests.lookup",
     "modals.lookup-pr",
@@ -82,7 +81,9 @@ wait = { text = "Opened on", timeout_ms = 5000 }
 
 [[step]]
 capture = "found"
-checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
+# The footer is left out: with the details strip focused it isn't cut off at 160 columns, and Python spells
+# `^p Command Pallete` (Py bug B14), which Rust fixes on purpose.
+checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [expect.dialog]
 contains = ["Search for a pull request by number:", "Pull Request Number:", "Pull request number", "Lookup", "Cancel"]

@@ -23,7 +23,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.pull-request-new` | `pull_request.new` | `P` | New PR | selections pane | M3 | not started | #184 | |
 | `keybindings.pull-request-merge` | `pull_request.merge` | `ctrl+m` | Merge PR | PR Overview | M3 | not started | #183 | TERM: `ctrl+m` sends CR, same as Enter, without the kitty protocol. Must never fire on plain Enter (Py bug B30). |
 | `keybindings.pull-request-edit` | `pull_request.edit` | `E` | Edit PR | PR table, PR Overview | M3 | not started | #185 | |
-| `keybindings.pull-request-lookup` | `pull_request.lookup` | `O` | Lookup Pull Request | PR table | M2 | not started | #238 | |
+| `keybindings.pull-request-lookup` | `pull_request.lookup` | `O` | Lookup Pull Request | PR table | M2 | in progress | #238 | |
 | `keybindings.repositories-favorite` | `repositories.favorite` | `ctrl+f` | Toggle Favorite | repos table | M2 | in progress | #222 | |
 | `keybindings.repositories-lookup` | `repositories.lookup` | `O` | Lookup Repository | repos table | M2 | in progress | #224 | |
 | `keybindings.user-view-profile` | `user.view_profile` | `u` | View User | repos, PR and issues tables | M2 | in progress | #225, #226 | Rust (#225): the repos table; the PR and issues tables are #226. |

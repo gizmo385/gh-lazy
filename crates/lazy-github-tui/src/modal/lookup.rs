@@ -72,6 +72,8 @@ pub trait LookupKind: Send + 'static {
     const PLACEHOLDER: &'static str;
     /// Whether the dialog has the "Continue tracking this repo?" switch.
     const TRACK_SWITCH: bool = false;
+    /// What the input may hold, if it's restricted: [`number::can_become_number`] for a `type="number"` input.
+    const FILTER: Option<fn(&str) -> bool> = None;
 
     /// The live check behind the red border.
     fn is_valid(text: &str) -> bool;
@@ -203,7 +205,10 @@ impl<K: LookupKind> LookupDialog<K> {
         };
         Self {
             ring,
-            input: TextInput::new(K::PLACEHOLDER),
+            input: match K::FILTER {
+                Some(filter) => TextInput::new(K::PLACEHOLDER).with_filter(filter),
+                None => TextInput::new(K::PLACEHOLDER),
+            },
             track: K::TRACK_SWITCH.then(|| Switch::new(false)),
             buttons: ButtonRow::new("Lookup"),
             pending: None,
@@ -573,6 +578,8 @@ impl LookupKind for RepoLookup {
 fn validation_error(message: &'static str) -> Toast {
     Toast::error(message).with_title("Validation Error")
 }
+
+pub mod number;
 
 #[cfg(test)]
 mod tests;

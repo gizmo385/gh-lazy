@@ -66,7 +66,7 @@ pub enum InputOutcome {
 }
 
 /// The input's text, cursor and selection.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct TextInput {
     value: String,
     /// A char index into `value`, from 0 to its length. It's the selection's end, as in Textual.
@@ -78,6 +78,8 @@ pub struct TextInput {
     scroll: usize,
     /// The last validation failed: Textual's `-invalid` class, drawn as a red border.
     invalid: bool,
+    /// What the text may be, as Textual's `restrict`: an edit whose result fails it is refused.
+    filter: Option<fn(&str) -> bool>,
 }
 
 impl TextInput {
@@ -90,7 +92,16 @@ impl TextInput {
             placeholder,
             scroll: 0,
             invalid: false,
+            filter: None,
         }
+    }
+
+    /// Only lets the text become what `filter` accepts: a typed key, a paste or a delete whose result it refuses
+    /// changes nothing, as Textual's `Input.restrict` and `type` do (e.g. a number lookup's input).
+    #[must_use]
+    pub fn with_filter(mut self, filter: fn(&str) -> bool) -> Self {
+        self.filter = Some(filter);
+        self
     }
 
     /// Marks the input invalid or valid, as the owner's last check of its text said. An invalid input has a red
@@ -255,20 +266,29 @@ impl TextInput {
 
     /// Types `text` over the selection, or at the cursor when there's none (Textual's `replace` and `insert`).
     fn replace_selection(&mut self, text: &str) {
-        if let Some((start, end)) = self.selection() {
-            self.delete(start, end);
-        }
+        let (start, end) = self.selection().unwrap_or((self.cursor, self.cursor));
         self.anchor = None;
-        let at = self.byte_at(self.cursor);
-        self.value.insert_str(at, text);
-        self.cursor += text.chars().count();
+        self.replace(start, end, text);
     }
 
     /// Deletes the chars in `start..end` and leaves the cursor at `start`.
     fn delete(&mut self, start: usize, end: usize) {
+        self.replace(start, end, "");
+    }
+
+    /// Replaces the chars in `start..end` with `text` and leaves the cursor after it, unless the filter refuses the
+    /// result, which changes nothing (Textual's `Input.replace`, which every edit goes through).
+    fn replace(&mut self, start: usize, end: usize, text: &str) {
         let (from, to) = (self.byte_at(start), self.byte_at(end));
-        self.value.replace_range(from..to, "");
-        self.cursor = start;
+        let mut value = String::with_capacity(self.value.len() + text.len());
+        value.push_str(&self.value[..from]);
+        value.push_str(text);
+        value.push_str(&self.value[to..]);
+        if self.filter.is_some_and(|allowed| !allowed(&value)) {
+            return;
+        }
+        self.value = value;
+        self.cursor = start + text.chars().count();
     }
 
     /// Textual's `_WORD_START`, `(?<=\W)\w`, over the chars before the cursor: the last word start, or 0.
@@ -718,6 +738,51 @@ mod tests {
             input.press(area, column);
             assert_eq!((input.cursor(), input.selection()), (cursor, None), "column {column}");
         }
+    }
+
+    /// An input that only holds what a number input may.
+    fn numeric(value: &str) -> TextInput {
+        let mut input = TextInput::new("Pull request number").with_filter(crate::modal::number::can_become_number);
+        input.set_value(value);
+        input
+    }
+
+    #[test]
+    fn a_filter_refuses_typed_keys_that_cant_make_a_number() {
+        let mut input = numeric("");
+        for key in ["a", "b", "1", "full_stop", "x", "5", "e", "space", "minus", "2"] {
+            // Refused or not, a printable key is the input's.
+            assert_eq!(press(&mut input, key), InputOutcome::Changed, "{key}");
+        }
+        assert_eq!((input.value(), input.cursor()), ("1.5e-2", 6));
+        // A second point is refused wherever it goes.
+        let _ = press(&mut input, "home");
+        let _ = press(&mut input, "full_stop");
+        assert_eq!((input.value(), input.cursor()), ("1.5e-2", 0));
+    }
+
+    #[test]
+    fn a_filter_refuses_pastes_that_cant_make_a_number() {
+        let mut input = numeric("12");
+        input.handle_paste("3a");
+        assert_eq!((input.value(), input.cursor()), ("12", 2));
+        input.handle_paste("34\nabc");
+        assert_eq!((input.value(), input.cursor()), ("1234", 4));
+        // Over a selection: the result is what's checked.
+        input.select_all();
+        input.handle_paste("-9");
+        assert_eq!(input.value(), "-9");
+    }
+
+    #[test]
+    fn a_filter_refuses_deletes_that_leave_no_number() {
+        // `1_2` without its 1 would start with `_`, which Textual refuses too.
+        let mut input = numeric("1_2");
+        input.cursor = 1;
+        let _ = press(&mut input, "backspace");
+        assert_eq!((input.value(), input.cursor()), ("1_2", 1));
+        let _ = press(&mut input, "delete");
+        assert_eq!((input.value(), input.cursor()), ("12", 1));
     }
 
     #[test]

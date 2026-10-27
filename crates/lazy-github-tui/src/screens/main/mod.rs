@@ -9,6 +9,7 @@ pub mod layout;
 mod list;
 mod overview_text;
 mod pr_details;
+mod pr_lookup;
 mod profile;
 mod pull_requests;
 mod repo_overview;
@@ -46,6 +47,7 @@ use details::{DetailsPane, details_title};
 use issue_lists::IssueLists;
 use layout::{LayoutInput, layout};
 pub use pr_details::PullRequestTarget;
+use pr_lookup::{PrLookup, select_repository_first};
 use profile::ProfileFetch;
 pub use profile::ProfileOrigin;
 pub use repos::{RepoCells, ReposSection};
@@ -279,6 +281,10 @@ pub enum MainAction {
     LookupRepository,
     /// The Lookup repository dialog closed: with the repo it found, or `None` when it was cancelled.
     RepoLookedUp(Option<Box<Repository>>),
+    /// Open the Lookup pull request dialog (`pull_request.lookup`), or toast without a selected repo.
+    LookupPullRequest,
+    /// The Lookup pull request dialog found a pull request. A cancelled lookup sends nothing.
+    PullRequestLookedUp(Box<FullPullRequest>),
     /// `user.view_profile` in a table: open the profile of the highlighted row's user.
     ViewProfile(ProfileOrigin),
     /// The User profile dialog closed, with the repo picked there, if any.
@@ -898,6 +904,9 @@ impl MainScreen {
             Owner::Section(SectionId::Repos) if id == BindingId::RepositoriesLookup => {
                 Some(Action::Main(MainAction::LookupRepository))
             }
+            Owner::Section(SectionId::PullRequests) if id == BindingId::PullRequestLookup => {
+                Some(Action::Main(MainAction::LookupPullRequest))
+            }
             Owner::Section(SectionId::Repos) if id == BindingId::UserViewProfile => {
                 Some(Action::Main(MainAction::ViewProfile(ProfileOrigin::Repos)))
             }
@@ -1111,6 +1120,23 @@ impl Component for MainScreen {
             // Python's PR and issue containers post `RepoSelected` without `add_item`.
             MainAction::ProfilePicked(ProfileOrigin::PullRequests | ProfileOrigin::Issues, Some(repo)) => {
                 cx.dispatch(Action::SelectRepo(repo));
+            }
+            // Python opens the dialog and fails an `assert` at submit (Py bug B12).
+            MainAction::LookupPullRequest if cx.current_repo().is_none() => cx.notify(select_repository_first()),
+            MainAction::LookupPullRequest => cx.open_dialog(LookupDialog::<PrLookup>::new(), |found| {
+                found.map_or(Action::Consumed, |pr| {
+                    Action::Main(MainAction::PullRequestLookedUp(Box::new(pr)))
+                })
+            }),
+            // Python's `action_lookup_pull_request`: added unless its number is in the table, then selected as from the
+            // table, but with the pull request already fetched.
+            MainAction::PullRequestLookedUp(pr) => {
+                self.issue_lists.insert_pr_if_missing(pr.pr.clone(), cx);
+                tracing::info!("Looked up PR #{}", pr.number());
+                cx.dispatch(Action::Main(MainAction::OpenPullRequest {
+                    target: PullRequestTarget::Full(pr),
+                    focus: true,
+                }));
             }
             MainAction::OpenPullRequest { target, focus } => self.open_pull_request(target, focus, cx),
             MainAction::OpenIssue(issue) => self.open_issue(*issue, cx),

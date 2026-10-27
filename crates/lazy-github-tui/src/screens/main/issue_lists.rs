@@ -177,6 +177,11 @@ impl IssueLists {
         Some(feeds)
     }
 
+    /// Adds a looked-up pull request to the PR table unless it's there: [`ListSection::insert_if_missing`].
+    pub(super) fn insert_pr_if_missing(&mut self, pr: PartialPullRequest, cx: &mut Cx<'_>) {
+        self.prs.insert_if_missing(pr, cx);
+    }
+
     /// Requests the page the PR table asked for.
     pub(super) fn load_more_prs(&mut self, generation: u64, page: u32, per_page: u32, cx: &mut Cx<'_>) {
         self.prs.load_more(generation, page, per_page, cx);

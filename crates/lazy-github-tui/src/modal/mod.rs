@@ -28,7 +28,7 @@ use crate::theme::{Palette, ThemeColor};
 pub use confirm::{ConfirmAction, ConfirmDialog};
 pub use focus::{FocusMove, FocusRing};
 pub use frame::{DIM_FACTOR, DialogFrame, dim, frame_rect};
-pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup};
+pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup, number};
 pub use stack::ModalEntry;
 pub use user_profile::{UserProfileAction, UserProfileDialog};
 

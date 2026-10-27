@@ -219,6 +219,20 @@ impl<S: ListSource> ListSection<S> {
         });
     }
 
+    /// Adds `item` unless a row already has its key, whose row then stays as it was: Python's `item_in_table` check
+    /// before `add_item`, for a looked-up item. A new row is sorted into place and written to the cache, and the
+    /// section stops being compact.
+    pub(super) fn insert_if_missing(&mut self, item: S::Item, cx: &mut Cx<'_>) {
+        if self.table.get(&item.key()).is_some() {
+            return;
+        }
+        // The first row of an empty table runs the lazy check, as Textual's `add_row` does.
+        let event = self.table.insert(item, &());
+        self.follow(event.as_ref(), cx);
+        self.save_cache(cx);
+        self.refresh_compact();
+    }
+
     /// Compact exactly when the table has no items. The owner calls it where Python calls `set_compact`.
     pub(super) fn refresh_compact(&mut self) {
         self.compact = self.table.items().len() == 0;

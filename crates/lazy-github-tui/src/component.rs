@@ -213,18 +213,28 @@ impl Owner {
             // Textual's `TextArea` has no group title: its keys are an untitled section.
             | Owner::DialogField(
                 _,
-                FieldKind::TextEditor | FieldKind::Button | FieldKind::Switch | FieldKind::Scroll | FieldKind::Table,
+                FieldKind::TextEditor
+                | FieldKind::Button
+                | FieldKind::Switch
+                | FieldKind::Scroll
+                | FieldKind::Table
+                | FieldKind::Select
+                | FieldKind::SelectOverlay,
             ) => None,
         }
     }
 
-    /// Whether the owner is a text input, which takes the keys it types from every link further out.
+    /// Whether the owner is a text input, which takes the keys it types from every link further out. A select's open
+    /// list counts: it takes the printable keys to search.
     pub fn types_text(self) -> bool {
         matches!(
             self,
             Owner::SearchInput(_)
                 | Owner::DiffFilter
-                | Owner::DialogField(_, FieldKind::TextInput | FieldKind::TextEditor)
+                | Owner::DialogField(
+                    _,
+                    FieldKind::TextInput | FieldKind::TextEditor | FieldKind::SelectOverlay
+                )
         )
     }
 

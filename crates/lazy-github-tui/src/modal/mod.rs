@@ -20,6 +20,7 @@ use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Component, Cx, Owner};
 use crate::components::button::BUTTON_BINDINGS;
 use crate::components::info::INFO_BINDINGS;
+use crate::components::select::{SELECT_BINDINGS, SELECT_OVERLAY_BINDINGS};
 use crate::components::switch::SWITCH_BINDINGS;
 use crate::components::table::TABLE_BINDINGS;
 use crate::components::text_editor::TEXT_EDITOR_BINDINGS;
@@ -80,7 +81,7 @@ pub enum ModalKind {
     Test(u8),
 }
 
-/// The kinds of focusable field a dialog has, for [`crate::component::Owner::DialogField`]. Selects come with #179.
+/// The kinds of focusable field a dialog has, for [`crate::component::Owner::DialogField`].
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum FieldKind {
     /// Textual's `Input`: it types text, so the keys it types are gone from the links behind it.
@@ -96,6 +97,12 @@ pub enum FieldKind {
     Scroll,
     /// Textual's `DataTable`, with the vim keys: `enter` selects the cursor's row.
     Table,
+    /// Textual's `Select` with its list closed ([`crate::components::select::Select`]): `enter`, `space`, `up` or
+    /// `down` opens it.
+    Select,
+    /// A select's open list (`SelectOverlay`): it has the focus while open, takes the printable keys to search, and
+    /// `escape` dismisses it.
+    SelectOverlay,
 }
 
 impl FieldKind {
@@ -108,6 +115,8 @@ impl FieldKind {
             FieldKind::Switch => SWITCH_BINDINGS,
             FieldKind::Scroll => INFO_BINDINGS,
             FieldKind::Table => TABLE_BINDINGS,
+            FieldKind::Select => SELECT_BINDINGS,
+            FieldKind::SelectOverlay => SELECT_OVERLAY_BINDINGS,
         };
         ChainLink::new(Owner::DialogField(kind, self), bindings)
     }

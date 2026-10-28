@@ -1,0 +1,18 @@
+---
+source: crates/lazy-github-tui/src/components/select/tests.rs
+assertion_line: 302
+expression: "draw_box(&status(None), false)"
+---
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊  Select                 ▼  ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+--- styles
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaab
+.ccddddddcccccccccccccccccdccb
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaab
+--- legend
+. fg=#191919 bg=#4f4f4f REVERSED
+a fg=#191919 bg=#1e1e1e
+b fg=#191919 bg=#4f4f4f
+c fg=#e0e0e0 bg=#1e1e1e
+d fg=#7f7f7f bg=#1e1e1e

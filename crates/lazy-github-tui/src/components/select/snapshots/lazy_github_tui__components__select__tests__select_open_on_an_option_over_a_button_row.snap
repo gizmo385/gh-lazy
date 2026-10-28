@@ -1,0 +1,38 @@
+---
+source: crates/lazy-github-tui/src/components/select/tests.rs
+assertion_line: 365
+expression: "draw_open(status(Some(\"closed\")), 9)"
+---
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊  Closed                           ▲  ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊  Select                              ▎
+▊  Open                                ▎
+▊  Closed                              ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+
+--- styles
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab
+.cccccccccccccccccccccccccccccccccccdccb
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab
+effffffffffffffffffffffffffffffffffffffg
+ehhiiiiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhg
+ehhhhhhhhjjjjjjhhhhhhhhhjjjjjjjjhhhhhhhg
+ehkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkhg
+effffffffffffffffffffffffffffffffffffffg
+llllllllllllllllllllllllllllllllllllllll
+--- legend
+. fg=#191919 bg=#4f4f4f REVERSED
+a fg=#191919 bg=#1e1e1e
+b fg=#191919 bg=#4f4f4f
+c fg=#e0e0e0 bg=#1e1e1e
+d fg=#7f7f7f bg=#1e1e1e
+e fg=#0178d4 bg=#4f4f4f REVERSED
+f fg=#0178d4 bg=#272727
+g fg=#0178d4 bg=#4f4f4f
+h fg=#e0e0e0 bg=#272727
+i fg=#a1a1a1 bg=#272727
+j fg=#e0e0e0 bg=#272727 BOLD
+k fg=#ddedf9 bg=#0178d4 BOLD
+l fg=Reset bg=#4f4f4f

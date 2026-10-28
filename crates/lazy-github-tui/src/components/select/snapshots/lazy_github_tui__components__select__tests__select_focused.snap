@@ -1,0 +1,18 @@
+---
+source: crates/lazy-github-tui/src/components/select/tests.rs
+assertion_line: 312
+expression: "draw_box(&status(Some(\"closed\")), true)"
+---
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊  Closed                 ▼  ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+--- styles
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaab
+.cccccccccccccccccccccccccdccb
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaab
+--- legend
+. fg=#0178d4 bg=#4f4f4f REVERSED
+a fg=#0178d4 bg=#272727
+b fg=#0178d4 bg=#4f4f4f
+c fg=#e0e0e0 bg=#272727
+d fg=#838383 bg=#272727

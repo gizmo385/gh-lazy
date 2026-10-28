@@ -1,0 +1,29 @@
+---
+source: crates/lazy-github-tui/src/components/select/tests.rs
+assertion_line: 371
+expression: "draw_open(status(Some(\"open\")), 6)"
+---
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊  Select                              ▎
+▊  Open                                ▎
+▊  Closed                              ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+--- styles
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab
+cdddddddddddddddddddddddddddddddddddddde
+cffggggggffffffffffffffffffffffffffffffe
+cfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfe
+cffffffffffffffffffffffffffffffffffffffe
+cddddddddiiiiiidddddddddiiiiiiiiddddddde
+--- legend
+. fg=#191919 bg=#4f4f4f REVERSED
+a fg=#191919 bg=#1e1e1e
+b fg=#191919 bg=#4f4f4f
+c fg=#0178d4 bg=#4f4f4f REVERSED
+d fg=#0178d4 bg=#272727
+e fg=#0178d4 bg=#4f4f4f
+f fg=#e0e0e0 bg=#272727
+g fg=#a1a1a1 bg=#272727
+h fg=#ddedf9 bg=#0178d4 BOLD
+i fg=#0178d4 bg=#272727 BOLD

@@ -200,7 +200,8 @@ registry! {
         .hidden()
         .tooltip("Focus the command log, where actions taken by LazyGithub are shown");
 
-    // Textual built-ins. Python has no ids for them, so overrides never reach them. All are hidden.
+    // Textual built-ins. Python has no ids for them, so overrides never reach them. All are hidden but the select
+    // overlay's `escape`.
     TextualQuit("textual.app.quit", "ctrl+q", "quit", "Quit")
         .tooltip("Quit the app and return to the command prompt.")
         .hidden()
@@ -314,6 +315,18 @@ registry! {
     TextualButtonPress("textual.button.press", "enter", "press", "Press button").hidden();
     // `Switch`: the dialogs' switches (#223).
     TextualSwitchToggle("textual.switch.toggle_switch", "enter,space", "toggle_switch", "Toggle").hidden();
+    // `Select`: the dialogs' selects (#253). Its overlay is an `OptionList` with `escape` to dismiss it, the one
+    // built-in the footer shows.
+    TextualSelectShowOverlay("textual.select.show_overlay", "enter,down,space,up", "show_overlay", "Show menu").hidden();
+    TextualSelectDismiss("textual.select.dismiss", "escape", "dismiss", "Dismiss menu");
+    // `OptionList`, in `OptionList.BINDINGS` order: the select's overlay (#253) and `SelectionList` (#254).
+    TextualOptionListCursorDown("textual.option_list.cursor_down", "down", "cursor_down", "Down").hidden();
+    TextualOptionListLast("textual.option_list.last", "end", "last", "Last").hidden();
+    TextualOptionListSelect("textual.option_list.select", "enter", "select", "Select").hidden();
+    TextualOptionListFirst("textual.option_list.first", "home", "first", "First").hidden();
+    TextualOptionListPageDown("textual.option_list.page_down", "pagedown", "page_down", "Page Down").hidden();
+    TextualOptionListPageUp("textual.option_list.page_up", "pageup", "page_up", "Page Up").hidden();
+    TextualOptionListCursorUp("textual.option_list.cursor_up", "up", "cursor_up", "Up").hidden();
     // `Tree`: the run Jobs tab's tree (#242), in `Tree.BINDINGS` order. It inherits the `textual.scroll.*` keys too.
     TextualTreeCursorParent("textual.tree.cursor_parent", "shift+left", "cursor_parent", "Cursor to parent").hidden();
     TextualTreeCursorParentNextSibling("textual.tree.cursor_parent_next_sibling", "shift+right", "cursor_parent_next_sibling", "Cursor to next ancestor")

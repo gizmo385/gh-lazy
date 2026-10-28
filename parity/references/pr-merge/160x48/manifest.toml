@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["overview-content", "merge-failed", "already-merged", "merged"]
 
 [inputs]
-scenario = "7118e66251f37e2d98a403f828c290a74b1b861d"
+scenario = "ee205730274ba10e0e06d8bdd9343d37ac6301b1"
 fixtures = "a3466bfa490cdb719d6e22a3bebbba61ae8eedb7"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "d40dac32aacaaea9cd02642bf388d6d6f854e0ee"

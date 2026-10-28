@@ -13,7 +13,7 @@ use std::time::Duration;
 
 use tokio::sync::OnceCell;
 
-use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
+use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter, MergeMethod};
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts, Method};
 use crate::models::{
     CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, IssueState,
@@ -283,6 +283,19 @@ pub trait Github: Clone + Send + Sync + 'static {
         number: u64,
         kind: ReactionKind,
     ) -> impl Future<Output = Result<bool, GhError>> + Send;
+
+    /// Merges pull request `number` of `repo`: `PUT /repos/{owner}/{repo}/pulls/{number}/merge` with `request` over
+    /// stdin. GitHub merges only while the head is still `request.sha`. Returns its answer, which may say it didn't
+    /// merge. Never cached.
+    ///
+    /// Fails on any HTTP error status (405 when it isn't mergeable, 409 when the head moved) or `gh` failure, or with
+    /// [`GhError::Decode`] when the body doesn't decode.
+    fn merge_pull_request(
+        &self,
+        repo: &Repository,
+        number: u64,
+        request: &MergeRequest,
+    ) -> impl Future<Output = Result<MergeResult, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -512,6 +525,29 @@ pub struct NewReview {
     pub body: String,
     /// Its inline comments, in the order they were added.
     pub comments: Vec<DraftReviewComment>,
+}
+
+/// What [`Github::merge_pull_request`] sends: the body of `PUT /repos/{owner}/{repo}/pulls/{number}/merge`, serialized
+/// with its fields in this order and the method as `merge`, `squash` or `rebase`.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize)]
+pub struct MergeRequest {
+    /// How to merge: `pull_requests.preferred_merge_method`.
+    pub merge_method: MergeMethod,
+    /// The head commit the merge is for; GitHub refuses it (409) once the branch has moved on.
+    pub sha: String,
+}
+
+/// GitHub's answer to a merge it accepted.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
+pub struct MergeResult {
+    /// Whether the pull request was merged.
+    pub merged: bool,
+    /// GitHub's message, such as "Pull Request successfully merged".
+    #[serde(default)]
+    pub message: String,
+    /// The merge commit, when there is one.
+    #[serde(default)]
+    pub sha: Option<String>,
 }
 
 /// A review's verdict, as the reviews endpoint takes it: `APPROVE`, `REQUEST_CHANGES` or `COMMENT`.
@@ -917,6 +953,16 @@ impl GhCli {
         request
     }
 
+    /// `PUT /repos/{owner}/{repo}/pulls/{number}/merge` with `merge` as the JSON body.
+    fn merge_pull_request_request(repo: &Repository, number: u64, merge: &MergeRequest) -> Result<GhRequest, GhError> {
+        let mut request = GhRequest::new(
+            Method::Put,
+            format!("/repos/{}/{}/pulls/{number}/merge", repo.owner.login, repo.name),
+        );
+        request.body = Some(serde_json::to_value(merge)?);
+        Ok(request)
+    }
+
     /// `POST /repos/{owner}/{repo}/pulls/{number}/reviews` with `review` as the JSON body.
     fn create_review_request(repo: &Repository, number: u64, review: &NewReview) -> Result<GhRequest, GhError> {
         let mut request = GhRequest::new(
@@ -1150,6 +1196,21 @@ impl Github for GhCli {
         let request = Self::add_issue_reaction_request(repo, number, kind);
         reaction_created(self.inner.runner.request(request).await)
     }
+
+    async fn merge_pull_request(
+        &self,
+        repo: &Repository,
+        number: u64,
+        request: &MergeRequest,
+    ) -> Result<MergeResult, GhError> {
+        let request = Self::merge_pull_request_request(repo, number, request)?;
+        merge_result(self.inner.runner.request(request).await)
+    }
+}
+
+/// What a merge request answered: GitHub's result for a 2xx, the error for anything else (a 405 or a 409).
+fn merge_result(response: Result<GhResponse, GhError>) -> Result<MergeResult, GhError> {
+    response?.json()
 }
 
 /// Whether an add-reaction request created the reaction: 201 for a new one, 200 when the user already had it
@@ -2431,6 +2492,65 @@ mod tests {
         assert!(matches!(
             answer("404 Not Found", 1),
             Err(GhError::Http { status: 404, .. })
+        ));
+    }
+
+    #[test]
+    fn merge_pull_request_argv_puts_each_method_and_the_head_sha_over_stdin() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        for (method, name) in [
+            (MergeMethod::Merge, "merge"),
+            (MergeMethod::Squash, "squash"),
+            (MergeMethod::Rebase, "rebase"),
+        ] {
+            let merge = MergeRequest {
+                merge_method: method,
+                sha: "c0ffee5555555555555555555555555555555555".into(),
+            };
+            let request = GhCli::merge_pull_request_request(&pr_details_repo(), 5, &merge).unwrap();
+            assert_eq!(
+                strings(request.argv(gh.runner().hostname(), false)),
+                [
+                    "api",
+                    "-i",
+                    "-X",
+                    "PUT",
+                    "-H",
+                    "Accept: application/vnd.github+json",
+                    "--input",
+                    "-",
+                    "/repos/parity-bot/pr-details/pulls/5/merge"
+                ]
+            );
+            assert_eq!(
+                request.body.unwrap().to_string(),
+                format!(r#"{{"merge_method":"{name}","sha":"c0ffee5555555555555555555555555555555555"}}"#)
+            );
+        }
+    }
+
+    #[test]
+    fn merge_results_decode_and_a_refused_merge_is_an_error() {
+        let merged = parity_fixture("pr-write", "repos/parity-bot/pr-details/pulls/5/merge/PUT.json");
+        let merged = merge_result(json_response("200 OK", &merged["response"]["body"].to_string())).unwrap();
+        assert_eq!(
+            merged,
+            MergeResult {
+                merged: true,
+                message: "Pull Request successfully merged".into(),
+                sha: Some("5eed5eed5eed5eed5eed5eed5eed5eed5eed5eed".into()),
+            }
+        );
+        let not_merged = merge_result(json_response("200 OK", r#"{"merged":false,"message":"Nope"}"#)).unwrap();
+        assert!(!not_merged.merged);
+        assert_eq!(not_merged.sha, None);
+        let refused = parity_fixture("pr-write", "repos/parity-bot/pr-details/pulls/4/merge/PUT.json");
+        assert!(matches!(
+            merge_result(json_response(
+                "405 Method Not Allowed",
+                &refused["response"]["body"].to_string()
+            )),
+            Err(GhError::Http { status: 405, .. })
         ));
     }
 

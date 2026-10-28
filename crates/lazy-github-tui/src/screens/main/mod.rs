@@ -11,6 +11,7 @@ mod list;
 mod overview_text;
 mod pr_details;
 mod pr_lookup;
+mod pr_merge;
 mod profile;
 mod pull_requests;
 mod repo_overview;
@@ -52,6 +53,7 @@ use issue_lookup::IssueLookup;
 use layout::{LayoutInput, layout};
 pub use pr_details::PullRequestTarget;
 use pr_lookup::{PrLookup, select_repository_first};
+use pr_merge::PrMerges;
 use profile::ProfileFetch;
 pub use profile::ProfileOrigin;
 pub use repos::{RepoCells, ReposSection};
@@ -249,6 +251,7 @@ pub struct MainScreen {
     issue_lists: IssueLists,
     workflows: WorkflowsPane,
     profile: ProfileFetch,
+    merges: PrMerges,
     /// Where each section's table component was drawn in the last frame, by [`SectionId::index`]: the box's
     /// interior, or the maximized rect. `None` when it wasn't drawn.
     table_areas: [Option<Rect>; 4],
@@ -317,6 +320,8 @@ pub enum MainAction {
     },
     /// Add Comment, opened from the PR Diff tab, closed with a comment: it joins the diff viewer's pending comments.
     DiffCommentAdded(Box<PendingComment>),
+    /// Merge the pull request the details show (`pull_request.merge` in its Overview), or warn that it's merged.
+    MergePullRequest,
     /// Add reaction, opened from the PR Overview, closed with these reactions checked, in the order they were
     /// checked (none when cancelled): the Overview posts them.
     ReactionsChosen(Vec<ReactionKind>),
@@ -382,6 +387,7 @@ impl MainScreen {
             issue_lists: IssueLists::new(options),
             workflows: WorkflowsPane::new(options),
             profile: ProfileFetch::default(),
+            merges: PrMerges::default(),
             table_areas: [None; 4],
             hits: Vec::new(),
             pending_pr: None,
@@ -577,6 +583,7 @@ impl MainScreen {
         let response = self.repos.on_response(id, response, cx)?;
         let response = self.issue_lists.on_response(id, response, cx)?;
         let response = self.workflows.on_response(id, response, cx)?;
+        let response = self.merges.on_response(id, response, cx)?;
         let response = self.on_pull_request(id, response, cx)?;
         self.details.on_response(id, response, cx)
     }
@@ -1274,6 +1281,11 @@ impl Component for MainScreen {
             MainAction::CommentClosed { posted, reply } => self.details.comment_closed(posted, reply, cx),
             MainAction::DiffCommentAdded(comment) => self.details.diff_comment_added(*comment, cx),
             MainAction::ReactionsChosen(kinds) => self.details.reactions_chosen(kinds, cx),
+            MainAction::MergePullRequest => {
+                if let Some(pr) = self.details.pull_request().map(pr_details::PullRequestDetails::pr) {
+                    self.merges.start(pr, cx);
+                }
+            }
             MainAction::ClickSelect(repo) => {
                 self.try_focus(FocusTarget::Table(SectionId::Repos));
                 cx.dispatch(Action::SelectRepo(repo));

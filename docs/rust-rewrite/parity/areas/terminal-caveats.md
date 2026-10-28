@@ -5,7 +5,7 @@ this file.
 
 | Id | Caveat | Affects | Recommendation |
 | --- | --- | --- | --- |
-| `terminal-caveats.ctrl-m-enter` | `ctrl+m` and Enter are the same byte (CR) without the kitty keyboard protocol. | `pull_request.merge` | Keep the id and default. Only treat a disambiguated `ctrl+m` as merge; never Enter. See Py bug B30. |
+| `terminal-caveats.ctrl-m-enter` | `ctrl+m` and Enter are the same byte (CR) without the kitty keyboard protocol. | `pull_request.merge` | Keep the id and default. Only treat a disambiguated `ctrl+m` as merge; never Enter. See Py bug B30. Implemented in #262 (`pr-merge` sends CSI 109;5 u). |
 | `terminal-caveats.shift-enter` | `shift+enter` arrives as plain Enter in legacy terminals. | `modal.submit` | Push kitty enhancement flags when supported; keep the Submit buttons working; don't map plain Enter to submit inside multi-line editors. |
 | `terminal-caveats.ctrl-v-paste` | `ctrl+v` is often captured by the terminal as paste. | `link.paste` | Also handle bracketed paste on the main screen as "open paste modal with this text" (needs a decision if it changes UX). |
 | `terminal-caveats.uppercase-bindings` | Uppercase bindings (`M`, `I`, `P`, `E`, `O`, `J`, `K`, `G`, `R`, `T`, `F`) arrive as shifted characters; some terminals report `shift+m`. | all uppercase ids | Normalize `shift+<letter>` and `<LETTER>` to the same key. |

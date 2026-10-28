@@ -3,7 +3,7 @@ description = "PR Overview merge (ctrl+m): a PR GitHub refuses to merge (error),
 # ctrl+m is sent in the kitty keyboard protocol's encoding (CSI 109;5 u), which both apps read; a terminal without the
 # protocol sends Enter for it (terminal-caveats.ctrl-m-enter). After the merge Rust refetches the PR (Py bug B15's
 # recommendation) and Python redraws the stale one, so the Overview text after the merge isn't in [expect].
-gate = false
+gate = true
 parity_rows = [
     "pull-requests.overview-merge",
     "keybindings.pull-request-merge",
@@ -49,13 +49,15 @@ wait.timeout_ms = 15000
 [[step]]
 wait.text = "Superseded by the new renderer."
 
-# Into the Overview's content, where the merge key is bound.
+# Into the Overview's content, where the merge key is bound. The footer shows far enough at 160 columns to tell
+# `^p Command Pallete` (Python) from `^p Command Palette` (Rust, Py bug B14 fixed on purpose), so the cross-app footer
+# check is left out and [expect] matches the footer's text up to there with `contains`.
 [[step]]
 keys = ["tab"]
 
 [[step]]
 capture = "overview-content"
-checks = ["titles", "focus", "footer"]
+checks = ["titles", "focus"]
 
 [[step]]
 type = "\u001b[109;5u"
@@ -142,8 +144,7 @@ checks = ["titles", "focus"]
 
 [expect.overview-content]
 focused = ["[5] PR #4 Details"]
-contains = ["Drop the legacy renderer (#4)"]
-footer = ["^m Merge PR", "E Edit PR", "R Add reaction", "^v Paste link", "f Follow link", "F Follow link (browser)", "q Quit", "^p Command Pallete", "M Maximize", "? Keybindings"]
+contains = ["Drop the legacy renderer (#4)", " ^m Merge PR  E Edit PR  R Add reaction  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pal"]
 
 [expect.merge-failed]
 contains = ["Error Merging PR", "Pull request 4 could not be merged"]

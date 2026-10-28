@@ -222,8 +222,8 @@ impl DetailsBody for PullRequestDetails {
         }
     }
 
-    /// A section title's or list's key applies to the Overview, and add a reaction makes a request; merge (#183) and
-    /// edit (#185) aren't built yet: the key is consumed, as in Python.
+    /// A section title's or list's key applies to the Overview, add a reaction makes a request and merge goes to the
+    /// main screen; edit (#185) isn't built yet: the key is consumed, as in Python.
     fn on_binding(&mut self, tab: usize, owner: Owner, id: BindingId) -> Option<Action> {
         // The diff viewer's titles, pane, filter and keys.
         match PrTab::at(tab) {
@@ -235,6 +235,7 @@ impl DetailsBody for PullRequestDetails {
         match (owner, id) {
             (Owner::CollapsibleTitle | Owner::ListView, _) => self.overview.on_binding(id).then_some(Action::Consumed),
             (Owner::PrOverview, BindingId::ReactAdd) => Some(Action::Main(MainAction::DetailsCommand(owner, id))),
+            (Owner::PrOverview, BindingId::PullRequestMerge) => Some(Action::Main(MainAction::MergePullRequest)),
             _ => Some(Action::Unimplemented(id)),
         }
     }

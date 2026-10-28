@@ -503,12 +503,17 @@ fn the_pull_request_bindings_answer_unimplemented() {
     settle(&mut app);
     app.press(&["tab"]);
     let main = app.app_mut().main_screen_mut().unwrap();
-    for id in [BindingId::PullRequestMerge, BindingId::PullRequestEdit] {
-        assert!(matches!(
-            main.details.on_binding(crate::component::Owner::PrOverview, id),
-            Some(Action::Unimplemented(got)) if got == id
-        ));
-    }
+    assert!(matches!(
+        main.details
+            .on_binding(crate::component::Owner::PrOverview, BindingId::PullRequestEdit),
+        Some(Action::Unimplemented(BindingId::PullRequestEdit))
+    ));
+    // Merge goes to the main screen, which holds the merges in flight.
+    assert!(matches!(
+        main.details
+            .on_binding(crate::component::Owner::PrOverview, BindingId::PullRequestMerge),
+        Some(Action::Main(crate::screens::main::MainAction::MergePullRequest))
+    ));
     // Add reaction runs as a command, which makes a request.
     assert!(matches!(
         main.details
@@ -1052,4 +1057,197 @@ fn without_the_user_no_dialog_opens() {
         "{out}"
     );
     assert!(modals(&app).is_empty());
+}
+
+// Merge (#262).
+
+/// The Overview of the PR `keys` select from the table, with focus in its content, on `config` and `gh`.
+fn merge_ready(config: Config, gh: FakeGithub, keys: &[&str]) -> TestApp {
+    let mut app = TestApp::with_github(config, gh);
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["2"]);
+    app.press(keys);
+    settle(&mut app);
+    app.press(&["tab"]);
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    app
+}
+
+/// The merges sent, by number, with what each sent.
+fn merges(app: &TestApp) -> Vec<(u64, lazy_github_core::github::MergeRequest)> {
+    app.gh()
+        .calls()
+        .into_iter()
+        .filter_map(|call| match call {
+            GithubCall::MergePullRequest {
+                full_name,
+                number,
+                request,
+            } => {
+                assert_eq!(full_name, NAME);
+                Some((number, request))
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+/// The pull request fetches made, by number.
+fn fetched(app: &TestApp) -> Vec<u64> {
+    app.gh()
+        .calls()
+        .into_iter()
+        .filter_map(|call| match call {
+            GithubCall::PullRequest { number, .. } => Some(number),
+            _ => None,
+        })
+        .collect()
+}
+
+fn merge_result(merged: bool) -> lazy_github_core::github::MergeResult {
+    lazy_github_core::github::MergeResult {
+        merged,
+        message: "Pull Request successfully merged".into(),
+        sha: merged.then(|| "5eed5eed5eed5eed5eed5eed5eed5eed5eed5eed".into()),
+    }
+}
+
+fn toasts(app: &TestApp) -> Vec<Toast> {
+    app.app().toasts().iter().cloned().collect()
+}
+
+#[test]
+fn the_overview_footer_starts_with_merge() {
+    let mut app = merge_ready(config(), gh(), &["enter"]);
+    let screen = app.screen(160, 48);
+    assert!(
+        screen
+            .lines()
+            .last()
+            .unwrap()
+            .starts_with(" ^m Merge PR  E Edit PR  R Add reaction"),
+        "{screen}"
+    );
+}
+
+#[test]
+fn an_already_merged_pull_request_warns_and_sends_nothing() {
+    let mut app = merge_ready(config(), gh(), &["j", "j", "enter"]);
+    app.press(&["ctrl+m"]);
+    settle(&mut app);
+    assert!(merges(&app).is_empty());
+    assert_eq!(
+        toasts(&app),
+        [Toast::warning("PR has already been merged!").with_title("Already Merged")]
+    );
+}
+
+#[test]
+fn a_merge_toasts_and_shows_the_pull_request_fetched_again() {
+    let gh = gh().with_merge(5, Ok(merge_result(true)));
+    let mut app = merge_ready(config(), gh, &["enter"]);
+    assert_eq!(fetched(&app), [5]);
+    // Once merged, GitHub answers with the merged pull request.
+    let mut merged = fixture_pr(5);
+    merged.merged_at = fixture_pr(3).merged_at;
+    let _ = app.gh().clone().with_pull_request(NAME, 5, Ok(merged));
+    app.press(&["ctrl+m"]);
+    let out = settle(&mut app);
+    assert!(out.contains("INFO Merged PR 5 in repo parity-bot/pr-details"), "{out}");
+    assert_eq!(
+        merges(&app),
+        [(
+            5,
+            lazy_github_core::github::MergeRequest {
+                merge_method: lazy_github_core::config::MergeMethod::Squash,
+                sha: fixture_pr(5).head.sha,
+            }
+        )]
+    );
+    assert_eq!(
+        toasts(&app),
+        [
+            Toast::info("Pull request 5 merged. Note some cached information on the UI may be out of date.")
+                .with_title("PR Merged")
+        ]
+    );
+    // Fetched again and shown as a fresh selection: the tabs rebuilt and the strip focused.
+    assert_eq!(fetched(&app), [5, 5]);
+    assert_eq!(focus(&app), FocusTarget::DetailsTabs);
+    assert_eq!(
+        tabs(&app),
+        (vec!["Overview".into(), "Diff".into(), "Conversation".into()], 0)
+    );
+    assert!(main(&app).details_pull_request().unwrap().merged_at.is_some());
+    assert!(app.screen(160, 48).contains("Merged Add a cursor to the viewer (#5)"));
+}
+
+#[test]
+fn a_failed_refetch_toasts_as_a_failed_selection() {
+    let gh = gh().with_merge(5, Ok(merge_result(true)));
+    let mut app = merge_ready(config(), gh, &["enter"]);
+    let _ = app.gh().clone().with_pull_request(NAME, 5, Err(server_error()));
+    app.press(&["ctrl+m"]);
+    settle(&mut app);
+    assert_eq!(fetched(&app), [5, 5]);
+    let toasts = toasts(&app);
+    assert_eq!(toasts.len(), 2, "{toasts:?}");
+    assert_eq!(
+        toasts[1],
+        Toast::error("Error fetching pull request!").with_title("API Error")
+    );
+    // The pull request still shows as it was.
+    assert_eq!(shown_pr(&app), Some(5));
+    assert!(main(&app).details_pull_request().unwrap().merged_at.is_none());
+}
+
+#[test]
+fn a_refused_or_unmerged_merge_toasts_and_changes_nothing() {
+    for result in [Ok(merge_result(false)), Err(server_error())] {
+        let failed = result.is_err();
+        let gh = gh().with_merge(4, result);
+        let mut app = merge_ready(config(), gh, &["j", "enter"]);
+        app.press(&["ctrl+m"]);
+        let out = settle(&mut app);
+        let line = if failed {
+            "ERROR Failed to merge PR 4"
+        } else {
+            "WARN Failed to merge PR 4"
+        };
+        assert!(out.contains(line), "{out}");
+        assert_eq!(merges(&app).len(), 1);
+        assert_eq!(
+            toasts(&app),
+            [Toast::error("Pull request 4 could not be merged").with_title("Error Merging PR")]
+        );
+        assert_eq!(fetched(&app), [4], "no refetch");
+        assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    }
+}
+
+#[test]
+fn the_merge_method_follows_the_config() {
+    use lazy_github_core::config::MergeMethod;
+
+    for method in [MergeMethod::Merge, MergeMethod::Rebase] {
+        let mut config = config();
+        config.pull_requests.preferred_merge_method = method;
+        let mut app = merge_ready(config, gh().with_merge(5, Ok(merge_result(true))), &["enter"]);
+        app.press(&["ctrl+m"]);
+        settle(&mut app);
+        assert_eq!(merges(&app)[0].1.merge_method, method);
+    }
+}
+
+#[test]
+fn enter_in_the_overview_never_merges() {
+    let mut app = merge_ready(config(), gh().with_merge(5, Ok(merge_result(true))), &["enter"]);
+    app.press(&["enter"]);
+    settle(&mut app);
+    // Down onto a list and enter again.
+    app.press(&["tab", "enter"]);
+    settle(&mut app);
+    assert!(merges(&app).is_empty());
+    assert!(app.app().toasts().is_empty());
 }

@@ -18,9 +18,9 @@ listed with that modal under [Modals](./modals.md).
 | `toasts.bug-report-error` | "Could not load LazyGithub repo! Please open the bug report on Github" | error / "Error opening bug report" | `ui/screens/primary.py` | M4 | not started | #195 | |
 | `toasts.nothing-selected` | "No repository currently selected" / "No pull request currently selected" / "No issue currently selected" | error | `ui/widgets/repositories.py`, `ui/widgets/pull_requests.py`, `ui/widgets/issues.py` | M2 | parity | #225, #226 | Rust (#225): the repos message (scenario `user-profile-no-repo`). Rust (#226): the PR and issue messages (scenario `user-profile-authors`). |
 | `toasts.edit-pr-already-merged` | "This PR has already been merged!" | warning | `ui/widgets/pull_requests.py` | M3 | not started | #185, #283 | From the PR table (after fetching the PR) and the PR Overview. Scenario `pr-edit`. |
-| `toasts.merge-already-merged` | "PR has already been merged!" | warning / "Already Merged" | `ui/widgets/pull_requests.py` | M3 | not started | #183, #262 | |
-| `toasts.pr-merged` | "Pull request N merged. Note some cached information on the UI may be out of date." | information / "PR Merged" | `ui/widgets/pull_requests.py` | M3 | not started | #183, #262 | |
-| `toasts.pr-merge-failed` | "Pull request N could not be merged" | error / "Error Merging PR" | `ui/widgets/pull_requests.py` | M3 | not started | #183, #262 | |
+| `toasts.merge-already-merged` | "PR has already been merged!" | warning / "Already Merged" | `ui/widgets/pull_requests.py` | M3 | in progress | #183, #262 | |
+| `toasts.pr-merged` | "Pull request N merged. Note some cached information on the UI may be out of date." | information / "PR Merged" | `ui/widgets/pull_requests.py` | M3 | in progress | #183, #262 | |
+| `toasts.pr-merge-failed` | "Pull request N could not be merged" | error / "Error Merging PR" | `ui/widgets/pull_requests.py` | M3 | in progress | #183, #262 | |
 | `toasts.comment-empty` | "Comment cannot be empty!" | warning | `ui/widgets/split_diff_viewer.py` | M3 | in progress | #187, #272 | |
 | `toasts.comment-review-added` | "New comment added", "New review created!" | information | `ui/widgets/split_diff_viewer.py` | M3 | in progress | #187, #272, #273 | |
 | `toasts.review-status-missing` | "Please select a status for the new review!" | error | `ui/widgets/split_diff_viewer.py` | M3 | in progress | #187, #273 | |

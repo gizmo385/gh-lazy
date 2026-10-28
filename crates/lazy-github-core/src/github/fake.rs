@@ -7,7 +7,10 @@ use std::time::Duration;
 
 use serde::de::Error as _;
 
-use super::{DiffFetchError, Github, IssueListQuery, IssueUpdate, NewIssue, NewReview, PageQuery, RepoListQuery};
+use super::{
+    DiffFetchError, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue, NewReview, PageQuery,
+    RepoListQuery,
+};
 use crate::gh::GhError;
 use crate::models::{
     CheckRun, CheckState, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
@@ -17,7 +20,7 @@ use crate::models::{
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review` and `add_issue_reaction` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction` and `merge_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -170,6 +173,15 @@ pub enum GithubCall {
         /// The reaction sent.
         kind: ReactionKind,
     },
+    /// [`Github::merge_pull_request`].
+    MergePullRequest {
+        /// The repository's full name.
+        full_name: String,
+        /// The pull request's number.
+        number: u64,
+        /// What was sent.
+        request: MergeRequest,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repository's full name.
@@ -235,6 +247,8 @@ struct State {
     updated_issue: Option<Result<Issue, GhError>>,
     /// What `add_issue_reaction` returns, by the kind sent; kinds not set fail with a 422.
     added_reactions: HashMap<ReactionKind, Result<bool, GhError>>,
+    /// What `merge_pull_request` returns, by the pull request's number; numbers not set fail with a 422.
+    merges: HashMap<u64, Result<MergeResult, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -487,6 +501,14 @@ impl FakeGithub {
     #[must_use]
     pub fn with_added_reaction(self, kind: ReactionKind, added: Result<bool, GhError>) -> Self {
         self.lock().added_reactions.insert(kind, added);
+        self
+    }
+
+    /// `merge_pull_request` returns `result` for pull request `number`, whatever the repo and the request sent. Other
+    /// numbers fail with a 422.
+    #[must_use]
+    pub fn with_merge(self, number: u64, result: Result<MergeResult, GhError>) -> Self {
+        self.lock().merges.insert(number, result);
         self
     }
 
@@ -890,6 +912,25 @@ impl Github for FakeGithub {
         };
         self.respond(call, |state| match state.added_reactions.get(&kind) {
             Some(Ok(added)) => Ok(*added),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Err(unprocessable()),
+        })
+        .await
+    }
+
+    async fn merge_pull_request(
+        &self,
+        repo: &Repository,
+        number: u64,
+        request: &MergeRequest,
+    ) -> Result<MergeResult, GhError> {
+        let call = GithubCall::MergePullRequest {
+            full_name: repo.full_name.clone(),
+            number,
+            request: request.clone(),
+        };
+        self.respond(call, |state| match state.merges.get(&number) {
+            Some(Ok(result)) => Ok(result.clone()),
             Some(Err(error)) => Err(duplicate(error)),
             None => Err(unprocessable()),
         })
@@ -1427,6 +1468,36 @@ mod tests {
                 full_name: "octocat/a".into(),
                 number: 5,
                 kind: ReactionKind::Heart,
+            }
+        );
+    }
+
+    #[tokio::test]
+    async fn merge_pull_request_answers_by_number_and_records_the_call() {
+        let merged = MergeResult {
+            merged: true,
+            message: "Pull Request successfully merged".into(),
+            sha: Some("5eed".into()),
+        };
+        let github = FakeGithub::new().with_merge(5, Ok(merged.clone()));
+        let request = MergeRequest {
+            merge_method: crate::config::MergeMethod::Rebase,
+            sha: "c0ffee".into(),
+        };
+        assert_eq!(
+            github.merge_pull_request(&repo("a"), 5, &request).await.unwrap(),
+            merged
+        );
+        assert!(matches!(
+            github.merge_pull_request(&repo("a"), 4, &request).await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        assert_eq!(
+            github.calls()[0],
+            GithubCall::MergePullRequest {
+                full_name: "octocat/a".into(),
+                number: 5,
+                request,
             }
         );
     }

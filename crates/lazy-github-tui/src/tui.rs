@@ -689,6 +689,15 @@ mod tests {
         ) -> Result<bool, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }
+
+        async fn merge_pull_request(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _number: u64,
+            _request: &lazy_github_core::github::MergeRequest,
+        ) -> Result<lazy_github_core::github::MergeResult, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
     }
 
     /// Runs the loop on a `TestBackend` with `effect` already started, and returns how it ended.

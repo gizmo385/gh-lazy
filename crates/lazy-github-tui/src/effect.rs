@@ -8,7 +8,8 @@ use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{
-    DiffFetchError, Github, IssueListQuery, IssueUpdate, NewIssue, NewReview, PageQuery, RepoListQuery,
+    DiffFetchError, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue, NewReview, PageQuery,
+    RepoListQuery,
 };
 use lazy_github_core::models::{
     CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, ReactionKind,
@@ -267,6 +268,15 @@ pub enum GithubRequest {
         /// The reaction to add.
         kind: ReactionKind,
     },
+    /// [`Github::merge_pull_request`].
+    MergePullRequest {
+        /// The repo the pull request is in.
+        repo: Box<Repository>,
+        /// Its number.
+        number: u64,
+        /// The method and the head commit.
+        request: MergeRequest,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repo the issue is in.
@@ -337,6 +347,8 @@ pub enum GithubResponse {
     CreateReview(Result<Box<Review>, GhError>),
     /// [`Github::add_issue_reaction`]: whether the reaction was created.
     AddIssueReaction(Result<bool, GhError>),
+    /// [`Github::merge_pull_request`].
+    MergePullRequest(Result<MergeResult, GhError>),
 }
 
 impl GithubRequest {
@@ -413,6 +425,9 @@ impl GithubRequest {
             }
             GithubRequest::AddIssueReaction { repo, number, kind } => {
                 GithubResponse::AddIssueReaction(gh.add_issue_reaction(&repo, number, kind).await)
+            }
+            GithubRequest::MergePullRequest { repo, number, request } => {
+                GithubResponse::MergePullRequest(gh.merge_pull_request(&repo, number, &request).await)
             }
         }
     }

@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["no-repo", "open", "missing-fields", "push-prompt", "push-failed", "suggested", "filled", "created", "escaped", "cancelled"]
 
 [inputs]
-scenario = "4609aa0dacdf8e7743ac62a56b1b04cb7c6a7e7a"
+scenario = "ee9600b5dc6c53f031e37f96d52672a8805b6c39"
 fixtures = "f71ef860c13c7a5b01116625039823a43becab0f"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "d40dac32aacaaea9cd02642bf388d6d6f854e0ee"

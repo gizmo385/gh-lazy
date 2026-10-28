@@ -1,5 +1,6 @@
 ---
 source: crates/lazy-github-tui/src/modal/confirm/tests.rs
+assertion_line: 255
 expression: "styled(&mut app, 100, 30)"
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -18,9 +19,9 @@ expression: "styled(&mut app, 100, 30)"
 ┌─ [2] Pull Requests ────█ eight nine ten one two three four five six     █any issues, pull        │
 │ #  Status  Author  Titl█ seven eight nine ten the end of the fifth row  █ill be retrieved and    │
 │                        █                                                █                        │
-│                        █ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔        ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔       █                        │
-└────────────────────────█       Yes                      No              █n lists can also be   ▁▁│
-┌─ [3] Issues ───────────█ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁        ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁       █                        │
+│                        █ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ █                        │
+└────────────────────────█          Yes                      No           █n lists can also be   ▁▁│
+┌─ [3] Issues ───────────█ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ █                        │
 │ #  Status  Author  Titl█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                        │
 │                                      ││                                                          │
 │                                      ││  Pull Requests                                           │
@@ -49,9 +50,9 @@ bbbbbbbbbbbbbbbbbbbbbbbbbjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkjaaaaa
 cccccccccccccccccccccccccjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkjaaaaaaaaaaaaaaaaaaaaaahhc
 clllllllllllllllllllllllljkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkjaaaaaaaaaaaaaaaaaaaaaahhc
 caaaaaaaaaaaaaaaaaaaaaaaajkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkjaaaaaaaaaaaaaaaaaaaaaahhc
-caaaaaaaaaaaaaaaaaaaaaaaajkmmmmmmmmmmmmmmmmkkkkkkkknnnnnnnnnnnnnnnnkkkkkkkjaaaaaaaaaaaaaaaaaaaaaahhc
-cccccccccccccccccccccccccjkooooopppppooooookkkkkkkkqqqqqqrrrrqqqqqqkkkkkkkjsssssssssssssssssssaaattc
-cccccccccccccccccccccccccjkuuuuuuuuuuuuuuuukkkkkkkkvvvvvvvvvvvvvvvvkkkkkkkjaaaaaaaaaaaaaaaaaaaaaawwc
+caaaaaaaaaaaaaaaaaaaaaaaajkmmmmmmmmmmmmmmmmmmmmmmkknnnnnnnnnnnnnnnnnnnnnnkjaaaaaaaaaaaaaaaaaaaaaahhc
+cccccccccccccccccccccccccjkoooooooopppppoooooooookkqqqqqqqqqrrrrqqqqqqqqqkjsssssssssssssssssssaaattc
+cccccccccccccccccccccccccjkuuuuuuuuuuuuuuuuuuuuuukkvvvvvvvvvvvvvvvvvvvvvvkjaaaaaaaaaaaaaaaaaaaaaawwc
 clllllllllllllllllllllllljjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjaaaaaaaaaaaaaaaaaaaaaawwc
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaxxxxxxxxxxxxxaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaawwc

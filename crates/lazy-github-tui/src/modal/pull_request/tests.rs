@@ -4,7 +4,7 @@
 use std::path::{Path, PathBuf};
 
 use lazy_github_core::config::Config;
-use lazy_github_core::github::{FakeGithub, GithubCall};
+use lazy_github_core::github::{FakeGithub, GithubCall, NewPullRequest};
 use lazy_github_core::models::{IssueListItem, RepoName};
 use serde_json::Value;
 
@@ -519,4 +519,403 @@ fn create_pr_compare_suggestion() {
     app.press(&["shift+tab", "shift+tab"]);
     type_text(&mut app, "new");
     insta::assert_snapshot!(app.screen(160, 48));
+}
+
+// Submitting.
+
+/// PR 10, as `POST .../pulls` answers.
+pub(super) fn created() -> FullPullRequest {
+    let body = fixture_body("pr-create", &format!("repos/{REPO}/pulls/10/GET.json"));
+    FullPullRequest::from_api(body, &fixture_repo()).unwrap()
+}
+
+fn refused() -> lazy_github_core::gh::GhError {
+    lazy_github_core::gh::GhError::Http {
+        status: 422,
+        message: "Validation Failed".into(),
+        body: Vec::new(),
+    }
+}
+
+/// The create requests sent, oldest first.
+fn creates(app: &TestApp) -> Vec<NewPullRequest> {
+    app.gh()
+        .calls()
+        .into_iter()
+        .filter_map(|call| match call {
+            GithubCall::CreatePullRequest { full_name, pr } => {
+                assert_eq!(full_name, REPO);
+                Some(pr)
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+/// The git requests sent, oldest first, without the upstream check.
+fn git_requests(app: &TestApp) -> Vec<GitRequest> {
+    app.effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::Git { request, .. } if !matches!(request, GitRequest::HasUpstream { .. }) => Some(request.clone()),
+            _ => None,
+        })
+        .filter(|request| !matches!(request, GitRequest::OriginRepo | GitRequest::CurrentBranch))
+        .collect()
+}
+
+fn messages(app: &TestApp) -> Vec<(Option<String>, String)> {
+    app.app()
+        .toasts()
+        .iter()
+        .map(|toast| (toast.title.clone(), toast.message.to_string()))
+        .collect()
+}
+
+fn titled(title: &str, message: &str) -> (Option<String>, String) {
+    (Some(title.to_owned()), message.to_owned())
+}
+
+fn plain(message: &str) -> (Option<String>, String) {
+    (None, message.to_owned())
+}
+
+/// Create PR with the title, Compare and the description typed (`\n` in it is `enter`), from `app`.
+fn filled_in(app: TestApp, title: &str, compare: &str, description: &str) -> TestApp {
+    let mut app = opened_in(app);
+    type_text(&mut app, title);
+    app.press(&["shift+tab", "shift+tab"]);
+    type_text(&mut app, compare);
+    app.press(&["tab", "tab", "tab"]);
+    type_text(&mut app, description);
+    app
+}
+
+fn creating_gh(result: Result<FullPullRequest, lazy_github_core::gh::GhError>) -> FakeGithub {
+    gh().with_created_pull_request(result)
+}
+
+#[test]
+fn each_empty_required_field_is_refused_and_marked() {
+    for (title, compare, base_emptied) in [("", "x", false), ("T", "", false), ("T", "x", true)] {
+        let mut app = opened_in(TestApp::with_github(Config::default(), creating_gh(Ok(created()))));
+        type_text(&mut app, title);
+        app.press(&["shift+tab", "shift+tab"]);
+        type_text(&mut app, compare);
+        if base_emptied {
+            app.press(&["shift+tab", "backspace"]);
+        }
+        app.press(&["shift+enter"]);
+        settle(&mut app);
+        assert!(creates(&app).is_empty(), "{title:?} {compare:?} {base_emptied}");
+        assert_eq!(messages(&app), [titled("Invalid PR!", "Missing required fields!")]);
+        assert!(is_open(&app));
+    }
+}
+
+#[test]
+fn every_empty_field_is_marked_on_submit() {
+    let mut dialog = direct(CreatePrefill::default());
+    let mut app = TestApp::new(Config::default());
+    app.with_cx(|cx| dialog.submit(cx));
+    assert!(dialog.title.is_invalid() && dialog.compare.is_invalid() && dialog.base.is_invalid());
+    assert!(dialog.submit.is_none(), "nothing sent");
+}
+
+#[test]
+fn spaces_pass_and_the_request_is_built_from_the_form() {
+    let app = filled_in(
+        TestApp::with_github(Config::default(), creating_gh(Ok(created()))),
+        " ",
+        " ",
+        "",
+    );
+    let mut app = app;
+    app.press(&["shift+enter"]);
+    settle(&mut app);
+    assert_eq!(
+        creates(&app),
+        [NewPullRequest {
+            title: " ".into(),
+            draft: false,
+            base: "main".into(),
+            head: "parity-bot: ".into(),
+            body: None,
+        }]
+    );
+}
+
+#[test]
+fn draft_and_the_description_are_sent() {
+    let mut app = filled_in(
+        TestApp::with_github(Config::default(), creating_gh(Ok(created()))),
+        "Parity PR",
+        "new-feature",
+        "First line\nSecond line",
+    );
+    // Back to Draft: description, title, Draft.
+    app.press(&["shift+tab", "shift+tab", "space", "shift+enter"]);
+    settle(&mut app);
+    assert_eq!(
+        creates(&app),
+        [NewPullRequest {
+            title: "Parity PR".into(),
+            draft: true,
+            base: "main".into(),
+            head: "parity-bot:new-feature".into(),
+            body: Some("First line\nSecond line".into()),
+        }]
+    );
+}
+
+#[test]
+fn a_second_submit_while_creating_is_ignored_and_closing_cancels_it() {
+    let mut app = filled_in(
+        TestApp::with_github(Config::default(), creating_gh(Ok(created()))),
+        "T",
+        "b",
+        "",
+    );
+    app.press(&["shift+enter", "shift+enter"]);
+    let creating: Vec<RequestId> = app
+        .effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::Github {
+                id,
+                request: GithubRequest::CreatePullRequest { .. },
+            } => Some(*id),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(creating.len(), 1);
+    assert_eq!(messages(&app), [plain("Creating PR...")]);
+    app.press(&["escape"]);
+    assert!(!is_open(&app));
+    assert!(app.effects().contains(&Effect::Cancel(creating[0])));
+}
+
+#[test]
+fn a_created_pull_request_closes_the_dialog_with_it() {
+    let mut app = filled_in(
+        TestApp::with_github(Config::default(), creating_gh(Ok(created()))),
+        "Parity PR",
+        "new-feature",
+        "",
+    );
+    app.press(&["shift+enter"]);
+    settle(&mut app);
+    assert!(!is_open(&app));
+    assert_eq!(
+        messages(&app),
+        [plain("Creating PR..."), plain("Successfully created PR!")]
+    );
+    // No reviewers listed: no review request.
+    assert!(
+        !app.gh()
+            .calls()
+            .iter()
+            .any(|call| matches!(call, GithubCall::RequestReviewers { .. }))
+    );
+    let main = app.app().main_screen().unwrap();
+    assert_eq!(main.details_title(), "[5] PR #10 Details");
+}
+
+#[test]
+fn listed_reviewers_are_requested_and_a_refusal_is_reported_after_the_success() {
+    for refuse in [false, true] {
+        let friend = serde_json::from_value(fixture_body("pr-edit", "users/parity-friend/GET.json")).unwrap();
+        let gh = creating_gh(Ok(created()))
+            .with_review_request(10, if refuse { Err(refused()) } else { Ok(()) })
+            .with_profile("parity-friend", Ok(friend));
+        // From the description, `tab` to the Reviewers input, which lists the login it finds.
+        let mut app = filled_in(TestApp::with_github(Config::default(), gh), "T", "b", "");
+        app.press(&["tab"]);
+        type_text(&mut app, "parity-friend");
+        app.press(&["enter"]);
+        settle(&mut app);
+        app.press(&["shift+enter"]);
+        settle(&mut app);
+        assert!(app.gh().calls().contains(&GithubCall::RequestReviewers {
+            full_name: REPO.into(),
+            number: 10,
+            reviewers: vec!["parity-friend".into()],
+        }));
+        assert!(!is_open(&app), "closed either way");
+        let mut expected = vec![plain("Creating PR..."), plain("Successfully created PR!")];
+        if refuse {
+            expected.push(titled(
+                "Error requesting reviews",
+                "Could not request reviews from parity-friend",
+            ));
+        }
+        assert_eq!(messages(&app), expected, "refused: {refuse}");
+    }
+}
+
+#[test]
+fn a_refused_create_keeps_the_form_and_checks_the_branch_as_typed() {
+    let app = TestApp::with_github(Config::default(), creating_gh(Err(refused()))).with_git_answers(GitAnswers {
+        on_remote: true,
+        ..GitAnswers::default()
+    });
+    let mut app = filled_in(app, "Parity PR", " spaced ", "kept");
+    app.press(&["shift+enter"]);
+    settle(&mut app);
+    assert_eq!(
+        messages(&app)[1],
+        titled(
+            "Error creating pull request",
+            "Check that your branches are valid and that a PR does not already exist"
+        )
+    );
+    assert_eq!(
+        git_requests(&app),
+        [GitRequest::BranchExistsOnRemote {
+            branch: " spaced ".into()
+        }]
+    );
+    assert_eq!(app.app().modals(), [ModalKind::PullRequest]);
+    assert!(dialog_view(&mut app).screen.contains("▊ 1  kept"));
+}
+
+/// A refused create in a directory whose `origin` is `local` (if any), with git answering from `answers`.
+fn refused_in(local: Option<&str>, answers: GitAnswers) -> TestApp {
+    let app = TestApp::with_github(Config::default(), creating_gh(Err(refused())))
+        .with_local_repo(local.map(|name| RepoName::from_remote_url(&format!("git@github.com:{name}.git")).unwrap()))
+        .with_git_answers(answers);
+    let mut app = filled_in(app, "Parity PR", "missing-branch", "");
+    app.press(&["shift+enter"]);
+    settle(&mut app);
+    app
+}
+
+#[test]
+fn a_branch_on_the_remote_asks_nothing() {
+    let app = refused_in(
+        None,
+        GitAnswers {
+            on_remote: true,
+            ..GitAnswers::default()
+        },
+    );
+    assert_eq!(app.app().modals(), [ModalKind::PullRequest]);
+}
+
+#[test]
+fn a_missing_branch_asks_to_push_it() {
+    let mut app = refused_in(None, GitAnswers::default());
+    assert_eq!(app.app().modals(), [ModalKind::PullRequest, ModalKind::Confirm]);
+    let screen = app.screen(160, 48);
+    assert!(
+        screen.contains("Warning: Branch missing-branch may not exist"),
+        "{screen}"
+    );
+    assert!(screen.contains("on remote. Do you want to create it?"));
+    assert_eq!(screen.lines().last(), Some(" y Yes  n No  q Close"));
+}
+
+#[test]
+fn yes_outside_a_clone_of_the_repo_fails_without_git() {
+    for local in [None, Some("parity-bot/dotfiles")] {
+        let mut app = refused_in(local, GitAnswers::default());
+        app.press(&["y"]);
+        settle(&mut app);
+        assert_eq!(app.app().modals(), [ModalKind::PullRequest], "back to Create PR");
+        assert!(
+            !git_requests(&app)
+                .iter()
+                .any(|request| matches!(request, GitRequest::PushBranch { .. }))
+        );
+        assert_eq!(
+            messages(&app).last(),
+            Some(&plain("Error while pushing branch missing-branch to remote"))
+        );
+        let toast = app.app().toasts().iter().last().unwrap();
+        assert_eq!(
+            toast.message.spans[1].style.fg,
+            Some(crate::theme::Theme::default().accent(crate::theme::Accent::Red))
+        );
+    }
+}
+
+#[test]
+fn yes_in_a_clone_pushes_and_reports_either_way() {
+    for push in [Ok(()), Err("rejected".to_owned())] {
+        let failed = push.is_err();
+        let mut app = refused_in(
+            Some("parity-bot/pr-details"),
+            GitAnswers {
+                push,
+                ..GitAnswers::default()
+            },
+        );
+        app.press(&["y"]);
+        settle(&mut app);
+        assert!(git_requests(&app).contains(&GitRequest::PushBranch {
+            branch: "missing-branch".into()
+        }));
+        let expected = if failed {
+            "Error while pushing branch missing-branch to remote"
+        } else {
+            "Pushed branch missing-branch to remote"
+        };
+        assert_eq!(messages(&app).last(), Some(&plain(expected)));
+        assert_eq!(app.app().modals(), [ModalKind::PullRequest]);
+        assert_eq!(creates(&app).len(), 1, "nothing is resubmitted");
+    }
+}
+
+#[test]
+fn no_pushes_nothing_and_focus_is_back_where_it_was() {
+    for key in ["n", "escape", "q"] {
+        let mut app = refused_in(Some("parity-bot/pr-details"), GitAnswers::default());
+        app.press(&[key]);
+        settle(&mut app);
+        assert_eq!(app.app().modals(), [ModalKind::PullRequest], "{key}");
+        assert!(
+            !git_requests(&app)
+                .iter()
+                .any(|request| matches!(request, GitRequest::PushBranch { .. }))
+        );
+        // The description had focus: typing goes there.
+        type_text(&mut app, "after");
+        assert!(dialog_view(&mut app).screen.contains("after"), "{key}");
+    }
+}
+
+#[test]
+fn a_push_answer_after_the_dialog_closed_is_dropped() {
+    let mut app = refused_in(
+        Some("parity-bot/pr-details"),
+        GitAnswers {
+            push: Ok(()),
+            ..GitAnswers::default()
+        },
+    );
+    // Yes, then Create PR closed before git answers.
+    app.press(&["y", "escape"]);
+    settle(&mut app);
+    assert!(app.app().modals().is_empty());
+    assert!(!messages(&app).iter().any(|(_, message)| message.starts_with("Pushed")));
+}
+
+#[test]
+fn create_pr_push_prompt() {
+    let mut app = refused_in(None, GitAnswers::default());
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+#[test]
+fn create_pr_missing_fields() {
+    let mut app = opened();
+    app.press(&["shift+enter"]);
+    let screen = app.render(160, 48);
+    // The dialog's frame, with the invalid borders' colors.
+    let frame = Rect::new(30, 6, 100, 36);
+    let mut dialog = ratatui::buffer::Buffer::empty(frame);
+    for (x, y) in frame.positions().map(|p| (p.x, p.y)) {
+        dialog[(x, y)] = screen[(x, y)].clone();
+    }
+    insta::assert_snapshot!(crate::test_util::buffer_to_styled_string(&dialog));
 }

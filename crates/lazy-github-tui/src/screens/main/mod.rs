@@ -310,6 +310,8 @@ pub enum MainAction {
     IssueCreated(Box<Issue>),
     /// Open Create PR (`pull_request.new`), or toast without a selected repo.
     NewPullRequest,
+    /// Create PR created a pull request: it goes into the PR table and opens. A closed dialog sends nothing.
+    PullRequestCreated(Box<FullPullRequest>),
     /// Open the Edit issue dialog (`issue.edit`) for the issue under the Issues table's cursor or the one the Overview
     /// shows, or toast without one.
     EditIssue(EditOrigin),
@@ -406,6 +408,21 @@ impl MainScreen {
             hits: Vec::new(),
             pending_pr: None,
         }
+    }
+
+    /// New issue created `issue`: `add_item`, then `IssueSelected`, as Python's flow does once the dialog closes.
+    fn issue_created(&mut self, issue: Box<Issue>, cx: &mut Cx<'_>) {
+        self.issue_lists.upsert_issue((*issue).clone(), cx);
+        cx.dispatch(Action::Main(MainAction::OpenIssue(issue)));
+    }
+
+    /// Create PR created `pr`: `add_item`, then `PullRequestSelected`, as Python's `trigger_pr_creation_flow` does.
+    fn pull_request_created(&mut self, pr: Box<FullPullRequest>, cx: &mut Cx<'_>) {
+        self.issue_lists.upsert_pr(pr.pr.clone(), cx);
+        cx.dispatch(Action::Main(MainAction::OpenPullRequest {
+            target: PullRequestTarget::Full(pr),
+            focus: true,
+        }));
     }
 
     /// What the screen does once it's shown: load the repos, under the loading overlay.
@@ -1384,14 +1401,11 @@ impl Component for MainScreen {
             }
             MainAction::NewIssue => new_issue(cx),
             MainAction::NewPullRequest => new_pull_request::new_pull_request(cx),
+            MainAction::PullRequestCreated(pr) => self.pull_request_created(pr, cx),
             MainAction::EditIssue(origin) => self.edit_issue(origin, cx),
             // Python's `add_item` of the updated issue: the row is replaced in place, the cursor and focus stay.
             MainAction::IssueUpdated(issue) => self.issue_lists.upsert_issue(*issue, cx),
-            // `add_item`, then `IssueSelected`, as Python's flow does once the dialog closes.
-            MainAction::IssueCreated(issue) => {
-                self.issue_lists.upsert_issue((*issue).clone(), cx);
-                cx.dispatch(Action::Main(MainAction::OpenIssue(issue)));
-            }
+            MainAction::IssueCreated(issue) => self.issue_created(issue, cx),
             MainAction::OpenPullRequest { target, focus } => self.open_pull_request(target, focus, cx),
             MainAction::OpenIssue(issue) => self.open_issue(*issue, cx),
             MainAction::OpenWorkflowRun(run) => self.open_workflow_run(*run, cx),
@@ -1490,6 +1504,9 @@ mod tests;
 
 #[cfg(test)]
 mod new_issue_tests;
+
+#[cfg(test)]
+mod new_pull_request_tests;
 
 #[cfg(test)]
 mod edit_issue_tests;

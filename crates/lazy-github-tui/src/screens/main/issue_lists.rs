@@ -187,6 +187,11 @@ impl IssueLists {
         self.issues.insert_if_missing(issue, cx);
     }
 
+    /// Adds a created pull request to the PR table, or replaces its row: [`ListSection::upsert`].
+    pub(super) fn upsert_pr(&mut self, pr: PartialPullRequest, cx: &mut Cx<'_>) {
+        self.prs.upsert(pr, cx);
+    }
+
     /// Adds a created issue to the Issues table, or replaces its row: [`ListSection::upsert`].
     pub(super) fn upsert_issue(&mut self, issue: Issue, cx: &mut Cx<'_>) {
         self.issues.upsert(issue, cx);

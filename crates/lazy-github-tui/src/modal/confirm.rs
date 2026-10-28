@@ -155,7 +155,7 @@ impl Component for ConfirmDialog {
             buf.set_line(row.x, row.y, line, row.width);
         }
 
-        // Two equal columns with the gutter between; each button at its natural width at its column's left.
+        // Two equal columns with the gutter between; each button fills its column (`Button { width: 100% }`).
         let column = content.width.saturating_sub(COLUMN_GUTTER) / 2;
         let y = content.y + question_rows + ROW_GUTTER;
         let focused = self.ring.focused();
@@ -164,8 +164,7 @@ impl Component for ConfirmDialog {
             (ConfirmField::No, content.x + column + COLUMN_GUTTER),
         ] {
             let button = self.button_mut(field);
-            let width = button.width(theme);
-            let button_area = Rect::new(x, y, width, button::HEIGHT).intersection(content);
+            let button_area = Rect::new(x, y, column, button::HEIGHT).intersection(content);
             button.render(buf, button_area, theme, focused == Some(field));
         }
     }

@@ -107,7 +107,7 @@ fn everything_else_answers_false() {
 fn a_click_between_the_buttons_does_nothing() {
     let mut app = app();
     app.render(160, 48);
-    app.click(77, 26);
+    app.click(79, 26);
     app.click(60, 21);
     assert!(is_open(&app));
     assert!(replies(&app).is_empty());
@@ -192,7 +192,10 @@ fn the_footer_lists_yes_no_and_close() {
 
 // Drawing.
 
-/// Python's `run_test` capture at 160x48, columns 40 to 119 of rows 16 to 31 (rows 16, 17 and 29 to 31 are blank).
+/// Python's `run_test` capture at 160x48, columns 40 to 119 of rows 16 to 31 (rows 16, 17 and 29 to 31 are blank),
+/// with the button rows as the running app draws them (the `pr-new` scenario's `push-prompt` reference): each button
+/// fills its column, as `Button { width: 100% }` says. A bare `run_test` loads Button's own default CSS after the
+/// dialog's, so the dialog's rule loses on order there; in the app Create PR's buttons load it first.
 const PYTHON: &str = "
                █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
                █                                                █
@@ -201,9 +204,9 @@ const PYTHON: &str = "
                █                                                █
                █                                                █
                █                                                █
-               █ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔        ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔       █
-               █       Yes                      No              █
-               █ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁        ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁       █
+               █ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ █
+               █          Yes                      No           █
+               █ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ █
                █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█";
 
 #[test]

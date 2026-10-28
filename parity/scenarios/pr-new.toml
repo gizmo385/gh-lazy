@@ -4,7 +4,9 @@ description = "Create PR modal (P): without a repo; the empty modal; missing fie
 # push needs a local git remote in the harness and is in pr-new-push (#184 sub-issues). The PR table after the
 # create is not compared: Python cuts the new number 10 to "1" (Py bug B73), so `created` checks only the titles,
 # tabs and focus. The modal hides the boxes under it from the structure, so the modal captures rely on [expect].
-gate = false
+# `escaped` and `cancelled` leave the footer out: with the PR table focused it's cut inside `^p Command Pallete`
+# (Py bug B14), which Rust spells right, so the cut footers differ.
+gate = true
 parity_rows = [
     "modals.create-edit-pr",
     "modals.create-pr-branches",
@@ -195,7 +197,7 @@ wait.gone = "New Pull Request"
 
 [[step]]
 capture = "escaped"
-checks = ["titles", "focus", "footer"]
+checks = ["titles", "focus"]
 
 # And with Cancel: title, description, reviewer, Create, Cancel.
 [[step]]
@@ -215,7 +217,7 @@ wait.gone = "New Pull Request"
 
 [[step]]
 capture = "cancelled"
-checks = ["titles", "focus", "footer"]
+checks = ["titles", "focus"]
 
 [expect.no-repo]
 contains = ["Cannot open new pull request", "Please select a repository first!"]

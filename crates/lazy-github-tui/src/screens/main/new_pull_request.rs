@@ -3,11 +3,10 @@
 
 use std::path::Path;
 
-use lazy_github_core::models::Repository;
-
+use super::MainAction;
 use super::pr_lookup::select_repository_first;
 use crate::action::Action;
-use crate::component::{Cx, LocalRepo};
+use crate::component::Cx;
 use crate::modal::{CreatePrefill, PullRequestDialog};
 
 /// `pull_request.new`: without a selected repo, the toast; otherwise Create PR for it.
@@ -19,18 +18,17 @@ pub(super) fn new_pull_request(cx: &mut Cx<'_>) {
     let template = cx.config().pull_requests.pull_request_template.clone();
     let prefill = CreatePrefill {
         base: repo.default_branch.clone().unwrap_or_default(),
-        compare: is_local_repo(cx, &repo)
+        compare: cx
+            .local_repo()
+            .matches(&repo.full_name)
             .then(|| cx.current_branch().map(str::to_owned))
             .flatten(),
         description: template.as_deref().map(read_template).unwrap_or_default(),
     };
     let dialog = PullRequestDialog::create(repo, prefill, cx);
-    cx.open_dialog(dialog, |_| Action::Consumed);
-}
-
-/// Whether `repo` is the repo of the directory LazyGithub was launched in (GitHub names ignore case).
-pub(super) fn is_local_repo(cx: &Cx<'_>, repo: &Repository) -> bool {
-    matches!(cx.local_repo(), LocalRepo::Known(Some(local)) if local.matches(&repo.full_name))
+    cx.open_dialog(dialog, |pr| {
+        pr.map_or(Action::Consumed, |pr| Action::Main(MainAction::PullRequestCreated(pr)))
+    });
 }
 
 /// The template's text: `pull_requests.pull_request_template` as Python reads it, not `~`-expanded, a relative path

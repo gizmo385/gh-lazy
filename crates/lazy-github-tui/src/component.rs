@@ -295,6 +295,13 @@ pub enum LocalRepo {
     Known(Option<RepoName>),
 }
 
+impl LocalRepo {
+    /// Whether git named a current-directory repo and it's `full_name` (GitHub names ignore case).
+    pub fn matches(&self, full_name: &str) -> bool {
+        matches!(self, LocalRepo::Known(Some(local)) if local.matches(full_name))
+    }
+}
+
 /// The state every component may read, owned by `App`.
 pub(crate) struct Shared {
     pub(crate) config: Config,

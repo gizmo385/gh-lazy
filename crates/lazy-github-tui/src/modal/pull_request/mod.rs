@@ -7,6 +7,7 @@
 
 mod layout;
 mod reviewers;
+mod submit;
 
 use std::ops::Range;
 
@@ -20,6 +21,7 @@ use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 
 use self::layout::{BranchColumns, FormRows, Part};
+use self::submit::{BranchFollowUp, Submit};
 use super::form::FormScroll;
 use super::{Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, dialog_bindings};
 use crate::action::Action;
@@ -58,7 +60,7 @@ const PR_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
 /// The dialog's own actions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PullRequestAction {
-    /// `modal.submit` or Create: check the fields and create the pull request (#279).
+    /// `modal.submit` or Create: check the fields and create the pull request.
     Submit,
     /// `modal.close` or Cancel: close with nothing.
     Close,
@@ -67,6 +69,8 @@ pub enum PullRequestAction {
     /// Title, Base, Compare or the description changed: Python's `Input.Changed` / `TextArea.Changed` handlers,
     /// where drafts (#186) schedule their save.
     Edited,
+    /// The push prompt's answer: push the branch the refused create named (`true`), or not.
+    PushAnswer(bool),
 }
 
 /// What the dialog is for.
@@ -150,6 +154,10 @@ pub struct PullRequestDialog {
     branches_request: Option<RequestId>,
     /// The upstream check, until it answers.
     upstream_request: Option<RequestId>,
+    /// The submit in flight.
+    submit: Option<Submit>,
+    /// The remote check and the push prompt after a refused create.
+    follow_up: BranchFollowUp,
     /// The outer `Option` is whether it's done, the inner the dialog's output.
     #[allow(clippy::option_option)]
     output: Option<Option<Box<FullPullRequest>>>,
@@ -188,6 +196,8 @@ impl PullRequestDialog {
             upstream_warning: false,
             branches_request,
             upstream_request,
+            submit: None,
+            follow_up: BranchFollowUp::default(),
             output: None,
         };
         dialog.sync_ring();
@@ -397,6 +407,7 @@ impl PullRequestDialog {
             cx.effect(Effect::Cancel(id));
         }
         self.reviewers.cancel(cx);
+        self.cancel_submit(cx);
         self.output = Some(None);
     }
 
@@ -571,7 +582,8 @@ impl Component for PullRequestDialog {
 
     fn update(&mut self, action: PullRequestAction, cx: &mut Cx<'_>) {
         match action {
-            PullRequestAction::Submit => tracing::debug!("Create PR's submit comes with #279"),
+            PullRequestAction::Submit => self.submit(cx),
+            PullRequestAction::PushAnswer(yes) => self.on_push_answer(yes, cx),
             PullRequestAction::Close => self.close(cx),
             PullRequestAction::AddReviewer => self.reviewers.submit(cx),
             // Drafts (#186) schedule their save here.
@@ -873,6 +885,7 @@ impl Dialog for PullRequestDialog {
                 None
             }
             other => {
+                let other = self.on_submit_response(id, other, cx)?;
                 let unclaimed = self.reviewers.on_response(id, other, cx);
                 // A found reviewer shows the list, which joins the focus order.
                 self.sync_ring();
@@ -881,14 +894,14 @@ impl Dialog for PullRequestDialog {
         }
     }
 
-    fn on_git_response(&mut self, id: RequestId, response: GitResponse, _cx: &mut Cx<'_>) -> Option<GitResponse> {
+    fn on_git_response(&mut self, id: RequestId, response: GitResponse, cx: &mut Cx<'_>) -> Option<GitResponse> {
         match response {
             GitResponse::HasUpstream(has_upstream) if self.upstream_request == Some(id) => {
                 self.upstream_request = None;
                 self.upstream_warning = !has_upstream;
                 None
             }
-            other => Some(other),
+            other => self.on_branch_git(id, other, cx),
         }
     }
 }

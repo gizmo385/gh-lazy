@@ -274,7 +274,7 @@ registry! {
     TextualInputCut("textual.input.cut", "ctrl+x", "cut", "Cut selected text").hidden();
     TextualInputCopy("textual.input.copy", "ctrl+c,super+c", "copy", "Copy selected text").hidden();
     TextualInputPaste("textual.input.paste", "ctrl+v", "paste", "Paste text from the clipboard").hidden();
-    // `TextArea`: the multi-line editors (#256). Selection, the clipboard, undo and redo act with #257.
+    // `TextArea`: the multi-line editors (#256, #257).
     TextualTextAreaCursorUp("textual.text_area.cursor_up", "up", "cursor_up", "Cursor up").hidden();
     TextualTextAreaCursorDown("textual.text_area.cursor_down", "down", "cursor_down", "Cursor down").hidden();
     TextualTextAreaCursorLeft("textual.text_area.cursor_left", "left", "cursor_left", "Cursor left").hidden();

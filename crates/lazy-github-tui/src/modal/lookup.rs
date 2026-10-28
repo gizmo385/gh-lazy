@@ -486,7 +486,7 @@ impl<K: LookupKind> Dialog for LookupDialog<K> {
         self.input.is_selecting()
     }
 
-    fn handle_paste(&mut self, text: &str) -> Option<Action> {
+    fn handle_paste(&mut self, text: &str, _cx: &Cx<'_>) -> Option<Action> {
         self.ring.is_focused(LookupField::Input).then(|| {
             let _ = self.edit(|input| {
                 input.handle_paste(text);

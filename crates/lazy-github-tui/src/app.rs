@@ -202,7 +202,10 @@ impl App {
             Event::Mouse(mouse) => self.action_for_mouse(mouse),
             // A bracketed paste goes to the top dialog, or else to the focused search box, and nowhere else.
             Event::Paste(text) => match (self.modals.last_mut(), &mut self.base) {
-                (Some(top), _) => top.handle_paste(&text),
+                (Some(top), _) => {
+                    let mut scratch = Outbox::default();
+                    top.handle_paste(&text, &Cx::new(&mut self.shared, &mut scratch))
+                }
                 (None, BaseScreen::Main(main)) => main.handle_paste(&text),
                 (None, _) => None,
             },
@@ -439,9 +442,13 @@ impl App {
                 BindingId::AppOpenHelp => Some(Action::ToggleHelp),
                 other => Some(Action::Unimplemented(other)),
             },
-            // A text input takes `copy` before the chain when it has a selection. Reaching the input's link means it
-            // has none, so the key goes on to the next link (Textual's `SkipAction`).
-            owner if owner.types_text() && id == BindingId::TextualInputCopy => None,
+            // A text input or editor takes `copy` before the chain when it has a selection. Reaching its link means
+            // it has none, so the key goes on to the next link (Textual's `SkipAction`).
+            owner
+                if owner.types_text() && matches!(id, BindingId::TextualInputCopy | BindingId::TextualTextAreaCopy) =>
+            {
+                None
+            }
             owner => {
                 let mut scratch = Outbox::default();
                 let cx = Cx::new(&mut self.shared, &mut scratch);

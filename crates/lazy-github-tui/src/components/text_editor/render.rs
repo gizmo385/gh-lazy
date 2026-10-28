@@ -24,6 +24,7 @@ mod monokai {
     pub(super) const CURSOR: Rgb = Rgb::new(0xf8, 0xf8, 0xf0);
     pub(super) const CURSOR_LINE: Rgb = Rgb::new(0x3e, 0x3d, 0x32);
     pub(super) const CURSOR_LINE_GUTTER: Rgb = Rgb::new(0xc2, 0xc2, 0xbf);
+    pub(super) const SELECTION: Rgb = Rgb::new(0x65, 0x68, 0x6a);
 }
 
 /// The styles of one frame.
@@ -37,6 +38,10 @@ struct Styles {
     gutter: Style,
     cursor_line_gutter: Style,
     cursor: Style,
+    /// Selected text: patched over the text's style.
+    selection: Style,
+    /// The `▌` that stands for a selected empty line: the selection's background color.
+    empty_line_marker: Color,
     border: TallBorder,
     scrollbar: ScrollbarColors,
 }
@@ -45,7 +50,7 @@ impl Styles {
     fn new(editor: &TextEditor, theme: &Theme, under: Paint, focused: bool) -> Self {
         let p = theme.palette;
         let rgb = |c: Rgb| theme.paint(Paint::Rgb(c));
-        let (bg, base, cursor_line, gutter, cursor_line_gutter, cursor) = match editor.variant {
+        let (bg, base, cursor_line, gutter, cursor_line_gutter, cursor, selection) = match editor.variant {
             EditorVariant::Code => {
                 let bg = Paint::Rgb(monokai::BACKGROUND);
                 let base = Style::new().fg(rgb(monokai::TEXT)).bg(theme.paint(bg));
@@ -57,6 +62,8 @@ impl Styles {
                     base.fg(rgb(monokai::GUTTER)),
                     Style::new().fg(rgb(monokai::CURSOR_LINE_GUTTER)).bg(line_bg),
                     Style::new().fg(rgb(monokai::BACKGROUND)).bg(rgb(monokai::CURSOR)),
+                    // Only a background: the text keeps its color.
+                    Style::new().bg(rgb(monokai::SELECTION)),
                 )
             }
             EditorVariant::Plain => {
@@ -84,7 +91,20 @@ impl Styles {
                             .bg(theme.paint(light_bg)),
                     )
                 };
-                (bg, base, base.bg(theme.color(p.boost, bg)), base, base, cursor)
+                // `.text-area--selection`: `$input-selection-foreground` on `$input-selection-background`.
+                let selection_bg = p.input_selection_background.over(bg);
+                let selection = Style::new()
+                    .fg(theme.color(p.input_selection_foreground, selection_bg))
+                    .bg(theme.paint(selection_bg));
+                (
+                    bg,
+                    base,
+                    base.bg(theme.color(p.boost, bg)),
+                    base,
+                    base,
+                    cursor,
+                    selection,
+                )
             }
         };
         let border = theme.color(if focused { p.border } else { p.border_blurred }, bg);
@@ -96,6 +116,8 @@ impl Styles {
             gutter,
             cursor_line_gutter,
             cursor,
+            selection,
+            empty_line_marker: selection.bg.unwrap_or(Color::Reset),
             border: TallBorder {
                 left: Style::new()
                     .fg(border)
@@ -180,25 +202,25 @@ pub(super) fn draw(editor: &TextEditor, buf: &mut Buffer, theme: &Theme, under: 
             x = x.saturating_add(u16::try_from(gutter_width).unwrap_or(u16::MAX));
         }
         let text = editor.layout.sections(lines, line)[section];
-        draw_section(buf, x, row, text, text_style);
+        let section_start = match section {
+            0 => 0,
+            n => editor.layout.offsets(line)[n - 1],
+        };
+        let selected = selected_columns(editor, line);
+        if selected == Some(Selected::EmptyLine) && section == 0 {
+            // An empty line inside the selection shows a `▌` in the selection's color, unless the cursor's on it.
+            buf.set_stringn(x, y, "▌", 1, text_style.fg(styles.empty_line_marker));
+            continue;
+        }
+        let style_at = |column: usize| match selected {
+            Some(Selected::Columns(from, to)) if (from..to).contains(&column) => text_style.patch(styles.selection),
+            _ => text_style,
+        };
+        draw_section(buf, x, row, text, section_start, style_at);
     }
 
     if focused {
-        let (cx, cy) = editor.layout.location_to_offset(lines, cursor);
-        if let Some(screen_row) = cy
-            .checked_sub(editor.scroll_y)
-            .filter(|&r| r < usize::from(text_area.height))
-        {
-            let x = usize::from(text_area.x) + gutter_width + cx;
-            if x < usize::from(text_area.right()) {
-                // Both fit in u16: they're inside `text_area`.
-                let (x, y) = (
-                    u16::try_from(x).unwrap_or(u16::MAX),
-                    text_area.y + u16::try_from(screen_row).unwrap_or(u16::MAX),
-                );
-                buf[(x, y)].set_style(styles.cursor);
-            }
-        }
+        draw_cursor(editor, buf, text_area, styles.cursor);
     }
 
     if editor.view.scrollbar {
@@ -222,10 +244,64 @@ fn fill(buf: &mut Buffer, row: Rect, style: Style) {
     }
 }
 
-/// One wrapped row's text from `x`, tabs expanded within the row, cut off at `row`'s right edge.
-fn draw_section(buf: &mut Buffer, mut x: u16, row: Rect, text: &str, style: Style) {
+/// The cursor over the cell it's on, when that's in view.
+fn draw_cursor(editor: &TextEditor, buf: &mut Buffer, text_area: Rect, style: Style) {
+    let (cx, cy) = editor.layout.location_to_offset(editor.lines(), editor.cursor());
+    let Some(screen_row) = cy
+        .checked_sub(editor.scroll_y)
+        .filter(|&r| r < usize::from(text_area.height))
+    else {
+        return;
+    };
+    let x = usize::from(text_area.x) + editor.gutter_width() + cx;
+    if x < usize::from(text_area.right()) {
+        // Both fit in u16: they're inside `text_area`.
+        let (x, y) = (
+            u16::try_from(x).unwrap_or(u16::MAX),
+            text_area.y + u16::try_from(screen_row).unwrap_or(u16::MAX),
+        );
+        buf[(x, y)].set_style(style);
+    }
+}
+
+/// What of a line the selection covers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Selected {
+    /// The chars in this column range.
+    Columns(usize, usize),
+    /// The line is empty, inside the selection, and the cursor isn't on it.
+    EmptyLine,
+}
+
+/// The part of `line` the selection covers, as Textual's `_render_line` styles it: never the line break, which has no
+/// cell.
+fn selected_columns(editor: &TextEditor, line: usize) -> Option<Selected> {
+    let (top, bottom) = editor.selection_range();
+    if top == bottom || !(top.0..=bottom.0).contains(&line) {
+        return None;
+    }
+    let len = editor.lines()[line].chars().count();
+    if len == 0 && line != editor.cursor().0 {
+        return Some(Selected::EmptyLine);
+    }
+    let from = if line == top.0 { top.1 } else { 0 };
+    let to = if line == bottom.0 { bottom.1 } else { len };
+    Some(Selected::Columns(from, to))
+}
+
+/// One wrapped row's text from `x`, tabs expanded within the row, cut off at `row`'s right edge. `style_at` styles
+/// each char by its column in the line, which starts at `first_column`.
+fn draw_section(
+    buf: &mut Buffer,
+    mut x: u16,
+    row: Rect,
+    text: &str,
+    first_column: usize,
+    style_at: impl Fn(usize) -> Style,
+) {
     let mut cells = 0;
-    for c in text.chars() {
+    for (i, c) in text.chars().enumerate() {
+        let style = style_at(first_column + i);
         let (symbol, width) = if c == '\t' {
             (" ".repeat(TAB_WIDTH - cells % TAB_WIDTH), TAB_WIDTH - cells % TAB_WIDTH)
         } else {

@@ -379,6 +379,15 @@
       ]
     },
     {
+      "raw": "ctrl+shift+k",
+      "keys": [
+        "ctrl+shift+k"
+      ],
+      "display": [
+        "shift+^k"
+      ]
+    },
+    {
       "raw": "ctrl+shift+left",
       "keys": [
         "ctrl+shift+left"
@@ -430,6 +439,24 @@
       ],
       "display": [
         "^x"
+      ]
+    },
+    {
+      "raw": "ctrl+y",
+      "keys": [
+        "ctrl+y"
+      ],
+      "display": [
+        "^y"
+      ]
+    },
+    {
+      "raw": "ctrl+z",
+      "keys": [
+        "ctrl+z"
+      ],
+      "display": [
+        "^z"
       ]
     },
     {
@@ -504,6 +531,24 @@
       ],
       "display": [
         "f"
+      ]
+    },
+    {
+      "raw": "f6",
+      "keys": [
+        "f6"
+      ],
+      "display": [
+        "f6"
+      ]
+    },
+    {
+      "raw": "f7",
+      "keys": [
+        "f7"
+      ],
+      "display": [
+        "f7"
       ]
     },
     {

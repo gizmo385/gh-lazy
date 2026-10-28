@@ -1,11 +1,11 @@
 //! The text editor does with its movement and editing keys what Textual's `TextArea` does:
-//! `fixtures/generate_editor_keys.py` plays cases on headless Textual editors and dumps the text, the selection and the
-//! scroll after each key or paste to `fixtures/editor_keys.json`, and this replays them on `TextEditor` drawn at the
-//! same size.
+//! `fixtures/generate_editor_keys.py` plays cases on headless Textual editors and dumps the text, the selection, the
+//! scroll and the in-app clipboard after each key or paste to `fixtures/editor_keys.json`, and this replays them on
+//! `TextEditor` drawn at the same size, keeping the clipboard as `App` does.
 
 mod common;
 
-use lazy_github_tui::components::text_editor::{EditorVariant, Location, TextEditor};
+use lazy_github_tui::components::text_editor::{EditorOutcome, EditorVariant, Location, TextEditor};
 use lazy_github_tui::keymap::{KeySpec, Keymap};
 use lazy_github_tui::theme::Theme;
 use ratatui::buffer::Buffer;
@@ -21,6 +21,7 @@ struct Case {
     size: (u16, u16),
     text: String,
     cursor: Location,
+    clipboard: String,
     steps: Vec<Step>,
 }
 
@@ -32,6 +33,7 @@ struct Step {
     /// Textual's `Selection(start, end)`.
     selection: (Location, Location),
     scroll: usize,
+    clipboard: String,
 }
 
 fn cases() -> Vec<Case> {
@@ -49,6 +51,8 @@ fn draw(editor: &mut TextEditor, (width, height): (u16, u16)) {
 #[test]
 fn the_editor_matches_textual_key_by_key() {
     let keymap = Keymap::defaults();
+    // One instant for every key: the generator doesn't wait between keys, so undo never batches by time here.
+    let now = tokio::time::Instant::now();
     let mut failures = Vec::new();
     for case in cases() {
         let variant = match case.variant.as_str() {
@@ -58,24 +62,33 @@ fn the_editor_matches_textual_key_by_key() {
         let mut editor = TextEditor::new(variant, &case.text);
         draw(&mut editor, case.size);
         editor.set_cursor(case.cursor);
+        let mut clipboard = case.clipboard.clone();
         for (i, step) in case.steps.iter().enumerate() {
             let label = match (&step.key, &step.paste) {
                 (Some(key), _) => {
                     let KeySpec::Chord(chord) = KeySpec::parse(key) else {
                         panic!("{}: {key:?} isn't a key", case.name);
                     };
-                    let _ = editor.handle_key(&chord, &keymap);
+                    // `App` applies `Action::Copy` by setting its clipboard.
+                    if let EditorOutcome::Copied { text, .. } = editor.handle_key(&chord, &keymap, &clipboard, now) {
+                        clipboard = text;
+                    }
                     key.clone()
                 }
                 (None, Some(text)) => {
-                    let _ = editor.handle_paste(text);
+                    let _ = editor.handle_paste(text, now);
                     format!("paste {text:?}")
                 }
                 (None, None) => panic!("{}: a step with neither a key nor a paste", case.name),
             };
             draw(&mut editor, case.size);
-            let got = (editor.text(), editor.selection(), editor.scroll_offset());
-            let want = (step.text.clone(), step.selection, step.scroll);
+            let got = (
+                editor.text(),
+                editor.selection(),
+                editor.scroll_offset(),
+                clipboard.clone(),
+            );
+            let want = (step.text.clone(), step.selection, step.scroll, step.clipboard.clone());
             if got != want {
                 failures.push(format!(
                     "{} step {i} ({label}):\n  got  {got:?}\n  want {want:?}",

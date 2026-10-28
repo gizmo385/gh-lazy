@@ -23,6 +23,7 @@ use crate::clock::{Clock as _, FakeClock};
 use crate::component::{ChainLink, Component, Cx, RenderCx};
 use crate::components::button::{ButtonMouse, ButtonRow, Pressed};
 use crate::components::switch::Switch;
+use crate::components::text_editor::{EditorOutcome, EditorVariant, Location, TextEditor};
 use crate::components::text_input::{self, InputOutcome, TextInput};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
@@ -607,6 +608,8 @@ impl Component for LatestWins {
 pub enum TestField {
     /// A text input, which types `q`.
     Input,
+    /// A plain text editor, only with [`TestDialog::with_editor`].
+    Editor,
     /// A switch, whose only keys are `enter` and `space`: `q` isn't one, so it closes the dialog.
     Switch,
     /// The submit button.
@@ -621,7 +624,7 @@ impl TestField {
         match self {
             TestField::Submit => Some(Pressed::Submit),
             TestField::Cancel => Some(Pressed::Cancel),
-            TestField::Input | TestField::Switch => None,
+            TestField::Input | TestField::Editor | TestField::Switch => None,
         }
     }
 }
@@ -636,6 +639,8 @@ pub struct TestDialog {
     footer: bool,
     ring: FocusRing<TestField>,
     input: TextInput,
+    /// The editor, with [`Self::with_editor`].
+    editor: Option<TextEditor>,
     switch: Switch,
     buttons: ButtonRow,
     // The outer `Option` is whether it's done, the inner the dialog's output.
@@ -660,6 +665,9 @@ fn switch_area(area: Rect) -> Rect {
 
 /// The rows of the test dialog's interior that each field takes, from the interior's top.
 const INPUT_ROW: u16 = 4;
+/// The editor, when there is one: interior rows 8 to 11, between the input and the switch.
+const EDITOR_ROW: u16 = 8;
+const EDITOR_HEIGHT: u16 = 4;
 /// Lookup's switch: interior rows 12 to 14.
 const SWITCH_ROW: u16 = 12;
 /// Lookup's button row: its buttons are on interior rows 19 to 21.
@@ -679,10 +687,52 @@ impl TestDialog {
                 TestField::Cancel,
             ]),
             input: TextInput::new("Name"),
+            editor: None,
             switch: Switch::new(false),
             buttons: ButtonRow::new("Lookup"),
             output: None,
             mouse_events: 0,
+        }
+    }
+
+    /// This dialog with a plain text editor holding `text` after its input, in the focus ring and on interior rows 8
+    /// to 11.
+    #[must_use]
+    pub fn with_editor(mut self, text: &str) -> Self {
+        self.editor = Some(TextEditor::new(EditorVariant::Plain, text));
+        let focused = self.ring.focused();
+        self.ring = FocusRing::new([
+            TestField::Input,
+            TestField::Editor,
+            TestField::Switch,
+            TestField::Submit,
+            TestField::Cancel,
+        ]);
+        if let Some(field) = focused {
+            self.ring.focus(field);
+        }
+        self
+    }
+
+    /// The editor's text, when it has one.
+    pub fn editor_text(&self) -> Option<String> {
+        self.editor.as_ref().map(TextEditor::text)
+    }
+
+    /// The editor's selection, when it has one.
+    pub fn editor_selection(&self) -> Option<(Location, Location)> {
+        self.editor.as_ref().map(TextEditor::selection)
+    }
+
+    /// Focuses `field`, telling the editor when it gains focus (its undo batch ends).
+    fn focus_field(&mut self, field: TestField) {
+        let had = self.ring.is_focused(field);
+        self.ring.focus(field);
+        if !had
+            && field == TestField::Editor
+            && let Some(editor) = &mut self.editor
+        {
+            editor.focus_gained();
         }
     }
 
@@ -757,11 +807,23 @@ impl Component for TestDialog {
     }
 
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
-        self.ring.is_focused(TestField::Input) && self.input.consumes_key(key, keymap)
+        match (self.ring.focused(), &self.editor) {
+            (Some(TestField::Input), _) => self.input.consumes_key(key, keymap),
+            (Some(TestField::Editor), Some(editor)) => editor.consumes_key(key, keymap),
+            _ => false,
+        }
     }
 
     fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action> {
         let chord = KeyChord::from_event(&key)?;
+        if self.ring.is_focused(TestField::Editor)
+            && let Some(editor) = &mut self.editor
+        {
+            return match editor.handle_key(&chord, cx.keymap(), cx.clipboard(), cx.now()) {
+                EditorOutcome::Copied { text, .. } => Some(Action::Copy(text)),
+                EditorOutcome::Changed | EditorOutcome::Moved | EditorOutcome::Ignored => Some(Action::Consumed),
+            };
+        }
         match self.input.handle_key(&chord, cx.keymap(), cx.clipboard()) {
             // Like Python's dialogs, `enter` in a single-line input doesn't submit.
             InputOutcome::Changed | InputOutcome::Submitted => Some(Action::Consumed),
@@ -772,6 +834,12 @@ impl Component for TestDialog {
 
     fn handle_mouse(&mut self, event: MouseEvent, area: Rect, cx: &Cx<'_>) -> Option<Action> {
         self.mouse_events += 1;
+        // A drag that started in the editor, wherever the pointer is now.
+        if let Some(editor) = &mut self.editor
+            && editor.captured_mouse(event)
+        {
+            return Some(Action::Consumed);
+        }
         if let Some((button, outcome)) = self.buttons.handle_mouse(&event, cx.now()) {
             let field = match button {
                 Pressed::Submit => TestField::Submit,
@@ -796,6 +864,12 @@ impl Component for TestDialog {
         let row = event.row - area.y;
         if (INPUT_ROW..INPUT_ROW + text_input::HEIGHT).contains(&row) {
             self.ring.focus(TestField::Input);
+        }
+        if self.editor.is_some() && (EDITOR_ROW..EDITOR_ROW + EDITOR_HEIGHT).contains(&row) {
+            self.focus_field(TestField::Editor);
+            if let Some(editor) = &mut self.editor {
+                editor.press(event.column, event.row);
+            }
         }
         Some(Action::Consumed)
     }
@@ -848,6 +922,15 @@ impl Component for TestDialog {
             under,
             self.ring.is_focused(TestField::Switch),
         );
+        if let Some(editor) = &mut self.editor {
+            editor.render(
+                frame.buffer_mut(),
+                rows(EDITOR_ROW, EDITOR_HEIGHT),
+                theme,
+                under,
+                self.ring.is_focused(TestField::Editor),
+            );
+        }
         let focused = self.ring.focused().and_then(TestField::button);
         self.buttons
             .render(frame.buffer_mut(), rows(BUTTON_ROW, ButtonRow::HEIGHT), theme, focused);
@@ -869,7 +952,18 @@ impl Dialog for TestDialog {
     }
 
     fn move_focus(&mut self, direction: FocusMove) {
+        let had_editor = self.ring.is_focused(TestField::Editor);
         self.ring.step(direction);
+        if !had_editor
+            && self.ring.is_focused(TestField::Editor)
+            && let Some(editor) = &mut self.editor
+        {
+            editor.focus_gained();
+        }
+    }
+
+    fn captures_mouse(&self) -> bool {
+        self.editor.as_ref().is_some_and(TextEditor::is_selecting)
     }
 
     fn size(&self, _available: Rect) -> (u16, u16) {
@@ -887,6 +981,7 @@ impl Dialog for TestDialog {
     fn field_chain(&self) -> Vec<ChainLink> {
         match self.ring.focused() {
             Some(TestField::Input) => vec![FieldKind::TextInput.link(self.kind())],
+            Some(TestField::Editor) => vec![FieldKind::TextEditor.link(self.kind())],
             Some(TestField::Submit | TestField::Cancel) => vec![FieldKind::Button.link(self.kind())],
             Some(TestField::Switch) => vec![FieldKind::Switch.link(self.kind())],
             None => Vec::new(),
@@ -913,11 +1008,18 @@ impl Dialog for TestDialog {
         }
     }
 
-    fn handle_paste(&mut self, text: &str) -> Option<Action> {
-        self.ring.is_focused(TestField::Input).then(|| {
-            self.input.handle_paste(text);
-            Action::Consumed
-        })
+    fn handle_paste(&mut self, text: &str, cx: &Cx<'_>) -> Option<Action> {
+        match (self.ring.focused(), &mut self.editor) {
+            (Some(TestField::Input), _) => {
+                self.input.handle_paste(text);
+                Some(Action::Consumed)
+            }
+            (Some(TestField::Editor), Some(editor)) => {
+                let _ = editor.handle_paste(text, cx.now());
+                Some(Action::Consumed)
+            }
+            _ => None,
+        }
     }
 }
 

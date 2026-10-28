@@ -778,3 +778,70 @@ fn the_switch_matches_pythons_cells() {
         }
     }
 }
+
+// A dialog with a text editor (#257): the clipboard between fields, and the mouse.
+
+/// The test dialog with an editor holding `alpha` and `beta`, its input focused.
+fn editor_app() -> TestApp {
+    app_with(TestDialog::new(1).with_editor("alpha\nbeta"))
+}
+
+fn clipboard_writes(app: &TestApp) -> Vec<String> {
+    app.effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            crate::effect::Effect::SetClipboard(text) => Some(text.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn text_cut_in_the_editor_pastes_into_the_input_and_back() {
+    let mut app = editor_app();
+    // The editor's cut with nothing selected takes its line, line break and all.
+    app.press(&["tab", "ctrl+x"]);
+    assert_eq!(app.app().clipboard(), "alpha\n");
+    assert_eq!(clipboard_writes(&app), ["alpha\n"]);
+    // The input pastes all of it.
+    app.press(&["shift+tab", "ctrl+v", "shift+enter"]);
+    assert_eq!(replies(&app), ["1: Some(\"alpha\\n\")"]);
+
+    // The other way: the input's cut pastes into the editor.
+    let mut app = editor_app();
+    app.send(Event::Paste("gamma".into()));
+    app.press(&["ctrl+shift+a", "ctrl+x", "tab", "ctrl+v"]);
+    // Copy the editor's whole text to see it.
+    app.press(&["f7", "ctrl+c"]);
+    assert_eq!(app.app().clipboard(), "gammaalpha\nbeta");
+}
+
+#[test]
+fn copy_without_a_selection_in_the_editor_does_nothing() {
+    let mut app = editor_app();
+    app.press(&["tab", "ctrl+c"]);
+    assert!(replies(&app).is_empty(), "no quit hint inside a dialog");
+    assert!(clipboard_writes(&app).is_empty());
+    assert_eq!(open_kinds(&app), [ModalKind::Test(1)]);
+}
+
+#[test]
+fn a_drag_from_the_editor_keeps_the_mouse_outside_the_frame() {
+    let mut app = editor_app();
+    let screen = app.screen(160, 48);
+    let (row, line) = screen
+        .lines()
+        .enumerate()
+        .find(|(_, line)| line.contains("alpha"))
+        .expect("the editor shows alpha");
+    let column = u16::try_from(line[..line.find("alpha").unwrap()].chars().count()).unwrap();
+    let row = u16::try_from(row).unwrap();
+    // Pressed on the `l` of `alpha`, which focuses the editor, dragged out of the frame, released below it.
+    app.drag((column + 1, row), &[(2, 2), (159, 47)]);
+    app.press(&["ctrl+c"]);
+    assert_eq!(app.app().clipboard(), "lpha\nbeta");
+    // The release ended the drag: a move with the button down outside selects nothing.
+    app.mouse(MouseEventKind::Drag(MouseButton::Left), 2, 2);
+    app.press(&["ctrl+c"]);
+    assert_eq!(app.app().clipboard(), "lpha\nbeta");
+}

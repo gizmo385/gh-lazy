@@ -104,8 +104,8 @@ impl ModalEntry {
         self.dialog.handle_mouse(event, self.interior, cx)
     }
 
-    pub(crate) fn handle_paste(&mut self, text: &str) -> Option<Action> {
-        self.dialog.handle_paste(text)
+    pub(crate) fn handle_paste(&mut self, text: &str, cx: &Cx<'_>) -> Option<Action> {
+        self.dialog.handle_paste(text, cx)
     }
 
     pub(crate) fn update(&mut self, action: DialogAction, cx: &mut Cx<'_>) {
@@ -172,7 +172,7 @@ trait AnyDialog: Send {
     fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action>;
     fn handle_mouse(&mut self, event: MouseEvent, area: Rect, cx: &Cx<'_>) -> Option<Action>;
     fn captures_mouse(&self) -> bool;
-    fn handle_paste(&mut self, text: &str) -> Option<Action>;
+    fn handle_paste(&mut self, text: &str, cx: &Cx<'_>) -> Option<Action>;
     fn update(&mut self, action: DialogAction, cx: &mut Cx<'_>);
     fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse>;
     fn size(&self, available: Rect) -> (u16, u16);
@@ -231,8 +231,8 @@ impl<D: Dialog> AnyDialog for Open<D> {
         self.dialog.captures_mouse()
     }
 
-    fn handle_paste(&mut self, text: &str) -> Option<Action> {
-        self.dialog.handle_paste(text)
+    fn handle_paste(&mut self, text: &str, cx: &Cx<'_>) -> Option<Action> {
+        self.dialog.handle_paste(text, cx)
     }
 
     fn update(&mut self, action: DialogAction, cx: &mut Cx<'_>) {

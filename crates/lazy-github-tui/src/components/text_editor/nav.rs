@@ -14,7 +14,7 @@ pub(super) struct Nav<'a> {
 }
 
 impl Nav<'_> {
-    fn len(&self, row: usize) -> usize {
+    pub(super) fn len(&self, row: usize) -> usize {
         self.lines.get(row).map_or(0, |line| line.chars().count())
     }
 

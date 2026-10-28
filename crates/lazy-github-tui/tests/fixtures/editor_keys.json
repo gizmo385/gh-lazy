@@ -11,6 +11,7 @@
       1,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "down",
@@ -25,7 +26,8 @@
             40
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -40,7 +42,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -55,7 +58,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -70,7 +74,8 @@
             40
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -85,7 +90,8 @@
             80
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -100,7 +106,8 @@
             80
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -115,7 +122,8 @@
             39
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -131,6 +139,7 @@
       0,
       79
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "up",
@@ -145,7 +154,8 @@
             39
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -160,7 +170,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -175,7 +186,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -190,7 +202,8 @@
             79
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -205,7 +218,8 @@
             80
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -221,6 +235,7 @@
       1,
       12
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "up",
@@ -235,7 +250,8 @@
             10
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -250,7 +266,8 @@
             12
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -265,7 +282,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -280,7 +298,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -295,7 +314,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -310,7 +330,8 @@
             12
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -325,7 +346,8 @@
             10
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -341,6 +363,7 @@
       0,
       9
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "down",
@@ -355,7 +378,8 @@
             9
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -370,7 +394,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -385,7 +410,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -400,7 +426,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "left",
@@ -415,7 +442,8 @@
             15
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -430,7 +458,8 @@
             10
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -446,6 +475,7 @@
       0,
       30
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "up",
@@ -460,7 +490,8 @@
             10
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -475,7 +506,8 @@
             30
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -490,7 +522,8 @@
             50
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -505,7 +538,8 @@
             64
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -520,7 +554,8 @@
             80
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -535,7 +570,8 @@
             64
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -550,7 +586,8 @@
             50
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -565,7 +602,8 @@
             30
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -581,6 +619,7 @@
       0,
       22
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "up",
@@ -595,7 +634,8 @@
             2
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -610,7 +650,8 @@
             22
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -625,7 +666,8 @@
             26
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -640,7 +682,8 @@
             6
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -656,6 +699,7 @@
       0,
       3
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "down",
@@ -670,7 +714,8 @@
             13
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -685,7 +730,8 @@
             23
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -700,7 +746,8 @@
             13
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "right",
@@ -715,7 +762,8 @@
             14
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -730,7 +778,8 @@
             24
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -746,6 +795,7 @@
       1,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "left",
@@ -760,7 +810,8 @@
             10
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "left",
@@ -775,7 +826,8 @@
             9
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "right",
@@ -790,7 +842,8 @@
             10
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "right",
@@ -805,7 +858,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "right",
@@ -820,7 +874,8 @@
             1
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -836,6 +891,7 @@
       0,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "left",
@@ -850,7 +906,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "right",
@@ -865,7 +922,8 @@
             1
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -881,6 +939,7 @@
       3,
       3
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "right",
@@ -895,7 +954,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "right",
@@ -910,7 +970,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "left",
@@ -925,7 +986,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -941,6 +1003,7 @@
       0,
       10
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "right",
@@ -955,7 +1018,8 @@
             11
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "right",
@@ -970,7 +1034,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "left",
@@ -985,7 +1050,8 @@
             11
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "left",
@@ -1000,7 +1066,8 @@
             10
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -1016,6 +1083,7 @@
       0,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+right",
@@ -1030,7 +1098,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -1045,7 +1114,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -1060,7 +1130,8 @@
             7
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -1075,7 +1146,8 @@
             8
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -1090,7 +1162,8 @@
             11
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -1105,7 +1178,8 @@
             14
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -1120,7 +1194,8 @@
             17
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -1135,7 +1210,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -1150,7 +1226,8 @@
             8
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -1166,6 +1243,7 @@
       2,
       3
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+left",
@@ -1180,7 +1258,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -1195,7 +1274,8 @@
             16
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -1210,7 +1290,8 @@
             11
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -1225,7 +1306,8 @@
             2
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -1240,7 +1322,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -1255,7 +1338,8 @@
             17
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -1270,7 +1354,8 @@
             14
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -1285,7 +1370,8 @@
             11
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -1300,7 +1386,8 @@
             8
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -1316,6 +1403,7 @@
       0,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+right",
@@ -1330,7 +1418,8 @@
             5
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -1345,7 +1434,8 @@
             11
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -1360,7 +1450,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -1375,7 +1466,8 @@
             11
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -1391,6 +1483,7 @@
       0,
       5
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+right",
@@ -1405,7 +1498,8 @@
             26
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -1420,7 +1514,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -1435,7 +1530,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -1451,6 +1547,7 @@
       1,
       8
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "home",
@@ -1465,7 +1562,8 @@
             2
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "home",
@@ -1480,7 +1578,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "home",
@@ -1495,7 +1594,8 @@
             2
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "right",
@@ -1510,7 +1610,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "home",
@@ -1525,7 +1626,8 @@
             2
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+a",
@@ -1540,7 +1642,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+a",
@@ -1555,7 +1658,8 @@
             2
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -1571,6 +1675,7 @@
       1,
       1
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "home",
@@ -1585,7 +1690,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -1600,7 +1706,8 @@
             15
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+e",
@@ -1615,7 +1722,8 @@
             15
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "home",
@@ -1630,7 +1738,8 @@
             2
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -1646,6 +1755,7 @@
       0,
       50
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "home",
@@ -1660,7 +1770,8 @@
             40
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -1675,7 +1786,8 @@
             80
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -1690,7 +1802,8 @@
             80
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "home",
@@ -1705,7 +1818,8 @@
             40
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -1720,7 +1834,8 @@
             80
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -1735,7 +1850,8 @@
             80
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "home",
@@ -1750,7 +1866,8 @@
             40
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -1766,6 +1883,7 @@
       0,
       25
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "home",
@@ -1780,7 +1898,8 @@
             20
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -1795,7 +1914,8 @@
             39
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -1810,7 +1930,8 @@
             19
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -1825,7 +1946,8 @@
             19
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+a",
@@ -1840,7 +1962,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+e",
@@ -1855,7 +1978,8 @@
             19
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -1871,6 +1995,7 @@
       0,
       30
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "home",
@@ -1885,7 +2010,8 @@
             20
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -1900,7 +2026,8 @@
             39
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -1915,7 +2042,8 @@
             54
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -1930,7 +2058,8 @@
             54
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "home",
@@ -1945,7 +2074,8 @@
             40
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -1960,7 +2090,8 @@
             20
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -1976,6 +2107,7 @@
       0,
       5
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "home",
@@ -1990,7 +2122,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -2005,7 +2138,8 @@
             9
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "left",
@@ -2020,7 +2154,8 @@
             8
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -2035,7 +2170,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -2050,7 +2186,8 @@
             9
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -2066,6 +2203,7 @@
       0,
       3
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "pagedown",
@@ -2080,7 +2218,8 @@
             3
           ]
         ],
-        "scroll": 6
+        "scroll": 6,
+        "clipboard": ""
       },
       {
         "key": "pagedown",
@@ -2095,7 +2234,8 @@
             3
           ]
         ],
-        "scroll": 6
+        "scroll": 6,
+        "clipboard": ""
       },
       {
         "key": "pagedown",
@@ -2110,7 +2250,8 @@
             3
           ]
         ],
-        "scroll": 6
+        "scroll": 6,
+        "clipboard": ""
       },
       {
         "key": "pageup",
@@ -2125,7 +2266,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "pageup",
@@ -2140,7 +2282,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "pageup",
@@ -2155,7 +2298,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -2171,6 +2315,7 @@
       0,
       4
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "pagedown",
@@ -2185,7 +2330,8 @@
             4
           ]
         ],
-        "scroll": 6
+        "scroll": 6,
+        "clipboard": ""
       },
       {
         "key": "pagedown",
@@ -2200,7 +2346,8 @@
             4
           ]
         ],
-        "scroll": 11
+        "scroll": 11,
+        "clipboard": ""
       },
       {
         "key": "pageup",
@@ -2215,7 +2362,8 @@
             4
           ]
         ],
-        "scroll": 5
+        "scroll": 5,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -2230,7 +2378,8 @@
             4
           ]
         ],
-        "scroll": 5
+        "scroll": 5,
+        "clipboard": ""
       }
     ]
   },
@@ -2246,6 +2395,7 @@
       0,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "down",
@@ -2260,7 +2410,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -2275,7 +2426,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -2290,7 +2442,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -2305,7 +2458,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -2320,7 +2474,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -2335,7 +2490,8 @@
             0
           ]
         ],
-        "scroll": 1
+        "scroll": 1,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -2350,7 +2506,8 @@
             0
           ]
         ],
-        "scroll": 2
+        "scroll": 2,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -2365,7 +2522,8 @@
             0
           ]
         ],
-        "scroll": 2
+        "scroll": 2,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -2380,7 +2538,8 @@
             0
           ]
         ],
-        "scroll": 2
+        "scroll": 2,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -2395,7 +2554,8 @@
             0
           ]
         ],
-        "scroll": 2
+        "scroll": 2,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -2410,7 +2570,8 @@
             0
           ]
         ],
-        "scroll": 2
+        "scroll": 2,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -2425,7 +2586,8 @@
             0
           ]
         ],
-        "scroll": 2
+        "scroll": 2,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -2440,7 +2602,8 @@
             0
           ]
         ],
-        "scroll": 1
+        "scroll": 1,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -2455,7 +2618,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -2471,6 +2635,7 @@
       0,
       5
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "x",
@@ -2485,7 +2650,8 @@
             6
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "space",
@@ -2500,7 +2666,8 @@
             7
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "é",
@@ -2515,7 +2682,8 @@
             8
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "中",
@@ -2530,7 +2698,8 @@
             9
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "enter",
@@ -2545,7 +2714,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "q",
@@ -2560,7 +2730,8 @@
             1
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "enter",
@@ -2575,7 +2746,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "enter",
@@ -2590,7 +2762,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -2606,6 +2779,7 @@
       0,
       19
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "t",
@@ -2620,7 +2794,8 @@
             20
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "u",
@@ -2635,7 +2810,8 @@
             21
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "space",
@@ -2650,7 +2826,8 @@
             22
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "v",
@@ -2665,7 +2842,8 @@
             23
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "backspace",
@@ -2680,7 +2858,8 @@
             22
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "backspace",
@@ -2695,7 +2874,8 @@
             21
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -2711,6 +2891,7 @@
       1,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "backspace",
@@ -2725,7 +2906,8 @@
             10
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "backspace",
@@ -2740,7 +2922,8 @@
             9
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -2755,7 +2938,8 @@
             24
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "backspace",
@@ -2770,7 +2954,8 @@
             23
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -2786,6 +2971,7 @@
       0,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "backspace",
@@ -2800,7 +2986,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -2816,6 +3003,7 @@
       0,
       10
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "delete",
@@ -2830,7 +3018,8 @@
             10
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+d",
@@ -2845,7 +3034,8 @@
             10
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -2860,7 +3050,8 @@
             24
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "delete",
@@ -2875,7 +3066,8 @@
             24
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "delete",
@@ -2890,7 +3082,8 @@
             24
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -2906,6 +3099,7 @@
       3,
       4
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "delete",
@@ -2920,7 +3114,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+d",
@@ -2935,7 +3130,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -2951,6 +3147,7 @@
       0,
       1
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "delete",
@@ -2965,7 +3162,8 @@
             1
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "backspace",
@@ -2980,7 +3178,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "right",
@@ -2995,7 +3194,8 @@
             1
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "delete",
@@ -3010,7 +3210,8 @@
             1
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3026,6 +3227,7 @@
       0,
       17
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+w",
@@ -3040,7 +3242,8 @@
             14
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+w",
@@ -3055,7 +3258,8 @@
             11
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+w",
@@ -3070,7 +3274,8 @@
             8
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+w",
@@ -3085,7 +3290,8 @@
             7
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+w",
@@ -3100,7 +3306,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+w",
@@ -3115,7 +3322,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3131,6 +3339,7 @@
       1,
       2
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+w",
@@ -3145,7 +3354,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+w",
@@ -3160,7 +3370,8 @@
             17
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+w",
@@ -3175,7 +3386,8 @@
             14
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3191,6 +3403,7 @@
       0,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+w",
@@ -3205,7 +3418,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3221,6 +3435,7 @@
       0,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+f",
@@ -3235,7 +3450,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -3250,7 +3466,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -3265,7 +3482,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -3280,7 +3498,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -3295,7 +3514,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -3310,7 +3530,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -3325,7 +3546,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3341,6 +3563,7 @@
       1,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+f",
@@ -3355,7 +3578,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -3370,7 +3594,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -3385,7 +3610,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -3400,7 +3626,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -3415,7 +3642,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3431,6 +3659,7 @@
       2,
       3
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+f",
@@ -3445,7 +3674,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3461,6 +3691,7 @@
       0,
       17
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+f",
@@ -3475,7 +3706,8 @@
             17
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -3490,7 +3722,8 @@
             17
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3506,6 +3739,7 @@
       1,
       9
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+u",
@@ -3520,7 +3754,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+u",
@@ -3535,7 +3770,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -3550,7 +3786,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+u",
@@ -3565,7 +3802,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3581,6 +3819,7 @@
       0,
       30
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+u",
@@ -3595,7 +3834,8 @@
             20
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+u",
@@ -3610,7 +3850,8 @@
             16
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3626,6 +3867,7 @@
       1,
       4
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+k",
@@ -3640,7 +3882,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+k",
@@ -3655,7 +3898,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+k",
@@ -3670,7 +3914,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+k",
@@ -3685,7 +3930,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3701,6 +3947,7 @@
       2,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+k",
@@ -3715,7 +3962,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+k",
@@ -3730,7 +3978,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3746,6 +3995,7 @@
       0,
       25
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+k",
@@ -3760,7 +4010,8 @@
             25
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+k",
@@ -3775,7 +4026,8 @@
             25
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+k",
@@ -3790,7 +4042,8 @@
             25
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3806,6 +4059,7 @@
       1,
       6
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+shift+k",
@@ -3820,7 +4074,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+shift+k",
@@ -3835,7 +4090,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+shift+k",
@@ -3850,7 +4106,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+shift+k",
@@ -3865,7 +4122,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3881,6 +4139,7 @@
       4,
       5
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+shift+k",
@@ -3895,7 +4154,8 @@
             5
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -3910,7 +4170,8 @@
             5
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+shift+k",
@@ -3925,7 +4186,8 @@
             5
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3941,6 +4203,7 @@
       3,
       2
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+shift+k",
@@ -3955,7 +4218,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+shift+k",
@@ -3970,7 +4234,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -3986,6 +4251,7 @@
       0,
       5
     ],
+    "clipboard": "",
     "steps": [
       {
         "paste": "a\r\nb\nc",
@@ -4000,7 +4266,8 @@
             1
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "x",
@@ -4015,7 +4282,8 @@
             2
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "paste": "end\n",
@@ -4030,7 +4298,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -4046,6 +4315,7 @@
       0,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "paste": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
@@ -4060,7 +4330,8 @@
             80
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -4075,7 +4346,8 @@
             63
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "paste": "\n",
@@ -4090,7 +4362,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -4106,6 +4379,7 @@
       3,
       4
     ],
+    "clipboard": "",
     "steps": [
       {
         "paste": "p\npp\nppp\npppp\nppppp\npppppp\nppppppp\npppppppp",
@@ -4120,7 +4394,8 @@
             8
           ]
         ],
-        "scroll": 5
+        "scroll": 5,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -4135,7 +4410,8 @@
             7
           ]
         ],
-        "scroll": 5
+        "scroll": 5,
+        "clipboard": ""
       }
     ]
   },
@@ -4151,6 +4427,7 @@
       3,
       3
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+left",
@@ -4165,7 +4442,8 @@
             2
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -4180,7 +4458,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -4195,7 +4474,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -4210,7 +4490,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -4225,7 +4506,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -4240,7 +4522,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -4255,7 +4538,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -4270,7 +4554,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -4285,7 +4570,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -4300,7 +4586,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -4316,6 +4603,7 @@
       2,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+w",
@@ -4330,7 +4618,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+w",
@@ -4345,7 +4634,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+w",
@@ -4360,7 +4650,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+w",
@@ -4375,7 +4666,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -4391,6 +4683,7 @@
       0,
       6
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "down",
@@ -4405,7 +4698,8 @@
             15
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -4420,7 +4714,8 @@
             3
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -4435,7 +4730,8 @@
             15
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -4450,7 +4746,8 @@
             6
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -4465,7 +4762,8 @@
             12
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -4480,7 +4778,8 @@
             15
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -4496,6 +4795,7 @@
       0,
       1
     ],
+    "clipboard": "",
     "steps": [
       {
         "paste": "1\r2\r",
@@ -4510,7 +4810,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "paste": " z",
@@ -4525,7 +4826,8 @@
             1
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -4541,6 +4843,7 @@
       0,
       25
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+w",
@@ -4555,7 +4858,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -4570,7 +4874,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+u",
@@ -4585,7 +4890,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+k",
@@ -4600,7 +4906,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+k",
@@ -4615,7 +4922,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -4631,6 +4939,7 @@
       0,
       39
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "z",
@@ -4645,7 +4954,8 @@
             40
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "space",
@@ -4660,7 +4970,8 @@
             41
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "left",
@@ -4675,7 +4986,8 @@
             40
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "backspace",
@@ -4690,7 +5002,8 @@
             39
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -4705,7 +5018,8 @@
             43
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "up",
@@ -4720,7 +5034,8 @@
             39
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -4736,6 +5051,7 @@
       0,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "pagedown",
@@ -4750,7 +5066,8 @@
             97
           ]
         ],
-        "scroll": 6
+        "scroll": 6,
+        "clipboard": ""
       },
       {
         "key": "pagedown",
@@ -4765,7 +5082,8 @@
             31
           ]
         ],
-        "scroll": 9
+        "scroll": 9,
+        "clipboard": ""
       },
       {
         "key": "pagedown",
@@ -4780,7 +5098,8 @@
             66
           ]
         ],
-        "scroll": 9
+        "scroll": 9,
+        "clipboard": ""
       },
       {
         "key": "pageup",
@@ -4795,7 +5114,8 @@
             129
           ]
         ],
-        "scroll": 3
+        "scroll": 3,
+        "clipboard": ""
       },
       {
         "key": "pageup",
@@ -4810,7 +5130,8 @@
             31
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "pageup",
@@ -4825,7 +5146,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -4841,6 +5163,7 @@
       0,
       45
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+shift+k",
@@ -4855,7 +5178,8 @@
             4
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+shift+k",
@@ -4870,7 +5194,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -4886,6 +5211,7 @@
       0,
       20
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "ctrl+k",
@@ -4900,7 +5226,8 @@
             20
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -4915,7 +5242,8 @@
             34
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+k",
@@ -4930,7 +5258,8 @@
             34
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "home",
@@ -4945,7 +5274,8 @@
             29
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+u",
@@ -4960,7 +5290,5336 @@
             29
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-shift-arrows",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      4
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            6
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+left",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            15
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+up",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+up",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-shift-left-collapse",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      4
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+left",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+left",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "left",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-wrapped-rows",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      0,
+      25
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            25
+          ],
+          [
+            0,
+            45
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            25
+          ],
+          [
+            0,
+            59
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            25
+          ],
+          [
+            0,
+            45
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            25
+          ],
+          [
+            0,
+            25
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            25
+          ],
+          [
+            0,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            25
+          ],
+          [
+            0,
+            25
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-words",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      0,
+      4
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "ctrl+shift+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            7
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+shift+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            8
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+shift+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            7
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+shift+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+shift+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+shift+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "end",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            17
+          ],
+          [
+            0,
+            17
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-word-ends",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      2,
+      3
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "ctrl+shift+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            2,
+            3
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "home",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+shift+left",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            16
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-home-end",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      8
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+home",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            8
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+home",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            8
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+end",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            8
+          ],
+          [
+            1,
+            15
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+end",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            8
+          ],
+          [
+            1,
+            15
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+home",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            8
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-home-end-wrapped",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      0,
+      30
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+end",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            30
+          ],
+          [
+            0,
+            39
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+home",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            30
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+home",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            30
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "up",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-line",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home\nnext",
+    "cursor": [
+      0,
+      30
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "f6",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home\nnext",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "x",
+        "text": "x\nnext",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "f6",
+        "text": "x\nnext",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "f6",
+        "text": "x\nnext",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "backspace",
+        "text": "\nnext",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-line-empty",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      2,
+      0
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "f6",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "f6",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "up",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-all",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      3
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "f7",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "f7",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "left",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "f7",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "f7",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "enter",
+        "text": "\n",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-then-type",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      0,
+      2
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "q",
+        "text": "fiqindented line\n\nlast",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+left",
+        "text": "fiqindented line\n\nlast",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+left",
+        "text": "fiqindented line\n\nlast",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "enter",
+        "text": "f\nindented line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-then-delete",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      0,
+      2
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "delete",
+        "text": "fiindented line\n\nlast",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+end",
+        "text": "fiindented line\n\nlast",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            15
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "backspace",
+        "text": "fi\n\nlast",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+home",
+        "text": "fi\n\nlast",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+w",
+        "text": "fi\n\nlast",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-then-delete-word",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      0,
+      4
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "ctrl+shift+right",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            7
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+f",
+        "text": "foo.(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+left",
+        "text": "foo.(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+f",
+        "text": "foo(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-then-delete-to-ends",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      6
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+left",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            6
+          ],
+          [
+            1,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+u",
+        "text": "first line\nented line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+right",
+        "text": "first line\nented line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+k",
+        "text": "first line\ne\n\nlast",
+        "selection": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+left",
+        "text": "first line\ne\n\nlast",
+        "selection": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+k",
+        "text": "first line\n\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-then-delete-lines",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+    "cursor": [
+      2,
+      3
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+down",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+down",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            2,
+            3
+          ],
+          [
+            4,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+shift+k",
+        "text": "line 1\nline 2\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            2,
+            3
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+down",
+        "text": "line 1\nline 2\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "home",
+        "text": "line 1\nline 2\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+shift+k",
+        "text": "line 1\nline 2\nline 6\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-lines-ending-at-start",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+    "cursor": [
+      2,
+      3
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+down",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+home",
+        "text": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+shift+k",
+        "text": "line 1\nline 2\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "select-up-from-first-row",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      0,
+      3
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+up",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            3,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "cut-selection",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      2
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+end",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            15
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+x",
+        "text": "first line\n  \n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "indented line"
+      },
+      {
+        "key": "end",
+        "text": "first line\n  \n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "indented line"
+      },
+      {
+        "key": "ctrl+v",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            15
+          ],
+          [
+            1,
+            15
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "indented line"
+      },
+      {
+        "key": "ctrl+v",
+        "text": "first line\n  indented lineindented line\n\nlast",
+        "selection": [
+          [
+            1,
+            28
+          ],
+          [
+            1,
+            28
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "indented line"
+      }
+    ]
+  },
+  {
+    "name": "cut-lines",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      5
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "ctrl+x",
+        "text": "first line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "  indented line\n"
+      },
+      {
+        "key": "ctrl+x",
+        "text": "first line\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "\n"
+      },
+      {
+        "key": "ctrl+v",
+        "text": "first line\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "\n"
+      },
+      {
+        "key": "up",
+        "text": "first line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "\n"
+      },
+      {
+        "key": "ctrl+v",
+        "text": "first line\n\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "\n"
+      }
+    ]
+  },
+  {
+    "name": "cut-last-line",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      3,
+      2
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "ctrl+x",
+        "text": "first line\n  indented line\n\n",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "last"
+      },
+      {
+        "key": "ctrl+v",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "last"
+      },
+      {
+        "key": "ctrl+x",
+        "text": "first line\n  indented line\n\n",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "last"
+      }
+    ]
+  },
+  {
+    "name": "cut-only-line",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "lonely",
+    "cursor": [
+      0,
+      3
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "ctrl+x",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "lonely"
+      },
+      {
+        "key": "ctrl+v",
+        "text": "lonely",
+        "selection": [
+          [
+            0,
+            6
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "lonely"
+      },
+      {
+        "key": "ctrl+v",
+        "text": "lonelylonely",
+        "selection": [
+          [
+            0,
+            12
+          ],
+          [
+            0,
+            12
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "lonely"
+      }
+    ]
+  },
+  {
+    "name": "copy-selection",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      0,
+      0
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+down",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+c",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "first line\n "
+      },
+      {
+        "key": "end",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            15
+          ],
+          [
+            1,
+            15
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "first line\n "
+      },
+      {
+        "key": "ctrl+v",
+        "text": "first line\n  indented linefirst line\n \n\nlast",
+        "selection": [
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "first line\n "
+      },
+      {
+        "key": "super+c",
+        "text": "first line\n  indented linefirst line\n \n\nlast",
+        "selection": [
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "first line\n "
+      },
+      {
+        "key": "ctrl+c",
+        "text": "first line\n  indented linefirst line\n \n\nlast",
+        "selection": [
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "first line\n "
+      }
+    ]
+  },
+  {
+    "name": "copy-without-selection",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      2
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "ctrl+c",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "super+c",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+v",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "copy-across-lines-and-paste-over",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home\nnext",
+    "cursor": [
+      0,
+      70
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+down",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home\nnext",
+        "selection": [
+          [
+            0,
+            70
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+c",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home\nnext",
+        "selection": [
+          [
+            0,
+            70
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": " from home"
+      },
+      {
+        "key": "f7",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home\nnext",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": " from home"
+      },
+      {
+        "key": "ctrl+v",
+        "text": " from home",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": " from home"
+      }
+    ]
+  },
+  {
+    "name": "undo-redo",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "",
+    "cursor": [
+      0,
+      0
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "h",
+        "text": "h",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "i",
+        "text": "hi",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "space",
+        "text": "hi ",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "y",
+        "text": "hi y",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "o",
+        "text": "hi yo",
+        "selection": [
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "enter",
+        "text": "hi yo\n",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "hi yo\na",
+        "selection": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "b",
+        "text": "hi yo\nab",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "paste": "pasted",
+        "text": "hi yo\nabpasted",
+        "selection": [
+          [
+            1,
+            8
+          ],
+          [
+            1,
+            8
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "hi yo\nab",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "hi yo\n",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "hi yo",
+        "selection": [
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+y",
+        "text": "hi yo\n",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+y",
+        "text": "hi yo\nab",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+y",
+        "text": "hi yo\nabpasted",
+        "selection": [
+          [
+            1,
+            8
+          ],
+          [
+            1,
+            8
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+y",
+        "text": "hi yo\nabpasted",
+        "selection": [
+          [
+            1,
+            8
+          ],
+          [
+            1,
+            8
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "undo-moves-split-batches",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      0,
+      5
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "x",
+        "text": "firstx line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            6
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "y",
+        "text": "firstxy line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            7
+          ],
+          [
+            0,
+            7
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "right",
+        "text": "firstxy line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            8
+          ],
+          [
+            0,
+            8
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "z",
+        "text": "firstxy zline\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            9
+          ],
+          [
+            0,
+            9
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "w",
+        "text": "firstxy zwline\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "left",
+        "text": "firstxy zwline\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            9
+          ],
+          [
+            0,
+            9
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "firstxy line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            8
+          ],
+          [
+            0,
+            8
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "undo-replace-switch",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      0,
+      0
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "a",
+        "text": "afirst line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "b",
+        "text": "abfirst line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "backspace",
+        "text": "afirst line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "backspace",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "c",
+        "text": "cfirst line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "abfirst line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+y",
+        "text": "abfirst line\n  indented line\n\nlast",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "undo-selection-restored",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      2
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "shift+right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "shift+right",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "q",
+        "text": "first line\n  qented line\n\nlast",
+        "selection": [
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+y",
+        "text": "first line\n  qented line\n\nlast",
+        "selection": [
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "undo-select-all-typing",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      0,
+      4
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "f7",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "x",
+        "text": "x",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "y",
+        "text": "xy",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "x",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+y",
+        "text": "x",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "redo-cleared-by-edit",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      3,
+      4
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "!",
+        "text": "first line\n  indented line\n\nlast!",
+        "selection": [
+          [
+            3,
+            5
+          ],
+          [
+            3,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "?",
+        "text": "first line\n  indented line\n\nlast!?",
+        "selection": [
+          [
+            3,
+            6
+          ],
+          [
+            3,
+            6
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "enter",
+        "text": "first line\n  indented line\n\nlast!?\n",
+        "selection": [
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  indented line\n\nlast!?",
+        "selection": [
+          [
+            3,
+            6
+          ],
+          [
+            3,
+            6
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "x",
+        "text": "first line\n  indented line\n\nlast!?x",
+        "selection": [
+          [
+            3,
+            7
+          ],
+          [
+            3,
+            7
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+y",
+        "text": "first line\n  indented line\n\nlast!?x",
+        "selection": [
+          [
+            3,
+            7
+          ],
+          [
+            3,
+            7
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  indented line\n\nlast!?",
+        "selection": [
+          [
+            3,
+            6
+          ],
+          [
+            3,
+            6
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            3,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "undo-deletes",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+    "cursor": [
+      0,
+      17
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "ctrl+w",
+        "text": "foo.bar(baz)  \n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            14
+          ],
+          [
+            0,
+            14
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+w",
+        "text": "foo.bar(baz\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            11
+          ],
+          [
+            0,
+            11
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "backspace",
+        "text": "foo.bar(ba\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+shift+k",
+        "text": "  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "foo.bar(ba\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            17
+          ],
+          [
+            0,
+            17
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "foo.bar(baz)  qux\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            17
+          ],
+          [
+            0,
+            17
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+y",
+        "text": "foo.bar(ba\n  spaced   out  \nend",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "undo-cut-and-paste",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      3
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "ctrl+x",
+        "text": "first line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "  indented line\n"
+      },
+      {
+        "key": "ctrl+v",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "  indented line\n"
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "  indented line\n"
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "  indented line\n"
+      },
+      {
+        "key": "ctrl+y",
+        "text": "first line\n\nlast",
+        "selection": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "  indented line\n"
+      },
+      {
+        "key": "ctrl+y",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "  indented line\n"
+      }
+    ]
+  },
+  {
+    "name": "undo-nothing",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      3
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+y",
+        "text": "first line\n  indented line\n\nlast",
+        "selection": [
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "undo-long-typing",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "",
+    "cursor": [
+      0,
+      0
+    ],
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "a",
+        "text": "a",
+        "selection": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aa",
+        "selection": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaa",
+        "selection": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaa",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaa",
+        "selection": [
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            5
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaa",
+        "selection": [
+          [
+            0,
+            6
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaa",
+        "selection": [
+          [
+            0,
+            7
+          ],
+          [
+            0,
+            7
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaa",
+        "selection": [
+          [
+            0,
+            8
+          ],
+          [
+            0,
+            8
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaa",
+        "selection": [
+          [
+            0,
+            9
+          ],
+          [
+            0,
+            9
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            11
+          ],
+          [
+            0,
+            11
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            12
+          ],
+          [
+            0,
+            12
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            13
+          ],
+          [
+            0,
+            13
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            14
+          ],
+          [
+            0,
+            14
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            15
+          ],
+          [
+            0,
+            15
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            16
+          ],
+          [
+            0,
+            16
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            17
+          ],
+          [
+            0,
+            17
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            18
+          ],
+          [
+            0,
+            18
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            19
+          ],
+          [
+            0,
+            19
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            21
+          ],
+          [
+            0,
+            21
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            22
+          ],
+          [
+            0,
+            22
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            23
+          ],
+          [
+            0,
+            23
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            24
+          ],
+          [
+            0,
+            24
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            25
+          ],
+          [
+            0,
+            25
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            26
+          ],
+          [
+            0,
+            26
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            27
+          ],
+          [
+            0,
+            27
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            28
+          ],
+          [
+            0,
+            28
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            29
+          ],
+          [
+            0,
+            29
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            30
+          ],
+          [
+            0,
+            30
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            31
+          ],
+          [
+            0,
+            31
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            32
+          ],
+          [
+            0,
+            32
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            33
+          ],
+          [
+            0,
+            33
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            34
+          ],
+          [
+            0,
+            34
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            35
+          ],
+          [
+            0,
+            35
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            36
+          ],
+          [
+            0,
+            36
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            37
+          ],
+          [
+            0,
+            37
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            38
+          ],
+          [
+            0,
+            38
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            39
+          ],
+          [
+            0,
+            39
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            40
+          ],
+          [
+            0,
+            40
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            41
+          ],
+          [
+            0,
+            41
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            42
+          ],
+          [
+            0,
+            42
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            43
+          ],
+          [
+            0,
+            43
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            44
+          ],
+          [
+            0,
+            44
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            45
+          ],
+          [
+            0,
+            45
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            46
+          ],
+          [
+            0,
+            46
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            47
+          ],
+          [
+            0,
+            47
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            48
+          ],
+          [
+            0,
+            48
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            49
+          ],
+          [
+            0,
+            49
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            50
+          ],
+          [
+            0,
+            50
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            51
+          ],
+          [
+            0,
+            51
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            52
+          ],
+          [
+            0,
+            52
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            53
+          ],
+          [
+            0,
+            53
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            54
+          ],
+          [
+            0,
+            54
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            55
+          ],
+          [
+            0,
+            55
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            56
+          ],
+          [
+            0,
+            56
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            57
+          ],
+          [
+            0,
+            57
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            58
+          ],
+          [
+            0,
+            58
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            59
+          ],
+          [
+            0,
+            59
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            60
+          ],
+          [
+            0,
+            60
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            61
+          ],
+          [
+            0,
+            61
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            62
+          ],
+          [
+            0,
+            62
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            63
+          ],
+          [
+            0,
+            63
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            64
+          ],
+          [
+            0,
+            64
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            65
+          ],
+          [
+            0,
+            65
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            66
+          ],
+          [
+            0,
+            66
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            67
+          ],
+          [
+            0,
+            67
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            68
+          ],
+          [
+            0,
+            68
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            69
+          ],
+          [
+            0,
+            69
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            70
+          ],
+          [
+            0,
+            70
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            71
+          ],
+          [
+            0,
+            71
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            72
+          ],
+          [
+            0,
+            72
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            73
+          ],
+          [
+            0,
+            73
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            74
+          ],
+          [
+            0,
+            74
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            75
+          ],
+          [
+            0,
+            75
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            76
+          ],
+          [
+            0,
+            76
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            77
+          ],
+          [
+            0,
+            77
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            78
+          ],
+          [
+            0,
+            78
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            79
+          ],
+          [
+            0,
+            79
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            80
+          ],
+          [
+            0,
+            80
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            81
+          ],
+          [
+            0,
+            81
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            82
+          ],
+          [
+            0,
+            82
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            83
+          ],
+          [
+            0,
+            83
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            84
+          ],
+          [
+            0,
+            84
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            85
+          ],
+          [
+            0,
+            85
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            86
+          ],
+          [
+            0,
+            86
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            87
+          ],
+          [
+            0,
+            87
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            88
+          ],
+          [
+            0,
+            88
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            89
+          ],
+          [
+            0,
+            89
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            90
+          ],
+          [
+            0,
+            90
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            91
+          ],
+          [
+            0,
+            91
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            92
+          ],
+          [
+            0,
+            92
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            93
+          ],
+          [
+            0,
+            93
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            94
+          ],
+          [
+            0,
+            94
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            95
+          ],
+          [
+            0,
+            95
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            96
+          ],
+          [
+            0,
+            96
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            97
+          ],
+          [
+            0,
+            97
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            98
+          ],
+          [
+            0,
+            98
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            99
+          ],
+          [
+            0,
+            99
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            100
+          ],
+          [
+            0,
+            100
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            101
+          ],
+          [
+            0,
+            101
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            102
+          ],
+          [
+            0,
+            102
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            103
+          ],
+          [
+            0,
+            103
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            104
+          ],
+          [
+            0,
+            104
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "a",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            105
+          ],
+          [
+            0,
+            105
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": [
+          [
+            0,
+            100
+          ],
+          [
+            0,
+            100
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
+      },
+      {
+        "key": "ctrl+z",
+        "text": "",
+        "selection": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": ""
       }
     ]
   },
@@ -4976,6 +10635,7 @@
       0,
       0
     ],
+    "clipboard": "",
     "steps": [
       {
         "key": "up",
@@ -4990,7 +10650,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "down",
@@ -5005,7 +10666,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "left",
@@ -5020,7 +10682,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "right",
@@ -5035,7 +10698,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "home",
@@ -5050,7 +10714,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "end",
@@ -5065,7 +10730,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+left",
@@ -5080,7 +10746,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+right",
@@ -5095,7 +10762,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "backspace",
@@ -5110,7 +10778,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "delete",
@@ -5125,7 +10794,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+w",
@@ -5140,7 +10810,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+f",
@@ -5155,7 +10826,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+u",
@@ -5170,7 +10842,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+k",
@@ -5185,7 +10858,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "ctrl+shift+k",
@@ -5200,7 +10874,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "pageup",
@@ -5215,7 +10890,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "pagedown",
@@ -5230,7 +10906,8 @@
             0
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
       },
       {
         "key": "a",
@@ -5245,7 +10922,184 @@
             1
           ]
         ],
-        "scroll": 0
+        "scroll": 0,
+        "clipboard": ""
+      }
+    ]
+  },
+  {
+    "name": "paste-clipboard-lines",
+    "variant": "code",
+    "size": [
+      48,
+      8
+    ],
+    "text": "first line\n  indented line\n\nlast",
+    "cursor": [
+      1,
+      2
+    ],
+    "clipboard": "one\ntwo\n",
+    "steps": [
+      {
+        "key": "ctrl+v",
+        "text": "first line\n  one\ntwo\nindented line\n\nlast",
+        "selection": [
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "one\ntwo\n"
+      },
+      {
+        "key": "ctrl+v",
+        "text": "first line\n  one\ntwo\none\ntwo\nindented line\n\nlast",
+        "selection": [
+          [
+            5,
+            0
+          ],
+          [
+            5,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "one\ntwo\n"
+      },
+      {
+        "key": "shift+up",
+        "text": "first line\n  one\ntwo\none\ntwo\nindented line\n\nlast",
+        "selection": [
+          [
+            5,
+            0
+          ],
+          [
+            4,
+            0
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "one\ntwo\n"
+      },
+      {
+        "key": "ctrl+v",
+        "text": "first line\n  one\ntwo\none\none\ntwo\nindented line\n\nlast",
+        "selection": [
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            0
+          ]
+        ],
+        "scroll": 1,
+        "clipboard": "one\ntwo\n"
+      },
+      {
+        "key": "ctrl+z",
+        "text": "first line\n  one\ntwo\none\ntwo\nindented line\n\nlast",
+        "selection": [
+          [
+            5,
+            0
+          ],
+          [
+            4,
+            0
+          ]
+        ],
+        "scroll": 1,
+        "clipboard": "one\ntwo\n"
+      }
+    ]
+  },
+  {
+    "name": "paste-clipboard-over-selection",
+    "variant": "plain",
+    "size": [
+      25,
+      8
+    ],
+    "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+    "cursor": [
+      0,
+      4
+    ],
+    "clipboard": "fast",
+    "steps": [
+      {
+        "key": "ctrl+shift+right",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            9
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "fast"
+      },
+      {
+        "key": "ctrl+v",
+        "text": "The fast brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            8
+          ],
+          [
+            0,
+            8
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "fast"
+      },
+      {
+        "key": "ctrl+z",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            9
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "fast"
+      },
+      {
+        "key": "ctrl+z",
+        "text": "The quick brown fox jumps over the lazy dog and keeps running far away from home",
+        "selection": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            9
+          ]
+        ],
+        "scroll": 0,
+        "clipboard": "fast"
       }
     ]
   }

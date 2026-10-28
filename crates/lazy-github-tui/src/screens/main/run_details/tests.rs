@@ -9,10 +9,8 @@ use lazy_github_core::github::{FakeGithub, GithubCall};
 use lazy_github_core::models::{Repository, Workflow, WorkflowJob, WorkflowRun};
 use serde_json::Value;
 
-use crate::component::Owner;
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::event::Event;
-use crate::keymap::BindingId;
 use crate::screens::main::{FocusTarget, MainScreen, SectionId};
 use crate::test_util::{TestApp, logs};
 
@@ -423,23 +421,144 @@ fn focusing_a_button_scrolls_it_into_view() {
     assert!(screen.contains("Re-run Workflow"), "{screen}");
 }
 
+// Re-run (#265).
+
+const RUN_42: u64 = 5_000_042;
+
+/// The re-runs sent, as `(run id, failed_only)`, and the run refetches, by run id.
+fn reruns(app: &TestApp) -> (Vec<(u64, bool)>, Vec<u64>) {
+    let mut reruns = Vec::new();
+    let mut refetches = Vec::new();
+    for call in app.gh().calls() {
+        match call {
+            GithubCall::RerunWorkflowRun(id) => reruns.push((id, false)),
+            GithubCall::RerunFailedJobs(id) => reruns.push((id, true)),
+            GithubCall::WorkflowRun(id) => refetches.push(id),
+            _ => {}
+        }
+    }
+    (reruns, refetches)
+}
+
+fn toasts(app: &TestApp) -> Vec<crate::toast::Toast> {
+    app.app().toasts().iter().cloned().collect()
+}
+
+/// Run 42 selected on `gh`, with the button `tabs` presses after the strip focused (2: Re-run Workflow, 3: Re-run
+/// Failed Jobs).
+fn on_button(gh: FakeGithub, tabs: usize) -> TestApp {
+    let mut app = app_with(gh);
+    app.press(&["enter"]);
+    settle(&mut app);
+    for _ in 0..tabs {
+        app.press(&["tab"]);
+    }
+    app
+}
+
+/// Run 42 as GitHub answers once it's re-run: titled differently, so the refetched run can be told apart.
+fn rerun_42() -> WorkflowRun {
+    let mut run = fixture_run(42);
+    run.display_title = "Fix the flaky test (re-run)".into();
+    run
+}
+
 #[test]
-fn enter_on_a_button_does_nothing_yet() {
-    let mut app = selected(42);
-    app.press(&["tab", "tab"]);
-    let before = app.screen(160, 48);
-    let out = logs(|| {
+fn each_button_sends_its_request() {
+    for (tabs, label, failed_only) in [(2, "Re-run Workflow", false), (3, "Re-run Failed Jobs", true)] {
+        let mut app = on_button(gh(), tabs);
+        assert_eq!(focused_button(&app), Some(label));
         app.press(&["enter"]);
-    });
-    assert!(out.contains("TextualButtonPress is not implemented yet"), "{out}");
-    assert_eq!(app.screen(160, 48), before);
-    assert_eq!(jobs_requests(&app).len(), 1);
-    let main = app.app_mut().main_screen_mut().unwrap();
-    assert!(matches!(
-        main.details
-            .on_binding(Owner::DetailsButton, BindingId::TextualButtonPress),
-        Some(crate::action::Action::Unimplemented(BindingId::TextualButtonPress))
-    ));
+        settle(&mut app);
+        assert_eq!(reruns(&app).0, [(RUN_42, failed_only)], "{label}");
+    }
+}
+
+#[test]
+fn a_queued_rerun_toasts_and_shows_the_run_fetched_again() {
+    for (presses, failed_only, message) in [
+        (3, true, "Failed jobs queued for re-run"),
+        (2, false, "Workflow run queued for re-run"),
+    ] {
+        let gh = gh()
+            .with_rerun(RUN_42, failed_only, Ok(()))
+            .with_workflow_run(RUN_42, Ok(rerun_42()));
+        let mut app = on_button(gh, presses);
+        app.press(&["enter"]);
+        settle(&mut app);
+        assert_eq!(reruns(&app), (vec![(RUN_42, failed_only)], vec![RUN_42]), "{message}");
+        assert_eq!(
+            toasts(&app),
+            [crate::toast::Toast::info(message).with_title("Re-run Started")]
+        );
+        // Shown as a fresh selection: its jobs asked for again and the strip focused.
+        assert_eq!(jobs_requests(&app).len(), 2);
+        assert_eq!(focus(&app), FocusTarget::DetailsTabs);
+        assert_eq!(tabs(&app), (vec!["Overview".into(), "Jobs".into(), "Logs".into()], 0));
+        assert_eq!(details(&app).run().display_title, "Fix the flaky test (re-run)");
+    }
+}
+
+#[test]
+fn a_refused_rerun_toasts_and_changes_nothing() {
+    for (tabs, message, line) in [
+        (
+            3,
+            "Failed to re-run failed jobs",
+            "ERROR Error re-running failed jobs for workflow run 5000042",
+        ),
+        (
+            2,
+            "Failed to re-run workflow",
+            "ERROR Error re-running workflow run 5000042",
+        ),
+    ] {
+        // Neither is canned: the fake refuses both with a 422.
+        let mut app = on_button(gh(), tabs);
+        app.press(&["enter"]);
+        let out = settle(&mut app);
+        assert!(out.contains(line), "{out}");
+        assert_eq!(toasts(&app), [crate::toast::Toast::error(message).with_title("Error")]);
+        assert!(reruns(&app).1.is_empty(), "no refetch");
+        assert_eq!(jobs_requests(&app).len(), 1);
+        assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    }
+}
+
+#[test]
+fn a_failed_refetch_still_reselects_the_run() {
+    let gh = gh().with_rerun(RUN_42, true, Ok(()));
+    let mut app = on_button(gh, 3);
+    app.press(&["enter"]);
+    let out = settle(&mut app);
+    assert!(
+        out.contains("ERROR Error fetching workflow run 5000042 after a re-run"),
+        "{out}"
+    );
+    assert_eq!(reruns(&app).1, [RUN_42]);
+    assert_eq!(jobs_requests(&app).len(), 2);
+    assert_eq!(focus(&app), FocusTarget::DetailsTabs);
+    assert_eq!(details(&app).run(), &fixture_run(42));
+}
+
+#[test]
+fn a_click_on_a_button_presses_it() {
+    let mut app = on_button(gh().with_rerun(RUN_42, true, Ok(())), 0);
+    let (row, column) = find(&mut app, "Re-run Failed Jobs");
+    app.click(column, row);
+    settle(&mut app);
+    assert_eq!(reruns(&app).0, [(RUN_42, true)]);
+}
+
+#[test]
+fn a_second_press_sends_a_second_request() {
+    let mut app = on_button(gh(), 2);
+    app.press(&["enter"]);
+    // Past the button's debounce.
+    app.advance(std::time::Duration::from_millis(300));
+    app.press(&["enter"]);
+    settle(&mut app);
+    assert_eq!(reruns(&app).0, [(RUN_42, false), (RUN_42, false)]);
 }
 
 #[test]
@@ -481,7 +600,6 @@ fn a_click_on_a_button_focuses_it_and_one_on_the_body_focuses_the_body() {
         (focus(&app), focused_button(&app)),
         (FocusTarget::DetailsContent, Some("Re-run Failed Jobs"))
     );
-    assert_eq!(jobs_requests(&app).len(), 1);
     let (row, column) = find(&mut app, "Commit Information");
     app.click(column, row);
     assert_eq!((focus(&app), focused_button(&app)), (FocusTarget::DetailsContent, None));

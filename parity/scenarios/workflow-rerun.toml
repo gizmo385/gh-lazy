@@ -3,7 +3,7 @@ description = "Run Overview re-run buttons: Re-run Failed Jobs and Re-run Workfl
 # shift+tab from the Repositories table wraps to the last focus stop on the screen, the Overview's last button, in both
 # apps (the stops before the buttons differ: owner decision on #241). After a re-run Rust refetches the run (Py bug
 # B15's recommendation) and Python reloads the stale one.
-gate = false
+gate = true
 parity_rows = [
     "workflows.overview-actions",
     "toasts.rerun-started",

@@ -21,7 +21,7 @@ use crate::models::{
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request` and `dispatch_workflow` fail with a 422, `list_branches` returns none, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` returns none, `workflow_run` fails with a 404, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -194,6 +194,12 @@ pub enum GithubCall {
         /// The branch it was asked to run on.
         git_ref: String,
     },
+    /// [`Github::rerun_workflow_run`], with the run's id.
+    RerunWorkflowRun(u64),
+    /// [`Github::rerun_failed_jobs`], with the run's id.
+    RerunFailedJobs(u64),
+    /// [`Github::workflow_run`], with the run's id.
+    WorkflowRun(u64),
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repository's full name.
@@ -265,6 +271,10 @@ struct State {
     branches: HashMap<String, Result<Vec<Branch>, GhError>>,
     /// What `dispatch_workflow` returns, by workflow id and ref; pairs not set fail with a 422.
     dispatches: HashMap<(u64, String), Result<(), GhError>>,
+    /// What the re-runs return, by run id and whether only the failed jobs; runs not set fail with a 422.
+    reruns: HashMap<(u64, bool), Result<(), GhError>>,
+    /// Keyed by run id.
+    workflow_runs: HashMap<u64, Result<WorkflowRun, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -540,6 +550,21 @@ impl FakeGithub {
     #[must_use]
     pub fn with_dispatch(self, workflow_id: u64, git_ref: &str, result: Result<(), GhError>) -> Self {
         self.lock().dispatches.insert((workflow_id, git_ref.to_owned()), result);
+        self
+    }
+
+    /// `rerun_failed_jobs` (with `failed_only`) or `rerun_workflow_run` returns `result` for run `run_id`, whatever
+    /// the repo. Runs not set fail with a 422.
+    #[must_use]
+    pub fn with_rerun(self, run_id: u64, failed_only: bool, result: Result<(), GhError>) -> Self {
+        self.lock().reruns.insert((run_id, failed_only), result);
+        self
+    }
+
+    /// `workflow_run` returns `run` for run `run_id`, whatever the repo. Runs not set fail with a 404.
+    #[must_use]
+    pub fn with_workflow_run(self, run_id: u64, run: Result<WorkflowRun, GhError>) -> Self {
+        self.lock().workflow_runs.insert(run_id, run);
         self
     }
 
@@ -990,6 +1015,35 @@ impl Github for FakeGithub {
         .await
     }
 
+    async fn rerun_workflow_run(&self, _repo: &Repository, run_id: u64) -> Result<(), GhError> {
+        self.respond(GithubCall::RerunWorkflowRun(run_id), |state| {
+            canned_rerun(state, run_id, false)
+        })
+        .await
+    }
+
+    async fn rerun_failed_jobs(&self, _repo: &Repository, run_id: u64) -> Result<(), GhError> {
+        self.respond(GithubCall::RerunFailedJobs(run_id), |state| {
+            canned_rerun(state, run_id, true)
+        })
+        .await
+    }
+
+    async fn workflow_run(&self, _repo: &Repository, run_id: u64) -> Result<WorkflowRun, GhError> {
+        self.respond(GithubCall::WorkflowRun(run_id), |state| {
+            match state.workflow_runs.get(&run_id) {
+                Some(Ok(run)) => Ok(run.clone()),
+                Some(Err(error)) => Err(duplicate(error)),
+                None => Err(GhError::Http {
+                    status: 404,
+                    message: "Not Found".to_owned(),
+                    body: Vec::new(),
+                }),
+            }
+        })
+        .await
+    }
+
     async fn update_issue(&self, repo: &Repository, number: u64, update: &IssueUpdate) -> Result<Issue, GhError> {
         let call = GithubCall::UpdateIssue {
             full_name: repo.full_name.clone(),
@@ -1016,6 +1070,15 @@ fn duplicate_diff_error(error: &DiffFetchError) -> DiffFetchError {
         DiffFetchError::TooLarge => DiffFetchError::TooLarge,
         DiffFetchError::Http(status) => DiffFetchError::Http(*status),
         DiffFetchError::Gh(error) => DiffFetchError::Gh(duplicate(error)),
+    }
+}
+
+/// A canned re-run's result, or a 422 when none was set.
+fn canned_rerun(state: &State, run_id: u64, failed_only: bool) -> Result<(), GhError> {
+    match state.reruns.get(&(run_id, failed_only)) {
+        Some(Ok(())) => Ok(()),
+        Some(Err(error)) => Err(duplicate(error)),
+        None => Err(unprocessable()),
     }
 }
 
@@ -1586,6 +1649,45 @@ mod tests {
             }
         );
         assert_eq!(github.calls()[0], GithubCall::ListBranches("octocat/a".into()));
+    }
+
+    #[tokio::test]
+    async fn reruns_and_runs_by_run_id() {
+        let run = crate::models::WorkflowRun {
+            id: 42,
+            ..serde_json::from_value(serde_json::json!({
+                "id": 0, "name": "CI", "display_title": "t", "path": "p", "run_number": 1, "head_branch": "main",
+                "head_sha": "0", "status": "completed", "event": "push",
+                "actor": {"login": "o", "id": 1, "html_url": ""},
+                "triggering_actor": {"login": "o", "id": 1, "html_url": ""},
+                "repository": serde_json::to_value(repo("a")).unwrap(),
+                "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z",
+                "html_url": "", "jobs_url": "", "logs_url": ""
+            }))
+            .unwrap()
+        };
+        let github = FakeGithub::new()
+            .with_rerun(42, true, Ok(()))
+            .with_rerun(42, false, Err(GhError::NotInstalled))
+            .with_workflow_run(42, Ok(run.clone()));
+        assert!(github.rerun_failed_jobs(&repo("a"), 42).await.is_ok());
+        assert!(matches!(
+            github.rerun_workflow_run(&repo("a"), 42).await,
+            Err(GhError::NotInstalled)
+        ));
+        assert!(matches!(
+            github.rerun_failed_jobs(&repo("a"), 41).await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        assert_eq!(github.workflow_run(&repo("a"), 42).await.unwrap(), run);
+        assert!(matches!(
+            github.workflow_run(&repo("a"), 41).await,
+            Err(GhError::Http { status: 404, .. })
+        ));
+        assert_eq!(
+            github.calls()[..2],
+            [GithubCall::RerunFailedJobs(42), GithubCall::RerunWorkflowRun(42)]
+        );
     }
 
     #[tokio::test]

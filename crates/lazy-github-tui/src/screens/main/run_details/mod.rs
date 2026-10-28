@@ -15,7 +15,7 @@ pub(in crate::screens::main) mod status;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crossterm::event::MouseEvent;
+use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 
 use lazy_github_core::gh::GhError;
 use lazy_github_core::models::{WorkflowJob, WorkflowRun};
@@ -355,8 +355,19 @@ impl DetailsBody for RunDetails {
         }
     }
 
+    /// The Jobs tree takes its own mouse; on the Overview, the release that completes a click on a button presses it,
+    /// as `enter` does.
     fn mouse(&mut self, tab: usize, mouse: MouseEvent) -> Option<Action> {
-        (RunTab::at(tab) == RunTab::Jobs && self.jobs_tab.mouse(mouse)).then_some(Action::Consumed)
+        match RunTab::at(tab) {
+            RunTab::Jobs => self.jobs_tab.mouse(mouse).then_some(Action::Consumed),
+            RunTab::Overview => (mouse.kind == MouseEventKind::Up(MouseButton::Left)
+                && self.overview.release(Position::new(mouse.column, mouse.row)))
+            .then_some(Action::Main(MainAction::DetailsCommand(
+                Owner::DetailsButton,
+                BindingId::TextualButtonPress,
+            ))),
+            RunTab::Logs => None,
+        }
     }
 
     fn maximizable(&self, tab: usize) -> bool {
@@ -381,19 +392,25 @@ impl DetailsBody for RunDetails {
         }
     }
 
-    /// The tree's keys act at once; `l` asks for logs, so it runs in [`Self::on_command`]. Re-running (#188) isn't
-    /// built yet: `enter` on a button is consumed and does nothing.
+    /// The tree's keys act at once; `l` asks for logs and `enter` on an Overview button re-runs the run, so they run
+    /// in [`Self::on_command`].
     fn on_binding(&mut self, _tab: usize, owner: Owner, id: BindingId) -> Option<Action> {
         match owner {
             Owner::Tree => self.jobs_tab.tree_binding(id).then_some(Action::Consumed),
-            Owner::RunJobs => Some(Action::Main(MainAction::DetailsCommand(owner, id))),
+            Owner::RunJobs | Owner::DetailsButton => Some(Action::Main(MainAction::DetailsCommand(owner, id))),
             _ => Some(Action::Unimplemented(id)),
         }
     }
 
     fn on_command(&mut self, tab: usize, owner: Owner, id: BindingId, cx: &mut Cx<'_>) {
-        if RunTab::at(tab) == RunTab::Jobs && owner == Owner::RunJobs && id == BindingId::WorkflowsViewJobLogs {
-            self.view_job_logs(cx);
+        match (RunTab::at(tab), owner, id) {
+            (RunTab::Jobs, Owner::RunJobs, BindingId::WorkflowsViewJobLogs) => self.view_job_logs(cx),
+            (RunTab::Overview, Owner::DetailsButton, BindingId::TextualButtonPress) => {
+                if let Some(failed_only) = self.overview.press(cx.now()) {
+                    cx.dispatch(Action::Main(MainAction::RerunWorkflow { failed_only }));
+                }
+            }
+            _ => {}
         }
     }
 }

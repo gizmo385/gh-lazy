@@ -316,6 +316,25 @@ pub trait Github: Clone + Send + Sync + 'static {
         workflow_id: u64,
         git_ref: &str,
     ) -> impl Future<Output = Result<(), GhError>> + Send;
+
+    /// Re-runs every job of run `run_id` in `repo`: `POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun`, with no
+    /// body. GitHub answers 201. Never cached.
+    ///
+    /// Fails on any HTTP error status or `gh` failure.
+    fn rerun_workflow_run(&self, repo: &Repository, run_id: u64) -> impl Future<Output = Result<(), GhError>> + Send;
+
+    /// Re-runs the failed jobs of run `run_id` in `repo`: `POST
+    /// /repos/{owner}/{repo}/actions/runs/{run_id}/rerun-failed-jobs`, with no body. GitHub answers 201. Never cached.
+    ///
+    /// Fails on any HTTP error status or `gh` failure.
+    fn rerun_failed_jobs(&self, repo: &Repository, run_id: u64) -> impl Future<Output = Result<(), GhError>> + Send;
+
+    /// Run `run_id` of `repo`: `GET /repos/{owner}/{repo}/actions/runs/{run_id}`. Never cached, as Python's
+    /// `get_workflow_run`.
+    ///
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body doesn't decode.
+    fn workflow_run(&self, repo: &Repository, run_id: u64)
+    -> impl Future<Output = Result<WorkflowRun, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -995,6 +1014,22 @@ impl GhCli {
         request
     }
 
+    /// `POST /repos/{owner}/{repo}/actions/runs/{run_id}/{what}` with no body: `rerun` or `rerun-failed-jobs`.
+    fn rerun_request(repo: &Repository, run_id: u64, what: &str) -> GhRequest {
+        GhRequest::new(
+            Method::Post,
+            format!("/repos/{}/{}/actions/runs/{run_id}/{what}", repo.owner.login, repo.name),
+        )
+    }
+
+    /// `GET /repos/{owner}/{repo}/actions/runs/{run_id}`, uncached: Python sends no `Cache-Control` here.
+    fn workflow_run_request(repo: &Repository, run_id: u64) -> GhRequest {
+        GhRequest::get(format!(
+            "/repos/{}/{}/actions/runs/{run_id}",
+            repo.owner.login, repo.name
+        ))
+    }
+
     /// `PUT /repos/{owner}/{repo}/pulls/{number}/merge` with `merge` as the JSON body.
     fn merge_pull_request_request(repo: &Repository, number: u64, merge: &MergeRequest) -> Result<GhRequest, GhError> {
         let mut request = GhRequest::new(
@@ -1261,9 +1296,25 @@ impl Github for GhCli {
         let request = Self::dispatch_workflow_request(repo, workflow_id, git_ref);
         dispatched(self.inner.runner.request(request).await)
     }
+
+    async fn rerun_workflow_run(&self, repo: &Repository, run_id: u64) -> Result<(), GhError> {
+        let request = Self::rerun_request(repo, run_id, "rerun");
+        dispatched(self.inner.runner.request(request).await)
+    }
+
+    async fn rerun_failed_jobs(&self, repo: &Repository, run_id: u64) -> Result<(), GhError> {
+        let request = Self::rerun_request(repo, run_id, "rerun-failed-jobs");
+        dispatched(self.inner.runner.request(request).await)
+    }
+
+    async fn workflow_run(&self, repo: &Repository, run_id: u64) -> Result<WorkflowRun, GhError> {
+        let request = Self::workflow_run_request(repo, run_id);
+        self.inner.runner.request(request).await?.json()
+    }
 }
 
-/// Whether a dispatch went through: any 2xx (GitHub's 204) is done, and the body, if any, is ignored.
+/// Whether a write without an answer of its own went through (a dispatch's 204, a re-run's 201): any 2xx is done, and
+/// the body, if any, is ignored.
 fn dispatched(response: Result<GhResponse, GhError>) -> Result<(), GhError> {
     response.map(drop)
 }
@@ -2681,6 +2732,54 @@ mod tests {
             )),
             Err(GhError::Http { status: 422, .. })
         ));
+    }
+
+    #[test]
+    fn rerun_argv_posts_without_a_body() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        for what in ["rerun", "rerun-failed-jobs"] {
+            let request = GhCli::rerun_request(&run_fixture_repo(), 5_000_042, what);
+            assert!(request.body.is_none());
+            assert_eq!(
+                strings(request.argv(gh.runner().hostname(), false)),
+                [
+                    "api",
+                    "-i",
+                    "-X",
+                    "POST",
+                    "-H",
+                    "Accept: application/vnd.github+json",
+                    &format!("/repos/parity-bot/run-fixture/actions/runs/5000042/{what}")
+                ]
+            );
+        }
+        let created = gh::interpret(Some(0), b"HTTP/2.0 201 Created\r\n\r\n", b"", false);
+        assert!(dispatched(created).is_ok());
+    }
+
+    #[test]
+    fn workflow_run_argv_is_a_plain_get_and_the_run_decodes() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        let request = GhCli::workflow_run_request(&run_fixture_repo(), 5_000_042);
+        assert_eq!(
+            strings(request.argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/run-fixture/actions/runs/5000042"
+            ]
+        );
+        let run: WorkflowRun = parity_response(
+            "workflow-write",
+            "repos/parity-bot/run-fixture/actions/runs/5000042/GET.json",
+        )
+        .json()
+        .unwrap();
+        assert_eq!((run.id, run.run_number), (5_000_042, 42));
     }
 
     #[test]

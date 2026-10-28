@@ -24,8 +24,8 @@ listed with that modal under [Modals](./modals.md).
 | `toasts.comment-empty` | "Comment cannot be empty!" | warning | `ui/widgets/split_diff_viewer.py` | M3 | in progress | #187, #272 | |
 | `toasts.comment-review-added` | "New comment added", "New review created!" | information | `ui/widgets/split_diff_viewer.py` | M3 | in progress | #187, #272, #273 | |
 | `toasts.review-status-missing` | "Please select a status for the new review!" | error | `ui/widgets/split_diff_viewer.py` | M3 | in progress | #187, #273 | |
-| `toasts.rerun-started` | "Workflow run queued for re-run", "Failed jobs queued for re-run" | information / "Re-run Started" | `ui/widgets/workflow_run_details.py` | M3 | not started | #188, #265 | |
-| `toasts.rerun-failed` | "Failed to re-run workflow", "Failed to re-run failed jobs" | error / "Error" | `ui/widgets/workflow_run_details.py` | M3 | not started | #188, #265 | |
+| `toasts.rerun-started` | "Workflow run queued for re-run", "Failed jobs queued for re-run" | information / "Re-run Started" | `ui/widgets/workflow_run_details.py` | M3 | in progress | #188, #265 | |
+| `toasts.rerun-failed` | "Failed to re-run workflow", "Failed to re-run failed jobs" | error / "Error" | `ui/widgets/workflow_run_details.py` | M3 | in progress | #188, #265 | |
 | `toasts.workflow-nothing-to-trigger` | "No repository selected", "No workflows found in this repository" | warning | `ui/widgets/workflows.py` | M3 | in progress | #188, #264 | |
 | `toasts.workflow-triggered` | "Successfully triggered workflow" | information | `ui/widgets/workflows.py` | M3 | in progress | #188, #264 | Py bug B68. |
 | `toasts.no-links-visible` | "No links visible" | information | `ui/widgets/link_hints.py` | M4 | not started | #196 | |

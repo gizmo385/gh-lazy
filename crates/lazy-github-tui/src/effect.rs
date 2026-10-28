@@ -291,6 +291,22 @@ pub enum GithubRequest {
         /// The branch to run it on.
         git_ref: String,
     },
+    /// [`Github::rerun_workflow_run`], or [`Github::rerun_failed_jobs`] with `failed_only`.
+    RerunWorkflow {
+        /// The repo the run is in.
+        repo: Box<Repository>,
+        /// The run's id.
+        run_id: u64,
+        /// Whether only the failed jobs re-run.
+        failed_only: bool,
+    },
+    /// [`Github::workflow_run`].
+    WorkflowRun {
+        /// The repo the run is in.
+        repo: Box<Repository>,
+        /// The run's id.
+        run_id: u64,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repo the issue is in.
@@ -367,6 +383,10 @@ pub enum GithubResponse {
     ListBranches(Result<Vec<Branch>, GhError>),
     /// [`Github::dispatch_workflow`].
     DispatchWorkflow(Result<(), GhError>),
+    /// [`Github::rerun_workflow_run`] or [`Github::rerun_failed_jobs`].
+    RerunWorkflow(Result<(), GhError>),
+    /// [`Github::workflow_run`], boxed to keep this enum small.
+    WorkflowRun(Result<Box<WorkflowRun>, GhError>),
 }
 
 impl GithubRequest {
@@ -453,6 +473,18 @@ impl GithubRequest {
                 workflow_id,
                 git_ref,
             } => GithubResponse::DispatchWorkflow(gh.dispatch_workflow(&repo, workflow_id, &git_ref).await),
+            GithubRequest::RerunWorkflow {
+                repo,
+                run_id,
+                failed_only,
+            } => GithubResponse::RerunWorkflow(if failed_only {
+                gh.rerun_failed_jobs(&repo, run_id).await
+            } else {
+                gh.rerun_workflow_run(&repo, run_id).await
+            }),
+            GithubRequest::WorkflowRun { repo, run_id } => {
+                GithubResponse::WorkflowRun(gh.workflow_run(&repo, run_id).await.map(Box::new))
+            }
         }
     }
 }

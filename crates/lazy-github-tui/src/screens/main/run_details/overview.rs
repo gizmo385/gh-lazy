@@ -42,6 +42,8 @@ pub(in crate::screens::main) struct RunOverview {
     focus: Option<usize>,
     /// Where each shown button was drawn last, clipped to the view, by index.
     button_areas: Vec<(Rect, usize)>,
+    /// The button a left press landed on, until the release: the two make a click, which presses it.
+    armed: Option<usize>,
 }
 
 /// Everything that scrolls, with its layouts.
@@ -86,6 +88,7 @@ impl RunOverview {
             ],
             focus: None,
             button_areas: Vec::new(),
+            armed: None,
         }
     }
 
@@ -154,11 +157,29 @@ impl RunOverview {
 
     /// A left press at `position`, inside the content: it focuses the button there, else the body.
     pub(super) fn click(&mut self, position: Position) {
-        self.focus = self
-            .button_areas
+        self.focus = self.button_at(position);
+        self.armed = self.focus;
+    }
+
+    /// A left release at `position`: whether it completes a click on the button the press landed on.
+    pub(super) fn release(&mut self, position: Position) -> bool {
+        self.armed
+            .take()
+            .is_some_and(|index| self.button_at(position) == Some(index))
+    }
+
+    fn button_at(&self, position: Position) -> Option<usize> {
+        self.button_areas
             .iter()
             .find(|(area, _)| area.contains(position))
-            .map(|&(_, index)| index);
+            .map(|&(_, index)| index)
+    }
+
+    /// `enter` on the focused button, or a click on it, at `now`: which re-run it asks for, `Some(true)` for
+    /// "Re-run Failed Jobs". `None` without a focused button, or for a press inside its debounce.
+    pub(super) fn press(&mut self, now: tokio::time::Instant) -> Option<bool> {
+        let index = self.focus?;
+        self.buttons[index].press(now).then_some(index == 1)
     }
 
     /// Scrolls the focused button into view, as Textual does for a widget that takes focus.

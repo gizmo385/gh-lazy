@@ -17,6 +17,7 @@ mod pull_requests;
 mod repo_overview;
 mod repos;
 mod run_details;
+mod run_rerun;
 mod section_table;
 mod sections;
 mod workflows;
@@ -57,6 +58,7 @@ use pr_merge::PrMerges;
 use profile::ProfileFetch;
 pub use profile::ProfileOrigin;
 pub use repos::{RepoCells, ReposSection};
+use run_rerun::RunReruns;
 use section_table::{SectionEvent, SectionTable, earliest_deadline};
 use sections::{EMPTY_SUFFIX, titled_box};
 use workflows::WorkflowsPane;
@@ -252,6 +254,7 @@ pub struct MainScreen {
     workflows: WorkflowsPane,
     profile: ProfileFetch,
     merges: PrMerges,
+    reruns: RunReruns,
     /// Where each section's table component was drawn in the last frame, by [`SectionId::index`]: the box's
     /// interior, or the maximized rect. `None` when it wasn't drawn.
     table_areas: [Option<Rect>; 4],
@@ -320,6 +323,11 @@ pub enum MainAction {
     },
     /// Add Comment, opened from the PR Diff tab, closed with a comment: it joins the diff viewer's pending comments.
     DiffCommentAdded(Box<PendingComment>),
+    /// Re-run the workflow run the details show (a Run Overview button): only its failed jobs, or the whole run.
+    RerunWorkflow {
+        /// Whether only the failed jobs re-run ("Re-run Failed Jobs").
+        failed_only: bool,
+    },
     /// Open the Trigger workflow dialog (`workflows.trigger`), or warn why it can't.
     TriggerWorkflow,
     /// Merge the pull request the details show (`pull_request.merge` in its Overview), or warn that it's merged.
@@ -390,6 +398,7 @@ impl MainScreen {
             workflows: WorkflowsPane::new(options),
             profile: ProfileFetch::default(),
             merges: PrMerges::default(),
+            reruns: RunReruns::default(),
             table_areas: [None; 4],
             hits: Vec::new(),
             pending_pr: None,
@@ -586,6 +595,7 @@ impl MainScreen {
         let response = self.issue_lists.on_response(id, response, cx)?;
         let response = self.workflows.on_response(id, response, cx)?;
         let response = self.merges.on_response(id, response, cx)?;
+        let response = self.reruns.on_response(id, response, cx)?;
         let response = self.on_pull_request(id, response, cx)?;
         self.details.on_response(id, response, cx)
     }
@@ -1287,6 +1297,11 @@ impl Component for MainScreen {
             MainAction::DiffCommentAdded(comment) => self.details.diff_comment_added(*comment, cx),
             MainAction::ReactionsChosen(kinds) => self.details.reactions_chosen(kinds, cx),
             MainAction::TriggerWorkflow => self.workflows.trigger(cx),
+            MainAction::RerunWorkflow { failed_only } => {
+                if let Some(run) = self.details.run().map(run_details::RunDetails::run) {
+                    self.reruns.start(run, failed_only, cx);
+                }
+            }
             MainAction::MergePullRequest => {
                 if let Some(pr) = self.details.pull_request().map(pr_details::PullRequestDetails::pr) {
                     self.merges.start(pr, cx);

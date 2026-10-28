@@ -21,7 +21,7 @@ listed with that modal under [Modals](./modals.md).
 | `toasts.merge-already-merged` | "PR has already been merged!" | warning / "Already Merged" | `ui/widgets/pull_requests.py` | M3 | not started | #183, #262 | |
 | `toasts.pr-merged` | "Pull request N merged. Note some cached information on the UI may be out of date." | information / "PR Merged" | `ui/widgets/pull_requests.py` | M3 | not started | #183, #262 | |
 | `toasts.pr-merge-failed` | "Pull request N could not be merged" | error / "Error Merging PR" | `ui/widgets/pull_requests.py` | M3 | not started | #183, #262 | |
-| `toasts.comment-empty` | "Comment cannot be empty!" | warning | `ui/widgets/split_diff_viewer.py` | M3 | not started | #187, #272 | |
+| `toasts.comment-empty` | "Comment cannot be empty!" | warning | `ui/widgets/split_diff_viewer.py` | M3 | in progress | #187, #272 | |
 | `toasts.comment-review-added` | "New comment added", "New review created!" | information | `ui/widgets/split_diff_viewer.py` | M3 | not started | #187, #272, #273 | |
 | `toasts.review-status-missing` | "Please select a status for the new review!" | error | `ui/widgets/split_diff_viewer.py` | M3 | not started | #187, #273 | |
 | `toasts.rerun-started` | "Workflow run queued for re-run", "Failed jobs queued for re-run" | information / "Re-run Started" | `ui/widgets/workflow_run_details.py` | M3 | not started | #188, #265 | |

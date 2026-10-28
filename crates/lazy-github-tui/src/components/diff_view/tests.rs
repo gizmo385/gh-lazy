@@ -343,3 +343,137 @@ fn pr_diff_hunk_current_line_highlighted() {
     // The current line is the added `let marker = …;`: its tokens on the brighter green.
     insta::assert_snapshot!(pane_screen(VIEWER, 1, 4, 76));
 }
+
+// Pending comments (#272).
+
+/// A pending comment on line `line` of README.md's hunk.
+fn comment(view: &DiffView, line: usize, body: &str) -> PendingComment {
+    let file = &view.body.files[README].file;
+    let at = DiffLineRef {
+        file: README,
+        hunk: 0,
+        line,
+    };
+    PendingComment {
+        body: body.to_owned(),
+        ..PendingComment::on(&file.path, &file.hunks[0], at).unwrap()
+    }
+}
+
+/// The view with comments on README.md's lines 4 and 1, in that order.
+fn with_two_comments() -> DiffView {
+    let mut view = view();
+    let first = comment(&view, 3, "Mention the arrow keys too.");
+    let second = comment(&view, 0, "A heading for\nthe usage.");
+    view.add_comment(first);
+    view.add_comment(second);
+    view
+}
+
+fn bodies(view: &DiffView) -> Vec<&str> {
+    view.pending().iter().map(|c| c.body.as_str()).collect()
+}
+
+#[test]
+fn the_comment_target_is_the_focused_pane_s_current_line() {
+    let mut view = view();
+    assert_eq!(view.comment_target(), None);
+    press(&mut view, &["J", "j", "j", "j"]);
+    let target = view.comment_target().unwrap();
+    assert_eq!(
+        (
+            target.path.as_str(),
+            target.line_number,
+            target.position,
+            target.line_text.as_str()
+        ),
+        ("README.md", 5, 4, "+Run `viewer FILE`, then press `j` and `k` to move.")
+    );
+    assert_eq!(target.body, "");
+}
+
+#[test]
+fn each_comment_adds_a_remove_stop_after_the_files() {
+    use DiffStop::{HunkTitle, RemoveComment};
+    let mut view = with_two_comments();
+    let stops = ring(&mut view);
+    assert_eq!(
+        stops[stops.len() - 3..],
+        [HunkTitle(VIEWER, 1), RemoveComment(0), RemoveComment(1)]
+    );
+    view.focus_last();
+    assert_eq!(view.stop(), RemoveComment(1));
+    assert!(!view.focus_step(true));
+}
+
+#[test]
+fn the_section_is_hidden_with_no_comments() {
+    let mut view = view();
+    assert!(!draw(&mut view, 80, 200).contains("Pending Comments:"));
+    let first = comment(&view, 3, "x");
+    view.add_comment(first);
+    let screen = draw(&mut view, 80, 200);
+    assert!(screen.contains("Pending Comments:"), "{screen}");
+    assert!(screen.contains("README.md:5 - +Run `viewer FILE`"), "{screen}");
+}
+
+#[test]
+fn remove_drops_the_first_the_last_and_the_only_comment() {
+    use DiffStop::{HunkTitle, RemoveComment};
+    // The first: focus on the second button follows it, now first.
+    let mut view = with_two_comments();
+    view.focus(RemoveComment(1));
+    view.remove_comment(0);
+    assert_eq!(bodies(&view), ["A heading for\nthe usage."]);
+    assert_eq!(view.stop(), RemoveComment(0));
+    // The last, focused: focus goes to the stop before it.
+    let mut view = with_two_comments();
+    view.focus(RemoveComment(1));
+    press(&mut view, &["enter"]);
+    assert_eq!(bodies(&view), ["Mention the arrow keys too."]);
+    assert_eq!(view.stop(), RemoveComment(0));
+    // The only one: the section hides and focus goes back to the files.
+    press(&mut view, &["enter"]);
+    assert!(view.pending().is_empty());
+    assert_eq!(view.stop(), HunkTitle(VIEWER, 1));
+    assert!(!draw(&mut view, 80, 200).contains("Pending Comments:"));
+}
+
+#[test]
+fn a_click_on_remove_drops_its_comment() {
+    let mut view = with_two_comments();
+    view.focus(DiffStop::RemoveComment(1));
+    let screen = draw(&mut view, 80, 40);
+    // The focused button is revealed: find its label's row.
+    let row = screen
+        .lines()
+        .enumerate()
+        .filter(|(_, line)| line.contains("Remove"))
+        .map(|(row, _)| row)
+        .last()
+        .unwrap();
+    let row = u16::try_from(row).unwrap();
+    view.click(Position::new(8, row));
+    assert_eq!(view.stop(), DiffStop::RemoveComment(1));
+    let up = |column, row| MouseEvent {
+        kind: MouseEventKind::Up(MouseButton::Left),
+        column,
+        row,
+        modifiers: crossterm::event::KeyModifiers::NONE,
+    };
+    assert!(view.mouse(up(8, row)));
+    assert_eq!(bodies(&view), ["Mention the arrow keys too."]);
+    // A release without a press on a button does nothing.
+    assert!(!view.mouse(up(8, row)));
+}
+
+#[test]
+fn pr_review_pending_comments() {
+    let mut view = with_two_comments();
+    view.focus(DiffStop::RemoveComment(1));
+    let mut terminal = Terminal::new(TestBackend::new(96, 40)).unwrap();
+    terminal
+        .draw(|frame| view.render(frame, frame.area(), &Theme::default(), true))
+        .unwrap();
+    insta::assert_snapshot!(buffer_to_styled_string(terminal.backend().buffer()));
+}

@@ -1,0 +1,109 @@
+---
+source: crates/lazy-github-tui/src/components/diff_view/tests.rs
+expression: buffer_to_styled_string(terminal.backend().buffer())
+---
+
+    ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+      ▶ Lines 22-28 (+3 -2) • impl Viewer {
+
+
+
+
+                                      Pending Comments:
+
+
+
+┌────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                            │
+│                                                                                            │
+│ ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│ │                                                                                        │ │
+│ │ README.md:5 - +Run `viewer FILE`, then press `j` and `k` to move.                      │ │▄▄
+│ │                                                                                        │ │
+│ │                                                                                        │ │
+│ │  Mention the arrow keys too.                                                           │ │
+│ │                                                                                        │ │
+│ │                                                                                        │ │
+│ │ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                                                       │ │
+│ │      Remove                                                                            │ │
+│ │ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                                                       │ │
+│ │                                                                                        │ │
+│ └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                            │
+│ ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│ │                                                                                        │ │
+│ │ README.md:3 - ## Usage                                                                 │ │
+│ │                                                                                        │ │
+│ │                                                                                        │ │
+│ │  A heading for                                                                         │ │
+│ │  the usage.                                                                            │ │
+│ │                                                                                        │ │
+│ │                                                                                        │ │
+│ │ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                                                       │ │▅▅
+│ │      Remove                                                                            │ │
+│ │ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                                                       │ │
+--- styles
+..............................................................................................aa
+....bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaa
+......cccccccccccccccddceeccccccccccccccccc...................................................aa
+..............................................................................................aa
+..............................................................................................aa
+ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa
+ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa
+gggggggggggggggggggggggggggggggggggggghhhhhhhhhhhhhhhhhgggggggggggggggggggggggggggggggggggggggaa
+ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggaa
+ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggaa
+ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa
+iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiaa
+iffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffiaa
+iffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffiaa
+ifjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjfiaa
+ifjffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfiaa
+ifjfkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkffffffffffffffffffffffjfill
+ifjffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfimm
+ifjfnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnfjfimm
+ifjfnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnfjfimm
+ifjfnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnfjfimm
+ifjffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfimm
+ifjfoooooooooooooooofffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfimm
+ifjfpppphhhhhhhhppppfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfimm
+ifjfqqqqqqqqqqqqqqqqfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfimm
+ifjffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfimm
+ifjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjfimm
+iffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffimm
+ifjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjfimm
+ifjffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfimm
+ifjfkkkkkkkkkkkkkkkkkkkkkkfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfimm
+ifjffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfimm
+ifjfnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnfjfimm
+ifjfnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnfjfimm
+ifjfnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnfjfimm
+ifjfnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnfjfimm
+ifjffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfimm
+ifjfrrrrrrrrrrrrrrrrfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfiss
+ifjfttttuuuuuuuuttttfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfiaa
+ifjfvvvvvvvvvvvvvvvvfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffjfiaa
+--- legend
+. fg=Reset bg=#1e1e1e
+a fg=#e0e0e0 bg=#000000
+b fg=#121212 bg=#1e1e1e
+c fg=#e0e0e0 bg=#1e1e1e
+d fg=#98e024 bg=#1e1e1e
+e fg=#f4005f bg=#1e1e1e
+f fg=#e0e0e0 bg=#121212
+g fg=#e0e0e0 bg=#fea62b
+h fg=#211505 bg=#fea62b BOLD
+i fg=#fea62b bg=#121212
+j fg=#004578 bg=#121212
+k fg=#a0a0a0 bg=#121212
+l fg=#003054 bg=#000000
+m fg=#003054 bg=Reset REVERSED
+n fg=#e2e3e5 bg=#242f38
+o fg=#ffcf56 bg=#fea62b
+p fg=#211505 bg=#fea62b
+q fg=#b86b00 bg=#fea62b
+r fg=#ffcf56 bg=#fca834
+s fg=#003054 bg=#000000 REVERSED
+t fg=#201506 bg=#fca834
+u fg=#201506 bg=#fca834 BOLD | REVERSED
+v fg=#b86b00 bg=#fca834

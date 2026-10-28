@@ -419,6 +419,7 @@ fn draw(dialog: &mut NewCommentDialog) -> String {
                 super::super::DialogFrame {
                     theme: &theme,
                     background: theme.palette.surface_lighten_3,
+                    border: super::super::default_border(theme.palette),
                 },
                 rect,
             );

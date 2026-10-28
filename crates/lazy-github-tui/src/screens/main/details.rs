@@ -15,6 +15,7 @@ use tokio::time::Instant;
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Cx, Owner, RenderCx};
 use crate::components::command_log::Wheel;
+use crate::components::diff_view::PendingComment;
 use crate::components::info::{InfoView, Scroll};
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
 use crate::effect::{GithubResponse, RequestId};
@@ -103,6 +104,9 @@ pub(super) trait DetailsBody {
     /// it shows comments.
     /// `reply` says whether it answered a comment or a review.
     fn comment_closed(&mut self, _posted: Option<PostedComment>, _reply: bool, _cx: &mut Cx<'_>) {}
+
+    /// Add Comment, opened from this body's diff viewer, closed with `comment`: the viewer keeps it as pending.
+    fn diff_comment_added(&mut self, _comment: PendingComment, _cx: &mut Cx<'_>) {}
 
     /// A mouse event over tab `tab`'s content other than a press (a release, a move, the wheel), for a widget inside
     /// it that takes its own (a tree). Says whether it took the event; the pane handles any other.
@@ -419,6 +423,11 @@ impl DetailsPane {
     /// [`DetailsBody::comment_closed`].
     pub(super) fn comment_closed(&mut self, posted: Option<PostedComment>, reply: bool, cx: &mut Cx<'_>) {
         self.body.get_mut().comment_closed(posted, reply, cx);
+    }
+
+    /// [`DetailsBody::diff_comment_added`].
+    pub(super) fn diff_comment_added(&mut self, comment: PendingComment, cx: &mut Cx<'_>) {
+        self.body.get_mut().diff_comment_added(comment, cx);
     }
 
     /// [`DetailsBody::mouse`] in the active tab.

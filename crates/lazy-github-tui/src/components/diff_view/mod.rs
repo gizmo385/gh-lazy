@@ -2,16 +2,18 @@
 //! the file filter, then one collapsible section per file, each holding one collapsible section per hunk, each
 //! holding the hunk's [`HunkPane`].
 //!
-//! The viewer doesn't know about pull requests: it takes a parsed [`Diff`], so the review form (#187) can be added
-//! after the files. Inside the details content it has an inner focus ring ([`DiffStop`]) computed from what's shown
-//! and open, and a text input (the filter) that takes its keys before the binding chain, as the table's search box
-//! does.
+//! The viewer doesn't know about pull requests: it takes a parsed [`Diff`]. After the files come the pending review
+//! comments ([`PendingComment`], #272), which Add Comment adds. Inside the details content it has an inner focus ring
+//! ([`DiffStop`]) computed from what's shown and open, and a text input (the filter) that takes its keys before the
+//! binding chain, as the table's search box does.
 
 mod highlight;
 mod pane;
+mod review;
 
 use std::ops::Range;
 
+use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::diff::{ChangedFile, Counts, Diff, Label};
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
@@ -21,7 +23,11 @@ use ratatui::text::{Line, Span};
 
 pub use highlight::code_spans;
 pub use pane::{HunkPane, PaneLayout};
+pub use review::{DiffLineRef, PendingComment, line_text};
 
+use review::ButtonPlaced;
+
+use super::button::BUTTON_BINDINGS;
 use super::collapsible::{CONTENT_INDENT, Collapsible, Placement, SectionFocus};
 use super::command_log::Wheel;
 use super::info::Scroll;
@@ -86,7 +92,8 @@ const FILTER_BINDINGS: &[BindingId] = &[
 ];
 
 /// A focus stop inside the viewer, in ring order: the scroll area, the filter, then each shown file's title, and
-/// inside an open file each hunk's title and, when that hunk is open, its pane. Files and hunks are by index.
+/// inside an open file each hunk's title and, when that hunk is open, its pane; then each pending comment's Remove
+/// button. Files, hunks and comments are by index.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DiffStop {
     /// The scrolling area itself (`DiffViewerContainer`).
@@ -99,6 +106,8 @@ pub enum DiffStop {
     HunkTitle(usize, usize),
     /// A hunk's pane: the file, then the hunk.
     Pane(usize, usize),
+    /// A pending comment's Remove button.
+    RemoveComment(usize),
 }
 
 impl DiffStop {
@@ -106,7 +115,7 @@ impl DiffStop {
     fn file(self) -> Option<usize> {
         match self {
             DiffStop::FileTitle(f) | DiffStop::HunkTitle(f, _) | DiffStop::Pane(f, _) => Some(f),
-            DiffStop::Scroll | DiffStop::Filter => None,
+            DiffStop::Scroll | DiffStop::Filter | DiffStop::RemoveComment(_) => None,
         }
     }
 
@@ -114,7 +123,7 @@ impl DiffStop {
     fn hunk(self) -> Option<(usize, usize)> {
         match self {
             DiffStop::HunkTitle(f, h) | DiffStop::Pane(f, h) => Some((f, h)),
-            DiffStop::Scroll | DiffStop::Filter | DiffStop::FileTitle(_) => None,
+            DiffStop::Scroll | DiffStop::Filter | DiffStop::FileTitle(_) | DiffStop::RemoveComment(_) => None,
         }
     }
 }
@@ -153,6 +162,8 @@ pub struct DiffView {
     reveal: Option<Reveal>,
     /// Where the view was drawn last, for clicks.
     area: Rect,
+    /// A left press landed on this button and its release hasn't come yet: the two make a click.
+    armed: Option<DiffStop>,
 }
 
 /// Everything that scrolls, with its layouts.
@@ -162,6 +173,8 @@ struct Body {
     files: Vec<FileSection>,
     /// A line under the filter in place of the files: why the diff couldn't be parsed.
     notice: Option<String>,
+    /// The comments added with Add Comment, in the order they were added.
+    pending: Vec<PendingComment>,
     stop: DiffStop,
     /// Whether focus is inside the content, so the stop is drawn focused.
     focused: bool,
@@ -176,6 +189,8 @@ struct Body {
 #[derive(Debug, Clone, Default)]
 struct Placements {
     files: Vec<Option<FilePlaced>>,
+    /// Each pending comment's Remove button.
+    removes: Vec<ButtonPlaced>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -234,6 +249,7 @@ impl DiffView {
                 filter: TextInput::new(FILTER_PLACEHOLDER),
                 files,
                 notice,
+                pending: Vec::new(),
                 stop: DiffStop::Scroll,
                 focused: false,
                 layouts: LayoutCache::default(),
@@ -242,6 +258,7 @@ impl DiffView {
             },
             reveal: None,
             area: Rect::default(),
+            armed: None,
         }
     }
 
@@ -284,6 +301,53 @@ impl DiffView {
         self.body.files.get(file)?.hunks.get(hunk)
     }
 
+    /// The pending comments, in the order they were added.
+    pub fn pending(&self) -> &[PendingComment] {
+        &self.body.pending
+    }
+
+    /// What Add Comment comments on with a hunk pane focused: the pane's current line, with an empty body.
+    pub fn comment_target(&self) -> Option<PendingComment> {
+        let DiffStop::Pane(f, h) = self.body.stop else {
+            return None;
+        };
+        let file = self.body.files.get(f)?;
+        let line = DiffLineRef {
+            file: f,
+            hunk: h,
+            line: file.hunks.get(h)?.pane.cursor(),
+        };
+        PendingComment::on(&file.file.path, file.file.hunks.get(h)?, line)
+    }
+
+    /// Adds `comment` after the others, showing the section with the first one. Focus stays where it is.
+    pub fn add_comment(&mut self, comment: PendingComment) {
+        self.body.pending.push(comment);
+        self.body.layouts.clear();
+    }
+
+    /// Drops pending comment `index`, hiding the section with the last one. A focused Remove button that goes takes
+    /// focus to the stop before it, as Textual does when the focused widget is removed.
+    fn remove_comment(&mut self, index: usize) {
+        if index >= self.body.pending.len() {
+            return;
+        }
+        let stop = match self.body.stop {
+            DiffStop::RemoveComment(i) if i == index => {
+                let stops = self.stops();
+                let at = stops.iter().position(|&stop| stop == self.body.stop).unwrap_or(0);
+                Some(stops[at.saturating_sub(1)])
+            }
+            DiffStop::RemoveComment(i) if i > index => Some(DiffStop::RemoveComment(i - 1)),
+            _ => None,
+        };
+        self.body.pending.remove(index);
+        self.body.layouts.clear();
+        if let Some(stop) = stop {
+            self.focus(stop);
+        }
+    }
+
     /// A `textual.scroll.*` binding with the viewer focused.
     pub fn scroll(&mut self, scroll: Scroll) {
         self.scroll.scroll(scroll);
@@ -311,6 +375,7 @@ impl DiffView {
                 }
             }
         }
+        stops.extend((0..self.body.pending.len()).map(DiffStop::RemoveComment));
         stops
     }
 
@@ -365,6 +430,7 @@ impl DiffView {
                 vec![ChainLink::new(Owner::CollapsibleTitle, TITLE_BINDINGS), viewer]
             }
             DiffStop::Pane(..) => vec![ChainLink::new(Owner::HunkPane, HUNK_PANE_BINDINGS), viewer],
+            DiffStop::RemoveComment(_) => vec![ChainLink::new(Owner::DetailsButton, BUTTON_BINDINGS), viewer],
         }
     }
 
@@ -379,7 +445,8 @@ impl DiffView {
         }
     }
 
-    /// A binding matched at one of [`Self::chain`]'s links. `None` lets the key fall through.
+    /// A binding matched at one of [`Self::chain`]'s links. `None` lets the key fall through. Add Comment
+    /// (`diff.add_comment`) isn't the viewer's: it opens a dialog, which the Diff tab does.
     pub fn on_binding(&mut self, owner: Owner, id: BindingId) -> Option<Action> {
         match (owner, id) {
             (Owner::CollapsibleTitle, BindingId::TextualCollapsibleToggle) => match self.body.stop {
@@ -401,8 +468,10 @@ impl DiffView {
                     self.body.layouts.clear();
                 }
             }
-            // Add comment and its modal are #187.
-            (Owner::HunkPane, BindingId::DiffAddComment) => return Some(Action::Unimplemented(id)),
+            (Owner::DetailsButton, BindingId::TextualButtonPress) => match self.body.stop {
+                DiffStop::RemoveComment(index) => self.remove_comment(index),
+                _ => return None,
+            },
             (Owner::DiffViewer, BindingId::DiffNextHunk) => self.jump_to_hunk(true),
             (Owner::DiffViewer, BindingId::DiffPreviousHunk) => self.jump_to_hunk(false),
             (Owner::DiffViewer, BindingId::DiffFilterFiles) => self.focus(DiffStop::Filter),
@@ -529,6 +598,7 @@ impl DiffView {
     /// filter takes focus (the filter's cursor moving to the press), and anything else focuses the scroll area.
     pub fn click(&mut self, position: Position) {
         let stop = self.stop_at(position);
+        self.armed = None;
         match stop {
             DiffStop::FileTitle(f) => self.toggle(f, None),
             DiffStop::HunkTitle(f, h) => self.toggle(f, Some(h)),
@@ -544,9 +614,28 @@ impl DiffView {
                 self.body.layouts.clear();
                 return;
             }
+            DiffStop::RemoveComment(_) => self.armed = Some(stop),
             DiffStop::Pane(..) | DiffStop::Scroll => {}
         }
         self.focus(stop);
+    }
+
+    /// A mouse event other than a press: the left release that completes a click on a button presses it. Says
+    /// whether it took the event.
+    pub fn mouse(&mut self, event: MouseEvent) -> bool {
+        if event.kind != MouseEventKind::Up(MouseButton::Left) {
+            return false;
+        }
+        let Some(armed) = self.armed.take() else {
+            return false;
+        };
+        if self.stop_at(Position::new(event.column, event.row)) != armed {
+            return false;
+        }
+        if let DiffStop::RemoveComment(index) = armed {
+            self.remove_comment(index);
+        }
+        true
     }
 
     /// The stop drawn at a screen cell.
@@ -580,6 +669,9 @@ impl DiffView {
                     return DiffStop::Pane(f, h);
                 }
             }
+        }
+        if let Some(index) = placements.removes.iter().position(|placed| placed.contains(row, x)) {
+            return DiffStop::RemoveComment(index);
         }
         DiffStop::Scroll
     }
@@ -634,6 +726,7 @@ impl Body {
             Reveal::Stop(DiffStop::FileTitle(f)) => file(f).map(|p| title(&p.section)),
             Reveal::Stop(DiffStop::HunkTitle(f, h)) => hunk(f, h).map(|p| title(&p.section)),
             Reveal::Stop(DiffStop::Pane(f, h)) => hunk(f, h).map(|p| p.pane.clone()),
+            Reveal::Stop(DiffStop::RemoveComment(i)) => placements.removes.get(i).map(|p| p.rows.clone()),
             Reveal::Section(f, None) => file(f).map(|p| p.section.rows.clone()),
             Reveal::Section(f, Some(h)) => hunk(f, h).map(|p| p.section.rows.clone()),
         }
@@ -674,10 +767,15 @@ impl Layout for Body {
             })
             .collect();
         let filter_focused = self.focused && self.stop == DiffStop::Filter;
+        let remove_focused = match self.stop {
+            DiffStop::RemoveComment(index) if self.focused => Some(index),
+            _ => None,
+        };
         let Body {
             filter,
             files,
             notice,
+            pending,
             layouts,
             placements,
             ..
@@ -699,6 +797,7 @@ impl Layout for Body {
                     .files
                     .push(file.shown.then(|| layout_file(&mut out, file, focus, width, theme)));
             }
+            placed.removes = review::layout_pending(&mut out, pending, remove_focused, width, theme);
             placements.retain(|(w, _)| *w != width);
             if placements.len() == 2 {
                 placements.remove(0);

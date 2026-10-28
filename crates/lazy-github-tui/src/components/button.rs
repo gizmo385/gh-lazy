@@ -319,13 +319,24 @@ pub enum Pressed {
 }
 
 /// `ModalDialogButtons`: a green submit button and a red "Cancel", side by side and centered, with a blank row above
-/// and below (`Button { margin: 1 }`). A [`Self::flush`] row has no margins.
+/// and below (`Button { margin: 1 }`). A [`Self::flush`] row has no margins, and a [`Self::spaced`] row only the side
+/// ones.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ButtonRow {
     submit: Button,
     cancel: Button,
-    /// Whether the buttons have `margin: 1`.
-    margins: bool,
+    margins: RowMargins,
+}
+
+/// The buttons' margins in a [`ButtonRow`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum RowMargins {
+    /// `margin: 1`.
+    All,
+    /// `margin: 0 1`.
+    Sides,
+    /// None.
+    None,
 }
 
 impl ButtonRow {
@@ -340,21 +351,40 @@ impl ButtonRow {
         Self {
             submit: Button::new(submit_label, ButtonVariant::Success),
             cancel: Button::new("Cancel", ButtonVariant::Error),
-            margins: true,
+            margins: RowMargins::All,
         }
     }
 
     /// The row without margins: the two buttons touching, centered, in a plain `Horizontal` (New issue, Edit issue).
     pub fn flush(submit_label: impl Into<Cow<'static, str>>) -> Self {
         Self {
-            margins: false,
+            margins: RowMargins::None,
             ..Self::new(submit_label)
         }
     }
 
-    /// The rows the row takes: [`Self::HEIGHT`], or [`Self::FLUSH_HEIGHT`] for a flush row.
+    /// The row with a cell of margin left and right of each button but none above or below (`margin: 0 1`): Add
+    /// Comment's. It's [`Self::FLUSH_HEIGHT`] tall.
+    pub fn spaced(submit_label: impl Into<Cow<'static, str>>) -> Self {
+        Self {
+            margins: RowMargins::Sides,
+            ..Self::new(submit_label)
+        }
+    }
+
+    /// The row with "Cancel" in `variant` rather than red (Add Comment's is the default variant).
+    #[must_use]
+    pub fn with_cancel_variant(mut self, variant: ButtonVariant) -> Self {
+        self.cancel = Button::new("Cancel", variant);
+        self
+    }
+
+    /// The rows the row takes: [`Self::HEIGHT`], or [`Self::FLUSH_HEIGHT`] for a row without margins above and below.
     pub fn height(&self) -> u16 {
-        if self.margins { Self::HEIGHT } else { Self::FLUSH_HEIGHT }
+        match self.margins {
+            RowMargins::All => Self::HEIGHT,
+            RowMargins::Sides | RowMargins::None => Self::FLUSH_HEIGHT,
+        }
     }
 
     /// One of the buttons.
@@ -391,15 +421,17 @@ impl ButtonRow {
     /// Draws the row into the top [`Self::height`] rows of `area`, with `focused` drawn focused.
     pub fn render(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, focused: Option<Pressed>) {
         let (submit, cancel) = (self.submit.width(theme), self.cancel.width(theme));
-        // With margins, one cell outside each button, and one between them where their margins collapse.
-        let (total, margin, gap) = if self.margins {
-            (submit + cancel + 3, 1, 1)
-        } else {
-            (submit + cancel, 0, 0)
+        // With side margins, one cell outside each button, and one between them where their margins collapse.
+        let (side, top) = match self.margins {
+            RowMargins::All => (1, 1),
+            RowMargins::Sides => (1, 0),
+            RowMargins::None => (0, 0),
         };
-        let left = area.x + area.width.saturating_sub(total) / 2 + margin;
-        let y = area.y.saturating_add(margin);
-        let rows = area.height.saturating_sub(margin).min(HEIGHT);
+        let total = submit + cancel + 3 * side;
+        let left = area.x + area.width.saturating_sub(total) / 2 + side;
+        let gap = side;
+        let y = area.y.saturating_add(top);
+        let rows = area.height.saturating_sub(top).min(HEIGHT);
         let place = |x: u16, width: u16| {
             Rect {
                 x,

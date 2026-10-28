@@ -33,6 +33,7 @@ use tokio::time::Instant;
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Component, Cx, Owner, RenderCx, ScreenKind};
 use crate::components::command_log::{CommandLog, Wheel};
+use crate::components::diff_view::PendingComment;
 use crate::components::hatch::Hatch;
 use crate::components::info::{INFO_BINDINGS, Scroll};
 use crate::components::table::{Handled, SEARCHABLE_BINDINGS, TABLE_BINDINGS, TableFocus};
@@ -314,6 +315,8 @@ pub enum MainAction {
         /// Whether it was a reply (`r`) rather than a new comment (`n`).
         reply: bool,
     },
+    /// Add Comment, opened from the PR Diff tab, closed with a comment: it joins the diff viewer's pending comments.
+    DiffCommentAdded(Box<PendingComment>),
     /// Show a pull request's details: fetch it first if `target` is a table row. `focus` moves focus to the tab
     /// strip once they show (Python's `focus_pr_details`, false only for M4's preload, #198).
     OpenPullRequest {
@@ -1232,6 +1235,7 @@ impl Component for MainScreen {
             MainAction::WheelDetails(wheel) => self.details.wheel(wheel),
             MainAction::DetailsCommand(owner, id) => self.details.on_command(owner, id, cx),
             MainAction::CommentClosed { posted, reply } => self.details.comment_closed(posted, reply, cx),
+            MainAction::DiffCommentAdded(comment) => self.details.diff_comment_added(*comment, cx),
             MainAction::ClickSelect(repo) => {
                 self.try_focus(FocusTarget::Table(SectionId::Repos));
                 cx.dispatch(Action::SelectRepo(repo));

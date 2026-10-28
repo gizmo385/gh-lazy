@@ -1,9 +1,10 @@
 //! A pull request's Diff tab: Python's `PrDiffTabPane`. The diff is fetched with the pull request, whatever tab is
 //! active; until it arrives the tab shows the loading overlay, then the diff viewer, or one line saying why there's
-//! no diff.
+//! no diff. `c` on a hunk pane opens Add Comment, whose comment joins the viewer's pending comments.
 
 use std::time::Duration;
 
+use crossterm::event::MouseEvent;
 use lazy_github_core::diff;
 use lazy_github_core::github::DiffFetchError;
 use lazy_github_core::models::FullPullRequest;
@@ -17,12 +18,15 @@ use tokio::time::Instant;
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Cx, Owner};
 use crate::components::command_log::Wheel;
-use crate::components::diff_view::DiffView;
+use crate::components::diff_view::{DiffView, PendingComment};
 use crate::components::info::Scroll;
 use crate::components::loading;
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
+use crate::modal::AddCommentDialog;
+use crate::toast::Toast;
 
+use super::super::MainAction;
 use super::super::details::BodyRenderCx;
 
 /// Where the Diff tab is.
@@ -157,7 +161,44 @@ impl PrDiff {
     }
 
     pub(super) fn on_binding(&mut self, owner: Owner, id: BindingId) -> Option<Action> {
-        self.view_mut()?.on_binding(owner, id)
+        let view = self.view_mut()?;
+        if (owner, id) == (Owner::HunkPane, BindingId::DiffAddComment) {
+            return Some(Action::Main(MainAction::DetailsCommand(owner, id)));
+        }
+        view.on_binding(owner, id)
+    }
+
+    /// Python's `action_add_comment` and `on_trigger_add_comment`: Add Comment for the focused pane's current line.
+    /// A comment it closes with comes back as [`MainAction::DiffCommentAdded`].
+    pub(super) fn command(&mut self, owner: Owner, id: BindingId, cx: &mut Cx<'_>) {
+        if (owner, id) != (Owner::HunkPane, BindingId::DiffAddComment) {
+            return;
+        }
+        let Some(target) = self.view().and_then(DiffView::comment_target) else {
+            return;
+        };
+        let dialog = AddCommentDialog::new(target.line_text.clone());
+        cx.open_dialog(dialog, move |body| {
+            body.map_or(Action::Consumed, |body| {
+                Action::Main(MainAction::DiffCommentAdded(Box::new(PendingComment {
+                    body,
+                    ..target
+                })))
+            })
+        });
+    }
+
+    /// Add Comment closed with `comment`: it joins the pending comments, with Python's toast.
+    pub(super) fn add_comment(&mut self, comment: PendingComment, cx: &mut Cx<'_>) {
+        if let Some(view) = self.view_mut() {
+            view.add_comment(comment);
+            cx.notify(Toast::info("New comment added"));
+        }
+    }
+
+    /// A mouse event other than a press: the release of a click on a button.
+    pub(super) fn mouse(&mut self, event: MouseEvent) -> bool {
+        self.view_mut().is_some_and(|view| view.mouse(event))
     }
 
     pub(super) fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Option<Action> {

@@ -5,6 +5,7 @@
 //! binding chain is the focused field's links, then its screen link, and only priority bindings from the app link
 //! (`ctrl+q`). Drawing dims everything below each dialog, then draws its frame, its interior and its footer.
 
+mod add_comment;
 mod confirm;
 mod edit_issue;
 mod focus;
@@ -32,10 +33,11 @@ use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::BindingId;
 use crate::theme::{Palette, ThemeColor};
 
+pub use add_comment::{AddCommentAction, AddCommentDialog};
 pub use confirm::{ConfirmAction, ConfirmDialog};
 pub use edit_issue::{EditIssueAction, EditIssueDialog};
 pub use focus::{FocusMove, FocusRing};
-pub use frame::{DIM_FACTOR, DialogFrame, dim, frame_rect, frame_rect_with_margin};
+pub use frame::{DIM_FACTOR, DialogFrame, default_border, dim, frame_rect, frame_rect_with_margin};
 pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup, number};
 pub use new_comment::{NewCommentAction, NewCommentDialog, PostedComment, ReplyTarget};
 pub use new_issue::{NewIssueAction, NewIssueDialog};
@@ -85,6 +87,8 @@ pub enum ModalKind {
     EditIssue,
     /// [`NewCommentDialog`]: a new comment or a reply.
     NewComment,
+    /// [`AddCommentDialog`]: a pending review comment on a diff line.
+    AddComment,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -146,6 +150,8 @@ pub enum DialogAction {
     EditIssue(EditIssueAction),
     /// [`NewCommentDialog`]'s.
     NewComment(NewCommentAction),
+    /// [`AddCommentDialog`]'s.
+    AddComment(AddCommentAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -160,6 +166,7 @@ impl DialogAction {
             DialogAction::NewIssue(_) => ModalKind::NewIssue,
             DialogAction::EditIssue(_) => ModalKind::EditIssue,
             DialogAction::NewComment(_) => ModalKind::NewComment,
+            DialogAction::AddComment(_) => ModalKind::AddComment,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }
@@ -213,6 +220,11 @@ pub trait Dialog: Component + Send + 'static {
     /// The interior's background: `$surface-lighten-3` unless the dialog says otherwise.
     fn background(&self, palette: &Palette) -> ThemeColor {
         palette.surface_lighten_3
+    }
+
+    /// The frame's border color: `$background 80%` ([`default_border`]) unless the dialog says otherwise.
+    fn border(&self, palette: &Palette) -> ThemeColor {
+        default_border(palette)
     }
 
     /// Whether the bottom row shows the dialog's footer. False for Create/Edit PR.

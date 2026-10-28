@@ -5,7 +5,7 @@ use ratatui::layout::Rect;
 use ratatui::style::Style;
 use ratatui::widgets::Widget;
 
-use crate::theme::{Theme, ThemeColor};
+use crate::theme::{Palette, Theme, ThemeColor};
 
 /// How far each cell below a modal moves toward `$background`: Textual's `ModalScreen` has
 /// `background: $background 60%`.
@@ -13,6 +13,11 @@ pub const DIM_FACTOR: f64 = 0.6;
 
 /// The frame's border color, as a dialog's `border: thick $background 80%` writes it.
 const BORDER_ALPHA: f64 = 0.8;
+
+/// The border most dialogs have: `thick $background 80%`, for [`crate::modal::Dialog::border`].
+pub fn default_border(palette: &Palette) -> ThemeColor {
+    palette.background.multiply_alpha(BORDER_ALPHA)
+}
 
 /// Dims every cell of `area` in `buf`, foreground and background, as a modal screen's translucent background does to
 /// the screens under it. A no-op on the ANSI themes ([`Theme::dim`]).
@@ -68,12 +73,14 @@ pub fn frame_rect_with_margin(area: Rect, (width, height): (u16, u16), margin: u
     }
 }
 
-/// Textual's `thick` border in `$background 80%`, around an interior painted `background`.
+/// Textual's `thick` border in `border` (usually `$background 80%`), around an interior painted `background`.
 pub struct DialogFrame<'a> {
     /// The theme.
     pub theme: &'a Theme,
     /// The dialog's [`crate::modal::Dialog::background`].
     pub background: ThemeColor,
+    /// The dialog's [`crate::modal::Dialog::border`].
+    pub border: ThemeColor,
 }
 
 impl DialogFrame<'_> {
@@ -95,7 +102,7 @@ impl Widget for DialogFrame<'_> {
         // `$background` again: that's what the dialog's translucent border is drawn on.
         let screen = theme.background();
         let background = self.background.over(screen);
-        let border = palette.background.multiply_alpha(BORDER_ALPHA).over(screen);
+        let border = self.border.over(screen);
         let border = Style::new().fg(theme.paint(border)).bg(theme.paint(background));
         let interior = Style::new()
             .fg(theme.color(palette.foreground, background))

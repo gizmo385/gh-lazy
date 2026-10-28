@@ -873,6 +873,7 @@ impl App {
                 DialogFrame {
                     theme: &theme,
                     background,
+                    border: entry.border(theme.palette),
                 },
                 rect,
             );

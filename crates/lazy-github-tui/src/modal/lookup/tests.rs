@@ -535,6 +535,7 @@ fn draw<K: LookupKind>(dialog: &mut LookupDialog<K>) -> String {
                 DialogFrame {
                     theme: &theme,
                     background,
+                    border: dialog.border(theme.palette),
                 },
                 area,
             );

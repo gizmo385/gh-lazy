@@ -129,6 +129,10 @@ impl ModalEntry {
         self.dialog.background(palette)
     }
 
+    pub(crate) fn border(&self, palette: &Palette) -> ThemeColor {
+        self.dialog.border(palette)
+    }
+
     pub(crate) fn shows_footer(&self) -> bool {
         self.dialog.shows_footer()
     }
@@ -177,6 +181,7 @@ trait AnyDialog: Send {
     fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse>;
     fn frame(&self, area: Rect) -> Rect;
     fn background(&self, palette: &Palette) -> ThemeColor;
+    fn border(&self, palette: &Palette) -> ThemeColor;
     fn shows_footer(&self) -> bool;
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>);
     fn take_reply(&mut self) -> Option<Action>;
@@ -253,6 +258,10 @@ impl<D: Dialog> AnyDialog for Open<D> {
 
     fn background(&self, palette: &Palette) -> ThemeColor {
         self.dialog.background(palette)
+    }
+
+    fn border(&self, palette: &Palette) -> ThemeColor {
+        self.dialog.border(palette)
     }
 
     fn shows_footer(&self) -> bool {

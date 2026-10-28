@@ -13,6 +13,7 @@ use crate::backend::tests::VtTerminal;
 use crate::components::diff_view::{DiffStop, DiffView};
 use crate::effect::{Effect, GithubRequest, GithubResponse};
 use crate::event::Event;
+use crate::modal::ModalKind;
 use crate::screens::main::FocusTarget;
 use crate::screens::main::pr_details::tests::{fixture_pr, fixture_repo};
 use crate::test_util::{TestApp, logs};
@@ -288,11 +289,6 @@ fn j_and_k_move_the_line_and_clamp() {
     assert!(app.screen(160, 48).contains("Line: 2/6"));
     app.press(&["j", "j", "j", "j", "j", "j"]);
     assert!(app.screen(160, 48).contains("Line: 6/6"));
-    // `c` is #187: consumed and logged.
-    let out = logs(|| {
-        app.press(&["c"]);
-    });
-    assert!(out.contains("is not implemented yet"), "{out}");
 }
 
 #[test]
@@ -449,4 +445,167 @@ fn the_deleted_file_row_keeps_its_border_on_a_terminal_and_leaves_nothing_behind
         "{rows:#?}"
     );
     assert!(rows.iter().all(|row| !row.contains("(deleted)")), "{rows:#?}");
+}
+
+// Add Comment and the pending comments (#272).
+
+/// PR 5's Diff tab with README.md's hunk open and its pane focused on line `line` (from 1).
+fn readme_pane_at(line: usize) -> TestApp {
+    let mut app = diff_tab();
+    app.press(&["tab", "tab", "tab", "tab", "enter", "tab"]);
+    for _ in 1..line {
+        app.press(&["j"]);
+    }
+    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
+    app
+}
+
+fn modals(app: &TestApp) -> Vec<ModalKind> {
+    app.app().modals()
+}
+
+fn toasts(app: &TestApp) -> Vec<String> {
+    app.app()
+        .toasts()
+        .iter()
+        .map(|toast| toast.message.to_string())
+        .collect()
+}
+
+/// Types `text` into whatever has focus: letters, digits and spaces.
+fn type_text(app: &mut TestApp, text: &str) {
+    for c in text.chars() {
+        let key = if c == ' ' { "space".to_owned() } else { c.to_string() };
+        app.press(&[key.as_str()]);
+    }
+}
+
+/// Adds a comment `body` on the focused pane's current line with `c`.
+fn add(app: &mut TestApp, body: &str) {
+    app.press(&["c"]);
+    type_text(app, body);
+    app.press(&["shift+enter"]);
+}
+
+fn pending(app: &TestApp) -> Vec<(String, u32, String)> {
+    view(app)
+        .pending()
+        .iter()
+        .map(|c| (format!("{}:{}", c.path, c.line_number), c.position, c.body.clone()))
+        .collect()
+}
+
+#[test]
+fn c_opens_add_comment_on_the_current_line() {
+    let mut app = readme_pane_at(4);
+    app.press(&["c"]);
+    assert_eq!(modals(&app), [ModalKind::AddComment]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("Commenting on:"), "{screen}");
+    assert!(
+        screen.contains("+Run `viewer FILE`, then press `j` and `k` to move."),
+        "{screen}"
+    );
+    // The screen's footer stays under the dim: the dialog has none of its own.
+    assert!(screen.lines().last().unwrap().contains("c Add Comment"), "{screen}");
+}
+
+#[test]
+fn pr_review_add_comment_160x48() {
+    let mut app = readme_pane_at(4);
+    app.press(&["c"]);
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+#[test]
+fn pr_review_add_comment_100x30() {
+    let mut app = readme_pane_at(4);
+    app.press(&["c"]);
+    insta::assert_snapshot!(app.screen(100, 30));
+}
+
+#[test]
+fn an_empty_comment_toasts_and_the_dialog_stays() {
+    let mut app = readme_pane_at(4);
+    app.press(&["c", "shift+enter"]);
+    assert_eq!(modals(&app), [ModalKind::AddComment]);
+    assert_eq!(toasts(&app), ["Comment cannot be empty!"]);
+    assert!(view(&app).pending().is_empty());
+}
+
+#[test]
+fn an_added_comment_is_pending_with_a_toast_and_focus_goes_back_to_the_pane() {
+    let mut app = readme_pane_at(4);
+    add(&mut app, "Mention the arrow keys");
+    assert!(modals(&app).is_empty());
+    assert_eq!(toasts(&app), ["New comment added"]);
+    assert_eq!(
+        (focus(&app), stop(&app)),
+        (FocusTarget::DetailsContent, DiffStop::Pane(README, 0))
+    );
+    // Line 4 of the hunk is the file's line 5 (B22: Python shows `README.md:3`, the line's index), at diff position 4.
+    assert_eq!(
+        pending(&app),
+        [("README.md:5".to_owned(), 4, "Mention the arrow keys".to_owned())]
+    );
+}
+
+#[test]
+fn a_closed_dialog_adds_nothing() {
+    let mut app = readme_pane_at(4);
+    app.press(&["c", "x", "escape"]);
+    assert!(modals(&app).is_empty());
+    assert!(view(&app).pending().is_empty());
+    assert!(!app.screen(160, 48).contains("Pending Comments:"));
+}
+
+#[test]
+fn comments_stay_in_the_order_they_were_added() {
+    let mut app = readme_pane_at(1);
+    add(&mut app, "first");
+    app.press(&["j", "j"]);
+    add(&mut app, "second");
+    app.press(&["k"]);
+    add(&mut app, "third");
+    let bodies: Vec<String> = pending(&app).into_iter().map(|(_, _, body)| body).collect();
+    assert_eq!(bodies, ["first", "second", "third"]);
+}
+
+#[test]
+fn the_section_shows_with_the_first_comment_and_hides_with_the_last() {
+    let mut app = readme_pane_at(4);
+    assert!(!app.screen(160, 48).contains("Pending Comments:"));
+    add(&mut app, "only");
+    // The Remove button is the ring's last stop.
+    app.press(&["5", "tab"]);
+    let mut ring = vec![stop(&app)];
+    while focus(&app) == FocusTarget::DetailsContent {
+        app.press(&["tab"]);
+        if focus(&app) == FocusTarget::DetailsContent {
+            ring.push(stop(&app));
+        }
+    }
+    assert_eq!(ring.last(), Some(&DiffStop::RemoveComment(0)));
+    app.press(&["5", "tab"]);
+    while stop(&app) != DiffStop::RemoveComment(0) {
+        app.press(&["tab"]);
+    }
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("Pending Comments:"), "{screen}");
+    app.press(&["enter"]);
+    assert!(view(&app).pending().is_empty());
+    assert!(!app.screen(160, 48).contains("Pending Comments:"));
+    // Focus went to the stop before the button: src/viewer.rs's second hunk title. No toast for a removal.
+    assert_eq!(stop(&app), DiffStop::HunkTitle(VIEWER, 1));
+    assert_eq!(toasts(&app), ["New comment added"]);
+}
+
+#[test]
+fn a_reselected_pr_starts_with_no_pending_comments() {
+    let mut app = readme_pane_at(4);
+    add(&mut app, "gone");
+    assert_eq!(view(&app).pending().len(), 1);
+    app.press(&["2", "enter"]);
+    settle(&mut app);
+    assert!(view(&app).pending().is_empty());
 }

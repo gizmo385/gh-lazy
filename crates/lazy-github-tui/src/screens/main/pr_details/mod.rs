@@ -7,6 +7,7 @@ mod overview;
 
 use std::sync::Arc;
 
+use crossterm::event::MouseEvent;
 use lazy_github_core::models::{FullPullRequest, PartialPullRequest};
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
@@ -14,6 +15,7 @@ use ratatui::layout::{Position, Rect};
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Cx, Owner};
 use crate::components::command_log::Wheel;
+use crate::components::diff_view::PendingComment;
 use crate::components::info::Scroll;
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
@@ -236,9 +238,19 @@ impl DetailsBody for PullRequestDetails {
     }
 
     fn on_command(&mut self, tab: usize, owner: Owner, id: BindingId, cx: &mut Cx<'_>) {
-        if PrTab::at(tab) == PrTab::Conversation {
-            self.conversation.command(owner, id, cx);
+        match PrTab::at(tab) {
+            PrTab::Conversation => self.conversation.command(owner, id, cx),
+            PrTab::Diff => self.diff.command(owner, id, cx),
+            PrTab::Overview => {}
         }
+    }
+
+    fn diff_comment_added(&mut self, comment: PendingComment, cx: &mut Cx<'_>) {
+        self.diff.add_comment(comment, cx);
+    }
+
+    fn mouse(&mut self, tab: usize, mouse: MouseEvent) -> bool {
+        PrTab::at(tab) == PrTab::Diff && self.diff.mouse(mouse)
     }
 
     /// The Conversation's openers send this only when it should reload: after `n` either way, after a posted reply.

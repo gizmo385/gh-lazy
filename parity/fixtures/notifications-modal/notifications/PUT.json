@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "request": {
+    "method": "PUT",
+    "path": "/notifications",
+    "body": {
+      "read": "true"
+    }
+  },
+  "response": {
+    "status": 205
+  }
+}

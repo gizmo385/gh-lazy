@@ -1,0 +1,144 @@
+version = 1
+description = "Notifications modal (ctrl+n): loading, the Unread tab first, the table and its columns, a lazy page, r and u switching tabs, R marking one read, tab moving focus off the table, escape closing and refreshing the count"
+# The modal's thick border isn't a box to the structure extractor (parity/README.md, "Limits"), so its tabs, table
+# and rows are only loose text: each capture checks them per app with [expect], and the footer cross-app.
+gate = false
+parity_rows = [
+    "modals.notifications",
+    "modals.notifications-tabs",
+    "modals.notifications-table",
+    "modals.notifications-keys",
+    "modals.notifications-loading",
+    "modals.notifications-focus",
+    "keybindings.notifications-view-read",
+    "keybindings.notifications-view-unread",
+    "keybindings.notifications-mark-read",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+# notifications-slow answers the first all=true page 1.5 s late, for the loading capture.
+fixtures = ["notifications-slow", "notifications-modal", "pr-details", "base"]
+
+[env.config_overrides]
+notifications = { enabled = true }
+
+[[step]]
+wait = { text = "• Unread Notifications: 4", timeout_ms = 15000 }
+
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { text = "Notifications  " }
+
+[[step]]
+capture = "loading"
+checks = ["footer"]
+
+[[step]]
+wait = { text = "Updated At" }
+
+[[step]]
+capture = "open"
+checks = ["footer"]
+
+# Four unread rows: the first row's highlight already asked for Unread's page 1 (all=false); this asks for page 2.
+[[step]]
+keys = ["j"]
+
+[[step]]
+wait = { log = { method = "GET", path = "/notifications", query = { all = "false", page = "2", per_page = "50" } } }
+
+[[step]]
+capture = "moved"
+checks = ["footer"]
+
+[[step]]
+keys = ["r"]
+
+[[step]]
+wait = { text = "Subscribed" }
+
+[[step]]
+capture = "read-tab"
+checks = ["footer"]
+
+[[step]]
+keys = ["u"]
+
+[[step]]
+wait = { gone = "Subscribed" }
+
+[[step]]
+capture = "unread-tab"
+checks = ["footer"]
+
+# Back to the first row, then R: it leaves Unread once the PATCH answers.
+[[step]]
+keys = ["k", "R"]
+
+[[step]]
+wait = { log = { method = "PATCH", path = "/notifications/threads/9100001" } }
+
+[[step]]
+wait = { gone = "Add the notifications modal" }
+
+[[step]]
+capture = "marked-one"
+checks = ["footer"]
+
+[[step]]
+keys = ["r"]
+
+[[step]]
+wait = { text = "Add the notifications modal" }
+
+[[step]]
+capture = "read-after-mark"
+checks = ["footer"]
+
+# Off the table, onto the scrolling container: the table's keys leave the footer.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+capture = "tabbed"
+checks = ["footer"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "• Unread Notifications: 3" }
+
+[[step]]
+capture = "closed"
+
+[expect.loading]
+contains = ["Notifications", "•Unread", "✓Read"]
+not_contains = ["Traceback", "Thread ID", "Add the notifications modal"]
+
+[expect.open]
+contains = ["Notifications", "•Unread", "✓Read", "Updated At", "Subject", "Title", "2026-10-24 23:00:00  PullRequest  Add the notifications modal", "2026-10-24 22:15:30  Issue        Typo in the install docs", "CheckSuite", "2026-10-22 08:00:00"]
+not_contains = ["Traceback", "v1.0.0", "Fails to load"]
+
+[expect.read-tab]
+contains = ["2026-10-24 22:30:00  Release      v1.0.0", "Fails to load", "Subscribed", "Author"]
+not_contains = ["Add the notifications modal", "Typo in the install docs"]
+
+[expect.unread-tab]
+contains = ["Add the notifications modal", "Typo in the install docs"]
+not_contains = ["v1.0.0"]
+
+[expect.marked-one]
+contains = ["Typo in the install docs", "Closed pull request with nothing"]
+not_contains = ["Add the notifications modal", "v1.0.0"]
+
+[expect.read-after-mark]
+contains = ["Add the notifications modal", "v1.0.0", "Fails to load"]
+not_contains = ["Typo in the install docs"]
+
+[expect.closed]
+contains = ["• Unread Notifications: 3", "No repository selected"]
+not_contains = ["Updated At"]

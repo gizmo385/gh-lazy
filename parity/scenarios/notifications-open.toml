@@ -1,0 +1,108 @@
+version = 1
+description = "Notifications: enter on a PR notification marks it read, closes, selects its repo and opens the PR; an issue, a PR that fails to load and a subject with no URL open only the repo; the count refreshes on every close"
+gate = false
+parity_rows = [
+    "modals.notifications-select",
+    "keybindings.notifications-open",
+    "toasts.opening-for-notification",
+]
+sizes = [[160, 48]]
+
+[env]
+# pr-details has PR 5 (with everything its Overview loads) and PR 2 (a 500); repo-selected-empty has what selecting
+# parity-bot/dotfiles loads.
+fixtures = ["notifications-modal", "pr-details", "repo-selected-empty", "base"]
+
+[env.config_overrides]
+notifications = { enabled = true }
+
+[[step]]
+wait = { text = "• Unread Notifications: 4", timeout_ms = 15000 }
+
+# 9100001: unread, PR 5 of parity-bot/pr-details.
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { text = "Thread ID" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Opening pull request for notification" }
+
+[[step]]
+wait = { text = "• Unread Notifications: 3" }
+
+[[step]]
+capture = "pull-request"
+checks = ["titles", "tabs", "focus"]
+
+# 9100002: an issue, which opens only the repo. GitHub's all=true page still lists 9100001 as unread (the fixture
+# doesn't change), so it's the second row.
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { text = "Thread ID" }
+
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait = { text = "Opening repository for notification" }
+
+[[step]]
+capture = "issue"
+checks = ["titles", "tabs", "focus"]
+
+# 9100005: read, PR 2, which fails to load: only the repo opens, with no error toast.
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { text = "Thread ID" }
+
+[[step]]
+keys = ["r", "j", "enter"]
+
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/pulls/2" } }
+
+[[step]]
+capture = "pr-fails"
+checks = ["titles", "tabs", "focus"]
+
+# 9100004: a CheckSuite with no subject URL, in parity-bot/dotfiles.
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { text = "Thread ID" }
+
+[[step]]
+keys = ["j", "j", "enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/dotfiles" }
+
+[[step]]
+capture = "no-url"
+checks = ["titles", "tabs", "focus"]
+
+[expect.pull-request]
+contains = ["Current repo: parity-bot/pr-details", "Opening pull request for notification", "Add a cursor to the viewer (#5)"]
+not_contains = ["Thread ID", "Traceback"]
+
+[expect.issue]
+contains = ["Current repo: parity-bot/pr-details", "Opening repository for notification"]
+not_contains = ["Thread ID", "Traceback"]
+
+[expect.pr-fails]
+contains = ["Current repo: parity-bot/pr-details", "Opening repository for notification"]
+not_contains = ["Thread ID", "Error fetching pull request!", "Traceback"]
+
+[expect.no-url]
+contains = ["Current repo: parity-bot/dotfiles", "Opening repository for notification"]
+not_contains = ["Thread ID", "Traceback"]

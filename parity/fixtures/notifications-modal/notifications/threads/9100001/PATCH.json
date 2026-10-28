@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "request": {
+    "method": "PATCH",
+    "path": "/notifications/threads/9100001"
+  },
+  "response": {
+    "status": 205
+  }
+}

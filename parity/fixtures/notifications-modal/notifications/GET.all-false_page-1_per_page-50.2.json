@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/notifications",
+    "query": {
+      "all": "false",
+      "page": "1",
+      "per_page": "50"
+    },
+    "when": {
+      "after": [
+        {
+          "method": "PATCH",
+          "path": "/notifications/threads/9100001"
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "id": "9100002",
+        "unread": true,
+        "reason": "mention",
+        "updated_at": "2026-10-24T22:15:30Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "  Typo in the install docs  ",
+          "url": "https://api.github.com/repos/parity-bot/pr-details/issues/7",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/pr-details/issues/7",
+          "type": "Issue"
+        },
+        "repository": {
+          "id": 2000300,
+          "node_id": "R_kgDOAB2000300",
+          "name": "pr-details",
+          "full_name": "parity-bot/pr-details",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/pr-details",
+          "description": "PR details fixture",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/pr-details"
+        },
+        "url": "https://api.github.com/notifications/threads/9100002",
+        "subscription_url": "https://api.github.com/notifications/threads/9100002/subscription"
+      },
+      {
+        "id": "9100004",
+        "unread": true,
+        "reason": "ci_activity",
+        "updated_at": "2026-10-24T21:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "CI workflow run failed for main branch",
+          "url": null,
+          "latest_comment_url": null,
+          "type": "CheckSuite"
+        },
+        "repository": {
+          "id": 2000001,
+          "node_id": "R_kgDOAB2000001",
+          "name": "dotfiles",
+          "full_name": "parity-bot/dotfiles",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/dotfiles",
+          "description": "My dotfiles",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/dotfiles"
+        },
+        "url": "https://api.github.com/notifications/threads/9100004",
+        "subscription_url": "https://api.github.com/notifications/threads/9100004/subscription"
+      },
+      {
+        "id": "9100006",
+        "unread": true,
+        "reason": "state_change",
+        "updated_at": "2026-10-22T08:00:00Z",
+        "last_read_at": null,
+        "subject": {
+          "title": "Closed pull request with nothing",
+          "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/4",
+          "latest_comment_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/4",
+          "type": "PullRequest"
+        },
+        "repository": {
+          "id": 2000300,
+          "node_id": "R_kgDOAB2000300",
+          "name": "pr-details",
+          "full_name": "parity-bot/pr-details",
+          "private": false,
+          "owner": {
+            "login": "parity-bot",
+            "id": 1000001,
+            "node_id": "U_kgDOAA9CQQ",
+            "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+            "url": "https://api.github.com/users/parity-bot",
+            "html_url": "https://github.com/parity-bot",
+            "type": "User",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/parity-bot/pr-details",
+          "description": "PR details fixture",
+          "fork": false,
+          "url": "https://api.github.com/repos/parity-bot/pr-details"
+        },
+        "url": "https://api.github.com/notifications/threads/9100006",
+        "subscription_url": "https://api.github.com/notifications/threads/9100006/subscription"
+      }
+    ]
+  },
+  "note": "after 9100001 was marked read"
+}

@@ -274,6 +274,19 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
 - `notifications-0/`, `notifications-3/`, `notifications-50/`: `GET /notifications` (`all=false`, `page=1`,
   `per_page=50`) answered with 0, 3 or 50 unread notifications (50 is a full first page) for repos in `base`. Listed
   before `base`, for the `status-bar-unread-*` scenarios. Hand-written.
+- `notifications-modal/`: for the Notifications modal scenarios (`notifications`, `notifications-mark-all`,
+  `notifications-open`; #189, #190). `GET /notifications` `all=true` page 1 (`per_page=50`, as both tabs page): six
+  notifications in `parity-bot/pr-details` and `parity-bot/dotfiles`, four unread (9100001 PR 5 `review_requested`,
+  9100002 issue 7 `mention` with a padded title, 9100004 a `ci_activity` CheckSuite with a `null` subject URL, 9100006
+  PR 4 `state_change`) and two read (9100003 a Release, 9100005 PR 2, which 500s in `pr-details`), 9100002 listed
+  before 9100003 though it's older, so the table's sort shows; then an empty page 2. `all=false` page 1 (the four
+  unread, also the status bar's count) and an empty page 2. `PATCH /notifications/threads/<id>` (205) for the unread
+  four and `PUT /notifications` with `{"read": "true"}` (205). Once `PATCH .../9100001` was served (`when.after`),
+  `all=false` page 1 drops it; once the `PUT` was, `all=false` page 1 is empty and `all=true` page 1 has all six read.
+  The two `when` variants never both hold in one scenario. Listed before `pr-details`, `repo-selected-empty` and
+  `base`. Hand-written.
+- `notifications-slow/`: `notifications-modal`'s `all=true` page 1 answered after 1.5 s (`delay_ms = 1500`), for the
+  `notifications` scenario's loading capture. Listed before `notifications-modal`. Hand-written.
 - `repo-selected-empty/`: what selecting `parity-bot/dotfiles` loads (issues, workflows, runs, the README), all empty
   but the README. Listed before `base`, for `status-bar-current-repo`. Hand-written.
 - `repo-overview/`: for the `repo-overview` scenario (#219). Base's `GET /user/repos` page with `parity-bot/lazy-demo`

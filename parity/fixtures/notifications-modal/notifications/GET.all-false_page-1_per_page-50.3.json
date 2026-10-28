@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/notifications",
+    "query": {
+      "all": "false",
+      "page": "1",
+      "per_page": "50"
+    },
+    "when": {
+      "after": [
+        {
+          "method": "PUT",
+          "path": "/notifications"
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": []
+  },
+  "note": "after everything was marked read"
+}

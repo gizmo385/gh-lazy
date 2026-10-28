@@ -1,0 +1,103 @@
+version = 1
+description = "Notifications: ctrl+r marks all read, toasts and switches to Read; the empty Unread tab; closing refreshes the count; reopening with nothing unread opens on Read; / searches a tab"
+# The modal's thick border isn't a box to the structure extractor, so its content is checked per app with [expect].
+gate = false
+parity_rows = [
+    "modals.notifications-tabs",
+    "modals.notifications-keys",
+    "modals.notifications-empty",
+    "modals.notifications-search",
+    "keybindings.notifications-mark-all-as-read",
+    "keybindings.notifications-view-unread",
+]
+sizes = [[160, 48]]
+
+[env]
+fixtures = ["notifications-modal", "pr-details", "base"]
+
+[env.config_overrides]
+notifications = { enabled = true }
+
+[[step]]
+wait = { text = "• Unread Notifications: 4", timeout_ms = 15000 }
+
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { text = "Thread ID" }
+
+[[step]]
+keys = ["ctrl+r"]
+
+[[step]]
+wait = { text = "Marked all notifications as read" }
+
+[[step]]
+capture = "marked-all"
+checks = ["footer"]
+
+[[step]]
+keys = ["u"]
+
+[[step]]
+wait = { gone = "v1.0.0" }
+
+[[step]]
+capture = "unread-empty"
+checks = ["footer"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "No unread notifications" }
+
+[[step]]
+capture = "closed"
+
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { text = "Thread ID" }
+
+[[step]]
+capture = "reopened"
+checks = ["footer"]
+
+[[step]]
+keys = ["/"]
+
+[[step]]
+type = "pull"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "v1.0.0" }
+
+[[step]]
+capture = "searched"
+checks = ["footer"]
+
+[expect.marked-all]
+contains = ["Marked all notifications as read", "Add the notifications modal", "v1.0.0", "Typo in the install docs", "Ci Activity", "Fails to load", "State Change"]
+not_contains = ["Traceback"]
+
+[expect.unread-empty]
+contains = ["Updated At", "Thread ID"]
+not_contains = ["Add the notifications modal", "v1.0.0", "Traceback"]
+
+[expect.closed]
+contains = ["No unread notifications"]
+not_contains = ["Updated At"]
+
+[expect.reopened]
+contains = ["Add the notifications modal", "v1.0.0", "State Change"]
+not_contains = ["Traceback"]
+
+[expect.searched]
+contains = ["pull", "Add the notifications modal", "Fails to load", "Closed pull request with nothing"]
+not_contains = ["v1.0.0", "Typo in the install docs", "Ci Activity"]

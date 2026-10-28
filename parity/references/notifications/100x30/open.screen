@@ -1,0 +1,99 @@
+lazy-github-screen 1
+size 100x30
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                   • Unread Notifications: 4│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Rep█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█─────────┐
+│ ★  Owner█                                                                              █         │
+│ ☆  parit█                                                                              █━━━━━━━━━│
+│ ☆  parit█                                Notifications                                 █         │
+│ ☆  parit█                                                                              █         │
+│ ☆  parit█ •Unread  ✓Read                                                               █)        │
+│         █╸━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█         │
+│         █ Updated At           Subject      Title                                   Rea█h        │
+│         █ 2026-10-24 23:00:00  PullRequest  Add the notifications modal             Rev█ the     │
+└─────────█ 2026-10-24 22:15:30  Issue        Typo in the install docs                Men█nce      │
+┌─ [2] Pul█ 2026-10-24 21:00:00  CheckSuite   CI workflow run failed for main branch  Ci █l        │
+│ #  Statu█ 2026-10-22 08:00:00  PullRequest  Closed pull request with nothing        Sta█d and    │
+│         █                                                           ▏                  █         │
+│         █                                                                              █         │
+└─────────█                                                                              █o be   ▁▁│
+┌─ [3] Iss█                                                                              █         │
+│ #  Statu█                                                                              █         │
+│         █                                                                              █         │
+│         █                                                                              █         │
+└─────────█                                                                              █         │
+┌─ [4] Wor█                                                                              █ls,      │
+│ Time  Re█                                                                              █ctive    │
+│         █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█         │
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ / Search  R Mark as Read  ^r Mark all as read  r View Read Notifications  u View Unread Notificatio
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccccccccccccccccccccca
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffffff
+dghggggggge..............................................................................eiiiiiiiiif
+djjjjjjjjje..............................................................................ekkkkkkkkkf
+dllllllllle..mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm..eiiiiiiinnf
+dllllllllle..............................................................................eiiiiiiinnf
+dllllllllle.ooooooo..ppppp...............................................................eqqqqqiinnf
+diiiiiiiiiersssssssrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrreiiiiiiinnf
+diiiiiiiiiettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttebiiiiiinnf
+diiiiiiiiieuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuebbbbiiinnf
+ddddddddddevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvebbbiiiinnf
+ffffffffffevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvebiiiiiinnf
+fwwwwwwwwwevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvebbbbbiinnf
+fiiiiiiiiiexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyzzzzzzzzzzzzzzzzzzeiiiiiiinnf
+fiiiiiiiiie..............................................................................eiiiiiiinnf
+ffffffffffe..............................................................................eAAAAiiiBBf
+ffffffffffe..............................................................................eiiiiiiiCCf
+fwwwwwwwwwe..............................................................................eiiiiiiiCCf
+fiiiiiiiiie..............................................................................eiiiiiiiCCf
+fiiiiiiiiie..............................................................................eiiiiiiiCCf
+ffffffffffe..............................................................................eiiiiiiiCCf
+ffffffffffe..............................................................................ebbbiiiiCCf
+fwwwwwwwwwe..............................................................................ebbbbbiiCCf
+fDDDDDDDDDeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeiiiiiiiCCf
+fiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiffiibbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbiiiiiiCCf
+fiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiffiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiCCf
+ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+EEEFFFFFFFEEEFFFFFFFFFFFFFEEEEFFFFFFFFFFFFFFFFFEEEFFFFFFFFFFFFFFFFFFFFFFFFEEEFFFFFFFFFFFFFFFFFFFFFFF
+--- legend
+. bg=#4f4f4f
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#700a0a bg=#121212
+d fg=#2a5738 bg=#121212
+e fg=#121212 bg=#4f4f4f
+f fg=#365270 bg=#121212
+g fg=#646464 bg=#1c2024 bold
+h fg=#476419 bg=#1c2024 bold
+i fg=#e0e0e0 bg=#121212
+j fg=#63696e bg=#0b3a5f bold
+k fg=#1a1a1a bg=#121212
+l fg=#646464 bg=#1a1a1a
+m fg=#0178d4 bg=#4f4f4f bold
+n fg=#0a1e2c bg=#121212 inverse
+o fg=#ff0000 bg=#4f4f4f
+p fg=#adff2f bg=#4f4f4f
+q fg=#0b3a5f bg=#121212 bold
+r fg=#5d5d5d bg=#4f4f4f
+s fg=#0178d4 bg=#4f4f4f
+t fg=#e0e0e0 bg=#2d3740 bold
+u fg=#ddedf9 bg=#0178d4 bold
+v fg=#e0e0e0 bg=#272727
+w fg=#646464 bg=#191d21 bold
+x fg=#003054 bg=#272727 inverse
+y fg=#003054 bg=#000000
+z fg=#e0e0e0 bg=#000000
+A fg=#646464 bg=#121212 bold
+B fg=#0a1e2c bg=#0a0a0a inverse
+C fg=#646464 bg=#0a0a0a
+D fg=#0a1e2c bg=#161616 inverse
+E fg=#ffa62b bg=#242f38 bold
+F fg=#e0e0e0 bg=#242f38

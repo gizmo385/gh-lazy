@@ -1,0 +1,95 @@
+lazy-github-screen 1
+size 100x30
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                   • Unread Notifications: 4│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Rep█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█─────────┐
+│ ★  Owner█                                                                              █         │
+│ ☆  parit█                                                                              █━━━━━━━━━│
+│ ☆  parit█                                Notifications                                 █         │
+│ ☆  parit█                                                                              █         │
+│ ☆  parit█ •Unread  ✓Read                                                               █)        │
+│         █╸━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█         │
+│         █                                                                              █h        │
+│         █                                                                              █ the     │
+└─────────█                                                                              █nce      │
+┌─ [2] Pul█                                                                              █l        │
+│ #  Statu█                                                                              █d and    │
+│         █                                                                              █         │
+│         █                                                                              █         │
+└─────────█                                  Loading...                                  █o be   ▁▁│
+┌─ [3] Iss█                                                                              █         │
+│ #  Statu█                                                                              █         │
+│         █                                                                              █         │
+│         █                                                                              █         │
+└─────────█                                                                              █         │
+┌─ [4] Wor█                                                                              █ls,      │
+│ Time  Re█                                                                              █ctive    │
+│         █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█         │
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ r View Read Notifications  u View Unread Notifications  q Close
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccccccccccccccccccccca
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffffff
+dghgggggggeiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiejjjjjjjjjf
+dkkkkkkkkkeiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiielllllllllf
+dmmmmmmmmmeiinnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnniiejjjjjjjoof
+dmmmmmmmmmeiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiejjjjjjjoof
+dmmmmmmmmmeipppppppiiqqqqqiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiierrrrrjjoof
+djjjjjjjjjestttttttssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssejjjjjjjoof
+djjjjjjjjje..............................................................................ebjjjjjjoof
+djjjjjjjjje..............................................................................ebbbbjjjoof
+dddddddddde..............................................................................ebbbjjjjoof
+ffffffffffe..............................................................................ebjjjjjjoof
+fuuuuuuuuue..............................................................................ebbbbbjjoof
+fjjjjjjjjje..............................................................................ejjjjjjjoof
+fjjjjjjjjje..............................................................................ejjjjjjjoof
+ffffffffffe..............................................................................evvvvjjjwwf
+ffffffffffe..............................................................................ejjjjjjjxxf
+fuuuuuuuuue..............................................................................ejjjjjjjxxf
+fjjjjjjjjje..............................................................................ejjjjjjjxxf
+fjjjjjjjjje..............................................................................ejjjjjjjxxf
+ffffffffffe..............................................................................ejjjjjjjxxf
+ffffffffffe..............................................................................ebbbjjjjxxf
+fuuuuuuuuue..............................................................................ebbbbbjjxxf
+fyyyyyyyyyeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeejjjjjjjxxf
+fjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjffjjbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbjjjjjjxxf
+fjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjffjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjxxf
+ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+zzzAAAAAAAAAAAAAAAAAAAAAAAAzzzAAAAAAAAAAAAAAAAAAAAAAAAAAzzzAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+--- legend
+. fg=#0178d4 bg=#555555
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#700a0a bg=#121212
+d fg=#2a5738 bg=#121212
+e fg=#121212 bg=#4f4f4f
+f fg=#365270 bg=#121212
+g fg=#646464 bg=#1c2024 bold
+h fg=#476419 bg=#1c2024 bold
+i bg=#4f4f4f
+j fg=#e0e0e0 bg=#121212
+k fg=#63696e bg=#0b3a5f bold
+l fg=#1a1a1a bg=#121212
+m fg=#646464 bg=#1a1a1a
+n fg=#0178d4 bg=#4f4f4f bold
+o fg=#0a1e2c bg=#121212 inverse
+p fg=#ff0000 bg=#4f4f4f
+q fg=#adff2f bg=#4f4f4f
+r fg=#0b3a5f bg=#121212 bold
+s fg=#5d5d5d bg=#4f4f4f
+t fg=#0178d4 bg=#4f4f4f
+u fg=#646464 bg=#191d21 bold
+v fg=#646464 bg=#121212 bold
+w fg=#0a1e2c bg=#0a0a0a inverse
+x fg=#646464 bg=#0a0a0a
+y fg=#0a1e2c bg=#161616 inverse
+z fg=#ffa62b bg=#242f38 bold
+A fg=#e0e0e0 bg=#242f38
+B bg=#242f38

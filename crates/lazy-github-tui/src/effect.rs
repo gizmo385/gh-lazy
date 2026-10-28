@@ -53,8 +53,15 @@ pub enum Effect {
     WriteCache {
         /// The file.
         path: PathBuf,
-        /// Its new text, from `lazy_github_core::cache::to_json`.
+        /// Its new text, from `lazy_github_core::cache::to_json` (or `drafts::to_json` for a PR draft).
         text: String,
+    },
+    /// Delete a cache file, on the same writer as [`Effect::WriteCache`], so a write and a delete of one path happen
+    /// in the order issued and the newest pending one wins. A missing file is fine; a failed delete is logged as a
+    /// warning.
+    RemoveCache {
+        /// The file.
+        path: PathBuf,
     },
     /// Send `Event::Timer(id)` every `every`, first at `+every` (Textual's `set_interval`). A no-op if `id` is
     /// already running.
@@ -109,6 +116,8 @@ pub enum TimerId {
     AuthPoll,
     /// Polling for notifications (#81).
     Notifications,
+    /// Create PR's draft autosave, 2 s after the last edit (#186). Owned by the open Create PR dialog.
+    PrDraftSave,
 }
 
 /// One [`Github`] call, as data. One variant per trait method.

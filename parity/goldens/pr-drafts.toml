@@ -1,0 +1,10 @@
+version = 1
+description = "PR draft files: the Python app's pr_drafts/<owner>_<repo>.json for a draft with every field and one with non-ASCII text, read by the Rust app as the same drafts and written back as the same JSON"
+generator = "crates/lazy-github-core/tests/fixtures/pr_drafts/generate.py"
+golden = [
+  "crates/lazy-github-core/tests/fixtures/pr_drafts/parity-bot_pr-details.json",
+  "crates/lazy-github-core/tests/fixtures/pr_drafts/parity-bot_unicode.json",
+]
+test = "crates/lazy-github-core/tests/drafts.rs"
+fresh_test = "pr_drafts_goldens_are_fresh"
+parity_rows = ["caches-drafts.pr-drafts"]

@@ -6,6 +6,7 @@
 //! The whole interior scrolls (the container is the `VerticalScroll`, with `padding: 1`), so the buttons are below
 //! the fold until focus or the wheel brings them up. The dialog has no footer of its own.
 
+mod draft;
 mod layout;
 mod reviewers;
 mod submit;
@@ -22,6 +23,7 @@ use ratatui::layout::{Margin, Position, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 
+use self::draft::DraftFile;
 use self::layout::{BranchColumns, FormRows, Part};
 use self::submit::{BranchFollowUp, Submit};
 use super::form::FormScroll;
@@ -34,7 +36,7 @@ use crate::components::info::Scroll;
 use crate::components::switch::Switch;
 use crate::components::text_editor::{EditorOutcome, EditorVariant, TextEditor};
 use crate::components::text_input::{InputOutcome, TextInput};
-use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId};
+use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::{Accent, Paint, Theme};
 
@@ -167,6 +169,8 @@ pub struct PullRequestDialog {
     submit: Option<Submit>,
     /// The remote check and the push prompt after a refused create.
     follow_up: BranchFollowUp,
+    /// Create PR's draft (#186); Edit PR has none.
+    draft_file: Option<DraftFile>,
     /// The outer `Option` is whether it's done, the inner the dialog's output.
     #[allow(clippy::option_option)]
     output: Option<Option<Box<FullPullRequest>>>,
@@ -175,7 +179,8 @@ pub struct PullRequestDialog {
 impl PullRequestDialog {
     /// Create PR for `repo`, filled in from `prefill`, with the title focused. It asks at once for the repo's
     /// branches (uncached, so a branch pushed a moment ago is offered; owner decision on #278) and its collaborators,
-    /// and whether the current-directory branch, if git named one, has an upstream.
+    /// and whether the current-directory branch, if git named one, has an upstream. It also reads the repo's saved
+    /// draft, which fills the form in over `prefill` when it loads.
     pub fn create(repo: Repository, prefill: CreatePrefill, cx: &mut Cx<'_>) -> Self {
         let mut base = TextInput::new(BASE_PLACEHOLDER);
         base.set_value(prefill.base);
@@ -190,6 +195,7 @@ impl PullRequestDialog {
             .current_branch()
             .map(str::to_owned)
             .map(|branch| cx.git(GitRequest::HasUpstream { branch }));
+        let draft_file = Some(DraftFile::open(&repo.full_name, cx));
         let mut dialog = Self {
             repo,
             mode: Mode::Create,
@@ -208,6 +214,7 @@ impl PullRequestDialog {
             requested_request: None,
             submit: None,
             follow_up: BranchFollowUp::default(),
+            draft_file,
             output: None,
         };
         dialog.sync_ring();
@@ -255,6 +262,7 @@ impl PullRequestDialog {
             requested_request,
             submit: None,
             follow_up: BranchFollowUp::default(),
+            draft_file: None,
             output: None,
         };
         dialog.sync_ring();
@@ -456,8 +464,9 @@ impl PullRequestDialog {
     }
 
     /// The one way the dialog closes without a pull request: `modal.close` or Cancel. Requests in flight are
-    /// cancelled. Drafts (#186) save here, for Create PR only.
+    /// cancelled. Create PR saves its draft first.
     fn close(&mut self, cx: &mut Cx<'_>) {
+        self.save_draft(cx);
         for id in self
             .branches_request
             .take()
@@ -650,8 +659,7 @@ impl Component for PullRequestDialog {
             PullRequestAction::PushAnswer(yes) => self.on_push_answer(yes, cx),
             PullRequestAction::Close => self.close(cx),
             PullRequestAction::AddReviewer => self.reviewers.submit(cx),
-            // Drafts (#186) schedule their save here.
-            PullRequestAction::Edited => {}
+            PullRequestAction::Edited => self.schedule_draft_save(cx),
         }
     }
 
@@ -981,6 +989,19 @@ impl Dialog for PullRequestDialog {
             other => self.on_branch_git(id, other, cx),
         }
     }
+
+    fn on_timer(&mut self, id: TimerId, cx: &mut Cx<'_>) -> bool {
+        id == TimerId::PrDraftSave && self.on_draft_timer(cx)
+    }
+
+    fn on_cache_read(
+        &mut self,
+        id: RequestId,
+        result: Result<Option<String>, String>,
+        cx: &mut Cx<'_>,
+    ) -> Option<Result<Option<String>, String>> {
+        self.on_draft_read(id, result, cx)
+    }
 }
 
 #[cfg(test)]
@@ -988,3 +1009,6 @@ mod tests;
 
 #[cfg(test)]
 mod edit_tests;
+
+#[cfg(test)]
+mod draft_tests;

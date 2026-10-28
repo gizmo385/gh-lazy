@@ -33,7 +33,7 @@ use crate::components::switch::SWITCH_BINDINGS;
 use crate::components::table::TABLE_BINDINGS;
 use crate::components::text_editor::TEXT_EDITOR_BINDINGS;
 use crate::components::text_input::INPUT_BINDINGS;
-use crate::effect::{GitResponse, GithubResponse, RequestId};
+use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
 use crate::keymap::BindingId;
 use crate::theme::{Palette, ThemeColor};
 
@@ -301,6 +301,21 @@ pub trait Dialog: Component + Send + 'static {
     /// Takes the answer to one of the dialog's git requests ([`Cx::git`]), and hands back any other.
     fn on_git_response(&mut self, _id: RequestId, response: GitResponse, _cx: &mut Cx<'_>) -> Option<GitResponse> {
         Some(response)
+    }
+
+    /// A tick of a timer the dialog started ([`crate::effect::Effect::StartTimeout`]). True when the dialog took it.
+    fn on_timer(&mut self, _id: TimerId, _cx: &mut Cx<'_>) -> bool {
+        false
+    }
+
+    /// Takes the result of one of the dialog's cache reads ([`Cx::read_cache`]), and hands back any other.
+    fn on_cache_read(
+        &mut self,
+        _id: RequestId,
+        result: Result<Option<String>, String>,
+        _cx: &mut Cx<'_>,
+    ) -> Option<Result<Option<String>, String>> {
+        Some(result)
     }
 }
 

@@ -9,7 +9,7 @@ use ratatui::layout::Rect;
 use super::{Dialog, DialogAction, FocusMove, ModalKind};
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Cx, Owner, RenderCx, ScreenKind};
-use crate::effect::{GitResponse, GithubResponse, RequestId};
+use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::{Palette, ThemeColor};
 
@@ -130,6 +130,19 @@ impl ModalEntry {
         self.dialog.on_git_response(id, response, cx)
     }
 
+    pub(crate) fn on_timer(&mut self, id: TimerId, cx: &mut Cx<'_>) -> bool {
+        self.dialog.on_timer(id, cx)
+    }
+
+    pub(crate) fn on_cache_read(
+        &mut self,
+        id: RequestId,
+        result: Result<Option<String>, String>,
+        cx: &mut Cx<'_>,
+    ) -> Option<Result<Option<String>, String>> {
+        self.dialog.on_cache_read(id, result, cx)
+    }
+
     pub(crate) fn frame(&self, area: Rect) -> Rect {
         self.dialog.frame(area)
     }
@@ -189,6 +202,13 @@ trait AnyDialog: Send {
     fn update(&mut self, action: DialogAction, cx: &mut Cx<'_>);
     fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse>;
     fn on_git_response(&mut self, id: RequestId, response: GitResponse, cx: &mut Cx<'_>) -> Option<GitResponse>;
+    fn on_timer(&mut self, id: TimerId, cx: &mut Cx<'_>) -> bool;
+    fn on_cache_read(
+        &mut self,
+        id: RequestId,
+        result: Result<Option<String>, String>,
+        cx: &mut Cx<'_>,
+    ) -> Option<Result<Option<String>, String>>;
     fn frame(&self, area: Rect) -> Rect;
     fn background(&self, palette: &Palette) -> ThemeColor;
     fn border(&self, palette: &Palette) -> ThemeColor;
@@ -264,6 +284,19 @@ impl<D: Dialog> AnyDialog for Open<D> {
 
     fn on_git_response(&mut self, id: RequestId, response: GitResponse, cx: &mut Cx<'_>) -> Option<GitResponse> {
         self.dialog.on_git_response(id, response, cx)
+    }
+
+    fn on_timer(&mut self, id: TimerId, cx: &mut Cx<'_>) -> bool {
+        self.dialog.on_timer(id, cx)
+    }
+
+    fn on_cache_read(
+        &mut self,
+        id: RequestId,
+        result: Result<Option<String>, String>,
+        cx: &mut Cx<'_>,
+    ) -> Option<Result<Option<String>, String>> {
+        self.dialog.on_cache_read(id, result, cx)
     }
 
     fn frame(&self, area: Rect) -> Rect {

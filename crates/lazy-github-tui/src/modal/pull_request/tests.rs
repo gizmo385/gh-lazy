@@ -394,7 +394,7 @@ fn cancel_closes_with_nothing_and_cancels_the_requests() {
         .iter()
         .filter(|effect| matches!(effect, Effect::Cancel(_)))
         .count();
-    assert_eq!(cancels, 2, "the branches and the collaborators");
+    assert_eq!(cancels, 3, "the branches, the collaborators and the draft read");
     assert!(toasts(&app).is_empty());
 }
 
@@ -439,13 +439,13 @@ fn an_input_emptied_and_left_is_marked_invalid() {
 }
 
 #[test]
-fn reopening_starts_fresh() {
+fn reopening_restores_what_was_typed_from_the_draft() {
     let mut app = opened();
     type_text(&mut app, "Typed");
     app.press(&["escape"]);
     app.press(&["P"]);
     settle(&mut app);
-    assert!(!dialog_view(&mut app).screen.contains("Typed"));
+    assert!(dialog_view(&mut app).screen.contains("Typed"));
 }
 
 // Reviewers in the dialog.

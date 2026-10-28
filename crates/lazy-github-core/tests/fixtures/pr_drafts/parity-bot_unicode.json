@@ -1,0 +1,9 @@
+{
+  "repo_full_name": "parity-bot/unicode",
+  "title": "\u00dcn\u00efc\u00f6d\u00e9 t\u00edtle \u2014 \u2713",
+  "description": "Na\u00efve caf\u00e9 notes: \u65e5\u672c\u8a9e and emoji \ud83c\udf89.",
+  "base_ref": "main",
+  "head_ref": "feature/\u00fcn\u00ef",
+  "is_draft": false,
+  "reviewers": []
+}

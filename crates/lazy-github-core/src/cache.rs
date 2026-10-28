@@ -178,6 +178,19 @@ pub fn write(path: &Path, text: &str) -> io::Result<()> {
     std::fs::write(path, text)
 }
 
+/// Deletes a cache file. A missing one is fine.
+///
+/// # Errors
+///
+/// When the file exists but can't be deleted.
+pub fn remove(path: &Path) -> io::Result<()> {
+    tracing::debug!("Removing cached data at: {}", path.display());
+    match std::fs::remove_file(path) {
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+        other => other,
+    }
+}
+
 fn kind(value: &Value) -> &'static str {
     match value {
         Value::Null => "null",

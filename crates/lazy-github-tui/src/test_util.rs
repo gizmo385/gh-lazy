@@ -499,6 +499,9 @@ impl TestApp {
                 Effect::WriteCache { path, text } => {
                     self.cache_files.insert(path.clone(), text.clone());
                 }
+                Effect::RemoveCache { path } => {
+                    self.cache_files.remove(path);
+                }
                 Effect::Cancel(id) => self.queued.retain(|queued| {
                     !matches!(
                         queued,

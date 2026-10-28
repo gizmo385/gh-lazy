@@ -250,8 +250,9 @@ impl PullRequestDialog {
     }
 
     /// Done: the success toast, then (Py bug B77's recommendation) one for a refused review request, and the dialog
-    /// closes with the pull request. Drafts (#186) are cleared here, for Create PR.
+    /// closes with the pull request. Create PR's draft is deleted first.
     fn finish(&mut self, pr: Box<FullPullRequest>, refused: Option<(Vec<String>, GhError)>, cx: &mut Cx<'_>) {
+        self.clear_draft(cx);
         cx.notify(Toast::info(match self.mode {
             Mode::Create => "Successfully created PR!",
             Mode::Edit(_) => "Successfully updated PR!",

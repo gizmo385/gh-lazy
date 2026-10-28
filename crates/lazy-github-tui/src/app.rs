@@ -584,15 +584,7 @@ impl App {
             }
             Action::Github(id, response) => self.route_response(id, response, out),
             Action::Git(id, response) => self.route_git(id, response, out),
-            Action::CacheRead(id, result) => {
-                let unclaimed = match &mut self.base {
-                    BaseScreen::Main(main) => main.on_cache_read(id, result, &mut Cx::new(&mut self.shared, out)),
-                    _ => Some(result),
-                };
-                if unclaimed.is_some() {
-                    tracing::debug!("Dropping the cache read {id}: nothing is waiting for it");
-                }
-            }
+            Action::CacheRead(id, result) => self.route_cache_read(id, result, out),
             Action::ConfigSaved(Ok(())) => tracing::debug!("Saved the config"),
             Action::ConfigSaved(Err(message)) => {
                 tracing::error!("Failed to save config: {message}");
@@ -605,7 +597,17 @@ impl App {
                 out.actions.push_back(Action::Auth(AuthAction::Poll));
             }
             Action::Timer(TimerId::Notifications) => out.actions.push_back(Action::RefreshNotifications),
-            Action::Timer(id) => tracing::debug!("Ignoring timer {id:?}: nothing owns it"),
+            Action::Timer(id) => {
+                // The other timers belong to the open dialogs, top first.
+                let taken = self
+                    .modals
+                    .iter_mut()
+                    .rev()
+                    .any(|entry| entry.on_timer(id, &mut Cx::new(&mut self.shared, out)));
+                if !taken {
+                    tracing::debug!("Ignoring timer {id:?}: nothing owns it");
+                }
+            }
             // Python attaches the pane's handler when the main screen mounts, so lines from before it (startup and
             // auth) never show.
             Action::CommandLog(line) => {
@@ -714,6 +716,23 @@ impl App {
                 self.shared.current_branch = branch;
             }
             _ => tracing::debug!("Dropping the response to request {id}: nothing is waiting for it"),
+        }
+    }
+
+    /// Hands a cache read to whatever is waiting for it: the open dialogs, top first, then the base screen.
+    fn route_cache_read(&mut self, id: RequestId, mut result: Result<Option<String>, String>, out: &mut Outbox) {
+        for entry in self.modals.iter_mut().rev() {
+            let Some(unclaimed) = entry.on_cache_read(id, result, &mut Cx::new(&mut self.shared, out)) else {
+                return;
+            };
+            result = unclaimed;
+        }
+        let unclaimed = match &mut self.base {
+            BaseScreen::Main(main) => main.on_cache_read(id, result, &mut Cx::new(&mut self.shared, out)),
+            _ => Some(result),
+        };
+        if unclaimed.is_some() {
+            tracing::debug!("Dropping the cache read {id}: nothing is waiting for it");
         }
     }
 

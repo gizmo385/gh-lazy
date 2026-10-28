@@ -2,13 +2,13 @@
 
 use std::collections::HashMap;
 use std::io::{self, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use indexmap::IndexMap;
-use lazy_github_core::cache;
 use lazy_github_core::config::{Config, ConfigPaths};
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::Github;
+use lazy_github_core::{cache, drafts};
 use tokio::sync::{mpsc, watch};
 use tokio::task::{AbortHandle, JoinHandle};
 use tokio::time::{Instant, MissedTickBehavior};
@@ -99,6 +99,7 @@ impl<G: Github> Runtime<G> {
                 self.tasks.insert(id, task.abort_handle());
             }
             Effect::WriteCache { path, text } => self.cache_writer.write(path, text),
+            Effect::RemoveCache { path } => self.cache_writer.remove(path),
             Effect::StartInterval { id, every } => {
                 if self.timers.contains_key(&id) {
                     return;
@@ -242,20 +243,21 @@ impl ConfigSaver {
     }
 }
 
-/// One task that writes cache files, one at a time. A write to a path that arrives while an older write to it is
-/// still pending replaces that one, so each path gets its newest text next. A write that fails is logged as a warning;
-/// the app carries on with its rows.
+/// One task that writes and deletes cache files, one at a time. A write or delete of a path that arrives while an
+/// older one for it is still pending replaces that one, so each path gets its newest state next. One that fails is
+/// logged as a warning; the app carries on.
 struct CacheWriter {
-    tx: mpsc::UnboundedSender<(PathBuf, String)>,
+    /// A path and its new text, `None` to delete it.
+    tx: mpsc::UnboundedSender<(PathBuf, Option<String>)>,
     task: JoinHandle<()>,
 }
 
 impl CacheWriter {
     fn spawn() -> Self {
-        let (tx, mut rx) = mpsc::unbounded_channel::<(PathBuf, String)>();
+        let (tx, mut rx) = mpsc::unbounded_channel::<(PathBuf, Option<String>)>();
         let task = tokio::spawn(async move {
-            // Pending writes, oldest path first. `insert` keeps a path's place and replaces its text.
-            let mut pending: IndexMap<PathBuf, String> = IndexMap::new();
+            // Pending changes, oldest path first. `insert` keeps a path's place and replaces its change.
+            let mut pending: IndexMap<PathBuf, Option<String>> = IndexMap::new();
             loop {
                 if pending.is_empty() {
                     // `None` once `finish` drops the sender and everything sent before is taken.
@@ -268,25 +270,26 @@ impl CacheWriter {
                 let Some((path, text)) = pending.shift_remove_index(0) else {
                     continue;
                 };
-                let written = tokio::task::spawn_blocking({
-                    let path = path.clone();
-                    move || cache::write(&path, &text)
-                })
-                .await;
-                let error = match written {
-                    Ok(Ok(())) => continue,
-                    Ok(Err(e)) => e.to_string(),
-                    Err(e) => format!("the write task failed: {e}"),
-                };
-                tracing::warn!("Failed to write cache file '{}': {error}", path.display());
+                let applied = tokio::task::spawn_blocking(move || apply_cache_change(&path, text.as_deref())).await;
+                // Logged here rather than on the blocking thread, so the warning reaches the subscriber the writer
+                // runs under.
+                match applied {
+                    Ok(Ok(())) => {}
+                    Ok(Err(warning)) => tracing::warn!("{warning}"),
+                    Err(e) => tracing::warn!("A cache write task failed: {e}"),
+                }
             }
         });
         Self { tx, task }
     }
 
-    fn write(&self, path: PathBuf, text: String) {
+    fn remove(&self, path: PathBuf) {
         // The receiver lives as long as the task, which only ends after `finish` drops the sender.
-        let _ = self.tx.send((path, text));
+        let _ = self.tx.send((path, None));
+    }
+
+    fn write(&self, path: PathBuf, text: String) {
+        let _ = self.tx.send((path, Some(text)));
     }
 
     async fn finish(self) {
@@ -295,6 +298,27 @@ impl CacheWriter {
             tracing::error!("The cache writer failed: {e}");
         }
     }
+}
+
+/// Writes `text` to the cache file at `path`, or deletes it for `None`. A failure comes back as its warning: PR
+/// drafts get the Python app's own wording (`lib/pr_drafts.py`), table caches the table cache's.
+fn apply_cache_change(path: &Path, text: Option<&str>) -> Result<(), String> {
+    let draft = drafts::is_draft_path(path);
+    let result = match (text, draft) {
+        (Some(text), true) => drafts::save(path, text),
+        (Some(text), false) => cache::write(path, text),
+        (None, true) => drafts::clear(path),
+        (None, false) => cache::remove(path),
+    };
+    result.map_err(|error| {
+        let path = path.display();
+        match (text.is_some(), draft) {
+            (true, true) => format!("Failed to save PR draft to '{path}': {error}"),
+            (true, false) => format!("Failed to write cache file '{path}': {error}"),
+            (false, true) => format!("Failed to clear PR draft at '{path}': {error}"),
+            (false, false) => format!("Failed to remove cache file '{path}': {error}"),
+        }
+    })
 }
 
 #[cfg(test)]
@@ -806,6 +830,71 @@ mod tests {
         };
         let prefix = format!("WARN Failed to write cache file '{}': ", path.display());
         assert!(warning.starts_with(&prefix), "{warning}");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn a_write_and_a_remove_of_one_path_land_in_the_order_issued() {
+        let dir = TempDir::new();
+        let (mut runtime, _rx) = runtime(FakeGithub::new(), &dir);
+        let removed = drafts::draft_path(&dir.0, "o/removed");
+        let written = drafts::draft_path(&dir.0, "o/written");
+        let table = dir.0.join("o_r_issues.json");
+        runtime.execute(Effect::WriteCache {
+            path: removed.clone(),
+            text: "{}".into(),
+        });
+        runtime.execute(Effect::RemoveCache { path: removed.clone() });
+        runtime.execute(Effect::RemoveCache { path: written.clone() });
+        runtime.execute(Effect::WriteCache {
+            path: written.clone(),
+            text: "{\"title\": \"kept\"}".into(),
+        });
+        runtime.execute(Effect::WriteCache {
+            path: table.clone(),
+            text: "[]".into(),
+        });
+        runtime.shutdown().await;
+        assert!(!removed.exists());
+        assert_eq!(std::fs::read_to_string(&written).unwrap(), "{\"title\": \"kept\"}");
+
+        // A remove of a missing file is fine, and one of a table cache deletes it.
+        let (mut runtime, _rx) = self::runtime(FakeGithub::new(), &dir);
+        runtime.execute(Effect::RemoveCache { path: table.clone() });
+        runtime.execute(Effect::RemoveCache { path: removed.clone() });
+        runtime.shutdown().await;
+        assert!(!table.exists());
+        assert!(!removed.exists());
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn a_failed_draft_save_or_clear_logs_pythons_warning() {
+        let capture = crate::test_util::LogCapture::start();
+        let dir = TempDir::new();
+        // A file where the drafts folder should be makes the save fail, and a folder where the draft should be makes
+        // the clear fail.
+        std::fs::write(dir.0.join("pr_drafts"), "").unwrap();
+        let unsaved = drafts::draft_path(&dir.0, "o/r");
+        let other = dir.0.join("other");
+        let uncleared = drafts::draft_path(&other, "o/r");
+        std::fs::create_dir_all(&uncleared).unwrap();
+        let (mut runtime, _rx) = runtime(FakeGithub::new(), &dir);
+        runtime.execute(Effect::WriteCache {
+            path: unsaved.clone(),
+            text: "{}".into(),
+        });
+        runtime.execute(Effect::RemoveCache {
+            path: uncleared.clone(),
+        });
+        runtime.shutdown().await;
+        let text = capture.text();
+        let warnings: Vec<&str> = text.lines().filter(|line| line.starts_with("WARN")).collect();
+        let [saved, cleared] = warnings.as_slice() else {
+            panic!("{warnings:?}");
+        };
+        let saved_prefix = format!("WARN Failed to save PR draft to '{}': ", unsaved.display());
+        assert!(saved.starts_with(&saved_prefix), "{saved}");
+        let cleared_prefix = format!("WARN Failed to clear PR draft at '{}': ", uncleared.display());
+        assert!(cleared.starts_with(&cleared_prefix), "{cleared}");
     }
 
     #[tokio::test(flavor = "current_thread", start_paused = true)]

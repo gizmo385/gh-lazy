@@ -13,6 +13,7 @@ pub mod component;
 pub mod components;
 pub mod effect;
 pub mod event;
+pub mod fuzzy;
 pub mod keymap;
 pub mod modal;
 pub mod notifications;

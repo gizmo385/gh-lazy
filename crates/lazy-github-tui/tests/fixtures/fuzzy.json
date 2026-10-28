@@ -1,0 +1,5696 @@
+[
+ {
+  "query": "t",
+  "name": "Toggle Command Log",
+  "score": 6.0,
+  "offsets": [
+   0
+  ],
+  "highlights": [
+   0
+  ]
+ },
+ {
+  "query": "t",
+  "name": "Toggle Workflows",
+  "score": 6.0,
+  "offsets": [
+   0
+  ],
+  "highlights": [
+   0
+  ]
+ },
+ {
+  "query": "t",
+  "name": "Toggle Issues",
+  "score": 6.0,
+  "offsets": [
+   0
+  ],
+  "highlights": [
+   0
+  ]
+ },
+ {
+  "query": "t",
+  "name": "Toggle Pull Requests",
+  "score": 6.0,
+  "offsets": [
+   0
+  ],
+  "highlights": [
+   0
+  ]
+ },
+ {
+  "query": "t",
+  "name": "Change Settings",
+  "score": 3.0,
+  "offsets": [
+   9
+  ],
+  "highlights": [
+   9
+  ]
+ },
+ {
+  "query": "t",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "t",
+  "name": "Open Bug Report",
+  "score": 3.0,
+  "offsets": [
+   14
+  ],
+  "highlights": [
+   14
+  ]
+ },
+ {
+  "query": "t",
+  "name": "Refresh notifications",
+  "score": 3.0,
+  "offsets": [
+   10
+  ],
+  "highlights": [
+   10
+  ]
+ },
+ {
+  "query": "t",
+  "name": "Theme",
+  "score": 6.0,
+  "offsets": [
+   0
+  ],
+  "highlights": [
+   0
+  ]
+ },
+ {
+  "query": "t",
+  "name": "Quit",
+  "score": 3.0,
+  "offsets": [
+   3
+  ],
+  "highlights": [
+   3
+  ]
+ },
+ {
+  "query": "t",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "t",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "t",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "t",
+  "name": "Screenshot",
+  "score": 3.0,
+  "offsets": [
+   9
+  ],
+  "highlights": [
+   9
+  ]
+ },
+ {
+  "query": "t",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "t",
+  "name": "preferred_merge_method",
+  "score": 3.0,
+  "offsets": [
+   18
+  ],
+  "highlights": [
+   18
+  ]
+ },
+ {
+  "query": "t",
+  "name": "Tab 22 bb b",
+  "score": 6.0,
+  "offsets": [
+   0
+  ],
+  "highlights": [
+   0
+  ]
+ },
+ {
+  "query": "t",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "t",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Toggle Pull Requests",
+  "score": 3.0,
+  "offsets": [
+   14
+  ],
+  "highlights": [
+   14
+  ]
+ },
+ {
+  "query": "q",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Quit",
+  "score": 6.0,
+  "offsets": [
+   0
+  ],
+  "highlights": [
+   0
+  ]
+ },
+ {
+  "query": "q",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "q",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "i",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "i",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "i",
+  "name": "Toggle Issues",
+  "score": 6.0,
+  "offsets": [
+   7
+  ],
+  "highlights": [
+   7
+  ]
+ },
+ {
+  "query": "i",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "i",
+  "name": "Change Settings",
+  "score": 3.0,
+  "offsets": [
+   11
+  ],
+  "highlights": [
+   11
+  ]
+ },
+ {
+  "query": "i",
+  "name": "Debug Info",
+  "score": 6.0,
+  "offsets": [
+   6
+  ],
+  "highlights": [
+   6
+  ]
+ },
+ {
+  "query": "i",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "i",
+  "name": "Refresh notifications",
+  "score": 3.0,
+  "offsets": [
+   11
+  ],
+  "highlights": [
+   11
+  ]
+ },
+ {
+  "query": "i",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "i",
+  "name": "Quit",
+  "score": 3.0,
+  "offsets": [
+   2
+  ],
+  "highlights": [
+   2
+  ]
+ },
+ {
+  "query": "i",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "i",
+  "name": "Minimize",
+  "score": 3.0,
+  "offsets": [
+   1
+  ],
+  "highlights": [
+   1
+  ]
+ },
+ {
+  "query": "i",
+  "name": "Maximize",
+  "score": 3.0,
+  "offsets": [
+   3
+  ],
+  "highlights": [
+   3
+  ]
+ },
+ {
+  "query": "i",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "i",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "i",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "i",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "i",
+  "name": "mississippi",
+  "score": 3.0,
+  "offsets": [
+   1
+  ],
+  "highlights": [
+   1
+  ]
+ },
+ {
+  "query": "i",
+  "name": "v2_build 10",
+  "score": 3.0,
+  "offsets": [
+   5
+  ],
+  "highlights": [
+   5
+  ]
+ },
+ {
+  "query": "m",
+  "name": "Toggle Command Log",
+  "score": 3.0,
+  "offsets": [
+   9
+  ],
+  "highlights": [
+   9
+  ]
+ },
+ {
+  "query": "m",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "m",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "m",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "m",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "m",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "m",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "m",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "m",
+  "name": "Theme",
+  "score": 3.0,
+  "offsets": [
+   3
+  ],
+  "highlights": [
+   3
+  ]
+ },
+ {
+  "query": "m",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "m",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "m",
+  "name": "Minimize",
+  "score": 6.0,
+  "offsets": [
+   0
+  ],
+  "highlights": [
+   0
+  ]
+ },
+ {
+  "query": "m",
+  "name": "Maximize",
+  "score": 6.0,
+  "offsets": [
+   0
+  ],
+  "highlights": [
+   0
+  ]
+ },
+ {
+  "query": "m",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "m",
+  "name": "show_command_log",
+  "score": 3.0,
+  "offsets": [
+   7
+  ],
+  "highlights": [
+   7
+  ]
+ },
+ {
+  "query": "m",
+  "name": "preferred_merge_method",
+  "score": 3.0,
+  "offsets": [
+   10
+  ],
+  "highlights": [
+   10
+  ]
+ },
+ {
+  "query": "m",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "m",
+  "name": "mississippi",
+  "score": 6.0,
+  "offsets": [
+   0
+  ],
+  "highlights": [
+   0
+  ]
+ },
+ {
+  "query": "m",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "s",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "s",
+  "name": "Toggle Workflows",
+  "score": 3.0,
+  "offsets": [
+   15
+  ],
+  "highlights": [
+   15
+  ]
+ },
+ {
+  "query": "s",
+  "name": "Toggle Issues",
+  "score": 3.0,
+  "offsets": [
+   8
+  ],
+  "highlights": [
+   8
+  ]
+ },
+ {
+  "query": "s",
+  "name": "Toggle Pull Requests",
+  "score": 3.0,
+  "offsets": [
+   17
+  ],
+  "highlights": [
+   17
+  ]
+ },
+ {
+  "query": "s",
+  "name": "Change Settings",
+  "score": 6.0,
+  "offsets": [
+   7
+  ],
+  "highlights": [
+   7
+  ]
+ },
+ {
+  "query": "s",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "s",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "s",
+  "name": "Refresh notifications",
+  "score": 3.0,
+  "offsets": [
+   5
+  ],
+  "highlights": [
+   5
+  ]
+ },
+ {
+  "query": "s",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "s",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "s",
+  "name": "Keys",
+  "score": 3.0,
+  "offsets": [
+   3
+  ],
+  "highlights": [
+   3
+  ]
+ },
+ {
+  "query": "s",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "s",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "s",
+  "name": "Screenshot",
+  "score": 6.0,
+  "offsets": [
+   0
+  ],
+  "highlights": [
+   0
+  ]
+ },
+ {
+  "query": "s",
+  "name": "show_command_log",
+  "score": 6.0,
+  "offsets": [
+   0
+  ],
+  "highlights": [
+   0
+  ]
+ },
+ {
+  "query": "s",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "s",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "s",
+  "name": "mississippi",
+  "score": 3.0,
+  "offsets": [
+   2
+  ],
+  "highlights": [
+   2
+  ]
+ },
+ {
+  "query": "s",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "show_command_log",
+  "score": 3.0,
+  "offsets": [
+   4
+  ],
+  "highlights": [
+   4
+  ]
+ },
+ {
+  "query": "_",
+  "name": "preferred_merge_method",
+  "score": 3.0,
+  "offsets": [
+   9
+  ],
+  "highlights": [
+   9
+  ]
+ },
+ {
+  "query": "_",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "_",
+  "name": "v2_build 10",
+  "score": 3.0,
+  "offsets": [
+   2
+  ],
+  "highlights": [
+   2
+  ]
+ },
+ {
+  "query": "2",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "Tab 22 bb b",
+  "score": 6.0,
+  "offsets": [
+   4
+  ],
+  "highlights": [
+   4
+  ]
+ },
+ {
+  "query": "2",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "2",
+  "name": "v2_build 10",
+  "score": 3.0,
+  "offsets": [
+   1
+  ],
+  "highlights": [
+   1
+  ]
+ },
+ {
+  "query": " ",
+  "name": "Toggle Command Log",
+  "score": 3.0,
+  "offsets": [
+   6
+  ],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Toggle Workflows",
+  "score": 3.0,
+  "offsets": [
+   6
+  ],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Toggle Issues",
+  "score": 3.0,
+  "offsets": [
+   6
+  ],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Toggle Pull Requests",
+  "score": 3.0,
+  "offsets": [
+   6
+  ],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Change Settings",
+  "score": 3.0,
+  "offsets": [
+   6
+  ],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Debug Info",
+  "score": 3.0,
+  "offsets": [
+   5
+  ],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Open Bug Report",
+  "score": 3.0,
+  "offsets": [
+   4
+  ],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Refresh notifications",
+  "score": 3.0,
+  "offsets": [
+   7
+  ],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "Tab 22 bb b",
+  "score": 3.0,
+  "offsets": [
+   3
+  ],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": " ",
+  "name": "v2_build 10",
+  "score": 3.0,
+  "offsets": [
+   8
+  ],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "Toggle Command Log",
+  "score": 12.0,
+  "offsets": [
+   0,
+   1,
+   2
+  ],
+  "highlights": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "query": "tog",
+  "name": "Toggle Workflows",
+  "score": 12.0,
+  "offsets": [
+   0,
+   1,
+   2
+  ],
+  "highlights": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "query": "tog",
+  "name": "Toggle Issues",
+  "score": 12.0,
+  "offsets": [
+   0,
+   1,
+   2
+  ],
+  "highlights": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "query": "tog",
+  "name": "Toggle Pull Requests",
+  "score": 12.0,
+  "offsets": [
+   0,
+   1,
+   2
+  ],
+  "highlights": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "query": "tog",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tog",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Keys",
+  "score": 20.0,
+  "offsets": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "highlights": [
+   0,
+   1,
+   2,
+   3
+  ]
+ },
+ {
+  "query": "keys",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "keys",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Toggle Command Log",
+  "score": 12.0,
+  "offsets": [
+   15,
+   16,
+   17
+  ],
+  "highlights": [
+   15,
+   16,
+   17
+  ]
+ },
+ {
+  "query": "log",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "show_command_log",
+  "score": 9.0,
+  "offsets": [
+   13,
+   14,
+   15
+  ],
+  "highlights": [
+   13,
+   14,
+   15
+  ]
+ },
+ {
+  "query": "log",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "log",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "Toggle Issues",
+  "score": 12.0,
+  "offsets": [
+   5,
+   6,
+   7
+  ],
+  "highlights": [
+   5,
+   7
+  ]
+ },
+ {
+  "query": "e i",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "Change Settings",
+  "score": 4.333333333333333,
+  "offsets": [
+   5,
+   6,
+   11
+  ],
+  "highlights": [
+   5,
+   11
+  ]
+ },
+ {
+  "query": "e i",
+  "name": "Debug Info",
+  "score": 5.777777777777778,
+  "offsets": [
+   1,
+   5,
+   6
+  ],
+  "highlights": [
+   1,
+   6
+  ]
+ },
+ {
+  "query": "e i",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "Refresh notifications",
+  "score": 3.3333333333333335,
+  "offsets": [
+   1,
+   7,
+   11
+  ],
+  "highlights": [
+   1,
+   11
+  ]
+ },
+ {
+  "query": "e i",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "e i",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "Toggle Issues",
+  "score": 6.0,
+  "offsets": [
+   8,
+   9
+  ],
+  "highlights": [
+   8,
+   9
+  ]
+ },
+ {
+  "query": "ss",
+  "name": "Toggle Pull Requests",
+  "score": 2.5,
+  "offsets": [
+   17,
+   19
+  ],
+  "highlights": [
+   17,
+   19
+  ]
+ },
+ {
+  "query": "ss",
+  "name": "Change Settings",
+  "score": 3.75,
+  "offsets": [
+   7,
+   14
+  ],
+  "highlights": [
+   7,
+   14
+  ]
+ },
+ {
+  "query": "ss",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "Refresh notifications",
+  "score": 2.5,
+  "offsets": [
+   5,
+   20
+  ],
+  "highlights": [
+   5,
+   20
+  ]
+ },
+ {
+  "query": "ss",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "Screenshot",
+  "score": 3.75,
+  "offsets": [
+   0,
+   6
+  ],
+  "highlights": [
+   0,
+   6
+  ]
+ },
+ {
+  "query": "ss",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ss",
+  "name": "mississippi",
+  "score": 6.0,
+  "offsets": [
+   2,
+   3
+  ],
+  "highlights": [
+   2,
+   3
+  ]
+ },
+ {
+  "query": "ss",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "show_command_log",
+  "score": 33.0,
+  "offsets": [
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ],
+  "highlights": [
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ]
+ },
+ {
+  "query": "command_log",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "command_log",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Quit",
+  "score": 20.0,
+  "offsets": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "highlights": [
+   0,
+   1,
+   2,
+   3
+  ]
+ },
+ {
+  "query": "quit",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quit",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Theme",
+  "score": 24.0,
+  "offsets": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "highlights": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ]
+ },
+ {
+  "query": "theme",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "theme",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Toggle Issues",
+  "score": 60.0,
+  "offsets": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "highlights": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ]
+ },
+ {
+  "query": "toggle issues",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "toggle issues",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mississippi",
+  "name": "mississippi",
+  "score": 48.0,
+  "offsets": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10
+  ],
+  "highlights": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10
+  ]
+ },
+ {
+  "query": "mississippi",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Toggle Issues",
+  "score": 5.555555555555555,
+  "offsets": [
+   0,
+   2,
+   7
+  ],
+  "highlights": [
+   0,
+   2,
+   7
+  ]
+ },
+ {
+  "query": "tgi",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tgi",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Toggle Pull Requests",
+  "score": 6.666666666666667,
+  "offsets": [
+   0,
+   7,
+   12
+  ],
+  "highlights": [
+   0,
+   7,
+   12
+  ]
+ },
+ {
+  "query": "tpr",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tpr",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Toggle Command Log",
+  "score": 6.375,
+  "offsets": [
+   7,
+   9,
+   15,
+   17
+  ],
+  "highlights": [
+   7,
+   9,
+   15,
+   17
+  ]
+ },
+ {
+  "query": "cmlg",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "show_command_log",
+  "score": 4.25,
+  "offsets": [
+   5,
+   7,
+   13,
+   15
+  ],
+  "highlights": [
+   5,
+   7,
+   13,
+   15
+  ]
+ },
+ {
+  "query": "cmlg",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "cmlg",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Refresh notifications",
+  "score": 12.0,
+  "offsets": [
+   0,
+   1,
+   2
+  ],
+  "highlights": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "query": "ref",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "preferred_merge_method",
+  "score": 9.0,
+  "offsets": [
+   1,
+   2,
+   3
+  ],
+  "highlights": [
+   1,
+   2,
+   3
+  ]
+ },
+ {
+  "query": "ref",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "ref",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "preferred_merge_method",
+  "score": 4.444444444444445,
+  "offsets": [
+   0,
+   10,
+   16
+  ],
+  "highlights": [
+   0,
+   10,
+   16
+  ]
+ },
+ {
+  "query": "pmm",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "pmm",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Toggle Command Log",
+  "score": 6.666666666666667,
+  "offsets": [
+   0,
+   7,
+   15
+  ],
+  "highlights": [
+   0,
+   7,
+   15
+  ]
+ },
+ {
+  "query": "tcl",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tcl",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Refresh notifications",
+  "score": 2.5,
+  "offsets": [
+   5,
+   14
+  ],
+  "highlights": [
+   5,
+   14
+  ]
+ },
+ {
+  "query": "sc",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Screenshot",
+  "score": 9.0,
+  "offsets": [
+   0,
+   1
+  ],
+  "highlights": [
+   0,
+   1
+  ]
+ },
+ {
+  "query": "sc",
+  "name": "show_command_log",
+  "score": 3.75,
+  "offsets": [
+   0,
+   5
+  ],
+  "highlights": [
+   0,
+   5
+  ]
+ },
+ {
+  "query": "sc",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "sc",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "Toggle Command Log",
+  "score": 2.5,
+  "offsets": [
+   1,
+   5
+  ],
+  "highlights": [
+   1,
+   5
+  ]
+ },
+ {
+  "query": "oe",
+  "name": "Toggle Workflows",
+  "score": 2.5,
+  "offsets": [
+   1,
+   5
+  ],
+  "highlights": [
+   1,
+   5
+  ]
+ },
+ {
+  "query": "oe",
+  "name": "Toggle Issues",
+  "score": 2.5,
+  "offsets": [
+   1,
+   5
+  ],
+  "highlights": [
+   1,
+   5
+  ]
+ },
+ {
+  "query": "oe",
+  "name": "Toggle Pull Requests",
+  "score": 2.5,
+  "offsets": [
+   1,
+   5
+  ],
+  "highlights": [
+   1,
+   5
+  ]
+ },
+ {
+  "query": "oe",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "Open Bug Report",
+  "score": 3.75,
+  "offsets": [
+   0,
+   2
+  ],
+  "highlights": [
+   0,
+   2
+  ]
+ },
+ {
+  "query": "oe",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "oe",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Minimize",
+  "score": 5.777777777777778,
+  "offsets": [
+   0,
+   6,
+   7
+  ],
+  "highlights": [
+   0,
+   6,
+   7
+  ]
+ },
+ {
+  "query": "mze",
+  "name": "Maximize",
+  "score": 5.777777777777778,
+  "offsets": [
+   0,
+   6,
+   7
+  ],
+  "highlights": [
+   0,
+   6,
+   7
+  ]
+ },
+ {
+  "query": "mze",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "mze",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Debug Info",
+  "score": 4.444444444444445,
+  "offsets": [
+   0,
+   2,
+   4
+  ],
+  "highlights": [
+   0,
+   2,
+   4
+  ]
+ },
+ {
+  "query": "dbg",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "dbg",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "v21",
+  "name": "v2_build 10",
+  "score": 7.222222222222222,
+  "offsets": [
+   0,
+   1,
+   9
+  ],
+  "highlights": [
+   0,
+   1,
+   9
+  ]
+ },
+ {
+  "query": "iipi",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "iipi",
+  "name": "mississippi",
+  "score": 5.0,
+  "offsets": [
+   1,
+   7,
+   8,
+   10
+  ],
+  "highlights": [
+   1,
+   7,
+   8,
+   10
+  ]
+ },
+ {
+  "query": "iipi",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "Tab 22 bb b",
+  "score": 5.777777777777778,
+  "offsets": [
+   2,
+   7,
+   8
+  ],
+  "highlights": [
+   2,
+   7,
+   8
+  ]
+ },
+ {
+  "query": "bbb",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "bbb",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "Tab 22 bb b",
+  "score": 7.5,
+  "offsets": [
+   0,
+   2,
+   3,
+   7
+  ],
+  "highlights": [
+   0,
+   2,
+   7
+  ]
+ },
+ {
+  "query": "tb b",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tb b",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "Toggle Command Log",
+  "score": 12.0,
+  "offsets": [
+   0,
+   1,
+   2
+  ],
+  "highlights": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "query": "TOG",
+  "name": "Toggle Workflows",
+  "score": 12.0,
+  "offsets": [
+   0,
+   1,
+   2
+  ],
+  "highlights": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "query": "TOG",
+  "name": "Toggle Issues",
+  "score": 12.0,
+  "offsets": [
+   0,
+   1,
+   2
+  ],
+  "highlights": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "query": "TOG",
+  "name": "Toggle Pull Requests",
+  "score": 12.0,
+  "offsets": [
+   0,
+   1,
+   2
+  ],
+  "highlights": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "query": "TOG",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TOG",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Quit",
+  "score": 20.0,
+  "offsets": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "highlights": [
+   0,
+   1,
+   2,
+   3
+  ]
+ },
+ {
+  "query": "QuIt",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "QuIt",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Toggle Pull Requests",
+  "score": 6.666666666666667,
+  "offsets": [
+   0,
+   7,
+   12
+  ],
+  "highlights": [
+   0,
+   7,
+   12
+  ]
+ },
+ {
+  "query": "TPR",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "TPR",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "zzz",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "tiq",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Toggle Command Log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Toggle Workflows",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Toggle Issues",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Toggle Pull Requests",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Change Settings",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Debug Info",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Open Bug Report",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Refresh notifications",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Theme",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Quit",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Keys",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Minimize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Maximize",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Screenshot",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "show_command_log",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "preferred_merge_method",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "Tab 22 bb b",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "mississippi",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ },
+ {
+  "query": "quitx",
+  "name": "v2_build 10",
+  "score": 0.0,
+  "offsets": [],
+  "highlights": []
+ }
+]

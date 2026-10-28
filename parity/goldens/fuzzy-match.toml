@@ -1,0 +1,7 @@
+version = 1
+description = "Fuzzy matcher: Textual's FuzzySearch score and offsets, and Matcher.highlight's highlighted offsets, for each query in a corpus (single letters, substrings, exact names, subsequences, the last_index cut, uppercase, non-matches) against the palette's command names, settings field names and names with spaces, digits, _ and repeated letters"
+generator = "crates/lazy-github-tui/tests/fixtures/generate_fuzzy.py"
+golden = ["crates/lazy-github-tui/tests/fixtures/fuzzy.json"]
+test = "crates/lazy-github-tui/tests/fuzzy.rs"
+fresh_test = "fuzzy_goldens_are_fresh"
+parity_rows = ["command-palette.fuzzy-match"]

@@ -13,7 +13,8 @@ use crate::components::comment::CommentStop;
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::event::Event;
 use crate::keymap::BindingId;
-use crate::screens::main::FocusTarget;
+use crate::screens::main::details::{MaximizeScope, SectionKey, SectionRef};
+use crate::screens::main::{FocusTarget, Maximized};
 use crate::test_util::{TestApp, logs};
 
 fn conversation(app: &TestApp) -> &PrConversation {
@@ -791,4 +792,161 @@ fn pr_overview_reviews_open() {
         assert!(screen.contains(row), "{row}: {screen}");
     }
     insta::assert_snapshot!(screen);
+}
+
+// M in the Conversation (#288).
+
+fn section(section: SectionRef) -> MaximizeScope {
+    MaximizeScope::Section(SectionKey(section))
+}
+
+fn maximized_section(app: &TestApp) -> Option<SectionRef> {
+    app.app()
+        .maximized()
+        .and_then(|maximized| maximized.section)
+        .map(|key| key.0)
+}
+
+#[test]
+fn maximize_scope_is_the_nearest_section_of_each_stop() {
+    let mut app = shown_conversation();
+    app.press(&["tab"]);
+    assert_eq!(conversation(&app).maximize_scope(), MaximizeScope::Nothing);
+    let review = |index| section(SectionRef::Review(index));
+    let reactions = |comment| section(SectionRef::CommentReactions(comment));
+    let mut scopes = Vec::new();
+    loop {
+        app.press(&["tab"]);
+        if focus(&app) != FocusTarget::DetailsContent {
+            break;
+        }
+        scopes.push((stop(&app), conversation(&app).maximize_scope()));
+    }
+    let comment = |id| ConversationStop::Comment(block(&app, id), CommentStop::Block);
+    let reactions_title = |id| ConversationStop::Comment(block(&app, id), CommentStop::ReactionsTitle);
+    assert_eq!(
+        scopes,
+        [
+            (ConversationStop::Review(0), review(0)),
+            // A comment in a review's thread: the review.
+            (comment(CommentRef::Review(9001)), review(0)),
+            (
+                reactions_title(CommentRef::Review(9001)),
+                reactions(CommentRef::Review(9001))
+            ),
+            (comment(CommentRef::Review(9002)), review(0)),
+            // Closed reviews too.
+            (ConversationStop::Review(1), review(1)),
+            (ConversationStop::Review(2), review(2)),
+            (ConversationStop::Review(3), review(3)),
+            (comment(CommentRef::Review(9003)), review(3)),
+            // A comment outside any review: the details tab area.
+            (comment(CommentRef::Issue(7001)), MaximizeScope::TabArea),
+            (
+                reactions_title(CommentRef::Issue(7001)),
+                reactions(CommentRef::Issue(7001))
+            ),
+            (comment(CommentRef::Issue(7002)), MaximizeScope::TabArea),
+        ]
+    );
+    assert!(!conversation(&app).is_open(1));
+    // An open list is in its reactions section too.
+    let c7001 = block(&app, CommentRef::Issue(7001));
+    tab_to(&mut app, ConversationStop::Comment(c7001, CommentStop::ReactionsTitle));
+    app.press(&["enter", "tab"]);
+    assert_eq!(stop(&app), ConversationStop::Comment(c7001, CommentStop::ReactionsList));
+    assert_eq!(conversation(&app).maximize_scope(), reactions(CommentRef::Issue(7001)));
+}
+
+#[test]
+fn tab_in_a_maximized_review_walks_its_title_blocks_and_reactions() {
+    let mut app = shown_conversation();
+    app.press(&["tab", "tab", "M"]);
+    assert_eq!(maximized_section(&app), Some(SectionRef::Review(0)));
+    let comment = |app: &TestApp, id| ConversationStop::Comment(block(app, id), CommentStop::Block);
+    let c9001 = block(&app, CommentRef::Review(9001));
+    let mut walked = Vec::new();
+    for _ in 0..5 {
+        app.press(&["tab"]);
+        walked.push(stop(&app));
+    }
+    assert_eq!(
+        walked,
+        [
+            comment(&app, CommentRef::Review(9001)),
+            ConversationStop::Comment(c9001, CommentStop::ReactionsTitle),
+            comment(&app, CommentRef::Review(9002)),
+            ConversationStop::Review(0),
+            comment(&app, CommentRef::Review(9001)),
+        ]
+    );
+    app.press(&["shift+tab", "shift+tab"]);
+    assert_eq!(stop(&app), comment(&app, CommentRef::Review(9002)));
+    // Enter on the reactions title opens it in place, and its list joins the stops.
+    app.press(&["shift+tab", "enter", "tab"]);
+    assert_eq!(stop(&app), ConversationStop::Comment(c9001, CommentStop::ReactionsList));
+    assert_eq!(maximized_section(&app), Some(SectionRef::Review(0)));
+    assert!(app.screen(160, 48).contains("👀 : parity-friend"));
+    app.press(&["escape"]);
+    assert_eq!(maximized_section(&app), None);
+    assert_eq!(stop(&app), ConversationStop::Comment(c9001, CommentStop::ReactionsList));
+}
+
+#[test]
+fn a_comment_outside_any_review_maximizes_the_tab_area() {
+    let mut app = shown_conversation();
+    let c7002 = block(&app, CommentRef::Issue(7002));
+    app.press(&["tab"]);
+    tab_to(&mut app, ConversationStop::Comment(c7002, CommentStop::Block));
+    app.press(&["M"]);
+    assert_eq!(
+        app.app().maximized(),
+        Some(Maximized::widget(FocusTarget::DetailsContent))
+    );
+}
+
+#[test]
+fn pr_conversation_review_maximized_160x48() {
+    let mut app = shown_conversation();
+    app.press(&["tab", "tab", "tab", "M"]);
+    assert_eq!(maximized_section(&app), Some(SectionRef::Review(0)));
+    app.advance(std::time::Duration::from_secs(5));
+    let screen = app.screen(160, 48);
+    // The review alone, without the pane's box, and the focused block in its dashed box.
+    assert!(screen.contains("  ▼ Review from parity-bot (Commented)"), "{screen}");
+    assert!(screen.contains("╏ Should the cursor wrap at the end?"), "{screen}");
+    assert!(!screen.contains("parity-reviewer"), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn pr_conversation_comment_reactions_maximized_160x48() {
+    let mut app = shown_conversation();
+    let c7001 = block(&app, CommentRef::Issue(7001));
+    app.press(&["tab"]);
+    tab_to(&mut app, ConversationStop::Comment(c7001, CommentStop::ReactionsTitle));
+    app.press(&["M"]);
+    assert_eq!(
+        maximized_section(&app),
+        Some(SectionRef::CommentReactions(CommentRef::Issue(7001)))
+    );
+    app.advance(std::time::Duration::from_secs(5));
+    let closed = app.screen(160, 48);
+    assert!(closed.contains("  ▶ 👍  1 | 🚀  1"), "{closed}");
+    assert!(!closed.contains("Rebased on main"), "{closed}");
+    // Enter opens it in place, and a click on its title closes it again.
+    app.press(&["enter"]);
+    let screen = app.screen(160, 48);
+    insta::assert_snapshot!(screen);
+    let row = row_of(&mut app, "▼ 👍");
+    app.click(4, row);
+    assert!(
+        !conversation(&app)
+            .block(CommentRef::Issue(7001))
+            .unwrap()
+            .reactions_open()
+    );
+    // Elsewhere in the section, the block takes focus.
+    app.click(20, row + 1);
+    assert_eq!(stop(&app), ConversationStop::Comment(c7001, CommentStop::Block));
 }

@@ -121,6 +121,42 @@ pub enum DiffStop {
     ReviewSubmit,
 }
 
+/// A collapsible section of the viewer, for the section maximize view: a file's, or a hunk's (the file, then the
+/// hunk), by index.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum DiffSection {
+    /// A file's section, with its hunks' sections inside.
+    File(usize),
+    /// A hunk's section, with its pane inside.
+    Hunk(usize, usize),
+}
+
+impl DiffSection {
+    /// Whether `stop` is inside the section: its title, or a stop in its contents.
+    fn holds(self, stop: DiffStop) -> bool {
+        match self {
+            DiffSection::File(f) => stop.file() == Some(f),
+            DiffSection::Hunk(f, h) => stop.hunk() == Some((f, h)),
+        }
+    }
+}
+
+/// A section laid out alone.
+#[derive(Debug, Clone, Default)]
+pub struct SectionAlone {
+    /// Its rows.
+    pub rendered: Rendered,
+    /// The focused stop's rows, when it's inside the section.
+    pub focus_rows: Option<Range<usize>>,
+}
+
+/// Where a section laid out alone landed.
+#[derive(Debug, Clone)]
+enum AlonePlaced {
+    File(FilePlaced),
+    Hunk(HunkPlaced),
+}
+
 /// What a mouse event other than a press did to the viewer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ViewMouse {
@@ -197,6 +233,8 @@ pub struct DiffView {
     area: Rect,
     /// A left press landed on this button and its release hasn't come yet: the two make a click.
     armed: Option<DiffStop>,
+    /// Where a section laid out alone (maximized) landed, by section and width: the latest two.
+    alone: Vec<(DiffSection, u16, AlonePlaced)>,
 }
 
 /// Everything that scrolls, with its layouts.
@@ -297,6 +335,7 @@ impl DiffView {
             reveal: None,
             area: Rect::default(),
             armed: None,
+            alone: Vec::new(),
         }
     }
 
@@ -860,19 +899,8 @@ impl DiffView {
         };
         for (f, placed) in placements.files.iter().enumerate() {
             let Some(placed) = placed else { continue };
-            let at = &placed.section;
-            if row == at.title_row && at.title_columns.contains(&x) {
-                return DiffStop::FileTitle(f);
-            }
-            for (h, hunk) in placed.hunks.iter().enumerate() {
-                if row == hunk.section.title_row && hunk.section.title_columns.contains(&x) {
-                    return DiffStop::HunkTitle(f, h);
-                }
-                // The box, between its margins, from the hunk's indent.
-                let boxed = hunk.pane.start + 1..hunk.pane.end.saturating_sub(1);
-                if boxed.contains(&row) && x >= 2 * CONTENT_INDENT {
-                    return DiffStop::Pane(f, h);
-                }
+            if let Some(stop) = hit_file(placed, f, row, x) {
+                return stop;
             }
         }
         if let Some(index) = placements.removes.iter().position(|placed| placed.contains(row, x)) {
@@ -890,6 +918,131 @@ impl DiffView {
             }
         }
         DiffStop::Scroll
+    }
+
+    // Maximize.
+
+    /// The section `M` maximizes from the focused stop: a file's title, its file's; a hunk's title or pane, its
+    /// hunk's. The scroll area doesn't allow it, the filter types the key, and the review form and the Remove buttons
+    /// are #187's.
+    pub fn maximize_section(&self) -> Option<DiffSection> {
+        match self.body.stop {
+            DiffStop::FileTitle(f) => Some(DiffSection::File(f)),
+            DiffStop::HunkTitle(f, h) | DiffStop::Pane(f, h) => Some(DiffSection::Hunk(f, h)),
+            DiffStop::Scroll
+            | DiffStop::Filter
+            | DiffStop::RemoveComment(_)
+            | DiffStop::ReviewStatus
+            | DiffStop::ReviewSummary
+            | DiffStop::ReviewSubmit => None,
+        }
+    }
+
+    /// Whether `section` is drawn: a file the filter keeps, or a hunk of an open one.
+    pub fn shows_section(&self, section: DiffSection) -> bool {
+        match section {
+            DiffSection::File(f) => self.body.files.get(f).is_some_and(|file| file.shown),
+            DiffSection::Hunk(f, h) => {
+                self.body.files.get(f).is_some_and(|file| {
+                    file.shown && file.section.is_open() && !file.file.deleted && h < file.hunks.len()
+                })
+            }
+        }
+    }
+
+    /// One stop `forward` or back among `section`'s stops, wrapping; from a stop outside it, its first.
+    pub fn focus_step_in(&mut self, section: DiffSection, forward: bool) {
+        let stops: Vec<DiffStop> = self.stops().into_iter().filter(|&stop| section.holds(stop)).collect();
+        let Some(&first) = stops.first() else { return };
+        let next = match stops.iter().position(|&stop| stop == self.body.stop) {
+            Some(at) if forward => stops[(at + 1) % stops.len()],
+            Some(at) => stops[(at + stops.len() - 1) % stops.len()],
+            None => first,
+        };
+        self.focus(next);
+    }
+
+    /// Focus enters maximized `section`: its title.
+    pub fn focus_section(&mut self, section: DiffSection) {
+        if let Some(first) = self.stops().into_iter().find(|&stop| section.holds(stop)) {
+            self.focus(first);
+        }
+    }
+
+    /// `section` laid out alone `width` wide, focused as in the viewer, `focused` saying whether focus is inside the
+    /// content. A hunk's pane is laid out for this width, its line cursor kept. `None` while it isn't drawn.
+    pub fn layout_section(
+        &mut self,
+        section: DiffSection,
+        width: u16,
+        theme: &Theme,
+        focused: bool,
+    ) -> Option<SectionAlone> {
+        if !self.shows_section(section) {
+            return None;
+        }
+        let stop = self.body.stop;
+        let mut rendered = Rendered::default();
+        let (placed, focus_rows) = match section {
+            DiffSection::File(f) => {
+                let focus = self.body.file_focus(f, focused);
+                let placed = layout_file(&mut rendered, &mut self.body.files[f], &focus, width, theme);
+                let rows = match stop {
+                    DiffStop::FileTitle(_) => Some(title_rows(&placed.section)),
+                    DiffStop::HunkTitle(_, h) => placed.hunks.get(h).map(|hunk| title_rows(&hunk.section)),
+                    DiffStop::Pane(_, h) => placed.hunks.get(h).map(|hunk| hunk.pane.clone()),
+                    _ => None,
+                };
+                (AlonePlaced::File(placed), rows)
+            }
+            DiffSection::Hunk(f, h) => {
+                let focus = self.body.file_focus(f, focused);
+                let FileSection { file, hunks, .. } = &mut self.body.files[f];
+                let placed = layout_hunk(&mut rendered, &mut hunks[h], file, h, &focus, width, theme);
+                let rows = match stop {
+                    DiffStop::HunkTitle(..) => Some(title_rows(&placed.section)),
+                    DiffStop::Pane(..) => Some(placed.pane.clone()),
+                    _ => None,
+                };
+                (AlonePlaced::Hunk(placed), rows)
+            }
+        };
+        // The pane's viewport now follows this width: the viewer lays it out afresh when it's drawn again.
+        self.body.layouts.clear();
+        let focus_rows = focus_rows.filter(|_| focused && section.holds(stop));
+        self.alone.retain(|(s, w, _)| (*s, *w) != (section, width));
+        if self.alone.len() == 2 {
+            self.alone.remove(0);
+        }
+        self.alone.push((section, width, placed));
+        Some(SectionAlone { rendered, focus_rows })
+    }
+
+    /// A left press on maximized `section` at `row` and `column` of its layout `width` wide, as of the last frame:
+    /// as in the viewer, a title focusing and toggling its section and the pane taking focus; anything else focuses
+    /// the scroll area.
+    pub fn click_section(&mut self, section: DiffSection, row: usize, column: u16, width: u16) {
+        let placed = self
+            .alone
+            .iter()
+            .find(|(s, w, _)| (*s, *w) == (section, width))
+            .map(|(_, _, placed)| placed);
+        let stop = match (section, placed) {
+            (DiffSection::File(f), Some(AlonePlaced::File(placed))) if column < width => {
+                hit_file(placed, f, row, column)
+            }
+            (DiffSection::Hunk(f, h), Some(AlonePlaced::Hunk(placed))) if column < width => {
+                hit_hunk(placed, f, h, row, column, 0)
+            }
+            _ => None,
+        }
+        .unwrap_or(DiffStop::Scroll);
+        match stop {
+            DiffStop::FileTitle(f) => self.toggle(f, None),
+            DiffStop::HunkTitle(f, h) => self.toggle(f, Some(h)),
+            _ => {}
+        }
+        self.focus(stop);
     }
 
     // Drawing.
@@ -988,9 +1141,23 @@ impl Body {
         }
     }
 
+    /// How file `f`'s sections look with focus where it is, `focused` saying whether focus is inside the content.
+    fn file_focus(&self, f: usize, focused: bool) -> FileFocus {
+        FileFocus {
+            section: self.section_focus(f, None, focused),
+            hunks: (0..self.files[f].hunks.len())
+                .map(|h| self.section_focus(f, Some(h), focused))
+                .collect(),
+            pane: match self.stop {
+                DiffStop::Pane(file, h) if focused && file == f => Some(h),
+                _ => None,
+            },
+        }
+    }
+
     /// How the section of file `file` or, with `hunk`, of one of its hunks looks with focus where it is.
-    fn section_focus(&self, file: usize, hunk: Option<usize>) -> SectionFocus {
-        if !self.focused {
+    fn section_focus(&self, file: usize, hunk: Option<usize>, focused: bool) -> SectionFocus {
+        if !focused {
             return SectionFocus::default();
         }
         let stop = self.stop;
@@ -1011,16 +1178,7 @@ impl Layout for Body {
     fn layout(&mut self, width: u16, theme: &Theme) -> &Rendered {
         self.last_width = width;
         let focus: Vec<FileFocus> = (0..self.files.len())
-            .map(|f| FileFocus {
-                section: self.section_focus(f, None),
-                hunks: (0..self.files[f].hunks.len())
-                    .map(|h| self.section_focus(f, Some(h)))
-                    .collect(),
-                pane: match self.stop {
-                    DiffStop::Pane(file, h) if self.focused && file == f => Some(h),
-                    _ => None,
-                },
-            })
+            .map(|f| self.file_focus(f, self.focused))
             .collect();
         let filter_focused = self.focused && self.stop == DiffStop::Filter;
         let remove_focused = match self.stop {
@@ -1164,6 +1322,34 @@ fn layout_hunk(
         pane: shift(&pane_rows, section.content.start),
         section,
     }
+}
+
+/// What a cell of file `f`'s section, placed at `placed`, lands on, by row and column in its layout.
+fn hit_file(placed: &FilePlaced, f: usize, row: usize, x: u16) -> Option<DiffStop> {
+    let at = &placed.section;
+    if row == at.title_row && at.title_columns.contains(&x) {
+        return Some(DiffStop::FileTitle(f));
+    }
+    placed
+        .hunks
+        .iter()
+        .enumerate()
+        .find_map(|(h, hunk)| hit_hunk(hunk, f, h, row, x, CONTENT_INDENT))
+}
+
+/// What a cell of hunk `h` of file `f`, placed at `placed` with its section `indent` columns in, lands on.
+fn hit_hunk(placed: &HunkPlaced, f: usize, h: usize, row: usize, x: u16, indent: u16) -> Option<DiffStop> {
+    if row == placed.section.title_row && placed.section.title_columns.contains(&x) {
+        return Some(DiffStop::HunkTitle(f, h));
+    }
+    // The box, between its margins, from the hunk's contents' indent.
+    let boxed = placed.pane.start + 1..placed.pane.end.saturating_sub(1);
+    (boxed.contains(&row) && x >= indent + CONTENT_INDENT).then_some(DiffStop::Pane(f, h))
+}
+
+/// A section's title row, as rows.
+fn title_rows(placement: &Placement) -> Range<usize> {
+    placement.title_row..placement.title_row + 1
 }
 
 fn shift(rows: &Range<usize>, by: usize) -> Range<usize> {

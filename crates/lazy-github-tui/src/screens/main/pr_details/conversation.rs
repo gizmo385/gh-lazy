@@ -40,7 +40,7 @@ use crate::modal::{NewCommentDialog, ReplyTarget};
 use crate::theme::{Accent, Paint, Theme};
 
 use super::super::MainAction;
-use super::super::details::BodyRenderCx;
+use super::super::details::{BodyRenderCx, MaximizeScope, SectionKey, SectionLayout, SectionRef};
 use super::super::overview_text::accent;
 use super::overview::PrOverview;
 
@@ -117,6 +117,8 @@ pub(in crate::screens::main) struct PrConversation {
     reveal: Option<Reveal>,
     /// Where the content was drawn last, for clicks.
     area: Rect,
+    /// Where a section laid out alone (maximized) landed, by section and width: the latest two.
+    alone: Vec<(SectionRef, u16, Placements)>,
 }
 
 /// What the next draw scrolls into view.
@@ -237,6 +239,7 @@ impl PrConversation {
             keep_focus: false,
             reveal: None,
             area: Rect::default(),
+            alone: Vec::new(),
         }
     }
 
@@ -741,6 +744,11 @@ impl PrConversation {
     /// it (its reactions title toggling, a reaction highlighted), and anything else focuses the scroll area.
     pub(super) fn click(&mut self, position: Position) {
         let stop = self.stop_at(position);
+        self.press(stop);
+    }
+
+    /// A left press landed on `stop`: a title toggles its section, and the stop takes focus.
+    fn press(&mut self, stop: ConversationStop) {
         match stop {
             ConversationStop::Review(index) => self.toggle(index),
             ConversationStop::Comment(block, CommentStop::ReactionsTitle) => {
@@ -770,6 +778,173 @@ impl PrConversation {
         let Some(placements) = body.placements(width).cloned() else {
             return ConversationStop::Scroll;
         };
+        body.hit(&placements, row, x)
+    }
+
+    // Maximize.
+
+    /// What `M` maximizes from the focused stop: a review's title, or a comment block in it, its review's section; a
+    /// reactions title or list, its section; a comment outside any review, the details tab area. The scroll area
+    /// doesn't allow it.
+    pub(super) fn maximize_scope(&self) -> MaximizeScope {
+        let Some(body) = self.body() else {
+            return MaximizeScope::Nothing;
+        };
+        let section = match body.stop {
+            ConversationStop::Scroll => return MaximizeScope::Nothing,
+            ConversationStop::Comment(block, CommentStop::ReactionsTitle | CommentStop::ReactionsList) => {
+                SectionRef::CommentReactions(body.blocks[block].0)
+            }
+            stop => match body.review_of(stop) {
+                Some(review) => SectionRef::Review(review),
+                None => return MaximizeScope::TabArea,
+            },
+        };
+        MaximizeScope::Section(SectionKey(section))
+    }
+
+    /// Whether `section` is shown: a review, or a comment's reactions section.
+    pub(super) fn shows_section(&self, section: SectionRef) -> bool {
+        let Some(body) = self.body() else {
+            return false;
+        };
+        match section {
+            SectionRef::Review(index) => matches!(body.items.get(index), Some(Item::Review(_))),
+            SectionRef::CommentReactions(comment) => body
+                .blocks
+                .iter()
+                .any(|(of, block)| *of == comment && block.has_reactions()),
+            SectionRef::Overview(_) | SectionRef::File(_) | SectionRef::Hunk(..) => false,
+        }
+    }
+
+    /// `section`'s own stops: a review's title and, while it's open, its blocks' stops; a reactions section's title
+    /// and open list.
+    fn section_stops(&self, section: SectionRef) -> Vec<ConversationStop> {
+        let Some(body) = self.body() else {
+            return Vec::new();
+        };
+        let inside = |stop: ConversationStop| match (section, stop) {
+            (SectionRef::Review(index), stop) => body.review_of(stop) == Some(index),
+            (
+                SectionRef::CommentReactions(comment),
+                ConversationStop::Comment(block, CommentStop::ReactionsTitle | CommentStop::ReactionsList),
+            ) => body.blocks[block].0 == comment,
+            _ => false,
+        };
+        self.stops().into_iter().filter(|&stop| inside(stop)).collect()
+    }
+
+    /// One stop `forward` or back among `section`'s stops, wrapping; from a stop outside it, its first.
+    pub(super) fn focus_step_in(&mut self, section: SectionRef, forward: bool) {
+        let stops = self.section_stops(section);
+        let Some(&first) = stops.first() else { return };
+        let current = self.current();
+        let next = match stops.iter().position(|&stop| stop == current) {
+            Some(at) if forward => stops[(at + 1) % stops.len()],
+            Some(at) => stops[(at + stops.len() - 1) % stops.len()],
+            None => first,
+        };
+        self.focus(next);
+    }
+
+    /// Focus enters maximized `section`: its first stop.
+    pub(super) fn focus_section(&mut self, section: SectionRef) {
+        if let Some(&first) = self.section_stops(section).first() {
+            self.focus(first);
+        }
+    }
+
+    /// `section` laid out alone `width` wide, focused as in the pane: a review without the focused review's box, as
+    /// Python draws it maximized. `None` while it isn't shown.
+    pub(super) fn layout_section(
+        &mut self,
+        section: SectionRef,
+        width: u16,
+        theme: &Theme,
+        focused: bool,
+    ) -> Option<SectionLayout> {
+        let body = self.body_mut()?;
+        let mut placements = body.no_placements();
+        let mut rendered = Rendered::default();
+        match section {
+            SectionRef::Review(index) => {
+                let Some(Item::Review(review)) = body.items.get(index) else {
+                    return None;
+                };
+                let (focused_review, title, block_focus) = body.focus_state(focused);
+                let focus = Focus {
+                    review: focused_review,
+                    title,
+                    blocks: &block_focus,
+                };
+                place_review(
+                    &mut rendered,
+                    index,
+                    review,
+                    &mut body.blocks,
+                    &focus,
+                    width,
+                    theme,
+                    false,
+                    &mut placements,
+                );
+            }
+            SectionRef::CommentReactions(comment) => {
+                let block = body.blocks.iter().position(|(of, _)| *of == comment)?;
+                let focus = body.block_focus(block, focused);
+                let layout = body.blocks[block].1.layout_reactions(width, focus, theme)?;
+                rendered = layout.rendered.clone();
+                placements.blocks[block] = Some(PlacedBlock {
+                    top: 0,
+                    left: 0,
+                    layout,
+                });
+            }
+            SectionRef::Overview(_) | SectionRef::File(_) | SectionRef::Hunk(..) => return None,
+        }
+        let focus_rows = focused
+            .then(|| body.rows_in(&placements, Reveal::Stop(body.stop)))
+            .flatten();
+        self.alone.retain(|(s, w, _)| (*s, *w) != (section, width));
+        if self.alone.len() == 2 {
+            self.alone.remove(0);
+        }
+        self.alone.push((section, width, placements));
+        Some(SectionLayout { rendered, focus_rows })
+    }
+
+    /// A left press on maximized `section` at `row` and `column` of its layout `width` wide, as of the last frame:
+    /// as in the pane. Elsewhere in a reactions section, its block takes focus, the nearest focusable widget around
+    /// it; elsewhere in a review, the scroll area.
+    pub(super) fn click_section(&mut self, section: SectionRef, row: usize, column: u16, width: u16) {
+        let placements = self
+            .alone
+            .iter()
+            .find(|(s, w, _)| (*s, *w) == (section, width))
+            .map(|(_, _, placements)| placements.clone());
+        let stop = match (placements, self.body_mut()) {
+            (Some(placements), Some(body)) if column < width => body.hit(&placements, row, column),
+            _ => ConversationStop::Scroll,
+        };
+        let stop = match (section, stop) {
+            (SectionRef::CommentReactions(comment), ConversationStop::Scroll) => self
+                .body()
+                .and_then(|body| body.blocks.iter().position(|(of, _)| *of == comment))
+                .map_or(ConversationStop::Scroll, |block| {
+                    ConversationStop::Comment(block, CommentStop::Block)
+                }),
+            (_, stop) => stop,
+        };
+        self.press(stop);
+    }
+}
+
+impl Body {
+    /// The stop at `row` and column `x` of the layout `placements` describe, highlighting the reaction there; the
+    /// scroll area when it's nothing else.
+    fn hit(&mut self, placements: &Placements, row: usize, x: u16) -> ConversationStop {
+        let body = self;
         for (index, title) in placements.titles.iter().enumerate() {
             if let Some((title_row, columns)) = title
                 && row == *title_row
@@ -800,7 +975,9 @@ impl PrConversation {
         }
         ConversationStop::Scroll
     }
+}
 
+impl PrConversation {
     // Drawing.
 
     pub(super) fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &BodyRenderCx<'_>) {
@@ -874,7 +1051,11 @@ impl Body {
 
     /// The content rows to scroll into view for `reveal`, in the layout `width` wide.
     fn rows_to_reveal(&self, reveal: Reveal, width: u16) -> Option<Range<usize>> {
-        let placements = self.placements(width)?;
+        self.rows_in(self.placements(width)?, reveal)
+    }
+
+    /// The rows to scroll into view for `reveal`, by `placements`.
+    fn rows_in(&self, placements: &Placements, reveal: Reveal) -> Option<Range<usize>> {
         match reveal {
             Reveal::Item(index) => placements.items.get(index).cloned(),
             Reveal::Stop(ConversationStop::Scroll) => None,
@@ -901,11 +1082,33 @@ impl Body {
         }
     }
 
-    /// The stop inside block `index` that has focus, if focus is on it or inside it.
-    fn block_focus(&self, index: usize) -> Option<CommentStop> {
+    /// The stop inside block `index` that has focus, if focus is on it or inside it, `focused` saying whether focus
+    /// is inside the content.
+    fn block_focus(&self, index: usize, focused: bool) -> Option<CommentStop> {
         match self.stop {
-            ConversationStop::Comment(block, stop) if self.focused && block == index => Some(stop),
+            ConversationStop::Comment(block, stop) if focused && block == index => Some(stop),
             _ => None,
+        }
+    }
+
+    /// Where focus is, as far as the layout goes, `focused` saying whether focus is inside the content: the review
+    /// holding it, the review whose title has it, and each block's focused stop.
+    fn focus_state(&self, focused: bool) -> (Option<usize>, Option<usize>, Vec<Option<CommentStop>>) {
+        let review = if focused { self.review_of(self.stop) } else { None };
+        let title = match self.stop {
+            ConversationStop::Review(index) if focused => Some(index),
+            _ => None,
+        };
+        let blocks = (0..self.blocks.len()).map(|i| self.block_focus(i, focused)).collect();
+        (review, title, blocks)
+    }
+
+    /// An empty set of placements for the items and blocks.
+    fn no_placements(&self) -> Placements {
+        Placements {
+            items: Vec::new(),
+            titles: vec![None; self.items.len()],
+            blocks: vec![None; self.blocks.len()],
         }
     }
 }
@@ -913,12 +1116,7 @@ impl Body {
 impl Layout for Body {
     fn layout(&mut self, width: u16, theme: &Theme) -> &Rendered {
         self.last_width = width;
-        let focused_review = if self.focused { self.review_of(self.stop) } else { None };
-        let title_focus = match self.stop {
-            ConversationStop::Review(index) if self.focused => Some(index),
-            _ => None,
-        };
-        let block_focus: Vec<Option<CommentStop>> = (0..self.blocks.len()).map(|i| self.block_focus(i)).collect();
+        let (focused_review, title_focus, block_focus) = self.focus_state(self.focused);
         let Body {
             items,
             blocks,
@@ -980,52 +1178,17 @@ fn conversation(
         match item {
             Item::Review(review) => {
                 let boxed = focus.review == Some(index) && width > 2;
-                let (left, inner) = if boxed { (1, width - 2) } else { (0, width) };
-                let mut section = Rendered::default();
-                let mut placed_blocks = Vec::new();
-                let section_focus = SectionFocus {
-                    title: focus.title == Some(index),
-                    within: focus.review == Some(index),
-                };
-                let placement = review.collapsible.layout(
-                    &mut section,
-                    &review_title(review, theme),
-                    section_focus,
-                    inner,
+                place_review(
+                    &mut out,
+                    index,
+                    review,
+                    blocks,
+                    focus,
+                    width,
                     theme,
-                    |content| review_contents(review, blocks, focus, content, theme, &mut placed_blocks),
+                    boxed,
+                    &mut placements,
                 );
-                let border = boxed.then(|| {
-                    let under = theme.background();
-                    Style::new()
-                        .fg(theme.color(theme.palette.success_lighten_3, under))
-                        .bg(theme.paint(under))
-                });
-                let top = out.lines.len() + usize::from(boxed);
-                match border {
-                    Some(border) => {
-                        let rule = "─".repeat(usize::from(inner));
-                        out.lines.push(Line::styled(format!("┌{rule}┐"), border));
-                        for line in &mut section.lines {
-                            line.spans.insert(0, Span::styled("│", border));
-                            line.spans.push(Span::styled("│", border));
-                        }
-                        append(&mut out, section, left);
-                        out.lines.push(Line::styled(format!("└{rule}┘"), border));
-                    }
-                    None => append(&mut out, section, 0),
-                }
-                placements.titles[index] = Some((
-                    top + placement.title_row,
-                    placement.title_columns.start + left..placement.title_columns.end + left,
-                ));
-                for (block, row, column, layout) in placed_blocks {
-                    placements.blocks[block] = Some(PlacedBlock {
-                        top: top + placement.content.start + row,
-                        left: left + CONTENT_INDENT + column,
-                        layout,
-                    });
-                }
             }
             Item::Comment(block) => {
                 let layout = blocks[*block]
@@ -1039,6 +1202,69 @@ fn conversation(
         placements.items.push(start..out.lines.len());
     }
     (out, placements)
+}
+
+/// Adds review item `index` to `out`, `width` wide, in the focused review's box when `boxed`, and records where its
+/// title and its blocks landed in `placements`. The pane and the maximize view (unboxed, as Python draws it) both lay
+/// reviews out through this.
+#[allow(clippy::too_many_arguments)] // One review's layout: everything here is an input to it.
+fn place_review(
+    out: &mut Rendered,
+    index: usize,
+    review: &ReviewSection,
+    blocks: &mut [(CommentRef, CommentBlock)],
+    focus: &Focus<'_>,
+    width: u16,
+    theme: &Theme,
+    boxed: bool,
+    placements: &mut Placements,
+) {
+    let (left, inner) = if boxed { (1, width - 2) } else { (0, width) };
+    let mut section = Rendered::default();
+    let mut placed_blocks = Vec::new();
+    let section_focus = SectionFocus {
+        title: focus.title == Some(index),
+        within: focus.review == Some(index),
+    };
+    let placement = review.collapsible.layout(
+        &mut section,
+        &review_title(review, theme),
+        section_focus,
+        inner,
+        theme,
+        |content| review_contents(review, blocks, focus, content, theme, &mut placed_blocks),
+    );
+    let border = boxed.then(|| {
+        let under = theme.background();
+        Style::new()
+            .fg(theme.color(theme.palette.success_lighten_3, under))
+            .bg(theme.paint(under))
+    });
+    let top = out.lines.len() + usize::from(boxed);
+    match border {
+        Some(border) => {
+            let rule = "─".repeat(usize::from(inner));
+            out.lines.push(Line::styled(format!("┌{rule}┐"), border));
+            for line in &mut section.lines {
+                line.spans.insert(0, Span::styled("│", border));
+                line.spans.push(Span::styled("│", border));
+            }
+            append(out, section, left);
+            out.lines.push(Line::styled(format!("└{rule}┘"), border));
+        }
+        None => append(out, section, 0),
+    }
+    placements.titles[index] = Some((
+        top + placement.title_row,
+        placement.title_columns.start + left..placement.title_columns.end + left,
+    ));
+    for (block, row, column, layout) in placed_blocks {
+        placements.blocks[block] = Some(PlacedBlock {
+            top: top + placement.content.start + row,
+            left: left + CONTENT_INDENT + column,
+            layout,
+        });
+    }
 }
 
 /// `Review from <login> (<state>)`, the state approved in greenyellow, changes requested in red, else title-cased.

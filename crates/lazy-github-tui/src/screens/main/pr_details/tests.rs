@@ -1258,7 +1258,7 @@ fn enter_in_the_overview_never_merges() {
 // The section maximize view (#287).
 
 fn overview_key(kind: SectionKind) -> SectionKey {
-    SectionKey(SectionRef::PrOverview(kind))
+    SectionKey(SectionRef::Overview(kind))
 }
 
 /// What's maximized, if anything.

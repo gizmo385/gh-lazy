@@ -15,6 +15,7 @@ use crate::effect::{Effect, GithubRequest, GithubResponse};
 use crate::event::Event;
 use crate::modal::ModalKind;
 use crate::screens::main::FocusTarget;
+use crate::screens::main::details::{MaximizeScope, SectionKey, SectionRef};
 use crate::screens::main::pr_details::tests::{fixture_pr, fixture_repo};
 use crate::test_util::{TestApp, logs};
 
@@ -808,4 +809,144 @@ fn pr_review_form_author() {
     settle(&mut app);
     app.press(&["1", "shift+tab"]);
     insta::assert_snapshot!(app.screen(160, 48));
+}
+
+// M in the Diff tab (#288).
+
+fn section(section: SectionRef) -> MaximizeScope {
+    MaximizeScope::Section(SectionKey(section))
+}
+
+fn maximized_section(app: &TestApp) -> Option<SectionRef> {
+    app.app()
+        .maximized()
+        .and_then(|maximized| maximized.section)
+        .map(|key| key.0)
+}
+
+fn tab_to(app: &mut TestApp, wanted: DiffStop) {
+    for _ in 0..40 {
+        app.press(&["tab"]);
+        if stop(app) == wanted {
+            return;
+        }
+    }
+    panic!("never reached {wanted:?}");
+}
+
+#[test]
+fn maximize_scope_is_the_section_of_each_title_or_pane() {
+    let mut app = diff_tab();
+    app.press(&["tab"]);
+    assert_eq!(stop(&app), DiffStop::Scroll);
+    assert_eq!(pr_diff(&app).maximize_scope(), MaximizeScope::Nothing);
+    app.press(&["tab"]);
+    assert_eq!(stop(&app), DiffStop::Filter);
+    assert_eq!(pr_diff(&app).maximize_scope(), MaximizeScope::Nothing);
+    app.press(&["tab"]);
+    assert_eq!(stop(&app), DiffStop::FileTitle(README));
+    assert_eq!(pr_diff(&app).maximize_scope(), section(SectionRef::File(README)));
+    app.press(&["tab"]);
+    assert_eq!(stop(&app), DiffStop::HunkTitle(README, 0));
+    assert_eq!(pr_diff(&app).maximize_scope(), section(SectionRef::Hunk(README, 0)));
+    app.press(&["enter", "tab"]);
+    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
+    assert_eq!(pr_diff(&app).maximize_scope(), section(SectionRef::Hunk(README, 0)));
+    // A deleted file's title.
+    tab_to(&mut app, DiffStop::FileTitle(OLD));
+    assert_eq!(pr_diff(&app).maximize_scope(), section(SectionRef::File(OLD)));
+}
+
+#[test]
+fn m_in_the_filter_types_it() {
+    let mut app = diff_tab();
+    app.press(&["tab", "tab", "M"]);
+    assert_eq!(view(&app).filter_text(), "M");
+    assert_eq!(app.app().maximized(), None);
+}
+
+#[test]
+fn keys_inside_a_maximized_file_stay_inside_it() {
+    let mut app = diff_tab();
+    app.press(&["tab", "tab", "tab", "M"]);
+    assert_eq!(maximized_section(&app), Some(SectionRef::File(README)));
+    // Its title and its hunk's, wrapping.
+    app.press(&["tab"]);
+    assert_eq!(stop(&app), DiffStop::HunkTitle(README, 0));
+    app.press(&["tab"]);
+    assert_eq!(stop(&app), DiffStop::FileTitle(README));
+    // Enter on the hunk's title opens its pane, which j moves in.
+    app.press(&["tab", "enter"]);
+    assert!(view(&app).is_hunk_open(README, 0));
+    app.press(&["tab", "j"]);
+    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
+    assert_eq!(view(&app).pane(README, 0).unwrap().cursor(), 1);
+    assert!(app.screen(160, 48).contains("Line: 2/6"));
+    app.press(&["tab"]);
+    assert_eq!(stop(&app), DiffStop::FileTitle(README));
+    app.press(&["shift+tab"]);
+    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
+    assert_eq!(maximized_section(&app), Some(SectionRef::File(README)));
+    app.press(&["escape"]);
+    assert_eq!(maximized_section(&app), None);
+    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
+}
+
+#[test]
+fn j_and_k_move_the_line_in_a_maximized_hunk_pane() {
+    let mut app = readme_pane_at(1);
+    app.press(&["M"]);
+    assert_eq!(maximized_section(&app), Some(SectionRef::Hunk(README, 0)));
+    app.press(&["j", "j", "k"]);
+    assert_eq!(view(&app).pane(README, 0).unwrap().cursor(), 1);
+    assert!(app.screen(160, 48).contains("Line: 2/6"));
+    // Its title and its pane, wrapping.
+    app.press(&["tab"]);
+    assert_eq!(stop(&app), DiffStop::HunkTitle(README, 0));
+    app.press(&["tab"]);
+    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
+    // The pane keeps its line once restored.
+    app.press(&["escape"]);
+    assert!(app.screen(160, 48).contains("Line: 2/6"));
+}
+
+#[test]
+fn a_click_on_a_maximized_file_hits_its_own_layout() {
+    let mut app = diff_tab();
+    app.press(&["tab", "tab", "tab", "M"]);
+    let row = u16::try_from(
+        app.screen(160, 48)
+            .lines()
+            .position(|line| line.contains("▶ Lines 3-7"))
+            .unwrap(),
+    )
+    .unwrap();
+    app.click(8, row);
+    assert_eq!(stop(&app), DiffStop::HunkTitle(README, 0));
+    assert!(view(&app).is_hunk_open(README, 0));
+    assert_eq!(maximized_section(&app), Some(SectionRef::File(README)));
+}
+
+#[test]
+fn pr_diff_file_maximized_160x48() {
+    let mut app = diff_tab();
+    app.press(&["tab", "tab", "tab", "M"]);
+    app.advance(std::time::Duration::from_secs(5));
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("  ▼ 📄  README.md (+3 -1)"), "{screen}");
+    assert!(screen.contains("      ▶ Lines 3-7 (+3 -1) • A tiny pager."), "{screen}");
+    assert!(!screen.contains("app.css"), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn pr_diff_hunk_pane_maximized_160x48() {
+    let mut app = readme_pane_at(1);
+    app.press(&["M"]);
+    app.advance(std::time::Duration::from_secs(5));
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("  ▼ Lines 3-7 (+3 -1) • A tiny pager."), "{screen}");
+    assert!(screen.contains("Line: 1/6"), "{screen}");
+    assert!(!screen.contains("README.md"), "{screen}");
+    insta::assert_snapshot!(screen);
 }

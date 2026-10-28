@@ -220,16 +220,19 @@ impl DetailsBody for PullRequestDetails {
     fn maximize_scope(&self, tab: usize) -> MaximizeScope {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.maximize_scope().map_or(MaximizeScope::Nothing, |kind| {
-                MaximizeScope::Section(SectionKey(SectionRef::PrOverview(kind)))
+                MaximizeScope::Section(SectionKey(SectionRef::Overview(kind)))
             }),
-            PrTab::Diff | PrTab::Conversation => MaximizeScope::Nothing,
+            PrTab::Diff => self.diff.maximize_scope(),
+            PrTab::Conversation => self.conversation.maximize_scope(),
         }
     }
 
     fn shows_section(&self, tab: usize, key: SectionKey) -> bool {
         match (PrTab::at(tab), key.0) {
-            (PrTab::Overview, SectionRef::PrOverview(kind)) => self.overview.shows_section(kind),
-            _ => false,
+            (PrTab::Overview, SectionRef::Overview(kind)) => self.overview.shows_section(kind),
+            (PrTab::Overview, _) => false,
+            (PrTab::Diff, section) => self.diff.shows_section(section),
+            (PrTab::Conversation, section) => self.conversation.shows_section(section),
         }
     }
 
@@ -242,28 +245,37 @@ impl DetailsBody for PullRequestDetails {
         focused: bool,
     ) -> Option<SectionLayout> {
         match (PrTab::at(tab), key.0) {
-            (PrTab::Overview, SectionRef::PrOverview(kind)) => {
-                self.overview.layout_section(kind, width, theme, focused)
-            }
-            _ => None,
+            (PrTab::Overview, SectionRef::Overview(kind)) => self.overview.layout_section(kind, width, theme, focused),
+            (PrTab::Overview, _) => None,
+            (PrTab::Diff, section) => self.diff.layout_section(section, width, theme, focused),
+            (PrTab::Conversation, section) => self.conversation.layout_section(section, width, theme, focused),
         }
     }
 
     fn focus_step_in(&mut self, tab: usize, key: SectionKey, forward: bool) {
-        if let (PrTab::Overview, SectionRef::PrOverview(kind)) = (PrTab::at(tab), key.0) {
-            self.overview.focus_step_in(kind, forward);
+        match (PrTab::at(tab), key.0) {
+            (PrTab::Overview, SectionRef::Overview(kind)) => self.overview.focus_step_in(kind, forward),
+            (PrTab::Overview, _) => {}
+            (PrTab::Diff, section) => self.diff.focus_step_in(section, forward),
+            (PrTab::Conversation, section) => self.conversation.focus_step_in(section, forward),
         }
     }
 
     fn focus_section(&mut self, tab: usize, key: SectionKey) {
-        if let (PrTab::Overview, SectionRef::PrOverview(kind)) = (PrTab::at(tab), key.0) {
-            self.overview.focus_section(kind);
+        match (PrTab::at(tab), key.0) {
+            (PrTab::Overview, SectionRef::Overview(kind)) => self.overview.focus_section(kind),
+            (PrTab::Overview, _) => {}
+            (PrTab::Diff, section) => self.diff.focus_section(section),
+            (PrTab::Conversation, section) => self.conversation.focus_section(section),
         }
     }
 
     fn click_section(&mut self, tab: usize, key: SectionKey, row: usize, column: u16, width: u16) {
-        if let (PrTab::Overview, SectionRef::PrOverview(kind)) = (PrTab::at(tab), key.0) {
-            self.overview.click_section(kind, row, column, width);
+        match (PrTab::at(tab), key.0) {
+            (PrTab::Overview, SectionRef::Overview(kind)) => self.overview.click_section(kind, row, column, width),
+            (PrTab::Overview, _) => {}
+            (PrTab::Diff, section) => self.diff.click_section(section, row, column, width),
+            (PrTab::Conversation, section) => self.conversation.click_section(section, row, column, width),
         }
     }
 

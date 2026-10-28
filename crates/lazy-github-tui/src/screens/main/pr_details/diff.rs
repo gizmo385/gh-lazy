@@ -23,16 +23,17 @@ use tokio::time::Instant;
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Cx, Owner};
 use crate::components::command_log::Wheel;
-use crate::components::diff_view::{DiffStop, DiffView, MissingStatus, PendingComment, ViewMouse};
+use crate::components::diff_view::{DiffSection, DiffStop, DiffView, MissingStatus, PendingComment, ViewMouse};
 use crate::components::info::Scroll;
 use crate::components::loading;
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::modal::AddCommentDialog;
+use crate::theme::Theme;
 use crate::toast::Toast;
 
 use super::super::MainAction;
-use super::super::details::BodyRenderCx;
+use super::super::details::{BodyRenderCx, MaximizeScope, SectionKey, SectionLayout, SectionRef};
 use super::PullRequestTarget;
 
 /// The Diff tab: its pull request, where the diff is, and the requests the review form waits on.
@@ -223,6 +224,57 @@ impl PrDiff {
         self.view().map(DiffView::chain).unwrap_or_default()
     }
 
+    // Maximize: the viewer's file and hunk sections, by the keys the details pane knows them by.
+
+    pub(super) fn maximize_scope(&self) -> MaximizeScope {
+        let section = self.view().and_then(DiffView::maximize_section);
+        section.map_or(MaximizeScope::Nothing, |section| {
+            let section = match section {
+                DiffSection::File(f) => SectionRef::File(f),
+                DiffSection::Hunk(f, h) => SectionRef::Hunk(f, h),
+            };
+            MaximizeScope::Section(SectionKey(section))
+        })
+    }
+
+    pub(super) fn shows_section(&self, section: SectionRef) -> bool {
+        diff_section(section).is_some_and(|section| self.view().is_some_and(|view| view.shows_section(section)))
+    }
+
+    pub(super) fn layout_section(
+        &mut self,
+        section: SectionRef,
+        width: u16,
+        theme: &Theme,
+        focused: bool,
+    ) -> Option<SectionLayout> {
+        let alone = self
+            .view_mut()?
+            .layout_section(diff_section(section)?, width, theme, focused)?;
+        Some(SectionLayout {
+            rendered: alone.rendered,
+            focus_rows: alone.focus_rows,
+        })
+    }
+
+    pub(super) fn focus_step_in(&mut self, section: SectionRef, forward: bool) {
+        if let (Some(section), Some(view)) = (diff_section(section), self.view_mut()) {
+            view.focus_step_in(section, forward);
+        }
+    }
+
+    pub(super) fn focus_section(&mut self, section: SectionRef) {
+        if let (Some(section), Some(view)) = (diff_section(section), self.view_mut()) {
+            view.focus_section(section);
+        }
+    }
+
+    pub(super) fn click_section(&mut self, section: SectionRef, row: usize, column: u16, width: u16) {
+        if let (Some(section), Some(view)) = (diff_section(section), self.view_mut()) {
+            view.click_section(section, row, column, width);
+        }
+    }
+
     pub(super) fn binding_state(&self, owner: Owner, id: BindingId) -> BindingState {
         self.view()
             .map_or(BindingState::Enabled, |view| view.binding_state(owner, id))
@@ -327,6 +379,15 @@ impl PrDiff {
 
     pub(super) fn handle_paste(&mut self, text: &str) -> bool {
         self.view_mut().is_some_and(|view| view.handle_paste(text))
+    }
+}
+
+/// The viewer's section a key names, if it's one of the Diff tab's.
+fn diff_section(section: SectionRef) -> Option<DiffSection> {
+    match section {
+        SectionRef::File(f) => Some(DiffSection::File(f)),
+        SectionRef::Hunk(f, h) => Some(DiffSection::Hunk(f, h)),
+        SectionRef::Overview(_) | SectionRef::Review(_) | SectionRef::CommentReactions(_) => None,
     }
 }
 

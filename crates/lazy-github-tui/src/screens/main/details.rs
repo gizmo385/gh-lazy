@@ -9,7 +9,7 @@
 use std::ops::Range;
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
-use lazy_github_core::models::{FullPullRequest, Issue, ReactionKind, Repository, WorkflowRun};
+use lazy_github_core::models::{CommentRef, FullPullRequest, Issue, ReactionKind, Repository, WorkflowRun};
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
 use tokio::time::Instant;
@@ -44,7 +44,15 @@ pub struct SectionKey(pub(super) SectionRef);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(super) enum SectionRef {
     /// One of the PR Overview's sections.
-    PrOverview(SectionKind),
+    Overview(SectionKind),
+    /// A review of the PR Conversation, by its item index.
+    Review(usize),
+    /// The reactions section of a comment in the PR Conversation.
+    CommentReactions(CommentRef),
+    /// A file of the PR Diff, by index.
+    File(usize),
+    /// A hunk of the PR Diff: the file, then the hunk.
+    Hunk(usize, usize),
 }
 
 /// What `M` maximizes with focus inside the details content: Textual's nearest maximizable ancestor of the focused

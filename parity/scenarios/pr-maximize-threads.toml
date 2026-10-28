@@ -2,7 +2,7 @@ version = 1
 description = "M in the PR Conversation and Diff tabs: the scroll areas do nothing; a review's title or a comment in it maximizes the review; a comment's reactions title its reactions; a comment outside a review the details tab area; the diff filter types M; a file's or hunk's title, or the hunk pane, maximizes that section"
 # A maximized section has no boxes, tables or tabs, so those captures are checked through [expect] `contains` and
 # `not_contains`. The footer is hidden while maximized.
-gate = false
+gate = true
 parity_rows = ["pull-requests.collapsible", "main-layout.maximize"]
 sizes = [[160, 48]]
 
@@ -166,6 +166,11 @@ keys = ["tab", "tab"]
 
 [[step]]
 wait = { text = "/ Filter Files" }
+
+# The one-time toast from `review-title` times out first, so one in `filter-types` would be new. A run quicker than
+# its 5 s still has it up here.
+[[step]]
+wait = { gone = "View Maximized", timeout_ms = 10000 }
 
 [[step]]
 keys = ["M"]

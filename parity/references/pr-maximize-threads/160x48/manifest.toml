@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["conversation-noop", "review-title", "review-comment", "top-comment", "comment-reactions", "filter-types", "file-title", "hunk-title", "hunk-pane"]
 
 [inputs]
-scenario = "f8c97d1914e4be4040e7cdabe2be3bc0e2a83ede"
+scenario = "2cfd1d087d770955e3e642a77c6b37bf2d79cc63"
 fixtures = "f08beddbcecbffb29234d9f65e3b95c0aa7e36cf"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "e02fc12d1a89a2bfa734e5ad4aca68e227877589"

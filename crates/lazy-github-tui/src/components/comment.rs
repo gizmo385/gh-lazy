@@ -287,35 +287,8 @@ impl CommentBlock {
         frame.push(rendered, blank(), TEXT_LEFT);
 
         if let Some(section) = &self.reactions {
-            let focus_title = focus == Some(CommentStop::ReactionsTitle);
-            let focus_list = focus == Some(CommentStop::ReactionsList);
-            let section_focus = SectionFocus {
-                title: focus_title,
-                within: focus_title || focus_list,
-            };
-            let title = [TextRun::new(section.summary.title.as_str(), Style::new())];
             let mut inside = Rendered::default();
-            let mut items = Vec::new();
-            let mut placement = section.collapsible.layout(
-                &mut inside,
-                &title,
-                section_focus,
-                right - SECTION_LEFT,
-                theme,
-                |content| {
-                    let rows: Vec<Vec<TextRun>> = section
-                        .summary
-                        .rows
-                        .iter()
-                        .map(|row| vec![TextRun::new(row.as_str(), Style::new())])
-                        .collect();
-                    let list = section
-                        .list
-                        .layout(&rows, content.width, theme, focus_list, content.under);
-                    items = list.items;
-                    list.rendered
-                },
-            );
+            let (mut placement, items) = section.layout(&mut inside, focus, right - SECTION_LEFT, theme);
             let shift = rendered.lines.len();
             frame.push(rendered, inside, SECTION_LEFT);
             let moved = |rows: &Range<usize>| rows.start + shift..rows.end + shift;
@@ -324,10 +297,7 @@ impl CommentBlock {
             placement.title_row += shift;
             placement.title_columns =
                 placement.title_columns.start + SECTION_LEFT..placement.title_columns.end + SECTION_LEFT;
-            out.reaction_items = items
-                .iter()
-                .map(|rows| rows.start + placement.content.start..rows.end + placement.content.start)
-                .collect();
+            out.reaction_items = items.iter().map(moved).collect();
             out.reactions = Some(placement);
         }
 
@@ -340,6 +310,56 @@ impl CommentBlock {
         pad_line(&mut margin, width, fill);
         rendered.lines.push(margin);
         out
+    }
+
+    /// The reactions section alone, `width` wide on the screen's background, as the section maximize view shows it:
+    /// laid out as inside the block, `focus` being the block's focused stop. `None` without one.
+    pub fn layout_reactions(&self, width: u16, focus: Option<CommentStop>, theme: &Theme) -> Option<CommentLayout> {
+        let section = self.reactions.as_ref()?;
+        let mut rendered = Rendered::default();
+        let (placement, items) = section.layout(&mut rendered, focus, width, theme);
+        Some(CommentLayout {
+            rendered,
+            reactions: Some(placement),
+            reaction_items: items,
+        })
+    }
+}
+
+impl ReactionsSection {
+    /// Adds the section to `out`, `width` wide, and returns where it landed and the rows of its list items, both by
+    /// row into `out`. `focus` is the block's focused stop.
+    fn layout(
+        &self,
+        out: &mut Rendered,
+        focus: Option<CommentStop>,
+        width: u16,
+        theme: &Theme,
+    ) -> (Placement, Vec<Range<usize>>) {
+        let focus_title = focus == Some(CommentStop::ReactionsTitle);
+        let focus_list = focus == Some(CommentStop::ReactionsList);
+        let section_focus = SectionFocus {
+            title: focus_title,
+            within: focus_title || focus_list,
+        };
+        let title = [TextRun::new(self.summary.title.as_str(), Style::new())];
+        let mut items = Vec::new();
+        let placement = self
+            .collapsible
+            .layout(out, &title, section_focus, width, theme, |content| {
+                let rows: Vec<Vec<TextRun>> = self
+                    .summary
+                    .rows
+                    .iter()
+                    .map(|row| vec![TextRun::new(row.as_str(), Style::new())])
+                    .collect();
+                let list = self.list.layout(&rows, content.width, theme, focus_list, content.under);
+                items = list.items;
+                list.rendered
+            });
+        let start = placement.content.start;
+        let items = items.iter().map(|rows| rows.start + start..rows.end + start).collect();
+        (placement, items)
     }
 }
 

@@ -1,7 +1,7 @@
 # The markdown the `linkify` golden (parity/goldens/linkify.toml) parses: generate_linkify.py dumps what
 # markdown-it-py makes of each case to linkify.json. The linkify.rs unit cases, #289's table, a few more link
 # and image cases, reference definitions with rejected targets (#297), #290's table and more of the inline linkify
-# rule, and the linkify-diff-error scenario's README paragraph.
+# rule (with #296's delimiters next to a URL), and the linkify-diff-error scenario's README paragraph.
 cases = [
   "https://example.com/a_(b)",
   "see https://example.com.",
@@ -156,5 +156,13 @@ cases = [
   "http://a.com/[x](y) and http://a.com/`x y`",
   "ftp://a.com/*b* HTTPS://A.COM/*B*",
   "a*http://b.com/c*",
+  "a_http://b.com/c_ d",
+  "x**http://a.com/y**z",
+  "a*http://b.com/c_*",
+  "a~~http://b.com/c~~",
+  "*a*http://b.com",
+  "1*ftp://a.com/ä* b",
+  "![a*http://b.com/c*](i.png)",
+  "a*http://b.com/c* and *d http://e.com/f*",
   "Pull requests for the PR details tabs, with bare links like https://example.com/docs/start, http://example.org/a?b=1 and ftp://files.example.net/pub.\nHosts like www.example.com, docs.example.io/guide and the file README.md become links too.\nMail user@example.com or mailto:user@example.com, and see //cdn.example.com/lib.js as well.\nTrailing punctuation stays out (https://example.com/end), https://example.com/q? and \"https://example.com/quoted\".\nNot in code `https://example.com/code` or in a [named link](https://example.com/named) to www.example.net.\nEmphasis doesn't split http://example.com/*wiki* or *https://example.com/em*, and targets are normalized: https://xn--bcher-kva.example/%C3%A4, www.xn--bcher-kva.de and https://example.com/a[1]|b.",
 ]

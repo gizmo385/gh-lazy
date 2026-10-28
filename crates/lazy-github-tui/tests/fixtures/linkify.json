@@ -3388,6 +3388,263 @@
   ]
  },
  {
+  "source": "a_http://b.com/c_ d",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "a_"
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://b.com/c_"
+    },
+    {
+     "type": "text",
+     "content": "http://b.com/c_"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " d"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "x**http://a.com/y**z",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "x**"
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/y**z"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com/y**z"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "a*http://b.com/c_*",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "a"
+    },
+    {
+     "type": "em_open",
+     "content": ""
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://b.com/c_"
+    },
+    {
+     "type": "text",
+     "content": "http://b.com/c_"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "em_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "a~~http://b.com/c~~",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "a~~"
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://b.com/c~~"
+    },
+    {
+     "type": "text",
+     "content": "http://b.com/c~~"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "*a*http://b.com",
+  "blocks": [
+   [
+    {
+     "type": "em_open",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "a"
+    },
+    {
+     "type": "em_close",
+     "content": ""
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://b.com"
+    },
+    {
+     "type": "text",
+     "content": "http://b.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "1*ftp://a.com/ä* b",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "1"
+    },
+    {
+     "type": "em_open",
+     "content": ""
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "ftp://a.com/%C3%A4"
+    },
+    {
+     "type": "text",
+     "content": "ftp://a.com/ä"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "em_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " b"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "![a*http://b.com/c*](i.png)",
+  "blocks": [
+   [
+    {
+     "type": "image",
+     "content": "a*http://b.com/c*",
+     "src": "i.png",
+     "children": [
+      "a",
+      "",
+      "",
+      "http://b.com/c",
+      "",
+      ""
+     ]
+    }
+   ]
+  ]
+ },
+ {
+  "source": "a*http://b.com/c* and *d http://e.com/f*",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "a"
+    },
+    {
+     "type": "em_open",
+     "content": ""
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://b.com/c"
+    },
+    {
+     "type": "text",
+     "content": "http://b.com/c"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "em_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " and "
+    },
+    {
+     "type": "em_open",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "d "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://e.com/f"
+    },
+    {
+     "type": "text",
+     "content": "http://e.com/f"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "em_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
   "source": "Pull requests for the PR details tabs, with bare links like https://example.com/docs/start, http://example.org/a?b=1 and ftp://files.example.net/pub.\nHosts like www.example.com, docs.example.io/guide and the file README.md become links too.\nMail user@example.com or mailto:user@example.com, and see //cdn.example.com/lib.js as well.\nTrailing punctuation stays out (https://example.com/end), https://example.com/q? and \"https://example.com/quoted\".\nNot in code `https://example.com/code` or in a [named link](https://example.com/named) to www.example.net.\nEmphasis doesn't split http://example.com/*wiki* or *https://example.com/em*, and targets are normalized: https://xn--bcher-kva.example/%C3%A4, www.xn--bcher-kva.de and https://example.com/a[1]|b.",
   "blocks": [
    [

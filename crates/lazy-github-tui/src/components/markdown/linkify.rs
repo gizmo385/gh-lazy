@@ -6,7 +6,7 @@
 //! for the Unicode character classes and the TLD lists. Positions are byte offsets into the text.
 //!
 //! This is markdown-it's core linkify rule, which runs on each text token. Its inline rule, which takes `http:`,
-//! `https:` and `ftp:` links before emphasis, is `parse::autolink_scheme_urls`, with [`scheme_at_start`].
+//! `https:` and `ftp:` links before emphasis, is `parse::scheme_url_ranges`, with [`scheme_at_start`].
 
 use std::ops::Range;
 use std::sync::LazyLock;
@@ -497,7 +497,7 @@ mod tests {
 
     /// Every case from #218's spec, and more, each as linkify-it-py matches it, which is what markdown-it's core
     /// linkify rule links in a text token. The inline rule's `http:`, `https:` and `ftp:` links, which drop a trailing
-    /// `*` and may follow `_`, come first in `parse::autolink_scheme_urls`.
+    /// `*` and may follow `_`, come first in `parse::scheme_url_ranges`.
     #[rstest::rstest]
     #[case("https://example.com/a_(b)", &[("https://example.com/a_(b)", "https://example.com/a_(b)")])]
     #[case("see https://example.com.", &[("https://example.com", "https://example.com")])]

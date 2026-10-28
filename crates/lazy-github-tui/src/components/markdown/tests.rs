@@ -580,6 +580,13 @@ fn deep_nesting_and_odd_input_do_not_panic() {
         }
     }
     assert!(text(&deep_quote, 200).iter().any(|row| row.ends_with("deep")));
+    // Past the depth limit the text is flattened, scheme URLs as written.
+    let deep_url = format!("{} see http://a.com/*b*", ">".repeat(200));
+    assert!(
+        text(&deep_url, 300)
+            .iter()
+            .any(|row| row.ends_with("see http://a.com/*b*"))
+    );
 }
 
 #[test]

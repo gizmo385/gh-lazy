@@ -16,10 +16,7 @@ const GOLDEN: &str = include_str!("fixtures/linkify.json");
 const WIDTH: u16 = 2000;
 
 /// The cases Rust doesn't match yet, by how their source starts, each with the issue that does.
-const KNOWN_GAPS: &[(&str, &str)] = &[
-    // markdown-it pairs this `*` by the letter and the URL's `h` around it; Rust's autolink puts a `<` there.
-    ("a*http://b.com/c*", "#296"),
-];
+const KNOWN_GAPS: &[(&str, &str)] = &[];
 
 #[derive(Debug, Deserialize)]
 struct Case {

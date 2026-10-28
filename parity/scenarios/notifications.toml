@@ -2,7 +2,7 @@ version = 1
 description = "Notifications modal (ctrl+n): loading, the Unread tab first, the table and its columns, a lazy page, r and u switching tabs, R marking one read, tab moving focus off the table, escape closing and refreshing the count"
 # The modal's thick border isn't a box to the structure extractor (parity/README.md, "Limits"), so its tabs, table
 # and rows are only loose text: each capture checks them per app with [expect], and the footer cross-app.
-gate = false
+gate = true
 parity_rows = [
     "modals.notifications",
     "modals.notifications-tabs",

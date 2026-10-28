@@ -5,6 +5,7 @@ use std::fmt;
 use crossterm::event::{KeyEvent, MouseEvent};
 use ratatui::Frame;
 use ratatui::layout::Rect;
+use tokio::time::Instant;
 
 use super::{Dialog, DialogAction, FocusMove, ModalKind};
 use crate::action::Action;
@@ -143,6 +144,11 @@ impl ModalEntry {
         self.dialog.on_cache_read(id, result, cx)
     }
 
+    /// When the dialog next needs drawing ([`Dialog::next_deadline`]).
+    pub(crate) fn next_deadline(&self, now: Instant) -> Option<Instant> {
+        self.dialog.next_deadline(now)
+    }
+
     pub(crate) fn frame(&self, area: Rect) -> Rect {
         self.dialog.frame(area)
     }
@@ -209,6 +215,7 @@ trait AnyDialog: Send {
         result: Result<Option<String>, String>,
         cx: &mut Cx<'_>,
     ) -> Option<Result<Option<String>, String>>;
+    fn next_deadline(&self, now: Instant) -> Option<Instant>;
     fn frame(&self, area: Rect) -> Rect;
     fn background(&self, palette: &Palette) -> ThemeColor;
     fn border(&self, palette: &Palette) -> ThemeColor;
@@ -297,6 +304,10 @@ impl<D: Dialog> AnyDialog for Open<D> {
         cx: &mut Cx<'_>,
     ) -> Option<Result<Option<String>, String>> {
         self.dialog.on_cache_read(id, result, cx)
+    }
+
+    fn next_deadline(&self, now: Instant) -> Option<Instant> {
+        self.dialog.next_deadline(now)
     }
 
     fn frame(&self, area: Rect) -> Rect {

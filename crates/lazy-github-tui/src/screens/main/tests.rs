@@ -1,8 +1,10 @@
 use lazy_github_core::config::Config;
+use lazy_github_core::github::NotificationQuery;
 use ratatui::style::Color;
 
 use super::*;
 use crate::keymap::Keymap;
+use crate::modal::ModalKind;
 use crate::test_util::TestApp;
 use crate::theme::{ColorDepth, ColorMode, Theme};
 
@@ -469,7 +471,15 @@ fn notifications_open_falls_through_while_notifications_are_off() {
     // Entering the main screen starts the notifications poll.
     let started = app.effects().len();
     app.press(&["ctrl+n"]);
-    assert_eq!(app.effects()[started..], []);
+    // The screen takes it: the Notifications modal opens and asks for its first page, and nothing quits.
+    assert_eq!(app.app().modals(), [ModalKind::Notifications]);
+    assert!(matches!(
+        app.effects()[started..],
+        [Effect::Github {
+            request: GithubRequest::ListNotifications(NotificationQuery { all: true, page: 1 }),
+            ..
+        }]
+    ));
 }
 
 #[test]

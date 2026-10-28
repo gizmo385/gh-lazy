@@ -1,0 +1,22 @@
+---
+source: crates/lazy-github-tui/src/modal/notifications/tests.rs
+expression: "styled_rows(&app.render(160, 48), 10..14)"
+---
+ •Unread  ✓Read
+╸━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ Updated At           Subject      Title                                   Reason            Thread ID
+ 2026-10-24 23:00:00  PullRequest  Add the notifications modal             Review Requested  9100001
+--- styles
+.aaaaaaa.bcccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+deeeeeeedddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
+--- legend
+. fg=#e0e0e0 bg=#0178d4
+a fg=#ff0000 bg=#0178d4 BOLD
+b fg=#e0e0e0 bg=#4f4f4f
+c fg=#adff2f bg=#4f4f4f
+d fg=#7a7a7a bg=#4f4f4f
+e fg=#0178d4 bg=#4f4f4f
+f fg=#e0e0e0 bg=#242f38 BOLD
+g fg=#e0e0e0 bg=#153854

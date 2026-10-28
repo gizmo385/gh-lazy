@@ -16,12 +16,14 @@ mod issue_form;
 mod lookup;
 mod new_comment;
 mod new_issue;
+mod notifications;
 mod pull_request;
 mod stack;
 mod trigger_workflow;
 mod user_profile;
 
 use ratatui::layout::Rect;
+use tokio::time::Instant;
 
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Component, Cx, Owner};
@@ -31,6 +33,7 @@ use crate::components::select::{SELECT_BINDINGS, SELECT_OVERLAY_BINDINGS};
 use crate::components::selection_list::SELECTION_LIST_BINDINGS;
 use crate::components::switch::SWITCH_BINDINGS;
 use crate::components::table::TABLE_BINDINGS;
+use crate::components::tabs::TABS_BINDINGS;
 use crate::components::text_editor::TEXT_EDITOR_BINDINGS;
 use crate::components::text_input::INPUT_BINDINGS;
 use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
@@ -46,6 +49,7 @@ pub use frame::{DIM_FACTOR, DialogFrame, default_border, dim, frame_rect, frame_
 pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup, number};
 pub use new_comment::{NewCommentAction, NewCommentDialog, PostedComment, ReplyTarget};
 pub use new_issue::{NewIssueAction, NewIssueDialog};
+pub use notifications::{NotificationsAction, NotificationsDialog, NotificationsTab};
 pub use pull_request::{
     CreatePrefill, PullRequestAction, PullRequestDialog, PullRequestForm, ReviewersField, ReviewersFocus,
     ReviewersOutcome, removing_toast,
@@ -105,6 +109,8 @@ pub enum ModalKind {
     TriggerWorkflow,
     /// [`PullRequestDialog`]: Create PR and Edit PR.
     PullRequest,
+    /// [`NotificationsDialog`]: the Unread and Read notification tabs.
+    Notifications,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -135,6 +141,21 @@ pub enum FieldKind {
     /// Textual's `SelectionList` ([`crate::components::selection_list::SelectionList`]): the `OptionList` keys move
     /// its highlight, and `space` or `enter` toggles the highlighted option.
     SelectionList,
+    /// Textual's `Tabs` ([`crate::components::tabs::TabStrip`]): `left` and `right` switch tabs.
+    Tabs,
+}
+
+/// The containers inside a dialog whose bindings apply around its focused field, for
+/// [`crate::component::Owner::DialogPane`]. Each dialog adds the ones it has.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum DialogPane {
+    /// Python's `SearchableDataTable` around a dialog's table: `/` search, while the table or its search box has
+    /// focus.
+    SearchableTable,
+    /// The Notifications modal's Unread tab (`UnreadNotificationTabPane`): mark read and mark all read.
+    UnreadNotifications,
+    /// The Notifications modal's `NotificationsContainer`: view read and view unread, anywhere in the modal.
+    NotificationsContainer,
 }
 
 impl FieldKind {
@@ -150,6 +171,7 @@ impl FieldKind {
             FieldKind::Select => SELECT_BINDINGS,
             FieldKind::SelectOverlay => SELECT_OVERLAY_BINDINGS,
             FieldKind::SelectionList => SELECTION_LIST_BINDINGS,
+            FieldKind::Tabs => TABS_BINDINGS,
         };
         ChainLink::new(Owner::DialogField(kind, self), bindings)
     }
@@ -178,6 +200,8 @@ pub enum DialogAction {
     TriggerWorkflow(TriggerWorkflowAction),
     /// [`PullRequestDialog`]'s.
     PullRequest(PullRequestAction),
+    /// [`NotificationsDialog`]'s.
+    Notifications(NotificationsAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -196,6 +220,7 @@ impl DialogAction {
             DialogAction::AddReaction(_) => ModalKind::AddReaction,
             DialogAction::TriggerWorkflow(_) => ModalKind::TriggerWorkflow,
             DialogAction::PullRequest(_) => ModalKind::PullRequest,
+            DialogAction::Notifications(_) => ModalKind::Notifications,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }
@@ -290,6 +315,12 @@ pub trait Dialog: Component + Send + 'static {
 
     /// A bracketed paste while the dialog is on top. `cx` gives the time an editor's undo batches by.
     fn handle_paste(&mut self, _text: &str, _cx: &Cx<'_>) -> Option<Action> {
+        None
+    }
+
+    /// When the dialog next needs drawing with nothing else happening, such as a loading overlay's next animation
+    /// frame. `None` when it doesn't.
+    fn next_deadline(&self, _now: Instant) -> Option<Instant> {
         None
     }
 

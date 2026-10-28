@@ -27,7 +27,9 @@ mod workflows;
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::AppearanceSettings;
 use lazy_github_core::gh::GhError;
-use lazy_github_core::models::{FullPullRequest, Issue, IssueListItem, ReactionKind, Repository, WorkflowRun};
+use lazy_github_core::models::{
+    FullPullRequest, Issue, IssueListItem, Notification, ReactionKind, Repository, WorkflowRun,
+};
 use ratatui::Frame;
 use ratatui::layout::{Margin, Position, Rect};
 use ratatui::style::Style;
@@ -44,7 +46,7 @@ use crate::components::table::{Handled, SEARCHABLE_BINDINGS, TABLE_BINDINGS, Tab
 use crate::components::text_input::{self, INPUT_BINDINGS};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::modal::{EditIssueDialog, LookupDialog, NewIssueDialog, PostedComment, RepoLookup};
+use crate::modal::{EditIssueDialog, LookupDialog, NewIssueDialog, NotificationsDialog, PostedComment, RepoLookup};
 use crate::options::AppOptions;
 use crate::theme::Theme;
 use crate::toast::Toast;
@@ -241,8 +243,7 @@ pub const SCREEN_BINDINGS: &[BindingId] = &[
     BindingId::LinkFollowExternal,
 ];
 
-/// Textual's `Tabs` bindings.
-pub const TABS_BINDINGS: &[BindingId] = &[BindingId::TextualTabsPrevious, BindingId::TextualTabsNext];
+pub use crate::components::tabs::TABS_BINDINGS;
 
 /// Textual's `ScrollableContainer` bindings, which the command log's `Log` has.
 pub const LOG_BINDINGS: &[BindingId] = &[
@@ -324,6 +325,11 @@ pub enum MainAction {
     ViewProfile(ProfileOrigin),
     /// The User profile dialog closed, with the repo picked there, if any.
     ProfilePicked(ProfileOrigin, Option<Box<Repository>>),
+    /// Open the Notifications modal (`notifications.open`, only while notifications are on).
+    OpenNotifications,
+    /// The Notifications modal closed, with the notification chosen there, if any (#190 chooses one). Either way the
+    /// unread count refreshes, as Python's `action_view_notifications` does once the modal returns.
+    NotificationsClosed(Option<Box<Notification>>),
     /// Open the New issue dialog (`issue.new`), or toast without a selected repo.
     NewIssue,
     /// The New issue dialog created an issue: it goes into the Issues table and opens. A closed dialog sends nothing.
@@ -450,6 +456,13 @@ impl MainScreen {
             target: PullRequestTarget::Full(pr),
             focus: true,
         }));
+    }
+
+    /// `MainAction::RerunWorkflow`: re-runs the workflow run the details show, if they show one.
+    fn rerun_workflow(&mut self, failed_only: bool, cx: &mut Cx<'_>) {
+        if let Some(run) = self.details.run().map(run_details::RunDetails::run) {
+            self.reruns.start(run, failed_only, cx);
+        }
     }
 
     /// `MainAction::EditPullRequest`: the table's cursor row, fetched first, or the pull request the details show.
@@ -1249,7 +1262,10 @@ impl MainScreen {
             }
             // Not built yet: the key is still consumed, as in Python.
             Owner::SearchableTable(_) | Owner::Section(_) | Owner::SelectionsPane => Some(Action::Unimplemented(id)),
-            Owner::App | Owner::Screen(ScreenKind::Auth | ScreenKind::Modal(_)) | Owner::DialogField(..) => None,
+            Owner::App
+            | Owner::Screen(ScreenKind::Auth | ScreenKind::Modal(_))
+            | Owner::DialogField(..)
+            | Owner::DialogPane(..) => None,
         }
     }
 
@@ -1408,7 +1424,11 @@ impl Component for MainScreen {
     fn on_binding(&mut self, id: BindingId, cx: &Cx<'_>) -> Option<Action> {
         match id {
             // Py bug B7: inactive while notifications are off, so the key falls through.
-            BindingId::NotificationsOpen => cx.config().notifications.enabled.then_some(Action::Unimplemented(id)),
+            BindingId::NotificationsOpen => cx
+                .config()
+                .notifications
+                .enabled
+                .then_some(Action::Main(MainAction::OpenNotifications)),
             BindingId::TextualFocusNext => Some(Action::FocusNext),
             BindingId::TextualFocusPrevious => Some(Action::FocusPrevious),
             // Nothing can be selected yet, so Textual's `check_action` lets ctrl+c through to `help_quit`.
@@ -1435,11 +1455,7 @@ impl Component for MainScreen {
             MainAction::DiffCommentAdded(comment) => self.details.diff_comment_added(*comment, cx),
             MainAction::ReactionsChosen(kinds) => self.details.reactions_chosen(kinds, cx),
             MainAction::TriggerWorkflow => self.workflows.trigger(cx),
-            MainAction::RerunWorkflow { failed_only } => {
-                if let Some(run) = self.details.run().map(run_details::RunDetails::run) {
-                    self.reruns.start(run, failed_only, cx);
-                }
-            }
+            MainAction::RerunWorkflow { failed_only } => self.rerun_workflow(failed_only, cx),
             MainAction::MergePullRequest => {
                 if let Some(pr) = self.details.pull_request().map(pr_details::PullRequestDetails::pr) {
                     self.merges.start(pr, cx);
@@ -1509,6 +1525,8 @@ impl Component for MainScreen {
                 tracing::info!("Looked up Issue #{}", issue.number);
                 cx.dispatch(Action::Main(MainAction::OpenIssue(Box::new(issue))));
             }
+            MainAction::OpenNotifications => open_notifications(cx),
+            MainAction::NotificationsClosed(_) => cx.dispatch(Action::RefreshNotifications),
             MainAction::NewIssue => new_issue(cx),
             MainAction::NewPullRequest => new_pull_request::new_pull_request(cx),
             MainAction::PullRequestCreated(pr) => self.pull_request_created(pr, cx),
@@ -1612,6 +1630,13 @@ fn new_issue(cx: &mut Cx<'_>) {
             issue.map_or(Action::Consumed, |issue| Action::Main(MainAction::IssueCreated(issue)))
         }),
     }
+}
+
+/// `MainAction::OpenNotifications`: Python's `action_view_notifications`, which refreshes the count once the modal
+/// returns, whatever it returned.
+fn open_notifications(cx: &mut Cx<'_>) {
+    let dialog = NotificationsDialog::new(cx);
+    cx.open_dialog(dialog, |chosen| Action::Main(MainAction::NotificationsClosed(chosen)));
 }
 
 #[cfg(test)]

@@ -15,7 +15,7 @@ use crate::action::Action;
 use crate::clock::Clock;
 use crate::effect::{Effect, GitRequest, GithubRequest, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::modal::{Dialog, FieldKind, ModalEntry, ModalKind};
+use crate::modal::{Dialog, DialogPane, FieldKind, ModalEntry, ModalKind};
 use crate::options::AppOptions;
 use crate::screens::main::SectionId;
 use crate::theme::Theme;
@@ -187,6 +187,10 @@ pub enum Owner {
     /// A field of an open dialog, which [`Dialog::field_chain`](crate::modal::Dialog::field_chain) puts in front of
     /// the dialog's screen link while it has focus.
     DialogField(ModalKind, FieldKind),
+    /// A container inside an open dialog around its focused field, whose bindings apply while focus is anywhere
+    /// inside it: [`Dialog::field_chain`](crate::modal::Dialog::field_chain) puts it after the field's link. It
+    /// isn't focusable itself, and the dialog's `on_binding` and `binding_state` answer for it.
+    DialogPane(ModalKind, DialogPane),
 }
 
 impl Owner {
@@ -201,6 +205,7 @@ impl Owner {
             Owner::CollapsibleTitle => Some("Collapsible"),
             Owner::App
             | Owner::Screen(_)
+            | Owner::DialogPane(..)
             | Owner::MainView
             | Owner::SelectionsPane
             | Owner::Section(_)
@@ -231,6 +236,7 @@ impl Owner {
                 | FieldKind::Switch
                 | FieldKind::Scroll
                 | FieldKind::Table
+                | FieldKind::Tabs
                 | FieldKind::Select
                 | FieldKind::SelectOverlay
                 | FieldKind::SelectionList,
@@ -412,6 +418,11 @@ impl<'a> Cx<'a> {
     /// until then. The system clipboard is never read (PLAN §10, decision 10).
     pub fn clipboard(&self) -> &str {
         &self.shared.clipboard
+    }
+
+    /// The startup options, such as whether loading overlays animate.
+    pub fn options(&self) -> AppOptions {
+        self.shared.options
     }
 
     /// Monotonic time from the app's clock.

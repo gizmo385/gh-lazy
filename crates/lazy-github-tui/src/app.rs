@@ -1007,7 +1007,13 @@ impl App {
             BaseScreen::Main(main) => main.next_deadline(self.shared.clock.now()),
             _ => None,
         };
-        [self.toasts.next_deadline(), main].into_iter().flatten().min()
+        let now = self.shared.clock.now();
+        let dialogs = self.modals.iter().filter_map(|entry| entry.next_deadline(now));
+        [self.toasts.next_deadline(), main]
+            .into_iter()
+            .flatten()
+            .chain(dialogs)
+            .min()
     }
 
     /// The in-app clipboard: the last text copied or cut in a text input, which `ctrl+v` pastes.
@@ -1074,7 +1080,7 @@ fn truncate_at_modal(mut chain: Vec<ChainLink>) -> Vec<ChainLink> {
 /// The dialog a chain link belongs to, if it's a dialog's.
 fn modal_owner(owner: Owner) -> Option<ModalKind> {
     match owner {
-        Owner::DialogField(kind, _) | Owner::Screen(ScreenKind::Modal(kind)) => Some(kind),
+        Owner::DialogField(kind, _) | Owner::DialogPane(kind, _) | Owner::Screen(ScreenKind::Modal(kind)) => Some(kind),
         _ => None,
     }
 }

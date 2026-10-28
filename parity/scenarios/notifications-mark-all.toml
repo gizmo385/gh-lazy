@@ -1,7 +1,7 @@
 version = 1
 description = "Notifications: ctrl+r marks all read, toasts and switches to Read; the empty Unread tab; closing refreshes the count; reopening with nothing unread opens on Read; / searches a tab"
 # The modal's thick border isn't a box to the structure extractor, so its content is checked per app with [expect].
-gate = false
+gate = true
 parity_rows = [
     "modals.notifications-tabs",
     "modals.notifications-keys",

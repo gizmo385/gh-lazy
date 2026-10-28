@@ -9,23 +9,45 @@ use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Widget};
 
-use crate::theme::Theme;
+use crate::keymap::BindingId;
+use crate::theme::{Accent, Paint, Theme};
 
 /// Rows the strip takes.
 pub const TAB_STRIP_HEIGHT: u16 = 2;
+
+/// Textual's `Tabs` bindings, while the strip has focus.
+pub const TABS_BINDINGS: &[BindingId] = &[BindingId::TextualTabsPrevious, BindingId::TextualTabsNext];
 
 /// Tab names and which one is active.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TabStrip {
     names: Vec<String>,
+    /// A fixed color per label, from the label's markup (`[red]•Unread[/red]`): it replaces the label's own color,
+    /// active or not, in every theme. `None` for a plain label.
+    accents: Vec<Option<Accent>>,
     active: usize,
 }
 
 impl TabStrip {
     /// A strip of `names` with the first active.
     pub fn new(names: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        let names: Vec<String> = names.into_iter().map(Into::into).collect();
         Self {
-            names: names.into_iter().map(Into::into).collect(),
+            accents: vec![None; names.len()],
+            names,
+            active: 0,
+        }
+    }
+
+    /// A strip of labels each drawn in a fixed color, with the first active: Python's tab titles written as markup.
+    pub fn accented(tabs: impl IntoIterator<Item = (impl Into<String>, Accent)>) -> Self {
+        let (names, accents) = tabs
+            .into_iter()
+            .map(|(name, accent)| (name.into(), Some(accent)))
+            .unzip();
+        Self {
+            names,
+            accents,
             active: 0,
         }
     }
@@ -88,7 +110,12 @@ impl TabStrip {
 
     /// Draws the label row and the bar into the first two rows of `area`, in the focused style when `focused`.
     pub fn render(&self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool) {
-        let under = theme.background();
+        self.render_over(frame, area, theme, focused, theme.background());
+    }
+
+    /// [`Self::render`] over a parent whose background is `under`, such as a dialog's interior: the translucent
+    /// label and bar colors blend with it.
+    pub fn render_over(&self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool, under: Paint) {
         let palette = theme.palette;
         // Textual's `Tab`: `padding: 0 1`, `$foreground 50%`, and `$foreground` when active. In a focused `Tabs`,
         // the active tab is `$block-cursor-foreground` on `$block-cursor-background` with its text style, padding
@@ -127,6 +154,11 @@ impl TabStrip {
                 (active_label, active_padding)
             } else {
                 (label, Style::new())
+            };
+            // The markup's color wins over the tab's own, as Textual applies a label's content style over the widget's.
+            let style = match self.accents.get(i).copied().flatten() {
+                Some(accent) => style.fg(theme.accent(accent)),
+                None => style,
             };
             spans.extend([
                 Span::styled(" ", padding),
@@ -283,6 +315,24 @@ mod tests {
         assert_eq!(buffer_to_string(&buffer), " A  Bee\n━━━╸━━━╺━━━━\n");
         assert_eq!(buffer[(1, 0)].fg, ratatui::style::Color::Rgb(0x79, 0x79, 0x79));
         assert_eq!(buffer[(4, 1)].fg, ratatui::style::Color::Rgb(0x01, 0x78, 0xd4));
+    }
+
+    #[test]
+    fn accented_labels_keep_their_color_active_or_not() {
+        // The Notifications tabs: `[red]•Unread[/red]` and `[greenyellow]✓Read[/]`, over `$surface-lighten-3`.
+        let strip = TabStrip::accented([("•Unread", Accent::Red), ("✓Read", Accent::GreenYellow)]);
+        let theme = Theme::default();
+        let under = theme.palette.surface_lighten_3.over(theme.background());
+        let mut terminal = Terminal::new(TestBackend::new(20, 2)).unwrap();
+        terminal
+            .draw(|frame| strip.render_over(frame, frame.area(), &theme, false, under))
+            .unwrap();
+        let buffer = terminal.backend().buffer();
+        assert_eq!(buffer_to_string(buffer), " •Unread  ✓Read\n╸━━━━━━━╺━━━━━━━━━━━\n");
+        assert_eq!(buffer[(1, 0)].fg, ratatui::style::Color::Rgb(0xff, 0x00, 0x00));
+        assert_eq!(buffer[(10, 0)].fg, ratatui::style::Color::Rgb(0xad, 0xff, 0x2f));
+        // The bar's `$foreground 10%` blends with the interior, not the screen.
+        assert_eq!(buffer[(0, 1)].fg, ratatui::style::Color::Rgb(0x5d, 0x5d, 0x5d));
     }
 
     #[test]

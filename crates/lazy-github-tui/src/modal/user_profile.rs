@@ -411,7 +411,8 @@ impl Dialog for UserProfileDialog {
             | FieldKind::Switch
             | FieldKind::Select
             | FieldKind::SelectOverlay
-            | FieldKind::SelectionList => None,
+            | FieldKind::SelectionList
+            | FieldKind::Tabs => None,
         }
     }
 }

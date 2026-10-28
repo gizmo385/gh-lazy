@@ -91,7 +91,7 @@ pub(crate) fn matches(cells: &[Cell], query: &str) -> bool {
 
 /// Python's `str.strip()`: `str.isspace` also counts the separators U+001C to U+001F, which Rust's `White_Space`
 /// doesn't.
-fn py_strip(s: &str) -> &str {
+pub fn py_strip(s: &str) -> &str {
     s.trim_matches(|c: char| c.is_whitespace() || ('\x1c'..='\x1f').contains(&c))
 }
 

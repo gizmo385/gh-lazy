@@ -308,10 +308,11 @@ pub trait Github: Clone + Send + Sync + 'static {
         request: &MergeRequest,
     ) -> impl Future<Output = Result<MergeResult, GhError>> + Send;
 
-    /// The first [`DEFAULT_PER_PAGE`] branches of `repo`, in API order: `GET /repos/{owner}/{repo}/branches` with
-    /// `page=1&per_page=30`, and no later pages, as Python's `list_branches`. Cached for `cache.default_ttl`.
+    /// Every branch of `repo`, in API order, from every page: `GET /repos/{owner}/{repo}/branches` with
+    /// `page=1&per_page=30` first, as Python's `list_branches` asks, and then each `rel="next"` page (Python stops at
+    /// the first 30, Py bug B79). Cached for `cache.default_ttl`.
     ///
-    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body or any branch doesn't
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when a page or any branch doesn't
     /// decode.
     fn list_branches(&self, repo: &Repository) -> impl Future<Output = Result<Vec<Branch>, GhError>> + Send;
 
@@ -1127,8 +1128,8 @@ impl GhCli {
         request
     }
 
-    /// `GET /repos/{owner}/{repo}/branches`, page 1 of [`DEFAULT_PER_PAGE`], cached for the default TTL as Python's
-    /// `github_headers()` asks.
+    /// `GET /repos/{owner}/{repo}/branches`, starting at page 1 of [`DEFAULT_PER_PAGE`] as Python's does (later pages
+    /// follow GitHub's links, B79), cached for the default TTL as Python's `github_headers()` asks.
     fn list_branches_request(&self, repo: &Repository) -> GhRequest {
         let mut request = Self::list_branches_uncached_request(repo);
         request.cache = Some(self.inner.ttls.default);
@@ -1475,16 +1476,12 @@ impl Github for GhCli {
     }
 
     async fn list_branches(&self, repo: &Repository) -> Result<Vec<Branch>, GhError> {
-        self.inner
-            .runner
-            .request(self.list_branches_request(repo))
-            .await?
-            .json()
+        self.inner.runner.paginate(self.list_branches_request(repo)).await
     }
 
     async fn list_branches_uncached(&self, repo: &Repository) -> Result<Vec<Branch>, GhError> {
         let request = Self::list_branches_uncached_request(repo);
-        self.inner.runner.request(request).await?.json()
+        self.inner.runner.paginate(request).await
     }
 
     async fn create_pull_request(&self, repo: &Repository, pr: &NewPullRequest) -> Result<FullPullRequest, GhError> {
@@ -2919,18 +2916,19 @@ mod tests {
     }
 
     #[test]
-    fn list_branches_argv_asks_for_the_first_page_with_the_default_ttl() {
+    fn list_branches_argv_pages_from_the_first_page_with_the_default_ttl() {
         let gh = GhCli::new(GhCliOptions::from(&Config::default()));
         let request = gh.list_branches_request(&run_fixture_repo());
+        // Every page (B79), the first one keyed as Python asks for it.
         assert_eq!(
-            strings(request.argv(gh.runner().hostname(), false)),
+            strings(request.argv(gh.runner().hostname(), true)),
             [
                 "api",
-                "-i",
                 "-X",
                 "GET",
                 "--cache",
                 "600s",
+                "--paginate",
                 "-H",
                 "Accept: application/vnd.github+json",
                 "/repos/parity-bot/run-fixture/branches?page=1&per_page=30"
@@ -3036,15 +3034,15 @@ mod tests {
     }
 
     #[test]
-    fn the_uncached_branches_argv_has_no_cache() {
+    fn the_uncached_branches_argv_pages_with_no_cache() {
         let gh = GhCli::new(GhCliOptions::from(&Config::default()));
         assert_eq!(
-            strings(GhCli::list_branches_uncached_request(&run_fixture_repo()).argv(gh.runner().hostname(), false)),
+            strings(GhCli::list_branches_uncached_request(&run_fixture_repo()).argv(gh.runner().hostname(), true)),
             [
                 "api",
-                "-i",
                 "-X",
                 "GET",
+                "--paginate",
                 "-H",
                 "Accept: application/vnd.github+json",
                 "/repos/parity-bot/run-fixture/branches?page=1&per_page=30"

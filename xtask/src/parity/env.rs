@@ -1,7 +1,8 @@
-//! The isolated environment for one app run: a temp `home/`, `bin/` (fake-gh as `gh`) and `work/`, the layered
-//! `config.json`, an optional git repo, and a cleared process environment.
+//! The isolated environment for one app run: a temp `home/`, `bin/` (fake-gh as `gh`, and `fake-ssh`) and `work/`,
+//! the layered `config.json`, an optional git repo with an optional local remote under `remotes/`, and a cleared
+//! process environment.
 
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -33,8 +34,31 @@ pub struct RunEnv {
     pub log: Option<PathBuf>,
     /// The temp dir holding `home/`, `bin/` and `work/`; removed when the run finishes.
     pub run_dir: Option<TempDir>,
-    /// With `--keep-home`: where `home/` and `work/` are copied when the run finishes.
+    /// With `--keep-home`: where `home/` and `work/` (and `remotes/`, if any) are copied when the run finishes.
     pub keep_into: Option<PathBuf>,
+    /// The bare repo `origin` reaches over fake-ssh (`git_remote_branches`), for `wait.remote_branch`.
+    pub remote: Option<LocalRemote>,
+}
+
+/// A run's local remote: the bare repo at `<run>/remotes/<owner>/<name>.git` that fake-ssh serves for `origin`.
+#[derive(Debug, Clone)]
+pub struct LocalRemote {
+    /// The bare repo.
+    pub git_dir: PathBuf,
+    /// The run's `HOME`, so git reads no developer config.
+    pub home: PathBuf,
+}
+
+impl LocalRemote {
+    /// Whether the bare repo has `refs/heads/<branch>`. A git that can't run counts as no.
+    pub fn has_branch(&self, branch: &str) -> bool {
+        let mut git = git_command(&self.home);
+        git.arg("--git-dir")
+            .arg(&self.git_dir)
+            .args(["rev-parse", "--verify", "--quiet"])
+            .arg(format!("refs/heads/{branch}"));
+        git.output().is_ok_and(|o| o.status.success())
+    }
 }
 
 impl RunEnv {
@@ -48,20 +72,28 @@ impl RunEnv {
             log: None,
             run_dir: None,
             keep_into: None,
+            remote: None,
         }
     }
 
-    /// Copies `home/` and `work/` into the report if asked to, then removes the temp dir.
+    /// Copies `home/`, `work/` and `remotes/` (when the run has one) into the report if asked to, then removes the
+    /// temp dir.
     pub fn finish(self) -> Result<()> {
         if let (Some(run), Some(dest)) = (&self.run_dir, &self.keep_into) {
-            for dir in ["home", "work"] {
-                copy_dir(&run.path().join(dir), &dest.join(dir))
-                    .with_context(|| format!("copying {dir}/ into {}", dest.display()))?;
+            for dir in ["home", "work", REMOTES_DIR] {
+                let from = run.path().join(dir);
+                if dir == REMOTES_DIR && !from.is_dir() {
+                    continue;
+                }
+                copy_dir(&from, &dest.join(dir)).with_context(|| format!("copying {dir}/ into {}", dest.display()))?;
             }
         }
         Ok(())
     }
 }
+
+/// The run dir's directory of bare repos, `FAKE_SSH_ROOT`.
+const REMOTES_DIR: &str = "remotes";
 
 /// The config every run starts from: `parity/configs/<name>.json`, `config_overrides` deep-merged over it, then
 /// the fields that keep the Python app off its first-start screen and on the `gh` backend.
@@ -130,6 +162,23 @@ pub fn prepare(
         let url = scenario.env.git_remote_protocol.url(remote);
         init_git_repo(&work, &home, &url, &scenario.env.git_branch)?;
     }
+    let local_remote = match (&scenario.env.git_remote, &scenario.env.git_remote_branches) {
+        (Some(remote), Some(branches)) => {
+            if !bin.join(fake_gh::fake_ssh_file_name()).is_file() {
+                return Err(HarnessError(format!(
+                    "{} has no fake-ssh next to it; build it with `cargo build -p fake-gh`",
+                    paths.fake_gh.display()
+                )));
+            }
+            let git_dir = remote_git_dir(root, remote);
+            init_bare_remote(&work, &home, &git_dir, branches, &scenario.env.git_branch)?;
+            Some(LocalRemote {
+                git_dir,
+                home: home.clone(),
+            })
+        }
+        _ => None,
+    };
 
     // After `git init`, so the parity commit stays empty (its SHA never changes) and seeded `work/` files are
     // untracked; after `config.json`, which a seed can't hold.
@@ -147,7 +196,7 @@ pub fn prepare(
     let fixtures = std::env::join_paths(scenario.env.fixtures.iter().map(|set| paths.roots.fixtures.join(set)))
         .map_err(|e| HarnessError(format!("fixture set paths can't be joined: {e}")))?;
     let path = std::env::join_paths(
-        std::iter::once(bin).chain(std::env::var_os("PATH").iter().flat_map(std::env::split_paths)),
+        std::iter::once(bin.clone()).chain(std::env::var_os("PATH").iter().flat_map(std::env::split_paths)),
     )
     .map_err(|e| HarnessError(format!("PATH can't be built: {e}")))?;
 
@@ -163,6 +212,11 @@ pub fn prepare(
     for (key, value) in isolated_env(root, &home, &work, path, fixtures, &log, scenario) {
         command.env(key, value);
     }
+    if local_remote.is_some() {
+        for (key, value) in ssh_env(root, &bin) {
+            command.env(key, value);
+        }
+    }
     command.cwd(&work);
 
     Ok(RunEnv {
@@ -172,7 +226,29 @@ pub fn prepare(
         log: Some(log),
         run_dir: Some(run_dir),
         keep_into: keep_home.then(|| out.to_owned()),
+        remote: local_remote,
     })
+}
+
+/// `<run>/remotes/<owner>/<name>.git`, where fake-ssh finds `git@github.com:<owner>/<name>.git`.
+fn remote_git_dir(root: &Path, remote: &str) -> PathBuf {
+    let mut dir = root.join(REMOTES_DIR);
+    // `remote` is a validated `owner/name`.
+    for segment in remote.split('/') {
+        dir.push(segment);
+    }
+    dir.set_extension("git");
+    dir
+}
+
+/// What points git's SSH transport at fake-ssh: the `simple` variant (`<host> <command>`, no ssh options) and the
+/// root its repo paths resolve under.
+fn ssh_env(root: &Path, bin: &Path) -> Vec<(&'static str, OsString)> {
+    vec![
+        ("GIT_SSH", bin.join(fake_gh::fake_ssh_file_name()).into()),
+        ("GIT_SSH_VARIANT", "simple".into()),
+        ("FAKE_SSH_ROOT", root.join(REMOTES_DIR).into()),
+    ]
 }
 
 /// The allow-listed environment. Nothing else from the developer's environment (`GH_TOKEN`, `NO_COLOR`,
@@ -217,6 +293,41 @@ fn isolated_env(
     env
 }
 
+/// `git` with the developer's environment cleared but `PATH`, and `HOME` the run's, so no user or system config
+/// applies.
+fn git_command(home: &Path) -> Command {
+    let mut git = Command::new("git");
+    git.env_clear();
+    if let Some(path) = std::env::var_os("PATH") {
+        git.env("PATH", path);
+    }
+    git.env("HOME", home).env("GIT_CONFIG_NOSYSTEM", "1");
+    git
+}
+
+/// Runs `git <args>` in `dir`, with a fixed author and date so commits hash the same on every run.
+fn run_git(dir: &Path, home: &Path, args: &[&OsStr]) -> Result<()> {
+    let shown = || args.iter().map(|a| a.to_string_lossy()).collect::<Vec<_>>().join(" ");
+    let mut git = git_command(home);
+    git.args(args)
+        .current_dir(dir)
+        .env("GIT_AUTHOR_NAME", "parity-bot")
+        .env("GIT_COMMITTER_NAME", "parity-bot")
+        .env("GIT_AUTHOR_EMAIL", "parity-bot@example.com")
+        .env("GIT_COMMITTER_EMAIL", "parity-bot@example.com")
+        .env("GIT_AUTHOR_DATE", "2026-01-01T00:00:00Z")
+        .env("GIT_COMMITTER_DATE", "2026-01-01T00:00:00Z");
+    let output = git.output().with_context(|| format!("running git {}", shown()))?;
+    if !output.status.success() {
+        return Err(HarnessError(format!(
+            "git {} failed: {}",
+            shown(),
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+    Ok(())
+}
+
 /// Makes `work` a git repo whose `origin` is `url`, with one empty commit whose SHA is the same on every run.
 fn init_git_repo(work: &Path, home: &Path, url: &str, branch: &str) -> Result<()> {
     let runs: [&[&str]; 3] = [
@@ -233,29 +344,31 @@ fn init_git_repo(work: &Path, home: &Path, url: &str, branch: &str) -> Result<()
         ],
     ];
     for args in runs {
-        let mut git = Command::new("git");
-        git.args(args).current_dir(work).env_clear();
-        if let Some(path) = std::env::var_os("PATH") {
-            git.env("PATH", path);
-        }
-        git.env("HOME", home)
-            .env("GIT_CONFIG_NOSYSTEM", "1")
-            .env("GIT_AUTHOR_NAME", "parity-bot")
-            .env("GIT_COMMITTER_NAME", "parity-bot")
-            .env("GIT_AUTHOR_EMAIL", "parity-bot@example.com")
-            .env("GIT_COMMITTER_EMAIL", "parity-bot@example.com")
-            .env("GIT_AUTHOR_DATE", "2026-01-01T00:00:00Z")
-            .env("GIT_COMMITTER_DATE", "2026-01-01T00:00:00Z");
-        let output = git
-            .output()
-            .with_context(|| format!("running git {}", args.join(" ")))?;
-        if !output.status.success() {
-            return Err(HarnessError(format!(
-                "git {} failed: {}",
-                args.join(" "),
-                String::from_utf8_lossy(&output.stderr).trim()
-            )));
-        }
+        let args: Vec<&OsStr> = args.iter().map(OsStr::new).collect();
+        run_git(work, home, &args)?;
+    }
+    Ok(())
+}
+
+/// Makes the bare repo `git_dir` with the work repo's commit as each of `branches`, the first its `HEAD`
+/// (`fallback_head` when there are none). The pushes go by path, so the work branch gets no upstream.
+fn init_bare_remote(work: &Path, home: &Path, git_dir: &Path, branches: &[String], fallback_head: &str) -> Result<()> {
+    std::fs::create_dir_all(git_dir).with_context(|| format!("creating {}", git_dir.display()))?;
+    let head = branches.first().map_or(fallback_head, String::as_str);
+    let init = ["init", "-q", "--bare", "-b", head].map(OsStr::new);
+    run_git(git_dir, home, &init)?;
+    for branch in branches {
+        let refspec = format!("HEAD:refs/heads/{branch}");
+        run_git(
+            work,
+            home,
+            &[
+                OsStr::new("push"),
+                OsStr::new("-q"),
+                git_dir.as_os_str(),
+                OsStr::new(&refspec),
+            ],
+        )?;
     }
     Ok(())
 }

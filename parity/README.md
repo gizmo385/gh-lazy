@@ -20,6 +20,9 @@ dir)` does the install: it hard-links when it can, and otherwise copies and wait
 freshly copied executable has in a multi-threaded process. The binary is deliberately not named
 `gh`, so `target/debug` on `PATH` never shadows the real gh.
 
+The crate builds a second binary, `fake-ssh`, that `fake_gh::install` puts next to `gh` as `<dir>/bin/fake-ssh`
+whenever it's in the same build dir as fake-gh (`cargo build -p fake-gh` builds both). See [fake-ssh](#fake-ssh).
+
 ### Environment variables
 
 fake-gh reads its configuration from the environment only.
@@ -135,6 +138,34 @@ processes at once.
 | `status` | The HTTP status answered (the last page's, with `--paginate`). |
 | `miss` | No fixture matched. With `--paginate`, the key logged is the page that missed, so it can be recorded. |
 | `error` | Why fake-gh refused the invocation (exit 2 or 3). |
+
+[fake-ssh](#fake-ssh) appends its own lines to the same log, under the same lock, so a report shows the pushes next
+to the API calls:
+
+```json
+{"seq":7,"argv":["git@github.com","git-receive-pack 'parity-bot/pr-details.git'"],"command":"ssh","service":"git-receive-pack","method":null,"path":"parity-bot/pr-details.git","query":null,"accept":null,"cache":null,"cache_control":null,"body":null,"fixture":null,"status":0,"miss":false,"error":null}
+```
+
+`command` is `ssh`, `service` the git service (`git-upload-pack` or `git-receive-pack`; `null` when the command
+was refused before it was known), `path` the repo path under `FAKE_SSH_ROOT`, and `status` fake-ssh's exit code.
+The other fields are `null` (`miss` is `false`); fake-gh's lines have no `service`. `ssh` lines are never served
+requests: `when` conditions and `wait.log` ignore them, and so does the served-requests comparison of references.
+
+### fake-ssh
+
+`fake-ssh` stands in for `ssh` when git reaches `git@github.com:<owner>/<name>.git`, and serves the request from a
+local bare repo instead. The harness runs the app with `GIT_SSH=<run>/bin/fake-ssh` and `GIT_SSH_VARIANT=simple`, so
+git runs it as `fake-ssh [-p <port>] <host> <command>`, where `<command>` is one argument: the service, a space, and
+the repo path in single quotes. fake-ssh:
+
+- accepts `git-upload-pack` (fetch, `ls-remote`) and `git-receive-pack` (push). Anything else exits 128 with
+  `fake-ssh: unsupported command: <command>` on stderr;
+- strips the quotes and a leading `/` from the path and resolves it under `FAKE_SSH_ROOT`. A path that leaves the
+  root (`..`, a symlink) or names no directory exits 128 with `ERROR: Repository not found.` on stderr, as GitHub
+  answers;
+- runs `git upload-pack <dir>` / `git receive-pack <dir>` (no shell) with stdin, stdout and stderr passed through,
+  and exits with its code. The host and port are ignored;
+- when `FAKE_GH_LOG` is set, appends one `ssh` line to the request log (above).
 
 ## Fixture format (v1)
 
@@ -617,7 +648,7 @@ cargo xtask parity --validate              # check every scenario file, run noth
 | `--plan` | With `--live-python-since`: print the plan line and exit `0`, building and running nothing. |
 | `--size COLSxROWS` | Run at this size instead of the scenarios' `sizes`. Repeatable. |
 | `--out DIR` | Write the report here instead of `parity/reports/latest/`. |
-| `--keep-home` | Copy each run's `home/` and `work/` into its report directory. |
+| `--keep-home` | Copy each run's `home/` and `work/` (and `remotes/`, with `git_remote_branches`) into its report directory. |
 | `--no-build` | Skip `cargo build -p lazy-github -p fake-gh`. The binaries must already be in `target/<profile>/`. |
 | `--no-sync` | Skip `uv sync --frozen` (which only runs when Python runs live). |
 | `--python PATH` | Run `PATH -m lazy_github` instead of the repo's `.venv/bin/python` (`.venv\Scripts\python.exe` on Windows). |
@@ -643,8 +674,9 @@ is `rust-not-ready`.
 
 ### The isolated environment
 
-Every scenario × size × app gets a temp dir `<run>` holding `home/`, `bin/` and `work/`. It's removed after the run;
-`--keep-home` copies `home/` and `work/` into the report first.
+Every scenario × size × app gets a temp dir `<run>` holding `home/`, `bin/` and `work/` (and `remotes/` with
+`git_remote_branches`). It's removed after the run; `--keep-home` copies `home/`, `work/` and `remotes/` into the
+report first.
 
 - `home/.config/lazy-github/config.json` is built from three layers, in order:
   - the scenario's `config` file, `parity/configs/<name>.json` (default `default`);
@@ -654,7 +686,8 @@ Every scenario × size × app gets a temp dir `<run>` holding `home/`, `bin/` an
 
   The Python app keeps everything (config, log, table cache, PR drafts) under `$HOME/.config/lazy-github`, so a fresh
   `HOME` also means no cached tables are shown before the first fetch.
-- `bin/gh` (`gh.exe` on Windows) is fake-gh, installed with `fake_gh::install`.
+- `bin/gh` (`gh.exe` on Windows) is fake-gh and `bin/fake-ssh` is [fake-ssh](#fake-ssh), installed with
+  `fake_gh::install`.
 - With `seed = "<name>"`, `parity/seeds/<name>/home/` is copied into `home/` and `work/` into `work/` before the app
   starts: after `config.json` is written and after the git repo below is made. Copying after `git init` keeps the
   parity commit empty, so its SHA doesn't change, and seeded `work/` files are untracked. Each app run gets a fresh
@@ -669,6 +702,18 @@ Every scenario × size × app gets a temp dir `<run>` holding `home/`, `bin/` an
     never finds that repo; a scenario where both apps should pick up the current directory's repo uses `"ssh"`.
   - `git commit -q --allow-empty -m parity` as `parity-bot <parity-bot@example.com>` dated `2026-01-01T00:00:00Z`,
     so the commit SHA is the same on every run.
+- With `git_remote_branches = ["main", ...]` (which needs `git_remote_protocol = "ssh"`), `origin` reaches a local
+  repo. `origin` stays `git@github.com:owner/name.git`: both apps derive the current directory's repo from
+  `git remote get-url origin`, so a local path or `url.<base>.insteadOf` (which `get-url` expands) would lose it.
+  Right after the commit above, with the same environment:
+  - `git init -q --bare -b <first listed branch>` makes `<run>/remotes/<owner>/<name>.git` (`-b <git_branch>` when
+    the list is empty, which leaves it with no branches);
+  - `git push -q <bare repo path> HEAD:refs/heads/<branch>` pushes the commit as each listed branch. It pushes by
+    path, so the work branch keeps no upstream;
+  - the app gets `GIT_SSH=<run>/bin/fake-ssh`, `GIT_SSH_VARIANT=simple` and `FAKE_SSH_ROOT=<run>/remotes`, so
+    `git ls-remote origin <b>` and `git push origin ...` in `work/` go through [fake-ssh](#fake-ssh) to that repo.
+
+  Without the key there's no `remotes/` and none of the three variables.
 - The environment is cleared, then only these are set:
   - `HOME` (plus `USERPROFILE` on Windows), and `XDG_CONFIG_HOME`/`XDG_CACHE_HOME`/`XDG_DATA_HOME`/`XDG_STATE_HOME`
     under `home/`
@@ -712,6 +757,8 @@ gh_auth = "logged-in"            # or "logged-out"; default "logged-in"
 git_remote = "gizmo385/gh-lazy"  # optional; omit = CWD is not a git repo
 git_remote_protocol = "https"    # or "ssh" (origin is git@github.com:...); default "https"; needs git_remote
 git_branch = "main"              # optional, default "main"
+git_remote_branches = ["main"]   # optional: a local remote for origin with these branches (see The isolated
+                                 # environment); needs git_remote_protocol = "ssh"
 seed = "repos-cache"             # optional: parity/seeds/<name>/, copied into home/ and work/ (see Seeds)
 
 [env.config_overrides]           # optional, deep-merged over the config file
@@ -757,6 +804,9 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
       blinking cursor doesn't reset the timer.
     - `log = { method = "PUT", path = "/repos/o/r/pulls/1/merge" }`: the fake-gh log has a served request matching
       it. `query`, `accept` and `body` can be given too, as in a fixture's `when.after` entry.
+    - `remote_branch = "<name>"`: the run's local remote has `refs/heads/<name>` (checked with
+      `git --git-dir <bare repo> rev-parse --verify --quiet`), so a scenario can assert that a push happened. Only in
+      a scenario with `git_remote_branches`.
 
     Each `wait` takes an optional `timeout_ms` (default 10000). A timeout fails that app's run at that step and dumps
     the screen.
@@ -845,7 +895,7 @@ summary.json                                     # all results
 <scenario>/<cols>x<rows>/<app>/<capture>.txt     # plain text screen
 <scenario>/<cols>x<rows>/<app>/<capture>.grid.json
 <scenario>/<cols>x<rows>/<app>/failure.txt       # only when the run failed (plus failure.grid.json)
-<scenario>/<cols>x<rows>/<app>/home/, work/      # only with --keep-home
+<scenario>/<cols>x<rows>/<app>/home/, work/      # only with --keep-home (remotes/ too, with git_remote_branches)
 <scenario>/<cols>x<rows>/<app>/<capture>.structure.json   # what the extractor recognized
 <scenario>/<cols>x<rows>/<capture>.check.json    # structural mismatches, and drift
 ```
@@ -1326,7 +1376,7 @@ Each input is a git object id from `git hash-object`, run in the repo with a cle
 
 | Input | What it hashes |
 | --- | --- |
-| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `key_delay_ms`, `capture_stable_ms`, the size, every step and, only when the scenario sets one, the seed: its name and its files as sorted `[<path relative to the seed dir>, <blob>]` pairs. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore`. |
+| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `git_remote_branches` (only when set), `key_delay_ms`, `capture_stable_ms`, the size, every step and, only when the scenario sets one, the seed: its name and its files as sorted `[<path relative to the seed dir>, <blob>]` pairs. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore`. |
 | `fixtures` | Every fixture in the scenario's sets whose request key (method, path, query, accept) equals a served entry in `requests.jsonl`, plus its `body_file`, as sorted `<set>/<relpath> <blob>` lines. For a `--paginate` request, the pages its `Link: rel="next"` headers lead to as well. |
 | `python_app` | `lazy_github/`, `pyproject.toml` and `uv.lock`. |
 | `harness` | `crates/fake-gh/src/`, `crates/fake-gh/Cargo.toml`, `xtask/src/parity/{env,runner,keys,grid}.rs`, `CAPTURE_VERSION` and the `vt100` and `portable-pty` versions in `Cargo.lock`. |
@@ -1421,6 +1471,10 @@ Re-record a scenario, and commit `parity/references/`, whenever its env, steps, 
 - `cargo test -p xtask` covers scenario parsing, key encoding, config layering, the query responder and the grid
   format, and drives a tiny test TUI (`xtask/tests/bin/echo_tui.rs`, built as an example) through the runner
   (`xtask/tests/runner.rs`). None of it needs Python.
+- `xtask/tests/local_remote.rs` prepares runs with `git_remote_branches` and checks, with real git and fake-ssh
+  (`xtask/tests/bin/fake_ssh.rs`, also an example), the bare repo's branches, `ls-remote` and `push` from `work/`
+  with the app's environment, and `wait.remote_branch`. `crates/fake-gh/tests/ssh.rs` tests fake-ssh itself: both
+  services, the refusals and the shared log lock.
 - Structure extraction and the checks are unit-tested on synthetic grids in `xtask/tests/grids/*.txt` and on the real
   Python dumps in `xtask/tests/grids/python/` (golden `insta` snapshots in `xtask/src/parity/snapshots/`). A synthetic
   grid is the screen's characters, then optionally a `--- styles` layer with one letter per cell and a `--- legend`

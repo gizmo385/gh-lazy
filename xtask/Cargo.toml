@@ -41,5 +41,12 @@ name = "echo_tui"
 path = "tests/bin/echo_tui.rs"
 test = false
 
+# fake-ssh for tests/local_remote.rs, at target/<profile>/examples/fake-ssh: next to echo_tui, which stands in for
+# fake-gh there, so `fake_gh::install` finds it.
+[[example]]
+name = "fake-ssh"
+path = "tests/bin/fake_ssh.rs"
+test = false
+
 [lints]
 workspace = true

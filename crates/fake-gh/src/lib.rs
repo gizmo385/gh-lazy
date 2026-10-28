@@ -10,9 +10,10 @@ mod install;
 pub mod lint;
 pub mod log;
 pub mod output;
+pub mod ssh;
 pub mod store;
 
-pub use install::install;
+pub use install::{fake_ssh_file_name, install};
 
 #[cfg(test)]
 mod test_support;

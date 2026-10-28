@@ -17,7 +17,7 @@ use fake_gh::log::{LogEntry, RequestLog};
 use portable_pty::{Child, MasterPty, PtySize, native_pty_system};
 use serde::{Deserialize, Serialize};
 
-use super::env::RunEnv;
+use super::env::{LocalRemote, RunEnv};
 use super::grid::{Grid, screen_text};
 use super::keys;
 use super::scenario::{DEFAULT_WAIT_TIMEOUT, Size, Step, WaitFor};
@@ -224,6 +224,8 @@ struct Session {
     /// [`Timing::wait_cap`](super::scenario::Timing::wait_cap).
     wait_cap: Option<Duration>,
     env_log: Option<std::path::PathBuf>,
+    /// The run's local remote, for `wait.remote_branch`.
+    remote: Option<LocalRemote>,
     timing: super::scenario::Timing,
 }
 
@@ -291,6 +293,7 @@ impl Session {
             deadline: Instant::now() + env.timing.timeout,
             wait_cap: env.timing.wait_cap,
             env_log: env.log.clone(),
+            remote: env.remote.clone(),
             timing: env.timing,
         })
     }
@@ -412,6 +415,7 @@ impl Session {
                 WaitFor::Log(matcher) => self.env_log.as_ref().is_some_and(|path| {
                     std::fs::read_to_string(path).is_ok_and(|text| RequestLog::parse(&text).has_served(matcher))
                 }),
+                WaitFor::RemoteBranch(branch) => self.remote.as_ref().is_some_and(|r| r.has_branch(branch)),
             };
             if done {
                 return Ok(());

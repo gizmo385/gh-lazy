@@ -200,6 +200,9 @@ pub struct EnvSpec {
     /// How `origin` is spelled. Only set to `Ssh` with a `git_remote`.
     pub git_remote_protocol: GitRemoteProtocol,
     pub git_branch: String,
+    /// `git_remote_branches`: the branches of a local bare repo that `origin` reaches over `fake-ssh`, the first
+    /// one its `HEAD`. `None` gives the app no reachable remote. Only set with an SSH `git_remote`.
+    pub git_remote_branches: Option<Vec<String>>,
     /// Deep-merged over the config file. Always a JSON object.
     pub config_overrides: Value,
     /// A seed name under the seeds root, whose `home/` and `work/` trees are copied into the run before the app
@@ -220,6 +223,8 @@ pub enum WaitFor {
     Stable(Duration),
     /// fake-gh's log has a served request matching this.
     Log(LoggedRequestMatcher),
+    /// The run's local remote (`git_remote_branches`) has `refs/heads/<name>`.
+    RemoteBranch(String),
 }
 
 #[derive(Debug, Clone)]
@@ -438,6 +443,7 @@ struct RawEnv {
     git_remote: Option<Spanned<String>>,
     git_remote_protocol: Option<Spanned<GitRemoteProtocol>>,
     git_branch: Option<String>,
+    git_remote_branches: Option<Spanned<Vec<String>>>,
     config_overrides: Option<toml::Table>,
     seed: Option<Spanned<String>>,
 }
@@ -465,6 +471,7 @@ struct RawWait {
     regex: Option<Spanned<String>>,
     stable_ms: Option<u64>,
     log: Option<LoggedRequestMatcher>,
+    remote_branch: Option<Spanned<String>>,
     timeout_ms: Option<u64>,
 }
 
@@ -578,7 +585,7 @@ impl Scenario {
         let mut captures = BTreeSet::new();
         for step in raw.steps {
             let start = step.span().start;
-            let step = parse_step(step.into_inner(), start, &loc)?;
+            let step = parse_step(step.into_inner(), start, &loc, env.git_remote_branches.is_some())?;
             if let Step::Capture(c) = &step
                 && !captures.insert(c.name.clone())
             {
@@ -676,6 +683,14 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
         }
         Some(protocol) => protocol.into_inner(),
     };
+    let git_remote_branches = match raw.git_remote_branches {
+        None => None,
+        Some(branches) => Some(parse_remote_branches(
+            branches,
+            git_remote.is_some() && git_remote_protocol == GitRemoteProtocol::Ssh,
+            loc,
+        )?),
+    };
 
     let config_overrides = match raw.config_overrides {
         None => Value::Object(serde_json::Map::new()),
@@ -709,6 +724,7 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
         git_remote,
         git_remote_protocol,
         git_branch: raw.git_branch.unwrap_or_else(|| "main".to_owned()),
+        git_remote_branches,
         config_overrides,
         seed,
     })
@@ -723,6 +739,32 @@ fn is_plain_name(s: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
 }
 
+/// `git_remote_branches`, which only an SSH `git_remote` (`ssh_remote`) can reach.
+fn parse_remote_branches(
+    branches: Spanned<Vec<String>>,
+    ssh_remote: bool,
+    loc: &Locator<'_>,
+) -> Result<Vec<String>, ScenarioError> {
+    if !ssh_remote {
+        return Err(loc.at_span(
+            &branches,
+            "`git_remote_branches` needs a `git_remote` with `git_remote_protocol = \"ssh\"`",
+        ));
+    }
+    if let Some(bad) = branches.get_ref().iter().find(|b| !is_branch_name(b)) {
+        return Err(loc.at_span(
+            &branches,
+            format!("`git_remote_branches` holds {bad:?}; a branch name can't be empty or hold whitespace"),
+        ));
+    }
+    Ok(branches.into_inner())
+}
+
+/// A branch name the harness passes to git as one argument: not empty, no whitespace. Git checks the rest.
+fn is_branch_name(s: &str) -> bool {
+    !s.is_empty() && !s.chars().any(char::is_whitespace)
+}
+
 /// `[a-z0-9][a-z0-9-]*`: safe as a report directory name.
 fn is_scenario_name(s: &str) -> bool {
     s.starts_with(|c: char| c.is_ascii_lowercase() || c.is_ascii_digit()) && is_capture_name(s)
@@ -734,7 +776,8 @@ fn is_capture_name(s: &str) -> bool {
             .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
 }
 
-fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>) -> Result<Step, ScenarioError> {
+/// `has_remote`: the scenario sets `git_remote_branches`, which `wait.remote_branch` needs.
+fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>, has_remote: bool) -> Result<Step, ScenarioError> {
     if raw.capture.is_none() && (raw.checks.is_some() || raw.ignore.is_some()) {
         return Err(loc.at(start, "`checks` and `ignore` are only allowed in a capture step"));
     }
@@ -767,7 +810,7 @@ fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>) -> Result<Step, Sce
         }
     }
     if let Some(wait) = raw.wait {
-        return parse_wait(wait, loc).map(Step::Wait);
+        return parse_wait(wait, loc, has_remote).map(Step::Wait);
     }
     if let Some(specs) = raw.keys {
         for spec in &specs {
@@ -805,7 +848,7 @@ fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>) -> Result<Step, Sce
     unreachable!("exactly one action is present")
 }
 
-fn parse_wait(spanned: Spanned<RawWait>, loc: &Locator<'_>) -> Result<Wait, ScenarioError> {
+fn parse_wait(spanned: Spanned<RawWait>, loc: &Locator<'_>, has_remote: bool) -> Result<Wait, ScenarioError> {
     let start = spanned.span().start;
     let raw = spanned.into_inner();
     let count = [
@@ -814,12 +857,16 @@ fn parse_wait(spanned: Spanned<RawWait>, loc: &Locator<'_>) -> Result<Wait, Scen
         raw.regex.is_some(),
         raw.stable_ms.is_some(),
         raw.log.is_some(),
+        raw.remote_branch.is_some(),
     ]
     .into_iter()
     .filter(|&b| b)
     .count();
     if count != 1 {
-        return Err(loc.at(start, "`wait` needs exactly one of text, gone, regex, stable_ms or log"));
+        return Err(loc.at(
+            start,
+            "`wait` needs exactly one of text, gone, regex, stable_ms, log or remote_branch",
+        ));
     }
     let until = if let Some(text) = raw.text {
         WaitFor::Text(text)
@@ -832,6 +879,23 @@ fn parse_wait(spanned: Spanned<RawWait>, loc: &Locator<'_>) -> Result<Wait, Scen
         WaitFor::Stable(Duration::from_millis(ms))
     } else if let Some(log) = raw.log {
         WaitFor::Log(log)
+    } else if let Some(branch) = raw.remote_branch {
+        if !has_remote {
+            return Err(loc.at_span(
+                &branch,
+                "`wait.remote_branch` needs `env.git_remote_branches`, which makes the remote it looks at",
+            ));
+        }
+        if !is_branch_name(branch.get_ref()) {
+            return Err(loc.at_span(
+                &branch,
+                format!(
+                    "`wait.remote_branch` {:?} can't be empty or hold whitespace",
+                    branch.get_ref()
+                ),
+            ));
+        }
+        WaitFor::RemoteBranch(branch.into_inner())
     } else {
         unreachable!("exactly one condition is present")
     };
@@ -1101,6 +1165,75 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
             "version = 1\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"git\"\n",
             4,
             "unknown variant `git`",
+        );
+    }
+
+    const SSH_REMOTE: &str = "version = 1\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"ssh\"\n";
+
+    #[test]
+    fn parses_git_remote_branches_and_the_remote_branch_wait() {
+        let s = parse(&format!(
+            "{SSH_REMOTE}git_remote_branches = [\"main\", \"dev\"]\n[[step]]\nwait.remote_branch = \"feature\"\n"
+        ))
+        .unwrap();
+        assert_eq!(
+            s.env.git_remote_branches,
+            Some(vec!["main".to_owned(), "dev".to_owned()])
+        );
+        assert!(matches!(&s.steps[0], Step::Wait(Wait { until: WaitFor::RemoteBranch(b), .. }) if b == "feature"));
+        let s = parse(&format!("{SSH_REMOTE}git_remote_branches = []\n")).unwrap();
+        assert_eq!(s.env.git_remote_branches, Some(Vec::new()));
+        assert_eq!(parse(SSH_REMOTE).unwrap().env.git_remote_branches, None);
+    }
+
+    #[test]
+    fn rejects_git_remote_branches_without_an_ssh_remote() {
+        assert_error(
+            "version = 1\n[env]\ngit_remote_branches = [\"main\"]\n",
+            3,
+            "needs a `git_remote` with `git_remote_protocol = \"ssh\"`",
+        );
+        assert_error(
+            "version = 1\n[env]\ngit_remote = \"o/n\"\ngit_remote_branches = [\"main\"]\n",
+            4,
+            "git_remote_protocol = \"ssh\"",
+        );
+        assert_error(
+            "version = 1\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"https\"\ngit_remote_branches = []\n",
+            5,
+            "git_remote_protocol = \"ssh\"",
+        );
+        assert_error(
+            &format!("{SSH_REMOTE}git_remote_branches = [\"main\", \"\"]\n"),
+            5,
+            "can't be empty or hold whitespace",
+        );
+        assert_error(&format!("{SSH_REMOTE}git_remote_branches = [\"a b\"]\n"), 5, "\"a b\"");
+    }
+
+    #[test]
+    fn rejects_a_remote_branch_wait_without_a_local_remote() {
+        assert_error(
+            "version = 1\n[[step]]\nwait.remote_branch = \"feature\"\n",
+            3,
+            "needs `env.git_remote_branches`",
+        );
+        assert_error(
+            &format!("{SSH_REMOTE}\n[[step]]\nwait = {{ remote_branch = \"feature\" }}\n"),
+            7,
+            "needs `env.git_remote_branches`",
+        );
+        assert_error(
+            &format!("{SSH_REMOTE}git_remote_branches = []\n[[step]]\nwait.remote_branch = \"\"\n"),
+            7,
+            "can't be empty",
+        );
+        assert_error(
+            &format!(
+                "{SSH_REMOTE}git_remote_branches = []\n[[step]]\nwait = {{ remote_branch = \"a\", text = \"b\" }}\n"
+            ),
+            7,
+            "exactly one of",
         );
     }
 

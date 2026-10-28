@@ -1051,6 +1051,9 @@ struct CaptureKey<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     git_remote_protocol: Option<&'static str>,
     git_branch: &'a str,
+    /// Left out without a local remote, so keys from before the field existed don't change.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    git_remote_branches: Option<&'a [String]>,
     key_delay_ms: u64,
     capture_stable_ms: u64,
     size: String,
@@ -1104,6 +1107,7 @@ enum KeyWait<'a> {
     Regex(&'a str),
     StableMs(u64),
     Log(&'a LoggedRequestMatcher),
+    RemoteBranch(&'a str),
 }
 
 fn millis(d: Duration) -> u64 {
@@ -1124,6 +1128,7 @@ pub fn capture_key(repo: &Path, scenario: &Scenario, size: Size, roots: &Roots) 
                 WaitFor::Regex(re) => KeyWait::Regex(re.as_str()),
                 WaitFor::Stable(d) => KeyWait::StableMs(millis(*d)),
                 WaitFor::Log(m) => KeyWait::Log(m),
+                WaitFor::RemoteBranch(b) => KeyWait::RemoteBranch(b),
             }),
             Step::Keys(keys) => KeyStep::Keys(keys),
             Step::Type(t) => KeyStep::Type(t),
@@ -1145,6 +1150,7 @@ pub fn capture_key(repo: &Path, scenario: &Scenario, size: Size, roots: &Roots) 
         git_remote_protocol: (scenario.env.git_remote_protocol != super::scenario::GitRemoteProtocol::Https)
             .then(|| scenario.env.git_remote_protocol.as_str()),
         git_branch: &scenario.env.git_branch,
+        git_remote_branches: scenario.env.git_remote_branches.as_deref(),
         key_delay_ms: millis(scenario.timing.key_delay),
         capture_stable_ms: millis(scenario.timing.capture_stable),
         size: size.to_string(),

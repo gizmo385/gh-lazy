@@ -17,6 +17,11 @@ path = "src/lib.rs"
 name = "fake-gh"
 path = "src/main.rs"
 
+# The SSH program git runs (`GIT_SSH`) in parity scenarios with a local remote; installed as `<run>/bin/fake-ssh`.
+[[bin]]
+name = "fake-ssh"
+path = "src/bin/fake-ssh.rs"
+
 [dependencies]
 http = { workspace = true }
 serde = { workspace = true }

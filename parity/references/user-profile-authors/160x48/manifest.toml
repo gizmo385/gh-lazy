@@ -7,7 +7,7 @@ captures = ["pr-author", "issue-author", "picked", "empty-tables"]
 scenario = "434fad2c0e7ddeefa2a56fa841ea7ea4b4d75856"
 fixtures = "b78c6e2310e24d8ee3f4cf8f2902928b7f03e438"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "d40dac32aacaaea9cd02642bf388d6d6f854e0ee"
+harness = "e02fc12d1a89a2bfa734e5ad4aca68e227877589"
 
 [recorded_with]
 python = "3.14.7"

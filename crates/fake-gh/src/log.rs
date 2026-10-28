@@ -1,7 +1,8 @@
 //! The JSONL request log (`FAKE_GH_LOG`).
 //!
 //! Every invocation appends one line. The Python app runs several `gh` processes at once, so the file is held under
-//! an exclusive lock from the read that `when` conditions need until the append is done.
+//! an exclusive lock from the read that `when` conditions need until the append is done. `fake-ssh` appends its
+//! lines (`command: "ssh"`) under the same lock.
 
 use std::fs::{File, OpenOptions};
 use std::io::{self, Read, Write};
@@ -19,9 +20,14 @@ pub struct LogEntry {
     pub seq: u64,
     /// The arguments fake-gh received, without the program name.
     pub argv: Vec<String>,
-    /// `api`, `auth status`, `auth token`, `version` or `pr diff`. `null` when argv couldn't be parsed.
+    /// `api`, `auth status`, `auth token`, `version` or `pr diff`; [`SSH_COMMAND`] for a `fake-ssh` line. `null`
+    /// when argv couldn't be parsed.
     pub command: Option<String>,
+    /// The git service a `fake-ssh` line ran (`git-upload-pack` or `git-receive-pack`). Left out of fake-gh lines.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub service: Option<String>,
     pub method: Option<String>,
+    /// The API path; for a `fake-ssh` line, the repo path under `FAKE_SSH_ROOT` (`owner/name.git`).
     pub path: Option<String>,
     pub query: Option<Query>,
     /// The normalized accept name, e.g. `json` or `diff`.
@@ -34,6 +40,7 @@ pub struct LogEntry {
     pub body: Option<Value>,
     /// The fixture served, relative to the parent of its set directory, with `/` separators.
     pub fixture: Option<String>,
+    /// The HTTP status; for a `fake-ssh` line, its exit code.
     pub status: Option<u16>,
     /// No fixture matched; fake-gh answered with a 404.
     pub miss: bool,
@@ -41,10 +48,19 @@ pub struct LogEntry {
     pub error: Option<String>,
 }
 
+/// The `command` of the lines `fake-ssh` writes.
+pub const SSH_COMMAND: &str = "ssh";
+
 impl LogEntry {
-    /// Whether this line records a request that fake-gh answered from a fixture.
+    /// Whether this line records a request that fake-gh answered from a fixture. `fake-ssh` lines never are, so
+    /// `when` conditions and `wait.log` ignore them.
     pub fn is_served(&self) -> bool {
-        !self.miss && self.error.is_none() && self.fixture.is_some()
+        !self.is_ssh() && !self.miss && self.error.is_none() && self.fixture.is_some()
+    }
+
+    /// Whether `fake-ssh` wrote this line.
+    pub fn is_ssh(&self) -> bool {
+        self.command.as_deref() == Some(SSH_COMMAND)
     }
 
     fn matches(&self, m: &LoggedRequestMatcher) -> bool {

@@ -16,6 +16,7 @@ mod issue_form;
 mod lookup;
 mod new_comment;
 mod new_issue;
+mod pull_request;
 mod stack;
 mod trigger_workflow;
 mod user_profile;
@@ -45,6 +46,7 @@ pub use frame::{DIM_FACTOR, DialogFrame, default_border, dim, frame_rect, frame_
 pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup, number};
 pub use new_comment::{NewCommentAction, NewCommentDialog, PostedComment, ReplyTarget};
 pub use new_issue::{NewIssueAction, NewIssueDialog};
+pub use pull_request::{ReviewersField, ReviewersFocus, ReviewersOutcome, removing_toast};
 pub use stack::ModalEntry;
 pub use trigger_workflow::{TriggerWorkflowAction, TriggerWorkflowDialog};
 pub use user_profile::{UserProfileAction, UserProfileDialog};

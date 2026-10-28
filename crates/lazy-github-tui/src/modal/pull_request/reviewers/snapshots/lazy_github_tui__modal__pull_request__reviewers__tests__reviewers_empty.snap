@@ -1,0 +1,22 @@
+---
+source: crates/lazy-github-tui/src/modal/pull_request/reviewers/tests.rs
+assertion_line: 440
+expression: "draw(&mut h.field, None)"
+---
+Reviewers
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊  Reviewer to add                               ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+--- styles
+.........aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+bccccccccccccccccccccccccccccccccccccccccccccccccd
+beefffffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeed
+bccccccccccccccccccccccccccccccccccccccccccccccccd
+--- legend
+. fg=#e0e0e0 bg=Reset BOLD
+a fg=Reset bg=Reset
+b fg=#191919 bg=#4f4f4f REVERSED
+c fg=#191919 bg=#1e1e1e
+d fg=#191919 bg=#4f4f4f
+e fg=#e0e0e0 bg=#1e1e1e
+f fg=#737373 bg=#1e1e1e

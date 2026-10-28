@@ -1,0 +1,41 @@
+---
+source: crates/lazy-github-tui/src/modal/pull_request/reviewers/tests.rs
+assertion_line: 456
+expression: "draw(&mut h.field, Some(ReviewersFocus::List))"
+---
+Reviewers
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊  Reviewer to add                               ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+Current Reviewers - Click/Select them to remove
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊ ▐X▌ parity-reviewer                            ▎
+▊ ▐X▌ parity-friend                              ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+--- styles
+.........aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+bccccccccccccccccccccccccccccccccccccccccccccccccd
+beefffffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeed
+bccccccccccccccccccccccccccccccccccccccccccccccccd
+gggggggggggggggggggggggggggggggggggggggggggggggaaa
+hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiij
+hklmlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkj
+hknmnoooooooooooooooooooooooooooooooooooooooooookj
+hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiij
+--- legend
+. fg=#e0e0e0 bg=Reset BOLD
+a fg=Reset bg=Reset
+b fg=#191919 bg=#4f4f4f REVERSED
+c fg=#191919 bg=#1e1e1e
+d fg=#191919 bg=#4f4f4f
+e fg=#e0e0e0 bg=#1e1e1e
+f fg=#737373 bg=#1e1e1e
+g fg=#e0e0e0 bg=Reset
+h fg=#0178d4 bg=#4f4f4f REVERSED
+i fg=#0178d4 bg=#272727
+j fg=#0178d4 bg=#4f4f4f
+k fg=#e0e0e0 bg=#272727
+l fg=#242f38 bg=#272727
+m fg=#8ad4a1 bg=#242f38
+n fg=#242f38 bg=#0178d4
+o fg=#ddedf9 bg=#0178d4 BOLD

@@ -68,7 +68,7 @@ process spawning.
 | Text input | `ratatui-textarea` (multi-line), in-house `TextInput` (single-line) | Multi-line editors for issue/PR/comment bodies, with Textual's TextArea keys mapped on top. `tui-textarea` 0.7 needs ratatui 0.29 (#85). |
 | Markdown | `pulldown-cmark` → our own ratatui renderer | Issue/PR bodies and comments. We own the renderer so links can be hint-targeted. |
 | Diff highlighting | `syntect` (or `two-face` for bundled syntaxes) | Split diff viewer syntax colors. |
-| Fuzzy matching | `nucleo-matcher` | Command palette, table search, file filter in diff view. |
+| Fuzzy matching | In-house port of Textual's `FuzzySearch` | Command palette and settings search. The visible order and highlighted letters come from Textual's own scoring, which `nucleo-matcher` doesn't reproduce, and it's about 80 lines (#191, #299). Table search and the diff file filter are substring matches in Python. |
 | Serialization | `serde`, `serde_json` | Models and config. Unknown fields ignored, defaults everywhere. |
 | CLI | `clap` (derive) | `run`, `dump-config`, `clear-config`, etc. mirror the Python `click` commands. |
 | Errors | `thiserror` in `core`, `color-eyre` in the binary | Typed errors where they're handled, pretty reports where they aren't. |

@@ -1,0 +1,344 @@
+version = 1
+description = "Command palette's LazyGithub commands: the four section toggles (hide and show, a toggled-off section's focus key ignored), the command log toggle, and Refresh notifications while notifications are on"
+# Palette text is loose text (see command-palette.toml), checked per app with [expect]. Captures after the repo is
+# selected ignore the Details box, whose tab underline Python sometimes draws zero-width (#209).
+gate = false
+parity_rows = [
+    "command-palette.toggle-command-log",
+    "command-palette.toggle-workflows",
+    "command-palette.toggle-issues",
+    "command-palette.toggle-pull-requests",
+    "command-palette.refresh-notifications",
+    "main-layout.focus-switching",
+    "main-layout.focus-lost",
+]
+
+[env]
+fixtures = ["notifications-3", "repo-selected-empty", "base"]
+
+[env.config_overrides]
+notifications = { enabled = true }
+
+[[step]]
+wait = { text = "Unread Notifications: 3", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/dotfiles" }
+
+[[step]]
+wait = { text = "[4] Workflows (empty)" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "tog"
+
+[[step]]
+wait = { text = "Toggle Pull Requests" }
+
+[[step]]
+capture = "query-tog"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details"] }
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "🔎" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "toggle issues"
+
+[[step]]
+wait = { text = "Toggle showing or hiding repo issues" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "[3] Issues" }
+
+[[step]]
+capture = "issues-hidden"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details"] }
+
+# 3 doesn't focus a section a toggle hid.
+[[step]]
+keys = ["3"]
+
+[[step]]
+capture = "issues-key"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details"] }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "toggle issues"
+
+[[step]]
+wait = { text = "Toggle showing or hiding repo issues" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "[3] Issues (empty)" }
+
+[[step]]
+capture = "issues-shown"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details"] }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "toggle work"
+
+[[step]]
+wait = { text = "Toggle showing or hiding repo actions" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "[4] Workflows" }
+
+[[step]]
+capture = "workflows-hidden"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details"] }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "toggle work"
+
+[[step]]
+wait = { text = "Toggle showing or hiding repo actions" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "[4] Workflows (empty)" }
+
+[[step]]
+capture = "workflows-shown"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details"] }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "toggle pull"
+
+[[step]]
+wait = { text = "Toggle showing or hiding repo pull requests" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "[2] Pull Requests" }
+
+[[step]]
+capture = "prs-hidden"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details"] }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "toggle pull"
+
+[[step]]
+wait = { text = "Toggle showing or hiding repo pull requests" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "[2] Pull Requests (empty)" }
+
+[[step]]
+capture = "prs-shown"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details"] }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "command log"
+
+[[step]]
+wait = { text = "Toggle showing or hiding the command log" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "[6] Command Log" }
+
+[[step]]
+capture = "log-shown"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details", "Command Log"] }
+
+[[step]]
+keys = ["6"]
+
+[[step]]
+capture = "log-focused"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details", "Command Log"] }
+
+# Hiding the focused command log: Python leaves nothing focused (Py bug B88), so focus isn't compared here.
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "command log"
+
+[[step]]
+wait = { text = "Toggle showing or hiding the command log" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "[6] Command Log" }
+
+[[step]]
+capture = "log-hidden"
+checks = ["titles"]
+ignore = { boxes = ["Details"] }
+
+[[step]]
+keys = ["1", "ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "ref"
+
+[[step]]
+wait = { text = "Refresh the unread notifications count" }
+
+[[step]]
+capture = "query-ref"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details"] }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "🔎" }
+
+[[step]]
+capture = "refreshed"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Details"] }
+
+[expect.query-tog]
+contains = [
+    "🔎 tog",
+    "Toggle Command Log",
+    "Toggle showing or hiding the command log",
+    "Toggle Workflows",
+    "Toggle showing or hiding repo actions",
+    "Toggle Issues",
+    "Toggle showing or hiding repo issues",
+    "Toggle Pull Requests",
+    "Toggle showing or hiding repo pull requests",
+]
+
+[expect.issues-hidden]
+pane_titles = ["", "[1] Repositories", "[5] parity-bot/dotfiles Details", "[2] Pull Requests (empty)", "[4] Workflows (empty)"]
+focused = ["[1] Repositories"]
+
+[expect.issues-key]
+focused = ["[1] Repositories"]
+
+[expect.issues-shown]
+pane_titles = ["", "[1] Repositories", "[5] parity-bot/dotfiles Details", "[2] Pull Requests (empty)", "[3] Issues (empty)", "[4] Workflows (empty)"]
+focused = ["[1] Repositories"]
+
+[expect.workflows-hidden]
+pane_titles = ["", "[1] Repositories", "[5] parity-bot/dotfiles Details", "[2] Pull Requests (empty)", "[3] Issues (empty)"]
+focused = ["[1] Repositories"]
+
+[expect.workflows-shown]
+pane_titles = ["", "[1] Repositories", "[5] parity-bot/dotfiles Details", "[2] Pull Requests (empty)", "[3] Issues (empty)", "[4] Workflows (empty)"]
+
+[expect.prs-hidden]
+pane_titles = ["", "[1] Repositories", "[5] parity-bot/dotfiles Details", "[3] Issues (empty)", "[4] Workflows (empty)"]
+focused = ["[1] Repositories"]
+
+[expect.prs-shown]
+pane_titles = ["", "[1] Repositories", "[5] parity-bot/dotfiles Details", "[2] Pull Requests (empty)", "[3] Issues (empty)", "[4] Workflows (empty)"]
+
+[expect.log-shown]
+# Pre-order by (row, col): with the sections three rows high when empty, the log's top row is above the Issues title.
+pane_titles = ["", "[1] Repositories", "[5] parity-bot/dotfiles Details", "[2] Pull Requests (empty)", "[6] Command Log", "[3] Issues (empty)", "[4] Workflows (empty)"]
+focused = ["[1] Repositories"]
+
+[expect.log-focused]
+focused = ["[6] Command Log"]
+
+[expect.log-hidden]
+pane_titles = ["", "[1] Repositories", "[5] parity-bot/dotfiles Details", "[2] Pull Requests (empty)", "[3] Issues (empty)", "[4] Workflows (empty)"]
+
+[expect.query-ref]
+contains = ["🔎 ref", "Refresh notifications", "Refresh the unread notifications count"]
+
+[expect.refreshed]
+focused = ["[1] Repositories"]
+contains = ["Unread Notifications: 3"]

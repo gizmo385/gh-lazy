@@ -1,0 +1,222 @@
+version = 1
+description = "Command palette (ctrl+p): the opening list of system commands, a query and its hit, No matches found, escape, and the Keys, Maximize and Minimize commands"
+# The palette is a band across the top of the screen with no box border, so its input, hits and help texts are loose
+# text, checked per app with [expect]. Python also lists "Screenshot" (deferred, #291) and "Theme" (#192), so the
+# opening list is taller there, covers different boxes, and that capture checks focus only.
+gate = false
+parity_rows = [
+    "command-palette.palette",
+    "command-palette.navigation",
+    "command-palette.keys",
+    "command-palette.maximize-minimize",
+    "keybindings.app-command-palette",
+]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+capture = "open"
+checks = ["focus"]
+
+[[step]]
+type = "keys"
+
+[[step]]
+wait = { text = "keys" }
+
+[[step]]
+capture = "query-keys"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["backspace", "backspace", "backspace", "backspace"]
+
+[[step]]
+type = "zzz"
+
+# Textual adds "No matches found" half a second after a search with no hits ends.
+[[step]]
+wait = { text = "No matches found" }
+
+# Enter with no hits does nothing: the palette stays open.
+[[step]]
+keys = ["enter"]
+
+[[step]]
+capture = "no-matches"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "🔎" }
+
+[[step]]
+capture = "closed"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "keys"
+
+[[step]]
+wait = { text = "keys" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Cursor up" }
+
+[[step]]
+capture = "keys"
+checks = ["titles", "focus"]
+
+# With the help panel open, "Keys" offers to hide it.
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "keys"
+
+[[step]]
+wait = { text = "Hide the keys" }
+
+[[step]]
+capture = "keys-hide"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "Cursor up" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "max"
+
+[[step]]
+wait = { text = "Maximize the focused widget" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "[1] Repositories" }
+
+# The palette's Maximize raises no "View Maximized" toast.
+[[step]]
+capture = "maximized"
+checks = ["titles"]
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+capture = "maximized-open"
+checks = ["focus"]
+
+[[step]]
+type = "min"
+
+[[step]]
+wait = { text = "Minimize the widget" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "[1] Repositories" }
+
+[[step]]
+capture = "minimized"
+checks = ["titles", "focus"]
+
+# The palette's Maximize didn't use up the one-time toast: the first M raises it.
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { text = "View Maximized" }
+
+[[step]]
+capture = "m-toast"
+checks = ["titles"]
+
+[expect.open]
+contains = [
+    "🔎 Search for commands…",
+    "Show help for the focused widget and a summary of available keys",
+    "Maximize the focused widget",
+    "Quit the application as soon as possible",
+]
+# LazyGithub's own commands are found by typing only (Py bug B87).
+not_contains = ["Toggle Issues", "Refresh notifications", "Traceback"]
+
+[expect.query-keys]
+contains = ["🔎 keys", "Show help for the focused widget and a summary of available keys"]
+not_contains = ["Maximize the focused widget", "Quit the application"]
+
+[expect.no-matches]
+contains = ["🔎 zzz", "No matches found"]
+
+[expect.closed]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
+focused = ["[1] Repositories"]
+not_contains = ["Search for commands", "No matches found"]
+
+[expect.keys]
+focused = ["[1] Repositories"]
+contains = ["▏         ↑ k Cursor up", "▏           / Search Search"]
+
+[expect.keys-hide]
+contains = ["🔎 keys", "Hide the keys and widget help panel"]
+not_contains = ["Show help for the focused widget"]
+
+[expect.maximized]
+pane_titles = []
+contains = ["★  Owner", "dotfiles"]
+not_contains = ["View Maximized", "[1] Repositories", "Cursor up"]
+
+[expect.maximized-open]
+contains = ["Minimize the widget and restore to normal size", "Quit the application as soon as possible"]
+not_contains = ["Maximize the focused widget"]
+
+[expect.minimized]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
+focused = ["[1] Repositories"]
+
+[expect.m-toast]
+pane_titles = []
+contains = ["View Maximized"]

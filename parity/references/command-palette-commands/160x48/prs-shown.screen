@@ -1,0 +1,123 @@
+lazy-github-screen 1
+size 160x48
+cursor 5 26 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/dotfiles                                                                                                    • Unread Notifications: 3│
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-bot/dotfiles Details ────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Repo Overview                                                                                │
+│ ☆  parity-bot  dotfiles     ✘                                ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  ✘                                ││parity-bot/dotfiles • Public                                                                  │
+│ ☆  parity-bot  lazy-demo    ✘                                ││Owned by parity-bot                                                                           │
+│                                                              ││Default branch: main                                                                          │
+│                                                              ││                                                                                              │
+│                                                              ││Shell configuration, kept in one place.                                                       │
+│                                                              ││                                                                                              │
+│                                                              ││──────────────────────────────────────────────────────────────────────────────────────────────│
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                           dotfiles                                           │
+│                                                              ││                                                                                              │
+│                                                              ││  Configuration files.                                                                        │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [2] Pull Requests (empty) ──────────────────────────────────┐│                                                                                              │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [3] Issues (empty) ─────────────────────────────────────────┐│                                                                                              │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^n Notifications  ^v Paste link  f Follow link  F Follow link (browser)
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbddddddddddddddddddddddddda
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+eghggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggef.bbbbbbbbbbbbb................................................................................f
+eiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiefjkkkkkkkkkkkkkjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjf
+ellllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllefmmmmmmmmmmmmmmmmmmmbbbcccccc..................................................................f
+ellllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllefbbbbbbbbbnnnnnnnnnn...........................................................................f
+e..............................................................efbbbbbbbbbbbbbbbboooo..........................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................efbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.......................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................efaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaf
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp..f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..bbbbbbbbbbbbbbbbbbbb........................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef..............................................................................................f
+fffffffffffffffffffffqqqqqqqfffffffffffffffffffffffffffffffffffff..............................................................................................f
+frrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrff..............................................................................................f
+fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff..............................................................................................f
+ffffffffffffffqqqqqqqffffffffffffffffffffffffffffffffffffffffffff..............................................................................................f
+frrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrff..............................................................................................f
+fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff..............................................................................................f
+fffffffffffffffffqqqqqqqfffffffffffffffffffffffffffffffffffffffff..............................................................................................f
+frrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrff..............................................................................................f
+ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+ssstttttttssssttttttttttttttttsssttttttttttttttttttsssttttttttttsssttttttttttssstttttttssssttttttttttttttsssstttttttttttsssttttttttttttssstttttttttttttttttttttt
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#adff2f bg=#121212
+d fg=#ff0000 bg=#121212
+e fg=#4ebf71 bg=#121212
+f fg=#6db2ff bg=#121212
+g fg=#e0e0e0 bg=#2d3740 bold
+h fg=#98e024 bg=#2d3740 bold
+i fg=#ddedf9 bg=#0178d4 bold
+j fg=#262626 bg=#121212
+k fg=#0178d4 bg=#121212
+l fg=#e0e0e0 bg=#272727
+m fg=#e0e0e0 bg=#121212 bold underline
+n fg=#e0e0e0 bg=#121212 underline
+o fg=#e0e0e0 bg=#121212 bold
+p fg=#0178d4 bg=#121212 bold
+q fg=#4e7bae bg=#121212
+r fg=#e0e0e0 bg=#242f38 bold
+s fg=#ffa62b bg=#242f38 bold
+t fg=#e0e0e0 bg=#242f38

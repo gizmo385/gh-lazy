@@ -1,6 +1,7 @@
-//! Create PR (and, with #283, Edit PR): one dialog with a heading, the Base / Compare / Draft row, a title, a code
-//! editor for the description, the Reviewers field and Create / Cancel, all in a scroll area. Python's
-//! `CreateOrEditPullRequestModal` around a `CreateOrEditPullRequestContainer`.
+//! Create PR and Edit PR: one dialog with a heading, the Base / Compare / Draft row, a title, a code editor for the
+//! description, the Reviewers field and Create (Update) / Cancel, all in a scroll area. Python's
+//! `CreateOrEditPullRequestModal` around a `CreateOrEditPullRequestContainer`. Edit PR prefills everything from the
+//! pull request and disables the branch row.
 //!
 //! The whole interior scrolls (the container is the `VerticalScroll`, with `padding: 1`), so the buttons are below
 //! the fold until focus or the wheel brings them up. The dialog has no footer of its own.
@@ -9,6 +10,7 @@ mod layout;
 mod reviewers;
 mod submit;
 
+use std::borrow::Cow;
 use std::ops::Range;
 
 use crossterm::event::{KeyEvent, MouseButton, MouseEvent, MouseEventKind};
@@ -51,6 +53,8 @@ const MARGIN: u16 = 1;
 const PADDING: u16 = 1;
 
 const CREATE_HEADING: &str = "New Pull Request";
+const BASE_PLACEHOLDER: &str = "Choose a base ref";
+const COMPARE_PLACEHOLDER: &str = "Choose a head ref";
 const WARNING: &str = "Warning:";
 const NO_UPSTREAM: &str = " Current local branch has no configured upstream";
 
@@ -60,7 +64,7 @@ const PR_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
 /// The dialog's own actions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PullRequestAction {
-    /// `modal.submit` or Create: check the fields and create the pull request.
+    /// `modal.submit`, Create or Update: check the fields and create or update the pull request.
     Submit,
     /// `modal.close` or Cancel: close with nothing.
     Close,
@@ -74,10 +78,12 @@ pub enum PullRequestAction {
 }
 
 /// What the dialog is for.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum Mode {
     /// A new pull request.
     Create,
+    /// This pull request, as it was when the dialog opened.
+    Edit(Box<FullPullRequest>),
 }
 
 /// What Create PR opens with, read by the opener.
@@ -134,7 +140,8 @@ impl PrField {
     }
 }
 
-/// The Create PR dialog for one repo. Its output is the created pull request, or `None` when it was closed.
+/// The Create PR or Edit PR dialog for one repo. Its output is the created or updated pull request, or `None` when
+/// it was closed.
 #[derive(Debug)]
 pub struct PullRequestDialog {
     repo: Repository,
@@ -154,6 +161,8 @@ pub struct PullRequestDialog {
     branches_request: Option<RequestId>,
     /// The upstream check, until it answers.
     upstream_request: Option<RequestId>,
+    /// Edit PR's request for the reviewers already requested, until it answers.
+    requested_request: Option<RequestId>,
     /// The submit in flight.
     submit: Option<Submit>,
     /// The remote check and the push prompt after a refused create.
@@ -168,9 +177,9 @@ impl PullRequestDialog {
     /// branches (uncached, so a branch pushed a moment ago is offered; owner decision on #278) and its collaborators,
     /// and whether the current-directory branch, if git named one, has an upstream.
     pub fn create(repo: Repository, prefill: CreatePrefill, cx: &mut Cx<'_>) -> Self {
-        let mut base = TextInput::new("Choose a base ref");
+        let mut base = TextInput::new(BASE_PLACEHOLDER);
         base.set_value(prefill.base);
-        let mut compare = TextInput::new("Choose a head ref");
+        let mut compare = TextInput::new(COMPARE_PLACEHOLDER);
         compare.set_value(prefill.compare.unwrap_or_default());
         let mut reviewers = ReviewersField::new(&cx.config().pull_requests.additional_suggested_pr_reviewers);
         reviewers.load(&repo, cx);
@@ -196,6 +205,54 @@ impl PullRequestDialog {
             upstream_warning: false,
             branches_request,
             upstream_request,
+            requested_request: None,
+            submit: None,
+            follow_up: BranchFollowUp::default(),
+            output: None,
+        };
+        dialog.sync_ring();
+        dialog.focus(PrField::Title);
+        dialog
+    }
+
+    /// Edit PR for `pr`: its title and body (empty when it has none) filled in with the title focused, its base, head
+    /// and draft flag shown in the disabled branch row. It asks at once for the repo's collaborators and the reviewers
+    /// already requested, who are listed when they arrive.
+    pub fn edit(pr: Box<FullPullRequest>, cx: &mut Cx<'_>) -> Self {
+        let repo = pr.pr.issue.repo.clone();
+        let mut base = TextInput::new(BASE_PLACEHOLDER);
+        base.set_value(pr.base.name.clone());
+        base.set_disabled(true);
+        let mut compare = TextInput::new(COMPARE_PLACEHOLDER);
+        compare.set_value(pr.head.name.clone());
+        compare.set_disabled(true);
+        let mut draft = Switch::new(pr.pr.draft);
+        draft.set_disabled(true);
+        let mut title = TextInput::new("Title");
+        title.set_value(pr.pr.issue.title.clone());
+        let description = TextEditor::new(EditorVariant::Code, pr.pr.issue.body.as_deref().unwrap_or_default());
+        let mut reviewers = ReviewersField::new(&cx.config().pull_requests.additional_suggested_pr_reviewers);
+        reviewers.load(&repo, cx);
+        let requested_request = Some(cx.request(GithubRequest::RequestedReviewers {
+            repo: Box::new(repo.clone()),
+            number: pr.number(),
+        }));
+        let mut dialog = Self {
+            repo,
+            mode: Mode::Edit(pr),
+            ring: FocusRing::new([]),
+            base,
+            compare,
+            draft,
+            title,
+            description,
+            reviewers,
+            buttons: ButtonRow::new("Update"),
+            scroll: FormScroll::default(),
+            upstream_warning: false,
+            branches_request: None,
+            upstream_request: None,
+            requested_request,
             submit: None,
             follow_up: BranchFollowUp::default(),
             output: None,
@@ -251,22 +308,21 @@ impl PullRequestDialog {
         })
     }
 
-    fn heading(&self) -> &'static str {
-        match self.mode {
-            Mode::Create => CREATE_HEADING,
+    fn heading(&self) -> Cow<'static, str> {
+        match &self.mode {
+            Mode::Create => Cow::Borrowed(CREATE_HEADING),
+            Mode::Edit(pr) => Cow::Owned(format!("Editing PR {}", pr.number())),
         }
     }
 
-    /// The fields in screen order: the Reviewers field's list joins while anyone is listed.
+    /// The fields in screen order: the branch row's only while it's enabled (Create PR), and the Reviewers field's
+    /// list while anyone is listed.
     fn order(&self) -> Vec<PrField> {
-        let mut order = vec![
-            PrField::Scroll,
-            PrField::Base,
-            PrField::Compare,
-            PrField::Draft,
-            PrField::Title,
-            PrField::Description,
-        ];
+        let mut order = vec![PrField::Scroll];
+        if matches!(self.mode, Mode::Create) {
+            order.extend([PrField::Base, PrField::Compare, PrField::Draft]);
+        }
+        order.extend([PrField::Title, PrField::Description]);
         order.extend(
             self.reviewers
                 .focus_stops()
@@ -359,7 +415,11 @@ impl PullRequestDialog {
 
     /// Edits `field`'s input with `edit`, checking it when the text changed (Textual's `Input.Changed`) or was
     /// submitted. Returns the outcome and whether the text changed.
-    fn edit(&mut self, field: PrField, edit: impl FnOnce(&mut TextInput) -> InputOutcome) -> (InputOutcome, bool) {
+    fn edit_input(
+        &mut self,
+        field: PrField,
+        edit: impl FnOnce(&mut TextInput) -> InputOutcome,
+    ) -> (InputOutcome, bool) {
         let Some(input) = self.input_mut(field) else {
             return (InputOutcome::Ignored, false);
         };
@@ -396,13 +456,14 @@ impl PullRequestDialog {
     }
 
     /// The one way the dialog closes without a pull request: `modal.close` or Cancel. Requests in flight are
-    /// cancelled. Drafts (#186) save here.
+    /// cancelled. Drafts (#186) save here, for Create PR only.
     fn close(&mut self, cx: &mut Cx<'_>) {
         for id in self
             .branches_request
             .take()
             .into_iter()
             .chain(self.upstream_request.take())
+            .chain(self.requested_request.take())
         {
             cx.effect(Effect::Cancel(id));
         }
@@ -451,6 +512,9 @@ impl PullRequestDialog {
         let moved = self.scroll.to_content(event);
         let at = Position::new(moved.column, moved.row);
         match row.and_then(|row| rows.part_at(row)) {
+            // Edit PR's branch row is disabled: a press there lands on the scroll area, as Textual focuses the nearest
+            // focusable ancestor of a disabled widget.
+            Some(Part::Branches) if matches!(self.mode, Mode::Edit(_)) => self.focus(PrField::Scroll),
             Some(Part::Branches) => {
                 let columns = BranchColumns::new(rows.area(Part::Branches, content));
                 if columns.base.contains(at) {
@@ -519,7 +583,7 @@ impl Component for PullRequestDialog {
         match field {
             PrField::Base | PrField::Compare | PrField::Title => {
                 let (outcome, changed) =
-                    self.edit(field, |input| input.handle_key(&chord, cx.keymap(), cx.clipboard()));
+                    self.edit_input(field, |input| input.handle_key(&chord, cx.keymap(), cx.clipboard()));
                 match outcome {
                     InputOutcome::Copied(text) => Some(Action::Copy(text)),
                     InputOutcome::Ignored => None,
@@ -623,7 +687,7 @@ impl Component for PullRequestDialog {
             buttons,
         };
         scroll.render(frame.buffer_mut(), inner, theme, fill, rows.height(), |buf, content| {
-            draw_static(buf, content, &rows, theme, under, heading, warning);
+            draw_static(buf, content, &rows, theme, under, &heading, warning);
             form.render(buf, content, &rows, theme, under, focused);
         });
     }
@@ -855,7 +919,7 @@ impl Dialog for PullRequestDialog {
         let field = self.ring.focused()?;
         match field {
             PrField::Base | PrField::Compare | PrField::Title => {
-                let (_, changed) = self.edit(field, |input| {
+                let (_, changed) = self.edit_input(field, |input| {
                     input.handle_paste(text);
                     InputOutcome::Changed
                 });
@@ -884,6 +948,19 @@ impl Dialog for PullRequestDialog {
                 self.on_branches(result);
                 None
             }
+            GithubResponse::RequestedReviewers(result) if self.requested_request == Some(id) => {
+                self.requested_request = None;
+                match result {
+                    Ok(logins) => {
+                        tracing::debug!("Found existing reviewers: {logins:?}");
+                        self.reviewers.add_existing(logins);
+                        self.sync_ring();
+                    }
+                    // Python's worker raises and Textual logs it; nobody is listed.
+                    Err(error) => tracing::debug!("Fetching the requested reviewers for Edit PR failed: {error}"),
+                }
+                None
+            }
             other => {
                 let other = self.on_submit_response(id, other, cx)?;
                 let unclaimed = self.reviewers.on_response(id, other, cx);
@@ -908,3 +985,6 @@ impl Dialog for PullRequestDialog {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod edit_tests;

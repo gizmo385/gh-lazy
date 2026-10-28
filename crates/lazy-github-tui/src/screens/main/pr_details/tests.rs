@@ -484,11 +484,10 @@ fn tab_from_the_strip_focuses_the_body_and_its_footer() {
         footer.starts_with(" ^m Merge PR  E Edit PR  R Add reaction  ^v Paste link"),
         "{footer}"
     );
-    // Not built yet: consumed and logged. `R` is Add reaction's.
-    let out = logs(|| {
-        app.press(&["E"]);
-    });
-    assert!(out.contains("is not implemented yet"), "{out}");
+    // `E` edits the shown pull request.
+    app.press(&["E"]);
+    assert_eq!(app.app().modals(), [crate::modal::ModalKind::PullRequest]);
+    app.press(&["escape"]);
     // Merge, edit and react belong to the Overview: the other tabs' bodies don't have them.
     app.press(&["5", "right", "tab"]);
     assert_eq!(focus(&app), FocusTarget::DetailsContent);
@@ -497,7 +496,7 @@ fn tab_from_the_strip_focuses_the_body_and_its_footer() {
 }
 
 #[test]
-fn the_pull_request_bindings_answer_unimplemented() {
+fn the_pull_request_bindings_go_to_the_main_screen() {
     let mut app = app();
     app.press(&["enter"]);
     settle(&mut app);
@@ -506,7 +505,9 @@ fn the_pull_request_bindings_answer_unimplemented() {
     assert!(matches!(
         main.details
             .on_binding(crate::component::Owner::PrOverview, BindingId::PullRequestEdit),
-        Some(Action::Unimplemented(BindingId::PullRequestEdit))
+        Some(Action::Main(crate::screens::main::MainAction::EditPullRequest(
+            crate::screens::main::EditOrigin::Overview
+        )))
     ));
     // Merge goes to the main screen, which holds the merges in flight.
     assert!(matches!(

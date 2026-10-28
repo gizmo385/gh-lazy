@@ -22,8 +22,8 @@ use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::modal::PostedComment;
 use crate::theme::Theme;
 
-use super::MainAction;
 use super::details::{BodyRenderCx, DetailsBody};
+use super::{EditOrigin, MainAction};
 pub(super) use conversation::PrConversation;
 pub(super) use diff::PrDiff;
 pub(super) use overview::PrOverview;
@@ -225,8 +225,8 @@ impl DetailsBody for PullRequestDetails {
         }
     }
 
-    /// A section title's or list's key applies to the Overview, add a reaction makes a request and merge goes to the
-    /// main screen; edit (#185) isn't built yet: the key is consumed, as in Python.
+    /// A section title's or list's key applies to the Overview, add a reaction makes a request, and merge and edit go
+    /// to the main screen.
     fn on_binding(&mut self, tab: usize, owner: Owner, id: BindingId) -> Option<Action> {
         // The diff viewer's titles, pane, filter and keys.
         match PrTab::at(tab) {
@@ -239,6 +239,9 @@ impl DetailsBody for PullRequestDetails {
             (Owner::CollapsibleTitle | Owner::ListView, _) => self.overview.on_binding(id).then_some(Action::Consumed),
             (Owner::PrOverview, BindingId::ReactAdd) => Some(Action::Main(MainAction::DetailsCommand(owner, id))),
             (Owner::PrOverview, BindingId::PullRequestMerge) => Some(Action::Main(MainAction::MergePullRequest)),
+            (Owner::PrOverview, BindingId::PullRequestEdit) => {
+                Some(Action::Main(MainAction::EditPullRequest(EditOrigin::Overview)))
+            }
             _ => Some(Action::Unimplemented(id)),
         }
     }

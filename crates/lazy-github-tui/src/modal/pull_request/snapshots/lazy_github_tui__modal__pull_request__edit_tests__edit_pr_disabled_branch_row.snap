@@ -1,0 +1,22 @@
+---
+source: crates/lazy-github-tui/src/modal/pull_request/edit_tests.rs
+expression: "crate::test_util::buffer_to_styled_string(&branches)"
+---
+█     ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎         ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎     ▊▔▔▔▔▔▔▔▔▎             █
+█ Base▊  main                    ▎← Compare▊  cursor                  ▎Draft▊        ▎             █
+█     ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎         ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎     ▊▁▁▁▁▁▁▁▁▎             █
+--- styles
+.aaaaabccccccccccccccccccccccccccdaaaaaaaaabccccccccccccccccccccccccccdaaaaabccccccccdaaaaaaaaaaeea.
+.affffbggggggggggggggggggggggggggdaafffffffbggggggggggggggggggggggggggdaaaaabgghhiiggdaaaaaaaaaaeea.
+.aaaaabccccccccccccccccccccccccccdaaaaaaaaabccccccccccccccccccccccccccdaaaaabccccccccdaaaaaaaaaaeea.
+--- legend
+. fg=#121212 bg=#4f4f4f
+a fg=#e0e0e0 bg=#4f4f4f
+b fg=#292929 bg=#4f4f4f REVERSED
+c fg=#292929 bg=#363636
+d fg=#292929 bg=#4f4f4f
+e fg=#003054 bg=#4f4f4f REVERSED
+f fg=#e0e0e0 bg=#4f4f4f BOLD
+g fg=#b4b4b4 bg=#363636
+h fg=#30383e bg=#363636 REVERSED
+i fg=#b4b4b4 bg=#272f33

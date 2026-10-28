@@ -160,6 +160,16 @@ impl Theme {
         self.paint(Paint::Rgb(rgb.blend(background, factor)))
     }
 
+    /// `color`, already drawn, under Textual's `opacity: <opacity>` on a widget over `under`, its parent's background:
+    /// blended `1 - opacity` of the way toward `under`. As with [`Theme::dim`], the terminal's default color and an
+    /// ANSI `under` can't be blended and stay as they are.
+    pub fn fade(&self, color: Color, under: Paint, opacity: f64) -> Color {
+        let (Some(rgb), Paint::Rgb(under)) = (depth::rgb_of(color), under) else {
+            return color;
+        };
+        self.paint(Paint::Rgb(rgb.blend(under, 1.0 - opacity)))
+    }
+
     /// The background of a markdown code block: Textual's `MarkdownFence` CSS, `black 10%` on dark themes and
     /// `white 30%` on light ones. ANSI themes give fences no background.
     pub fn markdown_fence_background(&self) -> ThemeColor {

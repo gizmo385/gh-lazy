@@ -2,7 +2,10 @@ version = 1
 description = "Edit PR (E): a merged PR from the table (warning, no dialog), a refused update of PR 4, then PR 5: a new title, the Reviewers input (already a reviewer, an unknown user, a suggestion accepted and added), the existing reviewer removed, Update (PATCH, then only the new reviewer requested), and E again from the PR Overview with nothing changed"
 # shift+enter is sent in the kitty keyboard protocol's encoding (CSI 13;2 u), which both apps read
 # (terminal-caveats.shift-enter). Python drops a key that follows a focus key at once, hence the stable waits.
-gate = false
+# The dialog captures leave the footer out of `checks`: the main screen's footer shows under the dialog, cut inside
+# `^p Command Pallete` (Py bug B14), which Rust spells right, so the cut footers differ. Their `[expect]`s check
+# that it's the PR table's footer instead.
+gate = true
 parity_rows = [
     "modals.edit-pr",
     "modals.pr-reviewers",
@@ -66,7 +69,7 @@ wait.stable_ms = 500
 
 [[step]]
 capture = "open-pr4"
-checks = ["titles", "focus", "footer"]
+checks = ["titles", "focus"]
 
 [[step]]
 type = "Drop the old renderer"
@@ -113,7 +116,7 @@ wait.stable_ms = 500
 
 [[step]]
 capture = "open"
-checks = ["titles", "focus", "footer"]
+checks = ["titles", "focus"]
 
 # The title is focused with its text selected, so typing replaces it.
 [[step]]
@@ -134,7 +137,7 @@ wait.text = "Current Reviewers - Click/Select them to remove"
 
 [[step]]
 capture = "reviewers"
-checks = ["titles", "focus", "footer"]
+checks = ["titles", "focus"]
 
 [[step]]
 type = "Parity-Reviewer"
@@ -311,16 +314,16 @@ contains = ["This PR has already been merged!"]
 not_contains = ["Editing PR"]
 
 [expect.open-pr4]
-contains = ["Editing PR 4", "Base", "Compare", "Draft", "Title", "Drop the legacy renderer", "Description", "Superseded by the new renderer."]
+contains = [" E Edit PR  u View User ", "Editing PR 4", "Base", "Compare", "Draft", "Title", "Drop the legacy renderer", "Description", "Superseded by the new renderer."]
 
 [expect.update-failed]
 contains = ["Editing PR 4", "Error updating pull request", "Unexpected error while attempting to update PR"]
 
 [expect.open]
-contains = ["Editing PR 5", "Title", "Add a cursor to the viewer", "Description", "Adds a cursor to the viewer, as discussed in #3."]
+contains = [" E Edit PR  u View User ", "Editing PR 5", "Title", "Add a cursor to the viewer", "Description", "Adds a cursor to the viewer, as discussed in #3."]
 
 [expect.reviewers]
-contains = ["Reviewers", "Current Reviewers - Click/Select them to remove", "parity-reviewer", "Update", "Cancel"]
+contains = [" E Edit PR  u View User ", "Reviewers", "Current Reviewers - Click/Select them to remove", "parity-reviewer", "Update", "Cancel"]
 
 [expect.already-reviewer]
 contains = ["Already a reviewer!"]

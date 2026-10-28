@@ -103,7 +103,7 @@ pub enum ModalKind {
     AddReaction,
     /// [`TriggerWorkflowDialog`]: a workflow to dispatch, and the branch.
     TriggerWorkflow,
-    /// [`PullRequestDialog`]: Create PR.
+    /// [`PullRequestDialog`]: Create PR and Edit PR.
     PullRequest,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.

@@ -9,6 +9,7 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
 
+use crate::components::disabled;
 use crate::keymap::BindingId;
 use crate::theme::{AnsiColor, Paint, Theme, ThemeColor};
 
@@ -25,6 +26,8 @@ const TRACK: u16 = 4;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct Switch {
     value: bool,
+    /// Textual's `disabled`: drawn faded and never focused, and clicks do nothing.
+    disabled: bool,
 }
 
 impl Switch {
@@ -36,7 +39,18 @@ impl Switch {
 
     /// A switch that's on when `value` is.
     pub fn new(value: bool) -> Self {
-        Self { value }
+        Self { value, disabled: false }
+    }
+
+    /// Disables the switch or enables it again. A disabled switch is drawn faded (Textual's `opacity: 0.7`) and
+    /// ignores clicks; its owner keeps it out of the focus order.
+    pub fn set_disabled(&mut self, disabled: bool) {
+        self.disabled = disabled;
+    }
+
+    /// Whether it's disabled.
+    pub fn is_disabled(&self) -> bool {
+        self.disabled
     }
 
     /// Whether it's on.
@@ -62,7 +76,8 @@ impl Switch {
     /// focuses it. Textual toggles on the click, which completes on the release; toggling on the press is the same to
     /// the eye and needs no state.
     pub fn handle_mouse(&mut self, event: &MouseEvent, area: Rect) -> bool {
-        let hit = event.kind == MouseEventKind::Down(MouseButton::Left)
+        let hit = !self.disabled
+            && event.kind == MouseEventKind::Down(MouseButton::Left)
             && Self::bounds(area).contains(Position::new(event.column, event.row));
         if hit {
             self.toggle();
@@ -77,7 +92,7 @@ impl Switch {
         if area.is_empty() {
             return;
         }
-        let styles = Styles::new(theme, under, focused, self.value);
+        let styles = Styles::new(theme, under, focused && !self.disabled, self.value);
         let last_row = Self::HEIGHT - 1;
         // The thumb is the slider's left half while off and its right half while on.
         let thumb = if self.value { TRACK / 2..TRACK } else { 0..TRACK / 2 };
@@ -96,6 +111,9 @@ impl Switch {
                 };
                 buf[(area.x + dx, area.y + dy)].set_symbol(symbol).set_style(style);
             }
+        }
+        if self.disabled {
+            disabled::fade(buf, area, theme, under);
         }
     }
 }
@@ -192,6 +210,39 @@ mod tests {
         assert!(!switch.value());
         assert!(Switch::new(true).value());
         assert_eq!(Switch::default(), Switch::new(false));
+    }
+
+    #[test]
+    fn a_disabled_switch_ignores_clicks_and_draws_faded() {
+        let area = Rect::new(0, 0, Switch::WIDTH, Switch::HEIGHT);
+        let mut switch = Switch::new(true);
+        switch.set_disabled(true);
+        assert!(switch.is_disabled());
+        assert!(!switch.handle_mouse(&left_press(4, 1), area));
+        assert!(switch.value());
+        let theme = Theme::default();
+        let under = theme.palette.surface.over(theme.background());
+        let draw = |switch: &Switch| {
+            let mut buf = Buffer::empty(area);
+            switch.render(&mut buf, area, &theme, under, true);
+            buf
+        };
+        let enabled = draw(&Switch::new(true));
+        let disabled = draw(&switch);
+        // Same cells, other colors; drawn unfocused whatever the owner says.
+        assert_eq!(
+            enabled
+                .content()
+                .iter()
+                .map(ratatui::buffer::Cell::symbol)
+                .collect::<String>(),
+            disabled
+                .content()
+                .iter()
+                .map(ratatui::buffer::Cell::symbol)
+                .collect::<String>()
+        );
+        assert_ne!(enabled[(4, 1)].bg, disabled[(4, 1)].bg);
     }
 
     #[test]

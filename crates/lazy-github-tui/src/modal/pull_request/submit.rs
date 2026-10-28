@@ -1,14 +1,17 @@
 //! Submitting Create PR: the check of the required fields, the create request, the review request for the listed
 //! reviewers, and, after a refused create, the remote branch check and the push prompt. Python's `_create_pr`,
 //! `ensure_branch_exists_on_remote` and `check_for_branch_creation`.
+//!
+//! Submitting Edit PR: the title check, the update (skipped when nothing changed), the reviewers already requested,
+//! then a review request for the listed ones who aren't. Python's `_edit_pr`.
 
 use lazy_github_core::gh::GhError;
-use lazy_github_core::github::NewPullRequest;
+use lazy_github_core::github::{NewPullRequest, PullRequestUpdate};
 use lazy_github_core::models::FullPullRequest;
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 
-use super::{PrField, PullRequestAction, PullRequestDialog};
+use super::{Mode, PrField, PullRequestAction, PullRequestDialog};
 use crate::action::Action;
 use crate::component::Cx;
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId};
@@ -21,7 +24,11 @@ use crate::toast::Toast;
 pub(super) enum Submit {
     /// The create request.
     Creating(RequestId),
-    /// The pull request was created; the review request for the listed reviewers is out.
+    /// Edit PR's update, with the pull request as it will be once updated.
+    Updating { id: RequestId, pr: Box<FullPullRequest> },
+    /// Edit PR's pull request is up to date; the reviewers already requested are being fetched.
+    Listing { id: RequestId, pr: Box<FullPullRequest> },
+    /// The pull request was created or updated; the review request for the listed reviewers is out.
     RequestingReviews {
         id: RequestId,
         pr: Box<FullPullRequest>,
@@ -32,7 +39,10 @@ pub(super) enum Submit {
 impl Submit {
     fn id(&self) -> RequestId {
         match self {
-            Submit::Creating(id) | Submit::RequestingReviews { id, .. } => *id,
+            Submit::Creating(id)
+            | Submit::Updating { id, .. }
+            | Submit::Listing { id, .. }
+            | Submit::RequestingReviews { id, .. } => *id,
         }
     }
 }
@@ -49,13 +59,24 @@ pub(super) struct BranchFollowUp {
 }
 
 impl PullRequestDialog {
-    /// `modal.submit` or Create. Title, Compare and Base must each be non-empty as typed (a space passes); the empty
-    /// ones are marked. Then the create request goes out.
+    /// `modal.submit`, Create or Update; a submit while one is in flight is ignored.
     pub(super) fn submit(&mut self, cx: &mut Cx<'_>) {
         if self.submit.is_some() {
-            tracing::debug!("Ignoring a Create PR submit: one is in flight");
+            tracing::debug!("Ignoring a pull request submit: one is in flight");
             return;
         }
+        match &self.mode {
+            Mode::Create => self.submit_create(cx),
+            Mode::Edit(pr) => {
+                let pr = pr.clone();
+                self.submit_update(pr, cx);
+            }
+        }
+    }
+
+    /// Create PR's submit. Title, Compare and Base must each be non-empty as typed (a space passes); the empty ones are
+    /// marked. Then the create request goes out.
+    fn submit_create(&mut self, cx: &mut Cx<'_>) {
         // Every field is checked, so each empty one is marked.
         let valid = [PrField::Title, PrField::Compare, PrField::Base]
             .map(|field| self.validate(field))
@@ -89,7 +110,89 @@ impl PullRequestDialog {
         }
     }
 
-    /// Takes the answer to the create or review request, and hands back any other.
+    /// Edit PR's submit for `pr` as it opened. The title must be non-empty as typed (Py bug B24's recommendation:
+    /// Python only marks it). The update goes out unless the title and description equal the pull request's (a body
+    /// it doesn't have never does, as in Python); either way the reviewers already requested are fetched next.
+    fn submit_update(&mut self, pr: Box<FullPullRequest>, cx: &mut Cx<'_>) {
+        if !self.validate(PrField::Title) {
+            cx.notify(Toast::error("Missing required fields!").with_title("Invalid PR!"));
+            return;
+        }
+        cx.notify(Toast::info("Updating PR..."));
+        let title = self.title.value().to_owned();
+        let body = self.description.text();
+        let unchanged = pr.pr.issue.title == title && pr.pr.issue.body.as_deref() == Some(body.as_str());
+        let mut edited = pr;
+        edited.pr.issue.title.clone_from(&title);
+        edited.pr.issue.body = Some(body.clone());
+        if unchanged {
+            self.list_requested(edited, cx);
+            return;
+        }
+        let update = PullRequestUpdate {
+            title,
+            body,
+            base: edited.base.name.clone(),
+        };
+        let id = cx.request(GithubRequest::UpdatePullRequest {
+            repo: Box::new(self.repo.clone()),
+            number: edited.number(),
+            update,
+        });
+        self.submit = Some(Submit::Updating { id, pr: edited });
+    }
+
+    /// Asks which reviewers `pr` has requested already, before requesting the rest.
+    fn list_requested(&mut self, pr: Box<FullPullRequest>, cx: &mut Cx<'_>) {
+        let id = cx.request(GithubRequest::RequestedReviewers {
+            repo: Box::new(self.repo.clone()),
+            number: pr.number(),
+        });
+        self.submit = Some(Submit::Listing { id, pr });
+    }
+
+    /// The update answered: on to the requested reviewers, or, refused, the toast and the edits kept.
+    fn on_updated(&mut self, pr: Box<FullPullRequest>, result: Result<(), GhError>, cx: &mut Cx<'_>) {
+        match result {
+            Ok(()) => self.list_requested(pr, cx),
+            Err(error) => {
+                tracing::error!("Error while attempting to update pull request: {error}");
+                cx.notify(
+                    Toast::error("Unexpected error while attempting to update PR")
+                        .with_title("Error updating pull request"),
+                );
+            }
+        }
+    }
+
+    /// The reviewers already requested answered (a failure counts as none). With anyone listed, the listed logins
+    /// not among them are requested, even when that's none, as Python does; with nobody listed, it's done.
+    fn on_requested(&mut self, pr: Box<FullPullRequest>, result: Result<Vec<String>, GhError>, cx: &mut Cx<'_>) {
+        let requested = result.unwrap_or_else(|error| {
+            tracing::debug!("Fetching the requested reviewers failed: {error}");
+            Vec::new()
+        });
+        let listed = self.reviewers.reviewers();
+        if listed.is_empty() {
+            self.finish(pr, None, cx);
+            return;
+        }
+        tracing::info!("Requesting PR reviews from: {}", listed.join(", "));
+        let reviewers: Vec<String> = listed.into_iter().filter(|login| !requested.contains(login)).collect();
+        self.request_reviews(pr, reviewers, cx);
+    }
+
+    /// Sends the review request for `reviewers` on `pr`, which closes the dialog once it answers.
+    fn request_reviews(&mut self, pr: Box<FullPullRequest>, reviewers: Vec<String>, cx: &mut Cx<'_>) {
+        let id = cx.request(GithubRequest::RequestReviewers {
+            repo: Box::new(self.repo.clone()),
+            number: pr.number(),
+            reviewers: reviewers.clone(),
+        });
+        self.submit = Some(Submit::RequestingReviews { id, pr, reviewers });
+    }
+
+    /// Takes the answer to the create, update, requested-reviewers or review request, and hands back any other.
     pub(super) fn on_submit_response(
         &mut self,
         id: RequestId,
@@ -101,6 +204,12 @@ impl PullRequestDialog {
         }
         match (self.submit.take(), response) {
             (Some(Submit::Creating(_)), GithubResponse::CreatePullRequest(result)) => self.on_created(result, cx),
+            (Some(Submit::Updating { pr, .. }), GithubResponse::UpdatePullRequest(result)) => {
+                self.on_updated(pr, result, cx);
+            }
+            (Some(Submit::Listing { pr, .. }), GithubResponse::RequestedReviewers(result)) => {
+                self.on_requested(pr, result, cx);
+            }
             (Some(Submit::RequestingReviews { pr, reviewers, .. }), GithubResponse::RequestReviewers(result)) => {
                 self.finish(pr, result.err().map(|error| (reviewers, error)), cx);
             }
@@ -123,12 +232,7 @@ impl PullRequestDialog {
                     return;
                 }
                 tracing::info!("Requesting PR reviews from: {}", reviewers.join(", "));
-                let id = cx.request(GithubRequest::RequestReviewers {
-                    repo: Box::new(self.repo.clone()),
-                    number: pr.number(),
-                    reviewers: reviewers.clone(),
-                });
-                self.submit = Some(Submit::RequestingReviews { id, pr, reviewers });
+                self.request_reviews(pr, reviewers, cx);
             }
             Err(error) => {
                 tracing::error!("Error while attempting to create new pull request: {error}");
@@ -146,9 +250,12 @@ impl PullRequestDialog {
     }
 
     /// Done: the success toast, then (Py bug B77's recommendation) one for a refused review request, and the dialog
-    /// closes with the pull request. Drafts (#186) are cleared here.
+    /// closes with the pull request. Drafts (#186) are cleared here, for Create PR.
     fn finish(&mut self, pr: Box<FullPullRequest>, refused: Option<(Vec<String>, GhError)>, cx: &mut Cx<'_>) {
-        cx.notify(Toast::info("Successfully created PR!"));
+        cx.notify(Toast::info(match self.mode {
+            Mode::Create => "Successfully created PR!",
+            Mode::Edit(_) => "Successfully updated PR!",
+        }));
         if let Some((reviewers, error)) = refused {
             tracing::error!("Requesting reviews from {} failed: {error}", reviewers.join(", "));
             cx.notify(

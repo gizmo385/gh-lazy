@@ -15,7 +15,7 @@ use crate::toast::Toast;
 
 const REPO: &str = "parity-bot/pr-details";
 
-fn fixture_body(set: &str, path: &str) -> Value {
+pub(super) fn fixture_body(set: &str, path: &str) -> Value {
     let path: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../parity/fixtures")
         .join(set)
@@ -126,7 +126,7 @@ impl DialogView {
     }
 }
 
-fn toasts(app: &TestApp) -> Vec<Toast> {
+pub(super) fn toasts(app: &TestApp) -> Vec<Toast> {
     app.app().toasts().iter().cloned().collect()
 }
 
@@ -137,7 +137,7 @@ fn direct(prefill: CreatePrefill) -> PullRequestDialog {
 }
 
 /// The fields `direction` visits from the title, `steps` times.
-fn walk(dialog: &mut PullRequestDialog, direction: FocusMove, steps: usize) -> Vec<PrField> {
+pub(super) fn walk(dialog: &mut PullRequestDialog, direction: FocusMove, steps: usize) -> Vec<PrField> {
     (0..steps)
         .map(|_| {
             dialog.move_focus(direction);
@@ -422,7 +422,7 @@ fn an_input_emptied_and_left_is_marked_invalid() {
     assert!(!dialog.base.is_invalid());
     // Base emptied: marked as it changes.
     dialog.focus(PrField::Base);
-    let (_, changed) = dialog.edit(PrField::Base, |input| {
+    let (_, changed) = dialog.edit_input(PrField::Base, |input| {
         input.handle_paste("");
         input.set_value("");
         InputOutcome::Changed
@@ -431,7 +431,7 @@ fn an_input_emptied_and_left_is_marked_invalid() {
     assert!(dialog.base.is_invalid());
     // Typing into the title clears its mark.
     dialog.focus(PrField::Title);
-    let _ = dialog.edit(PrField::Title, |input| {
+    let _ = dialog.edit_input(PrField::Title, |input| {
         input.handle_paste("x");
         InputOutcome::Changed
     });
@@ -529,7 +529,7 @@ pub(super) fn created() -> FullPullRequest {
     FullPullRequest::from_api(body, &fixture_repo()).unwrap()
 }
 
-fn refused() -> lazy_github_core::gh::GhError {
+pub(super) fn refused() -> lazy_github_core::gh::GhError {
     lazy_github_core::gh::GhError::Http {
         status: 422,
         message: "Validation Failed".into(),
@@ -564,7 +564,7 @@ fn git_requests(app: &TestApp) -> Vec<GitRequest> {
         .collect()
 }
 
-fn messages(app: &TestApp) -> Vec<(Option<String>, String)> {
+pub(super) fn messages(app: &TestApp) -> Vec<(Option<String>, String)> {
     app.app()
         .toasts()
         .iter()
@@ -572,11 +572,11 @@ fn messages(app: &TestApp) -> Vec<(Option<String>, String)> {
         .collect()
 }
 
-fn titled(title: &str, message: &str) -> (Option<String>, String) {
+pub(super) fn titled(title: &str, message: &str) -> (Option<String>, String) {
     (Some(title.to_owned()), message.to_owned())
 }
 
-fn plain(message: &str) -> (Option<String>, String) {
+pub(super) fn plain(message: &str) -> (Option<String>, String) {
     (None, message.to_owned())
 }
 

@@ -14,6 +14,7 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Widget};
 use regex::Regex;
 
+use crate::components::disabled;
 use crate::components::table::is_printable;
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::{AnsiColor, Paint, Theme};
@@ -93,6 +94,8 @@ pub struct TextInput {
     scroll: usize,
     /// The last validation failed: Textual's `-invalid` class, drawn as a red border.
     invalid: bool,
+    /// Textual's `disabled`: drawn faded and never focused, and presses do nothing.
+    disabled: bool,
     /// What the text may be, as Textual's `restrict`: an edit whose result fails it is refused.
     filter: Option<fn(&str) -> bool>,
     /// The known values a suggestion comes from, in order (Textual's `SuggestFromList`, case-sensitive).
@@ -113,6 +116,7 @@ impl TextInput {
             placeholder,
             scroll: 0,
             invalid: false,
+            disabled: false,
             filter: None,
             suggestions: None,
             suggestion: None,
@@ -164,6 +168,17 @@ impl TextInput {
     /// border (Textual's `-invalid` class) until the owner marks it valid again.
     pub fn set_invalid(&mut self, invalid: bool) {
         self.invalid = invalid;
+    }
+
+    /// Disables the input or enables it again. A disabled input is drawn faded (Textual's `opacity: 0.7`) and
+    /// ignores presses; its owner keeps it out of the focus order.
+    pub fn set_disabled(&mut self, disabled: bool) {
+        self.disabled = disabled;
+    }
+
+    /// Whether it's disabled.
+    pub fn is_disabled(&self) -> bool {
+        self.disabled
     }
 
     /// Whether the last check marked it invalid.
@@ -375,6 +390,9 @@ impl TextInput {
     /// any selection ends, and a drag starts there (Textual's `_on_mouse_down`, which runs after the focus that
     /// selected everything). The owner keeps the mouse for the input until [`Self::release`].
     pub fn press(&mut self, area: Rect, column: u16) {
+        if self.disabled {
+            return;
+        }
         self.cursor = self.index_at(area, column);
         self.anchor = Some(self.cursor);
         self.selecting = Some(area);
@@ -502,6 +520,15 @@ impl TextInput {
         if area.is_empty() {
             return;
         }
+        if self.disabled {
+            self.draw(buf, area, theme, under, false);
+            disabled::fade(buf, area, theme, under);
+        } else {
+            self.draw(buf, area, theme, under, focused);
+        }
+    }
+
+    fn draw(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focused: bool) {
         let styles = Styles::new(theme, under, focused, self.invalid);
         let border = TallBorder {
             left: styles.left,
@@ -1033,6 +1060,17 @@ mod tests {
             input.press(area, column);
             assert_eq!((input.cursor(), input.selection()), (cursor, None), "column {column}");
         }
+    }
+
+    #[test]
+    fn a_disabled_input_ignores_presses() {
+        let area = Rect::new(10, 0, 30, HEIGHT);
+        let mut input = selected();
+        input.set_disabled(true);
+        assert!(input.is_disabled());
+        input.press(area, 16);
+        assert_eq!(input.selection(), Some((0, 11)), "the selection stays");
+        assert!(!input.is_selecting());
     }
 
     /// Presses each key in `keys`, all of which the input takes.

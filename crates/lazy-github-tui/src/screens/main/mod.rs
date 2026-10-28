@@ -11,6 +11,7 @@ mod list;
 mod new_pull_request;
 mod overview_text;
 mod pr_details;
+mod pr_edit;
 mod pr_lookup;
 mod pr_merge;
 mod profile;
@@ -54,6 +55,7 @@ use issue_lists::IssueLists;
 use issue_lookup::IssueLookup;
 use layout::{LayoutInput, layout};
 pub use pr_details::PullRequestTarget;
+use pr_edit::PrEdit;
 use pr_lookup::{PrLookup, select_repository_first};
 use pr_merge::PrMerges;
 use profile::ProfileFetch;
@@ -255,6 +257,7 @@ pub struct MainScreen {
     workflows: WorkflowsPane,
     profile: ProfileFetch,
     merges: PrMerges,
+    edits: PrEdit,
     reruns: RunReruns,
     /// Where each section's table component was drawn in the last frame, by [`SectionId::index`]: the box's
     /// interior, or the maximized rect. `None` when it wasn't drawn.
@@ -315,6 +318,12 @@ pub enum MainAction {
     /// Open the Edit issue dialog (`issue.edit`) for the issue under the Issues table's cursor or the one the Overview
     /// shows, or toast without one.
     EditIssue(EditOrigin),
+    /// Open Edit PR (`pull_request.edit`) for the pull request under the PR table's cursor, fetched first, or the one
+    /// the Overview shows; or toast or warn why not.
+    EditPullRequest(EditOrigin),
+    /// Edit PR updated a pull request: from the table its row is replaced; either way the details show it. A closed
+    /// dialog sends nothing.
+    PullRequestUpdated(EditOrigin, Box<FullPullRequest>),
     /// The Edit issue dialog opened from the Issues table saved an issue: it replaces its row. A closed dialog, or one
     /// opened from the Overview, sends nothing.
     IssueUpdated(Box<Issue>),
@@ -403,6 +412,7 @@ impl MainScreen {
             workflows: WorkflowsPane::new(options),
             profile: ProfileFetch::default(),
             merges: PrMerges::default(),
+            edits: PrEdit::default(),
             reruns: RunReruns::default(),
             table_areas: [None; 4],
             hits: Vec::new(),
@@ -419,6 +429,30 @@ impl MainScreen {
     /// Create PR created `pr`: `add_item`, then `PullRequestSelected`, as Python's `trigger_pr_creation_flow` does.
     fn pull_request_created(&mut self, pr: Box<FullPullRequest>, cx: &mut Cx<'_>) {
         self.issue_lists.upsert_pr(pr.pr.clone(), cx);
+        cx.dispatch(Action::Main(MainAction::OpenPullRequest {
+            target: PullRequestTarget::Full(pr),
+            focus: true,
+        }));
+    }
+
+    /// `MainAction::EditPullRequest`: the table's cursor row, fetched first, or the pull request the details show.
+    fn edit_pull_request(&mut self, origin: EditOrigin, cx: &mut Cx<'_>) {
+        match origin {
+            EditOrigin::Table => self.edits.fetch_row(self.issue_lists.prs_table().selected(), cx),
+            EditOrigin::Overview => {
+                if let Some(pr) = self.details_pull_request() {
+                    pr_edit::open(Box::new(pr.clone()), EditOrigin::Overview, cx);
+                }
+            }
+        }
+    }
+
+    /// Edit PR updated `pr`: from the table, `add_item` replaces its row; then `PullRequestSelected`, as Python's
+    /// openers do.
+    fn pull_request_updated(&mut self, origin: EditOrigin, pr: Box<FullPullRequest>, cx: &mut Cx<'_>) {
+        if origin == EditOrigin::Table {
+            self.issue_lists.upsert_pr(pr.pr.clone(), cx);
+        }
         cx.dispatch(Action::Main(MainAction::OpenPullRequest {
             target: PullRequestTarget::Full(pr),
             focus: true,
@@ -622,6 +656,7 @@ impl MainScreen {
         let response = self.issue_lists.on_response(id, response, cx)?;
         let response = self.workflows.on_response(id, response, cx)?;
         let response = self.merges.on_response(id, response, cx)?;
+        let response = self.edits.on_response(id, response, cx)?;
         let response = self.reruns.on_response(id, response, cx)?;
         let response = self.on_pull_request(id, response, cx)?;
         self.details.on_response(id, response, cx)
@@ -1153,6 +1188,9 @@ impl MainScreen {
             Owner::Section(SectionId::Issues) if id == BindingId::IssueEdit => {
                 Some(Action::Main(MainAction::EditIssue(EditOrigin::Table)))
             }
+            Owner::Section(SectionId::PullRequests) if id == BindingId::PullRequestEdit => {
+                Some(Action::Main(MainAction::EditPullRequest(EditOrigin::Table)))
+            }
             // Not built yet: the key is still consumed, as in Python.
             Owner::SearchableTable(_) | Owner::Section(_) | Owner::SelectionsPane => Some(Action::Unimplemented(id)),
             Owner::App | Owner::Screen(ScreenKind::Auth | ScreenKind::Modal(_)) | Owner::DialogField(..) => None,
@@ -1403,6 +1441,8 @@ impl Component for MainScreen {
             MainAction::NewPullRequest => new_pull_request::new_pull_request(cx),
             MainAction::PullRequestCreated(pr) => self.pull_request_created(pr, cx),
             MainAction::EditIssue(origin) => self.edit_issue(origin, cx),
+            MainAction::EditPullRequest(origin) => self.edit_pull_request(origin, cx),
+            MainAction::PullRequestUpdated(origin, pr) => self.pull_request_updated(origin, pr, cx),
             // Python's `add_item` of the updated issue: the row is replaced in place, the cursor and focus stay.
             MainAction::IssueUpdated(issue) => self.issue_lists.upsert_issue(*issue, cx),
             MainAction::IssueCreated(issue) => self.issue_created(issue, cx),
@@ -1479,12 +1519,15 @@ impl Component for MainScreen {
     }
 }
 
-/// Where Edit issue was opened from.
+/// Where Edit issue or Edit PR was opened from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EditOrigin {
-    /// The Issues table (`IssuesContainer.trigger_edit_issue_flow`): the saved issue replaces its row.
+    /// The Issues table (`IssuesContainer.trigger_edit_issue_flow`): the saved issue replaces its row. The PR table
+    /// (`PullRequestsContainer.action_edit_pull_request`): the updated pull request replaces its row and shows.
     Table,
     /// The Issue Overview (`IssueOverviewTabPane.action_edit_issue`): what's saved isn't shown anywhere, as in Python.
+    /// The PR Overview (`PrOverviewTabPane.action_edit_pull_request`): the updated pull request shows, and the table
+    /// keeps the old row, as in Python.
     Overview,
 }
 
@@ -1510,3 +1553,6 @@ mod new_pull_request_tests;
 
 #[cfg(test)]
 mod edit_issue_tests;
+
+#[cfg(test)]
+mod edit_pull_request_tests;

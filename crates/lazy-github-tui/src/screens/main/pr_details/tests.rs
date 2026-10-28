@@ -15,7 +15,8 @@ use crate::action::Action;
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::event::Event;
 use crate::keymap::BindingId;
-use crate::screens::main::{FocusTarget, SectionId};
+use crate::screens::main::details::{SectionKey, SectionRef};
+use crate::screens::main::{FocusTarget, Maximized, SectionId};
 use crate::test_util::{TestApp, logs};
 use crate::toast::Toast;
 
@@ -1252,4 +1253,232 @@ fn enter_in_the_overview_never_merges() {
     settle(&mut app);
     assert!(merges(&app).is_empty());
     assert!(app.app().toasts().is_empty());
+}
+
+// The section maximize view (#287).
+
+fn overview_key(kind: SectionKind) -> SectionKey {
+    SectionKey(SectionRef::PrOverview(kind))
+}
+
+/// What's maximized, if anything.
+fn maximized(app: &TestApp) -> Option<Maximized> {
+    app.app().maximized()
+}
+
+/// Section `kind` of the Overview, maximized from inside the content.
+fn section_maximized(kind: SectionKind) -> Maximized {
+    Maximized {
+        target: FocusTarget::DetailsContent,
+        section: Some(overview_key(kind)),
+    }
+}
+
+/// How many "View Maximized" toasts are up.
+fn maximize_toasts(app: &TestApp) -> usize {
+    app.app()
+        .toasts()
+        .iter()
+        .filter(|toast| toast.title.as_deref() == Some("View Maximized"))
+        .count()
+}
+
+/// The rows of `screen` that aren't all hatch, by index.
+fn drawn_rows(screen: &str) -> Vec<usize> {
+    screen
+        .lines()
+        .enumerate()
+        // A blank row of the section is drawn too, though it reads as an empty line.
+        .filter(|(_, line)| line.is_empty() || !line.chars().all(|c| c == '╱'))
+        .map(|(row, _)| row)
+        .collect()
+}
+
+#[test]
+fn m_on_the_overview_body_does_nothing_and_keeps_the_toast() {
+    let mut app = shown(&["enter"]);
+    app.press(&["tab"]);
+    assert_eq!(stop(&app), OverviewStop::Body);
+    let before = app.screen(160, 48);
+    app.press(&["M"]);
+    assert_eq!(maximized(&app), None);
+    assert_eq!(maximize_toasts(&app), 0);
+    assert_eq!(app.screen(160, 48), before);
+    // The next maximize that works shows the toast.
+    app.press(&["tab", "M"]);
+    assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Reactions)));
+    assert_eq!(maximize_toasts(&app), 1);
+}
+
+#[test]
+fn m_on_a_section_title_or_open_list_maximizes_that_section_alone() {
+    let mut app = shown(&["enter"]);
+    app.press(&["tab", "tab", "M"]);
+    assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Reactions)));
+    assert_eq!(maximize_toasts(&app), 1);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("  ▶ 👍  2 | 🎉  1 | 👀  4"), "{screen}");
+    assert!(!screen.contains("Status checks"), "{screen}");
+    // The open list maximizes its section too; the toast showed once.
+    app.press(&["escape", "enter", "tab"]);
+    assert_eq!(stop(&app), OverviewStop::List(SectionKind::Reactions));
+    app.press(&["M"]);
+    assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Reactions)));
+    for (keys, kind) in [(["tab"], SectionKind::Checks), (["tab"], SectionKind::Reviews)] {
+        app.press(&["escape"]);
+        app.press(&keys);
+        assert_eq!(stop(&app), OverviewStop::Title(kind));
+        app.press(&["M"]);
+        assert_eq!(maximized(&app), Some(section_maximized(kind)), "{kind:?}");
+    }
+    assert_eq!(maximize_toasts(&app), 1);
+    // The tab strip still maximizes the tab area.
+    app.press(&["escape", "5", "M"]);
+    assert_eq!(maximized(&app), Some(Maximized::widget(FocusTarget::DetailsTabs)));
+}
+
+#[test]
+fn keys_while_a_section_is_maximized_stay_inside_it() {
+    let mut app = shown(&["enter"]);
+    app.press(&["tab", "tab", "M"]);
+    // Enter toggles the section in place.
+    app.press(&["enter"]);
+    assert!(overview(&app).is_open(SectionKind::Reactions));
+    assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Reactions)));
+    // Tab cycles its title and its open list, wrapping, both ways.
+    app.press(&["tab"]);
+    assert_eq!(stop(&app), OverviewStop::List(SectionKind::Reactions));
+    app.press(&["down", "down"]);
+    assert_eq!(overview(&app).highlight(SectionKind::Reactions), Some(1));
+    app.press(&["tab"]);
+    assert_eq!(stop(&app), OverviewStop::Title(SectionKind::Reactions));
+    app.press(&["shift+tab"]);
+    assert_eq!(stop(&app), OverviewStop::List(SectionKind::Reactions));
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    // M does nothing.
+    app.press(&["M"]);
+    assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Reactions)));
+    // A focus key moves focus, and the section stays until escape.
+    app.press(&["2"]);
+    assert_eq!(focus(&app), FocusTarget::Table(SectionId::PullRequests));
+    assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Reactions)));
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("  ▼ 👍  2 | 🎉  1 | 👀  4"), "{screen}");
+    assert!(!screen.contains("[2] Pull Requests"), "{screen}");
+    // Tab from outside comes back to the section's first stop.
+    app.press(&["tab"]);
+    assert_eq!(
+        (focus(&app), stop(&app)),
+        (FocusTarget::DetailsContent, OverviewStop::Title(SectionKind::Reactions))
+    );
+    // Escape restores the layout with focus kept, and the section still open.
+    app.press(&["2", "escape"]);
+    assert_eq!(maximized(&app), None);
+    assert_eq!(focus(&app), FocusTarget::Table(SectionId::PullRequests));
+    assert!(overview(&app).is_open(SectionKind::Reactions));
+    assert!(app.screen(160, 48).contains("[2] Pull Requests"));
+}
+
+#[test]
+fn a_maximized_section_is_centered_on_the_hatch_and_grows_in_place() {
+    let mut app = shown(&["enter"]);
+    app.press(&["tab", "tab", "M"]);
+    app.advance(std::time::Duration::from_secs(5));
+    let screen = app.screen(160, 48);
+    // Three rows, from row (48 - 3) / 2 = 22.
+    assert_eq!(drawn_rows(&screen), [22, 23, 24]);
+    insta::assert_snapshot!("pr_overview_reactions_maximized_160x48", screen);
+    app.press(&["enter"]);
+    let screen = app.screen(160, 48);
+    // Seven rows (three items), from row (48 - 7) / 2 = 20, as Python draws it.
+    assert_eq!(drawn_rows(&screen), (20..27).collect::<Vec<_>>());
+    insta::assert_snapshot!("pr_overview_reactions_maximized_open_160x48", screen);
+}
+
+#[test]
+fn a_click_on_the_maximized_title_toggles_it() {
+    let mut app = shown(&["enter"]);
+    app.press(&["tab", "tab", "tab", "M"]);
+    assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Checks)));
+    let row = row_of(&mut app, "▶ Status checks");
+    app.click(4, row);
+    assert!(overview(&app).is_open(SectionKind::Checks));
+    assert_eq!(stop(&app), OverviewStop::Title(SectionKind::Checks));
+    // An item focuses the list, as in the pane.
+    let row = row_of(&mut app, "... Pending deploy");
+    app.click(8, row);
+    assert_eq!(stop(&app), OverviewStop::List(SectionKind::Checks));
+    assert_eq!(overview(&app).highlight(SectionKind::Checks), Some(2));
+    // The hatch around it takes no click.
+    app.click(4, 0);
+    assert_eq!(stop(&app), OverviewStop::List(SectionKind::Checks));
+    assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Checks)));
+}
+
+/// The fake with PR 5's head commit carrying 20 passing check runs: an open checks section taller than 80x12.
+fn many_checks() -> FakeGithub {
+    use lazy_github_core::models::{CheckConclusion, CheckRunStatus};
+    let runs = (1..=20)
+        .map(|id| CheckRun {
+            id,
+            name: format!("job-{id}"),
+            status: CheckRunStatus::Completed,
+            conclusion: Some(CheckConclusion::Success),
+            html_url: None,
+        })
+        .collect();
+    gh().with_check_runs(NAME, &fixture_pr(5).head.sha, Ok(runs))
+}
+
+#[test]
+fn a_section_taller_than_the_screen_scrolls() {
+    let mut app = app_on(many_checks());
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["tab", "tab", "tab", "enter", "M"]);
+    assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Checks)));
+    app.advance(std::time::Duration::from_secs(5));
+    // From the top, with the scrollbar, and no hatch.
+    let screen = app.screen(80, 12);
+    assert!(screen.lines().nth(1).unwrap().contains("▼ Status checks"), "{screen}");
+    assert!(!screen.contains('╱'), "{screen}");
+    insta::assert_snapshot!("pr_overview_tall_section_maximized_80x12", screen);
+    // The wheel scrolls it.
+    app.mouse(crossterm::event::MouseEventKind::ScrollDown, 10, 5);
+    let scrolled = app.screen(80, 12);
+    assert!(!scrolled.contains("▼ Status checks"), "{scrolled}");
+    // The focused stop scrolls into view: the list's last item.
+    app.press(&["tab"]);
+    for _ in 0..20 {
+        app.press(&["down"]);
+    }
+    let screen = app.screen(80, 12);
+    assert!(screen.contains("✓ Passed job-20"), "{screen}");
+    // Back on the title, it scrolls back up.
+    app.press(&["tab"]);
+    let screen = app.screen(80, 12);
+    assert!(screen.contains("▼ Status checks"), "{screen}");
+}
+
+#[test]
+fn selecting_another_pull_request_while_a_section_is_maximized_restores_the_layout() {
+    let mut app = shown(&["enter"]);
+    app.press(&["tab", "tab", "M"]);
+    assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Reactions)));
+    // Behind the maximized view, the PR table selects PR 4.
+    app.press(&["2", "down", "enter"]);
+    assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Reactions)));
+    settle(&mut app);
+    assert_eq!(shown_pr(&app), Some(4));
+    assert_eq!(maximized(&app), None);
+    assert!(app.screen(160, 48).contains("[5] PR #4 Details"));
+    // Selecting the same pull request again rebuilds the details, which ends the maximize as well.
+    app.press(&["2", "up", "enter"]);
+    settle(&mut app);
+    app.press(&["tab", "tab", "M"]);
+    assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Reactions)));
+    app.press(&["2", "enter"]);
+    settle(&mut app);
+    assert_eq!(shown_pr(&app), Some(5));
+    assert_eq!(maximized(&app), None);
 }

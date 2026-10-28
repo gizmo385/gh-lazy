@@ -38,7 +38,7 @@ use crate::modal::AddReactionDialog;
 use crate::screens::main::MainAction;
 use crate::theme::{Accent, Theme};
 
-use super::super::details::BodyRenderCx;
+use super::super::details::{BodyRenderCx, SectionLayout};
 use super::super::overview_text::{HeaderStyles, accent, append, push_label, push_rule};
 use super::PR_OVERVIEW_BINDINGS;
 
@@ -53,7 +53,7 @@ const LIST_BINDINGS: &[BindingId] = &[
 ];
 
 /// The Overview's sections, top to bottom.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(in crate::screens::main) enum SectionKind {
     /// The reactions on the pull request.
     Reactions,
@@ -197,6 +197,8 @@ pub(in crate::screens::main) struct PrOverview {
     reveal: Option<Reveal>,
     /// Where the body was drawn last, for clicks.
     area: Rect,
+    /// Where a section laid out alone (maximized) landed, by section and width: the latest two.
+    alone: Vec<(SectionKind, u16, Placed)>,
 }
 
 /// Everything that scrolls, with its layouts.
@@ -273,6 +275,7 @@ impl PrOverview {
             reacting: Reacting::default(),
             reveal: None,
             area: Rect::default(),
+            alone: Vec::new(),
         }
     }
 
@@ -569,6 +572,110 @@ impl PrOverview {
         self.focus(last);
     }
 
+    // Maximize.
+
+    /// The section `M` maximizes from the focused stop: the one its title or list is in. The body is a scrolling
+    /// container, which doesn't allow it.
+    pub(super) fn maximize_scope(&self) -> Option<SectionKind> {
+        match self.body.stop {
+            OverviewStop::Body => None,
+            OverviewStop::Title(kind) | OverviewStop::List(kind) => Some(kind),
+        }
+    }
+
+    /// Whether section `kind` is drawn: loaded or failed.
+    pub(super) fn shows_section(&self, kind: SectionKind) -> bool {
+        self.body.sections[kind.index()].is_settled()
+    }
+
+    /// Section `kind` laid out alone `width` wide, focused as in the pane, or `None` while it isn't drawn.
+    pub(super) fn layout_section(
+        &mut self,
+        kind: SectionKind,
+        width: u16,
+        theme: &Theme,
+        focused: bool,
+    ) -> Option<SectionLayout> {
+        if !self.shows_section(kind) {
+            return None;
+        }
+        let (focus, list_focused) = self.body.section_focus(kind, focused);
+        let section = &self.body.sections[kind.index()];
+        let mut rendered = Rendered::default();
+        let placed = place_section(&mut rendered, kind, section, focus, list_focused, width, theme);
+        let focus_rows = focused
+            .then(|| stop_rows(self.body.stop, kind, &placed, section.list.highlight()))
+            .flatten();
+        self.alone.retain(|(k, w, _)| (*k, *w) != (kind, width));
+        if self.alone.len() == 2 {
+            self.alone.remove(0);
+        }
+        self.alone.push((kind, width, placed));
+        Some(SectionLayout { rendered, focus_rows })
+    }
+
+    /// Section `kind`'s own stops: its title and, while it's open with something in it, its list.
+    fn section_stops(&self, kind: SectionKind) -> Vec<OverviewStop> {
+        self.stops()
+            .into_iter()
+            .filter(|&stop| matches!(stop, OverviewStop::Title(k) | OverviewStop::List(k) if k == kind))
+            .collect()
+    }
+
+    /// One stop `forward` or back among section `kind`'s stops, wrapping; from a stop outside it, its first.
+    pub(super) fn focus_step_in(&mut self, kind: SectionKind, forward: bool) {
+        let stops = self.section_stops(kind);
+        let Some(&first) = stops.first() else { return };
+        let next = match stops.iter().position(|&stop| stop == self.body.stop) {
+            Some(at) if forward => stops[(at + 1) % stops.len()],
+            Some(at) => stops[(at + stops.len() - 1) % stops.len()],
+            None => first,
+        };
+        self.focus(next);
+    }
+
+    /// Focus enters maximized section `kind`: its title.
+    pub(super) fn focus_section(&mut self, kind: SectionKind) {
+        if self.shows_section(kind) {
+            self.focus(OverviewStop::Title(kind));
+        }
+    }
+
+    /// A left press on maximized section `kind` at `row` and `column` of its layout `width` wide, as of the last
+    /// frame: the title focuses and toggles it, a list item focuses the list and highlights the item, and anything
+    /// else focuses the body, the nearest focusable widget around the section.
+    pub(super) fn click_section(&mut self, kind: SectionKind, row: usize, column: u16, width: u16) {
+        let placed = self
+            .alone
+            .iter()
+            .find(|(k, w, _)| (*k, *w) == (kind, width))
+            .map(|(_, _, placed)| placed.clone());
+        let stop = match placed {
+            Some(placed) if column < width => self.stop_in(kind, &placed, row, column),
+            _ => OverviewStop::Body,
+        };
+        if let OverviewStop::Title(kind) = stop {
+            self.toggle(kind);
+        }
+        self.focus(stop);
+    }
+
+    /// The stop of section `kind`, placed at `placed`, drawn at `row` and `column`, highlighting the list item there.
+    fn stop_in(&mut self, kind: SectionKind, placed: &Placed, row: usize, column: u16) -> OverviewStop {
+        let at = &placed.section;
+        if row == at.title_row && at.title_columns.contains(&column) {
+            return OverviewStop::Title(kind);
+        }
+        if column >= CONTENT_INDENT
+            && let Some(item) = placed.items.iter().position(|rows| rows.contains(&row))
+        {
+            self.body.sections[kind.index()].list.set_highlight(Some(item));
+            self.body.layouts.clear();
+            return OverviewStop::List(kind);
+        }
+        OverviewStop::Body
+    }
+
     /// The chain links in front of the content's scroll link, for the focused stop.
     pub(super) fn chain(&self) -> Vec<ChainLink> {
         let overview = ChainLink::new(Owner::PrOverview, PR_OVERVIEW_BINDINGS);
@@ -635,20 +742,12 @@ impl PrOverview {
             let Some(placed) = &placements[kind.index()] else {
                 continue;
             };
-            let section = &mut self.body.sections[kind.index()];
-            if !section.is_settled() {
+            if !self.body.sections[kind.index()].is_settled() {
                 continue;
             }
-            let at = &placed.section;
-            if content_row == at.title_row && at.title_columns.contains(&x) {
-                return OverviewStop::Title(kind);
-            }
-            if x >= CONTENT_INDENT
-                && let Some(item) = placed.items.iter().position(|rows| rows.contains(&content_row))
-            {
-                section.list.set_highlight(Some(item));
-                self.body.layouts.clear();
-                return OverviewStop::List(kind);
+            let stop = self.stop_in(kind, placed, content_row, x);
+            if stop != OverviewStop::Body {
+                return stop;
             }
         }
         OverviewStop::Body
@@ -753,24 +852,16 @@ impl Body {
         let placed = |kind: SectionKind| placements[kind.index()].as_ref();
         match reveal {
             Reveal::Section(kind) => placed(kind).map(|p| p.section.rows.clone()),
-            Reveal::Stop(OverviewStop::Title(kind)) => {
-                placed(kind).map(|p| p.section.title_row..p.section.title_row + 1)
-            }
-            Reveal::Stop(OverviewStop::List(kind)) => {
-                let placed = placed(kind)?;
-                let highlight = self.sections[kind.index()].list.highlight();
-                match highlight.and_then(|item| placed.items.get(item)) {
-                    Some(rows) => Some(rows.clone()),
-                    None => Some(placed.section.content.clone()),
-                }
+            Reveal::Stop(stop @ (OverviewStop::Title(kind) | OverviewStop::List(kind))) => {
+                stop_rows(stop, kind, placed(kind)?, self.sections[kind.index()].list.highlight())
             }
             Reveal::Stop(OverviewStop::Body) => None,
         }
     }
 
-    /// How section `kind` looks with focus where it is.
-    fn section_focus(&self, kind: SectionKind) -> (SectionFocus, bool) {
-        let focused = |stop| self.focused && self.stop == stop;
+    /// How section `kind` looks with focus where it is, `focused` saying whether focus is inside the content.
+    fn section_focus(&self, kind: SectionKind, focused: bool) -> (SectionFocus, bool) {
+        let focused = |stop| focused && self.stop == stop;
         let title = focused(OverviewStop::Title(kind));
         let list = focused(OverviewStop::List(kind));
         (
@@ -786,7 +877,7 @@ impl Body {
 impl Layout for Body {
     fn layout(&mut self, width: u16, theme: &Theme) -> &Rendered {
         self.last_width = width;
-        let focus = SectionKind::ALL.map(|kind| self.section_focus(kind));
+        let focus = SectionKind::ALL.map(|kind| self.section_focus(kind, self.focused));
         let Body {
             pr,
             description,
@@ -874,30 +965,15 @@ fn overview(
             continue;
         }
         let (section_focus, list_focused) = focus[kind.index()];
-        let mut items = Vec::new();
-        let placement = section.collapsible.layout(
+        placements[kind.index()] = Some(place_section(
             &mut out,
-            &section_title(kind, &section.state, theme),
+            kind,
+            section,
             section_focus,
+            list_focused,
             width,
             theme,
-            |content| {
-                let rows = section_items(&section.state, theme);
-                let list = section
-                    .list
-                    .layout(&rows, content.width, theme, list_focused, content.under);
-                items = list.items;
-                list.rendered
-            },
-        );
-        let items = items
-            .into_iter()
-            .map(|rows| rows.start + placement.content.start..rows.end + placement.content.start)
-            .collect();
-        placements[kind.index()] = Some(Placed {
-            section: placement,
-            items,
-        });
+        ));
     }
 
     push_rule(&mut out, width, theme);
@@ -905,6 +981,56 @@ fn overview(
         append(&mut out, description.layout(width, theme));
     }
     (out, placements)
+}
+
+/// Adds section `kind` to `out`, `width` wide, and returns where it and its list items landed. The pane and the
+/// maximize view both lay sections out through this.
+fn place_section(
+    out: &mut Rendered,
+    kind: SectionKind,
+    section: &Section,
+    focus: SectionFocus,
+    list_focused: bool,
+    width: u16,
+    theme: &Theme,
+) -> Placed {
+    let mut items = Vec::new();
+    let placement = section.collapsible.layout(
+        out,
+        &section_title(kind, &section.state, theme),
+        focus,
+        width,
+        theme,
+        |content| {
+            let rows = section_items(&section.state, theme);
+            let list = section
+                .list
+                .layout(&rows, content.width, theme, list_focused, content.under);
+            items = list.items;
+            list.rendered
+        },
+    );
+    let items = items
+        .into_iter()
+        .map(|rows| rows.start + placement.content.start..rows.end + placement.content.start)
+        .collect();
+    Placed {
+        section: placement,
+        items,
+    }
+}
+
+/// The rows `stop` takes when it's in section `kind`, placed at `placed`: the title's row, or the list's highlighted
+/// item (all of its contents without one).
+fn stop_rows(stop: OverviewStop, kind: SectionKind, placed: &Placed, highlight: Option<usize>) -> Option<Range<usize>> {
+    match stop {
+        OverviewStop::Title(k) if k == kind => Some(placed.section.title_row..placed.section.title_row + 1),
+        OverviewStop::List(k) if k == kind => match highlight.and_then(|item| placed.items.get(item)) {
+            Some(rows) => Some(rows.clone()),
+            None => Some(placed.section.content.clone()),
+        },
+        _ => None,
+    }
 }
 
 /// A section's title: Python's placeholder while it loads, then what it holds or that it failed.

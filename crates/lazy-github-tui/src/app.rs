@@ -28,7 +28,8 @@ use crate::modal::{DialogFrame, ModalEntry, ModalKind, dim};
 use crate::notifications::NotificationPoll;
 use crate::options::AppOptions;
 use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
-use crate::screens::main::{FocusTarget, MainScreen};
+use crate::screens::main::MainScreen;
+pub use crate::screens::main::Maximized;
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
 use crate::theme::Theme;
 use crate::toast::{Severity, Toast, Toasts};
@@ -42,13 +43,6 @@ pub const APP_BINDINGS: &[BindingId] = &[
     BindingId::AppMaximizeWidget,
     BindingId::AppOpenHelp,
 ];
-
-/// The widget shown alone while maximized.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Maximized {
-    /// What had focus when it was maximized. It stays fixed until minimized, even when focus keys move focus.
-    pub target: FocusTarget,
-}
 
 /// The screen under any modals.
 enum BaseScreen {
@@ -498,6 +492,7 @@ impl App {
             self.apply(action, out);
             self.close_finished(out);
         }
+        self.restore_if_section_gone();
         // Toasts raised by this action time out from now.
         self.toasts.stamp(self.shared.clock.now());
         // One save per processed action, like Python's `Config.to_edit()`.
@@ -541,11 +536,11 @@ impl App {
             }
             Action::FocusNext | Action::FocusPrevious => {
                 if let BaseScreen::Main(main) = &mut self.base {
-                    main.focus_step(matches!(action, Action::FocusNext), self.maximized.map(|m| m.target));
+                    main.focus_step(matches!(action, Action::FocusNext), self.maximized);
                 }
             }
             Action::Maximize => self.maximize(out),
-            Action::Minimize => self.maximized = None,
+            Action::Minimize => self.minimize(),
             // Python's `action_open_help`: only this closes the panel, and it doesn't move focus.
             // Only the main screen has the panel: Python mounts it on the startup screen, which the main screen
             // then covers.
@@ -628,15 +623,35 @@ impl App {
         if self.maximized.is_some() {
             return;
         }
-        let BaseScreen::Main(main) = &self.base else { return };
-        let target = main.focus();
-        if !main.can_maximize() {
+        let BaseScreen::Main(main) = &mut self.base else { return };
+        let Some(maximized) = main.maximize_target() else {
             return;
-        }
-        self.maximized = Some(Maximized { target });
+        };
+        main.begin_maximize(maximized);
+        self.maximized = Some(maximized);
         if !self.has_shown_maximize_toast {
             self.has_shown_maximize_toast = true;
             out.actions.push_back(Action::Notify(maximize_toast()));
+        }
+    }
+
+    /// Back to the normal layout, focus unchanged.
+    fn minimize(&mut self) {
+        self.maximized = None;
+        if let BaseScreen::Main(main) = &mut self.base {
+            main.end_maximize();
+        }
+    }
+
+    /// Py bug B78's recommendation, answered by Chris: when the maximized section is no longer in the details
+    /// (another selection, the details reloaded), the layout is restored as `escape` would, where Python leaves a
+    /// blank hatch until `escape`.
+    fn restore_if_section_gone(&mut self) {
+        if let (Some(maximized), BaseScreen::Main(main)) = (self.maximized, &self.base)
+            && !main.shows_maximized(maximized)
+        {
+            tracing::debug!("The maximized section is gone; restoring the layout");
+            self.minimize();
         }
     }
 
@@ -820,7 +835,7 @@ impl App {
                 }
                 // While maximized, the widget replaces the rest of the screen, footer included.
                 if let Some(maximized) = self.maximized {
-                    main.render_maximized(frame, area, maximized.target, &cx);
+                    main.render_maximized(frame, area, maximized, &cx);
                     None
                 } else {
                     main.render(frame, area, &cx);
@@ -1079,6 +1094,7 @@ mod tests {
     use crate::clock::FakeClock;
     use crate::effect::{GitRequest, GithubRequest, GithubResponse, TimerId};
     use crate::event::Signal;
+    use crate::screens::main::FocusTarget;
     use crate::test_util::{LatestWins, LatestWinsAction, TestApp, key_event, logs};
 
     fn test_app() -> TestApp {

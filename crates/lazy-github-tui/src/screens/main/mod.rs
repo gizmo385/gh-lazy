@@ -49,8 +49,8 @@ use crate::options::AppOptions;
 use crate::theme::Theme;
 use crate::toast::Toast;
 
-pub use details::TabSwitch;
 use details::{DetailsPane, details_title};
+pub use details::{MaximizeScope, SectionKey, TabSwitch};
 use issue_lists::IssueLists;
 use issue_lookup::IssueLookup;
 use layout::{LayoutInput, layout};
@@ -178,6 +178,23 @@ impl FocusTarget {
             (None, None) => self.in_details() == maximized.in_details(),
             _ => false,
         }
+    }
+}
+
+/// The widget shown alone while maximized.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Maximized {
+    /// What had focus when it was maximized. It stays fixed until minimized, even when focus keys move focus.
+    pub target: FocusTarget,
+    /// A section inside the details content, when `M` came from one of its stops. Fixed like `target`: focus moving
+    /// doesn't change it.
+    pub section: Option<SectionKey>,
+}
+
+impl Maximized {
+    /// The whole widget `target` stands for: a table, the search box, the details tab area or the command log.
+    pub fn widget(target: FocusTarget) -> Self {
+        Self { target, section: None }
     }
 }
 
@@ -642,10 +659,40 @@ impl MainScreen {
         self.details.run().map(run_details::RunDetails::run)
     }
 
-    /// Whether `M` maximizes something with the current focus: see [`FocusTarget::maximizable`]. Inside the details
-    /// content, a focused button allows it, and maximizes the details tab area.
-    pub fn can_maximize(&self) -> bool {
-        self.focus.maximizable() || (self.focus == FocusTarget::DetailsContent && self.details.maximizable())
+    /// What `M` maximizes with the current focus, if anything: see [`FocusTarget::maximizable`]. Inside the details
+    /// content, the focused stop's nearest maximizable ancestor: a collapsible section, or the details tab area (from
+    /// a button or a comment block outside any section).
+    pub fn maximize_target(&self) -> Option<Maximized> {
+        let target = self.focus;
+        if target != FocusTarget::DetailsContent {
+            return target.maximizable().then_some(Maximized::widget(target));
+        }
+        match self.details.maximize_scope() {
+            MaximizeScope::Nothing => None,
+            MaximizeScope::TabArea => Some(Maximized::widget(target)),
+            MaximizeScope::Section(key) => Some(Maximized {
+                target,
+                section: Some(key),
+            }),
+        }
+    }
+
+    /// `maximized` was just maximized: a section's view starts afresh.
+    pub fn begin_maximize(&mut self, maximized: Maximized) {
+        if maximized.section.is_some() {
+            self.details.begin_section();
+        }
+    }
+
+    /// The maximize ended.
+    pub fn end_maximize(&mut self) {
+        self.details.end_section();
+    }
+
+    /// Whether what `maximized` shows is still there. A section goes away with the details that held it (another
+    /// selection, a reload); the rest always stay.
+    pub fn shows_maximized(&self, maximized: Maximized) -> bool {
+        maximized.section.is_none_or(|key| self.details.shows_section(key))
     }
 
     /// Takes a response to one of the screen's requests, and hands back any other: the repos section is offered it
@@ -887,12 +934,21 @@ impl MainScreen {
 
     /// Moves focus one step around [`Self::focus_ring`], wrapping. From a target outside the ring (a section
     /// hidden by config, focused with its key), both directions go to the ring's first entry, as in Textual.
-    pub fn focus_step(&mut self, forward: bool, maximized: Option<FocusTarget>) {
+    ///
+    /// While a section is maximized, only its own stops, wrapping; from outside the content, focus goes to its first.
+    pub fn focus_step(&mut self, forward: bool, maximized: Option<Maximized>) {
+        if let Some(Maximized { section: Some(key), .. }) = maximized {
+            let entering = self.focus != FocusTarget::DetailsContent;
+            if self.move_focus(FocusTarget::DetailsContent) {
+                self.details.section_focus_step(key, forward, entering);
+            }
+            return;
+        }
         // The stops inside the details content come first, and focus leaves the content past either end.
         if self.focus == FocusTarget::DetailsContent && self.details.focus_step(forward) {
             return;
         }
-        let ring = self.focus_ring(maximized);
+        let ring = self.focus_ring(maximized.map(|maximized| maximized.target));
         let Some(&first) = ring.first() else { return };
         let target = match ring.iter().position(|&target| target == self.focus) {
             Some(i) if forward => ring[(i + 1) % ring.len()],
@@ -1226,13 +1282,24 @@ impl MainScreen {
     }
 
     /// Draws only the maximized widget for `maximized`, over the whole `area`, as Textual's `Screen.maximize`: at
-    /// full width, and either filling the height or centered on a hatch.
-    pub fn render_maximized(&mut self, frame: &mut Frame<'_>, area: Rect, maximized: FocusTarget, cx: &RenderCx<'_>) {
+    /// full width, and either filling the height or centered on a hatch. A section taller than `area` scrolls.
+    pub fn render_maximized(&mut self, frame: &mut Frame<'_>, area: Rect, maximized: Maximized, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let natural_height = match maximized {
-            FocusTarget::Table(id) => Some(self.table(id).bare_table_rect(area).height),
-            FocusTarget::Search(_) => Some(text_input::HEIGHT),
-            FocusTarget::DetailsTabs | FocusTarget::DetailsContent | FocusTarget::CommandLog => None,
+        let content_focused = self.focus == FocusTarget::DetailsContent;
+        let Maximized {
+            target: maximized,
+            section,
+        } = maximized;
+        let natural_height = match (section, maximized) {
+            // A section that's gone draws as the hatch alone, until the app ends the maximize.
+            (Some(key), _) => Some(
+                self.details
+                    .section_height(key, area.width, theme, content_focused)
+                    .unwrap_or(0),
+            ),
+            (None, FocusTarget::Table(id)) => Some(self.table(id).bare_table_rect(area).height),
+            (None, FocusTarget::Search(_)) => Some(text_input::HEIGHT),
+            (None, FocusTarget::DetailsTabs | FocusTarget::DetailsContent | FocusTarget::CommandLog) => None,
         };
         let rect = match natural_height {
             Some(height) if height < area.height => Rect {
@@ -1251,6 +1318,11 @@ impl MainScreen {
 
         self.hits.clear();
         self.table_areas = [None; 4];
+        if let Some(key) = section {
+            self.details.render_section(frame, rect, key, theme, content_focused);
+            self.hits.push((rect, FocusTarget::DetailsContent));
+            return;
+        }
         match maximized {
             FocusTarget::Table(id) | FocusTarget::Search(id) => {
                 let within = self.focus.section() == Some(id);

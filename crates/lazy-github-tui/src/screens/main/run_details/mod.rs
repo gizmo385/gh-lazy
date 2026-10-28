@@ -33,7 +33,7 @@ use crate::keymap::BindingId;
 use crate::theme::Theme;
 
 use super::MainAction;
-use super::details::DetailsBody;
+use super::details::{DetailsBody, MaximizeScope};
 pub(super) use jobs::JobsTab;
 pub(super) use logs::LogsTab;
 use logs::Next;
@@ -370,11 +370,16 @@ impl DetailsBody for RunDetails {
         }
     }
 
-    fn maximizable(&self, tab: usize) -> bool {
-        match RunTab::at(tab) {
+    fn maximize_scope(&self, tab: usize) -> MaximizeScope {
+        let allowed = match RunTab::at(tab) {
             RunTab::Overview => self.overview.button_focused(),
             RunTab::Jobs => self.jobs_tab.tree_focused(),
             RunTab::Logs => false,
+        };
+        if allowed {
+            MaximizeScope::TabArea
+        } else {
+            MaximizeScope::Nothing
         }
     }
 

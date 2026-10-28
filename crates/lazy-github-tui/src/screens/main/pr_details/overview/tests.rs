@@ -382,3 +382,120 @@ fn check_states_read_as_python_draws_them() {
         assert_eq!(run.style.fg, Some(theme.accent(color)));
     }
 }
+
+// The section maximize view (#287).
+
+/// PR 5's Overview with its reactions (open) and checks (closed) loaded, and its reviews still loading.
+fn loaded_overview() -> PrOverview {
+    let mut app = crate::test_util::TestApp::new(lazy_github_core::config::Config::default());
+    let mut overview = app.with_cx(|cx| PrOverview::new(Arc::new(fixture_pr(5)), cx));
+    overview.body.sections = loaded_sections([true, false, false]);
+    overview
+}
+
+#[test]
+fn maximize_scope_is_the_section_of_the_focused_title_or_list() {
+    let mut overview = loaded_overview();
+    assert_eq!(overview.maximize_scope(), None);
+    for (stop, scope) in [
+        (OverviewStop::Body, None),
+        (
+            OverviewStop::Title(SectionKind::Reactions),
+            Some(SectionKind::Reactions),
+        ),
+        (OverviewStop::List(SectionKind::Reactions), Some(SectionKind::Reactions)),
+        (OverviewStop::Title(SectionKind::Checks), Some(SectionKind::Checks)),
+        (OverviewStop::List(SectionKind::Checks), Some(SectionKind::Checks)),
+    ] {
+        overview.focus(stop);
+        assert_eq!(overview.maximize_scope(), scope, "{stop:?}");
+    }
+    // A loading section isn't drawn, so it can't be laid out alone.
+    assert!(overview.shows_section(SectionKind::Checks));
+    assert!(!overview.shows_section(SectionKind::Reviews));
+    assert!(
+        overview
+            .layout_section(SectionKind::Reviews, 80, &Theme::default(), true)
+            .is_none()
+    );
+}
+
+#[test]
+fn a_section_alone_is_laid_out_as_in_the_pane() {
+    let mut overview = loaded_overview();
+    overview.focus(OverviewStop::List(SectionKind::Reactions));
+    let theme = Theme::default();
+    let alone = overview
+        .layout_section(SectionKind::Reactions, 60, &theme, true)
+        .unwrap();
+    let (focus, list_focused) = overview.body.section_focus(SectionKind::Reactions, true);
+    let mut pane = Rendered::default();
+    let section = &overview.body.sections[0];
+    let placed = place_section(
+        &mut pane,
+        SectionKind::Reactions,
+        section,
+        focus,
+        list_focused,
+        60,
+        &theme,
+    );
+    assert_eq!(alone.rendered, pane);
+    assert_eq!(text(&alone.rendered)[1], "  ▼ 👍 2 | 🎉 1 | 👀 4");
+    // The open list without a highlight: all of its contents.
+    assert_eq!(alone.focus_rows, Some(placed.section.content));
+    // Unfocused, nothing is scrolled into view.
+    let blurred = overview
+        .layout_section(SectionKind::Reactions, 60, &theme, false)
+        .unwrap();
+    assert_eq!(blurred.focus_rows, None);
+}
+
+#[test]
+fn tab_in_a_maximized_section_cycles_its_own_stops() {
+    let mut overview = loaded_overview();
+    overview.focus(OverviewStop::Body);
+    // From outside the section, its first stop.
+    overview.focus_step_in(SectionKind::Reactions, true);
+    assert_eq!(overview.stop(), OverviewStop::Title(SectionKind::Reactions));
+    overview.focus_step_in(SectionKind::Reactions, true);
+    assert_eq!(overview.stop(), OverviewStop::List(SectionKind::Reactions));
+    overview.focus_step_in(SectionKind::Reactions, true);
+    assert_eq!(overview.stop(), OverviewStop::Title(SectionKind::Reactions));
+    overview.focus_step_in(SectionKind::Reactions, false);
+    assert_eq!(overview.stop(), OverviewStop::List(SectionKind::Reactions));
+    // A closed section's title is its only stop.
+    overview.focus(OverviewStop::Title(SectionKind::Checks));
+    overview.focus_step_in(SectionKind::Checks, true);
+    assert_eq!(overview.stop(), OverviewStop::Title(SectionKind::Checks));
+    overview.focus_step_in(SectionKind::Checks, false);
+    assert_eq!(overview.stop(), OverviewStop::Title(SectionKind::Checks));
+    // Entering from outside the content: the title.
+    overview.focus(OverviewStop::Body);
+    overview.focus_section(SectionKind::Reactions);
+    assert_eq!(overview.stop(), OverviewStop::Title(SectionKind::Reactions));
+}
+
+#[test]
+fn a_click_on_a_maximized_section_hits_its_own_layout() {
+    let mut overview = loaded_overview();
+    overview.focus(OverviewStop::Title(SectionKind::Checks));
+    let theme = Theme::default();
+    overview.layout_section(SectionKind::Checks, 60, &theme, true);
+    // The title row is the second, after the rule; its text starts past the padding.
+    overview.click_section(SectionKind::Checks, 1, 3, 60);
+    assert!(overview.is_open(SectionKind::Checks));
+    assert_eq!(overview.stop(), OverviewStop::Title(SectionKind::Checks));
+    // An item, once laid out open: the rule, the title and a blank row, then the items.
+    overview.layout_section(SectionKind::Checks, 60, &theme, true);
+    overview.click_section(SectionKind::Checks, 4, 6, 60);
+    assert_eq!(overview.stop(), OverviewStop::List(SectionKind::Checks));
+    assert_eq!(overview.highlight(SectionKind::Checks), Some(1));
+    // Past the title on its row: the body, around the section.
+    overview.click_section(SectionKind::Checks, 1, 50, 60);
+    assert_eq!(overview.stop(), OverviewStop::Body);
+    assert!(overview.is_open(SectionKind::Checks));
+    // A width never laid out hits nothing.
+    overview.click_section(SectionKind::Checks, 1, 3, 70);
+    assert!(overview.is_open(SectionKind::Checks));
+}

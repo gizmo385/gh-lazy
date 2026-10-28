@@ -21,7 +21,7 @@ use crate::modal::{NewCommentDialog, PostedComment, ReplyTarget};
 use crate::theme::Theme;
 
 use super::MainAction;
-use super::details::{BodyRenderCx, DetailsBody};
+use super::details::{BodyRenderCx, DetailsBody, MaximizeScope};
 pub(super) use comments::IssueComments;
 pub(super) use overview::IssueOverview;
 
@@ -157,8 +157,12 @@ impl DetailsBody for IssueDetails {
         }
     }
 
-    fn maximizable(&self, tab: usize) -> bool {
-        IssueTab::at(tab) == IssueTab::Comments && self.comments.block_focused()
+    fn maximize_scope(&self, tab: usize) -> MaximizeScope {
+        if IssueTab::at(tab) == IssueTab::Comments && self.comments.block_focused() {
+            MaximizeScope::TabArea
+        } else {
+            MaximizeScope::Nothing
+        }
     }
 
     fn chain(&self, tab: usize) -> Vec<ChainLink> {

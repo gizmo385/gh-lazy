@@ -22,13 +22,13 @@ use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::modal::PostedComment;
 use crate::theme::Theme;
 
-use super::details::{BodyRenderCx, DetailsBody};
+use super::details::{BodyRenderCx, DetailsBody, MaximizeScope, SectionKey, SectionLayout, SectionRef};
 use super::{EditOrigin, MainAction};
 pub(super) use conversation::PrConversation;
 pub(super) use diff::PrDiff;
-pub(super) use overview::PrOverview;
 #[cfg(test)]
-pub(super) use overview::{OverviewStop, SectionKind};
+pub(super) use overview::OverviewStop;
+pub(super) use overview::{PrOverview, SectionKind};
 
 /// `PrOverviewTabPane.BINDINGS`: merge (#183), edit (#185) and add a reaction, in the footer while the Overview's
 /// content has focus.
@@ -214,6 +214,56 @@ impl DetailsBody for PullRequestDetails {
             PrTab::Overview => self.overview.click(position),
             PrTab::Diff => self.diff.click(position),
             PrTab::Conversation => self.conversation.click(position),
+        }
+    }
+
+    fn maximize_scope(&self, tab: usize) -> MaximizeScope {
+        match PrTab::at(tab) {
+            PrTab::Overview => self.overview.maximize_scope().map_or(MaximizeScope::Nothing, |kind| {
+                MaximizeScope::Section(SectionKey(SectionRef::PrOverview(kind)))
+            }),
+            PrTab::Diff | PrTab::Conversation => MaximizeScope::Nothing,
+        }
+    }
+
+    fn shows_section(&self, tab: usize, key: SectionKey) -> bool {
+        match (PrTab::at(tab), key.0) {
+            (PrTab::Overview, SectionRef::PrOverview(kind)) => self.overview.shows_section(kind),
+            _ => false,
+        }
+    }
+
+    fn layout_section(
+        &mut self,
+        tab: usize,
+        key: SectionKey,
+        width: u16,
+        theme: &Theme,
+        focused: bool,
+    ) -> Option<SectionLayout> {
+        match (PrTab::at(tab), key.0) {
+            (PrTab::Overview, SectionRef::PrOverview(kind)) => {
+                self.overview.layout_section(kind, width, theme, focused)
+            }
+            _ => None,
+        }
+    }
+
+    fn focus_step_in(&mut self, tab: usize, key: SectionKey, forward: bool) {
+        if let (PrTab::Overview, SectionRef::PrOverview(kind)) = (PrTab::at(tab), key.0) {
+            self.overview.focus_step_in(kind, forward);
+        }
+    }
+
+    fn focus_section(&mut self, tab: usize, key: SectionKey) {
+        if let (PrTab::Overview, SectionRef::PrOverview(kind)) = (PrTab::at(tab), key.0) {
+            self.overview.focus_section(kind);
+        }
+    }
+
+    fn click_section(&mut self, tab: usize, key: SectionKey, row: usize, column: u16, width: u16) {
+        if let (PrTab::Overview, SectionRef::PrOverview(kind)) = (PrTab::at(tab), key.0) {
+            self.overview.click_section(kind, row, column, width);
         }
     }
 

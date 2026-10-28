@@ -6,6 +6,8 @@
 //! else to the body, with the active tab's index. A new kind of selection (an issue, a workflow run) adds a [`Body`]
 //! variant, a `DetailsPane::show_*` one-liner, and a [`DetailsBody`] impl; nothing else here changes.
 
+use std::ops::Range;
+
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::models::{FullPullRequest, Issue, ReactionKind, Repository, WorkflowRun};
 use ratatui::Frame;
@@ -17,6 +19,8 @@ use crate::component::{BindingState, ChainLink, Cx, Owner, RenderCx};
 use crate::components::command_log::Wheel;
 use crate::components::diff_view::PendingComment;
 use crate::components::info::{InfoView, Scroll};
+use crate::components::markdown::Rendered;
+use crate::components::scroll_view::{Layout, ScrollView};
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
@@ -26,9 +30,43 @@ use crate::theme::Theme;
 
 use super::FocusTarget;
 use super::issue_details::IssueDetails;
-use super::pr_details::PullRequestDetails;
+use super::pr_details::{PullRequestDetails, SectionKind};
 use super::repo_overview::RepoOverview;
 use super::run_details::RunDetails;
+
+/// Names one collapsible section of the details body, for the section maximize view. Opaque outside the body that
+/// made it; it stays valid for as long as the body shows the section.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SectionKey(pub(super) SectionRef);
+
+/// The sections the bodies name. Each variant belongs to one body and one of its tabs, so a key never names a section
+/// of another tab.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(super) enum SectionRef {
+    /// One of the PR Overview's sections.
+    PrOverview(SectionKind),
+}
+
+/// What `M` maximizes with focus inside the details content: Textual's nearest maximizable ancestor of the focused
+/// widget.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MaximizeScope {
+    /// Nothing: the focused stop's nearest such ancestor would be the scrolling content, which doesn't allow it.
+    Nothing,
+    /// The details tab area (the `TabbedContent`).
+    TabArea,
+    /// One collapsible section, alone.
+    Section(SectionKey),
+}
+
+/// One section laid out alone, for the section maximize view.
+#[derive(Debug, Clone, Default)]
+pub(super) struct SectionLayout {
+    /// The section's rows.
+    pub(super) rendered: Rendered,
+    /// The rows of the focused stop when it's inside the section: what a focus move scrolls into view.
+    pub(super) focus_rows: Option<Range<usize>>,
+}
 
 /// One selection's tabs, as the details pane drives them. Every method that concerns one tab gets the active tab's
 /// index, in [`Self::tab_names`]' order; the body keeps every tab's state (scroll position, open sections) while
@@ -79,11 +117,42 @@ pub(super) trait DetailsBody {
     /// else the content itself, as Textual focuses the clicked widget or its nearest focusable ancestor.
     fn click(&mut self, _tab: usize, _position: Position) {}
 
-    /// Whether `M` maximizes the details tab area with focus inside tab `tab`'s content: only from a focused stop
-    /// that allows it (a button), as the scrolling content itself doesn't.
-    fn maximizable(&self, _tab: usize) -> bool {
+    /// What `M` maximizes with focus inside tab `tab`'s content: the nearest maximizable ancestor of the focused stop.
+    /// The scrolling content itself doesn't allow it, so by default nothing.
+    fn maximize_scope(&self, _tab: usize) -> MaximizeScope {
+        MaximizeScope::Nothing
+    }
+
+    /// Whether tab `tab` shows section `key`, so it can be laid out alone. A maximized section that's gone (another
+    /// selection, a reload) ends the maximize.
+    fn shows_section(&self, _tab: usize, _key: SectionKey) -> bool {
         false
     }
+
+    /// Section `key` of tab `tab` laid out alone `width` cells wide, as the pane lays it out, `focused` saying whether
+    /// focus is inside the content. `None` when the tab doesn't show it. The body keeps where its stops landed, by
+    /// width, for [`Self::click_section`].
+    fn layout_section(
+        &mut self,
+        _tab: usize,
+        _key: SectionKey,
+        _width: u16,
+        _theme: &Theme,
+        _focused: bool,
+    ) -> Option<SectionLayout> {
+        None
+    }
+
+    /// `tab` / `shift+tab` while section `key` is maximized: one stop `forward` or back among the section's own
+    /// stops, wrapping. From a stop outside it, its first stop.
+    fn focus_step_in(&mut self, _tab: usize, _key: SectionKey, _forward: bool) {}
+
+    /// Focus enters maximized section `key` from outside the content: its first stop.
+    fn focus_section(&mut self, _tab: usize, _key: SectionKey) {}
+
+    /// A left press on maximized section `key`, at `row` of its layout `width` wide and `column` from its left edge,
+    /// against the last [`Self::layout_section`] at that width: as [`Self::click`] in the pane.
+    fn click_section(&mut self, _tab: usize, _key: SectionKey, _row: usize, _column: u16, _width: u16) {}
 
     /// The binding chain links of tab `tab`'s content with focus inside it, innermost first, in front of the
     /// content's scroll link: Textual's widgets from the focused stop up to the tab pane.
@@ -187,6 +256,19 @@ pub(super) struct DetailsPane {
     tabs_area: Rect,
     /// Whether the bodies' loading overlays animate.
     animations: bool,
+    /// The section maximize view's scroll position and last draw.
+    section_view: SectionView,
+}
+
+/// The section maximize view. Textual's maximized screen scrolls when the section is taller than it.
+#[derive(Debug, Default)]
+struct SectionView {
+    scroll: ScrollView,
+    /// Scroll the focused stop into view at the next draw: after a maximize, a focus move, a click or a key.
+    reveal: bool,
+    /// The section drawn in the last frame, where, and the width its rows got, for clicks and the wheel. `None`
+    /// after a frame without it.
+    drawn: Option<(SectionKey, Rect, u16)>,
 }
 
 /// The selection whose tabs show.
@@ -241,6 +323,7 @@ impl Default for DetailsPane {
             body,
             tabs_area: Rect::default(),
             animations: true,
+            section_view: SectionView::default(),
         }
     }
 }
@@ -427,8 +510,12 @@ impl DetailsPane {
         self.body.get().chain(self.tabs.active())
     }
 
-    /// A binding matched at one of [`Self::content_chain`]'s links.
+    /// A binding matched at one of [`Self::content_chain`]'s links. On a maximized section, what it changed (a
+    /// toggle, a highlight) scrolls into view.
     pub(super) fn on_binding(&mut self, owner: Owner, id: BindingId) -> Option<Action> {
+        if self.section_view.drawn.is_some() {
+            self.section_view.reveal = true;
+        }
         self.body.get_mut().on_binding(self.tabs.active(), owner, id)
     }
 
@@ -496,22 +583,106 @@ impl DetailsPane {
         }
     }
 
-    /// [`DetailsBody::click`] in the active tab.
+    /// [`DetailsBody::click`] in the active tab, or [`DetailsBody::click_section`] on a maximized section, as of the
+    /// last frame.
     pub(super) fn click(&mut self, position: Position) {
-        self.body.get_mut().click(self.tabs.active(), position);
+        let tab = self.tabs.active();
+        if let Some((key, area, width)) = self.section_view.drawn {
+            if area.contains(position) {
+                let row = self.section_view.scroll.offset() + usize::from(position.y - area.y);
+                self.body
+                    .get_mut()
+                    .click_section(tab, key, row, position.x - area.x, width);
+                self.section_view.reveal = true;
+            }
+            return;
+        }
+        self.body.get_mut().click(tab, position);
     }
 
-    /// [`DetailsBody::maximizable`] in the active tab.
-    pub(super) fn maximizable(&self) -> bool {
-        self.body.get().maximizable(self.tabs.active())
+    /// [`DetailsBody::maximize_scope`] in the active tab.
+    pub(super) fn maximize_scope(&self) -> MaximizeScope {
+        self.body.get().maximize_scope(self.tabs.active())
+    }
+
+    /// [`DetailsBody::shows_section`] in the active tab.
+    pub(super) fn shows_section(&self, key: SectionKey) -> bool {
+        self.body.get().shows_section(self.tabs.active(), key)
+    }
+
+    /// A section was just maximized: its view starts at the top, with the focused stop scrolled into view.
+    pub(super) fn begin_section(&mut self) {
+        self.section_view = SectionView {
+            reveal: true,
+            ..SectionView::default()
+        };
+    }
+
+    /// The section maximize ended: clicks and the wheel go to the tab again.
+    pub(super) fn end_section(&mut self) {
+        self.section_view.drawn = None;
+    }
+
+    /// How many rows section `key` takes laid out `width` wide, or `None` when the active tab doesn't show it.
+    pub(super) fn section_height(&mut self, key: SectionKey, width: u16, theme: &Theme, focused: bool) -> Option<u16> {
+        let layout = self
+            .body
+            .get_mut()
+            .layout_section(self.tabs.active(), key, width, theme, focused)?;
+        Some(u16::try_from(layout.rendered.lines.len()).unwrap_or(u16::MAX))
+    }
+
+    /// Draws section `key` alone into `area`, scrolling beside a scrollbar when it's taller, as Textual's maximized
+    /// screen does (`overflow-y: auto`).
+    pub(super) fn render_section(
+        &mut self,
+        frame: &mut Frame<'_>,
+        area: Rect,
+        key: SectionKey,
+        theme: &Theme,
+        focused: bool,
+    ) {
+        let mut text = SectionText {
+            body: self.body.get_mut(),
+            tab: self.tabs.active(),
+            key,
+            focused,
+            layouts: Vec::new(),
+        };
+        let view = &mut self.section_view;
+        if std::mem::take(&mut view.reveal) {
+            let width = view.scroll.measure(area, theme, &mut text);
+            if let Some(rows) = text.focus_rows(width) {
+                view.scroll.reveal(rows);
+            }
+        }
+        view.scroll.render(frame, area, theme, &mut text);
+        let width = ScrollView::content_width(area, view.scroll.last_size().0);
+        view.drawn = Some((key, area, width));
+    }
+
+    /// `tab` / `shift+tab` while section `key` is maximized: [`DetailsBody::focus_step_in`] in the active tab, or
+    /// [`DetailsBody::focus_section`] when focus comes in from outside the content.
+    pub(super) fn section_focus_step(&mut self, key: SectionKey, forward: bool, entering: bool) {
+        let tab = self.tabs.active();
+        if entering {
+            self.body.get_mut().focus_section(tab, key);
+        } else {
+            self.body.get_mut().focus_step_in(tab, key, forward);
+        }
+        self.section_view.reveal = true;
     }
 
     pub(super) fn scroll(&mut self, scroll: Scroll) {
         self.body.get_mut().scroll(self.tabs.active(), scroll);
     }
 
-    /// A wheel notch over the active tab's body.
+    /// A wheel notch over the active tab's body, or over the maximized section.
     pub(super) fn wheel(&mut self, wheel: Wheel) {
+        if self.section_view.drawn.is_some() {
+            self.section_view.scroll.wheel(wheel);
+            return;
+        }
         self.body.get_mut().wheel(self.tabs.active(), wheel);
     }
 
@@ -534,6 +705,7 @@ impl DetailsPane {
         focus: FocusTarget,
     ) -> [(Rect, FocusTarget); 2] {
         let theme = cx.theme;
+        self.section_view.drawn = None;
         let tabs_height = area.height.min(TAB_STRIP_HEIGHT);
         let tabs = Rect {
             height: tabs_height,
@@ -555,6 +727,40 @@ impl DetailsPane {
         };
         self.body.get_mut().render_timed(tab, frame, body, &body_cx);
         [(tabs, FocusTarget::DetailsTabs), (body, FocusTarget::DetailsContent)]
+    }
+}
+
+/// A maximized section as [`ScrollView`] lays it out: the body's [`DetailsBody::layout_section`], once per width.
+struct SectionText<'a> {
+    body: &'a mut dyn DetailsBody,
+    tab: usize,
+    key: SectionKey,
+    focused: bool,
+    layouts: Vec<(u16, SectionLayout)>,
+}
+
+impl SectionText<'_> {
+    /// The focused stop's rows in the layout `width` wide, once laid out.
+    fn focus_rows(&self, width: u16) -> Option<Range<usize>> {
+        let (_, layout) = self.layouts.iter().find(|(w, _)| *w == width)?;
+        layout.focus_rows.clone()
+    }
+}
+
+impl Layout for SectionText<'_> {
+    fn layout(&mut self, width: u16, theme: &Theme) -> &Rendered {
+        let index = if let Some(index) = self.layouts.iter().position(|(w, _)| *w == width) {
+            index
+        } else {
+            // A section that's gone draws nothing; the app ends the maximize after the update that removed it.
+            let layout = self
+                .body
+                .layout_section(self.tab, self.key, width, theme, self.focused)
+                .unwrap_or_default();
+            self.layouts.push((width, layout));
+            self.layouts.len() - 1
+        };
+        &self.layouts[index].1.rendered
     }
 }
 

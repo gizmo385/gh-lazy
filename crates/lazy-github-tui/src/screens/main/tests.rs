@@ -300,11 +300,11 @@ fn maximize_toast() -> Toast {
 fn maximize_toasts_once_and_escape_restores() {
     let mut app = TestApp::new(Config::default());
     app.press(&["M"]);
-    assert_eq!(app.app().maximized(), Some(Maximized { target: REPOS }));
+    assert_eq!(app.app().maximized(), Some(Maximized::widget(REPOS)));
     assert!(app.app().toasts().iter().eq([&maximize_toast()]));
     // M while maximized is a no-op.
     app.press(&["M"]);
-    assert_eq!(app.app().maximized(), Some(Maximized { target: REPOS }));
+    assert_eq!(app.app().maximized(), Some(Maximized::widget(REPOS)));
     app.press(&["escape"]);
     assert_eq!(app.app().maximized(), None);
     assert_eq!(focus(&app), REPOS);
@@ -319,7 +319,7 @@ fn focus_keys_while_maximized_move_focus_but_not_the_maximized_widget() {
     let mut app = TestApp::new(Config::default());
     app.press(&["M", "2"]);
     assert_eq!(focus(&app), PRS);
-    assert_eq!(app.app().maximized(), Some(Maximized { target: REPOS }));
+    assert_eq!(app.app().maximized(), Some(Maximized::widget(REPOS)));
     // Tab is limited to the maximized table: from outside it, it goes to it, then stays.
     app.press(&["tab"]);
     assert_eq!(focus(&app), REPOS);
@@ -352,7 +352,7 @@ fn maximize_on_the_details_content_does_nothing_and_keeps_the_toast() {
     assert_eq!(app.screen(160, 48), before);
     // The one-time toast is still unused, so the next maximize that works shows it.
     app.press(&["1", "M"]);
-    assert_eq!(app.app().maximized(), Some(Maximized { target: REPOS }));
+    assert_eq!(app.app().maximized(), Some(Maximized::widget(REPOS)));
     assert!(app.app().toasts().iter().eq([&maximize_toast()]));
     assert_eq!(app.effects(), []);
 }
@@ -372,7 +372,7 @@ fn every_other_focus_target_maximizes() {
         app.press(keys);
         assert_eq!(focus(&app), target);
         app.press(&["M"]);
-        assert_eq!(app.app().maximized(), Some(Maximized { target }), "{target:?}");
+        assert_eq!(app.app().maximized(), Some(Maximized::widget(target)), "{target:?}");
     }
     // The search box types `M`; a rebound maximize reaches it (`a_rebound_maximize_maximizes_the_search_box`).
     for id in SectionId::ALL {
@@ -1330,7 +1330,7 @@ fn slash_while_maximized_filters_the_maximized_table() {
     app.press(&["M", "/"]);
     app.advance(std::time::Duration::from_secs(5));
     assert_eq!(focus(&app), SEARCH);
-    assert_eq!(app.app().maximized(), Some(Maximized { target: REPOS }));
+    assert_eq!(app.app().maximized(), Some(Maximized::widget(REPOS)));
     // The box takes focus and typing, but isn't drawn.
     type_text(&mut app, "dot");
     let screen = app.screen(100, 30);
@@ -1376,7 +1376,7 @@ fn a_rebound_maximize_maximizes_the_search_box() {
     app.press(&["M"]);
     assert_eq!(app.app().maximized(), None);
     app.press(&["f2"]);
-    assert_eq!(app.app().maximized(), Some(Maximized { target: SEARCH }));
+    assert_eq!(app.app().maximized(), Some(Maximized::widget(SEARCH)));
     app.advance(std::time::Duration::from_secs(5));
     // The input alone, at its 3 rows, centered on the hatch.
     let screen = app.screen(100, 30);
@@ -1628,7 +1628,7 @@ fn a_maximized_widget_stays_maximized() {
     let mut app = with_repos(Config::default(), octo_repos());
     app.press(&["M", "enter"]);
     assert_eq!(current_repo(&app), Some("octo/one"));
-    assert_eq!(app.app().maximized(), Some(Maximized { target: REPOS }));
+    assert_eq!(app.app().maximized(), Some(Maximized::widget(REPOS)));
 }
 
 #[test]

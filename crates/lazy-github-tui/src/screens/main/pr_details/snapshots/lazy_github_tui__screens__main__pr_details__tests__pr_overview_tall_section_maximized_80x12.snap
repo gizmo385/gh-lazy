@@ -1,0 +1,16 @@
+---
+source: crates/lazy-github-tui/src/screens/main/pr_details/tests.rs
+expression: screen
+---
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+  ▼ Status checks: ... Pending
+
+    ... Pending ci/docs - Building docs
+    ✓ Passed ci/lint - Lint passed
+    ✓ Passed job-1                                                            ▃▃
+    ✓ Passed job-10
+    ✓ Passed job-11
+    ✓ Passed job-12
+    ✓ Passed job-13
+    ✓ Passed job-14
+    ✓ Passed job-15

@@ -2,7 +2,7 @@ version = 1
 description = "M on the PR Overview's focus stops: the body does nothing; a section's title or list maximizes that section alone, centered on the hatch, with the one-time toast; enter toggles it while maximized; M again does nothing; a focus key moves focus but keeps the section; escape restores"
 # A maximized section has no boxes, tables or tabs, so those captures are checked through [expect] `contains` and
 # `not_contains`. The footer is hidden while maximized.
-gate = false
+gate = true
 parity_rows = ["pull-requests.collapsible", "main-layout.maximize"]
 sizes = [[160, 48]]
 

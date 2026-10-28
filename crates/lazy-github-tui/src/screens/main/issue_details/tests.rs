@@ -300,12 +300,7 @@ fn maximize_works_on_the_strip_but_not_the_body() {
     app.press(&["tab", "M"]);
     assert_eq!(app.app().maximized(), None);
     app.press(&["5", "M"]);
-    assert_eq!(
-        app.app().maximized(),
-        Some(Maximized {
-            target: FocusTarget::DetailsTabs
-        })
-    );
+    assert_eq!(app.app().maximized(), Some(Maximized::widget(FocusTarget::DetailsTabs)));
 }
 
 #[test]

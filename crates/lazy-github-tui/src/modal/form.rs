@@ -134,16 +134,38 @@ pub fn split(interior: Rect, button_height: u16) -> (Rect, Rect) {
 }
 
 /// The scroll area's position and where it was drawn last.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct FormScroll {
     view: ScrollView,
+    /// Whether an overflowing form shows a scrollbar, narrowing it by the bar's two columns.
+    scrollbar: bool,
     /// The scroll area on screen at the last draw. Empty until then.
     area: Rect,
     /// The offscreen area the form was drawn into at the last draw.
     content: Rect,
 }
 
+impl Default for FormScroll {
+    fn default() -> Self {
+        Self {
+            view: ScrollView::default(),
+            scrollbar: true,
+            area: Rect::default(),
+            content: Rect::default(),
+        }
+    }
+}
+
 impl FormScroll {
+    /// A scroll area that shows no scrollbar and keeps its whole width: for a dialog whose fields fill it, which
+    /// scrolls only to reveal a field below the screen's edge (Textual scrolls the modal screen itself).
+    pub fn without_scrollbar() -> Self {
+        Self {
+            scrollbar: false,
+            ..Self::default()
+        }
+    }
+
     /// The scroll area on screen at the last draw.
     pub fn area(&self) -> Rect {
         self.area
@@ -177,14 +199,18 @@ impl FormScroll {
         let content = Rect {
             x: area.x,
             y: 0,
-            width: ScrollView::content_width(area, usize::from(height)),
+            width: if self.scrollbar {
+                ScrollView::content_width(area, usize::from(height))
+            } else {
+                area.width
+            },
             height,
         };
         self.content = content;
         let mut scratch = Buffer::empty(content);
         scratch.set_style(content, fill);
         draw(&mut scratch, content);
-        self.view.render_buffer(buf, area, theme, &scratch);
+        self.view.render_buffer(buf, area, theme, &scratch, self.scrollbar);
     }
 
     /// The form row on screen row `row`, if it's in the scroll area.

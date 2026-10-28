@@ -19,6 +19,7 @@ use crate::components::info::{InfoView, Scroll};
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
+use crate::modal::PostedComment;
 use crate::options::AppOptions;
 use crate::theme::Theme;
 
@@ -97,6 +98,9 @@ pub(super) trait DetailsBody {
     /// A binding's action that needs the context (it makes requests), as [`Self::on_binding`] asked for with
     /// [`MainAction::DetailsCommand`](super::MainAction::DetailsCommand).
     fn on_command(&mut self, _tab: usize, _owner: Owner, _id: BindingId, _cx: &mut Cx<'_>) {}
+
+    /// The New comment dialog opened from this body posted `posted`: the body shows it, if it shows comments.
+    fn comment_posted(&mut self, _posted: PostedComment, _cx: &mut Cx<'_>) {}
 
     /// A mouse event over tab `tab`'s content other than a press (a release, a move, the wheel), for a widget inside
     /// it that takes its own (a tree). Says whether it took the event; the pane handles any other.
@@ -408,6 +412,11 @@ impl DetailsPane {
     /// [`DetailsBody::on_command`] in the active tab.
     pub(super) fn on_command(&mut self, owner: Owner, id: BindingId, cx: &mut Cx<'_>) {
         self.body.get_mut().on_command(self.tabs.active(), owner, id, cx);
+    }
+
+    /// [`DetailsBody::comment_posted`].
+    pub(super) fn comment_posted(&mut self, posted: PostedComment, cx: &mut Cx<'_>) {
+        self.body.get_mut().comment_posted(posted, cx);
     }
 
     /// [`DetailsBody::mouse`] in the active tab.

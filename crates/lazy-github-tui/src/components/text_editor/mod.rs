@@ -69,8 +69,27 @@ pub const TEXT_EDITOR_BINDINGS: &[BindingId] = &[
     BindingId::TextualTextAreaRedo,
 ];
 
-/// Cells between each side of the border and the text area (`padding: 0 1`).
+/// Cells between each side of the border and the text area by default (`padding: 0 1`).
 const PADDING: u16 = 1;
+
+/// The padding inside the editor's border.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct EditorPadding {
+    /// Rows above the text.
+    pub top: u16,
+    /// Columns each side of the text.
+    pub horizontal: u16,
+}
+
+impl Default for EditorPadding {
+    /// `TextArea`'s own `padding: 0 1`.
+    fn default() -> Self {
+        Self {
+            top: 0,
+            horizontal: PADDING,
+        }
+    }
+}
 /// Cells between the line numbers and the text (`gutter_margin`).
 const GUTTER_MARGIN: usize = 2;
 /// The column `wrap_width` keeps free for the cursor past a row's last char.
@@ -133,6 +152,7 @@ pub struct TextEditor {
     buffer: TextArea<'static>,
     variant: EditorVariant,
     border: EditorBorder,
+    padding: EditorPadding,
     /// The selection's start, which stays put while the cursor (its end) moves. Equal to the cursor when nothing is
     /// selected. The app keeps it rather than the crate, whose selection doesn't say which end is the anchor.
     anchor: Location,
@@ -156,6 +176,7 @@ impl TextEditor {
             buffer: TextArea::default(),
             variant,
             border: EditorBorder::Tall,
+            padding: EditorPadding::default(),
             anchor: (0, 0),
             history: EditHistory::default(),
             selecting: false,
@@ -173,6 +194,19 @@ impl TextEditor {
     pub fn with_border(mut self, border: EditorBorder) -> Self {
         self.border = border;
         self
+    }
+
+    /// The same editor with `padding` inside its border instead of `padding: 0 1`: New comment's
+    /// `padding-top: 1`, which Textual stores as `padding: 1 0 0 0`.
+    #[must_use]
+    pub fn with_padding(mut self, padding: EditorPadding) -> Self {
+        self.padding = padding;
+        self
+    }
+
+    /// The padding inside the border.
+    pub(super) fn padding(&self) -> EditorPadding {
+        self.padding
     }
 
     /// The text, its lines joined with `\n`.
@@ -622,11 +656,11 @@ impl TextEditor {
     /// last row.
     fn location_at(&self, column: u16, row: u16) -> Location {
         let area = self.view.area;
-        let text_x = i64::from(area.x) + 1 + i64::from(PADDING);
+        let text_x = i64::from(area.x) + 1 + i64::from(self.padding.horizontal);
         let gutter = i64::try_from(self.gutter_width()).unwrap_or(0);
         let scroll = i64::try_from(self.scroll_y).unwrap_or(0);
         let x = i64::from(column) - text_x - gutter;
-        let y = i64::from(row) - i64::from(area.y) - 1 + scroll;
+        let y = i64::from(row) - i64::from(area.y) - 1 - i64::from(self.padding.top) + scroll;
         let clamp = |n: i64| isize::try_from(n).unwrap_or(0);
         self.layout.offset_to_location(self.lines(), clamp(x), clamp(y))
     }
@@ -713,7 +747,7 @@ impl TextEditor {
 
     /// The text area's width inside the border and the padding, scrollbar included.
     fn inner_width(&self) -> usize {
-        usize::from(self.view.area.width.saturating_sub(2 + 2 * PADDING))
+        usize::from(self.view.area.width.saturating_sub(2 + 2 * self.padding.horizontal))
     }
 
     /// Rewraps the text for the last draw's size: Textual's `wrap_width`, which leaves out the gutter, a column for
@@ -760,7 +794,7 @@ impl TextEditor {
     pub fn render(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focused: bool) {
         if area != self.view.area {
             self.view.area = area;
-            self.view.height = usize::from(area.height.saturating_sub(2));
+            self.view.height = usize::from(area.height.saturating_sub(2 + self.padding.top));
             self.relayout();
             self.scroll_cursor_visible();
         }

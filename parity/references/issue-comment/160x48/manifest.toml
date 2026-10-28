@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["open", "preview", "posted", "comment-focused", "reply-open", "replied", "cancelled"]
 
 [inputs]
-scenario = "591b2424b53c87f876b00949db0dc4f75840ea20"
+scenario = "8285c1261a20c8fb46707eb728d48798ca746dfa"
 fixtures = "2f8fe7a0ad282d7ab1f1a41ed09cfeefb08b4d36"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "d40dac32aacaaea9cd02642bf388d6d6f854e0ee"

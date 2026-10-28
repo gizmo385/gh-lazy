@@ -17,8 +17,10 @@ use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::BindingId;
+use crate::modal::{NewCommentDialog, PostedComment, ReplyTarget};
 use crate::theme::Theme;
 
+use super::MainAction;
 use super::details::{BodyRenderCx, DetailsBody};
 pub(super) use comments::IssueComments;
 pub(super) use overview::IssueOverview;
@@ -166,10 +168,43 @@ impl DetailsBody for IssueDetails {
         }
     }
 
-    /// Editing an issue (#181), a new comment and a reply (#182) aren't built yet: the key is consumed, as in
-    /// Python.
-    fn on_binding(&mut self, _tab: usize, _owner: Owner, id: BindingId) -> Option<Action> {
-        Some(Action::Unimplemented(id))
+    /// A new comment and a reply open the New comment dialog, which needs the context.
+    fn on_binding(&mut self, tab: usize, owner: Owner, id: BindingId) -> Option<Action> {
+        match (IssueTab::at(tab), owner, id) {
+            (IssueTab::Comments, Owner::IssueComments, BindingId::ConversationCommentNew)
+            | (IssueTab::Comments, Owner::CommentBlock, BindingId::ConversationCommentReply) => {
+                Some(Action::Main(MainAction::DetailsCommand(owner, id)))
+            }
+            _ => Some(Action::Unimplemented(id)),
+        }
+    }
+
+    /// Python's `new_comment_flow` and `reply_to_comment_flow`: the dialog for the issue, answering the focused
+    /// comment for a reply. What it posts is appended to the tab.
+    fn on_command(&mut self, tab: usize, owner: Owner, id: BindingId, cx: &mut Cx<'_>) {
+        if IssueTab::at(tab) != IssueTab::Comments {
+            return;
+        }
+        let target = match (owner, id) {
+            (Owner::IssueComments, BindingId::ConversationCommentNew) => ReplyTarget::None,
+            (Owner::CommentBlock, BindingId::ConversationCommentReply) => match self.comments.focused_comment() {
+                Some(comment) => ReplyTarget::IssueComment(Box::new(comment.clone())),
+                None => return,
+            },
+            _ => return,
+        };
+        let dialog = NewCommentDialog::new(self.issue.repo.clone(), self.issue.number, target);
+        cx.open_dialog(dialog, |posted| {
+            posted.map_or(Action::Consumed, |posted| {
+                Action::Main(MainAction::CommentPosted(posted))
+            })
+        });
+    }
+
+    /// Python's `NewCommentCreated` handlers: the comment goes below the others.
+    fn comment_posted(&mut self, posted: PostedComment, _cx: &mut Cx<'_>) {
+        let PostedComment::Issue(comment) = posted;
+        self.comments.append(*comment);
     }
 }
 

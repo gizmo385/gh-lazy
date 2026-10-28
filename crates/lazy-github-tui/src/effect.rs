@@ -229,6 +229,15 @@ pub enum GithubRequest {
         /// Its title and body.
         issue: NewIssue,
     },
+    /// [`Github::create_issue_comment`].
+    CreateIssueComment {
+        /// The repo the issue or pull request is in.
+        repo: Box<Repository>,
+        /// Its number.
+        number: u64,
+        /// The comment's text.
+        body: String,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repo the issue is in.
@@ -289,6 +298,8 @@ pub enum GithubResponse {
     PullRequestReviews(Result<Vec<Review>, GhError>),
     /// [`Github::create_issue`], boxed to keep this enum small.
     CreateIssue(Result<Box<Issue>, GhError>),
+    /// [`Github::create_issue_comment`], boxed to keep this enum small.
+    CreateIssueComment(Result<Box<IssueComment>, GhError>),
     /// [`Github::update_issue`], boxed to keep this enum small.
     UpdateIssue(Result<Box<Issue>, GhError>),
 }
@@ -345,6 +356,9 @@ impl GithubRequest {
             }
             GithubRequest::CreateIssue { repo, issue } => {
                 GithubResponse::CreateIssue(gh.create_issue(&repo, &issue).await.map(Box::new))
+            }
+            GithubRequest::CreateIssueComment { repo, number, body } => {
+                GithubResponse::CreateIssueComment(gh.create_issue_comment(&repo, number, &body).await.map(Box::new))
             }
             GithubRequest::UpdateIssue { repo, number, update } => {
                 GithubResponse::UpdateIssue(gh.update_issue(&repo, number, &update).await.map(Box::new))

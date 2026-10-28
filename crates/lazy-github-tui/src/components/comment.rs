@@ -27,7 +27,7 @@ use crate::component::{ChainLink, Owner};
 use crate::keymap::BindingId;
 use crate::theme::{Paint, Theme};
 
-/// A focused block's bindings: `IssueCommentContainer.BINDINGS`. Reply is a no-op until #182.
+/// A focused block's bindings: `IssueCommentContainer.BINDINGS`: reply, which the view stacking the blocks handles.
 pub const COMMENT_BINDINGS: &[BindingId] = &[BindingId::ConversationCommentReply];
 
 /// A focused reactions title's bindings: Textual's `CollapsibleTitle`.

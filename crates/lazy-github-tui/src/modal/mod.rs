@@ -12,6 +12,7 @@ pub mod form;
 mod frame;
 mod issue_form;
 mod lookup;
+mod new_comment;
 mod new_issue;
 mod stack;
 mod user_profile;
@@ -34,8 +35,9 @@ use crate::theme::{Palette, ThemeColor};
 pub use confirm::{ConfirmAction, ConfirmDialog};
 pub use edit_issue::{EditIssueAction, EditIssueDialog};
 pub use focus::{FocusMove, FocusRing};
-pub use frame::{DIM_FACTOR, DialogFrame, dim, frame_rect};
+pub use frame::{DIM_FACTOR, DialogFrame, dim, frame_rect, frame_rect_with_margin};
 pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup, number};
+pub use new_comment::{NewCommentAction, NewCommentDialog, PostedComment, ReplyTarget};
 pub use new_issue::{NewIssueAction, NewIssueDialog};
 pub use stack::ModalEntry;
 pub use user_profile::{UserProfileAction, UserProfileDialog};
@@ -81,6 +83,8 @@ pub enum ModalKind {
     NewIssue,
     /// [`EditIssueDialog`]: an issue's title, state and description.
     EditIssue,
+    /// [`NewCommentDialog`]: a new comment or a reply.
+    NewComment,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -140,6 +144,8 @@ pub enum DialogAction {
     NewIssue(NewIssueAction),
     /// [`EditIssueDialog`]'s.
     EditIssue(EditIssueAction),
+    /// [`NewCommentDialog`]'s.
+    NewComment(NewCommentAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -153,6 +159,7 @@ impl DialogAction {
             DialogAction::UserProfile(_) => ModalKind::UserProfile,
             DialogAction::NewIssue(_) => ModalKind::NewIssue,
             DialogAction::EditIssue(_) => ModalKind::EditIssue,
+            DialogAction::NewComment(_) => ModalKind::NewComment,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }
@@ -192,6 +199,16 @@ pub trait Dialog: Component + Send + 'static {
     /// The frame's outer size, border included, for a screen whose area above the footer row is `available`. A
     /// size larger than `available` is clipped to it.
     fn size(&self, available: Rect) -> (u16, u16);
+
+    /// Where the frame goes on a screen of `area` (the footer row included): [`frame_rect`] of [`Self::size`] unless
+    /// the dialog says otherwise ([`frame_rect_with_margin`] for one with a `margin`).
+    fn frame(&self, area: Rect) -> Rect {
+        let available = Rect {
+            height: area.height.saturating_sub(1),
+            ..area
+        };
+        frame_rect(area, self.size(available))
+    }
 
     /// The interior's background: `$surface-lighten-3` unless the dialog says otherwise.
     fn background(&self, palette: &Palette) -> ThemeColor {

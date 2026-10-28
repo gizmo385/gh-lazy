@@ -545,29 +545,51 @@ fn a_click_on_a_block_focuses_it() {
 }
 
 #[test]
-fn reply_and_new_comment_are_unimplemented() {
+fn n_and_r_open_the_new_comment_dialog_and_focus_comes_back() {
     let mut app = on_comments(0);
     app.press(&["tab"]);
-    let out = logs(|| {
-        app.press(&["n"]);
-    });
-    assert!(out.contains("is not implemented yet"), "{out}");
-    app.press(&["tab"]);
-    let out = logs(|| {
-        app.press(&["r"]);
-    });
-    assert!(out.contains("is not implemented yet"), "{out}");
     let main = app.app_mut().main_screen_mut().unwrap();
     assert!(matches!(
         main.details
             .on_binding(Owner::IssueComments, BindingId::ConversationCommentNew),
-        Some(Action::Unimplemented(BindingId::ConversationCommentNew))
+        Some(Action::Main(MainAction::DetailsCommand(Owner::IssueComments, _)))
     ));
-    assert!(matches!(
-        main.details
-            .on_binding(Owner::CommentBlock, BindingId::ConversationCommentReply),
-        Some(Action::Unimplemented(BindingId::ConversationCommentReply))
-    ));
+    app.press(&["n"]);
+    assert_eq!(app.app().modals(), [crate::modal::ModalKind::NewComment]);
+    app.press(&["escape"]);
+    assert_eq!(
+        (focus(&app), comments(&app).stop()),
+        (FocusTarget::DetailsContent, None)
+    );
+    app.press(&["tab", "r"]);
+    assert_eq!(app.app().modals(), [crate::modal::ModalKind::NewComment]);
+    assert!(app.screen(160, 48).contains("Replying to comment from"));
+    app.press(&["escape"]);
+    assert_eq!(
+        (focus(&app), comments(&app).stop()),
+        (FocusTarget::DetailsContent, Some(0))
+    );
+}
+
+#[test]
+fn a_posted_comment_and_a_reply_are_appended() {
+    let mut app = on_comments(0);
+    let before = comments(&app).len();
+    let mut posted = fixture_comments(12)[0].clone();
+    posted.id = 7001;
+    posted.body = "Posted later".into();
+    app.dispatch(Action::Main(MainAction::CommentPosted(
+        crate::modal::PostedComment::Issue(Box::new(posted.clone())),
+    )));
+    posted.id = 7002;
+    posted.body = "A reply".into();
+    app.dispatch(Action::Main(MainAction::CommentPosted(
+        crate::modal::PostedComment::Issue(Box::new(posted)),
+    )));
+    assert_eq!(comments(&app).len(), before + 2);
+    let screen = app.screen(160, 48);
+    let (later, reply) = (screen.find("Posted later").unwrap(), screen.find("A reply").unwrap());
+    assert!(later < reply, "{screen}");
 }
 
 #[test]
@@ -645,4 +667,22 @@ fn issue_comments_none() {
     let screen = app.screen(160, 48);
     assert!(screen.contains("│No comments available"), "{screen}");
     insta::assert_snapshot!(screen);
+}
+
+/// Python mounts the posted comment below "No comments available", which stays.
+#[test]
+fn a_comment_posted_where_there_were_none_goes_below_the_empty_line() {
+    let mut app = on_comments(1);
+    assert_eq!(shown_issue(&app), Some(11));
+    let mut posted = fixture_comments(12)[0].clone();
+    posted.body = "The first comment".into();
+    app.dispatch(Action::Main(MainAction::CommentPosted(
+        crate::modal::PostedComment::Issue(Box::new(posted)),
+    )));
+    let screen = app.screen(160, 48);
+    let (empty, first) = (
+        screen.find("No comments available").unwrap(),
+        screen.find("The first comment").unwrap(),
+    );
+    assert!(empty < first, "{screen}");
 }

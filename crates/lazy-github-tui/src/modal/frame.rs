@@ -47,6 +47,27 @@ pub fn frame_rect(area: Rect, (width, height): (u16, u16)) -> Rect {
     }
 }
 
+/// Where a dialog of outer size `(width, height)` with `margin` cells around it goes on a screen of `area`, as
+/// Textual's `ModalScreen { align: center middle }` places it: centered with its margins in the area above the bottom
+/// row. When it's taller than that area, the modal screen scrolls, and its vertical scrollbar takes the two rightmost
+/// columns, which the centering leaves out; the frame then starts `margin` rows down and runs past the bottom, and
+/// isn't clipped (drawing cuts it at the screen's edge).
+pub fn frame_rect_with_margin(area: Rect, (width, height): (u16, u16), margin: u16) -> Rect {
+    let available = Rect {
+        height: area.height.saturating_sub(1),
+        ..area
+    };
+    let outer = (width + 2 * margin, height + 2 * margin);
+    let scrollbar = if outer.1 > available.height { 2 } else { 0 };
+    let across = available.width.saturating_sub(scrollbar);
+    Rect {
+        x: available.x + across.saturating_sub(outer.0) / 2 + margin,
+        y: available.y + available.height.saturating_sub(outer.1) / 2 + margin,
+        width,
+        height,
+    }
+}
+
 /// Textual's `thick` border in `$background 80%`, around an interior painted `background`.
 pub struct DialogFrame<'a> {
     /// The theme.
@@ -108,6 +129,24 @@ mod tests {
             Rect::new(50, 11, 60, 25)
         );
         assert_eq!(frame_rect(Rect::new(0, 0, 100, 30), (60, 25)), Rect::new(20, 2, 60, 25));
+    }
+
+    #[test]
+    fn a_frame_with_a_margin_taller_than_the_screen_starts_below_it() {
+        // New comment's 100 x 50 with `margin: 1`, captured from Python.
+        assert_eq!(
+            frame_rect_with_margin(Rect::new(0, 0, 160, 48), (100, 50), 1),
+            Rect::new(29, 1, 100, 50)
+        );
+        assert_eq!(
+            frame_rect_with_margin(Rect::new(0, 0, 100, 30), (100, 50), 1),
+            Rect::new(1, 1, 100, 50)
+        );
+        // One that fits is centered as without a margin.
+        assert_eq!(
+            frame_rect_with_margin(Rect::new(0, 0, 160, 80), (100, 50), 1),
+            Rect::new(30, 14, 100, 50)
+        );
     }
 
     #[test]

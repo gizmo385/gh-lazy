@@ -17,7 +17,7 @@ use crate::models::{
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue` and `update_issue` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue` and `create_issue_comment` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -132,6 +132,15 @@ pub enum GithubCall {
         /// What was sent.
         issue: NewIssue,
     },
+    /// [`Github::create_issue_comment`].
+    CreateIssueComment {
+        /// The repository's full name.
+        full_name: String,
+        /// The issue's or pull request's number.
+        number: u64,
+        /// What was sent.
+        body: String,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repository's full name.
@@ -187,6 +196,8 @@ struct State {
     reviews: HashMap<(String, u64), Result<Vec<Review>, GhError>>,
     /// What `create_issue` returns, whatever the repo; `None` fails with a 422.
     created_issue: Option<Result<Issue, GhError>>,
+    /// What `create_issue_comment` returns, by the body sent; bodies not set fail with a 422.
+    posted_comments: HashMap<String, Result<IssueComment, GhError>>,
     /// What `update_issue` returns, whatever the issue; `None` fails with a 422.
     updated_issue: Option<Result<Issue, GhError>>,
     latency: Option<Duration>,
@@ -409,6 +420,14 @@ impl FakeGithub {
     #[must_use]
     pub fn with_job_logs(self, job_id: u64, logs: Result<Option<String>, GhError>) -> Self {
         self.lock().job_logs.insert(job_id, logs);
+        self
+    }
+
+    /// `create_issue_comment` returns `posted` for a comment with body `body`, whatever the repo and number. Other
+    /// bodies fail with a 422.
+    #[must_use]
+    pub fn with_posted_comment(self, body: &str, posted: Result<IssueComment, GhError>) -> Self {
+        self.lock().posted_comments.insert(body.to_owned(), posted);
         self
     }
 
@@ -753,6 +772,20 @@ impl Github for FakeGithub {
         .await
     }
 
+    async fn create_issue_comment(&self, repo: &Repository, number: u64, body: &str) -> Result<IssueComment, GhError> {
+        let call = GithubCall::CreateIssueComment {
+            full_name: repo.full_name.clone(),
+            number,
+            body: body.to_owned(),
+        };
+        self.respond(call, |state| match state.posted_comments.get(body) {
+            Some(Ok(posted)) => Ok(posted.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Err(unprocessable()),
+        })
+        .await
+    }
+
     async fn update_issue(&self, repo: &Repository, number: u64, update: &IssueUpdate) -> Result<Issue, GhError> {
         let call = GithubCall::UpdateIssue {
             full_name: repo.full_name.clone(),
@@ -793,6 +826,15 @@ fn canned_page<T: Clone>(page: Option<&Result<Vec<T>, GhError>>) -> Result<Vec<T
 
 /// A copy of `error`, so a canned error can be returned on every call. `GhError` isn't `Clone` because its
 /// `serde_json` and `io` sources aren't; those are rebuilt from their message (and kind).
+/// GitHub's answer to a write it refuses.
+fn unprocessable() -> GhError {
+    GhError::Http {
+        status: 422,
+        message: "Unprocessable Entity".to_owned(),
+        body: Vec::new(),
+    }
+}
+
 fn duplicate(error: &GhError) -> GhError {
     match error {
         GhError::NotInstalled => GhError::NotInstalled,
@@ -1161,6 +1203,28 @@ mod tests {
                 full_name: "octocat/a".into(),
                 number: 12,
                 update,
+            }
+        );
+    }
+
+    #[tokio::test]
+    async fn create_issue_comment_answers_by_body_and_records_the_call() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../parity/fixtures/issue-write/repos/parity-bot/issue-fixture/issues/12/comments/POST.json");
+        let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let posted: IssueComment = serde_json::from_value(fixture["response"]["body"].clone()).unwrap();
+        let github = FakeGithub::new().with_posted_comment("hi", Ok(posted.clone()));
+        assert_eq!(github.create_issue_comment(&repo("a"), 12, "hi").await.unwrap(), posted);
+        assert!(matches!(
+            github.create_issue_comment(&repo("a"), 12, "").await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        assert_eq!(
+            github.calls()[0],
+            GithubCall::CreateIssueComment {
+                full_name: "octocat/a".into(),
+                number: 12,
+                body: "hi".into(),
             }
         );
     }

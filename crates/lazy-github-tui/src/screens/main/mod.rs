@@ -39,7 +39,7 @@ use crate::components::table::{Handled, SEARCHABLE_BINDINGS, TABLE_BINDINGS, Tab
 use crate::components::text_input::{self, INPUT_BINDINGS};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::modal::{EditIssueDialog, LookupDialog, NewIssueDialog, RepoLookup};
+use crate::modal::{EditIssueDialog, LookupDialog, NewIssueDialog, PostedComment, RepoLookup};
 use crate::options::AppOptions;
 use crate::theme::Theme;
 use crate::toast::Toast;
@@ -306,6 +306,8 @@ pub enum MainAction {
     /// The Edit issue dialog opened from the Issues table saved an issue: it replaces its row. A closed dialog, or one
     /// opened from the Overview, sends nothing.
     IssueUpdated(Box<Issue>),
+    /// The New comment dialog opened from the details posted a comment: the details show it.
+    CommentPosted(PostedComment),
     /// Show a pull request's details: fetch it first if `target` is a table row. `focus` moves focus to the tab
     /// strip once they show (Python's `focus_pr_details`, false only for M4's preload, #198).
     OpenPullRequest {
@@ -1223,6 +1225,7 @@ impl Component for MainScreen {
             MainAction::WheelLog(wheel) => self.command_log.wheel(wheel),
             MainAction::WheelDetails(wheel) => self.details.wheel(wheel),
             MainAction::DetailsCommand(owner, id) => self.details.on_command(owner, id, cx),
+            MainAction::CommentPosted(posted) => self.details.comment_posted(posted, cx),
             MainAction::ClickSelect(repo) => {
                 self.try_focus(FocusTarget::Table(SectionId::Repos));
                 cx.dispatch(Action::SelectRepo(repo));

@@ -2,7 +2,7 @@ version = 1
 description = "New comment (n) and reply (r) on the issue Comments tab: the empty modal, the live markdown preview, Post Comment appending the comment, the reply modal's heading and quote, and the posted reply appended"
 # The modal's footer isn't compared: Rust binds `modal.submit` there (Py bug B17's recommendation), so it shows
 # `shift+⏎ Submit` where Python shows only `esc Close`.
-gate = false
+gate = true
 parity_rows = [
     "modals.new-comment",
     "modals.text-editor",
@@ -89,9 +89,11 @@ checks = ["titles", "tabs", "focus"]
 [[step]]
 keys = ["tab", "tab"]
 
+# The footer shows whole here, `^p Command Pallete` included (Py bug B14, which Rust fixes), so it's left out of the
+# cross-app checks; [expect] checks its comment keys on the screen.
 [[step]]
 capture = "comment-focused"
-checks = ["titles", "tabs", "focus", "footer"]
+checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["r"]
@@ -155,8 +157,7 @@ contains = ["A new comment", "parity-bot • Tue Mar  3 09:00:00 2026"]
 not_contains = ["Post Comment", "Traceback"]
 
 [expect.comment-focused]
-contains = ["A comment from a deleted account."]
-footer = ["r Reply to Comment", "n New Comment", "^v Paste link", "f Follow link", "F Follow link (browser)", "q Quit", "^p Command Pallete", "M Maximize", "? Keybindings"]
+contains = ["A comment from a deleted account.", " r Reply to Comment  n New Comment  ^v Paste link"]
 
 [expect.reply-open]
 contains = ["Replying to comment from Unknown at Wed Feb  4 11:00:00 2026", "A comment from a deleted account.", "New comment", "Preview"]

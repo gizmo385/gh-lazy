@@ -141,14 +141,20 @@ impl ScrollView {
     /// Draws the visible rows of `content`, which holds widgets drawn whole, from its top, as wide as
     /// [`Self::content_width`] says, with a scrollbar in the last two columns when it overflows: Textual's
     /// `ScrollableContainer` around widgets rather than text. Only the columns of `content` from `area`'s left edge
-    /// are copied.
-    pub fn render_buffer(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, content: &Buffer) {
+    /// are copied. Without `scrollbar`, nothing is drawn for it and the content keeps the whole width (a container
+    /// that scrolls but shows no bar of its own).
+    pub fn render_buffer(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, content: &Buffer, scrollbar: bool) {
         let window = usize::from(area.height);
         let height = usize::from(content.area.height);
         let offset = self.offset.min(height.saturating_sub(window));
         self.last = (height, window);
         self.offset = offset;
-        let width = Self::content_width(area, height).min(content.area.width);
+        let width = if scrollbar {
+            Self::content_width(area, height)
+        } else {
+            area.width
+        }
+        .min(content.area.width);
         let area = area.intersection(buf.area);
         // Both are bounded by the screen's u16 height once visible.
         let rows = u16::try_from(height.saturating_sub(offset).min(window)).unwrap_or(u16::MAX);
@@ -159,7 +165,7 @@ impl ScrollView {
                 buf[(area.x + dx, area.y + dy)] = content[from].clone();
             }
         }
-        if height > window {
+        if scrollbar && height > window {
             let bar = Rect {
                 x: area.right().saturating_sub(SCROLLBAR_WIDTH),
                 width: SCROLLBAR_WIDTH.min(area.width),
@@ -354,7 +360,7 @@ mod tests {
         assert_eq!(ScrollView::content_width(area, 5), 10);
         let mut view = ScrollView::default();
         let mut buf = Buffer::empty(Rect::new(0, 0, 12, 7));
-        view.render_buffer(&mut buf, area, &theme, &content);
+        view.render_buffer(&mut buf, area, &theme, &content, true);
         assert_eq!(buf[(2, 1)].symbol(), "0");
         assert_eq!(buf[(2, 5)].symbol(), "4");
         assert_eq!(buf[(2, 1)].fg, Color::Red);
@@ -362,7 +368,7 @@ mod tests {
         view.reveal(7..9);
         assert_eq!(view.offset(), 4);
         let mut buf = Buffer::empty(Rect::new(0, 0, 12, 7));
-        view.render_buffer(&mut buf, area, &theme, &content);
+        view.render_buffer(&mut buf, area, &theme, &content, true);
         assert_eq!(buf[(2, 1)].symbol(), "4");
         assert_eq!(buf[(2, 5)].symbol(), "8");
         // The scrollbar's track takes the last two columns; nothing is drawn below the area.

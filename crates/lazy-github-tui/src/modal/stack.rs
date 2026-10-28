@@ -121,8 +121,8 @@ impl ModalEntry {
         self.dialog.on_response(id, response, cx)
     }
 
-    pub(crate) fn size(&self, available: Rect) -> (u16, u16) {
-        self.dialog.size(available)
+    pub(crate) fn frame(&self, area: Rect) -> Rect {
+        self.dialog.frame(area)
     }
 
     pub(crate) fn background(&self, palette: &Palette) -> ThemeColor {
@@ -175,7 +175,7 @@ trait AnyDialog: Send {
     fn handle_paste(&mut self, text: &str, cx: &Cx<'_>) -> Option<Action>;
     fn update(&mut self, action: DialogAction, cx: &mut Cx<'_>);
     fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse>;
-    fn size(&self, available: Rect) -> (u16, u16);
+    fn frame(&self, area: Rect) -> Rect;
     fn background(&self, palette: &Palette) -> ThemeColor;
     fn shows_footer(&self) -> bool;
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>);
@@ -247,8 +247,8 @@ impl<D: Dialog> AnyDialog for Open<D> {
         self.dialog.on_response(id, response, cx)
     }
 
-    fn size(&self, available: Rect) -> (u16, u16) {
-        self.dialog.size(available)
+    fn frame(&self, area: Rect) -> Rect {
+        self.dialog.frame(area)
     }
 
     fn background(&self, palette: &Palette) -> ThemeColor {

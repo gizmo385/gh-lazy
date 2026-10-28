@@ -60,7 +60,12 @@ pub(in crate::screens::main) struct IssueComments {
 struct Body {
     /// `owner/name` of the issue's repository, which the comments' `#N` references point into.
     repo: String,
+    /// The comments, which a reply quotes, in the blocks' order.
+    comments: Vec<IssueComment>,
     blocks: Vec<CommentBlock>,
+    /// Whether "No comments available" shows: the comments loaded empty. A comment posted later goes below it, as in
+    /// Python.
+    none_loaded: bool,
     /// The focused block, or `None` for the scroll view itself.
     stop: Option<usize>,
     /// Whether focus is inside the content, so the focused block is drawn in its box.
@@ -92,7 +97,9 @@ impl IssueComments {
             scroll: ScrollView::default(),
             body: Body {
                 repo: issue.repo.full_name.clone(),
+                comments: Vec::new(),
                 blocks: Vec::new(),
+                none_loaded: false,
                 stop: None,
                 focused: false,
                 layouts: LayoutCache::default(),
@@ -154,9 +161,23 @@ impl IssueComments {
             .iter()
             .map(|comment| CommentBlock::new(comment, repo))
             .collect();
+        self.body.none_loaded = comments.is_empty();
+        self.body.comments = comments;
         self.body.stop = None;
         self.body.clear();
         self.state = State::Loaded;
+    }
+
+    /// The comment of the focused block, if a block has focus.
+    pub(super) fn focused_comment(&self) -> Option<&IssueComment> {
+        self.body.comments.get(self.body.stop?)
+    }
+
+    /// A posted comment or reply: a block below the others. Focus stays where it is.
+    pub(super) fn append(&mut self, comment: IssueComment) {
+        self.body.blocks.push(CommentBlock::new(&comment, &self.body.repo));
+        self.body.comments.push(comment);
+        self.body.clear();
     }
 
     /// The tab is going away: cancels the request if it's still out.
@@ -320,6 +341,7 @@ impl Layout for Body {
         let focused = self.focused.then_some(self.stop).flatten();
         let Body {
             blocks,
+            none_loaded,
             layouts,
             placements,
             ..
@@ -327,7 +349,7 @@ impl Layout for Body {
         layouts.get(width, theme, || {
             let mut out = Rendered::default();
             let mut placed = Vec::with_capacity(blocks.len());
-            if blocks.is_empty() {
+            if *none_loaded || blocks.is_empty() {
                 let HeaderStyles { text, .. } = HeaderStyles::new(theme);
                 push_label(&mut out, &[TextRun::new(NO_COMMENTS, text)], width);
             }

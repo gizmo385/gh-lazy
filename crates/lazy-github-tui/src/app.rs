@@ -24,7 +24,7 @@ use crate::components::status_bar::{StatusBar, UnreadState};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
-use crate::modal::{DialogFrame, ModalEntry, ModalKind, dim, frame_rect};
+use crate::modal::{DialogFrame, ModalEntry, ModalKind, dim};
 use crate::notifications::NotificationPoll;
 use crate::options::AppOptions;
 use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
@@ -864,7 +864,10 @@ impl App {
         let mut hits = Vec::new();
         for (index, (entry, active)) in self.modals.iter_mut().zip(&actives).enumerate() {
             dim(frame.buffer_mut(), area, &theme);
-            let rect = frame_rect(area, entry.size(available));
+            let rect = entry.frame(area);
+            if rect.bottom() > available.bottom() {
+                screen_scrollbar(frame.buffer_mut(), available, rect, &theme);
+            }
             let background = entry.background(theme.palette);
             frame.render_widget(
                 DialogFrame {
@@ -971,6 +974,35 @@ fn with_app_link(mut chain: Vec<ChainLink>) -> Vec<ChainLink> {
     chain.push(ChainLink::new(Owner::App, APP_BINDINGS));
     ChainLink::filter_behind_inputs(&mut chain);
     chain
+}
+
+/// The vertical scrollbar a modal screen shows in the two rightmost columns of `available` when its dialog's frame
+/// (`rect`) runs past the bottom, as Textual's screen scrolls then. The screen isn't scrolled: the dialog keeps its
+/// own focused field in view.
+fn screen_scrollbar(buf: &mut ratatui::buffer::Buffer, available: Rect, rect: Rect, theme: &Theme) {
+    use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState, VERTICAL_WIDTH};
+
+    let palette = theme.palette;
+    let bg = theme.background();
+    let back = palette.scrollbar_background.over(bg);
+    let colors = ScrollbarColors {
+        bar: theme.paint(palette.scrollbar.over(back)),
+        back: theme.paint(back),
+        fg: theme.color(palette.foreground, bg),
+        bg: theme.paint(bg),
+    };
+    let bar = Rect {
+        x: available.right().saturating_sub(VERTICAL_WIDTH),
+        width: VERTICAL_WIDTH.min(available.width),
+        ..available
+    };
+    let state = ScrollbarState {
+        // The frame and the margin row below it.
+        content: usize::from(rect.bottom().saturating_sub(available.y)) + 1,
+        window: usize::from(available.height),
+        position: 0,
+    };
+    scrollbar::render(buf, bar, Axis::Vertical, state, colors);
 }
 
 /// `chain` up to and including its first modal screen, as Textual's `_modal_binding_chain` ends it.

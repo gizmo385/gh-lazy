@@ -9,7 +9,7 @@ use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
 
 use super::wrap::{TAB_WIDTH, char_cells};
-use super::{EditorBorder, EditorVariant, PADDING, TextEditor};
+use super::{EditorBorder, EditorVariant, TextEditor};
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState, VERTICAL_WIDTH};
 use crate::components::text_input::TallBorder;
 use crate::theme::{Paint, Rgb, Theme};
@@ -148,21 +148,19 @@ pub(super) fn draw(editor: &TextEditor, buf: &mut Buffer, theme: &Theme, under: 
         EditorBorder::Tall => styles.border.draw(buf, area),
         EditorBorder::Blank => buf.set_style(area, styles.base),
     }
-    if area.width <= 2 * (1 + PADDING) || area.height <= 2 {
+    let padding = editor.padding();
+    if area.width <= 2 * (1 + padding.horizontal) || area.height <= 2 + padding.top {
         return;
     }
     let scrollbar_width = if editor.view.scrollbar { VERTICAL_WIDTH } else { 0 };
-    let inner_width = area.width - 2 * (1 + PADDING);
+    let inner_width = area.width - 2 * (1 + padding.horizontal);
     let text_area = Rect {
-        x: area.x + 1 + PADDING,
-        y: area.y + 1,
+        x: area.x + 1 + padding.horizontal,
+        y: area.y + 1 + padding.top,
         width: inner_width.saturating_sub(scrollbar_width),
-        height: area.height - 2,
+        height: area.height - 2 - padding.top,
     };
-    for y in text_area.top()..text_area.bottom() {
-        buf[(area.x + 1, y)].set_symbol(" ").set_style(styles.padding);
-        buf[(area.right() - 2, y)].set_symbol(" ").set_style(styles.padding);
-    }
+    draw_padding(buf, area, text_area, padding.horizontal, styles.padding);
 
     let lines = editor.lines();
     let cursor = editor.cursor();
@@ -235,6 +233,20 @@ pub(super) fn draw(editor: &TextEditor, buf: &mut Buffer, theme: &Theme, under: 
             position: editor.scroll_y,
         };
         scrollbar::render(buf, bar, Axis::Vertical, state, styles.scrollbar);
+    }
+}
+
+/// The padding between the border (`area`'s edge) and `text_area`: the rows above it, and `horizontal` columns each
+/// side of it.
+fn draw_padding(buf: &mut Buffer, area: Rect, text_area: Rect, horizontal: u16, style: Style) {
+    for y in area.y + 1..text_area.top() {
+        fill(buf, Rect::new(area.x + 1, y, area.width - 2, 1), style);
+    }
+    for y in text_area.top()..text_area.bottom() {
+        for dx in 0..horizontal {
+            buf[(area.x + 1 + dx, y)].set_symbol(" ").set_style(style);
+            buf[(area.right() - 2 - dx, y)].set_symbol(" ").set_style(style);
+        }
     }
 }
 

@@ -1,0 +1,53 @@
+---
+source: crates/lazy-github-tui/src/modal/new_comment/tests.rs
+assertion_line: 337
+expression: "app.screen(160, 48)"
+---
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+│Current repo: parity-bot/iss█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+└────────────────────────────█New comment                                                                                       █─────────────────────────────
+┌─ [1] Repositories ─────────█                                                                                                  █─────────────────────────────
+│ ★  Owner       Name        █                                                                                                  █
+│ ☆  parity-bot  issue-fixtur█                                                                                                  █━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+└────────────────────────────█                                                                                                  █
+┌─ [2] Pull Requests ────────█                                                                                                  █the defaults when it is empty
+│ #  Status  Author      Titl█                                                                                                  █else changes for people who
+│ 8  open    parity-bot  A pu█                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █Preview                                                                                           █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+└────────────────────────────█                                                                                                  █
+┌─ [3] Issues ───────────────█                                                                                                  █
+│ #   Status  Author         █                                                                                                  █
+│ 12  open    parity-friend  █                                                                                                  █
+│ 11  closed  parity-bot     █                                                                                                  █
+│ 10  open    parity-bot     █                                                                                                  █
+│ 9   open    parity-friend  █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █
+│                            █                                                                                                  █                             ▄▄
+└────────────────────────────█                                                                                                  █
+┌─ [4] Workflows (empty) ────█                                 ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                 █
+│ Time  Result  Job Name  Run█                                   Post Comment       Cancel                                      █
+└────────────────────────────█                                 ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                 █─────────────────────────────
+ shift+⏎ Submit  esc Close

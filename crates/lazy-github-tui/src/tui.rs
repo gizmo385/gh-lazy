@@ -635,6 +635,14 @@ mod tests {
         ) -> Result<Vec<lazy_github_core::models::Review>, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }
+
+        async fn create_issue(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _issue: &lazy_github_core::github::NewIssue,
+        ) -> Result<lazy_github_core::models::Issue, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
     }
 
     /// Runs the loop on a `TestBackend` with `effect` already started, and returns how it ended.

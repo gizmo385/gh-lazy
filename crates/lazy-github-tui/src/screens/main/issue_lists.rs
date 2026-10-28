@@ -187,6 +187,11 @@ impl IssueLists {
         self.issues.insert_if_missing(issue, cx);
     }
 
+    /// Adds a created issue to the Issues table, or replaces its row: [`ListSection::upsert`].
+    pub(super) fn upsert_issue(&mut self, issue: Issue, cx: &mut Cx<'_>) {
+        self.issues.upsert(issue, cx);
+    }
+
     /// Requests the page the PR table asked for.
     pub(super) fn load_more_prs(&mut self, generation: u64, page: u32, per_page: u32, cx: &mut Cx<'_>) {
         self.prs.load_more(generation, page, per_page, cx);

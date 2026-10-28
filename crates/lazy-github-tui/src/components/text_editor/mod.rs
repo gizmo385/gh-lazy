@@ -680,8 +680,11 @@ impl TextEditor {
     }
 
     /// The mouse wheel: the view scrolls `rows` wrapped rows (negative is up), and the cursor stays where it is.
-    pub fn scroll(&mut self, rows: isize) {
+    /// Returns whether the view moved: when it can't, Textual lets the wheel go on to the container around it.
+    pub fn scroll(&mut self, rows: isize) -> bool {
+        let before = self.scroll_y;
         self.scroll_y = self.scroll_y.saturating_add_signed(rows).min(self.max_scroll());
+        self.scroll_y != before
     }
 
     /// How many chars `delete_str` removes to go from `top` to `bottom`, a line break counting as one.

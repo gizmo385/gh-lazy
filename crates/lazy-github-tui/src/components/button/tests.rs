@@ -173,6 +173,20 @@ fn button_row_lookup() {
 }
 
 #[test]
+fn a_flush_row_matches_new_issues_layout() {
+    // Python's New issue at 160x48: the interior is x = 29 to 126, and the 16-wide buttons touch at x = 62 and 78,
+    // on the row's first three rows.
+    let theme = Theme::default();
+    let mut buf = Buffer::empty(Rect::new(0, 0, 160, 48));
+    let mut row = ButtonRow::flush("Save");
+    assert_eq!(row.height(), 3);
+    row.render(&mut buf, Rect::new(29, 36, 98, 3), &theme, None);
+    assert_eq!(row.button(Pressed::Submit).area, Rect::new(62, 36, 16, 3));
+    assert_eq!(row.button(Pressed::Cancel).area, Rect::new(78, 36, 16, 3));
+    assert_eq!(ButtonRow::new("Save").height(), ButtonRow::HEIGHT);
+}
+
+#[test]
 fn the_row_matches_lookups_layout() {
     // Python at 160x48: the interior is x = 51 to 108, the row's buttons are 16 wide at x = 63 and x = 80, on rows
     // 31 to 33, with the labels on row 32.

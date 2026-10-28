@@ -7,7 +7,7 @@ use std::time::Duration;
 use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
-use lazy_github_core::github::{DiffFetchError, Github, IssueListQuery, PageQuery, RepoListQuery};
+use lazy_github_core::github::{DiffFetchError, Github, IssueListQuery, NewIssue, PageQuery, RepoListQuery};
 use lazy_github_core::models::{
     CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, Reactions,
     RepoName, Repository, Review, User, Workflow, WorkflowJob, WorkflowRun,
@@ -220,6 +220,13 @@ pub enum GithubRequest {
         /// The pull request whose reviews are listed.
         pr: Box<FullPullRequest>,
     },
+    /// [`Github::create_issue`].
+    CreateIssue {
+        /// The repo the issue opens in.
+        repo: Box<Repository>,
+        /// Its title and body.
+        issue: NewIssue,
+    },
 }
 
 /// The result of a [`GithubRequest`], in the variant of the same name.
@@ -269,6 +276,8 @@ pub enum GithubResponse {
     JobLogs(Result<Option<String>, GhError>),
     /// [`Github::pull_request_reviews`].
     PullRequestReviews(Result<Vec<Review>, GhError>),
+    /// [`Github::create_issue`], boxed to keep this enum small.
+    CreateIssue(Result<Box<Issue>, GhError>),
 }
 
 impl GithubRequest {
@@ -320,6 +329,9 @@ impl GithubRequest {
             GithubRequest::JobLogs { repo, job_id } => GithubResponse::JobLogs(gh.job_logs(&repo, job_id).await),
             GithubRequest::PullRequestReviews { pr } => {
                 GithubResponse::PullRequestReviews(gh.pull_request_reviews(&pr).await)
+            }
+            GithubRequest::CreateIssue { repo, issue } => {
+                GithubResponse::CreateIssue(gh.create_issue(&repo, &issue).await.map(Box::new))
             }
         }
     }

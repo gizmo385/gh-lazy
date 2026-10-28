@@ -312,14 +312,16 @@ fn the_wheel_scrolls_without_moving_the_cursor() {
     let theme = Theme::default();
     editor.render(&mut Buffer::empty(area), area, &theme, theme.background(), true);
     editor.set_cursor((1, 2));
-    editor.scroll(2);
+    assert!(editor.scroll(2));
     assert_eq!((editor.scroll_offset(), editor.cursor()), (2, (1, 2)));
-    editor.scroll(100);
+    assert!(editor.scroll(100));
     assert_eq!(editor.scroll_offset(), 8);
-    editor.scroll(-3);
+    assert!(editor.scroll(-3));
     assert_eq!(editor.scroll_offset(), 5);
-    editor.scroll(-30);
+    assert!(editor.scroll(-30));
     assert_eq!((editor.scroll_offset(), editor.cursor()), (0, (1, 2)));
+    // At the top, the wheel up moves nothing, and says so.
+    assert!(!editor.scroll(-2));
 }
 
 // Snapshots, textual-dark.

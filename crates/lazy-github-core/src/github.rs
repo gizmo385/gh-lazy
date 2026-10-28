@@ -14,7 +14,7 @@ use std::time::Duration;
 use tokio::sync::OnceCell;
 
 use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
-use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts};
+use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts, Method};
 use crate::models::{
     CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, Reactions,
     Repository, Review, ReviewComment, ReviewState, User, Workflow, WorkflowJob, WorkflowRun,
@@ -217,6 +217,12 @@ pub trait Github: Clone + Send + Sync + 'static {
     ///
     /// Fails on any HTTP error status (a 404 for a job without logs, such as a skipped or queued one) or `gh` failure.
     fn job_logs(&self, repo: &Repository, job_id: u64) -> impl Future<Output = Result<Option<String>, GhError>> + Send;
+
+    /// Opens a new issue in `repo` with `issue`'s title and body: `POST /repos/{owner}/{repo}/issues`, the body over
+    /// stdin. Returns the created issue, carrying `repo`. Never cached.
+    ///
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body doesn't decode.
+    fn create_issue(&self, repo: &Repository, issue: &NewIssue) -> impl Future<Output = Result<Issue, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -409,6 +415,16 @@ impl IssueListQuery {
             per_page: ISSUES_PER_PAGE,
         }
     }
+}
+
+/// What [`Github::create_issue`] sends: the body of `POST /repos/{owner}/{repo}/issues`, serialized with its fields
+/// in this order.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize)]
+pub struct NewIssue {
+    /// The title, as typed.
+    pub title: String,
+    /// The Markdown body, as typed (lines joined with `\n`). It may be empty.
+    pub body: String,
 }
 
 /// How long `gh` may serve each kind of response from its cache, from the `cache` config section.
@@ -738,6 +754,16 @@ impl GhCli {
         request
     }
 
+    /// `POST /repos/{owner}/{repo}/issues` with `issue` as the JSON body.
+    fn create_issue_request(repo: &Repository, issue: &NewIssue) -> Result<GhRequest, GhError> {
+        let mut request = GhRequest::new(
+            Method::Post,
+            format!("/repos/{}/{}/issues", repo.owner.login, repo.name),
+        );
+        request.body = Some(serde_json::to_value(issue)?);
+        Ok(request)
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -762,6 +788,11 @@ fn issue_list_items(response: &GhResponse, repo: &Repository) -> Result<Vec<Issu
         .into_iter()
         .map(|item| Ok(IssueListItem::from_api_item(item, repo)?))
         .collect()
+}
+
+/// The issue a create or update answered with, tagged with `repo`.
+fn created_issue(response: &GhResponse, repo: &Repository) -> Result<Issue, GhError> {
+    Ok(Issue::from_api(response.json()?, repo)?)
 }
 
 /// One issues-endpoint item, an issue or a pull request, tagged with `repo`.
@@ -911,6 +942,15 @@ impl Github for GhCli {
 
     async fn job_logs(&self, repo: &Repository, job_id: u64) -> Result<Option<String>, GhError> {
         job_log_text(self.inner.runner.request(Self::job_logs_request(repo, job_id)).await)
+    }
+
+    async fn create_issue(&self, repo: &Repository, issue: &NewIssue) -> Result<Issue, GhError> {
+        let response = self
+            .inner
+            .runner
+            .request(Self::create_issue_request(repo, issue)?)
+            .await?;
+        created_issue(&response, repo)
     }
 }
 
@@ -2015,6 +2055,56 @@ mod tests {
         assert!(matches!(not_found, Err(GhError::Http { status: 404, .. })));
         assert!(matches!(
             issue_list_item(&api_response(r#"{"number": 3}"#), &repo),
+            Err(GhError::Decode(_))
+        ));
+    }
+
+    #[test]
+    fn create_issue_argv_posts_the_body_over_stdin_without_a_cache() {
+        let issue = NewIssue {
+            title: "Parity title".into(),
+            body: "First line\nSecond line".into(),
+        };
+        let request = GhCli::create_issue_request(&issue_fixture_repo(), &issue).unwrap();
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        assert_eq!(
+            strings(request.argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "POST",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "--input",
+                "-",
+                "/repos/parity-bot/issue-fixture/issues"
+            ]
+        );
+        // Title, then body, both always there, the body as typed.
+        assert_eq!(
+            request.body.unwrap().to_string(),
+            r#"{"title":"Parity title","body":"First line\nSecond line"}"#
+        );
+        let empty = NewIssue {
+            title: " ".into(),
+            body: String::new(),
+        };
+        let request = GhCli::create_issue_request(&issue_fixture_repo(), &empty).unwrap();
+        assert_eq!(request.body.unwrap().to_string(), r#"{"title":" ","body":""}"#);
+    }
+
+    #[test]
+    fn a_created_issue_decodes_tagged_with_its_repo() {
+        let repo = issue_fixture_repo();
+        let response = parity_response("issue-write", "repos/parity-bot/issue-fixture/issues/POST.json");
+        let issue = created_issue(&response, &repo).unwrap();
+        assert_eq!(issue.number, 13);
+        assert_eq!(issue.title, "Parity title");
+        assert_eq!(issue.body.as_deref(), Some("First line\nSecond line"));
+        assert_eq!(issue.repo, repo);
+        assert!(matches!(
+            created_issue(&api_response(r#"{"number": 13}"#), &repo),
             Err(GhError::Decode(_))
         ));
     }

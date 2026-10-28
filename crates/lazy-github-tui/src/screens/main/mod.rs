@@ -39,7 +39,7 @@ use crate::components::table::{Handled, SEARCHABLE_BINDINGS, TABLE_BINDINGS, Tab
 use crate::components::text_input::{self, INPUT_BINDINGS};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::modal::{LookupDialog, RepoLookup};
+use crate::modal::{LookupDialog, NewIssueDialog, RepoLookup};
 use crate::options::AppOptions;
 use crate::theme::Theme;
 use crate::toast::Toast;
@@ -296,6 +296,10 @@ pub enum MainAction {
     ViewProfile(ProfileOrigin),
     /// The User profile dialog closed, with the repo picked there, if any.
     ProfilePicked(ProfileOrigin, Option<Box<Repository>>),
+    /// Open the New issue dialog (`issue.new`), or toast without a selected repo.
+    NewIssue,
+    /// The New issue dialog created an issue: it goes into the Issues table and opens. A closed dialog sends nothing.
+    IssueCreated(Box<Issue>),
     /// Show a pull request's details: fetch it first if `target` is a table row. `focus` moves focus to the tab
     /// strip once they show (Python's `focus_pr_details`, false only for M4's preload, #198).
     OpenPullRequest {
@@ -1019,6 +1023,7 @@ impl MainScreen {
             Owner::Section(SectionId::Issues) if id == BindingId::UserViewProfile => {
                 Some(Action::Main(MainAction::ViewProfile(ProfileOrigin::Issues)))
             }
+            Owner::SelectionsPane if id == BindingId::IssueNew => Some(Action::Main(MainAction::NewIssue)),
             // Not built yet: the key is still consumed, as in Python.
             Owner::SearchableTable(_) | Owner::Section(_) | Owner::SelectionsPane => Some(Action::Unimplemented(id)),
             Owner::App | Owner::Screen(ScreenKind::Auth | ScreenKind::Modal(_)) | Owner::DialogField(..) => None,
@@ -1264,6 +1269,12 @@ impl Component for MainScreen {
                 tracing::info!("Looked up Issue #{}", issue.number);
                 cx.dispatch(Action::Main(MainAction::OpenIssue(Box::new(issue))));
             }
+            MainAction::NewIssue => new_issue(cx),
+            // `add_item`, then `IssueSelected`, as Python's flow does once the dialog closes.
+            MainAction::IssueCreated(issue) => {
+                self.issue_lists.upsert_issue((*issue).clone(), cx);
+                cx.dispatch(Action::Main(MainAction::OpenIssue(issue)));
+            }
             MainAction::OpenPullRequest { target, focus } => self.open_pull_request(target, focus, cx),
             MainAction::OpenIssue(issue) => self.open_issue(*issue, cx),
             MainAction::OpenWorkflowRun(run) => self.open_workflow_run(*run, cx),
@@ -1337,5 +1348,19 @@ impl Component for MainScreen {
     }
 }
 
+/// `MainAction::NewIssue`: Python's `trigger_issue_creation_flow`, with the no-repo toast titled for issues (Py bug
+/// B14).
+fn new_issue(cx: &mut Cx<'_>) {
+    match cx.current_repo() {
+        None => cx.notify(select_repository_first().with_title("Cannot open new issue")),
+        Some(repo) => cx.open_dialog(NewIssueDialog::new(repo.clone(), None), |issue| {
+            issue.map_or(Action::Consumed, |issue| Action::Main(MainAction::IssueCreated(issue)))
+        }),
+    }
+}
+
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod new_issue_tests;

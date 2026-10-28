@@ -3,7 +3,7 @@ description = "New issue modal (I): without a repo, the empty modal, an empty ti
 # The toast after `I` without a repo is titled "Cannot open new pull request" in Python and "Cannot open new issue"
 # in Rust (Py bug B14, answered), so [expect] only checks its message. The empty-body toast (Py bug B25) isn't
 # exercised: Rust follows B25's recommendation and creates an issue with an empty body.
-gate = false
+gate = true
 parity_rows = [
     "modals.new-issue",
     "modals.text-editor",

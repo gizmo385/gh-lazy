@@ -129,6 +129,46 @@ impl ScrollView {
         width
     }
 
+    /// The width content `height` rows tall gets in `area`: the area's, less the scrollbar when it overflows.
+    pub fn content_width(area: Rect, height: usize) -> u16 {
+        if height > usize::from(area.height) {
+            area.width.saturating_sub(SCROLLBAR_WIDTH)
+        } else {
+            area.width
+        }
+    }
+
+    /// Draws the visible rows of `content`, which holds widgets drawn whole, from its top, as wide as
+    /// [`Self::content_width`] says, with a scrollbar in the last two columns when it overflows: Textual's
+    /// `ScrollableContainer` around widgets rather than text. Only the columns of `content` from `area`'s left edge
+    /// are copied.
+    pub fn render_buffer(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, content: &Buffer) {
+        let window = usize::from(area.height);
+        let height = usize::from(content.area.height);
+        let offset = self.offset.min(height.saturating_sub(window));
+        self.last = (height, window);
+        self.offset = offset;
+        let width = Self::content_width(area, height).min(content.area.width);
+        let area = area.intersection(buf.area);
+        // Both are bounded by the screen's u16 height once visible.
+        let rows = u16::try_from(height.saturating_sub(offset).min(window)).unwrap_or(u16::MAX);
+        let first = u16::try_from(offset).unwrap_or(u16::MAX);
+        for dy in 0..rows.min(area.height) {
+            for dx in 0..width.min(area.width) {
+                let from = (content.area.x + dx, content.area.y + first + dy);
+                buf[(area.x + dx, area.y + dy)] = content[from].clone();
+            }
+        }
+        if height > window {
+            let bar = Rect {
+                x: area.right().saturating_sub(SCROLLBAR_WIDTH),
+                width: SCROLLBAR_WIDTH.min(area.width),
+                ..area
+            };
+            render_scrollbar(buf, bar, height, offset, theme);
+        }
+    }
+
     /// Draws `text`, with a scrollbar in the last two columns when it overflows.
     pub fn render(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, text: &mut impl Layout) {
         self.draw(frame, area, theme, text, true);
@@ -297,6 +337,37 @@ mod tests {
             view.measure(Rect::new(0, 0, 10, 20), &theme, &mut Numbered::new(10)),
             10
         );
+    }
+
+    #[test]
+    fn a_buffer_shows_its_visible_rows_beside_a_scrollbar() {
+        use ratatui::style::Color;
+
+        let theme = Theme::default();
+        // Ten content rows, each marked with its number, in a five-row view.
+        let mut content = Buffer::empty(Rect::new(2, 0, 8, 10));
+        for row in 0..10u16 {
+            content.set_string(2, row, row.to_string(), Style::new().fg(Color::Red));
+        }
+        let area = Rect::new(2, 1, 10, 5);
+        assert_eq!(ScrollView::content_width(area, 10), 8);
+        assert_eq!(ScrollView::content_width(area, 5), 10);
+        let mut view = ScrollView::default();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 12, 7));
+        view.render_buffer(&mut buf, area, &theme, &content);
+        assert_eq!(buf[(2, 1)].symbol(), "0");
+        assert_eq!(buf[(2, 5)].symbol(), "4");
+        assert_eq!(buf[(2, 1)].fg, Color::Red);
+        assert_eq!(view.last_size(), (10, 5));
+        view.reveal(7..9);
+        assert_eq!(view.offset(), 4);
+        let mut buf = Buffer::empty(Rect::new(0, 0, 12, 7));
+        view.render_buffer(&mut buf, area, &theme, &content);
+        assert_eq!(buf[(2, 1)].symbol(), "4");
+        assert_eq!(buf[(2, 5)].symbol(), "8");
+        // The scrollbar's track takes the last two columns; nothing is drawn below the area.
+        assert_ne!(buf[(10, 1)].bg, Color::Reset);
+        assert_eq!(buf[(2, 6)].symbol(), " ");
     }
 
     #[test]

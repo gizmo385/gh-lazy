@@ -7,8 +7,10 @@
 
 mod confirm;
 mod focus;
+pub mod form;
 mod frame;
 mod lookup;
+mod new_issue;
 mod stack;
 mod user_profile;
 
@@ -30,6 +32,7 @@ pub use confirm::{ConfirmAction, ConfirmDialog};
 pub use focus::{FocusMove, FocusRing};
 pub use frame::{DIM_FACTOR, DialogFrame, dim, frame_rect};
 pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup, number};
+pub use new_issue::{NewIssueAction, NewIssueDialog};
 pub use stack::ModalEntry;
 pub use user_profile::{UserProfileAction, UserProfileDialog};
 
@@ -70,6 +73,8 @@ pub enum ModalKind {
     Lookup(LookupTarget),
     /// [`UserProfileDialog`]: a user's profile and recent repos.
     UserProfile,
+    /// [`NewIssueDialog`]: a new issue's title and description.
+    NewIssue,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -117,6 +122,8 @@ pub enum DialogAction {
     Lookup(LookupTarget, LookupAction),
     /// [`UserProfileDialog`]'s.
     UserProfile(UserProfileAction),
+    /// [`NewIssueDialog`]'s.
+    NewIssue(NewIssueAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -128,6 +135,7 @@ impl DialogAction {
             DialogAction::Confirm(_) => ModalKind::Confirm,
             DialogAction::Lookup(target, _) => ModalKind::Lookup(target),
             DialogAction::UserProfile(_) => ModalKind::UserProfile,
+            DialogAction::NewIssue(_) => ModalKind::NewIssue,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }

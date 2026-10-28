@@ -233,6 +233,16 @@ impl<S: ListSource> ListSection<S> {
         self.refresh_compact();
     }
 
+    /// Adds `item`, or replaces the row with its key: Python's `add_item`, for a created or edited item. The row is
+    /// sorted into place, the cache is rewritten and the section stops being compact.
+    pub(super) fn upsert(&mut self, item: S::Item, cx: &mut Cx<'_>) {
+        // The first row of an empty table runs the lazy check, as Textual's `add_row` does.
+        let event = self.table.insert(item, &());
+        self.follow(event.as_ref(), cx);
+        self.save_cache(cx);
+        self.refresh_compact();
+    }
+
     /// Compact exactly when the table has no items. The owner calls it where Python calls `set_compact`.
     pub(super) fn refresh_compact(&mut self) {
         self.compact = self.table.items().len() == 0;

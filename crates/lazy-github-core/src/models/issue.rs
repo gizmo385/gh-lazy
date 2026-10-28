@@ -70,6 +70,22 @@ pub struct Issue {
     pub repo: Repository,
 }
 
+impl Issue {
+    /// Decodes an issue the API sent for `repo`, such as the `201` body of `POST /repos/{owner}/{repo}/issues`,
+    /// tagged with `repo`.
+    ///
+    /// # Errors
+    ///
+    /// When the body isn't an object with the fields of an [`Issue`].
+    pub fn from_api(body: Value, repo: &Repository) -> Result<Self, serde_json::Error> {
+        let mut body = body;
+        if let Value::Object(fields) = &mut body {
+            fields.insert("repo".to_owned(), serde_json::to_value(repo)?);
+        }
+        serde_json::from_value(body)
+    }
+}
+
 /// A pull request as the issues endpoint lists it: the issue fields plus `draft`, without the branch and diff details
 /// of the pull request endpoint.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

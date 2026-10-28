@@ -319,23 +319,42 @@ pub enum Pressed {
 }
 
 /// `ModalDialogButtons`: a green submit button and a red "Cancel", side by side and centered, with a blank row above
-/// and below (`Button { margin: 1 }`).
+/// and below (`Button { margin: 1 }`). A [`Self::flush`] row has no margins.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ButtonRow {
     submit: Button,
     cancel: Button,
+    /// Whether the buttons have `margin: 1`.
+    margins: bool,
 }
 
 impl ButtonRow {
     /// The rows a dialog reserves for the row: the buttons and their margins.
     pub const HEIGHT: u16 = HEIGHT + 2;
 
+    /// The rows a [`Self::flush`] row takes: the buttons alone.
+    pub const FLUSH_HEIGHT: u16 = HEIGHT;
+
     /// The row with a submit button labeled `submit_label` ("Submit", "Lookup", "Save", ...).
     pub fn new(submit_label: impl Into<Cow<'static, str>>) -> Self {
         Self {
             submit: Button::new(submit_label, ButtonVariant::Success),
             cancel: Button::new("Cancel", ButtonVariant::Error),
+            margins: true,
         }
+    }
+
+    /// The row without margins: the two buttons touching, centered, in a plain `Horizontal` (New issue, Edit issue).
+    pub fn flush(submit_label: impl Into<Cow<'static, str>>) -> Self {
+        Self {
+            margins: false,
+            ..Self::new(submit_label)
+        }
+    }
+
+    /// The rows the row takes: [`Self::HEIGHT`], or [`Self::FLUSH_HEIGHT`] for a flush row.
+    pub fn height(&self) -> u16 {
+        if self.margins { Self::HEIGHT } else { Self::FLUSH_HEIGHT }
     }
 
     /// One of the buttons.
@@ -369,14 +388,18 @@ impl ButtonRow {
         })
     }
 
-    /// Draws the row into the top [`Self::HEIGHT`] rows of `area`, with `focused` drawn focused.
+    /// Draws the row into the top [`Self::height`] rows of `area`, with `focused` drawn focused.
     pub fn render(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, focused: Option<Pressed>) {
         let (submit, cancel) = (self.submit.width(theme), self.cancel.width(theme));
-        // One cell of margin outside each button, and one between them where their margins collapse.
-        let total = submit + cancel + 3;
-        let left = area.x + area.width.saturating_sub(total) / 2 + 1;
-        let y = area.y.saturating_add(1);
-        let rows = area.height.saturating_sub(1).min(HEIGHT);
+        // With margins, one cell outside each button, and one between them where their margins collapse.
+        let (total, margin, gap) = if self.margins {
+            (submit + cancel + 3, 1, 1)
+        } else {
+            (submit + cancel, 0, 0)
+        };
+        let left = area.x + area.width.saturating_sub(total) / 2 + margin;
+        let y = area.y.saturating_add(margin);
+        let rows = area.height.saturating_sub(margin).min(HEIGHT);
         let place = |x: u16, width: u16| {
             Rect {
                 x,
@@ -387,7 +410,7 @@ impl ButtonRow {
             .intersection(area)
         };
         let submit_area = place(left, submit);
-        let cancel_area = place(left + submit + 1, cancel);
+        let cancel_area = place(left + submit + gap, cancel);
         self.submit
             .render(buf, submit_area, theme, focused == Some(Pressed::Submit));
         self.cancel

@@ -4,4 +4,4 @@ generator = "crates/lazy-github-tui/tests/fixtures/generate_linkify.py"
 golden = ["crates/lazy-github-tui/tests/fixtures/linkify.json"]
 test = "crates/lazy-github-tui/tests/linkify.rs"
 fresh_test = "linkify_golden_is_fresh"
-parity_rows = ["markdown-links.link-normalize"]
+parity_rows = ["markdown-links.linkify", "markdown-links.link-normalize"]

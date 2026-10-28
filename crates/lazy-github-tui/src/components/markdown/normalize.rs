@@ -111,7 +111,7 @@ const HOSTNAME_MAX_LEN: usize = 255;
 
 /// A character of a scheme: `[a-z0-9.+-]` as Python matches it ignoring case, which also takes `İ`, `ı`, `ſ` and the
 /// Kelvin sign.
-fn is_protocol_char(c: char) -> bool {
+pub(super) fn is_protocol_char(c: char) -> bool {
     c.is_ascii_alphanumeric() || matches!(c, '.' | '+' | '-' | '\u{130}' | '\u{131}' | '\u{17f}' | '\u{212a}')
 }
 

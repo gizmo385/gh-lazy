@@ -50,7 +50,7 @@ capture = "diff-parse-error"
 checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 [expect.readme]
-contains = ["https://example.com/docs/start", "www.example.com", "user@example.com", "https://bücher.example/ä", "www.bücher.de"]
+contains = ["https://example.com/docs/start", "www.example.com", "user@example.com", "https://bücher.example/ä", "www.bücher.de", "http://example.com/*wiki*"]
 not_contains = ["Traceback"]
 
 [expect.diff-parse-error]

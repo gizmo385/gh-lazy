@@ -17,10 +17,8 @@ const WIDTH: u16 = 2000;
 
 /// The cases Rust doesn't match yet, by how their source starts, each with the issue that does.
 const KNOWN_GAPS: &[(&str, &str)] = &[
-    // markdown-it links a scheme URL on the source before emphasis and code spans: `http://example.com/*wiki*` is
-    // one link, and so is ``http://a.com/`x` ``.
-    ("Pull requests for the PR details tabs", "#290"),
-    ("http://a.com/`x`", "#290"),
+    // markdown-it pairs this `*` by the letter and the URL's `h` around it; Rust's autolink puts a `<` there.
+    ("a*http://b.com/c*", "#296"),
 ];
 
 #[derive(Debug, Deserialize)]

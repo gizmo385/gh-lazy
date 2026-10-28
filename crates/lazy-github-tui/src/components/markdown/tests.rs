@@ -989,3 +989,11 @@ fn markdown_code_sh_ansi_dark() {
     let rendered = Markdown::parse(source).layout(50, &theme("ansi-dark"));
     insta::assert_debug_snapshot!(buffer(&rendered, 50));
 }
+
+/// markdown-it links `http://a.com/*b` before it pairs emphasis: no italics on the link, a plain `*`, and `c` in
+/// italics.
+#[test]
+fn markdown_linkify_before_emphasis() {
+    let rendered = Markdown::parse("see http://a.com/*b* and *c*").layout(40, &dark());
+    insta::assert_debug_snapshot!((buffer(&rendered, 40), &rendered.links));
+}

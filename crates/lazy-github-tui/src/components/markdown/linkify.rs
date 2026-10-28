@@ -4,6 +4,9 @@
 //! linkify-it's patterns lean on lookarounds, which the `regex` crate doesn't have, so the hosts, ports, paths and
 //! the checks after them are scanned by hand here, following the patterns in `linkify_it/ucre.py`; `regex` is used
 //! for the Unicode character classes and the TLD lists. Positions are byte offsets into the text.
+//!
+//! This is markdown-it's core linkify rule, which runs on each text token. Its inline rule, which takes `http:`,
+//! `https:` and `ftp:` links before emphasis, is `parse::autolink_scheme_urls`, with [`scheme_at_start`].
 
 use std::ops::Range;
 use std::sync::LazyLock;
@@ -172,7 +175,7 @@ fn scheme_link(text: &str) -> Option<Range<usize>> {
             text.get(at..at + scheme.len())
                 .is_some_and(|s| s.eq_ignore_ascii_case(scheme))
         });
-        let Some(scheme) = scheme.filter(|scheme| scheme_may_start(text, at, scheme)) else {
+        let Some(scheme) = scheme.filter(|_| scheme_may_start(text, at)) else {
             at += char_at(text, at).map_or(1, char::len_utf8);
             continue;
         };
@@ -183,12 +186,7 @@ fn scheme_link(text: &str) -> Option<Range<usize>> {
             _ => http(&text[after..]),
         };
         if let Some(length) = length.filter(|&length| length > 0) {
-            let mut end = after + length;
-            if *scheme != "//" && *scheme != "mailto:" {
-                // markdown-it's inline linkify rule finds these first, and drops a trailing `*` (emphasis).
-                end = at + text[at..end].trim_end_matches('*').len();
-            }
-            return Some(at..end);
+            return Some(at..after + length);
         }
         // Searching resumes after the scheme, as Python's `finditer` does.
         at = after;
@@ -196,16 +194,20 @@ fn scheme_link(text: &str) -> Option<Range<usize>> {
     None
 }
 
-/// Whether a scheme at `at` can start a link. linkify-it wants the text's start, a separator, or whitespace,
-/// punctuation or a control character other than `_` before it. markdown-it's inline rule, which finds
-/// `http:`, `https:` and `ftp:` links first, wants anything but an ASCII letter or digit, `.`, `+` or `-`.
-fn scheme_may_start(text: &str, at: usize, scheme: &str) -> bool {
-    let Some(before) = char_before(text, at) else {
-        return true;
-    };
-    let linkify_it = is_separator(before) || (is_zpcc(before) && before != '_');
-    let inline_rule = scheme.ends_with("p:") && !(before.is_ascii_alphanumeric() || matches!(before, '.' | '+' | '-'));
-    linkify_it || inline_rule
+/// Whether a scheme at `at` can start a link: linkify-it wants the text's start, a separator, or whitespace,
+/// punctuation or a control character other than `_` before it.
+fn scheme_may_start(text: &str, at: usize) -> bool {
+    char_before(text, at).is_none_or(|before| is_separator(before) || (is_zpcc(before) && before != '_'))
+}
+
+/// linkify-it's `match_at_start` as markdown-it's inline linkify rule uses it: the length of the `http:`, `https:` or
+/// `ftp:` link (any case) at the start of `text`, or `None`.
+pub(super) fn scheme_at_start(text: &str) -> Option<usize> {
+    let scheme = ["http:", "https:", "ftp:"]
+        .into_iter()
+        .find(|scheme| text.get(..scheme.len()).is_some_and(|s| s.eq_ignore_ascii_case(scheme)))?;
+    let length = http(&text[scheme.len()..]).filter(|&length| length > 0)?;
+    Some(scheme.len() + length)
 }
 
 /// `http:`'s validator, on the text after the scheme: `//`, then an optional `user:pass@`, a host, a port, and a
@@ -493,7 +495,9 @@ mod tests {
             .collect()
     }
 
-    /// Every case from #218's spec, and more, each as `MarkdownIt("gfm-like").parse` links it in Python.
+    /// Every case from #218's spec, and more, each as linkify-it-py matches it, which is what markdown-it's core
+    /// linkify rule links in a text token. The inline rule's `http:`, `https:` and `ftp:` links, which drop a trailing
+    /// `*` and may follow `_`, come first in `parse::autolink_scheme_urls`.
     #[rstest::rstest]
     #[case("https://example.com/a_(b)", &[("https://example.com/a_(b)", "https://example.com/a_(b)")])]
     #[case("see https://example.com.", &[("https://example.com", "https://example.com")])]
@@ -530,10 +534,10 @@ mod tests {
         "https://user:pass@example.com/x",
         &[("https://user:pass@example.com/x", "https://user:pass@example.com/x")]
     )]
-    #[case("_http://a.com", &[("http://a.com", "http://a.com")])]
+    #[case("_http://a.com", &[])]
     #[case("xhttp://a.com", &[])]
     #[case("x.https://a.com", &[("https://a.com", "https://a.com")])]
-    #[case("http://a.com/b*", &[("http://a.com/b", "http://a.com/b")])]
+    #[case("http://a.com/b*", &[("http://a.com/b*", "http://a.com/b*")])]
     #[case("foo_bar.com", &[])]
     #[case("foo-bar.com", &[("foo-bar.com", "http://foo-bar.com")])]
     #[case("-foo.com", &[])]

@@ -1,12 +1,13 @@
 //! Source to block tree, over `pulldown-cmark`'s events, reading the document the way markdown-it's `gfm-like` preset
 //! and Textual's `Markdown` widget do in Python.
 
+use std::borrow::Cow;
 use std::ops::Range;
 use std::sync::Arc;
 
 use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, LinkType, OffsetIter, Options, Parser, Tag, TagEnd};
 
-use super::normalize::{normalize_link, normalize_link_text, validate_link};
+use super::normalize::{is_protocol_char, normalize_link, normalize_link_text, validate_link};
 use super::{Block, Inline, InlineStyle, linkify};
 
 /// How deep quotes and lists nest before the rest of a container reads as one paragraph of its text. Layout recurses
@@ -17,15 +18,111 @@ const MAX_DEPTH: usize = 32;
 const IMAGE_PREFIX: &str = "🖼  ";
 
 pub(super) fn parse(source: &str) -> Vec<Block> {
-    // Tables and strikethrough only, as in `gfm-like`: no task lists, footnotes, smart punctuation or heading
-    // attributes. Linkify isn't a pulldown-cmark option: `Inlines` splits each text token at its links.
-    let options = Options::ENABLE_TABLES | Options::ENABLE_STRIKETHROUGH;
+    let source = autolink_scheme_urls(source);
     let mut parser = BlockParser {
-        events: Parser::new_ext(source, options).into_offset_iter(),
-        source,
+        events: Parser::new_ext(&source, options()).into_offset_iter(),
+        source: &source,
         depth: 0,
     };
     parser.blocks(None)
+}
+
+/// Tables and strikethrough only, as in `gfm-like`: no task lists, footnotes, smart punctuation or heading attributes.
+/// Linkify isn't a pulldown-cmark option: [`autolink_scheme_urls`] does markdown-it's inline rule on the source, and
+/// `Inlines` its core rule, splitting each text token at its links.
+fn options() -> Options {
+    Options::ENABLE_TABLES | Options::ENABLE_STRIKETHROUGH
+}
+
+/// markdown-it's inline linkify rule, on the source: each `http:`, `https:` or `ftp:` URL in text outside link text
+/// and code (image alt text included), less trailing `*`, rewritten as the autolink `<url>`. markdown-it finds these
+/// before it pairs emphasis delimiters and reads code spans, so a URL keeps the `*`, `_` and backticks in it; as an
+/// autolink, it's one atom to pulldown-cmark too. So `*x http://a.com/*b* y*` is in italics up to the link, which
+/// patching the events afterwards couldn't do.
+///
+/// The `<` and `>` count as punctuation next to a delimiter, where markdown-it sees the URL's own first and last
+/// characters, so a delimiter between a letter and a URL (`a*http://b.com/c*`) can pair differently.
+fn autolink_scheme_urls(source: &str) -> Cow<'_, str> {
+    let mut urls: Vec<Range<usize>> = Vec::new();
+    // The links (`true`) and images open, innermost last: markdown-it's rule skips link text but reads image alt text
+    // as a document of its own.
+    let mut opened: Vec<bool> = Vec::new();
+    // Where the paragraphs, headings, cells and items open end: a URL ends with its inline content.
+    let mut ends: Vec<usize> = Vec::new();
+    let mut code = 0_usize;
+    for (event, range) in Parser::new_ext(source, options()).into_offset_iter() {
+        match event {
+            Event::Start(Tag::Link { .. }) => opened.push(true),
+            Event::Start(Tag::Image { .. }) => opened.push(false),
+            Event::End(TagEnd::Link | TagEnd::Image) => {
+                opened.pop();
+            }
+            Event::Start(Tag::CodeBlock(_)) => code += 1,
+            Event::End(TagEnd::CodeBlock) => code = code.saturating_sub(1),
+            Event::Start(Tag::Paragraph | Tag::Heading { .. } | Tag::TableCell | Tag::Item) => ends.push(range.end),
+            Event::End(TagEnd::Paragraph | TagEnd::Heading(_) | TagEnd::TableCell | TagEnd::Item) => {
+                ends.pop();
+            }
+            Event::Text(_) if code == 0 && opened.last() != Some(&true) => {
+                let limit = ends.last().copied().unwrap_or(source.len());
+                scheme_urls(source, range, limit, &mut urls);
+            }
+            _ => {}
+        }
+    }
+    if urls.is_empty() {
+        return Cow::Borrowed(source);
+    }
+    let mut out = String::with_capacity(source.len() + 2 * urls.len());
+    let mut at = 0;
+    for url in urls {
+        out.push_str(&source[at..url.start]);
+        out.push('<');
+        out.push_str(&source[url.clone()]);
+        out.push('>');
+        at = url.end;
+    }
+    out.push_str(&source[at..]);
+    Cow::Owned(out)
+}
+
+/// The URLs markdown-it's inline linkify rule takes at a `://` in the text at `text`, each from its scheme up to
+/// `limit` at most, added to `urls`.
+fn scheme_urls(source: &str, text: Range<usize>, limit: usize, urls: &mut Vec<Range<usize>>) {
+    let mut from = text.start.max(urls.last().map_or(0, |url| url.end));
+    while from < text.end
+        && let Some(found) = source[from..text.end].find("://")
+    {
+        let colon = from + found;
+        from = colon + 3;
+        // `SCHEME_RE` on the text before it: the run of scheme characters before `://`.
+        let run: usize = source[text.start..colon]
+            .chars()
+            .rev()
+            .take_while(|&c| is_protocol_char(c))
+            .map(char::len_utf8)
+            .sum();
+        let mut start = colon - run;
+        // An odd run of backslashes escapes the run's first character, which then isn't part of it.
+        let backslashes = source[..start].bytes().rev().take_while(|&b| b == b'\\').count();
+        if run > 0 && backslashes % 2 == 1 {
+            start += source[start..].chars().next().map_or(0, char::len_utf8);
+        }
+        let scheme = &source[start..colon];
+        if !["http", "https", "ftp"].iter().any(|s| scheme.eq_ignore_ascii_case(s)) {
+            continue;
+        }
+        let Some(length) = linkify::scheme_at_start(&source[start..limit.max(start)]) else {
+            continue;
+        };
+        let url = source[start..start + length].trim_end_matches('*');
+        // linkify-it never matches these, and an autolink can't hold them.
+        if url.contains(|c: char| c.is_whitespace() || c.is_control() || c == '<' || c == '>') {
+            continue;
+        }
+        urls.push(start..start + url.len());
+        from = from.max(start + url.len());
+    }
 }
 
 struct BlockParser<'a> {
@@ -251,6 +348,8 @@ struct Inlines<'a> {
     /// The current text token's text, outside links and images, held until the token ends so linkify can look for
     /// bare URLs in all of it, as markdown-it's linkify does per text token.
     pending: String,
+    /// Where markdown-it's tokens start in [`Inlines::pending`], in order. Its linkify runs on each text token alone.
+    pieces: Vec<Piece>,
     /// The links and images open, innermost last.
     opened: Vec<Opened>,
     /// Whether the text events of the autolink being read are skipped: its text is already in, normalized.
@@ -261,6 +360,14 @@ struct Inlines<'a> {
 struct Strike {
     real: bool,
     styled: bool,
+}
+
+/// Where a markdown-it token starts in the pending text: a text token, or a `text_special` one (a backslash escape or
+/// an entity), which linkify skips.
+#[derive(Debug, Clone, Copy)]
+struct Piece {
+    start: usize,
+    special: bool,
 }
 
 /// A link or image being read.
@@ -289,6 +396,7 @@ impl<'a> Inlines<'a> {
             images: 0,
             joins: false,
             pending: String::new(),
+            pieces: Vec::new(),
             opened: Vec::new(),
             autolink: false,
         }
@@ -448,7 +556,12 @@ impl<'a> Inlines<'a> {
             self.joins = false;
         }
         match event {
-            Event::Text(text) => self.text(&text, !in_image),
+            Event::Text(text) if in_image => self.text(&text, false),
+            Event::Text(text) => {
+                for (part, special) in tokens(self.source, &text, range) {
+                    self.add(part, true, special);
+                }
+            }
             Event::Code(code) if in_image => self.text(&code, false),
             Event::Code(code) => self.push(
                 code.as_ref(),
@@ -471,6 +584,11 @@ impl<'a> Inlines<'a> {
     /// a text token (markdown-it joins adjacent text, so a run that continues the previous one collapses with it).
     /// Collapsed text outside links and images waits in [`Inlines::pending`] for linkify.
     fn text(&mut self, text: &str, collapse: bool) {
+        self.add(text, collapse, false);
+    }
+
+    /// [`Self::text`], for a markdown-it `text_special` token (`special`) or a text token.
+    fn add(&mut self, text: &str, collapse: bool, special: bool) {
         if !collapse || !self.joins {
             self.flush();
         }
@@ -499,6 +617,13 @@ impl<'a> Inlines<'a> {
             }
         }
         if self.images == 0 && self.links.is_empty() {
+            let continues = !special && self.pieces.last().is_some_and(|piece| !piece.special);
+            if !continues {
+                self.pieces.push(Piece {
+                    start: self.pending.len(),
+                    special,
+                });
+            }
             self.pending.push_str(&collapsed);
         } else {
             self.push(&collapsed, self.style());
@@ -506,20 +631,31 @@ impl<'a> Inlines<'a> {
         self.joins = true;
     }
 
-    /// Adds the pending text token, its bare URLs, `www.` hosts and emails as links (#218).
+    /// Adds the pending text, the bare URLs, `www.` hosts and emails in each of its text tokens as links (#218).
+    /// markdown-it's core linkify rule skips a link at the very start of a token that follows a `text_special` one.
     fn flush(&mut self) {
-        if self.pending.is_empty() {
-            return;
-        }
         let text = std::mem::take(&mut self.pending);
+        let pieces = std::mem::take(&mut self.pieces);
         let style = self.style();
-        let mut at = 0;
-        for found in linkify::links(&text) {
-            self.push_run(&text[at..found.range.start], style, None);
-            self.push_run(&found.text, style, Some(Arc::from(found.url)));
-            at = found.range.end;
+        for (index, piece) in pieces.iter().enumerate() {
+            let end = pieces.get(index + 1).map_or(text.len(), |next| next.start);
+            let token = &text[piece.start..end];
+            if piece.special {
+                self.push_run(token, style, None);
+                continue;
+            }
+            let after_special = index > 0 && pieces[index - 1].special;
+            let mut at = 0;
+            for found in linkify::links(token) {
+                if after_special && found.range.start == 0 {
+                    continue;
+                }
+                self.push_run(&token[at..found.range.start], style, None);
+                self.push_run(&found.text, style, Some(Arc::from(found.url)));
+                at = found.range.end;
+            }
+            self.push_run(&token[at..], style, None);
         }
-        self.push_run(&text[at..], style, None);
     }
 
     /// Appends `text` as a run of the link being read, if any.
@@ -547,6 +683,39 @@ impl<'a> Inlines<'a> {
             link,
         });
     }
+}
+
+/// A text event as markdown-it's tokens, each with whether it's `text_special`: an entity is one; so is a backslash
+/// escape, whose backslash pulldown-cmark drops (the escaped character starts the event), and a backslash before a
+/// character it doesn't escape (`\h`), which pulldown-cmark keeps as text. A backslash ending the text is text, as
+/// markdown-it reads one ending the paragraph.
+fn tokens<'t>(source: &str, text: &'t str, range: &Range<usize>) -> Vec<(&'t str, bool)> {
+    let raw = source.get(range.clone()).unwrap_or_default();
+    if raw.starts_with('&') && raw != text {
+        return vec![(text, true)];
+    }
+    let mut out = Vec::new();
+    let mut rest = text;
+    let backslashes = source[..range.start].bytes().rev().take_while(|&b| b == b'\\').count();
+    if backslashes % 2 == 1
+        && let Some(first) = rest.chars().next()
+    {
+        out.push((&rest[..first.len_utf8()], true));
+        rest = &rest[first.len_utf8()..];
+    }
+    if raw.ends_with(rest) {
+        while let Some(slash) = rest.find('\\')
+            && let Some(next) = rest[slash + 1..].chars().next()
+        {
+            out.push((&rest[..slash], false));
+            let end = slash + 1 + next.len_utf8();
+            out.push((&rest[slash..end], true));
+            rest = &rest[end..];
+        }
+    }
+    out.push((rest, false));
+    out.retain(|(part, _)| !part.is_empty());
+    out
 }
 
 /// Where a link or image goes, as markdown-it normalizes it.
@@ -595,4 +764,67 @@ fn same_link(a: Option<&Arc<str>>, b: Option<&Arc<str>>) -> bool {
 /// Python's `\s` on `str`: Unicode whitespace, which also counts the four information separators.
 pub(super) fn is_space(c: char) -> bool {
     c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[rstest::rstest]
+    #[case("http://a.com/*b*", "<http://a.com/*b>*")]
+    #[case(
+        "see http://a.com/*b* and http://c.com/x_y_",
+        "see <http://a.com/*b>* and <http://c.com/x_y_>"
+    )]
+    #[case("*x HTTPS://a.com/*b* y*", "*x <HTTPS://a.com/*b>* y*")]
+    #[case("_ftp://a.com/x", "_<ftp://a.com/x>")]
+    #[case("![http://a.com/*b*](i.png)", "![<http://a.com/*b>*](i.png)")]
+    #[case("\\\\http://a.com/*b*", "\\\\<http://a.com/*b>*")]
+    #[case("\\hhttp://a.com/x", "\\h<http://a.com/x>")]
+    #[case("### http://a.com/*b*", "### <http://a.com/*b>*")]
+    #[case("| a |\n|---|\n| http://a.com/x|y |", "| a |\n|---|\n| <http://a.com/x>|y |")]
+    #[case("- http://a.com/*b*\n- c", "- <http://a.com/*b>*\n- c")]
+    #[case("> q http://a.com/*b*\n> more", "> q <http://a.com/*b>*\n> more")]
+    fn scheme_urls_become_autolinks(#[case] source: &str, #[case] rewritten: &str) {
+        assert_eq!(autolink_scheme_urls(source), rewritten);
+    }
+
+    #[rstest::rstest]
+    #[case("`http://a.com/*b*`")]
+    #[case("```\nhttp://a.com/*b*\n```")]
+    #[case("    http://a.com/*b*")]
+    #[case("[http://a.com/*b*](x)")]
+    #[case("[t](http://a.com/*b*)")]
+    #[case("<a href=\"http://a.com/*b*\">x</a> y")]
+    #[case("<http://a.com/*b*>")]
+    #[case("\\http://a.com/x")]
+    #[case("http\\://a.com/x")]
+    #[case("xhttp://a.com/*b*")]
+    #[case("x.http://a.com/*b*")]
+    #[case("www.a.com/*b* //a.com/*b* mailto:a@b.com*c*")]
+    #[case("http://")]
+    #[case("[r]: http://a.com/*b*\n\n[t][r]")]
+    fn other_urls_are_left_alone(#[case] source: &str) {
+        assert_eq!(autolink_scheme_urls(source), source);
+    }
+
+    #[rstest::rstest]
+    #[case("a\\*www.b.com", &[("a", false), ("*", true), ("www.b.com", false)])]
+    #[case("\\http://a.com/x", &[("\\h", true), ("ttp://a.com/x", false)])]
+    #[case("&amp;www.a.com", &[("&", true), ("www.a.com", false)])]
+    #[case("a\\", &[("a\\", false)])]
+    fn text_events_split_into_markdown_it_tokens(#[case] source: &str, #[case] expected: &[(&str, bool)]) {
+        let mut tokens_seen = Vec::new();
+        for (event, range) in Parser::new_ext(source, options()).into_offset_iter() {
+            if let Event::Text(text) = event {
+                tokens_seen.extend(
+                    tokens(source, &text, &range)
+                        .into_iter()
+                        .map(|(t, s)| (t.to_owned(), s)),
+                );
+            }
+        }
+        let expected: Vec<(String, bool)> = expected.iter().map(|&(t, s)| (t.to_owned(), s)).collect();
+        assert_eq!(tokens_seen, expected);
+    }
 }

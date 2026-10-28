@@ -1,0 +1,28 @@
+---
+source: crates/lazy-github-tui/src/components/markdown/tests.rs
+expression: "(buffer(&rendered, 40), &rendered.links)"
+---
+(
+    Buffer {
+        area: Rect { x: 0, y: 0, width: 40, height: 2 },
+        content: [
+            "  see http://a.com/*b* and c            ",
+            "                                        ",
+        ],
+        styles: [
+            x: 0, y: 0, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+            x: 2, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 6, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: UNDERLINED,
+            x: 21, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: NONE,
+            x: 27, y: 0, fg: Rgb(224, 224, 224), bg: Reset, underline: Reset, modifier: ITALIC,
+            x: 28, y: 0, fg: Reset, bg: Reset, underline: Reset, modifier: NONE,
+        ]
+    },
+    [
+        LinkSpan {
+            row: 0,
+            columns: 6..21,
+            target: "http://a.com/*b",
+        },
+    ],
+)

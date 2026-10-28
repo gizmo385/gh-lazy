@@ -2193,6 +2193,229 @@
   ]
  },
  {
+  "source": "[t][r]\n\n[r]: javascript:x",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "[t][r]"
+    }
+   ],
+   [
+    {
+     "type": "text",
+     "content": "[r]: javascript:x"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[r]: javascript:x \"see www.a.com\"\n[s]: http://a.com\n\n[s] [r]",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "[r]: javascript:x \"see "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://www.a.com"
+    },
+    {
+     "type": "text",
+     "content": "www.a.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "\""
+    },
+    {
+     "type": "softbreak",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "[s]: "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ],
+   [
+    {
+     "type": "text",
+     "content": "[s] [r]"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[r]: http://a.com\n\n[r]: javascript:x\n\n[r]",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com"
+    },
+    {
+     "type": "text",
+     "content": "r"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ": javascript:x"
+    }
+   ],
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com"
+    },
+    {
+     "type": "text",
+     "content": "r"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[r]: javascript:x\n\n[r]: file:y\n\n[r]: http://z.com\n\n[r]",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://z.com"
+    },
+    {
+     "type": "text",
+     "content": "r"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ": javascript:x"
+    }
+   ],
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://z.com"
+    },
+    {
+     "type": "text",
+     "content": "r"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ": file:y"
+    }
+   ],
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://z.com"
+    },
+    {
+     "type": "text",
+     "content": "r"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[r]: vbscript:x\n\n[r]",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "[r]: vbscript:x"
+    }
+   ],
+   [
+    {
+     "type": "text",
+     "content": "[r]"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[a\\]b]: data:text/html,x\n\n[a\\]b]",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "[a]b]: data:text/html,x"
+    }
+   ],
+   [
+    {
+     "type": "text",
+     "content": "[a]b]"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[r]: data:image/png;x\n\n[r]",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "data:image/png;x"
+    },
+    {
+     "type": "text",
+     "content": "r"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
   "source": "http://a.com/*b*",
   "blocks": [
    [

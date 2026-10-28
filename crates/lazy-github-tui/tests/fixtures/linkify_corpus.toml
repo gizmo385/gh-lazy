@@ -1,7 +1,7 @@
 # The markdown the `linkify` golden (parity/goldens/linkify.toml) parses: generate_linkify.py dumps what
 # markdown-it-py makes of each case to linkify.json. The linkify.rs unit cases, #289's table, a few more link
-# and image cases, #290's table and more of the inline linkify rule, and the linkify-diff-error scenario's README
-# paragraph.
+# and image cases, reference definitions with rejected targets (#297), #290's table and more of the inline linkify
+# rule, and the linkify-diff-error scenario's README paragraph.
 cases = [
   "https://example.com/a_(b)",
   "see https://example.com.",
@@ -112,6 +112,13 @@ cases = [
   "*see http://ä.com/ä*",
   "a [*t*](javascript:x) www.b.com <javascript:y> ![i](file:z) [](vbscript:v)",
   "<a@bär.com> <a@b.com>",
+  "[t][r]\n\n[r]: javascript:x",
+  "[r]: javascript:x \"see www.a.com\"\n[s]: http://a.com\n\n[s] [r]",
+  "[r]: http://a.com\n\n[r]: javascript:x\n\n[r]",
+  "[r]: javascript:x\n\n[r]: file:y\n\n[r]: http://z.com\n\n[r]",
+  "[r]: vbscript:x\n\n[r]",
+  "[a\\]b]: data:text/html,x\n\n[a\\]b]",
+  "[r]: data:image/png;x\n\n[r]",
   "http://a.com/*b*",
   "see http://a.com/*b* and *c*",
   "foo http://a.com/*b*c* bar",

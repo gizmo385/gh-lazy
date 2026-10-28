@@ -18,7 +18,8 @@ const MAX_DEPTH: usize = 32;
 const IMAGE_PREFIX: &str = "🖼  ";
 
 pub(super) fn parse(source: &str) -> Vec<Block> {
-    let source = autolink_scheme_urls(source);
+    let source = unlink_rejected_definitions(source);
+    let source = autolink_scheme_urls(&source);
     let mut parser = BlockParser {
         events: Parser::new_ext(&source, options()).into_offset_iter(),
         source: &source,
@@ -32,6 +33,114 @@ pub(super) fn parse(source: &str) -> Vec<Block> {
 /// `Inlines` its core rule, splitting each text token at its links.
 fn options() -> Options {
     Options::ENABLE_TABLES | Options::ENABLE_STRIKETHROUGH
+}
+
+/// markdown-it's reference rule, on the source: a link reference definition whose normalized target fails
+/// `validate_link` isn't one, so it stays paragraph text (with what follows it, as a definition can't interrupt a
+/// paragraph) and references to it stay text. pulldown-cmark takes it as a definition, so the `:` after its label is
+/// escaped, which shows the same. Its label can still be a reference to another definition, as in markdown-it.
+fn unlink_rejected_definitions(source: &str) -> Cow<'_, str> {
+    let colons = rejected_definition_colons(source);
+    if colons.is_empty() {
+        return Cow::Borrowed(source);
+    }
+    let escapes: Vec<(usize, char)> = colons.into_iter().map(|colon| (colon, '\\')).collect();
+    Cow::Owned(insert(source, &escapes))
+}
+
+/// Where [`rejected_definition_colons`]' label markers start: private-use characters, one per definition, which no
+/// real label shares.
+const FIRST_MARKER: u32 = 0xF_0000;
+
+/// Where the `:` after the label of each definition with a rejected target is, in order.
+///
+/// pulldown-cmark lists only the first definition of each label, and markdown-it rejects a later one with a bad target
+/// as well. So each definition listed gets a label of its own in a copy, with a marker put after its `[` (which doesn't
+/// change what's a definition), and the copy is parsed again to list the ones hidden behind it, until none is left.
+/// Without a duplicate label that's one parse, and without a `]:` none.
+fn rejected_definition_colons(source: &str) -> Vec<usize> {
+    // Every definition has a `]:`, and each round marks at least one more definition, so this bounds the rounds.
+    let candidates = source.matches("]:").count();
+    // Each marker and the offset in `source` it goes before, in order.
+    let mut markers: Vec<(usize, char)> = Vec::new();
+    let mut colons = Vec::new();
+    let mut copy = Cow::Borrowed(source);
+    while markers.len() < candidates {
+        let mut found: Vec<(usize, bool)> = Parser::new_ext(&copy, options())
+            .reference_definitions()
+            .iter()
+            .map(|(_, definition)| {
+                let start = original_offset(&markers, definition.span.start);
+                (start, validate_link(&normalize_link(&definition.dest)))
+            })
+            // A definition starts at its `[`; one marked already was read in an earlier round.
+            .filter(|&(start, _)| {
+                source.get(start..).is_some_and(|rest| rest.starts_with('['))
+                    && markers.binary_search_by_key(&(start + 1), |&(at, _)| at).is_err()
+            })
+            .collect();
+        if found.is_empty() {
+            break;
+        }
+        found.sort_unstable();
+        for (start, valid) in found {
+            let Some(marker) = u32::try_from(markers.len())
+                .ok()
+                .and_then(|n| char::from_u32(FIRST_MARKER + n))
+            else {
+                // Out of markers, past 2¹⁷ definitions: what's found so far will do.
+                colons.sort_unstable();
+                return colons;
+            };
+            let at = markers.partition_point(|&(at, _)| at <= start);
+            markers.insert(at, (start + 1, marker));
+            if !valid {
+                colons.extend(label_colon(source, start));
+            }
+        }
+        copy = Cow::Owned(insert(source, &markers));
+    }
+    colons.sort_unstable();
+    colons
+}
+
+/// The offset in `source` of `offset` in its copy with `markers` put in, for an offset outside the markers.
+fn original_offset(markers: &[(usize, char)], offset: usize) -> usize {
+    let mut shift = 0;
+    for &(at, marker) in markers {
+        if at + shift >= offset {
+            break;
+        }
+        shift += marker.len_utf8();
+    }
+    offset - shift
+}
+
+/// `source` with each character put in before its offset, in order.
+fn insert(source: &str, insertions: &[(usize, char)]) -> String {
+    let added: usize = insertions.iter().map(|&(_, c)| c.len_utf8()).sum();
+    let mut out = String::with_capacity(source.len() + added);
+    let mut from = 0;
+    for &(at, c) in insertions {
+        out.push_str(&source[from..at]);
+        out.push(c);
+        from = at;
+    }
+    out.push_str(&source[from..]);
+    out
+}
+
+/// Where the `:` after the label of the definition starting at `start` is: just past the first `]` not escaped.
+fn label_colon(source: &str, start: usize) -> Option<usize> {
+    let label = source.get(start..)?.strip_prefix('[')?;
+    let mut escaped = false;
+    let close = label.find(|c: char| {
+        let close = c == ']' && !escaped;
+        escaped = c == '\\' && !escaped;
+        close
+    })?;
+    let colon = start + 1 + close + 1;
+    source[colon..].starts_with(':').then_some(colon)
 }
 
 /// markdown-it's inline linkify rule, on the source: each `http:`, `https:` or `ftp:` URL in text outside link text
@@ -806,6 +915,33 @@ mod tests {
     #[case("[r]: http://a.com/*b*\n\n[t][r]")]
     fn other_urls_are_left_alone(#[case] source: &str) {
         assert_eq!(autolink_scheme_urls(source), source);
+    }
+
+    #[rstest::rstest]
+    #[case("[r]: javascript:x", "[r]\\: javascript:x")]
+    #[case("  [r]: JavaScript:x \"t\"\n\n[r]", "  [r]\\: JavaScript:x \"t\"\n\n[r]")]
+    #[case("> [r]: vbscript:x\n\n[r]", "> [r]\\: vbscript:x\n\n[r]")]
+    #[case("- [a\\]b]: file:x", "- [a\\]b]\\: file:x")]
+    #[case(
+        "[r]: javascript:x\n[s]: data:text/html,y",
+        "[r]\\: javascript:x\n[s]\\: data:text/html,y"
+    )]
+    #[case(
+        "[ä]: http://a.com\n\n[Ä]: javascript:x\n\n[ä]: file:y\n\n[ä]: http://b.com",
+        "[ä]: http://a.com\n\n[Ä]\\: javascript:x\n\n[ä]\\: file:y\n\n[ä]: http://b.com"
+    )]
+    fn rejected_definitions_become_text(#[case] source: &str, #[case] rewritten: &str) {
+        assert_eq!(unlink_rejected_definitions(source), rewritten);
+    }
+
+    #[rstest::rstest]
+    #[case("[r]: http://a.com\n\n[r]")]
+    #[case("[r]: data:image/png;x")]
+    #[case("```\n[r]: javascript:x\n```")]
+    #[case("a\n[r]: javascript:x")]
+    #[case("x ]: y")]
+    fn other_definitions_are_left_alone(#[case] source: &str) {
+        assert_eq!(unlink_rejected_definitions(source), source);
     }
 
     #[rstest::rstest]

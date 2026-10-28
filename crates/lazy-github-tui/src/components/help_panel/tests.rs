@@ -158,6 +158,54 @@ fn details_and_content_list_their_own_bindings_first() {
     assert_eq!(sections_after(Config::default(), &["5"]).len(), 4);
 }
 
+/// Python's Input group with the table's search box focused (`help-panel-input`): the inherited scroll keys first,
+/// with `left`, `right`, `home` and `end` in their places, then the rest of `Input.BINDINGS`.
+#[test]
+fn the_search_input_lists_the_whole_input_group_first() {
+    let sections = sections_after(Config::default(), &["/"]);
+    assert_eq!(sections[0].title, Some("Input"));
+    let rows: Vec<String> = sections[0]
+        .rows
+        .iter()
+        .map(|row| format!("{} {}", row.keys.join(" "), row.description))
+        .collect();
+    assert_eq!(
+        rows,
+        [
+            "↑ Scroll Up",
+            "↓ Scroll Down",
+            "← Move cursor left",
+            "→ Move cursor right or accept the completion suggestion",
+            "home ^a Go to start",
+            "end ^e Go to end",
+            "pgup Page Up",
+            "pgdn Page Down",
+            "^pgup Page Left",
+            "^pgdn Page Right",
+            "shift+← Move cursor left and select",
+            "^← Move cursor left a word",
+            "shift+^← Move cursor left a word and select",
+            "shift+→ Move cursor right and select",
+            "^→ Move cursor right a word",
+            "shift+^→ Move cursor right a word and select",
+            "⌫ Delete character left",
+            "shift+^a Select all",
+            "shift+home Select line start",
+            "shift+end Select line end",
+            "del ^d Delete character right",
+            "⏎ Submit",
+            "^w Delete left to start of word",
+            "^u Delete all to the left",
+            "^f Delete right to start of word",
+            "^k Delete all to the right",
+            "^x Cut selected text",
+            "^c super+c Copy selected text",
+            "^v Paste text from the clipboard",
+        ]
+    );
+    assert_eq!(sections[1].rows[0].description, "Search");
+}
+
 #[test]
 fn hidden_groups_are_absent_and_unshown_ones_present() {
     let chain = [

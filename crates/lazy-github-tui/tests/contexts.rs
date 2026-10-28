@@ -65,19 +65,6 @@ const CONTEXT_DIFFS: &[ContextDiff] = &[
         ],
         extra: &[],
     },
-    // The scroll keys `Input` inherits from `ScrollView` come with #252.
-    ContextDiff {
-        class: "textual.widgets.Input",
-        missing: &[
-            ("up", "scroll_up"),
-            ("down", "scroll_down"),
-            ("pageup", "page_up"),
-            ("pagedown", "page_down"),
-            ("ctrl+pageup", "page_left"),
-            ("ctrl+pagedown", "page_right"),
-        ],
-        extra: &[],
-    },
 ];
 
 /// Classes whose component isn't built yet, with the matrix row or issue it lands with. That change maps the class

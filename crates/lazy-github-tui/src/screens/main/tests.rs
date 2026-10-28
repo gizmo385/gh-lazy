@@ -1301,6 +1301,27 @@ fn paste_goes_into_the_box_only_while_it_has_focus() {
     assert_eq!(repos_table(&app).search_text(), "hello");
 }
 
+/// The input's inherited scroll keys stop at it, as in Python: they don't move the table's cursor behind it.
+#[test]
+fn scroll_keys_in_the_search_box_leave_the_table_cursor() {
+    let mut app = with_repos(Config::default(), base_repos());
+    app.press(&["j", "/"]);
+    let cursor = repos_table(&app).cursor();
+    assert_eq!(cursor, 1);
+    app.press(&[
+        "up",
+        "down",
+        "down",
+        "pageup",
+        "pagedown",
+        "ctrl+pageup",
+        "ctrl+pagedown",
+    ]);
+    assert_eq!(focus(&app), SEARCH);
+    assert_eq!(repos_table(&app).cursor(), cursor);
+    assert_eq!(app.effects(), []);
+}
+
 #[test]
 fn the_footer_with_the_box_focused_is_search_and_the_palette() {
     let mut app = with_repos(Config::default(), base_repos());

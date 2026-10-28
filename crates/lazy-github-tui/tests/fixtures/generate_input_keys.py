@@ -63,6 +63,12 @@ SEQUENCES: list[tuple[str, str, int, list[str]]] = [
     ("cut-and-paste", TEXT, 7, ["shift+home", "ctrl+x", "end", "ctrl+v", "ctrl+v"]),
     ("cut-without-selection", TEXT, 4, ["ctrl+x", "ctrl+v"]),
     ("cut-unicode", UNICODE, 6, ["shift+end", "ctrl+x", "home", "ctrl+v"]),
+    (
+        "scroll-keys-do-nothing",
+        TEXT,
+        4,
+        ["up", "down", "shift+right", "pageup", "pagedown", "ctrl+pageup", "ctrl+pagedown", "up", "down"],
+    ),
 ]
 
 # (name, value, cursor, clipboard, keys): pasting a clipboard copied elsewhere, line breaks and all.

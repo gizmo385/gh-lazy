@@ -25,13 +25,20 @@ static WORD: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"[\p{L}\p{N}_]").expect("valid pattern")
 });
 
-/// The input's bindings, in Textual's merged order: `left`, `right`, `home` and `end` keep the places of the
-/// `ScrollView` keys they replace, then the rest of `Input.BINDINGS` follows. The inherited scroll keys come with #252.
+/// The input's bindings, in Textual's merged order: the `ScrollView` keys `Input` inherits, with `left`, `right`,
+/// `home` and `end` replaced in place by the input's own, then the rest of `Input.BINDINGS`. The help panel lists
+/// them in this order under "Input".
 pub const INPUT_BINDINGS: &[BindingId] = &[
+    BindingId::TextualScrollUp,
+    BindingId::TextualScrollDown,
     BindingId::TextualInputCursorLeft,
     BindingId::TextualInputCursorRight,
     BindingId::TextualInputHome,
     BindingId::TextualInputEnd,
+    BindingId::TextualScrollPageUp,
+    BindingId::TextualScrollPageDown,
+    BindingId::TextualScrollPageLeft,
+    BindingId::TextualScrollPageRight,
     BindingId::TextualInputCursorLeftSelect,
     BindingId::TextualInputCursorLeftWord,
     BindingId::TextualInputCursorLeftWordSelect,
@@ -269,6 +276,14 @@ impl TextInput {
         let len = self.len();
         match id {
             B::TextualInputSubmit => return InputOutcome::Submitted,
+            // The inherited scroll keys: a one-line input has nothing to scroll, but they stop here rather than
+            // reaching the bindings behind it, and they leave the selection alone.
+            B::TextualScrollUp
+            | B::TextualScrollDown
+            | B::TextualScrollPageUp
+            | B::TextualScrollPageDown
+            | B::TextualScrollPageLeft
+            | B::TextualScrollPageRight => return InputOutcome::Changed,
             // Textual's `action_paste`: the whole in-app clipboard over the selection, line breaks and all (PLAN
             // §10.10). A filter may refuse the result.
             B::TextualInputPaste => {
@@ -813,7 +828,7 @@ mod tests {
     #[test]
     fn non_text_keys_are_ignored() {
         let mut input = input("abc", 1);
-        for key in ["tab", "shift+tab", "escape", "ctrl+p", "f1", "up", "down", "alt+x"] {
+        for key in ["tab", "shift+tab", "escape", "ctrl+p", "f1", "alt+x"] {
             assert_eq!(press(&mut input, key), InputOutcome::Ignored, "{key}");
         }
         assert_eq!((input.value(), input.cursor()), ("abc", 1));
@@ -822,6 +837,19 @@ mod tests {
         assert!(input.consumes_key(&chord("q"), &keymap));
         assert!(input.consumes_key(&chord("ctrl+f"), &keymap));
         assert!(input.consumes_key(&chord("enter"), &keymap));
+    }
+
+    #[rstest]
+    fn scroll_keys_are_consumed_and_change_nothing(
+        #[values("up", "down", "pageup", "pagedown", "ctrl+pageup", "ctrl+pagedown")] key: &str,
+    ) {
+        let mut input = bar_selected();
+        assert!(input.consumes_key(&chord(key), &Keymap::defaults()));
+        assert_eq!(press(&mut input, key), InputOutcome::Changed);
+        assert_eq!(
+            (input.value(), input.cursor(), input.selection()),
+            ("foo-bar baz", 7, Some((4, 7)))
+        );
     }
 
     /// Presses `key` with `clipboard` as the in-app clipboard.

@@ -1746,6 +1746,113 @@
     ]
   },
   {
+    "name": "scroll-keys-do-nothing",
+    "value": "foo-bar baz",
+    "cursor": 4,
+    "clipboard": "",
+    "steps": [
+      {
+        "key": "up",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          4,
+          4
+        ],
+        "clipboard": "",
+        "suggestion": ""
+      },
+      {
+        "key": "down",
+        "value": "foo-bar baz",
+        "cursor": 4,
+        "selection": [
+          4,
+          4
+        ],
+        "clipboard": "",
+        "suggestion": ""
+      },
+      {
+        "key": "shift+right",
+        "value": "foo-bar baz",
+        "cursor": 5,
+        "selection": [
+          4,
+          5
+        ],
+        "clipboard": "",
+        "suggestion": ""
+      },
+      {
+        "key": "pageup",
+        "value": "foo-bar baz",
+        "cursor": 5,
+        "selection": [
+          4,
+          5
+        ],
+        "clipboard": "",
+        "suggestion": ""
+      },
+      {
+        "key": "pagedown",
+        "value": "foo-bar baz",
+        "cursor": 5,
+        "selection": [
+          4,
+          5
+        ],
+        "clipboard": "",
+        "suggestion": ""
+      },
+      {
+        "key": "ctrl+pageup",
+        "value": "foo-bar baz",
+        "cursor": 5,
+        "selection": [
+          4,
+          5
+        ],
+        "clipboard": "",
+        "suggestion": ""
+      },
+      {
+        "key": "ctrl+pagedown",
+        "value": "foo-bar baz",
+        "cursor": 5,
+        "selection": [
+          4,
+          5
+        ],
+        "clipboard": "",
+        "suggestion": ""
+      },
+      {
+        "key": "up",
+        "value": "foo-bar baz",
+        "cursor": 5,
+        "selection": [
+          4,
+          5
+        ],
+        "clipboard": "",
+        "suggestion": ""
+      },
+      {
+        "key": "down",
+        "value": "foo-bar baz",
+        "cursor": 5,
+        "selection": [
+          4,
+          5
+        ],
+        "clipboard": "",
+        "suggestion": ""
+      }
+    ]
+  },
+  {
     "name": "paste-clipboard",
     "value": "foo-bar baz",
     "cursor": 4,

@@ -1,6 +1,6 @@
 version = 1
 description = "The keybindings panel with the table's search box focused: an Input group with every Input binding, the inherited scroll keys first, then the table's Search, the screen's and the app's keys"
-gate = false
+gate = true
 parity_rows = ["keybindings.textual-input-group"]
 
 [env]

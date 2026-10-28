@@ -17,8 +17,8 @@ use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter, M
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts, Method};
 use crate::models::{
     Branch, CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
-    IssueState, ReactionKind, Reactions, Repository, Review, ReviewComment, ReviewState, User, Workflow, WorkflowJob,
-    WorkflowRun,
+    IssueState, Notification, ReactionKind, Reactions, Repository, Review, ReviewComment, ReviewState, User, Workflow,
+    WorkflowJob, WorkflowRun,
 };
 
 #[cfg(any(test, feature = "test-util"))]
@@ -59,6 +59,29 @@ pub trait Github: Clone + Send + Sync + 'static {
     ///
     /// Fails on an HTTP error status or a body that isn't a JSON array.
     fn unread_notification_count(&self) -> impl Future<Output = Result<usize, GhError>> + Send;
+
+    /// One page of `/notifications` ([`NOTIFICATIONS_PER_PAGE`] of them), in API order: only the unread ones, or
+    /// the read ones too with `query.all`. Never `--paginate`d and never cached: a stale page would undo a mark-read.
+    ///
+    /// Fails on an HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body or any notification
+    /// doesn't decode (one bad item fails the page, as Python's does).
+    fn list_notifications(
+        &self,
+        query: NotificationQuery,
+    ) -> impl Future<Output = Result<Vec<Notification>, GhError>> + Send;
+
+    /// Marks notification thread `thread_id` read: `PATCH /notifications/threads/{thread_id}`, with no body. GitHub
+    /// answers 205. Never cached.
+    ///
+    /// Fails on any HTTP error status or `gh` failure (Python ignores both, Py bug B81).
+    fn mark_notification_read(&self, thread_id: u64) -> impl Future<Output = Result<(), GhError>> + Send;
+
+    /// Marks every notification read: `PUT /notifications` with `{"read": "true"}` (a string, as Python sends it)
+    /// over stdin. GitHub answers 205, or 202 when it finishes in the background; the body, if any, isn't read. Never
+    /// cached.
+    ///
+    /// Fails on any HTTP error status or `gh` failure (Python crashes on one, Py bug B82).
+    fn mark_all_notifications_read(&self) -> impl Future<Output = Result<(), GhError>> + Send;
 
     /// One page of `repo`'s issues and pull requests matching `query`, in API order. Each item carries `repo`.
     ///
@@ -479,6 +502,16 @@ impl PageQuery {
             ("per_page".to_owned(), self.per_page.to_string()),
         ]
     }
+}
+
+/// Which page of `/notifications` [`Github::list_notifications`] fetches. Its size is always
+/// [`NOTIFICATIONS_PER_PAGE`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct NotificationQuery {
+    /// Whether read notifications are listed too, not only unread ones.
+    pub all: bool,
+    /// The page, from 1.
+    pub page: u32,
 }
 
 /// Which repositories [`Github::list_repositories`] returns, by the user's relationship to them.
@@ -1236,14 +1269,33 @@ impl GhCli {
         Ok(request)
     }
 
+    /// The unread count's request: [`Self::list_notifications_request`]'s first page of unread notifications.
     fn unread_notifications_request() -> GhRequest {
+        Self::list_notifications_request(NotificationQuery { all: false, page: 1 })
+    }
+
+    /// `GET /notifications` for one page.
+    fn list_notifications_request(query: NotificationQuery) -> GhRequest {
         let mut request = GhRequest::get("/notifications");
-        // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
+        // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the page must be fresh.
         request.query = vec![
-            ("all".to_owned(), "false".to_owned()),
-            ("page".to_owned(), "1".to_owned()),
+            ("all".to_owned(), query.all.to_string()),
+            ("page".to_owned(), query.page.to_string()),
             ("per_page".to_owned(), NOTIFICATIONS_PER_PAGE.to_string()),
         ];
+        request
+    }
+
+    /// `PATCH /notifications/threads/{thread_id}`, with no body.
+    fn mark_notification_read_request(thread_id: u64) -> GhRequest {
+        GhRequest::new(Method::Patch, format!("/notifications/threads/{thread_id}"))
+    }
+
+    /// `PUT /notifications` with `{"read": "true"}`.
+    fn mark_all_notifications_read_request() -> GhRequest {
+        let mut request = GhRequest::new(Method::Put, "/notifications");
+        // A string, not a boolean: exactly Python's body, so the fixture's body matcher holds.
+        request.body = Some(serde_json::json!({ "read": "true" }));
         request
     }
 }
@@ -1294,6 +1346,21 @@ impl Github for GhCli {
     async fn unread_notification_count(&self) -> Result<usize, GhError> {
         let response = self.inner.runner.request(Self::unread_notifications_request()).await?;
         count_items(&response)
+    }
+
+    async fn list_notifications(&self, query: NotificationQuery) -> Result<Vec<Notification>, GhError> {
+        let request = Self::list_notifications_request(query);
+        self.inner.runner.request(request).await?.json()
+    }
+
+    async fn mark_notification_read(&self, thread_id: u64) -> Result<(), GhError> {
+        let request = Self::mark_notification_read_request(thread_id);
+        dispatched(self.inner.runner.request(request).await)
+    }
+
+    async fn mark_all_notifications_read(&self) -> Result<(), GhError> {
+        let request = Self::mark_all_notifications_read_request();
+        dispatched(self.inner.runner.request(request).await)
     }
 
     async fn list_issues(&self, repo: &Repository, query: IssueListQuery) -> Result<Vec<IssueListItem>, GhError> {
@@ -1884,6 +1951,138 @@ mod tests {
             Err(GhError::Decode(_))
         ));
         assert!(matches!(count_items(&response("")), Err(GhError::Decode(_))));
+    }
+
+    /// `request`'s argv on github.com and on a GHE host, in that order.
+    fn argv_on_both_hosts(request: &GhRequest) -> [Vec<String>; 2] {
+        let ghe = GhCli::new(GhCliOptions {
+            hostname: Some("ghe.example.com".into()),
+            ..GhCliOptions::default()
+        });
+        [
+            strings(request.argv(GhCli::default().runner().hostname(), false)),
+            strings(request.argv(ghe.runner().hostname(), false)),
+        ]
+    }
+
+    /// `argv` with GHE's `--hostname` after the method, where `gh` takes it.
+    fn on_ghe(argv: &[&str]) -> Vec<String> {
+        let mut argv: Vec<String> = argv.iter().map(|&arg| arg.to_owned()).collect();
+        argv.splice(4..4, ["--hostname".to_owned(), "ghe.example.com".to_owned()]);
+        argv
+    }
+
+    #[test]
+    fn list_notifications_argv_is_one_uncached_page_in_python_order() {
+        for (query, path) in [
+            (
+                NotificationQuery { all: true, page: 1 },
+                "/notifications?all=true&page=1&per_page=50",
+            ),
+            (
+                NotificationQuery { all: false, page: 2 },
+                "/notifications?all=false&page=2&per_page=50",
+            ),
+        ] {
+            let expected = [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "-H",
+                "Accept: application/vnd.github+json",
+                path,
+            ];
+            let [github, ghe] = argv_on_both_hosts(&GhCli::list_notifications_request(query));
+            assert_eq!(github, expected);
+            assert_eq!(ghe, on_ghe(&expected));
+            assert!(!github.iter().any(|arg| arg == "--cache" || arg == "--paginate"));
+        }
+        // The unread count asks for exactly the first unread page.
+        assert_eq!(
+            argv_on_both_hosts(&GhCli::unread_notifications_request()),
+            argv_on_both_hosts(&GhCli::list_notifications_request(NotificationQuery {
+                all: false,
+                page: 1
+            }))
+        );
+    }
+
+    #[test]
+    fn mark_notification_read_argv_patches_without_a_body() {
+        let request = GhCli::mark_notification_read_request(9_100_001);
+        assert!(request.body.is_none());
+        let expected = [
+            "api",
+            "-i",
+            "-X",
+            "PATCH",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "/notifications/threads/9100001",
+        ];
+        let [github, ghe] = argv_on_both_hosts(&request);
+        assert_eq!(github, expected);
+        assert_eq!(ghe, on_ghe(&expected));
+    }
+
+    #[test]
+    fn mark_all_notifications_read_argv_puts_the_string_true_over_stdin() {
+        let request = GhCli::mark_all_notifications_read_request();
+        let expected = [
+            "api",
+            "-i",
+            "-X",
+            "PUT",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "--input",
+            "-",
+            "/notifications",
+        ];
+        let [github, ghe] = argv_on_both_hosts(&request);
+        assert_eq!(github, expected);
+        assert_eq!(ghe, on_ghe(&expected));
+        assert_eq!(request.body.unwrap().to_string(), r#"{"read":"true"}"#);
+    }
+
+    #[test]
+    fn a_notifications_page_decodes_and_one_bad_item_fails_it() {
+        let page = parity_response(
+            "notifications-modal",
+            "notifications/GET.all-false_page-1_per_page-50.json",
+        );
+        let notifications: Vec<Notification> = page.json().unwrap();
+        assert!(!notifications.is_empty());
+        assert!(notifications.iter().all(|notification| notification.unread));
+
+        let empty = parity_response(
+            "notifications-modal",
+            "notifications/GET.all-true_page-2_per_page-50.json",
+        );
+        assert!(empty.json::<Vec<Notification>>().unwrap().is_empty());
+
+        let mut body = parity_fixture(
+            "notifications-modal",
+            "notifications/GET.all-true_page-1_per_page-50.json",
+        )["response"]["body"]
+            .take();
+        body[2]["id"] = serde_json::json!("not-a-number");
+        assert!(matches!(
+            api_response(&body.to_string()).json::<Vec<Notification>>(),
+            Err(GhError::Decode(_))
+        ));
+    }
+
+    #[test]
+    fn a_mark_read_is_done_on_a_202_or_205_and_a_500_is_an_error() {
+        let reset = gh::interpret(Some(0), b"HTTP/2.0 205 Reset Content\r\n\r\n", b"", false);
+        assert!(dispatched(reset).is_ok());
+        assert!(dispatched(json_response("202 Accepted", r#"{"message":"queued"}"#)).is_ok());
+        assert!(matches!(
+            dispatched(json_response("500 Internal Server Error", r#"{"message":"boom"}"#)),
+            Err(GhError::Http { status: 500, .. })
+        ));
     }
 
     #[test]

@@ -501,6 +501,21 @@ mod tests {
             std::future::pending().await
         }
 
+        async fn list_notifications(
+            &self,
+            _query: lazy_github_core::github::NotificationQuery,
+        ) -> Result<Vec<lazy_github_core::models::Notification>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
+        async fn mark_notification_read(&self, _thread_id: u64) -> Result<(), lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
+        async fn mark_all_notifications_read(&self) -> Result<(), lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
         async fn list_issues(
             &self,
             _repo: &lazy_github_core::models::Repository,

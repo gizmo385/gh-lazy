@@ -8,6 +8,7 @@ mod branch;
 mod checks;
 mod comment;
 mod issue;
+mod notification;
 mod pull_request;
 mod reaction;
 mod repo_name;
@@ -23,6 +24,7 @@ pub use checks::{
 };
 pub use comment::{CommentRef, IssueComment};
 pub use issue::{Issue, IssueListItem, IssueState, PartialPullRequest};
+pub use notification::{Notification, NotificationSubject};
 pub use pull_request::{FullPullRequest, GitRef};
 pub use reaction::{Reaction, ReactionKind, Reactions};
 pub use repo_name::RepoName;

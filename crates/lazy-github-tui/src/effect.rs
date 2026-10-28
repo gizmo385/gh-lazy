@@ -9,11 +9,12 @@ use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{
     DiffFetchError, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue, NewPullRequest,
-    NewReview, PageQuery, PullRequestUpdate, RepoListQuery,
+    NewReview, NotificationQuery, PageQuery, PullRequestUpdate, RepoListQuery,
 };
 use lazy_github_core::models::{
     Branch, CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
-    ReactionKind, Reactions, RepoName, Repository, Review, ReviewComment, User, Workflow, WorkflowJob, WorkflowRun,
+    Notification, ReactionKind, Reactions, RepoName, Repository, Review, ReviewComment, User, Workflow, WorkflowJob,
+    WorkflowRun,
 };
 
 /// Something the runtime does on the app's behalf.
@@ -128,6 +129,12 @@ pub enum GithubRequest {
     },
     /// [`Github::unread_notification_count`].
     UnreadNotificationCount,
+    /// [`Github::list_notifications`].
+    ListNotifications(NotificationQuery),
+    /// [`Github::mark_notification_read`] of the thread with this id.
+    MarkNotificationRead(u64),
+    /// [`Github::mark_all_notifications_read`].
+    MarkAllNotificationsRead,
     /// [`Github::repo_readme`] of the repo with this full name.
     RepoReadme(String),
     /// [`Github::repository`] with this full name.
@@ -377,6 +384,12 @@ pub enum GithubResponse {
     ListIssues(Result<Vec<IssueListItem>, GhError>),
     /// [`Github::unread_notification_count`].
     UnreadNotificationCount(Result<usize, GhError>),
+    /// [`Github::list_notifications`].
+    ListNotifications(Result<Vec<Notification>, GhError>),
+    /// [`Github::mark_notification_read`].
+    MarkNotificationRead(Result<(), GhError>),
+    /// [`Github::mark_all_notifications_read`].
+    MarkAllNotificationsRead(Result<(), GhError>),
     /// [`Github::repo_readme`].
     RepoReadme(Result<Option<String>, GhError>),
     /// [`Github::repository`], boxed to keep this enum small.
@@ -461,6 +474,15 @@ impl GithubRequest {
             GithubRequest::ListIssues { repo, query } => GithubResponse::ListIssues(gh.list_issues(&repo, query).await),
             GithubRequest::UnreadNotificationCount => {
                 GithubResponse::UnreadNotificationCount(gh.unread_notification_count().await)
+            }
+            GithubRequest::ListNotifications(query) => {
+                GithubResponse::ListNotifications(gh.list_notifications(query).await)
+            }
+            GithubRequest::MarkNotificationRead(thread_id) => {
+                GithubResponse::MarkNotificationRead(gh.mark_notification_read(thread_id).await)
+            }
+            GithubRequest::MarkAllNotificationsRead => {
+                GithubResponse::MarkAllNotificationsRead(gh.mark_all_notifications_read().await)
             }
             GithubRequest::RepoReadme(full_name) => GithubResponse::RepoReadme(gh.repo_readme(&full_name).await),
             GithubRequest::Repository(full_name) => {

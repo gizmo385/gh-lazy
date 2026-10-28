@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 
 use lazy_github_core::config::{IssueOwnerFilter, IssueStateFilter};
 use lazy_github_core::gh::{GhError, GhTimeouts};
-use lazy_github_core::github::{GhCli, GhCliOptions, Github, IssueListQuery, RepoListQuery};
+use lazy_github_core::github::{GhCli, GhCliOptions, Github, IssueListQuery, NotificationQuery, RepoListQuery};
 use lazy_github_core::models::{IssueListItem, Repository};
 use serde_json::Value;
 
@@ -685,4 +685,105 @@ async fn child_workflow_run_jobs() {
         ["build", "test"]
     );
     assert!(gh.workflow_run_jobs(&repo, 5_000_040).await.unwrap().is_empty());
+}
+
+#[test]
+fn notifications_list_and_mark_read_against_the_modal_fixtures() {
+    let log = run_child("child_notifications", "logged-in", &["notifications-modal", "base"]);
+    assert_eq!(log.len(), 4, "{log:#?}");
+    assert!(
+        log.iter().all(|line| line["miss"] == false && line["cache"].is_null()),
+        "{log:#?}"
+    );
+    let fixtures: Vec<&str> = log.iter().map(|line| line["fixture"].as_str().unwrap()).collect();
+    assert_eq!(
+        fixtures,
+        [
+            "notifications-modal/notifications/GET.all-true_page-1_per_page-50.json",
+            "notifications-modal/notifications/GET.all-false_page-2_per_page-50.json",
+            "notifications-modal/notifications/threads/9100001/PATCH.json",
+            "notifications-modal/notifications/PUT.json",
+        ]
+    );
+    let statuses: Vec<&Value> = log.iter().map(|line| &line["status"]).collect();
+    assert_eq!(statuses, [200, 200, 205, 205]);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_notifications() {
+    let Some(gh) = client() else { return };
+    let all = gh
+        .list_notifications(NotificationQuery { all: true, page: 1 })
+        .await
+        .unwrap();
+    let ids: Vec<u64> = all.iter().map(|notification| notification.id).collect();
+    assert_eq!(ids, [9_100_001, 9_100_002, 9_100_003, 9_100_004, 9_100_005, 9_100_006]);
+    let unread_page_2 = gh
+        .list_notifications(NotificationQuery { all: false, page: 2 })
+        .await
+        .unwrap();
+    assert!(unread_page_2.is_empty());
+    gh.mark_notification_read(9_100_001).await.unwrap();
+    gh.mark_all_notifications_read().await.unwrap();
+}
+
+/// A fixture answering `method path` (with `query`, if any) with a 500.
+fn server_error_fixture(method: &str, path: &str, query: Option<Value>) -> String {
+    let mut request = serde_json::json!({ "method": method, "path": path });
+    if let Some(query) = query {
+        request["query"] = query;
+    }
+    let fixture = serde_json::json!({
+        "version": 1,
+        "request": request,
+        "response": {
+            "status": 500,
+            "headers": { "Content-Type": "application/json; charset=utf-8" },
+            "body": { "message": "Server Error" },
+        },
+    });
+    serde_json::to_string_pretty(&fixture).unwrap()
+}
+
+#[test]
+fn notifications_server_errors_are_errors() {
+    let failing = common::TempDir::new("failing-notifications");
+    common::write(
+        failing.path(),
+        "notifications/GET.all-true_page-1_per_page-50.json",
+        &server_error_fixture(
+            "GET",
+            "/notifications",
+            Some(serde_json::json!({ "all": "true", "page": "1", "per_page": "50" })),
+        ),
+    );
+    common::write(
+        failing.path(),
+        "notifications/threads/9100001/PATCH.json",
+        &server_error_fixture("PATCH", "/notifications/threads/9100001", None),
+    );
+    common::write(
+        failing.path(),
+        "notifications/PUT.json",
+        &server_error_fixture("PUT", "/notifications", None),
+    );
+    let set = failing.path().to_str().unwrap();
+    let log = run_child("child_notifications_server_errors", "logged-in", &[set]);
+    assert_eq!(log.len(), 3, "{log:#?}");
+    assert!(
+        log.iter().all(|line| line["miss"] == false && line["status"] == 500),
+        "{log:#?}"
+    );
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_notifications_server_errors() {
+    let Some(gh) = client() else { return };
+    let is_500 = |error: GhError| matches!(error, GhError::Http { status: 500, .. });
+    let listed = gh.list_notifications(NotificationQuery { all: true, page: 1 }).await;
+    assert!(listed.is_err_and(is_500));
+    assert!(gh.mark_notification_read(9_100_001).await.is_err_and(is_500));
+    assert!(gh.mark_all_notifications_read().await.is_err_and(is_500));
 }

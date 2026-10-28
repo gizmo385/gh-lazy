@@ -9,19 +9,19 @@ use serde::de::Error as _;
 
 use super::{
     DiffFetchError, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue, NewPullRequest,
-    NewReview, PageQuery, PullRequestUpdate, RepoListQuery,
+    NewReview, NotificationQuery, PageQuery, PullRequestUpdate, RepoListQuery,
 };
 use crate::gh::GhError;
 use crate::models::{
     Branch, CheckRun, CheckState, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment,
-    IssueListItem, ReactionKind, Reactions, Repository, Review, ReviewComment, User, Workflow, WorkflowJob,
-    WorkflowRun,
+    IssueListItem, Notification, ReactionKind, Reactions, Repository, Review, ReviewComment, User, Workflow,
+    WorkflowJob, WorkflowRun,
 };
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` and `pull_request_uncached` fail with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, `collaborators` and `requested_reviewers` return none, `request_reviewers` and `update_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_notifications` returns an empty page, `mark_notification_read` and `mark_all_notifications_read` fail with a 422, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` and `pull_request_uncached` fail with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, `collaborators` and `requested_reviewers` return none, `request_reviewers` and `update_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -38,6 +38,12 @@ pub enum GithubCall {
     ListRepositories(RepoListQuery),
     /// [`Github::unread_notification_count`].
     UnreadNotificationCount,
+    /// [`Github::list_notifications`].
+    ListNotifications(NotificationQuery),
+    /// [`Github::mark_notification_read`], with the thread's id.
+    MarkNotificationRead(u64),
+    /// [`Github::mark_all_notifications_read`].
+    MarkAllNotificationsRead,
     /// [`Github::list_issues`].
     ListIssues {
         /// The repository listed.
@@ -260,6 +266,12 @@ struct State {
     user: Option<Result<User, GhError>>,
     repositories: Option<Result<Vec<Repository>, GhError>>,
     unread_count: Option<Result<usize, GhError>>,
+    /// Keyed by the query.
+    notification_pages: HashMap<NotificationQuery, Result<Vec<Notification>, GhError>>,
+    /// What `mark_notification_read` returns, by thread id; threads not set fail with a 422.
+    notification_reads: HashMap<u64, Result<(), GhError>>,
+    /// What `mark_all_notifications_read` returns; `None` fails with a 422.
+    all_notifications_read: Option<Result<(), GhError>>,
     /// Keyed by `full_name` and page.
     issue_pages: HashMap<(String, u32), Result<Vec<IssueListItem>, GhError>>,
     /// Keyed by `full_name`.
@@ -376,6 +388,27 @@ impl FakeGithub {
     /// From now on, `unread_notification_count` returns `count`. Clones see the change too.
     pub fn set_unread_count(&self, count: Result<usize, GhError>) {
         self.lock().unread_count = Some(count);
+    }
+
+    /// `list_notifications` returns `page` for `query`. Queries not set are empty pages.
+    #[must_use]
+    pub fn with_notification_page(self, query: NotificationQuery, page: Result<Vec<Notification>, GhError>) -> Self {
+        self.lock().notification_pages.insert(query, page);
+        self
+    }
+
+    /// `mark_notification_read` returns `result` for thread `thread_id`. Other threads fail with a 422.
+    #[must_use]
+    pub fn with_notification_read(self, thread_id: u64, result: Result<(), GhError>) -> Self {
+        self.lock().notification_reads.insert(thread_id, result);
+        self
+    }
+
+    /// `mark_all_notifications_read` returns `result`.
+    #[must_use]
+    pub fn with_all_notifications_read(self, result: Result<(), GhError>) -> Self {
+        self.lock().all_notifications_read = Some(result);
+        self
     }
 
     /// `list_issues` returns `page` for page `page_number` of the repository named `full_name`, whatever the
@@ -763,6 +796,27 @@ impl Github for FakeGithub {
             Some(Ok(count)) => Ok(*count),
             Some(Err(error)) => Err(duplicate(error)),
             None => Ok(0),
+        })
+        .await
+    }
+
+    async fn list_notifications(&self, query: NotificationQuery) -> Result<Vec<Notification>, GhError> {
+        self.respond(GithubCall::ListNotifications(query), |state| {
+            canned_page(state.notification_pages.get(&query))
+        })
+        .await
+    }
+
+    async fn mark_notification_read(&self, thread_id: u64) -> Result<(), GhError> {
+        self.respond(GithubCall::MarkNotificationRead(thread_id), |state| {
+            canned_write(state.notification_reads.get(&thread_id))
+        })
+        .await
+    }
+
+    async fn mark_all_notifications_read(&self) -> Result<(), GhError> {
+        self.respond(GithubCall::MarkAllNotificationsRead, |state| {
+            canned_write(state.all_notifications_read.as_ref())
         })
         .await
     }
@@ -1802,6 +1856,100 @@ mod tests {
                 number: 5,
                 request,
             }
+        );
+    }
+
+    fn notification(id: u64) -> Notification {
+        Notification {
+            id,
+            repository: repo("a"),
+            subject: crate::models::NotificationSubject {
+                title: format!("Thread {id}"),
+                url: None,
+                latest_comment_url: None,
+                kind: "Issue".into(),
+            },
+            reason: "mention".into(),
+            unread: true,
+            updated_at: jiff::Timestamp::UNIX_EPOCH,
+            last_read_at: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn notification_pages_by_query() {
+        let unread = NotificationQuery { all: false, page: 1 };
+        let all = NotificationQuery { all: true, page: 1 };
+        let failing = NotificationQuery { all: true, page: 2 };
+        let github = FakeGithub::new()
+            .with_notification_page(unread, Ok(vec![notification(1)]))
+            .with_notification_page(all, Ok(vec![notification(1), notification(2)]))
+            .with_notification_page(failing, Err(GhError::NotInstalled));
+        assert_eq!(github.list_notifications(unread).await.unwrap(), [notification(1)]);
+        assert_eq!(github.list_notifications(all).await.unwrap().len(), 2);
+        assert!(matches!(
+            github.list_notifications(failing).await,
+            Err(GhError::NotInstalled)
+        ));
+        let unset = NotificationQuery { all: false, page: 2 };
+        assert!(github.list_notifications(unset).await.unwrap().is_empty());
+        assert_eq!(
+            github.calls(),
+            [
+                GithubCall::ListNotifications(unread),
+                GithubCall::ListNotifications(all),
+                GithubCall::ListNotifications(failing),
+                GithubCall::ListNotifications(unset),
+            ]
+        );
+    }
+
+    #[tokio::test]
+    async fn mark_notification_read_answers_by_thread_id_and_records_the_call() {
+        let github = FakeGithub::new()
+            .with_notification_read(1, Ok(()))
+            .with_notification_read(
+                2,
+                Err(GhError::Http {
+                    status: 500,
+                    message: "Internal Server Error".into(),
+                    body: Vec::new(),
+                }),
+            );
+        assert!(github.mark_notification_read(1).await.is_ok());
+        assert!(matches!(
+            github.mark_notification_read(2).await,
+            Err(GhError::Http { status: 500, .. })
+        ));
+        assert!(matches!(
+            github.mark_notification_read(3).await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        assert_eq!(
+            github.calls(),
+            [
+                GithubCall::MarkNotificationRead(1),
+                GithubCall::MarkNotificationRead(2),
+                GithubCall::MarkNotificationRead(3),
+            ]
+        );
+    }
+
+    #[tokio::test]
+    async fn mark_all_notifications_read_answers_once_set_and_records_the_call() {
+        let github = FakeGithub::new();
+        assert!(matches!(
+            github.mark_all_notifications_read().await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        let github = github.with_all_notifications_read(Ok(()));
+        assert!(github.mark_all_notifications_read().await.is_ok());
+        assert_eq!(
+            github.calls(),
+            [
+                GithubCall::MarkAllNotificationsRead,
+                GithubCall::MarkAllNotificationsRead
+            ]
         );
     }
 

@@ -729,6 +729,39 @@ mod tests {
             std::future::pending().await
         }
 
+        async fn collaborators(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+        ) -> Result<Vec<String>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
+        async fn requested_reviewers(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _number: u64,
+        ) -> Result<Vec<String>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
+        async fn request_reviewers(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _number: u64,
+            _reviewers: &[String],
+        ) -> Result<(), lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
+        async fn update_pull_request(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _number: u64,
+            _update: &lazy_github_core::github::PullRequestUpdate,
+        ) -> Result<(), lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
         async fn dispatch_workflow(
             &self,
             _repo: &lazy_github_core::models::Repository,

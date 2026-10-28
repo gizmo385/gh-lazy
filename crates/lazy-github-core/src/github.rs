@@ -362,6 +362,47 @@ pub trait Github: Clone + Send + Sync + 'static {
     /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body doesn't decode.
     fn workflow_run(&self, repo: &Repository, run_id: u64)
     -> impl Future<Output = Result<WorkflowRun, GhError>> + Send;
+
+    /// The logins of `repo`'s collaborators, in API order: `GET /repos/{owner}/{repo}/collaborators`, GitHub's first
+    /// page of 30, as Python asks for no more. Never cached.
+    ///
+    /// Fails on any HTTP error status (403 without push access) or `gh` failure, or with [`GhError::Decode`] when the
+    /// body doesn't decode.
+    fn collaborators(&self, repo: &Repository) -> impl Future<Output = Result<Vec<String>, GhError>> + Send;
+
+    /// The logins of the users asked to review pull request `number` of `repo`, in API order: `GET
+    /// /repos/{owner}/{repo}/pulls/{number}/requested_reviewers`. Requested teams are left out, as in Python. Never
+    /// cached.
+    ///
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body doesn't decode.
+    fn requested_reviewers(
+        &self,
+        repo: &Repository,
+        number: u64,
+    ) -> impl Future<Output = Result<Vec<String>, GhError>> + Send;
+
+    /// Asks `reviewers` (logins) to review pull request `number` of `repo`: `POST
+    /// /repos/{owner}/{repo}/pulls/{number}/requested_reviewers` with `{"reviewers": [...]}` over stdin, sent even
+    /// when the list is empty, as Python does. GitHub answers 201; the body isn't read. Never cached.
+    ///
+    /// Fails on any HTTP error status or `gh` failure.
+    fn request_reviewers(
+        &self,
+        repo: &Repository,
+        number: u64,
+        reviewers: &[String],
+    ) -> impl Future<Output = Result<(), GhError>> + Send;
+
+    /// Edits pull request `number` of `repo`: `PATCH /repos/{owner}/{repo}/pulls/{number}` with `update` over stdin.
+    /// The answer isn't read: the caller already knows the new title and body, as Python does. Never cached.
+    ///
+    /// Fails on any HTTP error status (403 without the rights to edit it) or `gh` failure.
+    fn update_pull_request(
+        &self,
+        repo: &Repository,
+        number: u64,
+        update: &PullRequestUpdate,
+    ) -> impl Future<Output = Result<(), GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -646,6 +687,36 @@ impl NewPullRequest {
             body: (!description.is_empty()).then(|| description.to_owned()),
         }
     }
+}
+
+/// What [`Github::update_pull_request`] sends: the body of `PATCH /repos/{owner}/{repo}/pulls/{number}`, serialized
+/// with its fields in this order.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize)]
+pub struct PullRequestUpdate {
+    /// The title, as edited.
+    pub title: String,
+    /// The description, as edited.
+    pub body: String,
+    /// The branch it merges into: the pull request's own base, unchanged, as Python sends it.
+    pub base: String,
+}
+
+/// The body of `POST .../requested_reviewers`.
+#[derive(serde::Serialize)]
+struct ReviewRequest<'a> {
+    reviewers: &'a [String],
+}
+
+/// A user in a list where only the login is read.
+#[derive(serde::Deserialize)]
+struct LoginOnly {
+    login: String,
+}
+
+/// The body of `GET .../requested_reviewers`; the requested teams aren't read.
+#[derive(serde::Deserialize)]
+struct RequestedReviewers {
+    users: Vec<LoginOnly>,
 }
 
 /// A review's verdict, as the reviews endpoint takes it: `APPROVE`, `REQUEST_CHANGES` or `COMMENT`.
@@ -1107,6 +1178,43 @@ impl GhCli {
         ))
     }
 
+    /// `GET /repos/{owner}/{repo}/collaborators`, uncached and without a query: Python sends neither.
+    fn collaborators_request(repo: &Repository) -> GhRequest {
+        GhRequest::get(format!("/repos/{}/{}/collaborators", repo.owner.login, repo.name))
+    }
+
+    /// `/repos/{owner}/{repo}/pulls/{number}/requested_reviewers` with `method`, uncached and without a query.
+    fn requested_reviewers_request(method: Method, repo: &Repository, number: u64) -> GhRequest {
+        GhRequest::new(
+            method,
+            format!(
+                "/repos/{}/{}/pulls/{number}/requested_reviewers",
+                repo.owner.login, repo.name
+            ),
+        )
+    }
+
+    /// `POST .../pulls/{number}/requested_reviewers` with `{"reviewers": reviewers}`.
+    fn request_reviewers_request(repo: &Repository, number: u64, reviewers: &[String]) -> Result<GhRequest, GhError> {
+        let mut request = Self::requested_reviewers_request(Method::Post, repo, number);
+        request.body = Some(serde_json::to_value(ReviewRequest { reviewers })?);
+        Ok(request)
+    }
+
+    /// `PATCH /repos/{owner}/{repo}/pulls/{number}` with `update` as the JSON body.
+    fn update_pull_request_request(
+        repo: &Repository,
+        number: u64,
+        update: &PullRequestUpdate,
+    ) -> Result<GhRequest, GhError> {
+        let mut request = GhRequest::new(
+            Method::Patch,
+            format!("/repos/{}/{}/pulls/{number}", repo.owner.login, repo.name),
+        );
+        request.body = Some(serde_json::to_value(update)?);
+        Ok(request)
+    }
+
     /// `PUT /repos/{owner}/{repo}/pulls/{number}/merge` with `merge` as the JSON body.
     fn merge_pull_request_request(repo: &Repository, number: u64, merge: &MergeRequest) -> Result<GhRequest, GhError> {
         let mut request = GhRequest::new(
@@ -1403,6 +1511,42 @@ impl Github for GhCli {
         let request = Self::workflow_run_request(repo, run_id);
         self.inner.runner.request(request).await?.json()
     }
+
+    async fn collaborators(&self, repo: &Repository) -> Result<Vec<String>, GhError> {
+        logins(self.inner.runner.request(Self::collaborators_request(repo)).await)
+    }
+
+    async fn requested_reviewers(&self, repo: &Repository, number: u64) -> Result<Vec<String>, GhError> {
+        let request = Self::requested_reviewers_request(Method::Get, repo, number);
+        requested_logins(self.inner.runner.request(request).await)
+    }
+
+    async fn request_reviewers(&self, repo: &Repository, number: u64, reviewers: &[String]) -> Result<(), GhError> {
+        let request = Self::request_reviewers_request(repo, number, reviewers)?;
+        dispatched(self.inner.runner.request(request).await)
+    }
+
+    async fn update_pull_request(
+        &self,
+        repo: &Repository,
+        number: u64,
+        update: &PullRequestUpdate,
+    ) -> Result<(), GhError> {
+        let request = Self::update_pull_request_request(repo, number, update)?;
+        dispatched(self.inner.runner.request(request).await)
+    }
+}
+
+/// The logins of a list of users.
+fn logins(response: Result<GhResponse, GhError>) -> Result<Vec<String>, GhError> {
+    let users: Vec<LoginOnly> = response?.json()?;
+    Ok(users.into_iter().map(|user| user.login).collect())
+}
+
+/// The logins of the requested users, without the teams.
+fn requested_logins(response: Result<GhResponse, GhError>) -> Result<Vec<String>, GhError> {
+    let requested: RequestedReviewers = response?.json()?;
+    Ok(requested.users.into_iter().map(|user| user.login).collect())
 }
 
 /// Whether a write without an answer of its own went through (a dispatch's 204, a re-run's 201): any 2xx is done, and
@@ -2974,6 +3118,119 @@ mod tests {
             json_response("422 Unprocessable Entity", &refused["response"]["body"].to_string()),
             Err(GhError::Http { status: 422, .. })
         ));
+    }
+
+    #[test]
+    fn the_reviewer_reads_are_plain_gets() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        let argv = |request: GhRequest| strings(request.argv(gh.runner().hostname(), false));
+        let get = |path: &str| {
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "-H",
+                "Accept: application/vnd.github+json",
+                path,
+            ]
+            .map(str::to_owned)
+        };
+        assert_eq!(
+            argv(GhCli::collaborators_request(&pr_details_repo())),
+            get("/repos/parity-bot/pr-details/collaborators")
+        );
+        assert_eq!(
+            argv(GhCli::requested_reviewers_request(Method::Get, &pr_details_repo(), 5)),
+            get("/repos/parity-bot/pr-details/pulls/5/requested_reviewers")
+        );
+    }
+
+    #[test]
+    fn the_reviewer_and_pull_request_writes_send_their_bodies_over_stdin() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        let write = |method: &str, path: &str| {
+            [
+                "api",
+                "-i",
+                "-X",
+                method,
+                "-H",
+                "Accept: application/vnd.github+json",
+                "--input",
+                "-",
+                path,
+            ]
+            .map(str::to_owned)
+        };
+        for (reviewers, body) in [
+            (vec!["parity-friend".to_owned()], r#"{"reviewers":["parity-friend"]}"#),
+            (Vec::new(), r#"{"reviewers":[]}"#),
+        ] {
+            let request = GhCli::request_reviewers_request(&pr_details_repo(), 5, &reviewers).unwrap();
+            assert_eq!(
+                strings(request.argv(gh.runner().hostname(), false)),
+                write("POST", "/repos/parity-bot/pr-details/pulls/5/requested_reviewers")
+            );
+            assert_eq!(request.body.unwrap().to_string(), body);
+        }
+        let update = PullRequestUpdate {
+            title: "Drop the old renderer".into(),
+            body: "Superseded by the new renderer.".into(),
+            base: "main".into(),
+        };
+        let request = GhCli::update_pull_request_request(&pr_details_repo(), 4, &update).unwrap();
+        assert_eq!(
+            strings(request.argv(gh.runner().hostname(), false)),
+            write("PATCH", "/repos/parity-bot/pr-details/pulls/4")
+        );
+        assert_eq!(
+            request.body.unwrap().to_string(),
+            r#"{"title":"Drop the old renderer","body":"Superseded by the new renderer.","base":"main"}"#
+        );
+        // The fixture's request body is exactly what's sent.
+        let fixture = parity_fixture("pr-edit", "repos/parity-bot/pr-details/pulls/4/PATCH.json");
+        assert_eq!(serde_json::to_value(&update).unwrap(), fixture["request"]["body"]);
+    }
+
+    #[test]
+    fn collaborators_and_requested_reviewers_decode_to_logins_and_errors_are_errors() {
+        let body = |file: &str| parity_fixture("pr-edit", file)["response"]["body"].to_string();
+        assert_eq!(
+            logins(json_response(
+                "200 OK",
+                &body("repos/parity-bot/pr-details/collaborators/GET.json")
+            ))
+            .unwrap(),
+            ["parity-bot", "parity-friend", "parity-reviewer"]
+        );
+        let requested = body("repos/parity-bot/pr-details/pulls/5/requested_reviewers/GET.json");
+        assert_eq!(
+            requested_logins(json_response("200 OK", &requested)).unwrap(),
+            ["parity-reviewer"]
+        );
+        let none = body("repos/parity-bot/pr-details/pulls/4/requested_reviewers/GET.json");
+        assert!(requested_logins(json_response("200 OK", &none)).unwrap().is_empty());
+        let forbidden = || json_response("403 Forbidden", r#"{"message":"Must have push access"}"#);
+        assert!(matches!(logins(forbidden()), Err(GhError::Http { status: 403, .. })));
+        assert!(matches!(
+            requested_logins(forbidden()),
+            Err(GhError::Http { status: 403, .. })
+        ));
+        assert!(matches!(
+            dispatched(forbidden()),
+            Err(GhError::Http { status: 403, .. })
+        ));
+        let refused = body("repos/parity-bot/pr-details/pulls/4/PATCH.json");
+        assert!(matches!(
+            dispatched(json_response("403 Forbidden", &refused)),
+            Err(GhError::Http { status: 403, .. })
+        ));
+        let requested = parity_fixture(
+            "pr-edit",
+            "repos/parity-bot/pr-details/pulls/5/requested_reviewers/POST.json",
+        );
+        assert!(dispatched(json_response("201 Created", &requested["response"]["body"].to_string())).is_ok());
     }
 
     #[test]

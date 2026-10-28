@@ -592,6 +592,68 @@ mod tests {
     }
 
     #[tokio::test(flavor = "current_thread", start_paused = true)]
+    async fn the_reviewer_and_pull_request_update_requests_map_to_their_responses() {
+        use lazy_github_core::github::PullRequestUpdate;
+        use lazy_github_core::models::Repository;
+
+        let repo = || -> Box<Repository> {
+            Box::new(
+                serde_json::from_value(serde_json::json!({
+                    "name": "a", "full_name": "octocat/a", "owner": {"login": "octocat", "id": 1, "html_url": ""},
+                    "private": false, "html_url": "", "description": null, "default_branch": "main"
+                }))
+                .unwrap(),
+            )
+        };
+        let update = PullRequestUpdate {
+            title: "T".into(),
+            body: "B".into(),
+            base: "main".into(),
+        };
+        let gh = FakeGithub::new()
+            .with_collaborators("octocat/a", Ok(vec!["octocat".into()]))
+            .with_requested_reviewers("octocat/a", 5, Ok(vec!["friend".into()]))
+            .with_review_request(5, Ok(()))
+            .with_pull_request_update(5, Ok(()));
+        let collaborators = GithubRequest::Collaborators(repo()).run(&gh).await;
+        assert!(matches!(collaborators, GithubResponse::Collaborators(Ok(logins)) if logins == ["octocat"]));
+        let requested = GithubRequest::RequestedReviewers {
+            repo: repo(),
+            number: 5,
+        }
+        .run(&gh)
+        .await;
+        assert!(matches!(requested, GithubResponse::RequestedReviewers(Ok(logins)) if logins == ["friend"]));
+        let request = GithubRequest::RequestReviewers {
+            repo: repo(),
+            number: 5,
+            reviewers: vec!["friend".into()],
+        };
+        assert!(matches!(
+            request.run(&gh).await,
+            GithubResponse::RequestReviewers(Ok(()))
+        ));
+        let update_request = GithubRequest::UpdatePullRequest {
+            repo: repo(),
+            number: 5,
+            update: update.clone(),
+        };
+        assert!(matches!(
+            update_request.run(&gh).await,
+            GithubResponse::UpdatePullRequest(Ok(()))
+        ));
+        assert_eq!(gh.calls().len(), 4);
+        assert_eq!(
+            gh.calls()[3],
+            GithubCall::UpdatePullRequest {
+                full_name: "octocat/a".into(),
+                number: 5,
+                update
+            }
+        );
+    }
+
+    #[tokio::test(flavor = "current_thread", start_paused = true)]
     async fn a_cancelled_request_delivers_nothing() {
         let dir = TempDir::new();
         let gh = FakeGithub::new().with_latency(Duration::from_secs(1));

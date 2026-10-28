@@ -9,7 +9,7 @@ use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{
     DiffFetchError, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue, NewPullRequest,
-    NewReview, PageQuery, RepoListQuery,
+    NewReview, PageQuery, PullRequestUpdate, RepoListQuery,
 };
 use lazy_github_core::models::{
     Branch, CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
@@ -326,6 +326,33 @@ pub enum GithubRequest {
         /// The run's id.
         run_id: u64,
     },
+    /// [`Github::collaborators`], of this repo.
+    Collaborators(Box<Repository>),
+    /// [`Github::requested_reviewers`].
+    RequestedReviewers {
+        /// The repo the pull request is in.
+        repo: Box<Repository>,
+        /// Its number.
+        number: u64,
+    },
+    /// [`Github::request_reviewers`].
+    RequestReviewers {
+        /// The repo the pull request is in.
+        repo: Box<Repository>,
+        /// Its number.
+        number: u64,
+        /// The logins asked to review.
+        reviewers: Vec<String>,
+    },
+    /// [`Github::update_pull_request`].
+    UpdatePullRequest {
+        /// The repo the pull request is in.
+        repo: Box<Repository>,
+        /// Its number.
+        number: u64,
+        /// The new title and body, and its base.
+        update: PullRequestUpdate,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repo the issue is in.
@@ -408,6 +435,14 @@ pub enum GithubResponse {
     RerunWorkflow(Result<(), GhError>),
     /// [`Github::workflow_run`], boxed to keep this enum small.
     WorkflowRun(Result<Box<WorkflowRun>, GhError>),
+    /// [`Github::collaborators`]: their logins.
+    Collaborators(Result<Vec<String>, GhError>),
+    /// [`Github::requested_reviewers`]: their logins.
+    RequestedReviewers(Result<Vec<String>, GhError>),
+    /// [`Github::request_reviewers`].
+    RequestReviewers(Result<(), GhError>),
+    /// [`Github::update_pull_request`].
+    UpdatePullRequest(Result<(), GhError>),
 }
 
 impl GithubRequest {
@@ -518,6 +553,18 @@ impl GithubRequest {
             }),
             GithubRequest::WorkflowRun { repo, run_id } => {
                 GithubResponse::WorkflowRun(gh.workflow_run(&repo, run_id).await.map(Box::new))
+            }
+            GithubRequest::Collaborators(repo) => GithubResponse::Collaborators(gh.collaborators(&repo).await),
+            GithubRequest::RequestedReviewers { repo, number } => {
+                GithubResponse::RequestedReviewers(gh.requested_reviewers(&repo, number).await)
+            }
+            GithubRequest::RequestReviewers {
+                repo,
+                number,
+                reviewers,
+            } => GithubResponse::RequestReviewers(gh.request_reviewers(&repo, number, &reviewers).await),
+            GithubRequest::UpdatePullRequest { repo, number, update } => {
+                GithubResponse::UpdatePullRequest(gh.update_pull_request(&repo, number, &update).await)
             }
         }
     }

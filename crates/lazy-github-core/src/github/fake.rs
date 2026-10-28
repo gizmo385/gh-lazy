@@ -9,7 +9,7 @@ use serde::de::Error as _;
 
 use super::{
     DiffFetchError, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue, NewPullRequest,
-    NewReview, PageQuery, RepoListQuery,
+    NewReview, PageQuery, PullRequestUpdate, RepoListQuery,
 };
 use crate::gh::GhError;
 use crate::models::{
@@ -21,7 +21,7 @@ use crate::models::{
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` and `pull_request_uncached` fail with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` and `pull_request_uncached` fail with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, `collaborators` and `requested_reviewers` return none, `request_reviewers` and `update_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -216,6 +216,33 @@ pub enum GithubCall {
     RerunFailedJobs(u64),
     /// [`Github::workflow_run`], with the run's id.
     WorkflowRun(u64),
+    /// [`Github::collaborators`], with the repository's full name.
+    Collaborators(String),
+    /// [`Github::requested_reviewers`].
+    RequestedReviewers {
+        /// The repository's full name.
+        full_name: String,
+        /// The pull request's number.
+        number: u64,
+    },
+    /// [`Github::request_reviewers`].
+    RequestReviewers {
+        /// The repository's full name.
+        full_name: String,
+        /// The pull request's number.
+        number: u64,
+        /// The logins sent.
+        reviewers: Vec<String>,
+    },
+    /// [`Github::update_pull_request`].
+    UpdatePullRequest {
+        /// The repository's full name.
+        full_name: String,
+        /// The pull request's number.
+        number: u64,
+        /// What was sent.
+        update: PullRequestUpdate,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repository's full name.
@@ -293,6 +320,14 @@ struct State {
     reruns: HashMap<(u64, bool), Result<(), GhError>>,
     /// Keyed by run id.
     workflow_runs: HashMap<u64, Result<WorkflowRun, GhError>>,
+    /// Keyed by `full_name`.
+    collaborators: HashMap<String, Result<Vec<String>, GhError>>,
+    /// Keyed by `full_name` and pull request number.
+    requested_reviewers: HashMap<(String, u64), Result<Vec<String>, GhError>>,
+    /// What `request_reviewers` returns, by pull request number; numbers not set fail with a 422.
+    review_requests: HashMap<u64, Result<(), GhError>>,
+    /// What `update_pull_request` returns, by pull request number; numbers not set fail with a 422.
+    pull_request_updates: HashMap<u64, Result<(), GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -590,6 +625,39 @@ impl FakeGithub {
     #[must_use]
     pub fn with_workflow_run(self, run_id: u64, run: Result<WorkflowRun, GhError>) -> Self {
         self.lock().workflow_runs.insert(run_id, run);
+        self
+    }
+
+    /// `collaborators` returns `logins` for the repository named `full_name`. Repositories not set have none.
+    #[must_use]
+    pub fn with_collaborators(self, full_name: &str, logins: Result<Vec<String>, GhError>) -> Self {
+        self.lock().collaborators.insert(full_name.to_owned(), logins);
+        self
+    }
+
+    /// `requested_reviewers` returns `logins` for pull request `number` of the repository named `full_name`. Pull
+    /// requests not set have none.
+    #[must_use]
+    pub fn with_requested_reviewers(self, full_name: &str, number: u64, logins: Result<Vec<String>, GhError>) -> Self {
+        self.lock()
+            .requested_reviewers
+            .insert((full_name.to_owned(), number), logins);
+        self
+    }
+
+    /// `request_reviewers` returns `result` for pull request `number`, whatever the repo and the logins sent. Other
+    /// numbers fail with a 422.
+    #[must_use]
+    pub fn with_review_request(self, number: u64, result: Result<(), GhError>) -> Self {
+        self.lock().review_requests.insert(number, result);
+        self
+    }
+
+    /// `update_pull_request` returns `result` for pull request `number`, whatever the repo and the update sent. Other
+    /// numbers fail with a 422.
+    #[must_use]
+    pub fn with_pull_request_update(self, number: u64, result: Result<(), GhError>) -> Self {
+        self.lock().pull_request_updates.insert(number, result);
         self
     }
 
@@ -1091,6 +1159,48 @@ impl Github for FakeGithub {
         .await
     }
 
+    async fn collaborators(&self, repo: &Repository) -> Result<Vec<String>, GhError> {
+        self.respond(GithubCall::Collaborators(repo.full_name.clone()), |state| {
+            canned_page(state.collaborators.get(&repo.full_name))
+        })
+        .await
+    }
+
+    async fn requested_reviewers(&self, repo: &Repository, number: u64) -> Result<Vec<String>, GhError> {
+        let key = (repo.full_name.clone(), number);
+        let call = GithubCall::RequestedReviewers {
+            full_name: repo.full_name.clone(),
+            number,
+        };
+        self.respond(call, |state| canned_page(state.requested_reviewers.get(&key)))
+            .await
+    }
+
+    async fn request_reviewers(&self, repo: &Repository, number: u64, reviewers: &[String]) -> Result<(), GhError> {
+        let call = GithubCall::RequestReviewers {
+            full_name: repo.full_name.clone(),
+            number,
+            reviewers: reviewers.to_vec(),
+        };
+        self.respond(call, |state| canned_write(state.review_requests.get(&number)))
+            .await
+    }
+
+    async fn update_pull_request(
+        &self,
+        repo: &Repository,
+        number: u64,
+        update: &PullRequestUpdate,
+    ) -> Result<(), GhError> {
+        let call = GithubCall::UpdatePullRequest {
+            full_name: repo.full_name.clone(),
+            number,
+            update: update.clone(),
+        };
+        self.respond(call, |state| canned_write(state.pull_request_updates.get(&number)))
+            .await
+    }
+
     async fn update_issue(&self, repo: &Repository, number: u64, update: &IssueUpdate) -> Result<Issue, GhError> {
         let call = GithubCall::UpdateIssue {
             full_name: repo.full_name.clone(),
@@ -1117,6 +1227,15 @@ fn duplicate_diff_error(error: &DiffFetchError) -> DiffFetchError {
         DiffFetchError::TooLarge => DiffFetchError::TooLarge,
         DiffFetchError::Http(status) => DiffFetchError::Http(*status),
         DiffFetchError::Gh(error) => DiffFetchError::Gh(duplicate(error)),
+    }
+}
+
+/// A canned write's result, or a 422 when none was set.
+fn canned_write(result: Option<&Result<(), GhError>>) -> Result<(), GhError> {
+    match result {
+        Some(Ok(())) => Ok(()),
+        Some(Err(error)) => Err(duplicate(error)),
+        None => Err(unprocessable()),
     }
 }
 
@@ -1782,6 +1901,65 @@ mod tests {
         assert_eq!(
             github.calls()[..2],
             [GithubCall::RerunFailedJobs(42), GithubCall::RerunWorkflowRun(42)]
+        );
+    }
+
+    #[tokio::test]
+    async fn reviewer_reads_and_writes_answer_their_canned_results_and_record_the_calls() {
+        let update = PullRequestUpdate {
+            title: "T".into(),
+            body: "B".into(),
+            base: "main".into(),
+        };
+        let github = FakeGithub::new()
+            .with_collaborators("octocat/a", Ok(vec!["octocat".into(), "friend".into()]))
+            .with_requested_reviewers("octocat/a", 5, Ok(vec!["friend".into()]))
+            .with_requested_reviewers("octocat/a", 4, Err(GhError::NotInstalled))
+            .with_review_request(5, Ok(()))
+            .with_pull_request_update(5, Ok(()));
+        assert_eq!(github.collaborators(&repo("a")).await.unwrap(), ["octocat", "friend"]);
+        assert!(github.collaborators(&repo("b")).await.unwrap().is_empty());
+        assert_eq!(github.requested_reviewers(&repo("a"), 5).await.unwrap(), ["friend"]);
+        assert!(github.requested_reviewers(&repo("a"), 4).await.is_err());
+        assert!(
+            github
+                .request_reviewers(&repo("a"), 5, &["friend".into()])
+                .await
+                .is_ok()
+        );
+        assert!(matches!(
+            github.request_reviewers(&repo("a"), 4, &[]).await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        assert!(github.update_pull_request(&repo("a"), 5, &update).await.is_ok());
+        assert!(matches!(
+            github.update_pull_request(&repo("a"), 4, &update).await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        let calls = github.calls();
+        assert_eq!(calls[0], GithubCall::Collaborators("octocat/a".into()));
+        assert_eq!(
+            calls[2],
+            GithubCall::RequestedReviewers {
+                full_name: "octocat/a".into(),
+                number: 5
+            }
+        );
+        assert_eq!(
+            calls[4],
+            GithubCall::RequestReviewers {
+                full_name: "octocat/a".into(),
+                number: 5,
+                reviewers: vec!["friend".into()]
+            }
+        );
+        assert_eq!(
+            calls[6],
+            GithubCall::UpdatePullRequest {
+                full_name: "octocat/a".into(),
+                number: 5,
+                update
+            }
         );
     }
 

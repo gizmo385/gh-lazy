@@ -105,6 +105,11 @@ impl ScrollView {
         self.offset = offset.min(self.max_offset());
     }
 
+    /// Scrolls to `offset`, clamped to the last draw's size.
+    pub fn scroll_to(&mut self, offset: usize) {
+        self.offset = offset.min(self.max_offset());
+    }
+
     /// A wheel notch, as many rows as the command log's.
     pub fn wheel(&mut self, wheel: Wheel) {
         self.offset = match wheel {

@@ -425,9 +425,9 @@ fn the_chain_follows_focus() {
 
 #[test]
 fn bindings_not_built_yet_are_consumed() {
-    // `P` on the selections pane, `f` on the screen: no effect, and nothing quits.
+    // `f` and `ctrl+v` on the screen: no effect, and nothing quits.
     let mut app = TestApp::new(Config::default());
-    app.press(&["P", "f", "ctrl+v"]);
+    app.press(&["f", "ctrl+v"]);
     assert_eq!(app.effects(), []);
     // ctrl+c still reaches `help_quit` past the screen's copy binding.
     app.press(&["ctrl+c"]);

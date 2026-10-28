@@ -20,7 +20,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.issue-new` | `issue.new` | `I` | New Issue | selections pane | M3 | in progress | #181, #258 | |
 | `keybindings.issue-edit` | `issue.edit` | `E` | Edit Issue | issues table, Issue Overview | M3 | in progress | #181, #259 | |
 | `keybindings.issue-lookup` | `issue.lookup` | `O` | Lookup Issue | issues table | M2 | parity | #247 | |
-| `keybindings.pull-request-new` | `pull_request.new` | `P` | New PR | selections pane | M3 | not started | #278 | |
+| `keybindings.pull-request-new` | `pull_request.new` | `P` | New PR | selections pane | M3 | in progress | #278 | |
 | `keybindings.pull-request-merge` | `pull_request.merge` | `ctrl+m` | Merge PR | PR Overview | M3 | in progress | #183, #262 | TERM: `ctrl+m` sends CR, same as Enter, without the kitty protocol. Must never fire on plain Enter (Py bug B30). Scenario `pr-merge` sends it as CSI 109;5 u. |
 | `keybindings.pull-request-edit` | `pull_request.edit` | `E` | Edit PR | PR table, PR Overview | M3 | not started | #185, #283 | Scenario `pr-edit`. |
 | `keybindings.pull-request-lookup` | `pull_request.lookup` | `O` | Lookup Pull Request | PR table | M2 | parity | #238 | |

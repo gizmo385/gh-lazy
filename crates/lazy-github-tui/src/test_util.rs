@@ -50,6 +50,8 @@ pub struct TestApp {
     local_repo: Option<RepoName>,
     /// The working directory's branch, `None` for "git couldn't say".
     local_branch: Option<String>,
+    /// How git answers the branch checks and the push.
+    git: GitAnswers,
     /// The main screen's `OriginRepo` and `CurrentBranch` requests, held back at setup until
     /// [`Self::with_local_repo`] or [`Self::settle`] answers them.
     setup_git: Vec<(RequestId, GitRequest)>,
@@ -62,6 +64,28 @@ pub struct TestApp {
     effects: Vec<Effect>,
     queued: VecDeque<Effect>,
     timers: HashMap<TimerId, FakeTimer>,
+}
+
+/// How [`TestApp`] answers the git requests for a branch: by default no upstream, nothing on the remote, and a failed
+/// push.
+#[derive(Debug, Clone)]
+pub struct GitAnswers {
+    /// `HasUpstream`'s answer.
+    pub upstream: bool,
+    /// `BranchExistsOnRemote`'s answer.
+    pub on_remote: bool,
+    /// `PushBranch`'s answer.
+    pub push: Result<(), String>,
+}
+
+impl Default for GitAnswers {
+    fn default() -> Self {
+        Self {
+            upstream: false,
+            on_remote: false,
+            push: Err("no remote in tests".into()),
+        }
+    }
 }
 
 struct FakeTimer {
@@ -141,6 +165,7 @@ impl TestApp {
             gh,
             local_repo: None,
             local_branch: None,
+            git: GitAnswers::default(),
             setup_git: Vec::new(),
             setup_cache: Vec::new(),
             cache_files: HashMap::new(),
@@ -326,6 +351,13 @@ impl TestApp {
         self
     }
 
+    /// This app with git answering the branch checks and the push from `answers`.
+    #[must_use]
+    pub fn with_git_answers(mut self, answers: GitAnswers) -> Self {
+        self.git = answers;
+        self
+    }
+
     /// [`Self::with_local_repo`] on a borrowed app.
     pub fn set_local_repo(&mut self, repo: Option<RepoName>) {
         self.local_repo = repo;
@@ -336,11 +368,10 @@ impl TestApp {
     fn answer_git(&self, request: &GitRequest) -> GitResponse {
         match request {
             GitRequest::OriginRepo => GitResponse::OriginRepo(self.local_repo.clone()),
-            // Nothing on a remote.
             GitRequest::CurrentBranch => GitResponse::CurrentBranch(self.local_branch.clone()),
-            GitRequest::HasUpstream { .. } => GitResponse::HasUpstream(false),
-            GitRequest::BranchExistsOnRemote { .. } => GitResponse::BranchExistsOnRemote(false),
-            GitRequest::PushBranch { .. } => GitResponse::PushBranch(Err("no remote in tests".into())),
+            GitRequest::HasUpstream { .. } => GitResponse::HasUpstream(self.git.upstream),
+            GitRequest::BranchExistsOnRemote { .. } => GitResponse::BranchExistsOnRemote(self.git.on_remote),
+            GitRequest::PushBranch { .. } => GitResponse::PushBranch(self.git.push.clone()),
         }
     }
 

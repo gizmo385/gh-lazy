@@ -33,7 +33,7 @@ use crate::components::switch::SWITCH_BINDINGS;
 use crate::components::table::TABLE_BINDINGS;
 use crate::components::text_editor::TEXT_EDITOR_BINDINGS;
 use crate::components::text_input::INPUT_BINDINGS;
-use crate::effect::{GithubResponse, RequestId};
+use crate::effect::{GitResponse, GithubResponse, RequestId};
 use crate::keymap::BindingId;
 use crate::theme::{Palette, ThemeColor};
 
@@ -46,7 +46,10 @@ pub use frame::{DIM_FACTOR, DialogFrame, default_border, dim, frame_rect, frame_
 pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup, number};
 pub use new_comment::{NewCommentAction, NewCommentDialog, PostedComment, ReplyTarget};
 pub use new_issue::{NewIssueAction, NewIssueDialog};
-pub use pull_request::{ReviewersField, ReviewersFocus, ReviewersOutcome, removing_toast};
+pub use pull_request::{
+    CreatePrefill, PullRequestAction, PullRequestDialog, PullRequestForm, ReviewersField, ReviewersFocus,
+    ReviewersOutcome, removing_toast,
+};
 pub use stack::ModalEntry;
 pub use trigger_workflow::{TriggerWorkflowAction, TriggerWorkflowDialog};
 pub use user_profile::{UserProfileAction, UserProfileDialog};
@@ -100,6 +103,8 @@ pub enum ModalKind {
     AddReaction,
     /// [`TriggerWorkflowDialog`]: a workflow to dispatch, and the branch.
     TriggerWorkflow,
+    /// [`PullRequestDialog`]: Create PR.
+    PullRequest,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -171,6 +176,8 @@ pub enum DialogAction {
     AddReaction(AddReactionAction),
     /// [`TriggerWorkflowDialog`]'s.
     TriggerWorkflow(TriggerWorkflowAction),
+    /// [`PullRequestDialog`]'s.
+    PullRequest(PullRequestAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -188,6 +195,7 @@ impl DialogAction {
             DialogAction::AddComment(_) => ModalKind::AddComment,
             DialogAction::AddReaction(_) => ModalKind::AddReaction,
             DialogAction::TriggerWorkflow(_) => ModalKind::TriggerWorkflow,
+            DialogAction::PullRequest(_) => ModalKind::PullRequest,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }
@@ -287,6 +295,11 @@ pub trait Dialog: Component + Send + 'static {
 
     /// Takes a response to one of the dialog's requests, and hands back any other.
     fn on_response(&mut self, _id: RequestId, response: GithubResponse, _cx: &mut Cx<'_>) -> Option<GithubResponse> {
+        Some(response)
+    }
+
+    /// Takes the answer to one of the dialog's git requests ([`Cx::git`]), and hands back any other.
+    fn on_git_response(&mut self, _id: RequestId, response: GitResponse, _cx: &mut Cx<'_>) -> Option<GitResponse> {
         Some(response)
     }
 }

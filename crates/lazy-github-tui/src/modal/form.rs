@@ -259,6 +259,31 @@ impl FormScroll {
         self.view.reveal(usize::from(rows.start)..usize::from(rows.end));
     }
 
+    /// Textual's scroll when focus moves to a field (`Screen.set_focus`): nothing while the field's `rows` are all in
+    /// view; otherwise its rows with their margins, `with_margin`, are centered in the area (`scroll_to_center`), as
+    /// far as the content allows, keeping their first row in view (`origin_visible`).
+    pub fn center(&mut self, rows: Range<u16>, with_margin: Range<u16>) {
+        let offset = self.view.offset();
+        let (_, window) = self.view.last_size();
+        let in_view = offset..offset + window;
+        if in_view.contains(&usize::from(rows.start)) && usize::from(rows.end) <= in_view.end {
+            return;
+        }
+        // `Region.center` and the `int(... + 0.5)` of `scroll_to_region`, which truncates toward zero.
+        let middle = f64::from(with_margin.start) + f64::from(with_margin.end - with_margin.start) / 2.0;
+        #[allow(clippy::cast_precision_loss)] // offsets and windows are screen-sized
+        let window_middle = offset as f64 + (window / 2) as f64;
+        #[allow(clippy::cast_possible_truncation)] // a difference of screen-sized rows
+        let delta = (middle - window_middle + 0.5).trunc() as i64;
+        let target = i64::try_from(offset).unwrap_or(i64::MAX).saturating_add(delta).max(0);
+        self.view.scroll_to(usize::try_from(target).unwrap_or(0));
+        let start = usize::from(with_margin.start);
+        let offset = self.view.offset();
+        if !(offset..offset + window).contains(&start) {
+            self.view.scroll_to(start);
+        }
+    }
+
     /// A scroll key while the area has focus.
     pub fn scroll(&mut self, scroll: Scroll) {
         self.view.scroll(scroll);
@@ -316,6 +341,31 @@ mod tests {
         let (scroll, buttons) = split(Rect::new(1, 4, 98, 21), 3);
         assert_eq!(scroll.height, 16);
         assert_eq!(buttons, Rect::new(1, 21, 98, 3));
+    }
+
+    #[test]
+    fn focus_centers_a_field_out_of_view_and_keeps_its_top_in_view() {
+        let theme = Theme::default();
+        let mut form = FormScroll::default();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 160, 48));
+        // Create PR at 160x48: 59 rows of content in a 32-row area.
+        form.render(&mut buf, Rect::new(31, 8, 96, 32), &theme, Style::new(), 59, |_, _| {});
+        // In view already: no scroll.
+        form.center(12..15, 12..16);
+        assert_eq!(form.offset(), 0);
+        // The buttons' block, centered, clamped to the end.
+        form.center(55..58, 54..59);
+        assert_eq!(form.offset(), 27);
+        // The title, centered, clamped to the top (Textual's `scroll_to_center`, not a minimal scroll).
+        form.center(12..15, 12..16);
+        assert_eq!(form.offset(), 0);
+        // The editor from the end: its middle (32.5) to the window's (offset + 16), `int(x + 0.5)`.
+        form.center(55..58, 54..59);
+        form.center(17..47, 17..48);
+        assert_eq!(form.offset(), 17);
+        // A field taller than the area keeps its top row in view.
+        form.center(0..59, 0..59);
+        assert_eq!(form.offset(), 0);
     }
 
     #[test]

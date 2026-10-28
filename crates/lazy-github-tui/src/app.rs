@@ -676,8 +676,16 @@ impl App {
     }
 
     /// Hands a git response to whatever is waiting for it: the current-directory repo and branch are kept for every
-    /// component, and the main screen may select the repo.
-    fn route_git(&mut self, id: RequestId, response: GitResponse, out: &mut Outbox) {
+    /// component, and the main screen may select the repo. Any other answer goes to the open dialogs, top first.
+    fn route_git(&mut self, id: RequestId, mut response: GitResponse, out: &mut Outbox) {
+        if self.local_repo_request != Some(id) && self.current_branch_request != Some(id) {
+            for entry in self.modals.iter_mut().rev() {
+                let Some(unclaimed) = entry.on_git_response(id, response, &mut Cx::new(&mut self.shared, out)) else {
+                    return;
+                };
+                response = unclaimed;
+            }
+        }
         match response {
             GitResponse::OriginRepo(repo) if self.local_repo_request == Some(id) => {
                 self.local_repo_request = None;

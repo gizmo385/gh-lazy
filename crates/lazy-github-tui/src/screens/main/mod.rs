@@ -8,6 +8,7 @@ mod issue_lookup;
 mod issues;
 pub mod layout;
 mod list;
+mod new_pull_request;
 mod overview_text;
 mod pr_details;
 mod pr_lookup;
@@ -307,6 +308,8 @@ pub enum MainAction {
     NewIssue,
     /// The New issue dialog created an issue: it goes into the Issues table and opens. A closed dialog sends nothing.
     IssueCreated(Box<Issue>),
+    /// Open Create PR (`pull_request.new`), or toast without a selected repo.
+    NewPullRequest,
     /// Open the Edit issue dialog (`issue.edit`) for the issue under the Issues table's cursor or the one the Overview
     /// shows, or toast without one.
     EditIssue(EditOrigin),
@@ -1126,6 +1129,7 @@ impl MainScreen {
                 Some(Action::Main(MainAction::ViewProfile(ProfileOrigin::Issues)))
             }
             Owner::SelectionsPane if id == BindingId::IssueNew => Some(Action::Main(MainAction::NewIssue)),
+            Owner::SelectionsPane if id == BindingId::PullRequestNew => Some(Action::Main(MainAction::NewPullRequest)),
             Owner::Section(SectionId::Workflows) if id == BindingId::WorkflowsTrigger => {
                 Some(Action::Main(MainAction::TriggerWorkflow))
             }
@@ -1379,6 +1383,7 @@ impl Component for MainScreen {
                 cx.dispatch(Action::Main(MainAction::OpenIssue(Box::new(issue))));
             }
             MainAction::NewIssue => new_issue(cx),
+            MainAction::NewPullRequest => new_pull_request::new_pull_request(cx),
             MainAction::EditIssue(origin) => self.edit_issue(origin, cx),
             // Python's `add_item` of the updated issue: the row is replaced in place, the cursor and focus stay.
             MainAction::IssueUpdated(issue) => self.issue_lists.upsert_issue(*issue, cx),

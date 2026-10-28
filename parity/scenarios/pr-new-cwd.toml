@@ -2,7 +2,7 @@ version = 1
 description = "Create PR modal (P) launched in a clone of the selected repo, on a branch with no upstream: Compare prefilled with the local branch and the no-upstream warning; escape closes"
 # The origin is SSH so both apps pick up the current-directory repo (Py bug B5). Nothing is submitted: a failed create
 # would run git ls-remote against the real origin. The push prompt with a local remote is pr-new-push (#184).
-gate = false
+gate = true
 parity_rows = [
     "modals.create-pr-branches",
     "modals.create-pr-upstream-warning",

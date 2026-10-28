@@ -9,7 +9,7 @@ use ratatui::layout::Rect;
 use super::{Dialog, DialogAction, FocusMove, ModalKind};
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Cx, Owner, RenderCx, ScreenKind};
-use crate::effect::{GithubResponse, RequestId};
+use crate::effect::{GitResponse, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::{Palette, ThemeColor};
 
@@ -121,6 +121,15 @@ impl ModalEntry {
         self.dialog.on_response(id, response, cx)
     }
 
+    pub(crate) fn on_git_response(
+        &mut self,
+        id: RequestId,
+        response: GitResponse,
+        cx: &mut Cx<'_>,
+    ) -> Option<GitResponse> {
+        self.dialog.on_git_response(id, response, cx)
+    }
+
     pub(crate) fn frame(&self, area: Rect) -> Rect {
         self.dialog.frame(area)
     }
@@ -179,6 +188,7 @@ trait AnyDialog: Send {
     fn handle_paste(&mut self, text: &str, cx: &Cx<'_>) -> Option<Action>;
     fn update(&mut self, action: DialogAction, cx: &mut Cx<'_>);
     fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse>;
+    fn on_git_response(&mut self, id: RequestId, response: GitResponse, cx: &mut Cx<'_>) -> Option<GitResponse>;
     fn frame(&self, area: Rect) -> Rect;
     fn background(&self, palette: &Palette) -> ThemeColor;
     fn border(&self, palette: &Palette) -> ThemeColor;
@@ -250,6 +260,10 @@ impl<D: Dialog> AnyDialog for Open<D> {
 
     fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
         self.dialog.on_response(id, response, cx)
+    }
+
+    fn on_git_response(&mut self, id: RequestId, response: GitResponse, cx: &mut Cx<'_>) -> Option<GitResponse> {
+        self.dialog.on_git_response(id, response, cx)
     }
 
     fn frame(&self, area: Rect) -> Rect {

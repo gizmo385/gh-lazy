@@ -669,15 +669,122 @@ async fn the_chain_has_the_unread_pane_only_on_unread() {
     );
 }
 
+// Enter.
+
+impl Harness {
+    /// Like [`Self::loaded`], with `notifications.mark_notification_as_read_when_selected` set to `mark`.
+    async fn loaded_marking(gh: FakeGithub, mark: bool) -> Self {
+        let mut config = Config::default();
+        config.notifications.mark_notification_as_read_when_selected = mark;
+        let mut app = TestApp::new(config);
+        let seen = app.effects().len();
+        let dialog = app.with_cx(NotificationsDialog::new);
+        let mut harness = Self { app, gh, dialog, seen };
+        harness.settle().await;
+        harness
+    }
+
+    /// `common.table.select` on the focused table's cursor row.
+    fn select(&mut self) -> Option<Action> {
+        self.field_binding(FieldKind::Table, BindingId::TableSelect)
+    }
+
+    /// The thread the dialog closed with, if it closed.
+    #[allow(clippy::option_option)]
+    fn chosen(&mut self) -> Option<Option<u64>> {
+        self.dialog
+            .take_output()
+            .map(|chosen| chosen.map(|notification| notification.id))
+    }
+
+    /// The marks asked for since the last settle (a cursor move may ask for a page too).
+    fn requests(&self) -> Vec<GithubRequest> {
+        self.pending()
+            .into_iter()
+            .map(|(_, request)| request)
+            .filter(|request| !matches!(request, GithubRequest::ListNotifications(_)))
+            .collect()
+    }
+}
+
 #[tokio::test]
-async fn enter_on_a_row_does_nothing_yet() {
+async fn enter_on_an_unread_thread_marks_it_read_before_closing() {
     let mut harness = Harness::loaded(github()).await;
-    assert!(matches!(
-        harness.field_binding(FieldKind::Table, BindingId::TableSelect),
-        Some(Action::Consumed)
-    ));
-    assert!(harness.dialog.output.is_none());
-    assert_eq!(harness.pending(), []);
+    assert!(matches!(harness.select(), Some(Action::Consumed)));
+    assert_eq!(harness.requests(), [GithubRequest::MarkNotificationRead(9_100_001)]);
+    // Open until GitHub answers; another select meanwhile is ignored.
+    assert_eq!(harness.chosen(), None);
+    harness.field_binding(FieldKind::Table, BindingId::TableCursorDown);
+    harness.select();
+    assert_eq!(harness.requests(), [GithubRequest::MarkNotificationRead(9_100_001)]);
+    harness.settle().await;
+    assert_eq!(harness.chosen(), Some(Some(9_100_001)));
+    assert_eq!(harness.toasts(), []);
+}
+
+#[tokio::test]
+async fn with_the_setting_off_enter_closes_at_once() {
+    let mut harness = Harness::loaded_marking(github(), false).await;
+    harness.select();
+    assert_eq!(harness.chosen(), Some(Some(9_100_001)));
+    assert_eq!(harness.requests(), []);
+}
+
+#[tokio::test]
+async fn enter_on_a_read_thread_closes_at_once() {
+    let mut harness = Harness::loaded(github()).await;
+    harness.binding(BindingId::NotificationsViewRead);
+    harness.field_binding(FieldKind::Table, BindingId::TableCursorDown);
+    harness.select();
+    assert_eq!(harness.chosen(), Some(Some(9_100_005)));
+    assert_eq!(harness.requests(), []);
+}
+
+#[tokio::test]
+async fn a_thread_r_moved_to_read_is_marked_again() {
+    let mut harness = Harness::loaded(github()).await;
+    harness.binding(BindingId::NotificationsMarkRead);
+    harness.settle().await;
+    harness.binding(BindingId::NotificationsViewRead);
+    assert_eq!(harness.ids(NotificationsTab::Read)[0], 9_100_001);
+    harness.select();
+    // Python never flips `unread`, so it's marked once more.
+    assert_eq!(harness.requests(), [GithubRequest::MarkNotificationRead(9_100_001)]);
+    harness.settle().await;
+    assert_eq!(harness.chosen(), Some(Some(9_100_001)));
+}
+
+#[tokio::test]
+async fn a_failed_mark_on_select_opens_anyway_and_only_logs() {
+    let logs = LogCapture::start();
+    let mut harness = Harness::loaded(github().with_notification_read(9_100_001, Err(failure()))).await;
+    harness.select();
+    harness.settle().await;
+    assert_eq!(harness.chosen(), Some(Some(9_100_001)));
+    assert_eq!(harness.toasts(), []);
+    assert!(
+        logs.text().contains(&format!("ERROR {MARK_FAILED}\n")),
+        "{}",
+        logs.text()
+    );
+}
+
+#[tokio::test]
+async fn closing_while_the_mark_is_out_chooses_nothing() {
+    let mut harness = Harness::loaded(github()).await;
+    harness.select();
+    harness.binding(BindingId::ModalClose);
+    assert_eq!(harness.chosen(), Some(None));
+}
+
+#[tokio::test]
+async fn enter_on_an_empty_table_does_nothing() {
+    let read: Vec<Notification> = all_six().into_iter().filter(|n| !n.unread).collect();
+    let mut harness = Harness::loaded(FakeGithub::new().with_notification_page(query(true, 1), Ok(read))).await;
+    harness.binding(BindingId::NotificationsViewUnread);
+    harness.select();
+    assert_eq!(harness.chosen(), None);
+    assert_eq!(harness.requests(), []);
 }
 
 // Through the app.
@@ -832,8 +939,8 @@ async fn a_click_on_a_tab_label_focuses_the_strip_and_shows_the_tab() {
     assert_eq!(footer(&mut app), CONTAINER_FOOTER);
     let screen = app.screen(160, 48);
     assert!(screen.contains("v1.0.0") && !screen.contains("Typo in the install docs"));
-    // A click on a row focuses the table again.
-    app.click(30, 13);
+    // A click on a row focuses the table again (one off the cursor's row, which would choose it).
+    app.click(30, 14);
     assert_eq!(footer(&mut app), READ_FOOTER);
 }
 

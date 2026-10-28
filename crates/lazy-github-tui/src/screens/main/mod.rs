@@ -292,7 +292,21 @@ struct PendingPullRequest {
     id: RequestId,
     /// Whether the tab strip takes focus once it shows.
     focus: bool,
+    origin: PullRequestOrigin,
 }
+
+/// What asked for a pending pull request, which decides what its answer toasts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PullRequestOrigin {
+    /// A table row, or a just-merged pull request: a failure is "Error fetching pull request!".
+    Selection,
+    /// A chosen notification's subject: either way a toast says what opened, and a failure opens only the repo.
+    Notification,
+}
+
+/// The toasts after a chosen notification opens: Python's `action_view_notifications`.
+const OPENING_PULL_REQUEST: &str = "Opening pull request for notification";
+const OPENING_REPOSITORY: &str = "Opening repository for notification";
 
 /// The main screen's own actions.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -327,9 +341,13 @@ pub enum MainAction {
     ProfilePicked(ProfileOrigin, Option<Box<Repository>>),
     /// Open the Notifications modal (`notifications.open`, only while notifications are on).
     OpenNotifications,
-    /// The Notifications modal closed, with the notification chosen there, if any (#190 chooses one). Either way the
-    /// unread count refreshes, as Python's `action_view_notifications` does once the modal returns.
+    /// The Notifications modal closed, with the notification chosen there, if any. Either way the unread count
+    /// refreshes, as Python's `action_view_notifications` does once the modal returns; a chosen one's repo is then
+    /// selected and its subject opened.
     NotificationsClosed(Option<Box<Notification>>),
+    /// Open a chosen notification's subject, its repo already selected: a pull request is fetched from that repo and
+    /// shown; anything else just toasts that the repo opened.
+    OpenNotificationSubject(Box<Notification>),
     /// Open the New issue dialog (`issue.new`), or toast without a selected repo.
     NewIssue,
     /// The New issue dialog created an issue: it goes into the Issues table and opens. A closed dialog sends nothing.
@@ -538,17 +556,45 @@ impl MainScreen {
                     repo: Box::new(pr.issue.repo),
                     number: pr.issue.number,
                 });
-                self.pending_pr = Some(PendingPullRequest { id, focus });
+                self.pending_pr = Some(PendingPullRequest {
+                    id,
+                    focus,
+                    origin: PullRequestOrigin::Selection,
+                });
             }
             PullRequestTarget::Uncached(pr) => {
                 let id = cx.request(GithubRequest::PullRequestUncached {
                     repo: Box::new(pr.issue.repo),
                     number: pr.issue.number,
                 });
-                self.pending_pr = Some(PendingPullRequest { id, focus });
+                self.pending_pr = Some(PendingPullRequest {
+                    id,
+                    focus,
+                    origin: PullRequestOrigin::Selection,
+                });
             }
             PullRequestTarget::Full(pr) => self.show_pull_request(*pr, focus, cx),
         }
+    }
+
+    /// `MainAction::OpenNotificationSubject`: Python's `extract_notification_subject`. A pull request subject is
+    /// fetched by its number from the notification's repository (not the URL's owner and repo, as in Python), as a
+    /// selection that a newer one replaces.
+    fn open_notification_subject(&mut self, notification: &Notification, cx: &mut Cx<'_>) {
+        let Some(number) = notification.subject.pull_request_number() else {
+            cx.notify(Toast::info(OPENING_REPOSITORY));
+            return;
+        };
+        self.cancel_pending_selection(cx);
+        let id = cx.request(GithubRequest::PullRequest {
+            repo: Box::new(notification.repository.clone()),
+            number,
+        });
+        self.pending_pr = Some(PendingPullRequest {
+            id,
+            focus: true,
+            origin: PullRequestOrigin::Notification,
+        });
     }
 
     fn show_pull_request(&mut self, pr: FullPullRequest, focus: bool, cx: &mut Cx<'_>) {
@@ -630,9 +676,19 @@ impl MainScreen {
             return None;
         };
         self.pending_pr = None;
-        match result {
-            Ok(pr) => self.show_pull_request(*pr, pending.focus, cx),
-            Err(error) => pull_request_failed(&error, cx),
+        match (result, pending.origin) {
+            (Ok(pr), origin) => {
+                self.show_pull_request(*pr, pending.focus, cx);
+                if origin == PullRequestOrigin::Notification {
+                    cx.notify(Toast::info(OPENING_PULL_REQUEST));
+                }
+            }
+            (Err(error), PullRequestOrigin::Selection) => pull_request_failed(&error, cx),
+            // Python's `extract_notification_subject` swallows the failure: the repo it selected stays.
+            (Err(error), PullRequestOrigin::Notification) => {
+                tracing::debug!("Fetching the notification's pull request failed: {error}");
+                cx.notify(Toast::info(OPENING_REPOSITORY));
+            }
         }
         None
     }
@@ -1526,7 +1582,8 @@ impl Component for MainScreen {
                 cx.dispatch(Action::Main(MainAction::OpenIssue(Box::new(issue))));
             }
             MainAction::OpenNotifications => open_notifications(cx),
-            MainAction::NotificationsClosed(_) => cx.dispatch(Action::RefreshNotifications),
+            MainAction::NotificationsClosed(chosen) => notifications_closed(chosen, cx),
+            MainAction::OpenNotificationSubject(notification) => self.open_notification_subject(&notification, cx),
             MainAction::NewIssue => new_issue(cx),
             MainAction::NewPullRequest => new_pull_request::new_pull_request(cx),
             MainAction::PullRequestCreated(pr) => self.pull_request_created(pr, cx),
@@ -1639,11 +1696,25 @@ fn open_notifications(cx: &mut Cx<'_>) {
     cx.open_dialog(dialog, |chosen| Action::Main(MainAction::NotificationsClosed(chosen)));
 }
 
+/// `MainAction::NotificationsClosed`: the rest of Python's `action_view_notifications`. The count refreshes; a
+/// chosen notification's repo is then selected and its subject opened, in that order, so the repo selection cancels
+/// any pending selection before the subject's request exists.
+fn notifications_closed(chosen: Option<Box<Notification>>, cx: &mut Cx<'_>) {
+    cx.dispatch(Action::RefreshNotifications);
+    if let Some(notification) = chosen {
+        cx.dispatch(Action::SelectRepo(Box::new(notification.repository.clone())));
+        cx.dispatch(Action::Main(MainAction::OpenNotificationSubject(notification)));
+    }
+}
+
 #[cfg(test)]
 mod tests;
 
 #[cfg(test)]
 mod new_issue_tests;
+
+#[cfg(test)]
+mod notification_open_tests;
 
 #[cfg(test)]
 mod new_pull_request_tests;

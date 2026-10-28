@@ -1,6 +1,9 @@
 //! Notifications, from `GET /notifications`.
 
+use std::sync::LazyLock;
+
 use jiff::Timestamp;
+use regex::Regex;
 use serde::{Deserialize, Deserializer};
 
 use super::Repository;
@@ -40,6 +43,30 @@ pub struct NotificationSubject {
     /// The subject kind, as the API spells it: `PullRequest`, `Issue`, `Release`, `CheckSuite`, `Discussion`, ...
     #[serde(rename = "type")]
     pub kind: String,
+}
+
+/// A pull request API URL: Python's `_PULL_REQUEST_URL_REGEX`, a prefix match of a scheme, slashes and one host
+/// segment, then `/repos/<owner>/<repo>/pulls/<digits>`. Any path may come between the host and `/repos/`, so GitHub
+/// Enterprise's `/api/v3` matches too (Py bug B83's recommendation). `(?s)` and `[^/]` let a newline through as
+/// Python's pattern does; the digits are ASCII only, which is all GitHub sends.
+static PULL_REQUEST_URL: LazyLock<Regex> = LazyLock::new(|| {
+    // A literal pattern, checked by `pull_request_numbers` in the tests.
+    Regex::new(r"(?s)^[^:]+:/+[^/]+(?:/.*)?/repos/[^/]+/[^/]+/pulls/([0-9]+)")
+        .expect("a valid pull request URL pattern")
+});
+
+impl NotificationSubject {
+    /// The number of the pull request this subject is, when its URL is a pull request API URL
+    /// (`https://api.github.com/repos/<owner>/<repo>/pulls/5`, or anything after the digits). The URL's owner and repo
+    /// aren't returned: Python fetches the number from the notification's repository.
+    pub fn pull_request_number(&self) -> Option<u64> {
+        pull_request_number(self.url.as_deref()?)
+    }
+}
+
+/// The pull request number in `url`, if it's a pull request API URL (see [`NotificationSubject::pull_request_number`]).
+fn pull_request_number(url: &str) -> Option<u64> {
+    PULL_REQUEST_URL.captures(url)?.get(1)?.as_str().parse().ok()
 }
 
 /// A `u64` sent as a JSON number or as a string of digits.
@@ -155,6 +182,36 @@ mod tests {
                 "owner": {"login": "o", "id": 1, "html_url": "https://github.com/o"},
             },
         })
+    }
+
+    #[rstest::rstest]
+    #[case::github_com("https://api.github.com/repos/parity-bot/pr-details/pulls/5", Some(5))]
+    #[case::trailing_path("https://api.github.com/repos/o/r/pulls/5/files", Some(5))]
+    #[case::trailing_non_digits("https://api.github.com/repos/o/r/pulls/5abc", Some(5))]
+    #[case::many_slashes("https:///api.github.com/repos/o/r/pulls/12", Some(12))]
+    #[case::ghe("https://ghe.example.com/api/v3/repos/o/r/pulls/7", Some(7))]
+    #[case::issue("https://api.github.com/repos/o/r/issues/5", None)]
+    #[case::no_digits("https://api.github.com/repos/o/r/pulls/", None)]
+    #[case::not_a_number("https://api.github.com/repos/o/r/pulls/x", None)]
+    #[case::empty("", None)]
+    #[case::no_scheme("api.github.com/repos/o/r/pulls/5", None)]
+    #[case::no_host("https:///repos/o/r/pulls/5", None)]
+    #[case::empty_owner("https://api.github.com/repos//r/pulls/5", None)]
+    // Python's scheme is anything up to the first colon.
+    #[case::loose_scheme("see https://api.github.com/repos/o/r/pulls/5", Some(5))]
+    #[case::port("https://ghe.example.com:8443/repos/o/r/pulls/3", Some(3))]
+    #[case::too_big("https://api.github.com/repos/o/r/pulls/99999999999999999999999", None)]
+    fn pull_request_numbers(#[case] url: &str, #[case] number: Option<u64>) {
+        assert_eq!(pull_request_number(url), number);
+    }
+
+    #[test]
+    fn a_subject_without_a_url_is_no_pull_request() {
+        let mut subject: Notification = serde_json::from_value(notification(&json!(1))).unwrap();
+        assert_eq!(subject.subject.pull_request_number(), None);
+        // The owner and repo in the URL aren't the caller's: only the number comes back.
+        subject.subject.url = Some("https://api.github.com/repos/someone/else/pulls/9".to_owned());
+        assert_eq!(subject.subject.pull_request_number(), Some(9));
     }
 
     #[test]

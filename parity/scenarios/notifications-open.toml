@@ -1,6 +1,6 @@
 version = 1
 description = "Notifications: enter on a PR notification marks it read, closes, selects its repo and opens the PR; an issue, a PR that fails to load and a subject with no URL open only the repo; the count refreshes on every close"
-gate = false
+gate = true
 parity_rows = [
     "modals.notifications-select",
     "keybindings.notifications-open",

@@ -1,6 +1,8 @@
 //! The Notifications modal (`notifications.open`): the "Notifications" heading over two tabs, "•Unread" and "✓Read",
 //! each a lazily paged table of notification threads. On Unread, `R` marks the highlighted thread read and `ctrl+r`
-//! marks them all read. Python's `NotificationsModal` around a `NotificationsContainer`.
+//! marks them all read; Enter on a row in either tab chooses it, which closes the modal with it (marking it read
+//! first when `notifications.mark_notification_as_read_when_selected` says so). Python's `NotificationsModal` around
+//! a `NotificationsContainer`.
 //!
 //! One `all=true` first page fills both tabs, split by `unread`. Each tab then pages on its own from page 1 again, as
 //! Python's `current_batch` starts at 0 although the first page is already shown: Unread asks for `all=false`
@@ -117,6 +119,13 @@ pub enum NotificationsAction {
     MarkRead(u64),
     /// `notifications.mark_all_as_read`.
     MarkAllRead,
+    /// `common.table.select` (or a click on the cursor's row) on this thread in `tab`: choose it.
+    Select {
+        /// Whose table it was chosen in.
+        tab: NotificationsTab,
+        /// The thread's id.
+        thread: u64,
+    },
 }
 
 /// What has focus: Textual's focus chain of `NotificationsContainer`. The active tab's table counts its search box,
@@ -231,7 +240,7 @@ struct Areas {
     table: Rect,
 }
 
-/// The Notifications modal. Its output is the notification chosen there: always `None` until #190 adds Enter.
+/// The Notifications modal. Its output is the notification chosen there, or `None` when it closed without one.
 pub struct NotificationsDialog {
     tabs: TabStrip,
     active: NotificationsTab,
@@ -246,6 +255,9 @@ pub struct NotificationsDialog {
     marking: HashMap<RequestId, u64>,
     /// The `ctrl+r` request in flight.
     marking_all: Option<RequestId>,
+    /// The chosen notification, while its mark-on-select request is out. The modal closes with it once GitHub
+    /// answers, either way.
+    choosing: Option<(RequestId, Box<Notification>)>,
     areas: Areas,
     // `Some(None)` is a close with nothing chosen, as `take_output` hands it on.
     #[allow(clippy::option_option)]
@@ -289,6 +301,7 @@ impl NotificationsDialog {
             pages: [None, None],
             marking: HashMap::new(),
             marking_all: None,
+            choosing: None,
             areas: Areas::default(),
             output: None,
         }
@@ -370,8 +383,10 @@ impl NotificationsDialog {
     fn table_outcome(tab: NotificationsTab, handled: Handled<TableEvent<u64>>) -> Option<Action> {
         match handled {
             Handled::Ignored => None,
-            // Enter on a notification is #190's.
-            Handled::Consumed | Handled::Event(TableEvent::Selected(_)) => Some(Action::Consumed),
+            Handled::Consumed => Some(Action::Consumed),
+            Handled::Event(TableEvent::Selected(thread)) => {
+                Some(Self::action(NotificationsAction::Select { tab, thread }))
+            }
             Handled::Event(TableEvent::LoadMore { generation, page, .. }) => {
                 Some(Self::action(NotificationsAction::LoadMore { tab, generation, page }))
             }
@@ -506,6 +521,39 @@ impl NotificationsDialog {
         self.view(NotificationsTab::Read);
     }
 
+    /// Python's `handle_notification_selected`: a thread unread as fetched is marked read first when the setting
+    /// says so, and the modal stays open until GitHub answers; any other closes with it at once. A thread `R` moved
+    /// to Read still counts as unread here, as Python never flips the flag. While a mark is out, another choice is
+    /// ignored.
+    fn choose(&mut self, tab: NotificationsTab, thread: u64, cx: &mut Cx<'_>) {
+        if self.choosing.is_some() || self.output.is_some() {
+            return;
+        }
+        let Some(row) = self.table(tab).get(&thread) else {
+            return;
+        };
+        let notification = Box::new(row.0.clone());
+        if notification.unread && cx.config().notifications.mark_notification_as_read_when_selected {
+            let id = cx.request(GithubRequest::MarkNotificationRead(thread));
+            self.choosing = Some((id, notification));
+        } else {
+            self.output = Some(Some(notification));
+        }
+    }
+
+    /// The mark-on-select answered: the modal closes with the notification. A failure is only logged (Py bug B81's
+    /// recommendation for Enter): the notification opens anyway.
+    fn chosen_marked(&mut self, notification: Box<Notification>, result: Result<(), GhError>) {
+        if let Err(error) = result {
+            tracing::error!("{MARK_FAILED}");
+            tracing::debug!(
+                thread = notification.id,
+                "Marking the chosen notification read failed: {error}"
+            );
+        }
+        self.output = Some(Some(notification));
+    }
+
     /// The tab whose page `id` is.
     fn page_for(&self, id: RequestId) -> Option<(NotificationsTab, PageRequest)> {
         [NotificationsTab::Unread, NotificationsTab::Read]
@@ -627,6 +675,7 @@ impl Component for NotificationsDialog {
                     self.marking_all = Some(cx.request(GithubRequest::MarkAllNotificationsRead));
                 }
             }
+            NotificationsAction::Select { tab, thread } => self.choose(tab, thread, cx),
         }
     }
 
@@ -813,6 +862,15 @@ impl Dialog for NotificationsDialog {
             };
             self.marking.remove(&id);
             self.marked_read(thread, result, cx);
+            return None;
+        }
+        if self.choosing.as_ref().is_some_and(|(choosing, _)| *choosing == id) {
+            let GithubResponse::MarkNotificationRead(result) = response else {
+                return Some(response);
+            };
+            if let Some((_, notification)) = self.choosing.take() {
+                self.chosen_marked(notification, result);
+            }
             return None;
         }
         if self.marking_all == Some(id) {

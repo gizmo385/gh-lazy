@@ -39,7 +39,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.common-table-page-left` | `common.table.page_left` | `^` | Table page left | tables | M1 | parity | #78, #100, #158 | An earlier `H` definition is shadowed (Py bug B9). Override may be saved as `circumflex_accent`. |
 | `keybindings.common-table-scroll-top` | `common.table.scroll_top` | `g` | Table scroll to top | tables | M1 | parity | #78, #100, #158 | |
 | `keybindings.common-table-scroll-bottom` | `common.table.scroll_bottom` | `G` | Table scroll to bottom | tables | M1 | parity | #78, #100, #158 | |
-| `keybindings.workflows-trigger` | `workflows.trigger` | `T` | Trigger Workflow | workflows section | M3 | not started | #188, #264 | |
+| `keybindings.workflows-trigger` | `workflows.trigger` | `T` | Trigger Workflow | workflows section | M3 | in progress | #188, #264 | |
 | `keybindings.workflows-view-run-details` | `workflows.view_run_details` | `enter` | View Run Details | (unused) | M2 | parity | | Defined, rebindable in Settings, never bound (Py bug B9). Keybindings golden (`parity/goldens/keybindings.toml`). |
 | `keybindings.workflows-view-job-logs` | `workflows.view_job_logs` | `l` | View Job Logs | Jobs tab | M2 | parity | #243 | |
 | `keybindings.diff-add-comment` | `diff.add_comment` | `c` | Add Comment | hunk pane | M3 | in progress | #187, #272 | |

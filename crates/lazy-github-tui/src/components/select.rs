@@ -406,6 +406,10 @@ impl<T> Select<T> {
         if area.is_empty() {
             return;
         }
+        // The list covers what's below it: nothing of those cells' styles (a bold label's) carries over.
+        for position in area.positions() {
+            buf[position].reset();
+        }
         let styles = OverlayStyles::new(theme, under);
         TallBorder {
             left: styles.left,

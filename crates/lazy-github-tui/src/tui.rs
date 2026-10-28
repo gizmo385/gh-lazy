@@ -698,6 +698,22 @@ mod tests {
         ) -> Result<lazy_github_core::github::MergeResult, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }
+
+        async fn list_branches(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+        ) -> Result<Vec<lazy_github_core::models::Branch>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
+        async fn dispatch_workflow(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _workflow_id: u64,
+            _git_ref: &str,
+        ) -> Result<(), lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
     }
 
     /// Runs the loop on a `TestBackend` with `effect` already started, and returns how it ended.

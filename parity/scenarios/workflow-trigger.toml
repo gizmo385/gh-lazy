@@ -2,7 +2,7 @@ version = 1
 description = "Trigger workflow modal (T): without a repo; the Workflow select opened and Release picked; an empty branch rejected; a branch typed with its suggestion accepted with right; the dispatch sent and the success toast; q closes the modal"
 # Not exercised, because the two apps differ on purpose: Trigger with no workflow picked crashes Python (Py bug B67),
 # and a dispatch GitHub refuses still reports success in Python (Py bug B68).
-gate = false
+gate = true
 parity_rows = [
     "workflows.trigger",
     "modals.trigger-workflow",

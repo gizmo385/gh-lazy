@@ -320,6 +320,8 @@ pub enum MainAction {
     },
     /// Add Comment, opened from the PR Diff tab, closed with a comment: it joins the diff viewer's pending comments.
     DiffCommentAdded(Box<PendingComment>),
+    /// Open the Trigger workflow dialog (`workflows.trigger`), or warn why it can't.
+    TriggerWorkflow,
     /// Merge the pull request the details show (`pull_request.merge` in its Overview), or warn that it's merged.
     MergePullRequest,
     /// Add reaction, opened from the PR Overview, closed with these reactions checked, in the order they were
@@ -1107,6 +1109,9 @@ impl MainScreen {
                 Some(Action::Main(MainAction::ViewProfile(ProfileOrigin::Issues)))
             }
             Owner::SelectionsPane if id == BindingId::IssueNew => Some(Action::Main(MainAction::NewIssue)),
+            Owner::Section(SectionId::Workflows) if id == BindingId::WorkflowsTrigger => {
+                Some(Action::Main(MainAction::TriggerWorkflow))
+            }
             Owner::Section(SectionId::Issues) if id == BindingId::IssueEdit => {
                 Some(Action::Main(MainAction::EditIssue(EditOrigin::Table)))
             }
@@ -1281,6 +1286,7 @@ impl Component for MainScreen {
             MainAction::CommentClosed { posted, reply } => self.details.comment_closed(posted, reply, cx),
             MainAction::DiffCommentAdded(comment) => self.details.diff_comment_added(*comment, cx),
             MainAction::ReactionsChosen(kinds) => self.details.reactions_chosen(kinds, cx),
+            MainAction::TriggerWorkflow => self.workflows.trigger(cx),
             MainAction::MergePullRequest => {
                 if let Some(pr) = self.details.pull_request().map(pr_details::PullRequestDetails::pr) {
                     self.merges.start(pr, cx);

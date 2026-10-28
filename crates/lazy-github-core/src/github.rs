@@ -16,8 +16,9 @@ use tokio::sync::OnceCell;
 use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter, MergeMethod};
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts, Method};
 use crate::models::{
-    CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, IssueState,
-    ReactionKind, Reactions, Repository, Review, ReviewComment, ReviewState, User, Workflow, WorkflowJob, WorkflowRun,
+    Branch, CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
+    IssueState, ReactionKind, Reactions, Repository, Review, ReviewComment, ReviewState, User, Workflow, WorkflowJob,
+    WorkflowRun,
 };
 
 #[cfg(any(test, feature = "test-util"))]
@@ -296,6 +297,25 @@ pub trait Github: Clone + Send + Sync + 'static {
         number: u64,
         request: &MergeRequest,
     ) -> impl Future<Output = Result<MergeResult, GhError>> + Send;
+
+    /// The first [`DEFAULT_PER_PAGE`] branches of `repo`, in API order: `GET /repos/{owner}/{repo}/branches` with
+    /// `page=1&per_page=30`, and no later pages, as Python's `list_branches`. Cached for `cache.default_ttl`.
+    ///
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body or any branch doesn't
+    /// decode.
+    fn list_branches(&self, repo: &Repository) -> impl Future<Output = Result<Vec<Branch>, GhError>> + Send;
+
+    /// Asks GitHub to run workflow `workflow_id` of `repo` on `git_ref` (a branch name): `POST
+    /// /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches` with `{"ref": git_ref}` over stdin. GitHub
+    /// answers 204. Never cached.
+    ///
+    /// Fails on any HTTP error status (422 for a workflow without a `workflow_dispatch` trigger) or `gh` failure.
+    fn dispatch_workflow(
+        &self,
+        repo: &Repository,
+        workflow_id: u64,
+        git_ref: &str,
+    ) -> impl Future<Output = Result<(), GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -953,6 +973,28 @@ impl GhCli {
         request
     }
 
+    /// `GET /repos/{owner}/{repo}/branches`, page 1 of [`DEFAULT_PER_PAGE`], cached for the default TTL as Python's
+    /// `github_headers()` asks.
+    fn list_branches_request(&self, repo: &Repository) -> GhRequest {
+        let mut request = GhRequest::get(format!("/repos/{}/{}/branches", repo.owner.login, repo.name));
+        request.query = PageQuery::default().params();
+        request.cache = Some(self.inner.ttls.default);
+        request
+    }
+
+    /// `POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches` with `{"ref": git_ref}`.
+    fn dispatch_workflow_request(repo: &Repository, workflow_id: u64, git_ref: &str) -> GhRequest {
+        let mut request = GhRequest::new(
+            Method::Post,
+            format!(
+                "/repos/{}/{}/actions/workflows/{workflow_id}/dispatches",
+                repo.owner.login, repo.name
+            ),
+        );
+        request.body = Some(serde_json::json!({ "ref": git_ref }));
+        request
+    }
+
     /// `PUT /repos/{owner}/{repo}/pulls/{number}/merge` with `merge` as the JSON body.
     fn merge_pull_request_request(repo: &Repository, number: u64, merge: &MergeRequest) -> Result<GhRequest, GhError> {
         let mut request = GhRequest::new(
@@ -1206,6 +1248,24 @@ impl Github for GhCli {
         let request = Self::merge_pull_request_request(repo, number, request)?;
         merge_result(self.inner.runner.request(request).await)
     }
+
+    async fn list_branches(&self, repo: &Repository) -> Result<Vec<Branch>, GhError> {
+        self.inner
+            .runner
+            .request(self.list_branches_request(repo))
+            .await?
+            .json()
+    }
+
+    async fn dispatch_workflow(&self, repo: &Repository, workflow_id: u64, git_ref: &str) -> Result<(), GhError> {
+        let request = Self::dispatch_workflow_request(repo, workflow_id, git_ref);
+        dispatched(self.inner.runner.request(request).await)
+    }
+}
+
+/// Whether a dispatch went through: any 2xx (GitHub's 204) is done, and the body, if any, is ignored.
+fn dispatched(response: Result<GhResponse, GhError>) -> Result<(), GhError> {
+    response.map(drop)
 }
 
 /// What a merge request answered: GitHub's result for a 2xx, the error for anything else (a 405 or a 409).
@@ -2551,6 +2611,75 @@ mod tests {
                 &refused["response"]["body"].to_string()
             )),
             Err(GhError::Http { status: 405, .. })
+        ));
+    }
+
+    #[test]
+    fn list_branches_argv_asks_for_the_first_page_with_the_default_ttl() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        let request = gh.list_branches_request(&run_fixture_repo());
+        assert_eq!(
+            strings(request.argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--cache",
+                "600s",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/run-fixture/branches?page=1&per_page=30"
+            ]
+        );
+    }
+
+    #[test]
+    fn branches_decode_from_the_workflow_write_fixture() {
+        let response = parity_response(
+            "workflow-write",
+            "repos/parity-bot/run-fixture/branches/GET.page-1_per_page-30.json",
+        );
+        let branches: Vec<Branch> = response.json().unwrap();
+        let names: Vec<&str> = branches.iter().map(|branch| branch.name.as_str()).collect();
+        assert_eq!(names, ["main", "release", "run-details"]);
+    }
+
+    #[test]
+    fn dispatch_workflow_argv_posts_the_ref_over_stdin() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        let request = GhCli::dispatch_workflow_request(&run_fixture_repo(), 7_000_002, "release");
+        assert_eq!(
+            strings(request.argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "POST",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "--input",
+                "-",
+                "/repos/parity-bot/run-fixture/actions/workflows/7000002/dispatches"
+            ]
+        );
+        assert_eq!(request.body.unwrap().to_string(), r#"{"ref":"release"}"#);
+    }
+
+    #[test]
+    fn a_dispatch_is_done_on_a_204_and_a_422_is_an_error() {
+        let done = gh::interpret(Some(0), b"HTTP/2.0 204 No Content\r\n\r\n", b"", false);
+        assert!(dispatched(done).is_ok());
+        let refused = parity_fixture(
+            "workflow-write",
+            "repos/parity-bot/run-fixture/actions/workflows/7000001/dispatches/POST.json",
+        );
+        assert!(matches!(
+            dispatched(json_response(
+                "422 Unprocessable Entity",
+                &refused["response"]["body"].to_string()
+            )),
+            Err(GhError::Http { status: 422, .. })
         ));
     }
 

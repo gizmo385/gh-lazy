@@ -12,8 +12,8 @@ use lazy_github_core::github::{
     RepoListQuery,
 };
 use lazy_github_core::models::{
-    CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, ReactionKind,
-    Reactions, RepoName, Repository, Review, ReviewComment, User, Workflow, WorkflowJob, WorkflowRun,
+    Branch, CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
+    ReactionKind, Reactions, RepoName, Repository, Review, ReviewComment, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 /// Something the runtime does on the app's behalf.
@@ -277,6 +277,20 @@ pub enum GithubRequest {
         /// The method and the head commit.
         request: MergeRequest,
     },
+    /// [`Github::list_branches`].
+    ListBranches {
+        /// The repo whose branches to list.
+        repo: Box<Repository>,
+    },
+    /// [`Github::dispatch_workflow`].
+    DispatchWorkflow {
+        /// The repo the workflow is in.
+        repo: Box<Repository>,
+        /// The workflow's id.
+        workflow_id: u64,
+        /// The branch to run it on.
+        git_ref: String,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repo the issue is in.
@@ -349,6 +363,10 @@ pub enum GithubResponse {
     AddIssueReaction(Result<bool, GhError>),
     /// [`Github::merge_pull_request`].
     MergePullRequest(Result<MergeResult, GhError>),
+    /// [`Github::list_branches`].
+    ListBranches(Result<Vec<Branch>, GhError>),
+    /// [`Github::dispatch_workflow`].
+    DispatchWorkflow(Result<(), GhError>),
 }
 
 impl GithubRequest {
@@ -429,6 +447,12 @@ impl GithubRequest {
             GithubRequest::MergePullRequest { repo, number, request } => {
                 GithubResponse::MergePullRequest(gh.merge_pull_request(&repo, number, &request).await)
             }
+            GithubRequest::ListBranches { repo } => GithubResponse::ListBranches(gh.list_branches(&repo).await),
+            GithubRequest::DispatchWorkflow {
+                repo,
+                workflow_id,
+                git_ref,
+            } => GithubResponse::DispatchWorkflow(gh.dispatch_workflow(&repo, workflow_id, &git_ref).await),
         }
     }
 }

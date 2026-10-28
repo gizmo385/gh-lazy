@@ -13,14 +13,15 @@ use super::{
 };
 use crate::gh::GhError;
 use crate::models::{
-    CheckRun, CheckState, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
-    ReactionKind, Reactions, Repository, Review, ReviewComment, User, Workflow, WorkflowJob, WorkflowRun,
+    Branch, CheckRun, CheckState, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment,
+    IssueListItem, ReactionKind, Reactions, Repository, Review, ReviewComment, User, Workflow, WorkflowJob,
+    WorkflowRun,
 };
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction` and `merge_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request` and `dispatch_workflow` fail with a 422, `list_branches` returns none, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -182,6 +183,17 @@ pub enum GithubCall {
         /// What was sent.
         request: MergeRequest,
     },
+    /// [`Github::list_branches`], with the repository's full name.
+    ListBranches(String),
+    /// [`Github::dispatch_workflow`].
+    DispatchWorkflow {
+        /// The repository's full name.
+        full_name: String,
+        /// The workflow's id.
+        workflow_id: u64,
+        /// The branch it was asked to run on.
+        git_ref: String,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repository's full name.
@@ -249,6 +261,10 @@ struct State {
     added_reactions: HashMap<ReactionKind, Result<bool, GhError>>,
     /// What `merge_pull_request` returns, by the pull request's number; numbers not set fail with a 422.
     merges: HashMap<u64, Result<MergeResult, GhError>>,
+    /// Keyed by `full_name`.
+    branches: HashMap<String, Result<Vec<Branch>, GhError>>,
+    /// What `dispatch_workflow` returns, by workflow id and ref; pairs not set fail with a 422.
+    dispatches: HashMap<(u64, String), Result<(), GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -509,6 +525,21 @@ impl FakeGithub {
     #[must_use]
     pub fn with_merge(self, number: u64, result: Result<MergeResult, GhError>) -> Self {
         self.lock().merges.insert(number, result);
+        self
+    }
+
+    /// `list_branches` returns `branches` for the repository named `full_name`. Repositories not set have none.
+    #[must_use]
+    pub fn with_branches(self, full_name: &str, branches: Result<Vec<Branch>, GhError>) -> Self {
+        self.lock().branches.insert(full_name.to_owned(), branches);
+        self
+    }
+
+    /// `dispatch_workflow` returns `result` for workflow `workflow_id` on `git_ref`, whatever the repo. Other pairs
+    /// fail with a 422.
+    #[must_use]
+    pub fn with_dispatch(self, workflow_id: u64, git_ref: &str, result: Result<(), GhError>) -> Self {
+        self.lock().dispatches.insert((workflow_id, git_ref.to_owned()), result);
         self
     }
 
@@ -931,6 +962,28 @@ impl Github for FakeGithub {
         };
         self.respond(call, |state| match state.merges.get(&number) {
             Some(Ok(result)) => Ok(result.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Err(unprocessable()),
+        })
+        .await
+    }
+
+    async fn list_branches(&self, repo: &Repository) -> Result<Vec<Branch>, GhError> {
+        self.respond(GithubCall::ListBranches(repo.full_name.clone()), |state| {
+            canned_page(state.branches.get(&repo.full_name))
+        })
+        .await
+    }
+
+    async fn dispatch_workflow(&self, repo: &Repository, workflow_id: u64, git_ref: &str) -> Result<(), GhError> {
+        let call = GithubCall::DispatchWorkflow {
+            full_name: repo.full_name.clone(),
+            workflow_id,
+            git_ref: git_ref.to_owned(),
+        };
+        let key = (workflow_id, git_ref.to_owned());
+        self.respond(call, |state| match state.dispatches.get(&key) {
+            Some(Ok(())) => Ok(()),
             Some(Err(error)) => Err(duplicate(error)),
             None => Err(unprocessable()),
         })
@@ -1500,6 +1553,39 @@ mod tests {
                 request,
             }
         );
+    }
+
+    #[tokio::test]
+    async fn branches_by_repo_and_dispatches_by_workflow_and_ref() {
+        let main = Branch {
+            name: "main".into(),
+            commit: crate::models::CommitRef {
+                sha: "a1".into(),
+                url: String::new(),
+            },
+            protected: false,
+        };
+        let github = FakeGithub::new()
+            .with_branches("octocat/a", Ok(vec![main.clone()]))
+            .with_branches("octocat/b", Err(GhError::NotInstalled))
+            .with_dispatch(7, "main", Ok(()));
+        assert_eq!(github.list_branches(&repo("a")).await.unwrap(), [main]);
+        assert!(github.list_branches(&repo("b")).await.is_err());
+        assert!(github.list_branches(&repo("c")).await.unwrap().is_empty());
+        assert!(github.dispatch_workflow(&repo("a"), 7, "main").await.is_ok());
+        assert!(matches!(
+            github.dispatch_workflow(&repo("a"), 7, "release").await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        assert_eq!(
+            github.calls()[3],
+            GithubCall::DispatchWorkflow {
+                full_name: "octocat/a".into(),
+                workflow_id: 7,
+                git_ref: "main".into(),
+            }
+        );
+        assert_eq!(github.calls()[0], GithubCall::ListBranches("octocat/a".into()));
     }
 
     #[tokio::test]

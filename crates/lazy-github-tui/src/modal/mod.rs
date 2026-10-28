@@ -17,6 +17,7 @@ mod lookup;
 mod new_comment;
 mod new_issue;
 mod stack;
+mod trigger_workflow;
 mod user_profile;
 
 use ratatui::layout::Rect;
@@ -45,6 +46,7 @@ pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLooku
 pub use new_comment::{NewCommentAction, NewCommentDialog, PostedComment, ReplyTarget};
 pub use new_issue::{NewIssueAction, NewIssueDialog};
 pub use stack::ModalEntry;
+pub use trigger_workflow::{TriggerWorkflowAction, TriggerWorkflowDialog};
 pub use user_profile::{UserProfileAction, UserProfileDialog};
 
 /// Textual's `Screen.BINDINGS`, which every modal screen has before the dialog's own: `tab`, `shift+tab` and the
@@ -94,6 +96,8 @@ pub enum ModalKind {
     AddComment,
     /// [`AddReactionDialog`]: reactions to add to a pull request.
     AddReaction,
+    /// [`TriggerWorkflowDialog`]: a workflow to dispatch, and the branch.
+    TriggerWorkflow,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -163,6 +167,8 @@ pub enum DialogAction {
     AddComment(AddCommentAction),
     /// [`AddReactionDialog`]'s.
     AddReaction(AddReactionAction),
+    /// [`TriggerWorkflowDialog`]'s.
+    TriggerWorkflow(TriggerWorkflowAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -179,6 +185,7 @@ impl DialogAction {
             DialogAction::NewComment(_) => ModalKind::NewComment,
             DialogAction::AddComment(_) => ModalKind::AddComment,
             DialogAction::AddReaction(_) => ModalKind::AddReaction,
+            DialogAction::TriggerWorkflow(_) => ModalKind::TriggerWorkflow,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }

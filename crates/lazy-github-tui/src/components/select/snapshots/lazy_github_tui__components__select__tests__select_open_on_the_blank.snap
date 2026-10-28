@@ -1,6 +1,5 @@
 ---
 source: crates/lazy-github-tui/src/components/select/tests.rs
-assertion_line: 360
 expression: "draw_open(status(None), 9)"
 ---
 ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
@@ -18,10 +17,10 @@ expression: "draw_open(status(None), 9)"
 .aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab
 effffffffffffffffffffffffffffffffffffffg
 ehijjjjjjiiiiiiiiiiiiiiiiiiiiiiiiiiiiihg
-ehhhhhhhhkkkkkkhhhhhhhhhkkkkkkkkhhhhhhhg
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhg
 ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhg
 effffffffffffffffffffffffffffffffffffffg
-llllllllllllllllllllllllllllllllllllllll
+kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 --- legend
 . fg=#191919 bg=#4f4f4f REVERSED
 a fg=#191919 bg=#1e1e1e
@@ -34,5 +33,4 @@ g fg=#0178d4 bg=#4f4f4f
 h fg=#e0e0e0 bg=#272727
 i fg=#ddedf9 bg=#0178d4 BOLD
 j fg=#92c5ec bg=#0178d4 BOLD
-k fg=#e0e0e0 bg=#272727 BOLD
-l fg=Reset bg=#4f4f4f
+k fg=Reset bg=#4f4f4f

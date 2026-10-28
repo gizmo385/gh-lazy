@@ -4,6 +4,7 @@
 //! `None` when missing. Serializing writes every field (`None` as `null`), the shape the Python app's pydantic models
 //! produce, so local table caches stay readable by both apps.
 
+mod branch;
 mod checks;
 mod comment;
 mod issue;
@@ -15,6 +16,7 @@ mod review;
 mod user;
 mod workflow;
 
+pub use branch::{Branch, CommitRef};
 pub use checks::{
     CheckConclusion, CheckRow, CheckRun, CheckRunStatus, CheckState, CombinedStatus, CommitStatus, check_rows,
     overall_state,

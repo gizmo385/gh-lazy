@@ -7,10 +7,13 @@ use lazy_github_core::github::PageQuery;
 use lazy_github_core::models::{Repository, Workflow, WorkflowRun};
 
 use super::list::{ListSection, ListSource, PER_PAGE, PageFailure};
+use crate::action::Action;
 use crate::component::Cx;
 use crate::components::table::{Cell, Column, Page, SearchableTable, SortSpec, TableItem};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
+use crate::modal::TriggerWorkflowDialog;
 use crate::options::AppOptions;
+use crate::toast::Toast;
 
 /// The command-log line for a failed workflows request.
 const WORKFLOWS_ERROR: &str = "Error retrieving actions from the Github API";
@@ -93,21 +96,27 @@ impl ListSource for RunsSource {
 #[derive(Debug)]
 pub(super) struct WorkflowsPane {
     runs: ListSection<RunsSource>,
+    /// The repo the section last loaded: Python's `current_repo`, which `T` triggers in.
+    repo: Option<Repository>,
     /// The loaded repo's workflows, for #188's Trigger workflow modal: empty until they arrive, or when they failed.
     workflows: Vec<Workflow>,
     /// The workflows request in flight.
     workflows_request: Option<RequestId>,
     /// The first runs page in flight. Later pages are the [`ListSection`]'s.
     runs_request: Option<RequestId>,
+    /// The workflows `T` asked for because there were none, with the repo they're for.
+    trigger_request: Option<(RequestId, Repository)>,
 }
 
 impl WorkflowsPane {
     pub(super) fn new(options: AppOptions) -> Self {
         Self {
             runs: ListSection::new(options),
+            repo: None,
             workflows: Vec::new(),
             workflows_request: None,
             runs_request: None,
+            trigger_request: None,
         }
     }
 
@@ -140,9 +149,11 @@ impl WorkflowsPane {
             .take()
             .into_iter()
             .chain(self.runs_request.take())
+            .chain(self.trigger_request.take().map(|(id, _)| id))
         {
             cx.effect(Effect::Cancel(id));
         }
+        self.repo = Some(repo.clone());
         self.runs.begin(repo, cx);
         self.workflows.clear();
         self.workflows_request = Some(cx.request(GithubRequest::ListWorkflows {
@@ -156,6 +167,26 @@ impl WorkflowsPane {
                 per_page: PER_PAGE,
             },
         }));
+    }
+
+    /// `workflows.trigger`: Python's `action_trigger_workflow`. Without a repo it warns; with no workflows loaded it
+    /// asks for them first; then the dialog opens, or a warning says there's nothing to trigger.
+    pub(super) fn trigger(&mut self, cx: &mut Cx<'_>) {
+        let Some(repo) = self.repo.clone() else {
+            cx.notify(Toast::warning("No repository selected"));
+            return;
+        };
+        if self.workflows.is_empty() {
+            let id = cx.request(GithubRequest::ListWorkflows {
+                repo: Box::new(repo.clone()),
+                page: PageQuery::default(),
+            });
+            if let Some((old, _)) = self.trigger_request.replace((id, repo)) {
+                cx.effect(Effect::Cancel(old));
+            }
+            return;
+        }
+        open_trigger_dialog(repo, &self.workflows, cx);
     }
 
     /// Requests the page the runs table asked for.
@@ -176,6 +207,41 @@ impl WorkflowsPane {
     /// Takes a response to the workflows, the first runs page or a later runs page, and hands back any other. A
     /// request cancelled by a newer selection is handed back, so the app drops it (Py bug B45).
     pub(super) fn on_response(
+        &mut self,
+        id: RequestId,
+        response: GithubResponse,
+        cx: &mut Cx<'_>,
+    ) -> Option<GithubResponse> {
+        if let GithubResponse::ListWorkflows(result) = response {
+            return match self.trigger_request.take() {
+                Some((pending, repo)) if pending == id => {
+                    self.workflows_for_trigger(repo, result, cx);
+                    None
+                }
+                other => {
+                    self.trigger_request = other;
+                    self.on_section_response(id, GithubResponse::ListWorkflows(result), cx)
+                }
+            };
+        }
+        self.on_section_response(id, response, cx)
+    }
+
+    /// The workflows `T` asked for: Python's fetcher answers `[]` on an error, so a failure is logged and warns that
+    /// there's nothing to trigger.
+    fn workflows_for_trigger(&mut self, repo: Repository, result: Result<Vec<Workflow>, GhError>, cx: &mut Cx<'_>) {
+        self.workflows = result.unwrap_or_else(|error| {
+            log_failure(WORKFLOWS_ERROR, &error);
+            Vec::new()
+        });
+        if self.workflows.is_empty() {
+            cx.notify(Toast::warning("No workflows found in this repository"));
+        } else {
+            open_trigger_dialog(repo, &self.workflows, cx);
+        }
+    }
+
+    fn on_section_response(
         &mut self,
         id: RequestId,
         response: GithubResponse,
@@ -204,6 +270,18 @@ impl WorkflowsPane {
         }
         None
     }
+}
+
+/// Opens the Trigger workflow dialog for `workflows` in `repo`; a dispatch toasts once it closes.
+fn open_trigger_dialog(repo: Repository, workflows: &[Workflow], cx: &mut Cx<'_>) {
+    let dialog = TriggerWorkflowDialog::new(repo, workflows, cx);
+    cx.open_dialog(dialog, |triggered| {
+        if triggered {
+            Action::Notify(Toast::info("Successfully triggered workflow"))
+        } else {
+            Action::Consumed
+        }
+    });
 }
 
 /// A run in `repo` for tests: run `id` of the workflow `name`, numbered `run_number`, created at `created_at` (an RFC

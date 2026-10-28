@@ -1,0 +1,137 @@
+version = 1
+description = "Mouse: footer clicks run their binding, a click focuses a table or the tab strip but not a title, a row click moves the cursor without selecting, a header click changes nothing, the wheel scrolls a table"
+# The footer is left out of the cross-app checks where it shows `^p Command Pallete` (Py bug B14).
+gate = true
+parity_rows = ["main-layout.footer-click", "main-layout.mouse", "main-layout.click-focus"]
+sizes = [[160, 48]]
+
+[env]
+fixtures = ["repos-60", "base"]
+
+[[step]]
+wait = { text = "alpha-service", timeout_ms = 15000 }
+
+# Python recomposes the footer after the table fills, and a click during that is lost.
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+click = { text = "^f Toggle Favorite" }
+
+[[step]]
+wait = { text = "★  parity-bot" }
+
+# Park the pointer: a hovered footer item changes the footer's styles, which the extractor reads.
+[[step]]
+move = { at = [100, 1] }
+
+[[step]]
+capture = "footer-favorite"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
+
+[[step]]
+click = { text = "O Lookup Repository" }
+
+[[step]]
+wait = { text = "Search for a repository by name:" }
+
+[[step]]
+move = { at = [100, 1] }
+
+[[step]]
+capture = "footer-lookup"
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Search for a repository by name:" }
+
+# The Issues table is empty, so its header takes the click.
+[[step]]
+click = { text = "#  Status  Author  Title", nth = 2 }
+
+[[step]]
+move = { at = [100, 1] }
+
+[[step]]
+capture = "click-issues"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
+
+[[step]]
+click = { text = "Introduction" }
+
+[[step]]
+move = { at = [100, 1] }
+
+[[step]]
+capture = "click-tabs"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
+
+# A title isn't a focus target: Details keeps focus.
+[[step]]
+click = { text = "[2] Pull Requests" }
+
+[[step]]
+move = { at = [100, 1] }
+
+[[step]]
+capture = "click-title"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
+
+# The first click on a row moves the cursor and focuses the table; it doesn't select (Textual compares the column).
+[[step]]
+click = { text = "basalt-service" }
+
+[[step]]
+move = { at = [100, 1] }
+
+[[step]]
+capture = "row-click"
+
+[[step]]
+click = { text = "Owner" }
+
+[[step]]
+move = { at = [100, 1] }
+
+[[step]]
+capture = "header-click"
+
+[[step]]
+wheel = { at = [20, 9], direction = "down" }
+
+[[step]]
+move = { at = [100, 1] }
+
+[[step]]
+capture = "wheel-down"
+
+[[step]]
+wheel = { at = [20, 9], direction = "up" }
+
+[[step]]
+move = { at = [100, 1] }
+
+[[step]]
+capture = "wheel-up"
+
+[expect.footer-favorite]
+focused = ["[1] Repositories"]
+contains = ["★  parity-bot  alpha-service", "No repository selected"]
+
+[expect.footer-lookup]
+contains = ["Search for a repository by name:"]
+
+[expect.click-issues]
+focused = ["[3] Issues"]
+
+[expect.click-tabs]
+focused = ["[5] Details"]
+
+[expect.click-title]
+focused = ["[5] Details"]
+
+[expect.row-click]
+focused = ["[1] Repositories"]
+contains = ["No repository selected"]

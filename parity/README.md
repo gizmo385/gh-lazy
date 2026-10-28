@@ -780,6 +780,15 @@ wait = { stable_ms = 500 }
 type = "gh-lazy"                 # literal text, sent as UTF-8 keystrokes
 
 [[step]]
+click = { text = "O Lookup Repository" }   # left click on the first cell of the first match
+
+[[step]]
+wheel = { at = [20, 9], direction = "down" }   # one wheel notch over a 0-based [col, row]
+
+[[step]]
+move = { at = [100, 1] }         # motion only: park the pointer
+
+[[step]]
 capture = "after-select"
 checks = ["titles", "tabs", "headers", "rows", "cursor", "footer", "focus"]   # default: all of these
 ignore = { boxes = ["Details"] } # skip the listed checks inside boxes whose title contains this text
@@ -818,6 +827,39 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
     `wait.stable_ms = capture_stable_ms` runs first. `checks` and `ignore` are allowed alongside it, and only there.
   - `sleep_ms`: a number.
   - `resize = [cols, rows]`: resizes the PTY and the parser.
+  - `click`, `wheel` and `move`: mouse steps, below.
+- **Mouse steps** send SGR 1006 mouse reports. Each is a table with exactly one target:
+  - `at = [col, row]`: a cell, 0-based like `grid.json`, `structure.json` rects and `failure.txt`.
+  - `text = "<substring>"`, with optional `nth` (1-based, default 1), `offset = [dcol, drow]` (default `[0, 0]`)
+    and `timeout_ms` (default 10000), which are rejected without `text`. The match runs on each row's text as
+    `<capture>.txt` has it (wide-character continuation cells skipped) and maps back to the cell; matches are counted
+    row by row, top to bottom, left to right, non-overlapping. The target is the first cell of the `nth` match plus
+    `offset`. Like `wait.text`, the step polls until the match is on screen and times out if it never is, so it needs
+    no `wait` before it. Matching is per app, on its own screen, so text targets keep working when the apps place the
+    same text a cell apart. Use `at` for blank areas (parking the pointer, a pane's interior for the wheel).
+
+  The steps:
+  - `click`: a motion report to the target, then a left press and release, in one write, then `key_delay_ms`. Two
+    clicks on one cell within 0.5 s are a double click to Textual, so put a capture or a wait between them.
+  - `wheel`: `direction` is `up`, `down`, `left` or `right` (required) and `count` is 1 or more (default 1). A motion
+    report, then `count` wheel reports with `key_delay_ms` after each.
+  - `move`: one motion report, then `key_delay_ms`.
+
+  | Event | Bytes (`x = col + 1`, `y = row + 1`) |
+  | --- | --- |
+  | motion, no button | `CSI < 35 ; x ; y M` |
+  | left press / release | `CSI < 0 ; x ; y M` / `CSI < 0 ; x ; y m` |
+  | wheel up / down / left / right | `CSI < 64` / `65` / `66` / `67` `; x ; y M` (no release, as terminals send) |
+
+  When the step runs, the app must have turned on mouse reporting with SGR encoding, and the target must be on
+  screen; otherwise the run fails at that step as `step-failed`, with the reason in `status.json`'s `message`
+  (`click: the app hasn't enabled SGR mouse reporting (mode None, encoding Default)`,
+  `click: target [161, 3] is off the 160x48 screen`). Motion reports are sent only in any-motion mode (`?1003h`), as
+  a terminal does: in another mode `click` and `wheel` skip theirs and `move` fails. Both apps use any-motion mode.
+
+  Keys stay the way to drive a flow. Use the mouse only for the behavior under test, so a scenario doesn't depend on
+  hit-testing it isn't about. Don't send mouse reports with `type`: it hard-codes 1-based cells, can't follow text and
+  doesn't check that the app turned mouse reporting on.
 - **Key specs** use Textual's binding spelling from `lib/bindings.py`, so defaults can be copied. They're encoded as
   xterm sequences:
 
@@ -863,6 +905,9 @@ scenario:
   for a timer (`gone = "View Maximized"`, not `sleep_ms = 5500`).
 - **One timer per behavior.** Checks that wait out a timer (a toast expiring, a refresh interval) cost their whole
   duration in every run. Check each timer in one scenario at one size, and keep other scenarios from waiting for it.
+- **Park the pointer after a click.** A footer item under the pointer stays hovered (in both apps), and a hovered
+  item's styles change how the extractor reads the footer. Before a capture after a click, `move` the pointer to a
+  blank cell (the status box), as a real pointer moving away would.
 - **Re-record only what you changed.** `cargo xtask parity --record <scenario>` records just that scenario's
   [references](#recording), and skips fresh ones. `--record --force` with no names runs Python at least once for
   every reference, and twice where the screen changed (about 30 s to a minute today with 4 jobs); a harness or
@@ -879,10 +924,14 @@ scenario:
   DECRQM (`ESC[?<n>$p` → `ESC[?<n>;0$y`, "not recognized"). The kitty keyboard query (`ESC[?u`) is deliberately left
   unanswered: crossterm sends DA1 right after it, and the DA1 reply tells it there's no kitty support without waiting
   out its 2 s timeout.
+- Mouse steps' reports go through the same writer thread. Whether they're sent depends on the mouse mode the app
+  turned on, which the runner reads from the parser (Textual writes `?1000h ?1003h ?1015h ?1006h`, crossterm adds
+  `?1002h`; `vt100` ignores `?1015h`). The harness answers the in-band resize query (`?2048$p`) as not recognized,
+  so Textual leaves SGR pixel mode (`?1016h`) off and coordinates are cells.
 - Steps run in order. Waits poll the screen every 20 ms. Each key is followed by `key_delay_ms` (at least 100 ms after
   `escape`, so Textual's escape-sequence timeout doesn't fuse it with the next key).
-- The whole run is bounded by `timeout_ms`. On a step timeout, a crash, or an exit before the last step, the runner
-  writes `failure.txt` and `failure.grid.json` (the screen at that moment) and records the status.
+- The whole run is bounded by `timeout_ms`. On a step timeout, a failed step, a crash, or an exit before the last
+  step, the runner writes `failure.txt` and `failure.grid.json` (the screen at that moment) and records the status.
 - After the last step the app is killed and given 2 s to exit.
 
 ### Report layout
@@ -935,7 +984,9 @@ Each app run writes `status.json`:
 ```
 
 - `status` is `ok` (every step ran), `timeout` (a step or the whole run took too long), `exited` (the app exited
-  before the last step) or `spawn-error` (the PTY or the app couldn't be started; `message` says why).
+  before the last step), `step-failed` (a step couldn't run against the app as it was, e.g. a mouse step before the
+  app turned on mouse reporting; `message` says why) or `spawn-error` (the PTY or the app couldn't be started;
+  `message` says why).
 - `step` is the index of the failing step, and `exit_code` the app's exit code when it exited.
 - `misses` are the fake-gh log lines with `"miss": true`, ready for `cargo xtask record-fixtures --from-log` (#68), and
   `errors` the lines with an `error`. Either makes `fixture_problems: true`, and the run counts as failed even though
@@ -1470,7 +1521,11 @@ Re-record a scenario, and commit `parity/references/`, whenever its env, steps, 
 
 - `cargo test -p xtask` covers scenario parsing, key encoding, config layering, the query responder and the grid
   format, and drives a tiny test TUI (`xtask/tests/bin/echo_tui.rs`, built as an example) through the runner
-  (`xtask/tests/runner.rs`). None of it needs Python.
+  (`xtask/tests/runner.rs`). None of it needs Python. `xtask/src/parity/mouse.rs` unit-tests the SGR encoding and
+  text targets (`nth`, no match, a match after a wide character). `echo_tui` turns on mouse capture (any-motion, or
+  press/release only or off with `ECHO_TUI_MOUSE=press|off`) and echoes mouse events, and `tests/runner.rs` drives
+  `click`, `wheel` and `move` through it, with a text target, an off-screen target, a run without motion reports and
+  one with mouse reporting off.
 - `xtask/tests/local_remote.rs` prepares runs with `git_remote_branches` and checks, with real git and fake-ssh
   (`xtask/tests/bin/fake_ssh.rs`, also an example), the bare repo's branches, `ls-remote` and `push` from `work/`
   with the app's environment, and `wait.remote_branch`. `crates/fake-gh/tests/ssh.rs` tests fake-ssh itself: both

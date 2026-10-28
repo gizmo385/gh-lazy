@@ -7,7 +7,7 @@ captures = ["files", "hunk-open", "hunk-focused", "line-cursor", "filtered", "fi
 scenario = "f16b29bab3ae01b3137973439c7ac4b82765de14"
 fixtures = "f08beddbcecbffb29234d9f65e3b95c0aa7e36cf"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "e02fc12d1a89a2bfa734e5ad4aca68e227877589"
+harness = "62da7e76547ecbb63e9f20561b0f0c02692784e2"
 
 [recorded_with]
 python = "3.14.7"

@@ -20,7 +20,8 @@ use serde::{Deserialize, Serialize};
 use super::env::{LocalRemote, RunEnv};
 use super::grid::{Grid, screen_text};
 use super::keys;
-use super::scenario::{DEFAULT_WAIT_TIMEOUT, Size, Step, WaitFor};
+use super::mouse::{self, MouseReport};
+use super::scenario::{DEFAULT_WAIT_TIMEOUT, MouseTarget, Size, Step, WaitFor};
 use super::{Context, Result};
 
 /// How often waits look at the screen. Nothing in the runner sleeps longer than this between checks.
@@ -44,6 +45,9 @@ pub enum RunState {
     Exited,
     /// The PTY couldn't be opened or the app couldn't be started.
     SpawnError,
+    /// A step couldn't run against the app as it was, e.g. a mouse step on an app that hasn't enabled mouse
+    /// reporting. `message` says why.
+    StepFailed,
 }
 
 /// `status.json`: the outcome of one app run at one size.
@@ -121,6 +125,7 @@ impl AppRunStatus {
                 None => format!("exited at step {}", fmt_step(self.step)),
             },
             RunState::SpawnError => "spawn error".to_owned(),
+            RunState::StepFailed => format!("step {} failed", fmt_step(self.step)),
         };
         let _ = write!(s, " ({secs:.1}s)");
         if self.flaky {
@@ -159,6 +164,13 @@ pub fn run(env: RunEnv, steps: &[Step], out: &Path) -> Result<AppRunStatus> {
                 Err((index, StepError::Exited(code))) => {
                     session.dump_failure(out)?;
                     AppRunStatus::new(RunState::Exited, Some(index), code)
+                }
+                Err((index, StepError::Failed(message))) => {
+                    session.dump_failure(out)?;
+                    AppRunStatus {
+                        message: Some(message),
+                        ..AppRunStatus::new(RunState::StepFailed, Some(index), None)
+                    }
                 }
                 // Dropping the session on the way out stops the app.
                 Err((_, StepError::Io(e))) => return Err(e),
@@ -203,6 +215,8 @@ pub fn write_status(status: &AppRunStatus, out: &Path) -> Result<()> {
 enum StepError {
     Timeout,
     Exited(Option<u32>),
+    /// The step can't run against the app as it is; the message says why.
+    Failed(String),
     Io(super::HarnessError),
 }
 
@@ -351,6 +365,80 @@ impl Session {
                 lock(&self.parser).set_size(nonzero(size.rows), nonzero(size.cols));
                 Ok(())
             }
+            Step::Click(target) => {
+                let (col, row, motion) = self.mouse_target("click", target)?;
+                let mut bytes = if motion {
+                    mouse::sgr(MouseReport::Motion, col, row)
+                } else {
+                    Vec::new()
+                };
+                bytes.extend(mouse::sgr(MouseReport::Press, col, row));
+                bytes.extend(mouse::sgr(MouseReport::Release, col, row));
+                self.send(&bytes)?;
+                self.pause(self.timing.key_delay)
+            }
+            Step::Wheel {
+                target,
+                direction,
+                count,
+            } => {
+                let (col, row, motion) = self.mouse_target("wheel", target)?;
+                if motion {
+                    self.send(&mouse::sgr(MouseReport::Motion, col, row))?;
+                }
+                for _ in 0..*count {
+                    self.send(&mouse::sgr(MouseReport::Wheel(*direction), col, row))?;
+                    self.pause(self.timing.key_delay)?;
+                }
+                Ok(())
+            }
+            Step::Move(target) => {
+                let (col, row, motion) = self.mouse_target("move", target)?;
+                if !motion {
+                    let mode = lock(&self.parser).screen().mouse_protocol_mode();
+                    return Err(StepError::Failed(format!(
+                        "move: the app reports no mouse motion (mode {mode:?}), so a terminal wouldn't send it"
+                    )));
+                }
+                self.send(&mouse::sgr(MouseReport::Motion, col, row))?;
+                self.pause(self.timing.key_delay)
+            }
+        }
+    }
+
+    /// Resolves a mouse step's target to a cell, polling for a text target like `wait.text`, and checks that the app
+    /// has turned on SGR mouse reporting. Returns the cell and whether the app wants motion reports (any-motion
+    /// mode), which a terminal only sends then.
+    fn mouse_target(&mut self, step: &str, target: &MouseTarget) -> std::result::Result<(u16, u16, bool), StepError> {
+        let (col, row) = match target {
+            MouseTarget::At { col, row } => (i32::from(*col), i32::from(*row)),
+            MouseTarget::Text {
+                text,
+                nth,
+                offset: (dcol, drow),
+                timeout,
+            } => {
+                let (col, row) = self.poll(*timeout, |s| mouse::locate(lock(&s.parser).screen(), text, *nth))?;
+                (i32::from(col) + i32::from(*dcol), i32::from(row) + i32::from(*drow))
+            }
+        };
+        let parser = lock(&self.parser);
+        let screen = parser.screen();
+        let (mode, encoding) = (screen.mouse_protocol_mode(), screen.mouse_protocol_encoding());
+        if mode == vt100::MouseProtocolMode::None || encoding != vt100::MouseProtocolEncoding::Sgr {
+            return Err(StepError::Failed(format!(
+                "{step}: the app hasn't enabled SGR mouse reporting (mode {mode:?}, encoding {encoding:?})"
+            )));
+        }
+        let (rows, cols) = screen.size();
+        let on_screen = |n: i32, len: NonZeroU16| u16::try_from(n).ok().filter(|&n| n < len.get());
+        match (on_screen(col, cols), on_screen(row, rows)) {
+            (Some(col), Some(row)) => Ok((col, row, mode == vt100::MouseProtocolMode::AnyMotion)),
+            _ => Err(StepError::Failed(format!(
+                "{step}: target [{col}, {row}] is off the {}x{} screen",
+                cols.get(),
+                rows.get()
+            ))),
         }
     }
 
@@ -390,35 +478,57 @@ impl Session {
     }
 
     fn wait(&mut self, until: &WaitFor, timeout: Duration) -> std::result::Result<(), StepError> {
-        let timeout = match (until, self.wait_cap) {
-            (WaitFor::Stable(_), _) | (_, None) => timeout,
-            (_, Some(cap)) => timeout.min(cap),
-        };
-        let end = (Instant::now() + timeout).min(self.deadline);
-        let mut stable: Option<(String, Instant)> = None;
-        loop {
-            let done = match until {
-                WaitFor::Text(needle) => self.text().lines().any(|row| row.contains(needle.as_str())),
-                WaitFor::Gone(needle) => !self.text().lines().any(|row| row.contains(needle.as_str())),
-                WaitFor::Regex(re) => re.is_match(&self.text()),
-                WaitFor::Stable(duration) => {
-                    let text = self.text();
-                    let now = Instant::now();
-                    match &stable {
-                        Some((last, since)) if *last == text => now.duration_since(*since) >= *duration,
-                        _ => {
-                            stable = Some((text, now));
-                            duration.is_zero()
-                        }
+        if let WaitFor::Stable(duration) = until {
+            let mut stable: Option<(String, Instant)> = None;
+            // Stability waits aren't capped by `wait_cap`.
+            return self.poll_until(timeout, |s| {
+                let text = s.text();
+                let now = Instant::now();
+                match &stable {
+                    Some((last, since)) if *last == text => (now.duration_since(*since) >= *duration).then_some(()),
+                    _ => {
+                        stable = Some((text, now));
+                        duration.is_zero().then_some(())
                     }
                 }
-                WaitFor::Log(matcher) => self.env_log.as_ref().is_some_and(|path| {
+            });
+        }
+        self.poll(timeout, |s| {
+            let done = match until {
+                WaitFor::Text(needle) => s.text().lines().any(|row| row.contains(needle.as_str())),
+                WaitFor::Gone(needle) => !s.text().lines().any(|row| row.contains(needle.as_str())),
+                WaitFor::Regex(re) => re.is_match(&s.text()),
+                WaitFor::Stable(_) => unreachable!("handled above"),
+                WaitFor::Log(matcher) => s.env_log.as_ref().is_some_and(|path| {
                     std::fs::read_to_string(path).is_ok_and(|text| RequestLog::parse(&text).has_served(matcher))
                 }),
-                WaitFor::RemoteBranch(branch) => self.remote.as_ref().is_some_and(|r| r.has_branch(branch)),
+                WaitFor::RemoteBranch(branch) => s.remote.as_ref().is_some_and(|r| r.has_branch(branch)),
             };
-            if done {
-                return Ok(());
+            done.then_some(())
+        })
+    }
+
+    /// Polls `check` every [`POLL`] until it returns a value, for up to `timeout` (capped by
+    /// [`wait_cap`](super::scenario::Timing::wait_cap)) and never past the run's deadline.
+    fn poll<T>(
+        &mut self,
+        timeout: Duration,
+        check: impl FnMut(&Self) -> Option<T>,
+    ) -> std::result::Result<T, StepError> {
+        let timeout = self.wait_cap.map_or(timeout, |cap| timeout.min(cap));
+        self.poll_until(timeout, check)
+    }
+
+    /// [`poll`](Self::poll) without the cap.
+    fn poll_until<T>(
+        &mut self,
+        timeout: Duration,
+        mut check: impl FnMut(&Self) -> Option<T>,
+    ) -> std::result::Result<T, StepError> {
+        let end = (Instant::now() + timeout).min(self.deadline);
+        loop {
+            if let Some(found) = check(self) {
+                return Ok(found);
             }
             self.check_alive()?;
             let now = Instant::now();

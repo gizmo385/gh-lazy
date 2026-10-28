@@ -6,6 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
+use std::num::NonZeroU16;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::time::Duration;
@@ -240,6 +241,31 @@ pub struct Capture {
     pub ignore: Ignore,
 }
 
+/// Where a mouse step points. Cells are the grid's 0-based `[col, row]`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MouseTarget {
+    /// `at = [col, row]`: an exact cell.
+    At { col: u16, row: u16 },
+    /// `text = "..."`: the first cell of the `nth` match on screen, moved by `offset` (`[dcol, drow]`). The step polls
+    /// for the match for up to `timeout`, like `wait.text`.
+    Text {
+        text: String,
+        nth: NonZeroU16,
+        offset: (i16, i16),
+        timeout: Duration,
+    },
+}
+
+/// `wheel.direction`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum WheelDirection {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
 /// One `[[step]]`.
 #[derive(Debug, Clone)]
 pub enum Step {
@@ -251,6 +277,16 @@ pub enum Step {
     Capture(Capture),
     Sleep(Duration),
     Resize(Size),
+    /// A left click: a motion report, a press and a release.
+    Click(MouseTarget),
+    /// `count` wheel notches, after a motion report.
+    Wheel {
+        target: MouseTarget,
+        direction: WheelDirection,
+        count: u16,
+    },
+    /// A motion report alone, e.g. to park the pointer on a blank cell.
+    Move(MouseTarget),
 }
 
 /// Timing settings shared by every step of a run.
@@ -461,6 +497,33 @@ struct RawStep {
     ignore: Option<Ignore>,
     sleep_ms: Option<u64>,
     resize: Option<Spanned<[u16; 2]>>,
+    click: Option<Spanned<RawTarget>>,
+    wheel: Option<Spanned<RawWheel>>,
+    #[serde(rename = "move")]
+    move_to: Option<Spanned<RawTarget>>,
+}
+
+/// A `click` or `move` table. `wheel` repeats these fields, since `deny_unknown_fields` doesn't work with `flatten`.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawTarget {
+    at: Option<[u16; 2]>,
+    text: Option<String>,
+    nth: Option<u16>,
+    offset: Option<[i16; 2]>,
+    timeout_ms: Option<u64>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawWheel {
+    at: Option<[u16; 2]>,
+    text: Option<String>,
+    nth: Option<u16>,
+    offset: Option<[i16; 2]>,
+    timeout_ms: Option<u64>,
+    direction: WheelDirection,
+    count: Option<u16>,
 }
 
 #[derive(Deserialize)]
@@ -790,6 +853,9 @@ fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>, has_remote: bool) -
         ("capture", raw.capture.is_some()),
         ("sleep_ms", raw.sleep_ms.is_some()),
         ("resize", raw.resize.is_some()),
+        ("click", raw.click.is_some()),
+        ("wheel", raw.wheel.is_some()),
+        ("move", raw.move_to.is_some()),
     ]
     .into_iter()
     .filter_map(|(name, set)| set.then_some(name))
@@ -798,7 +864,8 @@ fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>, has_remote: bool) -
         [] => {
             return Err(loc.at(
                 start,
-                "a step needs exactly one of wait, keys, type, paste, capture, sleep_ms or resize; it has none",
+                "a step needs exactly one of wait, keys, type, paste, capture, sleep_ms, resize, click, wheel or move; it \
+                 has none",
             ));
         }
         [_] => {}
@@ -845,7 +912,79 @@ fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>, has_remote: bool) -
             .map(Step::Resize)
             .ok_or_else(|| loc.at_span(&size, "`resize` must be [cols, rows] above 0"));
     }
+    if let Some(raw) = raw.click {
+        let start = raw.span().start;
+        return parse_target("click", raw.into_inner(), start, loc).map(Step::Click);
+    }
+    if let Some(raw) = raw.move_to {
+        let start = raw.span().start;
+        return parse_target("move", raw.into_inner(), start, loc).map(Step::Move);
+    }
+    if let Some(raw) = raw.wheel {
+        return parse_wheel(raw, loc);
+    }
     unreachable!("exactly one action is present")
+}
+
+fn parse_wheel(raw: Spanned<RawWheel>, loc: &Locator<'_>) -> Result<Step, ScenarioError> {
+    let start = raw.span().start;
+    let RawWheel {
+        at,
+        text,
+        nth,
+        offset,
+        timeout_ms,
+        direction,
+        count,
+    } = raw.into_inner();
+    let target = RawTarget {
+        at,
+        text,
+        nth,
+        offset,
+        timeout_ms,
+    };
+    let target = parse_target("wheel", target, start, loc)?;
+    let count = count.unwrap_or(1);
+    if count == 0 {
+        return Err(loc.at(start, "`wheel.count` must be 1 or more"));
+    }
+    Ok(Step::Wheel {
+        target,
+        direction,
+        count,
+    })
+}
+
+/// A mouse step's target: exactly one of `at` and `text`, and `nth`, `offset` and `timeout_ms` only with `text`.
+fn parse_target(step: &str, raw: RawTarget, start: usize, loc: &Locator<'_>) -> Result<MouseTarget, ScenarioError> {
+    match (raw.at, raw.text) {
+        (None, None) => Err(loc.at(start, format!("`{step}` needs a target: `at = [col, row]` or `text`"))),
+        (Some(_), Some(_)) => Err(loc.at(start, format!("`{step}` takes one target, `at` or `text`, not both"))),
+        (Some([col, row]), None) => {
+            if raw.nth.is_some() || raw.offset.is_some() || raw.timeout_ms.is_some() {
+                return Err(loc.at(
+                    start,
+                    format!("`{step}`: `nth`, `offset` and `timeout_ms` are only allowed with `text`"),
+                ));
+            }
+            Ok(MouseTarget::At { col, row })
+        }
+        (None, Some(text)) => {
+            if text.is_empty() {
+                return Err(loc.at(start, format!("`{step}.text` can't be empty")));
+            }
+            let nth = NonZeroU16::new(raw.nth.unwrap_or(1))
+                .ok_or_else(|| loc.at(start, format!("`{step}.nth` counts from 1")))?;
+            let [dcol, drow] = raw.offset.unwrap_or_default();
+            Ok(MouseTarget::Text {
+                text,
+                nth,
+                offset: (dcol, drow),
+                timeout: raw.timeout_ms.map_or(DEFAULT_WAIT_TIMEOUT, Duration::from_millis),
+            })
+        }
+    }
 }
 
 fn parse_wait(spanned: Spanned<RawWait>, loc: &Locator<'_>, has_remote: bool) -> Result<Wait, ScenarioError> {
@@ -1234,6 +1373,75 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
             ),
             7,
             "exactly one of",
+        );
+    }
+
+    #[test]
+    fn parses_mouse_steps() {
+        let s = parse(
+            r#"version = 1
+[[step]]
+click = { text = "O Lookup", nth = 2, offset = [-1, 3], timeout_ms = 500 }
+[[step]]
+click = { at = [2, 30] }
+[[step]]
+wheel = { at = [20, 9], direction = "down" }
+[[step]]
+wheel = { text = "x", direction = "left", count = 3 }
+[[step]]
+move = { at = [100, 1] }
+"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            &s.steps[0],
+            Step::Click(MouseTarget::Text { text, nth, offset: (-1, 3), timeout })
+                if text == "O Lookup" && nth.get() == 2 && *timeout == Duration::from_millis(500)
+        ));
+        assert!(matches!(&s.steps[1], Step::Click(MouseTarget::At { col: 2, row: 30 })));
+        assert!(matches!(
+            &s.steps[2],
+            Step::Wheel {
+                target: MouseTarget::At { col: 20, row: 9 },
+                direction: WheelDirection::Down,
+                count: 1
+            }
+        ));
+        assert!(matches!(
+            &s.steps[3],
+            Step::Wheel {
+                target: MouseTarget::Text { nth, offset: (0, 0), timeout, .. },
+                direction: WheelDirection::Left,
+                count: 3,
+            } if nth.get() == 1 && *timeout == DEFAULT_WAIT_TIMEOUT
+        ));
+        assert!(matches!(&s.steps[4], Step::Move(MouseTarget::At { col: 100, row: 1 })));
+    }
+
+    #[test]
+    fn rejects_bad_mouse_steps() {
+        let bad = |step: &str, needle: &str| assert_error(&format!("version = 1\n[[step]]\n{step}\n"), 3, needle);
+        bad("click = { at = [1, 1], button = \"right\" }", "unknown field `button`");
+        bad("click = {}", "needs a target");
+        bad("move = { offset = [1, 1] }", "needs a target");
+        bad("click = { at = [1, 1], text = \"x\" }", "not both");
+        bad("click = { at = [1, 1], nth = 2 }", "only allowed with `text`");
+        bad("click = { at = [1, 1], offset = [0, 1] }", "only allowed with `text`");
+        bad("move = { at = [1, 1], timeout_ms = 5 }", "only allowed with `text`");
+        bad("click = { text = \"x\", nth = 0 }", "counts from 1");
+        bad("click = { text = \"\" }", "can't be empty");
+        bad("click = { at = [-1, 1] }", "invalid value");
+        bad("wheel = { at = [1, 1], direction = \"down\", count = 0 }", "1 or more");
+        bad(
+            "wheel = { at = [1, 1], direction = \"sideways\" }",
+            "unknown variant `sideways`",
+        );
+        bad("wheel = { at = [1, 1] }", "missing field `direction`");
+        bad("wheel = { direction = \"up\" }", "needs a target");
+        assert_error(
+            "version = 1\n[[step]]\nclick = { at = [1, 1] }\nmove = { at = [1, 1] }\n",
+            2,
+            "click, move",
         );
     }
 

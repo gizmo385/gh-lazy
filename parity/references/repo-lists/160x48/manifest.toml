@@ -7,7 +7,7 @@ captures = ["loaded", "issues-page-2", "issues-page-3", "prs-maximized", "prs-pa
 scenario = "dfc8a5e9467fd5b93387548c39cbee6a3886e0fe"
 fixtures = "58dea907841051dbcdd466eed2d8b9efa9035993"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "e02fc12d1a89a2bfa734e5ad4aca68e227877589"
+harness = "62da7e76547ecbb63e9f20561b0f0c02692784e2"
 
 [recorded_with]
 python = "3.14.7"

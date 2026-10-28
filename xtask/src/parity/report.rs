@@ -645,6 +645,7 @@ fn state_name(state: RunState) -> &'static str {
         RunState::Timeout => "timeout",
         RunState::Exited => "exited",
         RunState::SpawnError => "spawn-error",
+        RunState::StepFailed => "step-failed",
     }
 }
 

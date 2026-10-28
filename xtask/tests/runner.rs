@@ -1,5 +1,5 @@
-//! Drives the `echo_tui` example through the parity runner: waits, keys, typing, resizing, captures and failures.
-//! Needs no Python.
+//! Drives the `echo_tui` example through the parity runner: waits, keys, typing, resizing, mouse steps, captures and
+//! failures. Needs no Python.
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
@@ -196,4 +196,118 @@ fn a_missing_program_is_a_spawn_error() {
     let status = runner::run(env, &s.steps, out.path()).unwrap();
     assert_eq!(status.status, RunState::SpawnError, "{status:?}");
     assert!(status.message.is_some());
+}
+
+/// `run` with `ECHO_TUI_MOUSE` set: `off` leaves mouse reporting off, `press` turns it on without motion.
+fn run_with_mouse(scenario: &Scenario, out: &Path, mouse: &str) -> AppRunStatus {
+    let mut command = CommandBuilder::new(echo_tui());
+    command.env("TERM", "xterm-256color");
+    command.env("ECHO_TUI_MOUSE", mouse);
+    let env = RunEnv::for_command(command, Size { cols: 80, rows: 24 }, scenario.timing);
+    runner::run(env, &scenario.steps, out).unwrap()
+}
+
+#[test]
+fn click_wheel_and_move_send_sgr_reports() {
+    let out = tempfile::tempdir().unwrap();
+    // The text target needs no wait first: it polls until `settled` shows. echo_tui echoes 0-based cells too.
+    let s = scenario(
+        r#"
+[[step]]
+click = { text = "settled", offset = [2, 0] }
+
+[[step]]
+wait = { text = "mouse: move@2,1 down@2,1 up@2,1" }
+
+[[step]]
+wheel = { at = [10, 12], direction = "down", count = 2 }
+
+[[step]]
+wait = { text = "up@2,1 move@10,12 wheel-down@10,12 wheel-down@10,12" }
+
+[[step]]
+wheel = { at = [10, 12], direction = "up" }
+
+[[step]]
+move = { at = [79, 23] }
+
+[[step]]
+capture = "mouse"
+"#,
+    );
+    let status = run(&s, out.path());
+    assert_eq!(status.status, RunState::Ok, "{status:?}");
+    let screen = read(&out.path().join("mouse.txt"));
+    assert!(
+        screen.contains("mouse: wheel-down@10,12 move@10,12 wheel-up@10,12 move@79,23\n"),
+        "{screen}"
+    );
+}
+
+#[test]
+fn a_mouse_step_fails_when_the_app_has_not_enabled_mouse_reporting() {
+    let out = tempfile::tempdir().unwrap();
+    let s = scenario("[[step]]\nwait = { text = \"settled\" }\n\n[[step]]\nclick = { at = [0, 0] }\n");
+    let status = run_with_mouse(&s, out.path(), "off");
+    assert_eq!(status.status, RunState::StepFailed, "{status:?}");
+    assert_eq!(status.step, Some(1));
+    assert_eq!(
+        status.message.as_deref(),
+        Some("click: the app hasn't enabled SGR mouse reporting (mode None, encoding Default)")
+    );
+    assert!(read(&out.path().join("failure.txt")).contains("settled"));
+    let saved: serde_json::Value = serde_json::from_str(&read(&out.path().join("status.json"))).unwrap();
+    assert_eq!(saved["status"], "step-failed");
+}
+
+#[test]
+fn motion_reports_are_only_sent_in_any_motion_mode() {
+    let out = tempfile::tempdir().unwrap();
+    let s = scenario(
+        r#"
+[[step]]
+wait = { text = "settled" }
+
+[[step]]
+click = { at = [3, 4] }
+
+[[step]]
+wheel = { at = [5, 6], direction = "left" }
+
+[[step]]
+wait = { text = "mouse: down@3,4 up@3,4 wheel-left@5,6" }
+
+[[step]]
+move = { at = [1, 1] }
+"#,
+    );
+    let status = run_with_mouse(&s, out.path(), "press");
+    assert_eq!(status.status, RunState::StepFailed, "{status:?}");
+    assert_eq!(status.step, Some(4));
+    assert_eq!(
+        status.message.as_deref(),
+        Some("move: the app reports no mouse motion (mode PressRelease), so a terminal wouldn't send it")
+    );
+}
+
+#[test]
+fn a_mouse_target_off_screen_fails_the_step() {
+    let out = tempfile::tempdir().unwrap();
+    let s = scenario("[[step]]\nclick = { text = \"settled\", offset = [0, -2] }\n");
+    let status = run(&s, out.path());
+    assert_eq!(status.status, RunState::StepFailed, "{status:?}");
+    assert_eq!(
+        status.message.as_deref(),
+        Some("click: target [0, -1] is off the 80x24 screen")
+    );
+}
+
+#[test]
+fn a_text_target_that_never_shows_times_out() {
+    let out = tempfile::tempdir().unwrap();
+    let s = scenario("[[step]]\nclick = { text = \"never shown\", timeout_ms = 300 }\n");
+    let status = run(&s, out.path());
+    assert_eq!(status.status, RunState::Timeout, "{status:?}");
+    assert_eq!(status.step, Some(0));
+    assert!(out.path().join("failure.txt").is_file());
 }

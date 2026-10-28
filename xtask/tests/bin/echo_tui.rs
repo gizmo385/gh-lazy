@@ -6,6 +6,10 @@
 //! - row 1: `tick <n>` every 40 ms for 8 ticks, then `settled`
 //! - row 2: `size <cols>x<rows>`
 //! - row 3: `keys: ...`, each key as its char or `<Name>`
+//! - row 4: `mouse: ...`, the last few mouse events as `<kind>@<col>,<row>` (0-based)
+//!
+//! Mouse capture is on (crossterm's any-motion SGR mode) unless `ECHO_TUI_MOUSE` says otherwise: `off` leaves it off,
+//! and `press` turns on press/release reporting without motion (`?1000h ?1006h`).
 //!
 //! Ctrl+B draws a box titled with the process id at rows 5 to 7, so two runs differ (`tests/record.rs`). Ctrl+D
 //! exits with code 3. `--version` prints a version and exits, as fake-gh's installer and `--record` expect of the
@@ -14,7 +18,7 @@
 use std::io::{self, Write};
 use std::time::Duration;
 
-use crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
+use crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers, MouseButton, MouseEventKind};
 use crossterm::{cursor, execute, queue, style, terminal};
 
 fn line(out: &mut impl Write, row: u16, text: &str) -> io::Result<()> {
@@ -36,6 +40,22 @@ fn key_name(code: KeyCode, mods: KeyModifiers) -> String {
     }
 }
 
+fn mouse_name(kind: MouseEventKind) -> String {
+    match kind {
+        MouseEventKind::Down(MouseButton::Left) => "down".into(),
+        MouseEventKind::Up(MouseButton::Left) => "up".into(),
+        MouseEventKind::Moved => "move".into(),
+        MouseEventKind::ScrollUp => "wheel-up".into(),
+        MouseEventKind::ScrollDown => "wheel-down".into(),
+        MouseEventKind::ScrollLeft => "wheel-left".into(),
+        MouseEventKind::ScrollRight => "wheel-right".into(),
+        other => format!("{other:?}"),
+    }
+}
+
+/// How many mouse events row 4 shows, so it stays on one row of an 80-column screen.
+const MOUSE_EVENTS: usize = 4;
+
 fn main() -> io::Result<()> {
     if std::env::args().any(|a| a == "--version") {
         println!("echo_tui 1.0");
@@ -43,6 +63,11 @@ fn main() -> io::Result<()> {
     }
     terminal::enable_raw_mode()?;
     let mut out = io::stdout();
+    match std::env::var("ECHO_TUI_MOUSE").as_deref() {
+        Ok("off") => {}
+        Ok("press") => out.write_all(b"\x1b[?1000h\x1b[?1006h")?,
+        _ => execute!(out, crossterm::event::EnableMouseCapture)?,
+    }
     execute!(out, terminal::Clear(terminal::ClearType::All), cursor::MoveTo(7, 0))?;
     let (col, row) = cursor::position()?;
     let kbd = terminal::supports_keyboard_enhancement()?;
@@ -58,6 +83,8 @@ fn main() -> io::Result<()> {
 
     let mut keys = String::from("keys: ");
     line(&mut out, 3, &keys)?;
+    let mut mouse: Vec<String> = Vec::new();
+    line(&mut out, 4, "mouse:")?;
     loop {
         match crossterm::event::read()? {
             Event::Key(key) if key.kind == KeyEventKind::Press => {
@@ -75,6 +102,11 @@ fn main() -> io::Result<()> {
                 }
                 keys.push_str(&key_name(key.code, key.modifiers));
                 line(&mut out, 3, &keys)?;
+            }
+            Event::Mouse(event) => {
+                mouse.push(format!("{}@{},{}", mouse_name(event.kind), event.column, event.row));
+                let skip = mouse.len().saturating_sub(MOUSE_EVENTS);
+                line(&mut out, 4, &format!("mouse: {}", mouse[skip..].join(" ")))?;
             }
             Event::Resize(cols, rows) => line(&mut out, 2, &format!("size {cols}x{rows}"))?,
             _ => {}

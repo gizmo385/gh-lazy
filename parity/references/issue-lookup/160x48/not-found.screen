@@ -7,7 +7,7 @@ cursor 21 58 hidden
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-bot/issue-fixture Details ───────────────────────────────────────────────────────┐
 │ ★  Owner       Name           Private                        ││ Repo Overview                                                                                │
-│ ☆  parity-bot  issue-fixture  ✘                              ││╸╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  issue-fixture  ✘                              ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
 │ ☆  parity-bot  dotfiles       ✘                              ││parity-bot/issue-fixture • Public                                                             │
 │ ☆  parity-bot  hello-world    ✘                              ││Owned by parity-bot                                                                           │
 │ ☆  parity-bot  lazy-demo      ✘                              ││Default branch: main                                                                          │
@@ -56,49 +56,49 @@ abbbbbbbbbbbbbbccccccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 defeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd.bbbbbbbbbbbbb................................................................................d
-dggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggddhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhd
-diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiddjjjjjjjjjjjjjjjjjjjjjjjjbbbcccccc.............................................................d
-diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiddbbbbbbbbbkkkkkkkkkk...........................................................................d
-diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiddbbbbbbbbbbbbbbbbllll..........................................................................d
+dggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggddhiiiiiiiiiiiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhd
+djjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjddkkkkkkkkkkkkkkkkkkkkkkkkbbbcccccc.............................................................d
+djjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjddbbbbbbbbbllllllllll...........................................................................d
+djjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjddbbbbbbbbbbbbbbbbmmmm..........................................................................d
 d..............................................................dd..............................................................................................d
 d..............................................................ddbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..................................d
-d.................................................mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm.................................................d
-d.................................................mnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnmaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-ddddddddddddddddddddddddddddddddddddddddddddddddddmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-ddddddddddddddddddddddddddddddddddddddddddddddddddmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeemnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-dgggggggggggggggggggggggggggggggggggggggggggggggggmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnmooooooooooooooooooooooooooooooooooooooooooooooo..d
-d.................................................mnnppppppppppppppppppppppppppppppppppppppppppppppppppppppnnm.................................................d
-d.................................................mnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-d.................................................mqqqqqqqqqqqqqnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-d.................................................mrsssssssssssssssssssssssssssssssssssssssssssssssssssssssstm.................................................d
-d.................................................mruuvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvuutm.................................................d
-d.................................................mrsssssssssssssssssssssssssssssssssssssssssssssssssssssssstm.................................................d
-d.................................................mnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-d.................................................mwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwm.................................................d
-ddddddddddddddddddddddddddddddddddddddddddddddddddmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyymnnnnnnnnnnnnzzzzzzzzzzzzzzzznAAAAAAAAAAAAAAAAnnnnnnnnnnnnnm.................................................d
-xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBmnnnnnnnnnnnnCCCCDDDDDDDDCCCCnEEEEFFFFFFFFEEEEnnnnnnnnnnnnnm.................................................d
-xGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGmnnnnnnnnnnnnHHHHHHHHHHHHHHHHnIIIIIIIIIIIIIIIInnnnnnnnnnnnnm.................................................d
-xGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-xGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-xJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-x.................................................mnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-x.................................................mnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.................................................d
-x.................................................mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm.................................................d
-x..............................................................xd..............................................................................................d
-x..............................................................xd..............................................................................................d
-x..............................................................xd.................................KLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL.d
-x..............................................................xd.................................KLMMMMMMMMMMMMMMMMMMMMLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL.d
-x..............................................................xd.................................KLNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNLLLLLLLLLLLLLLLLLLLLLLLLLL.d
-x..............................................................xd.................................KLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL.d
-x..............................................................xd..............................................................................................d
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxd.................................KLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL.d
-dddddddddddddddddOOOOOOOddddddddddddddddddddddddddddddddddddddddd.................................KLMMMMMMMMMMMMMLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL.d
-deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd.................................KLNNNNNNNNNNNNNNNNNNNNNLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL.d
-ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddKLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLdd
-PPPPPPPPPQQQQQQQPPPQQQQQQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+d.................................................nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.................................................d
+d.................................................noooooooooooooooooooooooooooooooooooooooooooooooooooooooooonaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+ddddddddddddddddddddddddddddddddddddddddddddddddddnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+ddddddddddddddddddddddddddddddddddddddddddddddddddnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeenoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+dgggggggggggggggggggggggggggggggggggggggggggggggggnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooonppppppppppppppppppppppppppppppppppppppppppppppp..d
+d.................................................nooqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqoon.................................................d
+d.................................................noooooooooooooooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+d.................................................nrrrrrrrrrrrrrooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+d.................................................nsttttttttttttttttttttttttttttttttttttttttttttttttttttttttun.................................................d
+d.................................................nsvvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwvvun.................................................d
+d.................................................nsttttttttttttttttttttttttttttttttttttttttttttttttttttttttun.................................................d
+d.................................................noooooooooooooooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+d.................................................nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxn.................................................d
+ddddddddddddddddddddddddddddddddddddddddddddddddddnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyynoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+yzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzznooooooooooooAAAAAAAAAAAAAAAAoBBBBBBBBBBBBBBBBooooooooooooon.................................................d
+yCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCnooooooooooooDDDDEEEEEEEEDDDDoFFFFGGGGGGGGFFFFooooooooooooon.................................................d
+yHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHnooooooooooooIIIIIIIIIIIIIIIIoJJJJJJJJJJJJJJJJooooooooooooon.................................................d
+yHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+yHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+yKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+y.................................................noooooooooooooooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+y.................................................noooooooooooooooooooooooooooooooooooooooooooooooooooooooooon.................................................d
+y.................................................nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.................................................d
+y..............................................................yd..............................................................................................d
+y..............................................................yd..............................................................................................d
+y..............................................................yd.................................LMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM.d
+y..............................................................yd.................................LMNNNNNNNNNNNNNNNNNNNNMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM.d
+y..............................................................yd.................................LMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOMMMMMMMMMMMMMMMMMMMMMMMMMM.d
+y..............................................................yd.................................LMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM.d
+y..............................................................yd..............................................................................................d
+yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyd.................................LMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM.d
+dddddddddddddddddPPPPPPPddddddddddddddddddddddddddddddddddddddddd.................................LMNNNNNNNNNNNNNMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM.d
+deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd.................................LMOOOOOOOOOOOOOOOOOOOOOMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM.d
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddLMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMdd
+QQQQQQQQQRRRRRRRQQQRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#0a263a bg=#121212
@@ -109,39 +109,40 @@ e fg=#646464 bg=#191d21 bold
 f fg=#476419 bg=#191d21 bold
 g fg=#646464 bg=#13212c
 h fg=#1a1a1a bg=#121212
-i fg=#646464 bg=#161616
-j fg=#646464 bg=#121212 bold underline
-k fg=#646464 bg=#121212 underline
-l fg=#646464 bg=#121212 bold
-m fg=#121212 bg=#4f4f4f
-n bg=#4f4f4f
-o fg=#0b3a5f bg=#121212 bold
-p fg=#0178d4 bg=#4f4f4f bold
-q fg=#e0e0e0 bg=#4f4f4f bold
-r fg=#191919 bg=#4f4f4f inverse
-s fg=#191919 bg=#1e1e1e
-t fg=#191919 bg=#4f4f4f
-u bg=#1e1e1e
-v fg=#e0e0e0 bg=#1e1e1e
-w fg=#004578 bg=#4f4f4f
-x fg=#2a5738 bg=#121212
-y fg=#646464 bg=#1c2024 bold
-z fg=#7ae998 bg=#55c076
-A fg=#e76580 bg=#b93c5b
-B fg=#63696e bg=#0b3a5f bold
-C bg=#55c076
-D fg=#0b180f bg=#55c076 bold inverse
-E bg=#b93c5b
-F fg=#f5e5e9 bg=#b93c5b bold
-G fg=#646464 bg=#1a1a1a
-H fg=#008139 bg=#55c076
-I fg=#780028 bg=#b93c5b
-J fg=#0a1e2c bg=#1a1a1a inverse
-K fg=#b93c5b bg=#343f49
-L bg=#343f49
-M fg=#d17e92 bg=#343f49 bold
-N fg=#e0e0e0 bg=#343f49
-O fg=#2a3c50 bg=#121212
-P fg=#ffa62b bg=#242f38 bold
-Q fg=#e0e0e0 bg=#242f38
-R bg=#242f38
+i fg=#0b3a5f bg=#121212
+j fg=#646464 bg=#161616
+k fg=#646464 bg=#121212 bold underline
+l fg=#646464 bg=#121212 underline
+m fg=#646464 bg=#121212 bold
+n fg=#121212 bg=#4f4f4f
+o bg=#4f4f4f
+p fg=#0b3a5f bg=#121212 bold
+q fg=#0178d4 bg=#4f4f4f bold
+r fg=#e0e0e0 bg=#4f4f4f bold
+s fg=#191919 bg=#4f4f4f inverse
+t fg=#191919 bg=#1e1e1e
+u fg=#191919 bg=#4f4f4f
+v bg=#1e1e1e
+w fg=#e0e0e0 bg=#1e1e1e
+x fg=#004578 bg=#4f4f4f
+y fg=#2a5738 bg=#121212
+z fg=#646464 bg=#1c2024 bold
+A fg=#7ae998 bg=#55c076
+B fg=#e76580 bg=#b93c5b
+C fg=#63696e bg=#0b3a5f bold
+D bg=#55c076
+E fg=#0b180f bg=#55c076 bold inverse
+F bg=#b93c5b
+G fg=#f5e5e9 bg=#b93c5b bold
+H fg=#646464 bg=#1a1a1a
+I fg=#008139 bg=#55c076
+J fg=#780028 bg=#b93c5b
+K fg=#0a1e2c bg=#1a1a1a inverse
+L fg=#b93c5b bg=#343f49
+M bg=#343f49
+N fg=#d17e92 bg=#343f49 bold
+O fg=#e0e0e0 bg=#343f49
+P fg=#2a3c50 bg=#121212
+Q fg=#ffa62b bg=#242f38 bold
+R fg=#e0e0e0 bg=#242f38
+S bg=#242f38

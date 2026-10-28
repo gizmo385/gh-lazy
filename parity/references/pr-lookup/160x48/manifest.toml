@@ -7,7 +7,7 @@ captures = ["dialog", "empty-number", "unknown-number", "found"]
 scenario = "50e6c409254815776f1a938996454752bb62c875"
 fixtures = "610579837ec714ed44798c7cc6bb36acdd482add"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "e02fc12d1a89a2bfa734e5ad4aca68e227877589"
+harness = "62da7e76547ecbb63e9f20561b0f0c02692784e2"
 
 [recorded_with]
 python = "3.14.7"

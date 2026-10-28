@@ -26,7 +26,7 @@ use super::check::{self, Mismatch};
 use super::env;
 use super::grid::{Grid, Line, Style};
 use super::runner::{self, AppRunStatus};
-use super::scenario::{self, App, Check, Ignore, Roots, Scenario, Size, Step, WaitFor};
+use super::scenario::{self, App, Check, Ignore, MouseTarget, Roots, Scenario, Size, Step, WaitFor, WheelDirection};
 use super::screen;
 use super::structure::{self, ThemeColors};
 use super::{Context, HarnessError, Result};
@@ -45,6 +45,7 @@ pub const HARNESS_INPUTS: &[&str] = &[
     "xtask/src/parity/env.rs",
     "xtask/src/parity/runner.rs",
     "xtask/src/parity/keys.rs",
+    "xtask/src/parity/mouse.rs",
     "xtask/src/parity/grid.rs",
 ];
 /// Paths that need live Python in CI without being reference inputs: the Python-backed `#[ignore]`d tests and the
@@ -1097,6 +1098,34 @@ enum KeyStep<'a> {
     },
     SleepMs(u64),
     Resize(String),
+    Click(KeyTarget<'a>),
+    Wheel {
+        target: KeyTarget<'a>,
+        direction: WheelDirection,
+        count: u16,
+    },
+    Move(KeyTarget<'a>),
+}
+
+/// A mouse target as written. Without `timeout_ms`, as in [`KeyWait`]; the resolved cell isn't known until the run.
+#[derive(Serialize)]
+#[serde(rename_all = "snake_case")]
+enum KeyTarget<'a> {
+    At([u16; 2]),
+    Text { text: &'a str, nth: u16, offset: [i16; 2] },
+}
+
+impl<'a> KeyTarget<'a> {
+    fn of(target: &'a MouseTarget) -> Self {
+        match target {
+            MouseTarget::At { col, row } => KeyTarget::At([*col, *row]),
+            MouseTarget::Text { text, nth, offset, .. } => KeyTarget::Text {
+                text,
+                nth: nth.get(),
+                offset: [offset.0, offset.1],
+            },
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -1140,6 +1169,17 @@ pub fn capture_key(repo: &Path, scenario: &Scenario, size: Size, roots: &Roots) 
             },
             Step::Sleep(d) => KeyStep::SleepMs(millis(*d)),
             Step::Resize(s) => KeyStep::Resize(s.to_string()),
+            Step::Click(t) => KeyStep::Click(KeyTarget::of(t)),
+            Step::Wheel {
+                target,
+                direction,
+                count,
+            } => KeyStep::Wheel {
+                target: KeyTarget::of(target),
+                direction: *direction,
+                count: *count,
+            },
+            Step::Move(t) => KeyStep::Move(KeyTarget::of(t)),
         })
         .collect();
     let key = CaptureKey {
@@ -1817,6 +1857,43 @@ contains = ["Hi"]
                     {"capture": {"name": "main", "checks": ["titles"], "ignore": {"boxes": ["Log"]}}},
                 ],
             })
+        );
+    }
+
+    #[test]
+    fn the_capture_key_hashes_mouse_steps_as_written() {
+        let (_dir, roots) = key_roots();
+        let with = |step: &str| key_of(&variant("keys = [\"j\"]", step), SIZE, &roots);
+        let click = with("click = { text = \"Hi\", nth = 2, offset = [1, -1] }");
+        assert_eq!(
+            with("click = { text = \"Hi\", nth = 2, offset = [1, -1], timeout_ms = 50 }"),
+            click,
+            "timeout_ms"
+        );
+        for other in [
+            "click = { text = \"Hi\", offset = [1, -1] }",
+            "click = { text = \"Hi\", nth = 3, offset = [1, -1] }",
+            "click = { text = \"Hi\", nth = 2 }",
+            "click = { text = \"Ho\", nth = 2, offset = [1, -1] }",
+            "move = { text = \"Hi\", nth = 2, offset = [1, -1] }",
+        ] {
+            assert_ne!(with(other), click, "{other}");
+        }
+        let wheel = with("wheel = { at = [3, 4], direction = \"down\" }");
+        assert_eq!(with("wheel = { at = [3, 4], direction = \"down\", count = 1 }"), wheel);
+        assert_ne!(with("wheel = { at = [3, 4], direction = \"up\" }"), wheel);
+        assert_ne!(with("wheel = { at = [3, 4], direction = \"down\", count = 2 }"), wheel);
+        assert_ne!(with("wheel = { at = [4, 4], direction = \"down\" }"), wheel);
+
+        let key: Value = serde_json::from_str(&click).unwrap();
+        assert_eq!(
+            key["steps"][1],
+            serde_json::json!({"click": {"text": {"text": "Hi", "nth": 2, "offset": [1, -1]}}})
+        );
+        let key: Value = serde_json::from_str(&wheel).unwrap();
+        assert_eq!(
+            key["steps"][1],
+            serde_json::json!({"wheel": {"target": {"at": [3, 4]}, "direction": "down", "count": 1}})
         );
     }
 

@@ -96,6 +96,8 @@ pub struct App {
     mouse_capture: Option<MouseCapture>,
     /// The `OriginRepo` request asked when the main screen was entered, until git answers it.
     local_repo_request: Option<RequestId>,
+    /// The `CurrentBranch` request asked with it, until git answers it.
+    current_branch_request: Option<RequestId>,
     /// The unread count in the status box.
     notifications: NotificationPoll,
     should_quit: bool,
@@ -120,6 +122,7 @@ impl App {
             mouse: None,
             mouse_capture: None,
             local_repo_request: None,
+            current_branch_request: None,
             notifications: NotificationPoll::default(),
             should_quit: false,
         }
@@ -161,6 +164,8 @@ impl App {
         main.start(&mut cx);
         if *cx.local_repo() == LocalRepo::Unknown && self.local_repo_request.is_none() {
             self.local_repo_request = Some(cx.git(GitRequest::OriginRepo));
+            // Read once, as Python's `current_directory_branch`, for Create PR's head branch.
+            self.current_branch_request = Some(cx.git(GitRequest::CurrentBranch));
         }
         self.base = BaseScreen::Main(main);
         self.notifications.start(&mut Cx::new(&mut self.shared, out));
@@ -670,18 +675,22 @@ impl App {
         self.notifications.is_refreshing()
     }
 
-    /// Hands a git response to whatever is waiting for it: the current-directory repo is kept for every component,
-    /// and the main screen may select it.
+    /// Hands a git response to whatever is waiting for it: the current-directory repo and branch are kept for every
+    /// component, and the main screen may select the repo.
     fn route_git(&mut self, id: RequestId, response: GitResponse, out: &mut Outbox) {
-        if self.local_repo_request != Some(id) {
-            tracing::debug!("Dropping the response to request {id}: nothing is waiting for it");
-            return;
-        }
-        let GitResponse::OriginRepo(repo) = response;
-        self.local_repo_request = None;
-        self.shared.local_repo = LocalRepo::Known(repo);
-        if let BaseScreen::Main(main) = &mut self.base {
-            main.on_local_repo(&mut Cx::new(&mut self.shared, out));
+        match response {
+            GitResponse::OriginRepo(repo) if self.local_repo_request == Some(id) => {
+                self.local_repo_request = None;
+                self.shared.local_repo = LocalRepo::Known(repo);
+                if let BaseScreen::Main(main) = &mut self.base {
+                    main.on_local_repo(&mut Cx::new(&mut self.shared, out));
+                }
+            }
+            GitResponse::CurrentBranch(branch) if self.current_branch_request == Some(id) => {
+                self.current_branch_request = None;
+                self.shared.current_branch = branch;
+            }
+            _ => tracing::debug!("Dropping the response to request {id}: nothing is waiting for it"),
         }
     }
 
@@ -1388,6 +1397,27 @@ mod tests {
         assert_eq!(
             out,
             format!("DEBUG Dropping the response to request {id}: nothing is waiting for it\n")
+        );
+    }
+
+    #[test]
+    fn the_current_branch_is_read_once_on_entering_main() {
+        let mut app = TestApp::new(Config::default()).with_local_branch(Some("new-feature"));
+        assert_eq!(app.with_cx(|cx| cx.current_branch().map(str::to_owned)), None);
+        futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+        assert_eq!(
+            app.with_cx(|cx| cx.current_branch().map(str::to_owned)).as_deref(),
+            Some("new-feature")
+        );
+        // Entering the main screen again doesn't ask again.
+        let before = app.effects().len();
+        app.dispatch(Action::EnterMain);
+        assert!(
+            !app.effects()[before..]
+                .iter()
+                .any(|effect| matches!(effect, Effect::Git { .. })),
+            "{:?}",
+            &app.effects()[before..]
         );
     }
 

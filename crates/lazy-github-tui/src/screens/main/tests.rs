@@ -832,7 +832,7 @@ fn an_empty_list_draws_the_header_and_keeps_the_section() {
 fn only_the_pending_response_fills_the_table() {
     let mut app = TestApp::loading(Config::default(), FakeGithub::new());
     let pending = match app.effects() {
-        [Effect::Github { id, .. }, Effect::Git { .. }] => *id,
+        [Effect::Github { id, .. }, Effect::Git { .. }, Effect::Git { .. }] => *id,
         other => panic!("{other:?}"),
     };
     // A response to another request, even a repos list, is dropped.

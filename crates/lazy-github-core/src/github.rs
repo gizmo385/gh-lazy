@@ -315,6 +315,12 @@ pub trait Github: Clone + Send + Sync + 'static {
     /// decode.
     fn list_branches(&self, repo: &Repository) -> impl Future<Output = Result<Vec<Branch>, GhError>> + Send;
 
+    /// [`Github::list_branches`] fetched past `gh`'s cache, so a branch pushed a moment ago is listed (Create PR; owner
+    /// decision on #278). The answer isn't cached either.
+    ///
+    /// Fails as [`Github::list_branches`] does.
+    fn list_branches_uncached(&self, repo: &Repository) -> impl Future<Output = Result<Vec<Branch>, GhError>> + Send;
+
     /// Asks GitHub to run workflow `workflow_id` of `repo` on `git_ref` (a branch name): `POST
     /// /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches` with `{"ref": git_ref}` over stdin. GitHub
     /// answers 204. Never cached.
@@ -326,6 +332,17 @@ pub trait Github: Clone + Send + Sync + 'static {
         workflow_id: u64,
         git_ref: &str,
     ) -> impl Future<Output = Result<(), GhError>> + Send;
+
+    /// Opens a pull request in `repo`: `POST /repos/{owner}/{repo}/pulls` with `pr` over stdin. Returns the created
+    /// pull request, carrying `repo`. Never cached.
+    ///
+    /// Fails on any HTTP error status (422 for a head GitHub doesn't know, or a pull request that exists already) or
+    /// `gh` failure, or with [`GhError::Decode`] when the body doesn't decode.
+    fn create_pull_request(
+        &self,
+        repo: &Repository,
+        pr: &NewPullRequest,
+    ) -> impl Future<Output = Result<FullPullRequest, GhError>> + Send;
 
     /// Re-runs every job of run `run_id` in `repo`: `POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun`, with no
     /// body. GitHub answers 201. Never cached.
@@ -597,6 +614,38 @@ pub struct MergeResult {
     /// The merge commit, when there is one.
     #[serde(default)]
     pub sha: Option<String>,
+}
+
+/// What [`Github::create_pull_request`] sends: the body of `POST /repos/{owner}/{repo}/pulls`, serialized with its
+/// fields in this order and `body` left out when it's `None`.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize)]
+pub struct NewPullRequest {
+    /// The title, as typed.
+    pub title: String,
+    /// Whether it opens as a draft.
+    pub draft: bool,
+    /// The branch to merge into, as typed.
+    pub base: String,
+    /// The branch the changes come from, as `<owner>:<branch>`.
+    pub head: String,
+    /// The description, or `None` when it's empty (Python leaves the key out then).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub body: Option<String>,
+}
+
+impl NewPullRequest {
+    /// The request for a pull request in `repo` from `head_branch` into `base`. The head is qualified with `repo`'s
+    /// owner, so a branch in a fork can't be named, as in Python. An empty `description` is left out; one of only
+    /// spaces is sent. Nothing is trimmed.
+    pub fn new(repo: &Repository, title: &str, draft: bool, base: &str, head_branch: &str, description: &str) -> Self {
+        Self {
+            title: title.to_owned(),
+            draft,
+            base: base.to_owned(),
+            head: format!("{}:{head_branch}", repo.owner.login),
+            body: (!description.is_empty()).then(|| description.to_owned()),
+        }
+    }
 }
 
 /// A review's verdict, as the reviews endpoint takes it: `APPROVE`, `REQUEST_CHANGES` or `COMMENT`.
@@ -1010,10 +1059,23 @@ impl GhCli {
     /// `GET /repos/{owner}/{repo}/branches`, page 1 of [`DEFAULT_PER_PAGE`], cached for the default TTL as Python's
     /// `github_headers()` asks.
     fn list_branches_request(&self, repo: &Repository) -> GhRequest {
-        let mut request = GhRequest::get(format!("/repos/{}/{}/branches", repo.owner.login, repo.name));
-        request.query = PageQuery::default().params();
+        let mut request = Self::list_branches_uncached_request(repo);
         request.cache = Some(self.inner.ttls.default);
         request
+    }
+
+    /// [`Self::list_branches_request`] without `--cache`.
+    fn list_branches_uncached_request(repo: &Repository) -> GhRequest {
+        let mut request = GhRequest::get(format!("/repos/{}/{}/branches", repo.owner.login, repo.name));
+        request.query = PageQuery::default().params();
+        request
+    }
+
+    /// `POST /repos/{owner}/{repo}/pulls` with `pr` as the JSON body.
+    fn create_pull_request_request(repo: &Repository, pr: &NewPullRequest) -> Result<GhRequest, GhError> {
+        let mut request = GhRequest::new(Method::Post, format!("/repos/{}/{}/pulls", repo.owner.login, repo.name));
+        request.body = Some(serde_json::to_value(pr)?);
+        Ok(request)
     }
 
     /// `POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches` with `{"ref": git_ref}`.
@@ -1310,6 +1372,16 @@ impl Github for GhCli {
             .request(self.list_branches_request(repo))
             .await?
             .json()
+    }
+
+    async fn list_branches_uncached(&self, repo: &Repository) -> Result<Vec<Branch>, GhError> {
+        let request = Self::list_branches_uncached_request(repo);
+        self.inner.runner.request(request).await?.json()
+    }
+
+    async fn create_pull_request(&self, repo: &Repository, pr: &NewPullRequest) -> Result<FullPullRequest, GhError> {
+        let request = Self::create_pull_request_request(repo, pr)?;
+        full_pull_request(&self.inner.runner.request(request).await?, repo)
     }
 
     async fn dispatch_workflow(&self, repo: &Repository, workflow_id: u64, git_ref: &str) -> Result<(), GhError> {
@@ -2817,6 +2889,91 @@ mod tests {
         .json()
         .unwrap();
         assert_eq!((run.id, run.run_number), (5_000_042, 42));
+    }
+
+    #[test]
+    fn the_uncached_branches_argv_has_no_cache() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        assert_eq!(
+            strings(GhCli::list_branches_uncached_request(&run_fixture_repo()).argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/run-fixture/branches?page=1&per_page=30"
+            ]
+        );
+    }
+
+    fn new_pull_request(description: &str) -> NewPullRequest {
+        NewPullRequest::new(
+            &pr_details_repo(),
+            "Parity PR",
+            true,
+            "main",
+            "new-feature",
+            description,
+        )
+    }
+
+    #[test]
+    fn create_pull_request_argv_posts_over_stdin_without_a_cache() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        let request = GhCli::create_pull_request_request(&pr_details_repo(), &new_pull_request("")).unwrap();
+        assert_eq!(
+            strings(request.argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "POST",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "--input",
+                "-",
+                "/repos/parity-bot/pr-details/pulls"
+            ]
+        );
+    }
+
+    #[test]
+    fn a_new_pull_request_sends_its_keys_in_order_and_the_body_only_when_not_empty() {
+        let body = |description: &str| serde_json::to_string(&new_pull_request(description)).unwrap();
+        assert_eq!(
+            body(""),
+            r#"{"title":"Parity PR","draft":true,"base":"main","head":"parity-bot:new-feature"}"#
+        );
+        assert_eq!(
+            body("  "),
+            r#"{"title":"Parity PR","draft":true,"base":"main","head":"parity-bot:new-feature","body":"  "}"#
+        );
+        // Nothing is trimmed.
+        let untrimmed = NewPullRequest::new(&pr_details_repo(), " T ", false, " main", "b ", "x");
+        assert_eq!((untrimmed.title.as_str(), untrimmed.base.as_str()), (" T ", " main"));
+        assert_eq!(untrimmed.head, "parity-bot:b ");
+        // The fixture's request body is exactly what's sent.
+        let fixture = parity_fixture("pr-create", "repos/parity-bot/pr-details/pulls/POST.json");
+        assert_eq!(
+            serde_json::to_value(new_pull_request("First line\nSecond line")).unwrap(),
+            fixture["request"]["body"]
+        );
+    }
+
+    #[test]
+    fn a_created_pull_request_decodes_and_a_422_is_an_error() {
+        let created = parity_fixture("pr-create", "repos/parity-bot/pr-details/pulls/POST.json");
+        let response = json_response("201 Created", &created["response"]["body"].to_string()).unwrap();
+        let pr = full_pull_request(&response, &pr_details_repo()).unwrap();
+        assert_eq!(pr.number(), 10);
+        assert_eq!(pr.pr.issue.repo, pr_details_repo());
+        let refused = parity_fixture("pr-create", "repos/parity-bot/pr-details/pulls/POST.2.json");
+        assert!(matches!(
+            json_response("422 Unprocessable Entity", &refused["response"]["body"].to_string()),
+            Err(GhError::Http { status: 422, .. })
+        ));
     }
 
     #[test]

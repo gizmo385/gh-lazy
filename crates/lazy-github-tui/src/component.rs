@@ -306,6 +306,9 @@ pub(crate) struct Shared {
     pub(crate) current_repo: Option<Repository>,
     /// The current-directory repo, once git has answered.
     pub(crate) local_repo: LocalRepo,
+    /// The branch checked out in the current directory, read once at startup: `None` until git answers, or when it
+    /// couldn't say. Python's `current_directory_branch`.
+    pub(crate) current_branch: Option<String>,
     /// The in-app clipboard (Textual's `App.clipboard`): the last text copied or cut anywhere in the app. Only `App`
     /// writes it, when it applies `Action::Copy`.
     pub(crate) clipboard: String,
@@ -329,6 +332,7 @@ impl Shared {
             clock,
             current_repo: None,
             local_repo: LocalRepo::Unknown,
+            current_branch: None,
             clipboard: String::new(),
             next_request: 1,
             config_dirty: false,
@@ -389,6 +393,12 @@ impl<'a> Cx<'a> {
     /// The repo of the directory LazyGithub was launched in, as far as git has said.
     pub fn local_repo(&self) -> &LocalRepo {
         &self.shared.local_repo
+    }
+
+    /// The branch checked out in the directory LazyGithub was launched in: `None` until git answers, or when it
+    /// couldn't say. A detached HEAD is `HEAD`.
+    pub fn current_branch(&self) -> Option<&str> {
+        self.shared.current_branch.as_deref()
     }
 
     /// The in-app clipboard, which `ctrl+v` in a text input pastes: the last text copied or cut in the app, empty

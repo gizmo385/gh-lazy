@@ -8,8 +8,8 @@ use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{
-    DiffFetchError, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue, NewReview, PageQuery,
-    RepoListQuery,
+    DiffFetchError, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue, NewPullRequest,
+    NewReview, PageQuery, RepoListQuery,
 };
 use lazy_github_core::models::{
     Branch, CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
@@ -289,6 +289,18 @@ pub enum GithubRequest {
         /// The repo whose branches to list.
         repo: Box<Repository>,
     },
+    /// [`Github::list_branches_uncached`]. Answered as [`GithubResponse::ListBranches`].
+    ListBranchesUncached {
+        /// The repo whose branches to list.
+        repo: Box<Repository>,
+    },
+    /// [`Github::create_pull_request`].
+    CreatePullRequest {
+        /// The repo to open it in.
+        repo: Box<Repository>,
+        /// The title, draft flag, base, head and description.
+        pr: NewPullRequest,
+    },
     /// [`Github::dispatch_workflow`].
     DispatchWorkflow {
         /// The repo the workflow is in.
@@ -390,6 +402,8 @@ pub enum GithubResponse {
     ListBranches(Result<Vec<Branch>, GhError>),
     /// [`Github::dispatch_workflow`].
     DispatchWorkflow(Result<(), GhError>),
+    /// [`Github::create_pull_request`], boxed to keep this enum small.
+    CreatePullRequest(Result<Box<FullPullRequest>, GhError>),
     /// [`Github::rerun_workflow_run`] or [`Github::rerun_failed_jobs`].
     RerunWorkflow(Result<(), GhError>),
     /// [`Github::workflow_run`], boxed to keep this enum small.
@@ -398,6 +412,10 @@ pub enum GithubResponse {
 
 impl GithubRequest {
     /// Performs the request against `gh`.
+    #[allow(
+        clippy::too_many_lines,
+        reason = "a flat table with one arm per Github method; splitting it would need an unreachable arm"
+    )]
     pub async fn run<G: Github>(self, gh: &G) -> GithubResponse {
         match self {
             GithubRequest::CheckAuth => GithubResponse::CheckAuth(gh.check_auth().await),
@@ -478,6 +496,12 @@ impl GithubRequest {
                 GithubResponse::MergePullRequest(gh.merge_pull_request(&repo, number, &request).await)
             }
             GithubRequest::ListBranches { repo } => GithubResponse::ListBranches(gh.list_branches(&repo).await),
+            GithubRequest::ListBranchesUncached { repo } => {
+                GithubResponse::ListBranches(gh.list_branches_uncached(&repo).await)
+            }
+            GithubRequest::CreatePullRequest { repo, pr } => {
+                GithubResponse::CreatePullRequest(gh.create_pull_request(&repo, &pr).await.map(Box::new))
+            }
             GithubRequest::DispatchWorkflow {
                 repo,
                 workflow_id,
@@ -504,6 +528,23 @@ impl GithubRequest {
 pub enum GitRequest {
     /// [`GitCli::origin_repo`]: the repo LazyGithub was launched in.
     OriginRepo,
+    /// [`GitCli::current_branch`]: the branch checked out where LazyGithub was launched.
+    CurrentBranch,
+    /// [`GitCli::has_upstream`].
+    HasUpstream {
+        /// The local branch.
+        branch: String,
+    },
+    /// [`GitCli::branch_exists_on_remote`].
+    BranchExistsOnRemote {
+        /// The branch to look for on `origin`.
+        branch: String,
+    },
+    /// [`GitCli::push_branch`].
+    PushBranch {
+        /// The local branch to push.
+        branch: String,
+    },
 }
 
 /// The result of a [`GitRequest`], in the variant of the same name.
@@ -511,6 +552,14 @@ pub enum GitRequest {
 pub enum GitResponse {
     /// [`GitCli::origin_repo`]: `None` when there's no current-directory repo, whatever the reason.
     OriginRepo(Option<RepoName>),
+    /// [`GitCli::current_branch`]: `None` when git couldn't say.
+    CurrentBranch(Option<String>),
+    /// [`GitCli::has_upstream`].
+    HasUpstream(bool),
+    /// [`GitCli::branch_exists_on_remote`].
+    BranchExistsOnRemote(bool),
+    /// [`GitCli::push_branch`]: the failure as its log line, so the response stays `Clone`.
+    PushBranch(Result<(), String>),
 }
 
 impl GitRequest {
@@ -518,6 +567,14 @@ impl GitRequest {
     pub async fn run(self, git: &GitCli) -> GitResponse {
         match self {
             GitRequest::OriginRepo => GitResponse::OriginRepo(git.origin_repo().await),
+            GitRequest::CurrentBranch => GitResponse::CurrentBranch(git.current_branch().await),
+            GitRequest::HasUpstream { branch } => GitResponse::HasUpstream(git.has_upstream(&branch).await),
+            GitRequest::BranchExistsOnRemote { branch } => {
+                GitResponse::BranchExistsOnRemote(git.branch_exists_on_remote(&branch).await)
+            }
+            GitRequest::PushBranch { branch } => {
+                GitResponse::PushBranch(git.push_branch(&branch).await.map_err(|error| error.to_string()))
+            }
         }
     }
 }

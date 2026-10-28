@@ -394,6 +394,95 @@ mod tests {
         runtime.shutdown().await;
     }
 
+    /// Runs one git request through the runtime and returns its response.
+    async fn git_answer(
+        runtime: &mut Runtime<FakeGithub>,
+        rx: &mut mpsc::UnboundedReceiver<Event>,
+        request: GitRequest,
+    ) -> GitResponse {
+        let id = RequestId::new(9);
+        runtime.execute(Effect::Git { id, request });
+        match tokio::time::timeout(Duration::from_secs(30), rx.recv())
+            .await
+            .unwrap()
+            .unwrap()
+        {
+            Event::Git { id: got, response } => {
+                assert_eq!(got, id);
+                response
+            }
+            other => panic!("unexpected {other:?}"),
+        }
+    }
+
+    // Not on a paused clock, as above. The client runs in the work dir, not the process's (this checkout, on another
+    // branch), which the branch answers show.
+    #[tokio::test(flavor = "current_thread")]
+    async fn every_git_request_answers_from_the_working_directory() {
+        let dir = TempDir::new();
+        let (home, work) = (dir.0.join("home"), dir.0.join("work"));
+        std::fs::create_dir_all(&home).unwrap();
+        std::fs::create_dir_all(&work).unwrap();
+        git_in(&dir.0, &home, &["init", "-q", "--bare", "origin.git"]);
+        git_in(&work, &home, &["init", "-q", "-b", "parity-branch"]);
+        git_in(
+            &work,
+            &home,
+            &[
+                "-c",
+                "user.name=P",
+                "-c",
+                "user.email=p@example.com",
+                "commit",
+                "-q",
+                "--allow-empty",
+                "-m",
+                "c",
+            ],
+        );
+        let origin = dir.0.join("origin.git");
+        git_in(&work, &home, &["remote", "add", "origin", origin.to_str().unwrap()]);
+        let git = GitCli::new(Some(work))
+            .with_env("HOME", &home)
+            .with_env("GIT_CONFIG_NOSYSTEM", "1");
+        let (mut runtime, mut rx) = runtime_with_git(FakeGithub::new(), git, &dir);
+        let branch = || "parity-branch".to_owned();
+        let mut answer = async |request| git_answer(&mut runtime, &mut rx, request).await;
+        assert_eq!(answer(GitRequest::OriginRepo).await, GitResponse::OriginRepo(None));
+        assert_eq!(
+            answer(GitRequest::CurrentBranch).await,
+            GitResponse::CurrentBranch(Some(branch()))
+        );
+        assert_eq!(
+            answer(GitRequest::HasUpstream { branch: branch() }).await,
+            GitResponse::HasUpstream(false)
+        );
+        assert_eq!(
+            answer(GitRequest::BranchExistsOnRemote { branch: branch() }).await,
+            GitResponse::BranchExistsOnRemote(false)
+        );
+        assert_eq!(
+            answer(GitRequest::PushBranch { branch: branch() }).await,
+            GitResponse::PushBranch(Ok(()))
+        );
+        assert_eq!(
+            answer(GitRequest::BranchExistsOnRemote { branch: branch() }).await,
+            GitResponse::BranchExistsOnRemote(true)
+        );
+        assert_eq!(
+            answer(GitRequest::HasUpstream { branch: branch() }).await,
+            GitResponse::HasUpstream(true)
+        );
+        assert!(matches!(
+            answer(GitRequest::PushBranch {
+                branch: "missing".into()
+            })
+            .await,
+            GitResponse::PushBranch(Err(_))
+        ));
+        runtime.shutdown().await;
+    }
+
     #[tokio::test(flavor = "current_thread", start_paused = true)]
     async fn a_cancelled_git_request_delivers_nothing() {
         let dir = TempDir::new();

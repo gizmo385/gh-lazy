@@ -79,7 +79,7 @@ fn a_fresh_cache_goes_straight_to_main() {
     let mut app = TestApp::on_startup(config_checked(Some(1.hour())), FakeGithub::new());
     settle(&mut app);
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
-    // Only the main screen's repos list, its `repos.json` read and write, and the current-directory repo.
+    // Only the main screen's repos list, its `repos.json` read and write, and the current-directory repo and branch.
     assert!(
         matches!(
             app.effects(),
@@ -91,6 +91,10 @@ fn a_fresh_cache_goes_straight_to_main() {
                 Effect::ReadCache { .. },
                 Effect::Git {
                     request: GitRequest::OriginRepo,
+                    ..
+                },
+                Effect::Git {
+                    request: GitRequest::CurrentBranch,
                     ..
                 },
                 Effect::WriteCache { .. },
@@ -128,9 +132,9 @@ fn a_stale_cache_checks_then_saves_once_and_shows_main() {
     let now = app.clock().local_now().datetime();
     assert_eq!(saved[0].cache.auth_last_checked, Some(now));
     assert!(!saved[0].core.first_start);
-    // The check, the repos list, the `repos.json` read, the current-directory repo, the save and the `repos.json`
-    // write.
-    assert_eq!(app.effects().len(), 6, "{:?}", app.effects());
+    // The check, the repos list, the `repos.json` read, the current-directory repo and branch, the save and the
+    // `repos.json` write.
+    assert_eq!(app.effects().len(), 7, "{:?}", app.effects());
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
 }
 
@@ -177,7 +181,7 @@ fn the_poll_rechecks_and_moves_on_without_saving() {
     settle(&mut app);
     assert_eq!(app.app().screen(), Some(ScreenKind::Main));
     assert_eq!(saved_configs(&app), Vec::<&Config>::new());
-    let last = &app.effects()[app.effects().len() - 5..];
+    let last = &app.effects()[app.effects().len() - 6..];
     assert!(
         matches!(
             last,
@@ -190,6 +194,10 @@ fn the_poll_rechecks_and_moves_on_without_saving() {
                 Effect::ReadCache { .. },
                 Effect::Git {
                     request: GitRequest::OriginRepo,
+                    ..
+                },
+                Effect::Git {
+                    request: GitRequest::CurrentBranch,
                     ..
                 },
                 Effect::WriteCache { .. },

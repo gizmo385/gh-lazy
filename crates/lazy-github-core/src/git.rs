@@ -1,4 +1,5 @@
-//! Running `git` in the user's working directory, to find the repo LazyGithub was launched in.
+//! Running `git` in the user's working directory: the repo and branch LazyGithub was launched in, and the branch
+//! checks and push Create PR needs.
 //!
 //! The directory is passed in (from `LAZY_GITHUB_ORIGINAL_PWD` or the process's current directory, resolved once by
 //! the binary) rather than read from the environment here.
@@ -16,8 +17,11 @@ use tracing::debug;
 
 use crate::models::RepoName;
 
-/// How long one `git` call may run before it's killed.
+/// How long one local `git` call may run before it's killed.
 const GIT_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// How long a `git` call that talks to the remote (`ls-remote`, `push`) may run before it's killed.
+const NETWORK_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Why a `git` call failed. Each variant's `Display` is one sentence, for the log.
 #[derive(Debug, thiserror::Error)]
@@ -135,6 +139,58 @@ impl GitCli {
         }
     }
 
+    /// The checked-out branch, `git rev-parse --abbrev-ref HEAD` trimmed: `HEAD` when it's detached, as in Python,
+    /// and `None` when git fails (not a repo, no commit yet, git missing).
+    pub async fn current_branch(&self) -> Option<String> {
+        match self
+            .run_logged(&["rev-parse", "--abbrev-ref", "HEAD"], self.inner.timeout)
+            .await
+        {
+            Ok(stdout) => Some(stdout.trim().to_owned()),
+            Err(error) => {
+                debug!("No current-directory branch: {error}");
+                None
+            }
+        }
+    }
+
+    /// Whether `branch` has an upstream configured: `git config --get branch.<branch>.merge` exits 0.
+    pub async fn has_upstream(&self, branch: &str) -> bool {
+        let key = format!("branch.{branch}.merge");
+        self.run_logged(&["config", "--get", &key], self.inner.timeout)
+            .await
+            .is_ok()
+    }
+
+    /// Whether `origin` has `branch`: `git ls-remote origin <branch>` succeeds and prints something. False on any
+    /// failure (not a repo, no `origin`, the network).
+    pub async fn branch_exists_on_remote(&self, branch: &str) -> bool {
+        self.run_logged(&["ls-remote", "origin", branch], NETWORK_TIMEOUT)
+            .await
+            .is_ok_and(|stdout| !stdout.trim().is_empty())
+    }
+
+    /// Pushes the local branch `branch` to `origin` and makes it its upstream: `git push --set-upstream origin
+    /// <branch>`, the named branch rather than `HEAD` (Py bug B28's recommendation). The caller checks first that the
+    /// working directory's repo is the one the pull request is for.
+    pub async fn push_branch(&self, branch: &str) -> Result<(), GitError> {
+        self.run_logged(&["push", "--set-upstream", "origin", branch], NETWORK_TIMEOUT)
+            .await
+            .map(drop)
+    }
+
+    /// [`Self::output`], with what git printed on both streams logged at debug rather than reaching the terminal (Py
+    /// bug B74's recommendation).
+    async fn run_logged(&self, args: &[&str], limit: Duration) -> Result<String, GitError> {
+        let command = args.join(" ");
+        let result = self.output(args, limit).await;
+        match &result {
+            Ok((stdout, stderr)) => debug!("git {command}: stdout {:?}, stderr {:?}", stdout.trim(), stderr.trim()),
+            Err(error) => debug!("git {command}: {error}"),
+        }
+        result.map(|(stdout, _)| stdout)
+    }
+
     fn command(&self, args: &[&str]) -> Command {
         let mut command = Command::new(&self.inner.program);
         command
@@ -158,13 +214,17 @@ impl GitCli {
     /// Past the limit, `git` is killed and reaped and the result is [`GitError::Timeout`]. Dropping the returned
     /// future kills the child too, through `kill_on_drop`.
     async fn run(&self, args: &[&str]) -> Result<String, GitError> {
+        self.output(args, self.inner.timeout).await.map(|(stdout, _)| stdout)
+    }
+
+    /// Spawns `git args` and returns its stdout and stderr, for at most `limit`. See [`Self::run`].
+    async fn output(&self, args: &[&str], limit: Duration) -> Result<(String, String), GitError> {
         let mut child = match self.command(args).spawn() {
             Ok(child) => child,
             Err(error) => return Err(self.spawn_error(error).await),
         };
         let stdout = child.stdout.take();
         let stderr = child.stderr.take();
-        let limit = self.inner.timeout;
         // Borrows `child` only until it finishes or the timeout drops it, so the timeout path can still kill it.
         let finish = async {
             let (stdout, stderr, status) = tokio::join!(read_all(stdout), read_all(stderr), child.wait());
@@ -186,7 +246,10 @@ impl GitCli {
                 stderr: String::from_utf8_lossy(&stderr).trim().to_owned(),
             });
         }
-        Ok(String::from_utf8_lossy(&stdout).into_owned())
+        Ok((
+            String::from_utf8_lossy(&stdout).into_owned(),
+            String::from_utf8_lossy(&stderr).into_owned(),
+        ))
     }
 
     /// What a failed spawn means. A missing working directory fails the spawn like a missing program does, so it's
@@ -334,6 +397,87 @@ mod tests {
         let git = GitCli::with_program("lazy-github-no-such-git", Some(sandbox.work()));
         assert!(matches!(git.remote_url("origin").await, Err(GitError::NotInstalled)));
         assert_eq!(git.origin_repo().await, None);
+    }
+
+    impl Sandbox {
+        /// `work/` as a repo on `main` with one commit, and `origin.git/` as a bare repo set as its `origin` when
+        /// `origin` says so.
+        fn committed_repo(&self, origin: bool) {
+            let work = self.work();
+            self.git_in(&work, &["init", "-q", "-b", "main"]);
+            self.git_in(
+                &work,
+                &[
+                    "-c",
+                    "user.name=Parity",
+                    "-c",
+                    "user.email=parity@example.com",
+                    "commit",
+                    "-q",
+                    "--allow-empty",
+                    "-m",
+                    "first",
+                ],
+            );
+            if origin {
+                let bare = self.dir.path().join("origin.git");
+                self.git_in(self.dir.path(), &["init", "-q", "--bare", "origin.git"]);
+                self.git_in(&work, &["remote", "add", "origin", bare.to_str().unwrap()]);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn the_current_branch_is_its_name_head_when_detached_and_none_outside_a_repo() {
+        let sandbox = Sandbox::new();
+        let git = sandbox.client(sandbox.work());
+        assert_eq!(git.current_branch().await, None);
+        sandbox.committed_repo(false);
+        sandbox.git_in(&sandbox.work(), &["checkout", "-q", "-b", "feature/x"]);
+        assert_eq!(git.current_branch().await.as_deref(), Some("feature/x"));
+        sandbox.git_in(&sandbox.work(), &["checkout", "-q", "--detach"]);
+        assert_eq!(git.current_branch().await.as_deref(), Some("HEAD"));
+    }
+
+    #[tokio::test]
+    async fn an_upstream_is_seen_once_set() {
+        let sandbox = Sandbox::new();
+        sandbox.committed_repo(true);
+        let git = sandbox.client(sandbox.work());
+        assert!(!git.has_upstream("main").await);
+        sandbox.git_in(&sandbox.work(), &["push", "-q", "origin", "main"]);
+        assert!(!git.has_upstream("main").await, "a push without -u sets none");
+        sandbox.git_in(&sandbox.work(), &["branch", "--set-upstream-to=origin/main", "main"]);
+        assert!(git.has_upstream("main").await);
+    }
+
+    #[tokio::test]
+    async fn a_branch_is_on_the_remote_only_when_origin_lists_it() {
+        let sandbox = Sandbox::new();
+        sandbox.committed_repo(false);
+        let git = sandbox.client(sandbox.work());
+        assert!(!git.branch_exists_on_remote("main").await, "no origin");
+        let bare = sandbox.dir.path().join("origin.git");
+        sandbox.git_in(sandbox.dir.path(), &["init", "-q", "--bare", "origin.git"]);
+        sandbox.git_in(&sandbox.work(), &["remote", "add", "origin", bare.to_str().unwrap()]);
+        assert!(!git.branch_exists_on_remote("main").await, "not pushed yet");
+        sandbox.git_in(&sandbox.work(), &["push", "-q", "origin", "main"]);
+        assert!(git.branch_exists_on_remote("main").await);
+        assert!(!git.branch_exists_on_remote("nope").await);
+    }
+
+    #[tokio::test]
+    async fn a_push_creates_the_remote_branch_and_sets_its_upstream() {
+        let sandbox = Sandbox::new();
+        sandbox.committed_repo(true);
+        sandbox.git_in(&sandbox.work(), &["branch", "feature"]);
+        let git = sandbox.client(sandbox.work());
+        git.push_branch("feature").await.unwrap();
+        assert!(git.branch_exists_on_remote("feature").await);
+        assert!(git.has_upstream("feature").await);
+        // The named branch was pushed, not HEAD (still main).
+        assert!(!git.branch_exists_on_remote("main").await);
+        assert!(matches!(git.push_branch("missing").await, Err(GitError::Failed { .. })));
     }
 
     #[test]

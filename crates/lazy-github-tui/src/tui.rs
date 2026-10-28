@@ -714,6 +714,21 @@ mod tests {
             std::future::pending().await
         }
 
+        async fn list_branches_uncached(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+        ) -> Result<Vec<lazy_github_core::models::Branch>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
+        async fn create_pull_request(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _pr: &lazy_github_core::github::NewPullRequest,
+        ) -> Result<lazy_github_core::models::FullPullRequest, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
         async fn dispatch_workflow(
             &self,
             _repo: &lazy_github_core::models::Repository,

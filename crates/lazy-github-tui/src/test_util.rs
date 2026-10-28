@@ -48,9 +48,11 @@ pub struct TestApp {
     gh: FakeGithub,
     /// The working directory's `origin` repo, `None` for "not a repo".
     local_repo: Option<RepoName>,
-    /// The main screen's `OriginRepo` request, held back at setup until [`Self::with_local_repo`] or
-    /// [`Self::settle`] answers it.
-    setup_git: Option<(RequestId, GitRequest)>,
+    /// The working directory's branch, `None` for "git couldn't say".
+    local_branch: Option<String>,
+    /// The main screen's `OriginRepo` and `CurrentBranch` requests, held back at setup until
+    /// [`Self::with_local_repo`] or [`Self::settle`] answers them.
+    setup_git: Vec<(RequestId, GitRequest)>,
     /// The main screen's startup cache reads, held back at setup until [`Self::answer_setup_cache`] or
     /// [`Self::settle`] answers them.
     setup_cache: Vec<(RequestId, PathBuf)>,
@@ -138,7 +140,8 @@ impl TestApp {
             app,
             gh,
             local_repo: None,
-            setup_git: None,
+            local_branch: None,
+            setup_git: Vec::new(),
             setup_cache: Vec::new(),
             cache_files: HashMap::new(),
             clock,
@@ -214,28 +217,33 @@ impl TestApp {
         }
     }
 
-    /// Takes the queued `OriginRepo` request out of [`Self::effects`] and the queue, as setup.
+    /// Takes the queued `OriginRepo` and `CurrentBranch` requests out of [`Self::effects`] and the queue, as setup.
     fn hold_setup_git(&mut self) {
-        let position = self.queued.iter().position(|effect| {
+        let setup = |effect: &Effect| {
             matches!(
                 effect,
                 Effect::Git {
-                    request: GitRequest::OriginRepo,
+                    request: GitRequest::OriginRepo | GitRequest::CurrentBranch,
                     ..
                 }
             )
-        });
-        let Some(Effect::Git { id, request }) = position.and_then(|i| self.queued.remove(i)) else {
-            return;
         };
-        self.effects
-            .retain(|effect| !matches!(effect, Effect::Git { id: held, .. } if *held == id));
-        self.setup_git = Some((id, request));
+        let (held, queued): (Vec<_>, Vec<_>) = std::mem::take(&mut self.queued).into_iter().partition(setup);
+        self.queued = queued.into();
+        self.effects.retain(|effect| !setup(effect));
+        self.setup_git = held
+            .into_iter()
+            .filter_map(|effect| match effect {
+                Effect::Git { id, request } => Some((id, request)),
+                _ => None,
+            })
+            .collect();
     }
 
-    /// Answers the held setup git request from [`Self::with_local_repo`], if it's still held.
+    /// Answers the held setup git requests from [`Self::with_local_repo`] and [`Self::with_local_branch`], if they're
+    /// still held.
     fn answer_setup_git(&mut self) {
-        if let Some((id, request)) = self.setup_git.take() {
+        for (id, request) in std::mem::take(&mut self.setup_git) {
             let response = self.answer_git(&request);
             self.send(Event::Git { id, response });
         }
@@ -310,6 +318,14 @@ impl TestApp {
         self
     }
 
+    /// This app with `branch` checked out in its working directory; `None` (the default) means git couldn't say.
+    /// Answered with the setup git requests, like [`Self::with_local_repo`], so call it before either answers them.
+    #[must_use]
+    pub fn with_local_branch(mut self, branch: Option<&str>) -> Self {
+        self.local_branch = branch.map(str::to_owned);
+        self
+    }
+
     /// [`Self::with_local_repo`] on a borrowed app.
     pub fn set_local_repo(&mut self, repo: Option<RepoName>) {
         self.local_repo = repo;
@@ -320,6 +336,11 @@ impl TestApp {
     fn answer_git(&self, request: &GitRequest) -> GitResponse {
         match request {
             GitRequest::OriginRepo => GitResponse::OriginRepo(self.local_repo.clone()),
+            // Nothing on a remote.
+            GitRequest::CurrentBranch => GitResponse::CurrentBranch(self.local_branch.clone()),
+            GitRequest::HasUpstream { .. } => GitResponse::HasUpstream(false),
+            GitRequest::BranchExistsOnRemote { .. } => GitResponse::BranchExistsOnRemote(false),
+            GitRequest::PushBranch { .. } => GitResponse::PushBranch(Err("no remote in tests".into())),
         }
     }
 

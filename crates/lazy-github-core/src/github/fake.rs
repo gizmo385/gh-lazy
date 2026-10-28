@@ -8,8 +8,8 @@ use std::time::Duration;
 use serde::de::Error as _;
 
 use super::{
-    DiffFetchError, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue, NewReview, PageQuery,
-    RepoListQuery,
+    DiffFetchError, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue, NewPullRequest,
+    NewReview, PageQuery, RepoListQuery,
 };
 use crate::gh::GhError;
 use crate::models::{
@@ -21,7 +21,7 @@ use crate::models::{
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` and `pull_request_uncached` fail with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` returns none, `workflow_run` fails with a 404, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` and `pull_request_uncached` fail with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -192,6 +192,15 @@ pub enum GithubCall {
     },
     /// [`Github::list_branches`], with the repository's full name.
     ListBranches(String),
+    /// [`Github::list_branches_uncached`], with the repository's full name.
+    ListBranchesUncached(String),
+    /// [`Github::create_pull_request`].
+    CreatePullRequest {
+        /// The repository's full name.
+        full_name: String,
+        /// What was sent.
+        pr: NewPullRequest,
+    },
     /// [`Github::dispatch_workflow`].
     DispatchWorkflow {
         /// The repository's full name.
@@ -276,6 +285,8 @@ struct State {
     merges: HashMap<u64, Result<MergeResult, GhError>>,
     /// Keyed by `full_name`.
     branches: HashMap<String, Result<Vec<Branch>, GhError>>,
+    /// What `create_pull_request` returns, whatever the repo and the request; `None` fails with a 422.
+    created_pull_request: Option<Result<FullPullRequest, GhError>>,
     /// What `dispatch_workflow` returns, by workflow id and ref; pairs not set fail with a 422.
     dispatches: HashMap<(u64, String), Result<(), GhError>>,
     /// What the re-runs return, by run id and whether only the failed jobs; runs not set fail with a 422.
@@ -549,6 +560,13 @@ impl FakeGithub {
     #[must_use]
     pub fn with_branches(self, full_name: &str, branches: Result<Vec<Branch>, GhError>) -> Self {
         self.lock().branches.insert(full_name.to_owned(), branches);
+        self
+    }
+
+    /// `create_pull_request` returns `created`, whatever the repo and the request sent.
+    #[must_use]
+    pub fn with_created_pull_request(self, created: Result<FullPullRequest, GhError>) -> Self {
+        self.lock().created_pull_request = Some(created);
         self
     }
 
@@ -1004,6 +1022,27 @@ impl Github for FakeGithub {
     async fn list_branches(&self, repo: &Repository) -> Result<Vec<Branch>, GhError> {
         self.respond(GithubCall::ListBranches(repo.full_name.clone()), |state| {
             canned_page(state.branches.get(&repo.full_name))
+        })
+        .await
+    }
+
+    /// Answers from the same canned branches as `list_branches`.
+    async fn list_branches_uncached(&self, repo: &Repository) -> Result<Vec<Branch>, GhError> {
+        self.respond(GithubCall::ListBranchesUncached(repo.full_name.clone()), |state| {
+            canned_page(state.branches.get(&repo.full_name))
+        })
+        .await
+    }
+
+    async fn create_pull_request(&self, repo: &Repository, pr: &NewPullRequest) -> Result<FullPullRequest, GhError> {
+        let call = GithubCall::CreatePullRequest {
+            full_name: repo.full_name.clone(),
+            pr: pr.clone(),
+        };
+        self.respond(call, |state| match &state.created_pull_request {
+            Some(Ok(created)) => Ok(created.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Err(unprocessable()),
         })
         .await
     }
@@ -1678,6 +1717,33 @@ mod tests {
             }
         );
         assert_eq!(github.calls()[0], GithubCall::ListBranches("octocat/a".into()));
+        assert_eq!(github.list_branches_uncached(&repo("a")).await.unwrap().len(), 1);
+        assert_eq!(
+            github.calls().last(),
+            Some(&GithubCall::ListBranchesUncached("octocat/a".into()))
+        );
+    }
+
+    #[tokio::test]
+    async fn create_pull_request_records_the_call_and_answers_the_canned_pull_request() {
+        let pr = NewPullRequest::new(&repo("a"), "T", false, "main", "feature", "");
+        let github = FakeGithub::new();
+        assert!(matches!(
+            github.create_pull_request(&repo("a"), &pr).await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        let github = github.with_created_pull_request(Err(GhError::NotInstalled));
+        assert!(matches!(
+            github.create_pull_request(&repo("a"), &pr).await,
+            Err(GhError::NotInstalled)
+        ));
+        assert_eq!(
+            github.calls()[0],
+            GithubCall::CreatePullRequest {
+                full_name: "octocat/a".into(),
+                pr,
+            }
+        );
     }
 
     #[tokio::test]

@@ -1,0 +1,131 @@
+version = 1
+description = "Create PR push prompt against a local remote: refused for an unpushed branch, Yes pushes it, the same submit then creates the PR; reopened, the upstream warning is gone"
+# origin is git@github.com:parity-bot/pr-details.git, served by fake-ssh from a local bare repo with only `main`
+# (git_remote_branches), so `git ls-remote` and `git push` run offline.
+gate = true
+parity_rows = [
+    "modals.create-pr-push-prompt",
+    "modals.create-pr-upstream-warning",
+    "modals.confirm",
+    "keybindings.confirm-yes",
+]
+sizes = [[160, 48]]
+
+[env]
+# pr-create: POST .../pulls for this body answers 422, and 201 (PR 10) once the 422 was served.
+fixtures = ["pr-create", "pr-details", "base"]
+git_remote = "parity-bot/pr-details"
+git_remote_protocol = "ssh"
+git_branch = "new-feature"
+git_remote_branches = ["main"]
+config_overrides.appearance.show_issues = false
+config_overrides.appearance.show_workflows = false
+
+[[step]]
+wait.text = "Add a cursor to the viewer"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["P"]
+
+[[step]]
+wait.text = "no configured upstream"
+
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+type = "Parity PR"
+
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/pulls"
+wait.log.body.title = "Parity PR"
+wait.log.body.draft = false
+wait.log.body.base = "main"
+wait.log.body.head = "parity-bot:new-feature"
+
+[[step]]
+wait.text = "may not exist"
+
+[[step]]
+capture = "push-prompt"
+checks = ["footer"]
+
+[[step]]
+keys = ["y"]
+
+[[step]]
+wait.remote_branch = "new-feature"
+
+[[step]]
+wait.text = "Pushed branch new-feature to remote"
+
+[[step]]
+capture = "pushed"
+checks = ["footer"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/pulls"
+wait.log.body.title = "Parity PR"
+wait.log.body.draft = false
+wait.log.body.base = "main"
+wait.log.body.head = "parity-bot:new-feature"
+
+[[step]]
+wait.text = "Successfully created PR!"
+
+[[step]]
+wait.text = "Open Parity PR (#10) by parity-bot"
+wait.timeout_ms = 15000
+
+[[step]]
+capture = "created"
+checks = ["titles", "tabs", "focus"]
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["P"]
+
+[[step]]
+wait.text = "New Pull Request"
+
+# No footer: with the PR table focused it's cut inside `^p Command Pallete` (Py bug B14), which Rust spells right,
+# so the cut footers differ (as in pr-new). Python prints nothing over the screen here (Py bug B74 doesn't show).
+[[step]]
+capture = "reopened"
+checks = ["titles", "focus"]
+
+[expect.push-prompt]
+contains = ["Error creating pull request", "Warning: Branch new-feature may not exist", "Do you want to create it?"]
+footer = ["y Yes", "n No", "q Close"]
+
+[expect.pushed]
+contains = ["Pushed branch new-feature to remote", "New Pull Request", "Parity PR", "new-feature"]
+not_contains = ["Do you want to create it?"]
+
+[expect.created]
+focused = ["[5] PR #10 Details"]
+contains = ["Successfully created PR!", "Open Parity PR (#10) by parity-bot"]
+
+[expect.reopened]
+contains = ["New Pull Request", "new-feature"]
+not_contains = ["no configured upstream", "Traceback"]

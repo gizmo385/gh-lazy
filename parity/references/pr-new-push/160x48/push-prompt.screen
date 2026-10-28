@@ -1,0 +1,166 @@
+lazy-github-screen 1
+size 160x48
+cursor 23 45 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                                                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-bot/pr-details Details ──────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Repo Overview                                                                                │
+│ ☆  parity-bot  pr-details   ✘                                ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                             │
+│ ☆  parity-bot  hello-world  █                                                                                                  █                             │
+│ ☆  parity-bot  lazy-demo    █                                                                                                  █                             │
+│                             █                                                                                                  █                             │
+│                             █                                        New Pull Request                                          █, for the PR details tabs.   │
+│                             █                                                                                                  █                             │
+│                             █                                                                                                  █─────────────────────────────│
+│                             █                    Warning: Current local branch has no configured upstream                      █                             │
+│                             █                                                                                                  █                             │
+│                             █     ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎         ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎     ▊▔▔▔▔▔▔▔▔▎             █                             │
+│                             █ Base▊  main                    ▎← Compare▊  new-feature             ▎Draft▊        ▎             █                             │
+│                             █     ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎         ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎     ▊▁▁▁▁▁▁▁▁▎             █                             │
+│                             █                        █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                        █                             │
+│                             █ ───────────────────────█                                                █─────────────────────   █                             │
+│                             █                        █  Warning: Branch new-feature may not exist on  █                        █                             │
+│                             █ Title                  █  remote. Do you want to create it?             █                        █                             │
+│                             █ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔█                                                █▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎   █                             │
+│                             █ ▊  Parity PR           █                                                █                    ▎   █                             │
+└─────────────────────────────█ ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█                                                █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎▁▁ █                             │
+┌─ [2] Pull Requests ─────────█                        █ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ █                        █                             │
+│ #  Status  Author         Ti█ Description            █          Yes                      No           █                        █                             │
+│ 5  open    parity-friend  Ad█ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔█ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ █▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎   █                             │
+│ 4  closed  parity-bot     Dr█ ▊ 1                    █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                    ▎   █                             │
+│ 3  closed  parity-bot     Re█ ▊                                                                                            ▎   █                             │
+│ 2  open    parity-friend  Tr█ ▊                                                                                            ▎   █                             │
+│                             █ ▊                                                                                            ▎   █                             │
+│                             █ ▊                                                                                            ▎   █                             │
+│                             █ ▊                                                                                            ▎   █                             │
+│                             █ ▊                                                                                            ▎   █                             │
+│                             █ ▊                                                                                            ▎   █                             │
+│                             █ ▊                                                                                            ▎   █                             │
+│                             █ ▊                                                                                            ▎   █                             │
+│                             █ ▊                                                                 ▌                                                            │
+│                             █ ▊                                                                 ▌ Creating PR...                                             │
+│                             █                                                                   ▌                                                            │
+│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Error creating pull request                                │
+│                                                              ││                                 ▌ Check that your branches are valid and that a PR does not  │
+│                                                              ││                                 ▌ already exist                                              │
+└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+ y Yes  n No  q Close
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+dfgffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde.bbbbbbbbbbbbb................................................................................e
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdeijjjjjjjjjjjjjiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiie
+dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll.............................e
+dkkkkkkkkkkkkkkkkkkkkkkkkkkkkklmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmml.............................e
+dkkkkkkkkkkkkkkkkkkkkkkkkkkkkklmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnnml.............................e
+d.............................lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnnml.............................e
+d.............................lmmmoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooommnnmlbbbbbbbbbbbbbbbbbbbbbbbbbb...e
+d.............................lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnnml.............................e
+d.............................lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnnmlaaaaaaaaaaaaaaaaaaaaaaaaaaaaae
+d.............................lmpppppppppppppppppppqqqqqqqqpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppnnml.............................e
+d.............................lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnnml.............................e
+d.............................lmmmmmrsssssssssssssssssssssssssstmmmmmmmmmrsssssssssssssssssssssssssstmmmmmrsssssssstmmmmmmmmmmnnml.............................e
+d.............................lmuuuurvvwwwwwwwwwwwwwwwwwwwwwwvvtppuuuuuuurvvwwwwwwwwwwwwwwwwwwwwwwvvtppppprvvxxyyvvtmmmmmmmmmmnnmlzzzzzzzzzzzzzzzzzzzzzzzzzzz..e
+d.............................lmmmmmrsssssssssssssssssssssssssstmmmmmmmmmrsssssssssssssssssssssssssstmmmmmrsssssssstmmmmmmmmmmnnml.............................e
+d.............................lmmmmmmmmmmmmmmmmmmmmmmmmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAmmmmmmmmmmmmmmmmmmmmmnnml.............................e
+d.............................lmBBBBBBBBBBBBBBBBBBBBBBBACDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDCABBBBBBBBBBBBBBBBBBBBBnnml.............................e
+d.............................lmmmmmmmmmmmmmmmmmmmmmmmmACDEEEEEEEEDDDDDDDDEEEEEEEEEEEDDDDDDDDDDDDDDDDDDCAmmmmmmmmmmmmmmmmmmmmmnnml.............................e
+d.............................lmuuuuummmmmmmmmmmmmmmmmmACDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDCAmmmmmmmmmmmmmmmmmmmmmnnml.............................e
+d.............................lmFGGGGGGGGGGGGGGGGGGGGGGACDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDCAGGGGGGGGGGGGGGGGGGGGHnnml.............................e
+d.............................lmFIIJJJJJJJJJKJJJJJJJJJJACDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDCAJJJJJJJJJJJJJJJJJJIIHnnml.............................e
+ddddddddddddddddddddddddddddddlmFGGGGGGGGGGGGGGGGGGGGGGACCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCAGGGGGGGGGGGGGGGGGGGGHLLml.............................e
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeelmmmmmmmmmmmmmmmmmmmmmmmmACMMMMMMMMMMMMMMMMMMMMMMCCNNNNNNNNNNNNNNNNNNNNNNCAmmmmmmmmmmmmmmmmmmmmmOOml.............................e
+ePPPPPPPPPPPPPPPPPPPPPPPPPPPPPlmuuuuuuuuuuummmmmmmmmmmmACQQQQQQQQRRRRRQQQQQQQQQCCSSSSSSSSSTTTTSSSSSSSSSCAmmmmmmmmmmmmmmmmmmmmmOOml.............................e
+eUUUUUUUUUUUUUUUUUUUUUUUUUUUUUlmrVVVVVVVVVVVVVVVVVVVVVVACWWWWWWWWWWWWWWWWWWWWWWCCXXXXXXXXXXXXXXXXXXXXXXCAVVVVVVVVVVVVVVVVVVVVtOOml.............................e
+eYYYYYYYYYYYYYYYYYYYYYYYYYYYYYlmrZ000111111111111111111AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1111111111111111111ZtOOml.............................e
+eYYYYYYYYYYYYYYYYYYYYYYYYYYYYYlmrZ222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222ZtOOml.............................e
+eYYYYYYYYYYYYYYYYYYYYYYYYYYYYYlmrZ222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222ZtOOml.............................e
+e.............................lmrZ222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222ZtOOml.............................e
+e.............................lmrZ222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222ZtOOml.............................e
+e.............................lmrZ222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222ZtOOml.............................e
+e.............................lmrZ222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222ZtOOml.............................e
+e.............................lmrZ222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222ZtOOml.............................e
+e.............................lmrZ222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222ZtOOml.............................e
+e.............................lmrZ222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222ZtOOml.............................e
+e.............................lmrZ2222222222222222222222222222222222222222222222222222222222222222344444444444444444444444444444444444444444444444444444444444.e
+e.............................lmrZ2222222222222222222222222222222222222222222222222222222222222222345555555555555544444444444444444444444444444444444444444444.e
+e.............................lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm344444444444444444444444444444444444444444444444444444444444.e
+e.............................llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll.............................e
+e..............................................................ee.................................644444444444444444444444444444444444444444444444444444444444.e
+e..............................................................ee.................................647777777777777777777777777774444444444444444444444444444444.e
+e..............................................................ee.................................645555555555555555555555555555555555555555555555555555555554.e
+e..............................................................ee.................................645555555555555444444444444444444444444444444444444444444444.e
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee644444444444444444444444444444444444444444444444444444444444ee
+8889999888999888999999!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+--- legend
+. fg=#646464 bg=#121212
+a fg=#0e1a22 bg=#121212
+b fg=#323232 bg=#121212
+c fg=#2a3716 bg=#121212
+d fg=#1b2d21 bg=#121212
+e fg=#202b37 bg=#121212
+f fg=#323232 bg=#161719 bold
+g fg=#273214 bg=#161719 bold
+h fg=#323436 bg=#0f2230 bold
+i fg=#151515 bg=#121212
+j fg=#0f2230 bg=#121212
+k fg=#323232 bg=#151515
+l fg=#121212 bg=#2a2a2a
+m fg=#e0e0e0 bg=#2a2a2a
+n fg=#0a1e2c bg=#2a2a2a inverse
+o fg=#0b3a5f bg=#2a2a2a bold
+p fg=#646464 bg=#2a2a2a
+q fg=#70700a bg=#2a2a2a
+r fg=#141414 bg=#2a2a2a inverse
+s fg=#141414 bg=#161616
+t fg=#141414 bg=#2a2a2a
+u fg=#646464 bg=#2a2a2a bold
+v fg=#e0e0e0 bg=#161616
+w fg=#646464 bg=#161616
+x fg=#191d21 bg=#161616 inverse
+y fg=#646464 bg=#0a1014
+z fg=#0f2230 bg=#121212 bold
+A fg=#121212 bg=#4f4f4f
+B fg=#0a263a bg=#2a2a2a
+C bg=#4f4f4f
+D fg=#e0e0e0 bg=#4f4f4f
+E fg=#ffff00 bg=#4f4f4f
+F fg=#0b3a5f bg=#2a2a2a inverse
+G fg=#0b3a5f bg=#1a1a1a
+H fg=#0b3a5f bg=#2a2a2a
+I fg=#e0e0e0 bg=#1a1a1a
+J fg=#646464 bg=#1a1a1a
+K fg=#121212 bg=#646464
+L fg=#0a1e2c bg=#0a0a0a inverse
+M fg=#6db2ff bg=#0c7dd4
+N fg=#e76580 bg=#b93c5b
+O fg=#646464 bg=#0a0a0a
+P fg=#323232 bg=#141618 bold
+Q bg=#0c7dd4
+R fg=#dfeef9 bg=#0c7dd4 bold inverse
+S bg=#b93c5b
+T fg=#f5e5e9 bg=#b93c5b bold
+U fg=#323232 bg=#12181c
+V fg=#141414 bg=#1a1a18
+W fg=#004295 bg=#0c7dd4
+X fg=#780028 bg=#b93c5b
+Y fg=#323232 bg=#131313
+Z fg=#e0e0e0 bg=#1a1a18
+0 fg=#585857 bg=#23231e
+1 fg=#6e6e6b bg=#23231e
+2 fg=#6e6e6b bg=#1a1a18
+3 fg=#4ebf71 bg=#343f49
+4 bg=#343f49
+5 fg=#e0e0e0 bg=#343f49
+6 fg=#b93c5b bg=#343f49
+7 fg=#d17e92 bg=#343f49 bold
+8 fg=#ffa62b bg=#242f38 bold
+9 fg=#e0e0e0 bg=#242f38
+! bg=#242f38

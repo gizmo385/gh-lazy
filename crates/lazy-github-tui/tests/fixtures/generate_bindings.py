@@ -22,6 +22,7 @@ from typing import Any
 
 from textual.app import App
 from textual.binding import Binding, BindingsMap
+from textual.command import CommandPalette
 from textual.containers import VerticalScroll
 from textual.dom import DOMNode
 from textual.widgets import Button, Input, Log, Switch, Tabs, TextArea, Tree
@@ -39,6 +40,7 @@ TEXTUAL_CLASSES: dict[str, type[DOMNode]] = {
     "textual.widgets.Switch": Switch,
     "textual.widgets.Tree": Tree,
     "textual.widgets.TextArea": TextArea,
+    "textual.command.CommandPalette": CommandPalette,
 }
 
 # Override spellings that the parity matrix, keymap-overrides.toml and unknown-fields.json use, and the edge cases

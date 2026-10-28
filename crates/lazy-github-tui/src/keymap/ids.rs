@@ -351,6 +351,20 @@ registry! {
     TextualListSelect("textual.list_view.select_cursor", "enter", "select_cursor", "Select").hidden();
     TextualListCursorUp("textual.list_view.cursor_up", "up", "cursor_up", "Cursor up").hidden();
     TextualListCursorDown("textual.list_view.cursor_down", "down", "cursor_down", "Cursor down").hidden();
+    // `CommandPalette`: the command palette (#300), in `CommandPalette.BINDINGS` order. Only `escape` is shown, and
+    // nothing draws the palette's footer.
+    TextualCommandPaletteLast("textual.command_palette.last", "ctrl+end,shift+end", "command_list('last')", "Go to bottom")
+        .hidden();
+    TextualCommandPaletteFirst("textual.command_palette.first", "ctrl+home,shift+home", "command_list('first')", "Go to top")
+        .hidden();
+    TextualCommandPaletteCursorDown("textual.command_palette.cursor_down", "down", "cursor_down", "Next command").hidden();
+    TextualCommandPaletteEscape("textual.command_palette.escape", "escape", "escape", "Exit the command palette");
+    TextualCommandPalettePageDown("textual.command_palette.page_down", "pagedown", "command_list('page_down')", "Next page")
+        .hidden();
+    TextualCommandPalettePageUp("textual.command_palette.page_up", "pageup", "command_list('page_up')", "Previous page")
+        .hidden();
+    TextualCommandPaletteCursorUp("textual.command_palette.cursor_up", "up", "command_list('cursor_up')", "Previous command")
+        .hidden();
 }
 
 impl BindingId {

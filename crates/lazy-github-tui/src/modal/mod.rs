@@ -3,10 +3,12 @@
 //!
 //! `App` keeps the open dialogs bottom to top. While one is open, the top one has the keyboard and the mouse: its
 //! binding chain is the focused field's links, then its screen link, and only priority bindings from the app link
-//! (`ctrl+q`). Drawing dims everything below each dialog, then draws its frame, its interior and its footer.
+//! (`ctrl+q`). Drawing dims everything below each dialog, then draws its frame, its interior and its footer; a
+//! [frameless](Dialog::frameless) dialog draws on the whole dimmed screen itself.
 
 mod add_comment;
 mod add_reaction;
+mod command_palette;
 mod confirm;
 mod edit_issue;
 mod focus;
@@ -42,6 +44,9 @@ use crate::theme::{Palette, ThemeColor};
 
 pub use add_comment::{AddCommentAction, AddCommentDialog};
 pub use add_reaction::{AddReactionAction, AddReactionDialog};
+pub use command_palette::{
+    COMMAND_PALETTE_BINDINGS, CommandPaletteAction, CommandPaletteDialog, CommandSource, PaletteCommand, PaletteRun,
+};
 pub use confirm::{ConfirmAction, ConfirmDialog};
 pub use edit_issue::{EditIssueAction, EditIssueDialog};
 pub use focus::{FocusMove, FocusRing};
@@ -111,6 +116,8 @@ pub enum ModalKind {
     PullRequest,
     /// [`NotificationsDialog`]: the Unread and Read notification tabs.
     Notifications,
+    /// [`CommandPaletteDialog`]: the command palette.
+    CommandPalette,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -202,6 +209,8 @@ pub enum DialogAction {
     PullRequest(PullRequestAction),
     /// [`NotificationsDialog`]'s.
     Notifications(NotificationsAction),
+    /// [`CommandPaletteDialog`]'s.
+    CommandPalette(CommandPaletteAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -221,6 +230,7 @@ impl DialogAction {
             DialogAction::TriggerWorkflow(_) => ModalKind::TriggerWorkflow,
             DialogAction::PullRequest(_) => ModalKind::PullRequest,
             DialogAction::Notifications(_) => ModalKind::Notifications,
+            DialogAction::CommandPalette(_) => ModalKind::CommandPalette,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }
@@ -281,9 +291,16 @@ pub trait Dialog: Component + Send + 'static {
         default_border(palette)
     }
 
-    /// Whether the bottom row shows the dialog's footer. False for Create/Edit PR.
+    /// Whether the bottom row shows the dialog's footer. False for Create/Edit PR and the command palette.
     fn shows_footer(&self) -> bool {
         true
+    }
+
+    /// Whether the dialog draws itself without the frame: the stack only dims the screen, draws no frame or screen
+    /// scrollbar, and hands [`Component::render`] and [`Component::handle_mouse`] the whole screen, so every mouse
+    /// event reaches the dialog. Textual's command palette, a band across a full-screen modal.
+    fn frameless(&self) -> bool {
+        false
     }
 
     /// Set once the dialog is done (a button, `modal.close`, a finished lookup). The stack checks after every

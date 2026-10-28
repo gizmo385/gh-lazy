@@ -13,6 +13,7 @@ use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::Span;
 
+use super::option_nav;
 use super::text_input::TallBorder;
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::{Paint, Theme};
@@ -235,16 +236,10 @@ impl<T> SelectionList<T> {
         let page = self.window.unwrap_or(self.options.len()).max(1);
         let highlighted = self.highlighted;
         self.highlighted = Some(match (id, highlighted) {
-            (B::TextualOptionListCursorDown, Some(h)) => {
-                if h >= last {
-                    0
-                } else {
-                    h + 1
-                }
-            }
-            (B::TextualOptionListCursorUp, Some(h)) => h.checked_sub(1).unwrap_or(last),
-            (B::TextualOptionListPageDown, Some(h)) => (h + page).min(last),
-            (B::TextualOptionListPageUp, Some(h)) => h.saturating_sub(page),
+            (B::TextualOptionListCursorDown, Some(h)) => option_nav::next(h, self.options.len()),
+            (B::TextualOptionListCursorUp, Some(h)) => option_nav::previous(h, self.options.len()),
+            (B::TextualOptionListPageDown, Some(h)) => option_nav::page_down(h, self.options.len(), 1, page),
+            (B::TextualOptionListPageUp, Some(h)) => option_nav::page_up(h, 1, page),
             (B::TextualOptionListCursorDown | B::TextualOptionListFirst | B::TextualOptionListPageUp, _) => 0,
             (B::TextualOptionListCursorUp | B::TextualOptionListLast | B::TextualOptionListPageDown, _) => last,
             _ => return ListOutcome::Ignored,
@@ -258,12 +253,7 @@ impl<T> SelectionList<T> {
         let (Some(highlighted), Some(window)) = (self.highlighted, self.window) else {
             return;
         };
-        let window = window.max(1);
-        if highlighted < self.scroll {
-            self.scroll = highlighted;
-        } else if highlighted >= self.scroll + window {
-            self.scroll = highlighted + 1 - window;
-        }
+        self.scroll = option_nav::scroll_into_view(self.scroll, highlighted, 1, window.max(1));
     }
 
     /// The rows the list takes (`height: auto`): its options and the border.

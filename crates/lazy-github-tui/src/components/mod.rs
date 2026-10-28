@@ -13,6 +13,7 @@ pub mod info;
 pub mod list_view;
 pub mod loading;
 pub mod markdown;
+pub mod option_nav;
 pub mod reactions;
 pub mod scroll_view;
 pub mod scrollbar;

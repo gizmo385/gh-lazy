@@ -110,6 +110,8 @@ pub struct TextInput {
     /// The first known value that starts with the text, looked up at the text's last change (Textual's
     /// `_suggestion`). It's kept even when it's the text itself, but only drawn while longer.
     suggestion: Option<String>,
+    /// Drawn as the text row alone, on the parent's background ([`Self::borderless`]).
+    borderless: bool,
 }
 
 impl TextInput {
@@ -127,7 +129,17 @@ impl TextInput {
             filter: None,
             suggestions: None,
             suggestion: None,
+            borderless: false,
         }
+    }
+
+    /// Drawn without its border and padding, on the parent's background: the command palette's `CommandInput`
+    /// (`border: blank; padding-left: 0; background: transparent`), whose owner lays out the blank border and the
+    /// right padding around it. [`Self::render`] and [`Self::press`] then take the text row itself as `area`.
+    #[must_use]
+    pub fn borderless(mut self) -> Self {
+        self.borderless = true;
+        self
     }
 
     /// Suggests from `suggestions`: see [`Self::set_suggestions`].
@@ -452,7 +464,11 @@ impl TextInput {
     /// The char under `column` in an input drawn in `area`, scrolled as last drawn (Textual's
     /// `_cell_offset_to_index`). Columns left of the text are 0, and columns right of it are the end.
     fn index_at(&self, area: Rect, column: u16) -> usize {
-        let text_x = usize::from(area.x) + 1 + usize::from(PADDING);
+        let text_x = if self.borderless {
+            usize::from(area.x)
+        } else {
+            usize::from(area.x) + 1 + usize::from(PADDING)
+        };
         // Left of the text, which starts `scroll` cells before the text area, the offset would be negative.
         let Some(offset) = (usize::from(column) + self.scroll).checked_sub(text_x) else {
             return 0;
@@ -522,8 +538,8 @@ impl TextInput {
         (self.cursor + 1..chars.len()).find(|&i| !is_word(chars[i - 1]) && is_word(chars[i]))
     }
 
-    /// Draws the input into the top [`HEIGHT`] rows of `area`. `under` is the parent's background, which shows in the
-    /// half-cell `▊`/`▎` edges.
+    /// Draws the input into the top [`HEIGHT`] rows of `area`, or a [borderless](Self::borderless) one into its first
+    /// row. `under` is the parent's background, which shows in the half-cell `▊`/`▎` edges.
     ///
     /// The cursor is always drawn while focused. Textual blinks it every 0.5 s and restarts the blink on each key;
     /// that isn't reproduced yet.
@@ -544,24 +560,28 @@ impl TextInput {
     }
 
     fn draw(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focused: bool) {
-        let styles = Styles::new(theme, under, focused, self.invalid);
-        let border = TallBorder {
-            left: styles.left,
-            inner: styles.inner,
-            right: styles.right,
-            fill: styles.text,
-        };
-        border.draw(buf, area);
+        let styles = Styles::new(theme, under, focused, self.invalid, self.borderless);
+        let text = if self.borderless {
+            Rect { height: 1, ..area }
+        } else {
+            let border = TallBorder {
+                left: styles.left,
+                inner: styles.inner,
+                right: styles.right,
+                fill: styles.text,
+            };
+            border.draw(buf, area);
 
-        // The text row, between the border and the padding.
-        if area.height < 2 || area.width <= 2 * (PADDING + 1) {
-            return;
-        }
-        let text = Rect {
-            x: area.x + 1 + PADDING,
-            y: area.y + 1,
-            width: area.width - 2 * (PADDING + 1),
-            height: 1,
+            // The text row, between the border and the padding.
+            if area.height < 2 || area.width <= 2 * (PADDING + 1) {
+                return;
+            }
+            Rect {
+                x: area.x + 1 + PADDING,
+                y: area.y + 1,
+                width: area.width - 2 * (PADDING + 1),
+                height: 1,
+            }
         };
         let width = usize::from(text.width);
         let mut cells: Vec<(char, Style)> = Vec::new();
@@ -669,7 +689,8 @@ struct Styles {
 }
 
 impl Styles {
-    fn new(theme: &Theme, under: Paint, focused: bool, invalid: bool) -> Self {
+    /// `transparent` is a borderless input's `background: transparent; background-tint: 0%`: the text is on `under`.
+    fn new(theme: &Theme, under: Paint, focused: bool, invalid: bool, transparent: bool) -> Self {
         let p = theme.palette;
         let selection = |bg: Paint| {
             let selected = p.input_selection_background.over(bg);
@@ -701,7 +722,9 @@ impl Styles {
             };
         }
         let surface = p.surface.over(under);
-        let bg = if focused {
+        let bg = if transparent {
+            under
+        } else if focused {
             theme.tint(surface, p.foreground, 5.0)
         } else {
             surface

@@ -2389,6 +2389,154 @@
     ]
   },
   {
+    "class": "textual.command.CommandPalette",
+    "bindings": [
+      {
+        "key": "tab",
+        "id": null,
+        "action": "app.focus_next",
+        "description": "Focus Next",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+tab",
+        "id": null,
+        "action": "app.focus_previous",
+        "description": "Focus Previous",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "super+c",
+        "id": null,
+        "action": "screen.copy_text",
+        "description": "Copy selected text",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+end",
+        "id": null,
+        "action": "command_list('last')",
+        "description": "Go to bottom",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+end",
+        "id": null,
+        "action": "command_list('last')",
+        "description": "Go to bottom",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "ctrl+home",
+        "id": null,
+        "action": "command_list('first')",
+        "description": "Go to top",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "shift+home",
+        "id": null,
+        "action": "command_list('first')",
+        "description": "Go to top",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "down",
+        "id": null,
+        "action": "cursor_down",
+        "description": "Next command",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "escape",
+        "id": null,
+        "action": "escape",
+        "description": "Exit the command palette",
+        "show": true,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pagedown",
+        "id": null,
+        "action": "command_list('page_down')",
+        "description": "Next page",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "pageup",
+        "id": null,
+        "action": "command_list('page_up')",
+        "description": "Previous page",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      },
+      {
+        "key": "up",
+        "id": null,
+        "action": "command_list('cursor_up')",
+        "description": "Previous command",
+        "show": false,
+        "priority": false,
+        "system": false,
+        "key_display": null,
+        "tooltip": ""
+      }
+    ]
+  },
+  {
     "class": "textual.containers.VerticalScroll",
     "bindings": [
       {

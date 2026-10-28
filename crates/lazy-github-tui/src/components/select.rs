@@ -18,6 +18,7 @@ use ratatui::style::{Modifier, Style};
 use ratatui::text::Span;
 use tokio::time::Instant;
 
+use super::option_nav;
 use super::text_input::{TallBorder, printable};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::{AnsiColor, Paint, Theme};
@@ -253,12 +254,12 @@ impl<T> Select<T> {
         };
         let last = rows - 1;
         overlay.highlight = match id {
-            BindingId::TextualOptionListCursorDown => (overlay.highlight + 1) % rows,
-            BindingId::TextualOptionListCursorUp => overlay.highlight.checked_sub(1).unwrap_or(last),
+            BindingId::TextualOptionListCursorDown => option_nav::next(overlay.highlight, rows),
+            BindingId::TextualOptionListCursorUp => option_nav::previous(overlay.highlight, rows),
             BindingId::TextualOptionListFirst => 0,
             BindingId::TextualOptionListLast => last,
-            BindingId::TextualOptionListPageDown => (overlay.highlight + page).min(last),
-            BindingId::TextualOptionListPageUp => overlay.highlight.saturating_sub(page),
+            BindingId::TextualOptionListPageDown => option_nav::page_down(overlay.highlight, rows, 1, page),
+            BindingId::TextualOptionListPageUp => option_nav::page_up(overlay.highlight, 1, page),
             BindingId::TextualOptionListSelect => {
                 let row = overlay.highlight;
                 return self.pick(row);
@@ -307,11 +308,7 @@ impl<T> Select<T> {
     fn scroll_to_highlight(&mut self) {
         let window = usize::from(Self::overlay_height(self.rows()).saturating_sub(2));
         if let Some(overlay) = &mut self.overlay {
-            if overlay.highlight < overlay.scroll {
-                overlay.scroll = overlay.highlight;
-            } else if overlay.highlight >= overlay.scroll + window {
-                overlay.scroll = overlay.highlight + 1 - window;
-            }
+            overlay.scroll = option_nav::scroll_into_view(overlay.scroll, overlay.highlight, 1, window);
         }
     }
 

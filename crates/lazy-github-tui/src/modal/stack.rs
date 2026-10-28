@@ -17,7 +17,8 @@ use crate::theme::{Palette, ThemeColor};
 /// An open dialog and what to do with its output. Made by [`Cx::open_dialog`](crate::component::Cx::open_dialog).
 pub struct ModalEntry {
     dialog: Box<dyn AnyDialog>,
-    /// The frame's interior in the last frame drawn, for mouse events. Empty until then.
+    /// The frame's interior in the last frame drawn, for mouse events: the whole screen for a frameless dialog. Empty
+    /// until then.
     pub(crate) interior: Rect,
 }
 
@@ -165,6 +166,10 @@ impl ModalEntry {
         self.dialog.shows_footer()
     }
 
+    pub(crate) fn frameless(&self) -> bool {
+        self.dialog.frameless()
+    }
+
     pub(crate) fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         self.dialog.render(frame, area, cx);
     }
@@ -172,6 +177,12 @@ impl ModalEntry {
     /// The opener's reply, once the dialog has an output. The entry is spent after that.
     pub(crate) fn take_reply(&mut self) -> Option<Action> {
         self.dialog.take_reply()
+    }
+
+    /// The dialog, when it's a `D`, for tests that read its state.
+    #[cfg(test)]
+    pub(crate) fn dialog<D: Dialog>(&self) -> Option<&D> {
+        self.dialog.any().downcast_ref()
     }
 }
 
@@ -220,8 +231,11 @@ trait AnyDialog: Send {
     fn background(&self, palette: &Palette) -> ThemeColor;
     fn border(&self, palette: &Palette) -> ThemeColor;
     fn shows_footer(&self) -> bool;
+    fn frameless(&self) -> bool;
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>);
     fn take_reply(&mut self) -> Option<Action>;
+    #[cfg(test)]
+    fn any(&self) -> &dyn std::any::Any;
 }
 
 impl<D: Dialog> AnyDialog for Open<D> {
@@ -326,6 +340,10 @@ impl<D: Dialog> AnyDialog for Open<D> {
         self.dialog.shows_footer()
     }
 
+    fn frameless(&self) -> bool {
+        self.dialog.frameless()
+    }
+
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         self.dialog.render(frame, area, cx);
     }
@@ -337,5 +355,10 @@ impl<D: Dialog> AnyDialog for Open<D> {
             return None;
         };
         Some(reply(output))
+    }
+
+    #[cfg(test)]
+    fn any(&self) -> &dyn std::any::Any {
+        &self.dialog
     }
 }

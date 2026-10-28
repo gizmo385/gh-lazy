@@ -33,12 +33,19 @@ pub enum Action {
     FocusNext,
     /// Shift+Tab (`textual.screen.focus_previous`): the previous target in the focus ring.
     FocusPrevious,
-    /// `app.maximize_widget`: show only the focused widget. A no-op while something is maximized.
-    Maximize,
+    /// `app.maximize_widget`: show only the focused widget. A no-op while something is maximized. `toast` raises the
+    /// one-time "View Maximized" toast (LazyGithub's `action_maximize`); the palette's "Maximize" (Textual's
+    /// `Screen.action_maximize`) doesn't, and leaves it for the next `M`.
+    Maximize {
+        /// Whether to raise the one-time toast, if it hasn't been shown.
+        toast: bool,
+    },
     /// Escape while maximized: back to the normal layout, focus unchanged.
     Minimize,
     /// `app.open_help`: open the keybindings panel, or close it if it's open.
     ToggleHelp,
+    /// `app.command_palette`: open the command palette over the main screen, with the commands that apply now.
+    OpenCommandPalette,
     /// Replace the startup or authentication screen with the main screen.
     EnterMain,
     /// Refresh the unread notification count now: the poll's timer, and in M4 the command palette, a Settings save

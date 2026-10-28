@@ -118,6 +118,9 @@ pub enum TimerId {
     Notifications,
     /// Create PR's draft autosave, 2 s after the last edit (#186). Owned by the open Create PR dialog.
     PrDraftSave,
+    /// The command palette's "No matches found", 0.5 s after a search that found nothing (#300). Owned by the open
+    /// palette.
+    PaletteNoMatches,
 }
 
 /// One [`Github`] call, as data. One variant per trait method.

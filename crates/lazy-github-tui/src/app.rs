@@ -24,7 +24,9 @@ use crate::components::status_bar::{StatusBar, UnreadState};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
-use crate::modal::{DialogFrame, ModalEntry, ModalKind, dim};
+use crate::modal::{
+    CommandPaletteDialog, CommandSource, DialogFrame, ModalEntry, ModalKind, PaletteCommand, PaletteRun, dim,
+};
 use crate::notifications::NotificationPoll;
 use crate::options::AppOptions;
 use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
@@ -442,8 +444,9 @@ impl App {
             Owner::App => match id {
                 BindingId::AppQuit | BindingId::TextualQuit => Some(Action::Quit),
                 BindingId::TextualHelpQuit => Some(Action::QuitHint),
-                BindingId::AppMaximizeWidget => Some(Action::Maximize),
+                BindingId::AppMaximizeWidget => Some(Action::Maximize { toast: true }),
                 BindingId::AppOpenHelp => Some(Action::ToggleHelp),
+                BindingId::AppCommandPalette => Some(Action::OpenCommandPalette),
                 other => Some(Action::Unimplemented(other)),
             },
             // A text input or editor takes `copy` before the chain when it has a selection. Reaching its link means
@@ -539,7 +542,8 @@ impl App {
                     main.focus_step(matches!(action, Action::FocusNext), self.maximized);
                 }
             }
-            Action::Maximize => self.maximize(out),
+            Action::Maximize { toast } => self.maximize(toast, out),
+            Action::OpenCommandPalette => self.open_command_palette(out),
             Action::Minimize => self.minimize(),
             // Python's `action_open_help`: only this closes the panel, and it doesn't move focus.
             // Only the main screen has the panel: Python mounts it on the startup screen, which the main screen
@@ -619,9 +623,10 @@ impl App {
         }
     }
 
-    /// Shows only the focused widget, with the one-time toast. A no-op while something is maximized (`M` doesn't
-    /// toggle back) or when the focused widget isn't maximizable, which leaves the toast for the next maximize.
-    fn maximize(&mut self, out: &mut Outbox) {
+    /// Shows only the focused widget, with the one-time toast if `toast` says so. A no-op while something is maximized
+    /// (`M` doesn't toggle back) or when the focused widget isn't maximizable, which leaves the toast for the next
+    /// maximize.
+    fn maximize(&mut self, toast: bool, out: &mut Outbox) {
         if self.maximized.is_some() {
             return;
         }
@@ -631,10 +636,59 @@ impl App {
         };
         main.begin_maximize(maximized);
         self.maximized = Some(maximized);
-        if !self.has_shown_maximize_toast {
+        if toast && !self.has_shown_maximize_toast {
             self.has_shown_maximize_toast = true;
             out.actions.push_back(Action::Notify(maximize_toast()));
         }
+    }
+
+    /// Opens the command palette with the commands that apply now. Only the main screen has it, and the app link
+    /// that binds it is cut off under any dialog, the palette included.
+    fn open_command_palette(&mut self, out: &mut Outbox) {
+        if !self.modals.is_empty() {
+            return;
+        }
+        let BaseScreen::Main(main) = &self.base else { return };
+        let commands = self.system_commands(main);
+        Cx::new(&mut self.shared, out).open_dialog(CommandPaletteDialog::new(commands), |run| {
+            run.map_or(Action::Consumed, PaletteRun::action)
+        });
+    }
+
+    /// Textual's system commands as they apply on `main` now, in `App.get_system_commands` order. "Theme" lands with
+    /// #192, and "Screenshot" is deferred (#291). LazyGithub's own commands (#301) go before these, with
+    /// [`CommandSource::App`], which puts them in both the search and the opening list.
+    fn system_commands(&self, main: &MainScreen) -> Vec<PaletteCommand> {
+        let command = |name, help, run| PaletteCommand {
+            name,
+            help,
+            source: CommandSource::System,
+            run,
+        };
+        let mut commands = vec![command(
+            "Quit",
+            "Quit the application as soon as possible",
+            PaletteRun::Quit,
+        )];
+        commands.push(if self.help_open {
+            command("Keys", "Hide the keys and widget help panel", PaletteRun::ToggleHelp)
+        } else {
+            command(
+                "Keys",
+                "Show help for the focused widget and a summary of available keys",
+                PaletteRun::ToggleHelp,
+            )
+        });
+        if self.maximized.is_some() {
+            commands.push(command(
+                "Minimize",
+                "Minimize the widget and restore to normal size",
+                PaletteRun::Minimize,
+            ));
+        } else if main.maximize_target().is_some() {
+            commands.push(command("Maximize", "Maximize the focused widget", PaletteRun::Maximize));
+        }
+        commands
     }
 
     /// Back to the normal layout, focus unchanged.
@@ -887,7 +941,8 @@ impl App {
     }
 
     /// Each dialog, bottom to top, over everything drawn before it, dimmed: its frame centered above the bottom row,
-    /// its interior, and its footer on the bottom row. Only the top footer's items take clicks.
+    /// its interior, and its footer on the bottom row; a frameless one draws on the whole screen. Only the top footer's
+    /// items take clicks.
     fn render_modals(&mut self, frame: &mut Frame<'_>) {
         if self.modals.is_empty() {
             return;
@@ -920,6 +975,11 @@ impl App {
         let mut hits = Vec::new();
         for (index, (entry, active)) in self.modals.iter_mut().zip(&actives).enumerate() {
             dim(frame.buffer_mut(), area, &theme);
+            if entry.frameless() {
+                entry.interior = area;
+                entry.render(frame, area, &cx);
+                continue;
+            }
             let rect = entry.frame(area);
             if rect.bottom() > available.bottom() {
                 screen_scrollbar(frame.buffer_mut(), available, rect, &theme);
@@ -960,6 +1020,12 @@ impl App {
     /// The open dialogs' kinds, bottom to top.
     pub fn modals(&self) -> Vec<ModalKind> {
         self.modals.iter().map(ModalEntry::kind).collect()
+    }
+
+    /// The top dialog, when it's a `D`.
+    #[cfg(test)]
+    pub(crate) fn top_dialog<D: crate::modal::Dialog>(&self) -> Option<&D> {
+        self.modals.last()?.dialog()
     }
 
     /// The main screen, while it's the base screen.

@@ -1,9 +1,10 @@
 version = 1
 description = "Command palette (ctrl+p): the opening list of system commands, a query and its hit, No matches found, escape, and the Keys, Maximize and Minimize commands"
 # The palette is a band across the top of the screen with no box border, so its input, hits and help texts are loose
-# text, checked per app with [expect]. Python also lists "Screenshot" (deferred, #291) and "Theme" (#192), so the
-# opening list is taller there, covers different boxes, and that capture checks focus only.
-gate = false
+# text, checked per app with [expect]. Python also lists "Screenshot" (deferred, #291) and "Theme" (#192), and Rust
+# lists LazyGithub's own commands after the system ones (Py bug B87's answer; Python finds them only by typing), so
+# the opening list differs in length, covers different boxes, and that capture checks focus only.
+gate = true
 parity_rows = [
     "command-palette.palette",
     "command-palette.navigation",
@@ -181,8 +182,8 @@ contains = [
     "Maximize the focused widget",
     "Quit the application as soon as possible",
 ]
-# LazyGithub's own commands are found by typing only (Py bug B87).
-not_contains = ["Toggle Issues", "Refresh notifications", "Traceback"]
+# Whether LazyGithub's own commands are listed differs by app (Py bug B87's answer), so it isn't checked here.
+not_contains = ["Traceback"]
 
 [expect.query-keys]
 contains = ["🔎 keys", "Show help for the focused widget and a summary of available keys"]

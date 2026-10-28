@@ -109,9 +109,10 @@ pub(super) trait DetailsBody {
     fn diff_comment_added(&mut self, _comment: PendingComment, _cx: &mut Cx<'_>) {}
 
     /// A mouse event over tab `tab`'s content other than a press (a release, a move, the wheel), for a widget inside
-    /// it that takes its own (a tree). Says whether it took the event; the pane handles any other.
-    fn mouse(&mut self, _tab: usize, _mouse: MouseEvent) -> bool {
-        false
+    /// it that takes its own (a tree, a button's release). What it did, or `None` when it didn't take the event; the
+    /// pane handles any other.
+    fn mouse(&mut self, _tab: usize, _mouse: MouseEvent) -> Option<Action> {
+        None
     }
 
     /// How the footer and help panel show binding `id` of [`Self::chain`]'s link `owner` in tab `tab`.
@@ -121,13 +122,14 @@ pub(super) trait DetailsBody {
 
     /// A key before the binding chain, with focus inside tab `tab`'s content: a text input inside it (the diff
     /// viewer's file filter) takes the keys it types and its editing keys, as the table's search box does, pasting
-    /// `clipboard`. `None` passes the key on.
+    /// `clipboard`. `now` is the key's time, which a select's type-to-search times out by. `None` passes the key on.
     fn handle_focused_key(
         &mut self,
         _tab: usize,
         _key: &KeyChord,
         _keymap: &Keymap,
         _clipboard: &str,
+        _now: Instant,
     ) -> Option<Action> {
         None
     }
@@ -401,6 +403,14 @@ impl DetailsPane {
                 tracing::debug!("Dropping the reviews response {id} of a pull request no longer shown");
                 None
             }
+            GithubResponse::CurrentUser(_) => {
+                tracing::debug!("Dropping the current user response {id} of a diff no longer shown");
+                None
+            }
+            GithubResponse::CreateReview(_) => {
+                tracing::debug!("Dropping the review response {id} of a pull request no longer shown");
+                None
+            }
             other => Some(other),
         }
     }
@@ -431,7 +441,7 @@ impl DetailsPane {
     }
 
     /// [`DetailsBody::mouse`] in the active tab.
-    pub(super) fn mouse(&mut self, mouse: MouseEvent) -> bool {
+    pub(super) fn mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
         self.body.get_mut().mouse(self.tabs.active(), mouse)
     }
 
@@ -441,10 +451,16 @@ impl DetailsPane {
     }
 
     /// [`DetailsBody::handle_focused_key`] in the active tab.
-    pub(super) fn handle_focused_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Option<Action> {
+    pub(super) fn handle_focused_key(
+        &mut self,
+        key: &KeyChord,
+        keymap: &Keymap,
+        clipboard: &str,
+        now: Instant,
+    ) -> Option<Action> {
         self.body
             .get_mut()
-            .handle_focused_key(self.tabs.active(), key, keymap, clipboard)
+            .handle_focused_key(self.tabs.active(), key, keymap, clipboard, now)
     }
 
     /// [`DetailsBody::handle_paste`] in the active tab.

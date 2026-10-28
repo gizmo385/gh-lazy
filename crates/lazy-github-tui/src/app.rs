@@ -245,7 +245,12 @@ impl App {
                 return Some(top.handle_key(key, &cx).unwrap_or(Action::Consumed));
             }
         } else if let BaseScreen::Main(main) = &mut self.base
-            && let Some(action) = main.handle_focused_key(&chord, &self.shared.keymap, &self.shared.clipboard)
+            && let Some(action) = main.handle_focused_key(
+                &chord,
+                &self.shared.keymap,
+                &self.shared.clipboard,
+                self.shared.clock.now(),
+            )
         {
             return Some(action);
         }

@@ -259,6 +259,18 @@ pub trait Github: Clone + Send + Sync + 'static {
         comment_id: u64,
         body: &str,
     ) -> impl Future<Output = Result<ReviewComment, GhError>> + Send;
+
+    /// Submits a review of pull request `number` of `repo`: `POST /repos/{owner}/{repo}/pulls/{number}/reviews` with
+    /// `review` over stdin, its comments placed by diff position. Returns the review, without its comments. Never
+    /// cached.
+    ///
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body doesn't decode.
+    fn create_review(
+        &self,
+        repo: &Repository,
+        number: u64,
+        review: &NewReview,
+    ) -> impl Future<Output = Result<Review, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -474,6 +486,43 @@ pub struct IssueUpdate {
     /// The state to set, or `None` to leave it as it is.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub state: Option<IssueState>,
+}
+
+/// What [`Github::create_review`] sends: the body of `POST /repos/{owner}/{repo}/pulls/{number}/reviews`, serialized
+/// with its fields in this order. `comments` is `[]` when there are none.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize)]
+pub struct NewReview {
+    /// What the review does.
+    pub event: ReviewEvent,
+    /// The commit reviewed: the pull request's head.
+    pub commit_id: String,
+    /// The review's summary, as typed. It may be empty.
+    pub body: String,
+    /// Its inline comments, in the order they were added.
+    pub comments: Vec<DraftReviewComment>,
+}
+
+/// A review's verdict, as the reviews endpoint takes it: `APPROVE`, `REQUEST_CHANGES` or `COMMENT`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ReviewEvent {
+    /// Approve the changes.
+    Approve,
+    /// Ask for changes.
+    RequestChanges,
+    /// Only comment.
+    Comment,
+}
+
+/// An inline comment of a [`NewReview`], serialized with its fields in this order.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize)]
+pub struct DraftReviewComment {
+    /// The file's path, as the diff names it.
+    pub path: String,
+    /// The comment, as typed.
+    pub body: String,
+    /// The line's diff position: GitHub's older way to place a review comment, which it still takes.
+    pub position: u32,
 }
 
 /// How long `gh` may serve each kind of response from its cache, from the `cache` config section.
@@ -846,6 +895,16 @@ impl GhCli {
         request
     }
 
+    /// `POST /repos/{owner}/{repo}/pulls/{number}/reviews` with `review` as the JSON body.
+    fn create_review_request(repo: &Repository, number: u64, review: &NewReview) -> Result<GhRequest, GhError> {
+        let mut request = GhRequest::new(
+            Method::Post,
+            format!("/repos/{}/{}/pulls/{number}/reviews", repo.owner.login, repo.name),
+        );
+        request.body = Some(serde_json::to_value(review)?);
+        Ok(request)
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -1057,6 +1116,11 @@ impl Github for GhCli {
         body: &str,
     ) -> Result<ReviewComment, GhError> {
         let request = Self::reply_to_review_comment_request(repo, pr_number, comment_id, body);
+        self.inner.runner.request(request).await?.json()
+    }
+
+    async fn create_review(&self, repo: &Repository, number: u64, review: &NewReview) -> Result<Review, GhError> {
+        let request = Self::create_review_request(repo, number, review)?;
         self.inner.runner.request(request).await?.json()
     }
 }
@@ -1512,15 +1576,19 @@ mod tests {
         ));
     }
 
-    /// The `response.body` of a recorded parity fixture, as `gh api -i` would print it.
-    fn parity_response(set: &str, file: &str) -> GhResponse {
+    /// A recorded parity fixture, whole.
+    fn parity_fixture(set: &str, file: &str) -> serde_json::Value {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../parity/fixtures")
             .join(set)
             .join(file);
         let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
-        let fixture: serde_json::Value = serde_json::from_str(&text).unwrap();
-        api_response(&fixture["response"]["body"].to_string())
+        serde_json::from_str(&text).unwrap()
+    }
+
+    /// The `response.body` of a recorded parity fixture, as `gh api -i` would print it.
+    fn parity_response(set: &str, file: &str) -> GhResponse {
+        api_response(&parity_fixture(set, file)["response"]["body"].to_string())
     }
 
     fn api_response(body: &str) -> GhResponse {
@@ -2287,6 +2355,72 @@ mod tests {
             ]
         );
         assert_eq!(request.body.unwrap().to_string(), r#"{"body":"It stops, yes."}"#);
+    }
+
+    #[test]
+    fn create_review_argv_posts_the_review_over_stdin() {
+        let review = NewReview {
+            event: ReviewEvent::Approve,
+            commit_id: "c0ffee5555555555555555555555555555555555".into(),
+            body: "Looks good.".into(),
+            comments: vec![DraftReviewComment {
+                path: "README.md".into(),
+                body: "Mention the arrow keys too.".into(),
+                position: 4,
+            }],
+        };
+        let request = GhCli::create_review_request(&pr_details_repo(), 5, &review).unwrap();
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        assert_eq!(
+            strings(request.argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "POST",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "--input",
+                "-",
+                "/repos/parity-bot/pr-details/pulls/5/reviews"
+            ]
+        );
+        // The scenario's body, keys in Python's order.
+        let fixture = parity_fixture("pr-write", "repos/parity-bot/pr-details/pulls/5/reviews/POST.json");
+        assert_eq!(
+            request.body.unwrap().to_string(),
+            fixture["request"]["body"].to_string()
+        );
+    }
+
+    #[test]
+    fn each_review_event_is_sent_by_its_api_name_and_no_comments_is_an_empty_list() {
+        for (event, name) in [
+            (ReviewEvent::Approve, "APPROVE"),
+            (ReviewEvent::RequestChanges, "REQUEST_CHANGES"),
+            (ReviewEvent::Comment, "COMMENT"),
+        ] {
+            let review = NewReview {
+                event,
+                commit_id: "abc".into(),
+                body: String::new(),
+                comments: Vec::new(),
+            };
+            let request = GhCli::create_review_request(&pr_details_repo(), 5, &review).unwrap();
+            assert_eq!(
+                request.body.unwrap().to_string(),
+                format!(r#"{{"event":"{name}","commit_id":"abc","body":"","comments":[]}}"#)
+            );
+        }
+    }
+
+    #[test]
+    fn a_created_review_decodes() {
+        let response = parity_response("pr-write", "repos/parity-bot/pr-details/pulls/5/reviews/POST.json");
+        let review: Review = response.json().unwrap();
+        assert_eq!(review.id, 508);
+        assert_eq!(review.state, ReviewState::Approved);
+        assert_eq!(review.body, "Looks good.");
     }
 
     #[test]

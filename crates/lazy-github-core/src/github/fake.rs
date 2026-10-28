@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use serde::de::Error as _;
 
-use super::{DiffFetchError, Github, IssueListQuery, IssueUpdate, NewIssue, PageQuery, RepoListQuery};
+use super::{DiffFetchError, Github, IssueListQuery, IssueUpdate, NewIssue, NewReview, PageQuery, RepoListQuery};
 use crate::gh::GhError;
 use crate::models::{
     CheckRun, CheckState, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
@@ -17,7 +17,7 @@ use crate::models::{
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment` and `reply_to_review_comment` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment` and `create_review` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -152,6 +152,15 @@ pub enum GithubCall {
         /// What was sent.
         body: String,
     },
+    /// [`Github::create_review`].
+    CreateReview {
+        /// The repository's full name.
+        full_name: String,
+        /// The pull request's number.
+        number: u64,
+        /// What was sent.
+        review: NewReview,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repository's full name.
@@ -211,6 +220,8 @@ struct State {
     posted_comments: HashMap<String, Result<IssueComment, GhError>>,
     /// What `reply_to_review_comment` returns, by the body sent; bodies not set fail with a 422.
     review_replies: HashMap<String, Result<ReviewComment, GhError>>,
+    /// What `create_review` returns, by the review sent; reviews not set fail with a 422.
+    created_reviews: Vec<(NewReview, Result<Review, GhError>)>,
     /// What `update_issue` returns, whatever the issue; `None` fails with a 422.
     updated_issue: Option<Result<Issue, GhError>>,
     latency: Option<Duration>,
@@ -449,6 +460,14 @@ impl FakeGithub {
     #[must_use]
     pub fn with_review_reply(self, body: &str, reply: Result<ReviewComment, GhError>) -> Self {
         self.lock().review_replies.insert(body.to_owned(), reply);
+        self
+    }
+
+    /// `create_review` returns `created` for exactly `review`, whatever the pull request. Other reviews fail with a
+    /// 422.
+    #[must_use]
+    pub fn with_created_review(self, review: NewReview, created: Result<Review, GhError>) -> Self {
+        self.lock().created_reviews.push((review, created));
         self
     }
 
@@ -828,6 +847,22 @@ impl Github for FakeGithub {
         .await
     }
 
+    async fn create_review(&self, repo: &Repository, number: u64, review: &NewReview) -> Result<Review, GhError> {
+        let call = GithubCall::CreateReview {
+            full_name: repo.full_name.clone(),
+            number,
+            review: review.clone(),
+        };
+        self.respond(call, |state| {
+            match state.created_reviews.iter().find(|(sent, _)| sent == review) {
+                Some((_, Ok(created))) => Ok(created.clone()),
+                Some((_, Err(error))) => Err(duplicate(error)),
+                None => Err(unprocessable()),
+            }
+        })
+        .await
+    }
+
     async fn update_issue(&self, repo: &Repository, number: u64, update: &IssueUpdate) -> Result<Issue, GhError> {
         let call = GithubCall::UpdateIssue {
             full_name: repo.full_name.clone(),
@@ -903,7 +938,7 @@ fn duplicate(error: &GhError) -> GhError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::github::{RepoKind, RepoSort, SortDirection};
+    use crate::github::{RepoKind, RepoSort, ReviewEvent, SortDirection};
 
     fn octocat() -> User {
         User {
@@ -1296,6 +1331,38 @@ mod tests {
                 pr_number: 5,
                 comment_id: 9001,
                 body: "yes".into(),
+            }
+        );
+    }
+
+    #[tokio::test]
+    async fn create_review_answers_by_review_and_records_the_call() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../parity/fixtures/pr-write/repos/parity-bot/pr-details/pulls/5/reviews/POST.json");
+        let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let created: Review = serde_json::from_value(fixture["response"]["body"].clone()).unwrap();
+        let review = NewReview {
+            event: ReviewEvent::Approve,
+            commit_id: "abc".into(),
+            body: "ok".into(),
+            comments: Vec::new(),
+        };
+        let github = FakeGithub::new().with_created_review(review.clone(), Ok(created.clone()));
+        assert_eq!(github.create_review(&repo("a"), 5, &review).await.unwrap(), created);
+        let other = NewReview {
+            event: ReviewEvent::Comment,
+            ..review.clone()
+        };
+        assert!(matches!(
+            github.create_review(&repo("a"), 5, &other).await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        assert_eq!(
+            github.calls()[0],
+            GithubCall::CreateReview {
+                full_name: "octocat/a".into(),
+                number: 5,
+                review,
             }
         );
     }

@@ -153,6 +153,14 @@ pub enum Owner {
     /// A button inside the active details tab's content with focus (the run Overview's re-run buttons), in front of
     /// the content's scroll link.
     DetailsButton,
+    /// A focused text input inside the details content (the diff viewer's review summary, a Textual `Input`), in front
+    /// of the content's scroll link.
+    DetailsInput,
+    /// A focused select inside the details content with its list closed (the diff viewer's review status, Textual's
+    /// `Select`).
+    DetailsSelect,
+    /// A select's open list inside the details content (`SelectOverlay`): it takes the printable keys to search.
+    DetailsSelectOverlay,
     /// A focused collapsible section's title inside the details content (Textual's `CollapsibleTitle`).
     CollapsibleTitle,
     /// A focused list inside the details content, such as a section's (Textual's `ListView`).
@@ -186,7 +194,10 @@ impl Owner {
     /// `Input` and `CollapsibleTitle` have one.
     pub fn group_title(self) -> Option<&'static str> {
         match self {
-            Owner::SearchInput(_) | Owner::DiffFilter | Owner::DialogField(_, FieldKind::TextInput) => Some("Input"),
+            Owner::SearchInput(_)
+            | Owner::DiffFilter
+            | Owner::DetailsInput
+            | Owner::DialogField(_, FieldKind::TextInput) => Some("Input"),
             Owner::CollapsibleTitle => Some("Collapsible"),
             Owner::App
             | Owner::Screen(_)
@@ -201,6 +212,8 @@ impl Owner {
             | Owner::IssueOverview
             | Owner::IssueComments
             | Owner::DetailsButton
+            | Owner::DetailsSelect
+            | Owner::DetailsSelectOverlay
             | Owner::ListView
             | Owner::CommentBlock
             | Owner::PrConversation
@@ -231,6 +244,8 @@ impl Owner {
             self,
             Owner::SearchInput(_)
                 | Owner::DiffFilter
+                | Owner::DetailsInput
+                | Owner::DetailsSelectOverlay
                 | Owner::DialogField(
                     _,
                     FieldKind::TextInput | FieldKind::TextEditor | FieldKind::SelectOverlay

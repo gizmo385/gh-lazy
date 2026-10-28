@@ -1,9 +1,11 @@
 //! The review part of the diff viewer, below the files: the pending comments (Python's "Pending Comments:" header
-//! and its `CommentPreview`s), which Add Comment fills and the review sends.
+//! and its `CommentPreview`s), which Add Comment fills, then the Submit review form (`SubmitReview`), which sends them
+//! with the review.
 
 use std::ops::Range;
 
 use lazy_github_core::diff::{DiffLine, Hunk, LineKind};
+use lazy_github_core::github::{DraftReviewComment, NewReview, ReviewEvent};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
@@ -12,6 +14,8 @@ use ratatui::widgets::{Block, Widget};
 use super::buffer_line;
 use crate::components::button::{self, Button, ButtonVariant};
 use crate::components::markdown::{self, Rendered, TextRun};
+use crate::components::select::{self, DEFAULT_PROMPT, Select};
+use crate::components::text_input::{self, TextInput};
 use crate::theme::Theme;
 
 /// The header's text.
@@ -22,6 +26,16 @@ const HEADER_HEIGHT: usize = 3;
 
 /// Columns a box takes each side of what it holds: its `solid` border and its `padding: 1`.
 const BOX_SIDE: u16 = 2;
+
+/// The form's `margin: 2 0`.
+const FORM_MARGIN: usize = 2;
+
+/// The status select's options, in Python's order (`ReviewState` without the disallowed states).
+const STATUS_OPTIONS: [(&str, ReviewEvent); 3] = [
+    ("Approved", ReviewEvent::Approve),
+    ("Changes Requested", ReviewEvent::RequestChanges),
+    ("Commented", ReviewEvent::Comment),
+];
 
 /// A line of the diff, by index: the file, the hunk in it, and the line in the hunk.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -97,6 +111,144 @@ fn line_number(lines: &[DiffLine]) -> u32 {
             LineKind::NoNewline => None,
         })
         .unwrap_or(0)
+}
+
+/// The Submit review form: the status select (unless the viewer wrote the pull request, who can only comment), the
+/// summary input and the submit button.
+#[derive(Debug)]
+pub(super) struct ReviewForm {
+    /// `None` on the author's form.
+    pub(super) status: Option<Select<ReviewEvent>>,
+    pub(super) summary: TextInput,
+    pub(super) submit: Button,
+}
+
+/// The review status is the blank option: Python's "Please select a status for the new review!".
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MissingStatus;
+
+impl ReviewForm {
+    /// The reviewer's form ("Submit Review", the status at "Commented"), or with `author` the author's ("Add
+    /// Comments", no status).
+    pub(super) fn new(author: bool) -> Self {
+        let (status, label) = if author {
+            (None, "Add Comments")
+        } else {
+            let select = Select::new(DEFAULT_PROMPT, STATUS_OPTIONS, Some(&ReviewEvent::Comment));
+            (Some(select), "Submit Review")
+        };
+        Self {
+            status,
+            summary: TextInput::new("Review summary"),
+            submit: Button::new(label, ButtonVariant::Success),
+        }
+    }
+
+    /// The review to send with `comments`, for the commit `commit_id`. The author's form always comments.
+    pub(super) fn review(&self, commit_id: &str, comments: &[PendingComment]) -> Result<NewReview, MissingStatus> {
+        let event = match &self.status {
+            Some(select) => *select.value().ok_or(MissingStatus)?,
+            None => ReviewEvent::Comment,
+        };
+        Ok(NewReview {
+            event,
+            commit_id: commit_id.to_owned(),
+            body: self.summary.value().to_owned(),
+            comments: comments
+                .iter()
+                .map(|comment| DraftReviewComment {
+                    path: comment.path.clone(),
+                    body: comment.body.clone(),
+                    position: comment.position,
+                })
+                .collect(),
+        })
+    }
+}
+
+/// Which part of the form has focus.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum FormFocus {
+    Status,
+    Summary,
+    Submit,
+}
+
+/// Where the form's fields landed in the body.
+#[derive(Debug, Clone, Default)]
+pub(super) struct FormPlaced {
+    /// The status box's rows; `None` on the author's form.
+    pub(super) status: Option<Range<usize>>,
+    pub(super) summary: Range<usize>,
+    pub(super) submit: ButtonPlaced,
+}
+
+/// Adds `form` to `out`, `width` cells wide, with `focused` drawn focused, and returns where its fields landed:
+/// its top margin, "Review Status:" and the select, the summary, the button with a row of margin above and below,
+/// then its bottom margin.
+pub(super) fn layout_form(
+    out: &mut Rendered,
+    form: &mut ReviewForm,
+    focused: Option<FormFocus>,
+    width: u16,
+    theme: &Theme,
+) -> FormPlaced {
+    let under = theme.background();
+    let base = Style::new()
+        .fg(theme.color(theme.palette.foreground, under))
+        .bg(theme.paint(under));
+    let status_rows = if form.status.is_some() {
+        1 + usize::from(select::HEIGHT)
+    } else {
+        0
+    };
+    let input = usize::from(text_input::HEIGHT);
+    let button_rows = usize::from(button::HEIGHT);
+    let height = FORM_MARGIN + status_rows + input + 1 + button_rows + 1 + FORM_MARGIN;
+    let area = Rect::new(0, 0, width, u16::try_from(height).unwrap_or(u16::MAX));
+    let mut buf = Buffer::empty(area);
+    buf.set_style(area, base);
+    let row = |r: usize| u16::try_from(r).unwrap_or(u16::MAX);
+    let start = out.lines.len();
+    let mut y = FORM_MARGIN;
+    let mut placed = FormPlaced::default();
+    if let Some(status) = &form.status {
+        buf.set_stringn(0, row(y), "Review Status:", usize::from(width), base);
+        y += 1;
+        let focused = focused == Some(FormFocus::Status) && !status.is_open();
+        status.render_box(
+            &mut buf,
+            Rect::new(0, row(y), width, select::HEIGHT),
+            theme,
+            under,
+            focused,
+        );
+        placed.status = Some(start + y..start + y + usize::from(select::HEIGHT));
+        y += usize::from(select::HEIGHT);
+    }
+    form.summary.render(
+        &mut buf,
+        Rect::new(0, row(y), width, text_input::HEIGHT),
+        theme,
+        under,
+        focused == Some(FormFocus::Summary),
+    );
+    placed.summary = start + y..start + y + input;
+    y += input + 1;
+    // `margin: 1` on the button: a cell in from the left.
+    let button_width = form.submit.width(theme).min(width.saturating_sub(1));
+    form.submit.render(
+        &mut buf,
+        Rect::new(1, row(y), button_width, button::HEIGHT),
+        theme,
+        focused == Some(FormFocus::Submit),
+    );
+    placed.submit = ButtonPlaced {
+        rows: start + y..start + y + button_rows,
+        columns: 1..1 + button_width,
+    };
+    out.lines.extend((0..area.height).map(|y| buffer_line(&buf, y)));
+    placed
 }
 
 /// Where a button landed in the body: its rows, and its columns from the view's left edge.

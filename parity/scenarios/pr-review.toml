@@ -3,7 +3,7 @@ description = "Diff review: c on a hunk line opens Add Comment, an empty comment
 # Python shows a pending comment's line as the hunk-relative index (README.md:3) and Rust the line's real number
 # (README.md:5, Py bug B22's recommendation), and after the submit Rust refetches the PR (B15), so neither is in
 # [expect]. shift+enter is sent as CSI 13;2 u, which both apps read.
-gate = false
+gate = true
 parity_rows = [
     "diff-viewer.add-comment",
     "diff-viewer.pending-comments",
@@ -162,6 +162,11 @@ wait.log.body.comments = [ { path = "README.md", body = "Mention the arrow keys 
 
 [[step]]
 wait.text = "New review created!"
+
+# Rust fetches the PR again before showing it (B15); Python shows the stale one at once. Either way the Overview tab
+# shows again.
+[[step]]
+wait.text = "Opened on"
 
 [[step]]
 capture = "submitted"

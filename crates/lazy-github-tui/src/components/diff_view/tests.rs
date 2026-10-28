@@ -11,6 +11,7 @@ use ratatui::layout::Position;
 use super::*;
 use crate::keymap::{KeySpec, Keymap};
 use crate::test_util::{buffer_to_string, buffer_to_styled_string};
+use lazy_github_core::github::ReviewEvent;
 
 /// PR 5's diff: README.md (one hunk), assets/app.css (added), build.rs, docs/old.md (deleted) and src/viewer.rs (two
 /// hunks).
@@ -38,7 +39,10 @@ fn press(view: &mut DiffView, keys: &[&str]) {
         let KeySpec::Chord(chord) = KeySpec::parse(key) else {
             panic!("{key} isn't a key");
         };
-        if view.handle_key(&chord, &keymap, "").is_some() {
+        if view
+            .handle_key(&chord, &keymap, "", tokio::time::Instant::now())
+            .is_some()
+        {
             continue;
         }
         let mut chain = view.chain();
@@ -461,10 +465,10 @@ fn a_click_on_remove_drops_its_comment() {
         row,
         modifiers: crossterm::event::KeyModifiers::NONE,
     };
-    assert!(view.mouse(up(8, row)));
+    assert_eq!(view.mouse(up(8, row)), ViewMouse::Consumed);
     assert_eq!(bodies(&view), ["Mention the arrow keys too."]);
     // A release without a press on a button does nothing.
-    assert!(!view.mouse(up(8, row)));
+    assert_eq!(view.mouse(up(8, row)), ViewMouse::Ignored);
 }
 
 #[test]
@@ -476,4 +480,92 @@ fn pr_review_pending_comments() {
         .draw(|frame| view.render(frame, frame.area(), &Theme::default(), true))
         .unwrap();
     insta::assert_snapshot!(buffer_to_styled_string(terminal.backend().buffer()));
+}
+
+// The review form (#273).
+
+#[test]
+fn the_form_s_stops_come_last_and_the_author_s_has_no_status() {
+    use DiffStop::{RemoveComment, ReviewStatus, ReviewSubmit, ReviewSummary};
+    let mut view = with_two_comments();
+    view.show_review_form(false);
+    let stops = ring(&mut view);
+    assert_eq!(
+        stops[stops.len() - 5..],
+        [
+            RemoveComment(0),
+            RemoveComment(1),
+            ReviewStatus,
+            ReviewSummary,
+            ReviewSubmit
+        ]
+    );
+    let mut view = with_two_comments();
+    view.show_review_form(true);
+    let stops = ring(&mut view);
+    assert_eq!(
+        stops[stops.len() - 3..],
+        [RemoveComment(1), ReviewSummary, ReviewSubmit]
+    );
+    assert_eq!(view.review_button(), Some("Add Comments"));
+}
+
+#[test]
+fn an_invalid_diff_shows_no_form() {
+    let mut view = DiffView::invalid("bad");
+    view.show_review_form(false);
+    assert!(!view.has_review_form());
+}
+
+#[test]
+fn the_review_sends_each_comment_s_diff_position_in_order() {
+    let mut view = with_two_comments();
+    view.show_review_form(false);
+    let review = view.review_request("abc").unwrap().unwrap();
+    assert_eq!(review.event, ReviewEvent::Comment);
+    assert_eq!((review.commit_id.as_str(), review.body.as_str()), ("abc", ""));
+    let comments: Vec<(&str, u32)> = review.comments.iter().map(|c| (c.body.as_str(), c.position)).collect();
+    assert_eq!(
+        comments,
+        [("Mention the arrow keys too.", 4), ("A heading for\nthe usage.", 1)]
+    );
+}
+
+#[test]
+fn the_author_always_comments_and_the_blank_status_is_missing() {
+    let mut view = view();
+    view.show_review_form(true);
+    assert_eq!(view.review_request("abc").unwrap().unwrap().event, ReviewEvent::Comment);
+    let mut view = self::view();
+    view.show_review_form(false);
+    view.focus(DiffStop::ReviewStatus);
+    press(&mut view, &["enter", "home", "enter"]);
+    assert_eq!(view.review_status(), Some(None));
+    assert_eq!(view.review_request("abc"), Some(Err(MissingStatus)));
+}
+
+#[test]
+fn typing_goes_into_the_summary_and_tab_closes_an_open_list() {
+    let mut view = view();
+    view.show_review_form(false);
+    view.focus(DiffStop::ReviewSummary);
+    press(&mut view, &["o", "k", "J"]);
+    assert_eq!(view.review_summary(), Some("okJ"));
+    view.focus(DiffStop::ReviewStatus);
+    press(&mut view, &["enter"]);
+    assert!(view.status_open());
+    assert!(view.focus_step(true));
+    assert!(!view.status_open());
+}
+
+#[test]
+fn the_status_list_opens_over_the_view() {
+    let mut view = view();
+    view.show_review_form(false);
+    view.focus(DiffStop::ReviewStatus);
+    press(&mut view, &["enter"]);
+    let screen = draw(&mut view, 80, 30);
+    for option in ["Approved", "Changes Requested", "Commented"] {
+        assert!(screen.contains(option), "{option}: {screen}");
+    }
 }

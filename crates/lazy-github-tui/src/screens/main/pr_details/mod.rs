@@ -91,7 +91,7 @@ impl PullRequestDetails {
         let pr = Arc::new(pr);
         Self {
             overview: PrOverview::new(Arc::clone(&pr), cx),
-            diff: PrDiff::new(&pr, cx),
+            diff: PrDiff::new(Arc::clone(&pr), cx),
             conversation: PrConversation::new(Arc::clone(&pr), cx),
             pr,
         }
@@ -128,7 +128,7 @@ impl DetailsBody for PullRequestDetails {
 
     fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
         let response = self.overview.on_response(id, response)?;
-        let response = self.diff.on_response(id, response)?;
+        let response = self.diff.on_response(id, response, cx)?;
         self.conversation.on_response(id, response, &mut self.overview, cx)
     }
 
@@ -249,8 +249,11 @@ impl DetailsBody for PullRequestDetails {
         self.diff.add_comment(comment, cx);
     }
 
-    fn mouse(&mut self, tab: usize, mouse: MouseEvent) -> bool {
-        PrTab::at(tab) == PrTab::Diff && self.diff.mouse(mouse)
+    fn mouse(&mut self, tab: usize, mouse: MouseEvent) -> Option<Action> {
+        match PrTab::at(tab) {
+            PrTab::Diff => self.diff.mouse(mouse),
+            PrTab::Overview | PrTab::Conversation => None,
+        }
     }
 
     /// The Conversation's openers send this only when it should reload: after `n` either way, after a posted reply.
@@ -266,9 +269,16 @@ impl DetailsBody for PullRequestDetails {
         }
     }
 
-    fn handle_focused_key(&mut self, tab: usize, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Option<Action> {
+    fn handle_focused_key(
+        &mut self,
+        tab: usize,
+        key: &KeyChord,
+        keymap: &Keymap,
+        clipboard: &str,
+        now: tokio::time::Instant,
+    ) -> Option<Action> {
         match PrTab::at(tab) {
-            PrTab::Diff => self.diff.handle_key(key, keymap, clipboard),
+            PrTab::Diff => self.diff.handle_key(key, keymap, clipboard, now),
             PrTab::Overview | PrTab::Conversation => None,
         }
     }

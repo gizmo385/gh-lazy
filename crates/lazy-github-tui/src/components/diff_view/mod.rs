@@ -3,7 +3,8 @@
 //! holding the hunk's [`HunkPane`].
 //!
 //! The viewer doesn't know about pull requests: it takes a parsed [`Diff`]. After the files come the pending review
-//! comments ([`PendingComment`], #272), which Add Comment adds. Inside the details content it has an inner focus ring
+//! comments ([`PendingComment`], #272), which Add Comment adds, and once the owner shows it, the Submit review form
+//! (#273), which the owner submits. Inside the details content it has an inner focus ring
 //! ([`DiffStop`]) computed from what's shown and open, and a text input (the filter) that takes its keys before the
 //! binding chain, as the table's search box does.
 
@@ -15,6 +16,7 @@ use std::ops::Range;
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::diff::{ChangedFile, Counts, Diff, Label};
+use lazy_github_core::github::{NewReview, ReviewEvent};
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Position, Rect};
@@ -23,9 +25,9 @@ use ratatui::text::{Line, Span};
 
 pub use highlight::code_spans;
 pub use pane::{HunkPane, PaneLayout};
-pub use review::{DiffLineRef, PendingComment, line_text};
+pub use review::{DiffLineRef, MissingStatus, PendingComment, line_text};
 
-use review::ButtonPlaced;
+use review::{ButtonPlaced, FormFocus, FormPlaced, ReviewForm};
 
 use super::button::BUTTON_BINDINGS;
 use super::collapsible::{CONTENT_INDENT, Collapsible, Placement, SectionFocus};
@@ -33,11 +35,13 @@ use super::command_log::Wheel;
 use super::info::Scroll;
 use super::markdown::{self, Rendered, TextRun};
 use super::scroll_view::{Layout, LayoutCache, ScrollView};
-use super::text_input::{self, InputOutcome, TextInput};
+use super::select::{SELECT_BINDINGS, SELECT_OVERLAY_BINDINGS, SelectOutcome};
+use super::text_input::{self, INPUT_BINDINGS, InputOutcome, TextInput};
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Owner};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::{RichAnsi, Theme};
+use tokio::time::Instant;
 
 /// The filter's placeholder. It names the default key even with `diff.filter_files` rebound, as Python's does.
 const FILTER_PLACEHOLDER: &str = "Filter files (press '/' to focus, ESC to clear)";
@@ -93,7 +97,8 @@ const FILTER_BINDINGS: &[BindingId] = &[
 
 /// A focus stop inside the viewer, in ring order: the scroll area, the filter, then each shown file's title, and
 /// inside an open file each hunk's title and, when that hunk is open, its pane; then each pending comment's Remove
-/// button. Files, hunks and comments are by index.
+/// button, then the review form's status (not on the author's form), summary and button. Files, hunks and comments
+/// are by index.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DiffStop {
     /// The scrolling area itself (`DiffViewerContainer`).
@@ -108,6 +113,23 @@ pub enum DiffStop {
     Pane(usize, usize),
     /// A pending comment's Remove button.
     RemoveComment(usize),
+    /// The review form's status select, its list open or closed.
+    ReviewStatus,
+    /// The review form's summary input.
+    ReviewSummary,
+    /// The review form's button: "Submit Review", or the author's "Add Comments".
+    ReviewSubmit,
+}
+
+/// What a mouse event other than a press did to the viewer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ViewMouse {
+    /// Not the viewer's.
+    Ignored,
+    /// Taken (a click on Remove dropped its comment).
+    Consumed,
+    /// A click on the review form's button: the owner submits the review.
+    SubmitReview,
 }
 
 impl DiffStop {
@@ -115,7 +137,12 @@ impl DiffStop {
     fn file(self) -> Option<usize> {
         match self {
             DiffStop::FileTitle(f) | DiffStop::HunkTitle(f, _) | DiffStop::Pane(f, _) => Some(f),
-            DiffStop::Scroll | DiffStop::Filter | DiffStop::RemoveComment(_) => None,
+            DiffStop::Scroll
+            | DiffStop::Filter
+            | DiffStop::RemoveComment(_)
+            | DiffStop::ReviewStatus
+            | DiffStop::ReviewSummary
+            | DiffStop::ReviewSubmit => None,
         }
     }
 
@@ -123,7 +150,13 @@ impl DiffStop {
     fn hunk(self) -> Option<(usize, usize)> {
         match self {
             DiffStop::HunkTitle(f, h) | DiffStop::Pane(f, h) => Some((f, h)),
-            DiffStop::Scroll | DiffStop::Filter | DiffStop::FileTitle(_) | DiffStop::RemoveComment(_) => None,
+            DiffStop::Scroll
+            | DiffStop::Filter
+            | DiffStop::FileTitle(_)
+            | DiffStop::RemoveComment(_)
+            | DiffStop::ReviewStatus
+            | DiffStop::ReviewSummary
+            | DiffStop::ReviewSubmit => None,
         }
     }
 }
@@ -175,6 +208,8 @@ struct Body {
     notice: Option<String>,
     /// The comments added with Add Comment, in the order they were added.
     pending: Vec<PendingComment>,
+    /// The Submit review form, once the owner shows it.
+    form: Option<ReviewForm>,
     stop: DiffStop,
     /// Whether focus is inside the content, so the stop is drawn focused.
     focused: bool,
@@ -191,6 +226,8 @@ struct Placements {
     files: Vec<Option<FilePlaced>>,
     /// Each pending comment's Remove button.
     removes: Vec<ButtonPlaced>,
+    /// The review form's fields, while it shows.
+    form: Option<FormPlaced>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -250,6 +287,7 @@ impl DiffView {
                 files,
                 notice,
                 pending: Vec::new(),
+                form: None,
                 stop: DiffStop::Scroll,
                 focused: false,
                 layouts: LayoutCache::default(),
@@ -304,6 +342,56 @@ impl DiffView {
     /// The pending comments, in the order they were added.
     pub fn pending(&self) -> &[PendingComment] {
         &self.body.pending
+    }
+
+    /// Shows the Submit review form after the files and the pending comments: the author's (`author`, only a summary
+    /// and "Add Comments") or a reviewer's. A diff that couldn't be parsed shows no form, as in Python.
+    pub fn show_review_form(&mut self, author: bool) {
+        if self.body.notice.is_none() && self.body.form.is_none() {
+            self.body.form = Some(ReviewForm::new(author));
+            self.body.layouts.clear();
+        }
+    }
+
+    /// Whether the review form shows.
+    pub fn has_review_form(&self) -> bool {
+        self.body.form.is_some()
+    }
+
+    /// The review status chosen: `None` without a form or on the author's form, `Some(None)` for the blank option.
+    pub fn review_status(&self) -> Option<Option<ReviewEvent>> {
+        let status = self.body.form.as_ref()?.status.as_ref()?;
+        Some(status.value().copied())
+    }
+
+    /// The review summary as typed, while the form shows.
+    pub fn review_summary(&self) -> Option<&str> {
+        self.body.form.as_ref().map(|form| form.summary.value())
+    }
+
+    /// The review form's button label, while the form shows.
+    pub fn review_button(&self) -> Option<&str> {
+        self.body.form.as_ref().map(|form| form.submit.label())
+    }
+
+    /// The review the form would send for commit `commit_id`, with every pending comment in the order they were
+    /// added. `None` without a form.
+    pub fn review_request(&self, commit_id: &str) -> Option<Result<NewReview, MissingStatus>> {
+        let form = self.body.form.as_ref()?;
+        Some(form.review(commit_id, &self.body.pending))
+    }
+
+    /// Whether a submitted review is in flight: the button is disabled until the answer comes.
+    pub fn is_submitting(&self) -> bool {
+        self.body.form.as_ref().is_some_and(|form| form.submit.disabled())
+    }
+
+    /// Disables the review form's button while a review is in flight, or enables it again.
+    pub fn set_submitting(&mut self, submitting: bool) {
+        if let Some(form) = &mut self.body.form {
+            form.submit.set_disabled(submitting);
+            self.body.layouts.clear();
+        }
     }
 
     /// What Add Comment comments on with a hunk pane focused: the pane's current line, with an empty body.
@@ -376,14 +464,32 @@ impl DiffView {
             }
         }
         stops.extend((0..self.body.pending.len()).map(DiffStop::RemoveComment));
+        if let Some(form) = &self.body.form {
+            if form.status.is_some() {
+                stops.push(DiffStop::ReviewStatus);
+            }
+            stops.extend([DiffStop::ReviewSummary, DiffStop::ReviewSubmit]);
+        }
         stops
     }
 
     /// Moves to `stop` and scrolls it into view at the next draw. Focus moving onto the filter selects its text, as
     /// Textual's `Input` does on focus.
     fn focus(&mut self, stop: DiffStop) {
-        if stop == DiffStop::Filter && self.body.stop != DiffStop::Filter {
+        let before = self.body.stop;
+        if stop == DiffStop::Filter && before != DiffStop::Filter {
             self.body.filter.select_all();
+        }
+        if let Some(form) = &mut self.body.form {
+            if stop == DiffStop::ReviewSummary && before != DiffStop::ReviewSummary {
+                form.summary.select_all();
+            }
+            // The open list goes with the focus.
+            if stop != DiffStop::ReviewStatus
+                && let Some(status) = &mut form.status
+            {
+                status.close();
+            }
         }
         self.body.set_stop(stop);
         if stop != DiffStop::Scroll {
@@ -430,8 +536,27 @@ impl DiffView {
                 vec![ChainLink::new(Owner::CollapsibleTitle, TITLE_BINDINGS), viewer]
             }
             DiffStop::Pane(..) => vec![ChainLink::new(Owner::HunkPane, HUNK_PANE_BINDINGS), viewer],
-            DiffStop::RemoveComment(_) => vec![ChainLink::new(Owner::DetailsButton, BUTTON_BINDINGS), viewer],
+            DiffStop::RemoveComment(_) | DiffStop::ReviewSubmit => {
+                vec![ChainLink::new(Owner::DetailsButton, BUTTON_BINDINGS), viewer]
+            }
+            DiffStop::ReviewSummary => vec![ChainLink::new(Owner::DetailsInput, INPUT_BINDINGS), viewer],
+            DiffStop::ReviewStatus if self.status_open() => {
+                vec![
+                    ChainLink::new(Owner::DetailsSelectOverlay, SELECT_OVERLAY_BINDINGS),
+                    viewer,
+                ]
+            }
+            DiffStop::ReviewStatus => vec![ChainLink::new(Owner::DetailsSelect, SELECT_BINDINGS), viewer],
         }
+    }
+
+    /// Whether the review status's list is open.
+    fn status_open(&self) -> bool {
+        self.body
+            .form
+            .as_ref()
+            .and_then(|form| form.status.as_ref())
+            .is_some_and(super::select::Select::is_open)
     }
 
     /// How the footer and help panel show a binding of [`Self::chain`]. With the scroll area focused the viewer's
@@ -472,6 +597,13 @@ impl DiffView {
                 DiffStop::RemoveComment(index) => self.remove_comment(index),
                 _ => return None,
             },
+            (Owner::DetailsSelect | Owner::DetailsSelectOverlay, _) => {
+                let status = self.body.form.as_mut()?.status.as_mut()?;
+                if status.on_binding(id) == SelectOutcome::Ignored {
+                    return None;
+                }
+                self.body.layouts.clear();
+            }
             (Owner::DiffViewer, BindingId::DiffNextHunk) => self.jump_to_hunk(true),
             (Owner::DiffViewer, BindingId::DiffPreviousHunk) => self.jump_to_hunk(false),
             (Owner::DiffViewer, BindingId::DiffFilterFiles) => self.focus(DiffStop::Filter),
@@ -480,17 +612,39 @@ impl DiffView {
                 self.apply_filter();
                 self.focus(DiffStop::Scroll);
             }
-            // The filter took its editing keys before the chain.
-            (Owner::DiffFilter, _) => {}
+            // The filter and the summary took their editing keys before the chain.
+            (Owner::DiffFilter | Owner::DetailsInput, _) => {}
             _ => return None,
         }
         Some(Action::Consumed)
     }
 
-    /// A key before the binding chain: the focused filter takes printable keys and its editing keys. `enter` leaves
-    /// it for the first shown file's first hunk (Py bug B59). Paste types `clipboard`, and copy and cut hand the
-    /// text to the app's clipboard.
-    pub fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Option<Action> {
+    /// A key before the binding chain, at `now`: the focused filter or review summary takes printable keys and its
+    /// editing keys, and the review status's open list its search keys. `enter` leaves the filter for the first shown
+    /// file's first hunk (Py bug B59), and does nothing in the summary. Paste types `clipboard`, and copy and cut hand
+    /// the text to the app's clipboard.
+    pub fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str, now: Instant) -> Option<Action> {
+        match (self.body.stop, &mut self.body.form) {
+            (DiffStop::ReviewSummary, Some(form)) if form.summary.consumes_key(key, keymap) => {
+                let action = match form.summary.handle_key(key, keymap, clipboard) {
+                    InputOutcome::Copied(text) => Action::Copy(text),
+                    InputOutcome::Changed | InputOutcome::Submitted | InputOutcome::Ignored => Action::Consumed,
+                };
+                self.body.layouts.clear();
+                return Some(action);
+            }
+            (
+                DiffStop::ReviewStatus,
+                Some(ReviewForm {
+                    status: Some(status), ..
+                }),
+            ) if status.consumes_key(key, keymap) => {
+                let _ = status.handle_key(key, keymap, now);
+                self.body.layouts.clear();
+                return Some(Action::Consumed);
+            }
+            _ => {}
+        }
         let filter = &mut self.body.filter;
         if self.body.stop != DiffStop::Filter || !filter.consumes_key(key, keymap) {
             return None;
@@ -510,8 +664,14 @@ impl DiffView {
         Some(action)
     }
 
-    /// A bracketed paste: its first line goes into the filter while the filter has focus. Says whether it did.
+    /// A bracketed paste: its first line goes into the filter or the review summary while it has focus. Says whether
+    /// it did.
     pub fn handle_paste(&mut self, text: &str) -> bool {
+        if let (DiffStop::ReviewSummary, Some(form)) = (self.body.stop, &mut self.body.form) {
+            form.summary.handle_paste(text);
+            self.body.layouts.clear();
+            return true;
+        }
         if self.body.stop != DiffStop::Filter {
             return false;
         }
@@ -597,8 +757,26 @@ impl DiffView {
     /// A left press at a screen cell, against the last frame: a title focuses and toggles its section, a pane or the
     /// filter takes focus (the filter's cursor moving to the press), and anything else focuses the scroll area.
     pub fn click(&mut self, position: Position) {
-        let stop = self.stop_at(position);
         self.armed = None;
+        // The status's open list is drawn over everything: a press on it picks, and one anywhere else closes it.
+        if let Some(ReviewForm {
+            status: Some(status), ..
+        }) = &mut self.body.form
+            && status.is_open()
+        {
+            let event = MouseEvent {
+                kind: MouseEventKind::Down(MouseButton::Left),
+                column: position.x,
+                row: position.y,
+                modifiers: crossterm::event::KeyModifiers::NONE,
+            };
+            self.body.layouts.clear();
+            if status.handle_overlay_mouse(&event) != SelectOutcome::Ignored {
+                return;
+            }
+            status.close();
+        }
+        let stop = self.stop_at(position);
         match stop {
             DiffStop::FileTitle(f) => self.toggle(f, None),
             DiffStop::HunkTitle(f, h) => self.toggle(f, Some(h)),
@@ -614,28 +792,55 @@ impl DiffView {
                 self.body.layouts.clear();
                 return;
             }
-            DiffStop::RemoveComment(_) => self.armed = Some(stop),
+            DiffStop::RemoveComment(_) | DiffStop::ReviewSubmit => self.armed = Some(stop),
+            DiffStop::ReviewStatus => {
+                self.focus(stop);
+                if let Some(ReviewForm {
+                    status: Some(status), ..
+                }) = &mut self.body.form
+                {
+                    let _ = status.toggle();
+                }
+                self.body.layouts.clear();
+                return;
+            }
+            DiffStop::ReviewSummary => {
+                self.focus(stop);
+                let input = Rect {
+                    width: self.body.last_width,
+                    height: text_input::HEIGHT,
+                    ..self.area
+                };
+                if let Some(form) = &mut self.body.form {
+                    form.summary.press(input, position.x);
+                }
+                self.body.layouts.clear();
+                return;
+            }
             DiffStop::Pane(..) | DiffStop::Scroll => {}
         }
         self.focus(stop);
     }
 
-    /// A mouse event other than a press: the left release that completes a click on a button presses it. Says
-    /// whether it took the event.
-    pub fn mouse(&mut self, event: MouseEvent) -> bool {
+    /// A mouse event other than a press: the left release that completes a click on a button presses it.
+    pub fn mouse(&mut self, event: MouseEvent) -> ViewMouse {
         if event.kind != MouseEventKind::Up(MouseButton::Left) {
-            return false;
+            return ViewMouse::Ignored;
         }
         let Some(armed) = self.armed.take() else {
-            return false;
+            return ViewMouse::Ignored;
         };
         if self.stop_at(Position::new(event.column, event.row)) != armed {
-            return false;
+            return ViewMouse::Ignored;
         }
-        if let DiffStop::RemoveComment(index) = armed {
-            self.remove_comment(index);
+        match armed {
+            DiffStop::RemoveComment(index) => {
+                self.remove_comment(index);
+                ViewMouse::Consumed
+            }
+            DiffStop::ReviewSubmit => ViewMouse::SubmitReview,
+            _ => ViewMouse::Ignored,
         }
-        true
     }
 
     /// The stop drawn at a screen cell.
@@ -673,6 +878,17 @@ impl DiffView {
         if let Some(index) = placements.removes.iter().position(|placed| placed.contains(row, x)) {
             return DiffStop::RemoveComment(index);
         }
+        if let Some(form) = &placements.form {
+            if form.status.as_ref().is_some_and(|rows| rows.contains(&row)) {
+                return DiffStop::ReviewStatus;
+            }
+            if form.summary.contains(&row) {
+                return DiffStop::ReviewSummary;
+            }
+            if form.submit.contains(row, x) {
+                return DiffStop::ReviewSubmit;
+            }
+        }
         DiffStop::Scroll
     }
 
@@ -689,6 +905,43 @@ impl DiffView {
         }
         self.scroll.render(frame, area, theme, &mut self.body);
         self.area = area;
+        self.render_status_list(frame, area, theme);
+    }
+
+    /// The review status's open list, last, over the view and past it if need be, as Textual's `overlay: screen`
+    /// draws it: right below the box, moved up to fit the screen.
+    fn render_status_list(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme) {
+        let width = self.body.last_width;
+        let Some(rows) = self
+            .body
+            .placements(width)
+            .and_then(|placements| placements.form.as_ref())
+            .and_then(|form| form.status.clone())
+        else {
+            return;
+        };
+        let offset = self.scroll.offset();
+        let Some(ReviewForm {
+            status: Some(status), ..
+        }) = &mut self.body.form
+        else {
+            return;
+        };
+        if !status.is_open() {
+            return;
+        }
+        // The box's rows on screen, kept inside the view when it's scrolled out of it.
+        let top =
+            i64::from(area.y) + i64::try_from(rows.start).unwrap_or(i64::MAX) - i64::try_from(offset).unwrap_or(0);
+        let top = top.clamp(i64::from(area.y), i64::from(area.bottom().saturating_sub(1)));
+        let below = Rect {
+            x: area.x,
+            y: u16::try_from(top).unwrap_or(area.y),
+            width,
+            height: crate::components::select::HEIGHT,
+        };
+        let screen = frame.area();
+        status.render_overlay(frame.buffer_mut(), below, screen, theme, theme.background());
     }
 }
 
@@ -727,6 +980,9 @@ impl Body {
             Reveal::Stop(DiffStop::HunkTitle(f, h)) => hunk(f, h).map(|p| title(&p.section)),
             Reveal::Stop(DiffStop::Pane(f, h)) => hunk(f, h).map(|p| p.pane.clone()),
             Reveal::Stop(DiffStop::RemoveComment(i)) => placements.removes.get(i).map(|p| p.rows.clone()),
+            Reveal::Stop(DiffStop::ReviewStatus) => placements.form.as_ref()?.status.clone(),
+            Reveal::Stop(DiffStop::ReviewSummary) => placements.form.as_ref().map(|p| p.summary.clone()),
+            Reveal::Stop(DiffStop::ReviewSubmit) => placements.form.as_ref().map(|p| p.submit.rows.clone()),
             Reveal::Section(f, None) => file(f).map(|p| p.section.rows.clone()),
             Reveal::Section(f, Some(h)) => hunk(f, h).map(|p| p.section.rows.clone()),
         }
@@ -771,11 +1027,18 @@ impl Layout for Body {
             DiffStop::RemoveComment(index) if self.focused => Some(index),
             _ => None,
         };
+        let form_focused = match self.stop {
+            DiffStop::ReviewStatus if self.focused => Some(FormFocus::Status),
+            DiffStop::ReviewSummary if self.focused => Some(FormFocus::Summary),
+            DiffStop::ReviewSubmit if self.focused => Some(FormFocus::Submit),
+            _ => None,
+        };
         let Body {
             filter,
             files,
             notice,
             pending,
+            form,
             layouts,
             placements,
             ..
@@ -798,6 +1061,9 @@ impl Layout for Body {
                     .push(file.shown.then(|| layout_file(&mut out, file, focus, width, theme)));
             }
             placed.removes = review::layout_pending(&mut out, pending, remove_focused, width, theme);
+            if let Some(form) = form {
+                placed.form = Some(review::layout_form(&mut out, form, form_focused, width, theme));
+            }
             placements.retain(|(w, _)| *w != width);
             if placements.len() == 2 {
                 placements.remove(0);

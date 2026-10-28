@@ -355,8 +355,8 @@ impl DetailsBody for RunDetails {
         }
     }
 
-    fn mouse(&mut self, tab: usize, mouse: MouseEvent) -> bool {
-        RunTab::at(tab) == RunTab::Jobs && self.jobs_tab.mouse(mouse)
+    fn mouse(&mut self, tab: usize, mouse: MouseEvent) -> Option<Action> {
+        (RunTab::at(tab) == RunTab::Jobs && self.jobs_tab.mouse(mouse)).then_some(Action::Consumed)
     }
 
     fn maximizable(&self, tab: usize) -> bool {

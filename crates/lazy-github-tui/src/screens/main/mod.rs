@@ -669,10 +669,16 @@ impl MainScreen {
     }
 
     /// Step 4 of key dispatch: a key the focused search box takes before the binding chain. `None` passes it on.
-    pub fn handle_focused_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> Option<Action> {
+    pub fn handle_focused_key(
+        &mut self,
+        key: &KeyChord,
+        keymap: &Keymap,
+        clipboard: &str,
+        now: Instant,
+    ) -> Option<Action> {
         // An input inside the details content (the diff viewer's file filter) takes its keys the same way.
         if self.focus == FocusTarget::DetailsContent {
-            return self.details.handle_focused_key(key, keymap, clipboard);
+            return self.details.handle_focused_key(key, keymap, clipboard, now);
         }
         let FocusTarget::Search(id) = self.focus else {
             return None;
@@ -826,9 +832,9 @@ impl MainScreen {
         // A widget inside the content that takes its own wheel and clicks (a tree) gets them first.
         if !matches!(mouse.kind, MouseEventKind::Down(_))
             && self.hit(mouse.column, mouse.row) == Some(FocusTarget::DetailsContent)
-            && self.details.mouse(mouse)
+            && let Some(action) = self.details.mouse(mouse)
         {
-            return Some(Action::Consumed);
+            return Some(action);
         }
         match mouse.kind {
             MouseEventKind::Down(MouseButton::Left) => {
@@ -1025,6 +1031,9 @@ impl MainScreen {
             | Owner::IssueOverview
             | Owner::IssueComments
             | Owner::DetailsButton
+            | Owner::DetailsInput
+            | Owner::DetailsSelect
+            | Owner::DetailsSelectOverlay
             | Owner::CollapsibleTitle
             | Owner::ListView
             | Owner::CommentBlock

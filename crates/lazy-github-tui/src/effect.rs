@@ -8,7 +8,7 @@ use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{
-    DiffFetchError, Github, IssueListQuery, IssueUpdate, NewIssue, PageQuery, RepoListQuery,
+    DiffFetchError, Github, IssueListQuery, IssueUpdate, NewIssue, NewReview, PageQuery, RepoListQuery,
 };
 use lazy_github_core::models::{
     CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, Reactions,
@@ -249,6 +249,15 @@ pub enum GithubRequest {
         /// The reply's text.
         body: String,
     },
+    /// [`Github::create_review`].
+    CreateReview {
+        /// The pull request's repo.
+        repo: Box<Repository>,
+        /// The pull request's number.
+        number: u64,
+        /// The verdict, the commit, the summary and the comments.
+        review: NewReview,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repo the issue is in.
@@ -315,6 +324,8 @@ pub enum GithubResponse {
     ReplyToReviewComment(Result<Box<ReviewComment>, GhError>),
     /// [`Github::update_issue`], boxed to keep this enum small.
     UpdateIssue(Result<Box<Issue>, GhError>),
+    /// [`Github::create_review`], boxed to keep this enum small.
+    CreateReview(Result<Box<Review>, GhError>),
 }
 
 impl GithubRequest {
@@ -385,6 +396,9 @@ impl GithubRequest {
             ),
             GithubRequest::UpdateIssue { repo, number, update } => {
                 GithubResponse::UpdateIssue(gh.update_issue(&repo, number, &update).await.map(Box::new))
+            }
+            GithubRequest::CreateReview { repo, number, review } => {
+                GithubResponse::CreateReview(gh.create_review(&repo, number, &review).await.map(Box::new))
             }
         }
     }

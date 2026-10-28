@@ -1082,21 +1082,24 @@ impl MainScreen {
         }
     }
 
-    /// Whether a text input on the screen has the mouse: a left press on a search box started a drag that hasn't been
-    /// released. `App` then hands the left drags and the release to [`Self::captured_mouse`], wherever they are.
+    /// Whether a text input on the screen has the mouse: a left press on a search box or an input in the details (the
+    /// diff viewer's file filter) started a drag that hasn't been released. `App` then hands the left drags and the
+    /// release to [`Self::captured_mouse`], wherever they are.
     pub fn captures_mouse(&self) -> bool {
         SectionId::ALL
             .into_iter()
             .any(|id| self.table(id).search_captures_mouse())
+            || self.details.captures_mouse()
     }
 
     /// A mouse event while a text input on the screen has the mouse (Textual's `capture_mouse`): it goes to that input
     /// wherever the pointer is. `None` when nothing has the mouse or the input doesn't take the event.
     pub fn captured_mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
-        SectionId::ALL
+        let taken = SectionId::ALL
             .into_iter()
             .any(|id| self.table_mut(id).search_captured_mouse(mouse))
-            .then_some(Action::Consumed)
+            || self.details.captured_mouse(mouse);
+        taken.then_some(Action::Consumed)
     }
 
     /// A mouse event over a section's interior. A left press on the search box or the table focuses it: the

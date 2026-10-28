@@ -861,6 +861,24 @@ impl DiffView {
         self.focus(stop);
     }
 
+    /// Whether a press on the filter or the review summary started a drag that hasn't been released: the owner keeps
+    /// the mouse for the viewer until then and hands it [`Self::captured_mouse`].
+    pub fn captures_mouse(&self) -> bool {
+        self.body.filter.is_selecting() || self.body.form.as_ref().is_some_and(|form| form.summary.is_selecting())
+    }
+
+    /// A mouse event while the viewer has the mouse, wherever the pointer is: the input being dragged over takes the
+    /// left drags and the release ([`TextInput::captured_mouse`]). Says whether it took the event.
+    pub fn captured_mouse(&mut self, event: MouseEvent) -> bool {
+        let summary = self.body.form.as_mut().map(|form| &mut form.summary);
+        let taken = self.body.filter.captured_mouse(event) || summary.is_some_and(|input| input.captured_mouse(event));
+        if taken {
+            // The cursor and selection moved, and the cached layouts hold the inputs as drawn.
+            self.body.layouts.clear();
+        }
+        taken
+    }
+
     /// A mouse event other than a press: the left release that completes a click on a button presses it.
     pub fn mouse(&mut self, event: MouseEvent) -> ViewMouse {
         if event.kind != MouseEventKind::Up(MouseButton::Left) {

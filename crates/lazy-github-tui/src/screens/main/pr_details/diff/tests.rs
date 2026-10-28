@@ -11,6 +11,8 @@ use serde_json::Value;
 
 use crate::backend::tests::VtTerminal;
 use crate::components::diff_view::{DiffStop, DiffView};
+use crossterm::event::{MouseButton, MouseEventKind};
+
 use crate::effect::{Effect, GithubRequest, GithubResponse};
 use crate::event::Event;
 use crate::modal::ModalKind;
@@ -373,6 +375,44 @@ fn a_paste_goes_into_the_focused_filter() {
     assert!(!view(&app).is_file_shown(README));
 }
 
+/// The screen row and column where `text` is first drawn.
+fn find(screen: &str, text: &str) -> (u16, u16) {
+    let (row, line) = screen
+        .lines()
+        .enumerate()
+        .find(|(_, line)| line.contains(text))
+        .unwrap_or_else(|| panic!("{text:?} isn't on screen:\n{screen}"));
+    let column = line[..line.find(text).unwrap()].chars().count();
+    (u16::try_from(column).unwrap(), u16::try_from(row).unwrap())
+}
+
+#[test]
+fn a_drag_from_the_filter_keeps_the_mouse_until_the_release() {
+    let mut app = diff_tab();
+    app.press(&["tab", "/"]);
+    app.send(Event::Paste("foo-bar baz".into()));
+    let (column, row) = find(&app.screen(160, 48), "foo-bar baz");
+    let bar = column + 4;
+    // Pressed on the `b` of `bar`, dragged left out of the details over the Pull Requests table and back right over
+    // the diff below the filter, and released there: `bar` is selected, and the release clicks nothing.
+    app.drag((bar, row), &[(10, 20), (bar + 3, row + 6)]);
+    assert_eq!(
+        (focus(&app), stop(&app)),
+        (FocusTarget::DetailsContent, DiffStop::Filter)
+    );
+    app.press(&["x"]);
+    assert_eq!(view(&app).filter_text(), "foo-x baz");
+    // The release ended the drag: moves with the button down select nothing until the next press.
+    app.mouse(MouseEventKind::Drag(MouseButton::Left), column, row);
+    app.press(&["y"]);
+    assert_eq!(view(&app).filter_text(), "foo-xy baz");
+    // A drag past the filter's right edge selects to the end.
+    app.render(160, 48);
+    app.drag((bar, row), &[(159, 2)]);
+    app.press(&["z"]);
+    assert_eq!(view(&app).filter_text(), "foo-z");
+}
+
 #[test]
 fn enter_and_a_click_toggle_sections() {
     let mut app = diff_tab();
@@ -687,6 +727,22 @@ fn the_author_s_form_has_only_the_summary_and_add_comments() {
     assert_eq!(stop(&app), DiffStop::ReviewSummary);
     app.press(&["shift+tab"]);
     assert_ne!(stop(&app), DiffStop::ReviewStatus);
+}
+
+#[test]
+fn a_drag_from_the_summary_selects_wherever_the_pointer_goes() {
+    let mut app = diff_tab_with(config(), reviewer_gh(), &["j", "j", "enter"]);
+    settle(&mut app);
+    app.press(&["1", "shift+tab", "shift+tab"]);
+    assert_eq!(stop(&app), DiffStop::ReviewSummary);
+    app.send(Event::Paste("foo-bar baz".into()));
+    let (column, row) = find(&app.screen(160, 48), "foo-bar baz");
+    let bar = column + 4;
+    // Out over the tables and back, released below the summary.
+    app.drag((bar, row), &[(10, 20), (bar + 3, row + 3)]);
+    assert_eq!(stop(&app), DiffStop::ReviewSummary);
+    type_text(&mut app, "x");
+    assert_eq!(view(&app).review_summary(), Some("foo-x baz"));
 }
 
 #[test]

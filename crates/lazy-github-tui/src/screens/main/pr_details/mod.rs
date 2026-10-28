@@ -332,6 +332,15 @@ impl DetailsBody for PullRequestDetails {
         }
     }
 
+    // Only the Diff tab has text inputs: its file filter and review summary.
+    fn captures_mouse(&self) -> bool {
+        self.diff.captures_mouse()
+    }
+
+    fn captured_mouse(&mut self, mouse: MouseEvent) -> bool {
+        self.diff.captured_mouse(mouse)
+    }
+
     /// The Conversation's openers send this only when it should reload: after `n` either way, after a posted reply.
     /// After a reply, focus stays on what was replied to.
     fn comment_closed(&mut self, _posted: Option<PostedComment>, reply: bool, cx: &mut Cx<'_>) {

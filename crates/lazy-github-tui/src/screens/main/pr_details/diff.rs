@@ -356,6 +356,14 @@ impl PrDiff {
 
     /// A mouse event other than a press: the release of a click on a button. A click on the review's button submits
     /// it, as `enter` does.
+    pub(super) fn captures_mouse(&self) -> bool {
+        self.view().is_some_and(DiffView::captures_mouse)
+    }
+
+    pub(super) fn captured_mouse(&mut self, event: MouseEvent) -> bool {
+        self.view_mut().is_some_and(|view| view.captured_mouse(event))
+    }
+
     pub(super) fn mouse(&mut self, event: MouseEvent) -> Option<Action> {
         match self.view_mut()?.mouse(event) {
             ViewMouse::Ignored => None,

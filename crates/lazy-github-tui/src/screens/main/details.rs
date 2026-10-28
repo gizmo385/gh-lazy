@@ -195,6 +195,19 @@ pub(super) trait DetailsBody {
         None
     }
 
+    /// Whether a text input inside the body has the mouse: a left press on it started a drag that hasn't been
+    /// released. The main screen then hands the body the left drags and the release, wherever they are
+    /// ([`Self::captured_mouse`]). Not per tab: the drag stays with the input that started it.
+    fn captures_mouse(&self) -> bool {
+        false
+    }
+
+    /// A mouse event while [`Self::captures_mouse`]: the dragged input takes the left drags and the release. Says
+    /// whether it took the event.
+    fn captured_mouse(&mut self, _mouse: MouseEvent) -> bool {
+        false
+    }
+
     /// How the footer and help panel show binding `id` of [`Self::chain`]'s link `owner` in tab `tab`.
     fn binding_state(&self, _tab: usize, _owner: Owner, _id: BindingId) -> BindingState {
         BindingState::Enabled
@@ -550,6 +563,16 @@ impl DetailsPane {
     /// [`DetailsBody::mouse`] in the active tab.
     pub(super) fn mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
         self.body.get_mut().mouse(self.tabs.active(), mouse)
+    }
+
+    /// [`DetailsBody::captures_mouse`].
+    pub(super) fn captures_mouse(&self) -> bool {
+        self.body.get().captures_mouse()
+    }
+
+    /// [`DetailsBody::captured_mouse`].
+    pub(super) fn captured_mouse(&mut self, mouse: MouseEvent) -> bool {
+        self.body.get_mut().captured_mouse(mouse)
     }
 
     /// [`DetailsBody::binding_state`] in the active tab.

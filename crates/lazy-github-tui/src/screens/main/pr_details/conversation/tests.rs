@@ -473,8 +473,78 @@ fn pr_conversation_comment_focused() {
     insta::assert_snapshot!(app.screen(160, 48));
 }
 
+/// PR 5's Conversation with `gh` answering, the tab strip focused.
+fn conversation_on(gh: lazy_github_core::github::FakeGithub) -> TestApp {
+    let mut app = app_on(gh);
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["5", "right", "right"]);
+    app
+}
+
+/// The fake, also answering a reply "Yes" to a review comment and a comment "Yes".
+fn writing_gh() -> lazy_github_core::github::FakeGithub {
+    let reply = reviews(5)[0].comments[0].clone();
+    let comment = comments(5)[0].clone();
+    gh().with_review_reply("Yes", Ok(reply))
+        .with_posted_comment("Yes", Ok(comment))
+}
+
+/// Tabs from the tab strip until focus is on `wanted`.
+fn tab_to(app: &mut TestApp, wanted: ConversationStop) {
+    for _ in 0..60 {
+        app.press(&["tab"]);
+        if stop(app) == wanted {
+            return;
+        }
+    }
+    panic!("never reached {wanted:?}");
+}
+
+/// The comment-writing requests the app sent.
+fn writes(app: &TestApp) -> Vec<GithubRequest> {
+    app.effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::Github { request, .. }
+                if matches!(
+                    request,
+                    GithubRequest::CreateIssueComment { .. } | GithubRequest::ReplyToReviewComment { .. }
+                ) =>
+            {
+                Some(request.clone())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+fn review_requests(app: &TestApp) -> usize {
+    app.effects()
+        .iter()
+        .filter(|effect| {
+            matches!(
+                effect,
+                Effect::Github {
+                    request: GithubRequest::PullRequestReviews { .. },
+                    ..
+                }
+            )
+        })
+        .count()
+}
+
+fn dialog_open(app: &TestApp) -> bool {
+    app.app().modals() == [crate::modal::ModalKind::NewComment]
+}
+
+/// Types "Yes" and posts it.
+fn post_yes(app: &mut TestApp) {
+    app.press(&["Y", "e", "s", "shift+enter"]);
+}
+
 #[test]
-fn replies_and_new_comments_answer_unimplemented() {
+fn the_bindings_ask_for_the_dialog() {
     let mut app = shown_conversation();
     app.press(&["tab", "tab", "tab"]);
     let main = app.app_mut().main_screen_mut().unwrap();
@@ -485,16 +555,115 @@ fn replies_and_new_comments_answer_unimplemented() {
     ] {
         assert!(matches!(
             main.details.on_binding(owner, id),
-            Some(Action::Unimplemented(got)) if got == id
+            Some(Action::Main(crate::screens::main::MainAction::DetailsCommand(o, got))) if o == owner && got == id
         ));
     }
-    // The keys themselves: consumed and logged.
-    for key in ["r", "n"] {
-        let out = logs(|| {
-            app.press(&[key]);
-        });
-        assert!(out.contains("is not implemented yet"), "{key}: {out}");
-    }
+}
+
+#[test]
+fn r_on_a_review_comment_replies_in_its_thread() {
+    let mut app = conversation_on(writing_gh());
+    let c9001 = block(&app, CommentRef::Review(9001));
+    tab_to(&mut app, ConversationStop::Comment(c9001, CommentStop::Block));
+    // The comment's `r` is innermost: it wins over the review's.
+    app.press(&["r"]);
+    assert!(dialog_open(&app));
+    assert!(
+        app.screen(160, 48)
+            .contains("Replying to comment from parity-bot at Mon Feb  2 10:00:00 2026")
+    );
+    let before = review_requests(&app);
+    post_yes(&mut app);
+    assert_eq!(
+        writes(&app),
+        [GithubRequest::ReplyToReviewComment {
+            repo: Box::new(fixture_pr(5).pr.issue.repo),
+            pr_number: 5,
+            comment_id: 9001,
+            body: "Yes".into(),
+        }]
+    );
+    settle(&mut app);
+    assert!(!dialog_open(&app));
+    // A posted reply reloads the conversation (Py bug B18's recommendation), and focus stays on the comment.
+    assert_eq!(review_requests(&app), before + 1);
+    assert_eq!(stop(&app), ConversationStop::Comment(c9001, CommentStop::Block));
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+}
+
+#[test]
+fn r_on_an_issue_comment_posts_an_issue_comment() {
+    let mut app = conversation_on(writing_gh());
+    let first = comments(5)[0].id;
+    let c = block(&app, CommentRef::Issue(first));
+    tab_to(&mut app, ConversationStop::Comment(c, CommentStop::Block));
+    app.press(&["r"]);
+    assert!(app.screen(160, 48).contains("Replying to comment from"));
+    post_yes(&mut app);
+    assert!(matches!(
+        writes(&app).as_slice(),
+        [GithubRequest::CreateIssueComment { number: 5, body, .. }] if body == "Yes"
+    ));
+}
+
+#[test]
+fn r_on_a_review_replies_with_an_issue_comment() {
+    let mut app = conversation_on(writing_gh());
+    tab_to(&mut app, ConversationStop::Review(0));
+    app.press(&["r"]);
+    assert!(dialog_open(&app));
+    let review = &reviews(5)[0];
+    let at = lazy_github_core::time::c_format(review.submitted_at.unwrap());
+    assert!(
+        app.screen(160, 48)
+            .contains(&format!("Replying to comment from {} at {at}", review.user.login))
+    );
+    post_yes(&mut app);
+    assert!(matches!(
+        writes(&app).as_slice(),
+        [GithubRequest::CreateIssueComment { number: 5, .. }]
+    ));
+}
+
+#[test]
+fn a_cancelled_reply_doesnt_reload_but_n_does() {
+    let mut app = conversation_on(writing_gh());
+    tab_to(&mut app, ConversationStop::Review(0));
+    let before = review_requests(&app);
+    app.press(&["r", "escape"]);
+    settle(&mut app);
+    assert_eq!(review_requests(&app), before);
+    // `n`, cancelled: Python's `action_new_comment` reloads either way, and focus goes back to the scroll area.
+    app.press(&["n", "escape"]);
+    settle(&mut app);
+    assert_eq!(review_requests(&app), before + 1);
+    assert_eq!(stop(&app), ConversationStop::Scroll);
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    // `n`, posted: reloaded again.
+    app.press(&["n"]);
+    post_yes(&mut app);
+    settle(&mut app);
+    assert_eq!(review_requests(&app), before + 2);
+    assert!(!dialog_open(&app));
+}
+
+#[test]
+fn the_content_stays_up_while_it_reloads() {
+    let mut app = conversation_on(writing_gh());
+    app.press(&["tab", "n", "escape"]);
+    // The reload's requests are out, unanswered: the conversation still shows.
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("Review from parity-bot"), "{screen}");
+    settle(&mut app);
+    assert!(app.screen(160, 48).contains("Review from parity-bot"));
+}
+
+#[test]
+fn pr_conversation_reply_to_a_review() {
+    let mut app = conversation_on(writing_gh());
+    tab_to(&mut app, ConversationStop::Review(0));
+    app.press(&["r"]);
+    insta::assert_snapshot!(app.screen(160, 48));
 }
 
 #[test]

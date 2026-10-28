@@ -12,7 +12,7 @@ use lazy_github_core::github::{
 };
 use lazy_github_core::models::{
     CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, Reactions,
-    RepoName, Repository, Review, User, Workflow, WorkflowJob, WorkflowRun,
+    RepoName, Repository, Review, ReviewComment, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 /// Something the runtime does on the app's behalf.
@@ -238,6 +238,17 @@ pub enum GithubRequest {
         /// The comment's text.
         body: String,
     },
+    /// [`Github::reply_to_review_comment`].
+    ReplyToReviewComment {
+        /// The pull request's repo.
+        repo: Box<Repository>,
+        /// The pull request's number.
+        pr_number: u64,
+        /// The review comment replied to.
+        comment_id: u64,
+        /// The reply's text.
+        body: String,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repo the issue is in.
@@ -300,6 +311,8 @@ pub enum GithubResponse {
     CreateIssue(Result<Box<Issue>, GhError>),
     /// [`Github::create_issue_comment`], boxed to keep this enum small.
     CreateIssueComment(Result<Box<IssueComment>, GhError>),
+    /// [`Github::reply_to_review_comment`], boxed to keep this enum small.
+    ReplyToReviewComment(Result<Box<ReviewComment>, GhError>),
     /// [`Github::update_issue`], boxed to keep this enum small.
     UpdateIssue(Result<Box<Issue>, GhError>),
 }
@@ -360,6 +373,16 @@ impl GithubRequest {
             GithubRequest::CreateIssueComment { repo, number, body } => {
                 GithubResponse::CreateIssueComment(gh.create_issue_comment(&repo, number, &body).await.map(Box::new))
             }
+            GithubRequest::ReplyToReviewComment {
+                repo,
+                pr_number,
+                comment_id,
+                body,
+            } => GithubResponse::ReplyToReviewComment(
+                gh.reply_to_review_comment(&repo, pr_number, comment_id, &body)
+                    .await
+                    .map(Box::new),
+            ),
             GithubRequest::UpdateIssue { repo, number, update } => {
                 GithubResponse::UpdateIssue(gh.update_issue(&repo, number, &update).await.map(Box::new))
             }

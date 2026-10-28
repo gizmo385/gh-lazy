@@ -176,6 +176,48 @@ fn the_heading_names_the_author_and_the_date() {
     assert_eq!(ReplyTarget::None.heading(), None);
 }
 
+#[test]
+fn a_review_has_a_heading_only_once_submitted() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../parity/fixtures/pr-details/repos/parity-bot/pr-details/pulls/5/reviews/GET.json");
+    let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let mut review: lazy_github_core::models::Review =
+        serde_json::from_value(fixture["response"]["body"][0].clone()).unwrap();
+    let at = review.submitted_at.unwrap();
+    let target = ReplyTarget::Review(Box::new(review.clone()));
+    let (line, quote) = target.heading().unwrap();
+    assert_eq!(
+        line,
+        format!(
+            "Replying to comment from {} at {}",
+            review.user.login,
+            time::c_format(at)
+        )
+    );
+    assert_eq!(quote, review.body);
+    review.submitted_at = None;
+    assert_eq!(ReplyTarget::Review(Box::new(review)).heading(), None);
+}
+
+#[test]
+fn a_reply_to_a_review_comment_goes_to_its_thread() {
+    let mut app = comments_tab();
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../parity/fixtures/pr-details/repos/parity-bot/pr-details/pulls/5/reviews/501/comments/GET.json");
+    let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let comment: ReviewComment = serde_json::from_value(fixture["response"]["body"][0].clone()).unwrap();
+    let id = comment.comment.id;
+    let mut dialog = NewCommentDialog::new(fixture_repo(), 5, ReplyTarget::ReviewComment(Box::new(comment)));
+    app.with_cx(|cx| dialog.update(NewCommentAction::Submit, cx));
+    assert!(app.effects().iter().any(|effect| matches!(
+        effect,
+        Effect::Github {
+            request: GithubRequest::ReplyToReviewComment { pr_number: 5, comment_id, .. },
+            ..
+        } if *comment_id == id
+    )));
+}
+
 // Opening and focus.
 
 #[test]

@@ -578,14 +578,16 @@ fn a_posted_comment_and_a_reply_are_appended() {
     let mut posted = fixture_comments(12)[0].clone();
     posted.id = 7001;
     posted.body = "Posted later".into();
-    app.dispatch(Action::Main(MainAction::CommentPosted(
-        crate::modal::PostedComment::Issue(Box::new(posted.clone())),
-    )));
+    app.dispatch(Action::Main(MainAction::CommentClosed {
+        posted: Some(crate::modal::PostedComment::Issue(Box::new(posted.clone()))),
+        reply: false,
+    }));
     posted.id = 7002;
     posted.body = "A reply".into();
-    app.dispatch(Action::Main(MainAction::CommentPosted(
-        crate::modal::PostedComment::Issue(Box::new(posted)),
-    )));
+    app.dispatch(Action::Main(MainAction::CommentClosed {
+        posted: Some(crate::modal::PostedComment::Issue(Box::new(posted))),
+        reply: false,
+    }));
     assert_eq!(comments(&app).len(), before + 2);
     let screen = app.screen(160, 48);
     let (later, reply) = (screen.find("Posted later").unwrap(), screen.find("A reply").unwrap());
@@ -676,9 +678,10 @@ fn a_comment_posted_where_there_were_none_goes_below_the_empty_line() {
     assert_eq!(shown_issue(&app), Some(11));
     let mut posted = fixture_comments(12)[0].clone();
     posted.body = "The first comment".into();
-    app.dispatch(Action::Main(MainAction::CommentPosted(
-        crate::modal::PostedComment::Issue(Box::new(posted)),
-    )));
+    app.dispatch(Action::Main(MainAction::CommentClosed {
+        posted: Some(crate::modal::PostedComment::Issue(Box::new(posted))),
+        reply: false,
+    }));
     let screen = app.screen(160, 48);
     let (empty, first) = (
         screen.find("No comments available").unwrap(),

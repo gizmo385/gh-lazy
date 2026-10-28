@@ -246,6 +246,19 @@ pub trait Github: Clone + Send + Sync + 'static {
         number: u64,
         body: &str,
     ) -> impl Future<Output = Result<IssueComment, GhError>> + Send;
+
+    /// Replies to review comment `comment_id` on pull request `pr_number` of `repo`: `POST
+    /// /repos/{owner}/{repo}/pulls/{pr_number}/comments/{comment_id}/replies` with `{"body": body}` over stdin. Returns
+    /// the reply, a review comment in the same thread. Never cached.
+    ///
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body doesn't decode.
+    fn reply_to_review_comment(
+        &self,
+        repo: &Repository,
+        pr_number: u64,
+        comment_id: u64,
+        body: &str,
+    ) -> impl Future<Output = Result<ReviewComment, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -820,6 +833,19 @@ impl GhCli {
         request
     }
 
+    /// `POST /repos/{owner}/{repo}/pulls/{pr_number}/comments/{comment_id}/replies` with `{"body": body}`.
+    fn reply_to_review_comment_request(repo: &Repository, pr_number: u64, comment_id: u64, body: &str) -> GhRequest {
+        let mut request = GhRequest::new(
+            Method::Post,
+            format!(
+                "/repos/{}/{}/pulls/{pr_number}/comments/{comment_id}/replies",
+                repo.owner.login, repo.name
+            ),
+        );
+        request.body = Some(serde_json::json!({ "body": body }));
+        request
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -1020,6 +1046,17 @@ impl Github for GhCli {
 
     async fn create_issue_comment(&self, repo: &Repository, number: u64, body: &str) -> Result<IssueComment, GhError> {
         let request = Self::create_issue_comment_request(repo, number, body);
+        self.inner.runner.request(request).await?.json()
+    }
+
+    async fn reply_to_review_comment(
+        &self,
+        repo: &Repository,
+        pr_number: u64,
+        comment_id: u64,
+        body: &str,
+    ) -> Result<ReviewComment, GhError> {
+        let request = Self::reply_to_review_comment_request(repo, pr_number, comment_id, body);
         self.inner.runner.request(request).await?.json()
     }
 }
@@ -2228,6 +2265,40 @@ mod tests {
         assert_eq!(request.body.unwrap().to_string(), r#"{"body":"A **new** comment"}"#);
         let empty = GhCli::create_issue_comment_request(&issue_fixture_repo(), 12, "");
         assert_eq!(empty.body.unwrap().to_string(), r#"{"body":""}"#);
+    }
+
+    #[test]
+    fn reply_to_review_comment_argv_posts_the_body_over_stdin() {
+        let repo = issue_fixture_repo();
+        let request = GhCli::reply_to_review_comment_request(&repo, 5, 9001, "It stops, yes.");
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        assert_eq!(
+            strings(request.argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "POST",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "--input",
+                "-",
+                "/repos/parity-bot/issue-fixture/pulls/5/comments/9001/replies"
+            ]
+        );
+        assert_eq!(request.body.unwrap().to_string(), r#"{"body":"It stops, yes."}"#);
+    }
+
+    #[test]
+    fn a_review_reply_decodes() {
+        let response = parity_response(
+            "pr-write",
+            "repos/parity-bot/pr-details/pulls/5/comments/9001/replies/POST.json",
+        );
+        let reply: ReviewComment = response.json().unwrap();
+        assert_eq!(reply.comment.id, 9004);
+        assert_eq!(reply.comment.body, "It stops, yes.");
+        assert_eq!(reply.path, "src/viewer.rs");
     }
 
     #[test]

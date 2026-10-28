@@ -36,8 +36,10 @@ use crate::components::markdown::{self, Markdown, Rendered, TextRun};
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::BindingId;
+use crate::modal::{NewCommentDialog, ReplyTarget};
 use crate::theme::{Accent, Paint, Theme};
 
+use super::super::MainAction;
 use super::super::details::BodyRenderCx;
 use super::super::overview_text::accent;
 use super::overview::PrOverview;
@@ -71,6 +73,14 @@ pub(in crate::screens::main) enum ConversationStop {
     Comment(usize, CommentStop),
 }
 
+/// A focus stop that survives a reload.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum KeptStop {
+    Scroll,
+    Review(usize),
+    Comment(CommentRef),
+}
+
 /// Where the tab is.
 #[derive(Debug)]
 enum State {
@@ -99,6 +109,11 @@ pub(in crate::screens::main) struct PrConversation {
     scroll: ScrollView,
     /// The comment reactions still out, by request, with the block each is for.
     reactions: HashMap<RequestId, usize>,
+    /// A reload's requests while the loaded content stays up (after a comment was posted).
+    reloading: Option<Requests>,
+    /// Whether the reload puts focus back on the same review or comment (after a reply), rather than on the scroll
+    /// area (after `n`, as Python's remounted conversation loses its focused widget).
+    keep_focus: bool,
     reveal: Option<Reveal>,
     /// Where the content was drawn last, for clicks.
     area: Rect,
@@ -118,6 +133,8 @@ struct Body {
     items: Vec<Item>,
     /// Every shown comment's block, in the order they're shown, with the comment they're of.
     blocks: Vec<(CommentRef, CommentBlock)>,
+    /// What a reply to each block answers, in the blocks' order.
+    targets: Vec<ReplyTarget>,
     stop: ConversationStop,
     /// Whether focus is inside the content, so the stop is drawn focused.
     focused: bool,
@@ -139,6 +156,8 @@ enum Item {
 /// A review, laid out as a collapsible section.
 #[derive(Debug)]
 struct ReviewSection {
+    /// What a reply to the review answers.
+    target: ReplyTarget,
     login: String,
     state: ReviewState,
     collapsible: Collapsible,
@@ -214,6 +233,8 @@ impl PrConversation {
             },
             scroll: ScrollView::default(),
             reactions: HashMap::new(),
+            reloading: None,
+            keep_focus: false,
             reveal: None,
             area: Rect::default(),
         }
@@ -301,8 +322,9 @@ impl PrConversation {
             }
             return None;
         }
-        let State::Loading { requests, .. } = &mut self.state else {
-            return Some(response);
+        let requests = match (&mut self.state, &mut self.reloading) {
+            (_, Some(requests)) | (State::Loading { requests, .. }, None) => requests,
+            (State::Loaded(_) | State::Failed, None) => return Some(response),
         };
         let failed = match response {
             GithubResponse::PullRequestReviews(result) if id == requests.reviews_id => match result {
@@ -331,8 +353,46 @@ impl PrConversation {
         };
         let (reviews, comments) = (std::mem::take(reviews), std::mem::take(comments));
         overview.set_reviews(&reviews);
+        let kept = self
+            .reloading
+            .take()
+            .and(std::mem::take(&mut self.keep_focus).then(|| self.kept_stop()))
+            .flatten();
         self.load(&reviews, &comments, cx);
+        if let Some(kept) = kept {
+            self.restore(kept);
+        }
         None
+    }
+
+    /// Where focus is in the loaded content, in terms that outlive a reload: a review by its place, a comment by
+    /// which comment it is.
+    fn kept_stop(&self) -> Option<KeptStop> {
+        let body = self.body()?;
+        Some(match body.stop {
+            ConversationStop::Scroll => KeptStop::Scroll,
+            ConversationStop::Review(index) => KeptStop::Review(index),
+            ConversationStop::Comment(block, _) => KeptStop::Comment(body.blocks.get(block)?.0),
+        })
+    }
+
+    /// Focus back where it was before a reload, if that's still there; the scroll position stays.
+    fn restore(&mut self, kept: KeptStop) {
+        let Some(body) = self.body_mut() else {
+            return;
+        };
+        let stop = match kept {
+            KeptStop::Review(index) if matches!(body.items.get(index), Some(Item::Review(_))) => {
+                Some(ConversationStop::Review(index))
+            }
+            KeptStop::Comment(comment) => body
+                .blocks
+                .iter()
+                .position(|(of, _)| *of == comment)
+                .map(|block| ConversationStop::Comment(block, CommentStop::Block)),
+            KeptStop::Scroll | KeptStop::Review(_) => None,
+        };
+        body.set_stop(stop.unwrap_or(ConversationStop::Scroll));
     }
 
     /// Either request failed: Python logs this and leaves the spinner up (Py bug B16); the tab and the Overview's
@@ -340,7 +400,11 @@ impl PrConversation {
     fn fail(&mut self, error: &GhError, overview: &mut PrOverview, cx: &mut Cx<'_>) {
         tracing::error!("Error retrieving PR reviews or comments");
         tracing::debug!("Fetching the conversation failed: {error}");
-        if let State::Loading { requests, .. } = &self.state {
+        let reloading = self.reloading.take();
+        if let Some(requests) = reloading.as_ref().or(match &self.state {
+            State::Loading { requests, .. } => Some(requests),
+            State::Loaded(_) | State::Failed => None,
+        }) {
             if requests.reviews.is_none() {
                 cx.effect(Effect::Cancel(requests.reviews_id));
             }
@@ -357,6 +421,7 @@ impl PrConversation {
     fn load(&mut self, reviews: &[Review], comments: &[IssueComment], cx: &mut Cx<'_>) {
         let repo = &self.pr.pr.issue.repo;
         let mut blocks = Vec::new();
+        let mut targets = Vec::new();
         let mut items = Vec::new();
         let threads = review_threads(reviews);
         for (review, threads) in reviews.iter().zip(threads) {
@@ -379,6 +444,7 @@ impl PrConversation {
                                     CommentRef::Review(comment.comment.id),
                                     CommentBlock::new(&comment.comment, &repo.full_name),
                                 ));
+                                targets.push(ReplyTarget::ReviewComment(Box::new((*comment).clone())));
                                 blocks.len() - 1
                             })
                             .collect()
@@ -388,6 +454,7 @@ impl PrConversation {
             };
             let open = review.state != ReviewState::Dismissed && !matches!(contents, ReviewContents::Nothing);
             items.push(Item::Review(ReviewSection {
+                target: ReplyTarget::Review(Box::new(review.clone())),
                 login: review.user.login.clone(),
                 state: review.state,
                 collapsible: Collapsible::new(open),
@@ -399,6 +466,7 @@ impl PrConversation {
                 CommentRef::Issue(comment.id),
                 CommentBlock::new(comment, &repo.full_name),
             ));
+            targets.push(ReplyTarget::IssueComment(Box::new(comment.clone())));
             items.push(Item::Comment(blocks.len() - 1));
         }
 
@@ -412,6 +480,7 @@ impl PrConversation {
         self.state = State::Loaded(Box::new(Body {
             items,
             blocks,
+            targets,
             stop: ConversationStop::Scroll,
             // The next draw says.
             focused: false,
@@ -423,6 +492,16 @@ impl PrConversation {
 
     /// The tab is going away: cancels whatever it still waits on.
     pub(super) fn close(&self, cx: &mut Cx<'_>) {
+        if let Some(requests) = &self.reloading {
+            for (id, answered) in [
+                (requests.reviews_id, requests.reviews.is_some()),
+                (requests.comments_id, requests.comments.is_some()),
+            ] {
+                if !answered {
+                    cx.effect(Effect::Cancel(id));
+                }
+            }
+        }
         if let State::Loading { requests, .. } = &self.state {
             if requests.reviews.is_none() {
                 cx.effect(Effect::Cancel(requests.reviews_id));
@@ -536,8 +615,8 @@ impl PrConversation {
         chain
     }
 
-    /// A binding at one of [`Self::chain`]'s links. Replying and new comments aren't built yet (#182): the key is
-    /// consumed, as in Python.
+    /// A binding at one of [`Self::chain`]'s links. A new comment and the replies open the New comment dialog, which
+    /// needs the context: [`Self::command`].
     pub(super) fn on_binding(&mut self, owner: Owner, id: BindingId) -> Option<Action> {
         let stop = self.current();
         match (owner, stop) {
@@ -555,10 +634,94 @@ impl PrConversation {
                     None
                 }
             }
+            (Owner::CommentBlock, ConversationStop::Comment(..)) if id == BindingId::ConversationCommentReply => {
+                Some(Action::Main(MainAction::DetailsCommand(owner, id)))
+            }
+            (Owner::ConversationReview, _) if id == BindingId::ConversationReviewReply => {
+                Some(Action::Main(MainAction::DetailsCommand(owner, id)))
+            }
+            (Owner::PrConversation, _) if id == BindingId::ConversationCommentNew => {
+                Some(Action::Main(MainAction::DetailsCommand(owner, id)))
+            }
             (Owner::CommentBlock | Owner::ConversationReview | Owner::PrConversation, _) => {
                 Some(Action::Unimplemented(id))
             }
             _ => None,
+        }
+    }
+
+    /// What `r` at the current stop answers: the focused block's comment for `conversation.comment.reply`, the review
+    /// holding the stop for `conversation.review.reply`.
+    fn reply_target(&self, id: BindingId) -> Option<ReplyTarget> {
+        let body = self.body()?;
+        match (id, body.stop) {
+            (BindingId::ConversationCommentReply, ConversationStop::Comment(block, _)) => {
+                body.targets.get(block).cloned()
+            }
+            (BindingId::ConversationReviewReply, stop) => match body.items.get(body.review_of(stop)?)? {
+                Item::Review(review) => Some(review.target.clone()),
+                Item::Comment(_) => None,
+            },
+            _ => None,
+        }
+    }
+
+    /// Opens New comment for the pull request: Python's `action_new_comment`, `reply_to_comment_flow` and
+    /// `action_reply_to_review`. After `n` the conversation reloads whether or not something was posted; after a
+    /// reply, only when it was (Py bug B18's recommendation: Python never reloads after a reply).
+    pub(super) fn command(&mut self, owner: Owner, id: BindingId, cx: &mut Cx<'_>) {
+        let (repo, number) = (self.pr.pr.issue.repo.clone(), self.pr.number());
+        match (owner, id) {
+            (Owner::PrConversation, BindingId::ConversationCommentNew) => {
+                let dialog = NewCommentDialog::new(repo, number, ReplyTarget::None);
+                cx.open_dialog(dialog, |posted| {
+                    Action::Main(MainAction::CommentClosed { posted, reply: false })
+                });
+            }
+            (Owner::CommentBlock | Owner::ConversationReview, _) => {
+                let Some(target) = self.reply_target(id) else {
+                    return;
+                };
+                let dialog = NewCommentDialog::new(repo, number, target);
+                cx.open_dialog(dialog, |posted| {
+                    posted.map_or(Action::Consumed, |posted| {
+                        Action::Main(MainAction::CommentClosed {
+                            posted: Some(posted),
+                            reply: true,
+                        })
+                    })
+                });
+            }
+            _ => {}
+        }
+    }
+
+    /// Requests the reviews and the comments again, as opening the tab does: Python's `fetch_conversation`. Loaded
+    /// content stays up until the answers replace it; with `keep_focus`, focus then goes back to the same review or
+    /// comment. What was still out is cancelled.
+    pub(super) fn reload(&mut self, keep_focus: bool, cx: &mut Cx<'_>) {
+        self.close(cx);
+        self.reactions.clear();
+        let requests = Requests {
+            reviews_id: cx.request(GithubRequest::PullRequestReviews {
+                pr: Box::new((*self.pr).clone()),
+            }),
+            comments_id: cx.request(GithubRequest::IssueComments {
+                issue: Box::new(self.pr.pr.issue.clone()),
+            }),
+            reviews: None,
+            comments: None,
+        };
+        match self.state {
+            // The content stays up, with focus where it is, until the new one replaces it.
+            State::Loaded(_) => {
+                self.reloading = Some(requests);
+                self.keep_focus = keep_focus;
+            }
+            State::Loading { .. } | State::Failed => {
+                self.reloading = None;
+                self.state = State::Loading { requests, since: None };
+            }
         }
     }
 

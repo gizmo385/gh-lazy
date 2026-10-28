@@ -11,13 +11,13 @@ use super::{DiffFetchError, Github, IssueListQuery, IssueUpdate, NewIssue, PageQ
 use crate::gh::GhError;
 use crate::models::{
     CheckRun, CheckState, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
-    Reactions, Repository, Review, User, Workflow, WorkflowJob, WorkflowRun,
+    Reactions, Repository, Review, ReviewComment, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue` and `create_issue_comment` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment` and `reply_to_review_comment` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -141,6 +141,17 @@ pub enum GithubCall {
         /// What was sent.
         body: String,
     },
+    /// [`Github::reply_to_review_comment`].
+    ReplyToReviewComment {
+        /// The repository's full name.
+        full_name: String,
+        /// The pull request's number.
+        pr_number: u64,
+        /// The review comment replied to.
+        comment_id: u64,
+        /// What was sent.
+        body: String,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repository's full name.
@@ -198,6 +209,8 @@ struct State {
     created_issue: Option<Result<Issue, GhError>>,
     /// What `create_issue_comment` returns, by the body sent; bodies not set fail with a 422.
     posted_comments: HashMap<String, Result<IssueComment, GhError>>,
+    /// What `reply_to_review_comment` returns, by the body sent; bodies not set fail with a 422.
+    review_replies: HashMap<String, Result<ReviewComment, GhError>>,
     /// What `update_issue` returns, whatever the issue; `None` fails with a 422.
     updated_issue: Option<Result<Issue, GhError>>,
     latency: Option<Duration>,
@@ -428,6 +441,14 @@ impl FakeGithub {
     #[must_use]
     pub fn with_posted_comment(self, body: &str, posted: Result<IssueComment, GhError>) -> Self {
         self.lock().posted_comments.insert(body.to_owned(), posted);
+        self
+    }
+
+    /// `reply_to_review_comment` returns `reply` for a reply with body `body`, whatever it answers. Other bodies fail
+    /// with a 422.
+    #[must_use]
+    pub fn with_review_reply(self, body: &str, reply: Result<ReviewComment, GhError>) -> Self {
+        self.lock().review_replies.insert(body.to_owned(), reply);
         self
     }
 
@@ -780,6 +801,27 @@ impl Github for FakeGithub {
         };
         self.respond(call, |state| match state.posted_comments.get(body) {
             Some(Ok(posted)) => Ok(posted.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Err(unprocessable()),
+        })
+        .await
+    }
+
+    async fn reply_to_review_comment(
+        &self,
+        repo: &Repository,
+        pr_number: u64,
+        comment_id: u64,
+        body: &str,
+    ) -> Result<ReviewComment, GhError> {
+        let call = GithubCall::ReplyToReviewComment {
+            full_name: repo.full_name.clone(),
+            pr_number,
+            comment_id,
+            body: body.to_owned(),
+        };
+        self.respond(call, |state| match state.review_replies.get(body) {
+            Some(Ok(reply)) => Ok(reply.clone()),
             Some(Err(error)) => Err(duplicate(error)),
             None => Err(unprocessable()),
         })
@@ -1225,6 +1267,35 @@ mod tests {
                 full_name: "octocat/a".into(),
                 number: 12,
                 body: "hi".into(),
+            }
+        );
+    }
+
+    #[tokio::test]
+    async fn reply_to_review_comment_answers_by_body_and_records_the_call() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../parity/fixtures/pr-write/repos/parity-bot/pr-details/pulls/5/comments/9001/replies/POST.json");
+        let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let reply: ReviewComment = serde_json::from_value(fixture["response"]["body"].clone()).unwrap();
+        let github = FakeGithub::new().with_review_reply("yes", Ok(reply.clone()));
+        assert_eq!(
+            github
+                .reply_to_review_comment(&repo("a"), 5, 9001, "yes")
+                .await
+                .unwrap(),
+            reply
+        );
+        assert!(matches!(
+            github.reply_to_review_comment(&repo("a"), 5, 9001, "no").await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        assert_eq!(
+            github.calls()[0],
+            GithubCall::ReplyToReviewComment {
+                full_name: "octocat/a".into(),
+                pr_number: 5,
+                comment_id: 9001,
+                body: "yes".into(),
             }
         );
     }

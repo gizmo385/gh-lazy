@@ -3,7 +3,7 @@ description = "PR Conversation: r on a review comment opens the reply modal and 
 # The modal's footer isn't compared (Rust binds `modal.submit` there, Py bug B17). After the reply Rust reloads the
 # conversation (Py bug B18's recommendation) and Python doesn't, so the reply's text is only in [expect] after the
 # reload that `n` causes in both apps.
-gate = false
+gate = true
 parity_rows = [
     "pull-requests.conversation-new-comment",
     "pull-requests.conversation-reply",
@@ -64,6 +64,10 @@ wait.stable_ms = 1000
 # The scroll area, the first review's title, then the first comment of its thread.
 [[step]]
 keys = ["tab", "tab", "tab"]
+
+# Python draws the focus boxes a moment after the focus moves.
+[[step]]
+wait.stable_ms = 500
 
 [[step]]
 capture = "comment-focused"

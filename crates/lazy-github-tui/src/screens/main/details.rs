@@ -99,8 +99,10 @@ pub(super) trait DetailsBody {
     /// [`MainAction::DetailsCommand`](super::MainAction::DetailsCommand).
     fn on_command(&mut self, _tab: usize, _owner: Owner, _id: BindingId, _cx: &mut Cx<'_>) {}
 
-    /// The New comment dialog opened from this body posted `posted`: the body shows it, if it shows comments.
-    fn comment_posted(&mut self, _posted: PostedComment, _cx: &mut Cx<'_>) {}
+    /// The New comment dialog opened from this body closed, with what it posted, if anything: the body shows it, if
+    /// it shows comments.
+    /// `reply` says whether it answered a comment or a review.
+    fn comment_closed(&mut self, _posted: Option<PostedComment>, _reply: bool, _cx: &mut Cx<'_>) {}
 
     /// A mouse event over tab `tab`'s content other than a press (a release, a move, the wheel), for a widget inside
     /// it that takes its own (a tree). Says whether it took the event; the pane handles any other.
@@ -414,9 +416,9 @@ impl DetailsPane {
         self.body.get_mut().on_command(self.tabs.active(), owner, id, cx);
     }
 
-    /// [`DetailsBody::comment_posted`].
-    pub(super) fn comment_posted(&mut self, posted: PostedComment, cx: &mut Cx<'_>) {
-        self.body.get_mut().comment_posted(posted, cx);
+    /// [`DetailsBody::comment_closed`].
+    pub(super) fn comment_closed(&mut self, posted: Option<PostedComment>, reply: bool, cx: &mut Cx<'_>) {
+        self.body.get_mut().comment_closed(posted, reply, cx);
     }
 
     /// [`DetailsBody::mouse`] in the active tab.

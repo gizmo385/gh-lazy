@@ -193,18 +193,25 @@ impl DetailsBody for IssueDetails {
             },
             _ => return,
         };
+        let reply = target != ReplyTarget::None;
         let dialog = NewCommentDialog::new(self.issue.repo.clone(), self.issue.number, target);
-        cx.open_dialog(dialog, |posted| {
+        cx.open_dialog(dialog, move |posted| {
             posted.map_or(Action::Consumed, |posted| {
-                Action::Main(MainAction::CommentPosted(posted))
+                Action::Main(MainAction::CommentClosed {
+                    posted: Some(posted),
+                    reply,
+                })
             })
         });
     }
 
     /// Python's `NewCommentCreated` handlers: the comment goes below the others.
-    fn comment_posted(&mut self, posted: PostedComment, _cx: &mut Cx<'_>) {
-        let PostedComment::Issue(comment) = posted;
-        self.comments.append(*comment);
+    fn comment_closed(&mut self, posted: Option<PostedComment>, _reply: bool, _cx: &mut Cx<'_>) {
+        match posted {
+            Some(PostedComment::Issue(comment)) => self.comments.append(*comment),
+            // An issue has no review comments to reply to.
+            Some(PostedComment::Review(_)) | None => {}
+        }
     }
 }
 

@@ -10,7 +10,7 @@
 use std::ops::Range;
 
 use crossterm::event::{KeyEvent, MouseButton, MouseEvent, MouseEventKind};
-use lazy_github_core::models::{IssueComment, Repository};
+use lazy_github_core::models::{IssueComment, Repository, Review, ReviewComment};
 use lazy_github_core::time;
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
@@ -54,6 +54,11 @@ pub enum ReplyTarget {
     None,
     /// A reply to an issue comment: posted as a new issue comment, since GitHub doesn't thread them.
     IssueComment(Box<IssueComment>),
+    /// A reply to a review comment: posted in its thread through the review-reply endpoint.
+    ReviewComment(Box<ReviewComment>),
+    /// A reply to a review: posted as a new issue comment (Py bug B18 keeps that). A review that wasn't submitted
+    /// has no heading.
+    Review(Box<Review>),
 }
 
 impl ReplyTarget {
@@ -61,16 +66,28 @@ impl ReplyTarget {
     fn heading(&self) -> Option<(String, &str)> {
         match self {
             ReplyTarget::None => None,
-            ReplyTarget::IssueComment(comment) => {
-                let author = comment.user.as_ref().map_or("Unknown", |user| user.login.as_str());
+            ReplyTarget::IssueComment(comment) => Some(comment_heading(comment)),
+            ReplyTarget::ReviewComment(reply) => Some(comment_heading(&reply.comment)),
+            ReplyTarget::Review(review) => review.submitted_at.map(|at| {
                 let line = format!(
-                    "Replying to comment from {author} at {}",
-                    time::c_format(comment.created_at)
+                    "Replying to comment from {} at {}",
+                    review.user.login,
+                    time::c_format(at)
                 );
-                Some((line, comment.body.as_str()))
-            }
+                (line, review.body.as_str())
+            }),
         }
     }
+}
+
+/// The heading for a reply to `comment`: its author, `Unknown` when the account is gone, and when it was written.
+fn comment_heading(comment: &IssueComment) -> (String, &str) {
+    let author = comment.user.as_ref().map_or("Unknown", |user| user.login.as_str());
+    let line = format!(
+        "Replying to comment from {author} at {}",
+        time::c_format(comment.created_at)
+    );
+    (line, comment.body.as_str())
 }
 
 /// What the dialog posted.
@@ -78,6 +95,8 @@ impl ReplyTarget {
 pub enum PostedComment {
     /// A comment in the issue's or pull request's conversation.
     Issue(Box<IssueComment>),
+    /// A reply in a review comment's thread.
+    Review(Box<ReviewComment>),
 }
 
 /// The dialog's own actions.
@@ -246,19 +265,28 @@ impl NewCommentDialog {
         self.scroll.reveal(self.rows().of(field));
     }
 
-    /// Python's `post_comment`: the text as it is, through the issue comments endpoint. A second submit waits for the
-    /// first.
+    /// Python's `post_comment`: the text as it is, through the review-reply endpoint for a reply to a review comment
+    /// and the issue comments endpoint otherwise. A second submit waits for the first.
     fn submit(&mut self, cx: &mut Cx<'_>) {
         if self.pending.is_some() {
             tracing::debug!("Ignoring a New comment submit: one is in flight");
             return;
         }
+        let (repo, body) = (Box::new(self.repo.clone()), self.editor.text());
         let request = match &self.target {
-            ReplyTarget::None | ReplyTarget::IssueComment(_) => GithubRequest::CreateIssueComment {
-                repo: Box::new(self.repo.clone()),
-                number: self.number,
-                body: self.editor.text(),
+            ReplyTarget::ReviewComment(reply) => GithubRequest::ReplyToReviewComment {
+                repo,
+                pr_number: self.number,
+                comment_id: reply.comment.id,
+                body,
             },
+            ReplyTarget::None | ReplyTarget::IssueComment(_) | ReplyTarget::Review(_) => {
+                GithubRequest::CreateIssueComment {
+                    repo,
+                    number: self.number,
+                    body,
+                }
+            }
         };
         self.pending = Some(cx.request(request));
     }
@@ -522,6 +550,7 @@ impl Dialog for NewCommentDialog {
         let number = self.number;
         let result = match response {
             GithubResponse::CreateIssueComment(result) => result.map(PostedComment::Issue),
+            GithubResponse::ReplyToReviewComment(result) => result.map(PostedComment::Review),
             other => return Some(other),
         };
         self.pending = None;

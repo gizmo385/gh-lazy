@@ -306,8 +306,14 @@ pub enum MainAction {
     /// The Edit issue dialog opened from the Issues table saved an issue: it replaces its row. A closed dialog, or one
     /// opened from the Overview, sends nothing.
     IssueUpdated(Box<Issue>),
-    /// The New comment dialog opened from the details posted a comment: the details show it.
-    CommentPosted(PostedComment),
+    /// The New comment dialog opened from the details closed, with what it posted, if anything: the details show
+    /// it. Only openers that react to a cancel too (the PR Conversation's `n`) send `None`.
+    CommentClosed {
+        /// What it posted.
+        posted: Option<PostedComment>,
+        /// Whether it was a reply (`r`) rather than a new comment (`n`).
+        reply: bool,
+    },
     /// Show a pull request's details: fetch it first if `target` is a table row. `focus` moves focus to the tab
     /// strip once they show (Python's `focus_pr_details`, false only for M4's preload, #198).
     OpenPullRequest {
@@ -1225,7 +1231,7 @@ impl Component for MainScreen {
             MainAction::WheelLog(wheel) => self.command_log.wheel(wheel),
             MainAction::WheelDetails(wheel) => self.details.wheel(wheel),
             MainAction::DetailsCommand(owner, id) => self.details.on_command(owner, id, cx),
-            MainAction::CommentPosted(posted) => self.details.comment_posted(posted, cx),
+            MainAction::CommentClosed { posted, reply } => self.details.comment_closed(posted, reply, cx),
             MainAction::ClickSelect(repo) => {
                 self.try_focus(FocusTarget::Table(SectionId::Repos));
                 cx.dispatch(Action::SelectRepo(repo));

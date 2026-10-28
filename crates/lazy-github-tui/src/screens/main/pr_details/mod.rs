@@ -17,6 +17,7 @@ use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
+use crate::modal::PostedComment;
 use crate::theme::Theme;
 
 use super::details::{BodyRenderCx, DetailsBody};
@@ -224,7 +225,7 @@ impl DetailsBody for PullRequestDetails {
         // The diff viewer's titles, pane, filter and keys.
         match PrTab::at(tab) {
             PrTab::Diff => return self.diff.on_binding(owner, id),
-            // Its titles, blocks and reactions, and the replies and new comments that aren't built yet (#182).
+            // Its titles, blocks and reactions, a new comment and the replies.
             PrTab::Conversation => return self.conversation.on_binding(owner, id),
             PrTab::Overview => {}
         }
@@ -232,6 +233,18 @@ impl DetailsBody for PullRequestDetails {
             Owner::CollapsibleTitle | Owner::ListView => self.overview.on_binding(id).then_some(Action::Consumed),
             _ => Some(Action::Unimplemented(id)),
         }
+    }
+
+    fn on_command(&mut self, tab: usize, owner: Owner, id: BindingId, cx: &mut Cx<'_>) {
+        if PrTab::at(tab) == PrTab::Conversation {
+            self.conversation.command(owner, id, cx);
+        }
+    }
+
+    /// The Conversation's openers send this only when it should reload: after `n` either way, after a posted reply.
+    /// After a reply, focus stays on what was replied to.
+    fn comment_closed(&mut self, _posted: Option<PostedComment>, reply: bool, cx: &mut Cx<'_>) {
+        self.conversation.reload(reply, cx);
     }
 
     fn binding_state(&self, tab: usize, owner: Owner, id: BindingId) -> BindingState {

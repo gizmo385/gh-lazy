@@ -259,7 +259,7 @@ fn an_issue_selection_cancels_a_pending_pull_request() {
 }
 
 #[test]
-fn edit_shows_only_with_the_body_focused_and_is_unimplemented() {
+fn edit_shows_only_with_the_body_focused_and_opens_the_dialog() {
     let mut app = selected(0);
     assert!(!footer(&mut app).contains("Edit Issue"));
     app.press(&["tab"]);
@@ -269,15 +269,10 @@ fn edit_shows_only_with_the_body_focused_and_is_unimplemented() {
         line.starts_with(" E Edit Issue  ^v Paste link  f Follow link"),
         "{line}"
     );
-    let out = logs(|| {
-        app.press(&["E"]);
-    });
-    assert!(out.contains("is not implemented yet"), "{out}");
-    let main = app.app_mut().main_screen_mut().unwrap();
-    assert!(matches!(
-        main.details.on_binding(Owner::IssueOverview, BindingId::IssueEdit),
-        Some(Action::Unimplemented(BindingId::IssueEdit))
-    ));
+    app.press(&["E"]);
+    assert_eq!(app.app().modals(), [crate::modal::ModalKind::EditIssue]);
+    app.press(&["escape"]);
+    assert!(app.app().modals().is_empty());
     // `tab` again leaves the body: there are no stops inside the Overview.
     app.press(&["tab"]);
     assert_ne!(focus(&app), FocusTarget::DetailsContent);

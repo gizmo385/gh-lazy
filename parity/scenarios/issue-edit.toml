@@ -1,6 +1,6 @@
 version = 1
 description = "Edit issue modal (E) from the Issues table: the prefilled title, Status select and description; a new title, Closed picked in the select, Save, and the updated row replacing the old one; then E on the Issue Overview, closed with escape"
-gate = false
+gate = true
 parity_rows = [
     "modals.edit-issue",
     "modals.form-widgets",

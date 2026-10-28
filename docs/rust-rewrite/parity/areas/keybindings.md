@@ -18,7 +18,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.conversation-review-reply` | `conversation.review.reply` | `r` | Reply to Review | review block | M3 | not started | #182, #261 | Same key as `conversation.comment.reply`; the innermost focused block wins. |
 | `keybindings.conversation-comment-reply` | `conversation.comment.reply` | `r` | Reply to Comment | comment block | M3 | not started | #182, #260, #261 | |
 | `keybindings.issue-new` | `issue.new` | `I` | New Issue | selections pane | M3 | in progress | #181, #258 | |
-| `keybindings.issue-edit` | `issue.edit` | `E` | Edit Issue | issues table, Issue Overview | M3 | not started | #181, #259 | |
+| `keybindings.issue-edit` | `issue.edit` | `E` | Edit Issue | issues table, Issue Overview | M3 | in progress | #181, #259 | |
 | `keybindings.issue-lookup` | `issue.lookup` | `O` | Lookup Issue | issues table | M2 | parity | #247 | |
 | `keybindings.pull-request-new` | `pull_request.new` | `P` | New PR | selections pane | M3 | not started | #278 | |
 | `keybindings.pull-request-merge` | `pull_request.merge` | `ctrl+m` | Merge PR | PR Overview | M3 | not started | #183, #262 | TERM: `ctrl+m` sends CR, same as Enter, without the kitty protocol. Must never fire on plain Enter (Py bug B30). Scenario `pr-merge` sends it as CSI 109;5 u. |

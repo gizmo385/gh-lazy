@@ -9,13 +9,14 @@
 //! its frame if need be, as Textual's `overlay: screen` does.
 
 use std::borrow::Cow;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::Span;
+use tokio::time::Instant;
 
 use super::text_input::{TallBorder, printable};
 use crate::keymap::{BindingId, KeyChord, Keymap};

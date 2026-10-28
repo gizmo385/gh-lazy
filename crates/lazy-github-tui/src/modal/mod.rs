@@ -6,9 +6,11 @@
 //! (`ctrl+q`). Drawing dims everything below each dialog, then draws its frame, its interior and its footer.
 
 mod confirm;
+mod edit_issue;
 mod focus;
 pub mod form;
 mod frame;
+mod issue_form;
 mod lookup;
 mod new_issue;
 mod stack;
@@ -30,6 +32,7 @@ use crate::keymap::BindingId;
 use crate::theme::{Palette, ThemeColor};
 
 pub use confirm::{ConfirmAction, ConfirmDialog};
+pub use edit_issue::{EditIssueAction, EditIssueDialog};
 pub use focus::{FocusMove, FocusRing};
 pub use frame::{DIM_FACTOR, DialogFrame, dim, frame_rect};
 pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup, number};
@@ -76,6 +79,8 @@ pub enum ModalKind {
     UserProfile,
     /// [`NewIssueDialog`]: a new issue's title and description.
     NewIssue,
+    /// [`EditIssueDialog`]: an issue's title, state and description.
+    EditIssue,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -133,6 +138,8 @@ pub enum DialogAction {
     UserProfile(UserProfileAction),
     /// [`NewIssueDialog`]'s.
     NewIssue(NewIssueAction),
+    /// [`EditIssueDialog`]'s.
+    EditIssue(EditIssueAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -145,6 +152,7 @@ impl DialogAction {
             DialogAction::Lookup(target, _) => ModalKind::Lookup(target),
             DialogAction::UserProfile(_) => ModalKind::UserProfile,
             DialogAction::NewIssue(_) => ModalKind::NewIssue,
+            DialogAction::EditIssue(_) => ModalKind::EditIssue,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }

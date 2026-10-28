@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use serde::de::Error as _;
 
-use super::{DiffFetchError, Github, IssueListQuery, NewIssue, PageQuery, RepoListQuery};
+use super::{DiffFetchError, Github, IssueListQuery, IssueUpdate, NewIssue, PageQuery, RepoListQuery};
 use crate::gh::GhError;
 use crate::models::{
     CheckRun, CheckState, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
@@ -17,7 +17,7 @@ use crate::models::{
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue` fails with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue` and `update_issue` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -132,6 +132,15 @@ pub enum GithubCall {
         /// What was sent.
         issue: NewIssue,
     },
+    /// [`Github::update_issue`].
+    UpdateIssue {
+        /// The repository's full name.
+        full_name: String,
+        /// The issue's number.
+        number: u64,
+        /// What was sent.
+        update: IssueUpdate,
+    },
 }
 
 #[derive(Debug, Default)]
@@ -178,6 +187,8 @@ struct State {
     reviews: HashMap<(String, u64), Result<Vec<Review>, GhError>>,
     /// What `create_issue` returns, whatever the repo; `None` fails with a 422.
     created_issue: Option<Result<Issue, GhError>>,
+    /// What `update_issue` returns, whatever the issue; `None` fails with a 422.
+    updated_issue: Option<Result<Issue, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -398,6 +409,13 @@ impl FakeGithub {
     #[must_use]
     pub fn with_job_logs(self, job_id: u64, logs: Result<Option<String>, GhError>) -> Self {
         self.lock().job_logs.insert(job_id, logs);
+        self
+    }
+
+    /// `update_issue` returns `updated`, whatever the repo, the number and the update sent.
+    #[must_use]
+    pub fn with_updated_issue(self, updated: Result<Issue, GhError>) -> Self {
+        self.lock().updated_issue = Some(updated);
         self
     }
 
@@ -725,6 +743,24 @@ impl Github for FakeGithub {
         };
         self.respond(call, |state| match &state.created_issue {
             Some(Ok(created)) => Ok(created.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Err(GhError::Http {
+                status: 422,
+                message: "Unprocessable Entity".to_owned(),
+                body: Vec::new(),
+            }),
+        })
+        .await
+    }
+
+    async fn update_issue(&self, repo: &Repository, number: u64, update: &IssueUpdate) -> Result<Issue, GhError> {
+        let call = GithubCall::UpdateIssue {
+            full_name: repo.full_name.clone(),
+            number,
+            update: update.clone(),
+        };
+        self.respond(call, |state| match &state.updated_issue {
+            Some(Ok(updated)) => Ok(updated.clone()),
             Some(Err(error)) => Err(duplicate(error)),
             None => Err(GhError::Http {
                 status: 422,
@@ -1098,6 +1134,34 @@ mod tests {
                     issue: new,
                 },
             ]
+        );
+    }
+
+    #[tokio::test]
+    async fn update_issue_records_the_call_and_answers_the_canned_issue() {
+        let github = FakeGithub::new();
+        let update = IssueUpdate {
+            title: "T".into(),
+            body: String::new(),
+            state: None,
+        };
+        assert!(matches!(
+            github.update_issue(&repo("a"), 12, &update).await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../parity/fixtures/issue-write/repos/parity-bot/issue-fixture/issues/12/PATCH.json");
+        let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let updated = Issue::from_api(fixture["response"]["body"].clone(), &repo("a")).unwrap();
+        let github = github.with_updated_issue(Ok(updated.clone()));
+        assert_eq!(github.update_issue(&repo("a"), 12, &update).await.unwrap(), updated);
+        assert_eq!(
+            github.calls()[1],
+            GithubCall::UpdateIssue {
+                full_name: "octocat/a".into(),
+                number: 12,
+                update,
+            }
         );
     }
 

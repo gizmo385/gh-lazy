@@ -12,6 +12,7 @@ use serde_json::Value;
 
 use super::*;
 use crate::event::Event;
+use crate::modal::issue_form::IssueField;
 use crate::test_util::TestApp;
 
 const REPO: &str = "parity-bot/issue-fixture";
@@ -154,24 +155,24 @@ fn mouse(app: &mut TestApp, kind: MouseEventKind, column: u16, row: u16) {
 #[test]
 fn focus_walks_the_scroll_area_the_fields_and_the_buttons_and_wraps() {
     let mut dialog = NewIssueDialog::new(fixture_repo(), None);
-    assert_eq!(dialog.ring.focused(), Some(NewIssueField::Scroll));
+    assert_eq!(dialog.form.focused(), Some(IssueField::Scroll));
     let mut seen = Vec::new();
     for _ in 0..5 {
         dialog.move_focus(FocusMove::Next);
-        seen.push(dialog.ring.focused().unwrap());
+        seen.push(dialog.form.focused().unwrap());
     }
     assert_eq!(
         seen,
         [
-            NewIssueField::Title,
-            NewIssueField::Description,
-            NewIssueField::Save,
-            NewIssueField::Cancel,
-            NewIssueField::Scroll
+            IssueField::Title,
+            IssueField::Description,
+            IssueField::Save,
+            IssueField::Cancel,
+            IssueField::Scroll
         ]
     );
     dialog.move_focus(FocusMove::Previous);
-    assert_eq!(dialog.ring.focused(), Some(NewIssueField::Cancel));
+    assert_eq!(dialog.form.focused(), Some(IssueField::Cancel));
 }
 
 #[test]
@@ -302,7 +303,7 @@ fn a_second_submit_while_one_is_in_flight_is_ignored() {
 fn a_failed_answer_is_logged() {
     let mut dialog = NewIssueDialog::new(fixture_repo(), None);
     let mut app = opened();
-    dialog.title.set_value("T");
+    dialog.form.set_title("T");
     let id = app.with_cx(|cx| {
         dialog.update(NewIssueAction::Submit, cx);
         dialog.pending.unwrap()
@@ -322,7 +323,7 @@ fn a_failed_answer_is_logged() {
 fn another_response_is_handed_back() {
     let mut dialog = NewIssueDialog::new(fixture_repo(), None);
     let mut app = opened();
-    dialog.title.set_value("T");
+    dialog.form.set_title("T");
     app.with_cx(|cx| dialog.update(NewIssueAction::Submit, cx));
     app.with_cx(|cx| {
         let other = dialog.on_response(

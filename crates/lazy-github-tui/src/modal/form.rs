@@ -209,6 +209,19 @@ impl FormScroll {
         u16::try_from(form_row.max(0)).unwrap_or(u16::MAX)
     }
 
+    /// Where form rows `rows` are on screen as of the last draw, at the content's width, whether or not they're in
+    /// view: for drawing an overlay below a field. `None` when they'd start above the screen's top.
+    pub fn screen_rows(&self, rows: Range<u16>) -> Option<Rect> {
+        let offset = i64::try_from(self.view.offset()).ok()?;
+        let y = i64::from(self.area.y) + i64::from(rows.start) - offset;
+        Some(Rect {
+            x: self.content.x,
+            y: u16::try_from(y).ok()?,
+            width: self.content.width,
+            height: rows.end.saturating_sub(rows.start),
+        })
+    }
+
     /// Whether form rows `rows` are at least partly in view on screen cell `(column, row)`.
     pub fn shows_at(&self, rows: Range<u16>, column: u16, row: u16) -> bool {
         self.area.contains((column, row).into()) && rows.contains(&self.form_row(row))
@@ -303,6 +316,8 @@ mod tests {
         assert_eq!(form.to_content(event(10)).row, 5);
         assert_eq!(form.to_content(event(2)).row, 0);
         assert!(form.shows_at(8..29, 40, 13));
+        assert_eq!(form.screen_rows(8..29), Some(Rect::new(29, 13, 96, 21)));
+        assert_eq!(form.screen_rows(0..1), Some(Rect::new(29, 5, 96, 1)));
         assert!(!form.shows_at(8..29, 40, 12));
     }
 }

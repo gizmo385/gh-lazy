@@ -16,8 +16,8 @@ use tokio::sync::OnceCell;
 use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts, Method};
 use crate::models::{
-    CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, Reactions,
-    Repository, Review, ReviewComment, ReviewState, User, Workflow, WorkflowJob, WorkflowRun,
+    CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, IssueState,
+    Reactions, Repository, Review, ReviewComment, ReviewState, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 #[cfg(any(test, feature = "test-util"))]
@@ -223,6 +223,17 @@ pub trait Github: Clone + Send + Sync + 'static {
     ///
     /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body doesn't decode.
     fn create_issue(&self, repo: &Repository, issue: &NewIssue) -> impl Future<Output = Result<Issue, GhError>> + Send;
+
+    /// Edits issue `number` of `repo`: `PATCH /repos/{owner}/{repo}/issues/{number}` with `update`, the body over
+    /// stdin, sent even when nothing changed. Returns the updated issue, carrying `repo`. Never cached.
+    ///
+    /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body doesn't decode.
+    fn update_issue(
+        &self,
+        repo: &Repository,
+        number: u64,
+        update: &IssueUpdate,
+    ) -> impl Future<Output = Result<Issue, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -425,6 +436,19 @@ pub struct NewIssue {
     pub title: String,
     /// The Markdown body, as typed (lines joined with `\n`). It may be empty.
     pub body: String,
+}
+
+/// What [`Github::update_issue`] sends: the body of `PATCH /repos/{owner}/{repo}/issues/{number}`, serialized with
+/// its fields in this order and `state` left out when it's `None`.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize)]
+pub struct IssueUpdate {
+    /// The title, as edited.
+    pub title: String,
+    /// The Markdown body, as edited (lines joined with `\n`).
+    pub body: String,
+    /// The state to set, or `None` to leave it as it is.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub state: Option<IssueState>,
 }
 
 /// How long `gh` may serve each kind of response from its cache, from the `cache` config section.
@@ -764,6 +788,16 @@ impl GhCli {
         Ok(request)
     }
 
+    /// `PATCH /repos/{owner}/{repo}/issues/{number}` with `update` as the JSON body.
+    fn update_issue_request(repo: &Repository, number: u64, update: &IssueUpdate) -> Result<GhRequest, GhError> {
+        let mut request = GhRequest::new(
+            Method::Patch,
+            format!("/repos/{}/{}/issues/{number}", repo.owner.login, repo.name),
+        );
+        request.body = Some(serde_json::to_value(update)?);
+        Ok(request)
+    }
+
     fn unread_notifications_request() -> GhRequest {
         let mut request = GhRequest::get("/notifications");
         // Python's query, in its order, so both apps hit the same fixture key. No `cache`: the count must be fresh.
@@ -791,7 +825,7 @@ fn issue_list_items(response: &GhResponse, repo: &Repository) -> Result<Vec<Issu
 }
 
 /// The issue a create or update answered with, tagged with `repo`.
-fn created_issue(response: &GhResponse, repo: &Repository) -> Result<Issue, GhError> {
+fn written_issue(response: &GhResponse, repo: &Repository) -> Result<Issue, GhError> {
     Ok(Issue::from_api(response.json()?, repo)?)
 }
 
@@ -950,7 +984,16 @@ impl Github for GhCli {
             .runner
             .request(Self::create_issue_request(repo, issue)?)
             .await?;
-        created_issue(&response, repo)
+        written_issue(&response, repo)
+    }
+
+    async fn update_issue(&self, repo: &Repository, number: u64, update: &IssueUpdate) -> Result<Issue, GhError> {
+        let response = self
+            .inner
+            .runner
+            .request(Self::update_issue_request(repo, number, update)?)
+            .await?;
+        written_issue(&response, repo)
     }
 }
 
@@ -2095,16 +2138,59 @@ mod tests {
     }
 
     #[test]
+    fn update_issue_argv_patches_the_body_over_stdin_without_a_cache() {
+        let update = IssueUpdate {
+            title: "T".into(),
+            body: "B\n".into(),
+            state: Some(IssueState::Closed),
+        };
+        let request = GhCli::update_issue_request(&issue_fixture_repo(), 12, &update).unwrap();
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        assert_eq!(
+            strings(request.argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "PATCH",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "--input",
+                "-",
+                "/repos/parity-bot/issue-fixture/issues/12"
+            ]
+        );
+        assert_eq!(
+            request.body.unwrap().to_string(),
+            r#"{"title":"T","body":"B\n","state":"closed"}"#
+        );
+        let without_state = IssueUpdate { state: None, ..update };
+        let request = GhCli::update_issue_request(&issue_fixture_repo(), 12, &without_state).unwrap();
+        assert_eq!(request.body.unwrap().to_string(), r#"{"title":"T","body":"B\n"}"#);
+    }
+
+    #[test]
+    fn an_updated_issue_decodes_tagged_with_its_repo() {
+        let repo = issue_fixture_repo();
+        let response = parity_response("issue-write", "repos/parity-bot/issue-fixture/issues/12/PATCH.json");
+        let issue = written_issue(&response, &repo).unwrap();
+        assert_eq!(issue.number, 12);
+        assert_eq!(issue.title, "Crash when the config file is blank");
+        assert_eq!(issue.state, IssueState::Closed);
+        assert_eq!(issue.repo, repo);
+    }
+
+    #[test]
     fn a_created_issue_decodes_tagged_with_its_repo() {
         let repo = issue_fixture_repo();
         let response = parity_response("issue-write", "repos/parity-bot/issue-fixture/issues/POST.json");
-        let issue = created_issue(&response, &repo).unwrap();
+        let issue = written_issue(&response, &repo).unwrap();
         assert_eq!(issue.number, 13);
         assert_eq!(issue.title, "Parity title");
         assert_eq!(issue.body.as_deref(), Some("First line\nSecond line"));
         assert_eq!(issue.repo, repo);
         assert!(matches!(
-            created_issue(&api_response(r#"{"number": 13}"#), &repo),
+            written_issue(&api_response(r#"{"number": 13}"#), &repo),
             Err(GhError::Decode(_))
         ));
     }

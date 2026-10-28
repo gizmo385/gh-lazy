@@ -39,7 +39,7 @@ use crate::components::table::{Handled, SEARCHABLE_BINDINGS, TABLE_BINDINGS, Tab
 use crate::components::text_input::{self, INPUT_BINDINGS};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::modal::{LookupDialog, NewIssueDialog, RepoLookup};
+use crate::modal::{EditIssueDialog, LookupDialog, NewIssueDialog, RepoLookup};
 use crate::options::AppOptions;
 use crate::theme::Theme;
 use crate::toast::Toast;
@@ -300,6 +300,12 @@ pub enum MainAction {
     NewIssue,
     /// The New issue dialog created an issue: it goes into the Issues table and opens. A closed dialog sends nothing.
     IssueCreated(Box<Issue>),
+    /// Open the Edit issue dialog (`issue.edit`) for the issue under the Issues table's cursor or the one the Overview
+    /// shows, or toast without one.
+    EditIssue(EditOrigin),
+    /// The Edit issue dialog opened from the Issues table saved an issue: it replaces its row. A closed dialog, or one
+    /// opened from the Overview, sends nothing.
+    IssueUpdated(Box<Issue>),
     /// Show a pull request's details: fetch it first if `target` is a table row. `focus` moves focus to the tab
     /// strip once they show (Python's `focus_pr_details`, false only for M4's preload, #198).
     OpenPullRequest {
@@ -436,6 +442,25 @@ impl MainScreen {
         let label = format!("Issue #{}", issue.number);
         self.details.show_issue(issue, cx);
         self.details_shown(&label, true, cx);
+    }
+
+    /// `MainAction::EditIssue`: the dialog for the table's cursor row, or the issue the details show.
+    fn edit_issue(&self, origin: EditOrigin, cx: &mut Cx<'_>) {
+        let issue = match origin {
+            EditOrigin::Table => self.issue_lists.issues_table().selected(),
+            EditOrigin::Overview => self.details_issue(),
+        };
+        let Some(issue) = issue else {
+            cx.notify(Toast::error("No issue currently selected"));
+            return;
+        };
+        let dialog = EditIssueDialog::new(Box::new(issue.clone()));
+        match origin {
+            EditOrigin::Table => cx.open_dialog(dialog, |issue| {
+                issue.map_or(Action::Consumed, |issue| Action::Main(MainAction::IssueUpdated(issue)))
+            }),
+            EditOrigin::Overview => cx.open_dialog(dialog, |_| Action::Consumed),
+        }
     }
 
     /// `MainAction::OpenWorkflowRun`: the run's tabs show at once, and its jobs load. Python's
@@ -982,6 +1007,9 @@ impl MainScreen {
                 };
                 Some(Action::Main(MainAction::SwitchDetailsTab(switch)))
             }
+            Owner::IssueOverview if id == BindingId::IssueEdit => {
+                Some(Action::Main(MainAction::EditIssue(EditOrigin::Overview)))
+            }
             Owner::PrOverview
             | Owner::IssueOverview
             | Owner::IssueComments
@@ -1024,6 +1052,9 @@ impl MainScreen {
                 Some(Action::Main(MainAction::ViewProfile(ProfileOrigin::Issues)))
             }
             Owner::SelectionsPane if id == BindingId::IssueNew => Some(Action::Main(MainAction::NewIssue)),
+            Owner::Section(SectionId::Issues) if id == BindingId::IssueEdit => {
+                Some(Action::Main(MainAction::EditIssue(EditOrigin::Table)))
+            }
             // Not built yet: the key is still consumed, as in Python.
             Owner::SearchableTable(_) | Owner::Section(_) | Owner::SelectionsPane => Some(Action::Unimplemented(id)),
             Owner::App | Owner::Screen(ScreenKind::Auth | ScreenKind::Modal(_)) | Owner::DialogField(..) => None,
@@ -1270,6 +1301,9 @@ impl Component for MainScreen {
                 cx.dispatch(Action::Main(MainAction::OpenIssue(Box::new(issue))));
             }
             MainAction::NewIssue => new_issue(cx),
+            MainAction::EditIssue(origin) => self.edit_issue(origin, cx),
+            // Python's `add_item` of the updated issue: the row is replaced in place, the cursor and focus stay.
+            MainAction::IssueUpdated(issue) => self.issue_lists.upsert_issue(*issue, cx),
             // `add_item`, then `IssueSelected`, as Python's flow does once the dialog closes.
             MainAction::IssueCreated(issue) => {
                 self.issue_lists.upsert_issue((*issue).clone(), cx);
@@ -1348,6 +1382,15 @@ impl Component for MainScreen {
     }
 }
 
+/// Where Edit issue was opened from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EditOrigin {
+    /// The Issues table (`IssuesContainer.trigger_edit_issue_flow`): the saved issue replaces its row.
+    Table,
+    /// The Issue Overview (`IssueOverviewTabPane.action_edit_issue`): what's saved isn't shown anywhere, as in Python.
+    Overview,
+}
+
 /// `MainAction::NewIssue`: Python's `trigger_issue_creation_flow`, with the no-repo toast titled for issues (Py bug
 /// B14).
 fn new_issue(cx: &mut Cx<'_>) {
@@ -1364,3 +1407,6 @@ mod tests;
 
 #[cfg(test)]
 mod new_issue_tests;
+
+#[cfg(test)]
+mod edit_issue_tests;

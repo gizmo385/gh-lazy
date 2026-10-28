@@ -1,0 +1,7 @@
+version = 1
+description = "Markdown links: markdown-it-py's gfm-like preset parsing a corpus of bare URLs, hosts, emails, autolinks, links and images, with each inline token's type, content and href/src, laid out by the Rust markdown renderer and compared character by character (text, emphasis, link target)"
+generator = "crates/lazy-github-tui/tests/fixtures/generate_linkify.py"
+golden = ["crates/lazy-github-tui/tests/fixtures/linkify.json"]
+test = "crates/lazy-github-tui/tests/linkify.rs"
+fresh_test = "linkify_golden_is_fresh"
+parity_rows = ["markdown-links.link-normalize"]

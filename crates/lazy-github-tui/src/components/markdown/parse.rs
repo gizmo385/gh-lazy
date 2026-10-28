@@ -1,10 +1,12 @@
 //! Source to block tree, over `pulldown-cmark`'s events, reading the document the way markdown-it's `gfm-like` preset
 //! and Textual's `Markdown` widget do in Python.
 
+use std::ops::Range;
 use std::sync::Arc;
 
 use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, LinkType, OffsetIter, Options, Parser, Tag, TagEnd};
 
+use super::normalize::{normalize_link, normalize_link_text, validate_link};
 use super::{Block, Inline, InlineStyle, linkify};
 
 /// How deep quotes and lists nest before the rest of a container reads as one paragraph of its text. Layout recurses
@@ -39,17 +41,20 @@ impl<'a> BlockParser<'a> {
         let mut blocks = Vec::new();
         // Inline content outside a paragraph: a tight list item's text, which markdown-it puts in a (hidden)
         // paragraph and pulldown-cmark doesn't.
-        let mut loose = Inlines::default();
+        let mut loose = Inlines::new(self.source);
         let flush = |loose: &mut Inlines, blocks: &mut Vec<Block>| {
             if !loose.is_empty() {
-                blocks.push(Block::Paragraph(std::mem::take(loose).finish()));
+                let source = loose.source;
+                blocks.push(Block::Paragraph(
+                    std::mem::replace(loose, Inlines::new(source)).finish(),
+                ));
             }
         };
         while let Some((event, range)) = self.events.next() {
             match event {
                 Event::End(tag) if Some(tag) == end => break,
-                Event::Start(tag) if is_inline(&tag) => loose.start(&tag, &self.source[range]),
-                Event::End(tag) if is_inline_end(tag) => loose.end(tag),
+                Event::Start(tag) if is_inline(&tag) => loose.start(&tag, range),
+                Event::End(tag) if is_inline_end(tag) => loose.end(tag, &range),
                 Event::Start(tag) => {
                     flush(&mut loose, &mut blocks);
                     if let Some(block) = self.block(tag) {
@@ -63,7 +68,7 @@ impl<'a> BlockParser<'a> {
                 // HTML blocks vanish, as Textual drops markdown-it's `html_block` tokens. Any other stray end can't
                 // come from the options enabled.
                 Event::Html(_) | Event::End(_) => {}
-                event => loose.event(event),
+                event => loose.event(event, &range),
             }
         }
         flush(&mut loose, &mut blocks);
@@ -156,13 +161,13 @@ impl<'a> BlockParser<'a> {
 
     /// Inline content up to `end`.
     fn inlines(&mut self, end: TagEnd) -> Vec<Inline> {
-        let mut inlines = Inlines::default();
+        let mut inlines = Inlines::new(self.source);
         for (event, range) in self.events.by_ref() {
             match event {
                 Event::End(tag) if tag == end => break,
-                Event::Start(tag) => inlines.start(&tag, &self.source[range]),
-                Event::End(tag) => inlines.end(tag),
-                event => inlines.event(event),
+                Event::Start(tag) => inlines.start(&tag, range),
+                Event::End(tag) => inlines.end(tag, &range),
+                event => inlines.event(event, &range),
             }
         }
         inlines.finish()
@@ -170,7 +175,7 @@ impl<'a> BlockParser<'a> {
 
     /// The plain text of everything up to `end`, as one run.
     fn flatten(&mut self, end: TagEnd) -> Vec<Inline> {
-        let mut inlines = Inlines::default();
+        let mut inlines = Inlines::new(self.source);
         let mut open = 0_usize;
         for (event, _) in self.events.by_ref() {
             match event {
@@ -226,8 +231,10 @@ fn heading_level(level: HeadingLevel) -> u8 {
 
 /// Builds the inline runs of one block, as Textual's `_token_to_content` turns markdown-it's inline tokens into
 /// styled text.
-#[derive(Debug, Default)]
-struct Inlines {
+#[derive(Debug)]
+struct Inlines<'a> {
+    /// The document, which the events' ranges index.
+    source: &'a str,
     runs: Vec<Inline>,
     strong: usize,
     emphasis: usize,
@@ -244,6 +251,10 @@ struct Inlines {
     /// The current text token's text, outside links and images, held until the token ends so linkify can look for
     /// bare URLs in all of it, as markdown-it's linkify does per text token.
     pending: String,
+    /// The links and images open, innermost last.
+    opened: Vec<Opened>,
+    /// Whether the text events of the autolink being read are skipped: its text is already in, normalized.
+    autolink: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -252,7 +263,46 @@ struct Strike {
     styled: bool,
 }
 
-impl Inlines {
+/// A link or image being read.
+#[derive(Debug, Clone, Copy)]
+enum Opened {
+    Tag,
+    /// One whose target fails `validate_link`, which markdown-it doesn't make: its markup shows as text around its
+    /// (still parsed) link text. `end` is where its source ends, `inner_end` where the last event inside it ended.
+    /// The markup after the link text shows as written, where markdown-it parses it again, so a backslash escape or
+    /// an entity in a rejected target shows unexpanded.
+    Literal {
+        end: usize,
+        inner_end: usize,
+    },
+}
+
+impl<'a> Inlines<'a> {
+    fn new(source: &'a str) -> Self {
+        Inlines {
+            source,
+            runs: Vec::new(),
+            strong: 0,
+            emphasis: 0,
+            strikes: Vec::new(),
+            links: Vec::new(),
+            images: 0,
+            joins: false,
+            pending: String::new(),
+            opened: Vec::new(),
+            autolink: false,
+        }
+    }
+
+    /// Records that an event inside the open literal links ended at `range.end`.
+    fn note(&mut self, range: &Range<usize>) {
+        for opened in &mut self.opened {
+            if let Opened::Literal { inner_end, .. } = opened {
+                *inner_end = (*inner_end).max(range.end);
+            }
+        }
+    }
+
     fn is_empty(&self) -> bool {
         self.runs.is_empty() && self.pending.is_empty()
     }
@@ -271,9 +321,66 @@ impl Inlines {
         }
     }
 
-    fn start(&mut self, tag: &Tag<'_>, source: &str) {
+    fn start(&mut self, tag: &Tag<'_>, range: Range<usize>) {
+        self.note(&range);
+        let source = &self.source[range.clone()];
+        let link = match tag {
+            Tag::Link {
+                link_type, dest_url, ..
+            } => Some(LinkTarget::new(*link_type, dest_url, source)),
+            Tag::Image { dest_url, .. } => Some(LinkTarget {
+                url: normalize_link(dest_url),
+                text: None,
+            }),
+            _ => None,
+        };
+        if let Some(link) = &link
+            && !validate_link(&link.url)
+        {
+            // markdown-it's link rule fails, so the markup is text in the same text token as what's around it.
+            let markup = match tag {
+                Tag::Image { .. } => "![",
+                Tag::Link {
+                    link_type: LinkType::Autolink | LinkType::Email,
+                    ..
+                } => "<",
+                _ => "[",
+            };
+            self.opened.push(Opened::Literal {
+                end: range.end,
+                inner_end: range.start + markup.len(),
+            });
+            self.text(markup, self.images == 0);
+            return;
+        }
+        if link.is_some() {
+            self.opened.push(Opened::Tag);
+        }
         self.flush();
         self.joins = false;
+        match (tag, link) {
+            (Tag::Image { .. }, Some(image)) => {
+                if self.images == 0 {
+                    self.links.push(Arc::from(image.url));
+                    self.text(IMAGE_PREFIX, false);
+                }
+                self.images += 1;
+            }
+            (Tag::Link { .. }, Some(link)) => {
+                // Inside an image, only the text counts.
+                if self.images == 0 {
+                    self.links.push(Arc::from(link.url));
+                }
+                if let Some(text) = link.text {
+                    self.text(&text, self.images == 0);
+                    self.autolink = true;
+                }
+            }
+            (tag, _) => self.start_style(tag, source),
+        }
+    }
+
+    fn start_style(&mut self, tag: &Tag<'_>, source: &str) {
         match tag {
             Tag::Strikethrough => {
                 let strike = Strike {
@@ -285,29 +392,25 @@ impl Inlines {
                 }
                 self.strikes.push(strike);
             }
-            Tag::Image { dest_url, .. } => {
-                if self.images == 0 {
-                    self.links.push(Arc::from(dest_url.as_ref()));
-                    self.text(IMAGE_PREFIX, false);
-                }
-                self.images += 1;
-            }
             // Inside an image, only the text counts.
             _ if self.images > 0 => {}
             Tag::Strong => self.strong += 1,
             Tag::Emphasis => self.emphasis += 1,
-            // markdown-it's email autolinks (`<a@b.co>`) go to `mailto:`; pulldown-cmark gives the bare address.
-            Tag::Link {
-                link_type: LinkType::Email,
-                dest_url,
-                ..
-            } if !dest_url.starts_with("mailto:") => self.links.push(Arc::from(format!("mailto:{dest_url}"))),
-            Tag::Link { dest_url, .. } => self.links.push(Arc::from(dest_url.as_ref())),
             _ => {}
         }
     }
 
-    fn end(&mut self, tag: TagEnd) {
+    fn end(&mut self, tag: TagEnd, range: &Range<usize>) {
+        if matches!(tag, TagEnd::Link | TagEnd::Image) {
+            self.autolink = false;
+            if let Some(Opened::Literal { end, inner_end }) = self.opened.pop() {
+                let markup = self.source.get(inner_end.min(end)..end).unwrap_or_default();
+                self.note(range);
+                self.text(markup, self.images == 0);
+                return;
+            }
+        }
+        self.note(range);
         self.flush();
         self.joins = false;
         match tag {
@@ -334,7 +437,11 @@ impl Inlines {
         }
     }
 
-    fn event(&mut self, event: Event<'_>) {
+    fn event(&mut self, event: Event<'_>, range: &Range<usize>) {
+        self.note(range);
+        if self.autolink && matches!(event, Event::Text(_)) {
+            return;
+        }
         let in_image = self.images > 0;
         if !matches!(event, Event::Text(_)) {
             self.flush();
@@ -409,7 +516,7 @@ impl Inlines {
         let mut at = 0;
         for found in linkify::links(&text) {
             self.push_run(&text[at..found.range.start], style, None);
-            self.push_run(&text[found.range.clone()], style, Some(Arc::from(found.url)));
+            self.push_run(&found.text, style, Some(Arc::from(found.url)));
             at = found.range.end;
         }
         self.push_run(&text[at..], style, None);
@@ -439,6 +546,40 @@ impl Inlines {
             style,
             link,
         });
+    }
+}
+
+/// Where a link or image goes, as markdown-it normalizes it.
+struct LinkTarget {
+    url: String,
+    /// An autolink's text, normalized; a link's text is its own.
+    text: Option<String>,
+}
+
+impl LinkTarget {
+    /// `source` is the link's markup. An autolink's text and target come from what's between its `<` and `>` as
+    /// written, an email's target with `mailto:`, as markdown-it's `autolink` rule makes them.
+    fn new(link_type: LinkType, dest_url: &str, source: &str) -> Self {
+        let written = || {
+            source
+                .strip_prefix('<')
+                .and_then(|s| s.strip_suffix('>'))
+                .unwrap_or(dest_url)
+        };
+        match link_type {
+            LinkType::Autolink => LinkTarget {
+                url: normalize_link(written()),
+                text: Some(normalize_link_text(written())),
+            },
+            LinkType::Email => LinkTarget {
+                url: normalize_link(&format!("mailto:{}", written())),
+                text: Some(normalize_link_text(written())),
+            },
+            _ => LinkTarget {
+                url: normalize_link(dest_url),
+                text: None,
+            },
+        }
     }
 }
 

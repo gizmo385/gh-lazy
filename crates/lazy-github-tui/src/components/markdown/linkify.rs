@@ -10,6 +10,8 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
+use super::normalize::{normalize_link, normalize_link_text, validate_link};
+
 /// linkify-it's TLDs for links without a scheme: its list, any two-letter country code, and punycode.
 const TLDS: &str = "biz|com|edu|gov|net|org|pro|web|xxx|aero|asia|coop|info|museum|name|shop|рф|\
     a[cdefgilmnoqrstuwxz]|b[abdefghijmnorstvwyz]|c[acdfghiklmnoruvwxyz]|d[ejkmoz]|e[cegrstu]|f[ijkmor]|\
@@ -42,28 +44,57 @@ static FUZZY_TEST: LazyLock<Regex> = LazyLock::new(|| {
 /// A link found in text.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Found {
-    /// The bytes of the text it covers, which are shown as its text.
+    /// The bytes of the text it covers.
     pub(super) range: Range<usize>,
-    /// Where it goes: the text, after `http://` for a host without a scheme and `mailto:` for a bare email.
+    /// What it shows: the text it covers as `normalize_link_text` makes it (escapes decoded, Unicode hosts).
+    pub(super) text: String,
+    /// Where it goes: the text, after `http://` for a host without a scheme and `mailto:` for a bare email, as
+    /// `normalize_link` makes it.
     pub(super) url: String,
 }
 
-/// Every link in `text`, in order: linkify-it's `match`, which finds the first link and looks again after it.
+/// Every link in `text`, in order: linkify-it's `match`, which finds the first link and looks again after it. A
+/// match whose target markdown-it wouldn't link (`validate_link`) stays text.
 pub(super) fn links(text: &str) -> Vec<Found> {
     let mut found = Vec::new();
     let mut shift = 0;
     while let Some((range, kind)) = first(&text[shift..]) {
         let range = range.start + shift..range.end + shift;
+        shift = range.end;
         let raw = &text[range.clone()];
         let url = match kind {
-            Kind::Scheme => raw.to_owned(),
-            Kind::Fuzzy => format!("http://{raw}"),
-            Kind::Email => format!("mailto:{raw}"),
+            Kind::Scheme => normalize_link(raw),
+            Kind::Fuzzy => normalize_link(&format!("http://{raw}")),
+            Kind::Email => normalize_link(&format!("mailto:{raw}")),
         };
-        shift = range.end;
-        found.push(Found { range, url });
+        if !validate_link(&url) {
+            continue;
+        }
+        found.push(Found {
+            range,
+            text: shown(raw, kind),
+            url,
+        });
     }
     found
+}
+
+/// markdown-it's link text for a match. A host without a scheme gets `http://` for `normalize_link_text`, which is
+/// taken off again. markdown-it-py does the same with `mailto:` only for a match that already starts with it (its
+/// test is the reverse of markdown-it's), so a bare email's host shows as written.
+fn shown(raw: &str, kind: Kind) -> String {
+    let readd = |prefix: &str| {
+        let text = normalize_link_text(&format!("{prefix}{raw}"));
+        match text.strip_prefix(prefix) {
+            Some(stripped) => stripped.to_owned(),
+            None => text,
+        }
+    };
+    match kind {
+        Kind::Fuzzy => readd("http://"),
+        Kind::Scheme if raw.get(..7).is_some_and(|s| s.eq_ignore_ascii_case("mailto:")) => readd("mailto:"),
+        Kind::Scheme | Kind::Email => normalize_link_text(raw),
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -547,8 +578,8 @@ mod tests {
     #[case(":www.a.com", &[])]
     #[case(".www.a.com", &[])]
     #[case("@www.a.com", &[])]
-    #[case("мой.рф", &[("мой.рф", "http://мой.рф")])]
-    #[case("\"quoted\"@x.com", &[("quoted\"@x.com", "mailto:quoted\"@x.com")])]
+    #[case("мой.рф", &[("мой.рф", "http://xn--i1afg.xn--p1ai")])]
+    #[case("\"quoted\"@x.com", &[("quoted\"@x.com", "mailto:quoted%22@x.com")])]
     fn links_match_linkify_it(#[case] text: &str, #[case] expected: &[(&str, &str)]) {
         let expected: Vec<(&str, String)> = expected.iter().map(|&(t, u)| (t, u.to_owned())).collect();
         assert_eq!(find(text), expected);

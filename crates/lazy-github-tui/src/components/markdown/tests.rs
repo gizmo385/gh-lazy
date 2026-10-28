@@ -910,6 +910,47 @@ fn links_are_found_in_styled_text_headings_and_tables() {
 }
 
 #[test]
+fn link_targets_and_autolink_text_are_normalized() {
+    let rendered = render(
+        "<http://xn--4ca.com/%C3%A4> [t](http://ä.com/ä) ![i](http://a.com/[x].png) <a@bär.com> www.xn--bcher-kva.de",
+        120,
+    );
+    assert_eq!(
+        link_texts(&rendered),
+        [
+            ("http://ä.com/ä".to_owned(), "http://xn--4ca.com/%C3%A4".to_owned()),
+            ("t".to_owned(), "http://xn--4ca.com/%C3%A4".to_owned()),
+            ("🖼  i".to_owned(), "http://a.com/%5Bx%5D.png".to_owned()),
+            ("a@bär.com".to_owned(), "mailto:a@xn--br-via.com".to_owned()),
+            ("www.bücher.de".to_owned(), "http://www.xn--bcher-kva.de".to_owned()),
+        ]
+    );
+}
+
+#[test]
+fn a_link_markdown_it_rejects_shows_its_markup() {
+    let rendered = render(
+        "a [*t*](javascript:x) www.b.com <javascript:y> ![i](file:z) [](vbscript:v)",
+        100,
+    );
+    assert_eq!(
+        rows(&rendered),
+        [
+            "  a [t](javascript:x) www.b.com <javascript:y> ![i](file:z) [](vbscript:v)",
+            ""
+        ]
+    );
+    // The link text is still parsed, and the text around it still linkified.
+    assert_eq!(
+        link_texts(&rendered),
+        [("www.b.com".to_owned(), "http://www.b.com".to_owned())]
+    );
+    let buf = buffer(&rendered, 100);
+    assert!(buf[(5, 0)].modifier.contains(Modifier::ITALIC));
+    assert!(!buf[(4, 0)].modifier.contains(Modifier::ITALIC));
+}
+
+#[test]
 fn a_wrapped_url_is_one_link_over_both_rows() {
     let rendered = render("see https://example.com/a/long/path", 24);
     assert_eq!(

@@ -1,0 +1,2585 @@
+[
+ {
+  "source": "https://example.com/a_(b)",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/a_(b)"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/a_(b)"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "see https://example.com.",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "see "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "."
+    }
+   ]
+  ]
+ },
+ {
+  "source": "//example.com/x",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "//example.com/x"
+    },
+    {
+     "type": "text",
+     "content": "//example.com/x"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "ftp://a.b/c",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "ftp://a.b/c"
+    },
+    {
+     "type": "text",
+     "content": "ftp://a.b/c"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "www.github.com",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://www.github.com"
+    },
+    {
+     "type": "text",
+     "content": "www.github.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "visit example.com now",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "visit "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://example.com"
+    },
+    {
+     "type": "text",
+     "content": "example.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " now"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "foo.io",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://foo.io"
+    },
+    {
+     "type": "text",
+     "content": "foo.io"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "a.b.example.io/path?x=1#y",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.b.example.io/path?x=1#y"
+    },
+    {
+     "type": "text",
+     "content": "a.b.example.io/path?x=1#y"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "see README.md here",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "see "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://README.md"
+    },
+    {
+     "type": "text",
+     "content": "README.md"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " here"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "mail foo@bar.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "mail "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:foo@bar.com"
+    },
+    {
+     "type": "text",
+     "content": "foo@bar.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "config.json",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "config.json"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "v1.2",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "v1.2"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "x.dev",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "x.dev"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "x@y",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "x@y"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "skype:me",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "skype:me"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "1.2.3.4",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "1.2.3.4"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "HTTPS://EXAMPLE.COM/A",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "HTTPS://EXAMPLE.COM/A"
+    },
+    {
+     "type": "text",
+     "content": "HTTPS://EXAMPLE.COM/A"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://localhost:8080/x?y=1",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://localhost:8080/x?y=1"
+    },
+    {
+     "type": "text",
+     "content": "http://localhost:8080/x?y=1"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://a.com:99999/x",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "http://a.com:99999/x"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "example.com:8080/path",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://example.com:8080/path"
+    },
+    {
+     "type": "text",
+     "content": "example.com:8080/path"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "example.com:abc",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://example.com"
+    },
+    {
+     "type": "text",
+     "content": "example.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ":abc"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "(see https://example.com/foo)",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "(see "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/foo"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/foo"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ")"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "\"https://example.com/q\"",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "\""
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/q"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/q"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "\""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "https://example.com/a,b,c, and more",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/a,b,c"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/a,b,c"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ", and more"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "https://example.com/a!!! wow",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/a"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/a"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "!!! wow"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "https://example.com/a?b? end",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/a?b"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/a?b"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "? end"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "https://example.com/a... more",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/a"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/a"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "... more"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "https://example.com/a...b",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/a...b"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/a...b"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "https://example.com/a--b-",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/a--b-"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/a--b-"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "https://example.com/'x' y",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/'x'"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/'x'"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " y"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "https://example.com/it's",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/it's"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/it's"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "https://user:pass@example.com/x",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://user:pass@example.com/x"
+    },
+    {
+     "type": "text",
+     "content": "https://user:pass@example.com/x"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "_http://a.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "_"
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "xhttp://a.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "xhttp://a.com"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "x.https://a.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "x."
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://a.com"
+    },
+    {
+     "type": "text",
+     "content": "https://a.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://a.com/b*",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/b"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com/b"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "*"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "foo_bar.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "foo_bar.com"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "foo-bar.com",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://foo-bar.com"
+    },
+    {
+     "type": "text",
+     "content": "foo-bar.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "-foo.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "-foo.com"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "foo.com-",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "foo.com-"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "foo.com_",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "foo.com_"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "foo.co.uk/x",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://foo.co.uk/x"
+    },
+    {
+     "type": "text",
+     "content": "foo.co.uk/x"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "example.community",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "example.community"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "EXAMPLE.COM",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://EXAMPLE.COM"
+    },
+    {
+     "type": "text",
+     "content": "EXAMPLE.COM"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "exa$mple.com",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://exa$mple.com"
+    },
+    {
+     "type": "text",
+     "content": "exa$mple.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "$example.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "$"
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://example.com"
+    },
+    {
+     "type": "text",
+     "content": "example.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "a.b.c.d.e.f.org",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.b.c.d.e.f.org"
+    },
+    {
+     "type": "text",
+     "content": "a.b.c.d.e.f.org"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "x.y",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "x.y"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://x",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://x"
+    },
+    {
+     "type": "text",
+     "content": "http://x"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://1.2.3.4/x",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://1.2.3.4/x"
+    },
+    {
+     "type": "text",
+     "content": "http://1.2.3.4/x"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "a@1.2.3.4",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:a@1.2.3.4"
+    },
+    {
+     "type": "text",
+     "content": "a@1.2.3.4"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "foo.bar@baz.org",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:foo.bar@baz.org"
+    },
+    {
+     "type": "text",
+     "content": "foo.bar@baz.org"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "(a@b.com)",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "("
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:a@b.com"
+    },
+    {
+     "type": "text",
+     "content": "a@b.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ")"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "a@b.com.",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:a@b.com"
+    },
+    {
+     "type": "text",
+     "content": "a@b.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "."
+    }
+   ]
+  ]
+ },
+ {
+  "source": "mailto:foo@bar.com",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:foo@bar.com"
+    },
+    {
+     "type": "text",
+     "content": "mailto:foo@bar.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "mailto:foo",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "mailto:foo"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "www.x",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "www.x"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "www.example.com/path/to/file.html#frag",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://www.example.com/path/to/file.html#frag"
+    },
+    {
+     "type": "text",
+     "content": "www.example.com/path/to/file.html#frag"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "example.com/~user/",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://example.com/~user/"
+    },
+    {
+     "type": "text",
+     "content": "example.com/~user/"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "https://en.wikipedia.org/wiki/Foo_(bar)_baz",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://en.wikipedia.org/wiki/Foo_(bar)_baz"
+    },
+    {
+     "type": "text",
+     "content": "https://en.wikipedia.org/wiki/Foo_(bar)_baz"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "see http://a.com and http://b.com, ok",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "see "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " and "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://b.com"
+    },
+    {
+     "type": "text",
+     "content": "http://b.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ", ok"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "a.com/b.c.d/e",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/b.c.d/e"
+    },
+    {
+     "type": "text",
+     "content": "a.com/b.c.d/e"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "https://example.com/a;b; end",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/a;b"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/a;b"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "; end"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "https://x.com/<y",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://x.com/"
+    },
+    {
+     "type": "text",
+     "content": "https://x.com/"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "<y"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "a.com>b",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com"
+    },
+    {
+     "type": "text",
+     "content": "a.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ">b"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "//a.b",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "//a.b"
+    },
+    {
+     "type": "text",
+     "content": "//a.b"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "://a.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "://a.com"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "x//a.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "x//a.com"
+    }
+   ]
+  ]
+ },
+ {
+  "source": ":www.a.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": ":www.a.com"
+    }
+   ]
+  ]
+ },
+ {
+  "source": ".www.a.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": ".www.a.com"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "@www.a.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "@www.a.com"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "мой.рф",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://xn--i1afg.xn--p1ai"
+    },
+    {
+     "type": "text",
+     "content": "мой.рф"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "\"quoted\"@x.com",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "\""
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:quoted%22@x.com"
+    },
+    {
+     "type": "text",
+     "content": "quoted\"@x.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://a.com/[x]",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/%5Bx%5D"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com/[x]"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://a.com/{x}|y",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/%7Bx%7D%7Cy"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com/{x}|y"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://a.com/`x`",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/%60x%60"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com/`x`"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://a.com/~x^y",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/~x%5Ey"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com/~x^y"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://a.com/ä",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/%C3%A4"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com/ä"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://a.com/%zz",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/%25zz"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com/%zz"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://a.com/%C3%A4",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/%C3%A4"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com/ä"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://a.com/%20x",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/%20x"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com/ x"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://a.com/a%2Fb",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/a%2Fb"
+    },
+    {
+     "type": "text",
+     "content": "http://a.com/a%2Fb"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://ä.com/p",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://xn--4ca.com/p"
+    },
+    {
+     "type": "text",
+     "content": "http://ä.com/p"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://Bücher.example/",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://xn--Bcher-kva.example/"
+    },
+    {
+     "type": "text",
+     "content": "http://Bücher.example/"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "http://xn--4ca.com/p",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://xn--4ca.com/p"
+    },
+    {
+     "type": "text",
+     "content": "http://ä.com/p"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "www.xn--bcher-kva.de",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://www.xn--bcher-kva.de"
+    },
+    {
+     "type": "text",
+     "content": "www.bücher.de"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "foo@bär.com",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:foo@xn--br-via.com"
+    },
+    {
+     "type": "text",
+     "content": "foo@bär.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "<http://xn--4ca.com/%C3%A4>",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://xn--4ca.com/%C3%A4"
+    },
+    {
+     "type": "text",
+     "content": "http://ä.com/ä"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[t](<http://a.com/a b>)",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://a.com/a%20b"
+    },
+    {
+     "type": "text",
+     "content": "t"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[t](http://ä.com/ä)",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://xn--4ca.com/%C3%A4"
+    },
+    {
+     "type": "text",
+     "content": "t"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "![i](http://a.com/[x].png)",
+  "blocks": [
+   [
+    {
+     "type": "image",
+     "content": "i",
+     "src": "http://a.com/%5Bx%5D.png",
+     "children": [
+      "i"
+     ]
+    }
+   ]
+  ]
+ },
+ {
+  "source": "<foo@bär.com>",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "<"
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:foo@xn--br-via.com"
+    },
+    {
+     "type": "text",
+     "content": "foo@bär.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ">"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "<mailto:x@xn--br-via.com>",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:x@xn--br-via.com"
+    },
+    {
+     "type": "text",
+     "content": "mailto:x@bär.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "foo@xn--br-via.com",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:foo@xn--br-via.com"
+    },
+    {
+     "type": "text",
+     "content": "foo@xn--br-via.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "mailto:x@xn--br-via.com",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:x@xn--br-via.com"
+    },
+    {
+     "type": "text",
+     "content": "mailto:x@bär.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "//xn--4ca.com/x",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "//xn--4ca.com/x"
+    },
+    {
+     "type": "text",
+     "content": "//ä.com/x"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[t](HTTP://ä.com)",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "HTTP://%C3%A4.com"
+    },
+    {
+     "type": "text",
+     "content": "t"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[t](ftp://ä.com/ä)",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "ftp://%C3%A4.com/%C3%A4"
+    },
+    {
+     "type": "text",
+     "content": "t"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[t](javascript:alert(1))",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "[t](javascript:alert(1))"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "a [*t*](javascript:x) www.a.com b",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "a ["
+    },
+    {
+     "type": "em_open",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "t"
+    },
+    {
+     "type": "em_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "](javascript:x) "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://www.a.com"
+    },
+    {
+     "type": "text",
+     "content": "www.a.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " b"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[www.a.com](javascript:x)",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "["
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://www.a.com"
+    },
+    {
+     "type": "text",
+     "content": "www.a.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "](javascript:x)"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "<javascript:alert(1)>",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "<javascript:alert(1)>"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "![i](javascript:x)",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "![i](javascript:x)"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[t](data:image/png;x)",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "data:image/png;x"
+    },
+    {
+     "type": "text",
+     "content": "t"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[t][r]\n\n[r]: http://ä.com/[r]",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://xn--4ca.com/%5Br%5D"
+    },
+    {
+     "type": "text",
+     "content": "t"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "[a](  )",
+  "blocks": [
+   [
+    {
+     "type": "link_open",
+     "content": "",
+     "href": ""
+    },
+    {
+     "type": "text",
+     "content": "a"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "*see http://ä.com/ä*",
+  "blocks": [
+   [
+    {
+     "type": "em_open",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "see "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://xn--4ca.com/%C3%A4"
+    },
+    {
+     "type": "text",
+     "content": "http://ä.com/ä"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "em_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "a [*t*](javascript:x) www.b.com <javascript:y> ![i](file:z) [](vbscript:v)",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "a ["
+    },
+    {
+     "type": "em_open",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "t"
+    },
+    {
+     "type": "em_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "](javascript:x) "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://www.b.com"
+    },
+    {
+     "type": "text",
+     "content": "www.b.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " <javascript:y> ![i](file:z) [](vbscript:v)"
+    }
+   ]
+  ]
+ },
+ {
+  "source": "<a@bär.com> <a@b.com>",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "<"
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:a@xn--br-via.com"
+    },
+    {
+     "type": "text",
+     "content": "a@bär.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "> "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:a@b.com"
+    },
+    {
+     "type": "text",
+     "content": "a@b.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    }
+   ]
+  ]
+ },
+ {
+  "source": "Pull requests for the PR details tabs, with bare links like https://example.com/docs/start, http://example.org/a?b=1 and ftp://files.example.net/pub.\nHosts like www.example.com, docs.example.io/guide and the file README.md become links too.\nMail user@example.com or mailto:user@example.com, and see //cdn.example.com/lib.js as well.\nTrailing punctuation stays out (https://example.com/end), https://example.com/q? and \"https://example.com/quoted\".\nNot in code `https://example.com/code` or in a [named link](https://example.com/named) to www.example.net.\nEmphasis doesn't split http://example.com/*wiki* or *https://example.com/em*, and targets are normalized: https://xn--bcher-kva.example/%C3%A4, www.xn--bcher-kva.de and https://example.com/a[1]|b.",
+  "blocks": [
+   [
+    {
+     "type": "text",
+     "content": "Pull requests for the PR details tabs, with bare links like "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/docs/start"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/docs/start"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ", "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://example.org/a?b=1"
+    },
+    {
+     "type": "text",
+     "content": "http://example.org/a?b=1"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " and "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "ftp://files.example.net/pub"
+    },
+    {
+     "type": "text",
+     "content": "ftp://files.example.net/pub"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "."
+    },
+    {
+     "type": "softbreak",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "Hosts like "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://www.example.com"
+    },
+    {
+     "type": "text",
+     "content": "www.example.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ", "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://docs.example.io/guide"
+    },
+    {
+     "type": "text",
+     "content": "docs.example.io/guide"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " and the file "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://README.md"
+    },
+    {
+     "type": "text",
+     "content": "README.md"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " become links too."
+    },
+    {
+     "type": "softbreak",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "Mail "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:user@example.com"
+    },
+    {
+     "type": "text",
+     "content": "user@example.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " or "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "mailto:user@example.com"
+    },
+    {
+     "type": "text",
+     "content": "mailto:user@example.com"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ", and see "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "//cdn.example.com/lib.js"
+    },
+    {
+     "type": "text",
+     "content": "//cdn.example.com/lib.js"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " as well."
+    },
+    {
+     "type": "softbreak",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "Trailing punctuation stays out ("
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/end"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/end"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "), "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/q"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/q"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "? and \""
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/quoted"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/quoted"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "\"."
+    },
+    {
+     "type": "softbreak",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "Not in code "
+    },
+    {
+     "type": "code_inline",
+     "content": "https://example.com/code"
+    },
+    {
+     "type": "text",
+     "content": " or in a "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/named"
+    },
+    {
+     "type": "text",
+     "content": "named link"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " to "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://www.example.net"
+    },
+    {
+     "type": "text",
+     "content": "www.example.net"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "."
+    },
+    {
+     "type": "softbreak",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "Emphasis doesn't split "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://example.com/*wiki"
+    },
+    {
+     "type": "text",
+     "content": "http://example.com/*wiki"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "* or "
+    },
+    {
+     "type": "em_open",
+     "content": ""
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/em"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/em"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "em_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ", and targets are normalized: "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://xn--bcher-kva.example/%C3%A4"
+    },
+    {
+     "type": "text",
+     "content": "https://bücher.example/ä"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": ", "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "http://www.xn--bcher-kva.de"
+    },
+    {
+     "type": "text",
+     "content": "www.bücher.de"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": " and "
+    },
+    {
+     "type": "link_open",
+     "content": "",
+     "href": "https://example.com/a%5B1%5D%7Cb"
+    },
+    {
+     "type": "text",
+     "content": "https://example.com/a[1]|b"
+    },
+    {
+     "type": "link_close",
+     "content": ""
+    },
+    {
+     "type": "text",
+     "content": "."
+    }
+   ]
+  ]
+ }
+]

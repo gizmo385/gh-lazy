@@ -9,6 +9,7 @@
 pub(crate) mod highlight;
 mod layout;
 mod linkify;
+mod normalize;
 mod parse;
 mod table;
 mod wrap;

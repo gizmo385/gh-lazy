@@ -690,6 +690,14 @@ mod tests {
             std::future::pending().await
         }
 
+        async fn pull_request_uncached(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _number: u64,
+        ) -> Result<lazy_github_core::models::FullPullRequest, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
         async fn merge_pull_request(
             &self,
             _repo: &lazy_github_core::models::Repository,

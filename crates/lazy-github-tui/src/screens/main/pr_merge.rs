@@ -80,7 +80,8 @@ fn merged(pr: Box<PartialPullRequest>, result: Result<MergeResult, GhError>, cx:
                 .with_title("PR Merged"),
             );
             cx.dispatch(Action::Main(MainAction::OpenPullRequest {
-                target: PullRequestTarget::Partial(pr),
+                // Past gh's cache, which would still hold the pull request from before the merge.
+                target: PullRequestTarget::Uncached(pr),
                 focus: true,
             }));
         }

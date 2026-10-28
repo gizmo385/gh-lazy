@@ -138,6 +138,16 @@ pub trait Github: Clone + Send + Sync + 'static {
         number: u64,
     ) -> impl Future<Output = Result<FullPullRequest, GhError>> + Send;
 
+    /// [`Github::pull_request`] fetched past `gh`'s cache, for a pull request that just changed on GitHub (merged), so
+    /// a cached copy from before the change can't come back. The answer isn't cached either.
+    ///
+    /// Fails as [`Github::pull_request`] does.
+    fn pull_request_uncached(
+        &self,
+        repo: &Repository,
+        number: u64,
+    ) -> impl Future<Output = Result<FullPullRequest, GhError>> + Send;
+
     /// Every job of run `run_id` in `repo`, in API order, from every page (Python stops at the first 30, Py bug B64).
     /// Never cached.
     ///
@@ -825,9 +835,14 @@ impl GhCli {
 
     /// `GET /repos/{owner}/{repo}/pulls/{number}`, cached for the default TTL as Python's `github_headers()` asks.
     fn pull_request_request(&self, repo: &Repository, number: u64) -> GhRequest {
-        let mut request = GhRequest::get(format!("/repos/{}/{}/pulls/{number}", repo.owner.login, repo.name));
+        let mut request = Self::pull_request_uncached_request(repo, number);
         request.cache = Some(self.inner.ttls.default);
         request
+    }
+
+    /// `GET /repos/{owner}/{repo}/pulls/{number}` without `--cache`, so `gh` neither reads nor writes its cache.
+    fn pull_request_uncached_request(repo: &Repository, number: u64) -> GhRequest {
+        GhRequest::get(format!("/repos/{}/{}/pulls/{number}", repo.owner.login, repo.name))
     }
 
     /// `GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs`, uncached and without a query: Python sends neither, so
@@ -1167,6 +1182,11 @@ impl Github for GhCli {
             .request(self.pull_request_request(repo, number))
             .await?;
         full_pull_request(&response, repo)
+    }
+
+    async fn pull_request_uncached(&self, repo: &Repository, number: u64) -> Result<FullPullRequest, GhError> {
+        let request = Self::pull_request_uncached_request(repo, number);
+        full_pull_request(&self.inner.runner.request(request).await?, repo)
     }
 
     async fn workflow_run_jobs(&self, repo: &Repository, run_id: u64) -> Result<Vec<WorkflowJob>, GhError> {
@@ -2342,6 +2362,23 @@ mod tests {
                 "GET",
                 "--cache",
                 "600s",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/pr-details/pulls/5"
+            ]
+        );
+    }
+
+    #[test]
+    fn the_uncached_pull_request_argv_has_no_cache() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        assert_eq!(
+            strings(GhCli::pull_request_uncached_request(&pr_details_repo(), 5).argv(gh.runner().hostname(), false)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
                 "-H",
                 "Accept: application/vnd.github+json",
                 "/repos/parity-bot/pr-details/pulls/5"

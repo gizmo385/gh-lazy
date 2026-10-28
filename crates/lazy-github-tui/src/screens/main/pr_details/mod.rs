@@ -45,13 +45,16 @@ pub enum PullRequestTarget {
     Partial(Box<PartialPullRequest>),
     /// One already fetched (#238's lookup, M4's links and notifications): shown at once.
     Full(Box<FullPullRequest>),
+    /// One that just changed on GitHub (a merge): fetched past `gh`'s cache, so the change shows, and shown once it
+    /// arrives.
+    Uncached(Box<PartialPullRequest>),
 }
 
 impl PullRequestTarget {
     /// Its number, as in `#5`.
     pub fn number(&self) -> u64 {
         match self {
-            PullRequestTarget::Partial(pr) => pr.issue.number,
+            PullRequestTarget::Partial(pr) | PullRequestTarget::Uncached(pr) => pr.issue.number,
             PullRequestTarget::Full(pr) => pr.number(),
         }
     }

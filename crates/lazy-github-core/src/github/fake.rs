@@ -21,7 +21,7 @@ use crate::models::{
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` returns none, `workflow_run` fails with a 404, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` and `pull_request_uncached` fail with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` returns none, `workflow_run` fails with a 404, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -76,6 +76,13 @@ pub enum GithubCall {
     UserRepos(String),
     /// [`Github::pull_request`].
     PullRequest {
+        /// The repository's full name.
+        full_name: String,
+        /// The pull request's number.
+        number: u64,
+    },
+    /// [`Github::pull_request_uncached`].
+    PullRequestUncached {
         /// The repository's full name.
         full_name: String,
         /// The pull request's number.
@@ -771,16 +778,17 @@ impl Github for FakeGithub {
             full_name: repo.full_name.clone(),
             number,
         };
-        self.respond(call, |state| match state.pull_requests.get(&key) {
-            Some(Ok(pull_request)) => Ok(pull_request.clone()),
-            Some(Err(error)) => Err(duplicate(error)),
-            None => Err(GhError::Http {
-                status: 404,
-                message: "Not Found".to_owned(),
-                body: Vec::new(),
-            }),
-        })
-        .await
+        self.respond(call, |state| canned_pull_request(state, &key)).await
+    }
+
+    /// Answers from the same canned pull requests as `pull_request`.
+    async fn pull_request_uncached(&self, repo: &Repository, number: u64) -> Result<FullPullRequest, GhError> {
+        let key = (repo.full_name.clone(), number);
+        let call = GithubCall::PullRequestUncached {
+            full_name: repo.full_name.clone(),
+            number,
+        };
+        self.respond(call, |state| canned_pull_request(state, &key)).await
     }
 
     async fn workflow_run_jobs(&self, _repo: &Repository, run_id: u64) -> Result<Vec<WorkflowJob>, GhError> {
@@ -1073,6 +1081,19 @@ fn duplicate_diff_error(error: &DiffFetchError) -> DiffFetchError {
     }
 }
 
+/// A canned pull request, or a 404 when none was set.
+fn canned_pull_request(state: &State, key: &(String, u64)) -> Result<FullPullRequest, GhError> {
+    match state.pull_requests.get(key) {
+        Some(Ok(pull_request)) => Ok(pull_request.clone()),
+        Some(Err(error)) => Err(duplicate(error)),
+        None => Err(GhError::Http {
+            status: 404,
+            message: "Not Found".to_owned(),
+            body: Vec::new(),
+        }),
+    }
+}
+
 /// A canned re-run's result, or a 422 when none was set.
 fn canned_rerun(state: &State, run_id: u64, failed_only: bool) -> Result<(), GhError> {
     match state.reruns.get(&(run_id, failed_only)) {
@@ -1342,6 +1363,14 @@ mod tests {
         assert_eq!(
             github.calls()[0],
             GithubCall::PullRequest {
+                full_name: "octocat/a".into(),
+                number: 5
+            }
+        );
+        assert_eq!(github.pull_request_uncached(&repo("a"), 5).await.unwrap(), pr);
+        assert_eq!(
+            github.calls()[3],
+            GithubCall::PullRequestUncached {
                 full_name: "octocat/a".into(),
                 number: 5
             }

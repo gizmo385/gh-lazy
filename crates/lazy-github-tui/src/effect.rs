@@ -164,6 +164,13 @@ pub enum GithubRequest {
         /// Its number.
         number: u64,
     },
+    /// [`Github::pull_request_uncached`]. Answered as [`GithubResponse::PullRequest`].
+    PullRequestUncached {
+        /// The repo the pull request is in.
+        repo: Box<Repository>,
+        /// Its number.
+        number: u64,
+    },
     /// [`Github::workflow_run_jobs`].
     WorkflowRunJobs {
         /// The repo the run is in.
@@ -419,6 +426,9 @@ impl GithubRequest {
             GithubRequest::UserRepos(login) => GithubResponse::UserRepos(gh.user_repos(&login).await),
             GithubRequest::PullRequest { repo, number } => {
                 GithubResponse::PullRequest(gh.pull_request(&repo, number).await.map(Box::new))
+            }
+            GithubRequest::PullRequestUncached { repo, number } => {
+                GithubResponse::PullRequest(gh.pull_request_uncached(&repo, number).await.map(Box::new))
             }
             GithubRequest::WorkflowRunJobs { repo, run_id } => {
                 GithubResponse::WorkflowRunJobs(gh.workflow_run_jobs(&repo, run_id).await)

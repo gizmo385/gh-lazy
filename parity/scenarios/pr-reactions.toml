@@ -2,7 +2,7 @@ version = 1
 description = "PR Overview add reaction (R): the Add reaction modal lists the reactions the current user hasn't given, space and enter check two, Submit posts each, and q closes the modal without posting"
 # After posting, Python's reactions summary doesn't show a reaction kind nobody had given before (Py bug B66), and
 # Rust follows the recommendation and does, so the summary after Submit isn't in [expect].
-gate = false
+gate = true
 parity_rows = [
     "pull-requests.overview-add-reaction",
     "modals.add-reaction",

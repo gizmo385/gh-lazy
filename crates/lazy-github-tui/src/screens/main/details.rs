@@ -7,7 +7,7 @@
 //! variant, a `DetailsPane::show_*` one-liner, and a [`DetailsBody`] impl; nothing else here changes.
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
-use lazy_github_core::models::{FullPullRequest, Issue, Repository, WorkflowRun};
+use lazy_github_core::models::{FullPullRequest, Issue, ReactionKind, Repository, WorkflowRun};
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
 use tokio::time::Instant;
@@ -107,6 +107,9 @@ pub(super) trait DetailsBody {
 
     /// Add Comment, opened from this body's diff viewer, closed with `comment`: the viewer keeps it as pending.
     fn diff_comment_added(&mut self, _comment: PendingComment, _cx: &mut Cx<'_>) {}
+
+    /// Add reaction, opened from this body, closed with `kinds` checked (none when cancelled): the body posts them.
+    fn reactions_chosen(&mut self, _kinds: Vec<ReactionKind>, _cx: &mut Cx<'_>) {}
 
     /// A mouse event over tab `tab`'s content other than a press (a release, a move, the wheel), for a widget inside
     /// it that takes its own (a tree, a button's release). What it did, or `None` when it didn't take the event; the
@@ -411,6 +414,10 @@ impl DetailsPane {
                 tracing::debug!("Dropping the review response {id} of a pull request no longer shown");
                 None
             }
+            GithubResponse::AddIssueReaction(_) => {
+                tracing::debug!("Dropping the reaction response {id} of a pull request no longer shown");
+                None
+            }
             other => Some(other),
         }
     }
@@ -438,6 +445,11 @@ impl DetailsPane {
     /// [`DetailsBody::diff_comment_added`].
     pub(super) fn diff_comment_added(&mut self, comment: PendingComment, cx: &mut Cx<'_>) {
         self.body.get_mut().diff_comment_added(comment, cx);
+    }
+
+    /// [`DetailsBody::reactions_chosen`].
+    pub(super) fn reactions_chosen(&mut self, kinds: Vec<ReactionKind>, cx: &mut Cx<'_>) {
+        self.body.get_mut().reactions_chosen(kinds, cx);
     }
 
     /// [`DetailsBody::mouse`] in the active tab.

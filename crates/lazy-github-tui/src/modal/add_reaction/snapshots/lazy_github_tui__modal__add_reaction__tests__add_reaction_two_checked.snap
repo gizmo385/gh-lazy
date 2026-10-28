@@ -1,0 +1,67 @@
+---
+source: crates/lazy-github-tui/src/modal/add_reaction/tests.rs
+expression: "crate::test_util::buffer_to_styled_string(&dialog)"
+---
+█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+█                                                █
+█                                                █
+█                                                █
+█               Add a new reaction               █
+█                                                █
+█▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█
+█▊ ▐X▌ 👎                                        ▎█
+█▊ ▐X▌ 😄                                        ▎█
+█▊ ▐X▌ 😕                                        ▎█
+█▊ ▐X▌ ❤️                                        ▎█
+█▊ ▐X▌ 🚀                                        ▎█
+█▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█
+█                                                █
+█       ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔        █
+█            Submit           Cancel             █
+█       ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁        █
+█                                                █
+█                                                █
+█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█
+--- styles
+..................................................
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.cdddddddddddddddddddddddddddddddddddddddddddddde.
+.cfghgffifffffffffffffffffffffffffffffffffffffffe.
+.cfgjgffifffffffffffffffffffffffffffffffffffffffe.
+.cfghgffifffffffffffffffffffffffffffffffffffffffe.
+.cfghgffifffffffffffffffffffffffffffffffffffffffe.
+.cfkjkllillllllllllllllllllllllllllllllllllllllfe.
+.cdddddddddddddddddddddddddddddddddddddddddddddde.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaammmmmmmmmmmmmmmmannnnnnnnnnnnnnnnaaaaaaaa.
+.aaaaaaaooooppppppppooooaqqqqrrrrrrrrqqqqaaaaaaaa.
+.aaaaaaassssssssssssssssattttttttttttttttaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+..................................................
+--- legend
+. fg=#121212 bg=#4f4f4f
+a fg=#e0e0e0 bg=#4f4f4f
+b fg=#0178d4 bg=#4f4f4f BOLD
+c fg=#0178d4 bg=#4f4f4f REVERSED
+d fg=#0178d4 bg=#272727
+e fg=#0178d4 bg=#4f4f4f
+f fg=#e0e0e0 bg=#272727
+g fg=#242f38 bg=#272727
+h fg=#000f18 bg=#242f38
+i fg=Reset bg=Reset
+j fg=#8ad4a1 bg=#242f38
+k fg=#242f38 bg=#0178d4
+l fg=#ddedf9 bg=#0178d4 BOLD
+m fg=#7ae998 bg=#4ebf71
+n fg=#e76580 bg=#b93c5b
+o fg=#0a180e bg=#4ebf71
+p fg=#0a180e bg=#4ebf71 BOLD
+q fg=#f5e5e9 bg=#b93c5b
+r fg=#f5e5e9 bg=#b93c5b BOLD
+s fg=#008139 bg=#4ebf71
+t fg=#780028 bg=#b93c5b

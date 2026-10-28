@@ -8,7 +8,7 @@ mod overview;
 use std::sync::Arc;
 
 use crossterm::event::MouseEvent;
-use lazy_github_core::models::{FullPullRequest, PartialPullRequest};
+use lazy_github_core::models::{FullPullRequest, PartialPullRequest, ReactionKind};
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
 
@@ -22,6 +22,7 @@ use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::modal::PostedComment;
 use crate::theme::Theme;
 
+use super::MainAction;
 use super::details::{BodyRenderCx, DetailsBody};
 pub(super) use conversation::PrConversation;
 pub(super) use diff::PrDiff;
@@ -127,7 +128,7 @@ impl DetailsBody for PullRequestDetails {
     }
 
     fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
-        let response = self.overview.on_response(id, response)?;
+        let response = self.overview.on_response(id, response, cx)?;
         let response = self.diff.on_response(id, response, cx)?;
         self.conversation.on_response(id, response, &mut self.overview, cx)
     }
@@ -221,8 +222,8 @@ impl DetailsBody for PullRequestDetails {
         }
     }
 
-    /// A section title's or list's key applies to the Overview; merge (#183), edit (#185) and add a reaction aren't
-    /// built yet: the key is consumed, as in Python.
+    /// A section title's or list's key applies to the Overview, and add a reaction makes a request; merge (#183) and
+    /// edit (#185) aren't built yet: the key is consumed, as in Python.
     fn on_binding(&mut self, tab: usize, owner: Owner, id: BindingId) -> Option<Action> {
         // The diff viewer's titles, pane, filter and keys.
         match PrTab::at(tab) {
@@ -231,8 +232,9 @@ impl DetailsBody for PullRequestDetails {
             PrTab::Conversation => return self.conversation.on_binding(owner, id),
             PrTab::Overview => {}
         }
-        match owner {
-            Owner::CollapsibleTitle | Owner::ListView => self.overview.on_binding(id).then_some(Action::Consumed),
+        match (owner, id) {
+            (Owner::CollapsibleTitle | Owner::ListView, _) => self.overview.on_binding(id).then_some(Action::Consumed),
+            (Owner::PrOverview, BindingId::ReactAdd) => Some(Action::Main(MainAction::DetailsCommand(owner, id))),
             _ => Some(Action::Unimplemented(id)),
         }
     }
@@ -241,8 +243,13 @@ impl DetailsBody for PullRequestDetails {
         match PrTab::at(tab) {
             PrTab::Conversation => self.conversation.command(owner, id, cx),
             PrTab::Diff => self.diff.command(owner, id, cx),
+            PrTab::Overview if id == BindingId::ReactAdd => self.overview.add_reaction(cx),
             PrTab::Overview => {}
         }
+    }
+
+    fn reactions_chosen(&mut self, kinds: Vec<ReactionKind>, cx: &mut Cx<'_>) {
+        self.overview.post_reactions(kinds, cx);
     }
 
     fn diff_comment_added(&mut self, comment: PendingComment, cx: &mut Cx<'_>) {

@@ -17,7 +17,7 @@ use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter};
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts, Method};
 use crate::models::{
     CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem, IssueState,
-    Reactions, Repository, Review, ReviewComment, ReviewState, User, Workflow, WorkflowJob, WorkflowRun,
+    ReactionKind, Reactions, Repository, Review, ReviewComment, ReviewState, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 #[cfg(any(test, feature = "test-util"))]
@@ -271,6 +271,18 @@ pub trait Github: Clone + Send + Sync + 'static {
         number: u64,
         review: &NewReview,
     ) -> impl Future<Output = Result<Review, GhError>> + Send;
+
+    /// Adds the logged-in user's reaction of `kind` to issue or pull request `number` of `repo`: `POST
+    /// /repos/{owner}/{repo}/issues/{number}/reactions` with `{"content": kind.api_name()}` over stdin. Returns `true`
+    /// when it was created (201) and `false` when the user had already given it (200). Never cached.
+    ///
+    /// Fails on any HTTP error status or `gh` failure.
+    fn add_issue_reaction(
+        &self,
+        repo: &Repository,
+        number: u64,
+        kind: ReactionKind,
+    ) -> impl Future<Output = Result<bool, GhError>> + Send;
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -895,6 +907,16 @@ impl GhCli {
         request
     }
 
+    /// `POST /repos/{owner}/{repo}/issues/{number}/reactions` with `{"content": kind}`.
+    fn add_issue_reaction_request(repo: &Repository, number: u64, kind: ReactionKind) -> GhRequest {
+        let mut request = GhRequest::new(
+            Method::Post,
+            format!("/repos/{}/{}/issues/{number}/reactions", repo.owner.login, repo.name),
+        );
+        request.body = Some(serde_json::json!({ "content": kind.api_name() }));
+        request
+    }
+
     /// `POST /repos/{owner}/{repo}/pulls/{number}/reviews` with `review` as the JSON body.
     fn create_review_request(repo: &Repository, number: u64, review: &NewReview) -> Result<GhRequest, GhError> {
         let mut request = GhRequest::new(
@@ -1123,6 +1145,17 @@ impl Github for GhCli {
         let request = Self::create_review_request(repo, number, review)?;
         self.inner.runner.request(request).await?.json()
     }
+
+    async fn add_issue_reaction(&self, repo: &Repository, number: u64, kind: ReactionKind) -> Result<bool, GhError> {
+        let request = Self::add_issue_reaction_request(repo, number, kind);
+        reaction_created(self.inner.runner.request(request).await)
+    }
+}
+
+/// Whether an add-reaction request created the reaction: 201 for a new one, 200 when the user already had it
+/// (Python's `add_reaction_on_issue` counts only a 201).
+fn reaction_created(response: Result<GhResponse, GhError>) -> Result<bool, GhError> {
+    Ok(response?.status == 201)
 }
 
 /// `reviews` without the pending ones, each with the comments `fetch` gets for its id, one review after another. The
@@ -2355,6 +2388,50 @@ mod tests {
             ]
         );
         assert_eq!(request.body.unwrap().to_string(), r#"{"body":"It stops, yes."}"#);
+    }
+
+    #[test]
+    fn add_issue_reaction_argv_posts_each_kind_over_stdin() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        for kind in ReactionKind::ALL {
+            let request = GhCli::add_issue_reaction_request(&pr_details_repo(), 5, kind);
+            assert_eq!(
+                strings(request.argv(gh.runner().hostname(), false)),
+                [
+                    "api",
+                    "-i",
+                    "-X",
+                    "POST",
+                    "-H",
+                    "Accept: application/vnd.github+json",
+                    "--input",
+                    "-",
+                    "/repos/parity-bot/pr-details/issues/5/reactions"
+                ]
+            );
+            assert_eq!(
+                request.body.unwrap().to_string(),
+                format!(r#"{{"content":"{}"}}"#, kind.api_name())
+            );
+        }
+    }
+
+    #[test]
+    fn an_added_reaction_is_created_by_a_201_only() {
+        let answer = |status: &str, exit: i32| {
+            let stdout = format!("HTTP/2.0 {status}\r\nContent-Type: application/json\r\n\r\n{{}}");
+            reaction_created(gh::interpret(Some(exit), stdout.as_bytes(), b"", false))
+        };
+        assert!(answer("201 Created", 0).unwrap());
+        assert!(!answer("200 OK", 0).unwrap());
+        assert!(matches!(
+            answer("422 Unprocessable Entity", 1),
+            Err(GhError::Http { status: 422, .. })
+        ));
+        assert!(matches!(
+            answer("404 Not Found", 1),
+            Err(GhError::Http { status: 404, .. })
+        ));
     }
 
     #[test]

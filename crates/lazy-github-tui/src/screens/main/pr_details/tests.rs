@@ -484,13 +484,11 @@ fn tab_from_the_strip_focuses_the_body_and_its_footer() {
         footer.starts_with(" ^m Merge PR  E Edit PR  R Add reaction  ^v Paste link"),
         "{footer}"
     );
-    // Not built yet: consumed and logged.
-    for key in ["E", "R"] {
-        let out = logs(|| {
-            app.press(&[key]);
-        });
-        assert!(out.contains("is not implemented yet"), "{key}: {out}");
-    }
+    // Not built yet: consumed and logged. `R` is Add reaction's.
+    let out = logs(|| {
+        app.press(&["E"]);
+    });
+    assert!(out.contains("is not implemented yet"), "{out}");
     // Merge, edit and react belong to the Overview: the other tabs' bodies don't have them.
     app.press(&["5", "right", "tab"]);
     assert_eq!(focus(&app), FocusTarget::DetailsContent);
@@ -505,16 +503,21 @@ fn the_pull_request_bindings_answer_unimplemented() {
     settle(&mut app);
     app.press(&["tab"]);
     let main = app.app_mut().main_screen_mut().unwrap();
-    for id in [
-        BindingId::PullRequestMerge,
-        BindingId::PullRequestEdit,
-        BindingId::ReactAdd,
-    ] {
+    for id in [BindingId::PullRequestMerge, BindingId::PullRequestEdit] {
         assert!(matches!(
             main.details.on_binding(crate::component::Owner::PrOverview, id),
             Some(Action::Unimplemented(got)) if got == id
         ));
     }
+    // Add reaction runs as a command, which makes a request.
+    assert!(matches!(
+        main.details
+            .on_binding(crate::component::Owner::PrOverview, BindingId::ReactAdd),
+        Some(Action::Main(crate::screens::main::MainAction::DetailsCommand(
+            crate::component::Owner::PrOverview,
+            BindingId::ReactAdd
+        )))
+    ));
 }
 
 #[test]
@@ -890,4 +893,163 @@ fn replacing_the_pull_request_cancels_its_section_requests() {
     });
     assert!(out.contains("Dropping the Overview section response"), "{out}");
     assert!(!app.screen(160, 48).contains("👍"));
+}
+
+// Add reaction.
+
+/// parity-bot, who gave PR 5 a 👍, a 🎉 and a 👀, as `/user` returns them (with a name, unlike the reactions' users).
+fn parity_bot() -> lazy_github_core::models::User {
+    lazy_github_core::models::User {
+        login: "parity-bot".into(),
+        id: 1_000_001,
+        name: Some("Parity Bot".into()),
+        html_url: "https://github.com/parity-bot".into(),
+    }
+}
+
+/// PR 5's Overview open with focus in its content, against `gh` with parity-bot logged in.
+fn overview_focused(gh: FakeGithub) -> TestApp {
+    let mut app = TestApp::with_github(config(), gh.with_user(parity_bot()));
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["2", "enter"]);
+    settle(&mut app);
+    app.press(&["tab"]);
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    app
+}
+
+fn modals(app: &TestApp) -> Vec<crate::modal::ModalKind> {
+    app.app().modals()
+}
+
+/// The reactions posted, in order.
+fn posted(app: &TestApp) -> Vec<lazy_github_core::models::ReactionKind> {
+    app.gh()
+        .calls()
+        .into_iter()
+        .filter_map(|call| match call {
+            GithubCall::AddIssueReaction {
+                full_name,
+                number,
+                kind,
+            } => {
+                assert_eq!((full_name.as_str(), number), (NAME, 5));
+                Some(kind)
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+fn reactions_title(app: &mut TestApp) -> String {
+    let screen = app.screen(160, 48);
+    let line = screen.lines().find(|line| line.contains("▶ 👍")).unwrap_or_default();
+    let title = line.split("││").nth(1).unwrap_or_default().trim_matches(['│', ' ']);
+    // A wide emoji leaves a blank in its second cell.
+    title.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+#[test]
+fn r_asks_for_the_user_and_lists_the_reactions_they_havent_given() {
+    use lazy_github_core::models::ReactionKind::{Confused, Heart, Laugh, Rocket, ThumbsDown};
+
+    let mut app = overview_focused(gh());
+    app.press(&["R"]);
+    assert!(modals(&app).is_empty(), "the dialog waits for the user");
+    settle(&mut app);
+    assert_eq!(modals(&app), [crate::modal::ModalKind::AddReaction]);
+    let screen = app.screen(160, 48);
+    for kind in [ThumbsDown, Laugh, Confused, Heart, Rocket] {
+        assert!(screen.contains(&format!("▐X▌ {}", kind.emoji())), "{screen}");
+    }
+    for emoji in ["👍", "🎉", "👀"] {
+        assert!(!screen.contains(&format!("▐X▌ {emoji}")), "{screen}");
+    }
+    assert_eq!(screen.lines().last().unwrap().trim_end(), " q Close");
+}
+
+#[test]
+fn every_reaction_is_listed_when_the_reactions_didnt_load() {
+    let gh = gh().with_issue_reactions(NAME, 5, Err(server_error()));
+    let mut app = overview_focused(gh);
+    app.press(&["R"]);
+    settle(&mut app);
+    let screen = app.screen(160, 48);
+    for kind in lazy_github_core::models::ReactionKind::ALL {
+        assert!(screen.contains(&format!("▐X▌ {}", kind.emoji())), "{screen}");
+    }
+}
+
+#[test]
+fn submit_posts_in_the_order_checked_and_shows_new_kinds_with_one() {
+    use lazy_github_core::models::ReactionKind::{Heart, Laugh, Rocket, ThumbsDown};
+
+    let gh = gh()
+        .with_added_reaction(Laugh, Ok(true))
+        .with_added_reaction(Rocket, Ok(true))
+        .with_added_reaction(ThumbsDown, Ok(true))
+        .with_added_reaction(Heart, Ok(false));
+    let mut app = overview_focused(gh);
+    app.press(&["R"]);
+    settle(&mut app);
+    // 🚀, then 👎 checked, unchecked and checked again after ❤️ and 😄.
+    app.press(&[
+        "end", "space", "home", "space", "space", "up", "up", "space", "home", "down", "space",
+    ]);
+    app.press(&["home", "space", "tab", "enter"]);
+    assert!(modals(&app).is_empty());
+    let out = settle(&mut app);
+    assert!(!out.contains("ERROR"), "{out}");
+    assert_eq!(posted(&app), [Rocket, Heart, Laugh, ThumbsDown]);
+    // ❤️ was already there (a 200): nothing changes for it. The new kinds show with 1 (B66's recommendation).
+    assert_eq!(reactions_title(&mut app), "▶ 👍 2 | 🎉 1 | 👀 4 | 🚀 1 | 😄 1 | 👎 1");
+}
+
+#[test]
+fn a_failed_post_is_logged_and_the_rest_go_on() {
+    use lazy_github_core::models::ReactionKind::{Laugh, Rocket};
+
+    let gh = gh().with_added_reaction(Rocket, Ok(true));
+    let mut app = overview_focused(gh);
+    app.press(&["R"]);
+    settle(&mut app);
+    // 😄 isn't canned: the fake answers it with a 422.
+    app.press(&["down", "space", "end", "space", "tab", "enter"]);
+    let out = settle(&mut app);
+    assert!(out.contains("ERROR Error adding reaction laugh - "), "{out}");
+    assert_eq!(posted(&app), [Laugh, Rocket]);
+    assert_eq!(reactions_title(&mut app), "▶ 👍 2 | 🎉 1 | 👀 4 | 🚀 1");
+    assert!(app.app().toasts().is_empty());
+}
+
+#[test]
+fn cancel_and_q_post_nothing() {
+    for keys in [&["space", "tab", "tab", "enter"][..], &["space", "q"]] {
+        let mut app = overview_focused(gh());
+        app.press(&["R"]);
+        settle(&mut app);
+        app.press(keys);
+        settle(&mut app);
+        assert!(modals(&app).is_empty(), "{keys:?}");
+        assert!(posted(&app).is_empty(), "{keys:?}");
+        assert_eq!(reactions_title(&mut app), "▶ 👍 2 | 🎉 1 | 👀 4", "{keys:?}");
+        assert_eq!(focus(&app), FocusTarget::DetailsContent, "{keys:?}");
+    }
+}
+
+#[test]
+fn without_the_user_no_dialog_opens() {
+    let mut app = TestApp::with_github(config(), gh().with_user_error(server_error()));
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["2", "enter"]);
+    settle(&mut app);
+    app.press(&["tab", "R"]);
+    let out = settle(&mut app);
+    assert!(
+        out.contains("ERROR Error fetching the current user for a reaction"),
+        "{out}"
+    );
+    assert!(modals(&app).is_empty());
 }

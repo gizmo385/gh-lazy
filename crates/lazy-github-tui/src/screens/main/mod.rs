@@ -23,7 +23,7 @@ mod workflows;
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::AppearanceSettings;
 use lazy_github_core::gh::GhError;
-use lazy_github_core::models::{FullPullRequest, Issue, IssueListItem, Repository, WorkflowRun};
+use lazy_github_core::models::{FullPullRequest, Issue, IssueListItem, ReactionKind, Repository, WorkflowRun};
 use ratatui::Frame;
 use ratatui::layout::{Margin, Position, Rect};
 use ratatui::style::Style;
@@ -317,6 +317,9 @@ pub enum MainAction {
     },
     /// Add Comment, opened from the PR Diff tab, closed with a comment: it joins the diff viewer's pending comments.
     DiffCommentAdded(Box<PendingComment>),
+    /// Add reaction, opened from the PR Overview, closed with these reactions checked, in the order they were
+    /// checked (none when cancelled): the Overview posts them.
+    ReactionsChosen(Vec<ReactionKind>),
     /// Show a pull request's details: fetch it first if `target` is a table row. `focus` moves focus to the tab
     /// strip once they show (Python's `focus_pr_details`, false only for M4's preload, #198).
     OpenPullRequest {
@@ -453,6 +456,31 @@ impl MainScreen {
         let label = format!("Issue #{}", issue.number);
         self.details.show_issue(issue, cx);
         self.details_shown(&label, true, cx);
+    }
+
+    /// `user.view_profile` in a table: the profile of the highlighted row's user, or a toast without a row.
+    fn view_profile(&mut self, origin: ProfileOrigin, cx: &mut Cx<'_>) {
+        let login = match origin {
+            ProfileOrigin::Repos => self.repos.table.selected().map(|repo| repo.owner.login.clone()),
+            ProfileOrigin::PullRequests => self
+                .issue_lists
+                .prs_table()
+                .selected()
+                .map(|pr| pr.issue.user.login.clone()),
+            ProfileOrigin::Issues => self
+                .issue_lists
+                .issues_table()
+                .selected()
+                .map(|issue| issue.user.login.clone()),
+        };
+        match login {
+            Some(login) => self.profile.open(login, origin, cx),
+            None => cx.notify(Toast::error(match origin {
+                ProfileOrigin::Repos => "No repository currently selected",
+                ProfileOrigin::PullRequests => "No pull request currently selected",
+                ProfileOrigin::Issues => "No issue currently selected",
+            })),
+        }
     }
 
     /// `MainAction::EditIssue`: the dialog for the table's cursor row, or the issue the details show.
@@ -1245,6 +1273,7 @@ impl Component for MainScreen {
             MainAction::DetailsCommand(owner, id) => self.details.on_command(owner, id, cx),
             MainAction::CommentClosed { posted, reply } => self.details.comment_closed(posted, reply, cx),
             MainAction::DiffCommentAdded(comment) => self.details.diff_comment_added(*comment, cx),
+            MainAction::ReactionsChosen(kinds) => self.details.reactions_chosen(kinds, cx),
             MainAction::ClickSelect(repo) => {
                 self.try_focus(FocusTarget::Table(SectionId::Repos));
                 cx.dispatch(Action::SelectRepo(repo));
@@ -1261,20 +1290,7 @@ impl Component for MainScreen {
             }
             // A cancelled lookup or a profile closed with nothing picked.
             MainAction::RepoLookedUp(None) | MainAction::ProfilePicked(_, None) => {}
-            MainAction::ViewProfile(ProfileOrigin::Repos) => match self.repos.table.selected() {
-                Some(repo) => self.profile.open(repo.owner.login.clone(), ProfileOrigin::Repos, cx),
-                None => cx.notify(Toast::error("No repository currently selected")),
-            },
-            MainAction::ViewProfile(ProfileOrigin::PullRequests) => match self.issue_lists.prs_table().selected() {
-                Some(pr) => self
-                    .profile
-                    .open(pr.issue.user.login.clone(), ProfileOrigin::PullRequests, cx),
-                None => cx.notify(Toast::error("No pull request currently selected")),
-            },
-            MainAction::ViewProfile(ProfileOrigin::Issues) => match self.issue_lists.issues_table().selected() {
-                Some(issue) => self.profile.open(issue.user.login.clone(), ProfileOrigin::Issues, cx),
-                None => cx.notify(Toast::error("No issue currently selected")),
-            },
+            MainAction::ViewProfile(origin) => self.view_profile(origin, cx),
             MainAction::ProfilePicked(ProfileOrigin::Repos, Some(repo)) => {
                 if self.repos.table.get(&repo.full_name).is_none() {
                     self.repos.add((*repo).clone(), cx);

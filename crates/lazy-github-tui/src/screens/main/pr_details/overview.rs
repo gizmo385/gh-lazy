@@ -5,19 +5,25 @@
 //! The sections load after the pull request: the reactions and both checks requests start with the tab, and the
 //! reviews arrive with the Conversation tab's. Inside the tab, focus walks the body itself, then each shown
 //! section's title and, when it's open, its list.
+//!
+//! `react.add` opens the Add reaction dialog once the current user is known, then posts the checked reactions one
+//! after another and redraws the reactions summary.
 
+use std::collections::VecDeque;
 use std::ops::Range;
 use std::sync::Arc;
 
 use lazy_github_core::gh::GhError;
 use lazy_github_core::models::review_summary;
 use lazy_github_core::models::{CheckRow, CheckRun, CheckState, CombinedStatus, FullPullRequest, Reactions};
+use lazy_github_core::models::{ReactionKind, User};
 use lazy_github_core::models::{Review, ReviewState, ReviewSummary, ReviewVerdict, check_rows, overall_state};
 use lazy_github_core::{references, time};
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
 
+use crate::action::Action;
 use crate::component::{ChainLink, Cx, Owner};
 use crate::components::collapsible::{CONTENT_INDENT, Collapsible, Placement, SectionFocus};
 use crate::components::command_log::Wheel;
@@ -28,6 +34,8 @@ use crate::components::reactions::ReactionsSummary;
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::BindingId;
+use crate::modal::AddReactionDialog;
+use crate::screens::main::MainAction;
 use crate::theme::{Accent, Theme};
 
 use super::super::details::BodyRenderCx;
@@ -155,6 +163,21 @@ struct ChecksRequest {
     runs: Option<Vec<CheckRun>>,
 }
 
+/// Add reaction's state: the current user it waits for, then the checked reactions it posts one at a time.
+#[derive(Debug, Default)]
+struct Reacting {
+    /// The `CurrentUser` request `react.add` made; the dialog opens with its answer.
+    user_request: Option<RequestId>,
+    /// Who the reactions are posted as, once known.
+    user: Option<User>,
+    /// The checked reactions not posted yet, in the order they were checked.
+    queue: VecDeque<ReactionKind>,
+    /// The post in flight, and its reaction.
+    posting: Option<(RequestId, ReactionKind)>,
+    /// Whether a post since the summary was last drawn created a reaction.
+    added: bool,
+}
+
 /// What the next draw scrolls into view.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Reveal {
@@ -168,6 +191,9 @@ pub(in crate::screens::main) struct PrOverview {
     scroll: ScrollView,
     body: Body,
     requests: Requests,
+    /// The reactions as loaded, with the ones added since. `None` until they load, or when they failed to.
+    reactions: Option<Reactions>,
+    reacting: Reacting,
     reveal: Option<Reveal>,
     /// Where the body was drawn last, for clicks.
     area: Rect,
@@ -243,6 +269,8 @@ impl PrOverview {
                 placements: Vec::new(),
                 last_width: 0,
             },
+            reactions: None,
+            reacting: Reacting::default(),
             reveal: None,
             area: Rect::default(),
         }
@@ -283,9 +311,23 @@ impl PrOverview {
     // Requests.
 
     /// Takes a response to one of the Overview's requests, and hands back any other.
-    pub(super) fn on_response(&mut self, id: RequestId, response: GithubResponse) -> Option<GithubResponse> {
+    pub(super) fn on_response(
+        &mut self,
+        id: RequestId,
+        response: GithubResponse,
+        cx: &mut Cx<'_>,
+    ) -> Option<GithubResponse> {
         let checks = self.requests.checks.as_ref();
         match response {
+            GithubResponse::CurrentUser(result) if self.reacting.user_request == Some(id) => {
+                self.reacting.user_request = None;
+                self.open_add_reaction(result, cx);
+            }
+            GithubResponse::AddIssueReaction(result)
+                if self.reacting.posting.is_some_and(|(posting, _)| posting == id) =>
+            {
+                self.on_reaction_posted(result, cx);
+            }
             GithubResponse::IssueReactions(result) if self.requests.reactions == Some(id) => {
                 self.requests.reactions = None;
                 self.on_reactions(result);
@@ -309,23 +351,118 @@ impl PrOverview {
                 checks.runs.is_none().then_some(checks.runs_id),
             ]
         });
-        for id in self.requests.reactions.into_iter().chain(checks.flatten()) {
+        let reacting = self.reacting.user_request.into_iter();
+        for id in self
+            .requests
+            .reactions
+            .into_iter()
+            .chain(checks.flatten())
+            .chain(reacting)
+        {
             cx.effect(Effect::Cancel(id));
         }
     }
 
     /// Python's `load_reactions`: a failure is logged and, after B16, shown in the title.
     fn on_reactions(&mut self, result: Result<Reactions, GhError>) {
-        let state = match result {
-            Ok(reactions) => ReactionsSummary::new(&reactions).map_or(SectionState::Hidden, |summary| {
-                SectionState::Loaded(Loaded::Reactions(summary))
-            }),
+        match result {
+            Ok(reactions) => {
+                self.reactions = Some(reactions);
+                self.show_reactions();
+            }
             Err(error) => {
                 tracing::error!("Error loading reactions data: {error}");
-                SectionState::Failed
+                self.body.settle(SectionKind::Reactions, SectionState::Failed);
+            }
+        }
+    }
+
+    /// Draws the reactions section from [`Self::reactions`]: Python's `set_reactions`.
+    fn show_reactions(&mut self) {
+        let summary = self.reactions.as_ref().and_then(ReactionsSummary::new);
+        let state = summary.map_or(SectionState::Hidden, |summary| {
+            SectionState::Loaded(Loaded::Reactions(summary))
+        });
+        self.body.settle(SectionKind::Reactions, state);
+    }
+
+    // Add reaction.
+
+    /// `react.add`: asks for the current user, whose reactions the dialog leaves out (`gh` remembers it after the
+    /// first time). A second press while it's asked waits for the same answer.
+    pub(super) fn add_reaction(&mut self, cx: &mut Cx<'_>) {
+        if self.reacting.user_request.is_none() {
+            self.reacting.user_request = Some(cx.request(GithubRequest::CurrentUser));
+        }
+    }
+
+    /// The current user arrived: opens the dialog with every reaction they haven't given on the pull request, all
+    /// of them when the reactions didn't load. Without the user there's nothing to compare, so no dialog opens.
+    fn open_add_reaction(&mut self, result: Result<User, GhError>, cx: &mut Cx<'_>) {
+        let user = match result {
+            Ok(user) => user,
+            Err(error) => {
+                tracing::error!("Error fetching the current user for a reaction: {error}");
+                return;
             }
         };
-        self.body.settle(SectionKind::Reactions, state);
+        let given: Vec<ReactionKind> = self
+            .reactions
+            .iter()
+            .flat_map(Reactions::by_kind)
+            .filter(|(_, users)| users.contains(&user))
+            .map(|(kind, _)| kind)
+            .collect();
+        self.reacting.user = Some(user);
+        cx.open_dialog(AddReactionDialog::new(&given), |kinds| {
+            Action::Main(MainAction::ReactionsChosen(kinds))
+        });
+    }
+
+    /// The dialog closed with `kinds` checked, in the order they were checked: they're posted one at a time, in that
+    /// order, after any still being posted.
+    pub(super) fn post_reactions(&mut self, kinds: Vec<ReactionKind>, cx: &mut Cx<'_>) {
+        self.reacting.queue.extend(kinds);
+        if self.reacting.posting.is_none() {
+            self.post_next_reaction(cx);
+        }
+    }
+
+    /// Posts the next queued reaction, or, with none left, redraws the summary if any was created.
+    fn post_next_reaction(&mut self, cx: &mut Cx<'_>) {
+        let Some(kind) = self.reacting.queue.pop_front() else {
+            if std::mem::take(&mut self.reacting.added) {
+                self.show_reactions();
+            }
+            return;
+        };
+        let issue = &self.body.pr.pr.issue;
+        let id = cx.request(GithubRequest::AddIssueReaction {
+            repo: Box::new(issue.repo.clone()),
+            number: issue.number,
+            kind,
+        });
+        self.reacting.posting = Some((id, kind));
+    }
+
+    /// A post answered. A created reaction adds the user to its kind, a new kind included (Py bug B66's
+    /// recommendation; Python leaves a new kind out); one they already had changes nothing, and a failure is logged
+    /// and the rest go on.
+    fn on_reaction_posted(&mut self, result: Result<bool, GhError>, cx: &mut Cx<'_>) {
+        let Some((_, kind)) = self.reacting.posting.take() else {
+            return;
+        };
+        match result {
+            Ok(true) => {
+                if let Some(user) = self.reacting.user.clone() {
+                    self.reactions.get_or_insert_default().add(kind, user);
+                    self.reacting.added = true;
+                }
+            }
+            Ok(false) => {}
+            Err(error) => tracing::error!("Error adding reaction {} - {error}", kind.api_name()),
+        }
+        self.post_next_reaction(cx);
     }
 
     /// One of the two checks requests answered. The section shows once both have; either failing fails it, without

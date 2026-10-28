@@ -60,7 +60,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.modal-search` | `modal.search` | `/` | Search | Settings | M4 | not started | #193 | |
 | `keybindings.confirm-yes` | `confirm.yes` | `y` | Yes | Confirm | M3 | in progress | #214, #279 | |
 | `keybindings.confirm-no` | `confirm.no` | `n` | No | Confirm | M3 | in progress | #214, #279 | |
-| `keybindings.react-add` | `react.add` | `R` | Add reaction | PR Overview | M3 | not started | #183, #263 | |
+| `keybindings.react-add` | `react.add` | `R` | Add reaction | PR Overview | M3 | in progress | #183, #263 | Scenario `pr-reactions`. |
 | `keybindings.link-paste` | `link.paste` | `ctrl+v` | Paste link | main screen | M4 | not started | #197 | TERM: many terminals turn `ctrl+v` into a paste; consider also opening the modal on a bracketed-paste event on the main screen. |
 | `keybindings.link-follow` | `link.follow` | `f` | Follow link | main screen | M4 | not started | #196 | |
 | `keybindings.link-follow-external` | `link.follow_external` | `F` | Follow link (browser) | main screen | M4 | not started | #196 | |

@@ -11,13 +11,13 @@ use super::{DiffFetchError, Github, IssueListQuery, IssueUpdate, NewIssue, NewRe
 use crate::gh::GhError;
 use crate::models::{
     CheckRun, CheckState, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
-    Reactions, Repository, Review, ReviewComment, User, Workflow, WorkflowJob, WorkflowRun,
+    ReactionKind, Reactions, Repository, Review, ReviewComment, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment` and `create_review` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review` and `add_issue_reaction` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -161,6 +161,15 @@ pub enum GithubCall {
         /// What was sent.
         review: NewReview,
     },
+    /// [`Github::add_issue_reaction`].
+    AddIssueReaction {
+        /// The repository's full name.
+        full_name: String,
+        /// The issue's or pull request's number.
+        number: u64,
+        /// The reaction sent.
+        kind: ReactionKind,
+    },
     /// [`Github::update_issue`].
     UpdateIssue {
         /// The repository's full name.
@@ -224,6 +233,8 @@ struct State {
     created_reviews: Vec<(NewReview, Result<Review, GhError>)>,
     /// What `update_issue` returns, whatever the issue; `None` fails with a 422.
     updated_issue: Option<Result<Issue, GhError>>,
+    /// What `add_issue_reaction` returns, by the kind sent; kinds not set fail with a 422.
+    added_reactions: HashMap<ReactionKind, Result<bool, GhError>>,
     latency: Option<Duration>,
     calls: Vec<GithubCall>,
 }
@@ -468,6 +479,14 @@ impl FakeGithub {
     #[must_use]
     pub fn with_created_review(self, review: NewReview, created: Result<Review, GhError>) -> Self {
         self.lock().created_reviews.push((review, created));
+        self
+    }
+
+    /// `add_issue_reaction` returns `added` for a reaction of `kind`, whatever the issue: `true` as for a 201,
+    /// `false` as for a 200. Other kinds fail with a 422.
+    #[must_use]
+    pub fn with_added_reaction(self, kind: ReactionKind, added: Result<bool, GhError>) -> Self {
+        self.lock().added_reactions.insert(kind, added);
         self
     }
 
@@ -859,6 +878,20 @@ impl Github for FakeGithub {
                 Some((_, Err(error))) => Err(duplicate(error)),
                 None => Err(unprocessable()),
             }
+        })
+        .await
+    }
+
+    async fn add_issue_reaction(&self, repo: &Repository, number: u64, kind: ReactionKind) -> Result<bool, GhError> {
+        let call = GithubCall::AddIssueReaction {
+            full_name: repo.full_name.clone(),
+            number,
+            kind,
+        };
+        self.respond(call, |state| match state.added_reactions.get(&kind) {
+            Some(Ok(added)) => Ok(*added),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Err(unprocessable()),
         })
         .await
     }
@@ -1363,6 +1396,37 @@ mod tests {
                 full_name: "octocat/a".into(),
                 number: 5,
                 review,
+            }
+        );
+    }
+
+    #[tokio::test]
+    async fn add_issue_reaction_answers_by_kind_and_records_the_call() {
+        let github = FakeGithub::new()
+            .with_added_reaction(ReactionKind::Heart, Ok(true))
+            .with_added_reaction(ReactionKind::Rocket, Ok(false));
+        assert!(
+            github
+                .add_issue_reaction(&repo("a"), 5, ReactionKind::Heart)
+                .await
+                .unwrap()
+        );
+        assert!(
+            !github
+                .add_issue_reaction(&repo("a"), 5, ReactionKind::Rocket)
+                .await
+                .unwrap()
+        );
+        assert!(matches!(
+            github.add_issue_reaction(&repo("a"), 5, ReactionKind::Eyes).await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        assert_eq!(
+            github.calls()[0],
+            GithubCall::AddIssueReaction {
+                full_name: "octocat/a".into(),
+                number: 5,
+                kind: ReactionKind::Heart,
             }
         );
     }

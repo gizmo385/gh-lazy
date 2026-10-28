@@ -6,6 +6,7 @@
 //! (`ctrl+q`). Drawing dims everything below each dialog, then draws its frame, its interior and its footer.
 
 mod add_comment;
+mod add_reaction;
 mod confirm;
 mod edit_issue;
 mod focus;
@@ -35,6 +36,7 @@ use crate::keymap::BindingId;
 use crate::theme::{Palette, ThemeColor};
 
 pub use add_comment::{AddCommentAction, AddCommentDialog};
+pub use add_reaction::{AddReactionAction, AddReactionDialog};
 pub use confirm::{ConfirmAction, ConfirmDialog};
 pub use edit_issue::{EditIssueAction, EditIssueDialog};
 pub use focus::{FocusMove, FocusRing};
@@ -90,6 +92,8 @@ pub enum ModalKind {
     NewComment,
     /// [`AddCommentDialog`]: a pending review comment on a diff line.
     AddComment,
+    /// [`AddReactionDialog`]: reactions to add to a pull request.
+    AddReaction,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -157,6 +161,8 @@ pub enum DialogAction {
     NewComment(NewCommentAction),
     /// [`AddCommentDialog`]'s.
     AddComment(AddCommentAction),
+    /// [`AddReactionDialog`]'s.
+    AddReaction(AddReactionAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -172,6 +178,7 @@ impl DialogAction {
             DialogAction::EditIssue(_) => ModalKind::EditIssue,
             DialogAction::NewComment(_) => ModalKind::NewComment,
             DialogAction::AddComment(_) => ModalKind::AddComment,
+            DialogAction::AddReaction(_) => ModalKind::AddReaction,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }

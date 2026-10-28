@@ -1,0 +1,18 @@
+---
+source: crates/lazy-github-tui/src/components/text_input.rs
+assertion_line: 1388
+expression: "draw_suggesting(&mut input, 14, true)"
+---
+▊▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊  rity-bot  ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▎
+--- styles
+.aaaaaaaaaaaab
+.cccccccccdccb
+.aaaaaaaaaaaab
+--- legend
+. fg=#0178d4 bg=#4f4f4f REVERSED
+a fg=#0178d4 bg=#272727
+b fg=#0178d4 bg=#4f4f4f
+c fg=#e0e0e0 bg=#272727
+d fg=#121212 bg=#e0e0e0

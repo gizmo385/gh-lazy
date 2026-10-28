@@ -1,6 +1,7 @@
 //! The text input does with each of its keys what Textual's `Input` does: `fixtures/generate_input_keys.py` plays key
-//! sequences on a headless Textual `Input` and dumps the value, cursor, selection and in-app clipboard after each key to
-//! `fixtures/input_keys.json`, and this replays them on `TextInput`, keeping the clipboard as `App` does.
+//! sequences on a headless Textual `Input` and dumps the value, cursor, selection, in-app clipboard and inline
+//! suggestion after each key to `fixtures/input_keys.json`, and this replays them on `TextInput`, keeping the clipboard
+//! as `App` does.
 
 mod common;
 
@@ -16,6 +17,9 @@ struct Sequence {
     value: String,
     cursor: usize,
     clipboard: String,
+    /// The `SuggestFromList` the input suggests from, if any.
+    #[serde(default)]
+    suggestions: Option<Vec<String>>,
     steps: Vec<Step>,
 }
 
@@ -27,6 +31,8 @@ struct Step {
     /// Textual's `Selection(start, end)`: the anchor, then the cursor.
     selection: (usize, usize),
     clipboard: String,
+    /// Textual's `_suggestion`: empty without one.
+    suggestion: String,
 }
 
 fn sequences() -> Vec<Sequence> {
@@ -38,6 +44,9 @@ fn the_input_matches_textual_key_by_key() {
     let keymap = Keymap::defaults();
     for sequence in sequences() {
         let mut input = TextInput::new("");
+        if let Some(suggestions) = &sequence.suggestions {
+            input.set_suggestions(suggestions.clone());
+        }
         input.set_value(sequence.value.as_str());
         input.set_cursor(sequence.cursor);
         let mut clipboard = sequence.clipboard.clone();
@@ -54,13 +63,15 @@ fn the_input_matches_textual_key_by_key() {
                     input.value(),
                     input.cursor(),
                     (input.anchor(), input.cursor()),
-                    clipboard.as_str()
+                    clipboard.as_str(),
+                    input.suggestion().unwrap_or_default()
                 ),
                 (
                     step.value.as_str(),
                     step.cursor,
                     step.selection,
-                    step.clipboard.as_str()
+                    step.clipboard.as_str(),
+                    step.suggestion.as_str()
                 ),
                 "{} step {i} ({})",
                 sequence.name,

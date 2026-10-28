@@ -2,8 +2,9 @@
 
 A headless Textual app with one focused `Input` plays each sequence below: it sets the value, the cursor and the in-app
 clipboard (`App.copy_to_clipboard`), then presses the keys one at a time and records `value`, `cursor_position`,
-`selection` (start, end) and `App.clipboard` after each. `crates/lazy-github-tui/tests/input_keys.rs` replays the
-sequences on `TextInput`.
+`selection` (start, end), `App.clipboard` and the inline suggestion (`_suggestion`) after each. The suggestion sequences
+give the input a `SuggestFromList` first. `crates/lazy-github-tui/tests/input_keys.rs` replays the sequences on
+`TextInput`.
 
 Run from the repository root:
 
@@ -19,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from textual.app import App, ComposeResult
+from textual.suggester import SuggestFromList
 from textual.widgets import Input
 
 TEXT = "foo-bar baz"
@@ -70,6 +72,24 @@ CLIPBOARD_SEQUENCES: list[tuple[str, str, int, str, list[str]]] = [
 ]
 
 
+# The branches the suggestion sequences know, in order: `workflow-trigger`'s, and a non-ASCII one.
+SUGGESTIONS = ["main", "release", "run-details", "rélease"]
+
+# (name, value, cursor, keys), with an empty clipboard and a `SuggestFromList(SUGGESTIONS)`: each value change looks the
+# first case-sensitive prefix match up, `right` at the end accepts it, focus and select-all clear it.
+SUGGESTION_SEQUENCES: list[tuple[str, str, int, list[str]]] = [
+    ("suggest-and-accept", "", 0, ["r", "u", "backspace", "e", "l", "right", "right"]),
+    ("suggest-no-match", "", 0, ["x", "right", "backspace", "m"]),
+    ("suggest-case-sensitive", "", 0, ["R", "e", "l", "right"]),
+    ("suggest-non-ascii", "", 0, ["r", "é", "right"]),
+    ("suggest-exact-match", "", 0, ["m", "a", "i", "n", "right", "backspace"]),
+    ("suggest-right-before-end", "rel", 1, ["right", "right", "right"]),
+    ("suggest-never-shift-right-or-enter", "rel", 3, ["shift+right", "enter", "left", "shift+right", "right"]),
+    ("suggest-select-all-clears", "rel", 3, ["ctrl+shift+a", "right", "e", "right"]),
+    ("suggest-moves-keep-it", "re", 2, ["home", "delete", "end", "right"]),
+]
+
+
 class InputApp(App[None]):
     def compose(self) -> ComposeResult:
         yield Input()
@@ -81,6 +101,7 @@ def state(app: App[None], input: Input) -> dict[str, Any]:
         "cursor": input.cursor_position,
         "selection": list(input.selection),
         "clipboard": app.clipboard,
+        "suggestion": input._suggestion,
     }
 
 
@@ -104,7 +125,36 @@ async def play() -> list[dict[str, Any]]:
             sequences.append(
                 {"name": name, "value": value, "cursor": cursor, "clipboard": clipboard, "steps": steps}
             )
+        input.suggester = SuggestFromList(SUGGESTIONS, case_sensitive=True)
+        for name, value, cursor, keys in SUGGESTION_SEQUENCES:
+            # Through the empty text, so the value changes (and is looked up) even if it's the last one.
+            input.value = ""
+            input.value = value
+            input.cursor_position = cursor
+            app.copy_to_clipboard("")
+            await settle(app, pilot)
+            steps = []
+            for key in keys:
+                await pilot.press(key)
+                await settle(app, pilot)
+                steps.append({"key": key} | state(app, input))
+            sequences.append(
+                {
+                    "name": name,
+                    "value": value,
+                    "cursor": cursor,
+                    "clipboard": "",
+                    "suggestions": SUGGESTIONS,
+                    "steps": steps,
+                }
+            )
     return sequences
+
+
+async def settle(app: App[None], pilot: Any) -> None:
+    """Waits for the suggester's worker and its `SuggestionReady` message."""
+    await app.workers.wait_for_complete()
+    await pilot.pause()
 
 
 def main() -> None:

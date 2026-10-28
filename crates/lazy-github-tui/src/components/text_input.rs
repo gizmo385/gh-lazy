@@ -1,10 +1,10 @@
 //! A single-line text input: Textual's `Input` with its default look (a tall border, `padding: 0 2`), its editing and
-//! selection keys, its clipboard keys, and mouse-drag selection.
+//! selection keys, its clipboard keys, mouse-drag selection, and inline suggestions from a list (`SuggestFromList`).
 //!
 //! `tui-textarea` (PLAN §4) is for the multi-line editors. A one-line box is small enough to own, which lets it match
 //! Textual's styling and word rules exactly; the M3 lookup modals can reuse it.
 
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use ratatui::buffer::Buffer;
@@ -95,6 +95,11 @@ pub struct TextInput {
     invalid: bool,
     /// What the text may be, as Textual's `restrict`: an edit whose result fails it is refused.
     filter: Option<fn(&str) -> bool>,
+    /// The known values a suggestion comes from, in order (Textual's `SuggestFromList`, case-sensitive).
+    suggestions: Option<Arc<[String]>>,
+    /// The first known value that starts with the text, looked up at the text's last change (Textual's
+    /// `_suggestion`). It's kept even when it's the text itself, but only drawn while longer.
+    suggestion: Option<String>,
 }
 
 impl TextInput {
@@ -109,7 +114,42 @@ impl TextInput {
             scroll: 0,
             invalid: false,
             filter: None,
+            suggestions: None,
+            suggestion: None,
         }
+    }
+
+    /// Suggests from `suggestions`: see [`Self::set_suggestions`].
+    #[must_use]
+    pub fn with_suggestions(mut self, suggestions: impl Into<Arc<[String]>>) -> Self {
+        self.set_suggestions(suggestions);
+        self
+    }
+
+    /// Replaces the known values suggestions come from (Textual's `SuggestFromList`, case-sensitive): after each
+    /// change to the text, the first of them that starts with it, in this order, shows dimmed after the text while
+    /// the input has focus, and `right` at the end of the text accepts it. The new list applies from the next
+    /// change, as a new suggester does in Textual.
+    pub fn set_suggestions(&mut self, suggestions: impl Into<Arc<[String]>>) {
+        self.suggestions = Some(suggestions.into());
+    }
+
+    /// The suggestion looked up at the text's last change: the first known value that starts with the text, which
+    /// may be the text itself. `None` without one, for an empty text, and after focus or select-all clear it.
+    pub fn suggestion(&self) -> Option<&str> {
+        self.suggestion.as_deref()
+    }
+
+    /// The text changed: looks the suggestion up again (Textual's `_watch_value`). The lists are small, so this runs
+    /// at once where Textual runs a worker; once the text stops changing the result is the same.
+    fn suggest(&mut self) {
+        let value = &self.value;
+        self.suggestion = self
+            .suggestions
+            .as_deref()
+            .filter(|_| !value.is_empty())
+            .and_then(|suggestions| suggestions.iter().find(|s| s.starts_with(value.as_str())))
+            .cloned();
     }
 
     /// Only lets the text become what `filter` accepts: a typed key, a paste or a delete whose result it refuses
@@ -141,18 +181,24 @@ impl TextInput {
         self.cursor
     }
 
-    /// Replaces the text and puts the cursor at its end.
+    /// Replaces the text and puts the cursor at its end. A new text looks the suggestion up again.
     pub fn set_value(&mut self, value: impl Into<String>) {
-        self.value = value.into();
+        let value = value.into();
+        if value != self.value {
+            self.value = value;
+            self.suggest();
+        }
         self.cursor = self.len();
         self.anchor = None;
     }
 
-    /// Selects all the text, with the cursor at its end: what Textual's `Input` does on focus
-    /// (`select_on_focus`, on by default).
+    /// Selects all the text, with the cursor at its end, and clears the suggestion until the text next changes: what
+    /// Textual's `Input` does on focus (`select_on_focus`, on by default), so owners call it when the input gains
+    /// focus.
     pub fn select_all(&mut self) {
         self.anchor = Some(0);
         self.cursor = self.len();
+        self.suggestion = None;
     }
 
     /// The selection's fixed end: where it started, or the cursor when nothing is selected. With
@@ -229,6 +275,14 @@ impl TextInput {
                 }
                 return InputOutcome::Copied(text);
             }
+            // `action_cursor_right`: at the end of the text, a suggestion is accepted before anything else, whether
+            // or not something is selected.
+            B::TextualInputCursorRight if self.cursor == len => {
+                if let Some(suggestion) = self.suggestion.clone() {
+                    self.set_value(suggestion);
+                    return InputOutcome::Changed;
+                }
+            }
             _ => {}
         }
         if self.select(id) {
@@ -296,7 +350,10 @@ impl TextInput {
             B::TextualInputCursorRightWordSelect => (self.anchor(), self.word_start_after().unwrap_or(len)),
             B::TextualInputHomeSelect => (self.cursor, 0),
             B::TextualInputEndSelect => (self.cursor, len),
-            B::TextualInputSelectAll => (0, len),
+            B::TextualInputSelectAll => {
+                self.select_all();
+                return true;
+            }
             _ => return false,
         };
         self.anchor = Some(anchor);
@@ -408,8 +465,12 @@ impl TextInput {
         if self.filter.is_some_and(|allowed| !allowed(&value)) {
             return;
         }
+        let changed = value != self.value;
         self.value = value;
         self.cursor = start + text.chars().count();
+        if changed {
+            self.suggest();
+        }
     }
 
     /// Textual's `_WORD_START`, `(?<=\W)\w`, over the chars before the cursor: the last word start, or 0.
@@ -473,6 +534,18 @@ impl TextInput {
             }
         } else {
             cells.extend(self.value.chars().map(|c| (c, styles.text)));
+            // The suggestion's rest, dimmed, while focused and longer than the text. It starts with the text, so
+            // its rest is past the text's chars.
+            let rest = self
+                .suggestion
+                .as_deref()
+                .filter(|_| focused)
+                .map(|suggestion| suggestion.chars().skip(cells.len()))
+                .into_iter()
+                .flatten();
+            let before = cells.len();
+            cells.extend(rest.map(|c| (c, styles.suggestion)));
+            let suggesting = cells.len() > before;
             if focused {
                 // `stylize_before`: the cursor's style goes over the selection's.
                 if let Some((start, end)) = self.selection() {
@@ -480,7 +553,8 @@ impl TextInput {
                         cell.1 = styles.selection;
                     }
                 }
-                if self.cursor == cells.len() {
+                // The cursor's cell after the text, unless it's on the suggestion's first char.
+                if !suggesting && self.cursor == cells.len() {
                     cells.push((' ', styles.text));
                 }
                 if let Some(cell) = cells.get_mut(self.cursor) {
@@ -539,6 +613,8 @@ struct Styles {
     /// The text and the padding: `$foreground` on `$surface`, tinted `$foreground 5%` while focused.
     text: Style,
     placeholder: Style,
+    /// `input--suggestion`: `$text-disabled`, or `dim` on the ANSI themes.
+    suggestion: Style,
     cursor: Style,
     /// `input--selection`: `$input-selection-foreground` on `$input-selection-background`.
     selection: Style,
@@ -572,6 +648,7 @@ impl Styles {
             return Self {
                 text,
                 placeholder: text.add_modifier(Modifier::DIM),
+                suggestion: text.add_modifier(Modifier::DIM),
                 cursor: Style::new()
                     .fg(theme.paint(Paint::Ansi(AnsiColor::Black)))
                     .bg(theme.paint(Paint::Ansi(AnsiColor::White))),
@@ -605,6 +682,7 @@ impl Styles {
         Self {
             text,
             placeholder: text.fg(theme.color(p.text_disabled, bg)),
+            suggestion: text.fg(theme.color(p.text_disabled, bg)),
             cursor,
             selection: selection(bg),
             left: Style::new()
@@ -1169,6 +1247,148 @@ mod tests {
         assert_eq!((input.value(), input.cursor()), ("1_2", 1));
         let _ = press(&mut input, "delete");
         assert_eq!((input.value(), input.cursor()), ("12", 1));
+    }
+
+    // Suggestions.
+
+    /// The branches the `workflow-trigger` scenario knows, and two more.
+    fn branches() -> Arc<[String]> {
+        ["main", "release", "run-details", "rélease", "main"]
+            .map(String::from)
+            .into()
+    }
+
+    /// An empty input suggesting from [`branches`], with `keys` typed.
+    fn suggesting(keys: &[&str]) -> TextInput {
+        let mut input = TextInput::new("").with_suggestions(branches());
+        press_all(&mut input, keys);
+        input
+    }
+
+    #[rstest]
+    #[case::prefix(&["r", "e", "l"], Some("release"))]
+    #[case::first_match_in_list_order(&["r"], Some("release"))]
+    #[case::a_longer_prefix_moves_on(&["r", "u"], Some("run-details"))]
+    #[case::no_match(&["x"], None)]
+    #[case::case_sensitive(&["R", "e", "l"], None)]
+    #[case::non_ascii_prefix(&["r", "é"], Some("rélease"))]
+    #[case::the_text_itself(&["m", "a", "i", "n"], Some("main"))]
+    #[case::emptied(&["r", "backspace"], None)]
+    fn the_first_known_value_starting_with_the_text_is_suggested(
+        #[case] keys: &[&str],
+        #[case] suggestion: Option<&str>,
+    ) {
+        assert_eq!(suggesting(keys).suggestion(), suggestion);
+    }
+
+    #[test]
+    fn without_a_list_nothing_is_suggested() {
+        let mut input = input("", 0);
+        let _ = press(&mut input, "r");
+        assert_eq!(input.suggestion(), None);
+    }
+
+    #[test]
+    fn right_at_the_end_accepts_the_suggestion() {
+        let mut input = suggesting(&["r", "e", "l"]);
+        assert_eq!(press(&mut input, "right"), InputOutcome::Changed);
+        assert_eq!((input.value(), input.cursor()), ("release", 7));
+        // The accepted text suggests itself, so `right` again changes nothing.
+        assert_eq!(input.suggestion(), Some("release"));
+        let _ = press(&mut input, "right");
+        assert_eq!((input.value(), input.cursor()), ("release", 7));
+    }
+
+    #[test]
+    fn right_before_the_end_moves_the_cursor() {
+        let mut input = suggesting(&["r", "e", "l", "left"]);
+        assert_eq!(press(&mut input, "right"), InputOutcome::Changed);
+        assert_eq!(
+            (input.value(), input.cursor(), input.suggestion()),
+            ("rel", 3, Some("release"))
+        );
+        let _ = press(&mut input, "right");
+        assert_eq!(input.value(), "release");
+    }
+
+    #[test]
+    fn right_at_the_end_accepts_even_with_a_selection() {
+        let mut input = suggesting(&["r", "e", "l", "shift+left", "shift+right"]);
+        assert_eq!((input.anchor(), input.cursor()), (3, 3));
+        let _ = press(&mut input, "right");
+        assert_eq!((input.value(), input.cursor(), input.selection()), ("release", 7, None));
+    }
+
+    #[test]
+    fn shift_right_and_enter_never_accept() {
+        let mut input = suggesting(&["r", "e", "l"]);
+        assert_eq!(press(&mut input, "shift+right"), InputOutcome::Changed);
+        assert_eq!(press(&mut input, "enter"), InputOutcome::Submitted);
+        assert_eq!((input.value(), input.suggestion()), ("rel", Some("release")));
+    }
+
+    #[test]
+    fn focus_and_select_all_clear_the_suggestion_until_the_next_change() {
+        let mut input = suggesting(&["r", "e", "l"]);
+        input.select_all();
+        assert_eq!(input.suggestion(), None);
+        let mut keyed = suggesting(&["r", "e", "l"]);
+        let _ = press(&mut keyed, "ctrl+shift+a");
+        assert_eq!(keyed.suggestion(), None);
+        // `right` collapses the selection to its end rather than accepting.
+        let _ = press(&mut keyed, "right");
+        assert_eq!((keyed.value(), keyed.cursor()), ("rel", 3));
+        let _ = press(&mut keyed, "e");
+        assert_eq!(keyed.suggestion(), Some("release"));
+    }
+
+    #[test]
+    fn moves_and_refused_edits_keep_the_suggestion() {
+        let mut input = suggesting(&["r", "e"]);
+        press_all(&mut input, &["left", "home", "end", "delete"]);
+        assert_eq!(input.suggestion(), Some("release"));
+    }
+
+    #[test]
+    fn a_replaced_list_applies_from_the_next_change() {
+        let mut input = suggesting(&["r", "e"]);
+        input.set_suggestions(vec!["regex".to_owned()]);
+        assert_eq!(input.suggestion(), Some("release"));
+        let _ = press(&mut input, "g");
+        assert_eq!(input.suggestion(), Some("regex"));
+        // A text set by the owner looks it up too.
+        input.set_value("r");
+        assert_eq!(input.suggestion(), Some("regex"));
+    }
+
+    fn draw_suggesting(input: &mut TextInput, width: u16, focused: bool) -> String {
+        let theme = crate::theme::Theme::default();
+        let mut buf = Buffer::empty(Rect::new(0, 0, width, HEIGHT));
+        let under = theme.palette.surface_lighten_3.over(theme.background());
+        let area = buf.area;
+        input.render(&mut buf, area, &theme, under, focused);
+        crate::test_util::buffer_to_styled_string(&buf)
+    }
+
+    #[test]
+    fn text_input_suggestion_focused() {
+        // The `workflow-trigger` Branch input: `rel`, the cursor on the `e` after it, `ase` dimmed.
+        let mut input = suggesting(&["r", "e", "l"]);
+        insta::assert_snapshot!(draw_suggesting(&mut input, 30, true));
+    }
+
+    #[test]
+    fn text_input_suggestion_unfocused() {
+        let mut input = suggesting(&["r", "e", "l"]);
+        insta::assert_snapshot!(draw_suggesting(&mut input, 30, false));
+    }
+
+    #[test]
+    fn text_input_suggestion_longer_than_the_box() {
+        // Eight text cells: the view scrolls so the cursor, on the suggestion's first char, is in view.
+        let mut input = TextInput::new("").with_suggestions(vec!["parity-bot/a-long-branch-name".to_owned()]);
+        press_all(&mut input, &["p", "a", "r", "i", "t", "y", "-", "b", "o"]);
+        insta::assert_snapshot!(draw_suggesting(&mut input, 14, true));
     }
 
     #[test]

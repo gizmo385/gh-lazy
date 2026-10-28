@@ -1,0 +1,30 @@
+---
+source: crates/lazy-github-tui/src/components/selection_list/tests.rs
+assertion_line: 320
+expression: "draw(&mut reactions(), 48, true)"
+---
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊ ▐X▌ 👎                                        ▎
+▊ ▐X▌ 😄                                        ▎
+▊ ▐X▌ 😕                                        ▎
+▊ ▐X▌ ❤️                                        ▎
+▊ ▐X▌ 🚀                                        ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+--- styles
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab
+.cdedffgffffffffffffffffffffffffffffffffffffffcb
+.chehccgcccccccccccccccccccccccccccccccccccccccb
+.chehccgcccccccccccccccccccccccccccccccccccccccb
+.chehccgcccccccccccccccccccccccccccccccccccccccb
+.chehccgcccccccccccccccccccccccccccccccccccccccb
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab
+--- legend
+. fg=#0178d4 bg=#4f4f4f REVERSED
+a fg=#0178d4 bg=#272727
+b fg=#0178d4 bg=#4f4f4f
+c fg=#e0e0e0 bg=#272727
+d fg=#242f38 bg=#0178d4
+e fg=#000f18 bg=#242f38
+f fg=#ddedf9 bg=#0178d4 BOLD
+g fg=Reset bg=Reset
+h fg=#242f38 bg=#272727

@@ -25,6 +25,7 @@ use crate::component::{BindingState, ChainLink, Component, Cx, Owner};
 use crate::components::button::BUTTON_BINDINGS;
 use crate::components::info::INFO_BINDINGS;
 use crate::components::select::{SELECT_BINDINGS, SELECT_OVERLAY_BINDINGS};
+use crate::components::selection_list::SELECTION_LIST_BINDINGS;
 use crate::components::switch::SWITCH_BINDINGS;
 use crate::components::table::TABLE_BINDINGS;
 use crate::components::text_editor::TEXT_EDITOR_BINDINGS;
@@ -116,6 +117,9 @@ pub enum FieldKind {
     /// A select's open list (`SelectOverlay`): it has the focus while open, takes the printable keys to search, and
     /// `escape` dismisses it.
     SelectOverlay,
+    /// Textual's `SelectionList` ([`crate::components::selection_list::SelectionList`]): the `OptionList` keys move
+    /// its highlight, and `space` or `enter` toggles the highlighted option.
+    SelectionList,
 }
 
 impl FieldKind {
@@ -130,6 +134,7 @@ impl FieldKind {
             FieldKind::Table => TABLE_BINDINGS,
             FieldKind::Select => SELECT_BINDINGS,
             FieldKind::SelectOverlay => SELECT_OVERLAY_BINDINGS,
+            FieldKind::SelectionList => SELECTION_LIST_BINDINGS,
         };
         ChainLink::new(Owner::DialogField(kind, self), bindings)
     }

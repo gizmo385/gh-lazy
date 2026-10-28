@@ -327,6 +327,9 @@ registry! {
     TextualOptionListPageDown("textual.option_list.page_down", "pagedown", "page_down", "Page Down").hidden();
     TextualOptionListPageUp("textual.option_list.page_up", "pageup", "page_up", "Page Up").hidden();
     TextualOptionListCursorUp("textual.option_list.cursor_up", "up", "cursor_up", "Up").hidden();
+    // `SelectionList`: Add reaction's list and the PR reviewers list (#254). `enter` toggles too, through
+    // `OptionList`'s `select`.
+    TextualSelectionListSelect("textual.selection_list.select", "space", "select", "Toggle option").hidden();
     // `Tree`: the run Jobs tab's tree (#242), in `Tree.BINDINGS` order. It inherits the `textual.scroll.*` keys too.
     TextualTreeCursorParent("textual.tree.cursor_parent", "shift+left", "cursor_parent", "Cursor to parent").hidden();
     TextualTreeCursorParentNextSibling("textual.tree.cursor_parent_next_sibling", "shift+right", "cursor_parent_next_sibling", "Cursor to next ancestor")

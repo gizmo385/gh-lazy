@@ -1,0 +1,14 @@
+---
+source: crates/lazy-github-tui/src/components/selection_list/tests.rs
+assertion_line: 325
+expression: "draw(&mut SelectionList::<u8>::new(), 20, false)"
+---
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+--- styles
+.aaaaaaaaaaaaaaaaaab
+.aaaaaaaaaaaaaaaaaab
+--- legend
+. fg=#191919 bg=#4f4f4f REVERSED
+a fg=#191919 bg=#1e1e1e
+b fg=#191919 bg=#4f4f4f

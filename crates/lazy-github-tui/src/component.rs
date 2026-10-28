@@ -232,7 +232,8 @@ impl Owner {
                 | FieldKind::Scroll
                 | FieldKind::Table
                 | FieldKind::Select
-                | FieldKind::SelectOverlay,
+                | FieldKind::SelectOverlay
+                | FieldKind::SelectionList,
             ) => None,
         }
     }

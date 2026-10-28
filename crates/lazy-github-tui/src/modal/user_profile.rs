@@ -410,7 +410,8 @@ impl Dialog for UserProfileDialog {
             | FieldKind::Button
             | FieldKind::Switch
             | FieldKind::Select
-            | FieldKind::SelectOverlay => None,
+            | FieldKind::SelectOverlay
+            | FieldKind::SelectionList => None,
         }
     }
 }

@@ -108,7 +108,7 @@ pub(super) fn i64<'de, D: Deserializer<'de>>(deserializer: D) -> Result<i64, D::
 /// Parses an integer string the way pydantic does: surrounding whitespace and a leading `+` or `-` are allowed,
 /// single underscores may separate digits (`1_000`), and a fractional part must be all zeros (`1.00`). Exponents
 /// (`1e3`) and other float spellings are rejected.
-fn parse_int_str(s: &str) -> Option<i64> {
+pub(super) fn parse_int_str(s: &str) -> Option<i64> {
     let s = s.trim();
     let (sign, s) = match s.strip_prefix('-') {
         Some(rest) => ("-", rest),
@@ -257,6 +257,11 @@ pub(super) mod naive_datetime {
         };
         let sub_micro = dt.subsec_nanosecond() % 1000;
         dt.checked_sub(i64::from(sub_micro).nanoseconds()).ok()
+    }
+
+    /// Python's `str(datetime)`: [`format`] with a space in place of the `T`, as the settings modal shows it.
+    pub(crate) fn display(dt: DateTime) -> String {
+        format(dt).replacen('T', " ", 1)
     }
 
     pub(crate) fn format(dt: DateTime) -> String {

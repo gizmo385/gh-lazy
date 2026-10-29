@@ -6,6 +6,7 @@
 //! There is no global instance. The app owns one [`Config`], changes it in place and calls [`Config::save`].
 
 mod lax;
+pub mod settings;
 
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
@@ -124,6 +125,9 @@ pub enum IssueStateFilter {
 }
 
 impl IssueStateFilter {
+    /// Every filter, in the order the Python enum lists them.
+    pub const ALL: [Self; 3] = [Self::All, Self::Open, Self::Closed];
+
     /// The `state` query value: `all`, `open` or `closed`.
     pub fn as_str(self) -> &'static str {
         match self {
@@ -145,6 +149,19 @@ pub enum IssueOwnerFilter {
     All,
 }
 
+impl IssueOwnerFilter {
+    /// Every filter, in the order the Python enum lists them.
+    pub const ALL: [Self; 2] = [Self::Mine, Self::All];
+
+    /// The value as `config.json` stores it: `mine` or `all`.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            IssueOwnerFilter::Mine => "mine",
+            IssueOwnerFilter::All => "all",
+        }
+    }
+}
+
 /// How GitHub merges a pull request.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -156,6 +173,20 @@ pub enum MergeMethod {
     Squash,
     /// The commits rebased onto the base branch.
     Rebase,
+}
+
+impl MergeMethod {
+    /// Every method, in the order the Python enum lists them.
+    pub const ALL: [Self; 3] = [Self::Merge, Self::Squash, Self::Rebase];
+
+    /// The value as `config.json` stores it: `merge`, `squash` or `rebase`.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            MergeMethod::Merge => "merge",
+            MergeMethod::Squash => "squash",
+            MergeMethod::Rebase => "rebase",
+        }
+    }
 }
 
 /// The names of Textual's built-in themes, in Textual's order: the only values `appearance.theme` loads as. The UI

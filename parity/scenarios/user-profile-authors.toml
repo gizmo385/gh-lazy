@@ -19,9 +19,16 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Browse fixture pull request 99", timeout_ms = 15000 }
 
-# The first PR's author.
+# The first PR's author. Wait for the footer after each focus key: Python moves focus a tick later, and keys typed
+# before it go to the old table (Py bug B98).
 [[step]]
-keys = ["2", "u"]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["u"]
 
 [[step]]
 wait = { text = "Parity Bot (@parity-bot)" }
@@ -40,7 +47,13 @@ wait = { gone = "Parity Bot (@parity-bot)" }
 
 # The third issue's author, then the one repo on their profile.
 [[step]]
-keys = ["3", "j", "j", "u"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["j", "j", "u"]
 
 [[step]]
 wait = { text = "Parity Friend (@parity-friend)" }
@@ -64,7 +77,13 @@ ignore = { boxes = ["Details"] }
 
 # A repo with no PRs or issues: both tables toast.
 [[step]]
-keys = ["1", "j", "enter"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["j", "enter"]
 
 [[step]]
 wait = { text = "Current repo: parity-bot/dotfiles" }
@@ -73,13 +92,25 @@ wait = { text = "Current repo: parity-bot/dotfiles" }
 wait = { text = "[2] Pull Requests (empty)" }
 
 [[step]]
-keys = ["2", "u"]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["u"]
 
 [[step]]
 wait = { text = "No pull request currently selected" }
 
 [[step]]
-keys = ["3", "u"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["u"]
 
 [[step]]
 wait = { text = "No issue currently selected" }

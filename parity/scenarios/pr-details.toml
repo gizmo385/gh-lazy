@@ -98,6 +98,11 @@ checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 [[step]]
 keys = ["tab", "tab"]
 
+# Python draws the focus box a moment after the focus moves (#303), so wait for the box's left edge beside the review's
+# title: the details pane's border, the scroll area's, then the box's.
+[[step]]
+wait = { regex = "│││\\s+▼ Review from parity-bot", timeout_ms = 5000 }
+
 [[step]]
 capture = "conversation-review-focused"
 checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]

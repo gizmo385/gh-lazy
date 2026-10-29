@@ -1,0 +1,132 @@
+lazy-github-screen 1
+size 160x48
+cursor 1 4 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: gizmo385/gh-lazy                                                                                                                                │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] gizmo385/gh-lazy Details ───────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Repo Overview                                                                                │
+│ ☆  parity-bot  dotfiles     ✘                                ││╸╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  ✘                                ││gizmo385/gh-lazy • Public                                                                     │
+│ ☆  parity-bot  lazy-demo    ✘                                ││Owned by gizmo385                                                                             │
+│                                                              ││Default branch: main                                                                          │
+│                                                              ││                                                                                              │
+│                                                              ││A terminal UI for interacting with GitHub                                                     │
+│                                                              ││                                                                                              │
+│                                                              ││────────────────────────────────────────────────────────────────────────────────────────────  │
+│                                                              ││                                                                                              │
+│                                                              ││  🖼  PyPI - Version 🖼  PyPI - Downloads LazyGithub is a terminal UI client for interacting    │
+│                                                              ││  with GitHub. It draws heavy inspiration from the lazygit project and uses Textual to        │
+│                                                              ││  drive the terminal UI interactions. 🖼  Example screenshot                                   │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│  How to Use It                                                                               │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
+│ #    Status  Author    Title                                 ││  Installing with the Github CLI                                                              │
+│ 112  open    gizmo385  Parity harness: `cargo xtask parity`  ││                                                                                              │
+│ 111  closed  gizmo385  Add cargo xtask record-fixtures and   ││  If you have the Github CLI installed, you can install LazyGithub as an extension with gh    │
+│ 110  closed  gizmo385  Add the Github trait with auth check  ││  extension install gizmo385/gh-lazy and then running gh lazy to run it.                      │
+│ 104  closed  gizmo385  Build fake-gh and the parity fixture  ││                                                                                              │
+│ 103  closed  gizmo385  Log to a size-rotated file in the Py  ││  Installing from PyPi                                                                        │
+│ 96   closed  gizmo385  Load and save config.json compatibly▆▆││                                                                                              │
+│ 95   closed  gizmo385  Run gh api requests through a typed   ││  You can run the most recently built version by installing it from PyPI. If you have uv      │
+│ 91   open    gizmo385  Complete the parity matrix from the   ││  installed, you can do that easily with uvx lazy-github. When you first start LazyGithub,    │
+│                                 ▊                            ││  you will be prompted with a device login code and a link to GitHub where you will be        │
+└──────────────────────────────────────────────────────────────┘│  able to authenticate the app against your account. This allows the app to act on your       │
+┌─ [3] Issues ─────────────────────────────────────────────────┐│  behalf and is necessary for LazyGithub to function. Currently, it supports the              │
+│ #    Status  Author    Title                                 ││  following:                                                                                  │
+│ 113  open    gizmo385  Record the first repo-scoped base fi  ││                                                                                              │
+│ 109  open    gizmo385  fake-gh: treat a missing `page` quer  ││  • Listing the repositories associated with your account                                   ▂▂│
+│ 108  open    gizmo385  Help panel: ? toggles the keybinding  ││  • Listing the issues, pull requests, and actions on your repositories                       │
+│ 107  open    gizmo385  Footer: bindings for the focused con▅▅││  • Listing the details, diff, and reviews on any of those pull requests                      │
+│ 106  open    gizmo385  Startup flow: gh auth check, auth ca  ││  • Detailed issue and pull request views, including conversation participation               │
+│ 105  open    gizmo385  TUI runtime: terminal setup, event l  ││                                                                                              │
+│ 102  open    gizmo385  Searchable table: lazy-loading hook   ││  Reporting Bugs                                                                              │
+│ 101  open    gizmo385  Searchable table: / search input and  ││                                                                                              │
+│                               ▍                              ││  If you run into any bugs while using LazyGithub, please let me know! You can do this by     │
+└──────────────────────────────────────────────────────────────┘│  creating a new bug report or search for Open Bug Report in the command pallete from         │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│  inside LazyGithub. 🖼  In-App Bug Reporter                                                   │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Comman
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+dfgffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde.bbbbbbbbbbbbb................................................................................e
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdeiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiie
+djjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjdekkkkkkkkkkkkkkkkbbbcccccc...................................................................lle
+djjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjdebbbbbbbbbmmmmmmmm...........................................................................lle
+d..............................................................debbbbbbbbbbbbbbbbnnnn........................................................................lle
+d..............................................................de............................................................................................lle
+d..............................................................debbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...................................................lle
+d..............................................................de............................................................................................lle
+d..............................................................deaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalle
+d..............................................................de............................................................................................lle
+d..............................................................de..mmmmmmmmmmmmmmmmmbmmmmmmmmmmmmmmmmmmmbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..lle
+d..............................................................de..bbbbbmmmmmmbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbmmmmmmmbbbbbbbbbbbbbbbbbbmmmmmmmbbb......lle
+d..............................................................de..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbmmmmmmmmmmmmmmmmmmmmm.................................lle
+d..............................................................de............................................................................................lle
+d..............................................................de............................................................................................lle
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..ooooooooooooo.............................................................................lle
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee............................................................................................lle
+eppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqee..rrrrrrrrrrrrrrrrrrrrrrrrrrrrrr............................................................lle
+essssssssssssssssssssssssssssssssssssssssssssssssssssssssssssqqee............................................................................................lle
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttqqee..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbuu..lle
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttqqee..uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuubbbbbbbbbbbbbbbbbbuuuuuuubbbbbbbbbbb....................lle
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttqqee............................................................................................lle
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttqqee..rrrrrrrrrrrrrrrrrrrr......................................................................lle
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttvvee............................................................................................lle
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttwwee..bbbbbbbbbbbbbbbbmmmmmmmmmmmmmmmmmmmmmmmmmmmbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbmm....lle
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttwwee..mmmmmmmmmbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbuuuuuuuuuuuuuuubbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..lle
+eqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxwwwwwwwwwwwwwwwwwwwwwwwwwwyyee..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb......lle
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.....lle
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb............lle
+eppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqee..bbbbbbbbbb................................................................................lle
+essssssssssssssssssssssssssssssssssssssssssssssssssssssssssssqqee............................................................................................lle
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttqqee..zzbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...................................vve
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttqqee..zzbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.....................wwe
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttvvee..zzbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb....................wwe
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttwwee..zzbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.............wwe
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttwwee............................................................................................wwe
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttwwee..rrrrrrrrrrrrrr............................................................................wwe
+ettttttttttttttttttttttttttttttttttttttttttttttttttttttttttttwwee............................................................................................wwe
+eqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxwwwwwwwwwwwwwwwwwwwwwwwwwwwwyyee..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...wwe
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..bbbbbbbbbbbbbbbmmmmmmmmmmbbbbbbbbbbbbbbbuuuuuuuuuuuuuuubbbbbbbbbbbbbbbbbbbbbbbbbbbb.......wwe
+eeeeeeeeeeeeeeeeeAAAAAAAeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..bbbbbbbbbbbbbbbbbbbmmmmmmmmmmmmmmmmmmmmmm.................................................wwe
+eppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppee............................................................................................wwe
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+BBBCCCCCCCBBBBCCCCCCCCCCCCCCCCBBBCCCCCCCCCCCCCCCCCCBBBCCCCCCCCCCBBBCCCCCCCCCCBBBCCCCCCCBBBBCCCCCCCCCCCBBBCCCCCCCCCCCCBBBCCCCCCCCCCCCCCCCCCCCCCBBBCCCCCBBBBCCCCCC
+--- legend
+. bg=#121212
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#adff2f bg=#121212
+d fg=#4ebf71 bg=#121212
+e fg=#6db2ff bg=#121212
+f fg=#e0e0e0 bg=#2d3740 bold
+g fg=#98e024 bg=#2d3740 bold
+h fg=#ddedf9 bg=#0178d4 bold
+i fg=#262626 bg=#121212
+j fg=#e0e0e0 bg=#272727
+k fg=#e0e0e0 bg=#121212 bold underline
+l fg=#003054 bg=#121212 inverse
+m fg=#e0e0e0 bg=#121212 underline
+n fg=#e0e0e0 bg=#121212 bold
+o fg=#0178d4 bg=#121212 underline
+p fg=#e0e0e0 bg=#242f38 bold
+q fg=#003054 bg=#1e1e1e inverse
+r fg=#0178d4 bg=#121212 bold
+s fg=#e0e0e0 bg=#153854
+t fg=#e0e0e0 bg=#1e1e1e
+u fg=#f4bb6e bg=#241d13
+v fg=#003054 bg=#000000 inverse
+w fg=#e0e0e0 bg=#000000
+x fg=#003054 bg=#000000
+y bg=#000000
+z fg=#57a5e2 bg=#121212
+A fg=#4e7bae bg=#121212
+B fg=#ffa62b bg=#242f38 bold
+C fg=#e0e0e0 bg=#242f38

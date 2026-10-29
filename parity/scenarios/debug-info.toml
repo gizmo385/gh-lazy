@@ -1,0 +1,142 @@
+version = 1
+description = "Debug Info (command palette): the modal's Library Versions and LazyGithub Config markdown, its footer, Copy to Clipboard and its toast, shift+enter doing nothing, and closing with q, escape and the Close button"
+# The library list differs on purpose (decision debug-info-versions): Python lists Textual, Click, Httpx, Hishel and
+# Pydantic, Rust its rustc, gh, OS and terminal, so [expect] checks only the lines both have. The config's two paths
+# under the run's temp HOME are below what either size shows. Python clips the config at the modal's bottom with no
+# way to scroll (Py bug B95), which the 100x30 capture shows; Rust follows B95's recommendation (#312).
+gate = false
+parity_rows = [
+    "modals.debug-bug-report",
+    "modals.debug-modal-contents",
+    "command-palette.debug-info",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "debug"
+
+[[step]]
+wait = { text = "View Debug Information" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Library Versions" }
+
+# Copy to Clipboard has focus.
+[[step]]
+capture = "open"
+checks = ["titles", "focus", "footer"]
+
+# shift+enter (modal.submit), in the kitty keyboard protocol's encoding (CSI 13;2 u), which both apps read: bound,
+# shown in the footer, and does nothing.
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Debug info copied to clipboard" }
+
+[[step]]
+capture = "copied"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+keys = ["q"]
+
+[[step]]
+wait = { gone = "Library Versions" }
+
+[[step]]
+capture = "closed"
+checks = ["titles", "focus", "footer"]
+
+# escape closes it too.
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "debug"
+
+[[step]]
+wait = { text = "View Debug Information" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Library Versions" }
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Library Versions" }
+
+# And tab to the Close button and press it.
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "debug"
+
+[[step]]
+wait = { text = "View Debug Information" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Library Versions" }
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { gone = "Library Versions" }
+
+[[step]]
+capture = "closed-button"
+checks = ["titles", "focus", "footer"]
+
+[expect.open]
+focused = []
+contains = ["Library Versions", "LazyGithub Version: ", "LazyGithub Config", "Copy to Clipboard", "Close"]
+not_contains = ["Traceback"]
+footer = ["shift+⏎ Submit", "q Close"]
+
+[expect.copied]
+contains = ["Library Versions", "Copied", "Debug info copied to clipboard"]
+footer = ["shift+⏎ Submit", "q Close"]
+
+[expect.closed]
+focused = ["[1] Repositories"]
+not_contains = ["Library Versions", "Copy to Clipboard"]
+
+[expect.closed-button]
+focused = ["[1] Repositories"]
+not_contains = ["Library Versions", "Copy to Clipboard"]

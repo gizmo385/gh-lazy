@@ -1,0 +1,154 @@
+lazy-github-screen 1
+size 160x48
+cursor 1 26 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                                                               • Unread Notifications: 3│
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] Details ────────────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Introduction                                                                                 │
+│ ☆  parity-bot  dotfiles     █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  █                                                                                                  █                             │
+│ ☆  parity-bot  lazy-demo    █                                                                                                  █                             │
+│                             █                                       LazyGithub Settings                                        █6.6)                         │
+│                             █                                                                                                  █                             │
+│                             █ Appearance  Notifications  Key Bindings  Repositories  Pull Requests  Issues  Cache  Core  Api   █n get started by selecting   │
+│                             █╸━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█ou have selected a           │
+│                             █                                                                                                  █l be retrieved and           │
+│                             █                                                                                                  █                             │
+│                             █  Settings focused on altering the appearance of LazyGithub, including hiding or showing          █                             │
+│                             █  different sections.                                                                             █with!                        │
+│                             █                                                                                                  █                             │
+│                             █                                                                                                  █                             │
+│                             █ Theme:                                         ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎   █                             │
+└─────────────────────────────█                                                ▊  Nord                                    ▼  ▎   █                             │
+┌─ [2] Pull Requests ─────────█                                                ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎   █PR diff, and participating   │
+│ #  Status  Author  Title    █                                                                                                  █reate a new PR for the       │
+│                             █                                                                                                  █                             │
+│                             █ Show Command Log:                              ▊▔▔▔▔▔▔▔▔▎                                        █                             │
+│                             █                                                ▊        ▎                                        █                             │
+│                             █                                                ▊▁▁▁▁▁▁▁▁▎                                        █                             │
+│                             █                                                                                                  █                             │
+│                             █                                                                                                  █ting in any activate         │
+│                             █ Show Workflows:                                ▊▔▔▔▔▔▔▔▔▎                                      ▇▇█itself. This means that you  │
+│                             █                                                ▊        ▎                                        █                             │
+│                             █                                                ▊▁▁▁▁▁▁▁▁▎                                        █                             │
+│                             █                                                                                                  █                             │
+└─────────────────────────────█                                                                                                  █                             │
+┌─ [4] Workflows ─────────────█ Show Issues:                                   ▊▔▔▔▔▔▔▔▔▎                                        █                             │
+│ Time  Result  Job Name  Run █                                                ▊        ▎                                        █tly only supports listing    │
+│                             █                                                                                                  █e currently selected repo,   │
+│                             █──────────────────────────────────────────────────────────────────────────────────────────────────█.                            │
+│                             █                                                                                                  █                             │
+│                             █                                   ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                               █                             │
+│                             █                                         Save           Cancel                                    █                             │
+│                             █                                   ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                               █                             │
+│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Settings updated                                           │
+└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+ shift+⏎ Submit  q Close  / Search
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccccccccccccccccccccca
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+dfgffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdehbbbbbbbbbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+diiiiiiiiiiiiiiiiiiiiiiiiiiiiijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjkkkkkkkkkkkkkkkkkkkkkkkkkkkkke
+dlllllllllllllllllllllllllllllj..................................................................................................jhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+dlllllllllllllllllllllllllllllj..................................................................................................jhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhj..mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm..jnnnnnnnnnnnnnnnnnnnnnnnnnnnhhe
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhj..................................................................................................jhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjoppppppppppo.qqqqqqqqqqqqq..qqqqqqqqqqqq..qqqqqqqqqqqq..qqqqqqqqqqqqq..qqqqqq..qqqqq..qqqq..qqq...jbbbbbbbbbbbbbbbbbbbbbbbbbbhhhe
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjrssssssssssrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrjbbbbbbbbbbbbbbbbbbhhhhhhhhhhhe
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttuujbbbbbbbbbbbbbbbbbbhhhhhhhhhhhe
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt..............................................................................................tuujhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt.vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.......tuujhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt.vvvvvvvvvvvvvvvvvvv..........................................................................tuujwwwwwhhhhhhhhhhhhhhhhhhhhhhhhe
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt..............................................................................................tuujhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt..............................................................................................tuujhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjtxxxxxx.........................................yzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzAtuujhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ddddddddddddddddddddddddddddddjt...............................................yBBCCCCBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBDBBAtuujhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeejt...............................................yzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzAtuujbbbbbbbbbbbbbbbbbbbbbbbbbbhhhe
+eEEEEEEEEEEEEEEEEEEEEEEEEEEEEEjt..............................................................................................tuujbbbbbbbbbbbbbbbbbbbbbbhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt..............................................................................................tuujhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhjtxxxxxxxxxxxxxxxxx..............................yzzzzzzzzA.....................................tuujhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt...............................................yBBFFGGBBA.....................................tuujhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt...............................................yzzzzzzzzA.....................................tuujhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt..............................................................................................tuujhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt..............................................................................................tuujbbbbbbbbbbbbbbbbbbbbhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhjtxxxxxxxxxxxxxxx................................yzzzzzzzzA.....................................tHHjbbbbbbbbbbbbbbbbbbbbbbbbbbbhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt...............................................yBBGGIIBBA.....................................tJJjhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt...............................................yzzzzzzzzA.....................................tJJjhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhjt..............................................................................................tJJjhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeejt..............................................................................................tJJjhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeejtxxxxxxxxxxxx...................................yzzzzzzzzA.....................................tJJjhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+eEEEEEEEEEEEEEEEEEEEEEEEEEEEEEjt...............................................yBBFFGGBBA.....................................tJJjbbbbbbbbbbbbbbbbbbbbbbbbbhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhj..................................................................................................jbbbbbbbbbbbbbbbbbbbbbbbbbbhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhjKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKjbhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhj..................................................................................................jhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhj...................................LLLLLLLLLLLLLLLLMMMMMMMMMMMMMMMM...............................jhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhj...................................NNNNNOOOOOONNNNNPPPPQQQQQQQQPPPP...............................jhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhj...................................RRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSS...............................jhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhTUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhTUVVVVVVVVVVVVVVVVUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUhe
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeTUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUee
+WWWWWWWWWXXXXXXXWWWXXXXXXWWWXXXXXXXYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+--- legend
+. bg=#707889
+a fg=#4f5f73 bg=#2e3440
+b fg=#727883 bg=#2e3440
+c fg=#811f26 bg=#2e3440
+d fg=#5c6b5e bg=#2e3440
+e fg=#6a858c bg=#2e3440
+f fg=#727883 bg=#39404e bold
+g fg=#587834 bg=#39404e bold
+h fg=#d8dee9 bg=#2e3440
+i fg=#2e3440 bg=#526c79
+j fg=#2e3440 bg=#707889
+k fg=#343a46 bg=#2e3440
+l fg=#727883 bg=#363c4a
+m fg=#88c0d0 bg=#707889 bold
+n fg=#526c79 bg=#2e3440 bold
+o bg=#88c0d0
+p fg=#2e3440 bg=#88c0d0
+q fg=#a4abb9 bg=#707889
+r fg=#8f96a5 bg=#707889
+s fg=#88c0d0 bg=#707889
+t fg=#ffffff bg=#707889
+u fg=#48626f bg=#707889 inverse
+v fg=#b4bbc8 bg=#707889
+w fg=#727883 bg=#2e3440 bold
+x fg=#d8dee9 bg=#707889 bold
+y fg=#353c4c bg=#707889 inverse
+z fg=#353c4c bg=#3b4252
+A fg=#353c4c bg=#707889
+B bg=#3b4252
+C fg=#d8dee9 bg=#3b4252
+D fg=#89909d bg=#3b4252
+E fg=#727883 bg=#363d4c bold
+F fg=#434c5e bg=#3b4252 inverse
+G fg=#d8dee9 bg=#212a3a
+H fg=#48626f bg=#1e242f inverse
+I fg=#a3be8c bg=#3b4252 inverse
+J fg=#d8dee9 bg=#1e242f
+K fg=#81a1c1 bg=#707889
+L fg=#cce8b4 bg=#a3be8c
+M fg=#eb8890 bg=#be616a
+N bg=#a3be8c
+O fg=#2e3440 bg=#a3be8c bold
+P bg=#be616a
+Q fg=#2e3440 bg=#be616a bold
+R fg=#688253 bg=#a3be8c
+S fg=#7e2735 bg=#be616a
+T fg=#a3be8c bg=#545d70
+U bg=#545d70
+V fg=#d8dee9 bg=#545d70
+W fg=#88c0d0 bg=#434c5e bold
+X fg=#d8dee9 bg=#434c5e
+Y bg=#434c5e

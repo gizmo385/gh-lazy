@@ -1,0 +1,44 @@
+version = 1
+description = "Open Bug Report when gizmo385/gh-lazy can't be loaded: the error toast, no repo selected and no New issue modal"
+gate = false
+parity_rows = [
+    "command-palette.open-bug-report",
+    "toasts.bug-report-error",
+]
+
+[env]
+# bug-report-error over base: GET /repos/gizmo385/gh-lazy answers 500.
+fixtures = ["bug-report-error", "base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "bug report"
+
+[[step]]
+wait = { text = "Open Bug Report" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Error opening bug report" }
+
+[[step]]
+capture = "error"
+checks = ["titles", "headers", "rows", "cursor", "focus", "footer"]
+
+[expect.error]
+focused = ["[1] Repositories"]
+contains = ["No repository selected", "Error opening bug report", "Could not load LazyGithub repo!"]
+not_contains = ["Description", "Current repo:", "Traceback"]

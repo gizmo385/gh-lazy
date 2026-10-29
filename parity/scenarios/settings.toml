@@ -1,0 +1,225 @@
+version = 1
+description = "Settings modal (palette \"Change Settings\"): the heading, the nine tabs in config order switched with left and right, each tab's dimmed docstring and its fields' widgets by type, the Key Bindings rows, and escape closing without saving"
+# The modal's thick border isn't a box to the structure extractor (parity/README.md, "Limits"), so its tabs, labels
+# and widgets are loose text, checked per app with [expect], and the footer cross-app. Focus inside the modal isn't
+# visible to the extractor either; the focus ring is unit-tested.
+gate = false
+parity_rows = [
+    "command-palette.change-settings",
+    "modals.settings",
+    "modals.settings-tabs",
+    "modals.settings-widgets",
+    "modals.settings-focus",
+    "modals.settings-cancel",
+]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+capture = "palette-query"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+[[step]]
+capture = "appearance"
+checks = ["footer"]
+
+# The tab strip has focus on open: right moves to the next tab.
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "Mark Notification As Read When Selected" }
+
+[[step]]
+capture = "notifications"
+checks = ["footer"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "Custom keybinding overrides" }
+
+[[step]]
+capture = "key-bindings"
+checks = ["footer"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "Repository-specific settings" }
+
+[[step]]
+capture = "repositories"
+checks = ["footer"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "Preferred Merge Method" }
+
+[[step]]
+capture = "pull-requests"
+checks = ["footer"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { gone = "Preferred Merge Method" }
+
+[[step]]
+capture = "issues"
+checks = ["footer"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "Auth Cache Duration" }
+
+[[step]]
+capture = "cache"
+checks = ["footer"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "Logfile Max Bytes" }
+
+[[step]]
+capture = "core"
+checks = ["footer"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "Base Url" }
+
+[[step]]
+capture = "api"
+checks = ["footer"]
+
+# right wraps to the first tab.
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "Show Command Log" }
+
+[[step]]
+capture = "wrapped"
+checks = ["footer"]
+
+# Escape closes the modal, saving nothing.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "LazyGithub Settings" }
+
+[[step]]
+capture = "closed"
+checks = ["titles", "focus", "footer"]
+
+[expect.palette-query]
+contains = ["Change Settings", "Adjust LazyGithub settings"]
+
+[expect.appearance]
+contains = [
+    "LazyGithub Settings",
+    "Appearance  Notifications  Key Bindings  Repositories  Pull Requests  Issues  Cache  Core  Api",
+    "Settings focused on altering the appearance of LazyGithub, including hiding or showing",
+    "Theme:",
+    "Textual Dark",
+    "Show Command Log:",
+    "Show Workflows:",
+    "Show Issues:",
+    "Save",
+    "Cancel",
+]
+footer = ["shift+⏎ Submit", "q Close", "/ Search"]
+
+[expect.notifications]
+contains = [
+    "Controls the settings for the optional notification feature, which relies on the standard",
+    "Enabled:",
+    "Mark Notification As Read When Selected:",
+]
+
+[expect.key-bindings]
+contains = [
+    "Custom keybinding overrides for LazyGithub. When rebinding, pressing ESCAPE will reset to",
+    "Command Pallete: ctrl+p",
+    "Maximize: M",
+    "Keybindings: ?",
+    "Quit: q",
+]
+
+[expect.repositories]
+contains = ["Repository-specific settings", "Additional Repos To Track:", "Add new item...", "Favorites:"]
+
+[expect.pull-requests]
+contains = [
+    "Changes how pull requests are retrieved from the Github API",
+    "State Filter:",
+    "All",
+    "Owner Filter:",
+    "Preferred Merge Method:",
+    "Squash",
+    "Additional Suggested Pr Reviewers:",
+]
+
+[expect.issues]
+contains = ["Changes how issues are retrieved from the Github API", "State Filter:", "Owner Filter:"]
+
+[expect.cache]
+contains = [
+    "Settings that control how long data will be cached from the GitHub API",
+    "Auth Cache Duration:",
+    "86400",
+    "Auth Last Checked:",
+    "Cache Directory:",
+    "Default Ttl:",
+    "600",
+]
+
+[expect.core]
+contains = ["First Start:", "Logfile Path:", "Logfile Max Bytes:", "5000000"]
+
+[expect.api]
+contains = ["Controlling how the GitHub API is accessed in LazyGithub", "Base Url:", "https://api.github.com", "Client Type:"]
+
+[expect.closed]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
+focused = ["[1] Repositories"]
+not_contains = ["LazyGithub Settings"]

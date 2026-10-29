@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/gizmo385/gh-lazy/actions/runs",
+    "query": {
+      "page": "1",
+      "per_page": "30"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "total_count": 0,
+      "workflow_runs": []
+    }
+  },
+  "note": "Hand-written for the bug-report scenario: Open Bug Report selects gizmo385/gh-lazy, which lists no runs here"
+}

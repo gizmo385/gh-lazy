@@ -1,0 +1,147 @@
+version = 1
+description = "Settings Save and Cancel: Save applies the theme (Nord), hides a section the config now hides, starts the notification count when notifications are turned on, and toasts \"Settings updated\"; reopening shows the saved values; escape after a change discards it"
+# The modal is loose text (see settings.toml). After the theme changes, the focus color no longer matches the
+# config's theme in parity/themes.toml, so captures after the save compare titles only; the theme switch is
+# checked in the report's screens and by unit tests. config.json's contents are unit-tested.
+gate = false
+parity_rows = [
+    "modals.settings-save",
+    "modals.settings-cancel",
+    "modals.settings-widgets",
+    "toasts.settings-updated",
+]
+
+[env]
+fixtures = ["notifications-3", "base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+# The scroll area, then the Theme select: open its list and pick Nord (two below Textual Dark).
+[[step]]
+keys = ["tab", "tab", "enter"]
+
+[[step]]
+wait = { text = "Textual Light" }
+
+[[step]]
+capture = "theme-list"
+checks = ["footer"]
+
+[[step]]
+keys = ["down", "down", "enter"]
+
+[[step]]
+wait = { gone = "Textual Light" }
+
+# Show Command Log, Show Workflows, Show Issues: turn Show Issues off.
+[[step]]
+keys = ["tab", "tab", "tab", "enter"]
+
+# Back to the tab strip, then the Notifications tab's Enabled switch: on.
+[[step]]
+keys = ["shift+tab", "shift+tab", "shift+tab", "shift+tab", "shift+tab", "right"]
+
+[[step]]
+wait = { text = "Mark Notification As Read When Selected" }
+
+# Textual switches the pane a moment after the strip: let it settle before moving focus into it.
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["tab", "tab", "enter"]
+
+[[step]]
+capture = "edited"
+checks = ["footer"]
+
+# Mark Notification As Read When Selected, then Save.
+[[step]]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Settings updated" }
+
+[[step]]
+wait = { text = "Unread Notifications: 3" }
+
+[[step]]
+capture = "saved"
+checks = ["titles"]
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+[[step]]
+capture = "reopened"
+checks = ["footer"]
+
+# Show Workflows off, then escape: nothing is saved and the section stays.
+[[step]]
+keys = ["tab", "tab", "tab", "tab", "enter", "escape"]
+
+[[step]]
+wait = { gone = "LazyGithub Settings" }
+
+[[step]]
+capture = "cancelled"
+checks = ["titles"]
+
+[expect.theme-list]
+contains = ["Textual Dark", "Textual Light", "Nord", "Gruvbox"]
+
+[expect.saved]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[4] Workflows"]
+contains = ["Settings updated", "Unread Notifications: 3"]
+not_contains = ["LazyGithub Settings"]
+
+[expect.reopened]
+contains = ["LazyGithub Settings", "Theme:", "Nord"]
+not_contains = ["Textual Dark"]
+
+[expect.cancelled]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[4] Workflows"]
+not_contains = ["LazyGithub Settings"]

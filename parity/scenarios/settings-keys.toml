@@ -1,0 +1,177 @@
+version = 1
+description = "Settings Key Bindings tab: a focused row takes the next key and shows its Textual name, escape resets it to the default, Save writes the override and the new key works at once (the old one no longer does); reopening shows it"
+# The modal is loose text (see settings.toml). The harness can't send shift+enter, so Save is reached with shift+tab
+# (the ring wraps from the tab strip to Cancel, then Save). The override in config.json is unit-tested.
+gate = false
+parity_rows = [
+    "modals.settings-key-rebinding",
+    "modals.settings-save",
+    "keybindings.app-open-help",
+]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+[[step]]
+keys = ["right", "right"]
+
+[[step]]
+wait = { text = "Custom keybinding overrides" }
+
+# The scroll area, then the rows sorted by id: app.command_palette, app.maximize_widget, app.open_help.
+[[step]]
+keys = ["tab", "tab", "tab", "tab"]
+
+[[step]]
+capture = "row-focused"
+checks = ["footer"]
+
+[[step]]
+keys = ["!"]
+
+[[step]]
+wait = { text = "Keybindings: exclamation_mark" }
+
+[[step]]
+capture = "captured"
+checks = ["footer"]
+
+# q and / are captured too, not Close or Search.
+[[step]]
+keys = ["q"]
+
+[[step]]
+wait = { text = "Keybindings: q" }
+
+[[step]]
+keys = ["/"]
+
+[[step]]
+wait = { text = "Keybindings: slash" }
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "Keybindings: ?" }
+
+[[step]]
+capture = "reset"
+checks = ["footer"]
+
+[[step]]
+keys = ["!"]
+
+[[step]]
+wait = { text = "Keybindings: exclamation_mark" }
+
+[[step]]
+keys = ["shift+tab", "shift+tab", "shift+tab", "shift+tab", "shift+tab", "shift+tab", "enter"]
+
+[[step]]
+wait = { text = "Settings updated" }
+
+[[step]]
+capture = "saved"
+checks = ["titles", "focus"]
+
+# ? no longer opens the panel; ! does.
+[[step]]
+keys = ["?"]
+
+[[step]]
+capture = "old-key"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["!"]
+
+[[step]]
+wait = { text = "Cursor up" }
+
+[[step]]
+capture = "new-key"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["!"]
+
+[[step]]
+wait = { gone = "Cursor up" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+[[step]]
+keys = ["right", "right"]
+
+[[step]]
+wait = { text = "Custom keybinding overrides" }
+
+[[step]]
+capture = "reopened"
+checks = ["footer"]
+
+[expect.row-focused]
+contains = ["Command Pallete: ctrl+p", "Maximize: M", "Keybindings: ?", "Quit: q"]
+footer = ["shift+⏎ Submit", "q Close", "/ Search"]
+
+[expect.captured]
+contains = ["Keybindings: exclamation_mark"]
+not_contains = ["Keybindings: ?"]
+
+[expect.reset]
+contains = ["Keybindings: ?"]
+
+[expect.saved]
+focused = ["[1] Repositories"]
+contains = ["Settings updated"]
+not_contains = ["LazyGithub Settings"]
+
+[expect.old-key]
+not_contains = ["Cursor up"]
+
+[expect.new-key]
+contains = ["Cursor up"]
+
+[expect.reopened]
+contains = ["Keybindings: exclamation_mark", "Command Pallete: ctrl+p"]

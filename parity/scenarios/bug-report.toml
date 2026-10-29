@@ -1,0 +1,82 @@
+version = 1
+description = "Open Bug Report (command palette): gizmo385/gh-lazy becomes the current repo and loads, and New issue opens with the bug-report template and the debug info in its description; then cancelled"
+# The template's library lines differ on purpose (decision debug-info-versions), so [expect] checks only the lines
+# both apps write. Captures ignore the Details box, whose tab underline Python sometimes draws zero-width (#209).
+gate = false
+parity_rows = [
+    "command-palette.open-bug-report",
+    "modals.debug-bug-report",
+    "modals.bug-report-template",
+]
+
+[env]
+# bug-report over base: gizmo385/gh-lazy's (empty) workflows and runs, which selecting the repo asks for.
+fixtures = ["bug-report", "base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "bug report"
+
+[[step]]
+wait = { text = "Open Bug Report" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Description" }
+
+[[step]]
+wait = { text = "Current repo: gizmo385/gh-lazy" }
+
+[[step]]
+wait = { text = "[4] Workflows (empty)" }
+
+# The modal's scroll area has focus, as when New issue opens with I.
+[[step]]
+capture = "open"
+checks = ["titles", "focus", "footer"]
+ignore = { boxes = ["Details"] }
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Description" }
+
+[[step]]
+capture = "cancelled"
+checks = ["titles", "headers", "rows", "cursor", "focus", "footer"]
+ignore = { boxes = ["Details"] }
+
+[expect.open]
+contains = [
+    "Current repo: gizmo385/gh-lazy",
+    "Title",
+    "Description",
+    "**Describe the bug**",
+    "**To Reproduce**",
+    "**Expected behavior**",
+    "**Installation Mechanism:** [Github CLI, nix, PyPi, etc]",
+    "**Debug Info:**",
+    "# Library Versions",
+    "- LazyGithub Version: ",
+    "# LazyGithub Config",
+    "Save",
+    "Cancel",
+]
+footer = ["shift+⏎ Submit", "q Close"]
+
+[expect.cancelled]
+not_contains = ["Description", "Traceback"]

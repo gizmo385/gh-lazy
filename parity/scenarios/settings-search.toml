@@ -1,0 +1,109 @@
+version = 1
+description = "Settings / search: the box opens above the tab strip with focus, Enter filters every tab's fields by fuzzy match on the field name (and Key Bindings rows by description or id), focus stays in the box, tab leaves it with the filter kept, and escape closes the modal"
+# The modal is loose text (see settings.toml).
+gate = false
+parity_rows = ["modals.settings-search", "keybindings.modal-search", "modals.settings-focus"]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+[[step]]
+keys = ["/"]
+
+[[step]]
+wait = { text = "Search settings..." }
+
+[[step]]
+capture = "search-open"
+checks = ["footer"]
+
+[[step]]
+type = "filter"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "Show Command Log" }
+
+[[step]]
+capture = "search-appearance"
+checks = ["footer"]
+
+# tab leaves the search box for the tab strip; the filter stays.
+[[step]]
+keys = ["tab", "right", "right", "right", "right"]
+
+[[step]]
+wait = { text = "Changes how pull requests are retrieved" }
+
+[[step]]
+capture = "search-pull-requests"
+checks = ["footer"]
+
+[[step]]
+keys = ["left", "left"]
+
+[[step]]
+wait = { text = "Custom keybinding overrides" }
+
+[[step]]
+capture = "search-key-bindings"
+checks = ["footer"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "LazyGithub Settings" }
+
+[[step]]
+capture = "closed"
+checks = ["titles", "focus", "footer"]
+
+[expect.search-open]
+contains = ["Search settings...", "Show Command Log:"]
+# The box types q, so the footer offers escape for Close.
+footer = ["shift+⏎ Submit", "esc Close", "/ Search"]
+
+[expect.search-appearance]
+contains = ["filter", "Settings focused on altering the appearance of LazyGithub"]
+not_contains = ["Theme:", "Show Command Log:", "Show Pull Requests:"]
+footer = ["shift+⏎ Submit", "esc Close", "/ Search"]
+
+[expect.search-pull-requests]
+contains = ["filter", "State Filter:", "Owner Filter:"]
+not_contains = ["Preferred Merge Method:", "Pull Request Template:"]
+
+[expect.search-key-bindings]
+contains = ["filter", "Filter Files: /"]
+not_contains = ["Command Pallete: ctrl+p"]
+
+[expect.closed]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
+focused = ["[1] Repositories"]
+not_contains = ["LazyGithub Settings"]

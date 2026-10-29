@@ -1,0 +1,142 @@
+version = 1
+description = "Command palette Theme command: a second palette (\"Search for themes…\") listing the 21 theme names sorted, no help lines, the first highlighted; moving the highlight changes nothing; escape keeps the theme; a query narrows the list and enter switches the theme for the session"
+# The theme list (one row per name) covers the Repositories box, so those captures don't check focus. Palette text is loose text (see command-palette.toml), checked per app with [expect]. After the switch the focus
+# color no longer matches parity/themes.toml's entry for the config's theme, so later captures compare titles only;
+# the new theme's colors are checked in the report's screens and by unit tests. Not saved to config.json (Py bug
+# B27), which is unit-tested.
+gate = false
+parity_rows = ["command-palette.theme"]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "theme"
+
+[[step]]
+wait = { text = "Change the current theme" }
+
+[[step]]
+capture = "query-theme"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Search for themes" }
+
+[[step]]
+capture = "themes"
+checks = ["titles"]
+
+# Moving the highlight doesn't preview anything.
+[[step]]
+keys = ["down", "down"]
+
+[[step]]
+capture = "moved"
+checks = ["titles"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "🔎" }
+
+[[step]]
+capture = "escaped"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "theme"
+
+[[step]]
+wait = { text = "Change the current theme" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Search for themes" }
+
+[[step]]
+type = "nor"
+
+[[step]]
+wait = { gone = "dracula" }
+
+[[step]]
+capture = "query-nor"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "🔎" }
+
+[[step]]
+capture = "switched"
+checks = ["titles"]
+
+[expect.query-theme]
+contains = ["🔎 theme", "Theme", "Change the current theme"]
+
+[expect.themes]
+contains = [
+    "Search for themes…",
+    "ansi-dark",
+    "ansi-light",
+    "atom-one-dark",
+    "atom-one-light",
+    "catppuccin-frappe",
+    "catppuccin-latte",
+    "catppuccin-macchiato",
+    "catppuccin-mocha",
+    "dracula",
+    "flexoki",
+    "gruvbox",
+    "monokai",
+    "nord",
+    "rose-pine",
+    "rose-pine-dawn",
+    "rose-pine-moon",
+    "solarized-dark",
+    "solarized-light",
+    "textual-dark",
+]
+not_contains = ["Change the current theme"]
+
+[expect.moved]
+contains = ["ansi-dark", "tokyo-night"]
+
+[expect.escaped]
+focused = ["[1] Repositories"]
+not_contains = ["Search for themes"]
+
+[expect.query-nor]
+contains = ["🔎 nor", "nord"]
+not_contains = ["dracula", "textual-dark"]
+
+[expect.switched]
+pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]
+not_contains = ["Search for themes"]

@@ -1,0 +1,884 @@
+{
+  "bug_report_template": "**Describe the bug**\n\n**To Reproduce**\n\n**Expected behavior**\n\n**Installation Mechanism:** [Github CLI, nix, PyPi, etc]\n\n**Debug Info:**\n{debug_info}\n\n**Additional context**",
+  "cases": [
+    {
+      "name": "version",
+      "args": [
+        "version"
+      ],
+      "config": null,
+      "cache_files": [],
+      "stdin": null,
+      "env": {},
+      "stdout": "LazyGithub version <VERSION>\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "dump-config-no-file",
+      "args": [
+        "dump-config"
+      ],
+      "config": null,
+      "cache_files": [],
+      "stdin": null,
+      "env": {},
+      "stdout": "Config file location: <HOME>/.config/lazy-github/config.json (exists => False)\n{\n  \"appearance\": {\n    \"theme\": \"textual-dark\",\n    \"show_command_log\": false,\n    \"show_workflows\": true,\n    \"show_issues\": true,\n    \"show_pull_requests\": true\n  },\n  \"notifications\": {\n    \"enabled\": false,\n    \"mark_notification_as_read_when_selected\": true\n  },\n  \"bindings\": {\n    \"overrides\": {}\n  },\n  \"repositories\": {\n    \"additional_repos_to_track\": [],\n    \"favorites\": []\n  },\n  \"pull_requests\": {\n    \"state_filter\": \"all\",\n    \"owner_filter\": \"all\",\n    \"preferred_merge_method\": \"squash\",\n    \"additional_suggested_pr_reviewers\": [],\n    \"preload_pull_request_for_current_commit\": false,\n    \"pull_request_template\": null\n  },\n  \"issues\": {\n    \"state_filter\": \"all\",\n    \"owner_filter\": \"all\"\n  },\n  \"cache\": {\n    \"auth_cache_duration\": 86400,\n    \"auth_last_checked\": null,\n    \"cache_directory\": \"<HOME>/.config/lazy-github/.cache\",\n    \"default_ttl\": 600,\n    \"list_repos_ttl\": 86400,\n    \"list_issues_ttl\": 3600\n  },\n  \"core\": {\n    \"first_start\": true,\n    \"logfile_path\": \"<HOME>/.config/lazy-github/lazy_github.log\",\n    \"logfile_max_bytes\": 5000000,\n    \"logfile_count\": 5\n  },\n  \"api\": {\n    \"base_url\": \"https://api.github.com\",\n    \"client_type\": \"RAW_HTTP\"\n  }\n}\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "dump-config-full",
+      "args": [
+        "dump-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord",
+          "show_command_log": true,
+          "show_workflows": false,
+          "show_issues": false,
+          "show_pull_requests": false
+        },
+        "notifications": {
+          "enabled": true,
+          "mark_notification_as_read_when_selected": false
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q",
+            "common.table.select": "enter,space"
+          }
+        },
+        "repositories": {
+          "additional_repos_to_track": [
+            "Textualize/textual",
+            "org/repo.with-chars_1"
+          ],
+          "favorites": [
+            "gizmo385/gh-lazy",
+            "gizmo385/dotfiles"
+          ]
+        },
+        "pull_requests": {
+          "state_filter": "open",
+          "owner_filter": "mine",
+          "preferred_merge_method": "rebase",
+          "additional_suggested_pr_reviewers": [
+            "octocat",
+            "hubot"
+          ],
+          "preload_pull_request_for_current_commit": true,
+          "pull_request_template": "/home/lazy/templates/pr.md"
+        },
+        "issues": {
+          "state_filter": "open",
+          "owner_filter": "mine"
+        },
+        "cache": {
+          "auth_cache_duration": 7200,
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "cache_directory": "/var/cache/lazy-github",
+          "default_ttl": 300,
+          "list_repos_ttl": 43200,
+          "list_issues_ttl": 1800
+        },
+        "core": {
+          "first_start": false,
+          "logfile_path": "<HOME>/.config/lazy-github/app.log",
+          "logfile_max_bytes": 1000000,
+          "logfile_count": 3
+        },
+        "api": {
+          "base_url": "https://github.example.com/api/v3",
+          "client_type": "GITHUB_CLI"
+        }
+      },
+      "cache_files": [],
+      "stdin": null,
+      "env": {},
+      "stdout": "Config file location: <HOME>/.config/lazy-github/config.json (exists => True)\n{\n  \"appearance\": {\n    \"theme\": \"nord\",\n    \"show_command_log\": true,\n    \"show_workflows\": false,\n    \"show_issues\": false,\n    \"show_pull_requests\": false\n  },\n  \"notifications\": {\n    \"enabled\": true,\n    \"mark_notification_as_read_when_selected\": false\n  },\n  \"bindings\": {\n    \"overrides\": {\n      \"app.quit\": \"ctrl+q\",\n      \"common.table.select\": \"enter,space\"\n    }\n  },\n  \"repositories\": {\n    \"additional_repos_to_track\": [\n      \"Textualize/textual\",\n      \"org/repo.with-chars_1\"\n    ],\n    \"favorites\": [\n      \"gizmo385/gh-lazy\",\n      \"gizmo385/dotfiles\"\n    ]\n  },\n  \"pull_requests\": {\n    \"state_filter\": \"open\",\n    \"owner_filter\": \"mine\",\n    \"preferred_merge_method\": \"rebase\",\n    \"additional_suggested_pr_reviewers\": [\n      \"octocat\",\n      \"hubot\"\n    ],\n    \"preload_pull_request_for_current_commit\": true,\n    \"pull_request_template\": \"/home/lazy/templates/pr.md\"\n  },\n  \"issues\": {\n    \"state_filter\": \"open\",\n    \"owner_filter\": \"mine\"\n  },\n  \"cache\": {\n    \"auth_cache_duration\": 7200,\n    \"auth_last_checked\": \"2026-10-24T18:30:05.123456\",\n    \"cache_directory\": \"/var/cache/lazy-github\",\n    \"default_ttl\": 300,\n    \"list_repos_ttl\": 43200,\n    \"list_issues_ttl\": 1800\n  },\n  \"core\": {\n    \"first_start\": false,\n    \"logfile_path\": \"<HOME>/.config/lazy-github/app.log\",\n    \"logfile_max_bytes\": 1000000,\n    \"logfile_count\": 3\n  },\n  \"api\": {\n    \"base_url\": \"https://github.example.com/api/v3\",\n    \"client_type\": \"GITHUB_CLI\"\n  }\n}\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": true,
+      "cache_exists_after": false
+    },
+    {
+      "name": "dump-config-tricky",
+      "args": [
+        "dump-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": null,
+      "env": {},
+      "stdout": "Config file location: <HOME>/.config/lazy-github/config.json (exists => True)\n{\n  \"appearance\": {\n    \"theme\": \"nord\",\n    \"show_command_log\": false,\n    \"show_workflows\": true,\n    \"show_issues\": true,\n    \"show_pull_requests\": true\n  },\n  \"notifications\": {\n    \"enabled\": false,\n    \"mark_notification_as_read_when_selected\": true\n  },\n  \"bindings\": {\n    \"overrides\": {\n      \"app.quit\": \"ctrl+q\"\n    }\n  },\n  \"repositories\": {\n    \"additional_repos_to_track\": [],\n    \"favorites\": [\n      \"owner/12\",\n      \"true/null\",\n      \"a{b}[c]\",\n      \"café/ünïcode\"\n    ]\n  },\n  \"pull_requests\": {\n    \"state_filter\": \"all\",\n    \"owner_filter\": \"all\",\n    \"preferred_merge_method\": \"squash\",\n    \"additional_suggested_pr_reviewers\": [],\n    \"preload_pull_request_for_current_commit\": false,\n    \"pull_request_template\": null\n  },\n  \"issues\": {\n    \"state_filter\": \"all\",\n    \"owner_filter\": \"all\"\n  },\n  \"cache\": {\n    \"auth_cache_duration\": 86400,\n    \"auth_last_checked\": \"2026-10-24T18:30:05.123456\",\n    \"cache_directory\": \"<HOME>/.config/lazy-github/.cache\",\n    \"default_ttl\": 0,\n    \"list_repos_ttl\": 86400,\n    \"list_issues_ttl\": 3600\n  },\n  \"core\": {\n    \"first_start\": true,\n    \"logfile_path\": \"<HOME>/.config/lazy-github/lazy_github.log\",\n    \"logfile_max_bytes\": 5000000,\n    \"logfile_count\": 5\n  },\n  \"api\": {\n    \"base_url\": \"https://api.github.com\",\n    \"client_type\": \"RAW_HTTP\"\n  }\n}\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": true,
+      "cache_exists_after": false
+    },
+    {
+      "name": "dump-config-color",
+      "args": [
+        "dump-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": null,
+      "env": {
+        "FORCE_COLOR": "1"
+      },
+      "stdout": "Config file location: <HOME>/.config/lazy-github/config.json (exists => True)\n\u001b[1m{\u001b[0m\n  \u001b[1;34m\"appearance\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1;34m\"theme\"\u001b[0m: \u001b[32m\"nord\"\u001b[0m,\n    \u001b[1;34m\"show_command_log\"\u001b[0m: \u001b[3;91mfalse\u001b[0m,\n    \u001b[1;34m\"show_workflows\"\u001b[0m: \u001b[3;92mtrue\u001b[0m,\n    \u001b[1;34m\"show_issues\"\u001b[0m: \u001b[3;92mtrue\u001b[0m,\n    \u001b[1;34m\"show_pull_requests\"\u001b[0m: \u001b[3;92mtrue\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1;34m\"notifications\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1;34m\"enabled\"\u001b[0m: \u001b[3;91mfalse\u001b[0m,\n    \u001b[1;34m\"mark_notification_as_read_when_selected\"\u001b[0m: \u001b[3;92mtrue\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1;34m\"bindings\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1;34m\"overrides\"\u001b[0m: \u001b[1m{\u001b[0m\n      \u001b[1;34m\"app.quit\"\u001b[0m: \u001b[32m\"ctrl+q\"\u001b[0m\n    \u001b[1m}\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1;34m\"repositories\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1;34m\"additional_repos_to_track\"\u001b[0m: \u001b[1m[\u001b[0m\u001b[1m]\u001b[0m,\n    \u001b[1;34m\"favorites\"\u001b[0m: \u001b[1m[\u001b[0m\n      \u001b[32m\"owner/12\"\u001b[0m,\n      \u001b[32m\"true/null\"\u001b[0m,\n      \u001b[32m\"a{b}[c]\"\u001b[0m,\n      \u001b[32m\"café/ünïcode\"\u001b[0m\n    \u001b[1m]\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1;34m\"pull_requests\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1;34m\"state_filter\"\u001b[0m: \u001b[32m\"all\"\u001b[0m,\n    \u001b[1;34m\"owner_filter\"\u001b[0m: \u001b[32m\"all\"\u001b[0m,\n    \u001b[1;34m\"preferred_merge_method\"\u001b[0m: \u001b[32m\"squash\"\u001b[0m,\n    \u001b[1;34m\"additional_suggested_pr_reviewers\"\u001b[0m: \u001b[1m[\u001b[0m\u001b[1m]\u001b[0m,\n    \u001b[1;34m\"preload_pull_request_for_current_commit\"\u001b[0m: \u001b[3;91mfalse\u001b[0m,\n    \u001b[1;34m\"pull_request_template\"\u001b[0m: \u001b[3;35mnull\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1;34m\"issues\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1;34m\"state_filter\"\u001b[0m: \u001b[32m\"all\"\u001b[0m,\n    \u001b[1;34m\"owner_filter\"\u001b[0m: \u001b[32m\"all\"\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1;34m\"cache\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1;34m\"auth_cache_duration\"\u001b[0m: \u001b[1;36m86400\u001b[0m,\n    \u001b[1;34m\"auth_last_checked\"\u001b[0m: \u001b[32m\"2026-10-24T18:30:05.123456\"\u001b[0m,\n    \u001b[1;34m\"cache_directory\"\u001b[0m: \u001b[32m\"<HOME>/.config/lazy-github/.cache\"\u001b[0m,\n    \u001b[1;34m\"default_ttl\"\u001b[0m: \u001b[1;36m0\u001b[0m,\n    \u001b[1;34m\"list_repos_ttl\"\u001b[0m: \u001b[1;36m86400\u001b[0m,\n    \u001b[1;34m\"list_issues_ttl\"\u001b[0m: \u001b[1;36m3600\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1;34m\"core\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1;34m\"first_start\"\u001b[0m: \u001b[3;92mtrue\u001b[0m,\n    \u001b[1;34m\"logfile_path\"\u001b[0m: \u001b[32m\"<HOME>/.config/lazy-github/lazy_github.log\"\u001b[0m,\n    \u001b[1;34m\"logfile_max_bytes\"\u001b[0m: \u001b[1;36m5000000\u001b[0m,\n    \u001b[1;34m\"logfile_count\"\u001b[0m: \u001b[1;36m5\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1;34m\"api\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1;34m\"base_url\"\u001b[0m: \u001b[32m\"https://api.github.com\"\u001b[0m,\n    \u001b[1;34m\"client_type\"\u001b[0m: \u001b[32m\"RAW_HTTP\"\u001b[0m\n  \u001b[1m}\u001b[0m\n\u001b[1m}\u001b[0m\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": true,
+      "cache_exists_after": false
+    },
+    {
+      "name": "dump-config-color-no-color",
+      "args": [
+        "dump-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": null,
+      "env": {
+        "FORCE_COLOR": "1",
+        "NO_COLOR": "1"
+      },
+      "stdout": "Config file location: <HOME>/.config/lazy-github/config.json (exists => True)\n\u001b[1m{\u001b[0m\n  \u001b[1m\"appearance\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1m\"theme\"\u001b[0m: \"nord\",\n    \u001b[1m\"show_command_log\"\u001b[0m: \u001b[3mfalse\u001b[0m,\n    \u001b[1m\"show_workflows\"\u001b[0m: \u001b[3mtrue\u001b[0m,\n    \u001b[1m\"show_issues\"\u001b[0m: \u001b[3mtrue\u001b[0m,\n    \u001b[1m\"show_pull_requests\"\u001b[0m: \u001b[3mtrue\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1m\"notifications\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1m\"enabled\"\u001b[0m: \u001b[3mfalse\u001b[0m,\n    \u001b[1m\"mark_notification_as_read_when_selected\"\u001b[0m: \u001b[3mtrue\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1m\"bindings\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1m\"overrides\"\u001b[0m: \u001b[1m{\u001b[0m\n      \u001b[1m\"app.quit\"\u001b[0m: \"ctrl+q\"\n    \u001b[1m}\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1m\"repositories\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1m\"additional_repos_to_track\"\u001b[0m: \u001b[1m[\u001b[0m\u001b[1m]\u001b[0m,\n    \u001b[1m\"favorites\"\u001b[0m: \u001b[1m[\u001b[0m\n      \"owner/12\",\n      \"true/null\",\n      \"a{b}[c]\",\n      \"café/ünïcode\"\n    \u001b[1m]\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1m\"pull_requests\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1m\"state_filter\"\u001b[0m: \"all\",\n    \u001b[1m\"owner_filter\"\u001b[0m: \"all\",\n    \u001b[1m\"preferred_merge_method\"\u001b[0m: \"squash\",\n    \u001b[1m\"additional_suggested_pr_reviewers\"\u001b[0m: \u001b[1m[\u001b[0m\u001b[1m]\u001b[0m,\n    \u001b[1m\"preload_pull_request_for_current_commit\"\u001b[0m: \u001b[3mfalse\u001b[0m,\n    \u001b[1m\"pull_request_template\"\u001b[0m: \u001b[3mnull\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1m\"issues\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1m\"state_filter\"\u001b[0m: \"all\",\n    \u001b[1m\"owner_filter\"\u001b[0m: \"all\"\n  \u001b[1m}\u001b[0m,\n  \u001b[1m\"cache\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1m\"auth_cache_duration\"\u001b[0m: \u001b[1m86400\u001b[0m,\n    \u001b[1m\"auth_last_checked\"\u001b[0m: \"2026-10-24T18:30:05.123456\",\n    \u001b[1m\"cache_directory\"\u001b[0m: \"<HOME>/.config/lazy-github/.cache\",\n    \u001b[1m\"default_ttl\"\u001b[0m: \u001b[1m0\u001b[0m,\n    \u001b[1m\"list_repos_ttl\"\u001b[0m: \u001b[1m86400\u001b[0m,\n    \u001b[1m\"list_issues_ttl\"\u001b[0m: \u001b[1m3600\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1m\"core\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1m\"first_start\"\u001b[0m: \u001b[3mtrue\u001b[0m,\n    \u001b[1m\"logfile_path\"\u001b[0m: \"<HOME>/.config/lazy-github/lazy_github.log\",\n    \u001b[1m\"logfile_max_bytes\"\u001b[0m: \u001b[1m5000000\u001b[0m,\n    \u001b[1m\"logfile_count\"\u001b[0m: \u001b[1m5\u001b[0m\n  \u001b[1m}\u001b[0m,\n  \u001b[1m\"api\"\u001b[0m: \u001b[1m{\u001b[0m\n    \u001b[1m\"base_url\"\u001b[0m: \"https://api.github.com\",\n    \u001b[1m\"client_type\"\u001b[0m: \"RAW_HTTP\"\n  \u001b[1m}\u001b[0m\n\u001b[1m}\u001b[0m\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": true,
+      "cache_exists_after": false
+    },
+    {
+      "name": "debug-no-file",
+      "args": [
+        "debug"
+      ],
+      "config": null,
+      "cache_files": [],
+      "stdin": null,
+      "env": {},
+      "stdout": "# Library Versions\n\n- LazyGithub Version: <VERSION>\n- Textual Version: 8.2.5\n- Click Version: 8.3.3\n- Httpx Version: 0.28.1\n- Hishel Version: 0.1.5\n- Pydantic Version: 2.13.3\n\n# LazyGithub Config\n\n```json\n{\n    \"appearance\": {\n        \"theme\": \"textual-dark\",\n        \"show_command_log\": false,\n        \"show_workflows\": true,\n        \"show_issues\": true,\n        \"show_pull_requests\": true\n    },\n    \"notifications\": {\n        \"enabled\": false,\n        \"mark_notification_as_read_when_selected\": true\n    },\n    \"bindings\": {\n        \"overrides\": {}\n    },\n    \"repositories\": {\n        \"additional_repos_to_track\": [],\n        \"favorites\": []\n    },\n    \"pull_requests\": {\n        \"state_filter\": \"all\",\n        \"owner_filter\": \"all\",\n        \"preferred_merge_method\": \"squash\",\n        \"additional_suggested_pr_reviewers\": [],\n        \"preload_pull_request_for_current_commit\": false,\n        \"pull_request_template\": null\n    },\n    \"issues\": {\n        \"state_filter\": \"all\",\n        \"owner_filter\": \"all\"\n    },\n    \"cache\": {\n        \"auth_cache_duration\": 86400,\n        \"auth_last_checked\": null,\n        \"cache_directory\": \"<HOME>/.config/lazy-github/.cache\",\n        \"default_ttl\": 600,\n        \"list_repos_ttl\": 86400,\n        \"list_issues_ttl\": 3600\n    },\n    \"core\": {\n        \"first_start\": true,\n        \"logfile_path\": \"<HOME>/.config/lazy-github/lazy_github.log\",\n        \"logfile_max_bytes\": 5000000,\n        \"logfile_count\": 5\n    },\n    \"api\": {\n        \"base_url\": \"https://api.github.com\",\n        \"client_type\": \"RAW_HTTP\"\n    }\n}\n```\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "debug-full",
+      "args": [
+        "debug"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord",
+          "show_command_log": true,
+          "show_workflows": false,
+          "show_issues": false,
+          "show_pull_requests": false
+        },
+        "notifications": {
+          "enabled": true,
+          "mark_notification_as_read_when_selected": false
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q",
+            "common.table.select": "enter,space"
+          }
+        },
+        "repositories": {
+          "additional_repos_to_track": [
+            "Textualize/textual",
+            "org/repo.with-chars_1"
+          ],
+          "favorites": [
+            "gizmo385/gh-lazy",
+            "gizmo385/dotfiles"
+          ]
+        },
+        "pull_requests": {
+          "state_filter": "open",
+          "owner_filter": "mine",
+          "preferred_merge_method": "rebase",
+          "additional_suggested_pr_reviewers": [
+            "octocat",
+            "hubot"
+          ],
+          "preload_pull_request_for_current_commit": true,
+          "pull_request_template": "/home/lazy/templates/pr.md"
+        },
+        "issues": {
+          "state_filter": "open",
+          "owner_filter": "mine"
+        },
+        "cache": {
+          "auth_cache_duration": 7200,
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "cache_directory": "/var/cache/lazy-github",
+          "default_ttl": 300,
+          "list_repos_ttl": 43200,
+          "list_issues_ttl": 1800
+        },
+        "core": {
+          "first_start": false,
+          "logfile_path": "<HOME>/.config/lazy-github/app.log",
+          "logfile_max_bytes": 1000000,
+          "logfile_count": 3
+        },
+        "api": {
+          "base_url": "https://github.example.com/api/v3",
+          "client_type": "GITHUB_CLI"
+        }
+      },
+      "cache_files": [],
+      "stdin": null,
+      "env": {},
+      "stdout": "# Library Versions\n\n- LazyGithub Version: <VERSION>\n- Textual Version: 8.2.5\n- Click Version: 8.3.3\n- Httpx Version: 0.28.1\n- Hishel Version: 0.1.5\n- Pydantic Version: 2.13.3\n\n# LazyGithub Config\n\n```json\n{\n    \"appearance\": {\n        \"theme\": \"nord\",\n        \"show_command_log\": true,\n        \"show_workflows\": false,\n        \"show_issues\": false,\n        \"show_pull_requests\": false\n    },\n    \"notifications\": {\n        \"enabled\": true,\n        \"mark_notification_as_read_when_selected\": false\n    },\n    \"bindings\": {\n        \"overrides\": {\n            \"app.quit\": \"ctrl+q\",\n            \"common.table.select\": \"enter,space\"\n        }\n    },\n    \"repositories\": {\n        \"additional_repos_to_track\": [\n            \"Textualize/textual\",\n            \"org/repo.with-chars_1\"\n        ],\n        \"favorites\": [\n            \"gizmo385/gh-lazy\",\n            \"gizmo385/dotfiles\"\n        ]\n    },\n    \"pull_requests\": {\n        \"state_filter\": \"open\",\n        \"owner_filter\": \"mine\",\n        \"preferred_merge_method\": \"rebase\",\n        \"additional_suggested_pr_reviewers\": [\n            \"octocat\",\n            \"hubot\"\n        ],\n        \"preload_pull_request_for_current_commit\": true,\n        \"pull_request_template\": \"/home/lazy/templates/pr.md\"\n    },\n    \"issues\": {\n        \"state_filter\": \"open\",\n        \"owner_filter\": \"mine\"\n    },\n    \"cache\": {\n        \"auth_cache_duration\": 7200,\n        \"auth_last_checked\": \"2026-10-24T18:30:05.123456\",\n        \"cache_directory\": \"/var/cache/lazy-github\",\n        \"default_ttl\": 300,\n        \"list_repos_ttl\": 43200,\n        \"list_issues_ttl\": 1800\n    },\n    \"core\": {\n        \"first_start\": false,\n        \"logfile_path\": \"<HOME>/.config/lazy-github/app.log\",\n        \"logfile_max_bytes\": 1000000,\n        \"logfile_count\": 3\n    },\n    \"api\": {\n        \"base_url\": \"https://github.example.com/api/v3\",\n        \"client_type\": \"GITHUB_CLI\"\n    }\n}\n```\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": true,
+      "cache_exists_after": false
+    },
+    {
+      "name": "debug-tricky",
+      "args": [
+        "debug"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": null,
+      "env": {},
+      "stdout": "# Library Versions\n\n- LazyGithub Version: <VERSION>\n- Textual Version: 8.2.5\n- Click Version: 8.3.3\n- Httpx Version: 0.28.1\n- Hishel Version: 0.1.5\n- Pydantic Version: 2.13.3\n\n# LazyGithub Config\n\n```json\n{\n    \"appearance\": {\n        \"theme\": \"nord\",\n        \"show_command_log\": false,\n        \"show_workflows\": true,\n        \"show_issues\": true,\n        \"show_pull_requests\": true\n    },\n    \"notifications\": {\n        \"enabled\": false,\n        \"mark_notification_as_read_when_selected\": true\n    },\n    \"bindings\": {\n        \"overrides\": {\n            \"app.quit\": \"ctrl+q\"\n        }\n    },\n    \"repositories\": {\n        \"additional_repos_to_track\": [],\n        \"favorites\": [\n            \"owner/12\",\n            \"true/null\",\n            \"a{b}[c]\",\n            \"café/ünïcode\"\n        ]\n    },\n    \"pull_requests\": {\n        \"state_filter\": \"all\",\n        \"owner_filter\": \"all\",\n        \"preferred_merge_method\": \"squash\",\n        \"additional_suggested_pr_reviewers\": [],\n        \"preload_pull_request_for_current_commit\": false,\n        \"pull_request_template\": null\n    },\n    \"issues\": {\n        \"state_filter\": \"all\",\n        \"owner_filter\": \"all\"\n    },\n    \"cache\": {\n        \"auth_cache_duration\": 86400,\n        \"auth_last_checked\": \"2026-10-24T18:30:05.123456\",\n        \"cache_directory\": \"<HOME>/.config/lazy-github/.cache\",\n        \"default_ttl\": 0,\n        \"list_repos_ttl\": 86400,\n        \"list_issues_ttl\": 3600\n    },\n    \"core\": {\n        \"first_start\": true,\n        \"logfile_path\": \"<HOME>/.config/lazy-github/lazy_github.log\",\n        \"logfile_max_bytes\": 5000000,\n        \"logfile_count\": 5\n    },\n    \"api\": {\n        \"base_url\": \"https://api.github.com\",\n        \"client_type\": \"RAW_HTTP\"\n    }\n}\n```\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": true,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-config-no-confirm",
+      "args": [
+        "clear-config",
+        "--no-confirm"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": null,
+      "env": {},
+      "stdout": "Your settings have been cleared\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-config-no-confirm-no-file",
+      "args": [
+        "clear-config",
+        "--no-confirm"
+      ],
+      "config": null,
+      "cache_files": [],
+      "stdin": null,
+      "env": {},
+      "stdout": "Your settings have been cleared\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-config-yes",
+      "args": [
+        "clear-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": "y\n",
+      "env": {},
+      "stdout": "Confirm deletion your LazyGithub settings [y/N]: Your settings have been cleared\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-config-yes-word",
+      "args": [
+        "clear-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": "YES\n",
+      "env": {},
+      "stdout": "Confirm deletion your LazyGithub settings [y/N]: Your settings have been cleared\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-config-no",
+      "args": [
+        "clear-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": "n\n",
+      "env": {},
+      "stdout": "Confirm deletion your LazyGithub settings [y/N]: Canceling\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": true,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-config-no-word",
+      "args": [
+        "clear-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": " No \n",
+      "env": {},
+      "stdout": "Confirm deletion your LazyGithub settings [y/N]: Canceling\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": true,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-config-empty-answer",
+      "args": [
+        "clear-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": "\n",
+      "env": {},
+      "stdout": "Confirm deletion your LazyGithub settings [y/N]: Canceling\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": true,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-config-eof",
+      "args": [
+        "clear-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": null,
+      "env": {},
+      "stdout": "Confirm deletion your LazyGithub settings [y/N]: ",
+      "stderr": "Aborted!\n",
+      "exit_code": 1,
+      "config_exists_after": true,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-config-eof-after-text",
+      "args": [
+        "clear-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": "y",
+      "env": {},
+      "stdout": "Confirm deletion your LazyGithub settings [y/N]: Your settings have been cleared\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-config-invalid-then-yes",
+      "args": [
+        "clear-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": "maybe\ny\n",
+      "env": {},
+      "stdout": "Confirm deletion your LazyGithub settings [y/N]: Error: invalid input\nConfirm deletion your LazyGithub settings [y/N]: Your settings have been cleared\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-config-invalid-then-eof",
+      "args": [
+        "clear-config"
+      ],
+      "config": {
+        "appearance": {
+          "theme": "nord"
+        },
+        "repositories": {
+          "favorites": [
+            "owner/12",
+            "true/null",
+            "a{b}[c]",
+            "café/ünïcode"
+          ]
+        },
+        "bindings": {
+          "overrides": {
+            "app.quit": "ctrl+q"
+          }
+        },
+        "cache": {
+          "auth_last_checked": "2026-10-24T18:30:05.123456",
+          "default_ttl": 0
+        }
+      },
+      "cache_files": [],
+      "stdin": "maybe\n",
+      "env": {},
+      "stdout": "Confirm deletion your LazyGithub settings [y/N]: Error: invalid input\nConfirm deletion your LazyGithub settings [y/N]: ",
+      "stderr": "Aborted!\n",
+      "exit_code": 1,
+      "config_exists_after": true,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-config-yes-no-file",
+      "args": [
+        "clear-config"
+      ],
+      "config": null,
+      "cache_files": [],
+      "stdin": "y\n",
+      "env": {},
+      "stdout": "Confirm deletion your LazyGithub settings [y/N]: Your settings have been cleared\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-cache-no-confirm",
+      "args": [
+        "clear-cache",
+        "--no-confirm"
+      ],
+      "config": null,
+      "cache_files": [
+        "a.json",
+        "sub/b.json"
+      ],
+      "stdin": null,
+      "env": {},
+      "stdout": "Cache cleared\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-cache-no-confirm-no-dir",
+      "args": [
+        "clear-cache",
+        "--no-confirm"
+      ],
+      "config": null,
+      "cache_files": [],
+      "stdin": null,
+      "env": {},
+      "stdout": "Cache cleared\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-cache-yes",
+      "args": [
+        "clear-cache"
+      ],
+      "config": null,
+      "cache_files": [
+        "a.json"
+      ],
+      "stdin": "y\n",
+      "env": {},
+      "stdout": "Confirm deletion of everything in <HOME>/.config/lazy-github/.cache [y/N]: Cache cleared\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": false
+    },
+    {
+      "name": "clear-cache-no",
+      "args": [
+        "clear-cache"
+      ],
+      "config": null,
+      "cache_files": [
+        "a.json"
+      ],
+      "stdin": "n\n",
+      "env": {},
+      "stdout": "Confirm deletion of everything in <HOME>/.config/lazy-github/.cache [y/N]: Canceling cache deletion\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": true
+    },
+    {
+      "name": "clear-cache-empty-answer",
+      "args": [
+        "clear-cache"
+      ],
+      "config": null,
+      "cache_files": [
+        "a.json"
+      ],
+      "stdin": "\n",
+      "env": {},
+      "stdout": "Confirm deletion of everything in <HOME>/.config/lazy-github/.cache [y/N]: Canceling cache deletion\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": true
+    },
+    {
+      "name": "clear-cache-eof",
+      "args": [
+        "clear-cache"
+      ],
+      "config": null,
+      "cache_files": [
+        "a.json"
+      ],
+      "stdin": null,
+      "env": {},
+      "stdout": "Confirm deletion of everything in <HOME>/.config/lazy-github/.cache [y/N]: ",
+      "stderr": "Aborted!\n",
+      "exit_code": 1,
+      "config_exists_after": false,
+      "cache_exists_after": true
+    },
+    {
+      "name": "clear-cache-invalid-then-no",
+      "args": [
+        "clear-cache"
+      ],
+      "config": null,
+      "cache_files": [
+        "a.json"
+      ],
+      "stdin": "x\nn\n",
+      "env": {},
+      "stdout": "Confirm deletion of everything in <HOME>/.config/lazy-github/.cache [y/N]: Error: invalid input\nConfirm deletion of everything in <HOME>/.config/lazy-github/.cache [y/N]: Canceling cache deletion\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": false,
+      "cache_exists_after": true
+    },
+    {
+      "name": "clear-cache-configured-dir",
+      "args": [
+        "clear-cache"
+      ],
+      "config": {
+        "cache": {
+          "cache_directory": "<HOME>/elsewhere"
+        }
+      },
+      "cache_files": [
+        "a.json"
+      ],
+      "stdin": "y\n",
+      "env": {},
+      "stdout": "Confirm deletion of everything in <HOME>/elsewhere [y/N]: Cache cleared\n",
+      "stderr": "",
+      "exit_code": 0,
+      "config_exists_after": true,
+      "cache_exists_after": false
+    }
+  ]
+}

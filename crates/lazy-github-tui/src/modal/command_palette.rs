@@ -23,6 +23,7 @@ use crate::components::text_input::{INPUT_BINDINGS, InputOutcome, TextInput};
 use crate::effect::{Effect, TimerId};
 use crate::fuzzy::fuzzy_match;
 use crate::keymap::{BindingId, KeyChord, Keymap};
+use crate::screens::main::Toggle;
 use crate::theme::{Paint, TextStyle, Theme, ThemeColor};
 
 /// The palette's screen bindings, in Textual's merged order: the modal screen's, then `CommandPalette.BINDINGS`.
@@ -77,9 +78,13 @@ const DIM_ALPHA: f64 = 0.66;
 const INPUT_RULE_ALPHA: f64 = 0.5;
 
 /// What running a palette command does. The opener turns it into an [`Action`] with [`PaletteRun::action`] once
-/// the palette has closed. #301 adds LazyGithub's commands, and #192, #193 and #195 theirs.
+/// the palette has closed. #192, #193 and #195 add theirs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PaletteRun {
+    /// "Toggle Command Log", "Toggle Workflows", "Toggle Issues", "Toggle Pull Requests".
+    Toggle(Toggle),
+    /// "Refresh notifications": the poll's refresh, now.
+    RefreshNotifications,
     /// "Keys": open the help panel, or close it, as `?` does.
     ToggleHelp,
     /// "Maximize": maximize the focused widget as `M` does, without the one-time toast.
@@ -94,6 +99,8 @@ impl PaletteRun {
     /// The action that runs it on the main screen.
     pub fn action(self) -> Action {
         match self {
+            PaletteRun::Toggle(toggle) => Action::Toggle(toggle),
+            PaletteRun::RefreshNotifications => Action::RefreshNotifications,
             PaletteRun::ToggleHelp => Action::ToggleHelp,
             PaletteRun::Maximize => Action::Maximize { toast: false },
             PaletteRun::Minimize => Action::Minimize,

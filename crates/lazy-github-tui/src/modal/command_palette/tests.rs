@@ -88,6 +88,19 @@ fn many() -> Vec<PaletteCommand> {
         .collect()
 }
 
+/// LazyGithub's toggles, as the opening list ends with them.
+const TOGGLES: [&str; 4] = [
+    "Toggle Command Log",
+    "Toggle Workflows",
+    "Toggle Issues",
+    "Toggle Pull Requests",
+];
+
+/// The opening list: `system` sorted by name, then [`TOGGLES`] (Py bug B87's answer).
+fn opening(system: &[&'static str]) -> Vec<&'static str> {
+    system.iter().copied().chain(TOGGLES).collect()
+}
+
 fn styled(app: &mut TestApp) -> String {
     buffer_to_styled_string(&app.render(160, 48))
 }
@@ -97,7 +110,7 @@ fn styled(app: &mut TestApp) -> String {
 #[test]
 fn ctrl_p_opens_the_palette_with_the_input_focused() {
     let mut app = opened();
-    assert_eq!(hits(&app), ["Keys", "Maximize", "Quit"]);
+    assert_eq!(hits(&app), opening(&["Keys", "Maximize", "Quit"]));
     assert_eq!(highlighted(&app), Some("Keys"));
     // The input takes printable keys, `q` and `?` included.
     type_text(&mut app, "q?1");
@@ -152,7 +165,7 @@ fn keys_says_whether_it_shows_or_hides_the_help_panel() {
 fn maximize_is_offered_when_m_would_maximize_and_minimize_while_maximized() {
     let mut app = TestApp::new(Config::default());
     app.press(&["M", "ctrl+p"]);
-    assert_eq!(hits(&app), ["Keys", "Minimize", "Quit"]);
+    assert_eq!(hits(&app), opening(&["Keys", "Minimize", "Quit"]));
     assert_eq!(help_texts(&app)[1], "Minimize the widget and restore to normal size");
 
     // `M` does nothing in the details content, so neither is offered.
@@ -163,7 +176,122 @@ fn maximize_is_offered_when_m_would_maximize_and_minimize_while_maximized() {
         Some(FocusTarget::DetailsContent)
     );
     app.press(&["ctrl+p"]);
-    assert_eq!(hits(&app), ["Keys", "Quit"]);
+    assert_eq!(hits(&app), opening(&["Keys", "Quit"]));
+}
+
+#[test]
+fn lazygithubs_commands_are_in_their_order_before_the_system_ones() {
+    let app = opened();
+    let palette = palette(&app).expect("the palette is open");
+    let names: Vec<_> = palette.commands.iter().map(|c| (c.name, c.source)).collect();
+    assert_eq!(
+        names,
+        [
+            ("Toggle Command Log", CommandSource::App),
+            ("Toggle Workflows", CommandSource::App),
+            ("Toggle Issues", CommandSource::App),
+            ("Toggle Pull Requests", CommandSource::App),
+            ("Quit", CommandSource::System),
+            ("Keys", CommandSource::System),
+            ("Maximize", CommandSource::System),
+        ]
+    );
+    let helps: Vec<_> = palette.commands[..4].iter().map(|c| c.help).collect();
+    assert_eq!(
+        helps,
+        [
+            "Toggle showing or hiding the command log",
+            "Toggle showing or hiding repo actions",
+            "Toggle showing or hiding repo issues",
+            "Toggle showing or hiding repo pull requests",
+        ]
+    );
+}
+
+#[test]
+fn tog_lists_the_four_toggles_and_lazygithubs_win_ties() {
+    let mut app = opened();
+    type_text(&mut app, "tog");
+    assert_eq!(hits(&app), TOGGLES);
+    // Every query's hits are best first, and on equal scores LazyGithub's come first (Py bug B86's answer).
+    for query in ["t", "i", "o", "e", "s", "m"] {
+        app.press(&["ctrl+u"]);
+        type_text(&mut app, query);
+        let palette = palette(&app).expect("the palette is open");
+        let order: Vec<(f64, bool)> = palette
+            .hits
+            .iter()
+            .map(|hit| {
+                let command = &palette.commands[hit.command];
+                let score = fuzzy_match(query, command.name).expect("a hit matches").score;
+                (score, command.source == CommandSource::System)
+            })
+            .collect();
+        assert!(
+            order
+                .windows(2)
+                .all(|w| w[0].0.total_cmp(&w[1].0).then(w[1].1.cmp(&w[0].1)).is_ge()),
+            "{query}: {order:?}"
+        );
+    }
+}
+
+#[test]
+fn refresh_notifications_is_listed_only_while_notifications_are_on() {
+    let mut app = opened();
+    type_text(&mut app, "ref");
+    assert!(hits(&app).is_empty());
+    app.advance(Duration::from_secs(1));
+    assert!(palette(&app).is_some_and(CommandPaletteDialog::shows_no_matches));
+
+    let mut config = Config::default();
+    config.notifications.enabled = true;
+    let mut app = TestApp::new(config);
+    futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once");
+    app.press(&["ctrl+p"]);
+    // Last among LazyGithub's, after the system commands in the opening list.
+    assert_eq!(hits(&app).last(), Some(&"Refresh notifications"));
+    type_text(&mut app, "ref");
+    assert_eq!(hits(&app), ["Refresh notifications"]);
+    assert_eq!(help_texts(&app), ["Refresh the unread notifications count"]);
+    let checks = |app: &TestApp| {
+        app.effects()
+            .iter()
+            .filter(|effect| {
+                matches!(
+                    effect,
+                    Effect::Github {
+                        request: crate::effect::GithubRequest::CheckAuth,
+                        ..
+                    }
+                )
+            })
+            .count()
+    };
+    let before = checks(&app);
+    app.press(&["enter"]);
+    assert!(app.app().modals().is_empty());
+    assert_eq!(checks(&app), before + 1);
+    assert!(app.app().notifications_refreshing());
+}
+
+#[test]
+fn a_toggle_runs_on_the_main_screen() {
+    let mut app = opened();
+    type_text(&mut app, "toggle issues");
+    assert_eq!(highlighted(&app), Some("Toggle Issues"));
+    app.press(&["enter"]);
+    assert!(app.app().modals().is_empty());
+    let main = app.app().main_screen().expect("on the main screen");
+    assert!(!main.section(SectionId::Issues).shown());
+    app.press(&["ctrl+p"]);
+    type_text(&mut app, "command log");
+    app.press(&["enter"]);
+    assert!(
+        app.app()
+            .main_screen()
+            .is_some_and(|main| main.command_log().is_visible())
+    );
 }
 
 // Search.
@@ -220,7 +348,7 @@ fn the_query_is_stripped_and_a_blank_one_lists_everything() {
     assert_eq!(hits(&app), ["Keys"]);
     app.press(&["ctrl+u"]);
     type_text(&mut app, "   ");
-    assert_eq!(hits(&app), ["Keys", "Maximize", "Quit"]);
+    assert_eq!(hits(&app), opening(&["Keys", "Maximize", "Quit"]));
     // A blank query never says it found nothing.
     app.advance(Duration::from_secs(1));
     assert!(!palette(&app).is_some_and(CommandPaletteDialog::shows_no_matches));
@@ -266,7 +394,7 @@ fn no_matches_isnt_shown_once_the_query_finds_something_again() {
     let mut app = opened();
     type_text(&mut app, "kz");
     app.press(&["backspace"]);
-    assert_eq!(hits(&app), ["Keys"]);
+    assert_eq!(hits(&app), ["Keys", "Toggle Workflows"]);
     app.advance(Duration::from_secs(1));
     assert!(!palette(&app).is_some_and(CommandPaletteDialog::shows_no_matches));
     assert!(app.effects().contains(&Effect::CancelTimer(TimerId::PaletteNoMatches)));
@@ -288,10 +416,10 @@ fn up_and_down_wrap() {
     let mut app = opened();
     app.press(&["down"]);
     assert_eq!(highlighted(&app), Some("Maximize"));
-    app.press(&["down", "down"]);
+    app.press(&["down"; 6]);
     assert_eq!(highlighted(&app), Some("Keys"));
     app.press(&["up"]);
-    assert_eq!(highlighted(&app), Some("Quit"));
+    assert_eq!(highlighted(&app), Some("Toggle Pull Requests"));
 }
 
 #[test]
@@ -355,7 +483,7 @@ fn enter_runs_the_highlighted_hit_after_the_palette_closes() {
     let mut app = with_commands(many());
     app.press(&["down", "enter"]);
     assert_eq!(app.app().modals(), [ModalKind::CommandPalette]);
-    assert_eq!(hits(&app), ["Keys", "Maximize", "Quit"]);
+    assert_eq!(hits(&app), opening(&["Keys", "Maximize", "Quit"]));
 }
 
 #[test]

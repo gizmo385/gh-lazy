@@ -150,6 +150,12 @@ impl<S: ListSource> ListSection<S> {
         self.repo = Some(repo.clone());
     }
 
+    /// The rows' pages and cache file are now `repo`'s, without clearing them: the palette's reload, where the first
+    /// page then replaces the rows.
+    pub(super) fn retarget(&mut self, repo: &Repository) {
+        self.repo = Some(repo.clone());
+    }
+
     /// Takes the result of the section's cache read, and hands back any other.
     ///
     /// Python's `initialize_from_cache`: the cached rows go in under the overlay. Python restores before it fetches;

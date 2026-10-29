@@ -201,9 +201,8 @@ fn a_section_hidden_by_config_still_takes_focus() {
 #[test]
 fn a_section_hidden_by_toggle_ignores_its_key_but_workflows_does_not() {
     let mut app = TestApp::new(Config::default());
-    let main = app.app_mut().main_screen_mut().unwrap();
-    main.set_hidden_by_toggle(SectionId::PullRequests, true);
-    main.set_hidden_by_toggle(SectionId::Workflows, true);
+    app.dispatch(Action::Toggle(Toggle::PullRequests));
+    app.dispatch(Action::Toggle(Toggle::Workflows));
     app.press(&["2"]);
     assert_eq!(focus(&app), REPOS);
     app.press(&["4"]);

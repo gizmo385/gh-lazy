@@ -30,8 +30,8 @@ use crate::modal::{
 use crate::notifications::NotificationPoll;
 use crate::options::AppOptions;
 use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
-use crate::screens::main::MainScreen;
 pub use crate::screens::main::Maximized;
+use crate::screens::main::{MainScreen, Toggle};
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
 use crate::theme::Theme;
 use crate::toast::{Severity, Toast, Toasts};
@@ -544,6 +544,7 @@ impl App {
             }
             Action::Maximize { toast } => self.maximize(toast, out),
             Action::OpenCommandPalette => self.open_command_palette(out),
+            Action::Toggle(toggle) => self.toggle(toggle, out),
             Action::Minimize => self.minimize(),
             // Python's `action_open_help`: only this closes the panel, and it doesn't move focus.
             // Only the main screen has the panel: Python mounts it on the startup screen, which the main screen
@@ -649,15 +650,54 @@ impl App {
             return;
         }
         let BaseScreen::Main(main) = &self.base else { return };
-        let commands = self.system_commands(main);
+        let mut commands = self.app_commands();
+        commands.extend(self.system_commands(main));
         Cx::new(&mut self.shared, out).open_dialog(CommandPaletteDialog::new(commands), |run| {
             run.map_or(Action::Consumed, PaletteRun::action)
         });
     }
 
+    /// LazyGithub's own commands as they apply now, in `MainScreenCommandProvider.commands` order. They come before
+    /// the system commands, which keeps them first among equal scores (Py bug B86's answer). "Change Settings" (#193),
+    /// "Debug Info" and "Open Bug Report" (#195) go between the toggles and "Refresh notifications".
+    fn app_commands(&self) -> Vec<PaletteCommand> {
+        let command = |name, help, run| PaletteCommand {
+            name,
+            help,
+            source: CommandSource::App,
+            run,
+        };
+        let toggle = |name, help, toggle| command(name, help, PaletteRun::Toggle(toggle));
+        let mut commands = vec![
+            toggle(
+                "Toggle Command Log",
+                "Toggle showing or hiding the command log",
+                Toggle::CommandLog,
+            ),
+            toggle(
+                "Toggle Workflows",
+                "Toggle showing or hiding repo actions",
+                Toggle::Workflows,
+            ),
+            toggle("Toggle Issues", "Toggle showing or hiding repo issues", Toggle::Issues),
+            toggle(
+                "Toggle Pull Requests",
+                "Toggle showing or hiding repo pull requests",
+                Toggle::PullRequests,
+            ),
+        ];
+        if self.shared.config.notifications.enabled {
+            commands.push(command(
+                "Refresh notifications",
+                "Refresh the unread notifications count",
+                PaletteRun::RefreshNotifications,
+            ));
+        }
+        commands
+    }
+
     /// Textual's system commands as they apply on `main` now, in `App.get_system_commands` order. "Theme" lands with
-    /// #192, and "Screenshot" is deferred (#291). LazyGithub's own commands (#301) go before these, with
-    /// [`CommandSource::App`], which puts them in both the search and the opening list.
+    /// #192, and "Screenshot" is deferred (#291).
     fn system_commands(&self, main: &MainScreen) -> Vec<PaletteCommand> {
         let command = |name, help, run| PaletteCommand {
             name,
@@ -689,6 +729,17 @@ impl App {
             commands.push(command("Maximize", "Maximize the focused widget", PaletteRun::Maximize));
         }
         commands
+    }
+
+    /// A palette toggle on the main screen. Hiding the maximized section or command log restores the layout too
+    /// (Py bug B88's answer, where Python keeps drawing it maximized until `escape`); the screen has already moved
+    /// focus out of it.
+    fn toggle(&mut self, toggle: Toggle, out: &mut Outbox) {
+        let BaseScreen::Main(main) = &mut self.base else { return };
+        let shown = main.toggle(toggle, &mut Cx::new(&mut self.shared, out));
+        if !shown && self.maximized.is_some_and(|maximized| toggle.covers(maximized.target)) {
+            self.minimize();
+        }
     }
 
     /// Back to the normal layout, focus unchanged.

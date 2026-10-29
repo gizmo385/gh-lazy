@@ -102,11 +102,28 @@ impl IssueLists {
     /// A repo was selected while the PR or the Issues section is shown: every table clears under its overlay, and
     /// the first page is requested, once when both tables' filters agree and once per table when they don't.
     pub(super) fn load_repo(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
+        self.prs.begin(repo, cx);
+        self.issues.begin(repo, cx);
+        self.request_first_page(repo, cx);
+    }
+
+    /// The palette showed the PR or the Issues section again with `repo` selected: Python's bare
+    /// `fetch_issues_and_pull_requests`. The first page is requested as on selection, but nothing is read from the
+    /// cache and the tables aren't cleared: their rows stay until the page lands and replaces them.
+    pub(super) fn reload(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
+        // The rows may be for an older repo, if it was selected while both sections were hidden; the page and the
+        // cache it writes are for this one.
+        self.prs.retarget(repo);
+        self.issues.retarget(repo);
+        self.request_first_page(repo, cx);
+    }
+
+    /// Requests the first page for both tables, replacing any first page in flight: once when both tables' filters
+    /// agree and once per table when they don't.
+    fn request_first_page(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
         for id in self.first_page_ids() {
             cx.effect(Effect::Cancel(id));
         }
-        self.prs.begin(repo, cx);
-        self.issues.begin(repo, cx);
         let prs = pull_requests_query(cx.config());
         let issues = issues_query(cx.config());
         let mut request = |query: IssueListQuery| {

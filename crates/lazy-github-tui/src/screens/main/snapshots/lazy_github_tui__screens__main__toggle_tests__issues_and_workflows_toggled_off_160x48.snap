@@ -1,0 +1,52 @@
+---
+source: crates/lazy-github-tui/src/screens/main/toggle_tests.rs
+expression: "app.screen(160, 48)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                                                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] Details ────────────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner  Name  Private                                      ││ Introduction                                                                                 │
+│                                                              ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                         LazyGithub: A Terminal UI For GitHub (0.1.0)                         │
+│                                                              ││                                                                                              │
+│                                                              ││  LazyGithub is a terminal UI for interacting with GitHub. You can get started by selecting   │
+│                                                              ││  one of the repositories listed in the table on the left. Once you have selected a           │
+│                                                              ││  repository, any issues, pull requests, and action workflows will be retrieved and           │
+│                                                              ││  displayed below it.                                                                         │
+│                                                              ││                                                                                              │
+│                                                              ││  Issues, pull requests, and action lists can also be interacted with!                        │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││  Pull Requests                                                                               │
+│                                                              ││                                                                                              │
+│                                                              ││  You can interact with a PR by viewing its details, viewing the PR diff, and participating   │
+│                                                              ││  in any active conversations happening on the PR. You can also create a new PR for the       │
+│                                                              ││  currently selected repo.                                                                    │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│  Issues                                                                                      │
+│ #  Status  Author  Title                                     ││                                                                                              │
+│                                                              ││  You can interact with an issue by viewing its details, partipcating in any activate         │
+│                                                              ││  conversations happening on the issue, and by editing the issue itself. This means that you  │
+│                                                              ││  can close an issue from within LazyGithub.                                                  │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││  Actions                                                                                     │
+│                                                              ││                                                                                              │
+│                                                              ││  Github action and workflow support is pretty limited. It currently only supports listing    │
+│                                                              ││  the workflows and the most recent runs across all actions on the currently selected repo,   │
+│                                                              ││  as well as kicking off a workflow that supports manual triggers.                            │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Comman

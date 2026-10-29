@@ -9,6 +9,8 @@ use lazy_github_core::gh::GhError;
 use lazy_github_core::github::FakeGithub;
 use lazy_github_core::models::{IssueListItem, Repository};
 
+use crate::action::Action;
+use crate::screens::main::Toggle;
 use crate::screens::main::pull_requests::{Kind, item};
 use crate::screens::main::repos::repo;
 use crate::screens::main::workflows::run;
@@ -110,4 +112,31 @@ fn restored_sections_after_failed_fetches_100x30() {
     )
     .unwrap();
     assert_eq!(runs.iter().map(|run| run.id).collect::<Vec<_>>(), [3, 2, 1]);
+}
+
+/// The rest of `caches-drafts.workflow-runs-json`: the palette's "Toggle Workflows" reads the runs cache when it
+/// shows the section again, as Python's `action_toggle_ui` does with `initialize_tables_from_cache`.
+#[test]
+fn showing_workflows_again_restores_the_runs_from_the_cache() {
+    let repo = repo("octo", "one", false);
+    let gh = FakeGithub::new()
+        .with_repositories(vec![repo.clone()])
+        .with_run_page("octo/one", 1, Err(server_error()));
+    let mut config = cache_config();
+    config.appearance.show_workflows = false;
+    let mut app = with_caches(TestApp::with_github(config, gh), &repo);
+    app.press(&["enter"]);
+    logs(|| app.settle().now_or_never().expect("the fake answers at once"));
+    assert!(!app.screen(100, 30).contains("[4] Workflows"));
+    app.dispatch(Action::Toggle(Toggle::Workflows));
+    logs(|| app.settle().now_or_never().expect("the fake answers at once"));
+    let screen = app.screen(100, 30);
+    for text in [
+        "[4] Workflows ",
+        "2026-10-21 09:00",
+        "2026-10-20 09:00",
+        "2026-10-19 09:00",
+    ] {
+        assert!(screen.contains(text), "{text}\n{screen}");
+    }
 }

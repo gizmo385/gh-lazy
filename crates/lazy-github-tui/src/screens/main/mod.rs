@@ -200,12 +200,46 @@ impl Maximized {
     }
 }
 
+/// What one of the command palette's "Toggle …" commands shows or hides, for this session only: Python's
+/// `action_toggle_ui`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Toggle {
+    /// "Toggle Command Log".
+    CommandLog,
+    /// "Toggle Workflows".
+    Workflows,
+    /// "Toggle Issues".
+    Issues,
+    /// "Toggle Pull Requests".
+    PullRequests,
+}
+
+impl Toggle {
+    /// The section it toggles, if it's one (not the command log).
+    pub fn section(self) -> Option<SectionId> {
+        match self {
+            Toggle::CommandLog => None,
+            Toggle::Workflows => Some(SectionId::Workflows),
+            Toggle::Issues => Some(SectionId::Issues),
+            Toggle::PullRequests => Some(SectionId::PullRequests),
+        }
+    }
+
+    /// Whether `target` is inside what it toggles: the section's table or search box, or the command log.
+    pub fn covers(self, target: FocusTarget) -> bool {
+        match self.section() {
+            Some(id) => target.section() == Some(id),
+            None => target == FocusTarget::CommandLog,
+        }
+    }
+}
+
 /// How one section takes part in the layout.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SectionState {
-    /// From `appearance.show_*` at startup.
+    /// Python's `display`: from `appearance.show_*` at startup, then flipped by the palette's toggles.
     pub displayed: bool,
-    /// Hidden by a runtime toggle (M4; see #75).
+    /// Python's `visible` cleared: hidden by the palette's toggle, which ignores the section's focus key.
     pub hidden_by_toggle: bool,
     /// Empty, drawn three rows high with ` (empty)` in the title (M2).
     pub compact: bool,
@@ -943,9 +977,40 @@ impl MainScreen {
         SectionId::ALL.map(|id| self.section(id))
     }
 
-    /// Hides or shows a section by a runtime toggle. M4's command palette drives this.
-    pub fn set_hidden_by_toggle(&mut self, id: SectionId, hidden: bool) {
-        self.sections[id.index()].hidden_by_toggle = hidden;
+    /// A palette toggle: shows `toggle`'s section or the command log if it's hidden, by config or a toggle, and hides
+    /// it otherwise, and says whether it's now shown. Python's `action_toggle_ui`.
+    ///
+    /// Showing a section with a repo selected reloads it, since a hidden section isn't loaded on selection. Hiding
+    /// requests nothing; when focus was inside, it moves to the first stop of the focus ring (Py bug B88's answer,
+    /// where Python leaves nothing focused). Restoring a maximized layout first is `App`'s, which owns it.
+    pub fn toggle(&mut self, toggle: Toggle, cx: &mut Cx<'_>) -> bool {
+        let shown = if let Some(id) = toggle.section() {
+            let state = &mut self.sections[id.index()];
+            // Python flips `display`, and sets `visible` to match.
+            let show = !state.displayed;
+            state.displayed = show;
+            state.hidden_by_toggle = !show;
+            show
+        } else {
+            let show = !self.command_log.is_visible();
+            self.command_log.set_visible(show);
+            show
+        };
+        tracing::debug!(?toggle, shown, "Toggled from the command palette");
+        if shown {
+            if let Some(repo) = cx.current_repo().cloned() {
+                match toggle {
+                    Toggle::Workflows => self.workflows.load_repo(&repo, cx),
+                    Toggle::Issues | Toggle::PullRequests => self.issue_lists.reload(&repo, cx),
+                    Toggle::CommandLog => {}
+                }
+            }
+        } else if toggle.covers(self.focus)
+            && let Some(&first) = self.focus_ring(None).first()
+        {
+            self.move_focus(first);
+        }
+        shown
     }
 
     /// The command log, which keeps every line pushed since the screen was built, shown or not.
@@ -953,7 +1018,7 @@ impl MainScreen {
         &self.command_log
     }
 
-    /// The command log, to push lines and to show or hide it (the palette's toggle, M4).
+    /// The command log, to push lines. Showing and hiding it is [`Self::toggle`]'s.
     pub fn command_log_mut(&mut self) -> &mut CommandLog {
         &mut self.command_log
     }
@@ -1727,3 +1792,6 @@ mod edit_issue_tests;
 
 #[cfg(test)]
 mod edit_pull_request_tests;
+
+#[cfg(test)]
+mod toggle_tests;

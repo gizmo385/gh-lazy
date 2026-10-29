@@ -2,7 +2,7 @@ version = 1
 description = "Command palette's LazyGithub commands: the four section toggles (hide and show, a toggled-off section's focus key ignored), the command log toggle, and Refresh notifications while notifications are on"
 # Palette text is loose text (see command-palette.toml), checked per app with [expect]. Captures after the repo is
 # selected ignore the Details box, whose tab underline Python sometimes draws zero-width (#209).
-gate = false
+gate = true
 parity_rows = [
     "command-palette.toggle-command-log",
     "command-palette.toggle-workflows",
@@ -235,7 +235,8 @@ capture = "log-focused"
 checks = ["titles", "focus"]
 ignore = { boxes = ["Details", "Command Log"] }
 
-# Hiding the focused command log: Python leaves nothing focused (Py bug B88), so focus isn't compared here.
+# Hiding the focused command log: Python leaves nothing focused, where Rust focuses the Repositories table (Py bug
+# B88's answer, unit-tested), so focus isn't compared here.
 [[step]]
 keys = ["ctrl+p"]
 

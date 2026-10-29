@@ -7,7 +7,7 @@ use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
 use crate::keymap::BindingId;
 use crate::modal::{DialogAction, ModalEntry};
 use crate::screens::auth::AuthAction;
-use crate::screens::main::{FocusTarget, MainAction};
+use crate::screens::main::{FocusTarget, MainAction, Toggle};
 use crate::toast::Toast;
 
 /// The closed set of things `App::update` handles. It grows one variant per feature: screens and components add one
@@ -46,6 +46,9 @@ pub enum Action {
     ToggleHelp,
     /// `app.command_palette`: open the command palette over the main screen, with the commands that apply now.
     OpenCommandPalette,
+    /// A palette "Toggle …" command: show or hide a section or the command log on the main screen. `App` applies it,
+    /// since hiding the maximized section also restores the layout (Py bug B88's answer).
+    Toggle(Toggle),
     /// Replace the startup or authentication screen with the main screen.
     EnterMain,
     /// Refresh the unread notification count now: the poll's timer, and in M4 the command palette, a Settings save

@@ -1,0 +1,212 @@
+version = 1
+description = "Maximize from the Diff tab's widgets outside any file or hunk: the file filter and the review summary through the palette's Maximize, the Review Status select and the Submit Review button with M; each maximizes the details tab area, and escape restores it with focus kept"
+# The filter and the summary are inputs, so M types into them (Py bug B38); the palette's Maximize is how Python
+# reaches their nearest maximizable ancestor. A rebound maximize key works there in Rust only (B38's answer), so it's
+# unit-tested rather than captured here. A maximized tab area has no boxes, so those captures are checked through
+# [expect] `contains` and `not_contains`.
+gate = false
+parity_rows = ["main-layout.maximize"]
+sizes = [[160, 48]]
+
+[env]
+fixtures = ["pr-details", "base"]
+
+[env.config_overrides.appearance]
+show_issues = false
+show_workflows = false
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Add a cursor to the viewer", timeout_ms = 15000 }
+
+# Python drops an enter that follows a focus key at once, so the PR table gets a moment to take focus.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Opened on", timeout_ms = 15000 }
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "README.md", timeout_ms = 15000 }
+
+# The scroll area, then the file filter (whose chain adds `/ Filter Files` to the footer). The palette's Maximize
+# raises no "View Maximized" toast and leaves the one-time toast for the first M.
+[[step]]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { text = "/ Filter Files" }
+
+[[step]]
+wait = { stable_ms = 600 }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "max"
+
+[[step]]
+wait = { text = "Maximize the focused widget" }
+
+[[step]]
+keys = ["enter"]
+
+# The palette covers the Details title, so its going is the first signal.
+[[step]]
+wait = { gone = "Maximize the focused widget" }
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "filter"
+checks = ["titles"]
+
+# escape restores before the filter sees it, so the filter keeps focus and its text.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[5] PR #5 Details" }
+
+[[step]]
+capture = "filter-restored"
+checks = ["titles", "tabs", "focus"]
+
+# A second escape is the filter's: it clears and blurs (the footer drops `/ Filter Files`). From the repos table, shift+tab enters the details content at
+# its last stop, the Submit Review button: M maximizes, with the one-time toast.
+# A bare escape followed at once by `1` would read as alt+1, so the screen settles in between.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "/ Filter Files" }
+
+[[step]]
+wait = { stable_ms = 600 }
+
+[[step]]
+keys = ["1"]
+
+[[step]]
+wait = { stable_ms = 600 }
+
+[[step]]
+keys = ["shift+tab"]
+
+[[step]]
+wait = { stable_ms = 600 }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "submit"
+checks = ["titles"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[5] PR #5 Details" }
+
+# The stop before it, the review summary: an input, which types M, so the palette maximizes.
+[[step]]
+keys = ["shift+tab"]
+
+[[step]]
+wait = { stable_ms = 600 }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "max"
+
+[[step]]
+wait = { text = "Maximize the focused widget" }
+
+[[step]]
+keys = ["enter"]
+
+# The palette covers the Details title, so its going is the first signal.
+[[step]]
+wait = { gone = "Maximize the focused widget" }
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "summary"
+checks = ["titles"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[5] PR #5 Details" }
+
+# The stop before it, the Review Status select, closed: M maximizes.
+[[step]]
+keys = ["shift+tab"]
+
+[[step]]
+wait = { stable_ms = 600 }
+
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "review-status"
+checks = ["titles"]
+
+[expect.filter]
+pane_titles = []
+contains = ["Overview  Diff  Conversation", "Filter files (press '/' to focus, ESC to clear)"]
+not_contains = ["[1] Repositories", "View Maximized"]
+
+[expect.filter-restored]
+focused = ["[5] PR #5 Details"]
+contains = ["Filter files (press '/' to focus, ESC to clear)", "/ Filter Files"]
+
+[expect.submit]
+pane_titles = []
+contains = ["Overview  Diff  Conversation", "Submit Review", "View Maximized"]
+not_contains = ["[1] Repositories"]
+
+[expect.summary]
+pane_titles = []
+contains = ["Overview  Diff  Conversation", "Review summary"]
+not_contains = ["[1] Repositories"]
+
+[expect.review-status]
+pane_titles = []
+contains = ["Overview  Diff  Conversation", "Review Status:", "Commented"]
+not_contains = ["[1] Repositories"]

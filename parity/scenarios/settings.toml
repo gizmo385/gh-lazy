@@ -44,6 +44,10 @@ keys = ["enter"]
 [[step]]
 wait = { text = "LazyGithub Settings" }
 
+# Python draws the modal's footer a moment after the modal (#352).
+[[step]]
+wait = { text = "q Close" }
+
 [[step]]
 capture = "appearance"
 checks = ["footer"]
@@ -64,6 +68,14 @@ keys = ["right"]
 
 [[step]]
 wait = { text = "Custom keybinding overrides" }
+
+# Python draws each row's key a moment after the tab's text (its labels are RichLogs written before mount), so wait
+# for the first and last rows' keys (#352).
+[[step]]
+wait = { text = "e: ctrl+p" }
+
+[[step]]
+wait = { text = "Quit: q" }
 
 [[step]]
 capture = "key-bindings"

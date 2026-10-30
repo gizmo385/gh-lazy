@@ -56,13 +56,32 @@ keys = ["down", "down", "enter"]
 [[step]]
 wait = { gone = "Textual Light" }
 
+# Python hands focus back to the select a moment after its list closes, and keys sent before that reopen the list
+# (#352): wait for the modal's footer to replace the list's, then let it settle.
+[[step]]
+wait = { text = "q Close" }
+
+[[step]]
+wait = { stable_ms = 500 }
+
 # Show Command Log, Show Workflows, Show Issues: turn Show Issues off.
 [[step]]
 keys = ["tab", "tab", "tab", "enter"]
 
-# Back to the tab strip, then the Notifications tab's Enabled switch: on.
+# Nothing on screen but the switch shows the toggle landed, so let it settle before leaving (#352).
 [[step]]
-keys = ["shift+tab", "shift+tab", "shift+tab", "shift+tab", "shift+tab", "right"]
+wait = { stable_ms = 500 }
+
+# Back to the tab strip, then the Notifications tab's Enabled switch: on. Python routes a key to the widget focused
+# when it reads the key, so right waits for the shift+tabs to land (#352).
+[[step]]
+keys = ["shift+tab", "shift+tab", "shift+tab", "shift+tab", "shift+tab"]
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["right"]
 
 [[step]]
 wait = { text = "Mark Notification As Read When Selected" }

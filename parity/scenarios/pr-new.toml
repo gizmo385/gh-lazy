@@ -219,6 +219,24 @@ wait.gone = "New Pull Request"
 capture = "cancelled"
 checks = ["titles", "focus"]
 
+# In a short terminal the dialog opens scrolled to the focused title, with the heading and the branches above the
+# fold (#336).
+[[step]]
+resize = [48, 16]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["P"]
+
+[[step]]
+wait.text = "Description"
+
+[[step]]
+capture = "short-terminal"
+checks = ["titles", "focus"]
+
 [expect.no-repo]
 contains = ["Cannot open new pull request", "Please select a repository first!"]
 not_contains = ["New Pull Request"]
@@ -256,3 +274,7 @@ not_contains = ["New Pull Request", "Traceback"]
 [expect.cancelled]
 focused = ["[2] Pull Requests"]
 not_contains = ["New Pull Request", "Traceback"]
+
+[expect.short-terminal]
+contains = ["Title", "Description"]
+not_contains = ["New Pu", "Compare", "Traceback"]

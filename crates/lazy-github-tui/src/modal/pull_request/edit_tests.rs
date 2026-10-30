@@ -135,6 +135,26 @@ fn a_pull_request_without_a_body_gives_an_empty_editor() {
 }
 
 #[test]
+fn a_short_terminal_opens_scrolled_to_the_focused_title() {
+    // Edit PR shares Create PR's form: first drawn at 48x16, it scrolls to the title it focused on opening (#336).
+    let mut app = selected(TestApp::with_github(Config::default(), edit_gh()));
+    app.press(&["E"]);
+    settle(&mut app);
+    assert!(is_open(&app), "E opens Edit PR");
+    let screen = app.screen(48, 16);
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Edit PR is open");
+    assert!(dialog.scroll.offset() > 0, "the form is scrolled");
+    assert!(
+        screen.contains("Add a cursor to the viewer"),
+        "the title is in view:\n{screen}"
+    );
+    assert!(
+        !screen.contains("Compare"),
+        "the branches are above the fold:\n{screen}"
+    );
+}
+
+#[test]
 fn the_draft_flag_shows_in_the_switch() {
     let mut pr = pull_request(5);
     pr.pr.draft = true;

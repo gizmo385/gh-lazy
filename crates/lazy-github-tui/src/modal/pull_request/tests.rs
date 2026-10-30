@@ -961,6 +961,35 @@ fn a_frame_past_the_right_edge_is_cut_the_same_on_every_row() {
     insta::assert_snapshot!(app.screen(48, 16));
 }
 
+#[test]
+fn a_short_terminal_opens_scrolled_to_the_focused_title() {
+    // First drawn at 48x16, the dialog scrolls to the title it focused on opening, as Textual does once the dialog
+    // is laid out: the heading and the branches are above the fold (#336).
+    let mut app = selected(TestApp::with_github(Config::default(), gh()));
+    app.press(&["P"]);
+    settle(&mut app);
+    let screen = app.screen(48, 16);
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+    assert!(dialog.scroll.offset() > 0, "the form is scrolled");
+    assert!(screen.contains("Title"), "the title is in view:\n{screen}");
+    assert!(
+        !screen.contains("Compare"),
+        "the branches are above the fold:\n{screen}"
+    );
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn a_tall_terminal_opens_at_the_top() {
+    // The title is in view from the top already, so nothing scrolls.
+    let mut app = selected(TestApp::with_github(Config::default(), gh()));
+    app.press(&["P"]);
+    settle(&mut app);
+    let _ = app.render(100, 30);
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+    assert_eq!(dialog.scroll.offset(), 0);
+}
+
 // `gh` failing mid-session (#323): opening Create PR, looking up a reviewer, creating and requesting reviews.
 
 mod gh_failures {

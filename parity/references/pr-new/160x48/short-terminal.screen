@@ -1,0 +1,60 @@
+lazy-github-screen 1
+size 48x16
+cursor 15 7 hidden
+--- text
+┌──────────────────────────────────────────────┐
+│Current repo:                                 │
+└█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+┌█
+│█ Title
+│█ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+│█ ▊  Title
+│█ ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+└█
+┌█ Description
+│█ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+│█
+│█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+│    ▏            ││                           │
+└─────────────────┘└───────────────────────────┘
+ / Search  O Lookup Pull Request  E Edit PR  u V
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+accccccccccccccccccccccccccccccccccccccccccccccc
+dc
+dc.eeeee
+dc.fgggggggggggggggggggggggggggggggggggggggggggg
+dc.fhhijjjjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+dc.fgggggggggggggggggggggggggggggggggggggggggggg
+dc
+lc.eeeeeeeeeee
+lc.mnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+lc
+lccccccccccccccccccccccccccccccccccccccccccccccc
+loooopqqqqqqqqqqrrldssssssssqqqqqqqqqqqqqqqqqrrd
+lllllllllllllllllllddddddddddddddddddddddddddddd
+tttuuuuuuutttuuuuuuuuuuuuuuuuuuuutttuuuuuuuutttu
+--- legend
+. bg=#4f4f4f
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#121212 bg=#4f4f4f
+d fg=#365270 bg=#121212
+e fg=#e0e0e0 bg=#4f4f4f bold
+f fg=#0178d4 bg=#4f4f4f inverse
+g fg=#0178d4 bg=#272727
+h bg=#272727
+i fg=#121212 bg=#e0e0e0
+j fg=#797979 bg=#272727
+k fg=#e0e0e0 bg=#272727
+l fg=#2a5738 bg=#121212
+m fg=#191919 bg=#4f4f4f inverse
+n fg=#191919 bg=#272822
+o fg=#0a1e2c bg=#1a1a1a inverse
+p fg=#0a1e2c bg=#0a0a0a
+q fg=#646464 bg=#0a0a0a
+r fg=#e0e0e0 bg=#0a0a0a
+s fg=#0a1e2c bg=#121212 inverse
+t fg=#704d1c bg=#191d21 bold
+u fg=#646464 bg=#191d21

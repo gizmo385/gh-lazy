@@ -143,6 +143,11 @@ pub struct FormScroll {
     area: Rect,
     /// The offscreen area the form was drawn into at the last draw.
     content: Rect,
+    /// Whether the form has been drawn, so the area's size is known.
+    drawn: bool,
+    /// A [`Self::center`] asked for before the first draw, done once the area's size is known: a dialog focuses its
+    /// first field when it opens, and Textual scrolls to it after laying the dialog out (#336).
+    pending_center: Option<(Range<u16>, Range<u16>)>,
 }
 
 impl Default for FormScroll {
@@ -152,6 +157,8 @@ impl Default for FormScroll {
             scrollbar: true,
             area: Rect::default(),
             content: Rect::default(),
+            drawn: false,
+            pending_center: None,
         }
     }
 }
@@ -207,6 +214,11 @@ impl FormScroll {
             height,
         };
         self.content = content;
+        self.drawn = true;
+        if let Some((rows, with_margin)) = self.pending_center.take() {
+            self.view.resize(usize::from(height), usize::from(area.height));
+            self.center(rows, with_margin);
+        }
         let mut scratch = Buffer::empty(content);
         scratch.set_style(content, fill);
         draw(&mut scratch, content);
@@ -261,8 +273,13 @@ impl FormScroll {
 
     /// Textual's scroll when focus moves to a field (`Screen.set_focus`): nothing while the field's `rows` are all in
     /// view; otherwise its rows with their margins, `with_margin`, are centered in the area (`scroll_to_center`), as
-    /// far as the content allows, keeping their first row in view (`origin_visible`).
+    /// far as the content allows, keeping their first row in view (`origin_visible`). Before the first draw, when the
+    /// area's size isn't known yet, it waits for that draw.
     pub fn center(&mut self, rows: Range<u16>, with_margin: Range<u16>) {
+        if !self.drawn {
+            self.pending_center = Some((rows, with_margin));
+            return;
+        }
         let offset = self.view.offset();
         let (_, window) = self.view.last_size();
         let in_view = offset..offset + window;
@@ -365,6 +382,23 @@ mod tests {
         assert_eq!(form.offset(), 17);
         // A field taller than the area keeps its top row in view.
         form.center(0..59, 0..59);
+        assert_eq!(form.offset(), 0);
+    }
+
+    #[test]
+    fn focus_before_the_first_draw_centers_on_that_draw() {
+        let theme = Theme::default();
+        let mut form = FormScroll::default();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 48, 16));
+        // Create PR at 48x16: 59 rows of content in an 11-row area, the title focused as the dialog opens.
+        form.center(12..15, 12..16);
+        assert_eq!(form.offset(), 0, "nothing to scroll until the size is known");
+        form.render(&mut buf, Rect::new(2, 3, 96, 11), &theme, Style::new(), 59, |_, _| {});
+        // The title's block (middle 14) to the window's (offset + 5), `int(x + 0.5)`.
+        assert_eq!(form.offset(), 9);
+        // Done once: a later draw keeps the user's scroll.
+        form.scroll(Scroll::Home);
+        form.render(&mut buf, Rect::new(2, 3, 96, 11), &theme, Style::new(), 59, |_, _| {});
         assert_eq!(form.offset(), 0);
     }
 

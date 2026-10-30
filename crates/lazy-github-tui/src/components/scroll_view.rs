@@ -105,6 +105,13 @@ impl ScrollView {
         self.offset = offset.min(self.max_offset());
     }
 
+    /// Takes the content and window heights of the draw about to happen, clamping the offset to them, so a view can
+    /// scroll as of that draw's size before it's drawn the first time.
+    pub fn resize(&mut self, content: usize, window: usize) {
+        self.last = (content, window);
+        self.offset = self.offset.min(self.max_offset());
+    }
+
     /// Scrolls to `offset`, clamped to the last draw's size.
     pub fn scroll_to(&mut self, offset: usize) {
         self.offset = offset.min(self.max_offset());

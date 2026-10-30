@@ -111,6 +111,8 @@ pub struct App {
     bug_report: BugReport,
     /// The unread count in the status box.
     notifications: NotificationPoll,
+    /// Warnings from before the main screen, logged once it's up so the command log shows them.
+    main_screen_warnings: Vec<String>,
     should_quit: bool,
 }
 
@@ -137,8 +139,15 @@ impl App {
             gh_version_request: None,
             bug_report: BugReport::default(),
             notifications: NotificationPoll::default(),
+            main_screen_warnings: Vec::new(),
             should_quit: false,
         }
+    }
+
+    /// Logs `message` as a warning when the main screen first shows. The command log drops lines from before it, as
+    /// Python's does, so a startup problem the user should see (no log file) waits for it.
+    pub fn warn_on_main_screen(&mut self, message: impl Into<String>) {
+        self.main_screen_warnings.push(message.into());
     }
 
     /// Effects to run when the event loop starts: the startup auth check, unless a recent one is cached, in which
@@ -182,6 +191,9 @@ impl App {
         }
         self.base = BaseScreen::Main(main);
         self.notifications.start(&mut Cx::new(&mut self.shared, out));
+        for warning in self.main_screen_warnings.drain(..) {
+            tracing::warn!("{warning}");
+        }
     }
 
     /// Maps `event` to actions and applies them.
@@ -1717,6 +1729,25 @@ mod tests {
         app.send(Event::CommandLog(line("on the main screen")));
         let log = app.app().main_screen().unwrap().command_log();
         assert_eq!(log.lines(), ["INFO 2026-10-25 01:02:03 - on the main screen"]);
+    }
+
+    #[test]
+    fn a_startup_warning_is_logged_once_the_main_screen_is_up() {
+        let mut app = TestApp::on_startup(Config::default(), lazy_github_core::github::FakeGithub::new());
+        app.app_mut()
+            .warn_on_main_screen("Could not open log file x: denied. Continuing without a log file.");
+        let out = logs(|| futures_util::FutureExt::now_or_never(app.settle()).unwrap());
+        assert_eq!(app.app().screen(), Some(ScreenKind::Main));
+        let warnings: Vec<&str> = out.lines().filter(|line| line.starts_with("WARN ")).collect();
+        assert_eq!(
+            warnings,
+            ["WARN Could not open log file x: denied. Continuing without a log file."]
+        );
+        // Only the first time.
+        let out = logs(|| {
+            app.app_mut().update(Action::EnterMain);
+        });
+        assert!(!out.contains("WARN "), "{out}");
     }
 
     #[test]

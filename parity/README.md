@@ -695,6 +695,10 @@ report first.
   every run) when its name isn't `[a-z0-9][a-z0-9-]*`, its directory is missing, it holds anything at the top level
   other than `home/` and `work/`, it holds no files, it holds a symlink anywhere, or it holds
   `home/.config/lazy-github/config.json`, which the harness owns (use `config` and `config_overrides`).
+- With `config_dir_read_only = true`, `home/.config/lazy-github` is made read-only (`r-x`) last, after the config
+  and the seed, so the app can't save its config or create its log file, cache or drafts there. Write permission
+  comes back when the run finishes, so the run dir can be removed. Unix only (a read-only folder on Windows still
+  takes new files), and meaningless as root, which writes anyway; such scenarios are Rust-only (`apps = ["rust"]`).
 - `work/` is the app's working directory. When the scenario sets `git_remote = "owner/name"`, it's made a git repo:
   - `git init -q -b <git_branch, default main>`
   - `git remote add origin https://github.com/owner/name.git`, or `git@github.com:owner/name.git` with
@@ -760,6 +764,7 @@ git_branch = "main"              # optional, default "main"
 git_remote_branches = ["main"]   # optional: a local remote for origin with these branches (see The isolated
                                  # environment); needs git_remote_protocol = "ssh"
 seed = "repos-cache"             # optional: parity/seeds/<name>/, copied into home/ and work/ (see Seeds)
+config_dir_read_only = false     # optional: make home/.config/lazy-github read-only (see The isolated environment)
 
 [env.config_overrides]           # optional, deep-merged over the config file
 appearance = { show_command_log = true }
@@ -1448,7 +1453,7 @@ Each input is a git object id from `git hash-object`, run in the repo with a cle
 
 | Input | What it hashes |
 | --- | --- |
-| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `git_remote_branches` (only when set), `key_delay_ms`, `capture_stable_ms`, the size, every step and, only when the scenario sets one, the seed: its name and its files as sorted `[<path relative to the seed dir>, <blob>]` pairs. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore.boxes` (not `ignore.writes`). |
+| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `git_remote_branches` (only when set), `key_delay_ms`, `capture_stable_ms`, the size, every step and, only when the scenario sets one, the seed: its name and its files as sorted `[<path relative to the seed dir>, <blob>]` pairs; and `config_dir_read_only` only when `true`. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore.boxes` (not `ignore.writes`). |
 | `fixtures` | Every fixture in the scenario's sets whose request key (method, path, query, accept) equals a served entry in `requests.jsonl`, plus its `body_file`, as sorted `<set>/<relpath> <blob>` lines. For a `--paginate` request, the pages its `Link: rel="next"` headers lead to as well. |
 | `python_app` | `lazy_github/`, `pyproject.toml` and `uv.lock`. |
 | `harness` | `crates/fake-gh/src/`, `crates/fake-gh/Cargo.toml`, `xtask/src/parity/{env,runner,keys,grid}.rs`, `CAPTURE_VERSION` and the `vt100` and `portable-pty` versions in `Cargo.lock`. |

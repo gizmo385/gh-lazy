@@ -165,3 +165,59 @@ fn an_unopenable_log_file_prints_one_line_and_carries_on() {
     // It carried on to the terminal check.
     assert!(stderr.contains("stdout is not one"), "{stderr:?}");
 }
+
+/// Sets `path`'s Unix mode, returning the old one.
+fn chmod(path: &Path, mode: u32) -> u32 {
+    use std::os::unix::fs::PermissionsExt as _;
+    let old = std::fs::metadata(path).unwrap().permissions().mode();
+    std::fs::set_permissions(path, std::fs::Permissions::from_mode(mode)).unwrap();
+    old
+}
+
+#[test]
+fn an_unreadable_config_exits_1_with_one_line() {
+    let home = TempHome::new("unreadable-config");
+    home.write_config("{}");
+    let file = home.config_dir().join("config.json");
+    let old = chmod(&file, 0o000);
+    if std::fs::read(&file).is_ok() {
+        chmod(&file, old);
+        return; // Root reads it anyway.
+    }
+    let output = home.run(&[]);
+    chmod(&file, old);
+    assert_eq!(output.status.code(), Some(1));
+    let stderr = text(&output.stderr);
+    assert!(
+        stderr.starts_with(&format!("Error: failed to read {}: ", file.display())),
+        "{stderr:?}"
+    );
+    assert_eq!(stderr.lines().count(), 1, "{stderr:?}");
+    assert!(!stderr.contains("panicked"), "{stderr:?}");
+}
+
+#[test]
+fn a_read_only_config_folder_starts_without_a_log_file() {
+    let home = TempHome::new("read-only-config");
+    home.write_config("{}");
+    let dir = home.config_dir();
+    let old = chmod(&dir, 0o555);
+    if std::fs::write(dir.join("probe"), "").is_ok() {
+        chmod(&dir, old);
+        return; // Root writes anyway.
+    }
+    let output = home.run(&[]);
+    chmod(&dir, old);
+    let stderr = text(&output.stderr);
+    let prefix = format!(
+        "LazyGithub: could not open log file {}: ",
+        dir.join("lazy_github.log").display()
+    );
+    assert!(
+        stderr.lines().next().unwrap_or_default().starts_with(&prefix),
+        "{stderr:?}"
+    );
+    // It got past the config and the log file to the terminal check.
+    assert!(stderr.contains("stdout is not one"), "{stderr:?}");
+    assert!(!stderr.contains("panicked"), "{stderr:?}");
+}

@@ -1,6 +1,7 @@
 //! Logging: a size-rotated log file in the Python app's format, and the stream behind the command-log pane.
 //!
-//! Nothing here writes to the terminal, apart from one line on stderr when the log file can't be opened.
+//! Nothing here writes to the terminal, apart from one line on stderr when the log file can't be opened. That case
+//! also gives [`LoggingHandle::file_warning`], for the UI to show in the command log once it's on screen.
 //!
 //! Conventions for the rest of the app:
 //!
@@ -66,9 +67,16 @@ pub struct LoggingHandle {
     /// Command-log lines, including those logged before anything reads them (up to [`COMMAND_LOG_CAPACITY`]).
     pub command_log: mpsc::Receiver<LogLine>,
     dropped_command_log_lines: Arc<AtomicU64>,
+    file_warning: Option<String>,
 }
 
 impl LoggingHandle {
+    /// Why there is no log file, when it couldn't be opened: a sentence naming the file and the I/O error. The
+    /// command log only shows lines logged once the main screen is up, so the UI logs this then.
+    pub fn file_warning(&self) -> Option<&str> {
+        self.file_warning.as_deref()
+    }
+
     /// How many command-log lines were dropped because [`Self::command_log`] was full.
     pub fn dropped_command_log_lines(&self) -> u64 {
         self.dropped_command_log_lines.load(Ordering::Relaxed)
@@ -84,19 +92,20 @@ pub fn init(opts: LoggingOptions) -> LoggingHandle {
     let (command_log, rx, dropped) = command_log_layer(opts.clock.clone());
     let (filter, filter_error) = file_filter(std::env::var(LOG_FILTER_ENV).ok().as_deref());
 
-    let (file_layer, guard) = match RotatingFileWriter::open(&opts.path, opts.max_bytes, opts.backup_count) {
-        Ok(writer) => {
-            let (writer, guard) = tracing_appender::non_blocking(writer);
-            (Some(file_layer(writer, opts.clock, filter)), Some(guard))
-        }
-        Err(e) => {
-            eprintln!(
-                "LazyGithub: could not open log file {}: {e}; continuing without a log file",
-                opts.path.display()
-            );
-            (None, None)
-        }
-    };
+    let (file_layer, guard, file_warning) =
+        match RotatingFileWriter::open(&opts.path, opts.max_bytes, opts.backup_count) {
+            Ok(writer) => {
+                let (writer, guard) = tracing_appender::non_blocking(writer);
+                (Some(file_layer(writer, opts.clock, filter)), Some(guard), None)
+            }
+            Err(e) => {
+                eprintln!(
+                    "LazyGithub: could not open log file {}: {e}; continuing without a log file",
+                    opts.path.display()
+                );
+                (None, None, Some(file_warning(&opts.path, &e)))
+            }
+        };
 
     // Another subscriber is only installed already in tests, where keeping it is the right outcome.
     let _ = tracing_subscriber::registry()
@@ -112,7 +121,16 @@ pub fn init(opts: LoggingOptions) -> LoggingHandle {
         _file: guard,
         command_log: rx,
         dropped_command_log_lines: dropped,
+        file_warning,
     }
+}
+
+/// The command-log warning for a log file that couldn't be opened.
+fn file_warning(path: &std::path::Path, error: &std::io::Error) -> String {
+    format!(
+        "Could not open log file {}: {error}. Continuing without a log file.",
+        path.display()
+    )
 }
 
 /// The file layer: [`LogLine`]s written to `writer`, filtered by `filter`.
@@ -296,6 +314,40 @@ mod tests {
         assert!(err.is_some());
         assert!(filter.would_enable("lazy_github_core", &Level::DEBUG));
         assert!(!filter.would_enable("hyper", &Level::INFO));
+    }
+
+    #[test]
+    fn a_full_disk_drops_file_lines_without_stopping_the_command_log() {
+        let (writer, guard) = tracing_appender::non_blocking(crate::test_fs::FullDisk);
+        let lines = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let sink = {
+            let lines = Arc::clone(&lines);
+            move |line: LogLine| lines.lock().unwrap().push(line.message)
+        };
+        crate::test_log::keep_callsites_interested();
+        let subscriber = tracing_subscriber::registry()
+            .with(file_layer(writer, fixed_clock(), file_filter(None).0))
+            .with(CommandLogLayer::new(sink, fixed_clock()));
+        tracing::subscriber::with_default(subscriber, || {
+            for n in 0..3 {
+                tracing::info!(target: "lazy_github", "line {n}");
+            }
+        });
+        drop(guard); // Waits for the worker, which got an error for every line.
+        assert_eq!(*lines.lock().unwrap(), ["line 0", "line 1", "line 2"]);
+    }
+
+    #[test]
+    fn the_file_warning_names_the_file_and_the_error() {
+        let error = std::io::Error::from(std::io::ErrorKind::PermissionDenied);
+        let path = std::path::Path::new("logs").join("lazy_github.log");
+        assert_eq!(
+            file_warning(&path, &error),
+            format!(
+                "Could not open log file {}: permission denied. Continuing without a log file.",
+                path.display()
+            )
+        );
     }
 
     #[test]

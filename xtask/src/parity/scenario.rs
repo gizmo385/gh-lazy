@@ -235,6 +235,9 @@ pub struct EnvSpec {
     /// A seed name under the seeds root, whose `home/` and `work/` trees are copied into the run before the app
     /// starts.
     pub seed: Option<String>,
+    /// `config_dir_read_only`: the config folder (`home/.config/lazy-github`) is made read-only once it's filled, so
+    /// the app can't write its config, log file or cache there. Unix only.
+    pub config_dir_read_only: bool,
 }
 
 /// What a `wait` step waits for.
@@ -508,6 +511,8 @@ struct RawEnv {
     git_remote_branches: Option<Spanned<Vec<String>>>,
     config_overrides: Option<toml::Table>,
     seed: Option<Spanned<String>>,
+    #[serde(default)]
+    config_dir_read_only: bool,
 }
 
 #[derive(Deserialize)]
@@ -809,24 +814,7 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
         Some(table) => serde_json::to_value(table).map_err(|e| loc.at(0, format!("env.config_overrides: {e}")))?,
     };
 
-    let seed = match raw.seed {
-        None => None,
-        Some(seed) => {
-            let name = seed.get_ref();
-            if !is_scenario_name(name) {
-                return Err(loc.at_span(&seed, format!("seed name {name:?} must match [a-z0-9][a-z0-9-]*")));
-            }
-            let dir = roots.seed_dir(name);
-            if !dir.is_dir() {
-                return Err(loc.at_span(
-                    &seed,
-                    format!("seed {name:?} isn't a directory under {}", roots.seeds.display()),
-                ));
-            }
-            seed_files(&dir).map_err(|e| loc.at_span(&seed, format!("seed {name:?}: {e}")))?;
-            Some(seed.into_inner())
-        }
-    };
+    let seed = raw.seed.map(|seed| parse_seed(seed, loc, roots)).transpose()?;
 
     Ok(EnvSpec {
         fixtures,
@@ -838,7 +826,25 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
         git_remote_branches,
         config_overrides,
         seed,
+        config_dir_read_only: raw.config_dir_read_only,
     })
+}
+
+/// `env.seed`, checked: a valid name, a directory under the seeds root, and files it may hold.
+fn parse_seed(seed: Spanned<String>, loc: &Locator<'_>, roots: &Roots) -> Result<String, ScenarioError> {
+    let name = seed.get_ref();
+    if !is_scenario_name(name) {
+        return Err(loc.at_span(&seed, format!("seed name {name:?} must match [a-z0-9][a-z0-9-]*")));
+    }
+    let dir = roots.seed_dir(name);
+    if !dir.is_dir() {
+        return Err(loc.at_span(
+            &seed,
+            format!("seed {name:?} isn't a directory under {}", roots.seeds.display()),
+        ));
+    }
+    seed_files(&dir).map_err(|e| loc.at_span(&seed, format!("seed {name:?}: {e}")))?;
+    Ok(seed.into_inner())
 }
 
 /// A name that's safe as one path segment: `[A-Za-z0-9._-]+`, not `.` or `..`.
@@ -1259,6 +1265,13 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
         assert_eq!(s.env.git_remote_protocol, GitRemoteProtocol::Https);
         assert_eq!(s.env.git_branch, "main");
         assert_eq!(s.env.seed, None);
+        assert!(!s.env.config_dir_read_only);
+    }
+
+    #[test]
+    fn parses_a_read_only_config_dir() {
+        let s = parse("version = 1\n[env]\nconfig_dir_read_only = true\n").unwrap();
+        assert!(s.env.config_dir_read_only);
     }
 
     /// Roots whose seeds dir is a temp dir, for building bad seeds.

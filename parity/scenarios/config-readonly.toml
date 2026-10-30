@@ -1,0 +1,43 @@
+version = 1
+description = "A read-only config folder: the app starts without a log file (one warning in the command log), and a favorite toggle keeps the star for the session and shows the save error as a toast"
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "toasts.settings-save-failed",
+    "infrastructure.log-file-unavailable",
+]
+
+[env]
+fixtures = ["base"]
+config_dir_read_only = true
+
+# A cached auth check, so nothing saves the config before the toggle.
+[env.config_overrides]
+cache = { auth_last_checked = "2999-01-01T00:00:00" }
+appearance = { show_command_log = true }
+
+[[step]]
+wait = { text = "dotfiles", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Could not open log file" }
+
+[[step]]
+capture = "started"
+
+[[step]]
+keys = ["ctrl+f"]
+
+[[step]]
+wait = { text = "Failed to save settings" }
+
+[[step]]
+capture = "save-failed"
+
+[expect.started]
+contains = ["Could not open log file"]
+not_contains = ["Failed to save settings", "panicked"]
+
+[expect.save-failed]
+# The favorite stays for the session; the toast names the file (wrapped, so not matched here) and the I/O error.
+contains = ["★  parity-bot  dotfiles", "Failed to save settings: failed to write", "Permission denied"]

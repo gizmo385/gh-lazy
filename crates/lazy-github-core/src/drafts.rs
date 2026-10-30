@@ -145,16 +145,26 @@ pub fn to_json(draft: &PrDraft) -> String {
     serde_json::to_string_pretty(draft).unwrap_or_else(|error| unreachable!("a PR draft failed to serialize: {error}"))
 }
 
-/// Writes a draft file, creating its folder first when it's missing.
+/// Writes a draft file, creating its folder first when it's missing. The file is replaced whole, so a failure (a
+/// full disk, say) leaves the previous draft.
 ///
 /// # Errors
 ///
 /// When the folder can't be created or the file can't be written.
 pub fn save(path: &Path, text: &str) -> io::Result<()> {
+    save_with(path, text, |file, bytes| file.write_all(bytes))
+}
+
+/// [`save`], with `write_all` putting the bytes into the temp file, so tests can fill the disk.
+fn save_with(
+    path: &Path,
+    text: &str,
+    write_all: impl FnOnce(&mut dyn io::Write, &[u8]) -> io::Result<()>,
+) -> io::Result<()> {
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir)?;
     }
-    std::fs::write(path, text)?;
+    crate::atomic_write::write_with(path, text.as_bytes(), write_all)?;
     tracing::debug!("Saved PR draft to {}", path.display());
     Ok(())
 }
@@ -339,6 +349,51 @@ mod tests {
         let (unreadable, logged) = logs(|| load(&path(), Err("permission denied".into())));
         assert_eq!(unreadable, None);
         assert!(logged.contains("permission denied. Ignoring draft."), "{logged}");
+    }
+
+    #[test]
+    fn a_full_disk_fails_the_save_and_keeps_the_previous_draft() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = draft_path(dir.path(), "o/r");
+        save(&path, &to_json(&draft())).unwrap();
+        let before = std::fs::read(&path).unwrap();
+        let (error, logged) = logs(|| save_with(&path, "{}", crate::test_fs::disk_full_after(1)).unwrap_err());
+        assert_eq!(error.kind(), io::ErrorKind::StorageFull);
+        // The runtime logs the failure; nothing here claims the draft was saved.
+        assert_eq!(logged, "");
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_read_only_folder_fails_the_save_and_the_clear() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = draft_path(dir.path(), "o/r");
+        save(&path, &to_json(&draft())).unwrap();
+        let Some(_guard) = crate::test_fs::read_only(path.parent().unwrap()) else {
+            return; // Root writes anyway.
+        };
+        assert_eq!(save(&path, "{}").unwrap_err().kind(), io::ErrorKind::PermissionDenied);
+        assert_eq!(clear(&path).unwrap_err().kind(), io::ErrorKind::PermissionDenied);
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), to_json(&draft()));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn an_unreadable_draft_loads_as_none_with_a_warning() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = draft_path(dir.path(), "o/r");
+        save(&path, &to_json(&draft())).unwrap();
+        let Some(_guard) = crate::test_fs::unreadable(&path) else {
+            return; // Root reads anyway.
+        };
+        let read = crate::cache::read(&path).map_err(|e| e.to_string());
+        assert!(read.is_err(), "{read:?}");
+        let (loaded, logged) = logs(|| load(&path, read));
+        assert_eq!(loaded, None);
+        let prefix = format!("WARN Unexpected error loading PR draft from '{}': ", path.display());
+        assert!(logged.starts_with(&prefix), "{logged}");
+        assert!(logged.ends_with(". Ignoring draft."), "{logged}");
     }
 
     #[test]

@@ -165,17 +165,27 @@ pub fn read(path: &Path) -> io::Result<Option<String>> {
     std::fs::read_to_string(path).map(Some)
 }
 
-/// Writes a cache file, creating its directory first when it's missing.
+/// Writes a cache file, creating its directory first when it's missing. The file is replaced whole, so a failure
+/// (a full disk, say) leaves the previous one.
 ///
 /// # Errors
 ///
 /// When the directory can't be created or the file can't be written.
 pub fn write(path: &Path, text: &str) -> io::Result<()> {
+    write_with(path, text, |file, bytes| file.write_all(bytes))
+}
+
+/// [`write`], with `write_all` putting the bytes into the temp file, so tests can fill the disk.
+fn write_with(
+    path: &Path,
+    text: &str,
+    write_all: impl FnOnce(&mut dyn io::Write, &[u8]) -> io::Result<()>,
+) -> io::Result<()> {
     tracing::debug!("Saving cached data to: {}", path.display());
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir)?;
     }
-    std::fs::write(path, text)
+    crate::atomic_write::write_with(path, text.as_bytes(), write_all)
 }
 
 /// Deletes a cache file. A missing one is fine.
@@ -381,6 +391,52 @@ mod tests {
         assert_eq!(read(&path).unwrap().as_deref(), Some("[1]"));
         // A folder where the file should be is no cache.
         assert_eq!(read(dir.path()).unwrap(), None);
+    }
+
+    #[test]
+    fn a_full_disk_fails_the_write_and_keeps_the_previous_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("repos.json");
+        write(&path, "[1]").unwrap();
+        let error = write_with(&path, "[1,2,3]", crate::test_fs::disk_full_after(2)).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::StorageFull);
+        assert_eq!(read(&path).unwrap().as_deref(), Some("[1]"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_read_only_directory_fails_the_write_and_keeps_the_previous_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("repos.json");
+        write(&path, "[1]").unwrap();
+        let Some(_guard) = crate::test_fs::read_only(dir.path()) else {
+            return; // Root writes anyway.
+        };
+        let error = write(&path, "[2]").unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::PermissionDenied);
+        assert_eq!(read(&path).unwrap().as_deref(), Some("[1]"));
+        // A new cache file fails the same way, and so does one in a folder that would have to be created.
+        assert!(write(&dir.path().join("issues.json"), "[]").is_err());
+        assert!(write(&dir.path().join("pr_drafts").join("o_r.json"), "{}").is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn an_unreadable_file_is_a_read_error_and_loads_as_no_cache_with_a_warning() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("repos.json");
+        write(&path, r#"[{"name":"a","count":1}]"#).unwrap();
+        let Some(_guard) = crate::test_fs::unreadable(&path) else {
+            return; // Root reads anyway.
+        };
+        assert_eq!(read(&path).unwrap_err().kind(), io::ErrorKind::PermissionDenied);
+        let (rows, logged) = warnings(|| load::<Row>(&path, read(&path).map_err(|e| e.to_string()), "Row"));
+        assert_eq!(rows, []);
+        let [line] = logged.as_slice() else {
+            panic!("{logged:?}");
+        };
+        let prefix = format!("WARN Unexpected error loading cache from '{}': ", path.display());
+        assert!(line.starts_with(&prefix), "{line}");
     }
 
     #[test]

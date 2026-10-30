@@ -196,6 +196,7 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
     tracing::debug!("Color mode: {color_mode:?}");
     let options = AppOptions::from_env();
     tracing::debug!("Options: {options:?}");
+    let log_file_warning = logging.file_warning().map(str::to_owned);
 
     let result = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -205,7 +206,10 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
             let gh = GhCli::new(GhCliOptions::from(&config));
             let git = GitCli::new(original_pwd);
             let theme = Theme::from_config(&config.appearance.theme, color_mode);
-            let app = App::new(config, theme, options, SystemClock);
+            let mut app = App::new(config, theme, options, SystemClock);
+            if let Some(warning) = log_file_warning {
+                app.warn_on_main_screen(warning);
+            }
             runtime.block_on(lazy_github_tui::tui::run(app, gh, git, logging.command_log, paths))
         });
     match result {

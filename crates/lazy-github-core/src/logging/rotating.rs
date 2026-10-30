@@ -252,6 +252,47 @@ mod tests {
         assert!(std::fs::symlink_metadata(&path).unwrap().file_type().is_symlink());
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn a_read_only_directory_fails_to_open() {
+        let tmp = TempDir::new();
+        let Some(_guard) = crate::test_fs::read_only(tmp.path()) else {
+            return; // Root writes anyway.
+        };
+        let error = RotatingFileWriter::open(&tmp.path().join("log"), 100, 2).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::PermissionDenied);
+        let nested = RotatingFileWriter::open(&tmp.path().join("logs").join("log"), 100, 2).unwrap_err();
+        assert_eq!(nested.kind(), io::ErrorKind::PermissionDenied);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_file_without_permissions_fails_to_open() {
+        let tmp = TempDir::new();
+        let path = tmp.path().join("log");
+        std::fs::write(&path, "old\n").unwrap();
+        let Some(_guard) = crate::test_fs::unreadable(&path) else {
+            return; // Root opens anyway.
+        };
+        let error = RotatingFileWriter::open(&path, 100, 2).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::PermissionDenied);
+    }
+
+    /// `/dev/full` fails every write with `ENOSPC`, as a full disk does.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn a_full_disk_fails_the_write_without_panicking() {
+        let tmp = TempDir::new();
+        let path = tmp.path().join("log");
+        std::os::unix::fs::symlink("/dev/full", &path).unwrap();
+        let mut w = RotatingFileWriter::open(&path, 10, 2).unwrap();
+        for n in 0..3 {
+            let error = w.write_all(&record(n)).unwrap_err();
+            assert_eq!(error.kind(), io::ErrorKind::StorageFull);
+        }
+        assert!(!tmp.path().join("log.1").exists());
+    }
+
     #[test]
     fn creates_missing_parent_directories() {
         let tmp = TempDir::new();

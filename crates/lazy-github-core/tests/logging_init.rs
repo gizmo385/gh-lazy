@@ -17,6 +17,7 @@ fn init_writes_the_file_and_feeds_the_command_log() {
         backup_count: 5,
         clock: Arc::new(|| date(2026, 10, 25).at(14, 3, 7, 0)),
     });
+    assert_eq!(handle.file_warning(), None);
     tracing::debug!(target: "lazy_github_core::gh", "Running Github CLI command: gh api -i -X GET /user");
     tracing::info!(target: "lazy_github_tui", "Selected repo foo/bar");
 

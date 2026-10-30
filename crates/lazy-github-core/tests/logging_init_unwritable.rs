@@ -18,6 +18,13 @@ fn init_without_a_log_file_still_feeds_the_command_log() {
         backup_count: 5,
         clock: logging::system_clock(),
     });
+    let warning = handle.file_warning().unwrap();
+    let prefix = format!(
+        "Could not open log file {}: ",
+        blocker.join("lazy_github.log").display()
+    );
+    assert!(warning.starts_with(&prefix), "{warning}");
+    assert!(warning.ends_with(". Continuing without a log file."), "{warning}");
     tracing::info!(target: "lazy_github_tui", "Selected repo foo/bar");
     let line = handle.command_log.try_recv().unwrap();
     assert_eq!(line.message, "Selected repo foo/bar");

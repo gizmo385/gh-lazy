@@ -12,6 +12,7 @@ use std::time::Duration;
 use super::check;
 use super::ci::{self, Finding};
 use super::env::{self, Paths};
+use super::read_only::ReadOnlyConfigDir;
 use super::record;
 use super::reference::{self, Freshness};
 use super::report;
@@ -928,7 +929,14 @@ pub(super) fn run_app(
         if options.cap_ungated_waits && !gates {
             env.timing.wait_cap = Some(UNGATED_WAIT_CAP);
         }
-        let mut status = runner::run(env, &scenario.steps, out)?;
+        // Held until the run (and its `--keep-home` copy) is done; dropping it cleans up the run dir.
+        let read_only = match &env.run_dir {
+            Some(run_dir) if scenario.env.config_dir_read_only => Some(ReadOnlyConfigDir::new(run_dir.path())?),
+            _ => None,
+        };
+        let status = runner::run(env, &scenario.steps, out);
+        drop(read_only);
+        let mut status = status?;
         if status.passed() || attempt >= retries {
             if status.passed() && attempt > 0 {
                 status.flaky = true;

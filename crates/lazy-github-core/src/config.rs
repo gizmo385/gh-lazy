@@ -9,7 +9,6 @@ pub mod doctor;
 mod lax;
 pub mod settings;
 
-use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -595,39 +594,26 @@ impl Config {
     }
 }
 
-/// `contents` written atomically to the config file, creating the config folder if it's missing.
+/// `contents` written atomically to the config file, creating the config folder if it's missing. A failure leaves
+/// the existing file untouched. A symlinked config.json (dotfiles managers) is written through, as Python's
+/// in-place write does.
 fn write_atomically(paths: &ConfigPaths, contents: &str) -> Result<(), ConfigError> {
+    write_atomically_with(paths, contents, |file, bytes| file.write_all(bytes))
+}
+
+/// [`write_atomically`], with `write_all` putting the bytes into the temp file, so tests can fill the disk.
+fn write_atomically_with(
+    paths: &ConfigPaths,
+    contents: &str,
+    write_all: impl FnOnce(&mut dyn std::io::Write, &[u8]) -> std::io::Result<()>,
+) -> Result<(), ConfigError> {
     std::fs::create_dir_all(&paths.dir).map_err(|source| ConfigError::Write {
         path: paths.dir.clone(),
         source,
     })?;
-
-    // Write through a symlinked config.json (dotfiles managers), as Python's in-place write does: the temp file
-    // sits next to the real target and the rename replaces the target, not the link. `canonicalize` fails when
-    // the file doesn't exist yet, which is the first save.
-    let target = std::fs::canonicalize(&paths.file).unwrap_or_else(|_| paths.file.clone());
-    let mut tmp_name = target.file_name().unwrap_or_default().to_owned();
-    tmp_name.push(".tmp");
-    let tmp = target.with_file_name(tmp_name);
-
-    let write = || -> std::io::Result<()> {
-        let mut file = std::fs::File::create(&tmp)?;
-        file.write_all(contents.as_bytes())?;
-        // Keep the mode of an existing file (say, `chmod 600`), as an in-place write would.
-        if let Ok(metadata) = std::fs::metadata(&target) {
-            file.set_permissions(metadata.permissions())?;
-        }
-        file.sync_all()?;
-        drop(file);
-        std::fs::rename(&tmp, &target)
-    };
-    write().map_err(|source| {
-        // Best effort: the original error is the one worth reporting.
-        let _ = std::fs::remove_file(&tmp);
-        ConfigError::Write {
-            path: paths.file.clone(),
-            source,
-        }
+    crate::atomic_write::write_with(&paths.file, contents.as_bytes(), write_all).map_err(|source| ConfigError::Write {
+        path: paths.file.clone(),
+        source,
     })
 }
 
@@ -765,6 +751,101 @@ mod tests {
     fn datetime_truncates_to_microseconds() {
         let dt = naive_datetime::parse("2024-01-02T03:04:05.1234567").unwrap();
         assert_eq!(naive_datetime::format(dt), "2024-01-02T03:04:05.123456");
+    }
+
+    /// A config folder holding a saved `config.json` with a favorite.
+    fn saved_config() -> (tempfile::TempDir, ConfigPaths, Vec<u8>) {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = ConfigPaths::in_dir(dir.path().join("lazy-github"));
+        let mut config = Config::default_in(&paths);
+        config.repositories.favorites.push("o/r".to_owned());
+        config.save(&paths).unwrap();
+        let before = std::fs::read(&paths.file).unwrap();
+        (dir, paths, before)
+    }
+
+    /// The config of [`saved_config`] with one more favorite.
+    fn changed(paths: &ConfigPaths) -> Config {
+        let mut config = Config::load(paths).unwrap();
+        config.repositories.favorites.push("o/other".to_owned());
+        config
+    }
+
+    #[test]
+    fn a_full_disk_leaves_the_previous_config_byte_identical() {
+        let (_dir, paths, before) = saved_config();
+        let config = changed(&paths);
+        let json = config.to_json_pretty();
+        let error = write_atomically_with(&paths, &json, crate::test_fs::disk_full_after(json.len() / 2)).unwrap_err();
+        let ConfigError::Write { path, source } = &error else {
+            panic!("{error:?}");
+        };
+        assert_eq!(path, &paths.file);
+        assert_eq!(source.kind(), std::io::ErrorKind::StorageFull);
+        assert_eq!(
+            error.to_string(),
+            format!("failed to write {}: No space left on device", paths.file.display())
+        );
+        assert_eq!(std::fs::read(&paths.file).unwrap(), before);
+        let names: Vec<_> = std::fs::read_dir(&paths.dir)
+            .unwrap()
+            .map(|e| e.unwrap().file_name())
+            .collect();
+        assert_eq!(names, ["config.json"]);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_read_only_folder_fails_the_save_and_leaves_the_previous_config() {
+        let (_dir, paths, before) = saved_config();
+        let Some(_guard) = crate::test_fs::read_only(&paths.dir) else {
+            return; // Root writes anyway.
+        };
+        let error = changed(&paths).save(&paths).unwrap_err();
+        let ConfigError::Write { path, source } = &error else {
+            panic!("{error:?}");
+        };
+        assert_eq!(path, &paths.file);
+        assert_eq!(source.kind(), std::io::ErrorKind::PermissionDenied);
+        assert!(
+            error
+                .to_string()
+                .starts_with(&format!("failed to write {}: ", paths.file.display())),
+            "{error}"
+        );
+        assert_eq!(std::fs::read(&paths.file).unwrap(), before);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_missing_config_in_a_read_only_folder_is_the_defaults() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = ConfigPaths::in_dir(dir.path());
+        let Some(_guard) = crate::test_fs::read_only(&paths.dir) else {
+            return;
+        };
+        assert_eq!(Config::load(&paths).unwrap(), Config::default_in(&paths));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn an_unreadable_config_is_a_read_error() {
+        let (_dir, paths, _) = saved_config();
+        let Some(_guard) = crate::test_fs::unreadable(&paths.file) else {
+            return;
+        };
+        let error = Config::load(&paths).unwrap_err();
+        let ConfigError::Read { path, source } = &error else {
+            panic!("{error:?}");
+        };
+        assert_eq!(path, &paths.file);
+        assert_eq!(source.kind(), std::io::ErrorKind::PermissionDenied);
+        assert!(
+            error
+                .to_string()
+                .starts_with(&format!("failed to read {}: ", paths.file.display())),
+            "{error}"
+        );
     }
 
     #[test]

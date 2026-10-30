@@ -15,6 +15,10 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 
+/// The Notifications modal's saved first page: `notifications.json`, app-wide ([`CacheScope::App`]), holding
+/// [`crate::models::Notification`]s (Python's type name `Notification`).
+pub const NOTIFICATIONS: &str = "notifications";
+
 /// Which cache a file belongs to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CacheScope<'a> {

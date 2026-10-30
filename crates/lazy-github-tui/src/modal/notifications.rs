@@ -8,18 +8,25 @@
 //! Python's `current_batch` starts at 0 although the first page is already shown: Unread asks for `all=false`
 //! pages, Read for `all=true` pages filtered to the read threads.
 //!
-//! Nothing is cached: Python writes `notifications.json` and never reads it (Py bug B29).
+//! The last live first page is saved to `notifications.json` (decision `notifications-cache`), with the threads
+//! marked read here since flipped to `unread: false`. The next open reads it while the live first page is out: a
+//! readable file with any thread shows its threads at once, under the line "Showing saved notifications -
+//! refreshing...", instead of the loading overlay. Everything works on those saved rows. The live page then replaces
+//! them, keeping the thread a moved cursor is on, the tab the user picked, and the marks made meanwhile. Python writes the file
+//! and never reads it (Py bug B29), so it always waits under the overlay.
 
 use crossterm::event::{KeyEvent, MouseButton, MouseEvent, MouseEventKind};
 use jiff::civil::DateTime;
 use jiff::tz::TimeZone;
+use lazy_github_core::cache::{self, CacheScope};
 use lazy_github_core::gh::GhError;
 use lazy_github_core::github::NotificationQuery;
 use lazy_github_core::models::Notification;
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::style::Style;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::path::PathBuf;
 use tokio::time::Instant;
 
 use super::{Dialog, DialogAction, DialogPane, FieldKind, FocusMove, ModalKind, dialog_bindings};
@@ -30,7 +37,7 @@ use crate::components::table::{
     TableItem, py_strip,
 };
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
-use crate::effect::{GithubRequest, GithubResponse, RequestId};
+use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::Accent;
 use crate::toast::Toast;
@@ -59,6 +66,15 @@ const MARK_ALL_FAILED: &str = "Failed to mark all notifications as read";
 
 /// Python's `notify` after marking everything read.
 const MARKED_ALL: &str = "Marked all notifications as read";
+
+/// The line under the heading while the saved rows are shown and the live page is out.
+const SAVED_REFRESHING: &str = "Showing saved notifications - refreshing...";
+
+/// The line under the heading once the live page failed with the saved rows shown.
+const SAVED_REFRESH_FAILED: &str = "Showing saved notifications - refresh failed";
+
+/// The cache file's model, by its Python name, for the warnings about a bad file.
+const CACHE_TYPE: &str = "Notification";
 
 /// The modal screen's bindings: only `modal.close` of its own.
 const NOTIFICATIONS_BINDINGS: &[BindingId] = dialog_bindings![ModalClose];
@@ -240,6 +256,35 @@ struct Areas {
     table: Rect,
 }
 
+/// What the two tables hold.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Shown {
+    /// Nothing yet: the loading overlay (no saved rows, or the read hasn't answered).
+    Loading,
+    /// The saved first page while the live one is out (`failed` once it failed).
+    Saved { failed: bool },
+    /// The live first page's answer (and any later pages): its rows, or none after a failure with nothing saved.
+    Live,
+}
+
+/// What the user did on the saved rows that the live page has to keep.
+#[derive(Debug, Default)]
+struct Carry {
+    /// Threads `R` marked read while the saved rows were shown.
+    marked: HashSet<u64>,
+    /// `ctrl+r` succeeded while the saved rows were shown.
+    marked_all: bool,
+    /// The user chose a tab since the modal opened (`r`, `u`, the strip, or `ctrl+r`'s switch to Read).
+    tab_picked: bool,
+}
+
+impl Carry {
+    /// Whether a live thread goes to Unread: unread as fetched and not marked read meanwhile.
+    fn unread(&self, notification: &Notification) -> bool {
+        notification.unread && !self.marked_all && !self.marked.contains(&notification.id)
+    }
+}
+
 /// The Notifications modal. Its output is the notification chosen there, or `None` when it closed without one.
 pub struct NotificationsDialog {
     tabs: TabStrip,
@@ -258,6 +303,16 @@ pub struct NotificationsDialog {
     /// The chosen notification, while its mark-on-select request is out. The modal closes with it once GitHub
     /// answers, either way.
     choosing: Option<(RequestId, Box<Notification>)>,
+    /// What the tables hold.
+    shown: Shown,
+    /// The read of `notifications.json`, until it answers.
+    cache_read: Option<RequestId>,
+    /// `notifications.json`.
+    cache_path: PathBuf,
+    /// What `notifications.json` gets: the saved or live first page, in API order, with the threads marked read here
+    /// since flipped to read.
+    snapshot: Vec<Notification>,
+    carry: Carry,
     areas: Areas,
     // `Some(None)` is a close with nothing chosen, as `take_output` hands it on.
     #[allow(clippy::option_option)]
@@ -269,6 +324,7 @@ impl std::fmt::Debug for NotificationsDialog {
         f.debug_struct("NotificationsDialog")
             .field("active", &self.active)
             .field("focus", &self.focus)
+            .field("shown", &self.shown)
             .field("unread", &self.tables[0].row_count())
             .field("read", &self.tables[1].row_count())
             .finish_non_exhaustive()
@@ -276,9 +332,15 @@ impl std::fmt::Debug for NotificationsDialog {
 }
 
 impl NotificationsDialog {
-    /// The modal, loading: both tables under the loading overlay, focus on the container, and the first page asked
-    /// for at once, as Python's `on_mount` does.
+    /// The modal, loading: both tables under the loading overlay, focus on the container, `notifications.json` read,
+    /// and the first page asked for at once, as Python's `on_mount` does.
     pub fn new(cx: &mut Cx<'_>) -> Self {
+        let cache_path = cache::cache_path(
+            &cx.config().cache.cache_directory,
+            CacheScope::App,
+            cache::NOTIFICATIONS,
+        );
+        let cache_read = cx.read_cache(cache_path.clone());
         let options = cx.options();
         let table = || {
             let columns = ["Updated At", "Subject", "Title", "Reason", "Thread ID"]
@@ -302,6 +364,11 @@ impl NotificationsDialog {
             marking: HashMap::new(),
             marking_all: None,
             choosing: None,
+            shown: Shown::Loading,
+            cache_read: Some(cache_read),
+            cache_path,
+            snapshot: Vec::new(),
+            carry: Carry::default(),
             areas: Areas::default(),
             output: None,
         }
@@ -372,6 +439,12 @@ impl NotificationsDialog {
         self.tabs.select(tab.index());
     }
 
+    /// The user chose `tab` (a key or a click): it becomes active and stays when the live page replaces saved rows.
+    fn pick(&mut self, tab: NotificationsTab) {
+        self.carry.tab_picked = true;
+        self.switch_to(tab);
+    }
+
     /// `notifications.view_read` / `view_unread`: Python's `action_view_read` and `action_view_unread`, which
     /// activate the tab and focus its `DataTable`.
     fn view(&mut self, tab: NotificationsTab) {
@@ -416,34 +489,150 @@ impl NotificationsDialog {
         }
     }
 
+    /// The tab a first page opens on: Unread when anything is unread, else Read.
+    fn opening_tab(any_unread: bool) -> NotificationsTab {
+        if any_unread {
+            NotificationsTab::Unread
+        } else {
+            NotificationsTab::Read
+        }
+    }
+
+    /// The `notifications.json` read answered. A readable file with any thread shows its threads, unless the live
+    /// page got here first: they go into the tabs by `unread`, the overlays clear, and the modal shows the tab and
+    /// focus a live first page would, unless the user already picked a tab. The saved rows don't page. A missing,
+    /// empty or bad file (warned about) leaves the overlay.
+    fn cache_loaded(&mut self, result: Result<Option<String>, String>) {
+        if self.shown != Shown::Loading {
+            tracing::debug!("Dropping the saved notifications: the live first page already answered");
+            return;
+        }
+        let saved: Vec<Notification> = cache::load(&self.cache_path, result, CACHE_TYPE);
+        if saved.is_empty() {
+            return;
+        }
+        let (unread, read): (Vec<_>, Vec<_>) = saved.iter().cloned().map(NotificationRow).partition(|row| row.0.unread);
+        let any_unread = !unread.is_empty();
+        for (tab, rows) in [(NotificationsTab::Unread, unread), (NotificationsTab::Read, read)] {
+            let table = self.table_mut(tab);
+            table.set_loading(false);
+            // Lazy loading is off, so the first rows ask for nothing.
+            let _ = table.insert_many(rows, &());
+        }
+        self.snapshot = saved;
+        self.shown = Shown::Saved { failed: false };
+        if !self.carry.tab_picked {
+            self.view(Self::opening_tab(any_unread));
+        }
+    }
+
     /// Python's `load_notifications`: the first page goes into the tabs by `unread`, the overlays clear, and the
     /// modal shows Unread when anything is unread, else Read, with that tab's table focused. A failure is logged and
     /// leaves both tabs empty, as Python's fetcher returns `[]`.
+    ///
+    /// Over saved rows, the live page replaces them instead ([`Self::replace_saved`]), and a failure keeps them.
     fn first_page_loaded(&mut self, result: Result<Vec<Notification>, GhError>, cx: &mut Cx<'_>) {
-        let notifications = result.unwrap_or_else(|error| {
-            tracing::error!("{FETCH_FAILED}");
-            tracing::debug!("Listing notifications failed: {error}");
-            Vec::new()
-        });
-        let (unread, read): (Vec<_>, Vec<_>) = notifications
+        let page = result
+            .inspect_err(|error| {
+                tracing::error!("{FETCH_FAILED}");
+                tracing::debug!("Listing notifications failed: {error}");
+            })
+            .ok();
+        match (self.shown, page) {
+            (Shown::Saved { .. }, None) => self.shown = Shown::Saved { failed: true },
+            (Shown::Saved { .. }, Some(page)) => self.replace_saved(page, cx),
+            (Shown::Loading | Shown::Live, page) => {
+                let fetched = page.is_some();
+                let any_unread = self.fill(page.unwrap_or_default(), cx);
+                self.shown = Shown::Live;
+                if fetched {
+                    self.save(cx);
+                }
+                self.view(Self::opening_tab(any_unread));
+            }
+        }
+    }
+
+    /// Puts a live first page into the tabs by `unread` (after the carry-over) and keeps it, marks applied, as the
+    /// snapshot. Whether any went to Unread.
+    fn fill(&mut self, page: Vec<Notification>, cx: &mut Cx<'_>) -> bool {
+        let mut snapshot = page.clone();
+        for notification in &mut snapshot {
+            notification.unread = self.carry.unread(notification);
+        }
+        self.snapshot = snapshot;
+        // A thread marked read meanwhile keeps `unread` as fetched, as `R` leaves it (Py bug B84).
+        let (unread, read): (Vec<_>, Vec<_>) = page
             .into_iter()
             .map(NotificationRow)
-            .partition(|row| row.0.unread);
+            .partition(|row| self.carry.unread(&row.0));
         let any_unread = !unread.is_empty();
         // Paging is on before the rows go in, so a short tab asks for its page 1 at once, as Python's first
         // `RowHighlighted` does with `current_batch` still 0. Unread asks first, as Python adds its rows first.
         for (tab, rows) in [(NotificationsTab::Unread, unread), (NotificationsTab::Read, read)] {
+            // After a mark all, Unread never pages, as after one on live rows.
+            let pages = tab == NotificationsTab::Read || !self.carry.marked_all;
             let table = self.table_mut(tab);
             table.set_loading(false);
-            table.enable_lazy_load(PER_PAGE, 0);
+            if pages {
+                table.enable_lazy_load(PER_PAGE, 0);
+            }
             let event = table.insert_many(rows, &());
             self.follow(tab, event.as_ref(), cx);
         }
-        self.view(if any_unread {
-            NotificationsTab::Unread
-        } else {
-            NotificationsTab::Read
+        any_unread
+    }
+
+    /// The live first page lands over the saved rows: both tables are refilled from it, the tab follows it unless the
+    /// user picked one, and focus stays. A cursor the user moved down stays on its thread when the active tab still
+    /// has it, else goes to the top; one still on the top row stays there, as a live first page opens, so keys
+    /// pressed after the swap do what they do in Python.
+    fn replace_saved(&mut self, page: Vec<Notification>, cx: &mut Cx<'_>) {
+        let table = self.active_table();
+        let cursor = table.selected().filter(|_| table.cursor() > 0).map(|row| row.0.id);
+        for table in &mut self.tables {
+            // A new generation, so nothing the saved rows did can page.
+            table.clear();
+        }
+        let any_unread = self.fill(page, cx);
+        self.shown = Shown::Live;
+        if !self.carry.tab_picked {
+            self.switch_to(Self::opening_tab(any_unread));
+        }
+        if let Some(thread) = cursor {
+            let tab = self.active;
+            if let Handled::Event(event) = self.active_table_mut().select_key(&thread) {
+                self.follow(tab, Some(&event), cx);
+            }
+        }
+        self.save(cx);
+    }
+
+    /// Writes the snapshot to `notifications.json`.
+    fn save(&self, cx: &mut Cx<'_>) {
+        cx.effect(Effect::WriteCache {
+            path: self.cache_path.clone(),
+            text: cache::to_json(&self.snapshot),
         });
+    }
+
+    /// Flips the snapshot's threads that `marked` says GitHub now has read, and writes it if any changed.
+    fn mark_saved(&mut self, marked: impl Fn(u64) -> bool, cx: &mut Cx<'_>) {
+        let mut changed = false;
+        for notification in &mut self.snapshot {
+            if notification.unread && marked(notification.id) {
+                notification.unread = false;
+                changed = true;
+            }
+        }
+        if changed {
+            self.save(cx);
+        }
+    }
+
+    /// Whether the saved rows are shown.
+    fn showing_saved(&self) -> bool {
+        matches!(self.shown, Shown::Saved { .. })
     }
 
     /// A tab's later page arrived. Read keeps only the read threads, and its paging ends on an empty API page, not
@@ -459,9 +648,13 @@ impl NotificationsDialog {
         let page = match result {
             Ok(notifications) => {
                 let last = notifications.is_empty();
+                // Unread also drops a thread marked read on the saved rows, which GitHub may not list as read yet.
                 let items = notifications
                     .into_iter()
-                    .filter(|notification| tab == NotificationsTab::Unread || !notification.unread)
+                    .filter(|notification| match tab {
+                        NotificationsTab::Unread => !self.carry.marked.contains(&notification.id),
+                        NotificationsTab::Read => !notification.unread,
+                    })
                     .map(NotificationRow)
                     .collect();
                 Page { items, last }
@@ -491,6 +684,10 @@ impl NotificationsDialog {
             cx.notify(Toast::error(MARK_FAILED));
             return;
         }
+        if self.showing_saved() {
+            self.carry.marked.insert(thread);
+        }
+        self.mark_saved(|id| id == thread, cx);
         // Gone already when a mark all answered first.
         let Some(row) = self.table_mut(NotificationsTab::Unread).remove(&thread) else {
             return;
@@ -510,6 +707,12 @@ impl NotificationsDialog {
             return;
         }
         cx.notify(Toast::info(MARKED_ALL));
+        if self.showing_saved() {
+            self.carry.marked_all = true;
+        }
+        // Its switch to Read counts as the user's pick, so the live page doesn't switch back.
+        self.carry.tab_picked = true;
+        self.mark_saved(|_| true, cx);
         let unread = self.table_mut(NotificationsTab::Unread);
         let rows: Vec<NotificationRow> = unread.items().cloned().collect();
         // Python's `clear_rows`, which drops the load function: Unread never pages again, and a page in flight is
@@ -543,13 +746,16 @@ impl NotificationsDialog {
 
     /// The mark-on-select answered: the modal closes with the notification. A failure is only logged (Py bug B81's
     /// recommendation for Enter): the notification opens anyway.
-    fn chosen_marked(&mut self, notification: Box<Notification>, result: Result<(), GhError>) {
-        if let Err(error) = result {
-            tracing::error!("{MARK_FAILED}");
-            tracing::debug!(
-                thread = notification.id,
-                "Marking the chosen notification read failed: {error}"
-            );
+    fn chosen_marked(&mut self, notification: Box<Notification>, result: Result<(), GhError>, cx: &mut Cx<'_>) {
+        match result {
+            Ok(()) => self.mark_saved(|id| id == notification.id, cx),
+            Err(error) => {
+                tracing::error!("{MARK_FAILED}");
+                tracing::debug!(
+                    thread = notification.id,
+                    "Marking the chosen notification read failed: {error}"
+                );
+            }
         }
         self.output = Some(Some(notification));
     }
@@ -578,11 +784,13 @@ impl Component for NotificationsDialog {
                 Some(Action::Consumed)
             }
             BindingId::NotificationsViewRead => {
-                self.view(NotificationsTab::Read);
+                self.pick(NotificationsTab::Read);
+                self.focus_stop(Stop::Table);
                 Some(Action::Consumed)
             }
             BindingId::NotificationsViewUnread => {
-                self.view(NotificationsTab::Unread);
+                self.pick(NotificationsTab::Unread);
+                self.focus_stop(Stop::Table);
                 Some(Action::Consumed)
             }
             // Only the Unread pane's link has these. With no row there's nothing to mark (Py bug B80: Python
@@ -638,7 +846,7 @@ impl Component for NotificationsDialog {
                 // As a click on a details tab: the strip takes focus, then the tab activates.
                 self.focus_stop(Stop::Tabs);
                 if let Some(index) = self.tabs.hit(event.column - tabs.x) {
-                    self.switch_to(NotificationsTab::from_index(index));
+                    self.pick(NotificationsTab::from_index(index));
                 }
             }
             return Some(Action::Consumed);
@@ -699,6 +907,21 @@ impl Component for NotificationsDialog {
         frame
             .buffer_mut()
             .set_stringn(heading.x, heading.y, format!("{HEADING:^width$}"), width, style);
+
+        // The heading's bottom margin row, blank in Python, says when the rows are the saved ones.
+        if let Shown::Saved { failed } = self.shown {
+            let line = if failed { SAVED_REFRESH_FAILED } else { SAVED_REFRESHING };
+            let row = Rect {
+                y: heading.y.saturating_add(1),
+                ..heading
+            }
+            .intersection(area);
+            let muted = Style::new().fg(theme.color(p.text_muted, under));
+            let width = usize::from(row.width);
+            frame
+                .buffer_mut()
+                .set_stringn(row.x, row.y, format!("{line:^width$}"), width, muted);
+        }
 
         let tabs = Rect {
             y: area.y.saturating_add(HEADING_ROWS),
@@ -807,7 +1030,7 @@ impl Dialog for NotificationsDialog {
                     BindingId::TextualTabsPrevious => strip.select_previous(),
                     _ => return None,
                 };
-                self.switch_to(NotificationsTab::from_index(strip.active()));
+                self.pick(NotificationsTab::from_index(strip.active()));
                 Some(Action::Consumed)
             }
             // The container's content always fits, so its scroll keys have nothing to scroll. The search box got
@@ -870,7 +1093,7 @@ impl Dialog for NotificationsDialog {
                 return Some(response);
             };
             if let Some((_, notification)) = self.choosing.take() {
-                self.chosen_marked(notification, result);
+                self.chosen_marked(notification, result, cx);
             }
             return None;
         }
@@ -883,6 +1106,19 @@ impl Dialog for NotificationsDialog {
             return None;
         }
         Some(response)
+    }
+
+    fn on_cache_read(
+        &mut self,
+        id: RequestId,
+        result: Result<Option<String>, String>,
+        _cx: &mut Cx<'_>,
+    ) -> Option<Result<Option<String>, String>> {
+        if self.cache_read.take_if(|pending| *pending == id).is_none() {
+            return Some(result);
+        }
+        self.cache_loaded(result);
+        None
     }
 }
 

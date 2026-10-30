@@ -468,6 +468,10 @@ the seeds' cache directories.
   reviewer) and a `work/pr_template.md`. For #186's draft-restore scenario.
 - `pr-draft-corrupt/`: the same paths with a draft that has only `repo_full_name` and `title`, so it fails the
   schema. For #186's corrupt-draft scenario.
+- `notifications-cache/`: `home/.config/lazy-github/.cache/notifications.json` in Python's shape (`subject_type`)
+  with three threads: 9100901 "Saved unread thread" (unread) and 9100902 "Saved read thread" (read), which only
+  it has, then 9100001 "Add the notifications modal" saved as read (the live page has it unread). For the
+  `notifications-cache` scenario.
 
 ## Recording fixtures
 

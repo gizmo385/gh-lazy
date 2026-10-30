@@ -5,7 +5,7 @@
 use std::path::{Path, PathBuf};
 
 use lazy_github_core::cache::{self, CacheScope};
-use lazy_github_core::models::{Issue, IssueListItem, PartialPullRequest, Repository, WorkflowRun};
+use lazy_github_core::models::{Issue, IssueListItem, Notification, PartialPullRequest, Repository, WorkflowRun};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
@@ -14,6 +14,7 @@ const USER_REPOS: &str = "user/repos/GET.direction-asc_page-1_per_page-50_sort-f
 const CACHE_FIXTURE_ISSUES: &str = "repos/parity-bot/cache-fixture/issues/GET.page-1_per_page-30_state-all.json";
 const CACHE_FIXTURE_RUNS: &str = "repos/parity-bot/cache-fixture/actions/runs/GET.page-1_per_page-30.json";
 const CACHE_FIXTURE: &str = "parity-bot/cache-fixture";
+const NOTIFICATIONS_PAGE: &str = "notifications/GET.all-true_page-1_per_page-50.json";
 
 fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -91,6 +92,7 @@ fn the_python_files_are_named_as_the_rust_app_names_them() {
             "workflow_runs",
             "parity-bot_cache-fixture_workflow_runs.json",
         ),
+        (CacheScope::App, cache::NOTIFICATIONS, "notifications.json"),
     ] {
         let path = cache::cache_path(&dir, scope, name);
         assert_eq!(path, dir.join(file));
@@ -128,6 +130,14 @@ fn workflow_runs_json_round_trips_with_python() {
     );
 }
 
+#[test]
+fn notifications_json_round_trips_with_python() {
+    // Python writes the subject's kind as `subject_type`, which the Rust app reads and writes back.
+    let notifications: Vec<Notification> =
+        serde_json::from_value(body("notifications-modal", NOTIFICATIONS_PAGE)).unwrap();
+    check("notifications.json", "Notification", &notifications);
+}
+
 /// Regenerates the goldens with the Python app and checks the committed copies match (the golden manifest is
 /// `parity/goldens/table-caches.toml`).
 #[test]
@@ -136,11 +146,12 @@ fn cache_goldens_are_fresh() {
     use std::process::Command;
 
     const GENERATOR: &str = "crates/lazy-github-core/tests/fixtures/cache/generate.py";
-    const GOLDENS: [&str; 4] = [
+    const GOLDENS: [&str; 5] = [
         "repos.json",
         "parity-bot_cache-fixture_pull_requests.json",
         "parity-bot_cache-fixture_issues.json",
         "parity-bot_cache-fixture_workflow_runs.json",
+        "notifications.json",
     ];
     let root = root();
     let out = tempfile::tempdir().unwrap();

@@ -1,5 +1,8 @@
 //! The Notifications modal: its cells, the first page, each tab's paging, `R`, `ctrl+r`, `r` / `u`, focus, closing,
-//! and its drawing, against the `notifications-modal` parity fixtures.
+//! the saved rows of `notifications.json`, and its drawing, against the `notifications-modal` parity fixtures.
+
+use std::collections::HashSet;
+use std::path::PathBuf;
 
 use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
@@ -63,22 +66,81 @@ fn list_calls(gh: &FakeGithub) -> Vec<(bool, u32)> {
         .collect()
 }
 
-/// A dialog on its own, its requests answered by a [`FakeGithub`] in [`Self::settle`].
+/// A dialog on its own, its requests answered by a [`FakeGithub`] in [`Self::settle`]. Its `notifications.json`
+/// read is answered only by [`Self::read_saved`].
 struct Harness {
     app: TestApp,
     gh: FakeGithub,
     dialog: NotificationsDialog,
-    /// How many of the app's effects were already answered.
+    /// How many of the app's effects came before the dialog's.
     seen: usize,
+    /// The requests already answered.
+    answered: HashSet<RequestId>,
 }
 
 impl Harness {
     /// The dialog as it opens: loading, its first page asked for.
     fn new(gh: FakeGithub) -> Self {
-        let mut app = TestApp::new(Config::default());
+        Self::with_config(gh, Config::default())
+    }
+
+    fn with_config(gh: FakeGithub, config: Config) -> Self {
+        let mut app = TestApp::new(config);
         let seen = app.effects().len();
         let dialog = app.with_cx(NotificationsDialog::new);
-        Self { app, gh, dialog, seen }
+        Self {
+            app,
+            gh,
+            dialog,
+            seen,
+            answered: HashSet::new(),
+        }
+    }
+
+    /// Opened on `saved` (read before the live page answers), with nothing else answered.
+    fn saved(gh: FakeGithub, saved: &[Notification]) -> Self {
+        let mut harness = Self::new(gh);
+        harness.read_saved(Some(&cache::to_json(saved)));
+        harness
+    }
+
+    /// Answers the dialog's `notifications.json` read with `text` (`None`: no file).
+    fn read_saved(&mut self, text: Option<&str>) {
+        let id = self.app.effects()[self.seen..]
+            .iter()
+            .find_map(|effect| match effect {
+                Effect::ReadCache { id, path } if *path == saved_path() => Some(*id),
+                _ => None,
+            })
+            .expect("the dialog reads notifications.json");
+        let Self { app, dialog, .. } = self;
+        let result = Ok(text.map(str::to_owned));
+        let unclaimed = app.with_cx(|cx| dialog.on_cache_read(id, result, cx));
+        assert!(unclaimed.is_none(), "the dialog takes its read");
+    }
+
+    /// What the dialog wrote to `notifications.json`, each write in turn.
+    fn writes(&self) -> Vec<Vec<Notification>> {
+        self.app.effects()[self.seen..]
+            .iter()
+            .filter_map(|effect| match effect {
+                Effect::WriteCache { path, text } if *path == saved_path() => {
+                    Some(cache::try_parse(path, text, CACHE_TYPE).unwrap())
+                }
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Answers the pending requests `wanted` picks, once each, leaving the rest (and what the answers ask) pending.
+    async fn answer(&mut self, wanted: impl Fn(&GithubRequest) -> bool) {
+        for (id, request) in self.pending() {
+            if wanted(&request) {
+                self.answered.insert(id);
+                let response = request.run(&self.gh).await;
+                self.respond(id, response);
+            }
+        }
     }
 
     /// Opened and loaded, with every page it asked for on the way answered.
@@ -88,12 +150,12 @@ impl Harness {
         harness
     }
 
-    /// The requests the dialog made since the last settle.
+    /// The requests the dialog made that aren't answered yet.
     fn pending(&self) -> Vec<(RequestId, GithubRequest)> {
         self.app.effects()[self.seen..]
             .iter()
             .filter_map(|effect| match effect {
-                Effect::Github { id, request } => Some((*id, request.clone())),
+                Effect::Github { id, request } if !self.answered.contains(id) => Some((*id, request.clone())),
                 _ => None,
             })
             .collect()
@@ -101,16 +163,8 @@ impl Harness {
 
     /// Answers every request the dialog made, and the ones those answers made, until none is left.
     async fn settle(&mut self) {
-        loop {
-            let pending = self.pending();
-            self.seen = self.app.effects().len();
-            if pending.is_empty() {
-                return;
-            }
-            for (id, request) in pending {
-                let response = request.run(&self.gh).await;
-                self.respond(id, response);
-            }
+        while !self.pending().is_empty() {
+            self.answer(|_| true).await;
         }
     }
 
@@ -299,6 +353,7 @@ async fn the_loading_overlay_animates_until_the_first_page() {
         dialog: app.with_cx(NotificationsDialog::new),
         app,
         gh: FakeGithub::new(),
+        answered: HashSet::new(),
     };
     let now = Instant::now();
     assert!(harness.dialog.next_deadline(now).is_some());
@@ -679,10 +734,7 @@ impl Harness {
     async fn loaded_marking(gh: FakeGithub, mark: bool) -> Self {
         let mut config = Config::default();
         config.notifications.mark_notification_as_read_when_selected = mark;
-        let mut app = TestApp::new(config);
-        let seen = app.effects().len();
-        let dialog = app.with_cx(NotificationsDialog::new);
-        let mut harness = Self { app, gh, dialog, seen };
+        let mut harness = Self::with_config(gh, config);
         harness.settle().await;
         harness
     }
@@ -962,11 +1014,6 @@ async fn closing_refreshes_the_unread_count() {
     assert!(app.app().modals().is_empty());
     app.settle().await;
     assert_eq!(counts(&app), before + 1);
-    assert!(
-        app.effects()
-            .iter()
-            .all(|effect| !matches!(effect, Effect::WriteCache { .. }))
-    );
 }
 
 #[tokio::test]
@@ -981,21 +1028,541 @@ async fn answers_after_closing_are_dropped() {
     assert!(!app.screen(160, 48).contains("Updated At"));
 }
 
+// The saved rows (`notifications.json`).
+
+/// `notifications.json` under the default config's cache directory.
+fn saved_path() -> PathBuf {
+    cache::cache_path(
+        &Config::default().cache.cache_directory,
+        CacheScope::App,
+        cache::NOTIFICATIONS,
+    )
+}
+
+/// A copy of the first fixture thread (9100001) with this id, title, time and flag.
+fn saved_thread(id: u64, title: &str, updated_at: &str, unread: bool) -> Notification {
+    let mut notification = thread(id, updated_at, unread);
+    notification.subject.title = title.into();
+    notification
+}
+
+/// What the parity seed `notifications-cache` holds: an unread and a read thread only it has, and 9100001 saved as
+/// read (live, it's unread).
+fn saved_three() -> Vec<Notification> {
+    vec![
+        saved_thread(9_100_901, "Saved unread thread", "2026-10-25T01:00:00Z", true),
+        saved_thread(9_100_902, "Saved read thread", "2026-10-25T00:30:00Z", false),
+        saved_thread(9_100_001, "Add the notifications modal", "2026-10-24T23:00:00Z", false),
+    ]
+}
+
+fn saved_read_only() -> Vec<Notification> {
+    saved_three().into_iter().filter(|n| !n.unread).collect()
+}
+
+/// The threads of `page` with the given ids flipped to read, as the file holds them after those marks.
+fn marked(mut page: Vec<Notification>, ids: &[u64]) -> Vec<Notification> {
+    for notification in &mut page {
+        if ids.contains(&notification.id) {
+            notification.unread = false;
+        }
+    }
+    page
+}
+
+fn is_first_page(request: &GithubRequest) -> bool {
+    *request == GithubRequest::ListNotifications(query(true, 1))
+}
+
+fn is_mark(request: &GithubRequest) -> bool {
+    matches!(
+        request,
+        GithubRequest::MarkNotificationRead(_) | GithubRequest::MarkAllNotificationsRead
+    )
+}
+
 #[tokio::test]
-async fn nothing_is_cached() {
+async fn it_reads_the_file_before_asking_for_the_first_page() {
+    let harness = Harness::new(github());
+    let effects: Vec<&Effect> = harness.app.effects()[harness.seen..].iter().collect();
+    assert!(
+        matches!(
+            effects.as_slice(),
+            [Effect::ReadCache { path, .. }, Effect::Github { request, .. }]
+                if *path == saved_path() && is_first_page(request)
+        ),
+        "{effects:?}"
+    );
+}
+
+#[rstest]
+#[case::no_file(None)]
+#[case::empty(Some("[]"))]
+#[tokio::test]
+async fn with_nothing_saved_it_opens_loading(#[case] text: Option<&str>) {
+    let mut harness = Harness::new(github());
+    harness.read_saved(text);
+    assert_eq!(harness.dialog.shown, Shown::Loading);
+    assert!(harness.dialog.tables.iter().all(SearchableTable::is_loading));
+    assert_eq!(harness.dialog.stop(), Stop::Container);
+    harness.settle().await;
+    assert_eq!(harness.ids(NotificationsTab::Unread), UNREAD_SORTED);
+    assert_eq!(harness.dialog.shown, Shown::Live);
+}
+
+#[tokio::test]
+async fn a_corrupt_file_warns_and_opens_loading() {
+    let logs = LogCapture::start();
+    let mut harness = Harness::new(github());
+    harness.read_saved(Some("[{"));
+    assert_eq!(harness.dialog.shown, Shown::Loading);
+    assert!(harness.dialog.tables.iter().all(SearchableTable::is_loading));
+    assert!(
+        logs.text().contains("WARN Failed to parse cache file '"),
+        "{}",
+        logs.text()
+    );
+}
+
+#[tokio::test]
+async fn a_bad_thread_warns_with_the_notification_schema_and_opens_loading() {
+    let logs = LogCapture::start();
+    let mut harness = Harness::new(github());
+    let mut saved: Vec<serde_json::Value> = serde_json::from_str(&cache::to_json(saved_three())).unwrap();
+    saved[1]["unread"] = serde_json::json!("no");
+    harness.read_saved(Some(&serde_json::Value::Array(saved).to_string()));
+    assert_eq!(harness.dialog.shown, Shown::Loading);
+    assert!(
+        logs.text()
+            .contains("doesn't match the expected schema for Notification"),
+        "{}",
+        logs.text()
+    );
+}
+
+#[tokio::test]
+async fn saved_rows_show_at_once_split_by_unread() {
+    let harness = Harness::saved(github(), &saved_three());
+    assert_eq!(harness.dialog.shown, Shown::Saved { failed: false });
+    assert_eq!(harness.ids(NotificationsTab::Unread), [9_100_901]);
+    assert_eq!(harness.ids(NotificationsTab::Read), [9_100_902, 9_100_001]);
+    assert!(!harness.dialog.tables.iter().any(SearchableTable::is_loading));
+    assert_eq!(harness.dialog.active_tab(), NotificationsTab::Unread);
+    assert_eq!(harness.dialog.stop(), Stop::Table);
+    // Only the live first page is out: the saved rows don't page.
+    assert!(harness.dialog.tables.iter().all(|table| table.lazy_load().is_none()));
+    assert_eq!(
+        harness
+            .pending()
+            .into_iter()
+            .map(|(_, request)| request)
+            .collect::<Vec<_>>(),
+        [GithubRequest::ListNotifications(query(true, 1))]
+    );
+}
+
+#[tokio::test]
+async fn all_saved_read_opens_on_read() {
+    let harness = Harness::saved(github(), &saved_read_only());
+    assert_eq!(harness.dialog.active_tab(), NotificationsTab::Read);
+    assert_eq!(harness.dialog.stop(), Stop::Table);
+}
+
+#[tokio::test]
+async fn a_tab_picked_under_the_overlay_stays_on_the_saved_rows() {
+    let mut harness = Harness::new(github());
+    harness.binding(BindingId::NotificationsViewRead);
+    harness.read_saved(Some(&cache::to_json(saved_three())));
+    assert_eq!(harness.dialog.active_tab(), NotificationsTab::Read);
+}
+
+#[tokio::test]
+async fn a_live_page_before_the_read_drops_it() {
+    let mut harness = Harness::new(github());
+    harness.answer(is_first_page).await;
+    harness.read_saved(Some(&cache::to_json(saved_three())));
+    assert_eq!(harness.dialog.shown, Shown::Live);
+    assert_eq!(harness.ids(NotificationsTab::Unread), UNREAD_SORTED);
+    assert_eq!(harness.ids(NotificationsTab::Read), READ_SORTED);
+}
+
+// The live page over the saved rows.
+
+#[tokio::test]
+async fn the_live_page_replaces_the_saved_rows() {
+    let mut harness = Harness::saved(github(), &saved_three());
+    harness.settle().await;
+    assert_eq!(harness.dialog.shown, Shown::Live);
+    assert_eq!(harness.ids(NotificationsTab::Unread), UNREAD_SORTED);
+    assert_eq!(harness.ids(NotificationsTab::Read), READ_SORTED);
+    assert_eq!(harness.dialog.active_tab(), NotificationsTab::Unread);
+    assert_eq!(harness.dialog.stop(), Stop::Table);
+    assert_eq!(harness.dialog.active_table().cursor(), 0);
+    // Each short tab asks for its page 1, as after a live first page.
+    assert_eq!(list_calls(&harness.gh), [(true, 1), (false, 1), (true, 1)]);
+}
+
+#[tokio::test]
+async fn the_cursor_stays_on_its_thread() {
+    let mut harness = Harness::saved(github(), &all_six());
+    harness.field_binding(FieldKind::Table, BindingId::TableCursorDown);
+    harness.field_binding(FieldKind::Table, BindingId::TableCursorDown);
+    assert_eq!(
+        harness.dialog.active_table().selected().map(|row| row.0.id),
+        Some(9_100_004)
+    );
+    // Live, 9100001 was marked read elsewhere, so 9100004 is one row higher.
+    let live = marked(all_six(), &[9_100_001]);
+    let gh = github().with_notification_page(query(true, 1), Ok(live));
+    harness.gh = gh;
+    harness.answer(is_first_page).await;
+    assert_eq!(harness.ids(NotificationsTab::Unread), [9_100_002, 9_100_004, 9_100_006]);
+    assert_eq!(
+        harness.dialog.active_table().selected().map(|row| row.0.id),
+        Some(9_100_004)
+    );
+    assert_eq!(harness.dialog.active_table().cursor(), 1);
+}
+
+#[tokio::test]
+async fn a_moved_cursor_whose_thread_left_the_tab_goes_to_the_top() {
+    let mut harness = Harness::saved(github(), &saved_three());
+    harness.binding(BindingId::NotificationsViewRead);
+    harness.field_binding(FieldKind::Table, BindingId::TableCursorDown);
+    assert_eq!(
+        harness.dialog.active_table().selected().map(|row| row.0.id),
+        Some(9_100_001)
+    );
+    harness.settle().await;
+    // Live, 9100001 is unread, so it's not in Read.
+    assert_eq!(harness.ids(NotificationsTab::Read), READ_SORTED);
+    assert_eq!(harness.dialog.active_table().cursor(), 0);
+}
+
+#[tokio::test]
+async fn the_tab_follows_the_live_page_unless_picked() {
+    // Saved all read, so Read; live has unread threads, so Unread.
+    let mut harness = Harness::saved(github(), &saved_read_only());
+    assert_eq!(harness.dialog.active_tab(), NotificationsTab::Read);
+    harness.settle().await;
+    assert_eq!(harness.dialog.active_tab(), NotificationsTab::Unread);
+}
+
+#[derive(Debug, Clone, Copy)]
+enum Pick {
+    ViewRead,
+    StripNext,
+}
+
+#[rstest]
+#[case::view_read(Pick::ViewRead)]
+#[case::strip(Pick::StripNext)]
+#[tokio::test]
+async fn a_picked_tab_stays_when_the_live_page_lands(#[case] pick: Pick) {
+    let mut harness = Harness::saved(github(), &saved_three());
+    match pick {
+        Pick::ViewRead => {
+            harness.binding(BindingId::NotificationsViewRead);
+        }
+        Pick::StripNext => {
+            harness.dialog.focus_stop(Stop::Tabs);
+            harness.field_binding(FieldKind::Tabs, BindingId::TextualTabsNext);
+        }
+    }
+    assert_eq!(harness.dialog.active_tab(), NotificationsTab::Read);
+    let stop = harness.dialog.stop();
+    harness.settle().await;
+    assert_eq!(harness.dialog.active_tab(), NotificationsTab::Read);
+    assert_eq!(harness.dialog.stop(), stop, "focus stays");
+}
+
+#[tokio::test]
+async fn view_unread_picked_stays_over_a_live_page_with_nothing_unread() {
+    let read: Vec<Notification> = all_six().into_iter().filter(|n| !n.unread).collect();
+    let gh = FakeGithub::new().with_notification_page(query(true, 1), Ok(read));
+    let mut harness = Harness::saved(gh, &saved_three());
+    harness.binding(BindingId::NotificationsViewUnread);
+    harness.settle().await;
+    assert_eq!(harness.dialog.active_tab(), NotificationsTab::Unread);
+    assert!(harness.ids(NotificationsTab::Unread).is_empty());
+}
+
+#[tokio::test]
+async fn a_focused_search_box_keeps_its_text_and_the_live_rows_all_show() {
+    let mut harness = Harness::saved(github(), &all_six());
+    harness.binding(BindingId::TableSearch);
+    for c in "typo".chars() {
+        harness.type_key(&c.to_string());
+    }
+    harness.settle().await;
+    assert_eq!(harness.dialog.stop(), Stop::Search);
+    assert_eq!(harness.dialog.active_table().search_text(), "typo");
+    assert_eq!(harness.ids(NotificationsTab::Unread), UNREAD_SORTED);
+}
+
+#[tokio::test]
+async fn a_submitted_search_keeps_its_text_but_the_live_rows_all_show() {
+    let mut harness = Harness::saved(github(), &all_six());
+    harness.search("typo");
+    assert_eq!(harness.ids(NotificationsTab::Unread), [9_100_002]);
+    harness.settle().await;
+    assert_eq!(harness.dialog.active_table().search_text(), "typo");
+    assert_eq!(harness.ids(NotificationsTab::Unread), UNREAD_SORTED);
+    // The submit put the cursor on the top row, where it stays.
+    assert_eq!(harness.dialog.active_table().cursor(), 0);
+}
+
+#[tokio::test]
+async fn a_cursor_left_on_the_top_row_stays_there() {
+    // Saved, 9100002 is Unread's top row; live, 9100001 is above it.
+    let mut harness = Harness::saved(github(), &marked(all_six(), &[9_100_001]));
+    assert_eq!(
+        harness.dialog.active_table().selected().map(|row| row.0.id),
+        Some(9_100_002)
+    );
+    harness.settle().await;
+    assert_eq!(harness.dialog.active_table().cursor(), 0);
+    assert_eq!(
+        harness.dialog.active_table().selected().map(|row| row.0.id),
+        Some(9_100_001)
+    );
+}
+
+#[tokio::test]
+async fn r_on_a_saved_row_carries_over_to_the_live_page() {
+    let mut harness = Harness::saved(github(), &all_six());
+    harness.binding(BindingId::NotificationsMarkRead);
+    harness.answer(is_mark).await;
+    assert_eq!(harness.ids(NotificationsTab::Unread), [9_100_002, 9_100_004, 9_100_006]);
+    harness.settle().await;
+    // Live, GitHub still lists 9100001 as unread; the mark puts it in Read anyway, `unread` as fetched.
+    assert_eq!(harness.ids(NotificationsTab::Unread), [9_100_002, 9_100_004, 9_100_006]);
+    assert_eq!(harness.ids(NotificationsTab::Read), [9_100_001, 9_100_003, 9_100_005]);
+    assert!(harness.item(NotificationsTab::Read, 9_100_001).unwrap().unread);
+    // The file has it read.
+    assert_eq!(harness.writes().last().unwrap(), &marked(all_six(), &[9_100_001]));
+}
+
+#[tokio::test]
+async fn ctrl_r_on_saved_rows_carries_over_and_unread_doesnt_page() {
+    let mut harness = Harness::saved(github(), &all_six());
+    harness.binding(BindingId::NotificationsMarkAllAsRead);
+    harness.answer(is_mark).await;
+    assert_eq!(harness.dialog.active_tab(), NotificationsTab::Read);
+    harness.settle().await;
+    assert!(harness.ids(NotificationsTab::Unread).is_empty());
+    assert_eq!(harness.ids(NotificationsTab::Read).len(), 6);
+    assert_eq!(
+        harness.dialog.active_tab(),
+        NotificationsTab::Read,
+        "ctrl+r's switch counts as a pick"
+    );
+    assert!(harness.dialog.table(NotificationsTab::Unread).lazy_load().is_none());
+    // Unread doesn't page, and Read's six rows are more than five from its cursor: nothing past the first page.
+    assert_eq!(list_calls(&harness.gh), [(true, 1)]);
+    let all = [9_100_001, 9_100_002, 9_100_003, 9_100_004, 9_100_005, 9_100_006];
+    assert_eq!(harness.writes().last().unwrap(), &marked(all_six(), &all));
+}
+
+#[tokio::test]
+async fn r_in_flight_across_the_swap_moves_the_live_row() {
+    let mut harness = Harness::saved(github(), &all_six());
+    harness.binding(BindingId::NotificationsMarkRead);
+    harness.answer(is_first_page).await;
+    assert_eq!(harness.ids(NotificationsTab::Unread), UNREAD_SORTED);
+    harness.answer(is_mark).await;
+    assert_eq!(harness.ids(NotificationsTab::Unread), [9_100_002, 9_100_004, 9_100_006]);
+    assert_eq!(harness.ids(NotificationsTab::Read)[0], 9_100_001);
+}
+
+#[tokio::test]
+async fn enter_on_a_saved_row_chooses_it_marking_it_first() {
+    let mut harness = Harness::saved(github().with_notification_read(9_100_901, Ok(())), &saved_three());
+    harness.select();
+    assert_eq!(harness.requests(), [GithubRequest::MarkNotificationRead(9_100_901)]);
+    harness.answer(is_mark).await;
+    assert_eq!(harness.chosen(), Some(Some(9_100_901)));
+    assert_eq!(
+        harness.writes(),
+        [marked(saved_three(), &[9_100_901])],
+        "the mark is saved"
+    );
+}
+
+#[tokio::test]
+async fn with_the_setting_off_enter_on_a_saved_row_closes_at_once() {
+    let mut config = Config::default();
+    config.notifications.mark_notification_as_read_when_selected = false;
+    let mut harness = Harness::with_config(github(), config);
+    harness.read_saved(Some(&cache::to_json(saved_three())));
+    harness.select();
+    assert_eq!(harness.chosen(), Some(Some(9_100_901)));
+    assert_eq!(harness.requests(), []);
+}
+
+#[tokio::test]
+async fn a_failed_live_page_keeps_the_saved_rows() {
+    let logs = LogCapture::start();
+    let gh = FakeGithub::new().with_notification_page(query(true, 1), Err(failure()));
+    let mut harness = Harness::saved(gh, &saved_three());
+    harness.settle().await;
+    assert_eq!(harness.dialog.shown, Shown::Saved { failed: true });
+    assert_eq!(harness.ids(NotificationsTab::Unread), [9_100_901]);
+    assert_eq!(harness.ids(NotificationsTab::Read), [9_100_902, 9_100_001]);
+    assert!(
+        logs.text().contains(&format!("ERROR {FETCH_FAILED}\n")),
+        "{}",
+        logs.text()
+    );
+    assert_eq!(harness.toasts(), []);
+    assert_eq!(harness.writes(), Vec::<Vec<Notification>>::new());
+    // Nothing pages from the saved rows.
+    harness.field_binding(FieldKind::Table, BindingId::TableCursorDown);
+    harness.settle().await;
+    assert_eq!(list_calls(&harness.gh), [(true, 1)]);
+}
+
+// Writes.
+
+#[tokio::test]
+async fn the_live_first_page_is_written_without_later_pages() {
+    let gh = github().with_notification_page(
+        query(true, 2),
+        Ok(vec![thread(9_200_001, "2026-10-01T00:00:00Z", false)]),
+    );
+    let mut harness = Harness::loaded(gh).await;
+    harness.binding(BindingId::NotificationsViewRead);
+    harness.field_binding(FieldKind::Table, BindingId::TableCursorDown);
+    harness.settle().await;
+    assert!(harness.ids(NotificationsTab::Read).contains(&9_200_001));
+    assert_eq!(harness.writes(), [all_six()]);
+}
+
+#[tokio::test]
+async fn marks_rewrite_the_file() {
+    let mut harness = Harness::loaded(github()).await;
+    harness.binding(BindingId::NotificationsMarkRead);
+    harness.settle().await;
+    assert_eq!(harness.writes().last().unwrap(), &marked(all_six(), &[9_100_001]));
+    harness.binding(BindingId::NotificationsMarkAllAsRead);
+    harness.settle().await;
+    let all = [9_100_001, 9_100_002, 9_100_003, 9_100_004, 9_100_005, 9_100_006];
+    assert_eq!(harness.writes().last().unwrap(), &marked(all_six(), &all));
+    assert_eq!(harness.writes().len(), 3);
+}
+
+#[tokio::test]
+async fn a_mark_on_select_rewrites_the_file() {
+    let mut harness = Harness::loaded(github()).await;
+    harness.select();
+    harness.settle().await;
+    assert_eq!(harness.chosen(), Some(Some(9_100_001)));
+    assert_eq!(harness.writes().last().unwrap(), &marked(all_six(), &[9_100_001]));
+}
+
+#[tokio::test]
+async fn failed_marks_and_failed_pages_write_nothing() {
+    let gh = FakeGithub::new()
+        .with_notification_page(query(true, 1), Err(failure()))
+        .with_notification_read(9_100_001, Err(failure()));
+    let harness = Harness::loaded(gh).await;
+    assert_eq!(harness.writes(), Vec::<Vec<Notification>>::new());
+
+    let mut harness = Harness::loaded(github().with_notification_read(9_100_001, Err(failure()))).await;
+    harness.binding(BindingId::NotificationsMarkRead);
+    harness.settle().await;
+    harness.select();
+    harness.settle().await;
+    assert_eq!(harness.writes(), [all_six()]);
+}
+
+#[tokio::test]
+async fn r_on_a_later_page_row_writes_nothing() {
+    let later = thread(9_200_001, "2026-10-01T00:00:00Z", true);
+    let gh = github()
+        .with_notification_page(query(false, 1), Ok(vec![later]))
+        .with_notification_read(9_200_001, Ok(()));
+    let mut harness = Harness::loaded(gh).await;
+    harness.field_binding(FieldKind::Table, BindingId::TableScrollBottom);
+    harness.settle().await;
+    assert_eq!(
+        harness.dialog.active_table().selected().map(|row| row.0.id),
+        Some(9_200_001)
+    );
+    harness.binding(BindingId::NotificationsMarkRead);
+    harness.settle().await;
+    assert!(harness.ids(NotificationsTab::Read).contains(&9_200_001));
+    assert_eq!(harness.writes(), [all_six()]);
+}
+
+// The saved rows through the app.
+
+/// The main screen with `notifications.json` holding `saved`, the modal opened on it and the live page still out.
+async fn opened_saved(gh: FakeGithub, saved: &[Notification]) -> TestApp {
+    let mut app = TestApp::with_github(enabled(), gh.with_unread_count(Ok(4)))
+        .with_cache_file(saved_path(), cache::to_json(saved));
+    app.settle().await;
+    app.press(&["ctrl+n"]);
+    app.answer_cache_reads();
+    app
+}
+
+#[tokio::test]
+async fn the_saved_rows_with_the_line_under_the_heading() {
+    let mut app = opened_saved(github(), &saved_three()).await;
+    assert_eq!(footer(&mut app), UNREAD_FOOTER);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains(SAVED_REFRESHING) && !screen.contains("Loading"));
+    insta::assert_snapshot!("saved_unread", screen);
+    insta::assert_snapshot!("saved_unread_narrow", app.screen(100, 30));
+    // The line is muted.
+    let buffer = app.render(160, 48);
+    let (x, y) = (0..48)
+        .flat_map(|y| (0..160).map(move |x| (x, y)))
+        .find(|&(x, y)| buffer[(x, y)].symbol() == "S" && buffer[(x + 1, y)].symbol() == "h")
+        .unwrap();
+    assert_ne!(buffer[(x, y)].fg, buffer[(x, y - 1)].fg, "not the heading's color");
+
+    app.settle().await;
+    let screen = app.screen(160, 48);
+    assert!(!screen.contains("Showing saved notifications"));
+    assert!(screen.contains("Typo in the install docs") && !screen.contains("Saved unread thread"));
+    // The file now holds the live first page.
+    let written: Vec<Notification> =
+        cache::try_parse(&saved_path(), app.cache_file(&saved_path()).unwrap(), CACHE_TYPE).unwrap();
+    assert_eq!(written, all_six());
+}
+
+#[tokio::test]
+async fn a_failed_refresh_says_so_under_the_heading() {
+    let gh = github().with_notification_page(query(true, 1), Err(failure()));
+    let mut app = opened_saved(gh, &saved_three()).await;
+    app.settle().await;
+    let screen = app.screen(160, 48);
+    assert!(screen.contains(SAVED_REFRESH_FAILED) && screen.contains("Saved unread thread"));
+    insta::assert_snapshot!("saved_refresh_failed", screen);
+}
+
+#[tokio::test]
+async fn a_click_on_a_tab_counts_as_a_pick() {
+    let mut app = opened_saved(github(), &saved_three()).await;
+    app.render(160, 48);
+    // "✓Read" on the strip.
+    app.click(28, 10);
+    app.settle().await;
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("v1.0.0") && !screen.contains("Typo in the install docs"));
+}
+
+#[tokio::test]
+async fn reopening_shows_what_the_last_open_saved() {
     let mut app = opened().await;
-    app.press(&["R"]);
-    app.settle().await;
-    app.press(&["ctrl+r"]);
-    app.settle().await;
     app.press(&["escape"]);
     app.settle().await;
-    // Python writes `notifications.json` from both tabs and never reads it (Py bug B29).
-    assert!(
-        app.effects()
-            .iter()
-            .all(|effect| !matches!(effect, Effect::WriteCache { .. }))
-    );
+    app.press(&["ctrl+n"]);
+    app.answer_cache_reads();
+    let screen = app.screen(160, 48);
+    assert!(screen.contains(SAVED_REFRESHING) && screen.contains("Add the notifications modal"));
 }
 
 // `gh` failing mid-session (#323): the pages and the marks.
@@ -1035,6 +1602,24 @@ mod gh_failures {
                     Ok(())
                 } else {
                     Err(format!("{:?}", app.app().modals()))
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn the_first_page_over_saved_rows_keeps_them() {
+        assert_gh_failures_surface(
+            || listed().with_cache_file(saved_path(), cache::to_json(saved_three())),
+            |app| {
+                app.press(&["ctrl+n"]);
+            },
+            |app| {
+                let screen = app.screen(160, 48);
+                if screen.contains(SAVED_REFRESH_FAILED) && screen.contains("Saved unread thread") {
+                    Ok(())
+                } else {
+                    Err(format!("the saved rows went:\n{screen}"))
                 }
             },
         );

@@ -542,3 +542,16 @@ fn a_search_keeps_the_widths_of_the_rows_it_hides() {
         "gh-dash".len() + 2
     );
 }
+
+#[test]
+fn select_key_ignores_a_key_the_search_hides() {
+    let mut table = table();
+    search(&mut table, "parity-org");
+    let shown = ids(&table);
+    assert_eq!(shown.len(), 2);
+    // Repo 1 is parity-bot's: hidden.
+    assert_eq!(table.select_key(&1), Handled::Ignored);
+    assert_eq!(table.cursor(), 0);
+    assert_eq!(table.select_key(&shown[1]), Handled::Consumed);
+    assert_eq!(table.cursor(), 1);
+}

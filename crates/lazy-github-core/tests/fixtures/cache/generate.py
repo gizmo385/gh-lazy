@@ -14,6 +14,8 @@ The models are built from the parity fixtures the way the Python app builds them
   `/user/repos` page.
 - parity-bot_cache-fixture_workflow_runs.json: `WorkflowRun(**run)` for each run of table-caches' first
   `/repos/parity-bot/cache-fixture/actions/runs` page, as `list_workflow_runs` builds them.
+- notifications.json: `Notification(**n)` for each thread of notifications-modal's `all=true` first `/notifications`
+  page, as `fetch_notifications` builds them.
 
 `--out DIR` writes them to DIR instead of this directory; the `cache_goldens_are_fresh` test uses it.
 """
@@ -26,13 +28,14 @@ from typing import Any
 from lazy_github.lib.cache import save_models_to_cache
 from lazy_github.lib.config import Config
 from lazy_github.lib.context import LazyGithubContext
-from lazy_github.models.github import Issue, PartialPullRequest, Repository, WorkflowRun
+from lazy_github.models.github import Issue, Notification, PartialPullRequest, Repository, WorkflowRun
 
 HERE = Path(__file__).parent
 FIXTURES = HERE.parents[4] / "parity" / "fixtures"
 USER_REPOS = "user/repos/GET.direction-asc_page-1_per_page-50_sort-full_name_type-all.json"
 CACHE_FIXTURE_ISSUES = "repos/parity-bot/cache-fixture/issues/GET.page-1_per_page-30_state-all.json"
 CACHE_FIXTURE_RUNS = "repos/parity-bot/cache-fixture/actions/runs/GET.page-1_per_page-30.json"
+NOTIFICATIONS_PAGE = "notifications/GET.all-true_page-1_per_page-50.json"
 
 
 def body(fixture: str, path: str) -> Any:
@@ -63,6 +66,9 @@ def main() -> None:
 
     runs = [WorkflowRun(**run) for run in body("table-caches", CACHE_FIXTURE_RUNS)["workflow_runs"]]
     save_models_to_cache(repo, "workflow_runs", runs)
+
+    notifications = [Notification(**n) for n in body("notifications-modal", NOTIFICATIONS_PAGE)]
+    save_models_to_cache(None, "notifications", notifications)
 
 
 if __name__ == "__main__":

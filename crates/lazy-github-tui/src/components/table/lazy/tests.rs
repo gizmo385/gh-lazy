@@ -389,3 +389,13 @@ fn lazy_after_page_2() {
     assert_eq!(numbers(&table), [8, 7, 6, 5, 4, 3, 2, 1]);
     insta::assert_debug_snapshot!(draw(&mut table, Rect::new(0, 0, 30, 10)));
 }
+
+#[test]
+fn select_key_runs_the_check_as_a_cursor_move_does() {
+    let mut table = thirty();
+    // Descending: number 3 is row 27, within five of the end.
+    assert_eq!(table.select_key(&3), load_more(0, 2, 30));
+    assert_eq!(table.cursor(), 27);
+    // Selecting the row the cursor is already on is no move, so no second check.
+    assert_eq!(table.select_key(&3), Handled::Consumed);
+}

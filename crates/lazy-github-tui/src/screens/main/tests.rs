@@ -470,14 +470,18 @@ fn notifications_open_falls_through_while_notifications_are_off() {
     // Entering the main screen starts the notifications poll.
     let started = app.effects().len();
     app.press(&["ctrl+n"]);
-    // The screen takes it: the Notifications modal opens and asks for its first page, and nothing quits.
+    // The screen takes it: the Notifications modal opens, reads its saved rows and asks for its first page, and
+    // nothing quits.
     assert_eq!(app.app().modals(), [ModalKind::Notifications]);
     assert!(matches!(
         app.effects()[started..],
-        [Effect::Github {
-            request: GithubRequest::ListNotifications(NotificationQuery { all: true, page: 1 }),
-            ..
-        }]
+        [
+            Effect::ReadCache { .. },
+            Effect::Github {
+                request: GithubRequest::ListNotifications(NotificationQuery { all: true, page: 1 }),
+                ..
+            }
+        ]
     ));
 }
 

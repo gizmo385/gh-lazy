@@ -1,0 +1,84 @@
+version = 1
+description = "Notifications modal (ctrl+n) on a saved notifications.json: the saved threads show at once under 'Showing saved notifications - refreshing...', the live first page replaces them, and the next open shows what the first one saved"
+# Rust only: Python writes notifications.json but never reads it (Py bug B29, decision notifications-cache), so it
+# always waits under the loading overlay. The modal's thick border isn't a box to the structure extractor, so its
+# rows are checked with [expect].
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "modals.notifications-cached",
+    "modals.notifications-cached-refresh",
+    "caches-drafts.notifications-json",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+# notifications-slow answers the all=true first page 1.5 s late, so the saved rows hold still for the capture.
+fixtures = ["notifications-slow", "notifications-modal", "pr-details", "base"]
+# notifications.json with 9100901 (unread) and 9100902 (read), which only it has, and 9100001 saved as read.
+seed = "notifications-cache"
+
+[env.config_overrides]
+notifications = { enabled = true }
+
+[[step]]
+wait = { text = "• Unread Notifications: 4", timeout_ms = 15000 }
+
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { text = "Saved unread thread" }
+
+[[step]]
+capture = "saved"
+
+[[step]]
+wait = { text = "Add the notifications modal" }
+
+[[step]]
+wait = { gone = "Showing saved notifications" }
+
+[[step]]
+capture = "live"
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "✓Read" }
+
+[[step]]
+wait = { text = "• Unread Notifications: 4" }
+
+# The first open wrote the live first page: the second opens on it.
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { text = "Showing saved notifications - refreshing..." }
+
+[[step]]
+capture = "reopened"
+
+[[step]]
+wait = { gone = "Showing saved notifications" }
+
+[[step]]
+capture = "reopened-live"
+
+[expect.saved]
+contains = ["Saved unread thread", "Showing saved notifications - refreshing...", "Updated At", "Mark as Read", "Mark all as read"]
+not_contains = ["Loading", "Traceback", "Typo in the install docs"]
+
+[expect.live]
+contains = ["Add the notifications modal", "Typo in the install docs", "Updated At"]
+not_contains = ["Saved unread thread", "Saved read thread", "Showing saved notifications"]
+
+[expect.reopened]
+contains = ["Showing saved notifications - refreshing...", "Add the notifications modal", "Typo in the install docs"]
+not_contains = ["Saved unread thread", "Saved read thread", "Loading"]
+
+[expect.reopened-live]
+contains = ["Add the notifications modal", "Typo in the install docs"]
+not_contains = ["Saved unread thread", "Showing saved notifications"]

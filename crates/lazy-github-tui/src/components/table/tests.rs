@@ -749,3 +749,28 @@ fn styled_cells_keep_their_spans() {
     assert_eq!(cell.display, line);
     assert_eq!(Cell::int(7).value, CellValue::Int(7));
 }
+
+// `select_key`.
+
+#[test]
+fn select_key_puts_the_cursor_on_the_keys_row_and_scrolls_it_into_view() {
+    let mut table = twelve();
+    // 40x8: too short for all twelve rows.
+    let _ = snap(&mut table, true);
+    // Id 12 is the last row.
+    assert_eq!(table.select_key(&12), Handled::Consumed);
+    assert_eq!(table.cursor(), 11);
+    assert_eq!(table.selected().map(|item| item.id), Some(12));
+    assert!(table.scroll().0 > 0, "the last row is scrolled into view");
+    // Back to the first row.
+    assert_eq!(table.select_key(&4), Handled::Consumed);
+    assert_eq!(table.scroll(), (0, 0));
+}
+
+#[test]
+fn select_key_of_an_absent_key_leaves_the_cursor() {
+    let mut table = twelve();
+    let _ = table.on_binding(BindingId::TableCursorDown);
+    assert_eq!(table.select_key(&99), Handled::Ignored);
+    assert_eq!(table.cursor(), 1);
+}

@@ -1,0 +1,35 @@
+---
+source: crates/lazy-github-tui/src/modal/notifications/tests.rs
+assertion_line: 1474
+expression: "app.screen(100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                   • Unread Notifications: 4│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Rep█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█─────────┐
+│ ★  Owner█                                                                              █         │
+│         █                                                                              █━━━━━━━━━│
+│         █                                Notifications                                 █         │
+│         █                 Showing saved notifications - refreshing...                  █         │
+│         █ •Unread  ✓Read                                                               █)        │
+│         █╸━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█         │
+│         █ Updated At           Subject      Title                Reason            Thre█h        │
+│         █ 2026-10-25 01:00:00  PullRequest  Saved unread thread  Review Requested  9100█ the     │
+└─────────█                                                                        ▌     █nce      │
+┌─ [2] Pul█                                                                              █l        │
+│ #  Statu█                                                                              █d and    │
+│         █                                                                              █         │
+│         █                                                                              █         │
+└─────────█                                                                              █o be   ▁▁│
+┌─ [3] Iss█                                                                              █         │
+│ #  Statu█                                                                              █         │
+│         █                                                                              █         │
+│         █                                                                              █         │
+└─────────█                                                                              █         │
+┌─ [4] Wor█                                                                              █ls,      │
+│ Time  Re█                                                                              █ctive    │
+│         █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█         │
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ / Search  R Mark as Read  ^r Mark all as read  r View Read Notifications  u View Unread Notificatio

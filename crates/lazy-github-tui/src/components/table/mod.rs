@@ -485,6 +485,17 @@ impl<T: TableItem> SearchableTable<T> {
         handled
     }
 
+    /// Puts the cursor on the row of `key`, scrolling it into view, for an owner that keeps the cursor on an item
+    /// across a refill. [`Handled::Ignored`] when no shown row has `key` (it's absent, or a search hides it), and the
+    /// cursor stays. A cursor that moves runs a lazy table's check, as any cursor move does.
+    pub fn select_key(&mut self, key: &T::Key) -> Handled<TableEvent<T::Key>> {
+        let Some(cursor) = self.rows.iter().position(|row| &row.key == key) else {
+            return Handled::Ignored;
+        };
+        let pos = self.body().reveal_cursor(Position { cursor, ..self.pos });
+        self.move_to(pos)
+    }
+
     fn move_to(&mut self, pos: Position) -> Handled<TableEvent<T::Key>> {
         let moved = pos.cursor != self.pos.cursor;
         self.pos = pos;

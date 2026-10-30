@@ -1,20 +1,22 @@
-//! Notifications, from `GET /notifications`.
+//! Notifications, from `GET /notifications`, and as the Notifications modal saves its first page to
+//! `notifications.json` (see [`crate::cache::NOTIFICATIONS`]).
 
 use std::sync::LazyLock;
 
 use jiff::Timestamp;
 use regex::Regex;
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use super::Repository;
 
 /// One notification thread: Python's `Notification`.
 ///
-/// Not `Serialize`: notifications are never cached (Python's are, Py bug B29).
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+/// It serializes as Python's `model_dump(mode="json")` writes it, for `notifications.json`: every field, `null` for
+/// none, the id as a number and the subject's kind as `subject_type`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Notification {
-    /// The thread id, which marking it read goes by. GitHub sends it as a JSON string (`"9100001"`); a number is
-    /// accepted too.
+    /// The thread id, which marking it read goes by. GitHub sends it as a JSON string (`"9100001"`); a number, as the
+    /// cache file holds it, is accepted too.
     #[serde(deserialize_with = "string_or_number")]
     pub id: u64,
     /// The repository the thread is in, in GitHub's minimal shape (no default branch, archived flag or permissions).
@@ -32,7 +34,7 @@ pub struct Notification {
 }
 
 /// What a notification is about: Python's `NotificationSubject`.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NotificationSubject {
     /// The subject's title, verbatim (untrimmed).
     pub title: String,
@@ -41,7 +43,10 @@ pub struct NotificationSubject {
     /// The API URL of the latest comment on it, if any.
     pub latest_comment_url: Option<String>,
     /// The subject kind, as the API spells it: `PullRequest`, `Issue`, `Release`, `CheckSuite`, `Discussion`, ...
-    #[serde(rename = "type")]
+    ///
+    /// GitHub sends it as `type`; Python's `model_dump` writes it as `subject_type`, which is what the cache file
+    /// holds. Both read.
+    #[serde(rename(serialize = "subject_type", deserialize = "type"), alias = "subject_type")]
     pub kind: String,
 }
 
@@ -221,6 +226,54 @@ mod tests {
             assert_eq!(parsed.id, 42);
             assert_eq!(parsed.subject.kind, "Discussion");
         }
+    }
+
+    #[test]
+    fn the_subject_kind_reads_as_type_or_subject_type() {
+        let mut cached = notification(&json!(7));
+        let subject = cached["subject"].as_object_mut().unwrap();
+        let kind = subject.remove("type").unwrap();
+        subject.insert("subject_type".into(), kind);
+        let parsed: Notification = serde_json::from_value(cached).unwrap();
+        assert_eq!(parsed.subject.kind, "Discussion");
+        let parsed: Notification = serde_json::from_value(notification(&json!(7))).unwrap();
+        assert_eq!(parsed.subject.kind, "Discussion");
+    }
+
+    #[test]
+    fn it_serializes_in_pythons_dump_shape() {
+        let parsed: Notification = serde_json::from_value(notification(&json!("42"))).unwrap();
+        let dumped = serde_json::to_value(&parsed).unwrap();
+        assert_eq!(dumped["id"], json!(42));
+        assert_eq!(dumped["last_read_at"], Value::Null);
+        assert_eq!(dumped["updated_at"], json!("2026-10-24T22:00:00Z"));
+        assert_eq!(
+            dumped["subject"],
+            json!({"title": "t", "url": null, "latest_comment_url": null, "subject_type": "Discussion"})
+        );
+        // Every repository field, `null` for the ones GitHub's minimal shape leaves out.
+        assert_eq!(dumped["repository"]["default_branch"], Value::Null);
+        assert_eq!(dumped["repository"]["permissions"], Value::Null);
+        let back: Notification = serde_json::from_value(dumped).unwrap();
+        assert_eq!(back, parsed);
+    }
+
+    #[test]
+    fn one_bad_thread_makes_the_whole_file_none_with_the_schema_warning() {
+        let path = std::path::Path::new("notifications.json");
+        let good: Notification = serde_json::from_value(notification(&json!(1))).unwrap();
+        let good = serde_json::to_value(good).unwrap();
+        let mut bad = good.clone();
+        bad["unread"] = json!("yes");
+        let text = Value::Array(vec![good, bad]).to_string();
+        let error = crate::cache::try_parse::<Notification>(path, &text, "Notification").unwrap_err();
+        let message = error.to_string();
+        assert!(
+            message.contains("doesn't match the expected schema for Notification")
+                && message.contains("item 1: unread"),
+            "{message}"
+        );
+        assert_eq!(crate::cache::parse::<Notification>(path, &text, "Notification"), []);
     }
 
     #[test]

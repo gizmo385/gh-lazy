@@ -57,6 +57,11 @@ keys = ["ctrl+n"]
 [[step]]
 wait = { text = "Add the notifications modal", timeout_ms = 15000 }
 
+# The Rust app opens on the rows the last open saved (decision notifications-cache); this waits for the live
+# page. Python never shows the line, so it passes at once there.
+[[step]]
+wait = { gone = "Showing saved notifications" }
+
 [[step]]
 wait = { stable_ms = 300 }
 

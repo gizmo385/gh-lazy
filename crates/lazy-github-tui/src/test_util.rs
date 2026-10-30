@@ -209,6 +209,21 @@ impl TestApp {
         self
     }
 
+    /// Answers the queued cache reads from the fake cache files, leaving every other queued effect in place.
+    pub fn answer_cache_reads(&mut self) -> &mut Self {
+        let (reads, rest): (VecDeque<Effect>, VecDeque<Effect>) = std::mem::take(&mut self.queued)
+            .into_iter()
+            .partition(|effect| matches!(effect, Effect::ReadCache { .. }));
+        self.queued = rest;
+        for effect in reads {
+            if let Effect::ReadCache { id, path } = effect {
+                let result = Ok(self.cache_files.get(&path).cloned());
+                self.send(Event::CacheRead { id, result });
+            }
+        }
+        self
+    }
+
     /// This app with the fake cache file `path` holding `text`, for reads still to be answered (such as the held
     /// startup ones of [`Self::loading`]).
     #[must_use]

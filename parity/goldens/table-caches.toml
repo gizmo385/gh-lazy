@@ -1,11 +1,12 @@
 version = 1
-description = "Table cache files: the Python app's repos.json and a repo's pull_requests, issues and workflow_runs files, read by the Rust app as the models it builds from the same fixtures and written back as the same JSON"
+description = "Table cache files: the Python app's repos.json, notifications.json and a repo's pull_requests, issues and workflow_runs files, read by the Rust app as the models it builds from the same fixtures and written back as the same JSON"
 generator = "crates/lazy-github-core/tests/fixtures/cache/generate.py"
 golden = [
   "crates/lazy-github-core/tests/fixtures/cache/repos.json",
   "crates/lazy-github-core/tests/fixtures/cache/parity-bot_cache-fixture_pull_requests.json",
   "crates/lazy-github-core/tests/fixtures/cache/parity-bot_cache-fixture_issues.json",
   "crates/lazy-github-core/tests/fixtures/cache/parity-bot_cache-fixture_workflow_runs.json",
+  "crates/lazy-github-core/tests/fixtures/cache/notifications.json",
 ]
 test = "crates/lazy-github-core/tests/cache.rs"
 fresh_test = "cache_goldens_are_fresh"
@@ -16,4 +17,5 @@ parity_rows = [
   "caches-drafts.pull-requests-json",
   "caches-drafts.issues-json",
   "caches-drafts.workflow-runs-json",
+  "caches-drafts.notifications-json",
 ]

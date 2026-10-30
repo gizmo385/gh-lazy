@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["pull-request", "issue", "pr-fails", "no-url"]
 
 [inputs]
-scenario = "68a02bb791eb19553a1e12748563525d365e2a83"
+scenario = "f23a492281bd94bf84c45d2dbd8ebac49df40dfb"
 fixtures = "4aa259775a069e01322df2c228cb7a21a042846e"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "89fd8ec5199f7194e251a19d4da830af25a57643"

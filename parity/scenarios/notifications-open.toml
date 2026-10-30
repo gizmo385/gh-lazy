@@ -47,6 +47,11 @@ keys = ["ctrl+n"]
 [[step]]
 wait = { text = "Thread ID" }
 
+# The Rust app opens on the rows the last open saved (decision notifications-cache); this waits for the live
+# page. Python never shows the line, so it passes at once there.
+[[step]]
+wait = { gone = "Showing saved notifications" }
+
 [[step]]
 keys = ["j", "enter"]
 
@@ -64,6 +69,11 @@ keys = ["ctrl+n"]
 [[step]]
 wait = { text = "Thread ID" }
 
+# The Rust app opens on the rows the last open saved (decision notifications-cache); this waits for the live
+# page. Python never shows the line, so it passes at once there.
+[[step]]
+wait = { gone = "Showing saved notifications" }
+
 [[step]]
 keys = ["r", "j", "enter"]
 
@@ -80,6 +90,11 @@ keys = ["ctrl+n"]
 
 [[step]]
 wait = { text = "Thread ID" }
+
+# The Rust app opens on the rows the last open saved (decision notifications-cache); this waits for the live
+# page. Python never shows the line, so it passes at once there.
+[[step]]
+wait = { gone = "Showing saved notifications" }
 
 [[step]]
 keys = ["j", "j", "enter"]

@@ -107,8 +107,10 @@ impl DialogFrame<'_> {
 
 impl Widget for DialogFrame<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let area = area.intersection(buf.area);
-        if area.is_empty() {
+        // A frame running past the screen's edge is cut there, as Textual draws it: the edges are the frame's own,
+        // so no border is drawn along the screen's edge (#334).
+        let visible = area.intersection(buf.area);
+        if visible.is_empty() {
             return;
         }
         let theme = self.theme;
@@ -122,9 +124,10 @@ impl Widget for DialogFrame<'_> {
         let interior = Style::new()
             .fg(theme.color(palette.foreground, background))
             .bg(theme.paint(background));
+        // `visible` isn't empty, so neither is `area`.
         let (left, right, top, bottom) = (area.left(), area.right() - 1, area.top(), area.bottom() - 1);
-        for y in top..=bottom {
-            for x in left..=right {
+        for y in visible.top()..visible.bottom() {
+            for x in visible.left()..visible.right() {
                 let edge = x == left || x == right;
                 let (symbol, style) = match (y == top, y == bottom) {
                     _ if edge => ("█", border),
@@ -175,6 +178,36 @@ mod tests {
     fn a_frame_larger_than_the_screen_is_clipped() {
         assert_eq!(frame_rect(Rect::new(0, 0, 50, 20), (60, 25)), Rect::new(0, 0, 50, 19));
         assert_eq!(frame_rect(Rect::new(0, 0, 0, 0), (60, 25)), Rect::new(0, 0, 0, 0));
+    }
+
+    #[test]
+    fn a_frame_past_the_screen_is_cut_without_edges_at_the_screen() {
+        let theme = Theme::default();
+        let draw = |frame: Rect| {
+            let mut buf = Buffer::empty(Rect::new(0, 0, 10, 6));
+            DialogFrame {
+                theme: &theme,
+                background: theme.palette.surface,
+                border: default_border(theme.palette),
+            }
+            .render(frame, &mut buf);
+            buf
+        };
+        // Past the right and bottom edges: only the left and top edges are drawn.
+        let buf = draw(Rect::new(1, 1, 20, 20));
+        for y in 1..6 {
+            assert_eq!(buf[(1, y)].symbol(), "█");
+            assert_ne!(buf[(9, y)].symbol(), "█", "no right edge on row {y}");
+        }
+        assert_eq!(buf[(5, 1)].symbol(), "▀");
+        assert_eq!(buf[(5, 5)].symbol(), " ", "no bottom edge on the screen's last row");
+        // On screen: all four.
+        let buf = draw(Rect::new(1, 1, 8, 4));
+        for y in 1..5 {
+            assert_eq!(buf[(1, y)].symbol(), "█");
+            assert_eq!(buf[(8, y)].symbol(), "█");
+        }
+        assert_eq!(buf[(5, 4)].symbol(), "▄");
     }
 
     #[test]

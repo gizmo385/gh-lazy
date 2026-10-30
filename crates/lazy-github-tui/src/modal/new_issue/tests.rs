@@ -463,3 +463,21 @@ fn new_issue_dialog_typed_100x30() {
     type_text(&mut app, "First line\nSecond line");
     insta::assert_snapshot!(app.screen(100, 30));
 }
+
+#[test]
+fn every_row_keeps_the_right_border_while_the_form_scrolls_at_48x16() {
+    // The frame fits the screen, so its right edge is on screen beside every row of the scrolled form (#334).
+    let mut app = opened();
+    let _ = app.render(48, 16);
+    app.press(&["tab", "tab"]);
+    assert!(
+        !app.screen(48, 16).contains("█Title "),
+        "focusing the description scrolls the title out of view"
+    );
+    let screen = app.render(48, 16);
+    // The frame is rows 1 to 12, from column 0 to the screen's last.
+    for y in 1..13 {
+        assert_eq!(screen[(47, y)].symbol(), "█", "row {y} has its right border");
+        assert_eq!(screen[(0, y)].symbol(), "█", "row {y} has its left border");
+    }
+}

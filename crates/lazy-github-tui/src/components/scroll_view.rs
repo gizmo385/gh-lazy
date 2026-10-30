@@ -160,14 +160,20 @@ impl ScrollView {
             area.width
         }
         .min(content.area.width);
-        let area = area.intersection(buf.area);
+        // Only what's on the screen is copied. The scrollbar keeps to the area's own right edge, which may be past
+        // the screen's (a dialog running off it), so it isn't drawn over the content at the screen's edge (#334).
+        let visible = area.intersection(buf.area);
         // Both are bounded by the screen's u16 height once visible.
         let rows = u16::try_from(height.saturating_sub(offset).min(window)).unwrap_or(u16::MAX);
         let first = u16::try_from(offset).unwrap_or(u16::MAX);
         for dy in 0..rows.min(area.height) {
             for dx in 0..width.min(area.width) {
+                let to = (area.x.saturating_add(dx), area.y.saturating_add(dy));
+                if !visible.contains(to.into()) {
+                    continue;
+                }
                 let from = (content.area.x + dx, content.area.y + first + dy);
-                buf[(area.x + dx, area.y + dy)] = content[from].clone();
+                buf[to] = content[from].clone();
             }
         }
         if scrollbar && height > window {
@@ -379,6 +385,29 @@ mod tests {
         // The scrollbar's track takes the last two columns; nothing is drawn below the area.
         assert_ne!(buf[(10, 1)].bg, Color::Reset);
         assert_eq!(buf[(2, 6)].symbol(), " ");
+    }
+
+    #[test]
+    fn a_view_past_the_screen_copies_what_shows_and_keeps_its_scrollbar_at_its_own_edge() {
+        use ratatui::style::Color;
+
+        let theme = Theme::default();
+        // Ten 20-cell rows of `x`, in a view 22 wide (20 plus the scrollbar) on a screen 12 wide.
+        let mut content = Buffer::empty(Rect::new(2, 0, 20, 10));
+        for row in 0..10u16 {
+            content.set_string(2, row, "x".repeat(20), Style::new().fg(Color::Red));
+        }
+        let mut view = ScrollView::default();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 12, 5));
+        view.render_buffer(&mut buf, Rect::new(2, 0, 22, 5), &theme, &content, true);
+        assert_eq!(view.last_size(), (10, 5));
+        // The content runs to the screen's edge on every row: the scrollbar is past it.
+        for y in 0..5 {
+            for x in 2..12 {
+                assert_eq!(buf[(x, y)].symbol(), "x", "({x}, {y})");
+                assert_eq!(buf[(x, y)].fg, Color::Red, "({x}, {y})");
+            }
+        }
     }
 
     #[test]

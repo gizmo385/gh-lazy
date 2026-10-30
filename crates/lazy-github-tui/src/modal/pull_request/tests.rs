@@ -921,3 +921,31 @@ fn create_pr_missing_fields() {
     }
     insta::assert_snapshot!(crate::test_util::buffer_to_styled_string(&dialog));
 }
+
+/// Create PR at 48x16 with its form scrolled to the branches, which run past the screen's right edge.
+fn scrolled_at_48x16() -> TestApp {
+    let mut app = opened();
+    let _ = app.render(48, 16);
+    // Title, then on through the reviewers and the buttons, round to Base: the form scrolls down and back.
+    for _ in 0..6 {
+        app.press(&["tab"]);
+        let _ = app.render(48, 16);
+    }
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+    assert!(dialog.scroll.offset() > 0, "the form is scrolled");
+    app
+}
+
+#[test]
+fn a_frame_past_the_right_edge_is_cut_the_same_on_every_row() {
+    // The 100-wide frame starts at column 1 and runs past the 48-column screen, as Python's does: no row draws a
+    // border along the screen's edge, and the form's scrollbar, at the frame's own right edge, is off screen (#334).
+    let mut app = scrolled_at_48x16();
+    let screen = app.render(48, 16);
+    // The frame is rows 2 to 12.
+    for y in 2..13 {
+        assert_eq!(screen[(1, y)].symbol(), "█", "row {y} has its left border");
+        assert_ne!(screen[(47, y)].symbol(), "█", "row {y} is cut at the screen's edge");
+    }
+    insta::assert_snapshot!(app.screen(48, 16));
+}

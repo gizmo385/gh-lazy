@@ -74,7 +74,7 @@ jobs:
       with:
         enable-cache: true
         cache-dependency-glob: uv.lock
-        python-version: "3.11"
+        python-version: "3.13"
     - name: Install the Python app
       id: sync
       if: steps.plan.outcome == 'success' && steps.plan.outputs.live-python != 'none'

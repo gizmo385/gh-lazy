@@ -1,20 +1,24 @@
 version = 1
-description = "Paste link (ctrl+v): the dialog, an unknown link, a link that doesn't resolve, and pull request, issue, repository and user links opening in-app with their toasts; escape closes it"
-# Not built yet (#197): gate = false, so the Rust side shows as rust-not-ready in the report until it lands. The
-# harness can't send shift+enter, so Open is reached with tab. Each link gets a fresh dialog, since the input keeps
-# its text after a failed lookup.
+description = "Paste link (ctrl+v): the dialog, enter in the input (validates, doesn't open), an unknown link, a link that doesn't resolve, and pull request (shift+enter), issue, issue-that-is-a-PR, repository and user links opening in-app with their toasts; a repo picked from the profile is selected; escape closes it"
+# Not built yet (#197): gate = false, so the Rust side shows as rust-not-ready in the report until it lands. Each
+# link gets a fresh dialog, since the input keeps its text after a failed lookup. Open pressed with enter blurs the
+# button (Textual blurs a widget it disables), so nothing in the dialog has focus afterwards and escape closes it.
 gate = false
 parity_rows = [
     "modals.paste-link",
+    "markdown-links.github-url-patterns",
     "markdown-links.paste-link-result",
     "keybindings.link-paste",
     "toasts.opening-for-link",
+    "keybindings.modal-submit",
 ]
 
 [env]
-# links: GET /repos/<owner>/<repo> for issue-fixture and pr-details (and a 404 for parity-bot/missing); issue-details
-# lists issue-fixture first and has issue 12; pr-details has PR 5 (its README is slowed down in links); user-profile has parity-bot's profile.
-fixtures = ["links", "issue-details", "pr-details", "user-profile", "base"]
+# paste-link: GET /repos/parity-bot/pr-details/issues/5 (pull request 5 from the issues endpoint). links:
+# GET /repos/<owner>/<repo> for issue-fixture and pr-details (and a 404 for parity-bot/missing); issue-details lists
+# issue-fixture first and has issue 12; pr-details has PR 5 (its README is slowed down in links); user-profile has
+# parity-bot's profile and the profile-only repo.
+fixtures = ["paste-link", "links", "issue-details", "pr-details", "user-profile", "base"]
 
 [[step]]
 wait = { text = "issue-fixture", timeout_ms = 15000 }
@@ -29,8 +33,17 @@ wait = { text = "Paste a web GitHub link:" }
 capture = "open"
 checks = ["titles", "footer"]
 
+# Enter in the input doesn't open the link (Textual's Input.Submitted isn't handled); it only validates, so the
+# input turns red.
 [[step]]
 type = "not a link"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+capture = "invalid"
+checks = ["titles", "footer"]
 
 [[step]]
 keys = ["tab", "enter"]
@@ -83,11 +96,13 @@ keys = ["ctrl+v"]
 [[step]]
 wait = { text = "Paste a web GitHub link:" }
 
+# modal.submit from the input: shift+enter, in the kitty keyboard protocol's encoding (CSI 13;2 u), which both
+# apps read.
 [[step]]
 type = "https://github.com/parity-bot/pr-details/pull/5"
 
 [[step]]
-keys = ["tab", "enter"]
+type = "\u001b[13;2u"
 
 [[step]]
 wait = { text = "Opening pull request for link" }
@@ -119,6 +134,29 @@ wait = { text = "Workaround: delete the file", timeout_ms = 15000 }
 
 [[step]]
 capture = "issue"
+checks = ["titles", "focus"]
+
+# An issue link whose number is a pull request opens the pull request.
+[[step]]
+keys = ["ctrl+v"]
+
+[[step]]
+wait = { text = "Paste a web GitHub link:" }
+
+[[step]]
+type = "https://github.com/parity-bot/pr-details/issues/5#issuecomment-1"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "PR #5 Details", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Overview  Diff  Conversation", timeout_ms = 15000 }
+
+[[step]]
+capture = "issue-is-pull-request"
 checks = ["titles", "focus"]
 
 [[step]]
@@ -162,8 +200,23 @@ wait = { text = "Followers: 12" }
 capture = "user"
 checks = ["titles"]
 
+# A repo picked in the profile (tab focuses its table) is selected, and not added to the repos table.
+[[step]]
+keys = ["tab", "j", "enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/profile-only" }
+
+[[step]]
+capture = "user-repo"
+checks = ["titles", "focus"]
+
 [expect.open]
 contains = ["Paste a web GitHub link:", "Link:", "https://github.com/...", "Open", "Cancel"]
+
+[expect.invalid]
+contains = ["Paste a web GitHub link:", "not a link"]
+not_contains = ["Unknown link"]
 
 [expect.unknown]
 contains = ["Paste a web GitHub link:", "Unknown link"]
@@ -183,6 +236,10 @@ not_contains = ["Paste a web GitHub link:"]
 contains = ["Current repo: parity-bot/issue-fixture", "Opening issue for link", "Crash when the config file is empty (#12)"]
 not_contains = ["Paste a web GitHub link:"]
 
+[expect.issue-is-pull-request]
+contains = ["Current repo: parity-bot/pr-details", "PR #5 Details"]
+not_contains = ["Paste a web GitHub link:"]
+
 [expect.repository]
 contains = ["Current repo: parity-bot/pr-details", "Opening repository for link", "Repo Overview"]
 not_contains = ["Paste a web GitHub link:"]
@@ -190,3 +247,7 @@ not_contains = ["Paste a web GitHub link:"]
 [expect.user]
 contains = ["Followers: 12"]
 not_contains = ["Paste a web GitHub link:"]
+
+[expect.user-repo]
+contains = ["Current repo: parity-bot/profile-only"]
+not_contains = ["Followers: 12"]

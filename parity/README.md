@@ -410,6 +410,9 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   comments; and both repos' READMEs after 1.5 s, because Python's README worker crashes when the README arrives just
   as a link's issue or pull request replaces the Repo Overview (Textual cancels it when it arrives later). Listed
   before `issue-details`, `pr-details`, `user-profile` and `base`. Hand-written.
+- `paste-link/`: `GET /repos/parity-bot/pr-details/issues/5`, pull request 5 as the issues endpoint gives it (copied
+  from pr-details' issues page 1), for a pasted `/issues/5` link that is a pull request. Listed before `links` in the
+  `paste-link` scenario. Hand-written.
 - `run-details/`: the repo `parity-bot/run-fixture`, listed first on base's `GET /user/repos` page, with its README,
   empty issues, one workflow and three runs of it on `actions/runs` page 1 (then an empty page 2): 42 (completed,
   failure, attempt 2), 41 (in progress) and 40 (completed, success). `GET .../actions/runs/<id>/jobs` (no query):

@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/issues/5"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "url": "https://api.github.com/repos/parity-bot/pr-details/issues/5",
+      "repository_url": "https://api.github.com/repos/parity-bot/pr-details",
+      "comments_url": "https://api.github.com/repos/parity-bot/pr-details/issues/5/comments",
+      "html_url": "https://github.com/parity-bot/pr-details/pull/5",
+      "id": 8300005,
+      "node_id": "PR_kwDOPrDetails0005",
+      "number": 5,
+      "title": "Add a cursor to the viewer",
+      "user": {
+        "login": "parity-friend",
+        "id": 1000002,
+        "node_id": "U_kgDO1000002",
+        "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/parity-friend",
+        "html_url": "https://github.com/parity-friend",
+        "type": "User",
+        "site_admin": false
+      },
+      "labels": [],
+      "state": "open",
+      "locked": false,
+      "assignee": null,
+      "assignees": [],
+      "milestone": null,
+      "comments": 0,
+      "created_at": "2026-02-01T08:30:00Z",
+      "updated_at": "2026-02-01T08:30:00Z",
+      "closed_at": null,
+      "author_association": "CONTRIBUTOR",
+      "draft": false,
+      "pull_request": {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5",
+        "diff_url": "https://github.com/parity-bot/pr-details/pull/5.diff",
+        "patch_url": "https://github.com/parity-bot/pr-details/pull/5.patch",
+        "merged_at": null
+      },
+      "body": "Adds a cursor to the viewer, as discussed in #3.\n\n- `j` and `k` move it\n- the current line is marked with `>`\n\nThanks @parity-bot for the first review!\n",
+      "closed_by": null
+    }
+  },
+  "note": "hand-written: pull request 5 from the issues endpoint (copied from pr-details' issues page 1), for a pasted /issues/5 link that is a pull request"
+}

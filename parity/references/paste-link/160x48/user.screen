@@ -43,7 +43,7 @@ cursor 21 74 hidden
 │                                  █   parity-bot  hello-world   ✘                                                          █                                  │
 │                                  █   parity-bot  lazy-demo     ✘        A demo repository with a description long enough  █                                  │
 └──────────────────────────────────█                                                      ▊       ▌                                                            │
-┌─ [3] Issues (empty) ─────────────█                                                              ▌ Opening issue for link                                     │
+┌─ [3] Issues (empty) ─────────────█                                                              ▌ Opening pull request for link                              │
 │                                  █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌                                                            │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                 ▌                                                            │
@@ -92,7 +92,7 @@ ekkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd..uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
 ekkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd..uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu..dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkf
 ekkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd..uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu..dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkf
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeed..vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvwxxxxxxxyzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzkf
-eeeeeeeeeeeeeeAAAAAAAeeeeeeeeeeeeeed..............................................................yzBBBBBBBBBBBBBBBBBBBBBBzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzkf
+eeeeeeeeeeeeeeAAAAAAAeeeeeeeeeeeeeed..............................................................yzBBBBBBBBBBBBBBBBBBBBBBBBBBBBBzzzzzzzzzzzzzzzzzzzzzzzzzzzzzkf
 eCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddyzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzkf
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkf
 eeeeeeeeeeeeeeeeeAAAAAAAeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkyzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzkf

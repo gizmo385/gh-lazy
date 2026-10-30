@@ -7,11 +7,13 @@ A terminal UI for GitHub
 Usage: lazy-github [COMMAND]
 
 Commands:
-  clear-auth   Explains how to log out: LazyGithub uses the GitHub CLI's login
-  dump-config  Dump the current configuration, as it would be loaded by LazyGithub
-  run          Run LazyGithub
-  version      Prints the current version
-  help         Print this message or the help of the given subcommand(s)
+  clear-auth    Explains how to log out: LazyGithub uses the GitHub CLI's login
+  clear-cache   Reset the lazy-github cache
+  clear-config  Reset the user's settings
+  dump-config   Dump the current configuration, as it would be loaded by LazyGithub
+  run           Run LazyGithub
+  version       Prints the current version
+  help          Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help

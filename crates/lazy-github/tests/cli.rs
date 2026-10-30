@@ -15,7 +15,7 @@ const GOLDEN: &str = "tests/fixtures/cli/python-cli.json";
 
 /// The subcommands whose golden cases run. A case runs when its first argument is listed here; the issues that add a
 /// subcommand add it here.
-const IMPLEMENTED: &[&str] = &["version", "dump-config"];
+const IMPLEMENTED: &[&str] = &["version", "dump-config", "clear-config", "clear-cache"];
 
 struct TempHome(PathBuf);
 
@@ -321,6 +321,151 @@ fn dump_config_shows_unknown_keys_after_the_known_ones() {
         ),
         "{stdout}"
     );
+}
+
+/// The one line a failed delete prints (Py bug B97's recommendation), with nothing on stdout after the prompt.
+fn assert_failed_delete(output: &Output, path: &Path, prompt: &str) {
+    assert_eq!(output.status.code(), Some(1));
+    let stderr = text(&output.stderr);
+    let prefix = format!("Error: failed to delete {}: ", path.display());
+    assert!(stderr.starts_with(&prefix), "{stderr:?}");
+    assert_eq!(stderr.lines().count(), 1, "{stderr:?}");
+    assert_eq!(text(&output.stdout), format!("{prompt} [y/N]: "));
+}
+
+#[test]
+fn clear_config_deletes_a_broken_config() {
+    let home = TempHome::new("clear-config-broken");
+    home.write_config(r#"{"issues":{"state_filter":"bogus"}"#);
+    let output = home.command(&["clear-config"]).write_stdin("y\n").output().unwrap();
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    assert_eq!(
+        text(&output.stdout),
+        "Confirm deletion your LazyGithub settings [y/N]: Your settings have been cleared\n"
+    );
+    assert_eq!(home.contents(), paths(&[".config", ".config/lazy-github"]));
+}
+
+#[test]
+fn clear_cache_on_a_broken_config_is_one_error_line_and_no_prompt() {
+    let home = TempHome::new("clear-cache-broken");
+    home.write_config(r#"{"issues":{"state_filter":"bogus"}}"#);
+    let cache = home.config_dir().join(".cache");
+    std::fs::create_dir_all(&cache).unwrap();
+    let output = home.command(&["clear-cache"]).write_stdin("y\n").output().unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(text(&output.stdout), "");
+    let stderr = text(&output.stderr);
+    assert!(stderr.starts_with("Error: "), "{stderr:?}");
+    assert!(stderr.contains("`issues.state_filter`"), "{stderr:?}");
+    assert_eq!(stderr.lines().count(), 1, "{stderr:?}");
+    assert!(cache.is_dir());
+}
+
+#[test]
+fn clear_config_reports_a_config_it_cannot_delete() {
+    let home = TempHome::new("clear-config-dir");
+    std::fs::create_dir_all(home.config_file()).unwrap();
+    let output = home.command(&["clear-config"]).write_stdin("y\n").output().unwrap();
+    assert_failed_delete(
+        &output,
+        &home.config_file(),
+        "Confirm deletion your LazyGithub settings",
+    );
+    assert!(home.config_file().is_dir());
+}
+
+#[test]
+fn clear_cache_reports_a_cache_directory_that_is_a_file() {
+    let home = TempHome::new("clear-cache-file");
+    let cache = home.config_dir().join(".cache");
+    std::fs::create_dir_all(home.config_dir()).unwrap();
+    std::fs::write(&cache, "not a folder").unwrap();
+    let output = home.command(&["clear-cache"]).write_stdin("y\n").output().unwrap();
+    let prompt = format!("Confirm deletion of everything in {}", cache.display());
+    assert_failed_delete(&output, &cache, &prompt);
+    assert!(cache.is_file());
+}
+
+#[test]
+fn clear_cache_refuses_a_symlinked_cache_directory() {
+    let home = TempHome::new("clear-cache-symlink");
+    let target = home.0.join("real-cache");
+    std::fs::create_dir_all(&target).unwrap();
+    std::fs::write(target.join("a.json"), "{}").unwrap();
+    let link = home.0.join("linked-cache");
+    std::os::unix::fs::symlink(&target, &link).unwrap();
+    home.write_config(&format!(r#"{{"cache":{{"cache_directory":"{}"}}}}"#, link.display()));
+    let output = home.command(&["clear-cache"]).write_stdin("y\n").output().unwrap();
+    let prompt = format!("Confirm deletion of everything in {}", link.display());
+    assert_failed_delete(&output, &link, &prompt);
+    assert!(link.is_symlink());
+    assert!(target.join("a.json").is_file());
+}
+
+#[test]
+fn clear_config_and_clear_cache_create_no_log_file() {
+    let home = TempHome::new("clear-no-log");
+    for args in [&["clear-cache", "--no-confirm"][..], &["clear-config", "--no-confirm"]] {
+        let output = home.run(args);
+        assert_eq!(output.status.code(), Some(0), "{args:?}: {}", text(&output.stderr));
+        assert_eq!(home.contents(), Vec::<PathBuf>::new(), "{args:?}");
+    }
+
+    // Answered no, with a config folder already there, they leave it as it was.
+    home.write_config("{}");
+    for args in [&["clear-cache"][..], &["clear-config"]] {
+        let output = home.command(args).write_stdin("n\n").output().unwrap();
+        assert_eq!(output.status.code(), Some(0), "{args:?}: {}", text(&output.stderr));
+        assert_eq!(
+            home.contents(),
+            paths(&[".config", ".config/lazy-github", ".config/lazy-github/config.json"]),
+            "{args:?}"
+        );
+    }
+}
+
+/// `ctrl+c` at the prompt: Click prints `Aborted!` on stderr and exits 1.
+#[test]
+fn ctrl_c_at_the_prompt_aborts() {
+    use std::io::Read as _;
+    use std::process::Stdio;
+
+    let home = TempHome::new("clear-ctrl-c");
+    home.write_config("{}");
+    let mut child = std::process::Command::new(assert_cmd::cargo::cargo_bin("lazy-github"))
+        .arg("clear-config")
+        .env_clear()
+        .env("HOME", &home.0)
+        .env("LANG", "C.UTF-8")
+        .current_dir(&home.0)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    // Held open, so the prompt waits for an answer.
+    let stdin = child.stdin.take().unwrap();
+    let mut stdout = child.stdout.take().unwrap();
+    let prompt = "Confirm deletion your LazyGithub settings [y/N]: ";
+    let mut seen = Vec::new();
+    let mut buf = [0; 256];
+    while !seen.ends_with(prompt.as_bytes()) {
+        let n = stdout.read(&mut buf).unwrap();
+        assert_ne!(n, 0, "stdout closed before the prompt: {:?}", text(&seen));
+        seen.extend_from_slice(&buf[..n]);
+    }
+    let kill = std::process::Command::new("kill")
+        .args(["-INT", &child.id().to_string()])
+        .status()
+        .unwrap();
+    assert!(kill.success());
+    let output = child.wait_with_output().unwrap();
+    drop(stdin);
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(text(&output.stderr), "Aborted!\n");
+    assert_eq!(text(&seen), prompt);
+    assert!(home.config_file().is_file());
 }
 
 /// Regenerates `python-cli.json` with the Python app and checks the committed copy matches.

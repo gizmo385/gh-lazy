@@ -14,7 +14,7 @@ color-eyre = { workspace = true }
 lazy-github-core = { workspace = true }
 lazy-github-tui = { workspace = true }
 serde_json = { workspace = true }
-tokio = { workspace = true, features = ["rt-multi-thread"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "signal", "sync"] }
 tracing = { workspace = true }
 
 [dev-dependencies]

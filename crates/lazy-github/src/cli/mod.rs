@@ -1,6 +1,7 @@
 //! The subcommands other than `run`. Each writes to the `stdout` and `stderr` it's given and returns the exit code,
 //! so the tests can run them without a process. None of them starts logging or creates the config folder.
 
+mod clear;
 mod json;
 
 use std::fmt::Display;
@@ -11,6 +12,7 @@ use std::process::ExitCode;
 use lazy_github_core::config::{Config, ConfigError, ConfigPaths};
 use serde_json::Value;
 
+pub use clear::{aborted, clear_cache, clear_config};
 pub use json::JsonStyle;
 
 /// The token file the Python app's own login flow stored, in the config folder.

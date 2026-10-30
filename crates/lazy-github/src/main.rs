@@ -5,7 +5,7 @@ use std::io::{self, IsTerminal as _};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use lazy_github_core::config::{Config, ConfigPaths};
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{GhCli, GhCliOptions};
@@ -33,6 +33,10 @@ struct Cli {
 enum Command {
     /// Explains how to log out: LazyGithub uses the GitHub CLI's login
     ClearAuth,
+    /// Reset the lazy-github cache
+    ClearCache(ConfirmArgs),
+    /// Reset the user's settings
+    ClearConfig(ConfirmArgs),
     /// Dump the current configuration, as it would be loaded by LazyGithub
     DumpConfig,
     /// Run LazyGithub
@@ -41,12 +45,30 @@ enum Command {
     Version,
 }
 
+/// The option of the subcommands that ask before deleting.
+#[derive(Debug, Args)]
+struct ConfirmArgs {
+    /// Don't ask for confirmation
+    #[arg(long)]
+    no_confirm: bool,
+}
+
 fn main() -> ExitCode {
     // Parse first: `--help`, `--version` and usage errors exit here, before anything touches the disk.
     let cli = Cli::try_parse().unwrap_or_else(|err| err.exit());
     let (stdout, stderr) = (&mut io::stdout(), &mut io::stderr());
     match cli.command.unwrap_or(Command::Run) {
         Command::ClearAuth => cli::clear_auth(ConfigPaths::discover(), stdout, stderr),
+        Command::ClearCache(args) => abort_on_ctrl_c(move || {
+            let stdin = &mut io::stdin().lock();
+            let stdin = (!args.no_confirm).then_some(stdin);
+            cli::clear_cache(ConfigPaths::discover(), stdin, &mut io::stdout(), &mut io::stderr())
+        }),
+        Command::ClearConfig(args) => abort_on_ctrl_c(move || {
+            let stdin = &mut io::stdin().lock();
+            let stdin = (!args.no_confirm).then_some(stdin);
+            cli::clear_config(ConfigPaths::discover(), stdin, &mut io::stdout(), &mut io::stderr())
+        }),
         Command::DumpConfig => {
             let style = cli::JsonStyle::detect(env_var, stdout.is_terminal());
             cli::dump_config(ConfigPaths::discover(), style, stdout, stderr)
@@ -54,6 +76,34 @@ fn main() -> ExitCode {
         Command::Run => run(original_pwd(std::env::var_os(ORIGINAL_PWD_ENV), std::env::current_dir)),
         Command::Version => cli::version(stdout, stderr),
     }
+}
+
+/// Runs a subcommand that may wait at a `[y/N]` prompt, and on `ctrl+c` stops it as Click does: `Aborted!` on
+/// stderr, exit 1. The subcommand runs on its own thread so its blocking read of stdin can lose the race to the
+/// signal; returning from `main` then ends the process, the read with it.
+fn abort_on_ctrl_c(command: impl FnOnce() -> ExitCode + Send + 'static) -> ExitCode {
+    let Ok(runtime) = tokio::runtime::Builder::new_current_thread().enable_all().build() else {
+        // Without a runtime there's no handler, and `ctrl+c` ends the process the usual way.
+        return command();
+    };
+    runtime.block_on(async {
+        let (done, finished) = tokio::sync::oneshot::channel();
+        tokio::select! {
+            // Biased so the handler is registered, on the first poll, before the subcommand can print its prompt.
+            biased;
+            Ok(()) = tokio::signal::ctrl_c() => cli::aborted(&mut io::stderr()),
+            code = async move {
+                std::thread::spawn(move || {
+                    // The receiver only goes away once `main` is returning.
+                    let _ = done.send(command());
+                });
+                finished.await
+            } => {
+                // The subcommand's thread panicked, and the panic message is already printed.
+                code.unwrap_or(ExitCode::FAILURE)
+            }
+        }
+    })
 }
 
 /// An environment variable as Python's `os.environ` would give it: set but not Unicode still counts as set.

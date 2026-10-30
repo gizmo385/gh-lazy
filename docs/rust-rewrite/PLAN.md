@@ -27,7 +27,7 @@ Status: in review · Owner: @gizmo385 · Trunk branch: `rust-main`
 
 ## 2. Branching model
 
-- `main` stays the Python app. Nothing from the rewrite lands on `main` until the cutover PR (Milestone 5).
+- `main` stays the Python app. Nothing from the rewrite lands on `main` until the cutover PR (Milestone 6).
 - `rust-main` is the long-lived trunk for the rewrite, branched from `main` at `13b80e2` (v0.6.6).
 - Work branches are `rust/<issue-number>-<short-slug>`, cut from `rust-main`, and merged back via PR into `rust-main`.
   (The trunk is `rust-main`, not `rust`, because git cannot hold both a `rust` branch and `rust/...` branches.)
@@ -164,7 +164,7 @@ gate. See "Reading the report" and "CI" in `parity/README.md`.
   a first-class target, but its runners cost about 10x Linux minutes, so CI doesn't run it (Chris, 2026-10-25).
   macOS-only code paths (`cfg!(target_os = "macos")`, the parity harness's `TMPDIR`) are checked locally on a Mac
   before merge, and macOS gaps get a `platform: macos` label. Windows isn't built or tested until later in the
-  project; `windows-latest` joins the matrix in M5.
+  project; `windows-latest` joins the matrix in M6.
 - No shelling out except to `gh` and `git`; no `sh -c`. Paths via `std::path` and `etcetera`.
 - `fake-gh` is Rust, not a shell script, so the parity harness runs on all three OSes.
 - Recorded parity references are checked out with LF line endings on every OS (`.gitattributes`), so their hashes
@@ -200,10 +200,16 @@ Link hints (`f`/`F`) and paste-link modal. Settings modal including key rebindin
 Preload PR for current commit. CLI subcommands (`dump-config`, `clear-config`, `clear-auth` becomes a no-op or a
 pointer to `gh auth logout`).
 
-**M5 Hardening and cutover.** Every parity matrix row signed off. Windows added to CI and its status decided. Packaging: release workflow
-building binaries for `gh extension install` (precompiled gh extension, e.g. `cli/gh-extension-precompile`),
-`cargo install`, and an updated Nix flake. README rewrite. Cutover PR `rust-main` → `main` that removes the Python
-code, the PyPI publish workflow and `uv.lock`, with a final `python` release note.
+**M5 Parity sign-off and improvements.** First, validate the parity matrix across every feature: every row signed
+off at `parity` or an approved intentional diff. Then hardening (error paths, rate limits, large data, small
+terminals) and improvements that aren't tied to how the Python app does things: new behavior is filed as
+`enhancement` and recorded as an intentional diff where it changes a parity row. Split out from the old "Hardening and
+cutover" milestone (Chris, 2026-10-29).
+
+**M6 Release and cutover.** Windows added to CI and its status decided. Packaging: release workflow building binaries
+for `gh extension install` (precompiled gh extension, e.g. `cli/gh-extension-precompile`), `cargo install`, and an
+updated Nix flake. README rewrite. Cutover PR `rust-main` → `main` that removes the Python code, the PyPI publish
+workflow and `uv.lock`, with a final `python` release note.
 
 ## 9. Process
 
@@ -223,9 +229,10 @@ Recorded 2026-10-25 by Chris:
 3. Branch naming is `rust-main` for the trunk and `rust/<issue>-<slug>` for work branches, as in §2.
 4. The parity check runs on every PR into `rust-main`.
 5. Windows is allowed to fail until later in the project. We don't build or test it in CI at the start; it gets added
-   to the CI matrix in M5.
+   to the CI matrix in M6 (moved from M5 on 2026-10-29).
 6. M0 and M1 issues are filed. Milestones are tracked with GitHub milestones (`Rust M0: Foundations` through
-   `Rust M5: Hardening and cutover`) plus one tracking issue per milestone, whose checklist holds the order and
+   `Rust M5: Hardening and cutover`; since 2026-10-29 through `Rust M6: Release and cutover`, with M5 renamed
+   `Rust M5: Parity sign-off and improvements`) plus one tracking issue per milestone, whose checklist holds the order and
    dependencies. They replaced `milestone: M<n>` labels on 2026-10-25: a native milestone allows only one per issue,
    and it shows progress.
 7. Auto-merge may be enabled on PRs into `rust-main` (squash). It's never used for PRs into `main`.

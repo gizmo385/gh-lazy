@@ -11,6 +11,7 @@ expression: "format!(\"{}\\n{}\\n{}\", section(&html, \"Status by milestone\"),\
 <tr><td>M3</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
 <tr><td>M4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
 <tr><td>M5</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><td>M6</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
 <tr class="total"><td>Total</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">4</td></tr>
 
 <h3>Status by area</h3>

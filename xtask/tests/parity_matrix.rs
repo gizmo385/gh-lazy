@@ -27,9 +27,9 @@ fn committed_matrix_is_valid() {
     let by_status: usize = matrix.counts().iter().map(|(_, c)| c.iter().sum::<usize>()).sum();
     assert_eq!(rows, by_status);
 
-    // Every status row has a milestone, so the milestone table has exactly M0 to M5 and the same total.
+    // Every status row has a milestone, so the milestone table has exactly M0 to M6 and the same total.
     let by_milestone = matrix.counts_by_milestone();
-    assert_eq!(by_milestone.len(), 6);
+    assert_eq!(by_milestone.len(), 7);
     assert_eq!(
         by_milestone.iter().map(|(_, c)| c.iter().sum::<usize>()).sum::<usize>(),
         by_status
@@ -170,6 +170,7 @@ fn counts_statuses_by_milestone() {
             ("M3", [0, 0, 0, 0]),
             ("M4", [0, 0, 1, 0]),
             ("M5", [0, 0, 0, 0]),
+            ("M6", [0, 0, 0, 0]),
         ]
     );
 
@@ -182,8 +183,8 @@ fn counts_statuses_by_milestone() {
     let matrix = check(dir.path());
     assert_eq!(matrix.problems.len(), 1, "{:#?}", matrix.problems);
     let by_milestone = matrix.counts_by_milestone();
-    assert_eq!(by_milestone.len(), 7);
-    assert_eq!(by_milestone[6], ("none", [0, 1, 0, 0]));
+    assert_eq!(by_milestone.len(), 8);
+    assert_eq!(by_milestone[7], ("none", [0, 1, 0, 0]));
     let total = |counts: &[(&str, [usize; 4])]| counts.iter().flat_map(|(_, c)| c).sum::<usize>();
     assert_eq!(total(&by_milestone), total(&matrix.counts()));
 }
@@ -223,7 +224,7 @@ fn rejects_unknown_statuses_and_qualifiers() {
 
 #[test]
 fn rejects_bad_milestones_issues_and_cell_counts() {
-    assert_edit(AREA_FILE, "| M4 |", "| M9 |", "milestone `M9` isn't M0–M5");
+    assert_edit(AREA_FILE, "| M4 |", "| M9 |", "milestone `M9` isn't M0–M6");
     assert_edit(AREA_FILE, "| #2, #3 |", "| 2 |", "issue `2` isn't `#n` or `#n, #m`");
     assert_edit(
         AREA_FILE,

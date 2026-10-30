@@ -43,8 +43,8 @@ Labels are defined in [`labels.json`](./labels.json) and created with `scripts/s
 ## Milestones
 
 GitHub milestones `Rust M0: Foundations`, `Rust M1: App shell`, `Rust M2: Read-only browsing`, `Rust M3: Write
-actions`, `Rust M4: Remaining features` and `Rust M5: Hardening and cutover`, set with `gh issue create --milestone` or
-`gh issue edit --milestone`. Each also has a tracking issue with a checklist of its issues in order, since a milestone
+actions`, `Rust M4: Remaining features`, `Rust M5: Parity sign-off and improvements` and `Rust M6: Release and
+cutover`, set with `gh issue create --milestone` or `gh issue edit --milestone`. Each also has a tracking issue with a checklist of its issues in order, since a milestone
 itself is unordered. See
 [PLAN.md](./PLAN.md#8-milestones).
 

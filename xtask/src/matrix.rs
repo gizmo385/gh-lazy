@@ -24,7 +24,7 @@ pub const GOLDENS_DIR: &str = "parity/goldens";
 /// The values a row's Status may start with. `intentional diff` may be followed by ` (<qualifier>)`.
 pub const STATUSES: [&str; 4] = ["not started", "in progress", "parity", "intentional diff"];
 /// The milestones a row's Milestone may name (PLAN §8), in order.
-pub const MILESTONES: [&str; 6] = ["M0", "M1", "M2", "M3", "M4", "M5"];
+pub const MILESTONES: [&str; 7] = ["M0", "M1", "M2", "M3", "M4", "M5", "M6"];
 /// The [`Matrix::counts_by_milestone`] entry for status rows without a valid milestone.
 pub const NO_MILESTONE: &str = "none";
 const INTENTIONAL_DIFF: &str = "intentional diff";
@@ -33,7 +33,7 @@ const PY_BUG_STATUSES: [&str; 3] = ["open", "answered", "withdrawn"];
 static ROW_ID: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^([a-z0-9]+(?:-[a-z0-9]+)*)\.[a-z0-9]+(?:-[a-z0-9]+)*$").expect("valid regex"));
 static SLUG: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-z0-9]+(?:-[a-z0-9]+)*$").expect("valid regex"));
-static MILESTONE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^M[0-5]$").expect("valid regex"));
+static MILESTONE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^M[0-6]$").expect("valid regex"));
 static ISSUES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^#\d+(?:, #\d+)*$").expect("valid regex"));
 static BUG_REF: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\bB(\d+)\b").expect("valid regex"));
 static BUG_FILE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^B(\d{2,})\.md$").expect("valid regex"));
@@ -68,7 +68,7 @@ pub struct Row {
     pub line: usize,
     /// `None` for tables without a Status column (terminal caveats).
     pub status: Option<String>,
-    /// The Milestone cell as written (`M0`–`M5` when the matrix is valid), or `None` for tables without one.
+    /// The Milestone cell as written (`M0`–`M6` when the matrix is valid), or `None` for tables without one.
     pub milestone: Option<String>,
     /// The whole table line, for finding `Py bug` notes and decision links in any cell.
     pub source: String,
@@ -160,7 +160,7 @@ impl Matrix {
             .collect()
     }
 
-    /// Rows per status for each milestone, M0 to M5, across every area with a Status column. All six milestones are
+    /// Rows per status for each milestone, M0 to M6, across every area with a Status column. All seven milestones are
     /// listed, even with no rows. Status rows without a valid Milestone (a matrix problem) are counted under a last
     /// [`NO_MILESTONE`] entry, present only when there are any, so the totals match [`Matrix::counts`].
     pub fn counts_by_milestone(&self) -> Vec<(&str, [usize; STATUSES.len()])> {
@@ -637,7 +637,7 @@ fn parse_area(name: &str, file: &Path, text: &str, problems: &mut Vec<Problem>) 
         if let Some(milestone) = col("Milestone")
             && !MILESTONE.is_match(milestone)
         {
-            problems.push(problem(file, n, format!("milestone `{milestone}` isn't M0–M5")));
+            problems.push(problem(file, n, format!("milestone `{milestone}` isn't M0–M6")));
         }
         if let Some(issue) = col("Issue")
             && !issue.is_empty()

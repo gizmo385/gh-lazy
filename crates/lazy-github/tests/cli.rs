@@ -66,7 +66,8 @@ impl TempHome {
         self.command(args).output().unwrap()
     }
 
-    /// Every path under the home, relative to it.
+    /// Every path under the home, relative to it, except the state `gh` itself writes when the app runs it (newer
+    /// `gh` releases create `~/.local/state/gh/device-id` even for `gh --version`).
     fn contents(&self) -> Vec<PathBuf> {
         fn walk(dir: &Path, root: &Path, out: &mut Vec<PathBuf>) {
             for entry in std::fs::read_dir(dir).unwrap() {
@@ -77,6 +78,11 @@ impl TempHome {
                 }
             }
         }
+        let state = self.0.join(".local/state");
+        let _ = std::fs::remove_dir_all(state.join("gh"));
+        // These only go when nothing else is in them.
+        let _ = std::fs::remove_dir(&state);
+        let _ = std::fs::remove_dir(self.0.join(".local"));
         let mut out = Vec::new();
         walk(&self.0, &self.0, &mut out);
         out.sort();

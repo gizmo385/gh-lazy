@@ -295,6 +295,7 @@ fn no_suggestions_when_the_branches_fail() {
             status: 500,
             message: "boom".into(),
             body: Vec::new(),
+            headers: Vec::new(),
         }),
     );
     let mut app = opened_in(TestApp::with_github(Config::default(), gh));
@@ -534,6 +535,7 @@ pub(super) fn refused() -> lazy_github_core::gh::GhError {
         status: 422,
         message: "Validation Failed".into(),
         body: Vec::new(),
+        headers: Vec::new(),
     }
 }
 

@@ -304,6 +304,7 @@ mod tests {
             status: 502,
             message: "Bad Gateway".into(),
             body: Vec::new(),
+            headers: Vec::new(),
         }));
         let mut app = TestApp::with_github(enabled(), gh);
         let out = logs(|| settle(&mut app));

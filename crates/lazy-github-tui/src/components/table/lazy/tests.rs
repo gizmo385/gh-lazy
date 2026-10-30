@@ -76,6 +76,7 @@ fn http_error() -> GhError {
         status: 502,
         message: "Bad Gateway".into(),
         body: Vec::new(),
+        headers: Vec::new(),
     }
 }
 

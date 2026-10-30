@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/notifications",
+    "query": {
+      "all": "false",
+      "page": "1",
+      "per_page": "50"
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-RateLimit-Limit": "5000",
+      "X-RateLimit-Remaining": "0",
+      "X-RateLimit-Reset": "4102444800",
+      "X-RateLimit-Resource": "core"
+    },
+    "body": {
+      "message": "API rate limit exceeded for user ID 1000001.",
+      "documentation_url": "https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+    }
+  },
+  "note": "Hand-written for rate-limited: the primary rate limit, exhausted until 2100-01-01 00:00 UTC."
+}

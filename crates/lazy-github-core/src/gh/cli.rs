@@ -10,7 +10,7 @@ use std::time::Duration;
 use serde::de::DeserializeOwned;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 use tokio::process::Command;
-use tracing::debug;
+use tracing::{debug, warn};
 
 use super::response::{decode_pages, interpret};
 use super::{GhError, GhRequest, GhResponse};
@@ -183,7 +183,10 @@ impl GhCli {
                 hostname: self.inner.hostname.clone(),
                 detail,
             },
-            other => other,
+            other => {
+                log_rate_limit(&other);
+                other
+            }
         })
     }
 
@@ -281,6 +284,18 @@ impl GhCli {
             );
         }
         Ok(output)
+    }
+}
+
+/// Puts a rate-limited response in the command log, with the headers that say when the limit lifts.
+fn log_rate_limit(error: &GhError) {
+    if let GhError::Http { status, .. } = error
+        && error.rate_limit().is_some()
+    {
+        warn!(
+            "GitHub API rate limit reached (HTTP {status}): {}",
+            error.rate_limit_headers()
+        );
     }
 }
 

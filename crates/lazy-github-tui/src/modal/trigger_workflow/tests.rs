@@ -67,6 +67,7 @@ fn unprocessable() -> GhError {
         status: 422,
         message: "Unprocessable Entity".into(),
         body: Vec::new(),
+        headers: Vec::new(),
     }
 }
 

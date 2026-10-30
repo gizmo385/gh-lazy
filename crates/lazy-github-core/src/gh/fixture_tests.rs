@@ -74,7 +74,10 @@ fn not_found() {
         false,
     )
     .unwrap_err();
-    let GhError::Http { status, message, body } = error else {
+    let GhError::Http {
+        status, message, body, ..
+    } = error
+    else {
         panic!("expected Http, got {error:?}");
     };
     assert_eq!(status, 404);
@@ -203,7 +206,10 @@ fn paginated_failure_on_page_two_keeps_only_the_error_body() {
         true,
     )
     .unwrap_err();
-    let GhError::Http { status, message, body } = error else {
+    let GhError::Http {
+        status, message, body, ..
+    } = error
+    else {
         panic!("expected Http, got {error:?}");
     };
     assert_eq!(status, 500);

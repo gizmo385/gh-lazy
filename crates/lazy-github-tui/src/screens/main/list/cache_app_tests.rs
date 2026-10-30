@@ -31,6 +31,7 @@ fn server_error() -> GhError {
         status: 500,
         message: "Server Error".into(),
         body: Vec::new(),
+        headers: Vec::new(),
     }
 }
 

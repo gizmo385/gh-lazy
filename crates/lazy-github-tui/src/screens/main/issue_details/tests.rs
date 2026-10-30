@@ -459,6 +459,7 @@ fn a_failed_request_logs_an_error_and_shows_no_comments() {
             status: 500,
             message: "Server Error".into(),
             body: Vec::new(),
+            headers: Vec::new(),
         }),
     );
     let mut app = TestApp::with_github(Config::default(), gh);

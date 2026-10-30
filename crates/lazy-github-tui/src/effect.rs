@@ -477,6 +477,62 @@ pub enum GithubResponse {
     UpdatePullRequest(Result<(), GhError>),
 }
 
+impl GithubResponse {
+    /// The [`GhError`] the request failed with, if it failed with one. A failed diff fetch has one only when `gh`
+    /// failed without an HTTP status, as [`DiffFetchError`] keeps just the status otherwise.
+    #[allow(
+        clippy::match_same_arms,
+        reason = "a flat table with one arm per variant, in the enum's order; merging the arms of equal result types would scatter it"
+    )]
+    pub fn error(&self) -> Option<&GhError> {
+        match self {
+            GithubResponse::CheckAuth(result) => result.as_ref().err(),
+            GithubResponse::GhVersion(result) => result.as_ref().err(),
+            GithubResponse::CurrentUser(result) => result.as_ref().err(),
+            GithubResponse::ListRepositories(result) => result.as_ref().err(),
+            GithubResponse::ListIssues(result) => result.as_ref().err(),
+            GithubResponse::UnreadNotificationCount(result) => result.as_ref().err(),
+            GithubResponse::ListNotifications(result) => result.as_ref().err(),
+            GithubResponse::MarkNotificationRead(result) => result.as_ref().err(),
+            GithubResponse::MarkAllNotificationsRead(result) => result.as_ref().err(),
+            GithubResponse::RepoReadme(result) => result.as_ref().err(),
+            GithubResponse::Repository(result) => result.as_ref().err(),
+            GithubResponse::ListWorkflows(result) => result.as_ref().err(),
+            GithubResponse::ListWorkflowRuns(result) => result.as_ref().err(),
+            GithubResponse::User(result) => result.as_ref().err(),
+            GithubResponse::UserRepos(result) => result.as_ref().err(),
+            GithubResponse::PullRequest(result) => result.as_ref().err(),
+            GithubResponse::WorkflowRunJobs(result) => result.as_ref().err(),
+            GithubResponse::CommitStatus(result) => result.as_ref().err(),
+            GithubResponse::CheckRuns(result) => result.as_ref().err(),
+            GithubResponse::IssueReactions(result) => result.as_ref().err(),
+            GithubResponse::Issue(result) => result.as_ref().err(),
+            GithubResponse::IssueComments(result) => result.as_ref().err(),
+            GithubResponse::CommentReactions(result) => result.as_ref().err(),
+            GithubResponse::JobLogs(result) => result.as_ref().err(),
+            GithubResponse::PullRequestReviews(result) => result.as_ref().err(),
+            GithubResponse::CreateIssue(result) => result.as_ref().err(),
+            GithubResponse::CreateIssueComment(result) => result.as_ref().err(),
+            GithubResponse::ReplyToReviewComment(result) => result.as_ref().err(),
+            GithubResponse::UpdateIssue(result) => result.as_ref().err(),
+            GithubResponse::CreateReview(result) => result.as_ref().err(),
+            GithubResponse::AddIssueReaction(result) => result.as_ref().err(),
+            GithubResponse::MergePullRequest(result) => result.as_ref().err(),
+            GithubResponse::ListBranches(result) => result.as_ref().err(),
+            GithubResponse::DispatchWorkflow(result) => result.as_ref().err(),
+            GithubResponse::CreatePullRequest(result) => result.as_ref().err(),
+            GithubResponse::RerunWorkflow(result) => result.as_ref().err(),
+            GithubResponse::WorkflowRun(result) => result.as_ref().err(),
+            GithubResponse::Collaborators(result) => result.as_ref().err(),
+            GithubResponse::RequestedReviewers(result) => result.as_ref().err(),
+            GithubResponse::RequestReviewers(result) => result.as_ref().err(),
+            GithubResponse::UpdatePullRequest(result) => result.as_ref().err(),
+            GithubResponse::PullRequestDiff(Err(DiffFetchError::Gh(error))) => Some(error),
+            GithubResponse::PullRequestDiff(_) => None,
+        }
+    }
+}
+
 impl GithubRequest {
     /// Performs the request against `gh`.
     #[allow(

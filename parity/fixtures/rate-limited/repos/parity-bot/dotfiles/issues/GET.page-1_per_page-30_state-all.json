@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/dotfiles/issues",
+    "query": {
+      "page": "1",
+      "per_page": "30",
+      "state": "all"
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "Retry-After": "60"
+    },
+    "body": {
+      "message": "You have exceeded a secondary rate limit. Please wait a few minutes before you try again.",
+      "documentation_url": "https://docs.github.com/rest/overview/rate-limits-for-the-rest-api#about-secondary-rate-limits"
+    }
+  },
+  "note": "Hand-written for rate-limited: a secondary rate limit on the issues list the user asks for while the primary limit is still in force."
+}

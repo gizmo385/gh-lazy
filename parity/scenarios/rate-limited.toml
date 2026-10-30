@@ -1,0 +1,60 @@
+version = 1
+description = "GitHub rate limits: the notifications count hits the primary limit (one \"Rate limited\" toast with the reset time); selecting a repo still asks for its issues, whose secondary limit only logs, with no second toast"
+gate = true
+apps = ["rust"]
+parity_rows = ["toasts.rate-limited"]
+sizes = [[160, 48]]
+
+[env]
+# rate-limited answers the unread count with a 403 (X-RateLimit-Remaining: 0, reset 2100-01-01 00:00 UTC) and
+# dotfiles' issues with a 429 (Retry-After: 60); repo-selected-empty has the rest of dotfiles.
+fixtures = ["rate-limited", "repo-selected-empty", "base"]
+
+[env.config_overrides]
+notifications = { enabled = true }
+appearance = { show_command_log = true }
+
+[[step]]
+wait = { text = "dotfiles", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Rate limited", timeout_ms = 15000 }
+
+[[step]]
+capture = "limited"
+
+# The toast times out after 5 s.
+[[step]]
+wait = { gone = "Rate limited", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "(HTTP 429)", timeout_ms = 15000 }
+
+# Long enough for a second toast, were there one, to be drawn.
+[[step]]
+sleep_ms = 500
+
+[[step]]
+capture = "both"
+
+[expect.limited]
+# TZ is UTC in the parity environment, so the reset shows as 00:00.
+contains = [
+    "Rate limited",
+    "GitHub API rate limit reached. Try again at 00:00",
+    # The command log is narrower than the line; the log file has the headers in full.
+    "GitHub API rate limit reached (HTTP 403): X-RateLimit-Remainin",
+]
+not_contains = ["panicked"]
+
+[expect.both]
+# The issues request was made and failed with its own error line; the limit window from the 403 is still open, so
+# there's no second toast.
+contains = [
+    "GitHub API rate limit reached (HTTP 429): Retry-After: 60",
+    "API Error fetching issues and PRs from Github API",
+]
+not_contains = ["Rate limited", "panicked"]

@@ -81,6 +81,7 @@ fn fixture_logs(job_id: u64) -> Result<Option<String>, GhError> {
             status: 404,
             message: "Not Found".into(),
             body: Vec::new(),
+            headers: Vec::new(),
         }),
     }
 }
@@ -340,6 +341,7 @@ fn a_failed_request_logs_an_error_and_shows_no_jobs() {
             status: 500,
             message: "Server Error".into(),
             body: Vec::new(),
+            headers: Vec::new(),
         }),
     ));
     app.press(&["enter"]);
@@ -1284,6 +1286,7 @@ fn no_jobs_shows_a_line_and_asks_for_nothing() {
             status: 500,
             message: "Server Error".into(),
             body: Vec::new(),
+            headers: Vec::new(),
         }),
     ));
     app.press(&["enter"]);

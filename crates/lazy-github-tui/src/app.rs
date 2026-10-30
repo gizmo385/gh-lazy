@@ -33,6 +33,7 @@ use crate::modal::{
 };
 use crate::notifications::NotificationPoll;
 use crate::options::{AppOptions, TEST_PANIC_ENV, TestPanic};
+use crate::rate_limit::RateLimitWatch;
 use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
 pub use crate::screens::main::Maximized;
 use crate::screens::main::{MainScreen, Toggle};
@@ -111,6 +112,8 @@ pub struct App {
     bug_report: BugReport,
     /// The unread count in the status box.
     notifications: NotificationPoll,
+    /// Whether GitHub is rate limiting the app, which pauses the notifications poll.
+    rate_limit: RateLimitWatch,
     /// Warnings from before the main screen, logged once it's up so the command log shows them.
     main_screen_warnings: Vec<String>,
     should_quit: bool,
@@ -139,6 +142,7 @@ impl App {
             gh_version_request: None,
             bug_report: BugReport::default(),
             notifications: NotificationPoll::default(),
+            rate_limit: RateLimitWatch::default(),
             main_screen_warnings: Vec::new(),
             should_quit: false,
         }
@@ -655,6 +659,12 @@ impl App {
             Action::Timer(TimerId::AuthPoll) if matches!(self.base, BaseScreen::Auth(_)) => {
                 out.actions.push_back(Action::Auth(AuthAction::Poll));
             }
+            // The poll waits out a rate limit; the user's own refreshes still run.
+            Action::Timer(TimerId::Notifications)
+                if self.rate_limit.is_limited(self.shared.clock.local_now().timestamp()) =>
+            {
+                tracing::debug!("Skipping the notifications poll: GitHub is rate limiting requests");
+            }
             Action::Timer(TimerId::Notifications) => out.actions.push_back(Action::RefreshNotifications),
             Action::Timer(id) => {
                 // The other timers belong to the open dialogs, top first.
@@ -1011,6 +1021,10 @@ impl App {
 
     /// Hands a response to the screen waiting for it.
     fn route_response(&mut self, id: RequestId, response: GithubResponse, out: &mut Outbox) {
+        // Every response counts, even one nothing waits for any more.
+        if let Some(error) = response.error() {
+            self.rate_limit.observe(error, &mut Cx::new(&mut self.shared, out));
+        }
         if let Some(request) = self.gh_version_request.take_if(|request| request.id == id) {
             if let GithubResponse::GhVersion(result) = response {
                 let version = result

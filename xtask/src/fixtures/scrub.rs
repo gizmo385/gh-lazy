@@ -17,6 +17,21 @@ use super::recipe::RecipeEntry;
 /// volatile or describes the recorder's token.
 pub const ALLOWED_HEADERS: [&str; 3] = ["Content-Type", "Link", "Location"];
 
+/// The rate-limit headers a 403 or 429 keeps as well: on those statuses they say whether GitHub is rate limiting and
+/// until when, which is what the response means (#324).
+pub const RATE_LIMIT_HEADERS: [&str; 5] = [
+    "Retry-After",
+    "X-Ratelimit-Limit",
+    "X-Ratelimit-Remaining",
+    "X-Ratelimit-Reset",
+    "X-Ratelimit-Resource",
+];
+
+/// Whether a response with `status` keeps the header `name` (canonical).
+fn header_allowed(name: &str, status: u16) -> bool {
+    ALLOWED_HEADERS.contains(&name) || (matches!(status, 403 | 429) && RATE_LIMIT_HEADERS.contains(&name))
+}
+
 /// What emails become.
 pub const PLACEHOLDER_EMAIL: &str = "user@example.com";
 
@@ -208,7 +223,7 @@ pub struct ScrubAbort {
 pub fn scrub(resp: RawResponse, entry: &RecipeEntry) -> Result<ScrubbedResponse, ScrubAbort> {
     let rules = Rules::get();
     let mut findings = Vec::new();
-    let mut headers = rules.filter_headers(resp.headers, &mut findings);
+    let mut headers = rules.filter_headers(resp.headers, resp.status, &mut findings);
     if let Some(link) = headers.get_mut("Link") {
         let (rewritten, flagged) = rewrite_id_links(link, &entry.path);
         if flagged {
@@ -302,13 +317,18 @@ impl Rules {
             .min_by_key(|&(_, offset)| offset)
     }
 
-    /// Keeps allow-listed headers under their canonical names (repeats joined with `, `). Dropped headers are
-    /// findings; a secret in a kept header aborts.
-    fn filter_headers(&self, headers: Vec<(String, String)>, findings: &mut Vec<Finding>) -> BTreeMap<String, String> {
+    /// Keeps allow-listed headers of a `status` response under their canonical names (repeats joined with `, `).
+    /// Dropped headers are findings; a secret in a kept header aborts.
+    fn filter_headers(
+        &self,
+        headers: Vec<(String, String)>,
+        status: u16,
+        findings: &mut Vec<Finding>,
+    ) -> BTreeMap<String, String> {
         let mut kept: BTreeMap<String, String> = BTreeMap::new();
         for (name, value) in headers {
             let name = canonical_header_name(&name);
-            if !ALLOWED_HEADERS.contains(&name.as_str()) {
+            if !header_allowed(&name, status) {
                 findings.push(Finding {
                     location: Location::Header(name),
                     issue: Issue::Header,
@@ -438,7 +458,7 @@ impl Rules {
             .iter()
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
-        let kept = self.filter_headers(headers, &mut findings);
+        let kept = self.filter_headers(headers, fixture.response.status, &mut findings);
         if let Some(link) = kept.get("Link")
             && rewrite_id_links(link, &fixture.request.path).1
         {
@@ -859,6 +879,33 @@ mod tests {
                 ("Location".to_owned(), "https://example.com/logs.zip".to_owned()),
             ])
         );
+    }
+
+    #[test]
+    fn a_rate_limited_response_keeps_its_rate_limit_headers() {
+        let headers = [
+            ("x-ratelimit-remaining", "0"),
+            ("x-ratelimit-reset", "4102444800"),
+            ("retry-after", "60"),
+            ("X-Github-Request-Id", "2062:3FB230"),
+        ];
+        for status in [403, 429] {
+            let mut resp = json_response(&json!({"message": "API rate limit exceeded"}));
+            resp.status = status;
+            resp.headers
+                .extend(headers.iter().map(|(k, v)| ((*k).to_owned(), (*v).to_owned())));
+            let out = scrub(resp, &entry()).unwrap();
+            assert_eq!(
+                out.headers.keys().collect::<Vec<_>>(),
+                [
+                    "Content-Type",
+                    "Retry-After",
+                    "X-Ratelimit-Remaining",
+                    "X-Ratelimit-Reset"
+                ],
+                "{status}"
+            );
+        }
     }
 
     fn link_response(link: &str) -> RawResponse {

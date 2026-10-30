@@ -2,6 +2,8 @@
 
 use std::time::Duration;
 
+use jiff::Timestamp;
+
 /// Why a `gh` invocation failed. Each variant's `Display` is a sentence fit to show the user.
 #[derive(Debug, thiserror::Error)]
 pub enum GhError {
@@ -30,6 +32,9 @@ pub enum GhError {
         message: String,
         /// The raw response body.
         body: Vec<u8>,
+        /// The response headers as `(name, value)` pairs, in order. Empty when the request was paginated, as
+        /// `gh api --paginate` doesn't print them.
+        headers: Vec<(String, String)>,
     },
     /// `gh` exited non-zero without an HTTP response (network down, bad flag).
     #[error(
@@ -70,6 +75,44 @@ fn detail_suffix(detail: &str) -> String {
     }
 }
 
+/// When a GitHub rate limit lifts, read from the headers of the response that hit it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RateLimit {
+    /// The primary limit: `X-RateLimit-Remaining: 0`, lifting at `X-RateLimit-Reset`.
+    Until(Timestamp),
+    /// A secondary limit: `Retry-After`, this long after the response.
+    After(Duration),
+}
+
+impl RateLimit {
+    /// The moment the limit lifts, for a response that arrived at `now`.
+    pub fn reset(self, now: Timestamp) -> Timestamp {
+        match self {
+            RateLimit::Until(at) => at,
+            // Past jiff's range only for an absurd header; treat that as lifting at once.
+            RateLimit::After(wait) => now.checked_add(wait).unwrap_or(now),
+        }
+    }
+}
+
+/// The value of the first header named `name`, compared case-insensitively, with surrounding whitespace trimmed.
+pub(super) fn find_header<'a>(headers: &'a [(String, String)], name: &str) -> Option<&'a str> {
+    headers
+        .iter()
+        .find(|(key, _)| key.eq_ignore_ascii_case(name))
+        .map(|(_, value)| value.trim())
+}
+
+/// The headers GitHub describes its rate limits with, in the order the command log lists them: the ones that say when
+/// the limit lifts first, as a narrow log cuts the line.
+const RATE_LIMIT_HEADERS: [&str; 5] = [
+    "Retry-After",
+    "X-RateLimit-Remaining",
+    "X-RateLimit-Reset",
+    "X-RateLimit-Limit",
+    "X-RateLimit-Resource",
+];
+
 impl GhError {
     /// Whether the failure means the user has to (re)authenticate: `NotAuthenticated` or an HTTP 401.
     pub fn is_unauthorized(&self) -> bool {
@@ -77,6 +120,41 @@ impl GhError {
             self,
             GhError::NotAuthenticated { .. } | GhError::Http { status: 401, .. }
         )
+    }
+
+    /// The rate limit this failure hit, if it's one: an HTTP 403 or 429 with a `Retry-After` header (a secondary
+    /// limit), or with `X-RateLimit-Remaining: 0` and an `X-RateLimit-Reset` (the primary limit). `Retry-After` wins
+    /// when both are present, as GitHub's docs say. Any other 403, such as a missing permission, is `None`.
+    pub fn rate_limit(&self) -> Option<RateLimit> {
+        let GhError::Http {
+            status: 403 | 429,
+            headers,
+            ..
+        } = self
+        else {
+            return None;
+        };
+        if let Some(seconds) = find_header(headers, "retry-after").and_then(|value| value.parse::<u64>().ok()) {
+            return Some(RateLimit::After(Duration::from_secs(seconds)));
+        }
+        if find_header(headers, "x-ratelimit-remaining")? != "0" {
+            return None;
+        }
+        let reset = find_header(headers, "x-ratelimit-reset")?.parse::<i64>().ok()?;
+        Timestamp::from_second(reset).ok().map(RateLimit::Until)
+    }
+
+    /// The rate-limit headers of an HTTP failure as `Name: value` pairs joined with `", "`, in GitHub's spelling.
+    /// Empty when there are none.
+    pub fn rate_limit_headers(&self) -> String {
+        let GhError::Http { headers, .. } = self else {
+            return String::new();
+        };
+        RATE_LIMIT_HEADERS
+            .iter()
+            .filter_map(|name| find_header(headers, name).map(|value| format!("{name}: {value}")))
+            .collect::<Vec<_>>()
+            .join(", ")
     }
 }
 
@@ -128,6 +206,7 @@ mod tests {
                     status: 404,
                     message: "Not Found".into(),
                     body: Vec::new(),
+                    headers: Vec::new(),
                 },
                 "GitHub API request failed (HTTP 404): Not Found",
             ),
@@ -147,6 +226,7 @@ mod tests {
                     status: 502,
                     message: String::new(),
                     body: Vec::new(),
+                    headers: Vec::new(),
                 },
                 "GitHub API request failed (HTTP 502)",
             ),
@@ -182,6 +262,112 @@ mod tests {
         is_one_sentence(&text);
     }
 
+    fn http(status: u16, headers: &[(&str, &str)]) -> GhError {
+        GhError::Http {
+            status,
+            message: String::new(),
+            body: Vec::new(),
+            headers: headers
+                .iter()
+                .map(|(name, value)| ((*name).to_owned(), (*value).to_owned()))
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn a_403_with_no_remaining_requests_is_the_primary_limit() {
+        let error = http(
+            403,
+            &[
+                ("x-ratelimit-limit", "5000"),
+                ("x-ratelimit-remaining", "0"),
+                ("x-ratelimit-reset", "1792933200"),
+                ("x-ratelimit-resource", "core"),
+            ],
+        );
+        let reset = Timestamp::from_second(1_792_933_200).unwrap();
+        assert_eq!(error.rate_limit(), Some(RateLimit::Until(reset)));
+        assert_eq!(error.rate_limit().unwrap().reset(Timestamp::UNIX_EPOCH), reset);
+        assert_eq!(
+            error.rate_limit_headers(),
+            "X-RateLimit-Remaining: 0, X-RateLimit-Reset: 1792933200, X-RateLimit-Limit: 5000, X-RateLimit-Resource: core"
+        );
+        // A 429 with the same headers is the same limit.
+        let error = http(
+            429,
+            &[("X-RateLimit-Remaining", "0"), ("X-RateLimit-Reset", "1792933200")],
+        );
+        assert_eq!(error.rate_limit(), Some(RateLimit::Until(reset)));
+    }
+
+    #[test]
+    fn a_429_with_retry_after_is_a_secondary_limit() {
+        let error = http(429, &[("Retry-After", " 60 "), ("X-RateLimit-Remaining", "4000")]);
+        assert_eq!(error.rate_limit(), Some(RateLimit::After(Duration::from_mins(1))));
+        let now = Timestamp::from_second(1_792_929_600).unwrap();
+        assert_eq!(
+            error.rate_limit().unwrap().reset(now),
+            Timestamp::from_second(1_792_929_660).unwrap()
+        );
+        assert_eq!(
+            error.rate_limit_headers(),
+            "Retry-After: 60, X-RateLimit-Remaining: 4000"
+        );
+        // Retry-After wins over an exhausted primary limit, as GitHub's docs say.
+        let both = http(
+            403,
+            &[
+                ("x-ratelimit-remaining", "0"),
+                ("x-ratelimit-reset", "1792933200"),
+                ("retry-after", "30"),
+            ],
+        );
+        assert_eq!(both.rate_limit(), Some(RateLimit::After(Duration::from_secs(30))));
+    }
+
+    #[test]
+    fn other_failures_are_not_rate_limits() {
+        // A permission 403: requests remain.
+        let permission = http(
+            403,
+            &[("X-RateLimit-Remaining", "4999"), ("X-RateLimit-Reset", "1792933200")],
+        );
+        assert_eq!(permission.rate_limit(), None);
+        assert_eq!(http(403, &[]).rate_limit(), None);
+        assert_eq!(http(429, &[]).rate_limit(), None);
+        // No reset time to wait for.
+        assert_eq!(http(403, &[("X-RateLimit-Remaining", "0")]).rate_limit(), None);
+        assert_eq!(
+            http(403, &[("X-RateLimit-Remaining", "0"), ("X-RateLimit-Reset", "soon")]).rate_limit(),
+            None
+        );
+        // Other statuses never are, whatever the headers.
+        assert_eq!(http(500, &[("Retry-After", "60")]).rate_limit(), None);
+        assert_eq!(GhError::NotInstalled.rate_limit(), None);
+        assert_eq!(GhError::NotInstalled.rate_limit_headers(), "");
+    }
+
+    #[test]
+    fn interpret_keeps_the_headers_of_an_error_response() {
+        let stdout = b"HTTP/2.0 403 Forbidden\r\nX-Ratelimit-Remaining: 0\r\nX-Ratelimit-Reset: 1792933200\r\n\r\n\
+            {\"message\":\"API rate limit exceeded for user ID 1.\"}";
+        let error = crate::gh::interpret(
+            Some(1),
+            stdout,
+            b"gh: API rate limit exceeded for user ID 1. (HTTP 403)\n",
+            false,
+        )
+        .unwrap_err();
+        assert_eq!(
+            error.rate_limit(),
+            Some(RateLimit::Until(Timestamp::from_second(1_792_933_200).unwrap()))
+        );
+        assert_eq!(
+            error.to_string(),
+            "GitHub API request failed (HTTP 403): API rate limit exceeded for user ID 1."
+        );
+    }
+
     #[test]
     fn unauthorized() {
         assert!(
@@ -195,7 +381,8 @@ mod tests {
             GhError::Http {
                 status: 401,
                 message: String::new(),
-                body: Vec::new()
+                body: Vec::new(),
+                headers: Vec::new(),
             }
             .is_unauthorized()
         );
@@ -203,7 +390,8 @@ mod tests {
             !GhError::Http {
                 status: 403,
                 message: String::new(),
-                body: Vec::new()
+                body: Vec::new(),
+                headers: Vec::new(),
             }
             .is_unauthorized()
         );

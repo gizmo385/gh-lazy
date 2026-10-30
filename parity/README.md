@@ -357,6 +357,10 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
 - `lists-error/`: `parity-bot/dotfiles`' `issues` page 1 (`state=all`), `actions/workflows` page 1 and `actions/runs`
   page 1, each answered with a 500 (`{"message": "Server Error"}`) after 1.5 s. Listed before `repo-selected-empty`
   (the README) and `base`, for the `lists-fetch-error` scenario. Hand-written.
+- `rate-limited/`: the unread count (`GET /notifications`, `all=false` page 1) answered with a primary rate limit (403,
+  `X-RateLimit-Remaining: 0`, `X-RateLimit-Reset` 2100-01-01 00:00 UTC) and `parity-bot/dotfiles`' `issues` page 1
+  (`state=all`) with a secondary one (429, `Retry-After: 60`). Listed before `repo-selected-empty` and `base`, for
+  the Rust-only `rate-limited` scenario (#324). Hand-written.
 - `workflow-runs/`: the repo `parity-bot/ci-fixture`, listed first on base's `GET /user/repos` page, with 38 workflow
   runs, newest first, over `GET /repos/parity-bot/ci-fixture/actions/runs` pages of 30 (30, 8, then an empty page 3)
   and three workflows (`CI`, `Lint`, `Release`) on `actions/workflows` page 1. Run numbers are unique across the

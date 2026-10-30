@@ -3,6 +3,7 @@
 use serde::de::DeserializeOwned;
 
 use super::GhError;
+use super::error::find_header;
 
 /// `gh api` exits with this code when no credentials are available.
 const EXIT_AUTH_REQUIRED: i32 = 4;
@@ -20,10 +21,7 @@ pub struct GhResponse {
 impl GhResponse {
     /// The value of the first header named `name`, compared case-insensitively, with surrounding whitespace trimmed.
     pub fn header(&self, name: &str) -> Option<&str> {
-        self.headers
-            .iter()
-            .find(|(key, _)| key.eq_ignore_ascii_case(name))
-            .map(|(_, value)| value.trim())
+        find_header(&self.headers, name)
     }
 
     /// Decodes the body as JSON.
@@ -137,11 +135,16 @@ fn trailing_json_value(stdout: &[u8]) -> &[u8] {
     stdout[start..end].trim_ascii()
 }
 
-fn http_error(status: u16, message: String, body: Vec<u8>, fallback: &str) -> GhError {
+fn http_error(status: u16, message: String, body: Vec<u8>, headers: Vec<(String, String)>, fallback: &str) -> GhError {
     let message = json_message(&body)
         .or_else(|| Some(message).filter(|m| !m.is_empty()))
         .unwrap_or_else(|| fallback.to_owned());
-    GhError::Http { status, message, body }
+    GhError::Http {
+        status,
+        message,
+        body,
+        headers,
+    }
 }
 
 fn command_error(exit: Option<i32>, stderr: &str) -> GhError {
@@ -175,7 +178,9 @@ pub fn interpret(exit: Option<i32>, stdout: &[u8], stderr: &[u8], paginated: boo
             });
         }
         return Err(match stderr_http_error(&stderr) {
-            Some((status, message)) => http_error(status, message, trailing_json_value(stdout).to_vec(), ""),
+            Some((status, message)) => {
+                http_error(status, message, trailing_json_value(stdout).to_vec(), Vec::new(), "")
+            }
             None => command_error(exit, &stderr),
         });
     }
@@ -185,7 +190,7 @@ pub fn interpret(exit: Option<i32>, stdout: &[u8], stderr: &[u8], paginated: boo
             let message = stderr_http_error(&stderr)
                 .map(|(_, message)| message)
                 .unwrap_or_default();
-            Err(http_error(raw.status, message, raw.body, &raw.reason))
+            Err(http_error(raw.status, message, raw.body, raw.headers, &raw.reason))
         }
         Some(raw) if exit == Some(0) => Ok(GhResponse {
             status: raw.status,
@@ -200,7 +205,7 @@ pub fn interpret(exit: Option<i32>, stdout: &[u8], stderr: &[u8], paginated: boo
             "gh output did not start with an HTTP status line".to_owned()
         })),
         None => Err(match stderr_http_error(&stderr) {
-            Some((status, message)) => http_error(status, message, Vec::new(), ""),
+            Some((status, message)) => http_error(status, message, Vec::new(), Vec::new(), ""),
             None => command_error(exit, &stderr),
         }),
     }

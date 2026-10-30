@@ -213,6 +213,7 @@ fn a_missing_repo_or_a_failure_toasts_and_changes_nothing() {
             status: 500,
             message: "Server Error".to_owned(),
             body: Vec::new(),
+            headers: Vec::new(),
         })),
     ] {
         let mut app = TestApp::with_github(Config::default(), gh());

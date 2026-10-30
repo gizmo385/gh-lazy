@@ -135,6 +135,7 @@ fn a_failed_fetch_toasts_and_opens_nothing() {
             status: 500,
             message: "Server Error".into(),
             body: Vec::new(),
+            headers: Vec::new(),
         }),
     );
     let mut app = app_with(gh);

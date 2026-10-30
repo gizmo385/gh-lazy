@@ -9,7 +9,7 @@ mod request;
 mod response;
 
 pub use cli::{GhCli, GhTimeouts};
-pub use error::GhError;
+pub use error::{GhError, RateLimit};
 pub use request::{Accept, GhRequest, Method};
 pub use response::{GhResponse, interpret};
 

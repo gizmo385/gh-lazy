@@ -20,6 +20,7 @@ pub mod keymap;
 pub mod modal;
 pub mod notifications;
 pub mod options;
+pub mod rate_limit;
 pub mod runtime;
 pub mod screens;
 pub mod theme;

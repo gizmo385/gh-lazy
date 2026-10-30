@@ -922,6 +922,7 @@ impl Github for FakeGithub {
                     status: 404,
                     message: "Not Found".to_owned(),
                     body: Vec::new(),
+                    headers: Vec::new(),
                 }),
             }
         })
@@ -1011,6 +1012,7 @@ impl Github for FakeGithub {
                 status: 404,
                 message: "Not Found".to_owned(),
                 body: Vec::new(),
+                headers: Vec::new(),
             }),
         })
         .await
@@ -1058,6 +1060,7 @@ impl Github for FakeGithub {
                 status: 404,
                 message: "Not Found".to_owned(),
                 body: Vec::new(),
+                headers: Vec::new(),
             }),
         })
         .await
@@ -1075,6 +1078,7 @@ impl Github for FakeGithub {
                 status: 422,
                 message: "Unprocessable Entity".to_owned(),
                 body: Vec::new(),
+                headers: Vec::new(),
             }),
         })
         .await
@@ -1230,6 +1234,7 @@ impl Github for FakeGithub {
                     status: 404,
                     message: "Not Found".to_owned(),
                     body: Vec::new(),
+                    headers: Vec::new(),
                 }),
             }
         })
@@ -1291,6 +1296,7 @@ impl Github for FakeGithub {
                 status: 422,
                 message: "Unprocessable Entity".to_owned(),
                 body: Vec::new(),
+                headers: Vec::new(),
             }),
         })
         .await
@@ -1325,6 +1331,7 @@ fn canned_pull_request(state: &State, key: &(String, u64)) -> Result<FullPullReq
             status: 404,
             message: "Not Found".to_owned(),
             body: Vec::new(),
+            headers: Vec::new(),
         }),
     }
 }
@@ -1355,6 +1362,7 @@ fn unprocessable() -> GhError {
         status: 422,
         message: "Unprocessable Entity".to_owned(),
         body: Vec::new(),
+        headers: Vec::new(),
     }
 }
 
@@ -1365,10 +1373,16 @@ fn duplicate(error: &GhError) -> GhError {
             hostname: hostname.clone(),
             detail: detail.clone(),
         },
-        GhError::Http { status, message, body } => GhError::Http {
+        GhError::Http {
+            status,
+            message,
+            body,
+            headers,
+        } => GhError::Http {
             status: *status,
             message: message.clone(),
             body: body.clone(),
+            headers: headers.clone(),
         },
         GhError::Command { code, stderr } => GhError::Command {
             code: *code,
@@ -1479,6 +1493,7 @@ mod tests {
                 status: 502,
                 message: "Bad Gateway".into(),
                 body: Vec::new(),
+                headers: Vec::new(),
             })
             .with_unread_count(Err(GhError::Parse("no status line".into())));
         for _ in 0..2 {
@@ -1531,6 +1546,7 @@ mod tests {
                     status: 500,
                     message: "Server Error".into(),
                     body: Vec::new(),
+                    headers: Vec::new(),
                 }),
             );
         let first = IssueListQuery::first_page(IssueStateFilter::Open, IssueOwnerFilter::Mine);
@@ -1947,6 +1963,7 @@ mod tests {
                     status: 500,
                     message: "Internal Server Error".into(),
                     body: Vec::new(),
+                    headers: Vec::new(),
                 }),
             );
         assert!(github.mark_notification_read(1).await.is_ok());
@@ -2186,6 +2203,7 @@ mod tests {
                 status: 500,
                 message: "Server Error".into(),
                 body: Vec::new(),
+                headers: Vec::new(),
             }),
         );
         let second = PageQuery {
@@ -2278,6 +2296,7 @@ mod tests {
                 status: 404,
                 message: "Not Found".into(),
                 body: b"{}".to_vec(),
+                headers: Vec::new(),
             },
             GhError::Command {
                 code: Some(1),

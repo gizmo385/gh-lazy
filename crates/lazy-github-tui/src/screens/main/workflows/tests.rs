@@ -104,6 +104,7 @@ fn server_error() -> GhError {
         status: 500,
         message: "Server Error".into(),
         body: br#"{"message": "Server Error"}"#.to_vec(),
+        headers: Vec::new(),
     }
 }
 

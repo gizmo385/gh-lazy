@@ -168,6 +168,7 @@ fn a_failed_list_keeps_the_cached_rows_and_writes_nothing() {
         status: 500,
         message: "Server Error".into(),
         body: Vec::new(),
+        headers: Vec::new(),
     };
     let mut app = with_cache(FakeGithub::new().with_repositories_error(error));
     let before = cache::to_json(cached());
@@ -283,6 +284,7 @@ fn a_read_after_a_failed_list_still_shows() {
         status: 500,
         message: "Server Error".into(),
         body: Vec::new(),
+        headers: Vec::new(),
     };
     let mut app = with_cache(FakeGithub::new().with_repositories_error(error));
     app.answer_repos();

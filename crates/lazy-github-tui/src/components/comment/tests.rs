@@ -212,6 +212,7 @@ fn the_reactions_title_is_a_separate_stop() {
             status: 404,
             message: "Not Found".into(),
             body: Vec::new(),
+            headers: Vec::new(),
         }));
     });
     assert!(log.starts_with("DEBUG Could not find comment with ID 7001"), "{log}");

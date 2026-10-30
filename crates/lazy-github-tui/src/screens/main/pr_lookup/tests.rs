@@ -55,6 +55,7 @@ fn not_found() -> GhError {
         status: 404,
         message: "Not Found".into(),
         body: Vec::new(),
+        headers: Vec::new(),
     }
 }
 

@@ -145,6 +145,7 @@ fn http_error() -> GithubResponse {
         status: 500,
         message: "Server Error".into(),
         body: Vec::new(),
+        headers: Vec::new(),
     }))
 }
 
@@ -361,6 +362,7 @@ fn other_responses_are_handed_back() {
                 status: 500,
                 message: String::new(),
                 body: Vec::new(),
+                headers: Vec::new(),
             })),
             cx,
         )

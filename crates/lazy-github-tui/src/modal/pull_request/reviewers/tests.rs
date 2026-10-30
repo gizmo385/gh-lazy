@@ -33,6 +33,7 @@ fn not_found() -> GhError {
         status: 404,
         message: "Not Found".to_owned(),
         body: Vec::new(),
+        headers: Vec::new(),
     }
 }
 

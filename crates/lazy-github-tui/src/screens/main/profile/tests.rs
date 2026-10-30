@@ -75,6 +75,7 @@ fn server_error() -> GhError {
         status: 500,
         message: "Server Error".into(),
         body: Vec::new(),
+        headers: Vec::new(),
     }
 }
 
@@ -160,6 +161,7 @@ fn a_profile_github_does_not_give_is_an_unknown_user() {
             status: 404,
             message: "Not Found".into(),
             body: Vec::new(),
+            headers: Vec::new(),
         },
         server_error(),
     ] {

@@ -1019,6 +1019,50 @@ impl MainScreen {
         shown
     }
 
+    /// Settings were saved: the PR, Issues and Workflows sections are shown as the config's `appearance.show_*` now
+    /// say. Python's `update_displayed_sections`. The command log isn't touched: `show_command_log` is read at startup
+    /// only.
+    ///
+    /// Each section is shown in full, even one the palette toggled off (Py bug B91's answer, where Python leaves a blank
+    /// gap and the focus key ignored). One that comes back with a repo selected is loaded as [`Self::toggle`] loads it
+    /// (Py bug B92's answer, where Python leaves it empty until the next selection). When focus was in a section that
+    /// goes away, it moves to the first stop of the focus ring (Py bug B88's answer); restoring a maximized layout is
+    /// `App`'s.
+    pub fn apply_appearance(&mut self, cx: &mut Cx<'_>) {
+        let appearance = &cx.config().appearance;
+        let show = [
+            (SectionId::PullRequests, appearance.show_pull_requests),
+            (SectionId::Issues, appearance.show_issues),
+            (SectionId::Workflows, appearance.show_workflows),
+        ];
+        let was_shown = self.section_states().map(SectionState::shown);
+        for (id, show) in show {
+            let state = &mut self.sections[id.index()];
+            state.displayed = show;
+            state.hidden_by_toggle = false;
+        }
+        let appeared = |id: SectionId| !was_shown[id.index()] && self.sections[id.index()].shown();
+        let lists_appeared = appeared(SectionId::PullRequests) || appeared(SectionId::Issues);
+        let workflows_appeared = appeared(SectionId::Workflows);
+        tracing::debug!(sections = ?self.sections, "Applied the saved appearance");
+        if let Some(repo) = cx.current_repo().cloned() {
+            // One reload covers both tables, as on selection.
+            if lists_appeared {
+                self.issue_lists.reload(&repo, cx);
+            }
+            if workflows_appeared {
+                self.workflows.load_repo(&repo, cx);
+            }
+        }
+        let focus_hidden = self
+            .focus
+            .section()
+            .is_some_and(|id| was_shown[id.index()] && !self.sections[id.index()].shown());
+        if focus_hidden && let Some(&first) = self.focus_ring(None).first() {
+            self.move_focus(first);
+        }
+    }
+
     /// The command log, which keeps every line pushed since the screen was built, shown or not.
     pub fn command_log(&self) -> &CommandLog {
         &self.command_log
@@ -1798,6 +1842,9 @@ mod edit_issue_tests;
 
 #[cfg(test)]
 mod edit_pull_request_tests;
+
+#[cfg(test)]
+mod settings_save_tests;
 
 #[cfg(test)]
 mod toggle_tests;

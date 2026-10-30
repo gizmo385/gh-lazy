@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use crossterm::event::{KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
-use lazy_github_core::github::FakeGithub;
+use lazy_github_core::github::{FakeGithub, Github as _};
 use lazy_github_core::models::RepoName;
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
@@ -526,6 +526,7 @@ impl TestApp {
                 Effect::CancelTimer(id) => {
                     self.timers.remove(id);
                 }
+                Effect::ReconfigureGithub(options) => self.gh.reconfigure(options.clone()),
                 Effect::Bell | Effect::SetClipboard(_) | Effect::Quit => {}
             }
             self.effects.push(effect);

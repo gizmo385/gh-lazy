@@ -33,6 +33,8 @@ pub const FETCH_FAILED_MESSAGE: &str = "Failed to retrieve notifications from th
 pub struct NotificationPoll {
     unread: UnreadState,
     in_flight: Option<InFlight>,
+    /// Whether the interval has been started. It runs until the app quits, as Python's is never stopped.
+    started: bool,
 }
 
 /// The step of a refresh that's running, and its request.
@@ -67,11 +69,26 @@ impl NotificationPoll {
         if !cx.config().notifications.enabled {
             return;
         }
+        self.start_interval(cx);
+        self.refresh(cx);
+    }
+
+    /// Settings were saved: refreshes now, which blanks the count if notifications are now disabled, and starts the
+    /// interval if it isn't running, as when notifications were disabled at startup. Python's
+    /// `handle_settings_update`.
+    pub fn settings_saved(&mut self, cx: &mut Cx<'_>) {
+        self.refresh(cx);
+        if !self.started {
+            self.start_interval(cx);
+        }
+    }
+
+    fn start_interval(&mut self, cx: &mut Cx<'_>) {
+        self.started = true;
         cx.effect(Effect::StartInterval {
             id: TimerId::Notifications,
             every: REFRESH_INTERVAL,
         });
-        self.refresh(cx);
     }
 
     /// Refreshes the count: blank, with no request, while notifications are disabled; nothing while a refresh is

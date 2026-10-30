@@ -8,8 +8,8 @@ use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{
-    DiffFetchError, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue, NewPullRequest,
-    NewReview, NotificationQuery, PageQuery, PullRequestUpdate, RepoListQuery,
+    DiffFetchError, GhCliOptions, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue,
+    NewPullRequest, NewReview, NotificationQuery, PageQuery, PullRequestUpdate, RepoListQuery,
 };
 use lazy_github_core::models::{
     Branch, CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
@@ -40,6 +40,9 @@ pub enum Effect {
     Cancel(RequestId),
     /// Save this snapshot of the config. Saves happen in order, and a newer pending save replaces an older one.
     SaveConfig(Box<Config>),
+    /// Run every later GitHub request with these options ([`Github::reconfigure`]): Settings saved new cache TTLs
+    /// or a new `api.base_url`. Requests already running keep the old ones.
+    ReconfigureGithub(GhCliOptions),
     /// Read a table cache file (`lazy_github_core::cache::read`) off the async threads. The text comes back as
     /// `Event::CacheRead` with the same `id`, `None` when there's no file.
     ReadCache {

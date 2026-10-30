@@ -8,7 +8,7 @@
 
 use std::future::Future;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, PoisonError, RwLock};
 use std::time::Duration;
 
 use tokio::sync::OnceCell;
@@ -433,6 +433,13 @@ pub trait Github: Clone + Send + Sync + 'static {
         number: u64,
         update: &PullRequestUpdate,
     ) -> impl Future<Output = Result<(), GhError>> + Send;
+
+    /// Runs later requests as `options` say: the Settings modal saved a config with new cache TTLs or a new
+    /// `api.base_url`. A request already running keeps the options it started with. The default does nothing, for
+    /// clients that have no options.
+    fn reconfigure(&self, options: GhCliOptions) {
+        let _ = options;
+    }
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -868,17 +875,29 @@ pub fn hostname_for_base_url(base_url: &str) -> Option<String> {
 
 /// The real [`Github`]: typed endpoints over the [`gh::GhCli`] runner.
 ///
-/// Cheap to clone; clones share the runner and the memoized current user.
+/// Cheap to clone; clones share the runner, the memoized current user and any [`Github::reconfigure`].
 #[derive(Debug, Clone)]
 pub struct GhCli {
-    inner: Arc<GhCliInner>,
+    inner: Arc<RwLock<Configured>>,
 }
 
-#[derive(Debug)]
-struct GhCliInner {
+/// What [`GhCliOptions`] set up. Each request reads it once, so a reconfigure never splits one.
+#[derive(Debug, Clone)]
+struct Configured {
     runner: gh::GhCli,
     ttls: CacheTtls,
-    current_user: OnceCell<User>,
+    /// Per host: a new `--hostname` may be another user.
+    current_user: Arc<OnceCell<User>>,
+}
+
+impl Configured {
+    fn new(options: GhCliOptions, current_user: Arc<OnceCell<User>>) -> Self {
+        Self {
+            runner: gh::GhCli::new(options.program, options.hostname).with_timeouts(options.timeouts),
+            ttls: options.ttls,
+            current_user,
+        }
+    }
 }
 
 impl Default for GhCli {
@@ -891,18 +910,24 @@ impl GhCli {
     /// A client that runs `gh` as `options` say.
     pub fn new(options: GhCliOptions) -> Self {
         Self {
-            inner: Arc::new(GhCliInner {
-                runner: gh::GhCli::new(options.program, options.hostname).with_timeouts(options.timeouts),
-                ttls: options.ttls,
-                current_user: OnceCell::new(),
-            }),
+            inner: Arc::new(RwLock::new(Configured::new(options, Arc::default()))),
         }
     }
 
-    /// The runner the typed methods are built on. Test-only, so every real call site stays typed.
-    #[cfg(test)]
-    fn runner(&self) -> &gh::GhCli {
-        &self.inner.runner
+    /// The options now. The lock is only held to clone them, never across an await.
+    fn configured(&self) -> Configured {
+        // A panic while the lock was held can't leave it half-written: the only write is one assignment.
+        self.inner.read().unwrap_or_else(PoisonError::into_inner).clone()
+    }
+
+    /// The runner the typed methods are built on.
+    fn runner(&self) -> gh::GhCli {
+        self.configured().runner
+    }
+
+    /// The cache lifetimes now.
+    fn ttls(&self) -> CacheTtls {
+        self.configured().ttls
     }
 
     fn current_user_request() -> GhRequest {
@@ -923,7 +948,7 @@ impl GhCli {
         .into_iter()
         .map(|(key, value)| (key.to_owned(), value.to_owned()))
         .collect();
-        request.cache = Some(self.inner.ttls.list_repos);
+        request.cache = Some(self.ttls().list_repos);
         request
     }
 
@@ -940,7 +965,7 @@ impl GhCli {
             request.query.push(("creator".to_owned(), creator.to_owned()));
         }
         // Python sends its default TTL here; `cache.list_issues_ttl` is never read.
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
@@ -948,14 +973,14 @@ impl GhCli {
     fn repo_readme_request(&self, full_name: &str) -> GhRequest {
         let mut request = GhRequest::get(format!("/repos/{full_name}/readme"));
         request.accept = Accept::Raw;
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
     /// `GET /repos/{full_name}`, cached for the default TTL as Python's `github_headers()` asks.
     fn repository_request(&self, full_name: &str) -> GhRequest {
         let mut request = GhRequest::get(format!("/repos/{full_name}"));
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
@@ -971,7 +996,7 @@ impl GhCli {
     fn pull_request_diff_request(&self, repo: &Repository, number: u64) -> GhRequest {
         let mut request = GhRequest::get(format!("/repos/{}/{}/pulls/{number}", repo.owner.login, repo.name));
         request.accept = Accept::Diff;
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
@@ -989,14 +1014,14 @@ impl GhCli {
             ("direction".to_owned(), SortDirection::Desc.as_str().to_owned()),
             ("per_page".to_owned(), DEFAULT_PER_PAGE.to_string()),
         ];
-        request.cache = Some(self.inner.ttls.list_repos);
+        request.cache = Some(self.ttls().list_repos);
         request
     }
 
     /// `GET /repos/{owner}/{repo}/pulls/{number}`, cached for the default TTL as Python's `github_headers()` asks.
     fn pull_request_request(&self, repo: &Repository, number: u64) -> GhRequest {
         let mut request = Self::pull_request_uncached_request(repo, number);
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
@@ -1026,7 +1051,7 @@ impl GhCli {
             per_page: CHECKS_PER_PAGE,
         }
         .params();
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
@@ -1045,14 +1070,14 @@ impl GhCli {
             "/repos/{}/{}/issues/{number}/reactions",
             repo.owner.login, repo.name
         ));
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
     /// `GET /repos/{owner}/{repo}/issues/{number}`, cached for the default TTL as Python's `get_issue_by_number` asks.
     fn issue_request(&self, repo: &Repository, number: u64) -> GhRequest {
         let mut request = GhRequest::get(format!("/repos/{}/{}/issues/{number}", repo.owner.login, repo.name));
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
@@ -1066,7 +1091,7 @@ impl GhCli {
             )
         });
         let mut request = GhRequest::get(path);
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
@@ -1088,7 +1113,7 @@ impl GhCli {
             per_page: COMMENT_REACTIONS_PER_PAGE,
         }
         .params();
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
@@ -1099,7 +1124,7 @@ impl GhCli {
             "/repos/{}/{}/pulls/{number}/reviews",
             repo.owner.login, repo.name
         ));
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
@@ -1110,7 +1135,7 @@ impl GhCli {
             "/repos/{}/{}/pulls/{number}/reviews/{review_id}/comments",
             repo.owner.login, repo.name
         ));
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
@@ -1171,7 +1196,7 @@ impl GhCli {
     /// follow GitHub's links, B79), cached for the default TTL as Python's `github_headers()` asks.
     fn list_branches_request(&self, repo: &Repository) -> GhRequest {
         let mut request = Self::list_branches_uncached_request(repo);
-        request.cache = Some(self.inner.ttls.default);
+        request.cache = Some(self.ttls().default);
         request
     }
 
@@ -1331,46 +1356,61 @@ fn issue_list_item(response: &GhResponse, repo: &Repository) -> Result<IssueList
 }
 
 impl Github for GhCli {
+    fn reconfigure(&self, options: GhCliOptions) {
+        let mut configured = self.inner.write().unwrap_or_else(PoisonError::into_inner);
+        let same_host = configured.runner.hostname() == options.hostname.as_deref();
+        tracing::debug!(?options, same_host, "Reconfiguring gh");
+        // Another host may be another user; the same host keeps the one already fetched.
+        let current_user = if same_host {
+            Arc::clone(&configured.current_user)
+        } else {
+            Arc::default()
+        };
+        *configured = Configured::new(options, current_user);
+    }
+
     async fn check_auth(&self) -> Result<(), GhError> {
-        self.inner.runner.auth_status().await
+        self.runner().auth_status().await
     }
 
     async fn gh_version(&self) -> Result<String, GhError> {
-        self.inner.runner.version().await
+        self.runner().version().await
     }
 
     async fn current_user(&self) -> Result<User, GhError> {
         // Only a success is memoized, so a failed fetch is retried on the next call. Concurrent first calls share
         // one `gh` run.
-        self.inner
-            .current_user
-            .get_or_try_init(|| async { self.inner.runner.request(Self::current_user_request()).await?.json() })
+        let Configured {
+            runner, current_user, ..
+        } = self.configured();
+        current_user
+            .get_or_try_init(|| async { runner.request(Self::current_user_request()).await?.json() })
             .await
             .cloned()
     }
 
     async fn list_repositories(&self, query: RepoListQuery) -> Result<Vec<Repository>, GhError> {
-        self.inner.runner.paginate(self.list_repositories_request(query)).await
+        self.runner().paginate(self.list_repositories_request(query)).await
     }
 
     async fn unread_notification_count(&self) -> Result<usize, GhError> {
-        let response = self.inner.runner.request(Self::unread_notifications_request()).await?;
+        let response = self.runner().request(Self::unread_notifications_request()).await?;
         count_items(&response)
     }
 
     async fn list_notifications(&self, query: NotificationQuery) -> Result<Vec<Notification>, GhError> {
         let request = Self::list_notifications_request(query);
-        self.inner.runner.request(request).await?.json()
+        self.runner().request(request).await?.json()
     }
 
     async fn mark_notification_read(&self, thread_id: u64) -> Result<(), GhError> {
         let request = Self::mark_notification_read_request(thread_id);
-        dispatched(self.inner.runner.request(request).await)
+        dispatched(self.runner().request(request).await)
     }
 
     async fn mark_all_notifications_read(&self) -> Result<(), GhError> {
         let request = Self::mark_all_notifications_read_request();
-        dispatched(self.inner.runner.request(request).await)
+        dispatched(self.runner().request(request).await)
     }
 
     async fn list_issues(&self, repo: &Repository, query: IssueListQuery) -> Result<Vec<IssueListItem>, GhError> {
@@ -1380,67 +1420,57 @@ impl Github for GhCli {
         };
         // One page per call, never `--paginate`: tables load further pages as they scroll.
         let request = self.list_issues_request(repo, query, creator.as_deref());
-        let response = self.inner.runner.request(request).await?;
+        let response = self.runner().request(request).await?;
         issue_list_items(&response, repo)
     }
 
     async fn repo_readme(&self, full_name: &str) -> Result<Option<String>, GhError> {
-        readme_text(self.inner.runner.request(self.repo_readme_request(full_name)).await)
+        readme_text(self.runner().request(self.repo_readme_request(full_name)).await)
     }
 
     async fn repository(&self, full_name: &str) -> Result<Option<Repository>, GhError> {
-        found_repository(self.inner.runner.request(self.repository_request(full_name)).await)
+        found_repository(self.runner().request(self.repository_request(full_name)).await)
     }
 
     async fn list_workflows(&self, repo: &Repository, page: PageQuery) -> Result<Vec<Workflow>, GhError> {
         let response = self
-            .inner
-            .runner
+            .runner()
             .request(Self::actions_request(repo, "workflows", page))
             .await?;
         workflows(&response)
     }
 
     async fn list_workflow_runs(&self, repo: &Repository, page: PageQuery) -> Result<Vec<WorkflowRun>, GhError> {
-        let response = self
-            .inner
-            .runner
-            .request(Self::actions_request(repo, "runs", page))
-            .await?;
+        let response = self.runner().request(Self::actions_request(repo, "runs", page)).await?;
         workflow_runs(&response)
     }
 
     async fn pull_request_diff(&self, repo: &Repository, number: u64) -> Result<String, DiffFetchError> {
         let request = self.pull_request_diff_request(repo, number);
-        diff_text(self.inner.runner.request(request).await)
+        diff_text(self.runner().request(request).await)
     }
 
     async fn user(&self, login: &str) -> Result<FullUser, GhError> {
-        self.inner.runner.request(Self::user_request(login)).await?.json()
+        self.runner().request(Self::user_request(login)).await?.json()
     }
 
     async fn user_repos(&self, login: &str) -> Result<Vec<Repository>, GhError> {
-        self.inner.runner.request(self.user_repos_request(login)).await?.json()
+        self.runner().request(self.user_repos_request(login)).await?.json()
     }
 
     async fn pull_request(&self, repo: &Repository, number: u64) -> Result<FullPullRequest, GhError> {
-        let response = self
-            .inner
-            .runner
-            .request(self.pull_request_request(repo, number))
-            .await?;
+        let response = self.runner().request(self.pull_request_request(repo, number)).await?;
         full_pull_request(&response, repo)
     }
 
     async fn pull_request_uncached(&self, repo: &Repository, number: u64) -> Result<FullPullRequest, GhError> {
         let request = Self::pull_request_uncached_request(repo, number);
-        full_pull_request(&self.inner.runner.request(request).await?, repo)
+        full_pull_request(&self.runner().request(request).await?, repo)
     }
 
     async fn workflow_run_jobs(&self, repo: &Repository, run_id: u64) -> Result<Vec<WorkflowJob>, GhError> {
         let pages = self
-            .inner
-            .runner
+            .runner()
             .paginate_slurp(Self::workflow_run_jobs_request(repo, run_id))
             .await?;
         Ok(workflow_jobs(pages))
@@ -1448,36 +1478,34 @@ impl Github for GhCli {
 
     async fn commit_status(&self, repo: &Repository, sha: &str) -> Result<CombinedStatus, GhError> {
         let request = self.commit_checks_request(repo, sha, "status");
-        self.inner.runner.request(request).await?.json()
+        self.runner().request(request).await?.json()
     }
 
     async fn check_runs(&self, repo: &Repository, sha: &str) -> Result<Vec<CheckRun>, GhError> {
         let request = self.commit_checks_request(repo, sha, "check-runs");
-        check_run_list(&self.inner.runner.request(request).await?)
+        check_run_list(&self.runner().request(request).await?)
     }
 
     async fn issue_reactions(&self, repo: &Repository, number: u64) -> Result<Reactions, GhError> {
         let response = self
-            .inner
-            .runner
+            .runner()
             .request(self.issue_reactions_request(repo, number))
             .await?;
         reactions(&response)
     }
 
     async fn issue(&self, repo: &Repository, number: u64) -> Result<IssueListItem, GhError> {
-        let response = self.inner.runner.request(self.issue_request(repo, number)).await?;
+        let response = self.runner().request(self.issue_request(repo, number)).await?;
         issue_list_item(&response, repo)
     }
 
     async fn issue_comments(&self, issue: &Issue) -> Result<Vec<IssueComment>, GhError> {
-        self.inner.runner.paginate(self.issue_comments_request(issue)).await
+        self.runner().paginate(self.issue_comments_request(issue)).await
     }
 
     async fn comment_reactions(&self, repo: &Repository, comment: CommentRef) -> Result<Reactions, GhError> {
         let response = self
-            .inner
-            .runner
+            .runner()
             .request(self.comment_reactions_request(repo, comment))
             .await;
         reactions(&response?)
@@ -1486,7 +1514,7 @@ impl Github for GhCli {
     async fn pull_request_reviews(&self, pr: &FullPullRequest) -> Result<Vec<Review>, GhError> {
         let repo = &pr.pr.issue.repo;
         let number = pr.number();
-        let runner = &self.inner.runner;
+        let runner = &self.runner();
         let reviews = runner.paginate(self.pull_request_reviews_request(repo, number)).await?;
         with_review_comments(reviews, |review_id| {
             runner.paginate(self.review_comments_request(repo, number, review_id))
@@ -1495,22 +1523,17 @@ impl Github for GhCli {
     }
 
     async fn job_logs(&self, repo: &Repository, job_id: u64) -> Result<Option<String>, GhError> {
-        job_log_text(self.inner.runner.request(Self::job_logs_request(repo, job_id)).await)
+        job_log_text(self.runner().request(Self::job_logs_request(repo, job_id)).await)
     }
 
     async fn create_issue(&self, repo: &Repository, issue: &NewIssue) -> Result<Issue, GhError> {
-        let response = self
-            .inner
-            .runner
-            .request(Self::create_issue_request(repo, issue)?)
-            .await?;
+        let response = self.runner().request(Self::create_issue_request(repo, issue)?).await?;
         written_issue(&response, repo)
     }
 
     async fn update_issue(&self, repo: &Repository, number: u64, update: &IssueUpdate) -> Result<Issue, GhError> {
         let response = self
-            .inner
-            .runner
+            .runner()
             .request(Self::update_issue_request(repo, number, update)?)
             .await?;
         written_issue(&response, repo)
@@ -1518,7 +1541,7 @@ impl Github for GhCli {
 
     async fn create_issue_comment(&self, repo: &Repository, number: u64, body: &str) -> Result<IssueComment, GhError> {
         let request = Self::create_issue_comment_request(repo, number, body);
-        self.inner.runner.request(request).await?.json()
+        self.runner().request(request).await?.json()
     }
 
     async fn reply_to_review_comment(
@@ -1529,17 +1552,17 @@ impl Github for GhCli {
         body: &str,
     ) -> Result<ReviewComment, GhError> {
         let request = Self::reply_to_review_comment_request(repo, pr_number, comment_id, body);
-        self.inner.runner.request(request).await?.json()
+        self.runner().request(request).await?.json()
     }
 
     async fn create_review(&self, repo: &Repository, number: u64, review: &NewReview) -> Result<Review, GhError> {
         let request = Self::create_review_request(repo, number, review)?;
-        self.inner.runner.request(request).await?.json()
+        self.runner().request(request).await?.json()
     }
 
     async fn add_issue_reaction(&self, repo: &Repository, number: u64, kind: ReactionKind) -> Result<bool, GhError> {
         let request = Self::add_issue_reaction_request(repo, number, kind);
-        reaction_created(self.inner.runner.request(request).await)
+        reaction_created(self.runner().request(request).await)
     }
 
     async fn merge_pull_request(
@@ -1549,55 +1572,55 @@ impl Github for GhCli {
         request: &MergeRequest,
     ) -> Result<MergeResult, GhError> {
         let request = Self::merge_pull_request_request(repo, number, request)?;
-        merge_result(self.inner.runner.request(request).await)
+        merge_result(self.runner().request(request).await)
     }
 
     async fn list_branches(&self, repo: &Repository) -> Result<Vec<Branch>, GhError> {
-        self.inner.runner.paginate(self.list_branches_request(repo)).await
+        self.runner().paginate(self.list_branches_request(repo)).await
     }
 
     async fn list_branches_uncached(&self, repo: &Repository) -> Result<Vec<Branch>, GhError> {
         let request = Self::list_branches_uncached_request(repo);
-        self.inner.runner.paginate(request).await
+        self.runner().paginate(request).await
     }
 
     async fn create_pull_request(&self, repo: &Repository, pr: &NewPullRequest) -> Result<FullPullRequest, GhError> {
         let request = Self::create_pull_request_request(repo, pr)?;
-        full_pull_request(&self.inner.runner.request(request).await?, repo)
+        full_pull_request(&self.runner().request(request).await?, repo)
     }
 
     async fn dispatch_workflow(&self, repo: &Repository, workflow_id: u64, git_ref: &str) -> Result<(), GhError> {
         let request = Self::dispatch_workflow_request(repo, workflow_id, git_ref);
-        dispatched(self.inner.runner.request(request).await)
+        dispatched(self.runner().request(request).await)
     }
 
     async fn rerun_workflow_run(&self, repo: &Repository, run_id: u64) -> Result<(), GhError> {
         let request = Self::rerun_request(repo, run_id, "rerun");
-        dispatched(self.inner.runner.request(request).await)
+        dispatched(self.runner().request(request).await)
     }
 
     async fn rerun_failed_jobs(&self, repo: &Repository, run_id: u64) -> Result<(), GhError> {
         let request = Self::rerun_request(repo, run_id, "rerun-failed-jobs");
-        dispatched(self.inner.runner.request(request).await)
+        dispatched(self.runner().request(request).await)
     }
 
     async fn workflow_run(&self, repo: &Repository, run_id: u64) -> Result<WorkflowRun, GhError> {
         let request = Self::workflow_run_request(repo, run_id);
-        self.inner.runner.request(request).await?.json()
+        self.runner().request(request).await?.json()
     }
 
     async fn collaborators(&self, repo: &Repository) -> Result<Vec<String>, GhError> {
-        logins(self.inner.runner.request(Self::collaborators_request(repo)).await)
+        logins(self.runner().request(Self::collaborators_request(repo)).await)
     }
 
     async fn requested_reviewers(&self, repo: &Repository, number: u64) -> Result<Vec<String>, GhError> {
         let request = Self::requested_reviewers_request(Method::Get, repo, number);
-        requested_logins(self.inner.runner.request(request).await)
+        requested_logins(self.runner().request(request).await)
     }
 
     async fn request_reviewers(&self, repo: &Repository, number: u64, reviewers: &[String]) -> Result<(), GhError> {
         let request = Self::request_reviewers_request(repo, number, reviewers)?;
-        dispatched(self.inner.runner.request(request).await)
+        dispatched(self.runner().request(request).await)
     }
 
     async fn update_pull_request(
@@ -1607,7 +1630,7 @@ impl Github for GhCli {
         update: &PullRequestUpdate,
     ) -> Result<(), GhError> {
         let request = Self::update_pull_request_request(repo, number, update)?;
-        dispatched(self.inner.runner.request(request).await)
+        dispatched(self.runner().request(request).await)
     }
 }
 
@@ -1824,6 +1847,29 @@ mod tests {
                 list_repos: Duration::ZERO,
                 list_issues: Duration::ZERO,
             }
+        );
+    }
+
+    /// Settings' Save: a clone made before (as the runtime holds) runs its next request with the new TTL and host.
+    #[test]
+    fn reconfigure_applies_to_the_next_request_of_every_clone() {
+        let gh = GhCli::default();
+        let held = gh.clone();
+        let query = IssueListQuery::first_page(IssueStateFilter::All, IssueOwnerFilter::All);
+        assert_eq!(
+            held.list_issues_request(&lazy_fixture(), query, None).cache,
+            Some(Duration::from_mins(10))
+        );
+        let mut config = Config::default();
+        config.cache.default_ttl = 7;
+        config.api.base_url = "https://ghe.example.com/api/v3".into();
+        gh.reconfigure(GhCliOptions::from(&config));
+        let request = held.list_issues_request(&lazy_fixture(), query, None);
+        assert_eq!(request.cache, Some(Duration::from_secs(7)));
+        assert_eq!(held.runner().hostname(), Some("ghe.example.com"));
+        assert_eq!(
+            strings(held.runner().auth_status_argv()),
+            ["auth", "status", "--hostname", "ghe.example.com"]
         );
     }
 

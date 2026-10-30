@@ -87,6 +87,7 @@ impl<G: Github> Runtime<G> {
                 }
             }
             Effect::SaveConfig(config) => self.saver.save(config),
+            Effect::ReconfigureGithub(options) => self.gh.reconfigure(options),
             Effect::ReadCache { id, path } => {
                 let tx = self.tx.clone();
                 let task = tokio::spawn(async move {

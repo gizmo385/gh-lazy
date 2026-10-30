@@ -3,9 +3,10 @@ description = "Settings Save and Cancel: Save applies the theme (Nord), hides a 
 # The modal is loose text (see settings.toml). After the theme changes, the focus color no longer matches the
 # config's theme in parity/themes.toml, so captures after the save compare titles only; the theme switch is
 # checked in the report's screens and by unit tests. config.json's contents are unit-tested.
-gate = false
+gate = true
 parity_rows = [
     "modals.settings-save",
+    "modals.settings-apply",
     "modals.settings-cancel",
     "modals.settings-widgets",
     "toasts.settings-updated",

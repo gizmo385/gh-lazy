@@ -5,6 +5,7 @@ use std::sync::Arc;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
 use lazy_github_core::debug::DebugEnv;
+use lazy_github_core::github::GhCliOptions;
 use lazy_github_core::models::Repository;
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
@@ -558,7 +559,8 @@ impl App {
                 let theme = Theme::from_config(name, self.shared.theme.color_mode());
                 self.set_theme(theme, out);
             }
-            Action::OpenSettings | Action::SettingsClosed(_) => self.settings(&action, out),
+            Action::OpenSettings => self.open_settings(out),
+            Action::SettingsClosed(SettingsOutcome::Saved(config)) => self.apply_settings(*config, out),
             Action::ShowDebugInfo => self.show_debug_info(out),
             Action::Toggle(toggle) => self.toggle(toggle, out),
             Action::Minimize => self.minimize(),
@@ -570,7 +572,8 @@ impl App {
                 self.help_scroll = HelpScroll::default();
             }
             // `Consumed` was applied where it was produced.
-            Action::ToggleHelp | Action::Consumed => {}
+            // Cancel applies nothing.
+            Action::ToggleHelp | Action::Consumed | Action::SettingsClosed(SettingsOutcome::Cancelled) => {}
             Action::Main(action) => {
                 if let BaseScreen::Main(main) = &mut self.base {
                     main.update(action, &mut Cx::new(&mut self.shared, out));
@@ -684,25 +687,50 @@ impl App {
         });
     }
 
-    /// [`Action::OpenSettings`] and [`Action::SettingsClosed`].
-    ///
-    /// "Change Settings" opens the Settings modal over the main screen, built from the config as it is now (not the
-    /// session's palette theme); the palette has closed by the time its reply opens it. Writing and applying a saved
-    /// config is #307's, so until then a save is dropped.
-    fn settings(&mut self, action: &Action, out: &mut Outbox) {
-        match action {
-            Action::OpenSettings => {
-                if !self.modals.is_empty() || !matches!(self.base, BaseScreen::Main(_)) {
-                    return;
-                }
-                let dialog = SettingsDialog::new(&self.shared.config);
-                Cx::new(&mut self.shared, out).open_dialog(dialog, Action::SettingsClosed);
-            }
-            Action::SettingsClosed(SettingsOutcome::Saved(_)) => {
-                tracing::debug!("Dropping the saved settings: saving them isn't implemented yet");
-            }
-            _ => {}
+    /// [`Action::OpenSettings`]: "Change Settings" opens the Settings modal over the main screen, built from the
+    /// config as it is now (not the session's palette theme); the palette has closed by the time its reply opens it.
+    fn open_settings(&mut self, out: &mut Outbox) {
+        if !self.modals.is_empty() || !matches!(self.base, BaseScreen::Main(_)) {
+            return;
         }
+        let dialog = SettingsDialog::new(&self.shared.config);
+        Cx::new(&mut self.shared, out).open_dialog(dialog, Action::SettingsClosed);
+    }
+
+    /// Settings' Save: `config` becomes the app's and is written once (by [`Self::drain`]), and what the app reads
+    /// from it as it runs follows at once. Python's `on_settings_modal_dismissed` and `handle_settings_update`, toast
+    /// included, which shows on every Save, changed or not.
+    ///
+    /// The theme replaces any the palette picked for the session, keeping the terminal's color mode. The keymap is
+    /// rebuilt, so the footer, the help panel and every key follow; the section titles keep the keys they were built
+    /// with, as in Python. Hiding the maximized section restores the layout (Py bug B88's answer). Everything else is
+    /// read where it's next used, except the `gh` options, which are baked in at startup and so are rebuilt here when
+    /// their TTLs or host changed.
+    fn apply_settings(&mut self, config: Config, out: &mut Outbox) {
+        let gh_options = GhCliOptions::from(&config);
+        let reconfigure = gh_options != GhCliOptions::from(&self.shared.config);
+        *Cx::new(&mut self.shared, out).config_mut() = config;
+        // First, so the requests below already use the new options.
+        if reconfigure {
+            out.effects.push(Effect::ReconfigureGithub(gh_options));
+        }
+        out.actions
+            .push_back(Action::Notify(Toast::new(Severity::Information, "Settings updated")));
+        let config = &self.shared.config;
+        let theme = Theme::from_config(&config.appearance.theme, self.shared.theme.color_mode());
+        self.shared.keymap = Keymap::new(&config.bindings.overrides);
+        self.set_theme(theme, out);
+        if let BaseScreen::Main(main) = &mut self.base {
+            main.apply_appearance(&mut Cx::new(&mut self.shared, out));
+            if self
+                .maximized
+                .and_then(|maximized| maximized.target.section())
+                .is_some_and(|id| !main.section(id).shown())
+            {
+                self.minimize();
+            }
+        }
+        self.notifications.settings_saved(&mut Cx::new(&mut self.shared, out));
     }
 
     /// Switches the whole app to `theme`, which the caller has given the terminal's color mode. Only what's drawn

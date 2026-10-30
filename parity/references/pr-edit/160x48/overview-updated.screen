@@ -1,6 +1,6 @@
 lazy-github-screen 1
 size 160x48
-cursor 1 4 hidden
+cursor 26 64 hidden
 --- text
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │Current repo: parity-bot/pr-details                                                                                                                           │
@@ -16,7 +16,7 @@ cursor 1 4 hidden
 │                                                              ││  ▶ 👍 2 | 🎉 1 | 👀 4                                                                        │
 │                                                              ││                                                                                              │
 │                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
-│                                                              ││  ▶ Status checks: ✘ Failed                                                                   │
+│                                                              ││  ▶ Status checks: ✘                                                                          │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                          Loading...                                          │
@@ -65,7 +65,7 @@ d..............................................................derrrrrrrrrrrrrrr
 d..............................................................dessnnntnnnnnntnnnnnntnnsssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssse
 d..............................................................desssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssse
 d..............................................................derrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrre
-d..............................................................dessnnnnnnnnnnnnnnnnnuuuuuuuussssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssse
+d..............................................................dessnnnnnnnnnnnnnnnnnusssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssse
 d..............................................................desssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssse
 d..............................................................devvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvve
 d..............................................................devvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvve

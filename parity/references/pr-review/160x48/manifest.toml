@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["add-open", "add-empty", "pending", "status-focused", "submitted", "author-form"]
 
 [inputs]
-scenario = "ec442829d3de87c57994ab5760a21ca7866d6e26"
+scenario = "4fcdbb40534b4d02d668a7f399213eed6953f3e4"
 fixtures = "4adc8e742447e1532c44116251938c747067a94e"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"

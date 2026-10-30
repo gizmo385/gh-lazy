@@ -28,6 +28,9 @@ wait.timeout_ms = 15000
 keys = ["2"]
 
 [[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
 wait.stable_ms = 500
 
 [[step]]
@@ -44,7 +47,13 @@ wait.text = "Status checks:"
 wait.text = "👍 2"
 
 [[step]]
-keys = ["5", "right", "right"]
+keys = ["5"]
+
+[[step]]
+wait = { gone = "O Lookup" }
+
+[[step]]
+keys = ["right", "right"]
 
 [[step]]
 wait.text = "Review from parity-bot"

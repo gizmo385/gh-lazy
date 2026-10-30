@@ -36,7 +36,13 @@ capture = "browser"
 checks = ["titles", "focus"]
 
 [[step]]
-keys = ["3", "enter"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Workaround: delete the file", timeout_ms = 15000 }

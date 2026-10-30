@@ -46,6 +46,9 @@ wait = { text = "Workflow runs with jobs and logs.", timeout_ms = 15000 }
 keys = ["4"]
 
 [[step]]
+wait = { text = "T Trigger Workflow" }
+
+[[step]]
 keys = ["enter"]
 
 [[step]]
@@ -109,7 +112,13 @@ capture = "no-logs"
 checks = ["titles", "tabs", "focus"]
 
 [[step]]
-keys = ["5", "right"]
+keys = ["5"]
+
+[[step]]
+wait = { gone = "l View Job Logs" }
+
+[[step]]
+keys = ["right"]
 
 [[step]]
 wait = { text = "The operation was canceled.", timeout_ms = 15000 }
@@ -120,7 +129,13 @@ checks = ["titles", "tabs", "focus"]
 
 # Run 41, in progress.
 [[step]]
-keys = ["4", "j", "enter"]
+keys = ["4"]
+
+[[step]]
+wait = { text = "T Trigger Workflow" }
+
+[[step]]
+keys = ["j", "enter"]
 
 [[step]]
 wait = { text = "test (Not started)", timeout_ms = 15000 }
@@ -141,7 +156,13 @@ checks = ["titles", "tabs", "focus"]
 
 # Run 40, without jobs: each tab says so.
 [[step]]
-keys = ["4", "j", "enter"]
+keys = ["4"]
+
+[[step]]
+wait = { text = "T Trigger Workflow" }
+
+[[step]]
+keys = ["j", "enter"]
 
 [[step]]
 wait = { text = "Nothing to run (#40)", timeout_ms = 15000 }

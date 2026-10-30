@@ -33,7 +33,13 @@ ignore = { boxes = ["Details"] }
 
 # The bottom row (30 of 30) asks for page 2.
 [[step]]
-keys = ["4", "G"]
+keys = ["4"]
+
+[[step]]
+wait = { text = "T Trigger Workflow" }
+
+[[step]]
+keys = ["G"]
 
 [[step]]
 wait = { log = { method = "GET", path = "/repos/parity-bot/ci-fixture/actions/runs", query = { page = "2", per_page = "30" } }, timeout_ms = 15000 }

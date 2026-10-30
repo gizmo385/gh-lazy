@@ -24,9 +24,12 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Add a cursor to the viewer", timeout_ms = 15000 }
 
-# Python drops an enter that follows a focus key at once, so the PR table gets a moment to take focus.
+# Python moves focus a tick after a focus key (Py bug B98), so wait for the PR table's bindings in the footer.
 [[step]]
 keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
 
 [[step]]
 wait = { stable_ms = 500 }
@@ -107,10 +110,16 @@ wait = { stable_ms = 600 }
 keys = ["1"]
 
 [[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
 wait = { stable_ms = 600 }
 
 [[step]]
 keys = ["shift+tab"]
+
+[[step]]
+wait = { gone = "O Lookup Repository" }
 
 [[step]]
 wait = { stable_ms = 600 }

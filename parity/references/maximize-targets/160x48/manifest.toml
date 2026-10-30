@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["content-noop", "repos-max", "prs-max", "issues-max", "workflows-max", "log-max"]
 
 [inputs]
-scenario = "9cca3f49efe111cac63b14d67e77073965e40110"
+scenario = "7ffb72f26be6b51dbae45c1adf3eac9d4c3df4b6"
 fixtures = "152ce9bbfa49430b36bca9ef5e2ae1189ea76b00"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"

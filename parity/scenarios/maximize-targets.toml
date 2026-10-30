@@ -14,10 +14,21 @@ appearance = { show_command_log = true }
 [[step]]
 wait = { text = "Repositories", timeout_ms = 15000 }
 
-# The footer drops the repos table's bindings once 5 has moved focus to the details. The tab to the content after
-# it has no signal of its own, but keys are handled in order, so M reaches the content.
+# The repos table's bindings show once Python has settled, so the `gone` wait after the focus key means something.
 [[step]]
-keys = ["5", "tab"]
+wait = { text = "O Lookup Repository" }
+
+# The footer drops the repos table's bindings once 5 has moved focus to the details (Py bug B98: wait before more
+# keys). The tab to the content after it has no signal of its own, but keys are handled in order, so M reaches the
+# content.
+[[step]]
+keys = ["5"]
+
+[[step]]
+wait = { gone = "O Lookup" }
+
+[[step]]
+keys = ["tab"]
 
 [[step]]
 wait = { gone = "Toggle Favorite" }
@@ -32,7 +43,13 @@ checks = ["titles", "focus"]
 ignore = { boxes = ["Command Log"] }
 
 [[step]]
-keys = ["1", "M"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["M"]
 
 [[step]]
 wait = { gone = "[1] Repositories" }
@@ -48,7 +65,13 @@ keys = ["escape"]
 wait = { text = "[2] Pull Requests" }
 
 [[step]]
-keys = ["2", "M"]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["M"]
 
 [[step]]
 wait = { gone = "[2] Pull Requests" }
@@ -64,7 +87,13 @@ keys = ["escape"]
 wait = { text = "[3] Issues" }
 
 [[step]]
-keys = ["3", "M"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["M"]
 
 [[step]]
 wait = { gone = "[3] Issues" }
@@ -80,7 +109,13 @@ keys = ["escape"]
 wait = { text = "[4] Workflows" }
 
 [[step]]
-keys = ["4", "M"]
+keys = ["4"]
+
+[[step]]
+wait = { text = "T Trigger Workflow" }
+
+[[step]]
+keys = ["M"]
 
 [[step]]
 wait = { gone = "[4] Workflows" }
@@ -96,7 +131,13 @@ keys = ["escape"]
 wait = { text = "[6] Command Log" }
 
 [[step]]
-keys = ["6", "M"]
+keys = ["6"]
+
+[[step]]
+wait = { gone = "T Trigger Workflow" }
+
+[[step]]
+keys = ["M"]
 
 [[step]]
 wait = { gone = "[6] Command Log" }

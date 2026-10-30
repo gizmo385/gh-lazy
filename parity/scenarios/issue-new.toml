@@ -45,7 +45,13 @@ wait.text = "Issues with bodies and comments."
 wait.timeout_ms = 15000
 
 [[step]]
-keys = ["3", "I"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["I"]
 
 [[step]]
 wait.text = "Description"
@@ -114,7 +120,13 @@ checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Open it again and cancel with the button.
 [[step]]
-keys = ["3", "I"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["I"]
 
 [[step]]
 wait.text = "Description"

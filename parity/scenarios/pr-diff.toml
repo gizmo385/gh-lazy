@@ -40,6 +40,9 @@ wait = { text = "parity-friend", timeout_ms = 15000 }
 keys = ["2"]
 
 [[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
 wait = { stable_ms = 500 }
 
 [[step]]

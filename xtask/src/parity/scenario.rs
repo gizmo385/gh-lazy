@@ -684,7 +684,12 @@ impl Scenario {
 
         let env = parse_env(raw.env, &loc, roots)?;
 
-        let (steps, captures) = parse_steps(raw.steps, &loc, env.git_remote_branches.is_some())?;
+        let (steps, captures) = parse_steps(
+            raw.steps,
+            &loc,
+            env.git_remote_branches.is_some(),
+            apps.contains(&App::Python),
+        )?;
 
         let mut expect = BTreeMap::new();
         for (key, value) in raw.expect {
@@ -716,13 +721,19 @@ impl Scenario {
     }
 }
 
+/// The default keys that focus a main-screen section (`[1]` to `[6]`).
+const FOCUS_KEYS: &[&str] = &["1", "2", "3", "4", "5", "6"];
+
 /// The steps, and the capture names. Capture names must be unique, and only the last capture may set
-/// `ignore.writes`.
+/// `ignore.writes`. With `python`, a focus key must end its step and be followed by a condition wait
+/// ([`check_focus_waits`]).
 fn parse_steps(
     raw: Vec<Spanned<RawStep>>,
     loc: &Locator<'_>,
     has_remote: bool,
+    python: bool,
 ) -> Result<(Vec<Step>, BTreeSet<String>), ScenarioError> {
+    let mut starts = Vec::with_capacity(raw.len());
     let mut steps = Vec::with_capacity(raw.len());
     let mut captures = BTreeSet::new();
     // The start of each capture step with `ignore.writes`, and of the last capture step.
@@ -749,13 +760,58 @@ fn parse_steps(
             }
             last_capture = Some(start);
         }
+        starts.push(start);
         steps.push(step);
+    }
+    if python {
+        check_focus_waits(&steps, &starts, loc)?;
     }
     // The `writes` mismatch goes on the last capture, so `ignore.writes` anywhere else would do nothing.
     if let Some(&start) = ignoring_writes.iter().find(|&&s| Some(s) != last_capture) {
         return Err(loc.at(start, "`ignore.writes` is only allowed on the scenario's last capture"));
     }
     Ok((steps, captures))
+}
+
+/// Python moves focus a tick after a focus key (Py bug B98), so on a loaded machine a key sent right after one, or a
+/// capture, can reach the section that had focus before. A focus key must therefore end its `keys` step, and the next
+/// step must wait on a condition that shows the focus moved, e.g. the new section's bindings in the footer. A
+/// `stable_ms` wait doesn't count: a busy Python can hold the screen still past it. Where no text shows the move
+/// (focus moving behind a maximized section), an explicit `sleep_ms` is allowed instead. `starts` are the steps'
+/// offsets.
+fn check_focus_waits(steps: &[Step], starts: &[usize], loc: &Locator<'_>) -> Result<(), ScenarioError> {
+    for (i, step) in steps.iter().enumerate() {
+        let Step::Keys(keys) = step else { continue };
+        let Some(pos) = keys.iter().position(|k| FOCUS_KEYS.contains(&k.as_str())) else {
+            continue;
+        };
+        if pos + 1 < keys.len() {
+            return Err(loc.at(
+                starts[i],
+                format!(
+                    "focus key {:?} must end its `keys` step: Python moves focus a tick late (Py bug B98), so send \
+                     it, wait for the focus to move, then send the rest",
+                    keys[pos]
+                ),
+            ));
+        }
+        let waits = match steps.get(i + 1) {
+            Some(Step::Wait(w)) => !matches!(w.until, WaitFor::Stable(_)),
+            Some(Step::Sleep(_)) => true,
+            _ => false,
+        };
+        if !waits {
+            return Err(loc.at(
+                starts[i],
+                format!(
+                    "focus key {:?} must be followed by a `wait` that shows the focus moved (not `stable_ms`), e.g. \
+                     the section's bindings in the footer: Python moves focus a tick late (Py bug B98)",
+                    keys[pos]
+                ),
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, ScenarioError> {
@@ -1576,6 +1632,49 @@ move = { at = [100, 1] }
             2,
             "click, move",
         );
+    }
+
+    #[test]
+    fn a_focus_key_ends_its_step_and_is_followed_by_a_condition_wait() {
+        assert_error(
+            "version = 1\n[[step]]\nkeys = [\"2\", \"j\"]\n[[step]]\nwait = { text = \"x\" }\n",
+            2,
+            "focus key \"2\" must end its `keys` step",
+        );
+        // A focus key after other keys still has to end the step.
+        assert_error(
+            "version = 1\n[[step]]\nkeys = [\"escape\", \"5\", \"tab\"]\n",
+            2,
+            "focus key \"5\" must end",
+        );
+        assert_error(
+            "version = 1\n[[step]]\nsleep_ms = 1\n[[step]]\nkeys = [\"3\"]\n[[step]]\nwait = { stable_ms = 500 }\n",
+            4,
+            "must be followed by a `wait`",
+        );
+        assert_error(
+            "version = 1\n[[step]]\nkeys = [\"1\"]\n[[step]]\ncapture = \"x\"\n",
+            2,
+            "must be followed by a `wait`",
+        );
+        assert_error(
+            "version = 1\n[[step]]\nkeys = [\"6\"]\n",
+            2,
+            "must be followed by a `wait`",
+        );
+
+        for next in [
+            "wait = { text = \"O Lookup Issue\" }",
+            "wait = { gone = \"x\" }",
+            "sleep_ms = 500",
+        ] {
+            let source = format!("version = 1\n[[step]]\nkeys = [\"escape\", \"3\"]\n[[step]]\n{next}\n");
+            parse(&source).unwrap_or_else(|e| panic!("{next}: {e}"));
+        }
+        // Digits that aren't focus keys, and keys after the wait, are fine.
+        parse("version = 1\n[[step]]\nkeys = [\"7\", \"j\"]\n").unwrap();
+        // Rust focuses at once, so a Rust-only scenario may send a focus key with more keys.
+        parse("version = 1\napps = [\"rust\"]\n[[step]]\nkeys = [\"3\", \"enter\"]\n").unwrap();
     }
 
     #[test]

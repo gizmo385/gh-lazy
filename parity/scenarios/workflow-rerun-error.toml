@@ -27,9 +27,12 @@ wait.timeout_ms = 15000
 wait.text = "Workflow runs with jobs and logs."
 wait.timeout_ms = 15000
 
-# Python drops an enter that follows a focus key at once, so the Workflows table gets a moment to take focus.
+# Python moves focus a tick after a focus key (Py bug B98), so wait for the Workflows table's bindings in the footer.
 [[step]]
 keys = ["4"]
+
+[[step]]
+wait = { text = "T Trigger Workflow" }
 
 [[step]]
 wait.stable_ms = 500
@@ -45,7 +48,16 @@ wait.text = "deploy (9s)"
 wait.timeout_ms = 15000
 
 [[step]]
-keys = ["1", "shift+tab"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["shift+tab"]
+
+[[step]]
+wait = { gone = "O Lookup Repository" }
 
 [[step]]
 wait.stable_ms = 300
@@ -65,7 +77,16 @@ capture = "failed-jobs-error"
 checks = ["titles", "focus"]
 
 [[step]]
-keys = ["1", "shift+tab", "shift+tab"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["shift+tab", "shift+tab"]
+
+[[step]]
+wait = { gone = "O Lookup Repository" }
 
 [[step]]
 wait.stable_ms = 300

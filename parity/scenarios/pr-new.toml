@@ -178,6 +178,9 @@ checks = ["titles", "tabs", "focus"]
 keys = ["2"]
 
 [[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
 wait.stable_ms = 500
 
 [[step]]

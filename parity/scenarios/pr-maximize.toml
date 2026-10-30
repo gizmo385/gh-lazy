@@ -20,9 +20,12 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Add a cursor to the viewer", timeout_ms = 15000 }
 
-# Python drops an enter that follows a focus key at once, so the PR table gets a moment to take focus.
+# Python moves focus a tick after a focus key (Py bug B98), so wait for the PR table's bindings in the footer.
 [[step]]
 keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
 
 [[step]]
 wait = { stable_ms = 500 }
@@ -161,6 +164,10 @@ checks = ["titles", "focus"]
 # A focus key moves focus to the PR table, but the section stays maximized until escape.
 [[step]]
 keys = ["2"]
+
+# No text shows the move (the maximized section hides the table and the footer), so this sleeps for it (Py bug B98).
+[[step]]
+sleep_ms = 500
 
 [[step]]
 capture = "focus-key"

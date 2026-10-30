@@ -36,7 +36,13 @@ capture = "initial"
 checks = ["headers", "rows", "cursor"]
 
 [[step]]
-keys = ["1", "j", "j"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["j", "j"]
 
 [[step]]
 capture = "down-2"

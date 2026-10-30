@@ -13,7 +13,13 @@ fixtures = ["base"]
 wait = { text = "Repositories", timeout_ms = 15000 }
 
 [[step]]
-keys = ["1", "M"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["M"]
 
 [[step]]
 wait = { text = "View Maximized" }

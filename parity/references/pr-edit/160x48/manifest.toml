@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["already-merged", "open-pr4", "update-failed", "open", "reviewers", "already-reviewer", "unknown-user", "suggestion", "added", "list-focused", "removed", "updated", "from-overview", "overview-updated"]
 
 [inputs]
-scenario = "f07d2ad33693e727321d3de028281068e2c10ce6"
+scenario = "39c22d756d3c0c13651cbec737397b86432f4da0"
 fixtures = "ce8c0777dd3180606bb2d2a5deca57a8c7bf08e1"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"

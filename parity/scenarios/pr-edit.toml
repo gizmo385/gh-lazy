@@ -1,7 +1,7 @@
 version = 1
 description = "Edit PR (E): a merged PR from the table (warning, no dialog), a refused update of PR 4, then PR 5: a new title, the Reviewers input (already a reviewer, an unknown user, a suggestion accepted and added), the existing reviewer removed, Update (PATCH, then only the new reviewer requested), and E again from the PR Overview with nothing changed"
 # shift+enter is sent in the kitty keyboard protocol's encoding (CSI 13;2 u), which both apps read
-# (terminal-caveats.shift-enter). Python drops a key that follows a focus key at once, hence the stable waits.
+# (terminal-caveats.shift-enter). Python moves focus a tick after a focus key (Py bug B98), so each waits for it.
 # The dialog captures leave the footer out of `checks`: the main screen's footer shows under the dialog, cut inside
 # `^p Command Pallete` (Py bug B14), which Rust spells right, so the cut footers differ. Their `[expect]`s check
 # that it's the PR table's footer instead.
@@ -43,6 +43,9 @@ wait.timeout_ms = 15000
 # PR 3 is merged: a warning, and no dialog.
 [[step]]
 keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
 
 [[step]]
 wait.stable_ms = 500
@@ -264,6 +267,9 @@ wait.text = "Status checks:"
 
 [[step]]
 keys = ["5"]
+
+[[step]]
+wait = { gone = "O Lookup" }
 
 [[step]]
 wait.stable_ms = 500

@@ -31,6 +31,9 @@ wait = { text = "Issues with bodies and comments.", timeout_ms = 15000 }
 keys = ["3"]
 
 [[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
 keys = ["O"]
 
 [[step]]
@@ -87,7 +90,13 @@ checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Issue 12 is in the table already: selected, not added twice.
 [[step]]
-keys = ["3", "O"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["O"]
 
 [[step]]
 wait = { text = "Search for an issue by number:", timeout_ms = 10000 }
@@ -108,7 +117,13 @@ checks = ["titles", "headers", "rows", "cursor", "focus"]
 # 8 is a pull request. Python shows it as an issue and adds it to the Issues table (Py bug B61), so only the titles
 # and focus are compared.
 [[step]]
-keys = ["3", "O"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["O"]
 
 [[step]]
 wait = { text = "Search for an issue by number:", timeout_ms = 10000 }
@@ -128,7 +143,13 @@ checks = ["titles", "focus"]
 
 # Escape closes the dialog; focus goes back to the Issues table.
 [[step]]
-keys = ["3", "O"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["O"]
 
 [[step]]
 wait = { text = "Search for an issue by number:", timeout_ms = 10000 }

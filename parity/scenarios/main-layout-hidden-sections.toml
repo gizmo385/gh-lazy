@@ -19,12 +19,24 @@ appearance = { show_pull_requests = false, show_workflows = false }
 [[step]]
 wait = { text = "Repositories", timeout_ms = 15000 }
 
+# The repos table's bindings and the Details underline show once Python has settled, so the `gone` wait after 2 means
+# something.
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+wait = { regex = "╸━+╺" }
+
 [[step]]
 capture = "start"
 checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["2"]
+
+# B31: the hidden table takes focus, so the repos table's bindings leave the footer.
+[[step]]
+wait = { gone = "O Lookup Repository" }
 
 # The hidden section's bindings reach the footer (#76), so the footer is left out until then.
 # #76 adds contains = ["O Lookup Pull Request"] and the footer check

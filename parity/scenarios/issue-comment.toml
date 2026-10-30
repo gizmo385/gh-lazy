@@ -33,7 +33,13 @@ wait.text = "Issues with bodies and comments."
 wait.timeout_ms = 15000
 
 [[step]]
-keys = ["3", "enter"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.text = "Workaround: delete the file"
@@ -41,7 +47,13 @@ wait.timeout_ms = 15000
 
 # The Comments tab, then into its scroll area, where `n` is bound.
 [[step]]
-keys = ["5", "right"]
+keys = ["5"]
+
+[[step]]
+wait = { gone = "O Lookup" }
+
+[[step]]
+keys = ["right"]
 
 [[step]]
 wait.text = "A comment from a deleted account."

@@ -880,7 +880,12 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
 
     Each `wait` takes an optional `timeout_ms` (default 10000). A timeout fails that app's run at that step and dumps
     the screen.
-  - `keys`: a list of key specs, below.
+  - `keys`: a list of key specs, below. In a scenario Python runs, a focus key (`1` to `6`) must end its step, and
+    the next step must be a `wait` other than `stable_ms`, or a `sleep_ms` where no text can show the move. Python
+    moves focus a tick after the key (Py bug B98), so a key or capture sent right after it can reach the section that
+    had focus before (#314). Wait on the new section's bindings in the footer (`text = "O Lookup Issue"`), or, for a
+    section with none of its own (Details, the command log), on the old section's leaving it
+    (`gone = "O Lookup"`).
   - `type`: a string sent verbatim.
   - `paste`: a string. It's sent in bracketed-paste mode (`ESC[200~ … ESC[201~`) if the app has enabled it, else
     verbatim.

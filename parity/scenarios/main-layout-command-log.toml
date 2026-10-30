@@ -13,12 +13,19 @@ appearance = { show_command_log = true }
 [[step]]
 wait = { text = "Repositories", timeout_ms = 15000 }
 
+# The repos table's bindings show once Python has settled, so the `gone` wait after the focus key means something.
+[[step]]
+wait = { text = "O Lookup Repository" }
+
 [[step]]
 capture = "start"
 checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["6"]
+
+[[step]]
+wait = { gone = "O Lookup" }
 
 [[step]]
 capture = "log"

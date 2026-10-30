@@ -24,7 +24,13 @@ wait = { text = "Pull Requests", timeout_ms = 15000 }
 wait = { text = "lazy-fixture", timeout_ms = 15000 }
 
 [[step]]
-keys = ["1", "j", "j", "j", "enter"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["j", "j", "j", "enter"]
 
 # The first page is in the table once its newest PR shows.
 [[step]]
@@ -32,7 +38,13 @@ wait = { text = "Lazy fixture pull request 70", timeout_ms = 15000 }
 
 # The bottom row leaves 1 remaining, which asks for page 2.
 [[step]]
-keys = ["2", "G"]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["G"]
 
 [[step]]
 wait = { log = { method = "GET", path = "/repos/parity-bot/lazy-fixture/issues", query = { page = "2", per_page = "30", state = "all" } }, timeout_ms = 15000 }

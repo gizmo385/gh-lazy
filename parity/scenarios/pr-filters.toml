@@ -32,10 +32,13 @@ capture = "loaded"
 checks = ["titles", "headers", "rows", "cursor", "focus"]
 ignore = { boxes = ["Details"] }
 
-# Python drops a key that follows a focus key at once, so the PR table gets a moment to take focus. G puts the cursor on
+# Python moves focus a tick after a focus key (Py bug B98), so wait for the PR table's bindings. G puts the cursor on
 # the last PR of page 1, which asks for page 2 with the `pull_requests.*` filters.
 [[step]]
 keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
 
 [[step]]
 wait = { stable_ms = 500 }

@@ -42,7 +42,13 @@ capture = "restored"
 checks = ["titles", "tabs", "focus"]
 
 [[step]]
-keys = ["5", "M"]
+keys = ["5"]
+
+[[step]]
+wait = { gone = "O Lookup" }
+
+[[step]]
+keys = ["M"]
 
 [[step]]
 wait = { gone = "[5] Details" }

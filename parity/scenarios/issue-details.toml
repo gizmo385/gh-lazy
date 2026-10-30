@@ -39,6 +39,9 @@ wait = { text = "Issues with bodies and comments.", timeout_ms = 15000 }
 keys = ["3"]
 
 [[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
 keys = ["enter"]
 
 [[step]]
@@ -61,6 +64,9 @@ checks = ["titles", "headers", "rows", "cursor", "focus"]
 keys = ["5"]
 
 [[step]]
+wait = { gone = "E Edit Issue" }
+
+[[step]]
 keys = ["right"]
 
 [[step]]
@@ -80,7 +86,13 @@ checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # Right from the strip wraps around to Overview.
 [[step]]
-keys = ["5", "right"]
+keys = ["5"]
+
+[[step]]
+wait = { gone = "r Reply to Comment" }
+
+[[step]]
+keys = ["right"]
 
 [[step]]
 capture = "wrapped"
@@ -88,7 +100,13 @@ checks = ["titles", "tabs", "focus"]
 
 # Issue 11: closed, no body, no comments.
 [[step]]
-keys = ["3", "j", "enter"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["j", "enter"]
 
 [[step]]
 wait = { text = "Closed without a body (#11)", timeout_ms = 15000 }
@@ -109,7 +127,13 @@ checks = ["titles", "tabs", "focus"]
 
 # Issue 10: its comments take 2 s, so the Comments tab shows the loading overlay first.
 [[step]]
-keys = ["3", "j", "enter"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["j", "enter"]
 
 [[step]]
 wait = { text = "Comments that load slowly (#10)", timeout_ms = 15000 }

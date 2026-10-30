@@ -19,6 +19,9 @@ checks = ["titles", "focus"]
 keys = ["2"]
 
 [[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
 capture = "prs"
 checks = ["titles", "focus"]
 

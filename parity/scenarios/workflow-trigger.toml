@@ -26,7 +26,13 @@ wait.timeout_ms = 15000
 
 # No repo selected yet.
 [[step]]
-keys = ["4", "T"]
+keys = ["4"]
+
+[[step]]
+wait = { text = "T Trigger Workflow" }
+
+[[step]]
+keys = ["T"]
 
 [[step]]
 wait.text = "No repository selected"
@@ -36,7 +42,13 @@ capture = "no-repo"
 checks = ["titles", "focus"]
 
 [[step]]
-keys = ["1", "enter"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.text = "Fix the flaky test"
@@ -48,7 +60,13 @@ wait.timeout_ms = 15000
 
 # "Trigger Workflow" is also in the footer, so wait on the select's prompt.
 [[step]]
-keys = ["4", "T"]
+keys = ["4"]
+
+[[step]]
+wait = { text = "T Trigger Workflow" }
+
+[[step]]
+keys = ["T"]
 
 [[step]]
 wait.text = "Select a workflow"
@@ -119,7 +137,13 @@ checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Again, and close it with q while the select has focus.
 [[step]]
-keys = ["4", "T"]
+keys = ["4"]
+
+[[step]]
+wait = { text = "T Trigger Workflow" }
+
+[[step]]
+keys = ["T"]
 
 [[step]]
 wait.text = "Select a workflow"

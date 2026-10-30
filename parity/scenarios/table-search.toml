@@ -22,7 +22,13 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 wait = { text = "alpha-service", timeout_ms = 15000 }
 
 [[step]]
-keys = ["1", "/"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["/"]
 
 # No `rows`: Python keeps the table at the full section height under the box and clips its bottom rows, while Rust
 # lays it out in the rows the box leaves, so its horizontal scrollbar takes one of them (Py bug B40, decision

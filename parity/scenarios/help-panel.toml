@@ -59,7 +59,13 @@ checks = ["titles", "focus"]
 
 # Maximizing keeps the panel docked: the maximized table and its hatch fill the narrower area.
 [[step]]
-keys = ["1", "?"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["?"]
 
 [[step]]
 wait = { text = "Cursor up" }

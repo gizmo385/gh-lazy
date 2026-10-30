@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["failed-jobs-focused", "failed-jobs-rerun", "workflow-rerun"]
 
 [inputs]
-scenario = "32326e0131a437d8a9d8901f9ef5897827125ff8"
+scenario = "22ff3920643149743e44c8b579fe55742bbd6a7a"
 fixtures = "b2eeaef0851a0d300220aad7c54545670990a155"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"

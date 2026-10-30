@@ -31,10 +31,13 @@ keys = ["enter"]
 wait.text = "Add a cursor to the viewer"
 wait.timeout_ms = 15000
 
-# PR 4 is closed: GitHub answers 405. (Python drops a key that follows a focus key at once, so the PR table gets a
-# moment to take focus before each selection.)
+# PR 4 is closed: GitHub answers 405. (Python moves focus a tick after a focus key, Py bug B98, so each `2` waits for
+# the PR table's bindings in the footer before a selection.)
 [[step]]
 keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
 
 [[step]]
 wait.stable_ms = 500
@@ -78,6 +81,9 @@ checks = ["titles", "focus"]
 keys = ["2"]
 
 [[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
 wait.stable_ms = 500
 
 [[step]]
@@ -106,6 +112,9 @@ checks = ["titles", "focus"]
 # PR 5 is open: merged with squash and its head sha.
 [[step]]
 keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
 
 [[step]]
 wait.stable_ms = 500

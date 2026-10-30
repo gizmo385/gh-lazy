@@ -33,7 +33,13 @@ wait.timeout_ms = 15000
 
 # The Issues table's cursor is on issue 12.
 [[step]]
-keys = ["3", "E"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["E"]
 
 [[step]]
 wait.text = "Status"
@@ -98,7 +104,13 @@ checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # From the Issue Overview: select issue 11, move into the Overview's content and press E.
 [[step]]
-keys = ["3", "j", "enter"]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["j", "enter"]
 
 [[step]]
 wait.text = "Closed without a body (#11)"

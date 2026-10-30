@@ -85,6 +85,9 @@ ignore = { boxes = ["Details"] }
 keys = ["3"]
 
 [[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
 capture = "issues-key"
 checks = ["titles", "focus"]
 ignore = { boxes = ["Details"] }
@@ -231,6 +234,9 @@ ignore = { boxes = ["Details", "Command Log"] }
 keys = ["6"]
 
 [[step]]
+wait = { gone = "O Lookup" }
+
+[[step]]
 capture = "log-focused"
 checks = ["titles", "focus"]
 ignore = { boxes = ["Details", "Command Log"] }
@@ -261,7 +267,15 @@ checks = ["titles"]
 ignore = { boxes = ["Details"] }
 
 [[step]]
-keys = ["1", "ctrl+p"]
+keys = ["1"]
+
+# Python's footer keeps the shrunk bindings here (B88) even with the Repositories table focused, so no text shows the
+# move: sleep for it (Py bug B98).
+[[step]]
+sleep_ms = 500
+
+[[step]]
+keys = ["ctrl+p"]
 
 [[step]]
 wait = { text = "Search for commands" }

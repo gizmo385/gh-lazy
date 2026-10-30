@@ -4,7 +4,7 @@ size = "100x30"
 captures = ["start", "log"]
 
 [inputs]
-scenario = "528857dffb07bd9b89b4d4c44c365605071ce516"
+scenario = "b8304f3f625a8408359445f4f2354616f960fec5"
 fixtures = "152ce9bbfa49430b36bca9ef5e2ae1189ea76b00"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"

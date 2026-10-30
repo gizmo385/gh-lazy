@@ -37,9 +37,9 @@ cursor 1 8 hidden
 │ 2026-03-02 08:00  success      CI        Nothing to run      ││                                                                                              │
 │                                                       ▊      ││                                                                                              │
 │                                                              ││                                                                                              │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌ No repository selected                                     │
-│                                                              ││                                 ▌                                                            │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                 ▌ Validation Error                                           │
@@ -86,19 +86,19 @@ orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrod...............
 orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrod..............................................................................................d
 ossssssssssssssssssssssssssssssssssssssssssssssssssssssstuuuuuuod..............................................................................................d
 o..............................................................od..............................................................................................d
+o..............................................................od..............................................................................................d
+o..............................................................od..............................................................................................d
+o..............................................................od..............................................................................................d
+o..............................................................od..............................................................................................d
 o..............................................................od.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-o..............................................................od.................................vwxxxxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+o..............................................................od.................................vwxxxxxxxxxxxxxxxxwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+o..............................................................od.................................vwyyyyyyyyyyyyyyyyyyyyyyyywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
 o..............................................................od.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
 o..............................................................od..............................................................................................d
-o..............................................................od.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-o..............................................................od.................................ywzzzzzzzzzzzzzzzzwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-o..............................................................od.................................ywxxxxxxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-o..............................................................od.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-o..............................................................od..............................................................................................d
-o..............................................................od.................................Awwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-o..............................................................od.................................Awxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooddddddddddddddddddddddddddddddddddAwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwdd
-BBBCCCCCCCBBBCCCCCCCCCCCCCCCCCBBBCCCCCCCCCCBBBCCCCCCCBBBBCCCCCCCCCCCBBBCCCCCCCCCCCCBBBCCCCCCCCCCCCCCCCCCCCCCBBBCCCCCBBBBCCCCCCCCCCCCCCCCBBBCCCCCCCCCBBBCCCCCCCCC
+o..............................................................od.................................zwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+o..............................................................od.................................zwyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyywwwwwwwwwwwwwwwwwwwwwwwwwww.d
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooddddddddddddddddddddddddddddddddddzwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwdd
+AAABBBBBBBAAABBBBBBBBBBBBBBBBBAAABBBBBBBBBBAAABBBBBBBAAAABBBBBBBBBBBAAABBBBBBBBBBBBAAABBBBBBBBBBBBBBBBBBBBBBAAABBBBBAAAABBBBBBBBBBBBBBBBAAABBBBBBBBBAAABBBBBBBBB
 --- legend
 . bg=#121212
 a fg=#004578 bg=#121212
@@ -122,11 +122,10 @@ r fg=#e0e0e0 bg=#272727
 s fg=#003054 bg=#272727 inverse
 t fg=#003054 bg=#000000
 u fg=#e0e0e0 bg=#000000
-v fg=#fea62b bg=#343f49
+v fg=#b93c5b bg=#343f49
 w bg=#343f49
-x fg=#e0e0e0 bg=#343f49
-y fg=#b93c5b bg=#343f49
-z fg=#d17e92 bg=#343f49 bold
-A fg=#4ebf71 bg=#343f49
-B fg=#ffa62b bg=#242f38 bold
-C fg=#e0e0e0 bg=#242f38
+x fg=#d17e92 bg=#343f49 bold
+y fg=#e0e0e0 bg=#343f49
+z fg=#4ebf71 bg=#343f49
+A fg=#ffa62b bg=#242f38 bold
+B fg=#e0e0e0 bg=#242f38

@@ -32,9 +32,12 @@ keys = ["enter"]
 wait.text = "parity-friend"
 wait.timeout_ms = 15000
 
-# Python drops an enter that follows a focus key at once, so the PR table gets a moment to take focus.
+# Python moves focus a tick after a focus key (Py bug B98), so wait for the PR table's bindings in the footer.
 [[step]]
 keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
 
 [[step]]
 wait.stable_ms = 500
@@ -115,10 +118,16 @@ checks = ["titles", "focus"]
 keys = ["1"]
 
 [[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
 wait.stable_ms = 500
 
 [[step]]
 keys = ["shift+tab", "shift+tab", "shift+tab"]
+
+[[step]]
+wait = { gone = "O Lookup Repository" }
 
 [[step]]
 capture = "status-focused"
@@ -177,6 +186,9 @@ checks = ["titles", "focus"]
 keys = ["2"]
 
 [[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
 wait.stable_ms = 500
 
 [[step]]
@@ -196,10 +208,16 @@ wait.text = "Add Comments"
 keys = ["1"]
 
 [[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
 wait.stable_ms = 500
 
 [[step]]
 keys = ["shift+tab"]
+
+[[step]]
+wait = { gone = "O Lookup Repository" }
 
 [[step]]
 capture = "author-form"

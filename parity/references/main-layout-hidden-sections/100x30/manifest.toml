@@ -4,7 +4,7 @@ size = "100x30"
 captures = ["start", "hidden-prs", "tab"]
 
 [inputs]
-scenario = "8d89ec74317df92c1d44ae9c2defd1586db74be3"
+scenario = "f04b6189eb8be4226c44f4e875dba98f39d9ec2e"
 fixtures = "152ce9bbfa49430b36bca9ef5e2ae1189ea76b00"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"

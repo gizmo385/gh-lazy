@@ -30,10 +30,13 @@ wait.timeout_ms = 15000
 wait.text = "Workflow runs with jobs and logs."
 wait.timeout_ms = 15000
 
-# Run 42 failed, so both buttons show once its jobs are in. (Python drops an enter that follows a focus key at once,
-# so the Workflows table gets a moment to take focus.)
+# Run 42 failed, so both buttons show once its jobs are in. (Python moves focus a tick after a focus key, Py bug B98,
+# so wait for the Workflows table's bindings in the footer.)
 [[step]]
 keys = ["4"]
+
+[[step]]
+wait = { text = "T Trigger Workflow" }
 
 [[step]]
 wait.stable_ms = 500
@@ -49,7 +52,16 @@ wait.text = "deploy (9s)"
 wait.timeout_ms = 15000
 
 [[step]]
-keys = ["1", "shift+tab"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["shift+tab"]
+
+[[step]]
+wait = { gone = "O Lookup Repository" }
 
 [[step]]
 capture = "failed-jobs-focused"
@@ -73,7 +85,23 @@ capture = "failed-jobs-rerun"
 checks = ["titles", "focus"]
 
 [[step]]
-keys = ["1", "shift+tab", "shift+tab", "enter"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["shift+tab", "shift+tab"]
+
+# Python routes a key to the widget focused when it reads the key, so enter waits for both shift+tabs to land.
+[[step]]
+wait = { gone = "O Lookup Repository" }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.log.method = "POST"

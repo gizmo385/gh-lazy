@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["open", "filtered", "reopen", "cross-cell", "typed-over", "cleared", "max-filtered", "max-restored", "max-escape-in-box"]
 
 [inputs]
-scenario = "23bb7a9b14587ff862c6796f8b6a6030f1a4529e"
+scenario = "864707102456f906f61b0bb93767b988c994d4f9"
 fixtures = "358be860850dcbf852b92d3a22080fa6888c313d"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"

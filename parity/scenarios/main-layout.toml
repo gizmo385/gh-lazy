@@ -52,6 +52,9 @@ checks = ["titles", "tabs", "focus", "footer"]
 keys = ["2"]
 
 [[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
 capture = "prs"
 checks = ["titles", "tabs", "focus"]
 
@@ -59,11 +62,17 @@ checks = ["titles", "tabs", "focus"]
 keys = ["3"]
 
 [[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
 capture = "issues"
 checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["4"]
+
+[[step]]
+wait = { text = "T Trigger Workflow" }
 
 [[step]]
 capture = "workflows"
@@ -74,11 +83,18 @@ checks = ["titles", "tabs", "focus"]
 keys = ["5"]
 
 [[step]]
+wait = { gone = "T Trigger Workflow" }
+
+[[step]]
 capture = "details"
 checks = ["titles", "tabs", "focus"]
 
+# Focus is on the tab strip already, so 5 and then 6 leave it there: their waits pass at once.
 [[step]]
 keys = ["5"]
+
+[[step]]
+wait = { gone = "T Trigger Workflow" }
 
 [[step]]
 capture = "details-again"
@@ -87,6 +103,9 @@ checks = ["titles", "tabs", "focus"]
 # The command log isn't displayed, so 6 does nothing.
 [[step]]
 keys = ["6"]
+
+[[step]]
+wait = { gone = "T Trigger Workflow" }
 
 [[step]]
 capture = "no-log"

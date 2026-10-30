@@ -51,7 +51,13 @@ checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
 # is short enough to show `^p Command Pallete` (Python) against `^p Command Palette` (Rust): Py bug B14, fixed on
 # purpose. So these two captures leave out the cross-app footer check and match the footer's text with `contains`.
 [[step]]
-keys = ["5", "tab"]
+keys = ["5"]
+
+[[step]]
+wait = { gone = "O Lookup" }
+
+[[step]]
+keys = ["tab"]
 
 [[step]]
 capture = "content-focused"
@@ -66,7 +72,13 @@ checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # lazy-demo is the third row: archived, no description, and no README.
 [[step]]
-keys = ["1", "j", "enter"]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["j", "enter"]
 
 [[step]]
 wait = { text = "No README found.", timeout_ms = 15000 }

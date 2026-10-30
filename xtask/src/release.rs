@@ -705,11 +705,56 @@ mod tests {
         assert_eq!(deps, [pin("lazy-github-core", "=1.0.0")]);
     }
 
-    /// The real workspace: whatever its pins are, they pass the lockstep check.
+    /// The real workspace: its pins pass the lockstep check `release-plan` runs.
     #[test]
     fn the_workspace_pins_match_its_version() {
         let metadata = cargo_metadata(&crate::parity::cli::repo_root()).unwrap();
         let (version, deps) = from_metadata(&metadata).unwrap();
         check_pins(version, &deps).unwrap();
+    }
+
+    /// The crates.io packaging (#204): exactly the three app crates are publishable, each with the metadata its
+    /// crates.io page shows, and their dependencies on each other are exact pins of the workspace version.
+    #[test]
+    fn published_crates_have_their_metadata_and_exact_pins() {
+        const PUBLISHED: [&str; 3] = ["lazy-github", "lazy-github-core", "lazy-github-tui"];
+        let metadata = cargo_metadata(&crate::parity::cli::repo_root()).unwrap();
+        let packages = metadata["packages"].as_array().unwrap();
+        let mut publishable = Vec::new();
+        for package in packages {
+            let name = package["name"].as_str().unwrap();
+            // `publish` is null for "anywhere", [] for `publish = false`, or the allowed registries.
+            if package["publish"] == serde_json::json!([]) {
+                continue;
+            }
+            assert_eq!(package["publish"], serde_json::json!(["crates-io"]), "{name}");
+            publishable.push(name);
+            for key in ["description", "license", "repository", "homepage", "readme"] {
+                assert!(
+                    package[key].as_str().is_some_and(|value| !value.is_empty()),
+                    "{name} has no {key}"
+                );
+            }
+            for key in ["keywords", "categories", "authors"] {
+                assert!(
+                    package[key].as_array().is_some_and(|list| !list.is_empty()),
+                    "{name} has no {key}"
+                );
+            }
+        }
+        publishable.sort_unstable();
+        assert_eq!(publishable, PUBLISHED, "fake-gh and xtask must stay unpublishable");
+
+        let (version, deps) = from_metadata(&metadata).unwrap();
+        let expected = format!("={version}");
+        let published_deps: Vec<_> = deps
+            .iter()
+            .filter(|dep| PUBLISHED.contains(&dep.package.as_str()))
+            .collect();
+        // lazy-github on core and tui, and tui on core.
+        assert_eq!(published_deps.len(), 3, "{published_deps:?}");
+        for dep in published_deps {
+            assert_eq!(dep.requirement, expected, "{} -> {}", dep.package, dep.dependency);
+        }
     }
 }

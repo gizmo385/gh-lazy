@@ -10,14 +10,20 @@ edition = "2024"
 rust-version = "1.97"
 license = "MIT"
 repository = "https://github.com/gizmo385/gh-lazy"
+homepage = "https://github.com/gizmo385/gh-lazy"
+authors = ["Chris (Gizmo) <gizmo385@users.noreply.github.com>"]
+# The default, so fake-gh and xtask stay unpublishable; the three crates published to crates.io (#204) opt in.
 publish = false
 
 # Shared versions for the crates chosen in docs/rust-rewrite/PLAN.md §4. Declaring a dependency here doesn't build
 # it; each crate opts in with `foo = { workspace = true }` only for what it uses.
 [workspace.dependencies]
-# Internal crates
-lazy-github-core = { path = "crates/lazy-github-core" }
-lazy-github-tui = { path = "crates/lazy-github-tui" }
+# Internal crates. The published ones pin the workspace version exactly, since the three only ever release together
+# (#204): a version bump changes `[workspace.package] version` and these two lines, and `cargo xtask release-plan`
+# fails a release whose pins don't match. fake-gh stays path-only: it's only a dev-dependency, which cargo strips on
+# publish.
+lazy-github-core = { path = "crates/lazy-github-core", version = "=0.1.0" }
+lazy-github-tui = { path = "crates/lazy-github-tui", version = "=0.1.0" }
 fake-gh = { path = "crates/fake-gh" }
 
 # TUI

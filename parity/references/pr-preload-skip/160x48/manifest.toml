@@ -7,7 +7,7 @@ captures = ["two-prs", "other-repo"]
 scenario = "49a259335153ff3f32cf004a321bf7448a8f4b2a"
 fixtures = "ec67d88ab6fb054ddee1035316a5f83df29815a7"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "89fd8ec5199f7194e251a19d4da830af25a57643"
+harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"
 
 [recorded_with]
 python = "3.14.7"

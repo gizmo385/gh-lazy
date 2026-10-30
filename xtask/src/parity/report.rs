@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use super::diff::text_diff;
+use super::env::BROWSER_LOG;
 use super::grid::{Grid, Style};
 use super::runner::{AppRunStatus, RunState};
 use super::scenario::App;
@@ -258,6 +259,8 @@ struct SizeData<'a> {
     failures: Pair<Option<Grid>>,
     /// The last [`LOG_TAIL_LINES`] lines of each app's `fake-gh.log`.
     logs: Pair<Option<String>>,
+    /// Each app's `browser.jsonl`, when it opened something.
+    browser: Pair<Option<String>>,
 }
 
 impl SizeData<'_> {
@@ -349,6 +352,14 @@ fn load_scenario<'a>(out: &Path, scenario: &'a ScenarioSummary) -> Result<Scenar
             })
         })?;
 
+        let browser = Pair::try_from_fn(|app| {
+            Ok(if ran(app) {
+                read_optional(&app_file(app, BROWSER_LOG))?.filter(|text| fake_gh::browser::has_opened(text))
+            } else {
+                None
+            })
+        })?;
+
         let mut captures = Vec::with_capacity(size.captures.len());
         for capture in &size.captures {
             let name = &capture.name;
@@ -403,6 +414,7 @@ fn load_scenario<'a>(out: &Path, scenario: &'a ScenarioSummary) -> Result<Scenar
             captures,
             failures,
             logs,
+            browser,
         });
     }
     Ok(ScenarioData {
@@ -766,6 +778,16 @@ fn render_scenario(data: &ScenarioData<'_>, meta: &RunMeta) -> String {
                 w!(
                     body,
                     "<details><summary>fake-gh.log ({app}, last {LOG_TAIL_LINES} lines)</summary>\
+                     <pre class=\"log\">{}</pre></details>\n",
+                    escape(log)
+                );
+            }
+        }
+        for app in App::ALL {
+            if let Some(log) = size.browser.get(app) {
+                w!(
+                    body,
+                    "<details><summary>{BROWSER_LOG} ({app}): what it opened in the browser</summary>\
                      <pre class=\"log\">{}</pre></details>\n",
                     escape(log)
                 );
@@ -1240,6 +1262,7 @@ mod tests {
                     captures: vec![capture(checks.next().unwrap_or(CheckState::Absent))],
                     failures: Pair::default(),
                     logs: Pair::default(),
+                    browser: Pair::default(),
                 })
                 .collect(),
         }

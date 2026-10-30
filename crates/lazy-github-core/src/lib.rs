@@ -3,6 +3,7 @@
 //! This crate has no UI dependencies, so all GitHub and config logic is testable without a terminal.
 
 mod atomic_write;
+pub mod browser;
 pub mod cache;
 pub mod config;
 pub mod debug;

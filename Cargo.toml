@@ -66,6 +66,8 @@ tracing-appender = "0.2"
 
 # Platform integration
 etcetera = "0.11"
+# `$BROWSER` entries with `%s`, split as Python's `webbrowser` splits them (`lazy_github_core::browser`, #338).
+shlex = "1"
 open = "5"
 arboard = "3"
 jiff = "0.2"

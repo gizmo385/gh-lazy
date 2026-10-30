@@ -7,7 +7,7 @@ captures = ["cached", "fetched"]
 scenario = "6a4782f3252ef14b2892e582658a59ac013872d6"
 fixtures = "3448881b5c7c8e10f3f5d783ff20932da54ad93c"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "89fd8ec5199f7194e251a19d4da830af25a57643"
+harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"
 
 [recorded_with]
 python = "3.14.7"

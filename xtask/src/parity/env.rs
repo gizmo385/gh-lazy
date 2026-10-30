@@ -1,4 +1,5 @@
-//! The isolated environment for one app run: a temp `home/`, `bin/` (fake-gh as `gh`, and `fake-ssh`) and `work/`,
+//! The isolated environment for one app run: a temp `home/`, `bin/` (fake-gh as `gh`, `fake-ssh` and `fake-browser`)
+//! and `work/`,
 //! the layered `config.json`, an optional git repo with an optional local remote under `remotes/`, and a cleared
 //! process environment.
 
@@ -32,6 +33,8 @@ pub struct RunEnv {
     pub timing: Timing,
     /// fake-gh's request log, for `wait.log` steps and the status. `None` when the app doesn't run under fake-gh.
     pub log: Option<PathBuf>,
+    /// fake-browser's log (`browser.jsonl`), where each capture leaves its mark. `None` without fake-gh.
+    pub browser_log: Option<PathBuf>,
     /// The temp dir holding `home/`, `bin/` and `work/`; removed when the run finishes.
     pub run_dir: Option<TempDir>,
     /// With `--keep-home`: where `home/` and `work/` (and `remotes/`, if any) are copied when the run finishes.
@@ -70,6 +73,7 @@ impl RunEnv {
             size,
             timing,
             log: None,
+            browser_log: None,
             run_dir: None,
             keep_into: None,
             remote: None,
@@ -193,6 +197,17 @@ pub fn prepare(
     }
 
     let log = out.join("fake-gh.log");
+    let browser_log = out.join(BROWSER_LOG);
+    // A retry starts a fresh log, as fake-gh's does.
+    match std::fs::remove_file(&browser_log) {
+        Err(e) if e.kind() != std::io::ErrorKind::NotFound => {
+            return Err(e).with_context(|| format!("removing {}", browser_log.display()));
+        }
+        _ => {}
+    }
+    // Cargo builds fake-browser with fake-gh, so a real run always has it; only the harness's own tests, which
+    // stand other programs in for fake-gh, go without.
+    let browser = Some(bin.join(fake_gh::browser::file_name())).filter(|browser| browser.is_file());
     let fixtures = std::env::join_paths(scenario.env.fixtures.iter().map(|set| paths.roots.fixtures.join(set)))
         .map_err(|e| HarnessError(format!("fixture set paths can't be joined: {e}")))?;
     let path = std::env::join_paths(
@@ -209,7 +224,12 @@ pub fn prepare(
         App::Rust => CommandBuilder::new(&paths.rust_app),
     };
     command.env_clear();
-    for (key, value) in isolated_env(root, &home, &work, path, fixtures, &log, scenario) {
+    let logs = Logs {
+        gh: &log,
+        browser: browser.as_deref(),
+        browser_log: &browser_log,
+    };
+    for (key, value) in isolated_env(root, &home, &work, path, fixtures, &logs, scenario) {
         command.env(key, value);
     }
     if local_remote.is_some() {
@@ -224,6 +244,7 @@ pub fn prepare(
         size,
         timing: scenario.timing,
         log: Some(log),
+        browser_log: Some(browser_log),
         run_dir: Some(run_dir),
         keep_into: keep_home.then(|| out.to_owned()),
         remote: local_remote,
@@ -251,15 +272,29 @@ fn ssh_env(root: &Path, bin: &Path) -> Vec<(&'static str, OsString)> {
     ]
 }
 
+/// The file in an app's report dir that fake-browser logs to.
+pub const BROWSER_LOG: &str = "browser.jsonl";
+
+/// Where a run's fakes log, and the browser it opens links with.
+struct Logs<'a> {
+    /// fake-gh's request log.
+    gh: &'a Path,
+    /// The installed fake-browser, when there is one.
+    browser: Option<&'a Path>,
+    /// fake-browser's log.
+    browser_log: &'a Path,
+}
+
 /// The allow-listed environment. Nothing else from the developer's environment (`GH_TOKEN`, `NO_COLOR`,
-/// `TEXTUAL`, ...) reaches the app.
+/// `TEXTUAL`, `BROWSER`, ...) reaches the app. `BROWSER` is fake-browser, for both apps, so a link never opens a
+/// real browser and the run records what was opened.
 fn isolated_env(
     root: &Path,
     home: &Path,
     work: &Path,
     path: OsString,
     fixtures: OsString,
-    log: &Path,
+    logs: &Logs<'_>,
     scenario: &Scenario,
 ) -> Vec<(&'static str, OsString)> {
     let mut env: Vec<(&'static str, OsString)> = vec![
@@ -274,12 +309,16 @@ fn isolated_env(
         ("TZ", "UTC".into()),
         ("LAZY_GITHUB_ORIGINAL_PWD", work.into()),
         ("FAKE_GH_FIXTURES", fixtures),
-        ("FAKE_GH_LOG", log.into()),
+        ("FAKE_GH_LOG", logs.gh.into()),
         ("FAKE_GH_AUTH", scenario.env.gh_auth.env_value().into()),
         ("TEXTUAL_ANIMATIONS", "none".into()),
         ("PYTHONDONTWRITEBYTECODE", "1".into()),
         ("GIT_CONFIG_NOSYSTEM", "1".into()),
     ];
+    if let Some(browser) = logs.browser {
+        env.push(("BROWSER", browser.into()));
+        env.push((fake_gh::browser::LOG_ENV, logs.browser_log.into()));
+    }
     if cfg!(windows) {
         env.push(("USERPROFILE", home.into()));
     }
@@ -471,9 +510,10 @@ mod tests {
         };
         let source = "version = 1\n[env]\ngit_remote = \"o/n\"\nseed = \"s\"\n";
         let scenario = Scenario::parse(Path::new("seeded.toml"), source, &roots).unwrap();
-        // Any file will do as fake-gh: nothing runs it.
+        // Any file will do as fake-gh and fake-browser: nothing runs them.
         let fake_gh = dir.path().join("fake-gh");
         std::fs::write(&fake_gh, "").unwrap();
+        std::fs::write(dir.path().join(fake_gh::browser::file_name()), "").unwrap();
         let paths = Paths {
             fake_gh: fake_gh.clone(),
             rust_app: fake_gh.clone(),

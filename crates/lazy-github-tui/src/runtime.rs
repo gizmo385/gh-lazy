@@ -1,10 +1,14 @@
 //! The effect runner: performs `Effect`s in the background and sends their results back as `Event`s.
 
 use std::collections::HashMap;
+use std::future::Future;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
+use std::pin::Pin;
+use std::sync::Arc;
 
 use indexmap::IndexMap;
+use lazy_github_core::browser::{self, OpenError};
 use lazy_github_core::config::{Config, ConfigPaths};
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::Github;
@@ -18,6 +22,12 @@ use crate::components::markdown::MarkdownSource;
 use crate::effect::{Effect, RequestId, TimerId};
 use crate::event::Event;
 
+/// How the runtime opens a URL: [`browser::open`], or a recorder in tests.
+type Opener = Arc<dyn Fn(String) -> OpenFuture + Send + Sync>;
+
+/// An open in progress.
+type OpenFuture = Pin<Box<dyn Future<Output = Result<(), OpenError>> + Send>>;
+
 /// Runs effects. Every method returns at once; the work happens on spawned tasks.
 pub struct Runtime<G: Github> {
     gh: G,
@@ -30,6 +40,7 @@ pub struct Runtime<G: Github> {
     cache_writer: CacheWriter,
     /// The terminal, for the bell and the clipboard.
     terminal: Box<dyn Write + Send>,
+    opener: Opener,
 }
 
 impl<G: Github> Runtime<G> {
@@ -47,6 +58,7 @@ impl<G: Github> Runtime<G> {
             saver,
             cache_writer,
             terminal: Box::new(io::stdout()),
+            opener: Arc::new(|url: String| -> OpenFuture { Box::pin(async move { browser::open(&url).await }) }),
         }
     }
 
@@ -54,6 +66,13 @@ impl<G: Github> Runtime<G> {
     #[cfg(test)]
     fn with_terminal(mut self, terminal: impl Write + Send + 'static) -> Self {
         self.terminal = Box::new(terminal);
+        self
+    }
+
+    /// Opens URLs with `opener` instead of the browser.
+    #[cfg(test)]
+    fn with_opener(mut self, opener: impl Fn(String) -> OpenFuture + Send + Sync + 'static) -> Self {
+        self.opener = Arc::new(opener);
         self
     }
 
@@ -152,6 +171,15 @@ impl<G: Github> Runtime<G> {
                 {
                     tracing::debug!("Failed to write the clipboard: {err}");
                 }
+            }
+            // Nobody waits for it, so it isn't cancellable, and a browser that takes a while blocks nothing.
+            Effect::OpenUrl(url) => {
+                let open = (self.opener)(url.clone());
+                tokio::spawn(async move {
+                    if let Err(error) = open.await {
+                        tracing::warn!("couldn't open {url} in a browser: {error}");
+                    }
+                });
             }
             // `App` already stopped the loop; there's nothing to perform.
             Effect::Quit => {}
@@ -602,6 +630,32 @@ mod tests {
         runtime.execute(Effect::SetClipboard("héllo".into()));
         runtime.execute(Effect::SetClipboard(String::new()));
         assert_eq!(*terminal.0.lock().unwrap(), b"\x1b]52;c;aMOpbGxv\x07\x1b]52;c;\x07");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn open_url_runs_the_opener_in_the_background_and_sends_nothing_back() {
+        let dir = TempDir::new();
+        let (runtime, mut rx) = runtime(FakeGithub::new(), &dir);
+        let (opened_tx, mut opened) = tokio::sync::mpsc::unbounded_channel();
+        let release = Arc::new(tokio::sync::Notify::new());
+        let exits = Arc::clone(&release);
+        let mut runtime = runtime.with_opener(move |url| {
+            let (opened_tx, exits) = (opened_tx.clone(), Arc::clone(&exits));
+            Box::pin(async move {
+                let _ = opened_tx.send(url);
+                // A browser that hasn't exited yet.
+                exits.notified().await;
+                Err(OpenError::NothingOpened { tried: "test".into() })
+            })
+        });
+        // Returns at once, with the browser still running.
+        runtime.execute(Effect::OpenUrl("https://github.com/parity-bot".into()));
+        assert_eq!(opened.recv().await.as_deref(), Some("https://github.com/parity-bot"));
+        release.notify_one();
+        tokio::task::yield_now().await;
+        tokio::task::yield_now().await;
+        // A failure is only logged: no event comes back.
+        assert!(rx.try_recv().is_err());
     }
 
     #[test]

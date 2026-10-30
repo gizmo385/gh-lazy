@@ -238,6 +238,8 @@ struct Session {
     /// [`Timing::wait_cap`](super::scenario::Timing::wait_cap).
     wait_cap: Option<Duration>,
     env_log: Option<std::path::PathBuf>,
+    /// fake-browser's log, where each capture leaves its mark.
+    browser_log: Option<std::path::PathBuf>,
     /// The run's local remote, for `wait.remote_branch`.
     remote: Option<LocalRemote>,
     timing: super::scenario::Timing,
@@ -307,6 +309,7 @@ impl Session {
             deadline: Instant::now() + env.timing.timeout,
             wait_cap: env.timing.wait_cap,
             env_log: env.log.clone(),
+            browser_log: env.browser_log.clone(),
             remote: env.remote.clone(),
             timing: env.timing,
         })
@@ -373,7 +376,16 @@ impl Session {
             Step::Capture(capture) => {
                 self.wait(&WaitFor::Stable(self.timing.capture_stable), DEFAULT_WAIT_TIMEOUT)?;
                 let grid = Grid::from_screen(lock(&self.parser).screen());
-                write_grid(&grid, out, &capture.name).map_err(StepError::Io)
+                write_grid(&grid, out, &capture.name).map_err(StepError::Io)?;
+                // What the app had opened by now is the browser log up to this mark.
+                if let Some(log) = &self.browser_log {
+                    let mark = fake_gh::browser::BrowserLine::Capture {
+                        capture: capture.name.clone(),
+                    };
+                    fake_gh::browser::append(log, &mark)
+                        .map_err(|e| StepError::Io(super::HarnessError(format!("marking {}: {e}", log.display()))))?;
+                }
+                Ok(())
             }
             Step::Sleep(duration) => self.pause(*duration),
             Step::Resize(size) => {

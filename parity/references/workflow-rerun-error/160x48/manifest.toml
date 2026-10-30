@@ -7,7 +7,7 @@ captures = ["failed-jobs-error", "workflow-error"]
 scenario = "6deb6bd0bed1e89e10b477f276a3cbeffe2a0370"
 fixtures = "079cabac084a58970d38273b1285ec4f267ada58"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "89fd8ec5199f7194e251a19d4da830af25a57643"
+harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"
 
 [recorded_with]
 python = "3.14.7"

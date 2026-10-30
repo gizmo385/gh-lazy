@@ -172,6 +172,7 @@ not_contains = ["aarity-bot", "sarity-bot"]
 [expect.external]
 contains = ["Opening https://github.com/parity-bot externally", "Owned by parity-bot"]
 not_contains = ["Followers: 12"]
+opened = ["https://github.com/parity-bot"]
 
 [expect.followed-user]
 contains = ["Followers: 12"]

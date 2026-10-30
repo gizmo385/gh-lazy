@@ -32,22 +32,22 @@ cursor 1 4 hidden
 │ 96   closed  gizmo385  Load █▊ 13  - Textual Version: 8.2.5                                                                 ▎  █                             │
 │ 95   closed  gizmo385  Run g█▊ 14  - Click Version: 8.3.3                                                                   ▎  █om PyPI. If you have uv      │
 │ 91   open    gizmo385  Compl█▊ 15  - Httpx Version: 0.28.1                                                                  ▎  █u first start LazyGithub,    │
-│ 90   closed  gizmo385  [Do n█▊ 16  - Hishel Version: 0.1.5                                                                  ▎  █Hub where you will be        │
+│                             █▊ 16  - Hishel Version: 0.1.5                                                                  ▎  █Hub where you will be        │
 └─────────────────────────────█▊ 17  - Pydantic Version: 2.13.3                                                               ▎  █the app to act on your       │
 ┌─ [3] Issues ────────────────█▊ 18                                                                                           ▎  █it supports the              │
 │ #    Status  Author    Title█▊ 19  # LazyGithub Config                                                                      ▎▇▇█                             │
 │ 113  open    gizmo385  Recor█                                                                                                  █                             │
-│ 109  open    gizmo385  fake-█                                                                                                  █                             │
+│ 109  open    gizmo385  fake-█                                                                                                  █                           ▂▂│
 │ 108  open    gizmo385  Help █                                 ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                 █tories                       │
 │ 107  open    gizmo385  Foote█                                       Save           Cancel                                      █equests                      │
 │ 106  open    gizmo385  Start█                                 ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                 █ participation               │
 │ 105  open    gizmo385  TUI r█                                                                                                  █                             │
 │ 102  open    gizmo385  Searc█                                                                                                  █                             │
 │ 101  open    gizmo385  Searc█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
-│ 100  open    gizmo385  Searchable table: rows, sorting, curso││  If you run into any bugs while using LazyGithub, please let me know! You can do this by     │
+│                               ▍                              ││  If you run into any bugs while using LazyGithub, please let me know! You can do this by     │
 └──────────────────────────────────────────────────────────────┘│  creating a new bug report or search for Open Bug Report in the command pallete from         │
 ┌─ [4] Workflows (empty) ──────────────────────────────────────┐│  inside LazyGithub. 🖼  In-App Bug Reporter                                                   │
-│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                          ▏   │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  shift+⏎ Submit  q Close
 --- styles
@@ -81,24 +81,24 @@ eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjqyDDDD...........................................
 eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjqyDDDD......................................................................................FFysoojhhhhhhhhhhhhhhhhhhhhhhhhhhhppe
 eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjqyDDDD......................................................................................FFysoojbbbbbbbbbbbbbbbbbbbbbCChhhhppe
 eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjqyDDDD......................................................................................FFysoojbbbbbbbbbbbbbbbbbbbbbbbbbhhppe
-eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjqyDDDD......................................................................................FFysoojbbbbbbbbbbbbbbbbbbbbbhhhhhhppe
+eKKKKKKKKKKKKKKKKKKKKKKKKKKKKKjqyDDDD......................................................................................FFysoojbbbbbbbbbbbbbbbbbbbbbhhhhhhppe
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeejqyDDDD......................................................................................FFysoojbbbbbbbbbbbbbbbbbbbbbbhhhhhppe
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeejqyDDDD......................................................................................FFysoojbbbbbbbbbbbbbbbhhhhhhhhhhhhppe
 eGGGGGGGGGGGGGGGGGGGGGGGGGGGGGjqyDDDD......................................................................................FFysEEjhhhhhhhhhhhhhhhhhhhhhhhhhhhppe
 eHHHHHHHHHHHHHHHHHHHHHHHHHHHHHjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjhhhhhhhhhhhhhhhhhhhhhhhhhhhppe
-eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjhhhhhhhhhhhhhhhhhhhhhhhhhhhKKe
-eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnLLLLLLLLLLLLLLLLMMMMMMMMMMMMMMMMnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjbbbbbbhhhhhhhhhhhhhhhhhhhhhKKe
-eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnNNNNNOOOOOONNNNNPPPPQQQQQQQQPPPPnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjbbbbbbbhhhhhhhhhhhhhhhhhhhhKKe
-eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnRRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSSnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjbbbbbbbbbbbbbbhhhhhhhhhhhhhKKe
-eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjhhhhhhhhhhhhhhhhhhhhhhhhhhhKKe
-eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjhhhhhhhhhhhhhhhhhhhhhhhhhhhKKe
-eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjhhhhhhhhhhhhhhhhhhhhhhhhhhhKKe
-eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIeehhbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbhhhKKe
-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeehhbbbbbbbbbbbbbbbCCCCCCCCCCbbbbbbbbbbbbbbbJJJJJJJJJJJJJJJbbbbbbbbbbbbbbbbbbbbbbbbbbbbhhhhhhhKKe
-eeeeeeeeeeeeeeeeeTTTTTTTeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeehhbbbbbbbbbbbbbbbbbbbCCCCCCCCCCCCCCCCCCCCCChhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhKKe
-eGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGeeppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppUKVVe
+eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjhhhhhhhhhhhhhhhhhhhhhhhhhhhLLe
+eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnMMMMMMMMMMMMMMMMNNNNNNNNNNNNNNNNnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjbbbbbbhhhhhhhhhhhhhhhhhhhhhOOe
+eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnPPPPPQQQQQQPPPPPRRRRSSSSSSSSRRRRnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjbbbbbbbhhhhhhhhhhhhhhhhhhhhOOe
+eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnTTTTTTTTTTTTTTTTUUUUUUUUUUUUUUUUnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjbbbbbbbbbbbbbbhhhhhhhhhhhhhOOe
+eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjhhhhhhhhhhhhhhhhhhhhhhhhhhhOOe
+eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnjhhhhhhhhhhhhhhhhhhhhhhhhhhhOOe
+eIIIIIIIIIIIIIIIIIIIIIIIIIIIIIjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjhhhhhhhhhhhhhhhhhhhhhhhhhhhOOe
+eKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKVOOOOOOOOOOOOOOOOOOOOOOOOOOOOWWeehhbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbhhhOOe
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeehhbbbbbbbbbbbbbbbCCCCCCCCCCbbbbbbbbbbbbbbbJJJJJJJJJJJJJJJbbbbbbbbbbbbbbbbbbbbbbbbbbbbhhhhhhhOOe
+eeeeeeeeeeeeeeeeeXXXXXXXeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeehhbbbbbbbbbbbbbbbbbbbCCCCCCCCCCCCCCCCCCCCCChhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhOOe
+eGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGeehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhOOe
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-WWWWWWWWWXXXXXXXWWWXXXXXXYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+YYYYYYYYYZZZZZZZYYYZZZZZZ000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- legend
 . fg=#f8f8f2 bg=#272822
 a fg=#0a263a bg=#121212
@@ -137,18 +137,20 @@ G fg=#646464 bg=#191d21 bold
 H fg=#646464 bg=#13212c
 I fg=#646464 bg=#161616
 J fg=#6c5536 bg=#191612
-K fg=#646464 bg=#0a0a0a
-L fg=#7ae998 bg=#4ebf71
-M fg=#e76580 bg=#b93c5b
-N bg=#4ebf71
-O fg=#0a180e bg=#4ebf71 bold
-P bg=#b93c5b
-Q fg=#f5e5e9 bg=#b93c5b bold
-R fg=#008139 bg=#4ebf71
-S fg=#780028 bg=#b93c5b
-T fg=#2a3c50 bg=#121212
-U fg=#0a1e2c bg=#0a0a0a
-V fg=#e0e0e0 bg=#0a0a0a
-W fg=#ffa62b bg=#242f38 bold
-X fg=#e0e0e0 bg=#242f38
-Y bg=#242f38
+K fg=#0a1e2c bg=#161616 inverse
+L fg=#0a1e2c bg=#0a0a0a inverse
+M fg=#7ae998 bg=#4ebf71
+N fg=#e76580 bg=#b93c5b
+O fg=#646464 bg=#0a0a0a
+P bg=#4ebf71
+Q fg=#0a180e bg=#4ebf71 bold
+R bg=#b93c5b
+S fg=#f5e5e9 bg=#b93c5b bold
+T fg=#008139 bg=#4ebf71
+U fg=#780028 bg=#b93c5b
+V fg=#0a1e2c bg=#0a0a0a
+W fg=#e0e0e0 bg=#0a0a0a
+X fg=#2a3c50 bg=#121212
+Y fg=#ffa62b bg=#242f38 bold
+Z fg=#e0e0e0 bg=#242f38
+0 bg=#242f38

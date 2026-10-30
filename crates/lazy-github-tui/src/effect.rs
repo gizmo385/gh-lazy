@@ -103,6 +103,9 @@ pub enum Effect {
     /// Ask the terminal to put this text on the system clipboard with OSC 52, as Textual's `copy_to_clipboard` does.
     /// Terminals without OSC 52 ignore it.
     SetClipboard(String),
+    /// Open this URL in the user's browser (`lazy_github_core::browser::open`), in the background. Nothing comes back:
+    /// a failure is only logged, as Python ignores `webbrowser.open`'s answer.
+    OpenUrl(String),
     /// Stop the event loop after the current batch of events.
     Quit,
 }

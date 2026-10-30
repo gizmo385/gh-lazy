@@ -7,7 +7,7 @@ captures = ["open", "invalid", "not-found", "looked-up", "existing", "py-bug-b61
 scenario = "fdcea58364339c2a8e625f76d4e1b51833a84d3f"
 fixtures = "6ab5265105b25c40343f2953a004cb8d85b53855"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "89fd8ec5199f7194e251a19d4da830af25a57643"
+harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"
 
 [recorded_with]
 python = "3.14.7"

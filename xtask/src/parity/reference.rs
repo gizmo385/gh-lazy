@@ -63,6 +63,8 @@ pub const PINNED_CRATES: &[&str] = &["vt100", "portable-pty"];
 pub const REFERENCES_DIR: &str = "parity/references";
 pub const MANIFEST_FILE: &str = "manifest.toml";
 pub const REQUESTS_FILE: &str = "requests.jsonl";
+/// fake-browser's log of what the app opened, with each capture's mark. Kept only when the app opened something.
+pub const BROWSER_FILE: &str = "browser.jsonl";
 /// The extension of a capture's screen file (format in #161).
 pub const SCREEN_EXTENSION: &str = "screen";
 
@@ -358,6 +360,9 @@ pub fn materialize(dir: &Path, out: &Path) -> Result<AppRunStatus> {
         write(&format!("{capture}.grid.json"), &(grid.to_json() + "\n"))?;
     }
     write("fake-gh.log", &read(REQUESTS_FILE)?)?;
+    if let Some(browser) = read_optional(&dir.join(BROWSER_FILE))? {
+        write(env::BROWSER_LOG, &browser)?;
+    }
     let status = AppRunStatus::recorded();
     runner::write_status(&status, out)?;
     Ok(status)
@@ -384,12 +389,14 @@ pub fn load(dir: &Path, scenario: &Scenario) -> Result<Stored> {
     }
     let path = dir.join(REQUESTS_FILE);
     let requests = std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let browser = read_optional(&dir.join(BROWSER_FILE))?.unwrap_or_default();
     Ok(Stored {
         side: Side {
             label: REFERENCE_LABEL.to_owned(),
             failure: None,
             captures,
             requests,
+            browser,
         },
         screens,
     })
@@ -419,11 +426,13 @@ pub fn read_run(scenario: &Scenario, status: &AppRunStatus, out: &Path, label: &
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
         Err(e) => return Err(HarnessError(format!("reading {}: {e}", log.display()))),
     };
+    let browser = read_optional(&out.join(env::BROWSER_LOG))?.unwrap_or_default();
     Ok(Side {
         label: label.to_owned(),
         failure,
         captures,
         requests: screen::normalize_log(&log),
+        browser,
     })
 }
 
@@ -622,7 +631,7 @@ fn orphans_in_scenario(repo: &Path, dir: &Path, scenario: &Scenario) -> Result<V
                 _ if file.is_dir() => "not part of a reference".to_owned(),
                 Some(c) if captures.contains(c) => continue,
                 Some(c) => format!("{} has no capture {c}", scenario.name),
-                None if file_name == MANIFEST_FILE || file_name == REQUESTS_FILE => continue,
+                None if [MANIFEST_FILE, REQUESTS_FILE, BROWSER_FILE].contains(&file_name.as_str()) => continue,
                 None => "not part of a reference".to_owned(),
             };
             problems.push(orphan(display_entry(repo, &file), reason));
@@ -689,6 +698,8 @@ pub struct Side {
     pub captures: Vec<(String, Grid)>,
     /// Its request log as `requests.jsonl` holds it ([`screen::normalize_log`]).
     pub requests: String,
+    /// fake-browser's log, with each capture's mark (`browser.jsonl`); empty when there's none.
+    pub browser: String,
 }
 
 impl Side {
@@ -792,7 +803,9 @@ pub fn verify(scenario: &Scenario, theme: &ThemeColors, side: &Side) -> Vec<Disa
         let Some(expect) = scenario.expect.get(name) else {
             continue;
         };
-        let found = check::check_expect(App::Python, &structure::extract(grid, theme), expect);
+        let mut found = check::check_expect(App::Python, &structure::extract(grid, theme), expect);
+        let opened = fake_gh::browser::opened_by(&side.browser, name);
+        found.extend(check::check_opened(App::Python, &opened, expect));
         out.extend(found.into_iter().map(|mismatch| Disagreement::Expect {
             run: side.label.clone(),
             capture: name.clone(),
@@ -2427,6 +2440,7 @@ c fg=#ddedf9 bg=#0178d4 bold
             failure: None,
             captures: vec![("main".into(), grid)],
             requests: jsonl(requests),
+            browser: String::new(),
         }
     }
 

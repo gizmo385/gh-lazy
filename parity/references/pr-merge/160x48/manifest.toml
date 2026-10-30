@@ -7,7 +7,7 @@ captures = ["overview-content", "merge-failed", "already-merged", "merged"]
 scenario = "ee205730274ba10e0e06d8bdd9343d37ac6301b1"
 fixtures = "a3466bfa490cdb719d6e22a3bebbba61ae8eedb7"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "89fd8ec5199f7194e251a19d4da830af25a57643"
+harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"
 
 [recorded_with]
 python = "3.14.7"

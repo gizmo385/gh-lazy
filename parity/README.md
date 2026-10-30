@@ -20,8 +20,9 @@ dir)` does the install: it hard-links when it can, and otherwise copies and wait
 freshly copied executable has in a multi-threaded process. The binary is deliberately not named
 `gh`, so `target/debug` on `PATH` never shadows the real gh.
 
-The crate builds a second binary, `fake-ssh`, that `fake_gh::install` puts next to `gh` as `<dir>/bin/fake-ssh`
-whenever it's in the same build dir as fake-gh (`cargo build -p fake-gh` builds both). See [fake-ssh](#fake-ssh).
+The crate builds two more binaries, `fake-ssh` and `fake-browser`, that `fake_gh::install` puts next to `gh` as
+`<dir>/bin/fake-ssh` and `<dir>/bin/fake-browser` whenever they're in the same build dir as fake-gh
+(`cargo build -p fake-gh` builds all three). See [fake-ssh](#fake-ssh) and [fake-browser](#fake-browser).
 
 ### Environment variables
 
@@ -166,6 +167,16 @@ the repo path in single quotes. fake-ssh:
 - runs `git upload-pack <dir>` / `git receive-pack <dir>` (no shell) with stdin, stdout and stderr passed through,
   and exits with its code. The host and port are ignored;
 - when `FAKE_GH_LOG` is set, appends one `ssh` line to the request log (above).
+
+### fake-browser
+
+`fake-browser` stands in for the user's browser (#338). The harness runs both apps with
+`BROWSER=<run>/bin/fake-browser`, which Python's `webbrowser` and the Rust app's `lazy_github_core::browser` both try
+first, so a followed link never opens a real browser and the run records what each app opened. fake-browser appends
+one line, `{"url": "<its first argument>"}`, to the file `FAKE_BROWSER_LOG` names, prints nothing and exits 0 (1 when
+it can't write the log; without `FAKE_BROWSER_LOG` it logs nothing). The harness points `FAKE_BROWSER_LOG` at the
+app's `browser.jsonl` in the report, and appends `{"capture": "<name>"}` there at each capture, after the screen is
+taken, so the log says what had been opened by every capture. The `opened` expectation reads it.
 
 ## Fixture format (v1)
 
@@ -721,8 +732,9 @@ report first.
 
   The Python app keeps everything (config, log, table cache, PR drafts) under `$HOME/.config/lazy-github`, so a fresh
   `HOME` also means no cached tables are shown before the first fetch.
-- `bin/gh` (`gh.exe` on Windows) is fake-gh and `bin/fake-ssh` is [fake-ssh](#fake-ssh), installed with
-  `fake_gh::install`.
+- `bin/gh` (`gh.exe` on Windows) is fake-gh, `bin/fake-ssh` is [fake-ssh](#fake-ssh) and `bin/fake-browser` is
+  [fake-browser](#fake-browser), installed with `fake_gh::install`. The app gets `BROWSER=<run>/bin/fake-browser` and
+  `FAKE_BROWSER_LOG=<report>/<app>/browser.jsonl`.
 - With `seed = "<name>"`, `parity/seeds/<name>/home/` is copied into `home/` and `work/` into `work/` before the app
   starts: after `config.json` is written and after the git repo below is made. Copying after `git init` keeps the
   parity commit empty, so its SHA doesn't change, and seeded `work/` files are untracked. Each app run gets a fresh
@@ -766,6 +778,7 @@ report first.
   - `LAZY_GITHUB_ORIGINAL_PWD=<run>/work`
   - `FAKE_GH_FIXTURES` (the scenario's sets, resolved under `parity/fixtures/`), `FAKE_GH_LOG=<report dir>/fake-gh.log`
     and `FAKE_GH_AUTH`
+  - `BROWSER=<run>/bin/fake-browser` and `FAKE_BROWSER_LOG=<report dir>/browser.jsonl` ([fake-browser](#fake-browser))
   - `TEXTUAL_ANIMATIONS=none`, `PYTHONDONTWRITEBYTECODE=1`
   - `GIT_CONFIG_NOSYSTEM=1`
   - `TMPDIR=<run>/tmp` on macOS
@@ -845,6 +858,7 @@ contains = ["Repositories"]
 not_contains = ["Traceback"]
 footer = ["q Quit", "^p Command Pallete"]
 tabs = { box = "Details", names = ["Info"], active = "Info" }
+opened = ["https://github.com/parity-bot"]   # every URL opened in the browser by this capture, in order
 ```
 
 Rules. The parser rejects anything else, including unknown keys, with exit 2 and a `file:line` message:
@@ -931,7 +945,8 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
   `ctrl+m` and `shift+enter` are rejected: terminals can't send them distinctly without the kitty protocol, and that's
   a keymap design question (parity matrix, `docs/rust-rewrite/parity/areas/terminal-caveats.md`).
 - `[expect.<capture>]` keys must name a capture in the scenario. All of them are optional. `pane_titles` and `focused`
-  are exact ordered lists. `footer` is an exact ordered list of `"<key> <label>"`.
+  are exact ordered lists. `footer` is an exact ordered list of `"<key> <label>"`. `opened` is the exact ordered list
+  of URLs the app had opened in the browser by the capture (none of them empty).
 - `checks`, `ignore` and `[expect]` are evaluated by the structural check, below.
 
 ### Keeping the suite fast
@@ -988,6 +1003,7 @@ scenario:
 summary.json                                     # all results
 <scenario>/<cols>x<rows>/<app>/status.json       # how the run ended, fixture misses, duration
 <scenario>/<cols>x<rows>/<app>/fake-gh.log       # the request log
+<scenario>/<cols>x<rows>/<app>/browser.jsonl     # what it opened in the browser, with capture marks (fake-browser)
 <scenario>/<cols>x<rows>/<app>/pty.raw           # raw PTY output, for debugging
 <scenario>/<cols>x<rows>/<app>/<capture>.txt     # plain text screen
 <scenario>/<cols>x<rows>/<app>/<capture>.grid.json
@@ -998,8 +1014,8 @@ summary.json                                     # all results
 ```
 
 When Python comes from a reference, its directory holds what the reference stores, in the same form: each
-`<capture>.grid.json` and `<capture>.txt` (from the `.screen`), `fake-gh.log` (the normalized `requests.jsonl`) and a
-`status.json` with `"recorded": true`. Nothing ran, so there's no `pty.raw` and no `failure.txt`.
+`<capture>.grid.json` and `<capture>.txt` (from the `.screen`), `fake-gh.log` (the normalized `requests.jsonl`),
+`browser.jsonl` when the reference has one, and a `status.json` with `"recorded": true`. Nothing ran, so there's no `pty.raw` and no `failure.txt`.
 
 The report (#94) adds
 `<capture>.diff.txt`, `report.html`, `index.html` and `summary.md`.
@@ -1262,6 +1278,8 @@ the console gets one line per mismatch.
   - `tabs`: the first box (in pre-order) whose title contains `box`. `names` and `active` must match when given.
   - `contains` / `not_contains`: searched in each row of the plain text, so they see everything on screen, modals
     included.
+  - `opened`: the URLs in the app's `browser.jsonl` before the capture's mark ([fake-browser](#fake-browser)),
+    exactly and in order. A run with no log, or no mark yet, opened nothing.
 
   A failure counts against that app. A Python failure always fails the run, because it means the scenario or the
   fixtures are wrong.
@@ -1470,6 +1488,7 @@ parity/references/<scenario>/<cols>x<rows>/
   manifest.toml        # input hashes; written by --record, never by hand
   <capture>.screen     # one per capture step (format in #161)
   requests.jsonl       # the Python run's fake-gh log, normalized
+  browser.jsonl        # fake-browser's log with the capture marks; only when Python opened something
 ```
 
 Every scenario that runs Python has one directory per size in its `sizes`. Anything else under `parity/references/`

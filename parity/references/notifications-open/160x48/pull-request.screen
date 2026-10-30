@@ -16,7 +16,7 @@ cursor 1 4 hidden
 │                                                              ││  ▶ 👍 2 | 🎉 1 | 👀 4                                                                        │
 │                                                              ││                                                                                              │
 │                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
-│                                                              ││  ▶ Status checks: ✘                                                                          │
+│                                                              ││  ▶ Status checks: ✘ Failed                                                                   │
 │                                                              ││                                                                                              │
 │                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
 │                                                              ││  ▶ PR Reviews:                                                                               │
@@ -65,7 +65,7 @@ e..............................................................efrrrrrrrrrrrrrrr
 e..............................................................efssoootooooootooooootoossssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf
 e..............................................................efssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf
 e..............................................................efrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrf
-e..............................................................efssoooooooooooooooooussssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf
+e..............................................................efssooooooooooooooooouuuuuuuusssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf
 e..............................................................efssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf
 e..............................................................efrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrf
 e..............................................................efssooooooooooooosssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf

@@ -40,15 +40,15 @@ cursor 1 4 hidden
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌ Invalid Issue Number                                       │
-│                                                              ││                                 ▌ Must enter a valid issue number!                           │
-│                                                              ││                                 ▌                                                            │
 │                                                              ││                                                                                              │
-└──────────────────────────────────────────────────────────────┘│                                 ▌                                                            │
-┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                 ▌ Unknown Issue                                              │
-│ Time  Result  Job Name  Run Name  Run #                      ││                                 ▌ Could not find issue!                                      │
-└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  / Search  O Lookup Issue  E Edit Issue  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pallete
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -89,16 +89,16 @@ nrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrstnd...............
 n..............................................................nd..............................................................................................d
 n..............................................................nd..............................................................................................d
 n..............................................................nd..............................................................................................d
-n..............................................................nd.................................uvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
-n..............................................................nd.................................uvwwwwwwwwwwwwwwwwwwwwvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
-n..............................................................nd.................................uvxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxvvvvvvvvvvvvvvvvvvvvvvvvvv.d
-n..............................................................nd.................................uvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
 n..............................................................nd..............................................................................................d
-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnd.................................uvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
-dddddddddddddddddyyyyyyyddddddddddddddddddddddddddddddddddddddddd.................................uvwwwwwwwwwwwwwvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
-deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd.................................uvxxxxxxxxxxxxxxxxxxxxxvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
-dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddduvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvdd
-zzzAAAAAAAzzzAAAAAAAAAAAAAzzzAAAAAAAAAAAzzzAAAAAAAAAAzzzAAAAAAAAAAzzzAAAAAAAzzzzAAAAAAAAAAAzzzAAAAAAAAAAAAzzzAAAAAAAAAAAAAAAAAAAAAAzzzAAAAAzzzzAAAAAAAAAAAAAAAAz
+n..............................................................nd..............................................................................................d
+n..............................................................nd..............................................................................................d
+n..............................................................nd..............................................................................................d
+n..............................................................nd..............................................................................................d
+nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnd..............................................................................................d
+ddddddddddddddddduuuuuuuddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
+deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd..............................................................................................d
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+vvvwwwwwwwvvvwwwwwwwwwwwwwvvvwwwwwwwwwwwvvvwwwwwwwwwwvvvwwwwwwwwwwvvvwwwwwwwvvvvwwwwwwwwwwwvvvwwwwwwwwwwwwvvvwwwwwwwwwwwwwwwwwwwwwwvvvwwwwwvvvvwwwwwwwwwwwwwwwwv
 --- legend
 . bg=#121212
 a fg=#004578 bg=#121212
@@ -121,10 +121,6 @@ q fg=#e0e0e0 bg=#272727
 r fg=#003054 bg=#272727 inverse
 s fg=#003054 bg=#000000
 t fg=#e0e0e0 bg=#000000
-u fg=#b93c5b bg=#343f49
-v bg=#343f49
-w fg=#d17e92 bg=#343f49 bold
-x fg=#e0e0e0 bg=#343f49
-y fg=#4e7bae bg=#121212
-z fg=#ffa62b bg=#242f38 bold
-A fg=#e0e0e0 bg=#242f38
+u fg=#4e7bae bg=#121212
+v fg=#ffa62b bg=#242f38 bold
+w fg=#e0e0e0 bg=#242f38

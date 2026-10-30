@@ -602,7 +602,7 @@ impl TestApp {
                     self.timers.remove(id);
                 }
                 Effect::ReconfigureGithub(options) => self.gh.reconfigure(options.clone()),
-                Effect::Bell | Effect::SetClipboard(_) | Effect::Quit => {}
+                Effect::Bell | Effect::SetClipboard(_) | Effect::OpenUrl(_) | Effect::Quit => {}
             }
             self.effects.push(effect);
         }

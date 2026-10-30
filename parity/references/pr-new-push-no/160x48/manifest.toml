@@ -7,7 +7,7 @@ captures = ["push-prompt", "declined"]
 scenario = "75a72295acadd2140f2669a7e8ea6590722ef19c"
 fixtures = "16f98e8a71d6d8d869f6fbe7897c153ff9ff524a"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "89fd8ec5199f7194e251a19d4da830af25a57643"
+harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"
 
 [recorded_with]
 python = "3.14.7"

@@ -20,6 +20,8 @@ jiff = { workspace = true, features = ["serde"] }
 # GitHub reference expansion in issue, PR and comment bodies (`references::expand`, #231).
 regex = { workspace = true }
 serde ={ workspace = true }
+# `$BROWSER` entries with `%s` (`browser`, #338).
+shlex = { workspace = true }
 serde_json = { workspace = true }
 serde_path_to_error = { workspace = true }
 thiserror = { workspace = true }

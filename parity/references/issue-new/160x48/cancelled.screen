@@ -33,10 +33,10 @@ cursor 15 36 hidden
 │ 13  open    parity-bot     Parity title                      ││                                                                                              │
 │ 12  open    parity-friend  Crash when the config file is empt││                                                                                              │
 │ 11  closed  parity-bot     Closed without a body             ││                                                                                              │
-│ 10  open    parity-bot     Comments that load slowly         ││                                 ▌                                                            │
-│ 9   open    parity-friend  Comments that fail to load        ││                                 ▌ Cannot open new pull request                               │
-│                                                            ▏ ││                                 ▌ Please select a repository first!                          │
-│                                                              ││                                 ▌                                                            │
+│ 10  open    parity-bot     Comments that load slowly         ││                                                                                              │
+│ 9   open    parity-friend  Comments that fail to load        ││                                                                                              │
+│                                                            ▏ ││                                                                                              │
+│                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                 ▌ Must have a non-empty issue title!                         │
@@ -82,23 +82,23 @@ noooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooond...............
 nppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppnd..............................................................................................d
 nqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnd..............................................................................................d
 nqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnd..............................................................................................d
-nqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnd.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.d
-nqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnd.................................rsttttttttttttttttttttttttttttssssssssssssssssssssssssssssss.d
-nuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuvwnd.................................rsxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxsssssssssssssssssssssssss.d
-n..............................................................nd.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.d
+nqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnd..............................................................................................d
+nqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnd..............................................................................................d
+nrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrstnd..............................................................................................d
 n..............................................................nd..............................................................................................d
-n..............................................................nd.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.d
-n..............................................................nd.................................rsxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxssssssssssssssssssssssss.d
-n..............................................................nd.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.d
 n..............................................................nd..............................................................................................d
-n..............................................................nd.................................ysssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.d
-n..............................................................nd.................................ysxxxxxxxxxxxxxxxxxxxxxsssssssssssssssssssssssssssssssssssss.d
-n..............................................................nd.................................ysssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.d
+n..............................................................nd.................................uvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
+n..............................................................nd.................................uvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwvvvvvvvvvvvvvvvvvvvvvvvv.d
+n..............................................................nd.................................uvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
+n..............................................................nd..............................................................................................d
+n..............................................................nd.................................xvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
+n..............................................................nd.................................xvwwwwwwwwwwwwwwwwwwwwwvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
+n..............................................................nd.................................xvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
 nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnd..............................................................................................d
-dddddddddddddddddzzzzzzzddddddddddddddddddddddddddddddddddddddddd.................................ysssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.d
-deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd.................................ysxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxssssssssssssssssssssssssssss.d
-ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddysssssssssssssssssssssssssssssssssssssssssssssssssssssssssssdd
-AAABBBBBBBAAABBBBBBBBBBBBBAAABBBBBBBBBBBAAABBBBBBBBBBAAABBBBBBBBBBAAABBBBBBBAAAABBBBBBBBBBBAAABBBBBBBBBBBBAAABBBBBBBBBBBBBBBBBBBBBBAAABBBBBAAAABBBBBBBBBBBBBBBBA
+dddddddddddddddddyyyyyyyddddddddddddddddddddddddddddddddddddddddd.................................xvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
+deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd.................................xvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddxvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvdd
+zzzAAAAAAAzzzAAAAAAAAAAAAAzzzAAAAAAAAAAAzzzAAAAAAAAAAzzzAAAAAAAAAAzzzAAAAAAAzzzzAAAAAAAAAAAzzzAAAAAAAAAAAAzzzAAAAAAAAAAAAAAAAAAAAAAzzzAAAAAzzzzAAAAAAAAAAAAAAAAz
 --- legend
 . bg=#121212
 a fg=#004578 bg=#121212
@@ -118,14 +118,13 @@ n fg=#4ebf71 bg=#121212
 o fg=#e0e0e0 bg=#2d3740 bold
 p fg=#ddedf9 bg=#0178d4 bold
 q fg=#e0e0e0 bg=#272727
-r fg=#b93c5b bg=#343f49
-s bg=#343f49
-t fg=#d17e92 bg=#343f49 bold
-u fg=#003054 bg=#272727 inverse
-v fg=#003054 bg=#000000
-w fg=#e0e0e0 bg=#000000
-x fg=#e0e0e0 bg=#343f49
-y fg=#4ebf71 bg=#343f49
-z fg=#4e7bae bg=#121212
-A fg=#ffa62b bg=#242f38 bold
-B fg=#e0e0e0 bg=#242f38
+r fg=#003054 bg=#272727 inverse
+s fg=#003054 bg=#000000
+t fg=#e0e0e0 bg=#000000
+u fg=#b93c5b bg=#343f49
+v bg=#343f49
+w fg=#e0e0e0 bg=#343f49
+x fg=#4ebf71 bg=#343f49
+y fg=#4e7bae bg=#121212
+z fg=#ffa62b bg=#242f38 bold
+A fg=#e0e0e0 bg=#242f38

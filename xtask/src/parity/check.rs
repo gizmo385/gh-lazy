@@ -38,6 +38,8 @@ pub enum Kind {
     Requests,
     /// The non-`GET` requests each app sent (cross-app, once per size, on its last capture).
     Writes,
+    /// The URLs an app had opened in the browser by a capture (`[expect] opened`).
+    Opened,
 }
 
 impl From<Check> for Kind {
@@ -68,6 +70,7 @@ impl Kind {
             Kind::NotContains => "not_contains",
             Kind::Requests => "requests",
             Kind::Writes => "writes",
+            Kind::Opened => "opened",
         }
     }
 }
@@ -239,6 +242,33 @@ pub fn check_expect(app: App, s: &Structure, e: &Expect) -> Vec<Mismatch> {
     }
     out.extend(e.tabs.as_ref().and_then(|t| expect_tabs(app, s, t)));
     out
+}
+
+/// Checks what one app had opened in the browser by a capture (`opened`, from fake-browser's log) against
+/// `[expect.<capture>] opened`.
+pub fn check_opened(app: App, opened: &[String], e: &Expect) -> Option<Mismatch> {
+    let expected = e.opened.as_ref()?;
+    (opened != expected.as_slice()).then(|| {
+        Mismatch::expect(
+            app,
+            Kind::Opened,
+            None,
+            json!(opened),
+            json!(expected),
+            format!("opened {opened:?}, expected {expected:?}"),
+        )
+    })
+}
+
+/// What `app` had opened in the browser by capture `name` in the size dir `dir`, from its `browser.jsonl`. A run
+/// without the log opened nothing.
+fn opened_by(dir: &Path, app: App, name: &str) -> Result<Vec<String>> {
+    let path = dir.join(app.name()).join(super::env::BROWSER_LOG);
+    match std::fs::read_to_string(&path) {
+        Ok(text) => Ok(fake_gh::browser::opened_by(&text, name)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Vec::new()),
+        Err(e) => Err(HarnessError(format!("reading {}: {e}", path.display()))),
+    }
 }
 
 fn expect_tabs(app: App, s: &Structure, t: &ExpectTabs) -> Option<Mismatch> {
@@ -743,7 +773,10 @@ pub fn check_size(
         let expectation = scenario.expect.get(name);
         if let Some(e) = expectation {
             for (&app, s) in &structures {
-                let found = check_expect(app, s, e);
+                let mut found = check_expect(app, s, e);
+                if e.opened.is_some() {
+                    found.extend(check_opened(app, &opened_by(dir, app, name)?, e));
+                }
                 if !found.is_empty() {
                     against.push(app);
                 }
@@ -1125,7 +1158,53 @@ mod tests {
                 names: Some(vec!["Introduction".into()]),
                 active: Some("Introduction".into()),
             }),
+            opened: None,
         }
+    }
+
+    #[test]
+    fn opened_is_the_whole_list_in_order() {
+        let e = Expect {
+            opened: Some(vec!["https://a".into(), "https://b".into()]),
+            ..Expect::default()
+        };
+        let urls = |urls: &[&str]| urls.iter().map(|u| (*u).to_owned()).collect::<Vec<_>>();
+        assert_eq!(check_opened(App::Rust, &urls(&["https://a", "https://b"]), &e), None);
+        for wrong in [urls(&[]), urls(&["https://a"]), urls(&["https://b", "https://a"])] {
+            let m = check_opened(App::Rust, &wrong, &e).expect("a mismatch");
+            assert_eq!(m.check, Kind::Opened);
+            assert_eq!(m.rust, json!(wrong));
+            assert_eq!(m.python, Value::Null);
+        }
+        // Without the key nothing is checked.
+        assert_eq!(
+            check_opened(App::Python, &urls(&["https://x"]), &Expect::default()),
+            None
+        );
+    }
+
+    #[test]
+    fn opened_reads_each_apps_browser_log_up_to_the_capture() {
+        let dir = tempfile::tempdir().unwrap();
+        let rust = dir.path().join(App::Rust.name());
+        std::fs::create_dir_all(&rust).unwrap();
+        let log = [
+            fake_gh::browser::BrowserLine::Opened {
+                url: "https://a".into(),
+            },
+            fake_gh::browser::BrowserLine::Capture { capture: "one".into() },
+            fake_gh::browser::BrowserLine::Opened {
+                url: "https://b".into(),
+            },
+        ]
+        .iter()
+        .map(fake_gh::browser::BrowserLine::to_line)
+        .collect::<String>();
+        std::fs::write(rust.join(super::super::env::BROWSER_LOG), log).unwrap();
+        assert_eq!(opened_by(dir.path(), App::Rust, "one").unwrap(), ["https://a"]);
+        // The mark of a capture isn't there yet, or there's no log at all: nothing was opened by then.
+        assert!(opened_by(dir.path(), App::Rust, "two").unwrap().is_empty());
+        assert!(opened_by(dir.path(), App::Python, "one").unwrap().is_empty());
     }
 
     #[test]
@@ -1217,6 +1296,7 @@ mod tests {
             failure: None,
             captures: vec![("main".into(), grid.clone())],
             requests: requests.into(),
+            browser: String::new(),
         }
     }
 

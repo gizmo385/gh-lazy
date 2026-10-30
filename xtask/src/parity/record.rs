@@ -19,8 +19,8 @@ use super::cli::{self, RunOptions};
 use super::diff;
 use super::env::Paths;
 use super::reference::{
-    self, Disagreement, Freshness, MANIFEST_FILE, MANIFEST_FORMAT, Manifest, Problem, REFERENCES_DIR, REQUESTS_FILE,
-    RecordedWith, SCREEN_EXTENSION, Side, Stored,
+    self, BROWSER_FILE, Disagreement, Freshness, MANIFEST_FILE, MANIFEST_FORMAT, Manifest, Problem, REFERENCES_DIR,
+    REQUESTS_FILE, RecordedWith, SCREEN_EXTENSION, Side, Stored,
 };
 use super::scenario::{App, Scenario, Size, Step};
 use super::screen;
@@ -332,6 +332,10 @@ fn write_reference(
         write(&format!("{name}.{SCREEN_EXTENSION}"), &text)?;
     }
     write(REQUESTS_FILE, &run.requests)?;
+    // Most scenarios open nothing; they keep no log of the capture marks alone.
+    if fake_gh::browser::has_opened(&run.browser) {
+        write(BROWSER_FILE, &run.browser)?;
+    }
     let requests = reference::parse_requests(&run.requests).map_err(|(line, message)| {
         HarnessError(format!("{} {size}: {REQUESTS_FILE}:{line}: {message}", scenario.name))
     })?;

@@ -202,6 +202,8 @@ pub struct Expect {
     pub not_contains: Option<Vec<String>>,
     pub footer: Option<Vec<String>>,
     pub tabs: Option<ExpectTabs>,
+    /// Every URL the app had opened in the browser by this capture, in order (fake-browser's log).
+    pub opened: Option<Vec<String>>,
 }
 
 /// `tabs = { box = "Details", names = [...], active = "..." }`.
@@ -691,6 +693,9 @@ impl Scenario {
                     &key,
                     format!("[expect.{}] names no capture in this scenario", key.get_ref()),
                 ));
+            }
+            if value.opened.iter().flatten().any(|url| url.trim().is_empty()) {
+                return Err(loc.at_span(&key, format!("[expect.{}] opened has an empty URL", key.get_ref())));
             }
             expect.insert(key.into_inner(), value);
         }

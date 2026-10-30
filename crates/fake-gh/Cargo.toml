@@ -22,6 +22,11 @@ path = "src/main.rs"
 name = "fake-ssh"
 path = "src/bin/fake-ssh.rs"
 
+# The browser `$BROWSER` names in parity runs: it logs the URLs the app opens. Installed as `<run>/bin/fake-browser`.
+[[bin]]
+name = "fake-browser"
+path = "src/bin/fake-browser.rs"
+
 [dependencies]
 http = { workspace = true }
 serde = { workspace = true }
@@ -32,6 +37,8 @@ thiserror = { workspace = true }
 [dev-dependencies]
 assert_cmd = { workspace = true }
 insta = { workspace = true }
+# Throwaway logs in the fake-browser tests.
+tempfile = { workspace = true }
 # tests/rust_client.rs drives the Rust app's `GhCli` against this binary.
 lazy-github-core = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt"] }

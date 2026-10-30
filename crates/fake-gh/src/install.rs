@@ -1,4 +1,4 @@
-//! Putting fake-gh on a `PATH` as `gh`, and fake-ssh next to it.
+//! Putting fake-gh on a `PATH` as `gh`, and fake-ssh and fake-browser next to it.
 
 use std::io;
 use std::path::{Path, PathBuf};
@@ -14,8 +14,8 @@ pub fn fake_ssh_file_name() -> String {
 }
 
 /// Installs the fake-gh binary at `source` as `<dir>/bin/gh` (`gh.exe` on Windows) and returns `<dir>/bin`, the
-/// directory to put first on `PATH`. When the build dir of `source` also holds fake-ssh (Cargo builds both bins of
-/// the crate), it's installed as `<dir>/bin/fake-ssh`.
+/// directory to put first on `PATH`. When the build dir of `source` also holds fake-ssh and fake-browser (Cargo builds
+/// every bin of the crate), they're installed as `<dir>/bin/fake-ssh` and `<dir>/bin/fake-browser`.
 ///
 /// It hard-links when it can. Otherwise (e.g. `source` is on another filesystem) it copies, then waits until the copy
 /// can be executed: on Unix, a thread elsewhere in the process that forks while the copy's write handle is open holds
@@ -33,6 +33,11 @@ pub fn install(source: &Path, dir: &Path) -> io::Result<PathBuf> {
     if ssh.is_file() {
         // With no arguments fake-ssh only prints its usage; with `FAKE_GH_LOG` unset it logs nothing.
         install_one(&ssh, &bin.join(fake_ssh_file_name()), &[])?;
+    }
+    let browser = source.with_file_name(crate::browser::file_name());
+    if browser.is_file() {
+        // With `FAKE_BROWSER_LOG` unset it logs nothing.
+        install_one(&browser, &bin.join(crate::browser::file_name()), &[])?;
     }
     Ok(bin)
 }
@@ -53,7 +58,12 @@ fn wait_until_executable(target: &Path, probe: &[&str]) -> io::Result<()> {
     let start = Instant::now();
     loop {
         // fake-gh's `--version` needs no fixtures and, with the log unset, writes nothing.
-        match Command::new(target).args(probe).env_remove("FAKE_GH_LOG").output() {
+        match Command::new(target)
+            .args(probe)
+            .env_remove("FAKE_GH_LOG")
+            .env_remove(crate::browser::LOG_ENV)
+            .output()
+        {
             Err(e) if e.kind() == io::ErrorKind::ExecutableFileBusy => {
                 if start.elapsed() > BUSY_TIMEOUT {
                     return Err(io::Error::new(

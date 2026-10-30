@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/issue-fixture/readme",
+    "accept": "raw"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/vnd.github.raw; charset=utf-8"
+    },
+    "body_text": "# issue-fixture\n\nIssues with bodies and comments.\n",
+    "delay_ms": 1500
+  },
+  "note": "hand-written: issue-fixture's README after 1.5 s. Python's README worker crashes when the README arrives while a link's issue replaces the Repo Overview (Textual cancels it when it arrives later)"
+}

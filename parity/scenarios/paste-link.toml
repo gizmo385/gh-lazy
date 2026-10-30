@@ -1,0 +1,192 @@
+version = 1
+description = "Paste link (ctrl+v): the dialog, an unknown link, a link that doesn't resolve, and pull request, issue, repository and user links opening in-app with their toasts; escape closes it"
+# Not built yet (#197): gate = false, so the Rust side shows as rust-not-ready in the report until it lands. The
+# harness can't send shift+enter, so Open is reached with tab. Each link gets a fresh dialog, since the input keeps
+# its text after a failed lookup.
+gate = false
+parity_rows = [
+    "modals.paste-link",
+    "markdown-links.paste-link-result",
+    "keybindings.link-paste",
+    "toasts.opening-for-link",
+]
+
+[env]
+# links: GET /repos/<owner>/<repo> for issue-fixture and pr-details (and a 404 for parity-bot/missing); issue-details
+# lists issue-fixture first and has issue 12; pr-details has PR 5 (its README is slowed down in links); user-profile has parity-bot's profile.
+fixtures = ["links", "issue-details", "pr-details", "user-profile", "base"]
+
+[[step]]
+wait = { text = "issue-fixture", timeout_ms = 15000 }
+
+[[step]]
+keys = ["ctrl+v"]
+
+[[step]]
+wait = { text = "Paste a web GitHub link:" }
+
+[[step]]
+capture = "open"
+checks = ["titles", "footer"]
+
+[[step]]
+type = "not a link"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "Unknown link" }
+
+[[step]]
+capture = "unknown"
+checks = ["titles", "footer"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Paste a web GitHub link:" }
+
+[[step]]
+capture = "closed"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["ctrl+v"]
+
+[[step]]
+wait = { text = "Paste a web GitHub link:" }
+
+[[step]]
+type = "https://github.com/parity-bot/missing/pull/1"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "Could not resolve link!" }
+
+[[step]]
+capture = "not-found"
+checks = ["titles", "footer"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Paste a web GitHub link:" }
+
+[[step]]
+keys = ["ctrl+v"]
+
+[[step]]
+wait = { text = "Paste a web GitHub link:" }
+
+[[step]]
+type = "https://github.com/parity-bot/pr-details/pull/5"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "Opening pull request for link" }
+
+[[step]]
+wait = { text = "Overview  Diff  Conversation", timeout_ms = 15000 }
+
+[[step]]
+capture = "pull-request"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["ctrl+v"]
+
+[[step]]
+wait = { text = "Paste a web GitHub link:" }
+
+[[step]]
+type = "https://github.com/parity-bot/issue-fixture/issues/12"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "Opening issue for link" }
+
+[[step]]
+wait = { text = "Workaround: delete the file", timeout_ms = 15000 }
+
+[[step]]
+capture = "issue"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["ctrl+v"]
+
+[[step]]
+wait = { text = "Paste a web GitHub link:" }
+
+[[step]]
+type = "https://github.com/parity-bot/pr-details"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "Opening repository for link" }
+
+[[step]]
+wait = { text = "Pull requests for the PR details tabs.", timeout_ms = 15000 }
+
+[[step]]
+capture = "repository"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["ctrl+v"]
+
+[[step]]
+wait = { text = "Paste a web GitHub link:" }
+
+[[step]]
+type = "https://github.com/parity-bot"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "Followers: 12" }
+
+[[step]]
+capture = "user"
+checks = ["titles"]
+
+[expect.open]
+contains = ["Paste a web GitHub link:", "Link:", "https://github.com/...", "Open", "Cancel"]
+
+[expect.unknown]
+contains = ["Paste a web GitHub link:", "Unknown link"]
+
+[expect.closed]
+contains = ["No repository selected"]
+not_contains = ["Paste a web GitHub link:"]
+
+[expect.not-found]
+contains = ["Paste a web GitHub link:", "GitHub lookup failed", "Could not resolve link!"]
+
+[expect.pull-request]
+contains = ["Current repo: parity-bot/pr-details", "Opening pull request for link"]
+not_contains = ["Paste a web GitHub link:"]
+
+[expect.issue]
+contains = ["Current repo: parity-bot/issue-fixture", "Opening issue for link", "Crash when the config file is empty (#12)"]
+not_contains = ["Paste a web GitHub link:"]
+
+[expect.repository]
+contains = ["Current repo: parity-bot/pr-details", "Opening repository for link", "Repo Overview"]
+not_contains = ["Paste a web GitHub link:"]
+
+[expect.user]
+contains = ["Followers: 12"]
+not_contains = ["Paste a web GitHub link:"]

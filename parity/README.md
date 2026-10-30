@@ -394,6 +394,12 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   2 s, a 500 on 9 (it crashes Python: Py bug B60). `GET .../issues/<n>` for 3 (not on the listed page), 8 (a pull
   request) and 12, and a 404 for 404. Listed before `base`, for the `issue-details` and `issue-lookup` scenarios.
   Hand-written.
+- `links/`: what following GitHub links resolves, for the not-yet-built link scenarios (`link-hints`, `link-click`,
+  `paste-link`). `GET /repos/<owner>/<repo>` for `parity-bot/issue-fixture` and `parity-bot/pr-details` (copied from
+  their repo lists) and a 404 for `parity-bot/missing`; issue 7 of issue-fixture (the `#7` in issue 12's body) with no
+  comments; and both repos' READMEs after 1.5 s, because Python's README worker crashes when the README arrives just
+  as a link's issue or pull request replaces the Repo Overview (Textual cancels it when it arrives later). Listed
+  before `issue-details`, `pr-details`, `user-profile` and `base`. Hand-written.
 - `run-details/`: the repo `parity-bot/run-fixture`, listed first on base's `GET /user/repos` page, with its README,
   empty issues, one workflow and three runs of it on `actions/runs` page 1 (then an empty page 2): 42 (completed,
   failure, attempt 2), 41 (in progress) and 40 (completed, success). `GET .../actions/runs/<id>/jobs` (no query):
@@ -422,6 +428,9 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   (201, PR 10, after 1 s), and the non-draft from `new-feature` with no body (422, then 201 once the 422 was served,
   `when.after`). PR 10 itself, its diff (empty), reviews, issue comments, reactions and the status and check runs of
   its head sha. Hand-written.
+- `pr-preload/`: `GET /repos/parity-bot/pr-details/commits/<sha>/pulls` for the harness's git commit (the same SHA on
+  every run, see [The isolated environment](#the-isolated-environment)), answering PR 5 alone. Listed before
+  `pr-details` and `base`, for the `pr-preload` scenario (#198). Hand-written.
 - `workflow-write/`: for `parity-bot/run-fixture`, listed before `run-details` and `base`, for the `workflow-trigger`
   and `workflow-rerun` scenarios (M3, #188). Two workflows on `actions/workflows` page 1 (CI 7000001, Release
   7000002), the branches `main`, `release` and `run-details` (`page=1`, `per_page=30`), `POST
@@ -1390,6 +1399,12 @@ on the scenario file in the PR:
   whole run;
 - one `::warning` per `rust-not-ready` scenario, listing the Rust failures and the number of mismatches, and one per
   run that passed only on retry.
+
+**Scenarios ahead of their feature.** A scenario can land before the Rust feature it checks, with `gate = false` and
+its Python reference recorded: it runs on every PR, shows as `rust-not-ready` in the report, `summary.md` and the
+published site, and never fails the job, so the `pass` / `rust-not-ready` counts track how much of the Python app the
+Rust app matches. `link-hints`, `link-click`, `paste-link`, `pr-preload` and `settings-list-field` started this way.
+The feature PR then makes it pass and flips `gate`, as below.
 
 **Flipping `gate`.** A feature PR that makes a scenario pass sets `gate = true` in that scenario file in the same
 PR; its acceptance criteria say "scenario `<name>` with `gate = true`". The parity reviewer checks the flip, and

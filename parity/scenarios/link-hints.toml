@@ -1,0 +1,184 @@
+version = 1
+description = "Link hints (f / F): \"No links visible\" with nothing to follow, the labels over the Repo Overview's links, escape and a non-matching letter cancel, F opens the owner externally, f follows the owner to the profile modal and an issue body's #7 to issue 7 in-app"
+# Not built yet (#196): gate = false, so the Rust side shows as rust-not-ready in the report until it lands. The labels
+# are drawn over the link text itself ("aarity-bot/issue-fixture" is the label "a" over "parity-bot/issue-fixture"),
+# so [expect] checks them as text. Toasts stay up for 5 s and stack bottom-right inside the Details box.
+gate = false
+parity_rows = [
+    "markdown-links.link-hints",
+    "markdown-links.hint-labels",
+    "keybindings.link-follow",
+    "keybindings.link-follow-external",
+    "toasts.no-links-visible",
+    "toasts.opening-externally",
+]
+
+[env]
+# links over issue-details: GET /repos/parity-bot/issue-fixture and issue 7, so #7 resolves in-app; user-profile has
+# parity-bot's profile.
+fixtures = ["links", "issue-details", "user-profile", "base"]
+
+[[step]]
+wait = { text = "issue-fixture", timeout_ms = 15000 }
+
+# No repo selected: the Introduction has no links.
+[[step]]
+keys = ["f"]
+
+[[step]]
+wait = { text = "No links visible" }
+
+[[step]]
+capture = "no-links"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Comments that fail to load", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Issues with bodies and comments.", timeout_ms = 15000 }
+
+[[step]]
+wait = { gone = "No links visible" }
+
+# The Repo Overview links the repo (a) and its owner (s).
+[[step]]
+keys = ["f"]
+
+[[step]]
+wait = { text = "Owned by sarity-bot" }
+
+[[step]]
+capture = "hints"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "Owned by parity-bot" }
+
+[[step]]
+capture = "cancelled"
+checks = ["titles", "focus"]
+
+# A letter no label starts with cancels too.
+[[step]]
+keys = ["f"]
+
+[[step]]
+wait = { text = "Owned by sarity-bot" }
+
+[[step]]
+keys = ["z"]
+
+[[step]]
+wait = { text = "Owned by parity-bot" }
+
+[[step]]
+capture = "no-match"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["F"]
+
+[[step]]
+wait = { text = "Owned by sarity-bot" }
+
+[[step]]
+keys = ["s"]
+
+[[step]]
+wait = { text = "Opening https://github.com/parity-bot externally" }
+
+[[step]]
+capture = "external"
+checks = ["titles", "focus"]
+
+# f on the owner opens the profile modal in-app.
+[[step]]
+keys = ["f"]
+
+[[step]]
+wait = { text = "Owned by sarity-bot" }
+
+[[step]]
+keys = ["s"]
+
+[[step]]
+wait = { text = "Followers: 12" }
+
+[[step]]
+capture = "followed-user"
+checks = ["titles"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Followers: 12" }
+
+# Python restores the main screen's focus a moment after the modal goes.
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["3", "enter"]
+
+[[step]]
+wait = { text = "Workaround: delete the file", timeout_ms = 15000 }
+
+# Issue 12's links: the title (a), the author (s), #7 (d), parity-bot/dotfiles#3 (f) and @parity-bot (g).
+[[step]]
+keys = ["f"]
+
+[[step]]
+wait = { text = "farity-bot/dotfiles#3" }
+
+[[step]]
+capture = "issue-hints"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["d"]
+
+[[step]]
+wait = { text = "Opening issue for link" }
+
+[[step]]
+wait = { text = "Reached by following #7 from issue 12." }
+
+[[step]]
+capture = "followed-issue"
+checks = ["titles", "focus"]
+
+[expect.no-links]
+contains = ["No repository selected", "No links visible"]
+
+[expect.hints]
+contains = ["aarity-bot/issue-fixture • Public", "Owned by sarity-bot"]
+
+[expect.cancelled]
+contains = ["parity-bot/issue-fixture • Public", "Owned by parity-bot"]
+not_contains = ["aarity-bot", "sarity-bot"]
+
+[expect.no-match]
+contains = ["parity-bot/issue-fixture • Public", "Owned by parity-bot"]
+not_contains = ["aarity-bot", "sarity-bot"]
+
+[expect.external]
+contains = ["Opening https://github.com/parity-bot externally", "Owned by parity-bot"]
+not_contains = ["Followers: 12"]
+
+[expect.followed-user]
+contains = ["Followers: 12"]
+
+[expect.issue-hints]
+contains = ["a#12) by sarity-friend", "as d7, and farity-bot/dotfiles#3 has the same error. cc gparity-bot"]
+
+[expect.followed-issue]
+contains = ["Opening issue for link", "Reached by following #7 from issue 12."]
+not_contains = ["farity-bot/dotfiles#3"]

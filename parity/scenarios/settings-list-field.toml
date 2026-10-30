@@ -1,0 +1,173 @@
+version = 1
+description = "Settings list fields: enter in \"Add new item...\" adds the text as a checked item and clears the input, a duplicate isn't added, an unchecked item is dropped on Save, and reopening shows the saved lists"
+# The modal is loose text (see settings.toml). The checklist draws a checked and an unchecked item alike (only the
+# colors differ), so unchecking is checked after Save, by reopening. Python scrolls a just-added item's text two cells
+# left in its list, so it's matched as "rity-bot/hello-world". The harness can't send shift+enter: Save is the next
+# stop after the last checklist.
+gate = false
+parity_rows = [
+    "modals.settings-list-field",
+]
+
+[env]
+fixtures = ["base"]
+
+[env.config_overrides]
+repositories = { favorites = ["parity-bot/dotfiles"] }
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+[[step]]
+keys = ["right", "right", "right"]
+
+[[step]]
+wait = { text = "Additional Repos To Track" }
+
+# Textual switches the pane a moment after the strip: let it settle before moving focus into it.
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+capture = "tab"
+checks = ["footer"]
+
+# The scroll area, then Additional Repos To Track's input. Under load Python drops the second of two quick tabs here, so
+# they go one at a time; a focused text input turns the footer's "q Close" into "esc Close".
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { text = "esc Close" }
+
+[[step]]
+type = "parity-bot/hello-world"
+
+[[step]]
+wait = { text = "parity-bot/hello-world" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "rity-bot/hello-world " }
+
+[[step]]
+capture = "added"
+checks = ["footer"]
+
+# Its checklist, then Favorites' input: parity-bot/dotfiles is listed already.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { text = "q Close" }
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { text = "esc Close" }
+
+[[step]]
+type = "parity-bot/dotfiles"
+
+[[step]]
+wait = { regex = "▊  parity-bot/dotfiles" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+capture = "duplicate"
+checks = ["footer"]
+
+# Favorites' checklist: uncheck parity-bot/dotfiles, then Save.
+[[step]]
+keys = ["tab", "space"]
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "Settings updated" }
+
+[[step]]
+capture = "saved"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+[[step]]
+keys = ["right", "right", "right"]
+
+[[step]]
+wait = { text = "Additional Repos To Track" }
+
+[[step]]
+wait = { text = "parity-bot/hello-world" }
+
+[[step]]
+capture = "reopened"
+checks = ["footer"]
+
+[expect.tab]
+contains = ["Repository-specific settings", "Additional Repos To Track:", "Favorites:", "Add new item...", "parity-bot/dotfiles"]
+
+[expect.added]
+contains = ["rity-bot/hello-world", "parity-bot/dotfiles"]
+not_contains = ["▊  parity-bot/hello-world"]
+
+[expect.duplicate]
+contains = ["▊  parity-bot/dotfiles"]
+
+[expect.saved]
+contains = ["Settings updated"]
+not_contains = ["LazyGithub Settings"]
+
+[expect.reopened]
+contains = ["parity-bot/hello-world"]
+not_contains = ["parity-bot/dotfiles"]

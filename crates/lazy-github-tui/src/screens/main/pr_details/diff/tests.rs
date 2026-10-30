@@ -15,10 +15,10 @@ use crossterm::event::{MouseButton, MouseEventKind};
 
 use crate::effect::{Effect, GithubRequest, GithubResponse};
 use crate::event::Event;
-use crate::modal::ModalKind;
-use crate::screens::main::FocusTarget;
+use crate::modal::{CommandPaletteDialog, ModalKind};
 use crate::screens::main::details::{MaximizeScope, SectionKey, SectionRef};
 use crate::screens::main::pr_details::tests::{fixture_pr, fixture_repo};
+use crate::screens::main::{FocusTarget, Maximized};
 use crate::test_util::{TestApp, logs};
 
 use super::PrDiff;
@@ -682,7 +682,12 @@ fn scenario_review() -> NewReview {
 /// PR 5's Diff tab viewed by parity-bot, with the arrow-keys comment on README.md's line 4 pending, and focus on the
 /// review status.
 fn reviewing() -> TestApp {
-    let mut app = diff_tab_with(config(), reviewer_gh(), &["enter"]);
+    reviewing_with(config())
+}
+
+/// [`reviewing`] on `config`.
+fn reviewing_with(config: Config) -> TestApp {
+    let mut app = diff_tab_with(config, reviewer_gh(), &["enter"]);
     settle(&mut app);
     app.press(&["tab", "tab", "tab", "tab", "enter", "tab", "j", "j", "j"]);
     add(&mut app, "Mention the arrow keys too.");
@@ -898,7 +903,7 @@ fn maximize_scope_is_the_section_of_each_title_or_pane() {
     assert_eq!(pr_diff(&app).maximize_scope(), MaximizeScope::Nothing);
     app.press(&["tab"]);
     assert_eq!(stop(&app), DiffStop::Filter);
-    assert_eq!(pr_diff(&app).maximize_scope(), MaximizeScope::Nothing);
+    assert_eq!(pr_diff(&app).maximize_scope(), MaximizeScope::TabArea);
     app.press(&["tab"]);
     assert_eq!(stop(&app), DiffStop::FileTitle(README));
     assert_eq!(pr_diff(&app).maximize_scope(), section(SectionRef::File(README)));
@@ -1004,5 +1009,127 @@ fn pr_diff_hunk_pane_maximized_160x48() {
     assert!(screen.contains("  ▼ Lines 3-7 (+3 -1) • A tiny pager."), "{screen}");
     assert!(screen.contains("Line: 1/6"), "{screen}");
     assert!(!screen.contains("README.md"), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+// Maximize from the stops outside any file or hunk (#295).
+
+/// The details tab area, maximized from the Diff content.
+fn tab_area() -> Maximized {
+    Maximized::widget(FocusTarget::DetailsContent)
+}
+
+/// How many "View Maximized" toasts are up.
+fn maximize_toasts(app: &TestApp) -> usize {
+    app.app()
+        .toasts()
+        .iter()
+        .filter(|toast| toast.title.as_deref() == Some("View Maximized"))
+        .count()
+}
+
+/// [`config`] with maximize rebound to `f6`, a key neither input types.
+fn f6_config() -> Config {
+    let mut config = config();
+    config
+        .bindings
+        .overrides
+        .insert("app.maximize_widget".into(), "f6".into());
+    config
+}
+
+#[test]
+fn a_rebound_maximize_key_on_the_filter_maximizes_the_tab_area_and_m_still_types() {
+    let mut app = diff_tab_with(f6_config(), gh(), &["enter"]);
+    app.press(&["tab", "tab", "r", "e"]);
+    assert_eq!(stop(&app), DiffStop::Filter);
+    app.press(&["f6"]);
+    assert_eq!(app.app().maximized(), Some(tab_area()));
+    assert_eq!(maximize_toasts(&app), 1);
+    assert_eq!(view(&app).filter_text(), "re");
+    assert_eq!(stop(&app), DiffStop::Filter);
+    app.press(&["M"]);
+    assert_eq!(view(&app).filter_text(), "reM");
+    // Escape restores first; the filter keeps its focus and text, and a second one is the filter's own.
+    app.press(&["escape"]);
+    assert_eq!(app.app().maximized(), None);
+    assert_eq!(stop(&app), DiffStop::Filter);
+    assert_eq!(view(&app).filter_text(), "reM");
+    app.press(&["escape"]);
+    assert_eq!(view(&app).filter_text(), "");
+    assert_eq!(stop(&app), DiffStop::Scroll);
+}
+
+#[test]
+fn a_rebound_maximize_key_on_the_summary_maximizes_the_tab_area_and_m_still_types() {
+    let mut app = reviewing_with(f6_config());
+    app.press(&["tab", "o", "k"]);
+    assert_eq!(stop(&app), DiffStop::ReviewSummary);
+    app.press(&["f6"]);
+    assert_eq!(app.app().maximized(), Some(tab_area()));
+    assert_eq!(maximize_toasts(&app), 1);
+    assert_eq!(view(&app).review_summary(), Some("ok"));
+    app.press(&["M"]);
+    assert_eq!(view(&app).review_summary(), Some("okM"));
+    assert_eq!(app.app().maximized(), Some(tab_area()));
+}
+
+#[test]
+fn m_on_a_remove_button_maximizes_the_tab_area_and_escape_keeps_its_focus() {
+    let mut app = reviewing();
+    app.press(&["shift+tab"]);
+    assert_eq!(stop(&app), DiffStop::RemoveComment(0));
+    app.press(&["M"]);
+    assert_eq!(app.app().maximized(), Some(tab_area()));
+    assert_eq!(maximize_toasts(&app), 1);
+    app.press(&["escape"]);
+    assert_eq!(app.app().maximized(), None);
+    assert_eq!(stop(&app), DiffStop::RemoveComment(0));
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    assert_eq!(pending(&app).len(), 1);
+}
+
+#[test]
+fn m_on_the_review_status_and_submit_maximizes_the_tab_area() {
+    let mut app = reviewing();
+    app.press(&["M"]);
+    assert_eq!(app.app().maximized(), Some(tab_area()));
+    assert_eq!(stop(&app), DiffStop::ReviewStatus);
+    app.press(&["escape", "tab", "tab", "M"]);
+    assert_eq!(stop(&app), DiffStop::ReviewSubmit);
+    assert_eq!(app.app().maximized(), Some(tab_area()));
+    assert!(reviews_sent(&app).is_empty());
+}
+
+#[test]
+fn the_palette_offers_maximize_on_the_filter_and_runs_it_without_the_toast() {
+    let mut app = diff_tab();
+    app.press(&["tab", "tab"]);
+    assert_eq!(stop(&app), DiffStop::Filter);
+    app.press(&["ctrl+p"]);
+    let palette = app
+        .app()
+        .top_dialog::<CommandPaletteDialog>()
+        .expect("the palette is open");
+    assert!(palette.hit_names().contains(&"Maximize"), "{:?}", palette.hit_names());
+    type_text(&mut app, "max");
+    app.press(&["enter"]);
+    assert_eq!(app.app().maximized(), Some(tab_area()));
+    assert_eq!(maximize_toasts(&app), 0);
+    assert_eq!(stop(&app), DiffStop::Filter);
+    assert_eq!(view(&app).filter_text(), "");
+}
+
+#[test]
+fn pr_diff_tab_area_maximized_from_submit_160x48() {
+    let mut app = reviewing();
+    app.press(&["tab", "tab", "M"]);
+    assert_eq!(stop(&app), DiffStop::ReviewSubmit);
+    app.advance(std::time::Duration::from_secs(5));
+    let screen = app.screen(160, 48);
+    // The form sits at the bottom of the diff, so a maximize that scrolled back to the top would lose it.
+    assert!(screen.contains("Submit Review"), "{screen}");
+    assert!(screen.contains("Overview  Diff  Conversation"), "{screen}");
+    assert!(!screen.contains("[1] Repositories"), "{screen}");
     insta::assert_snapshot!(screen);
 }

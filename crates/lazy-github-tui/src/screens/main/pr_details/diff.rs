@@ -23,7 +23,9 @@ use tokio::time::Instant;
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Cx, Owner};
 use crate::components::command_log::Wheel;
-use crate::components::diff_view::{DiffSection, DiffStop, DiffView, MissingStatus, PendingComment, ViewMouse};
+use crate::components::diff_view::{
+    DiffMaximize, DiffSection, DiffStop, DiffView, MissingStatus, PendingComment, ViewMouse,
+};
 use crate::components::info::Scroll;
 use crate::components::loading;
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
@@ -227,14 +229,20 @@ impl PrDiff {
     // Maximize: the viewer's file and hunk sections, by the keys the details pane knows them by.
 
     pub(super) fn maximize_scope(&self) -> MaximizeScope {
-        let section = self.view().and_then(DiffView::maximize_section);
-        section.map_or(MaximizeScope::Nothing, |section| {
-            let section = match section {
-                DiffSection::File(f) => SectionRef::File(f),
-                DiffSection::Hunk(f, h) => SectionRef::Hunk(f, h),
-            };
-            MaximizeScope::Section(SectionKey(section))
-        })
+        let Some(view) = self.view() else {
+            return MaximizeScope::Nothing;
+        };
+        match view.maximize_scope() {
+            DiffMaximize::Nothing => MaximizeScope::Nothing,
+            DiffMaximize::TabArea => MaximizeScope::TabArea,
+            DiffMaximize::Section(section) => {
+                let section = match section {
+                    DiffSection::File(f) => SectionRef::File(f),
+                    DiffSection::Hunk(f, h) => SectionRef::Hunk(f, h),
+                };
+                MaximizeScope::Section(SectionKey(section))
+            }
+        }
     }
 
     pub(super) fn shows_section(&self, section: SectionRef) -> bool {

@@ -121,6 +121,17 @@ pub enum DiffStop {
     ReviewSubmit,
 }
 
+/// What maximize targets from a focused stop, by its nearest maximizable ancestor.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DiffMaximize {
+    /// No ancestor allows it: the scroll area.
+    Nothing,
+    /// The details tab area holding the viewer.
+    TabArea,
+    /// A file's or hunk's section.
+    Section(DiffSection),
+}
+
 /// A collapsible section of the viewer, for the section maximize view: a file's, or a hunk's (the file, then the
 /// hunk), by index.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -940,19 +951,19 @@ impl DiffView {
 
     // Maximize.
 
-    /// The section `M` maximizes from the focused stop: a file's title, its file's; a hunk's title or pane, its
-    /// hunk's. The scroll area doesn't allow it, the filter types the key, and the review form and the Remove buttons
-    /// are #187's.
-    pub fn maximize_section(&self) -> Option<DiffSection> {
+    /// What maximize targets from the focused stop: a file's title, its file's section; a hunk's title or pane, its
+    /// hunk's. The filter, the Remove buttons and the review form sit outside every section, so their nearest
+    /// maximizable ancestor is the details tab area; the scroll area itself doesn't allow it.
+    pub fn maximize_scope(&self) -> DiffMaximize {
         match self.body.stop {
-            DiffStop::FileTitle(f) => Some(DiffSection::File(f)),
-            DiffStop::HunkTitle(f, h) | DiffStop::Pane(f, h) => Some(DiffSection::Hunk(f, h)),
-            DiffStop::Scroll
-            | DiffStop::Filter
+            DiffStop::FileTitle(f) => DiffMaximize::Section(DiffSection::File(f)),
+            DiffStop::HunkTitle(f, h) | DiffStop::Pane(f, h) => DiffMaximize::Section(DiffSection::Hunk(f, h)),
+            DiffStop::Filter
             | DiffStop::RemoveComment(_)
             | DiffStop::ReviewStatus
             | DiffStop::ReviewSummary
-            | DiffStop::ReviewSubmit => None,
+            | DiffStop::ReviewSubmit => DiffMaximize::TabArea,
+            DiffStop::Scroll => DiffMaximize::Nothing,
         }
     }
 

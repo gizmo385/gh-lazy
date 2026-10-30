@@ -4,7 +4,7 @@ description = "Maximize from the Diff tab's widgets outside any file or hunk: th
 # reaches their nearest maximizable ancestor. A rebound maximize key works there in Rust only (B38's answer), so it's
 # unit-tested rather than captured here. A maximized tab area has no boxes, so those captures are checked through
 # [expect] `contains` and `not_contains`.
-gate = false
+gate = true
 parity_rows = ["main-layout.maximize"]
 sizes = [[160, 48]]
 

@@ -569,3 +569,51 @@ fn the_status_list_opens_over_the_view() {
         assert!(screen.contains(option), "{option}: {screen}");
     }
 }
+
+// Maximize (#288, #295).
+
+#[test]
+fn maximize_scope_is_the_section_or_the_tab_area_for_every_stop() {
+    use DiffStop::{
+        FileTitle, Filter, HunkTitle, Pane, RemoveComment, ReviewStatus, ReviewSubmit, ReviewSummary, Scroll,
+    };
+    for author in [false, true] {
+        let mut view = with_two_comments();
+        view.show_review_form(author);
+        view.focus(HunkTitle(README, 0));
+        press(&mut view, &["enter"]);
+        let stops = ring(&mut view);
+        assert!(stops.contains(&Pane(README, 0)));
+        assert_eq!(stops.contains(&ReviewStatus), !author);
+        for stop in stops {
+            view.focus(stop);
+            assert_eq!(view.stop(), stop);
+            let expected = match stop {
+                Scroll => DiffMaximize::Nothing,
+                FileTitle(f) => DiffMaximize::Section(DiffSection::File(f)),
+                HunkTitle(f, h) | Pane(f, h) => DiffMaximize::Section(DiffSection::Hunk(f, h)),
+                Filter | RemoveComment(_) | ReviewStatus | ReviewSummary | ReviewSubmit => DiffMaximize::TabArea,
+            };
+            assert_eq!(view.maximize_scope(), expected, "{stop:?} (author: {author})");
+        }
+    }
+    // Pin a few by hand, so the table above isn't the only statement of the rule.
+    let mut view = with_two_comments();
+    view.show_review_form(true);
+    for (stop, expected) in [
+        (Scroll, DiffMaximize::Nothing),
+        (Filter, DiffMaximize::TabArea),
+        (RemoveComment(1), DiffMaximize::TabArea),
+        (ReviewSummary, DiffMaximize::TabArea),
+        (ReviewSubmit, DiffMaximize::TabArea),
+        (FileTitle(OLD), DiffMaximize::Section(DiffSection::File(OLD))),
+        (
+            HunkTitle(README, 0),
+            DiffMaximize::Section(DiffSection::Hunk(README, 0)),
+        ),
+    ] {
+        view.focus(stop);
+        assert_eq!(view.maximize_scope(), expected, "{stop:?}");
+    }
+    assert_eq!(view.review_button(), Some("Add Comments"));
+}

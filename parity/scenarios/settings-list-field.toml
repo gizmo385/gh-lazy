@@ -4,7 +4,7 @@ description = "Settings list fields: enter in \"Add new item...\" adds the text 
 # colors differ), so unchecking is checked after Save, by reopening. Python scrolls a just-added item's text two cells
 # left in its list, so it's matched as "rity-bot/hello-world". The harness can't send shift+enter: Save is the next
 # stop after the last checklist.
-gate = false
+gate = true
 parity_rows = [
     "modals.settings-list-field",
 ]

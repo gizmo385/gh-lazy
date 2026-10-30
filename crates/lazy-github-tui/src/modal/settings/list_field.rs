@@ -22,15 +22,12 @@ pub(super) struct ListField {
 }
 
 impl ListField {
-    /// The editor for `items`, all checked, in order, with nothing highlighted.
+    /// The editor for `items`, all checked, in order. The first item is highlighted (nothing, when there are none),
+    /// as Textual's `OptionList` built with options is, so `space` on a freshly focused list toggles it.
     pub(super) fn new(items: Vec<String>) -> Self {
-        let mut list = SelectionList::new();
-        for item in items {
-            list.add(item.clone(), item, true);
-        }
         Self {
             input: TextInput::new(PLACEHOLDER),
-            list,
+            list: SelectionList::with_options(items.into_iter().map(|item| (item.clone(), item, true))),
         }
     }
 
@@ -98,7 +95,6 @@ mod tests {
             assert_eq!(list.list.len(), 2);
         }
         // An unchecked item is still an item.
-        let _ = list.list.on_binding(BindingId::TextualOptionListCursorDown);
         let _ = list.list.on_binding(BindingId::TextualSelectionListSelect);
         assert_eq!(list.value(), ["b"]);
         list.input.set_value("a");
@@ -111,7 +107,6 @@ mod tests {
     fn the_value_keeps_the_order_items_were_checked_in() {
         let mut list = field(&["a", "b", "c"]);
         // Uncheck "a", then check it again: it goes last.
-        let _ = list.list.on_binding(BindingId::TextualOptionListCursorDown);
         let _ = list.list.on_binding(BindingId::TextualSelectionListSelect);
         assert_eq!(list.value(), ["b", "c"]);
         let _ = list.list.on_binding(BindingId::TextualSelectionListSelect);
@@ -122,9 +117,10 @@ mod tests {
     }
 
     #[test]
-    fn the_list_starts_with_nothing_highlighted_and_caps_its_height() {
+    fn the_list_starts_on_its_first_item_and_caps_its_height() {
         let list = field(&["a", "b"]);
-        assert_eq!(list.list.highlighted(), None);
+        assert_eq!(list.list.highlighted(), Some(0));
+        assert_eq!(field(&[]).list.highlighted(), None);
         assert_eq!(list.list_height(), 4);
         assert_eq!(list.height(), 8);
         assert_eq!(field(&[]).height(), 6);

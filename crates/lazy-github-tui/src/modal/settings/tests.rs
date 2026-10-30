@@ -444,7 +444,7 @@ fn an_open_select_takes_escape_before_the_modal() {
 }
 
 #[test]
-fn a_list_fields_checklist_moves_from_no_highlight_and_toggles() {
+fn a_list_fields_checklist_starts_on_its_first_item_and_toggles() {
     let mut config = config();
     config.repositories.favorites = vec!["a/one".into(), "a/two".into()];
     let (mut app, _) = opened(&config);
@@ -454,13 +454,13 @@ fn a_list_fields_checklist_moves_from_no_highlight_and_toggles() {
         FieldWidget::List(list) => (list.list.highlighted(), list.value()),
         other => panic!("Favorites is a list, not {other:?}"),
     };
-    assert_eq!(list(&app), (None, vec!["a/one".into(), "a/two".into()]));
-    app.press(&["up"]);
-    assert_eq!(list(&app).0, Some(1));
-    app.press(&["down"]);
-    assert_eq!(list(&app).0, Some(0));
+    assert_eq!(list(&app), (Some(0), vec!["a/one".into(), "a/two".into()]));
     app.press(&["space"]);
     assert_eq!(list(&app).1, ["a/two"]);
+    app.press(&["down"]);
+    assert_eq!(list(&app).0, Some(1));
+    app.press(&["up"]);
+    assert_eq!(list(&app).0, Some(0));
     app.press(&["enter"]);
     assert_eq!(list(&app).1, ["a/two", "a/one"]);
 }
@@ -599,7 +599,7 @@ fn a_list_saves_its_checked_items_in_the_order_they_were_checked() {
     type_text(&mut app, "a/4");
     app.press(&["enter", "tab"]);
     // Uncheck "a/1" and "a/3", then check "a/1" again.
-    app.press(&["down", "space", "down", "down", "space", "up", "up", "space"]);
+    app.press(&["space", "down", "down", "space", "up", "up", "space"]);
     app.press(&["shift+enter"]);
     assert_eq!(saved(&outcome).repositories.favorites, ["a/2", "a/4", "a/1"]);
 }
@@ -692,7 +692,7 @@ fn snapshot_list_field() {
     let (mut app, _) = opened(&config);
     go_to_tab(&mut app, REPOSITORIES);
     tab_to(&mut app, SettingsFocus::ListItems(1));
-    app.press(&["down", "space"]);
+    app.press(&["space"]);
     insta::assert_snapshot!("list_field", app.screen(160, 48));
     insta::assert_snapshot!(
         "list_field_styled",

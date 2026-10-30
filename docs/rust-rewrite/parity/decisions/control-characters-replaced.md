@@ -4,7 +4,7 @@
   U+FFFD, everywhere the app shows such text, as the command log already does. Raw-text bodies from `gh` (diffs, job
   logs) are decoded lossily: invalid UTF-8 becomes U+FFFD instead of failing the request. ANSI escape sequences in job
   logs aren't interpreted: the ESC shows as U+FFFD and the rest of the sequence as text.
-- Decided by: Chris, in the #327 spec (from #201's hardening rule) and the B34 answer (2026-10-30)
+- Decided by: Chris, 2026-10-30: he approved drawing control characters as U+FFFD as an intentional diff, on top of the #327 spec and the B34 answer
 - Link: Py bug [B34](../py-bugs/B34.md), answered "follow the recommendation"; #327
 - Rows: `main-layout.text-from-github`
 

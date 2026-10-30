@@ -1,0 +1,73 @@
+version = 1
+description = "Clicking links in a markdown body: a user link opens the profile modal, an issue link opens that issue in-app with \"Opening issue for link\""
+# Not built yet: gate = false, so the Rust side shows as rust-not-ready in the report until it lands. Links that open
+# the browser change nothing on screen, so only the in-app targets are captured.
+gate = false
+parity_rows = [
+    "markdown-links.link-click",
+    "toasts.opening-for-link",
+]
+
+[env]
+# links over issue-details: GET /repos/parity-bot/issue-fixture and issue 7, so #7 resolves in-app; user-profile has
+# parity-bot's profile.
+fixtures = ["links", "issue-details", "user-profile", "base"]
+
+[[step]]
+wait = { text = "issue-fixture", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Comments that fail to load", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Issues with bodies and comments.", timeout_ms = 15000 }
+
+[[step]]
+keys = ["3", "enter"]
+
+[[step]]
+wait = { text = "Workaround: delete the file", timeout_ms = 15000 }
+
+# "cc @parity-bot" in the body.
+[[step]]
+click = { text = "cc @parity-bot", offset = [3, 0] }
+
+[[step]]
+wait = { text = "Followers: 12" }
+
+[[step]]
+move = { at = [10, 1] }
+
+[[step]]
+capture = "user"
+checks = ["titles"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Followers: 12" }
+
+# "#7" in "the same way as #7,".
+[[step]]
+click = { text = "same way as #7", offset = [12, 0] }
+
+[[step]]
+wait = { text = "Reached by following #7 from issue 12." }
+
+[[step]]
+move = { at = [10, 1] }
+
+[[step]]
+capture = "issue"
+checks = ["titles", "focus"]
+
+[expect.user]
+contains = ["Followers: 12"]
+
+[expect.issue]
+contains = ["Opening issue for link", "The issue a link points at (#7)", "Reached by following #7 from issue 12."]
+not_contains = ["Workaround: delete the file"]

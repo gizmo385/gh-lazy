@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/readme",
+    "accept": "raw"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/vnd.github.raw; charset=utf-8"
+    },
+    "body_text": "# pr-details\n\nPull requests for the PR details tabs.\n",
+    "delay_ms": 1500
+  },
+  "note": "hand-written: pr-details' README after 1.5 s. Python's README worker crashes when the README arrives while a link's pull request replaces the Repo Overview (Textual cancels it when it arrives later)"
+}

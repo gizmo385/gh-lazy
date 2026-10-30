@@ -89,22 +89,19 @@ fn many() -> Vec<PaletteCommand> {
         .collect()
 }
 
-/// LazyGithub's toggles, as the opening list ends with them.
-const TOGGLES: [&str; 4] = [
+/// LazyGithub's commands with notifications off, as the opening list ends with them.
+const APP_COMMANDS: [&str; 6] = [
     "Toggle Command Log",
     "Toggle Workflows",
     "Toggle Issues",
     "Toggle Pull Requests",
+    "Change Settings",
+    "Debug Info",
 ];
 
-/// The opening list: `system` sorted by name, then [`TOGGLES`] and "Change Settings" (Py bug B87's answer).
+/// The opening list: `system` sorted by name, then [`APP_COMMANDS`] (Py bug B87's answer).
 fn opening(system: &[&'static str]) -> Vec<&'static str> {
-    system
-        .iter()
-        .copied()
-        .chain(TOGGLES)
-        .chain(["Change Settings"])
-        .collect()
+    system.iter().copied().chain(APP_COMMANDS).collect()
 }
 
 fn styled(app: &mut TestApp) -> String {
@@ -198,6 +195,7 @@ fn lazygithubs_commands_are_in_their_order_before_the_system_ones() {
             ("Toggle Issues", CommandSource::App),
             ("Toggle Pull Requests", CommandSource::App),
             ("Change Settings", CommandSource::App),
+            ("Debug Info", CommandSource::App),
             ("Theme", CommandSource::System),
             ("Quit", CommandSource::System),
             ("Keys", CommandSource::System),
@@ -220,7 +218,7 @@ fn lazygithubs_commands_are_in_their_order_before_the_system_ones() {
 fn tog_lists_the_four_toggles_and_lazygithubs_win_ties() {
     let mut app = opened();
     type_text(&mut app, "tog");
-    assert_eq!(hits(&app), TOGGLES);
+    assert_eq!(hits(&app), APP_COMMANDS[..4]);
     // Every query's hits are best first, and on equal scores LazyGithub's come first (Py bug B86's answer).
     for query in ["t", "i", "o", "e", "s", "m"] {
         app.press(&["ctrl+u"]);
@@ -257,9 +255,15 @@ fn refresh_notifications_is_listed_only_while_notifications_are_on() {
     let mut app = TestApp::new(config);
     futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once");
     app.press(&["ctrl+p"]);
-    // Last among LazyGithub's, after the system commands in the opening list, with "Change Settings" right before.
+    // Last among LazyGithub's, after the system commands in the opening list, with "Change Settings" and
+    // "Debug Info" right before.
     assert!(
-        hits(&app).ends_with(&["Toggle Pull Requests", "Change Settings", "Refresh notifications"]),
+        hits(&app).ends_with(&[
+            "Toggle Pull Requests",
+            "Change Settings",
+            "Debug Info",
+            "Refresh notifications"
+        ]),
         "{:?}",
         hits(&app)
     );
@@ -438,10 +442,10 @@ fn up_and_down_wrap() {
     let mut app = opened();
     app.press(&["down"]);
     assert_eq!(highlighted(&app), Some("Maximize"));
-    app.press(&["down"; 8]);
+    app.press(&["down"; 9]);
     assert_eq!(highlighted(&app), Some("Keys"));
     app.press(&["up"]);
-    assert_eq!(highlighted(&app), Some("Change Settings"));
+    assert_eq!(highlighted(&app), Some("Debug Info"));
 }
 
 #[test]

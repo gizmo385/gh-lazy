@@ -1,0 +1,104 @@
+---
+source: crates/lazy-github-tui/src/modal/debug_info/tests.rs
+expression: "app.screen(160, 100)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                                                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] Details ────────────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner  Name  Private                                      ││ Introduction                                                                                 │
+│                                                              ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                         LazyGithub: A Terminal UI For GitHub (0.1.0)                         │
+│                                                              ││                                                                                              │
+│               █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█by selecting   │
+│               █                                                                                                                              █ed a           │
+│               █                                                                                                                              █ and           │
+│               █                                                                                                                              █               │
+│               █                                                       Library Versions                                                       █               │
+│               █                                                                                                                              █               │
+│               █  • LazyGithub Version: 0.1.0                                                                                                 █               │
+│               █  • Rustc Version: 1.97.0 (fixed 2026-01-01)                                                                                  █               │
+│               █  • Gh Version: 2.89.0 (fake-gh)                                                                                              █               │
+│               █  • OS: linux x86_64                                                                                                          █               │
+│               █  • Terminal: WezTerm 20240203-110809 (xterm-256color)                                                                        █articipating   │
+│               █                                                                                                                              █ for the       │
+│               █                                                                                                                              █               │
+│               █                                                      LazyGithub Config                                                       █               │
+│               █                                                                                                                              █               │
+│               █                                                                                                                              █               │
+│               █    {                                                                                                                         █               │
+│               █        "appearance": {                                                                                                       █tivate         │
+│               █            "theme": "textual-dark",                                                                                          █eans that you  │
+│               █            "show_command_log": false,                                                                                        █               │
+│               █            "show_workflows": true,                                                                                           █               │
+│               █            "show_issues": true,                                                                                              █               │
+│               █            "show_pull_requests": true                                                                                        █               │
+│               █        },                                                                                                                    █               │
+│               █        "notifications": {                                                                                                    █rts listing    │
+│               █            "enabled": false,                                                                                                 █lected repo,   │
+│               █            "mark_notification_as_read_when_selected": true                                                                   █               │
+│               █        },                                                                                                                    █               │
+│               █        "bindings": {                                                                                                         █               │
+│               █            "overrides": {}                                                                                                   █               │
+└───────────────█        },                                                                                                                    █               │
+┌─ [2] Pull Requ█        "repositories": {                                                                                                     █               │
+│ #  Status  Aut█            "additional_repos_to_track": [],                                                                                  █               │
+│               █            "favorites": []                                                                                                   █               │
+│               █        },                                                                                                                    █               │
+│               █        "pull_requests": {                                                                                                    █               │
+│               █            "state_filter": "all",                                                                                            █               │
+│               █            "owner_filter": "all",                                                                                            █               │
+│               █            "preferred_merge_method": "squash",                                                                               █               │
+│               █            "additional_suggested_pr_reviewers": [],                                                                          █               │
+│               █            "preload_pull_request_for_current_commit": false,                                                                 █               │
+│               █            "pull_request_template": null                                                                                     █               │
+│               █        },                                                                                                                    █               │
+│               █        "issues": {                                                                                                           █               │
+│               █            "state_filter": "all",                                                                                            █               │
+│               █            "owner_filter": "all"                                                                                             █               │
+│               █        },                                                                                                                    █               │
+│               █        "cache": {                                                                                                            █               │
+│               █            "auth_cache_duration": 86400,                                                                                     █               │
+└───────────────█            "auth_last_checked": null,                                                                                        █               │
+┌─ [3] Issues ──█            "cache_directory": "/home/user/.cache/lazy-github",                                                               █               │
+│ #  Status  Aut█            "default_ttl": 600,                                                                                               █               │
+│               █            "list_repos_ttl": 86400,                                                                                          █               │
+│               █            "list_issues_ttl": 3600                                                                                           █               │
+│               █        },                                                                                                                    █               │
+│               █        "core": {                                                                                                             █               │
+│               █            "first_start": true,                                                                                              █               │
+│               █            "logfile_path": "/home/user/.config/lazy-github/lazy_github.log",                                                 █               │
+│               █            "logfile_max_bytes": 5000000,                                                                                     █               │
+│               █            "logfile_count": 5                                                                                                █               │
+│               █        },                                                                                                                    █               │
+│               █        "api": {                                                                                                              █               │
+│               █            "base_url": "https://api.github.com",                                                                             █               │
+│               █            "client_type": "RAW_HTTP"                                                                                         █               │
+│               █        }                                                                                                                     █               │
+│               █    }                                                                                                                         █               │
+│               █                                                                                                                              █               │
+│               █                                                                                                                              █               │
+└───────────────█                                                                                                                              █               │
+┌─ [4] Workflows█──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────█               │
+│ Time  Result  █                                                                                                                              █               │
+│               █                                                                                                                              █               │
+│               █                                                                                                                              █               │
+│               █                                                                                                                              █               │
+│               █                                             ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                             █               │
+│               █                                              Copy to Clipboard       Close                                                   █               │
+│               █                                             ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                             █               │
+│               █                                                                                                                              █               │
+│               █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█               │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ shift+⏎ Submit  q Close

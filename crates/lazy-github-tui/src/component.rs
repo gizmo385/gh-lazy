@@ -308,6 +308,15 @@ impl LocalRepo {
     }
 }
 
+/// What's known of the installed gh's version ([`lazy_github_core::github::Github::gh_version`]).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum GhVersion {
+    /// Not asked yet this session.
+    Unknown,
+    /// Asked: the version, or `None` when gh couldn't say. A failure isn't asked again.
+    Known(Option<String>),
+}
+
 /// The state every component may read, owned by `App`.
 pub(crate) struct Shared {
     pub(crate) config: Config,
@@ -325,6 +334,8 @@ pub(crate) struct Shared {
     /// The in-app clipboard (Textual's `App.clipboard`): the last text copied or cut anywhere in the app. Only `App`
     /// writes it, when it applies `Action::Copy`.
     pub(crate) clipboard: String,
+    /// The installed gh's version, asked once per session by the first Debug Info. Only `App` writes it.
+    pub(crate) gh_version: GhVersion,
     next_request: u64,
     config_dirty: bool,
 }
@@ -347,6 +358,7 @@ impl Shared {
             local_repo: LocalRepo::Unknown,
             current_branch: None,
             clipboard: String::new(),
+            gh_version: GhVersion::Unknown,
             next_request: 1,
             config_dirty: false,
         }

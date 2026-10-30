@@ -1,0 +1,102 @@
+---
+source: crates/lazy-github-tui/src/modal/debug_info/tests.rs
+expression: "styled(&mut app, 100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Rep█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█─────────┐
+│ ★  Owner█        "core": {                                                             █         │
+│         █            "first_start": true,                                              █━━━━━━━━━│
+│         █            "logfile_path": "/home/user/.config/lazy-github/lazy_github.lo    █         │
+│         █            "logfile_max_bytes": 5000000,                                     █         │
+│         █            "logfile_count": 5                                                █)        │
+│         █        },                                                                    █         │
+│         █        "api": {                                                              █h        │
+│         █            "base_url": "https://api.github.com",                             █ the     │
+└─────────█            "client_type": "RAW_HTTP"                                         █nce      │
+┌─ [2] Pul█        }                                                                     █l        │
+│ #  Statu█    }                                                                         █d and    │
+│         █                                                                              █         │
+│         █                                                                            ▆▆█         │
+└─────────█                                                                              █o be   ▁▁│
+┌─ [3] Iss█────────────────────────────────────────────────────────────────────────────  █         │
+│ #  Statu█                                                                              █         │
+│         █                                                                              █         │
+│         █                     ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                     █         │
+└─────────█                      Copy to Clipboard       Close                           █         │
+┌─ [4] Wor█                     ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                     █ls,      │
+│ Time  Re█                                                                              █ctive    │
+│         █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█         │
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ shift+⏎ Submit  q Close
+--- styles
+....................................................................................................
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+....................................................................................................
+bbbbbbbbbbccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddd
+befeeeeeeecgghhiiiijjjjjjiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhggkkcaaaaaaaaad
+baaaaaaaaacgghhiiiiiiiijjjjjjjjjjjjjiillllihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhggkkcmmmmmmmmmd
+baaaaaaaaacgghhiiiiiiiijjjjjjjjjjjjjjiinnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnggkkcaaaaaaaood
+baaaaaaaaacgghhiiiiiiiijjjjjjjjjjjjjjjjjjjiipppppppihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhggkkcaaaaaaaood
+baaaaaaaaacgghhiiiiiiiijjjjjjjjjjjjjjjiiphhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhggkkcqqqqqaaood
+baaaaaaaaacgghhiiiiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhggkkcaaaaaaaood
+baaaaaaaaacgghhiiiijjjjjiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhggkkcaaaaaaaood
+baaaaaaaaacgghhiiiiiiiijjjjjjjjjjiinnnnnnnnnnnnnnnnnnnnnnnnihhhhhhhhhhhhhhhhhhhhhhhhhggkkcaaaaaaaood
+bbbbbbbbbbcgghhiiiiiiiijjjjjjjjjjjjjiinnnnnnnnnnhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhggkkcaaaaaaaood
+ddddddddddcgghhiiiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhggkkcaaaaaaaood
+drrrrrrrrrcgghhihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhggkkcaaaaaaaood
+daaaaaaaaacgghhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhggkkcaaaaaaaood
+daaaaaaaaacggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggsscaaaaaaaood
+ddddddddddcggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggttcuuuuaaavvd
+ddddddddddcwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwttcaaaaaaaxxd
+drrrrrrrrrcggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggttcaaaaaaaxxd
+daaaaaaaaacggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggcaaaaaaaxxd
+daaaaaaaaacgggggggggggggggggggggyyyyyyyyyyyyyyyyyyygzzzzzzzzzzzzzzzzgggggggggggggggggggggcaaaaaaaxxd
+ddddddddddcgggggggggggggggggggggAAAAAAAAAAAAAAAAAAAgBBBBCCCCCCCBBBBBgggggggggggggggggggggcaaaaaaaxxd
+ddddddddddcgggggggggggggggggggggDDDDDDDDDDDDDDDDDDDgEEEEEEEEEEEEEEEEgggggggggggggggggggggcaaaaaaaxxd
+drrrrrrrrrcggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggcaaaaaaaxxd
+dFFFFFFFFFccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccaaaaaaaxxd
+daaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxd
+daaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+GGGGGGGGGHHHHHHHGGGHHHHHHIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+--- legend
+. fg=#0a263a bg=#121212
+a fg=#646464 bg=#121212
+b fg=#2a5738 bg=#121212
+c fg=#121212 bg=#4f4f4f
+d fg=#365270 bg=#121212
+e fg=#646464 bg=#1c2024 BOLD
+f fg=#476419 bg=#1c2024 BOLD
+g fg=#e0e0e0 bg=#4f4f4f
+h fg=#e0e0e0 bg=#101010
+i fg=#ffffff bg=#101010
+j fg=#57a5e2 bg=#101010 BOLD
+k fg=#e0e0e0 bg=#000000
+l fg=#71ac84 bg=#101010 BOLD
+m fg=#1a1a1a bg=#121212
+n fg=#7dc092 bg=#101010
+o fg=#0a1e2c bg=#121212 REVERSED
+p fg=#ffc473 bg=#101010
+q fg=#0b3a5f bg=#121212 BOLD
+r fg=#646464 bg=#191d21 BOLD
+s fg=#003054 bg=#000000
+t fg=#003054 bg=#4f4f4f REVERSED
+u fg=#646464 bg=#121212 BOLD
+v fg=#0a1e2c bg=#0a0a0a REVERSED
+w fg=#004578 bg=#4f4f4f
+x fg=#646464 bg=#0a0a0a
+y fg=#7ae998 bg=#4ebf71
+z fg=#e76580 bg=#b93c5b
+A fg=#0a180e bg=#4ebf71 BOLD
+B fg=#f5e5e9 bg=#b93c5b
+C fg=#f5e5e9 bg=#b93c5b BOLD
+D fg=#008139 bg=#4ebf71
+E fg=#780028 bg=#b93c5b
+F fg=#0a1e2c bg=#161616 REVERSED
+G fg=#ffa62b bg=#242f38 BOLD
+H fg=#e0e0e0 bg=#242f38
+I fg=Reset bg=#242f38

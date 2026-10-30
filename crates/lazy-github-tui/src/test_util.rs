@@ -35,7 +35,10 @@ use crate::options::AppOptions;
 use crate::theme::Theme;
 
 /// The options every [`TestApp`] runs with unless it says otherwise: no animations.
-const TEST_OPTIONS: AppOptions = AppOptions { animations: false };
+const TEST_OPTIONS: AppOptions = AppOptions {
+    animations: false,
+    terminal: "xterm-256color",
+};
 
 /// An [`App`] under test.
 ///

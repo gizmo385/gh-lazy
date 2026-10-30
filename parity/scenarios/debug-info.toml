@@ -4,7 +4,7 @@ description = "Debug Info (command palette): the modal's Library Versions and La
 # Pydantic, Rust its rustc, gh, OS and terminal, so [expect] checks only the lines both have. The config's two paths
 # under the run's temp HOME are below what either size shows. Python clips the config at the modal's bottom with no
 # way to scroll (Py bug B95), which the 100x30 capture shows; Rust follows B95's recommendation (#312).
-gate = false
+gate = true
 parity_rows = [
     "modals.debug-bug-report",
     "modals.debug-modal-contents",

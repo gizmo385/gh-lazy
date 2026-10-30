@@ -100,7 +100,10 @@ impl<const END: bool> ListSource for TestSource<END> {
 type Section = ListSection<TestSource<false>>;
 
 fn section() -> Section {
-    ListSection::new(AppOptions { animations: false })
+    ListSection::new(AppOptions {
+        animations: false,
+        ..AppOptions::default()
+    })
 }
 
 fn numbered(range: std::ops::RangeInclusive<u64>) -> Vec<Numbered> {
@@ -171,7 +174,10 @@ fn cancels(app: &TestApp) -> Vec<RequestId> {
 
 /// A section begun for `octo/lists` with a first page of `first` items.
 fn loaded<S: ListSource<Item = Numbered>>(app: &mut TestApp, first: Vec<Numbered>) -> ListSection<S> {
-    let mut section = ListSection::new(AppOptions { animations: false });
+    let mut section = ListSection::new(AppOptions {
+        animations: false,
+        ..AppOptions::default()
+    });
     app.with_cx(|cx| {
         section.begin(&repo("octo", "lists", false), cx);
         section.first_page(Some(first.into()), cx);
@@ -450,7 +456,10 @@ fn a_short_later_page_asks_for_the_next_at_once_when_the_cursor_is_near_the_end(
 #[test]
 fn the_screen_deadline_includes_a_loading_section_table() {
     let mut app = TestApp::new(Config::default());
-    let mut animated: Section = ListSection::new(AppOptions { animations: true });
+    let mut animated: Section = ListSection::new(AppOptions {
+        animations: true,
+        ..crate::options::AppOptions::default()
+    });
     let mut still = section();
     let now = Instant::now();
     let tables = |a: &Section, b: &Section| -> Option<Instant> {

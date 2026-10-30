@@ -583,7 +583,10 @@ fn the_loading_overlay_swallows_the_mouse() {
     assert_eq!(table.cursor(), 0);
     let now = Instant::now();
     assert_eq!(table.next_deadline(now), Some(now + loading::FRAME_INTERVAL));
-    let mut still = twelve().with_options(AppOptions { animations: false });
+    let mut still = twelve().with_options(AppOptions {
+        animations: false,
+        ..AppOptions::default()
+    });
     still.set_loading(true);
     assert_eq!(still.next_deadline(now), None);
     table.set_loading(false);
@@ -640,7 +643,10 @@ fn table_empty() {
 
 #[test]
 fn table_loading_static() {
-    let mut table = twelve().with_options(AppOptions { animations: false });
+    let mut table = twelve().with_options(AppOptions {
+        animations: false,
+        ..AppOptions::default()
+    });
     table.set_loading(true);
     insta::assert_debug_snapshot!(snap(&mut table, true));
 }

@@ -1,0 +1,100 @@
+---
+source: crates/lazy-github-tui/src/modal/debug_info/tests.rs
+expression: "styled(&mut app(), 100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Rep█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█─────────┐
+│ ★  Owner█                                                                              █         │
+│         █                                                                              █━━━━━━━━━│
+│         █                              Library Versions                                █         │
+│         █                                                                            ▂▂█         │
+│         █  • LazyGithub Version: 0.1.0                                                 █)        │
+│         █  • Rustc Version: 1.97.0 (fixed 2026-01-01)                                  █         │
+│         █  • Gh Version: 2.89.0 (fake-gh)                                              █h        │
+│         █  • OS: linux x86_64                                                          █ the     │
+└─────────█  • Terminal: WezTerm 20240203-110809 (xterm-256color)                        █nce      │
+┌─ [2] Pul█                                                                              █l        │
+│ #  Statu█                                                                              █d and    │
+│         █                             LazyGithub Config                                █         │
+│         █                                                                              █         │
+└─────────█                                                                              █o be   ▁▁│
+┌─ [3] Iss█    {                                                                         █         │
+│ #  Statu█        "appearance": {                                                       █         │
+│         █                                                                              █         │
+│         █                     ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                     █         │
+└─────────█                      Copy to Clipboard       Close                           █         │
+┌─ [4] Wor█                     ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                     █ls,      │
+│ Time  Re█                                                                              █ctive    │
+│         █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█         │
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ shift+⏎ Submit  q Close
+--- styles
+....................................................................................................
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+....................................................................................................
+bbbbbbbbbbccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddd
+befeeeeeeecgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggghhcaaaaaaaaad
+baaaaaaaaacgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggghhciiiiiiiiid
+baaaaaaaaacggjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjgghhcaaaaaaakkd
+baaaaaaaaacggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggllcaaaaaaakkd
+baaaaaaaaacggmmggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggnncoooooaakkd
+baaaaaaaaacggmmggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggnncaaaaaaakkd
+baaaaaaaaacggmmggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggnncaaaaaaakkd
+baaaaaaaaacggmmggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggnncaaaaaaakkd
+bbbbbbbbbbcggmmggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggnncaaaaaaakkd
+ddddddddddcggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggnncaaaaaaakkd
+dpppppppppcggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggnncaaaaaaakkd
+daaaaaaaaacggjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjggnncaaaaaaakkd
+daaaaaaaaacggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggnncaaaaaaakkd
+ddddddddddcggqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqggnncrrrraaassd
+ddddddddddcggqqtqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqggnncaaaaaaauud
+dpppppppppcggqqttttvvvvvvvvvvvvtttqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqggnncaaaaaaauud
+daaaaaaaaacggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggcaaaaaaauud
+daaaaaaaaacgggggggggggggggggggggwwwwwwwwwwwwwwwwwwwgxxxxxxxxxxxxxxxxgggggggggggggggggggggcaaaaaaauud
+ddddddddddcgggggggggggggggggggggyyyyyyyyyyyyyyyyyyygzzzzAAAAAAAzzzzzgggggggggggggggggggggcaaaaaaauud
+ddddddddddcgggggggggggggggggggggBBBBBBBBBBBBBBBBBBBgCCCCCCCCCCCCCCCCgggggggggggggggggggggcaaaaaaauud
+dpppppppppcggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggcaaaaaaauud
+dDDDDDDDDDccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccaaaaaaauud
+daaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaauud
+daaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaauud
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+EEEEEEEEEFFFFFFFEEEFFFFFFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+--- legend
+. fg=#0a263a bg=#121212
+a fg=#646464 bg=#121212
+b fg=#2a5738 bg=#121212
+c fg=#121212 bg=#4f4f4f
+d fg=#365270 bg=#121212
+e fg=#646464 bg=#1c2024 BOLD
+f fg=#476419 bg=#1c2024 BOLD
+g fg=#e0e0e0 bg=#4f4f4f
+h fg=#003054 bg=#4f4f4f REVERSED
+i fg=#1a1a1a bg=#121212
+j fg=#0178d4 bg=#4f4f4f BOLD
+k fg=#0a1e2c bg=#121212 REVERSED
+l fg=#003054 bg=#000000 REVERSED
+m fg=#57a5e2 bg=#4f4f4f
+n fg=#e0e0e0 bg=#000000
+o fg=#0b3a5f bg=#121212 BOLD
+p fg=#646464 bg=#191d21 BOLD
+q fg=#e0e0e0 bg=#101010
+r fg=#646464 bg=#121212 BOLD
+s fg=#0a1e2c bg=#0a0a0a REVERSED
+t fg=#ffffff bg=#101010
+u fg=#646464 bg=#0a0a0a
+v fg=#57a5e2 bg=#101010 BOLD
+w fg=#7ae998 bg=#55c076
+x fg=#e76580 bg=#b93c5b
+y fg=#0b180f bg=#55c076 BOLD | REVERSED
+z fg=#f5e5e9 bg=#b93c5b
+A fg=#f5e5e9 bg=#b93c5b BOLD
+B fg=#008139 bg=#55c076
+C fg=#780028 bg=#b93c5b
+D fg=#0a1e2c bg=#161616 REVERSED
+E fg=#ffa62b bg=#242f38 BOLD
+F fg=#e0e0e0 bg=#242f38
+G fg=Reset bg=#242f38

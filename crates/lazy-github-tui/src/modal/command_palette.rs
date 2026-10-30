@@ -83,6 +83,8 @@ const INPUT_RULE_ALPHA: f64 = 0.5;
 pub enum PaletteRun {
     /// "Toggle Command Log", "Toggle Workflows", "Toggle Issues", "Toggle Pull Requests".
     Toggle(Toggle),
+    /// "Debug Info": open the Debug Info modal.
+    DebugInfo,
     /// "Refresh notifications": the poll's refresh, now.
     RefreshNotifications,
     /// "Keys": open the help panel, or close it, as `?` does.
@@ -106,6 +108,7 @@ impl PaletteRun {
     pub fn action(self) -> Action {
         match self {
             PaletteRun::Toggle(toggle) => Action::Toggle(toggle),
+            PaletteRun::DebugInfo => Action::ShowDebugInfo,
             PaletteRun::RefreshNotifications => Action::RefreshNotifications,
             PaletteRun::ToggleHelp => Action::ToggleHelp,
             PaletteRun::Maximize => Action::Maximize { toast: false },

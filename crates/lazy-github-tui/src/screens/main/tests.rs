@@ -1020,7 +1020,10 @@ fn without_animations_the_loading_table_has_no_deadline() {
     let animated = TestApp::loading_with_options(
         Config::default(),
         FakeGithub::new(),
-        crate::options::AppOptions { animations: true },
+        crate::options::AppOptions {
+            animations: true,
+            ..crate::options::AppOptions::default()
+        },
     );
     let now = crate::clock::Clock::now(animated.clock());
     assert_eq!(

@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
+use lazy_github_core::debug::DebugEnv;
 use lazy_github_core::models::Repository;
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
@@ -15,18 +16,18 @@ use tokio::time::Instant;
 use crate::action::Action;
 use crate::clock::Clock;
 use crate::component::{
-    BindingState, ChainLink, Component, Cx, LocalRepo, Outbox, Owner, RenderCx, ScreenKind, Shared,
+    BindingState, ChainLink, Component, Cx, GhVersion, LocalRepo, Outbox, Owner, RenderCx, ScreenKind, Shared,
 };
 use crate::components::command_log::Wheel;
 use crate::components::footer::{Footer, FooterHit, footer_items};
 use crate::components::help_panel::{HelpPanel, HelpScroll, help_sections, help_width};
 use crate::components::status_bar::{StatusBar, UnreadState};
-use crate::effect::{Effect, GitRequest, GitResponse, GithubResponse, RequestId, TimerId};
+use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
 use crate::modal::{
-    CommandPaletteDialog, CommandSource, DialogFrame, ModalEntry, ModalKind, PaletteCommand, PaletteRun,
-    SettingsDialog, SettingsOutcome, dim,
+    CommandPaletteDialog, CommandSource, DebugInfoDialog, DialogFrame, ModalEntry, ModalKind, PaletteCommand,
+    PaletteRun, SettingsDialog, SettingsOutcome, dim,
 };
 use crate::notifications::NotificationPoll;
 use crate::options::AppOptions;
@@ -95,6 +96,8 @@ pub struct App {
     local_repo_request: Option<RequestId>,
     /// The `CurrentBranch` request asked with it, until git answers it.
     current_branch_request: Option<RequestId>,
+    /// The `GhVersion` request a Debug Info is waiting on, until gh answers it.
+    gh_version_request: Option<RequestId>,
     /// The unread count in the status box.
     notifications: NotificationPoll,
     should_quit: bool,
@@ -120,6 +123,7 @@ impl App {
             mouse_capture: None,
             local_repo_request: None,
             current_branch_request: None,
+            gh_version_request: None,
             notifications: NotificationPoll::default(),
             should_quit: false,
         }
@@ -555,6 +559,7 @@ impl App {
                 self.set_theme(theme, out);
             }
             Action::OpenSettings | Action::SettingsClosed(_) => self.settings(&action, out),
+            Action::ShowDebugInfo => self.show_debug_info(out),
             Action::Toggle(toggle) => self.toggle(toggle, out),
             Action::Minimize => self.minimize(),
             // Python's `action_open_help`: only this closes the panel, and it doesn't move focus.
@@ -711,9 +716,30 @@ impl App {
         }
     }
 
+    /// The palette's "Debug Info": opens the Debug Info modal with the config as it is now. The first time in a
+    /// session it asks gh for its version and opens once gh answers; a second "Debug Info" meanwhile doesn't ask
+    /// again.
+    fn show_debug_info(&mut self, out: &mut Outbox) {
+        match &self.shared.gh_version {
+            GhVersion::Known(version) => {
+                // The terminal was read at startup; nothing here reads the environment.
+                let env = DebugEnv {
+                    terminal: self.shared.options.terminal.to_owned(),
+                    ..DebugEnv::detect(|_| None, version.clone())
+                };
+                let dialog = DebugInfoDialog::new(&env, &self.shared.config);
+                Cx::new(&mut self.shared, out).open_dialog(dialog, |()| Action::Consumed);
+            }
+            GhVersion::Unknown if self.gh_version_request.is_none() => {
+                self.gh_version_request = Some(Cx::new(&mut self.shared, out).request(GithubRequest::GhVersion));
+            }
+            GhVersion::Unknown => {}
+        }
+    }
+
     /// LazyGithub's own commands as they apply now, in `MainScreenCommandProvider.commands` order. They come before
-    /// the system commands, which keeps them first among equal scores (Py bug B86's answer). "Debug Info" and "Open Bug
-    /// Report" (#195) go after "Change Settings", ahead of "Refresh notifications".
+    /// the system commands, which keeps them first among equal scores (Py bug B86's answer). "Open Bug Report"
+    /// (#195) goes after "Debug Info", ahead of "Refresh notifications".
     fn app_commands(&self) -> Vec<PaletteCommand> {
         let command = |name, help, run| PaletteCommand {
             name,
@@ -744,6 +770,7 @@ impl App {
                 "Adjust LazyGithub settings",
                 PaletteRun::ChangeSettings,
             ),
+            command("Debug Info", "View Debug Information", PaletteRun::DebugInfo),
         ];
         if self.shared.config.notifications.enabled {
             commands.push(command(
@@ -901,6 +928,17 @@ impl App {
 
     /// Hands a response to the screen waiting for it.
     fn route_response(&mut self, id: RequestId, response: GithubResponse, out: &mut Outbox) {
+        if self.gh_version_request == Some(id) {
+            self.gh_version_request = None;
+            if let GithubResponse::GhVersion(result) = response {
+                let version = result
+                    .inspect_err(|error| tracing::warn!("Couldn't read gh's version: {error}"))
+                    .ok();
+                self.shared.gh_version = GhVersion::Known(version);
+                self.show_debug_info(out);
+            }
+            return;
+        }
         // Screens and panes that make other requests claim their responses here by id.
         let Some(mut response) = self
             .notifications

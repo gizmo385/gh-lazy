@@ -10,6 +10,7 @@ mod add_comment;
 mod add_reaction;
 mod command_palette;
 mod confirm;
+mod debug_info;
 mod edit_issue;
 mod focus;
 pub mod form;
@@ -49,6 +50,7 @@ pub use command_palette::{
     COMMAND_PALETTE_BINDINGS, CommandPaletteAction, CommandPaletteDialog, CommandSource, PaletteCommand, PaletteRun,
 };
 pub use confirm::{ConfirmAction, ConfirmDialog};
+pub use debug_info::{DebugInfoAction, DebugInfoDialog};
 pub use edit_issue::{EditIssueAction, EditIssueDialog};
 pub use focus::{FocusMove, FocusRing};
 pub use frame::{DIM_FACTOR, DialogFrame, default_border, dim, frame_rect, frame_rect_with_margin};
@@ -122,6 +124,8 @@ pub enum ModalKind {
     CommandPalette,
     /// [`SettingsDialog`]: "LazyGithub Settings".
     Settings,
+    /// [`DebugInfoDialog`]: the debug info, to read or copy.
+    DebugInfo,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -217,6 +221,8 @@ pub enum DialogAction {
     CommandPalette(CommandPaletteAction),
     /// [`SettingsDialog`]'s.
     Settings(SettingsAction),
+    /// [`DebugInfoDialog`]'s.
+    DebugInfo(DebugInfoAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -238,6 +244,7 @@ impl DialogAction {
             DialogAction::Notifications(_) => ModalKind::Notifications,
             DialogAction::CommandPalette(_) => ModalKind::CommandPalette,
             DialogAction::Settings(_) => ModalKind::Settings,
+            DialogAction::DebugInfo(_) => ModalKind::DebugInfo,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }

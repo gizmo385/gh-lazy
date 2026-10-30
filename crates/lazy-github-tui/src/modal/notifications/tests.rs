@@ -289,7 +289,10 @@ async fn the_first_page_splits_by_unread_and_opens_on_unread() {
 
 #[tokio::test]
 async fn the_loading_overlay_animates_until_the_first_page() {
-    let options = crate::options::AppOptions { animations: true };
+    let options = crate::options::AppOptions {
+        animations: true,
+        ..crate::options::AppOptions::default()
+    };
     let mut app = TestApp::loading_with_options(Config::default(), FakeGithub::new(), options);
     let mut harness = Harness {
         seen: app.effects().len(),

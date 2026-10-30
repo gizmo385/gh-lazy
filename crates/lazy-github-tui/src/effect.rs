@@ -128,6 +128,8 @@ pub enum TimerId {
 pub enum GithubRequest {
     /// [`Github::check_auth`].
     CheckAuth,
+    /// [`Github::gh_version`].
+    GhVersion,
     /// [`Github::current_user`].
     CurrentUser,
     /// [`Github::list_repositories`].
@@ -388,6 +390,8 @@ pub enum GithubRequest {
 pub enum GithubResponse {
     /// [`Github::check_auth`].
     CheckAuth(Result<(), GhError>),
+    /// [`Github::gh_version`].
+    GhVersion(Result<String, GhError>),
     /// [`Github::current_user`].
     CurrentUser(Result<User, GhError>),
     /// [`Github::list_repositories`].
@@ -479,6 +483,7 @@ impl GithubRequest {
     pub async fn run<G: Github>(self, gh: &G) -> GithubResponse {
         match self {
             GithubRequest::CheckAuth => GithubResponse::CheckAuth(gh.check_auth().await),
+            GithubRequest::GhVersion => GithubResponse::GhVersion(gh.gh_version().await),
             GithubRequest::CurrentUser => GithubResponse::CurrentUser(gh.current_user().await),
             GithubRequest::ListRepositories(query) => {
                 GithubResponse::ListRepositories(gh.list_repositories(query).await)

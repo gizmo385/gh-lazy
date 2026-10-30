@@ -12,8 +12,8 @@
   Python crashes on with no message of their own (the branch suggestions of Trigger workflow and the PR dialog, the
   current user for Add reaction) show the same "API Error" toast with the error's text. No retries or backoff: the
   next action simply runs `gh` again.
-- Decided by: the #323 spec (design agent, under #201's hardening rule), pending Chris's confirmation
-- Link: https://github.com/gizmo385/gh-lazy/issues/323 (parent #201)
+- Decided by: Chris, 2026-10-30 (proposed in the #323 spec under #201's hardening rule)
+- Link: https://github.com/gizmo385/gh-lazy/issues/323#issuecomment-6532454300
 - Rows: `toasts.gh-unavailable`
 
 Python's `run_gh_cli_command` creates the `gh` process outside its `try`, so a missing `gh` raises out of every

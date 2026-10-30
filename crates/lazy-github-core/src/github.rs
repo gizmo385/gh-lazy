@@ -452,8 +452,14 @@ pub enum DiffFetchError {
     #[error("Diff too large")]
     TooLarge,
     /// Any other HTTP error status.
-    #[error("Error fetching diff ({0})")]
-    Http(u16),
+    #[error("Error fetching diff ({status})")]
+    Http {
+        /// The status.
+        status: u16,
+        /// The whole failure, headers included, so a rate limit is recognised and the log has the detail.
+        #[source]
+        error: GhError,
+    },
     /// `gh` failed without an HTTP status: not installed, logged out, timed out, offline.
     #[error("Error fetching diff (0)")]
     Gh(#[source] GhError),
@@ -464,6 +470,15 @@ impl DiffFetchError {
     pub fn message(&self) -> String {
         self.to_string()
     }
+
+    /// The [`GhError`] behind it, for [`DiffFetchError::Http`] and [`DiffFetchError::Gh`]. A 404 and a 406 keep
+    /// none: neither is a rate limit or a reason to log in again.
+    pub fn gh_error(&self) -> Option<&GhError> {
+        match self {
+            DiffFetchError::NotFound | DiffFetchError::TooLarge => None,
+            DiffFetchError::Http { error, .. } | DiffFetchError::Gh(error) => Some(error),
+        }
+    }
 }
 
 impl From<GhError> for DiffFetchError {
@@ -473,7 +488,7 @@ impl From<GhError> for DiffFetchError {
         match error {
             GhError::Http { status: 404, .. } => DiffFetchError::NotFound,
             GhError::Http { status: 406, .. } => DiffFetchError::TooLarge,
-            GhError::Http { status, .. } => DiffFetchError::Http(status),
+            GhError::Http { status, .. } => DiffFetchError::Http { status, error },
             error => DiffFetchError::Gh(error),
         }
     }
@@ -2767,8 +2782,10 @@ mod tests {
         assert!(matches!(too_large, DiffFetchError::TooLarge));
         assert_eq!(too_large.message(), "Diff too large");
         let server = error("500 Internal Server Error");
-        assert!(matches!(server, DiffFetchError::Http(500)));
+        assert!(matches!(server, DiffFetchError::Http { status: 500, .. }));
         assert_eq!(server.message(), "Error fetching diff (500)");
+        assert!(matches!(server.gh_error(), Some(GhError::Http { status: 500, .. })));
+        assert!(not_found.gh_error().is_none());
         let offline = diff_text(Err(GhError::Command {
             code: Some(1),
             stderr: "error connecting to api.github.com".into(),

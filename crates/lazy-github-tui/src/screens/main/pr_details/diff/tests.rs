@@ -234,7 +234,15 @@ fn each_fetch_error_says_why() {
     let cases = [
         (DiffFetchError::NotFound, "No diff contents found"),
         (DiffFetchError::TooLarge, "Diff too large"),
-        (DiffFetchError::Http(502), "Error fetching diff (502)"),
+        (
+            DiffFetchError::from(GhError::Http {
+                status: 502,
+                message: String::new(),
+                body: Vec::new(),
+                headers: Vec::new(),
+            }),
+            "Error fetching diff (502)",
+        ),
         (DiffFetchError::Gh(GhError::NotInstalled), "Error fetching diff (0)"),
     ];
     for (error, message) in cases {

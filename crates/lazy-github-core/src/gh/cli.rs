@@ -328,11 +328,11 @@ impl GhCli {
 /// output. Output that isn't an HTTP response goes to the log file only, as it may be long or binary.
 fn log_failure(error: &GhError, stdout: &[u8]) {
     match error {
-        GhError::Http { status, .. } if error.rate_limit().is_some() => {
-            warn!(
-                "GitHub API rate limit reached (HTTP {status}): {}",
-                error.rate_limit_headers()
-            );
+        GhError::Http { status, message, .. } if error.rate_limit().is_some() => {
+            // A paginated response has no headers to show; GitHub's message is what said it's a limit.
+            let headers = error.rate_limit_headers();
+            let detail = if headers.is_empty() { message } else { &headers };
+            warn!("GitHub API rate limit reached (HTTP {status}): {detail}");
         }
         GhError::Command { .. } => warn!("{error}"),
         GhError::Parse(_) => debug!("gh printed: {}", super::response::excerpt(stdout)),

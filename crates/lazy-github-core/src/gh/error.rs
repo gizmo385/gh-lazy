@@ -75,6 +75,14 @@ fn detail_suffix(detail: &str) -> String {
     }
 }
 
+/// How long a rate limit is waited out when the response doesn't say: a minute, as GitHub's docs advise for a
+/// secondary limit that sends no `Retry-After`.
+pub const RATE_LIMIT_FALLBACK: Duration = Duration::from_mins(1);
+
+/// GitHub's messages for a rate-limited request, lowercase: the primary limit's "API rate limit exceeded for ..." and
+/// the secondary limit's "You have exceeded a secondary rate limit ...".
+const RATE_LIMIT_MESSAGES: [&str; 2] = ["api rate limit exceeded", "secondary rate limit"];
+
 /// When a GitHub rate limit lifts, read from the headers of the response that hit it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RateLimit {
@@ -125,15 +133,27 @@ impl GhError {
     /// The rate limit this failure hit, if it's one: an HTTP 403 or 429 with a `Retry-After` header (a secondary
     /// limit), or with `X-RateLimit-Remaining: 0` and an `X-RateLimit-Reset` (the primary limit). `Retry-After` wins
     /// when both are present, as GitHub's docs say. Any other 403, such as a missing permission, is `None`.
+    ///
+    /// A response with no headers (`gh api --paginate` prints none, and an error read off `gh`'s stderr has none) is
+    /// a limit when GitHub's message says so ("API rate limit exceeded", "secondary rate limit"), lifting
+    /// [`RATE_LIMIT_FALLBACK`] after it arrived.
     pub fn rate_limit(&self) -> Option<RateLimit> {
         let GhError::Http {
             status: 403 | 429,
             headers,
+            message,
             ..
         } = self
         else {
             return None;
         };
+        if headers.is_empty() {
+            let message = message.to_ascii_lowercase();
+            return RATE_LIMIT_MESSAGES
+                .iter()
+                .any(|text| message.contains(text))
+                .then_some(RateLimit::After(RATE_LIMIT_FALLBACK));
+        }
         if let Some(seconds) = find_header(headers, "retry-after").and_then(|value| value.parse::<u64>().ok()) {
             return Some(RateLimit::After(Duration::from_secs(seconds)));
         }
@@ -345,6 +365,68 @@ mod tests {
         assert_eq!(http(500, &[("Retry-After", "60")]).rate_limit(), None);
         assert_eq!(GhError::NotInstalled.rate_limit(), None);
         assert_eq!(GhError::NotInstalled.rate_limit_headers(), "");
+    }
+
+    fn http_message(status: u16, message: &str) -> GhError {
+        GhError::Http {
+            status,
+            message: message.into(),
+            body: Vec::new(),
+            headers: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn without_headers_github_s_message_says_it_s_a_limit() {
+        let fallback = Some(RateLimit::After(Duration::from_mins(1)));
+        for (status, message) in [
+            (403, "API rate limit exceeded for user ID 1."),
+            (429, "API rate limit exceeded for 203.0.113.7."),
+            (
+                403,
+                "You have exceeded a secondary rate limit. Please wait a few minutes before you try again.",
+            ),
+            (429, "You have exceeded a SECONDARY RATE LIMIT"),
+        ] {
+            assert_eq!(
+                http_message(status, message).rate_limit(),
+                fallback,
+                "{status} {message}"
+            );
+        }
+        // Another 403, another status, or no message: not a limit.
+        assert_eq!(
+            http_message(403, "Resource not accessible by integration").rate_limit(),
+            None
+        );
+        assert_eq!(http_message(500, "API rate limit exceeded").rate_limit(), None);
+        assert_eq!(http_message(403, "").rate_limit(), None);
+    }
+
+    #[test]
+    fn with_headers_only_the_headers_count() {
+        // A permission 403 that happens to quote the text, with requests left: the headers say it's not a limit.
+        let error = GhError::Http {
+            status: 403,
+            message: "API rate limit exceeded for user ID 1.".into(),
+            body: Vec::new(),
+            headers: vec![("X-RateLimit-Remaining".into(), "4999".into())],
+        };
+        assert_eq!(error.rate_limit(), None);
+    }
+
+    #[test]
+    fn a_paginated_limit_is_recognised_from_gh_s_error_line() {
+        let stdout = b"[{\"id\":1}]{\"message\":\"API rate limit exceeded for user ID 1.\"}";
+        let error = crate::gh::interpret(
+            Some(1),
+            stdout,
+            b"gh: API rate limit exceeded for user ID 1. (HTTP 403)\n",
+            true,
+        )
+        .unwrap_err();
+        assert_eq!(error.rate_limit(), Some(RateLimit::After(Duration::from_mins(1))));
+        assert_eq!(error.rate_limit_headers(), "");
     }
 
     #[test]

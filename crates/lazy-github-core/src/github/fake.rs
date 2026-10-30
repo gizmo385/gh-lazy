@@ -1360,7 +1360,10 @@ fn duplicate_diff_error(error: &DiffFetchError) -> DiffFetchError {
     match error {
         DiffFetchError::NotFound => DiffFetchError::NotFound,
         DiffFetchError::TooLarge => DiffFetchError::TooLarge,
-        DiffFetchError::Http(status) => DiffFetchError::Http(*status),
+        DiffFetchError::Http { status, error } => DiffFetchError::Http {
+            status: *status,
+            error: duplicate(error),
+        },
         DiffFetchError::Gh(error) => DiffFetchError::Gh(duplicate(error)),
     }
 }
@@ -1538,7 +1541,7 @@ mod tests {
         });
         assert!(matches!(
             github.pull_request_diff(&repo("a"), 1).await,
-            Err(DiffFetchError::Http(502))
+            Err(DiffFetchError::Http { status: 502, .. })
         ));
         // Failed calls are still recorded, and stopping goes back to the canned results.
         github.stop_failing();

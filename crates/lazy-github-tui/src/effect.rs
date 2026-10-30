@@ -478,8 +478,8 @@ pub enum GithubResponse {
 }
 
 impl GithubResponse {
-    /// The [`GhError`] the request failed with, if it failed with one. A failed diff fetch has one only when `gh`
-    /// failed without an HTTP status, as [`DiffFetchError`] keeps just the status otherwise.
+    /// The [`GhError`] the request failed with, if it failed with one. A failed diff fetch has one unless it was a
+    /// 404 or a 406 ([`DiffFetchError::gh_error`]).
     #[allow(
         clippy::match_same_arms,
         reason = "a flat table with one arm per variant, in the enum's order; merging the arms of equal result types would scatter it"
@@ -527,8 +527,7 @@ impl GithubResponse {
             GithubResponse::RequestedReviewers(result) => result.as_ref().err(),
             GithubResponse::RequestReviewers(result) => result.as_ref().err(),
             GithubResponse::UpdatePullRequest(result) => result.as_ref().err(),
-            GithubResponse::PullRequestDiff(Err(DiffFetchError::Gh(error))) => Some(error),
-            GithubResponse::PullRequestDiff(_) => None,
+            GithubResponse::PullRequestDiff(result) => result.as_ref().err().and_then(DiffFetchError::gh_error),
         }
     }
 }

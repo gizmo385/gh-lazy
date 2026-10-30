@@ -1,7 +1,8 @@
 //! GitHub's rate limits: one toast per limit window, and the notifications poll paused until the limit lifts.
 //!
 //! Python treats a rate-limited response as any other HTTP error (decision `rate-limit-toast`). Requests the user
-//! asks for still run while limited, each failing with its own error.
+//! asks for still run while limited, each failing with its own error. A `--paginate` call has no headers to say when
+//! the limit lifts, so its window is a minute ([`lazy_github_core::gh::RATE_LIMIT_FALLBACK`], #333).
 
 use jiff::Timestamp;
 use lazy_github_core::gh::GhError;
@@ -214,5 +215,73 @@ mod tests {
         settle(&mut app);
         assert_eq!(refreshes(&app), 2);
         assert_eq!(app.app().unread(), UnreadState::Count(4));
+    }
+
+    // #333: paginated calls and the PR diff.
+
+    /// A limit as a `--paginate` call sees it: GitHub's message, no headers.
+    fn paginated(status: u16, message: &str) -> GhError {
+        GhError::Http {
+            status,
+            message: message.into(),
+            body: Vec::new(),
+            headers: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn a_paginated_limit_toasts_a_minute_ahead_and_pauses_the_poll_that_long() {
+        let limited = paginated(403, "API rate limit exceeded for user ID 1.");
+        let gh = FakeGithub::new()
+            .with_repositories_error(limited)
+            .with_unread_count(Ok(2));
+        let mut app = TestApp::loading(enabled(), gh);
+        settle(&mut app);
+        assert_eq!(
+            rate_limit_toasts(&app),
+            ["GitHub API rate limit reached. Try again at 12:01"]
+        );
+        // The poll's startup refresh ran with the list; the tick at 12:01, when the fallback window ends, polls.
+        let before = refreshes(&app);
+        app.advance(REFRESH_INTERVAL);
+        settle(&mut app);
+        assert_eq!(refreshes(&app), before + 1);
+    }
+
+    #[test]
+    fn a_paginated_secondary_limit_counts_too() {
+        let limited = paginated(
+            403,
+            "You have exceeded a secondary rate limit. Please wait a few minutes before you try again.",
+        );
+        let mut app = TestApp::loading(Config::default(), FakeGithub::new().with_repositories_error(limited));
+        settle(&mut app);
+        assert_eq!(rate_limit_toasts(&app).len(), 1);
+    }
+
+    #[test]
+    fn a_paginated_permission_403_is_only_its_own_error() {
+        let forbidden = paginated(403, "Resource not accessible by integration");
+        let mut app = TestApp::loading(Config::default(), FakeGithub::new().with_repositories_error(forbidden));
+        settle(&mut app);
+        assert!(rate_limit_toasts(&app).is_empty());
+    }
+
+    #[test]
+    fn a_limited_diff_toasts_from_its_headers() {
+        use lazy_github_core::github::DiffFetchError;
+
+        let error = DiffFetchError::from(primary(10));
+        let response = crate::effect::GithubResponse::PullRequestDiff(Err(error));
+        assert!(response.error().is_some_and(|error| error.rate_limit().is_some()));
+        let mut app = TestApp::new(Config::default());
+        app.send(crate::event::Event::Github {
+            id: crate::effect::RequestId::new(999),
+            response,
+        });
+        assert_eq!(
+            rate_limit_toasts(&app),
+            ["GitHub API rate limit reached. Try again at 12:10"]
+        );
     }
 }

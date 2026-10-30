@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/user/repos",
+    "query": {
+      "direction": "asc",
+      "page": "1",
+      "per_page": "50",
+      "sort": "full_name",
+      "type": "all"
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-RateLimit-Limit": "5000",
+      "X-RateLimit-Remaining": "0",
+      "X-RateLimit-Reset": "4102444800",
+      "X-RateLimit-Resource": "core"
+    },
+    "body": {
+      "message": "API rate limit exceeded for user ID 1000001.",
+      "documentation_url": "https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+    }
+  },
+  "note": "Hand-written for rate-limited-paginated: the repos list, which the Rust app fetches with `gh api --paginate`, hits the primary rate limit. Without `-i` gh prints none of these headers, so only GitHub's message says it's a limit."
+}

@@ -320,6 +320,9 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   `notifications` scenario's loading capture. Listed before `notifications-modal`. Hand-written.
 - `repo-selected-empty/`: what selecting `parity-bot/dotfiles` loads (issues, workflows, runs, the README), all empty
   but the README. Listed before `base`, for `status-bar-current-repo`. Hand-written.
+- `rate-limited-paginated/`: base's `GET /user/repos` page 1 answered with a primary rate limit (403, "API rate limit
+  exceeded for user ID 1000001.", the `X-RateLimit-*` headers, which `gh api --paginate` doesn't print). Listed before
+  `base`, for the Rust-only `rate-limited-paginated` scenario (#333). Hand-written.
 - `repo-overview/`: for the `repo-overview` scenario (#219). Base's `GET /user/repos` page with `parity-bot/lazy-demo`
   archived and without a description; READMEs for `parity-bot/hello-world` (most CommonMark and GFM blocks,
   two tables, served after 1.5 s so the loading state can be captured), `parity-bot/lazy-demo` (a 404) and

@@ -1,0 +1,39 @@
+version = 1
+description = "A rate limit on a paginated call: the repos list (gh api --paginate, which prints no headers) gets a 403 whose message says the API rate limit is exceeded, so the app shows the \"Rate limited\" toast with the one-minute fallback window and logs the message"
+gate = true
+apps = ["rust"]
+parity_rows = ["toasts.rate-limited"]
+sizes = [[160, 48]]
+
+[env]
+# rate-limited-paginated answers the repos list with a primary-limit 403; base has the rest.
+fixtures = ["rate-limited-paginated", "base"]
+
+[env.config_overrides]
+appearance = { show_command_log = true }
+
+[[step]]
+wait = { text = "Rate limited", timeout_ms = 15000 }
+
+[[step]]
+capture = "limited"
+
+# The toast times out after 5 s, uncovering the command log.
+[[step]]
+wait = { gone = "Rate limited", timeout_ms = 15000 }
+
+[[step]]
+capture = "log"
+
+[expect.limited]
+# The reset is a minute after the response, in the run's own clock, so only the start of the message is fixed.
+contains = ["Rate limited", "GitHub API rate limit reached. Try again at"]
+not_contains = ["panicked"]
+
+[expect.log]
+contains = [
+    # The narrow command log cuts the line; the log file has GitHub's message in full.
+    "GitHub API rate limit reached (HTTP 403): API rate limit excee",
+    "Error fetching repositories from Github API",
+]
+not_contains = ["Loading", "panicked"]

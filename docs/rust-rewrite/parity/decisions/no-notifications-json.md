@@ -11,5 +11,5 @@ count comes from its own request. Writing it only leaves a stale copy of the use
 user sees changes; a unit test checks that the Rust app writes nothing.
 
 Superseded by [notifications-cache](./notifications-cache.md) (#332, 2026-10-30): Chris asked for a cache the modal
-reads, so the Rust app writes `notifications.json` again, in Python's shape, and reads it when the modal opens. If
-he picks the in-memory option on #332 instead, this decision stands and the file is still never written.
+reads, so the Rust app writes `notifications.json` again, in Python's shape, and reads it when the modal opens. He
+chose the on-disk file (D1), so this decision no longer applies.

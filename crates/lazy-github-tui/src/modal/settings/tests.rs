@@ -7,6 +7,7 @@ use lazy_github_core::config::{IssueOwnerFilter, IssueStateFilter, MergeMethod};
 
 use super::*;
 use crate::components::footer::footer_items;
+use crate::keymap::KeySpec;
 use crate::test_util::TestApp;
 use crate::toast::Severity;
 
@@ -338,9 +339,12 @@ fn the_ring_holds_the_active_tabs_fields_and_wraps_both_ways() {
             Cancel
         ]
     );
-    // The Key Bindings tab has none until #194.
+    // The Key Bindings tab has its rows instead of fields.
     app.press(&["left"]);
-    assert_eq!(ring_forward(&mut app), [Tabs, Scroll, Save, Cancel]);
+    let mut expected = vec![Tabs, Scroll];
+    expected.extend((0..59).map(KeyRow));
+    expected.extend([Save, Cancel]);
+    assert_eq!(ring_forward(&mut app), expected);
     // Api's disabled select is skipped.
     app.press(&["left", "left", "left"]);
     assert_eq!(active_tab(&app), API);
@@ -1006,4 +1010,202 @@ fn snapshot_search_pull_requests() {
     app.press(&["enter", "tab", "right", "right", "right", "right", "shift+tab"]);
     assert_eq!(focused(&app), Some(SettingsFocus::Search));
     insta::assert_snapshot!("search_pull_requests", app.screen(160, 48));
+}
+
+// The Key Bindings tab (#194).
+
+const KEY_BINDINGS: usize = 2;
+
+fn key_rows(app: &TestApp) -> &[key_row::KeyRow] {
+    &dialog(app).panes[KEY_BINDINGS].keys
+}
+
+fn key_value(app: &TestApp, config_id: &str) -> String {
+    let id = BindingId::from_config_id(config_id).expect("a binding");
+    key_rows(app)
+        .iter()
+        .find(|row| row.id == id)
+        .expect("a row")
+        .value
+        .clone()
+}
+
+/// The modal on the Key Bindings tab with the `app.open_help` row ("Keybindings", the third) focused.
+fn on_help_row(config: &Config) -> (TestApp, Outcome) {
+    let (mut app, outcome) = opened(config);
+    go_to_tab(&mut app, KEY_BINDINGS);
+    tab_to(&mut app, SettingsFocus::KeyRow(2));
+    (app, outcome)
+}
+
+#[test]
+fn the_key_rows_are_every_overridable_binding_sorted_by_id() {
+    let (app, _) = opened(&config());
+    let rows = key_rows(&app);
+    let ids: Vec<&str> = rows.iter().filter_map(|row| row.id.config_id()).collect();
+    let mut sorted = ids.clone();
+    sorted.sort_unstable();
+    assert_eq!(ids, sorted);
+    assert_eq!(ids.len(), 59);
+    assert_eq!(
+        &ids[..4],
+        [
+            "app.command_palette",
+            "app.maximize_widget",
+            "app.open_help",
+            "app.quit"
+        ]
+    );
+    assert_eq!(rows[2].label(), "Keybindings: ");
+    assert_eq!(rows[2].value, "?");
+    // Every row is labelled by its description, or its id when it has none.
+    for row in rows {
+        let description = row.id.def().description;
+        let expected = if description.is_empty() {
+            row.id.config_id().unwrap_or_default()
+        } else {
+            description
+        };
+        assert_eq!(row.label(), format!("{expected}: "));
+    }
+}
+
+#[test]
+fn a_row_shows_its_override_as_written() {
+    let mut config = config();
+    config.bindings.overrides.insert("app.quit".into(), "ctrl+x, f9".into());
+    let (app, _) = opened(&config);
+    assert_eq!(key_value(&app, "app.quit"), "ctrl+x, f9");
+}
+
+#[test]
+fn a_focused_row_takes_every_key_but_the_focus_moves() {
+    let (mut app, outcome) = on_help_row(&config());
+    for (key, name) in [
+        ("q", "q"),
+        ("/", "slash"),
+        ("shift+enter", "shift+enter"),
+        ("enter", "enter"),
+        ("space", "space"),
+        ("ctrl+c", "ctrl+c"),
+        ("!", "exclamation_mark"),
+    ] {
+        app.press(&[key]);
+        assert_eq!(app.app().modals(), [ModalKind::Settings], "{key} closed the modal");
+        assert_eq!(focused(&app), Some(SettingsFocus::KeyRow(2)));
+        assert_eq!(key_value(&app, "app.open_help"), name);
+    }
+    assert!(outcome.lock().expect("not poisoned").is_none());
+    app.press(&["tab"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::KeyRow(3)));
+    app.press(&["shift+tab"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::KeyRow(2)));
+    assert_eq!(key_value(&app, "app.open_help"), "exclamation_mark");
+}
+
+#[test]
+fn ctrl_q_still_quits_from_a_row() {
+    let (mut app, _) = on_help_row(&config());
+    app.press(&["ctrl+q"]);
+    assert_eq!(key_value(&app, "app.open_help"), "?");
+    assert!(app.app().should_quit());
+}
+
+#[test]
+fn escape_resets_a_row_to_its_default_key_string() {
+    let mut config = config();
+    config.bindings.overrides.insert("app.quit".into(), "x".into());
+    let (mut app, _) = opened(&config);
+    go_to_tab(&mut app, KEY_BINDINGS);
+    tab_to(&mut app, SettingsFocus::KeyRow(3));
+    app.press(&["escape"]);
+    assert_eq!(key_value(&app, "app.quit"), "q");
+    assert_eq!(app.app().modals(), [ModalKind::Settings]);
+}
+
+#[test]
+fn save_writes_overrides_in_place_appends_new_ones_and_removes_defaults() {
+    let mut config = config();
+    let overrides = &mut config.bindings.overrides;
+    overrides.insert("app.quit".into(), "x".into());
+    overrides.insert("not.a_binding".into(), "z".into());
+    overrides.insert("app.maximize_widget".into(), "f2".into());
+    let (mut app, outcome) = opened(&config);
+    go_to_tab(&mut app, KEY_BINDINGS);
+    // `app.quit` back to its default; `app.maximize_widget` changed in place; `app.open_help` added.
+    tab_to(&mut app, SettingsFocus::KeyRow(3));
+    app.press(&["escape"]);
+    app.press(&["shift+tab"]);
+    app.press(&["!"]);
+    app.press(&["shift+tab"]);
+    app.press(&["f3"]);
+    app.press(&["shift+tab"]);
+    app.press(&["shift+tab"]);
+    app.press(&["shift+tab"]);
+    app.press(&["shift+tab"]);
+    app.press(&["shift+tab"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::Save));
+    app.press(&["enter"]);
+    let saved = saved(&outcome);
+    let written: Vec<(&str, &str)> = saved
+        .bindings
+        .overrides
+        .iter()
+        .map(|(id, keys)| (id.as_str(), keys.as_str()))
+        .collect();
+    assert_eq!(
+        written,
+        [
+            ("not.a_binding", "z"),
+            ("app.maximize_widget", "f3"),
+            ("app.open_help", "exclamation_mark")
+        ]
+    );
+}
+
+#[test]
+fn pressing_a_differently_spelled_default_saves_an_override() {
+    // Py bug B93, answered: keep parity.
+    let (mut app, _) = on_help_row(&config());
+    app.press(&["?"]);
+    assert_eq!(key_value(&app, "app.open_help"), "question_mark");
+    let collected = dialog(&app).collect(&config()).expect("valid");
+    assert_eq!(
+        collected.bindings.overrides.get("app.open_help").map(String::as_str),
+        Some("question_mark")
+    );
+}
+
+#[test]
+fn a_non_ascii_key_is_saved_as_itself_and_reads_back() {
+    let (mut app, _) = on_help_row(&config());
+    app.press(&["£"]);
+    let collected = dialog(&app).collect(&config()).expect("valid");
+    assert_eq!(
+        collected.bindings.overrides.get("app.open_help").map(String::as_str),
+        Some("£")
+    );
+    let keymap = Keymap::new(&collected.bindings.overrides);
+    let pound = KeySpec::Chord(KeyChord::new(KeyCode::Char('£'), KeyModifiers::NONE));
+    assert!(keymap.keys(BindingId::AppOpenHelp).iter().any(|(_, key)| *key == pound));
+}
+
+#[test]
+fn search_matches_a_rows_description_or_id() {
+    let (mut app, _) = opened(&config());
+    search(&mut app, "keybindings");
+    let pane = &dialog(&app).panes[KEY_BINDINGS];
+    assert!(pane.stops().contains(&SettingsFocus::KeyRow(2)));
+    assert!(!pane.stops().contains(&SettingsFocus::KeyRow(3)));
+    search(&mut app, "app.quit");
+    let pane = &dialog(&app).panes[KEY_BINDINGS];
+    assert_eq!(pane.stops(), [SettingsFocus::KeyRow(3)]);
+}
+
+#[test]
+fn snapshot_key_bindings() {
+    let (mut app, _) = on_help_row(&config());
+    insta::assert_snapshot!("key_bindings_focused", app.screen(160, 48));
+    app.press(&["!"]);
+    insta::assert_snapshot!("key_bindings_captured", app.screen(160, 48));
 }

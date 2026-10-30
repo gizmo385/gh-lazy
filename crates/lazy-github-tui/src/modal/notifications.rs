@@ -818,7 +818,8 @@ impl Dialog for NotificationsDialog {
             | FieldKind::Switch
             | FieldKind::Select
             | FieldKind::SelectOverlay
-            | FieldKind::SelectionList => None,
+            | FieldKind::SelectionList
+            | FieldKind::KeyCapture => None,
         }
     }
 

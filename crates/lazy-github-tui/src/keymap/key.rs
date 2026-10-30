@@ -215,15 +215,7 @@ fn parse_chord(token: &str) -> Option<KeyChord> {
     let name = parts.pop()?;
     let mut mods = KeyModifiers::NONE;
     for modifier in parts {
-        mods |= match modifier {
-            "ctrl" => KeyModifiers::CONTROL,
-            "shift" => KeyModifiers::SHIFT,
-            "alt" => KeyModifiers::ALT,
-            "meta" => KeyModifiers::META,
-            "super" => KeyModifiers::SUPER,
-            "hyper" => KeyModifiers::HYPER,
-            _ => return None,
-        };
+        mods |= MODIFIERS.iter().find(|&&(name, _)| name == modifier)?.1;
     }
     let code = key_code(name)?;
     if let KeyCode::Char(c) = code
@@ -238,39 +230,78 @@ fn parse_chord(token: &str) -> Option<KeyChord> {
     Some(KeyChord::new(code, mods))
 }
 
+/// Textual's names for the keys that aren't characters, shared by the parser and [`textual_name`].
+const NAMED_KEYS: &[(&str, KeyCode)] = &[
+    ("enter", KeyCode::Enter),
+    ("escape", KeyCode::Esc),
+    ("tab", KeyCode::Tab),
+    ("space", KeyCode::Char(' ')),
+    ("backspace", KeyCode::Backspace),
+    ("delete", KeyCode::Delete),
+    ("insert", KeyCode::Insert),
+    ("home", KeyCode::Home),
+    ("end", KeyCode::End),
+    ("pageup", KeyCode::PageUp),
+    ("pagedown", KeyCode::PageDown),
+    ("up", KeyCode::Up),
+    ("down", KeyCode::Down),
+    ("left", KeyCode::Left),
+    ("right", KeyCode::Right),
+];
+
+/// Textual's modifier names, in the sorted order it writes them before the key.
+const MODIFIERS: &[(&str, KeyModifiers)] = &[
+    ("alt", KeyModifiers::ALT),
+    ("ctrl", KeyModifiers::CONTROL),
+    ("hyper", KeyModifiers::HYPER),
+    ("meta", KeyModifiers::META),
+    ("shift", KeyModifiers::SHIFT),
+    ("super", KeyModifiers::SUPER),
+];
+
 fn key_code(name: &str) -> Option<KeyCode> {
     let mut chars = name.chars();
     if let (Some(c), None) = (chars.next(), chars.next()) {
         return Some(KeyCode::Char(c));
     }
-    let code = match name {
-        "enter" => KeyCode::Enter,
-        "escape" => KeyCode::Esc,
-        "tab" => KeyCode::Tab,
-        "space" => KeyCode::Char(' '),
-        "backspace" => KeyCode::Backspace,
-        "delete" => KeyCode::Delete,
-        "insert" => KeyCode::Insert,
-        "home" => KeyCode::Home,
-        "end" => KeyCode::End,
-        "pageup" => KeyCode::PageUp,
-        "pagedown" => KeyCode::PageDown,
-        "up" => KeyCode::Up,
-        "down" => KeyCode::Down,
-        "left" => KeyCode::Left,
-        "right" => KeyCode::Right,
-        _ => {
-            if let Some(n) = name.strip_prefix('f').and_then(|n| n.parse::<u8>().ok())
-                && (1..=24).contains(&n)
-                && !name.starts_with("f0")
-            {
-                return Some(KeyCode::F(n));
-            }
-            let &(_, c) = PUNCTUATION.iter().find(|&&(punctuation, _)| punctuation == name)?;
-            KeyCode::Char(c)
-        }
+    if let Some(&(_, code)) = NAMED_KEYS.iter().find(|&&(named, _)| named == name) {
+        return Some(code);
+    }
+    if let Some(n) = name.strip_prefix('f').and_then(|n| n.parse::<u8>().ok())
+        && (1..=24).contains(&n)
+        && !name.starts_with("f0")
+    {
+        return Some(KeyCode::F(n));
+    }
+    let &(_, c) = PUNCTUATION.iter().find(|&&(punctuation, _)| punctuation == name)?;
+    Some(KeyCode::Char(c))
+}
+
+/// The name Textual gives a key press, as the Settings screen records it: the inverse of [`KeySpec::parse`]. A
+/// letter or digit is itself (`a`, `M`, `é`), ASCII punctuation and named keys go by Textual's names
+/// (`question_mark`, `space`, `pagedown`, `f5`), and modifiers come first in Textual's sorted order (`ctrl+a`,
+/// `alt+shift+x`). Other non-ASCII characters are written as themselves (`£`, where Textual writes `pound_sign`;
+/// decision `key-names-non-ascii-literal`).
+///
+/// `None` for `tab` and `escape`, which a Settings row doesn't record, and for keys Textual has no name for.
+pub fn textual_name(chord: &KeyChord) -> Option<String> {
+    let key = match chord.code {
+        KeyCode::Tab | KeyCode::Esc => return None,
+        KeyCode::Char(c) => match PUNCTUATION.iter().find(|&&(_, punctuation)| punctuation == c) {
+            Some(&(name, _)) => name.to_owned(),
+            None if c == ' ' => "space".to_owned(),
+            None => c.to_string(),
+        },
+        KeyCode::F(n) if (1..=24).contains(&n) => format!("f{n}"),
+        code => NAMED_KEYS.iter().find(|&&(_, named)| named == code)?.0.to_owned(),
     };
-    Some(code)
+    let mut parts: Vec<&str> = MODIFIERS
+        .iter()
+        .filter(|&&(_, modifier)| chord.mods.contains(modifier))
+        .map(|&(name, _)| name)
+        .collect();
+    parts.push(&key);
+    Some(parts.join("+"))
 }
 
 /// Textual's `format_key`: display aliases, punctuation names as their character, anything else as written.
@@ -574,5 +605,82 @@ mod tests {
     #[case(" h ", "h")]
     fn displays(#[case] token: &str, #[case] expected: &str) {
         assert_eq!(KeySpec::display(token), expected);
+    }
+
+    fn named(chord: KeyChord) -> String {
+        textual_name(&chord).unwrap_or_else(|| panic!("{chord:?} has no name"))
+    }
+
+    /// Every key a Settings row can record: printable ASCII, `space`, the named keys and `f1`-`f24`.
+    fn recordable_codes() -> Vec<KeyCode> {
+        let mut codes: Vec<KeyCode> = (' '..='~').map(KeyCode::Char).collect();
+        codes.extend(
+            NAMED_KEYS
+                .iter()
+                .map(|&(_, code)| code)
+                .filter(|code| !matches!(code, KeyCode::Tab | KeyCode::Esc | KeyCode::Char(_))),
+        );
+        codes.extend((1..=24).map(KeyCode::F));
+        codes
+    }
+
+    #[test]
+    fn textual_names_round_trip_with_the_parser() {
+        let mods = [
+            KeyModifiers::NONE,
+            KeyModifiers::CONTROL,
+            KeyModifiers::ALT,
+            KeyModifiers::SHIFT,
+            KeyModifiers::CONTROL | KeyModifiers::SHIFT,
+            KeyModifiers::ALT | KeyModifiers::SHIFT,
+            KeyModifiers::CONTROL | KeyModifiers::ALT,
+        ];
+        for code in recordable_codes() {
+            for mods in mods {
+                let chord = KeyChord::new(code, mods);
+                let name = named(chord);
+                assert_eq!(parsed(&name), chord, "{name}");
+                assert_eq!(named(parsed(&name)), name);
+            }
+        }
+    }
+
+    #[rstest]
+    #[case(plain(KeyCode::Char('a')), "a")]
+    #[case(plain(KeyCode::Char('A')), "A")]
+    #[case(plain(KeyCode::Char('1')), "1")]
+    #[case(plain(KeyCode::Char('é')), "é")]
+    #[case(plain(KeyCode::Char('£')), "£")]
+    #[case(plain(KeyCode::Char('!')), "exclamation_mark")]
+    #[case(plain(KeyCode::Char('?')), "question_mark")]
+    #[case(plain(KeyCode::Char('/')), "slash")]
+    #[case(plain(KeyCode::Char('^')), "circumflex_accent")]
+    #[case(plain(KeyCode::Char(' ')), "space")]
+    #[case(plain(KeyCode::Enter), "enter")]
+    #[case(plain(KeyCode::PageDown), "pagedown")]
+    #[case(plain(KeyCode::F(12)), "f12")]
+    #[case(ctrl('a'), "ctrl+a")]
+    #[case(KeyChord::new(KeyCode::Char('X'), KeyModifiers::ALT), "alt+shift+x")]
+    #[case(KeyChord::new(KeyCode::Up, KeyModifiers::CONTROL | KeyModifiers::SHIFT), "ctrl+shift+up")]
+    #[case(KeyChord::new(KeyCode::Char(' '), KeyModifiers::SHIFT), "shift+space")]
+    #[case(KeyChord::new(KeyCode::Enter, KeyModifiers::SHIFT), "shift+enter")]
+    fn textual_names(#[case] chord: KeyChord, #[case] expected: &str) {
+        assert_eq!(named(chord), expected);
+    }
+
+    #[test]
+    fn non_ascii_characters_read_back_to_the_same_key() {
+        let pound = plain(KeyCode::Char('£'));
+        assert_eq!(parsed(&named(pound)), pound);
+    }
+
+    #[rstest]
+    #[case(plain(KeyCode::Tab))]
+    #[case(KeyChord::new(KeyCode::BackTab, KeyModifiers::NONE))]
+    #[case(plain(KeyCode::Esc))]
+    #[case(plain(KeyCode::CapsLock))]
+    #[case(plain(KeyCode::F(25)))]
+    fn keys_a_row_does_not_record(#[case] chord: KeyChord) {
+        assert_eq!(textual_name(&chord), None);
     }
 }

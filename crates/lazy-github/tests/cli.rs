@@ -583,13 +583,16 @@ fn debug_with_a_broken_config_is_one_error_line() {
 #[test]
 fn debug_creates_nothing() {
     let home = TempHome::new("debug-no-side-effects");
-    let output = home.run(&["debug"]);
+    // fake-gh for `gh --version`: a real gh may write its own state under `$HOME` (`.local/state/gh/device-id`).
+    let bin = fake_gh_bin();
+    let run = |args: &[&str]| home.command(args).env("PATH", &bin.0).output().unwrap();
+    let output = run(&["debug"]);
     assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
     assert_eq!(home.contents(), Vec::<PathBuf>::new());
 
     // No log file appears in a config folder that's already there.
     home.write_config("{}");
-    let output = home.run(&["debug"]);
+    let output = run(&["debug"]);
     assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
     assert_eq!(
         home.contents(),

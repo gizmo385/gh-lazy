@@ -692,10 +692,10 @@ fn check_config_on_invalid_json_points_at_clear_config() {
         assert_eq!(text(&output.stdout), "");
         let stderr = text(&output.stderr);
         let lines: Vec<&str> = stderr.lines().collect();
-        assert_eq!(lines.len(), 2, "{stderr:?}");
+        assert_eq!(lines.len(), 1, "{stderr:?}");
         assert!(lines[0].starts_with("Error: "), "{stderr:?}");
         assert!(lines[0].contains("is not valid JSON (line 1, column 11)"), "{stderr:?}");
-        assert_eq!(lines[1], "Run lazy-github clear-config to start over.");
+        assert!(lines[0].contains("`lazy-github clear-config`"), "{stderr:?}");
         assert!(!backup(&home).exists());
     }
 }

@@ -10,8 +10,6 @@ use lazy_github_core::config::{ConfigError, ConfigPaths};
 use super::clear::{Answer, ask};
 use super::{aborted, error, finish};
 
-const START_OVER: &str = "Run lazy-github clear-config to start over.";
-
 /// `lazy-github check-config [--fix [--no-confirm]]`. Without `fix` it only reports. With it, each problem is
 /// offered for a reset on `stdin`, or all are reset when `stdin` is `None` (`--no-confirm`). Exits 0 when no
 /// problems remain.
@@ -45,12 +43,6 @@ pub fn check_config(
     };
     let report = match doctor::check(&text, &paths) {
         Ok(report) => report,
-        Err(e @ ConfigError::Syntax { .. }) => {
-            let code = error(stderr, e);
-            // Nothing is left to report a failed write to.
-            let _ = writeln!(stderr, "{START_OVER}");
-            return code;
-        }
         Err(e) => return error(stderr, e),
     };
     let result = (|| {

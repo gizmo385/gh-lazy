@@ -97,8 +97,11 @@ pub struct TextInput {
     /// cursor against it (Textual's `_selecting`).
     selecting: Option<Rect>,
     placeholder: &'static str,
-    /// The first text cell shown, which follows the cursor.
-    scroll: usize,
+    /// The first text cell shown, which follows the cursor; `None` before it does. Textual's `_initial_value` keeps an
+    /// input's view at the text's start, with the cursor at its end, until the cursor or selection first changes: on
+    /// focus (`select_on_focus`), a key, a press or the owner moving it. So an input built with a long value shows
+    /// its start until then.
+    scroll: Option<usize>,
     /// The last validation failed: Textual's `-invalid` class, drawn as a red border.
     invalid: bool,
     /// Textual's `disabled`: drawn faded and never focused, and presses do nothing.
@@ -123,7 +126,7 @@ impl TextInput {
             anchor: None,
             selecting: None,
             placeholder,
-            scroll: 0,
+            scroll: None,
             invalid: false,
             disabled: false,
             filter: None,
@@ -233,6 +236,7 @@ impl TextInput {
         self.anchor = Some(0);
         self.cursor = self.len();
         self.suggestion = None;
+        self.follow_cursor();
     }
 
     /// The selection's fixed end: where it started, or the cursor when nothing is selected. With
@@ -245,6 +249,7 @@ impl TextInput {
     pub fn set_cursor(&mut self, index: usize) {
         self.cursor = index.min(self.len());
         self.anchor = None;
+        self.follow_cursor();
     }
 
     /// The selected chars as `(start, end)` with `start < end`, when anything is selected.
@@ -273,14 +278,31 @@ impl TextInput {
     /// selected text, paste types `clipboard` (the in-app clipboard, [`Cx::clipboard`](crate::component::Cx::clipboard)),
     /// and anything else is [`InputOutcome::Ignored`].
     pub fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str) -> InputOutcome {
-        if let Some(c) = printable(key) {
+        let before = (self.cursor, self.anchor());
+        let outcome = if let Some(c) = printable(key) {
             self.replace_selection(c.encode_utf8(&mut [0; 4]));
-            return InputOutcome::Changed;
+            InputOutcome::Changed
+        } else {
+            match keymap.match_in(INPUT_BINDINGS, key) {
+                Some(id) => self.on_binding(id, clipboard),
+                None => InputOutcome::Ignored,
+            }
+        };
+        self.follow_if_moved(before);
+        outcome
+    }
+
+    /// Starts following the cursor if it or the selection moved from `before` (`(cursor, anchor)`): Textual's
+    /// `_watch_selection`, which only scrolls on a change.
+    fn follow_if_moved(&mut self, before: (usize, usize)) {
+        if (self.cursor, self.anchor()) != before {
+            self.follow_cursor();
         }
-        match keymap.match_in(INPUT_BINDINGS, key) {
-            Some(id) => self.on_binding(id, clipboard),
-            None => InputOutcome::Ignored,
-        }
+    }
+
+    /// The view follows the cursor from now on, starting from the text's start where it's been.
+    fn follow_cursor(&mut self) {
+        self.scroll.get_or_insert(0);
     }
 
     fn on_binding(&mut self, id: BindingId, clipboard: &str) -> InputOutcome {
@@ -406,7 +428,9 @@ impl TextInput {
     /// A bracketed paste: only its first line goes in, as Textual's `Input._on_paste` does with `splitlines()[0]`.
     pub fn handle_paste(&mut self, text: &str) {
         let line = text.split(is_line_break).next().unwrap_or_default();
+        let before = (self.cursor, self.anchor());
         self.replace_selection(line);
+        self.follow_if_moved(before);
     }
 
     fn len(&self) -> usize {
@@ -423,6 +447,7 @@ impl TextInput {
         self.cursor = self.index_at(area, column);
         self.anchor = Some(self.cursor);
         self.selecting = Some(area);
+        self.follow_cursor();
     }
 
     /// The pointer moved to `column` with the button still down: the cursor follows it and the anchor stays where the
@@ -470,7 +495,7 @@ impl TextInput {
             usize::from(area.x) + 1 + usize::from(PADDING)
         };
         // Left of the text, which starts `scroll` cells before the text area, the offset would be negative.
-        let Some(offset) = (usize::from(column) + self.scroll).checked_sub(text_x) else {
+        let Some(offset) = (usize::from(column) + self.scroll.unwrap_or(0)).checked_sub(text_x) else {
             return 0;
         };
         let mut left = 0;
@@ -586,7 +611,9 @@ impl TextInput {
         let width = usize::from(text.width);
         let mut cells: Vec<(char, Style)> = Vec::new();
         if self.value.is_empty() {
-            self.scroll = 0;
+            if let Some(scroll) = &mut self.scroll {
+                *scroll = 0;
+            }
             cells.extend(self.placeholder.chars().map(|c| (c, styles.placeholder)));
             if focused {
                 match cells.first_mut() {
@@ -623,22 +650,29 @@ impl TextInput {
                     cell.1 = styles.cursor_over(cell.1);
                 }
             }
-            // Scroll so the cursor's cell is in view, as Textual's `scroll_to_region` does on every move.
-            let before: usize = cells.iter().take(self.cursor).map(|&(c, _)| char_width(c)).sum();
-            let at = cells.get(self.cursor).map_or(1, |&(c, _)| char_width(c));
-            if before < self.scroll {
-                self.scroll = before;
-            } else if before + at > self.scroll + width {
-                self.scroll = before + at - width;
+            // Scroll so the cursor's cell is in view, as Textual's `scroll_to_region` does on every move, once the
+            // view follows the cursor. Every Python input selects all on focus, so focus counts as the first move.
+            if focused {
+                self.follow_cursor();
+            }
+            if let Some(scroll) = &mut self.scroll {
+                let before: usize = cells.iter().take(self.cursor).map(|&(c, _)| char_width(c)).sum();
+                let at = cells.get(self.cursor).map_or(1, |&(c, _)| char_width(c));
+                if before < *scroll {
+                    *scroll = before;
+                } else if before + at > *scroll + width {
+                    *scroll = before + at - width;
+                }
             }
         }
         let line: Line<'_> = cells
             .into_iter()
             .map(|(c, style)| Span::styled(c.to_string(), style))
             .collect();
+        let scroll = self.scroll.unwrap_or(0);
         Paragraph::new(line)
             .style(styles.text)
-            .scroll((0, u16::try_from(self.scroll).unwrap_or(u16::MAX)))
+            .scroll((0, u16::try_from(scroll).unwrap_or(u16::MAX)))
             .render(text, buf);
     }
 }
@@ -1246,7 +1280,7 @@ mod tests {
     #[test]
     fn a_drag_in_a_scrolled_view_counts_the_scroll() {
         let mut input = input("abcdefghijklmnopqrstuvwxyz0123456789", 30);
-        input.scroll = 10;
+        input.scroll = Some(10);
         // The first text cell shows `k`.
         input.press(AREA, 13);
         assert_eq!(input.cursor(), 10);
@@ -1478,6 +1512,42 @@ mod tests {
         let mut input = TextInput::new("").with_suggestions(vec!["parity-bot/a-long-branch-name".to_owned()]);
         press_all(&mut input, &["p", "a", "r", "i", "t", "y", "-", "b", "o"]);
         insta::assert_snapshot!(draw_suggesting(&mut input, 14, true));
+    }
+
+    /// The text row of `input` drawn `width` cells wide, padding included.
+    fn text_row(input: &mut TextInput, width: u16, focused: bool) -> String {
+        let theme = crate::theme::Theme::default();
+        let mut buf = Buffer::empty(Rect::new(0, 0, width, HEIGHT));
+        let under = theme.palette.surface.over(theme.background());
+        let area = buf.area;
+        input.render(&mut buf, area, &theme, under, focused);
+        (0..width).map(|x| buf[(x, 1)].symbol().to_owned()).collect()
+    }
+
+    #[test]
+    fn a_long_value_shows_its_start_until_the_cursor_first_moves() {
+        // Ten text cells. Built with the value, the cursor is at its end but the view stays at its start
+        // (Textual's `_initial_value`), and it stays there across redraws.
+        let mut input = TextInput::new("");
+        input.set_value("abcdefghijklmnopqrst");
+        assert_eq!(input.cursor(), 20);
+        assert_eq!(text_row(&mut input, 16, false), "▊  abcdefghij  ▎");
+        assert_eq!(text_row(&mut input, 16, false), "▊  abcdefghij  ▎");
+        // Focus follows the cursor to the end, and the view keeps that scroll once focus leaves.
+        input.select_all();
+        assert_eq!(text_row(&mut input, 16, true), "▊  lmnopqrst   ▎");
+        assert_eq!(text_row(&mut input, 16, false), "▊  lmnopqrst   ▎");
+
+        // A focused draw counts as focus even when the owner didn't select.
+        let mut input = TextInput::new("");
+        input.set_value("abcdefghijklmnopqrst");
+        assert_eq!(text_row(&mut input, 16, true), "▊  lmnopqrst   ▎");
+
+        // So does the owner moving the cursor of an unfocused input.
+        let mut input = TextInput::new("");
+        input.set_value("abcdefghijklmnopqrst");
+        input.set_cursor(15);
+        assert_eq!(text_row(&mut input, 16, false), "▊  ghijklmnop  ▎");
     }
 
     #[test]

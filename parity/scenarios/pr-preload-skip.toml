@@ -1,0 +1,75 @@
+version = 1
+description = "Preload the PR for the current commit, when nothing is preloaded: two PRs hold the local commit, so the selected repo's overview stays; selecting another repo looks the commit up there too, and its 422 leaves that repo's overview"
+# Not built yet (#198): gate = false until the Rust side lands. The origin is SSH so both apps pick up the
+# current-directory repo (Py bug B5). The command log is shown for the reference screens, but its box is ignored:
+# Python logs the 422 as an error line, which Py bug B110 asks about, and the lines carry the time. No capture checks
+# `tabs`: after a selection Python sometimes draws the Details tab underline zero-width (#209); `contains` checks
+# that the Repo Overview stayed.
+gate = false
+parity_rows = [
+    "pull-requests.preload-current-commit",
+    "pull-requests.preload-lookup-error",
+    "config.pull-requests-preload-pull-request-for-current-commit",
+]
+
+[env]
+# pr-preload-skip: the commit lookup answers two PRs in pr-details and a 422 in dotfiles. repo-selected-empty has
+# dotfiles' README and empty lists.
+fixtures = ["pr-preload-skip", "pr-details", "repo-selected-empty", "base"]
+git_remote = "parity-bot/pr-details"
+git_remote_protocol = "ssh"
+git_branch = "new-feature"
+
+[env.config_overrides]
+pull_requests = { preload_pull_request_for_current_commit = true }
+appearance = { show_command_log = true }
+
+[[step]]
+wait = { text = "Current repo: parity-bot/pr-details", timeout_ms = 15000 }
+
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/commits/77a3f2ceb72bcca424cae588f347fc970b288bbf/pulls" } }
+
+[[step]]
+wait = { text = "Try a faster parser", timeout_ms = 15000 }
+
+[[step]]
+capture = "two-prs"
+checks = ["titles", "focus", "rows"]
+ignore = { boxes = ["Command Log"] }
+
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/dotfiles", timeout_ms = 15000 }
+
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/dotfiles/commits/77a3f2ceb72bcca424cae588f347fc970b288bbf/pulls" } }
+
+[[step]]
+wait = { text = "Shell configuration, kept in one place.", timeout_ms = 15000 }
+
+[[step]]
+capture = "other-repo"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Command Log"] }
+
+[expect.two-prs]
+pane_titles = [
+    "",
+    "[1] Repositories",
+    "[5] parity-bot/pr-details Details",
+    "[2] Pull Requests",
+    "[6] Command Log",
+    "[3] Issues (empty)",
+    "[4] Workflows (empty)",
+]
+contains = ["Repo Overview", "parity-bot/pr-details • Public", "Try a faster parser"]
+not_contains = ["PR #5 Details", "Overview  Diff  Conversation"]
+focused = ["[1] Repositories"]
+
+[expect.other-repo]
+contains = ["Current repo: parity-bot/dotfiles", "Repo Overview", "Shell configuration, kept in one place."]
+not_contains = ["Overview  Diff  Conversation"]
+focused = ["[1] Repositories"]

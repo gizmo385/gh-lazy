@@ -544,6 +544,11 @@ impl App {
             }
             Action::Maximize { toast } => self.maximize(toast, out),
             Action::OpenCommandPalette => self.open_command_palette(out),
+            Action::OpenThemePalette => self.open_theme_palette(out),
+            Action::SetTheme(name) => {
+                let theme = Theme::from_config(name, self.shared.theme.color_mode());
+                self.set_theme(theme, out);
+            }
             Action::Toggle(toggle) => self.toggle(toggle, out),
             Action::Minimize => self.minimize(),
             // Python's `action_open_help`: only this closes the panel, and it doesn't move focus.
@@ -657,13 +662,35 @@ impl App {
         });
     }
 
+    /// The "Theme" command's palette: every theme by name, as [`Self::open_command_palette`] opens the commands. The
+    /// first palette has closed by the time its reply opens this one.
+    fn open_theme_palette(&mut self, out: &mut Outbox) {
+        if !self.modals.is_empty() || !matches!(self.base, BaseScreen::Main(_)) {
+            return;
+        }
+        Cx::new(&mut self.shared, out).open_dialog(CommandPaletteDialog::themes(), |run| {
+            run.map_or(Action::Consumed, PaletteRun::action)
+        });
+    }
+
+    /// Switches the whole app to `theme`, which the caller has given the terminal's color mode. Only what's drawn
+    /// changes: `Config` isn't touched, so nothing is saved. What cached colors from the old theme takes them from
+    /// the new one.
+    fn set_theme(&mut self, theme: Theme, out: &mut Outbox) {
+        tracing::debug!("Switching to the {} theme", theme.name);
+        self.shared.theme = theme;
+        if let BaseScreen::Main(main) = &mut self.base {
+            main.retheme(&Cx::new(&mut self.shared, out));
+        }
+    }
+
     /// LazyGithub's own commands as they apply now, in `MainScreenCommandProvider.commands` order. They come before
     /// the system commands, which keeps them first among equal scores (Py bug B86's answer). "Change Settings" (#193),
     /// "Debug Info" and "Open Bug Report" (#195) go between the toggles and "Refresh notifications".
     fn app_commands(&self) -> Vec<PaletteCommand> {
         let command = |name, help, run| PaletteCommand {
             name,
-            help,
+            help: Some(help),
             source: CommandSource::App,
             run,
         };
@@ -696,20 +723,19 @@ impl App {
         commands
     }
 
-    /// Textual's system commands as they apply on `main` now, in `App.get_system_commands` order. "Theme" lands with
-    /// #192, and "Screenshot" is deferred (#291).
+    /// Textual's system commands as they apply on `main` now, in `App.get_system_commands` order. "Screenshot" is
+    /// deferred (#291).
     fn system_commands(&self, main: &MainScreen) -> Vec<PaletteCommand> {
         let command = |name, help, run| PaletteCommand {
             name,
-            help,
+            help: Some(help),
             source: CommandSource::System,
             run,
         };
-        let mut commands = vec![command(
-            "Quit",
-            "Quit the application as soon as possible",
-            PaletteRun::Quit,
-        )];
+        let mut commands = vec![
+            command("Theme", "Change the current theme", PaletteRun::ChooseTheme),
+            command("Quit", "Quit the application as soon as possible", PaletteRun::Quit),
+        ];
         commands.push(if self.help_open {
             command("Keys", "Hide the keys and widget help panel", PaletteRun::ToggleHelp)
         } else {
@@ -1146,6 +1172,11 @@ impl App {
     /// The config as the app currently holds it.
     pub fn config(&self) -> &Config {
         &self.shared.config
+    }
+
+    /// The theme everything is drawn with now: the config's at startup, or one picked from the theme palette since.
+    pub fn theme(&self) -> &Theme {
+        &self.shared.theme
     }
 }
 

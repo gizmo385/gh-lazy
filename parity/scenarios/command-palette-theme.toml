@@ -4,7 +4,7 @@ description = "Command palette Theme command: a second palette (\"Search for the
 # color no longer matches parity/themes.toml's entry for the config's theme, so later captures compare titles only;
 # the new theme's colors are checked in the report's screens and by unit tests. Not saved to config.json (Py bug
 # B27), which is unit-tested.
-gate = false
+gate = true
 parity_rows = ["command-palette.theme"]
 
 [env]

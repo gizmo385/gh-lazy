@@ -20,6 +20,7 @@ use indexmap::IndexMap;
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Position as CellPosition, Rect};
+use ratatui::text::Line;
 use tokio::time::Instant;
 
 pub use lazy::{LOAD_MORE_BUFFER, LazyLoad, Page, PageLoaded};
@@ -344,6 +345,14 @@ impl<T: TableItem> SearchableTable<T> {
             }
         }
         self.rows.sort(self.sort);
+    }
+
+    /// Restyles the header of `column`, for a theme switch. The text must stay the same: the column's width isn't
+    /// measured again.
+    pub fn restyle_header(&mut self, column: usize, header: impl Into<Line<'static>>) {
+        if let Some(column) = self.columns.get_mut(column) {
+            column.header = header.into();
+        }
     }
 
     /// Every item, in insertion order.

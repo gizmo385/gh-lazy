@@ -132,6 +132,20 @@ impl JobsTab {
         self.body.clear();
     }
 
+    /// The theme changed: the labels' icons take its colors, the tree's cursor and expansion staying as they are.
+    pub(super) fn retheme(&mut self, theme: &Theme) {
+        let Some(jobs) = &self.body.jobs else { return };
+        // In `job_tree`'s order: each job, then its steps. "No jobs found" has no colors.
+        let labels = jobs.iter().flat_map(|job| {
+            std::iter::once(label(&job.name, &job.status, job.conclusion.as_ref(), theme)).chain(
+                job.steps
+                    .iter()
+                    .map(|step| label(&step.name, &step.status, step.conclusion.as_ref(), theme)),
+            )
+        });
+        self.tree.restyle_labels(labels);
+    }
+
     /// The job under the tree's cursor, or on its step: `None` without a cursor or on `No jobs found`.
     pub(super) fn cursor_job(&self) -> Option<usize> {
         self.tree.cursor_node().and_then(|(_, &job)| job)
@@ -586,5 +600,31 @@ mod tests {
         // 50,000 two-byte characters fit, uncut.
         let wide = "é".repeat(50_000);
         assert_eq!(logs_markdown(&wide), format!("```\n{wide}\n```"));
+    }
+
+    #[test]
+    fn a_theme_switch_recolors_the_labels_and_keeps_the_cursor_and_expansion() {
+        let keymap = Keymap::new(&indexmap::IndexMap::new());
+        let light = Theme::by_name("textual-light").expect("a built-in theme");
+        let draw = |tab: &mut JobsTab| {
+            let area = Rect::new(0, 0, 60, 20);
+            let mut buf = Buffer::empty(area);
+            tab.tree.render_to(&mut buf, area, &light, false);
+            buf
+        };
+        let jobs: Arc<[WorkflowJob]> = fixture_jobs(5_000_042).into();
+        let mut built_light = JobsTab::new(42, &keymap);
+        built_light.set_jobs(Arc::clone(&jobs), &light);
+        let mut switched = JobsTab::new(42, &keymap);
+        switched.set_jobs(jobs, &Theme::default());
+        for tab in [&mut built_light, &mut switched] {
+            let _ = tab.tree.handle(TreeAction::CursorDown);
+            let _ = tab.tree.handle(TreeAction::ToggleExpandAll);
+        }
+        // The skipped `lint` job's `−` is dimmed from the theme's foreground, which differs.
+        assert_ne!(draw(&mut built_light), draw(&mut switched));
+        switched.retheme(&light);
+        assert_eq!(draw(&mut built_light), draw(&mut switched));
+        assert_eq!(switched.cursor_job(), Some(0));
     }
 }

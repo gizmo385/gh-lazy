@@ -56,6 +56,11 @@ fn star_color(theme: &Theme) -> Color {
     theme.rich_ansi(RichAnsi::Green)
 }
 
+/// The favorite column's header: the star in `theme`'s green.
+fn star_header(theme: &Theme) -> Span<'static> {
+    Span::styled(FAVORITE, Style::new().fg(star_color(theme)))
+}
+
 impl TableItem for Repository {
     type Key = String;
     type Ctx = RepoCells;
@@ -187,7 +192,7 @@ impl ReposSection {
     /// An empty table with Python's columns, sorted by the favorite column.
     pub fn new(theme: &Theme, options: AppOptions) -> Self {
         let columns = vec![
-            Column::new(Span::styled(FAVORITE, Style::new().fg(star_color(theme)))),
+            Column::new(star_header(theme)),
             Column::new("Owner"),
             Column::new("Name"),
             Column::new("Private"),
@@ -350,6 +355,13 @@ impl ReposSection {
             tracing::info!("Favoriting repo {name}");
             favorites.push(name);
         }
+        self.table.refresh_rows(&RepoCells::from_cx(cx));
+    }
+
+    /// The theme changed: the header's star and the favorites' take the new theme's green. Textual resolves the
+    /// `[green]` markup at each render, so nothing else moves.
+    pub fn retheme(&mut self, cx: &Cx<'_>) {
+        self.table.restyle_header(0, star_header(cx.theme()));
         self.table.refresh_rows(&RepoCells::from_cx(cx));
     }
 
@@ -837,5 +849,29 @@ mod app_tests {
         assert_eq!(buffer[(2, 5)].fg, Color::Rgb(0x98, 0xe0, 0x24));
         let screen = crate::test_util::buffer_to_string(&buffer);
         insta::assert_snapshot!(screen);
+    }
+
+    #[test]
+    fn a_theme_switch_recolors_the_header_and_favorite_stars() {
+        let mut config = Config::default();
+        config.repositories.favorites = vec!["parity-bot/dotfiles".into()];
+        let mut app = TestApp::with_github(config, FakeGithub::new().with_repositories(base_repos()));
+        // The cursor off the favorite's row, so its star shows its own color.
+        app.press(&["j"]);
+        let star_colors = |app: &mut TestApp| {
+            let buffer = app.render(100, 30);
+            buffer
+                .content()
+                .iter()
+                .filter(|cell| cell.symbol() == FAVORITE)
+                .map(|cell| cell.fg)
+                .collect::<Vec<_>>()
+        };
+        let dark = star_color(&Theme::default());
+        assert_eq!(star_colors(&mut app), [dark, dark]);
+        app.dispatch(Action::SetTheme("textual-light"));
+        let light = star_color(&Theme::from_config("textual-light", Theme::default().color_mode()));
+        assert_ne!(light, dark);
+        assert_eq!(star_colors(&mut app), [light, light]);
     }
 }

@@ -7,6 +7,7 @@ use lazy_github_core::config::Config;
 use super::*;
 use crate::screens::main::{FocusTarget, MainScreen, SectionId};
 use crate::test_util::{TestApp, TestDialog, buffer_to_styled_string};
+use crate::theme::{ColorDepth, ColorMode};
 
 /// The open palette, if it's on top.
 fn palette(app: &TestApp) -> Option<&CommandPaletteDialog> {
@@ -26,7 +27,7 @@ fn help_texts(app: &TestApp) -> Vec<&'static str> {
     palette
         .hits
         .iter()
-        .map(|hit| palette.commands[hit.command].help)
+        .map(|hit| palette.commands[hit.command].help.unwrap_or_default())
         .collect()
 }
 
@@ -55,7 +56,7 @@ fn opened() -> TestApp {
 fn command(name: &'static str, source: CommandSource) -> PaletteCommand {
     PaletteCommand {
         name,
-        help: "Help",
+        help: Some("Help"),
         source,
         run: PaletteRun::Quit,
     }
@@ -110,7 +111,7 @@ fn styled(app: &mut TestApp) -> String {
 #[test]
 fn ctrl_p_opens_the_palette_with_the_input_focused() {
     let mut app = opened();
-    assert_eq!(hits(&app), opening(&["Keys", "Maximize", "Quit"]));
+    assert_eq!(hits(&app), opening(&["Keys", "Maximize", "Quit", "Theme"]));
     assert_eq!(highlighted(&app), Some("Keys"));
     // The input takes printable keys, `q` and `?` included.
     type_text(&mut app, "q?1");
@@ -165,7 +166,7 @@ fn keys_says_whether_it_shows_or_hides_the_help_panel() {
 fn maximize_is_offered_when_m_would_maximize_and_minimize_while_maximized() {
     let mut app = TestApp::new(Config::default());
     app.press(&["M", "ctrl+p"]);
-    assert_eq!(hits(&app), opening(&["Keys", "Minimize", "Quit"]));
+    assert_eq!(hits(&app), opening(&["Keys", "Minimize", "Quit", "Theme"]));
     assert_eq!(help_texts(&app)[1], "Minimize the widget and restore to normal size");
 
     // `M` does nothing in the details content, so neither is offered.
@@ -176,7 +177,7 @@ fn maximize_is_offered_when_m_would_maximize_and_minimize_while_maximized() {
         Some(FocusTarget::DetailsContent)
     );
     app.press(&["ctrl+p"]);
-    assert_eq!(hits(&app), opening(&["Keys", "Quit"]));
+    assert_eq!(hits(&app), opening(&["Keys", "Quit", "Theme"]));
 }
 
 #[test]
@@ -191,12 +192,13 @@ fn lazygithubs_commands_are_in_their_order_before_the_system_ones() {
             ("Toggle Workflows", CommandSource::App),
             ("Toggle Issues", CommandSource::App),
             ("Toggle Pull Requests", CommandSource::App),
+            ("Theme", CommandSource::System),
             ("Quit", CommandSource::System),
             ("Keys", CommandSource::System),
             ("Maximize", CommandSource::System),
         ]
     );
-    let helps: Vec<_> = palette.commands[..4].iter().map(|c| c.help).collect();
+    let helps: Vec<_> = palette.commands[..4].iter().filter_map(|c| c.help).collect();
     assert_eq!(
         helps,
         [
@@ -348,7 +350,7 @@ fn the_query_is_stripped_and_a_blank_one_lists_everything() {
     assert_eq!(hits(&app), ["Keys"]);
     app.press(&["ctrl+u"]);
     type_text(&mut app, "   ");
-    assert_eq!(hits(&app), opening(&["Keys", "Maximize", "Quit"]));
+    assert_eq!(hits(&app), opening(&["Keys", "Maximize", "Quit", "Theme"]));
     // A blank query never says it found nothing.
     app.advance(Duration::from_secs(1));
     assert!(!palette(&app).is_some_and(CommandPaletteDialog::shows_no_matches));
@@ -416,7 +418,7 @@ fn up_and_down_wrap() {
     let mut app = opened();
     app.press(&["down"]);
     assert_eq!(highlighted(&app), Some("Maximize"));
-    app.press(&["down"; 6]);
+    app.press(&["down"; 7]);
     assert_eq!(highlighted(&app), Some("Keys"));
     app.press(&["up"]);
     assert_eq!(highlighted(&app), Some("Toggle Pull Requests"));
@@ -483,7 +485,7 @@ fn enter_runs_the_highlighted_hit_after_the_palette_closes() {
     let mut app = with_commands(many());
     app.press(&["down", "enter"]);
     assert_eq!(app.app().modals(), [ModalKind::CommandPalette]);
-    assert_eq!(hits(&app), opening(&["Keys", "Maximize", "Quit"]));
+    assert_eq!(hits(&app), opening(&["Keys", "Maximize", "Quit", "Theme"]));
 }
 
 #[test]
@@ -637,5 +639,174 @@ fn opening_list_in_other_themes() {
         let mut app = TestApp::with_theme(Config::default(), theme);
         app.press(&["ctrl+p"]);
         insta::assert_snapshot!(name, styled(&mut app));
+    }
+}
+
+// The theme palette (#192).
+
+/// The theme names, sorted: the theme palette's opening list.
+fn theme_names() -> Vec<&'static str> {
+    let mut names: Vec<&'static str> = Theme::all().map(|theme| theme.name).collect();
+    names.sort_unstable();
+    names
+}
+
+/// An app on the main screen drawn with `theme`, with the theme palette open as "Theme" opens it.
+fn themes_opened(theme: Theme) -> TestApp {
+    let mut app = TestApp::with_theme(Config::default(), theme);
+    app.press(&["ctrl+p"]);
+    type_text(&mut app, "theme");
+    app.press(&["enter"]);
+    app
+}
+
+fn saved_config(app: &TestApp) -> bool {
+    app.effects()
+        .iter()
+        .any(|effect| matches!(effect, Effect::SaveConfig(_)))
+}
+
+fn repos_focused(app: &TestApp) -> bool {
+    app.app().main_screen().map(MainScreen::focus) == Some(FocusTarget::Table(SectionId::Repos))
+}
+
+#[test]
+fn theme_is_listed_and_opens_the_theme_palette() {
+    let mut app = opened();
+    let palette = palette(&app).expect("the palette is open");
+    let theme = palette
+        .commands
+        .iter()
+        .find(|c| c.name == "Theme")
+        .expect("Theme is listed");
+    assert_eq!(theme.help, Some("Change the current theme"));
+    assert_eq!(theme.source, CommandSource::System);
+    assert_eq!(theme.run, PaletteRun::ChooseTheme);
+    assert!(matches!(PaletteRun::ChooseTheme.action(), Action::OpenThemePalette));
+
+    type_text(&mut app, "theme");
+    assert_eq!(hits(&app), ["Theme"]);
+    assert_eq!(help_texts(&app), ["Change the current theme"]);
+    app.press(&["enter"]);
+    // The first palette closed, and the theme palette opened in its place.
+    assert!(is_open(&app));
+    assert_eq!(hits(&app), theme_names());
+    assert_eq!(highlighted(&app), Some("ansi-dark"));
+    assert!(app.screen(160, 48).contains("Search for themes…"));
+}
+
+#[test]
+fn the_theme_palette_lists_every_theme_by_name_one_row_each() {
+    assert_eq!(
+        theme_names(),
+        [
+            "ansi-dark",
+            "ansi-light",
+            "atom-one-dark",
+            "atom-one-light",
+            "catppuccin-frappe",
+            "catppuccin-latte",
+            "catppuccin-macchiato",
+            "catppuccin-mocha",
+            "dracula",
+            "flexoki",
+            "gruvbox",
+            "monokai",
+            "nord",
+            "rose-pine",
+            "rose-pine-dawn",
+            "rose-pine-moon",
+            "solarized-dark",
+            "solarized-light",
+            "textual-dark",
+            "textual-light",
+            "tokyo-night",
+        ]
+    );
+    let mut app = themes_opened(Theme::default());
+    let palette = palette(&app).expect("the theme palette is open");
+    assert_eq!(palette.rows_per_hit, 1);
+    assert_eq!(palette.list_rows(), 21);
+    assert!(help_texts(&app).iter().all(|help| help.is_empty()));
+    // Every theme names a command that switches to it.
+    let palette = self::palette(&app).expect("the theme palette is open");
+    let runs: Vec<PaletteRun> = palette.commands.iter().map(|c| c.run).collect();
+    let expected: Vec<PaletteRun> = theme_names().into_iter().map(PaletteRun::SetTheme).collect();
+    assert_eq!(runs, expected);
+    // A query narrows the list as the commands palette's does.
+    type_text(&mut app, "nor");
+    assert_eq!(hits(&app), ["nord"]);
+}
+
+#[test]
+fn theme_palette_page_keys_move_by_the_rows_in_view() {
+    let mut app = themes_opened(Theme::default());
+    // 70% of 20 rows is 14, border included: 12 rows, so 12 hits, in view.
+    app.render(160, 20);
+    let view = palette(&app).map(|p| usize::from(p.layout.list.height));
+    assert_eq!(view, Some(12));
+    app.press(&["pagedown"]);
+    assert_eq!(highlighted(&app), Some(theme_names()[12]));
+    app.press(&["pagedown"]);
+    assert_eq!(highlighted(&app), Some("tokyo-night"));
+    app.press(&["pageup"]);
+    assert_eq!(highlighted(&app), Some(theme_names()[20 - 12]));
+    app.press(&["pageup"]);
+    assert_eq!(highlighted(&app), Some("ansi-dark"));
+}
+
+#[test]
+fn picking_a_theme_switches_it_for_the_session_keeping_the_color_mode() {
+    let mode = ColorMode {
+        depth: ColorDepth::EightBit,
+        no_color: false,
+    };
+    let mut app = themes_opened(Theme::from_config("textual-dark", mode));
+    type_text(&mut app, "nor");
+    app.press(&["enter"]);
+    assert!(app.app().modals().is_empty());
+    let theme = app.app().theme();
+    assert_eq!(theme.name, "nord");
+    assert_eq!(theme.color_mode(), mode);
+    // Session only (Py bug B27, answered: keep parity): the config keeps its theme and nothing is saved.
+    assert_eq!(app.app().config().appearance.theme, "textual-dark");
+    assert!(!saved_config(&app));
+    assert!(repos_focused(&app));
+}
+
+#[test]
+fn moving_the_highlight_previews_nothing_and_escape_keeps_the_theme() {
+    let mut app = themes_opened(Theme::default());
+    app.press(&["down", "down"]);
+    assert_eq!(highlighted(&app), Some("atom-one-dark"));
+    assert_eq!(app.app().theme().name, "textual-dark");
+    app.press(&["escape"]);
+    assert!(app.app().modals().is_empty());
+    assert_eq!(app.app().theme().name, "textual-dark");
+    assert!(!saved_config(&app));
+    assert!(repos_focused(&app));
+}
+
+#[test]
+fn the_theme_palette_opens_only_on_the_main_screen_with_no_dialog() {
+    let mut app = TestApp::new(Config::default());
+    app.with_cx(|cx| cx.open_dialog(TestDialog::new(1), |_| Action::Consumed));
+    app.dispatch(Action::OpenThemePalette);
+    assert_eq!(app.app().modals(), [ModalKind::Test(1)]);
+}
+
+#[test]
+fn theme_palette_160x48() {
+    insta::assert_snapshot!(styled(&mut themes_opened(Theme::default())));
+}
+
+#[test]
+fn main_screen_after_a_theme_switch_160x48() {
+    for (query, name) in [("nord", "nord"), ("", "ansi-dark")] {
+        let mut app = themes_opened(Theme::default());
+        type_text(&mut app, query);
+        app.press(&["enter"]);
+        assert_eq!(app.app().theme().name, name);
+        insta::assert_snapshot!(format!("main_after_switch_to_{name}"), styled(&mut app));
     }
 }

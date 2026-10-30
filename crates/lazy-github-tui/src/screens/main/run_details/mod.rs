@@ -109,6 +109,11 @@ impl RunDetails {
         &self.run
     }
 
+    /// The theme changed: what cached the old theme's colors takes the new one's.
+    pub(in crate::screens::main) fn retheme(&mut self, theme: &Theme) {
+        self.jobs_tab.retheme(theme);
+    }
+
     /// The run's jobs, `None` while they load. Empty when the run has none, or when they failed to load.
     pub(in crate::screens::main) fn jobs(&self) -> Option<&Arc<[WorkflowJob]>> {
         match &self.jobs {

@@ -219,6 +219,14 @@ impl<T> Tree<T> {
         id
     }
 
+    /// Replaces the nodes' labels, in the order they were added, for a theme switch. The text must stay the same:
+    /// the content width isn't measured again. Extra labels are ignored, and nodes past the last label keep theirs.
+    pub fn restyle_labels(&mut self, labels: impl IntoIterator<Item = Line<'static>>) {
+        for (node, label) in self.nodes.iter_mut().zip(labels) {
+            node.label = label;
+        }
+    }
+
     /// Whether the tree has no nodes.
     pub fn is_empty(&self) -> bool {
         self.nodes.is_empty()

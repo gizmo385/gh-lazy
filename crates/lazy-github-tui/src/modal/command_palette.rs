@@ -40,6 +40,9 @@ pub const COMMAND_PALETTE_BINDINGS: &[BindingId] = dialog_bindings![
 /// The input's placeholder.
 const PLACEHOLDER: &str = "Search for commands…";
 
+/// The theme palette's placeholder (Textual's `search_themes`).
+const THEMES_PLACEHOLDER: &str = "Search for themes…";
+
 /// The band starts this far down (`margin-top: 3`), so the status summary stays in view above it.
 const MARGIN_TOP: u16 = 3;
 
@@ -59,9 +62,6 @@ const TEXT_RIGHT: u16 = 4;
 /// Each hit's `padding: 0 2`.
 const OPTION_PADDING: u16 = 2;
 
-/// Each hit is its name over its help text.
-const ROWS_PER_HIT: usize = 2;
-
 /// The list's `max-height: 70vh`, border included.
 const MAX_LIST_PERCENT: u32 = 70;
 
@@ -78,7 +78,7 @@ const DIM_ALPHA: f64 = 0.66;
 const INPUT_RULE_ALPHA: f64 = 0.5;
 
 /// What running a palette command does. The opener turns it into an [`Action`] with [`PaletteRun::action`] once
-/// the palette has closed. #192, #193 and #195 add theirs.
+/// the palette has closed. #193 and #195 add theirs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PaletteRun {
     /// "Toggle Command Log", "Toggle Workflows", "Toggle Issues", "Toggle Pull Requests".
@@ -93,6 +93,10 @@ pub enum PaletteRun {
     Minimize,
     /// "Quit".
     Quit,
+    /// "Theme": open the theme palette.
+    ChooseTheme,
+    /// A theme palette hit: switch to the theme of that name for the session.
+    SetTheme(&'static str),
 }
 
 impl PaletteRun {
@@ -105,6 +109,8 @@ impl PaletteRun {
             PaletteRun::Maximize => Action::Maximize { toast: false },
             PaletteRun::Minimize => Action::Minimize,
             PaletteRun::Quit => Action::Quit,
+            PaletteRun::ChooseTheme => Action::OpenThemePalette,
+            PaletteRun::SetTheme(name) => Action::SetTheme(name),
         }
     }
 }
@@ -123,8 +129,8 @@ pub enum CommandSource {
 pub struct PaletteCommand {
     /// What the search matches and the hit shows in bold: "Keys".
     pub name: &'static str,
-    /// The dimmed line under the name.
-    pub help: &'static str,
+    /// The dimmed line under the name, if it has one. A palette whose commands have none draws one row per hit.
+    pub help: Option<&'static str>,
     /// Where it comes from.
     pub source: CommandSource,
     /// What picking it does.
@@ -215,6 +221,8 @@ impl Layout {
 pub struct CommandPaletteDialog {
     input: TextInput,
     commands: Vec<PaletteCommand>,
+    /// The rows each hit takes: its name over its help text, or the name alone when no command has help.
+    rows_per_hit: usize,
     /// The listed commands, in order: every command for an empty query, else those whose names match it.
     hits: Vec<Hit>,
     /// The highlighted hit. Meaningless while there are none.
@@ -232,9 +240,35 @@ impl CommandPaletteDialog {
     /// query lists the system commands sorted by name, then LazyGithub's (Py bug B87's answer), the first
     /// highlighted.
     pub fn new(commands: Vec<PaletteCommand>) -> Self {
+        Self::with_placeholder(commands, PLACEHOLDER)
+    }
+
+    /// Textual's theme palette (`search_themes`): every built-in theme by name, sorted, with no help lines. The
+    /// empty query lists them in that order, the first highlighted rather than the current theme, and equal scores
+    /// keep it. Picking one hands back [`PaletteRun::SetTheme`].
+    pub fn themes() -> Self {
+        let mut commands: Vec<PaletteCommand> = Theme::all()
+            .map(|theme| PaletteCommand {
+                name: theme.name,
+                help: None,
+                source: CommandSource::System,
+                run: PaletteRun::SetTheme(theme.name),
+            })
+            .collect();
+        commands.sort_by_key(|command| command.name);
+        Self::with_placeholder(commands, THEMES_PLACEHOLDER)
+    }
+
+    fn with_placeholder(commands: Vec<PaletteCommand>, placeholder: &'static str) -> Self {
+        let rows_per_hit = if commands.iter().any(|command| command.help.is_some()) {
+            2
+        } else {
+            1
+        };
         let mut palette = Self {
-            input: TextInput::new(PLACEHOLDER).borderless(),
+            input: TextInput::new(placeholder).borderless(),
             commands,
+            rows_per_hit,
             hits: Vec::new(),
             highlight: 0,
             scroll: 0,
@@ -335,12 +369,12 @@ impl CommandPaletteDialog {
         self.finished = Some(Finished(run));
     }
 
-    /// The rows of list content: two per hit, or the "No matches found" row and none while the list is hidden.
+    /// The rows of list content: one or two per hit, or the "No matches found" row and none while the list is hidden.
     fn list_rows(&self) -> usize {
         if self.hits.is_empty() {
             usize::from(self.no_matches == NoMatches::Shown)
         } else {
-            self.hits.len() * ROWS_PER_HIT
+            self.hits.len() * self.rows_per_hit
         }
     }
 
@@ -356,7 +390,8 @@ impl CommandPaletteDialog {
     /// Moves the highlight to `highlight` and scrolls its rows into view.
     fn move_to(&mut self, highlight: usize) {
         self.highlight = highlight;
-        self.scroll = option_nav::scroll_into_view(self.scroll, highlight * ROWS_PER_HIT, ROWS_PER_HIT, self.window());
+        let rows = self.rows_per_hit;
+        self.scroll = option_nav::scroll_into_view(self.scroll, highlight * rows, rows, self.window());
     }
 
     /// A binding of the palette's screen link that moves the highlight. Nothing moves without hits, so "No matches
@@ -366,12 +401,12 @@ impl CommandPaletteDialog {
         if len == 0 {
             return;
         }
-        let (h, view) = (self.highlight, self.window());
+        let (h, view, rows) = (self.highlight, self.window(), self.rows_per_hit);
         let to = match id {
             BindingId::TextualCommandPaletteCursorDown => option_nav::next(h, len),
             BindingId::TextualCommandPaletteCursorUp => option_nav::previous(h, len),
-            BindingId::TextualCommandPalettePageDown => option_nav::page_down(h, len, ROWS_PER_HIT, view),
-            BindingId::TextualCommandPalettePageUp => option_nav::page_up(h, ROWS_PER_HIT, view),
+            BindingId::TextualCommandPalettePageDown => option_nav::page_down(h, len, rows, view),
+            BindingId::TextualCommandPalettePageUp => option_nav::page_up(h, rows, view),
             BindingId::TextualCommandPaletteFirst => 0,
             BindingId::TextualCommandPaletteLast => len - 1,
             _ => return,
@@ -479,7 +514,7 @@ impl Component for CommandPaletteDialog {
         }
         if list.contains(position) && !self.hits.is_empty() {
             let line = self.scroll + usize::from(event.row - list.y);
-            let hit = line / ROWS_PER_HIT;
+            let hit = line / self.rows_per_hit;
             if hit < self.hits.len() {
                 self.highlight = hit;
                 return Some(Self::action(CommandPaletteAction::Run));
@@ -573,7 +608,7 @@ impl Component for CommandPaletteDialog {
 }
 
 impl CommandPaletteDialog {
-    /// The hits' rows in view: each name over its help text, the highlighted hit on the cursor's colors.
+    /// The hits' rows in view: each name, over its help text when hits have two rows, the highlighted hit on the cursor's colors.
     fn draw_hits(&self, buf: &mut Buffer, list: Rect, styles: &ListStyles) {
         let content = Rect {
             x: list.x + OPTION_PADDING,
@@ -581,7 +616,7 @@ impl CommandPaletteDialog {
             ..list
         };
         for (y, line) in (list.top()..list.bottom()).zip(self.scroll..) {
-            let index = line / ROWS_PER_HIT;
+            let index = line / self.rows_per_hit;
             let Some(hit) = self.hits.get(index) else { break };
             let command = &self.commands[hit.command];
             let row = if index == self.highlight {
@@ -592,7 +627,7 @@ impl CommandPaletteDialog {
             for x in list.left()..list.right() {
                 buf[(x, y)].set_symbol(" ").set_style(row.name);
             }
-            let text: Line<'_> = if line % ROWS_PER_HIT == 0 {
+            let text: Line<'_> = if line % self.rows_per_hit == 0 {
                 command
                     .name
                     .chars()
@@ -607,7 +642,7 @@ impl CommandPaletteDialog {
                     })
                     .collect()
             } else {
-                Line::styled(command.help, row.help)
+                Line::styled(command.help.unwrap_or_default(), row.help)
             };
             buf.set_line(content.x, y, &text, content.width);
         }

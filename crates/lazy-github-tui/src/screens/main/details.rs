@@ -465,6 +465,14 @@ impl DetailsPane {
         }
     }
 
+    /// The theme changed: what cached the old theme's colors takes the new one's. The other bodies key their
+    /// layouts by theme.
+    pub(super) fn retheme(&mut self, theme: &Theme) {
+        if let Body::Run(details) = &mut self.body {
+            details.retheme(theme);
+        }
+    }
+
     /// The workflow run whose tabs are showing, if any.
     pub(super) fn run(&self) -> Option<&RunDetails> {
         match &self.body {

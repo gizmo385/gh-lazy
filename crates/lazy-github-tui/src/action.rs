@@ -46,6 +46,11 @@ pub enum Action {
     ToggleHelp,
     /// `app.command_palette`: open the command palette over the main screen, with the commands that apply now.
     OpenCommandPalette,
+    /// The palette's "Theme" command, once the palette has closed: open the theme palette over the main screen.
+    OpenThemePalette,
+    /// A theme palette hit: switch the whole app to the built-in theme of this name for the session, keeping the
+    /// terminal's color mode. `appearance.theme` isn't written (Py bug B27, answered: keep parity).
+    SetTheme(&'static str),
     /// A palette "Toggle …" command: show or hide a section or the command log on the main screen. `App` applies it,
     /// since hiding the maximized section also restores the layout (Py bug B88's answer).
     Toggle(Toggle),

@@ -541,6 +541,12 @@ impl MainScreen {
         }));
     }
 
+    /// The theme changed (`Action::SetTheme`): what cached the old theme's colors takes `cx`'s.
+    pub fn retheme(&mut self, cx: &Cx<'_>) {
+        self.repos.retheme(cx);
+        self.details.retheme(cx.theme());
+    }
+
     /// What the screen does once it's shown: load the repos, under the loading overlay.
     pub fn start(&mut self, cx: &mut Cx<'_>) {
         self.repos.start(cx);

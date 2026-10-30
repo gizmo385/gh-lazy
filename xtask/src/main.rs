@@ -1,5 +1,5 @@
-//! Development tasks, run with `cargo xtask <task>`. Tasks (`parity`, `parity-matrix`, `record-fixtures`, release
-//! helpers) are added by the issues that need them.
+//! Development tasks, run with `cargo xtask <task>`. Tasks (`parity`, `parity-matrix`, `record-fixtures`,
+//! `release-plan`) are added by the issues that need them.
 
 mod fixtures;
 
@@ -33,6 +33,9 @@ enum Task {
     Perf(xtask::perf::PerfArgs),
     /// Write the generated `large-account` parity fixture set (1,000 repos over 20 pages) under parity/fixtures/.
     LargeAccountFixtures,
+    /// Decide what a run of the release workflow releases (tag, version, prerelease, crates) and print it as
+    /// `key=value` lines for `$GITHUB_OUTPUT`. Exits non-zero, with the reason, when the run must not release.
+    ReleasePlan(xtask::release::ReleasePlanArgs),
 }
 
 #[derive(Debug, clap::Args)]
@@ -62,6 +65,7 @@ fn main() -> ExitCode {
         Some(Task::ParitySite(args)) => xtask::site::run(&xtask::parity::cli::repo_root(), &args),
         Some(Task::Perf(args)) => xtask::perf::run(&xtask::parity::cli::repo_root(), &args),
         Some(Task::LargeAccountFixtures) => xtask::large_account::run(&xtask::parity::cli::repo_root()),
+        Some(Task::ReleasePlan(args)) => xtask::release::run(&xtask::parity::cli::repo_root(), &args),
     }
 }
 

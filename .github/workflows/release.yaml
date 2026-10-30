@@ -1,0 +1,207 @@
+name: Release
+
+# Builds the gh extension binaries and publishes a GitHub release (#203). Releasing: bump `[workspace.package] version`
+# in Cargo.toml and push it to main. This workflow tags `v<version>` on that commit and creates the release "LazyGithub
+# v<version>" with one `gh-lazy-<os>-<arch>` binary per target, `SHA256SUMS` and a provenance attestation per binary,
+# then posts to Discord.
+#
+# Inert before the cutover (#207), by construction: main has neither this file nor Cargo.toml, pushes to rust-main
+# don't match `branches: [main]`, and `cargo xtask release-plan` refuses a stable release from a commit that isn't on
+# main. The one thing that runs on rust-main is a prerelease tag pushed on purpose (`v<version>-rc.1`), which
+# rehearses the whole workflow as a GitHub prerelease. Prereleases are never "latest", so `gh extension install` and
+# everyone on the Python app are unaffected. Nothing here runs on pull requests.
+on:
+  push:
+    branches: [main]
+    # GitHub doesn't apply path filters to tag pushes.
+    paths: [Cargo.toml]
+    # Prerelease rehearsals only. Stable tags are created by this workflow, with GITHUB_TOKEN, which doesn't trigger
+    # workflows, so there's no second run.
+    tags: ['v*-*']
+  # GitHub only offers this once the file is on the default branch (main).
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Decides whether to release, and what. A push to main that doesn't bump the version stops here.
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      release: ${{ steps.plan.outputs.release }}
+      version: ${{ steps.plan.outputs.version }}
+      tag: ${{ steps.plan.outputs.tag }}
+      prerelease: ${{ steps.plan.outputs.prerelease }}
+      publish_crates: ${{ steps.plan.outputs.publish_crates }}
+    steps:
+    # Full history: the plan needs the existing tags and origin/main for the "stable releases come from main" check.
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - name: Install toolchain
+      run: rustup toolchain install
+    - uses: Swatinem/rust-cache@v2
+      with:
+        key: release-plan
+    - name: Plan the release
+      id: plan
+      run: >-
+        cargo xtask release-plan --event "$GITHUB_EVENT_NAME" --ref "$GITHUB_REF" --sha "$GITHUB_SHA"
+        >> "$GITHUB_OUTPUT"
+
+  # No tests here: the commit already passed rust.yaml. Linux binaries are static musl builds, so they run on any
+  # distro. Both darwin targets build in one macOS job, so the 10x runner is used once per release.
+  build:
+    name: Build (${{ matrix.name }})
+    needs: plan
+    if: needs.plan.outputs.release == 'true'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    strategy:
+      fail-fast: true
+      matrix:
+        # `builds` is space-separated `<rust target>=<asset>` pairs. gh picks the asset whose name ends in the
+        # platform's `<os>-<arch>[.exe]` and installs it as the extension. Windows joins only if #202 decides it ships
+        # (as `x86_64-pc-windows-msvc=gh-lazy-windows-amd64.exe` on windows-latest).
+        include:
+        - name: linux-amd64
+          runner: ubuntu-latest
+          builds: x86_64-unknown-linux-musl=gh-lazy-linux-amd64
+        - name: linux-arm64
+          runner: ubuntu-24.04-arm
+          builds: aarch64-unknown-linux-musl=gh-lazy-linux-arm64
+        - name: darwin
+          runner: macos-latest
+          builds: aarch64-apple-darwin=gh-lazy-darwin-arm64 x86_64-apple-darwin=gh-lazy-darwin-amd64
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - name: Install musl tools
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y musl-tools
+    - name: Install toolchain
+      env:
+        BUILDS: ${{ matrix.builds }}
+      run: |
+        rustup toolchain install
+        for build in $BUILDS; do
+          rustup target add "${build%%=*}"
+        done
+    - uses: Swatinem/rust-cache@v2
+      with:
+        key: ${{ matrix.name }}
+    - name: Build
+      env:
+        BUILDS: ${{ matrix.builds }}
+      run: |
+        mkdir -p dist
+        for build in $BUILDS; do
+          target="${build%%=*}"
+          asset="${build#*=}"
+          cargo build --locked --profile dist -p lazy-github --target "$target"
+          cp "target/$target/dist/lazy-github" "dist/$asset"
+        done
+    # The linker ad-hoc signs arm64 binaries; check that stripping in the dist profile kept the signature valid.
+    - name: Check the arm64 signature
+      if: runner.os == 'macOS'
+      run: codesign -v dist/gh-lazy-darwin-arm64
+    # Each binary runs `version` where the runner can execute it. The x86_64 darwin build runs under Rosetta, or is
+    # skipped if the runner has none.
+    - name: Smoke test
+      env:
+        BUILDS: ${{ matrix.builds }}
+        VERSION: ${{ needs.plan.outputs.version }}
+      run: |
+        expected="LazyGithub version $VERSION"
+        for build in $BUILDS; do
+          asset="${build#*=}"
+          if [ "$asset" = gh-lazy-darwin-amd64 ] && ! arch -x86_64 /usr/bin/true 2>/dev/null; then
+            echo "::warning::Skipping the $asset smoke test: no Rosetta on this runner"
+            continue
+          fi
+          actual="$("./dist/$asset" version)"
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::$asset version printed '$actual', expected '$expected'"
+            exit 1
+          fi
+          echo "$asset: $actual"
+        done
+    - uses: actions/attest-build-provenance@v3
+      with:
+        subject-path: dist/gh-lazy-*
+    - uses: actions/upload-artifact@v6
+      with:
+        name: build-${{ matrix.name }}
+        path: dist/gh-lazy-*
+        if-no-files-found: error
+        retention-days: 7
+
+  # Runs only once every target built, so a failed build never leaves a release with missing binaries.
+  release:
+    name: GitHub release
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/download-artifact@v7
+      with:
+        pattern: build-*
+        path: dist
+        merge-multiple: true
+    - name: Checksums
+      working-directory: dist
+      run: |
+        sha256sum gh-lazy-* > SHA256SUMS
+        cat SHA256SUMS
+    # A stable release creates its tag on this commit. A prerelease's tag was pushed, so `--verify-tag` makes sure it
+    # exists rather than creating one, and `--latest=false` keeps gh extension installs on the current release.
+    - name: Create the release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        TAG: ${{ needs.plan.outputs.tag }}
+        PRERELEASE: ${{ needs.plan.outputs.prerelease }}
+      run: |
+        args=(--title "LazyGithub $TAG" --generate-notes)
+        if [ "$PRERELEASE" = true ]; then
+          args+=(--prerelease --latest=false --verify-tag)
+        else
+          args+=(--target "$GITHUB_SHA")
+        fi
+        gh release create "$TAG" "${args[@]}" dist/*
+
+  # Posts whatever the release's outcome, as publish.yaml did for PyPI. Stable releases in the upstream repository
+  # only: forks and rehearsals stay quiet.
+  notify-discord:
+    name: Notify Discord
+    needs: [plan, release]
+    if: >-
+      always() && needs.plan.outputs.release == 'true' && needs.plan.outputs.prerelease == 'false'
+      && github.repository == 'gizmo385/gh-lazy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - uses: nobrayner/discord-webhook@v1
+      with:
+        title: "Version ${{ needs.plan.outputs.version }} released"
+        description: "Check out the new version [here](https://github.com/${{ github.repository }}/releases/tag/${{ needs.plan.outputs.tag }})"
+        github-token: ${{ secrets.github_token }}
+        discord-webhook: ${{ secrets.DISCORD_WEBHOOK }}

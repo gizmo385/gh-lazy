@@ -4,4 +4,5 @@ pub mod large_account;
 pub mod matrix;
 pub mod parity;
 pub mod perf;
+pub mod release;
 pub mod site;

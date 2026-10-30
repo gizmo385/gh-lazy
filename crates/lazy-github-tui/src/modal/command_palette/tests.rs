@@ -97,9 +97,14 @@ const TOGGLES: [&str; 4] = [
     "Toggle Pull Requests",
 ];
 
-/// The opening list: `system` sorted by name, then [`TOGGLES`] (Py bug B87's answer).
+/// The opening list: `system` sorted by name, then [`TOGGLES`] and "Change Settings" (Py bug B87's answer).
 fn opening(system: &[&'static str]) -> Vec<&'static str> {
-    system.iter().copied().chain(TOGGLES).collect()
+    system
+        .iter()
+        .copied()
+        .chain(TOGGLES)
+        .chain(["Change Settings"])
+        .collect()
 }
 
 fn styled(app: &mut TestApp) -> String {
@@ -192,6 +197,7 @@ fn lazygithubs_commands_are_in_their_order_before_the_system_ones() {
             ("Toggle Workflows", CommandSource::App),
             ("Toggle Issues", CommandSource::App),
             ("Toggle Pull Requests", CommandSource::App),
+            ("Change Settings", CommandSource::App),
             ("Theme", CommandSource::System),
             ("Quit", CommandSource::System),
             ("Keys", CommandSource::System),
@@ -251,8 +257,12 @@ fn refresh_notifications_is_listed_only_while_notifications_are_on() {
     let mut app = TestApp::new(config);
     futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once");
     app.press(&["ctrl+p"]);
-    // Last among LazyGithub's, after the system commands in the opening list.
-    assert_eq!(hits(&app).last(), Some(&"Refresh notifications"));
+    // Last among LazyGithub's, after the system commands in the opening list, with "Change Settings" right before.
+    assert!(
+        hits(&app).ends_with(&["Toggle Pull Requests", "Change Settings", "Refresh notifications"]),
+        "{:?}",
+        hits(&app)
+    );
     type_text(&mut app, "ref");
     assert_eq!(hits(&app), ["Refresh notifications"]);
     assert_eq!(help_texts(&app), ["Refresh the unread notifications count"]);
@@ -275,6 +285,16 @@ fn refresh_notifications_is_listed_only_while_notifications_are_on() {
     assert!(app.app().modals().is_empty());
     assert_eq!(checks(&app), before + 1);
     assert!(app.app().notifications_refreshing());
+}
+
+#[test]
+fn change_settings_closes_the_palette_and_opens_settings() {
+    let mut app = opened();
+    type_text(&mut app, "settings");
+    assert_eq!(hits(&app).first(), Some(&"Change Settings"));
+    assert_eq!(help_texts(&app).first(), Some(&"Adjust LazyGithub settings"));
+    app.press(&["enter"]);
+    assert_eq!(app.app().modals(), [ModalKind::Settings]);
 }
 
 #[test]
@@ -418,10 +438,10 @@ fn up_and_down_wrap() {
     let mut app = opened();
     app.press(&["down"]);
     assert_eq!(highlighted(&app), Some("Maximize"));
-    app.press(&["down"; 7]);
+    app.press(&["down"; 8]);
     assert_eq!(highlighted(&app), Some("Keys"));
     app.press(&["up"]);
-    assert_eq!(highlighted(&app), Some("Toggle Pull Requests"));
+    assert_eq!(highlighted(&app), Some("Change Settings"));
 }
 
 #[test]

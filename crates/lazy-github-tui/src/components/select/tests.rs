@@ -436,3 +436,40 @@ fn the_open_list_takes_q_and_escape_from_the_dialog() {
         ["esc Dismiss menu", "shift+⏎ Submit"]
     );
 }
+
+#[test]
+fn a_disabled_select_never_opens_and_draws_faded() {
+    let mut select = status(Some("open"));
+    let _ = select.open();
+    select.set_disabled(true);
+    assert!(select.is_disabled());
+    assert!(!select.is_open(), "disabling closes the list");
+    assert_eq!(select.open(), SelectOutcome::Ignored);
+    assert_eq!(select.toggle(), SelectOutcome::Ignored);
+    assert_eq!(
+        select.on_binding(BindingId::TextualSelectShowOverlay),
+        SelectOutcome::Ignored
+    );
+    assert!(!select.is_open());
+    let theme = Theme::default();
+    let under = theme.palette.surface.over(theme.background());
+    let area = Rect::new(0, 0, 20, HEIGHT);
+    let draw = |select: &Select<&'static str>| {
+        let mut buf = Buffer::empty(area);
+        select.render_box(&mut buf, area, &theme, under, true);
+        buf
+    };
+    let enabled = draw(&status(Some("open")));
+    let disabled = draw(&select);
+    let symbols = |buf: &Buffer| {
+        buf.content()
+            .iter()
+            .map(ratatui::buffer::Cell::symbol)
+            .collect::<String>()
+    };
+    // Same cells, faded, and drawn unfocused whatever the owner says.
+    assert_eq!(symbols(&enabled), symbols(&disabled));
+    assert_ne!(enabled[(3, 1)].fg, disabled[(3, 1)].fg);
+    select.set_disabled(false);
+    assert_eq!(select.open(), SelectOutcome::Opened);
+}

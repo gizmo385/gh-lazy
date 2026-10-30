@@ -78,7 +78,7 @@ const DIM_ALPHA: f64 = 0.66;
 const INPUT_RULE_ALPHA: f64 = 0.5;
 
 /// What running a palette command does. The opener turns it into an [`Action`] with [`PaletteRun::action`] once
-/// the palette has closed. #193 and #195 add theirs.
+/// the palette has closed. #195 adds its own.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PaletteRun {
     /// "Toggle Command Log", "Toggle Workflows", "Toggle Issues", "Toggle Pull Requests".
@@ -97,6 +97,8 @@ pub enum PaletteRun {
     ChooseTheme,
     /// A theme palette hit: switch to the theme of that name for the session.
     SetTheme(&'static str),
+    /// "Change Settings": open the Settings modal.
+    ChangeSettings,
 }
 
 impl PaletteRun {
@@ -111,6 +113,7 @@ impl PaletteRun {
             PaletteRun::Quit => Action::Quit,
             PaletteRun::ChooseTheme => Action::OpenThemePalette,
             PaletteRun::SetTheme(name) => Action::SetTheme(name),
+            PaletteRun::ChangeSettings => Action::OpenSettings,
         }
     }
 }

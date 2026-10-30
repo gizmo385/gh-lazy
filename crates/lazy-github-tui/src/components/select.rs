@@ -18,8 +18,8 @@ use ratatui::style::{Modifier, Style};
 use ratatui::text::Span;
 use tokio::time::Instant;
 
-use super::option_nav;
 use super::text_input::{TallBorder, printable};
+use super::{disabled, option_nav};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::{AnsiColor, Paint, Theme};
 
@@ -99,6 +99,8 @@ pub struct Select<T> {
     overlay: Option<Overlay>,
     /// Where the open list was drawn last, for clicks and paging. Empty while closed.
     overlay_area: Rect,
+    /// Textual's `disabled`: drawn faded and never focused, and its list never opens.
+    disabled: bool,
 }
 
 impl<T: PartialEq> Select<T> {
@@ -115,6 +117,7 @@ impl<T: PartialEq> Select<T> {
             value: None,
             overlay: None,
             overlay_area: Rect::default(),
+            disabled: false,
         };
         select.set_options(options);
         select.set_value(value);
@@ -153,6 +156,20 @@ impl<T: PartialEq> Select<T> {
 }
 
 impl<T> Select<T> {
+    /// Disables the select or enables it again. A disabled select is drawn faded (Textual's `opacity: 0.7`), closes
+    /// its list and won't open it; its owner keeps it out of the focus order.
+    pub fn set_disabled(&mut self, disabled: bool) {
+        self.disabled = disabled;
+        if disabled {
+            self.close();
+        }
+    }
+
+    /// Whether it's disabled.
+    pub fn is_disabled(&self) -> bool {
+        self.disabled
+    }
+
     /// Whether the list is open.
     pub fn is_open(&self) -> bool {
         self.overlay.is_some()
@@ -178,8 +195,11 @@ impl<T> Select<T> {
     }
 
     /// Opens the list with the chosen option highlighted, or the blank without one (`_watch_expanded`, then
-    /// `action_show_overlay`'s first row). Already open, nothing changes.
+    /// `action_show_overlay`'s first row). Already open, nothing changes. A disabled select doesn't open.
     pub fn open(&mut self) -> SelectOutcome {
+        if self.disabled {
+            return SelectOutcome::Ignored;
+        }
         if self.overlay.is_none() {
             let highlight = self.value.map_or(0, |index| index + 1);
             self.overlay = Some(Overlay {
@@ -347,7 +367,8 @@ impl<T> Select<T> {
 
     /// Draws the box into the top [`HEIGHT`] rows of `area`: the chosen option's label, or the prompt muted, then the
     /// arrow, `▲` while open. `under` is the parent's background, which shows in the half-cell `▊`/`▎` edges.
-    /// `focused` is the box's own focus, which it doesn't have while the list is open.
+    /// `focused` is the box's own focus, which it doesn't have while the list is open. A disabled box is drawn
+    /// unfocused, then faded.
     pub fn render_box(&self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focused: bool) {
         let area = Rect {
             height: area.height.min(HEIGHT),
@@ -356,6 +377,13 @@ impl<T> Select<T> {
         if area.is_empty() {
             return;
         }
+        self.draw_box(buf, area, theme, under, focused && !self.disabled);
+        if self.disabled {
+            disabled::fade(buf, area.intersection(buf.area), theme, under);
+        }
+    }
+
+    fn draw_box(&self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focused: bool) {
         let styles = BoxStyles::new(theme, under, focused);
         TallBorder {
             left: styles.left,

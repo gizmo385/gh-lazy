@@ -411,3 +411,21 @@ fn a_dialog_footer_shows_none_of_the_lists_keys() {
         ("textual.selection_list.select", "space", "Toggle option")
     );
 }
+
+#[test]
+fn a_solid_border_is_a_thin_box_even_when_empty() {
+    let theme = Theme::default();
+    let under = theme.palette.surface.over(theme.background());
+    let area = Rect::new(0, 0, 10, 4);
+    let rows = |list: &mut SelectionList<&'static str>| {
+        let mut buf = Buffer::empty(area);
+        list.render_solid(&mut buf, area, &theme, under, false, theme.palette.primary);
+        (0..list.height())
+            .map(|y| (0..10).map(|x| buf[(x, y)].symbol().to_owned()).collect::<String>())
+            .collect::<Vec<_>>()
+    };
+    let mut list = SelectionList::new();
+    assert_eq!(rows(&mut list), ["┌────────┐", "└────────┘"]);
+    list.add("a", "a", true);
+    assert_eq!(rows(&mut list), ["┌────────┐", "│ ▐X▌ a  │", "└────────┘"]);
+}

@@ -3,7 +3,7 @@ description = "Settings modal (palette \"Change Settings\"): the heading, the ni
 # The modal's thick border isn't a box to the structure extractor (parity/README.md, "Limits"), so its tabs, labels
 # and widgets are loose text, checked per app with [expect], and the footer cross-app. Focus inside the modal isn't
 # visible to the extractor either; the focus ring is unit-tested.
-gate = false
+gate = true
 parity_rows = [
     "command-palette.change-settings",
     "modals.settings",
@@ -176,14 +176,9 @@ contains = [
     "Mark Notification As Read When Selected:",
 ]
 
+# The tab's binding rows ("Command Pallete: ctrl+p", "Maximize: M", ...) are #194's, which adds them back here.
 [expect.key-bindings]
-contains = [
-    "Custom keybinding overrides for LazyGithub. When rebinding, pressing ESCAPE will reset to",
-    "Command Pallete: ctrl+p",
-    "Maximize: M",
-    "Keybindings: ?",
-    "Quit: q",
-]
+contains = ["Custom keybinding overrides for LazyGithub. When rebinding, pressing ESCAPE will reset to"]
 
 [expect.repositories]
 contains = ["Repository-specific settings", "Additional Repos To Track:", "Add new item...", "Favorites:"]

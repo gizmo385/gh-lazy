@@ -16,7 +16,7 @@ use ratatui::text::Span;
 use super::option_nav;
 use super::text_input::TallBorder;
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::theme::{Paint, Theme};
+use crate::theme::{Paint, Theme, ThemeColor};
 
 /// A focused list's bindings, all hidden: `OptionList.BINDINGS`, then `SelectionList`'s `space`, in Textual's merged
 /// order.
@@ -282,6 +282,32 @@ impl<T> SelectionList<T> {
     /// view. `under` is the parent's background, which shows in the half-cell `▊`/`▎` edges. `focused` draws the
     /// focused border, tint and highlight.
     pub fn render(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focused: bool) {
+        self.draw(buf, area, theme, under, focused, None);
+    }
+
+    /// [`Self::render`] with `border: solid <border>` in place of the `tall` border: a thin box in `border`, focused
+    /// or not (the Settings modal's list fields have `border: solid $primary`).
+    pub fn render_solid(
+        &mut self,
+        buf: &mut Buffer,
+        area: Rect,
+        theme: &Theme,
+        under: Paint,
+        focused: bool,
+        border: ThemeColor,
+    ) {
+        self.draw(buf, area, theme, under, focused, Some(border));
+    }
+
+    fn draw(
+        &mut self,
+        buf: &mut Buffer,
+        area: Rect,
+        theme: &Theme,
+        under: Paint,
+        focused: bool,
+        solid: Option<ThemeColor>,
+    ) {
         let area = Rect {
             height: area.height.min(self.height()),
             ..area
@@ -292,17 +318,22 @@ impl<T> SelectionList<T> {
             return;
         }
         let styles = Styles::new(theme, under, focused);
-        TallBorder {
-            left: styles.left,
-            inner: styles.inner,
-            right: styles.right,
-            fill: styles.option,
-        }
-        .draw(buf, area);
-        if area.height == 2 && self.options.is_empty() {
-            // An empty list's bottom edge, which `TallBorder` leaves off a box this short.
-            for x in area.x + 1..area.right().saturating_sub(1) {
-                buf[(x, area.y + 1)].set_symbol("▁").set_style(styles.inner);
+        if let Some(color) = solid {
+            let border = styles.option.fg(theme.color(color, styles.bg));
+            draw_solid_box(buf, area, border, styles.option);
+        } else {
+            TallBorder {
+                left: styles.left,
+                inner: styles.inner,
+                right: styles.right,
+                fill: styles.option,
+            }
+            .draw(buf, area);
+            if area.height == 2 && self.options.is_empty() {
+                // An empty list's bottom edge, which `TallBorder` leaves off a box this short.
+                for x in area.x + 1..area.right().saturating_sub(1) {
+                    buf[(x, area.y + 1)].set_symbol("▁").set_style(styles.inner);
+                }
             }
         }
         let window = usize::from(area.height.saturating_sub(2));
@@ -352,6 +383,25 @@ impl<T: PartialEq> SelectionList<T> {
     }
 }
 
+/// A `solid` border around `area` in `border`, its inside filled with `fill`.
+fn draw_solid_box(buf: &mut Buffer, area: Rect, border: Style, fill: Style) {
+    let (left, right, top, bottom) = (area.left(), area.right() - 1, area.top(), area.bottom() - 1);
+    for y in top..=bottom {
+        for x in left..=right {
+            let (symbol, style) = match (x == left, x == right, y == top, y == bottom) {
+                (true, _, true, _) => ("┌", border),
+                (_, true, true, _) => ("┐", border),
+                (true, _, _, true) => ("└", border),
+                (_, true, _, true) => ("┘", border),
+                (_, _, true, _) | (_, _, _, true) => ("─", border),
+                (true, _, _, _) | (_, true, _, _) => ("│", border),
+                _ => (" ", fill),
+            };
+            buf[(x, y)].set_symbol(symbol).set_style(style);
+        }
+    }
+}
+
 /// `label` cut to `width` cells, ending in `…` when it doesn't fit (`text-wrap: nowrap; text-overflow: ellipsis`).
 fn fit(label: &str, width: usize) -> Cow<'_, str> {
     if Span::raw(label).width() <= width {
@@ -386,6 +436,8 @@ struct Styles {
     left: Style,
     inner: Style,
     right: Style,
+    /// The list's background, which a solid border is drawn over.
+    bg: Paint,
 }
 
 impl Styles {
@@ -427,6 +479,7 @@ impl Styles {
                 .add_modifier(Modifier::REVERSED),
             inner: Style::new().fg(border).bg(theme.paint(bg)),
             right: Style::new().fg(border).bg(theme.paint(under)),
+            bg,
         }
     }
 

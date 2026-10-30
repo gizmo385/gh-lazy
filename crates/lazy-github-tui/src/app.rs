@@ -25,7 +25,8 @@ use crate::effect::{Effect, GitRequest, GitResponse, GithubResponse, RequestId, 
 use crate::event::Event;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
 use crate::modal::{
-    CommandPaletteDialog, CommandSource, DialogFrame, ModalEntry, ModalKind, PaletteCommand, PaletteRun, dim,
+    CommandPaletteDialog, CommandSource, DialogFrame, ModalEntry, ModalKind, PaletteCommand, PaletteRun,
+    SettingsDialog, SettingsOutcome, dim,
 };
 use crate::notifications::NotificationPoll;
 use crate::options::AppOptions;
@@ -519,6 +520,10 @@ impl App {
         }
     }
 
+    #[allow(
+        clippy::too_many_lines,
+        reason = "a flat table with one arm per action, each handing off to its owner"
+    )]
     fn apply(&mut self, action: Action, out: &mut Outbox) {
         match action {
             Action::Quit => {
@@ -549,6 +554,7 @@ impl App {
                 let theme = Theme::from_config(name, self.shared.theme.color_mode());
                 self.set_theme(theme, out);
             }
+            Action::OpenSettings | Action::SettingsClosed(_) => self.settings(&action, out),
             Action::Toggle(toggle) => self.toggle(toggle, out),
             Action::Minimize => self.minimize(),
             // Python's `action_open_help`: only this closes the panel, and it doesn't move focus.
@@ -673,6 +679,27 @@ impl App {
         });
     }
 
+    /// [`Action::OpenSettings`] and [`Action::SettingsClosed`].
+    ///
+    /// "Change Settings" opens the Settings modal over the main screen, built from the config as it is now (not the
+    /// session's palette theme); the palette has closed by the time its reply opens it. Writing and applying a saved
+    /// config is #307's, so until then a save is dropped.
+    fn settings(&mut self, action: &Action, out: &mut Outbox) {
+        match action {
+            Action::OpenSettings => {
+                if !self.modals.is_empty() || !matches!(self.base, BaseScreen::Main(_)) {
+                    return;
+                }
+                let dialog = SettingsDialog::new(&self.shared.config);
+                Cx::new(&mut self.shared, out).open_dialog(dialog, Action::SettingsClosed);
+            }
+            Action::SettingsClosed(SettingsOutcome::Saved(_)) => {
+                tracing::debug!("Dropping the saved settings: saving them isn't implemented yet");
+            }
+            _ => {}
+        }
+    }
+
     /// Switches the whole app to `theme`, which the caller has given the terminal's color mode. Only what's drawn
     /// changes: `Config` isn't touched, so nothing is saved. What cached colors from the old theme takes them from
     /// the new one.
@@ -685,8 +712,8 @@ impl App {
     }
 
     /// LazyGithub's own commands as they apply now, in `MainScreenCommandProvider.commands` order. They come before
-    /// the system commands, which keeps them first among equal scores (Py bug B86's answer). "Change Settings" (#193),
-    /// "Debug Info" and "Open Bug Report" (#195) go between the toggles and "Refresh notifications".
+    /// the system commands, which keeps them first among equal scores (Py bug B86's answer). "Debug Info" and "Open Bug
+    /// Report" (#195) go after "Change Settings", ahead of "Refresh notifications".
     fn app_commands(&self) -> Vec<PaletteCommand> {
         let command = |name, help, run| PaletteCommand {
             name,
@@ -711,6 +738,11 @@ impl App {
                 "Toggle Pull Requests",
                 "Toggle showing or hiding repo pull requests",
                 Toggle::PullRequests,
+            ),
+            command(
+                "Change Settings",
+                "Adjust LazyGithub settings",
+                PaletteRun::ChangeSettings,
             ),
         ];
         if self.shared.config.notifications.enabled {

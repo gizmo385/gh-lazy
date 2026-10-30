@@ -1,5 +1,5 @@
-//! Textual's `*:disabled:can-focus { opacity: 0.7 }`: a disabled input or switch is drawn as usual, then faded toward
-//! its parent's background. Buttons have their own `:disabled` styles (`button.rs`).
+//! Textual's `*:disabled:can-focus { opacity: 0.7 }`: a disabled input, switch or select is drawn as usual, then
+//! faded toward its parent's background. Buttons have their own `:disabled` styles (`button.rs`).
 
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;

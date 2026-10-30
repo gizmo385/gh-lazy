@@ -20,6 +20,7 @@ mod new_comment;
 mod new_issue;
 mod notifications;
 mod pull_request;
+mod settings;
 mod stack;
 mod trigger_workflow;
 mod user_profile;
@@ -59,6 +60,7 @@ pub use pull_request::{
     CreatePrefill, PullRequestAction, PullRequestDialog, PullRequestForm, ReviewersField, ReviewersFocus,
     ReviewersOutcome, removing_toast,
 };
+pub use settings::{SettingsAction, SettingsDialog, SettingsOutcome};
 pub use stack::ModalEntry;
 pub use trigger_workflow::{TriggerWorkflowAction, TriggerWorkflowDialog};
 pub use user_profile::{UserProfileAction, UserProfileDialog};
@@ -118,6 +120,8 @@ pub enum ModalKind {
     Notifications,
     /// [`CommandPaletteDialog`]: the command palette.
     CommandPalette,
+    /// [`SettingsDialog`]: "LazyGithub Settings".
+    Settings,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -211,6 +215,8 @@ pub enum DialogAction {
     Notifications(NotificationsAction),
     /// [`CommandPaletteDialog`]'s.
     CommandPalette(CommandPaletteAction),
+    /// [`SettingsDialog`]'s.
+    Settings(SettingsAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -231,6 +237,7 @@ impl DialogAction {
             DialogAction::PullRequest(_) => ModalKind::PullRequest,
             DialogAction::Notifications(_) => ModalKind::Notifications,
             DialogAction::CommandPalette(_) => ModalKind::CommandPalette,
+            DialogAction::Settings(_) => ModalKind::Settings,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }

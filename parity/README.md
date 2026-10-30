@@ -1322,7 +1322,8 @@ plan ([Running scenarios](#running-scenarios) has the rules):
 | `live-python=none` | Anything else: most feature PRs. | No `setup-uv`, no `uv sync`, no Python process. Rust runs against the references. |
 
 The parity step is `cargo xtask parity --all --ci --no-sync --jobs 4 --live-python-since HEAD^1` (the runner's 4
-vCPUs), which recomputes the same plan. The job summary starts with the plan line. Pushes to `rust-main` run only
+vCPUs), which recomputes the same plan. Under `live-python=all` it runs `--jobs 2`: four live Textual apps on four
+vCPUs drop and misroute keys, which shows up as early captures and timeouts that repeat on the retry. The job summary starts with the plan line. Pushes to `rust-main` run only
 fmt, clippy and the unit tests, because the squash-merged tree already passed the gate on its PR, and that run keeps
 the Rust cache warm for PRs. The unit tests include the references freshness test, so a trunk that merged stale
 references goes red at once.

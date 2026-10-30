@@ -79,9 +79,13 @@ jobs:
       id: sync
       if: steps.plan.outcome == 'success' && steps.plan.outputs.live-python != 'none'
       run: uv sync --frozen
+    # Two jobs when every scenario runs Python live: four Textual apps on the runner's four cores start dropping and
+    # misrouting keys (missed captures, timeouts that repeat on the retry). Rust-only and partial runs keep four.
     - name: Parity scenarios
       if: github.event_name == 'pull_request'
-      run: cargo xtask parity --all --ci --no-sync --jobs 4 --live-python-since HEAD^1
+      env:
+        PARITY_JOBS: ${{ steps.plan.outputs.live-python == 'all' && '2' || '4' }}
+      run: cargo xtask parity --all --ci --no-sync --jobs "$PARITY_JOBS" --live-python-since HEAD^1
     # Runs even when the parity step fails, so a PR that breaks both reports both.
     - name: Python-backed integration tests
       if: ${{ !cancelled() && steps.plan.outputs.live-python == 'all' && steps.sync.outcome == 'success' }}

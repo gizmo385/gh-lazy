@@ -24,6 +24,7 @@ use crate::component::{
 use crate::components::command_log::Wheel;
 use crate::components::footer::{Footer, FooterHit, footer_items};
 use crate::components::help_panel::{HelpPanel, HelpScroll, help_sections, help_width};
+use crate::components::link_map::{LinkMap, LinkSink, ScreenLink};
 use crate::components::status_bar::{StatusBar, UnreadState};
 use crate::components::too_small::{TooSmall, is_too_small};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
@@ -43,6 +44,36 @@ use crate::screens::main::{MainScreen, Toggle};
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
 use crate::theme::Theme;
 use crate::toast::{Severity, Toast, Toasts};
+
+/// A click on a link drawn in the last frame (`links`): the press and the release on the same link follow it, after the
+/// release reaches the screen as any does (Textual's `Click` on a `Markdown` link). `pressed` holds the link a left
+/// press landed on until the release. `None` for any other event.
+fn link_click(
+    links: &LinkMap,
+    pressed: &mut Option<ScreenLink>,
+    main: &mut MainScreen,
+    mouse: MouseEvent,
+) -> Option<Action> {
+    let here = links.at(mouse.column, mouse.row);
+    match mouse.kind {
+        MouseEventKind::Down(MouseButton::Left) => {
+            *pressed = here.cloned();
+            None
+        }
+        MouseEventKind::Up(MouseButton::Left) => {
+            let pressed = pressed.take()?;
+            let here = here.filter(|&link| *link == pressed)?;
+            let target = Arc::clone(&here.target);
+            // A release over the content does nothing else today.
+            let _ = main.handle_mouse(mouse);
+            Some(Action::FollowLink {
+                target,
+                external: false,
+            })
+        }
+        _ => None,
+    }
+}
 
 /// The bindings on the app link of every non-modal chain, in Textual order: its built-ins, then `LazyGithub.BINDINGS`.
 pub const APP_BINDINGS: &[BindingId] = &[
@@ -99,6 +130,10 @@ pub struct App {
     help_scroll: HelpScroll,
     /// The footer items drawn in the last frame, for clicks.
     footer_hits: Vec<FooterHit>,
+    /// The links the main screen drew in the last frame, for clicks and link hints.
+    links: LinkMap,
+    /// The link a left press landed on, until the release: a click follows it when both land on it.
+    pressed_link: Option<ScreenLink>,
     /// Where the mouse was at the last mouse event, for hover highlights. Each frame checks it against that frame's
     /// layout, as Textual re-checks hover after each layout change. Terminals don't report the pointer leaving the
     /// window, so it stays at its last cell.
@@ -143,6 +178,8 @@ impl App {
             help_open: false,
             help_scroll: HelpScroll::default(),
             footer_hits: Vec::new(),
+            links: LinkMap::default(),
+            pressed_link: None,
             mouse: None,
             mouse_capture: None,
             local_repo_request: None,
@@ -446,6 +483,9 @@ impl App {
         let BaseScreen::Main(main) = &mut self.base else {
             return None;
         };
+        if let Some(action) = link_click(&self.links, &mut self.pressed_link, main, mouse) {
+            return Some(action);
+        }
         // The panel docks over the screen's right edge, and the wheel over it scrolls it.
         if self.help_open
             && self.help_scroll.contains(Position::new(mouse.column, mouse.row))
@@ -455,6 +495,11 @@ impl App {
             return Some(Action::Consumed);
         }
         main.handle_mouse(mouse)
+    }
+
+    /// The links drawn on the main screen in the last frame.
+    pub fn links(&self) -> &LinkMap {
+        &self.links
     }
 
     /// Tries each binding a key fired in one link, in order, until one applies (Textual's `_check_bindings`).
@@ -687,6 +732,22 @@ impl App {
             }
             Action::RefreshNotifications => self.notifications.refresh(&mut Cx::new(&mut self.shared, out)),
             Action::SelectRepo(repo) => self.select_repo(&repo, out),
+            // Link hints' `F`: whatever the link is, the browser, with Python's toast even when nothing opens.
+            Action::FollowLink { target, external: true } => {
+                out.effects.push(Effect::OpenUrl(target.to_string()));
+                self.toasts.push(Toast::new(
+                    Severity::Information,
+                    format!("Opening {target} externally"),
+                ));
+            }
+            Action::FollowLink {
+                target,
+                external: false,
+            } => {
+                if let BaseScreen::Main(main) = &mut self.base {
+                    main.follow_link(target, &mut Cx::new(&mut self.shared, out));
+                }
+            }
             Action::Auth(action) => {
                 if let BaseScreen::Auth(auth) = &mut self.base {
                     auth.update(action, &mut Cx::new(&mut self.shared, out));
@@ -1189,6 +1250,7 @@ impl App {
         if self.too_small() {
             // Nothing drawn this frame takes a click.
             self.footer_hits.clear();
+            self.links = LinkMap::default();
             frame.render_widget(
                 TooSmall {
                     theme: &self.shared.theme,
@@ -1222,12 +1284,14 @@ impl App {
             ),
             area,
         );
+        let links = LinkSink::default();
         let cx = RenderCx {
             theme,
             keymap: &self.shared.keymap,
             now: self.shared.clock.now(),
             focused: true,
             focus_within: true,
+            links: Some(&links),
         };
         let footer_area = match &mut self.base {
             BaseScreen::Startup(_) => None,
@@ -1289,6 +1353,7 @@ impl App {
             }
             None => Vec::new(),
         };
+        self.links = links.take();
     }
 
     /// Each dialog, bottom to top, over everything drawn before it, dimmed: its frame centered above the bottom row,
@@ -1306,12 +1371,14 @@ impl App {
             })
             .collect();
         let theme = self.shared.theme;
+        // Links in dialogs aren't followed (#339's scope): the frame's map is the main screen's.
         let cx = RenderCx {
             theme: &theme,
             keymap: &self.shared.keymap,
             now: self.shared.clock.now(),
             focused: true,
             focus_within: true,
+            links: None,
         };
         let available = Rect {
             height: area.height.saturating_sub(1),

@@ -170,6 +170,7 @@ impl DetailsBody for PullRequestDetails {
             now: tokio::time::Instant::now(),
             animations: false,
             focused,
+            links: None,
         };
         self.render_timed(tab, frame, area, &cx);
     }

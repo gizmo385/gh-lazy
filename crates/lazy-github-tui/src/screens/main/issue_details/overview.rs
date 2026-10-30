@@ -16,6 +16,7 @@ use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::effect::RequestId;
 use crate::theme::{Accent, Theme};
 
+use super::super::details::BodyRenderCx;
 use super::super::overview_text::{HeaderStyles, OverviewMarkdown, accent, append, push_label, push_rule};
 
 /// The Overview of one issue, and its scroll position.
@@ -83,8 +84,11 @@ impl IssueOverview {
         self.scroll.wheel(wheel);
     }
 
-    pub(super) fn render(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme) {
-        self.scroll.render(frame, area, theme, &mut self.body);
+    pub(super) fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &BodyRenderCx<'_>) {
+        self.scroll.render(frame, area, cx.theme, &mut self.body);
+        if let Some(links) = cx.links {
+            self.scroll.record_links(area, cx.theme, &mut self.body, links);
+        }
     }
 }
 

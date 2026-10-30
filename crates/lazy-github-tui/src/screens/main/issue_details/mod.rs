@@ -123,13 +123,14 @@ impl DetailsBody for IssueDetails {
             now: Instant::now(),
             animations: false,
             focused,
+            links: None,
         };
         self.render_timed(tab, frame, area, &cx);
     }
 
     fn render_timed(&mut self, tab: usize, frame: &mut Frame<'_>, area: Rect, cx: &BodyRenderCx<'_>) {
         match IssueTab::at(tab) {
-            IssueTab::Overview => self.overview.render(frame, area, cx.theme),
+            IssueTab::Overview => self.overview.render(frame, area, cx),
             IssueTab::Comments => self.comments.render(frame, area, cx),
         }
     }

@@ -1,8 +1,7 @@
 version = 1
-description = "Clicking links in a markdown body: a user link opens the profile modal, an issue link opens that issue in-app with \"Opening issue for link\""
-# Not built yet: gate = false, so the Rust side shows as rust-not-ready in the report until it lands. Links that open
-# the browser change nothing on screen, so only the in-app targets are captured.
-gate = false
+description = "Clicking links: the Repo Overview's title (a bare repo link) opens in the browser and nothing changes in the app; in a markdown body a user link opens the profile modal, an issue link opens that issue in-app with \"Opening issue for link\""
+# Links that open the browser change nothing on screen: the browser capture checks what fake-browser was asked to open.
+gate = true
 parity_rows = [
     "markdown-links.link-click",
     "toasts.opening-for-link",
@@ -25,6 +24,17 @@ wait = { text = "Comments that fail to load", timeout_ms = 15000 }
 [[step]]
 wait = { text = "Issues with bodies and comments.", timeout_ms = 15000 }
 
+# The repo title links the bare repo, which clicks send to the browser (accept_repo=False).
+[[step]]
+click = { text = "parity-bot/issue-fixture • Public" }
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+capture = "browser"
+checks = ["titles", "focus"]
+
 [[step]]
 keys = ["3", "enter"]
 
@@ -41,9 +51,11 @@ wait = { text = "Followers: 12" }
 [[step]]
 move = { at = [10, 1] }
 
+# No titles: Python's two-row strip at the bottom of the profile (Py bug B50) hides the Workflows box's border at
+# 160x48, as in `user-profile`'s `organization` capture.
 [[step]]
 capture = "user"
-checks = ["titles"]
+checks = []
 
 [[step]]
 keys = ["escape"]
@@ -64,6 +76,11 @@ move = { at = [10, 1] }
 [[step]]
 capture = "issue"
 checks = ["titles", "focus"]
+
+[expect.browser]
+contains = ["parity-bot/issue-fixture • Public", "Owned by parity-bot", "Issues with bodies and comments."]
+not_contains = ["Opening"]
+opened = ["https://github.com/parity-bot/issue-fixture"]
 
 [expect.user]
 contains = ["Followers: 12"]

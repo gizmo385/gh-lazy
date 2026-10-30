@@ -13,12 +13,13 @@ use ratatui::text::Line;
 use crate::component::Cx;
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
+use crate::components::link_map::LinkSink;
 use crate::components::markdown::{Markdown, MarkdownSource, Rendered, TextRun};
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::theme::{Accent, Theme};
 
-use super::details::DetailsBody;
+use super::details::{BodyRenderCx, DetailsBody};
 use super::overview_text::{HeaderStyles, accent, append, push_label, push_rule};
 
 /// What shows below the rule when there's no README, or it couldn't be fetched: Python's `*No README found.*`.
@@ -139,6 +140,12 @@ impl RepoOverview {
     pub(super) fn render(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme) {
         self.scroll.render(frame, area, theme, &mut self.body);
     }
+
+    /// [`Self::render`], recording the README's and the header's links into `links`.
+    fn render_linked(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, links: &LinkSink) {
+        self.render(frame, area, theme);
+        self.scroll.record_links(area, theme, &mut self.body, links);
+    }
 }
 
 impl DetailsBody for RepoOverview {
@@ -175,6 +182,13 @@ impl DetailsBody for RepoOverview {
 
     fn render(&mut self, _tab: usize, frame: &mut Frame<'_>, area: Rect, theme: &Theme, _focused: bool) {
         RepoOverview::render(self, frame, area, theme);
+    }
+
+    fn render_timed(&mut self, _tab: usize, frame: &mut Frame<'_>, area: Rect, cx: &BodyRenderCx<'_>) {
+        match cx.links {
+            Some(links) => self.render_linked(frame, area, cx.theme, links),
+            None => RepoOverview::render(self, frame, area, cx.theme),
+        }
     }
 }
 

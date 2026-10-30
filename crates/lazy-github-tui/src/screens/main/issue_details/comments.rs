@@ -289,6 +289,9 @@ impl IssueComments {
             }
         }
         self.scroll.render(frame, area, cx.theme, &mut self.body);
+        if let Some(links) = cx.links {
+            self.scroll.record_links(area, cx.theme, &mut self.body, links);
+        }
     }
 
     /// When the loading overlay's next frame is due.

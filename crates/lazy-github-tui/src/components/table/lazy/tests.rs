@@ -363,6 +363,7 @@ fn draw(table: &mut SearchableTable<Pr>, area: Rect) -> Buffer {
                 now: Instant::now(),
                 focused: true,
                 focus_within: true,
+                links: None,
             };
             table.render(frame, frame.area(), &cx);
         })

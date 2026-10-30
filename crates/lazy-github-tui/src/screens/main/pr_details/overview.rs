@@ -788,6 +788,9 @@ impl PrOverview {
             }
         }
         self.scroll.render(frame, area, cx.theme, &mut self.body);
+        if let Some(links) = cx.links {
+            self.scroll.record_links(area, cx.theme, &mut self.body, links);
+        }
         self.area = area;
 
         // The loading overlays, over the rows each loading section takes on screen.

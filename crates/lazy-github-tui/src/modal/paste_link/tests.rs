@@ -328,6 +328,7 @@ fn draw(dialog: &mut PasteLinkDialog) -> String {
                 now: tokio::time::Instant::now(),
                 focused: true,
                 focus_within: true,
+                links: None,
             };
             dialog.render(frame, DialogFrame::interior(area), &cx);
         })

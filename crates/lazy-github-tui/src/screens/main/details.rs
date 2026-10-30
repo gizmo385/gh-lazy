@@ -19,6 +19,7 @@ use crate::component::{BindingState, ChainLink, Cx, Owner, RenderCx};
 use crate::components::command_log::Wheel;
 use crate::components::diff_view::PendingComment;
 use crate::components::info::{InfoView, Scroll};
+use crate::components::link_map::LinkSink;
 use crate::components::markdown::{Markdown, Rendered};
 use crate::components::scroll_view::{Layout, ScrollView};
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
@@ -261,6 +262,8 @@ pub(super) struct BodyRenderCx<'a> {
     pub(super) animations: bool,
     /// Whether focus is inside the content ([`FocusTarget::DetailsContent`]).
     pub(super) focused: bool,
+    /// Where the links the content draws are recorded, when the frame keeps them.
+    pub(super) links: Option<&'a LinkSink>,
 }
 
 /// A tab switch: `textual.tabs.next_tab`, `textual.tabs.previous_tab` or a click on a tab.
@@ -774,6 +777,7 @@ impl DetailsPane {
             now: cx.now,
             animations: self.animations,
             focused: focus == FocusTarget::DetailsContent,
+            links: cx.links,
         };
         self.body.get_mut().render_timed(tab, frame, body, &body_cx);
         [(tabs, FocusTarget::DetailsTabs), (body, FocusTarget::DetailsContent)]

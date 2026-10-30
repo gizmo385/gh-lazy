@@ -552,6 +552,7 @@ fn draw<K: LookupKind>(dialog: &mut LookupDialog<K>) -> String {
                 now: tokio::time::Instant::now(),
                 focused: true,
                 focus_within: true,
+                links: None,
             };
             dialog.render(frame, DialogFrame::interior(area), &cx);
         })

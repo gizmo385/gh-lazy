@@ -13,6 +13,7 @@ use tokio::time::Instant;
 
 use crate::action::Action;
 use crate::clock::Clock;
+use crate::components::link_map::LinkSink;
 use crate::components::markdown::MarkdownSource;
 use crate::effect::{Effect, GitRequest, GithubRequest, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
@@ -577,4 +578,7 @@ pub struct RenderCx<'a> {
     pub focused: bool,
     /// Whether this component or one inside it has focus (Textual's `:focus-within`).
     pub focus_within: bool,
+    /// Where the views that draw links record them, for this frame's [`LinkMap`](crate::components::link_map::LinkMap):
+    /// the main screen's draw has one, and a view drawn without one records nothing.
+    pub links: Option<&'a LinkSink>,
 }

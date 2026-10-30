@@ -106,6 +106,7 @@ fn draw<T: TableItem>(table: &mut SearchableTable<T>, focused: bool, width: u16,
                 now: Instant::now(),
                 focused,
                 focus_within: focused,
+                links: None,
             };
             table.render(frame, frame.area(), &cx);
         })

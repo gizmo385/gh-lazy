@@ -1,5 +1,7 @@
 //! What happened, in app terms. `App::update` turns each one into state changes and effects.
 
+use std::sync::Arc;
+
 use lazy_github_core::logging::LogLine;
 use lazy_github_core::models::Repository;
 
@@ -74,6 +76,16 @@ pub enum Action {
     /// selection dispatches it (the repos table, the current-directory default, and later lookups and links), and
     /// selecting the current repo again reloads everything. Boxed: a `Repository` is big.
     SelectRepo(Box<Repository>),
+    /// Follow a link drawn on the main screen: a click on it, or a picked link hint. `external` (link hints' `F`)
+    /// opens it in the browser with a toast. Otherwise a pull request, issue or user link opens in the app once it
+    /// resolves, and anything else, or a link that doesn't resolve, opens in the browser. Python's
+    /// `action_open_gh_link`.
+    FollowLink {
+        /// The link's target, as drawn.
+        target: Arc<str>,
+        /// Whether it goes to the browser whatever it is.
+        external: bool,
+    },
 
     // Screens.
     /// The authentication screen's own actions.

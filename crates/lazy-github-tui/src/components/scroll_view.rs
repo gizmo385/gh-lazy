@@ -12,6 +12,7 @@ use ratatui::widgets::Paragraph;
 
 use super::command_log::{WHEEL_ROWS, Wheel};
 use super::info::Scroll;
+use super::link_map::LinkSink;
 use super::markdown::Rendered;
 use crate::theme::Theme;
 
@@ -229,6 +230,16 @@ impl ScrollView {
             };
             render_scrollbar(buf, bar, height, offset, theme);
         }
+    }
+
+    /// Records into `links` the links of `text` as the last [`Self::render`] in `area` drew them: laid out at the width
+    /// it got, scrolled to its offset, and cut to the rows and columns on screen.
+    pub fn record_links(&self, area: Rect, theme: &Theme, text: &mut impl Layout, links: &LinkSink) {
+        let width = Self::content_width(area, self.last.0);
+        let rendered = text.layout(width, theme);
+        links
+            .borrow_mut()
+            .record(Rect { width, ..area }, self.offset, &rendered.links);
     }
 
     /// Draws `text`, with a scrollbar in the last two columns when it overflows.

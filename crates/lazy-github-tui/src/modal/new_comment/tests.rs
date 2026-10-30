@@ -430,6 +430,7 @@ fn draw(dialog: &mut NewCommentDialog) -> String {
                 now: tokio::time::Instant::now(),
                 focused: true,
                 focus_within: true,
+                links: None,
             };
             dialog.render(frame, super::super::DialogFrame::interior(rect), &cx);
         })

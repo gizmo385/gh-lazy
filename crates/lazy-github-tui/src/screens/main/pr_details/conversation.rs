@@ -1002,6 +1002,9 @@ impl PrConversation {
                     }
                 }
                 self.scroll.render(frame, area, theme, body.as_mut());
+                if let Some(links) = cx.links {
+                    self.scroll.record_links(area, theme, body.as_mut(), links);
+                }
             }
         }
     }

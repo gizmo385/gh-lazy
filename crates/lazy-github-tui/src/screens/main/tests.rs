@@ -108,6 +108,7 @@ fn borders_follow_focus() {
                     now: tokio::time::Instant::now(),
                     focused: true,
                     focus_within: true,
+                    links: None,
                 };
                 screen.render(frame, frame.area(), &cx);
             })

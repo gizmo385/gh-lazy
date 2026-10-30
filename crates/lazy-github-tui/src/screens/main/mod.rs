@@ -28,7 +28,9 @@ mod workflows;
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::AppearanceSettings;
 use lazy_github_core::gh::GhError;
-use lazy_github_core::links::LinkSubject;
+use std::sync::Arc;
+
+use lazy_github_core::links::{LinkSubject, parse_github_url};
 use lazy_github_core::models::{
     FullPullRequest, Issue, IssueListItem, Notification, ReactionKind, Repository, WorkflowRun,
 };
@@ -327,6 +329,9 @@ pub struct MainScreen {
     /// The preload of the pull request for the working directory's commit, for the latest repo selection: a
     /// selection that any newer one replaces.
     preload: CommitPreload,
+    /// Followed links still resolving, by request, with the link: each opens in the app once it resolves, or in the
+    /// browser when it doesn't.
+    follows: Vec<(RequestId, Arc<str>)>,
 }
 
 /// A pull request selection waiting for the full pull request.
@@ -513,6 +518,7 @@ impl MainScreen {
             hits: Vec::new(),
             pending_pr: None,
             preload: CommitPreload::default(),
+            follows: Vec::new(),
         }
     }
 
@@ -707,6 +713,40 @@ impl MainScreen {
         }
     }
 
+    /// `Action::FollowLink` for a link that stays in the app if it can: Python's `action_open_gh_link`. A pull request,
+    /// issue or user link is looked up first ([`parse_github_url`] without repository links: a bare repo would be a
+    /// surprising full UI swap); anything else opens in the browser at once, with nothing shown in the app.
+    pub fn follow_link(&mut self, target: Arc<str>, cx: &mut Cx<'_>) {
+        match parse_github_url(&target, false) {
+            Some(link) => {
+                let id = cx.request(GithubRequest::ResolveLink(link));
+                self.follows.push((id, target));
+            }
+            None => cx.effect(Effect::OpenUrl(target.to_string())),
+        }
+    }
+
+    /// Takes the answer to a followed link's lookup, and hands back any other response: what it points at opens in
+    /// the app ([`Self::open_link_subject`]); a link that didn't resolve opens in the browser.
+    fn on_followed_link(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
+        let Some(index) = self.follows.iter().position(|(follow, _)| *follow == id) else {
+            return Some(response);
+        };
+        let GithubResponse::ResolveLink(result) = response else {
+            return Some(response);
+        };
+        let (_, target) = self.follows.remove(index);
+        match result {
+            Ok(Some(subject)) => self.open_link_subject(subject, cx),
+            Ok(None) => cx.effect(Effect::OpenUrl(target.to_string())),
+            Err(error) => {
+                tracing::debug!("Resolving {target} failed, so it opens in the browser: {error}");
+                cx.effect(Effect::OpenUrl(target.to_string()));
+            }
+        }
+        None
+    }
+
     /// `user.view_profile` in a table: the profile of the highlighted row's user, or a toast without a row.
     fn view_profile(&mut self, origin: ProfileOrigin, cx: &mut Cx<'_>) {
         let login = match origin {
@@ -870,6 +910,7 @@ impl MainScreen {
     /// first, then each section's pane.
     pub fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
         let response = self.profile.on_response(id, response, cx)?;
+        let response = self.on_followed_link(id, response, cx)?;
         let response = self.repos.on_response(id, response, cx)?;
         let response = self.issue_lists.on_response(id, response, cx)?;
         let response = self.workflows.on_response(id, response, cx)?;
@@ -1946,3 +1987,6 @@ mod preload_tests;
 
 #[cfg(test)]
 mod paste_link_tests;
+
+#[cfg(test)]
+mod follow_link_tests;

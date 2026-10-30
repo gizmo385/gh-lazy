@@ -97,6 +97,22 @@ pub struct PartialPullRequest {
     pub draft: bool,
 }
 
+impl PartialPullRequest {
+    /// Decodes a pull request the API sent for `repo`, such as one item of `GET
+    /// /repos/{owner}/{repo}/commits/{sha}/pulls`, tagged with `repo`.
+    ///
+    /// # Errors
+    ///
+    /// When the body isn't an object with the fields of an [`Issue`] and a boolean `draft`.
+    pub fn from_api(body: Value, repo: &Repository) -> Result<Self, serde_json::Error> {
+        let mut body = body;
+        if let Value::Object(fields) = &mut body {
+            fields.insert("repo".to_owned(), serde_json::to_value(repo)?);
+        }
+        serde_json::from_value(body)
+    }
+}
+
 /// One item of an issues-endpoint page: an issue or a pull request.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum IssueListItem {

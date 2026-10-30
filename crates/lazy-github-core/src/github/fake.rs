@@ -14,8 +14,8 @@ use super::{
 use crate::gh::GhError;
 use crate::models::{
     Branch, CheckRun, CheckState, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment,
-    IssueListItem, Notification, ReactionKind, Reactions, Repository, Review, ReviewComment, User, Workflow,
-    WorkflowJob, WorkflowRun,
+    IssueListItem, Notification, PartialPullRequest, ReactionKind, Reactions, Repository, Review, ReviewComment, User,
+    Workflow, WorkflowJob, WorkflowRun,
 };
 
 /// The version fake-gh's `gh --version` prints, and what [`FakeGithub::gh_version`] returns unless set.
@@ -24,7 +24,7 @@ const FAKE_GH_VERSION: &str = "2.89.0 (fake-gh)";
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `gh_version` returns fake-gh's `2.89.0 (fake-gh)`, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_notifications` returns an empty page, `mark_notification_read` and `mark_all_notifications_read` fail with a 422, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` and `pull_request_uncached` fail with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, `collaborators` and `requested_reviewers` return none, `request_reviewers` and `update_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_notifications` returns an empty page, `mark_notification_read` and `mark_all_notifications_read` fail with a 422, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` and `pull_request_uncached` fail with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `pull_requests_for_commit`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, `collaborators` and `requested_reviewers` return none, `request_reviewers` and `update_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -110,6 +110,13 @@ pub enum GithubCall {
     },
     /// [`Github::check_runs`].
     CheckRuns {
+        /// The repository's full name.
+        full_name: String,
+        /// The commit.
+        sha: String,
+    },
+    /// [`Github::pull_requests_for_commit`].
+    PullRequestsForCommit {
         /// The repository's full name.
         full_name: String,
         /// The commit.
@@ -305,6 +312,8 @@ struct State {
     commit_statuses: HashMap<(String, String), Result<CombinedStatus, GhError>>,
     /// Keyed by `full_name` and sha.
     check_runs: HashMap<(String, String), Result<Vec<CheckRun>, GhError>>,
+    /// Keyed by `full_name` and sha.
+    commit_pull_requests: HashMap<(String, String), Result<Vec<PartialPullRequest>, GhError>>,
     /// Keyed by `full_name` and number.
     issue_reactions: HashMap<(String, u64), Result<Reactions, GhError>>,
     /// Keyed by `full_name` and number.
@@ -531,6 +540,21 @@ impl FakeGithub {
         self.lock()
             .check_runs
             .insert((full_name.to_owned(), sha.to_owned()), runs);
+        self
+    }
+
+    /// `pull_requests_for_commit` returns `prs` for commit `sha` of the repository named `full_name`, each with its
+    /// `repo` set to the repository asked, as [`GhCli`](super::GhCli) does. Commits not set have none.
+    #[must_use]
+    pub fn with_commit_pull_requests(
+        self,
+        full_name: &str,
+        sha: &str,
+        prs: Result<Vec<PartialPullRequest>, GhError>,
+    ) -> Self {
+        self.lock()
+            .commit_pull_requests
+            .insert((full_name.to_owned(), sha.to_owned()), prs);
         self
     }
 
@@ -1022,6 +1046,24 @@ impl Github for FakeGithub {
         };
         self.respond(call, |state| canned_page(state.check_runs.get(&key)))
             .await
+    }
+
+    async fn pull_requests_for_commit(&self, repo: &Repository, sha: &str) -> Result<Vec<PartialPullRequest>, GhError> {
+        let key = (repo.full_name.clone(), sha.to_owned());
+        let call = GithubCall::PullRequestsForCommit {
+            full_name: repo.full_name.clone(),
+            sha: sha.to_owned(),
+        };
+        let prs = self
+            .respond(call, |state| canned_page(state.commit_pull_requests.get(&key)))
+            .await?;
+        Ok(prs
+            .into_iter()
+            .map(|mut pr| {
+                pr.issue.repo = repo.clone();
+                pr
+            })
+            .collect())
     }
 
     async fn issue_reactions(&self, repo: &Repository, number: u64) -> Result<Reactions, GhError> {

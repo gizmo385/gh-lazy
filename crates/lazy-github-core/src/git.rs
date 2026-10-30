@@ -154,6 +154,18 @@ impl GitCli {
         }
     }
 
+    /// The checked-out commit's sha, `git rev-parse HEAD` trimmed, or `None` when git fails (not a repo, no commit
+    /// yet, git missing; Py bug B41), logged at debug.
+    pub async fn head_commit(&self) -> Option<String> {
+        match self.run_logged(&["rev-parse", "HEAD"], self.inner.timeout).await {
+            Ok(stdout) => Some(stdout.trim().to_owned()).filter(|sha| !sha.is_empty()),
+            Err(error) => {
+                debug!("No current-directory commit: {error}");
+                None
+            }
+        }
+    }
+
     /// Whether `branch` has an upstream configured: `git config --get branch.<branch>.merge` exits 0.
     pub async fn has_upstream(&self, branch: &str) -> bool {
         let key = format!("branch.{branch}.merge");
@@ -437,6 +449,38 @@ mod tests {
         assert_eq!(git.current_branch().await.as_deref(), Some("feature/x"));
         sandbox.git_in(&sandbox.work(), &["checkout", "-q", "--detach"]);
         assert_eq!(git.current_branch().await.as_deref(), Some("HEAD"));
+    }
+
+    #[tokio::test]
+    async fn the_head_commit_is_its_sha_and_none_without_a_repo_or_a_commit() {
+        let sandbox = Sandbox::new();
+        let git = sandbox.client(sandbox.work());
+        assert_eq!(git.head_commit().await, None, "no repo");
+        sandbox.git_in(&sandbox.work(), &["init", "-q", "-b", "main"]);
+        assert_eq!(git.head_commit().await, None, "no commit yet");
+        sandbox.git_in(
+            &sandbox.work(),
+            &[
+                "-c",
+                "user.name=Parity",
+                "-c",
+                "user.email=parity@example.com",
+                "commit",
+                "-q",
+                "--allow-empty",
+                "-m",
+                "first",
+            ],
+        );
+        let expected = std::process::Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(sandbox.work())
+            .env("HOME", sandbox.home())
+            .output()
+            .unwrap();
+        let expected = String::from_utf8(expected.stdout).unwrap().trim().to_owned();
+        assert_eq!(expected.len(), 40);
+        assert_eq!(git.head_commit().await, Some(expected));
     }
 
     #[tokio::test]

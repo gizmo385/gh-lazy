@@ -14,6 +14,7 @@ mod pr_details;
 mod pr_edit;
 mod pr_lookup;
 mod pr_merge;
+mod preload;
 mod profile;
 mod pull_requests;
 mod repo_overview;
@@ -61,6 +62,7 @@ pub use pr_details::PullRequestTarget;
 use pr_edit::PrEdit;
 use pr_lookup::{PrLookup, select_repository_first};
 use pr_merge::PrMerges;
+use preload::CommitPreload;
 use profile::ProfileFetch;
 pub use profile::ProfileOrigin;
 pub use repos::{RepoCells, ReposSection};
@@ -319,6 +321,9 @@ pub struct MainScreen {
     hits: Vec<(Rect, FocusTarget)>,
     /// The selected pull request's request, while it's in flight. Only the latest selection is ever shown.
     pending_pr: Option<PendingPullRequest>,
+    /// The preload of the pull request for the working directory's commit, for the latest repo selection: a
+    /// selection that any newer one replaces.
+    preload: CommitPreload,
 }
 
 /// A pull request selection waiting for the full pull request.
@@ -493,6 +498,7 @@ impl MainScreen {
             table_areas: [None; 4],
             hits: Vec::new(),
             pending_pr: None,
+            preload: CommitPreload::default(),
         }
     }
 
@@ -558,9 +564,11 @@ impl MainScreen {
     /// publishes" for the contract of its `load_repo`.
     pub fn on_repo_selected(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
         self.cancel_pending_selection(cx);
-        if self.section(SectionId::PullRequests).shown() || self.section(SectionId::Issues).shown() {
+        let lists_shown = self.section(SectionId::PullRequests).shown() || self.section(SectionId::Issues).shown();
+        if lists_shown {
             self.issue_lists.load_repo(repo, cx);
         }
+        self.preload.start(repo, lists_shown, cx);
         if self.section(SectionId::Workflows).shown() {
             self.workflows.load_repo(repo, cx);
         }
@@ -579,12 +587,13 @@ impl MainScreen {
         }
     }
 
-    /// A new selection replaces any still loading: the pending pull request request is cancelled, and its answer, if
-    /// it comes anyway, is dropped. Every selection calls this first.
+    /// A new selection replaces any still loading: the pending pull request request and the preload's lookup are
+    /// cancelled, and their answers, if they come anyway, are dropped. Every selection calls this first.
     fn cancel_pending_selection(&mut self, cx: &mut Cx<'_>) {
         if let Some(pending) = self.pending_pr.take() {
             cx.effect(Effect::Cancel(pending.id));
         }
+        self.preload.cancel(cx);
     }
 
     /// `MainAction::OpenPullRequest`: a table row (or a just-merged pull request, past the cache) is fetched first, and
@@ -739,6 +748,11 @@ impl MainScreen {
         self.repos.check_current_directory_repo(cx);
     }
 
+    /// Git said which branch or commit the working directory is on: a preload waiting on them may look it up.
+    pub fn on_local_head(&mut self, cx: &mut Cx<'_>) {
+        self.preload.on_local_head(cx);
+    }
+
     /// The details box's title.
     pub fn details_title(&self) -> &str {
         &self.details_title
@@ -815,6 +829,7 @@ impl MainScreen {
         let response = self.merges.on_response(id, response, cx)?;
         let response = self.edits.on_response(id, response, cx)?;
         let response = self.reruns.on_response(id, response, cx)?;
+        let response = self.preload.on_response(id, response, cx)?;
         let response = self.on_pull_request(id, response, cx)?;
         self.details.on_response(id, response, cx)
     }
@@ -1860,3 +1875,6 @@ mod resize_tests;
 
 #[cfg(test)]
 mod gh_failure_tests;
+
+#[cfg(test)]
+mod preload_tests;

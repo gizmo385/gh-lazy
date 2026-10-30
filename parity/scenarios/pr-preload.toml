@@ -1,8 +1,7 @@
 version = 1
 description = "Preload the PR for the current commit: launched on a feature branch of the selected repo with preload_pull_request_for_current_commit on, the one PR for the local commit opens in Details without taking focus"
-# Not built yet (#198): gate = false, so the Rust side shows as rust-not-ready in the report until it lands. The
-# origin is SSH so both apps pick up the current-directory repo (Py bug B5).
-gate = false
+# The origin is SSH so both apps pick up the current-directory repo (Py bug B5).
+gate = true
 parity_rows = [
     "pull-requests.preload-current-commit",
     "config.pull-requests-preload-pull-request-for-current-commit",
@@ -27,25 +26,11 @@ wait = { text = "Overview  Diff  Conversation", timeout_ms = 15000 }
 [[step]]
 wait = { text = "Add a cursor to the viewer", timeout_ms = 15000 }
 
-# The Conversation tab loads its comments' reactions in the background; wait for all of them so the recorded requests
-# are the same on every run.
+# The Conversation tab loads its comments' reactions in the background, below the fold. The two apps ask for
+# different ones (Py bug B54: Python asks for review comments' reactions on the issue comments path, and for an empty
+# comment's), so this waits for the screen to settle rather than for a request.
 [[step]]
-wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/issues/comments/7001/reactions" } }
-
-[[step]]
-wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/issues/comments/7002/reactions" } }
-
-[[step]]
-wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/issues/comments/7003/reactions" } }
-
-[[step]]
-wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/issues/comments/9001/reactions" } }
-
-[[step]]
-wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/issues/comments/9002/reactions" } }
-
-[[step]]
-wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/issues/comments/9003/reactions" } }
+wait = { stable_ms = 1000 }
 
 [[step]]
 capture = "preloaded"

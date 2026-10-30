@@ -17,8 +17,8 @@ use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter, M
 use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts, Method};
 use crate::models::{
     Branch, CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
-    IssueState, Notification, ReactionKind, Reactions, Repository, Review, ReviewComment, ReviewState, User, Workflow,
-    WorkflowJob, WorkflowRun,
+    IssueState, Notification, PartialPullRequest, ReactionKind, Reactions, Repository, Review, ReviewComment,
+    ReviewState, User, Workflow, WorkflowJob, WorkflowRun,
 };
 
 #[cfg(any(test, feature = "test-util"))]
@@ -204,6 +204,18 @@ pub trait Github: Clone + Send + Sync + 'static {
     /// Fails on any HTTP error status or `gh` failure, or with [`GhError::Decode`] when the body or any run doesn't
     /// decode.
     fn check_runs(&self, repo: &Repository, sha: &str) -> impl Future<Output = Result<Vec<CheckRun>, GhError>> + Send;
+
+    /// The pull requests of `repo` that contain commit `sha`: `GET /repos/{owner}/{repo}/commits/{sha}/pulls`,
+    /// GitHub's first page of 30, never cached. Each carries `repo`, the repo asked, whichever is selected when the
+    /// answer arrives.
+    ///
+    /// Fails on any HTTP error status or `gh` failure (GitHub answers 422 when the commit isn't in `repo`), or with
+    /// [`GhError::Decode`] when the body or any pull request doesn't decode.
+    fn pull_requests_for_commit(
+        &self,
+        repo: &Repository,
+        sha: &str,
+    ) -> impl Future<Output = Result<Vec<PartialPullRequest>, GhError>> + Send;
 
     /// The reactions on issue or pull request `number` of `repo`: GitHub's first page of them (30, as Python asks for
     /// no more). Cached for `cache.default_ttl`. A reaction of a kind this build doesn't know is skipped.
@@ -1071,6 +1083,11 @@ impl GhCli {
         request
     }
 
+    /// `GET /repos/{owner}/{repo}/commits/{sha}/pulls`, without a query or `--cache`, as Python sends it.
+    fn pull_requests_for_commit_request(repo: &Repository, sha: &str) -> GhRequest {
+        GhRequest::get(format!("/repos/{}/{}/commits/{sha}/pulls", repo.owner.login, repo.name))
+    }
+
     /// `GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs`, uncached: Python sends no `Cache-Control` here.
     fn job_logs_request(repo: &Repository, job_id: u64) -> GhRequest {
         GhRequest::get(format!(
@@ -1371,6 +1388,15 @@ fn issue_list_item(response: &GhResponse, repo: &Repository) -> Result<IssueList
     Ok(IssueListItem::from_api_item(response.json()?, repo)?)
 }
 
+/// The pull requests of a commits-endpoint page, each tagged with `repo`. One bad item fails the page.
+fn commit_pull_requests(response: &GhResponse, repo: &Repository) -> Result<Vec<PartialPullRequest>, GhError> {
+    response
+        .json::<Vec<serde_json::Value>>()?
+        .into_iter()
+        .map(|item| Ok(PartialPullRequest::from_api(item, repo)?))
+        .collect()
+}
+
 impl Github for GhCli {
     fn reconfigure(&self, options: GhCliOptions) {
         let mut configured = self.inner.write().unwrap_or_else(PoisonError::into_inner);
@@ -1500,6 +1526,11 @@ impl Github for GhCli {
     async fn check_runs(&self, repo: &Repository, sha: &str) -> Result<Vec<CheckRun>, GhError> {
         let request = self.commit_checks_request(repo, sha, "check-runs");
         check_run_list(&self.runner().request(request).await?)
+    }
+
+    async fn pull_requests_for_commit(&self, repo: &Repository, sha: &str) -> Result<Vec<PartialPullRequest>, GhError> {
+        let request = Self::pull_requests_for_commit_request(repo, sha);
+        commit_pull_requests(&self.runner().request(request).await?, repo)
     }
 
     async fn issue_reactions(&self, repo: &Repository, number: u64) -> Result<Reactions, GhError> {
@@ -4266,5 +4297,65 @@ mod tests {
         .await;
         assert!(matches!(result, Err(GhError::Http { status: 500, .. })));
         assert_eq!(asked, [501, 502]);
+    }
+
+    const HARNESS_SHA: &str = "77a3f2ceb72bcca424cae588f347fc970b288bbf";
+
+    #[test]
+    fn pull_requests_for_commit_argv_has_no_cache_and_no_query() {
+        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
+        assert_eq!(
+            strings(
+                GhCli::pull_requests_for_commit_request(&pr_details_repo(), HARNESS_SHA)
+                    .argv(gh.runner().hostname(), false)
+            ),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "-H",
+                "Accept: application/vnd.github+json",
+                &format!("/repos/parity-bot/pr-details/commits/{HARNESS_SHA}/pulls"),
+            ]
+        );
+    }
+
+    #[test]
+    fn pull_requests_for_commit_decode_from_the_preload_fixtures_with_the_repo_asked() {
+        let file = format!("repos/parity-bot/pr-details/commits/{HARNESS_SHA}/pulls/GET.json");
+        // Any repo will do: the PRs carry the one asked, not one named in the body.
+        let asked = lazy_fixture();
+        let prs = commit_pull_requests(&parity_response("pr-preload", &file), &asked).unwrap();
+        let got: Vec<(u64, &str, bool, &str)> = prs
+            .iter()
+            .map(|pr| {
+                (
+                    pr.issue.number,
+                    pr.issue.title.as_str(),
+                    pr.draft,
+                    pr.issue.repo.full_name.as_str(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            got,
+            [(5, "Add a cursor to the viewer", false, "parity-bot/lazy-fixture")]
+        );
+
+        let prs = commit_pull_requests(&parity_response("pr-preload-skip", &file), &pr_details_repo()).unwrap();
+        let numbers: Vec<u64> = prs.iter().map(|pr| pr.issue.number).collect();
+        assert_eq!(numbers, [5, 2]);
+
+        let file = format!("repos/parity-bot/dotfiles/commits/{HARNESS_SHA}/pulls/GET.json");
+        let fixture = parity_fixture("pr-preload-skip", &file);
+        assert_eq!(fixture["response"]["status"], 422);
+        let response = json_response("422 Unprocessable Entity", &fixture["response"]["body"].to_string());
+        assert!(matches!(response, Err(GhError::Http { status: 422, .. })));
+
+        assert!(matches!(
+            commit_pull_requests(&api_response(r#"[{"number": 1}]"#), &asked),
+            Err(GhError::Decode(_))
+        ));
     }
 }

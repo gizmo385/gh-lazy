@@ -1,11 +1,10 @@
 version = 1
 description = "Preload the PR for the current commit, when nothing is preloaded: two PRs hold the local commit, so the selected repo's overview stays; selecting another repo looks the commit up there too, and its 422 leaves that repo's overview"
-# Not built yet (#198): gate = false until the Rust side lands. The origin is SSH so both apps pick up the
-# current-directory repo (Py bug B5). The command log is shown for the reference screens, but its box is ignored:
-# Python logs the 422 as an error line, which Py bug B110 asks about, and the lines carry the time. No capture checks
-# `tabs`: after a selection Python sometimes draws the Details tab underline zero-width (#209); `contains` checks
-# that the Repo Overview stayed.
-gate = false
+# The origin is SSH so both apps pick up the current-directory repo (Py bug B5). The command log is shown for the
+# reference screens, but its box is ignored: Python logs the 422 as an error line, which Rust logs at debug only (Py
+# bug B110's answer), and the lines carry the time. No capture checks `tabs`: after a selection Python sometimes
+# draws the Details tab underline zero-width (#209); `contains` checks that the Repo Overview stayed.
+gate = true
 parity_rows = [
     "pull-requests.preload-current-commit",
     "pull-requests.preload-lookup-error",

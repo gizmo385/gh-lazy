@@ -55,6 +55,7 @@ pub struct TestApp {
     local_repo: Option<RepoName>,
     /// The working directory's branch, `None` for "git couldn't say".
     local_branch: Option<String>,
+    local_commit: Option<String>,
     /// How git answers the branch checks and the push.
     git: GitAnswers,
     /// The main screen's `OriginRepo` and `CurrentBranch` requests, held back at setup until
@@ -172,6 +173,7 @@ impl TestApp {
             gh,
             local_repo: None,
             local_branch: None,
+            local_commit: None,
             git: GitAnswers::default(),
             setup_git: Vec::new(),
             setup_cache: Vec::new(),
@@ -374,6 +376,14 @@ impl TestApp {
         self
     }
 
+    /// This app with `sha` checked out in its working directory; `None` (the default) means git couldn't say. Asked
+    /// only by a preload, and answered in [`Self::settle`].
+    #[must_use]
+    pub fn with_local_commit(mut self, sha: Option<&str>) -> Self {
+        self.local_commit = sha.map(str::to_owned);
+        self
+    }
+
     /// This app with git answering the branch checks and the push from `answers`.
     #[must_use]
     pub fn with_git_answers(mut self, answers: GitAnswers) -> Self {
@@ -392,6 +402,7 @@ impl TestApp {
         match request {
             GitRequest::OriginRepo => GitResponse::OriginRepo(self.local_repo.clone()),
             GitRequest::CurrentBranch => GitResponse::CurrentBranch(self.local_branch.clone()),
+            GitRequest::HeadCommit => GitResponse::HeadCommit(self.local_commit.clone()),
             GitRequest::HasUpstream { .. } => GitResponse::HasUpstream(self.git.upstream),
             GitRequest::BranchExistsOnRemote { .. } => GitResponse::BranchExistsOnRemote(self.git.on_remote),
             GitRequest::PushBranch { .. } => GitResponse::PushBranch(self.git.push.clone()),

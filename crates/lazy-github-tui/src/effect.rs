@@ -13,8 +13,8 @@ use lazy_github_core::github::{
 };
 use lazy_github_core::models::{
     Branch, CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
-    Notification, ReactionKind, Reactions, RepoName, Repository, Review, ReviewComment, User, Workflow, WorkflowJob,
-    WorkflowRun,
+    Notification, PartialPullRequest, ReactionKind, Reactions, RepoName, Repository, Review, ReviewComment, User,
+    Workflow, WorkflowJob, WorkflowRun,
 };
 
 use crate::components::markdown::MarkdownSource;
@@ -222,6 +222,13 @@ pub enum GithubRequest {
     /// [`Github::check_runs`].
     CheckRuns {
         /// The commit's repo.
+        repo: Box<Repository>,
+        /// The commit.
+        sha: String,
+    },
+    /// [`Github::pull_requests_for_commit`].
+    PullRequestsForCommit {
+        /// The repo to look the commit up in.
         repo: Box<Repository>,
         /// The commit.
         sha: String,
@@ -441,6 +448,8 @@ pub enum GithubResponse {
     CommitStatus(Result<CombinedStatus, GhError>),
     /// [`Github::check_runs`].
     CheckRuns(Result<Vec<CheckRun>, GhError>),
+    /// [`Github::pull_requests_for_commit`].
+    PullRequestsForCommit(Result<Vec<PartialPullRequest>, GhError>),
     /// [`Github::issue_reactions`].
     IssueReactions(Result<Reactions, GhError>),
     /// [`Github::issue`], boxed to keep this enum small.
@@ -515,6 +524,7 @@ impl GithubResponse {
             GithubResponse::WorkflowRunJobs(result) => result.as_ref().err(),
             GithubResponse::CommitStatus(result) => result.as_ref().err(),
             GithubResponse::CheckRuns(result) => result.as_ref().err(),
+            GithubResponse::PullRequestsForCommit(result) => result.as_ref().err(),
             GithubResponse::IssueReactions(result) => result.as_ref().err(),
             GithubResponse::Issue(result) => result.as_ref().err(),
             GithubResponse::IssueComments(result) => result.as_ref().err(),
@@ -597,6 +607,9 @@ impl GithubRequest {
                 GithubResponse::CommitStatus(gh.commit_status(&repo, &sha).await)
             }
             GithubRequest::CheckRuns { repo, sha } => GithubResponse::CheckRuns(gh.check_runs(&repo, &sha).await),
+            GithubRequest::PullRequestsForCommit { repo, sha } => {
+                GithubResponse::PullRequestsForCommit(gh.pull_requests_for_commit(&repo, &sha).await)
+            }
             GithubRequest::IssueReactions { repo, number } => {
                 GithubResponse::IssueReactions(gh.issue_reactions(&repo, number).await)
             }
@@ -684,6 +697,8 @@ pub enum GitRequest {
     OriginRepo,
     /// [`GitCli::current_branch`]: the branch checked out where LazyGithub was launched.
     CurrentBranch,
+    /// [`GitCli::head_commit`]: the commit checked out where LazyGithub was launched.
+    HeadCommit,
     /// [`GitCli::has_upstream`].
     HasUpstream {
         /// The local branch.
@@ -708,6 +723,8 @@ pub enum GitResponse {
     OriginRepo(Option<RepoName>),
     /// [`GitCli::current_branch`]: `None` when git couldn't say.
     CurrentBranch(Option<String>),
+    /// [`GitCli::head_commit`]: `None` when git couldn't say.
+    HeadCommit(Option<String>),
     /// [`GitCli::has_upstream`].
     HasUpstream(bool),
     /// [`GitCli::branch_exists_on_remote`].
@@ -722,6 +739,7 @@ impl GitRequest {
         match self {
             GitRequest::OriginRepo => GitResponse::OriginRepo(git.origin_repo().await),
             GitRequest::CurrentBranch => GitResponse::CurrentBranch(git.current_branch().await),
+            GitRequest::HeadCommit => GitResponse::HeadCommit(git.head_commit().await),
             GitRequest::HasUpstream { branch } => GitResponse::HasUpstream(git.has_upstream(&branch).await),
             GitRequest::BranchExistsOnRemote { branch } => {
                 GitResponse::BranchExistsOnRemote(git.branch_exists_on_remote(&branch).await)

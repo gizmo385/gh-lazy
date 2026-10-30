@@ -310,6 +310,32 @@ impl LocalRepo {
     }
 }
 
+/// The working directory's checked-out branch and commit, as the preload of the PR for the current commit needs them
+/// ([`Cx::local_head`]).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LocalHead {
+    /// Git hasn't answered both yet.
+    Pending,
+    /// Git answered both. Either is `None` when git couldn't say; a detached HEAD's branch is `HEAD`.
+    Known {
+        /// Python's `current_directory_branch`.
+        branch: Option<String>,
+        /// Python's `current_local_commit`.
+        commit: Option<String>,
+    },
+}
+
+/// What's known of the working directory's HEAD commit, read at most once per session.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum HeadCommitRequest {
+    /// Nothing has needed it yet.
+    NotAsked,
+    /// Asked, with the request's id; git hasn't answered.
+    Asking(RequestId),
+    /// Git answered; [`Shared::head_commit`] holds the answer.
+    Answered,
+}
+
 /// What's known of the installed gh's version ([`lazy_github_core::github::Github::gh_version`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum GhVersion {
@@ -333,6 +359,14 @@ pub(crate) struct Shared {
     /// The branch checked out in the current directory, read once at startup: `None` until git answers, or when it
     /// couldn't say. Python's `current_directory_branch`.
     pub(crate) current_branch: Option<String>,
+    /// Whether git has answered for [`Self::current_branch`], which is `None` both before and when git couldn't say.
+    pub(crate) current_branch_answered: bool,
+    /// The working directory's HEAD commit request, asked the first time a preload needs it. Only `App` and
+    /// [`Cx::local_head`] write it.
+    pub(crate) head_commit_request: HeadCommitRequest,
+    /// The working directory's HEAD commit once git answered: `None` when it couldn't say. Python's
+    /// `current_local_commit`.
+    pub(crate) head_commit: Option<String>,
     /// The in-app clipboard (Textual's `App.clipboard`): the last text copied or cut anywhere in the app. Only `App`
     /// writes it, when it applies `Action::Copy`.
     pub(crate) clipboard: String,
@@ -359,6 +393,9 @@ impl Shared {
             current_repo: None,
             local_repo: LocalRepo::Unknown,
             current_branch: None,
+            current_branch_answered: false,
+            head_commit_request: HeadCommitRequest::NotAsked,
+            head_commit: None,
             clipboard: String::new(),
             gh_version: GhVersion::Unknown,
             next_request: 1,
@@ -426,6 +463,24 @@ impl<'a> Cx<'a> {
     /// couldn't say. A detached HEAD is `HEAD`.
     pub fn current_branch(&self) -> Option<&str> {
         self.shared.current_branch.as_deref()
+    }
+
+    /// The working directory's branch and HEAD commit, or [`LocalHead::Pending`] until git has answered both. The
+    /// first call asks git for the commit, which is read once per session and only when a preload needs it, as
+    /// Python's `current_local_commit`; `App` tells the main screen when the answers arrive.
+    pub fn local_head(&mut self) -> LocalHead {
+        if self.shared.head_commit_request == HeadCommitRequest::NotAsked {
+            let id = self.git(GitRequest::HeadCommit);
+            self.shared.head_commit_request = HeadCommitRequest::Asking(id);
+        }
+        if self.shared.current_branch_answered && self.shared.head_commit_request == HeadCommitRequest::Answered {
+            LocalHead::Known {
+                branch: self.shared.current_branch.clone(),
+                commit: self.shared.head_commit.clone(),
+            }
+        } else {
+            LocalHead::Pending
+        }
     }
 
     /// The in-app clipboard, which `ctrl+v` in a text input pastes: the last text copied or cut in the app, empty

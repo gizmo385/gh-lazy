@@ -794,6 +794,14 @@ mod tests {
             std::future::pending().await
         }
 
+        async fn pull_requests_for_commit(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _sha: &str,
+        ) -> Result<Vec<lazy_github_core::models::PartialPullRequest>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
         async fn issue_reactions(
             &self,
             _repo: &lazy_github_core::models::Repository,

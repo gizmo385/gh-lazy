@@ -18,7 +18,8 @@ use crate::action::Action;
 use crate::bug_report::BugReport;
 use crate::clock::Clock;
 use crate::component::{
-    BindingState, ChainLink, Component, Cx, GhVersion, LocalRepo, Outbox, Owner, RenderCx, ScreenKind, Shared,
+    BindingState, ChainLink, Component, Cx, GhVersion, HeadCommitRequest, LocalRepo, Outbox, Owner, RenderCx,
+    ScreenKind, Shared,
 };
 use crate::components::command_log::Wheel;
 use crate::components::footer::{Footer, FooterHit, footer_items};
@@ -1037,10 +1038,12 @@ impl App {
         self.notifications.is_refreshing()
     }
 
-    /// Hands a git response to whatever is waiting for it: the current-directory repo and branch are kept for every
-    /// component, and the main screen may select the repo. Any other answer goes to the open dialogs, top first.
+    /// Hands a git response to whatever is waiting for it: the current-directory repo, branch and HEAD commit are kept
+    /// for every component, and the main screen may select the repo or go on with a preload. Any other answer goes to
+    /// the open dialogs, top first.
     fn route_git(&mut self, id: RequestId, mut response: GitResponse, out: &mut Outbox) {
-        if self.local_repo_request != Some(id) && self.current_branch_request != Some(id) {
+        let head_commit_request = self.shared.head_commit_request == HeadCommitRequest::Asking(id);
+        if self.local_repo_request != Some(id) && self.current_branch_request != Some(id) && !head_commit_request {
             for entry in self.modals.iter_mut().rev() {
                 let Some(unclaimed) = entry.on_git_response(id, response, &mut Cx::new(&mut self.shared, out)) else {
                     return;
@@ -1059,8 +1062,22 @@ impl App {
             GitResponse::CurrentBranch(branch) if self.current_branch_request == Some(id) => {
                 self.current_branch_request = None;
                 self.shared.current_branch = branch;
+                self.shared.current_branch_answered = true;
+                self.on_local_head(out);
+            }
+            GitResponse::HeadCommit(commit) if head_commit_request => {
+                self.shared.head_commit_request = HeadCommitRequest::Answered;
+                self.shared.head_commit = commit;
+                self.on_local_head(out);
             }
             _ => tracing::debug!("Dropping the response to request {id}: nothing is waiting for it"),
+        }
+    }
+
+    /// Git answered for the working directory's branch or HEAD commit: a preload waiting on them may go on.
+    fn on_local_head(&mut self, out: &mut Outbox) {
+        if let BaseScreen::Main(main) = &mut self.base {
+            main.on_local_head(&mut Cx::new(&mut self.shared, out));
         }
     }
 

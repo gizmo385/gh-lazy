@@ -4,11 +4,11 @@ size = "160x48"
 captures = ["preloaded"]
 
 [inputs]
-scenario = "a1839f1c55686d623486c2450dbb61d052cac02a"
+scenario = "4b0c957819ca3c474812348176f4d984804697ac"
 fixtures = "769105003a07aede66e5110a8b88b367c5510056"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "89fd8ec5199f7194e251a19d4da830af25a57643"
 
 [recorded_with]
-python = "3.13.17"
+python = "3.14.7"
 os = "linux"

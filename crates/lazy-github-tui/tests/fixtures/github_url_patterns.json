@@ -1,0 +1,536 @@
+[
+ {
+  "text": "",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "not a link",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/parity-bot",
+  "valid": true,
+  "accept_repo": {
+   "kind": "user",
+   "login": "parity-bot"
+  },
+  "reject_repo": {
+   "kind": "user",
+   "login": "parity-bot"
+  }
+ },
+ {
+  "text": "github.com/parity-bot",
+  "valid": true,
+  "accept_repo": {
+   "kind": "user",
+   "login": "parity-bot"
+  },
+  "reject_repo": {
+   "kind": "user",
+   "login": "parity-bot"
+  }
+ },
+ {
+  "text": "https://github.com/parity-bot/",
+  "valid": true,
+  "accept_repo": {
+   "kind": "user",
+   "login": "parity-bot"
+  },
+  "reject_repo": {
+   "kind": "user",
+   "login": "parity-bot"
+  }
+ },
+ {
+  "text": "github.com/parity-bot/",
+  "valid": true,
+  "accept_repo": {
+   "kind": "user",
+   "login": "parity-bot"
+  },
+  "reject_repo": {
+   "kind": "user",
+   "login": "parity-bot"
+  }
+ },
+ {
+  "text": "https://github.com/parity-bot\n",
+  "valid": true,
+  "accept_repo": {
+   "kind": "user",
+   "login": "parity-bot"
+  },
+  "reject_repo": {
+   "kind": "user",
+   "login": "parity-bot"
+  }
+ },
+ {
+  "text": "https://github.com/a",
+  "valid": true,
+  "accept_repo": {
+   "kind": "user",
+   "login": "a"
+  },
+  "reject_repo": {
+   "kind": "user",
+   "login": "a"
+  }
+ },
+ {
+  "text": "https://github.com/a-b-c",
+  "valid": true,
+  "accept_repo": {
+   "kind": "user",
+   "login": "a-b-c"
+  },
+  "reject_repo": {
+   "kind": "user",
+   "login": "a-b-c"
+  }
+ },
+ {
+  "text": "https://github.com/-x",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/x-",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/x_y",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "https://example.com/user",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "example.com/user",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "http://github.com/parity-bot",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "https://GitHub.com/parity-bot",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o/r",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o",
+   "repo": "r"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "github.com/o/r",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o",
+   "repo": "r"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o/r/",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o",
+   "repo": "r"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o/r/pull/5",
+  "valid": true,
+  "accept_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  },
+  "reject_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  }
+ },
+ {
+  "text": "github.com/o/r/pull/5",
+  "valid": true,
+  "accept_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  },
+  "reject_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  }
+ },
+ {
+  "text": "https://github.com/o/r/pull/5/files",
+  "valid": true,
+  "accept_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  },
+  "reject_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  }
+ },
+ {
+  "text": "https://github.com/o/r/pull/5#discussion_r1",
+  "valid": true,
+  "accept_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  },
+  "reject_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  }
+ },
+ {
+  "text": "https://github.com/o/r/pull/",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o",
+   "repo": "r"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o/r/pull/abc",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o",
+   "repo": "r"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o/r/pull/5abc",
+  "valid": true,
+  "accept_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  },
+  "reject_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  }
+ },
+ {
+  "text": "https://github.com/o/r/pulls",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o",
+   "repo": "r"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o/r/pull/99999999999999999999999",
+  "valid": true,
+  "accept_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 99999999999999999999999
+  },
+  "reject_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 99999999999999999999999
+  }
+ },
+ {
+  "text": "https://github.com/o/r/issues/12",
+  "valid": true,
+  "accept_repo": {
+   "kind": "issue",
+   "owner": "o",
+   "repo": "r",
+   "number": 12
+  },
+  "reject_repo": {
+   "kind": "issue",
+   "owner": "o",
+   "repo": "r",
+   "number": 12
+  }
+ },
+ {
+  "text": "github.com/o/r/issues/12",
+  "valid": true,
+  "accept_repo": {
+   "kind": "issue",
+   "owner": "o",
+   "repo": "r",
+   "number": 12
+  },
+  "reject_repo": {
+   "kind": "issue",
+   "owner": "o",
+   "repo": "r",
+   "number": 12
+  }
+ },
+ {
+  "text": "https://github.com/o/r/issues/5#issuecomment-1",
+  "valid": true,
+  "accept_repo": {
+   "kind": "issue",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  },
+  "reject_repo": {
+   "kind": "issue",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  }
+ },
+ {
+  "text": "https://github.com/o/r/issues",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o",
+   "repo": "r"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o/r/issues/new",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o",
+   "repo": "r"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o/r/actions/runs/1",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o",
+   "repo": "r"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o/r/blob/main/README.md",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o",
+   "repo": "r"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o/r?tab=readme",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o",
+   "repo": "r?tab=readme"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o/r#readme",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o",
+   "repo": "r#readme"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "http://github.com/o/r",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "http://github.com/o/r/pull/5",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "https://gitlab.com/o/r/pull/5",
+  "valid": true,
+  "accept_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  },
+  "reject_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  }
+ },
+ {
+  "text": "https://ghe.example.com/o/r/issues/3",
+  "valid": true,
+  "accept_repo": {
+   "kind": "issue",
+   "owner": "o",
+   "repo": "r",
+   "number": 3
+  },
+  "reject_repo": {
+   "kind": "issue",
+   "owner": "o",
+   "repo": "r",
+   "number": 3
+  }
+ },
+ {
+  "text": "https://github.com/o",
+  "valid": true,
+  "accept_repo": {
+   "kind": "user",
+   "login": "o"
+  },
+  "reject_repo": {
+   "kind": "user",
+   "login": "o"
+  }
+ },
+ {
+  "text": "o/r",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "o/r/pull/5",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "r",
+   "repo": "pull"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https:/github.com/o/r",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "github.com",
+   "repo": "o"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com//r",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o r/name with spaces",
+  "valid": true,
+  "accept_repo": {
+   "kind": "repository",
+   "owner": "o r",
+   "repo": "name with spaces"
+  },
+  "reject_repo": null
+ },
+ {
+  "text": "https://github.com/o/r/pull/5\n",
+  "valid": true,
+  "accept_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  },
+  "reject_repo": {
+   "kind": "pull_request",
+   "owner": "o",
+   "repo": "r",
+   "number": 5
+  }
+ },
+ {
+  "text": "  https://github.com/o/r",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "https://",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ },
+ {
+  "text": "/o/r",
+  "valid": false,
+  "accept_repo": null,
+  "reject_repo": null
+ }
+]

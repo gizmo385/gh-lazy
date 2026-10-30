@@ -1,9 +1,8 @@
 version = 1
 description = "Paste link (ctrl+v): the dialog, enter in the input (validates, doesn't open), an unknown link, a link that doesn't resolve, and pull request (shift+enter), issue, issue-that-is-a-PR, repository and user links opening in-app with their toasts; a repo picked from the profile is selected; escape closes it"
-# Not built yet (#197): gate = false, so the Rust side shows as rust-not-ready in the report until it lands. Each
-# link gets a fresh dialog, since the input keeps its text after a failed lookup. Open pressed with enter blurs the
+# Each link gets a fresh dialog, since the input keeps its text after a failed lookup. Open pressed with enter blurs the
 # button (Textual blurs a widget it disables), so nothing in the dialog has focus afterwards and escape closes it.
-gate = false
+gate = true
 parity_rows = [
     "modals.paste-link",
     "markdown-links.github-url-patterns",
@@ -196,9 +195,11 @@ keys = ["tab", "enter"]
 [[step]]
 wait = { text = "Followers: 12" }
 
+# No titles: Python's two-row strip at the bottom of the profile (Py bug B50) hides the Workflows box's border at
+# 160x48, as in `user-profile`'s `organization` capture.
 [[step]]
 capture = "user"
-checks = ["titles"]
+checks = []
 
 # A repo picked in the profile (tab focuses its table) is selected, and not added to the repos table.
 [[step]]

@@ -11,7 +11,7 @@ use crate::effect::{GithubRequest, GithubResponse, RequestId};
 use crate::modal::UserProfileDialog;
 use crate::toast::Toast;
 
-/// Which table's `u` asked for a profile, which decides what a picked repo does.
+/// Which table's `u` (or which link) asked for a profile, which decides what a picked repo does.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProfileOrigin {
     /// The repos table: the owner of the highlighted repo.
@@ -20,6 +20,8 @@ pub enum ProfileOrigin {
     PullRequests,
     /// The Issues table: the author of the highlighted issue.
     Issues,
+    /// A user link, pasted or followed: the user it points at.
+    Link,
 }
 
 /// The profile fetches in flight. Each `u` makes its own pair of requests and opens its own dialog.

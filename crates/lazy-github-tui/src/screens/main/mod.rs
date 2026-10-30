@@ -28,6 +28,7 @@ mod workflows;
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::AppearanceSettings;
 use lazy_github_core::gh::GhError;
+use lazy_github_core::links::LinkSubject;
 use lazy_github_core::models::{
     FullPullRequest, Issue, IssueListItem, Notification, ReactionKind, Repository, WorkflowRun,
 };
@@ -48,7 +49,9 @@ use crate::components::table::{Handled, SEARCHABLE_BINDINGS, TABLE_BINDINGS, Tab
 use crate::components::text_input::{self, INPUT_BINDINGS};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::modal::{EditIssueDialog, LookupDialog, NewIssueDialog, NotificationsDialog, PostedComment, RepoLookup};
+use crate::modal::{
+    EditIssueDialog, LookupDialog, NewIssueDialog, NotificationsDialog, PasteLinkDialog, PostedComment, RepoLookup,
+};
 use crate::options::AppOptions;
 use crate::theme::Theme;
 use crate::toast::Toast;
@@ -348,6 +351,11 @@ enum PullRequestOrigin {
 const OPENING_PULL_REQUEST: &str = "Opening pull request for notification";
 const OPENING_REPOSITORY: &str = "Opening repository for notification";
 
+/// The toasts after a link opens in the app: Python's `_open_link_subject`.
+const OPENING_PULL_REQUEST_FOR_LINK: &str = "Opening pull request for link";
+const OPENING_ISSUE_FOR_LINK: &str = "Opening issue for link";
+const OPENING_REPOSITORY_FOR_LINK: &str = "Opening repository for link";
+
 /// The main screen's own actions.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MainAction {
@@ -388,6 +396,12 @@ pub enum MainAction {
     /// Open a chosen notification's subject, its repo already selected: a pull request is fetched from that repo and
     /// shown; anything else just toasts that the repo opened.
     OpenNotificationSubject(Box<Notification>),
+    /// Open the Paste link dialog (`link.paste`): empty from the key, or holding the text of a bracketed paste on the
+    /// screen (decision `paste-opens-link-modal`).
+    OpenPasteLink(Option<String>),
+    /// Open what a GitHub link points at, from the Paste link dialog or a followed link: a pull request or an issue
+    /// in its repo, a repo, or a user's profile. Python's `_open_link_subject`.
+    OpenLinkSubject(Box<LinkSubject>),
     /// Open the New issue dialog (`issue.new`), or toast without a selected repo.
     NewIssue,
     /// The New issue dialog created an issue: it goes into the Issues table and opens. A closed dialog sends nothing.
@@ -662,6 +676,37 @@ impl MainScreen {
         self.details_shown(&label, true, cx);
     }
 
+    /// `MainAction::OpenLinkSubject`: Python's `_open_link_subject`. A pull request or an issue selects its repo, then
+    /// shows with the tab strip focused; a repo is selected, focus staying where it was; each toasts what opened. A
+    /// user's profile opens as `u` opens one, and a repo picked there is selected without joining the repos table.
+    /// A link that opens something is a new selection, so it replaces any still loading (a pull request, the
+    /// preload's lookup) at once; the repo then goes first, since selecting one cancels any pending selection too.
+    fn open_link_subject(&mut self, subject: LinkSubject, cx: &mut Cx<'_>) {
+        if !matches!(subject, LinkSubject::User(_)) {
+            self.cancel_pending_selection(cx);
+        }
+        match subject {
+            LinkSubject::PullRequest(pr) => {
+                cx.dispatch(Action::SelectRepo(Box::new(pr.pr.issue.repo.clone())));
+                cx.dispatch(Action::Main(MainAction::OpenPullRequest {
+                    target: PullRequestTarget::Full(pr),
+                    focus: true,
+                }));
+                cx.notify(Toast::info(OPENING_PULL_REQUEST_FOR_LINK));
+            }
+            LinkSubject::Issue(issue) => {
+                cx.dispatch(Action::SelectRepo(Box::new(issue.repo.clone())));
+                cx.dispatch(Action::Main(MainAction::OpenIssue(issue)));
+                cx.notify(Toast::info(OPENING_ISSUE_FOR_LINK));
+            }
+            LinkSubject::Repository(repo) => {
+                cx.dispatch(Action::SelectRepo(repo));
+                cx.notify(Toast::info(OPENING_REPOSITORY_FOR_LINK));
+            }
+            LinkSubject::User(user) => self.profile.open(user.user.login, ProfileOrigin::Link, cx),
+        }
+    }
+
     /// `user.view_profile` in a table: the profile of the highlighted row's user, or a toast without a row.
     fn view_profile(&mut self, origin: ProfileOrigin, cx: &mut Cx<'_>) {
         let login = match origin {
@@ -676,13 +721,15 @@ impl MainScreen {
                 .issues_table()
                 .selected()
                 .map(|issue| issue.user.login.clone()),
+            // A link opens the profile by its login (`Self::open_link_subject`), never through `u`.
+            ProfileOrigin::Link => return,
         };
         match login {
             Some(login) => self.profile.open(login, origin, cx),
             None => cx.notify(Toast::error(match origin {
                 ProfileOrigin::Repos => "No repository currently selected",
                 ProfileOrigin::PullRequests => "No pull request currently selected",
-                ProfileOrigin::Issues => "No issue currently selected",
+                ProfileOrigin::Issues | ProfileOrigin::Link => "No issue currently selected",
             })),
         }
     }
@@ -979,16 +1026,17 @@ impl MainScreen {
         Some(table_outcome(id, handled).unwrap_or(Action::Consumed))
     }
 
-    /// A bracketed paste, which only a focused text input takes: a search box, or the diff viewer's file filter.
+    /// A bracketed paste: a focused text input (a search box, or the diff viewer's file filter) takes it; otherwise
+    /// it opens Paste link holding the text (decision `paste-opens-link-modal`, where Python ignores it).
     pub fn handle_paste(&mut self, text: &str) -> Option<Action> {
-        if self.focus == FocusTarget::DetailsContent {
-            return self.details.handle_paste(text).then_some(Action::Consumed);
+        if self.focus == FocusTarget::DetailsContent && self.details.handle_paste(text) {
+            return Some(Action::Consumed);
         }
-        let FocusTarget::Search(id) = self.focus else {
-            return None;
-        };
-        let handled = self.table_mut(id).handle_paste(text);
-        handled.is_handled().then_some(Action::Consumed)
+        if let FocusTarget::Search(id) = self.focus {
+            let handled = self.table_mut(id).handle_paste(text);
+            return handled.is_handled().then_some(Action::Consumed);
+        }
+        Some(Action::Main(MainAction::OpenPasteLink(Some(text.to_owned()))))
     }
 
     /// The state of one section.
@@ -1624,6 +1672,7 @@ impl Component for MainScreen {
                 .notifications
                 .enabled
                 .then_some(Action::Main(MainAction::OpenNotifications)),
+            BindingId::LinkPaste => Some(Action::Main(MainAction::OpenPasteLink(None))),
             BindingId::TextualFocusNext => Some(Action::FocusNext),
             BindingId::TextualFocusPrevious => Some(Action::FocusPrevious),
             // Nothing can be selected yet, so Textual's `check_action` lets ctrl+c through to `help_quit`.
@@ -1639,6 +1688,10 @@ impl Component for MainScreen {
         }
     }
 
+    #[allow(
+        clippy::too_many_lines,
+        reason = "a flat table with one arm per action, each handing off to its owner"
+    )]
     fn update(&mut self, action: MainAction, cx: &mut Cx<'_>) {
         match action {
             MainAction::ScrollDetails(scroll) => self.details.scroll(scroll),
@@ -1679,8 +1732,11 @@ impl Component for MainScreen {
                 }
                 cx.dispatch(Action::SelectRepo(repo));
             }
-            // Python's PR and issue containers post `RepoSelected` without `add_item`.
-            MainAction::ProfilePicked(ProfileOrigin::PullRequests | ProfileOrigin::Issues, Some(repo)) => {
+            // Python's PR and issue containers, and `_open_link_subject`, select it without `add_item`.
+            MainAction::ProfilePicked(
+                ProfileOrigin::PullRequests | ProfileOrigin::Issues | ProfileOrigin::Link,
+                Some(repo),
+            ) => {
                 cx.dispatch(Action::SelectRepo(repo));
             }
             // Python opens the dialog and fails an `assert` at submit (Py bug B12).
@@ -1723,6 +1779,15 @@ impl Component for MainScreen {
             MainAction::OpenNotifications => open_notifications(cx),
             MainAction::NotificationsClosed(chosen) => notifications_closed(chosen, cx),
             MainAction::OpenNotificationSubject(notification) => self.open_notification_subject(&notification, cx),
+            MainAction::OpenPasteLink(text) => {
+                let dialog = text.map_or_else(PasteLinkDialog::new, |text| PasteLinkDialog::with_text(&text));
+                cx.open_dialog(dialog, |subject| {
+                    subject.map_or(Action::Consumed, |subject| {
+                        Action::Main(MainAction::OpenLinkSubject(Box::new(subject)))
+                    })
+                });
+            }
+            MainAction::OpenLinkSubject(subject) => self.open_link_subject(*subject, cx),
             MainAction::NewIssue => new_issue(cx),
             MainAction::NewPullRequest => new_pull_request::new_pull_request(cx),
             MainAction::PullRequestCreated(pr) => self.pull_request_created(pr, cx),
@@ -1878,3 +1943,6 @@ mod gh_failure_tests;
 
 #[cfg(test)]
 mod preload_tests;
+
+#[cfg(test)]
+mod paste_link_tests;

@@ -20,8 +20,10 @@ mod lookup;
 mod new_comment;
 mod new_issue;
 mod notifications;
+mod paste_link;
 mod pull_request;
 mod settings;
+mod single_input;
 mod stack;
 mod trigger_workflow;
 mod user_profile;
@@ -58,6 +60,7 @@ pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLooku
 pub use new_comment::{NewCommentAction, NewCommentDialog, PostedComment, ReplyTarget};
 pub use new_issue::{NewIssueAction, NewIssueDialog};
 pub use notifications::{NotificationsAction, NotificationsDialog, NotificationsTab};
+pub use paste_link::{PasteLinkAction, PasteLinkDialog};
 pub use pull_request::{
     CreatePrefill, PullRequestAction, PullRequestDialog, PullRequestForm, ReviewersField, ReviewersFocus,
     ReviewersOutcome, removing_toast,
@@ -126,6 +129,8 @@ pub enum ModalKind {
     Settings,
     /// [`DebugInfoDialog`]: the debug info, to read or copy.
     DebugInfo,
+    /// [`PasteLinkDialog`]: "Paste a web GitHub link:".
+    PasteLink,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -226,6 +231,8 @@ pub enum DialogAction {
     Settings(SettingsAction),
     /// [`DebugInfoDialog`]'s.
     DebugInfo(DebugInfoAction),
+    /// [`PasteLinkDialog`]'s.
+    PasteLink(PasteLinkAction),
     /// The test dialog's actions, by the dialog's id.
     Test(u8, TestDialogAction),
 }
@@ -248,6 +255,7 @@ impl DialogAction {
             DialogAction::CommandPalette(_) => ModalKind::CommandPalette,
             DialogAction::Settings(_) => ModalKind::Settings,
             DialogAction::DebugInfo(_) => ModalKind::DebugInfo,
+            DialogAction::PasteLink(_) => ModalKind::PasteLink,
             DialogAction::Test(id, _) => ModalKind::Test(id),
         }
     }

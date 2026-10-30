@@ -9,32 +9,21 @@ use crossterm::event::{KeyEvent, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::models::Repository;
 use ratatui::Frame;
 use ratatui::layout::Rect;
-use ratatui::style::{Modifier, Style};
-use ratatui::text::Span;
+use ratatui::style::Style;
 
-use super::frame::on_screen;
+use super::single_input::{Areas, CheckedInput};
 use super::{Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, dialog_bindings};
 use crate::action::Action;
 use crate::component::{ChainLink, Component, Cx, RenderCx};
 use crate::components::button::{ButtonMouse, ButtonRow, Pressed};
 use crate::components::switch::Switch;
-use crate::components::text_input::{self, InputOutcome, TextInput};
+use crate::components::text_input::{InputOutcome, TextInput};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::toast::Toast;
 
 /// The frame's outer size, border included: `width: 60; max-height: 25` on a container that's `1fr` tall.
 const SIZE: (u16, u16) = (60, 25);
-
-/// The heading's block: `MarkdownH1`'s two rows of margin above and one below.
-const HEADING_ROWS: u16 = 4;
-const HEADING_MARGIN_TOP: u16 = 2;
-
-/// The `Markdown` widget's `padding: 0 2`, inside which the heading is centered.
-const HEADING_PADDING: u16 = 2;
-
-/// A horizontal `Rule`: its line with `margin: 1 0`.
-const RULE_ROWS: u16 = 3;
 
 /// The lookup dialog's screen bindings.
 const LOOKUP_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
@@ -109,85 +98,11 @@ impl LookupField {
     }
 }
 
-/// Where each part of the dialog goes in its interior. The parts are stacked top to bottom and the stack is
-/// centered vertically (the container's `align: center middle`), so a kind without the switch sits lower.
-struct Areas {
-    heading: Rect,
-    label: Rect,
-    input: Rect,
-    rules: [Option<Rect>; 2],
-    track_label: Option<Rect>,
-    track: Option<Rect>,
-    buttons: Rect,
-}
-
-impl Areas {
-    fn new(area: Rect, with_track: bool) -> Self {
-        let track_rows = if with_track { 1 + Switch::HEIGHT + RULE_ROWS } else { 0 };
-        let total = HEADING_ROWS + 1 + text_input::HEIGHT + RULE_ROWS + track_rows + ButtonRow::HEIGHT;
-        let mut y = area.y + area.height.saturating_sub(total) / 2;
-        let mut next = |height: u16| {
-            let rect = Rect { y, height, ..area }.intersection(area);
-            y = y.saturating_add(height);
-            rect
-        };
-        let heading_block = next(HEADING_ROWS);
-        let heading = Rect {
-            x: area.x + HEADING_PADDING.min(area.width),
-            y: heading_block.y.saturating_add(HEADING_MARGIN_TOP),
-            width: area.width.saturating_sub(2 * HEADING_PADDING),
-            height: 1,
-        }
-        .intersection(area);
-        let label = next(1);
-        let input = next(text_input::HEIGHT);
-        let rule = |block: Rect| {
-            Rect {
-                y: block.y + 1,
-                height: 1,
-                ..block
-            }
-            .intersection(area)
-        };
-        let first_rule = rule(next(RULE_ROWS));
-        let (track_label, track, second_rule) = if with_track {
-            let track_label = next(1);
-            let track = next(Switch::HEIGHT);
-            (Some(track_label), Some(track), Some(rule(next(RULE_ROWS))))
-        } else {
-            (None, None, None)
-        };
-        let buttons = next(ButtonRow::HEIGHT);
-        Self {
-            heading,
-            label,
-            input,
-            rules: [Some(first_rule), second_rule],
-            track_label,
-            track,
-            buttons,
-        }
-    }
-
-    /// The rows drawn as text cut to `screen` ([`on_screen`]). The widgets clip themselves, and keep their shape
-    /// where they're cut, as the mouse sees them.
-    fn clipped(self, screen: Rect) -> Self {
-        let clip = |rect: Rect| on_screen(rect, screen);
-        Self {
-            heading: clip(self.heading),
-            label: clip(self.label),
-            rules: self.rules.map(|rule| rule.map(clip)),
-            track_label: self.track_label.map(clip),
-            ..self
-        }
-    }
-}
-
 /// The lookup dialog for kind `K`. Its output is what was found, or `None` when it was closed.
 #[derive(Debug)]
 pub struct LookupDialog<K: LookupKind> {
     ring: FocusRing<LookupField>,
-    input: TextInput,
+    input: CheckedInput,
     track: Option<Switch>,
     buttons: ButtonRow,
     /// The request in flight and the text it was for.
@@ -219,10 +134,13 @@ impl<K: LookupKind> LookupDialog<K> {
         };
         Self {
             ring,
-            input: match K::FILTER {
-                Some(filter) => TextInput::new(K::PLACEHOLDER).with_filter(filter),
-                None => TextInput::new(K::PLACEHOLDER),
-            },
+            input: CheckedInput::new(
+                match K::FILTER {
+                    Some(filter) => TextInput::new(K::PLACEHOLDER).with_filter(filter),
+                    None => TextInput::new(K::PLACEHOLDER),
+                },
+                K::is_valid,
+            ),
             track: K::TRACK_SWITCH.then(|| Switch::new(false)),
             buttons: ButtonRow::new("Lookup"),
             pending: None,
@@ -233,12 +151,12 @@ impl<K: LookupKind> LookupDialog<K> {
 
     /// The input's text.
     pub fn text(&self) -> &str {
-        self.input.value()
+        self.input.input().value()
     }
 
     /// Whether the input shows the red border of a failed check.
     pub fn is_invalid(&self) -> bool {
-        self.input.is_invalid()
+        self.input.input().is_invalid()
     }
 
     /// Whether a lookup is in flight.
@@ -257,33 +175,12 @@ impl<K: LookupKind> LookupDialog<K> {
         })
     }
 
-    /// Textual's `Input.validate`: the red border follows the latest check.
-    fn validate(&mut self) {
-        self.input.set_invalid(!K::is_valid(self.input.value()));
-    }
-
-    /// Moves focus by `f`. The input is checked when it loses focus (Textual validates on blur), and its text is
-    /// selected when it gains it (`select_on_focus`), so typing replaces it.
+    /// Moves focus by `f`, checking the input when it loses focus and selecting its text when it gains it.
     fn refocus(&mut self, f: impl FnOnce(&mut FocusRing<LookupField>)) {
         let had_input = self.ring.is_focused(LookupField::Input);
         f(&mut self.ring);
-        match (had_input, self.ring.is_focused(LookupField::Input)) {
-            (true, false) => self.validate(),
-            (false, true) => self.input.select_all(),
-            _ => {}
-        }
-    }
-
-    /// Edits the input with `edit`, checking it if the text changed (Textual's `Input.Changed`).
-    fn edit(&mut self, edit: impl FnOnce(&mut TextInput) -> InputOutcome) -> InputOutcome {
-        let before = self.input.value().to_owned();
-        let outcome = edit(&mut self.input);
-        match outcome {
-            InputOutcome::Changed | InputOutcome::Copied(_) if self.input.value() != before => self.validate(),
-            InputOutcome::Submitted => self.validate(),
-            InputOutcome::Changed | InputOutcome::Copied(_) | InputOutcome::Ignored => {}
-        }
-        outcome
+        self.input
+            .focus_moved(had_input, self.ring.is_focused(LookupField::Input));
     }
 
     fn submit(&mut self, cx: &mut Cx<'_>) {
@@ -292,7 +189,7 @@ impl<K: LookupKind> LookupDialog<K> {
             tracing::debug!("Ignoring a lookup submit: one is in flight");
             return;
         }
-        let text = self.input.value().to_owned();
+        let text = self.input.input().value().to_owned();
         match K::request(&text, cx) {
             Ok(request) => {
                 let id = cx.request(request);
@@ -326,13 +223,16 @@ impl<K: LookupKind> Component for LookupDialog<K> {
     }
 
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
-        self.ring.is_focused(LookupField::Input) && self.input.consumes_key(key, keymap)
+        self.ring.is_focused(LookupField::Input) && self.input.input().consumes_key(key, keymap)
     }
 
     fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action> {
         let chord = KeyChord::from_event(&key)?;
         // `enter` in the input only checks it; looking up is `modal.submit` or the Lookup button.
-        match self.edit(|input| input.handle_key(&chord, cx.keymap(), cx.clipboard())) {
+        match self
+            .input
+            .edit(|input| input.handle_key(&chord, cx.keymap(), cx.clipboard()))
+        {
             InputOutcome::Changed | InputOutcome::Submitted => Some(Action::Consumed),
             InputOutcome::Copied(text) => Some(Action::Copy(text)),
             InputOutcome::Ignored => None,
@@ -341,7 +241,7 @@ impl<K: LookupKind> Component for LookupDialog<K> {
 
     fn handle_mouse(&mut self, event: MouseEvent, area: Rect, cx: &Cx<'_>) -> Option<Action> {
         // A drag that started on the input, wherever the pointer is now.
-        if self.input.captured_mouse(event) {
+        if self.input.input_mut().captured_mouse(event) {
             return Some(Action::Consumed);
         }
         if let Some((button, outcome)) = self.buttons.handle_mouse(&event, cx.now()) {
@@ -376,7 +276,7 @@ impl<K: LookupKind> Component for LookupDialog<K> {
             self.refocus(|ring| {
                 ring.focus(LookupField::Input);
             });
-            self.input.press(areas.input, event.column);
+            self.input.input_mut().press(areas.input, event.column);
         }
         Some(Action::Consumed)
     }
@@ -396,32 +296,10 @@ impl<K: LookupKind> Component for LookupDialog<K> {
         // A dialog taller than the terminal runs off its bottom edge, which nothing may be drawn past.
         let areas = Areas::new(area, self.track.is_some()).clipped(frame.area());
         let buf = frame.buffer_mut();
-
-        // `MarkdownH1`: centered, in `$markdown-h1-color` and its text style, the whole row styled.
-        let heading = p
-            .markdown_h1_text_style
-            .apply(Style::new().fg(theme.color(p.markdown_h1_color, under)));
-        let width = usize::from(areas.heading.width);
-        let heading_text = format!("{:^width$}", K::HEADING);
-        buf.set_stringn(areas.heading.x, areas.heading.y, heading_text, width, heading);
-
-        let label = Span::styled(K::LABEL, text.add_modifier(Modifier::BOLD));
-        buf.set_span(areas.label.x, areas.label.y, &label, areas.label.width);
-
+        areas.render_text(buf, K::HEADING, K::LABEL, theme, under);
         self.input
+            .input_mut()
             .render(buf, areas.input, theme, under, self.ring.is_focused(LookupField::Input));
-
-        // `Rule { color: $secondary }`.
-        let rule = Style::new().fg(theme.color(p.secondary, under));
-        for rect in areas.rules.into_iter().flatten() {
-            buf.set_stringn(
-                rect.x,
-                rect.y,
-                "─".repeat(usize::from(rect.width)),
-                usize::from(rect.width),
-                rule,
-            );
-        }
 
         if let (Some(track), Some(label_area), Some(track_area)) = (self.track, areas.track_label, areas.track) {
             buf.set_stringn(
@@ -498,15 +376,12 @@ impl<K: LookupKind> Dialog for LookupDialog<K> {
     }
 
     fn captures_mouse(&self) -> bool {
-        self.input.is_selecting()
+        self.input.input().is_selecting()
     }
 
     fn handle_paste(&mut self, text: &str, _cx: &Cx<'_>) -> Option<Action> {
         self.ring.is_focused(LookupField::Input).then(|| {
-            let _ = self.edit(|input| {
-                input.handle_paste(text);
-                InputOutcome::Changed
-            });
+            self.input.paste(text);
             Action::Consumed
         })
     }

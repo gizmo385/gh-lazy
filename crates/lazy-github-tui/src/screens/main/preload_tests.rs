@@ -7,6 +7,7 @@ use futures_util::FutureExt as _;
 use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::github::{FakeGithub, GithubCall};
+use lazy_github_core::links::LinkSubject;
 use lazy_github_core::models::{FullPullRequest, PartialPullRequest, Repository};
 use serde_json::Value;
 
@@ -408,6 +409,19 @@ fn newer_selections() -> Vec<(&'static str, Action)> {
             }),
         ),
         ("an issue", Action::Main(MainAction::OpenIssue(Box::new(issue)))),
+        // Paste link and followed links (#197, #339).
+        (
+            "a repo link",
+            Action::Main(MainAction::OpenLinkSubject(Box::new(LinkSubject::Repository(
+                Box::new(other()),
+            )))),
+        ),
+        (
+            "a PR link",
+            Action::Main(MainAction::OpenLinkSubject(Box::new(LinkSubject::PullRequest(
+                Box::new(full_pr(4)),
+            )))),
+        ),
         (
             "a run",
             Action::Main(MainAction::OpenWorkflowRun(Box::new(
@@ -420,8 +434,8 @@ fn newer_selections() -> Vec<(&'static str, Action)> {
 /// The details title each of [`newer_selections`] leaves.
 fn newer_title(name: &str) -> &'static str {
     match name {
-        "a repo" => "[5] octo/other Details",
-        "a PR row" | "a PR row to fetch" => "[5] PR #4 Details",
+        "a repo" | "a repo link" => "[5] octo/other Details",
+        "a PR row" | "a PR row to fetch" | "a PR link" => "[5] PR #4 Details",
         "an issue" => "[5] Issue #3 Details",
         _ => "[5] Workflow Run #42 Details",
     }

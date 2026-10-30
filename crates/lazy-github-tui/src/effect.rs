@@ -11,6 +11,7 @@ use lazy_github_core::github::{
     DiffFetchError, GhCliOptions, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue,
     NewPullRequest, NewReview, NotificationQuery, PageQuery, PullRequestUpdate, RepoListQuery,
 };
+use lazy_github_core::links::{GithubLink, LinkSubject, resolve_github_link};
 use lazy_github_core::models::{
     Branch, CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
     Notification, PartialPullRequest, ReactionKind, Reactions, RepoName, Repository, Review, ReviewComment, User,
@@ -189,6 +190,9 @@ pub enum GithubRequest {
     },
     /// [`Github::user`] with this login.
     User(String),
+    /// [`resolve_github_link`]: the lookups a GitHub web link needs, run as one request, so cancelling it cancels
+    /// the whole chain.
+    ResolveLink(GithubLink),
     /// [`Github::user_repos`] with this login.
     UserRepos(String),
     /// [`Github::pull_request`].
@@ -438,6 +442,8 @@ pub enum GithubResponse {
     PullRequestDiff(Result<String, DiffFetchError>),
     /// [`Github::user`], boxed to keep this enum small.
     User(Result<Box<FullUser>, GhError>),
+    /// [`resolve_github_link`]: what the link points at, or `None` when its repository isn't there.
+    ResolveLink(Result<Option<LinkSubject>, GhError>),
     /// [`Github::user_repos`].
     UserRepos(Result<Vec<Repository>, GhError>),
     /// [`Github::pull_request`], boxed to keep this enum small.
@@ -519,6 +525,7 @@ impl GithubResponse {
             GithubResponse::ListWorkflows(result) => result.as_ref().err(),
             GithubResponse::ListWorkflowRuns(result) => result.as_ref().err(),
             GithubResponse::User(result) => result.as_ref().err(),
+            GithubResponse::ResolveLink(result) => result.as_ref().err(),
             GithubResponse::UserRepos(result) => result.as_ref().err(),
             GithubResponse::PullRequest(result) => result.as_ref().err(),
             GithubResponse::WorkflowRunJobs(result) => result.as_ref().err(),
@@ -593,6 +600,7 @@ impl GithubRequest {
                 GithubResponse::PullRequestDiff(gh.pull_request_diff(&repo, number).await)
             }
             GithubRequest::User(login) => GithubResponse::User(gh.user(&login).await.map(Box::new)),
+            GithubRequest::ResolveLink(link) => GithubResponse::ResolveLink(resolve_github_link(gh, &link).await),
             GithubRequest::UserRepos(login) => GithubResponse::UserRepos(gh.user_repos(&login).await),
             GithubRequest::PullRequest { repo, number } => {
                 GithubResponse::PullRequest(gh.pull_request(&repo, number).await.map(Box::new))

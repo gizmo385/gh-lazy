@@ -1,0 +1,7 @@
+version = 1
+description = "GitHub web links: the Python app's user, pull request, issue and repository URL patterns over a corpus of texts, with and without repository links accepted, and the paste-link input's validator, compared with core::links"
+generator = "crates/lazy-github-tui/tests/fixtures/generate_github_url_patterns.py"
+golden = ["crates/lazy-github-tui/tests/fixtures/github_url_patterns.json"]
+test = "crates/lazy-github-tui/tests/github_url_patterns.rs"
+fresh_test = "github_url_patterns_golden_is_fresh"
+parity_rows = ["markdown-links.github-url-patterns"]

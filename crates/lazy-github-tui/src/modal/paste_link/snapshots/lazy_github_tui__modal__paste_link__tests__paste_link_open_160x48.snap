@@ -1,0 +1,53 @@
+---
+source: crates/lazy-github-tui/src/modal/paste_link/tests.rs
+assertion_line: 335
+expression: "app.screen(160, 48)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                                                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] Details ────────────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner  Name  Private                                      ││ Introduction                                                                                 │
+│                                                              ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                         LazyGithub: A Terminal UI For GitHub (0.1.0)                         │
+│                                                              ││                                                                                              │
+│                                                              ││  LazyGithub is a terminal UI for interacting with GitHub. You can get started by selecting   │
+│                                                              ││  one of the repositories listed in the table on the left. Once you have selected a           │
+│                                                              ││  repository, any issues, pull requests, and action workflows will be retrieved and           │
+│                                       █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                                       │
+│                                       █                                                                              █                                       │
+│                                       █                                                                              █nteracted with!                        │
+│                                       █                                                                              █                                       │
+│                                       █                           Paste a web GitHub link:                           █                                       │
+│                                       █                                                                              █                                       │
+└───────────────────────────────────────█Link:                                                                         █                                       │
+┌─ [2] Pull Requests ───────────────────█▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█ewing the PR diff, and participating   │
+│ #  Status  Author  Title              █▊  https://github.com/...                                                    ▎█can also create a new PR for the       │
+│                                       █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█                                       │
+│                                       █                                                                              █                                       │
+│                                       █──────────────────────────────────────────────────────────────────────────────█                                       │
+│                                       █                                                                              █                                       │
+│                                       █                                                                              █                                       │
+│                                       █                      ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                       █, partipcating in any activate         │
+└───────────────────────────────────────█                            Open            Cancel                            █the issue itself. This means that you  │
+┌─ [3] Issues ──────────────────────────█                      ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                       █                                       │
+│ #  Status  Author  Title              █                                                                              █                                       │
+│                                       █                                                                              █                                       │
+│                                       █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                                       │
+│                                                              ││                                                                                              │
+│                                                              ││  Github action and workflow support is pretty limited. It currently only supports listing    │
+│                                                              ││  the workflows and the most recent runs across all actions on the currently selected repo,   │
+│                                                              ││  as well as kicking off a workflow that supports manual triggers.                            │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows ──────────────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ shift+⏎ Submit  esc Close

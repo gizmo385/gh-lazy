@@ -11,6 +11,7 @@ pub mod drafts;
 pub mod gh;
 pub mod git;
 pub mod github;
+pub mod links;
 pub mod logging;
 pub mod models;
 pub mod references;

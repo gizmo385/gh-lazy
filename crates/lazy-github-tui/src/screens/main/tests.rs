@@ -426,9 +426,9 @@ fn the_chain_follows_focus() {
 
 #[test]
 fn bindings_not_built_yet_are_consumed() {
-    // `f` and `ctrl+v` on the screen: no effect, and nothing quits.
+    // `f` on the screen: no effect, and nothing quits.
     let mut app = TestApp::new(Config::default());
-    app.press(&["f", "ctrl+v"]);
+    app.press(&["f"]);
     assert_eq!(app.effects(), []);
     // ctrl+c still reaches `help_quit` past the screen's copy binding.
     app.press(&["ctrl+c"]);
@@ -1297,12 +1297,16 @@ fn printable_keys_type_into_the_box() {
 
 #[test]
 fn paste_goes_into_the_box_only_while_it_has_focus() {
+    // Elsewhere it opens Paste link (decision `paste-opens-link-modal`).
     let mut app = with_repos(Config::default(), base_repos());
     app.send(Event::Paste("dot".into()));
     assert_eq!(repos_table(&app).search_text(), "");
+    assert_eq!(app.app().modals(), [ModalKind::PasteLink]);
+    app.press(&["escape"]);
     app.press(&["/"]);
     app.send(Event::Paste("hello\nworld".into()));
     assert_eq!(repos_table(&app).search_text(), "hello");
+    assert!(app.app().modals().is_empty());
     app.press(&["tab"]);
     app.send(Event::Paste("more".into()));
     assert_eq!(repos_table(&app).search_text(), "hello");

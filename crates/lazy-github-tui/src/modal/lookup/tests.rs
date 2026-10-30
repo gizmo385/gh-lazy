@@ -564,7 +564,7 @@ fn typed(text: &str) -> LookupDialog<RepoLookup> {
     let keymap = Keymap::defaults();
     for c in text.chars() {
         let chord = KeyChord::new(crossterm::event::KeyCode::Char(c), crossterm::event::KeyModifiers::NONE);
-        let _ = dialog.edit(|input| input.handle_key(&chord, &keymap, ""));
+        let _ = dialog.input.edit(|input| input.handle_key(&chord, &keymap, ""));
     }
     dialog
 }

@@ -8,7 +8,8 @@
   view, the help panel) is drawn as it was once the terminal grows back.
 - Decided by: Chris, 2026-10-30, on #326: below the minimum size, draw only the centered "Terminal too small (w×h)"
   message and ignore every key except quit; the implementer picks the threshold near 40x12 from where the layout
-  first becomes unusable
+  first becomes unusable. He then confirmed the chosen 40x15, and that `q` quits only where it would at full size
+  while `ctrl+q` always quits.
 - Link: #326 (owner comment of 2026-10-30), parent #201
 - Rows: `main-layout.too-small`
 

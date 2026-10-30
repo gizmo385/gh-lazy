@@ -176,9 +176,15 @@ contains = [
     "Mark Notification As Read When Selected:",
 ]
 
-# The tab's binding rows ("Command Pallete: ctrl+p", "Maximize: M", ...) are #194's, which adds them back here.
+# "e: ctrl+p" is the first binding row: Python spells it "Command Pallete" (Py bug B14), Rust "Command Palette".
 [expect.key-bindings]
-contains = ["Custom keybinding overrides for LazyGithub. When rebinding, pressing ESCAPE will reset to"]
+contains = [
+    "Custom keybinding overrides for LazyGithub. When rebinding, pressing ESCAPE will reset to",
+    "e: ctrl+p",
+    "Maximize: M",
+    "Keybindings: ?",
+    "Quit: q",
+]
 
 [expect.repositories]
 contains = ["Repository-specific settings", "Additional Repos To Track:", "Add new item...", "Favorites:"]

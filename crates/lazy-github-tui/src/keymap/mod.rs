@@ -15,5 +15,5 @@ mod keymap;
 
 pub use active::{ActiveBinding, active_bindings};
 pub use ids::{BindingDef, BindingId};
-pub use key::{KeyChord, KeySpec};
+pub use key::{KeyChord, KeySpec, textual_name};
 pub use keymap::Keymap;

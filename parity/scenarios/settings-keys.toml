@@ -2,7 +2,7 @@ version = 1
 description = "Settings Key Bindings tab: a focused row takes the next key and shows its Textual name, escape resets it to the default, Save writes the override and the new key works at once (the old one no longer does); reopening shows it"
 # The modal is loose text (see settings.toml). The harness can't send shift+enter, so Save is reached with shift+tab
 # (the ring wraps from the tab strip to Cancel, then Save). The override in config.json is unit-tested.
-gate = false
+gate = true
 parity_rows = [
     "modals.settings-key-rebinding",
     "modals.settings-save",
@@ -151,8 +151,9 @@ wait = { text = "Custom keybinding overrides" }
 capture = "reopened"
 checks = ["footer"]
 
+# "e: ctrl+p" is the first row: Python spells it "Command Pallete" (Py bug B14), Rust "Command Palette".
 [expect.row-focused]
-contains = ["Command Pallete: ctrl+p", "Maximize: M", "Keybindings: ?", "Quit: q"]
+contains = ["e: ctrl+p", "Maximize: M", "Keybindings: ?", "Quit: q"]
 footer = ["shift+⏎ Submit", "q Close", "/ Search"]
 
 [expect.captured]
@@ -174,4 +175,4 @@ not_contains = ["Cursor up"]
 contains = ["Cursor up"]
 
 [expect.reopened]
-contains = ["Keybindings: exclamation_mark", "Command Pallete: ctrl+p"]
+contains = ["Keybindings: exclamation_mark", "e: ctrl+p"]

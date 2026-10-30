@@ -101,7 +101,7 @@ not_contains = ["Preferred Merge Method:", "Pull Request Template:"]
 
 # The tab's binding rows are #194's, which adds back "Filter Files: /" (the row the filter keeps) here.
 [expect.search-key-bindings]
-contains = ["filter", "Custom keybinding overrides for LazyGithub"]
+contains = ["filter", "Custom keybinding overrides for LazyGithub", "Filter Files: /"]
 not_contains = ["Command Pallete: ctrl+p"]
 
 [expect.closed]

@@ -12,6 +12,7 @@ use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
 
 use super::SettingsFocus;
+use super::key_row::KeyRow;
 use super::list_field::ListField;
 use crate::components::markdown::wrap;
 use crate::components::scroll_view::ScrollView;
@@ -161,8 +162,14 @@ struct PaneLayout {
     doc: Vec<String>,
     /// Each field's first row. A hidden field takes no rows: its top is where the next shown one starts.
     tops: Vec<u16>,
+    /// Each key row's first row, likewise.
+    key_tops: Vec<u16>,
+    /// The focused key row, which is taller, as laid out.
+    focused_key: Option<usize>,
     /// The content's height.
     height: u16,
+    /// The content width it was laid out at.
+    width: u16,
     /// The widget column's offset from the content's left edge, and its width.
     column: u16,
     column_width: u16,
@@ -190,6 +197,10 @@ pub(super) struct SettingsPane {
     /// Per field, whether the search filter shows it (Textual's `display`). A hidden field takes no rows and no
     /// focus, but still saves.
     shown: Vec<bool>,
+    /// The Key Bindings tab's rows, after the (no) fields; empty on every other tab.
+    pub(super) keys: Vec<KeyRow>,
+    /// Per key row, whether the search filter shows it.
+    keys_shown: Vec<bool>,
     pub(super) scroll: FormScroll,
     /// The layout at the last draw, for revealing a field and for the mouse.
     layout: PaneLayout,
@@ -197,7 +208,14 @@ pub(super) struct SettingsPane {
 
 impl SettingsPane {
     pub(super) fn new(section: &'static Section, config: &Config) -> Self {
+        let keys = if section.key == "bindings" {
+            KeyRow::all(&config.bindings.overrides)
+        } else {
+            Vec::new()
+        };
         Self {
+            keys_shown: vec![true; keys.len()],
+            keys,
             section,
             fields: section
                 .fields
@@ -221,6 +239,14 @@ impl SettingsPane {
         for (shown, field) in self.shown.iter_mut().zip(&self.fields) {
             *shown = query.is_none_or(|query| fuzzy_match(query, field.field.name).is_some());
         }
+        for (shown, row) in self.keys_shown.iter_mut().zip(&self.keys) {
+            *shown = query.is_none_or(|query| row.matches(query));
+        }
+    }
+
+    /// Whether key row `index` is shown.
+    fn is_key_shown(&self, index: usize) -> bool {
+        self.keys_shown.get(index).copied().unwrap_or(false)
     }
 
     /// Whether field `index` is shown.
@@ -240,6 +266,11 @@ impl SettingsPane {
                 stops.push(SettingsFocus::ListItems(index));
             }
         }
+        stops.extend(
+            (0..self.keys.len())
+                .filter(|&index| self.is_key_shown(index))
+                .map(SettingsFocus::KeyRow),
+        );
         stops
     }
 
@@ -274,6 +305,14 @@ impl SettingsPane {
         let (index, items) = match stop {
             SettingsFocus::Field(index) => (index, false),
             SettingsFocus::ListItems(index) => (index, true),
+            SettingsFocus::KeyRow(index) => {
+                if !self.is_key_shown(index) {
+                    return None;
+                }
+                let top = *self.layout.key_tops.get(index)?;
+                let rows = top..top + KeyRow::height(self.layout.focused_key == Some(index));
+                return Some((rows.clone(), rows));
+            }
             _ => return None,
         };
         if !self.is_shown(index) {
@@ -300,13 +339,18 @@ impl SettingsPane {
 
     /// Scrolls focus stop `stop` into view as Textual does when focus moves to it.
     pub(super) fn reveal(&mut self, stop: SettingsFocus) {
+        // A key row grows when it gains focus, so it's revealed at its focused height. A tab not drawn yet has no
+        // layout to redo: nothing is revealed until it is.
+        if self.layout.width > 0 && self.layout.focused_key != key_row_of(Some(stop)) {
+            self.layout = self.layout(self.layout.width, Some(stop));
+        }
         if let Some((rows, with_margin)) = self.stop_rows(stop) {
             self.scroll.center(rows, with_margin);
         }
     }
 
-    /// The layout at content width `width`.
-    fn layout(&self, width: u16) -> PaneLayout {
+    /// The layout at content width `width`, with `focus` drawn focused.
+    fn layout(&self, width: u16, focus: Option<SettingsFocus>) -> PaneLayout {
         let inner = width.saturating_sub(2 * BORDER);
         let doc = self
             .section
@@ -331,10 +375,26 @@ impl SettingsPane {
                 top
             })
             .collect();
+        let focused_key = key_row_of(focus);
+        let key_tops = self
+            .keys_shown
+            .iter()
+            .enumerate()
+            .map(|(index, &shown)| {
+                let top = y;
+                if shown {
+                    y = y.saturating_add(KeyRow::height(focused_key == Some(index)));
+                }
+                top
+            })
+            .collect();
         let column = inner / 2;
         PaneLayout {
             doc,
             tops,
+            key_tops,
+            focused_key,
+            width,
             height: y.saturating_add(PADDING + BORDER),
             column,
             column_width: inner - column,
@@ -376,6 +436,14 @@ impl SettingsPane {
                 _ => SettingsFocus::Field(index),
             };
             return Some(PaneHit::Stop(stop));
+        }
+        let inner = content.x + BORDER..content.right().saturating_sub(BORDER);
+        for (index, &top) in self.layout.key_tops.iter().enumerate() {
+            let rows = top..top + KeyRow::height(self.layout.focused_key == Some(index));
+            if self.is_key_shown(index) && inner.contains(&column) && rows.contains(&form_row.saturating_sub(content.y))
+            {
+                return Some(PaneHit::Stop(SettingsFocus::KeyRow(index)));
+            }
         }
         Some(PaneHit::Area)
     }
@@ -440,10 +508,10 @@ impl SettingsPane {
         focus: Option<SettingsFocus>,
     ) {
         let p = theme.palette;
-        let mut layout = self.layout(area.width);
+        let mut layout = self.layout(area.width, focus);
         let narrowed = ScrollView::content_width(area, usize::from(layout.height));
         if narrowed != area.width {
-            layout = self.layout(narrowed);
+            layout = self.layout(narrowed, focus);
         }
         let fill = Style::new().fg(theme.color(p.foreground, under)).bg(theme.paint(under));
         let bold = Style::new()
@@ -458,6 +526,8 @@ impl SettingsPane {
         };
         let fields = &mut self.fields;
         let shown = &self.shown;
+        let keys = &self.keys;
+        let keys_shown = &self.keys_shown;
         let plan = &layout;
         self.scroll
             .render(buf, area, theme, fill, layout.height, |content_buf, content| {
@@ -505,6 +575,15 @@ impl SettingsPane {
                         }
                     }
                 }
+                let row_width = content.width.saturating_sub(2 * BORDER);
+                for (index, ((row, &top), &shown)) in keys.iter().zip(&plan.key_tops).zip(keys_shown).enumerate() {
+                    if !shown {
+                        continue;
+                    }
+                    let focused = plan.focused_key == Some(index);
+                    let area = Rect::new(content.x + BORDER, content.y + top, row_width, KeyRow::height(focused));
+                    row.render(content_buf, area, theme, under, focused);
+                }
             });
         self.layout = layout;
     }
@@ -530,5 +609,13 @@ impl SettingsPane {
         if let FieldWidget::Select(select) = &mut self.fields[index].widget {
             select.render_overlay(buf, below, screen, theme, under);
         }
+    }
+}
+
+/// The key row `focus` is on, if it's on one.
+fn key_row_of(focus: Option<SettingsFocus>) -> Option<usize> {
+    match focus {
+        Some(SettingsFocus::KeyRow(index)) => Some(index),
+        _ => None,
     }
 }

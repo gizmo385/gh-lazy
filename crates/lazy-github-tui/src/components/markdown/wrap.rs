@@ -25,6 +25,21 @@ impl Cell<'_> {
 
 /// The graphemes of `text`, all from `run`. Control characters are left out, as ratatui draws none.
 pub(super) fn cells(text: &str, run: usize) -> Vec<Cell<'_>> {
+    if crate::display::is_printable_ascii(text) {
+        // Each byte is a grapheme one cell wide, and every index is a char boundary.
+        return (0..text.len())
+            .map(|i| Cell {
+                symbol: &text[i..=i],
+                width: 1,
+                run,
+            })
+            .collect();
+    }
+    grapheme_cells(text, run)
+}
+
+/// [`cells`] by walking `text`'s graphemes.
+fn grapheme_cells(text: &str, run: usize) -> Vec<Cell<'_>> {
     // Ratatui's grapheme split borrows the span, not the text, so each grapheme is taken back out of `text` by its
     // offset: a borrowed span's graphemes point into `text` itself.
     let span = Span::raw(text);
@@ -161,4 +176,22 @@ fn chop(word: &[Cell<'_>], width: usize) -> Vec<usize> {
 
 fn width_of(cells: &[Cell<'_>]) -> usize {
     cells.iter().map(|c| c.width).sum()
+}
+
+#[cfg(test)]
+mod tests {
+    use proptest::prelude::*;
+
+    use super::*;
+
+    proptest! {
+        /// The printable-ASCII shortcut in [`cells`] (#325) gives the cells the grapheme walk gives.
+        #[test]
+        fn the_ascii_shortcut_matches_the_grapheme_walk(text in prop_oneof!["[ -~]{0,40}", "[ -~\t\r\n\x1b]{0,40}"]) {
+            let key = |cells: Vec<Cell<'_>>| -> Vec<(String, usize, usize)> {
+                cells.into_iter().map(|c| (c.symbol.to_owned(), c.width, c.run)).collect()
+            };
+            prop_assert_eq!(key(cells(&text, 3)), key(grapheme_cells(&text, 3)));
+        }
+    }
 }

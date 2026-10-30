@@ -1,8 +1,8 @@
 //! A hunk pane: Python's `UnifiedDiffPane`, a box holding one hunk's lines with a gutter, a current line and the
 //! `Line: n/m` row under them.
 //!
-//! The code itself, syntax colored, comes from [`code_spans`], once per hunk, the first time the pane is laid out;
-//! the pane only adds the gutter, the line backgrounds and the cut at its width.
+//! The code itself, syntax colored, comes from [`HunkCode`], colored as far as the pane has shown it; the pane only
+//! adds the gutter, the line backgrounds and the cut at its width.
 
 use lazy_github_core::diff::{ChangedFile, Hunk, LineKind};
 use ratatui::buffer::Buffer;
@@ -11,7 +11,7 @@ use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
 
 use super::buffer_line;
-use super::highlight::code_spans;
+use super::highlight::HunkCode;
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
 use crate::display;
 use crate::theme::{Accent, Paint, Rgb, RichAnsi, Theme};
@@ -30,9 +30,9 @@ const VERTICAL_BAR: usize = scrollbar::VERTICAL_WIDTH as usize;
 /// One hunk's pane: its code, the current line and how far its lines are scrolled.
 #[derive(Debug, Clone)]
 pub struct HunkPane {
-    /// The hunk's code, colored the first time the pane is laid out: highlighting can be slow, and most hunks are
-    /// never opened.
-    code: Option<Vec<Line<'static>>>,
+    /// The hunk's code, made the first time the pane is laid out: highlighting can be slow, and most hunks are never
+    /// opened.
+    code: Option<HunkCode>,
     /// How many lines the hunk has.
     len: usize,
     /// The current line, an index into the hunk's lines.
@@ -107,6 +107,12 @@ impl HunkPane {
         self.scroll = self.scroll.min(self.len.saturating_sub(viewport));
     }
 
+    /// How many lines the last layout showed at once.
+    #[cfg(test)]
+    pub fn viewport(&self) -> usize {
+        self.viewport
+    }
+
     /// Remembers how many lines the last layout showed, which the next cursor move scrolls by.
     pub fn set_viewport(&mut self, viewport: usize) {
         self.viewport = viewport;
@@ -124,10 +130,8 @@ impl HunkPane {
         focused: bool,
         under: Paint,
     ) -> PaneLayout {
-        if self.code.is_none() {
-            self.code = Some(code_spans(file, hunk));
-        }
-        let code = self.code.as_deref().unwrap_or_default();
+        let cursor = self.cursor;
+        let code = self.code.get_or_insert_with(|| HunkCode::new(file, hunk));
         let mut out = PaneLayout::default();
         out.lines.push(Line::default());
         let width = usize::from(width);
@@ -138,7 +142,7 @@ impl HunkPane {
         let styles = Styles::new(theme, focused, under);
         let inner = width - 2;
         let len = self.len;
-        let widest = code.iter().map(Line::width).max().unwrap_or(0) + GUTTER_WIDTH;
+        let widest = code.widest() + GUTTER_WIDTH;
 
         // Each scrollbar narrows or shortens the room for the other, so settle them together.
         let (mut horizontal, mut vertical) = (false, false);
@@ -151,6 +155,7 @@ impl HunkPane {
         let text_width = inner.saturating_sub(if vertical { VERTICAL_BAR } else { 0 });
         let scroll = self.scroll.min(len - viewport);
         out.viewport = viewport;
+        let code = code.lines(scroll + viewport);
 
         let border = |left: &str, fill: &str, right: &str| {
             Line::from(Span::styled(
@@ -174,7 +179,7 @@ impl HunkPane {
             bar_rows(Axis::Vertical, VERTICAL_BAR, viewport, state, styles.scrollbar)
         });
         for (row, index) in (scroll..scroll + viewport).enumerate() {
-            let mut spans = self.row(hunk, code, index, text_width, &styles, theme);
+            let mut spans = code_row(cursor, hunk, code, index, text_width, &styles, theme);
             if let Some(bar) = &bar {
                 spans.extend(bar[row].spans.iter().cloned());
             }
@@ -206,47 +211,48 @@ impl HunkPane {
         out.lines.push(Line::default());
         out
     }
+}
 
-    /// Line `index` of the hunk: the gutter, then its code on its background, cut and filled to `width`.
-    fn row(
-        &self,
-        hunk: &Hunk,
-        code: &[Line<'static>],
-        index: usize,
-        width: usize,
-        styles: &Styles,
-        theme: &Theme,
-    ) -> Vec<Span<'static>> {
-        let line = hunk.lines.get(index);
-        let current = index == self.cursor;
-        let marker = if current { "► " } else { "  " };
-        // Py bug B22: a removed line shows its old-file number, every other line its new-file number.
-        let number = line
-            .and_then(|line| match line.kind {
-                LineKind::Removed => line.old,
-                LineKind::Context | LineKind::Added | LineKind::NoNewline => line.new,
-            })
-            .map_or_else(|| " ".repeat(4), |n| format!("{n:>4}"));
-        let kind = line.map_or(LineKind::Context, |line| line.kind);
-        let code = code.get(index);
-        let background = Styles::background(kind, current, theme);
-        // A context line keeps the highlighter's background (monokai's), as Python's do.
-        let code_style = styles.code(
-            background.or_else(|| code.and_then(|code| code.style.bg).map(|bg| reduce(bg, theme))),
-            theme,
-        );
-        let mut spans = vec![Span::styled(format!("{marker}{number} │ "), styles.gutter)];
-        if let Some(code) = code {
-            spans.extend(code.spans.iter().map(|span| {
-                let mut style = code_style.patch(span.style);
-                style.fg = style.fg.map(|fg| reduce(fg, theme));
-                // The line's own background wins over any the highlighter gives, as Python's `stylize` does.
-                style.bg = background.or_else(|| style.bg.map(|bg| reduce(bg, theme)));
-                Span::styled(span.content.clone(), style)
-            }));
-        }
-        cut(spans, width, code_style)
+/// Line `index` of the hunk, with line `cursor` current: the gutter, then its code on its background, cut and filled
+/// to `width`.
+fn code_row(
+    cursor: usize,
+    hunk: &Hunk,
+    code: &[Line<'static>],
+    index: usize,
+    width: usize,
+    styles: &Styles,
+    theme: &Theme,
+) -> Vec<Span<'static>> {
+    let line = hunk.lines.get(index);
+    let current = index == cursor;
+    let marker = if current { "► " } else { "  " };
+    // Py bug B22: a removed line shows its old-file number, every other line its new-file number.
+    let number = line
+        .and_then(|line| match line.kind {
+            LineKind::Removed => line.old,
+            LineKind::Context | LineKind::Added | LineKind::NoNewline => line.new,
+        })
+        .map_or_else(|| " ".repeat(4), |n| format!("{n:>4}"));
+    let kind = line.map_or(LineKind::Context, |line| line.kind);
+    let code = code.get(index);
+    let background = Styles::background(kind, current, theme);
+    // A context line keeps the highlighter's background (monokai's), as Python's do.
+    let code_style = styles.code(
+        background.or_else(|| code.and_then(|code| code.style.bg).map(|bg| reduce(bg, theme))),
+        theme,
+    );
+    let mut spans = vec![Span::styled(format!("{marker}{number} │ "), styles.gutter)];
+    if let Some(code) = code {
+        spans.extend(code.spans.iter().map(|span| {
+            let mut style = code_style.patch(span.style);
+            style.fg = style.fg.map(|fg| reduce(fg, theme));
+            // The line's own background wins over any the highlighter gives, as Python's `stylize` does.
+            style.bg = background.or_else(|| style.bg.map(|bg| reduce(bg, theme)));
+            Span::styled(span.content.clone(), style)
+        }));
     }
+    cut(spans, width, code_style)
 }
 
 /// A highlighter's exact color reduced to what the terminal shows, as the theme's own colors are.

@@ -28,6 +28,11 @@ enum Task {
     /// Write the parity site's landing page (run results, matrix status and coverage) from a parity report and the
     /// matrix. The Pages workflow publishes it with the report under report/.
     ParitySite(xtask::site::SiteArgs),
+    /// Run the large-data timing tests (#325) in a release build, one process per case, and print each case's slowest
+    /// frame and peak RSS. Not part of the required CI job.
+    Perf(xtask::perf::PerfArgs),
+    /// Write the generated `large-account` parity fixture set (1,000 repos over 20 pages) under parity/fixtures/.
+    LargeAccountFixtures,
 }
 
 #[derive(Debug, clap::Args)]
@@ -55,6 +60,8 @@ fn main() -> ExitCode {
             xtask::matrix::run(&xtask::parity::cli::repo_root(), args.markdown, args.uncovered)
         }
         Some(Task::ParitySite(args)) => xtask::site::run(&xtask::parity::cli::repo_root(), &args),
+        Some(Task::Perf(args)) => xtask::perf::run(&xtask::parity::cli::repo_root(), &args),
+        Some(Task::LargeAccountFixtures) => xtask::large_account::run(&xtask::parity::cli::repo_root()),
     }
 }
 

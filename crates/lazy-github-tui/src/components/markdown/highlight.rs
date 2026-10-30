@@ -205,45 +205,63 @@ pub(super) fn highlight(language: Option<&str>, lines: &[String]) -> Vec<Vec<(Ra
 /// opens carries on to the next. Each line's tokens are byte ranges into it, in order; text with no token is left
 /// out. If the grammar fails on some line, that line and the rest have no tokens.
 pub(crate) fn tokenize(syntax: &SyntaxReference, lines: &[String]) -> Vec<Vec<(Range<usize>, Token)>> {
-    let mut state = ParseState::new(syntax);
-    let mut stack = ScopeStack::new();
-    let mut failed = false;
-    lines
-        .iter()
-        .map(|line| {
-            if failed {
+    let mut tokenizer = Tokenizer::new(syntax);
+    lines.iter().map(|line| tokenizer.line(line)).collect()
+}
+
+/// [`tokenize`] a line at a time: the state one line leaves for the next, so text too long to tokenize in one frame
+/// can be tokenized as far as it's shown.
+#[derive(Debug, Clone)]
+pub(crate) struct Tokenizer {
+    state: ParseState,
+    stack: ScopeStack,
+    /// Whether the grammar failed on an earlier line, which leaves the rest without tokens.
+    failed: bool,
+}
+
+impl Tokenizer {
+    pub(crate) fn new(syntax: &SyntaxReference) -> Self {
+        Self {
+            state: ParseState::new(syntax),
+            stack: ScopeStack::new(),
+            failed: false,
+        }
+    }
+
+    /// The next line's tokens.
+    pub(crate) fn line(&mut self, line: &str) -> Vec<(Range<usize>, Token)> {
+        if self.failed {
+            return Vec::new();
+        }
+        // The newline-terminated grammars want each line with its `\n`.
+        let text = format!("{line}\n");
+        let Ok(ops) = self.state.parse_line(&text, &SYNTAXES) else {
+            // A grammar that fails on some input: the rest of the fence stays plain.
+            self.failed = true;
+            return Vec::new();
+        };
+        let mut tokens: Vec<(Range<usize>, Token)> = Vec::new();
+        for (range, op) in ScopeRangeIterator::new(&ops, &text) {
+            if self.stack.apply(op).is_err() {
+                self.failed = true;
                 return Vec::new();
             }
-            // The newline-terminated grammars want each line with its `\n`.
-            let text = format!("{line}\n");
-            let Ok(ops) = state.parse_line(&text, &SYNTAXES) else {
-                // A grammar that fails on some input: the rest of the fence stays plain.
-                failed = true;
-                return Vec::new();
-            };
-            let mut tokens: Vec<(Range<usize>, Token)> = Vec::new();
-            for (range, op) in ScopeRangeIterator::new(&ops, &text) {
-                if stack.apply(op).is_err() {
-                    failed = true;
-                    return Vec::new();
-                }
-                let range = range.start.min(line.len())..range.end.min(line.len());
-                if range.is_empty() {
-                    continue;
-                }
-                let scopes: Vec<String> = stack.as_slice().iter().map(|s| s.build_string()).collect();
-                if let Some(token) = stack_token(&scopes) {
-                    match tokens.last_mut() {
-                        Some((last, previous)) if *previous == token && last.end == range.start => {
-                            last.end = range.end;
-                        }
-                        _ => tokens.push((range, token)),
+            let range = range.start.min(line.len())..range.end.min(line.len());
+            if range.is_empty() {
+                continue;
+            }
+            let scopes: Vec<String> = self.stack.as_slice().iter().map(|s| s.build_string()).collect();
+            if let Some(token) = stack_token(&scopes) {
+                match tokens.last_mut() {
+                    Some((last, previous)) if *previous == token && last.end == range.start => {
+                        last.end = range.end;
                     }
+                    _ => tokens.push((range, token)),
                 }
             }
-            tokens
-        })
-        .collect()
+        }
+        tokens
+    }
 }
 
 /// A color in a highlight theme.

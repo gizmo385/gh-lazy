@@ -1,0 +1,51 @@
+name: Perf
+
+# The large-data timing tests (#325): each case in a release build, its frames held to 50 ms. Not a required check:
+# timings on shared runners are noisy, so this runs after merges and on demand rather than gating PRs.
+on:
+  push:
+    branches:
+    - rust-main
+    paths:
+    - 'crates/**'
+    - 'xtask/**'
+    - 'Cargo.lock'
+    - '.github/workflows/perf.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  perf:
+    name: large-data timing tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - name: Install toolchain
+      run: rustup toolchain install
+    - uses: Swatinem/rust-cache@v2
+      with:
+        key: perf-release
+    - name: Timing tests
+      shell: bash
+      run: |
+        set -o pipefail
+        cargo xtask perf | tee perf.txt
+    - name: Job summary
+      if: always()
+      shell: bash
+      run: |
+        if [ -f perf.txt ]; then
+          grep '^|' perf.txt >> "$GITHUB_STEP_SUMMARY" || true
+        fi

@@ -28,7 +28,16 @@ fn is_control(c: char) -> bool {
 
 /// The cells `s` takes once drawn. Control characters, which ratatui doesn't draw, take none.
 pub fn width(s: &str) -> usize {
+    if is_printable_ascii(s) {
+        return s.len();
+    }
     graphemes(s).map(|(_, g)| grapheme_width(g)).sum()
+}
+
+/// Whether `s` is all printable ASCII (space to `~`): then each byte is a grapheme one cell wide, and the grapheme
+/// walk, the slow part of laying out a large body or log, can be skipped.
+pub(crate) fn is_printable_ascii(s: &str) -> bool {
+    s.bytes().all(|b| matches!(b, b' '..=b'~'))
 }
 
 /// The cells one grapheme takes, as ratatui's buffer counts them.
@@ -113,6 +122,10 @@ pub fn truncate(s: &str, width: usize) -> Cow<'_, str> {
 
 /// The longest prefix of `s` made of whole graphemes that fits in `cells`, and the cells it takes.
 fn take_cells(s: &str, cells: usize) -> (&str, usize) {
+    if is_printable_ascii(s) {
+        let end = s.len().min(cells);
+        return (&s[..end], end);
+    }
     let mut used = 0;
     let mut end = 0;
     for (start, grapheme) in graphemes(s) {

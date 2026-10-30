@@ -30,3 +30,6 @@ pub mod tui;
 
 #[cfg(any(test, feature = "test-util"))]
 pub mod test_util;
+
+#[cfg(test)]
+mod perf_tests;

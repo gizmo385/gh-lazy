@@ -33,8 +33,8 @@ use super::button::BUTTON_BINDINGS;
 use super::collapsible::{CONTENT_INDENT, Collapsible, Placement, SectionFocus};
 use super::command_log::Wheel;
 use super::info::Scroll;
-use super::markdown::{self, Rendered, TextRun};
-use super::scroll_view::{Layout, LayoutCache, ScrollView};
+use super::markdown::{self, LinkSpan, Rendered, TextRun};
+use super::scroll_view::{Layout, ScrollView};
 use super::select::{SELECT_BINDINGS, SELECT_OVERLAY_BINDINGS, SelectOutcome};
 use super::text_input::{self, INPUT_BINDINGS, InputOutcome, TextInput};
 use crate::action::Action;
@@ -216,6 +216,33 @@ struct FileSection {
     hunks: Vec<HunkSection>,
     /// Whether the filter keeps it.
     shown: bool,
+    /// The section's latest layouts, the two a draw beside a scrollbar needs. A change anywhere in the view lays
+    /// the whole view out again, and with hundreds of hunks open that's too slow for one frame, so each file keeps
+    /// its own and only the files whose look changed are laid out again (#325).
+    layouts: Vec<FileLayout>,
+    /// How many layouts the section has had, which stamps each one.
+    stamps: u64,
+}
+
+/// One file's section laid out from its top row, and what it was laid out from.
+#[derive(Debug)]
+struct FileLayout {
+    key: FileKey,
+    /// Which of the file's layouts this is, so a view put together from it can tell it's still current.
+    stamp: u64,
+    rendered: Rendered,
+    placed: FilePlaced,
+}
+
+/// Everything a file's section layout depends on that can change: the width, the theme, focus, which sections are
+/// open, and each pane's current line and scroll. The file's own diff never changes.
+#[derive(Debug, Clone, PartialEq)]
+struct FileKey {
+    width: u16,
+    theme: Theme,
+    focus: FileFocus,
+    section: Collapsible,
+    hunks: Vec<(Collapsible, usize, usize)>,
 }
 
 /// One hunk's section and pane.
@@ -262,11 +289,40 @@ struct Body {
     stop: DiffStop,
     /// Whether focus is inside the content, so the stop is drawn focused.
     focused: bool,
-    layouts: LayoutCache,
+    layouts: Layouts,
     /// Where things landed in each cached layout, by width.
     placements: Vec<(u16, Placements)>,
     /// The width of the last layout asked for: the one the last draw used.
     last_width: u16,
+}
+
+/// The whole view's latest layouts, the two a draw beside a scrollbar needs. A change marks them stale rather than
+/// dropping them: the next layout at the same width keeps the rows of every file that looks the same, so a key that
+/// changes one file costs that file, not the whole diff (#325).
+#[derive(Debug, Default)]
+struct Layouts {
+    entries: Vec<Assembled>,
+}
+
+impl Layouts {
+    /// Marks every layout stale, for when anything in the view changes.
+    fn clear(&mut self) {
+        for entry in &mut self.entries {
+            entry.fresh = false;
+        }
+    }
+}
+
+/// The view laid out at one width.
+#[derive(Debug)]
+struct Assembled {
+    width: u16,
+    theme: Theme,
+    /// Whether nothing changed since it was laid out.
+    fresh: bool,
+    rendered: Rendered,
+    /// Each shown file's layout stamp and rows, by file index.
+    files: Vec<Option<(u64, Range<usize>)>>,
 }
 
 /// Where the shown files landed in a layout, by file index (`None` for a file the filter hides).
@@ -292,6 +348,8 @@ struct HunkPlaced {
     section: Placement,
     /// The pane's rows, its margins included; empty while the hunk is closed.
     pane: Range<usize>,
+    /// How many lines the pane showed at once, when it was laid out: a cached layout gives it back to the pane.
+    viewport: Option<usize>,
 }
 
 impl DiffView {
@@ -314,6 +372,8 @@ impl DiffView {
                     file,
                     hunks,
                     shown: true,
+                    layouts: Vec::new(),
+                    stamps: 0,
                 }
             })
             .collect();
@@ -339,7 +399,7 @@ impl DiffView {
                 form: None,
                 stop: DiffStop::Scroll,
                 focused: false,
-                layouts: LayoutCache::default(),
+                layouts: Layouts::default(),
                 placements: Vec::new(),
                 last_width: 0,
             },
@@ -1206,6 +1266,47 @@ impl Body {
 impl Layout for Body {
     fn layout(&mut self, width: u16, theme: &Theme) -> &Rendered {
         self.last_width = width;
+        let found = self
+            .layouts
+            .entries
+            .iter()
+            .position(|entry| entry.width == width && entry.theme == *theme);
+        let index = match found {
+            Some(index) if self.layouts.entries[index].fresh => index,
+            Some(index) => {
+                let stale = self.layouts.entries.remove(index);
+                let assembled = self.assemble(width, theme, Some(stale));
+                self.layouts.entries.push(assembled);
+                self.layouts.entries.len() - 1
+            }
+            None => {
+                if self.layouts.entries.len() == 2 {
+                    self.layouts.entries.remove(0);
+                }
+                let assembled = self.assemble(width, theme, None);
+                self.layouts.entries.push(assembled);
+                self.layouts.entries.len() - 1
+            }
+        };
+        &self.layouts.entries[index].rendered
+    }
+}
+
+impl Body {
+    /// The whole view laid out `width` cells wide, with where things landed noted in [`Body::placements`]. Each
+    /// file's rows come from its own layouts; a file whose layout `stale` already holds keeps those rows, moved
+    /// rather than copied.
+    fn assemble(&mut self, width: u16, theme: &Theme, stale: Option<Assembled>) -> Assembled {
+        let mut assembled = Assembled {
+            width,
+            theme: *theme,
+            fresh: true,
+            rendered: Rendered::default(),
+            files: Vec::new(),
+        };
+        if width == 0 {
+            return assembled;
+        }
         let focus: Vec<FileFocus> = (0..self.files.len())
             .map(|f| self.file_focus(f, self.focused))
             .collect();
@@ -1220,54 +1321,120 @@ impl Layout for Body {
             DiffStop::ReviewSubmit if self.focused => Some(FormFocus::Submit),
             _ => None,
         };
-        let Body {
-            filter,
-            files,
-            notice,
-            pending,
-            form,
-            layouts,
-            placements,
-            ..
-        } = self;
-        layouts.get(width, theme, || {
-            let mut out = Rendered::default();
-            let mut placed = Placements::default();
-            if width == 0 {
-                return out;
+        let (mut old_lines, old_files) =
+            stale.map_or_else(Default::default, |stale| (stale.rendered.lines, stale.files));
+        let out = &mut assembled.rendered;
+        let mut placed = Placements::default();
+        out.lines
+            .extend(filter_lines(&mut self.filter, width, theme, filter_focused));
+        if let Some(notice) = &self.notice {
+            let text = Style::new().fg(theme.color(theme.palette.foreground, theme.background()));
+            let notice = markdown::wrap_text(&[TextRun::new(notice.as_str(), text)], width);
+            out.lines.extend(notice.lines);
+        }
+        for (f, (file, focus)) in self.files.iter_mut().zip(&focus).enumerate() {
+            if !file.shown {
+                placed.files.push(None);
+                assembled.files.push(None);
+                continue;
             }
-            out.lines.extend(filter_lines(filter, width, theme, filter_focused));
-            if let Some(notice) = notice {
-                let text = Style::new().fg(theme.color(theme.palette.foreground, theme.background()));
-                let notice = markdown::wrap_text(&[TextRun::new(notice.as_str(), text)], width);
-                out.lines.extend(notice.lines);
+            let index = cached_file(file, focus, width, theme);
+            let layout = &file.layouts[index];
+            let base = out.lines.len();
+            match old_files.get(f).cloned().flatten() {
+                Some((stamp, rows)) if stamp == layout.stamp && rows.len() == layout.rendered.lines.len() => {
+                    out.lines.extend(old_lines[rows].iter_mut().map(std::mem::take));
+                }
+                _ => out.lines.extend(layout.rendered.lines.iter().cloned()),
             }
-            for (file, focus) in files.iter_mut().zip(&focus) {
-                placed
-                    .files
-                    .push(file.shown.then(|| layout_file(&mut out, file, focus, width, theme)));
-            }
-            placed.removes = review::layout_pending(&mut out, pending, remove_focused, width, theme);
-            if let Some(form) = form {
-                placed.form = Some(review::layout_form(&mut out, form, form_focused, width, theme));
-            }
-            placements.retain(|(w, _)| *w != width);
-            if placements.len() == 2 {
-                placements.remove(0);
-            }
-            placements.push((width, placed));
-            out
-        })
+            out.links.extend(layout.rendered.links.iter().map(|link| LinkSpan {
+                row: link.row + base,
+                ..link.clone()
+            }));
+            placed.files.push(Some(shift_file(&layout.placed, base)));
+            assembled.files.push(Some((layout.stamp, base..out.lines.len())));
+        }
+        placed.removes = review::layout_pending(out, &self.pending, remove_focused, width, theme);
+        if let Some(form) = &mut self.form {
+            placed.form = Some(review::layout_form(out, form, form_focused, width, theme));
+        }
+        self.placements.retain(|(w, _)| *w != width);
+        if self.placements.len() == 2 {
+            self.placements.remove(0);
+        }
+        self.placements.push((width, placed));
+        assembled
     }
 }
 
 /// How one file's sections look with focus where it is.
+#[derive(Debug, Clone, PartialEq)]
 struct FileFocus {
     section: SectionFocus,
     /// By hunk index.
     hunks: Vec<SectionFocus>,
     /// The hunk whose pane has focus.
     pane: Option<usize>,
+}
+
+/// The index in `file`'s layouts of its section laid out from its state now, `width` cells wide: one it already has,
+/// or else a new one from [`layout_file`].
+fn cached_file(file: &mut FileSection, focus: &FileFocus, width: u16, theme: &Theme) -> usize {
+    let key = FileKey {
+        width,
+        theme: *theme,
+        focus: focus.clone(),
+        section: file.section,
+        hunks: file
+            .hunks
+            .iter()
+            .map(|hunk| (hunk.section, hunk.pane.cursor(), hunk.pane.scroll()))
+            .collect(),
+    };
+    if let Some(index) = file.layouts.iter().position(|layout| layout.key == key) {
+        // Laying the panes out sets their viewports, and a maximized hunk may have changed one since.
+        for (hunk, placed) in file.hunks.iter_mut().zip(&file.layouts[index].placed.hunks) {
+            if let Some(viewport) = placed.viewport {
+                hunk.pane.set_viewport(viewport);
+            }
+        }
+        return index;
+    }
+    let mut rendered = Rendered::default();
+    let placed = layout_file(&mut rendered, file, focus, width, theme);
+    if file.layouts.len() == 2 {
+        file.layouts.remove(0);
+    }
+    file.stamps += 1;
+    file.layouts.push(FileLayout {
+        key,
+        stamp: file.stamps,
+        rendered,
+        placed,
+    });
+    file.layouts.len() - 1
+}
+
+/// `placed`, laid out from row 0, moved down `by` rows.
+fn shift_file(placed: &FilePlaced, by: usize) -> FilePlaced {
+    let shift_section = |section: &Placement| Placement {
+        rows: shift(&section.rows, by),
+        title_row: section.title_row + by,
+        title_columns: section.title_columns.clone(),
+        content: shift(&section.content, by),
+    };
+    FilePlaced {
+        section: shift_section(&placed.section),
+        hunks: placed
+            .hunks
+            .iter()
+            .map(|hunk| HunkPlaced {
+                section: shift_section(&hunk.section),
+                pane: shift(&hunk.pane, by),
+                viewport: hunk.viewport,
+            })
+            .collect(),
+    }
 }
 
 /// Adds `file`'s section to `out`, `width` cells wide, and returns where it and its hunks landed.
@@ -1350,6 +1517,7 @@ fn layout_hunk(
     HunkPlaced {
         pane: shift(&pane_rows, section.content.start),
         section,
+        viewport,
     }
 }
 

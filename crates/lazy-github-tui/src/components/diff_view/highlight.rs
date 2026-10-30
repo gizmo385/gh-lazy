@@ -11,8 +11,9 @@ use std::ops::Range;
 use lazy_github_core::diff::{ChangedFile, DiffLine, Hunk, LineKind};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
+use unicode_width::UnicodeWidthStr as _;
 
-use crate::components::markdown::highlight::{self, Token};
+use crate::components::markdown::highlight::{self, Token, Tokenizer};
 use crate::theme::Rgb;
 
 /// Rich's `Syntax` expands tabs to 4 columns before it tokenizes.
@@ -52,20 +53,59 @@ mod monokai {
 /// ([`Line::style`]). The pane keeps that background on context lines and lays its own over the others. Without a
 /// grammar they come back unstyled, so the pane's text color and backgrounds show.
 pub fn code_spans(file: &ChangedFile, hunk: &Hunk) -> Vec<Line<'static>> {
-    let texts: Vec<String> = hunk
-        .lines
-        .iter()
-        .map(|line| crate::display::sanitize(&expand_tabs(&code_text(line))).into_owned())
-        .collect();
-    let Some(syntax) = highlight::syntax_for_file(&file.path) else {
-        return texts.into_iter().map(Line::from).collect();
-    };
-    let tokens = highlight::tokenize(syntax, &texts);
-    texts
-        .iter()
-        .zip(tokens)
-        .map(|(text, tokens)| colored_line(text, &tokens))
-        .collect()
+    let mut code = HunkCode::new(file, hunk);
+    code.lines(hunk.lines.len()).to_vec()
+}
+
+/// A hunk's code as [`code_spans`] gives it, colored only as far as it's been shown. Tokenizing takes a fraction of
+/// a millisecond a line with some grammars, too slow for a hunk of thousands of lines in one frame, and a pane shows
+/// at most a screenful of them, so lines are colored in order up to the last one shown, and further as the pane
+/// scrolls down (#325).
+#[derive(Debug, Clone)]
+pub struct HunkCode {
+    texts: Vec<String>,
+    /// The widest line, in cells.
+    widest: usize,
+    /// Where tokenizing got to, with a grammar for the file's type.
+    tokenizer: Option<Tokenizer>,
+    /// The lines colored so far, from the first.
+    colored: Vec<Line<'static>>,
+}
+
+impl HunkCode {
+    pub fn new(file: &ChangedFile, hunk: &Hunk) -> Self {
+        let texts: Vec<String> = hunk
+            .lines
+            .iter()
+            .map(|line| crate::display::sanitize(&expand_tabs(&code_text(line))).into_owned())
+            .collect();
+        Self {
+            // As `Line::width` measures the colored line: by `UnicodeWidthStr`, not grapheme by grapheme.
+            widest: texts.iter().map(|text| text.width()).max().unwrap_or(0),
+            texts,
+            tokenizer: highlight::syntax_for_file(&file.path).map(Tokenizer::new),
+            colored: Vec::new(),
+        }
+    }
+
+    /// The widest line, in cells.
+    pub fn widest(&self) -> usize {
+        self.widest
+    }
+
+    /// The first `end` lines (all of them, if there are fewer), colored.
+    pub fn lines(&mut self, end: usize) -> &[Line<'static>] {
+        let end = end.min(self.texts.len());
+        while self.colored.len() < end {
+            let text = &self.texts[self.colored.len()];
+            let line = match &mut self.tokenizer {
+                Some(tokenizer) => colored_line(text, &tokenizer.line(text)),
+                None => Line::from(text.clone()),
+            };
+            self.colored.push(line);
+        }
+        &self.colored[..end]
+    }
 }
 
 /// A diff line's code, as Python takes it from the diff.
@@ -197,6 +237,33 @@ mod tests {
         for line in &lines {
             assert_eq!(line.style.bg, Some(color(monokai::BACKGROUND)));
         }
+    }
+
+    #[test]
+    fn code_colored_a_few_lines_at_a_time_is_code_colored_at_once() {
+        // A block comment spans the lines, so each line's colors depend on the ones before.
+        let lines = [" /* one", "-two", "+three */", " fn four() {}", "+let five = 5;", " }"];
+        let all = spans("src/lib.rs", &lines);
+        let body: String = lines.iter().flat_map(|line| [*line, "\n"]).collect();
+        let text = format!(
+            "diff --git a/src/lib.rs b/src/lib.rs\n--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1,4 +1,5 @@\n{body}"
+        );
+        let parsed = diff::parse(&text).unwrap();
+        let file = &parsed.files[0];
+        let mut code = HunkCode::new(file, &file.hunks[0]);
+        assert_eq!(code.widest(), "let five = 5;".len());
+        assert_eq!(code.lines(2), &all[..2]);
+        assert_eq!(code.lines(1), &all[..1]);
+        assert_eq!(code.lines(100), &all[..]);
+        // Without a grammar, plain.
+        let mut code = HunkCode::new(
+            &diff::ChangedFile {
+                path: "NOTES".into(),
+                ..file.clone()
+            },
+            &file.hunks[0],
+        );
+        assert_eq!(code.lines(1), [Line::from("/* one")]);
     }
 
     #[test]

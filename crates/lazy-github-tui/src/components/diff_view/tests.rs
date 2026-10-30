@@ -194,6 +194,87 @@ fn next_and_previous_hunk_open_what_they_land_on() {
     assert_eq!(view.stop(), Pane(VIEWER, 1));
 }
 
+/// The view laid out `width` wide, its lines with their styles and where everything landed.
+fn laid_out(view: &mut DiffView, width: u16) -> (Vec<String>, String) {
+    let theme = Theme::default();
+    let lines = view
+        .body
+        .layout(width, &theme)
+        .lines
+        .iter()
+        .map(|line| format!("{line:?}"))
+        .collect();
+    (lines, format!("{:?}", view.body.placements(width)))
+}
+
+/// What [`laid_out`] gives with every cached layout dropped first, the view's and each file's.
+fn laid_out_afresh(view: &mut DiffView, width: u16) -> (Vec<String>, String) {
+    view.body.layouts.entries.clear();
+    for file in &mut view.body.files {
+        file.layouts.clear();
+    }
+    laid_out(view, width)
+}
+
+#[test]
+fn a_view_put_together_from_cached_files_is_the_one_laid_out_afresh() {
+    // Each step changes one file, or focus, the filter or the comments, and is drawn (at two widths, as the view
+    // overflows) before the comparison, so the next one starts from cached layouts (#325).
+    let steps: &[&[&str]] = &[
+        &["J"],
+        &["j", "j"],
+        &["J", "J"],
+        &["k"],
+        &["K"],
+        &["shift+tab"],
+        &["enter"],
+        &["tab", "tab"],
+        &["J", "j", "c"],
+        &["/", "v"],
+        &["escape"],
+    ];
+    let mut view = view();
+    draw(&mut view, 100, 30);
+    for keys in steps {
+        for key in *keys {
+            // Focus moves and comments come from outside the view: the app's focus ring and the comment modal.
+            match *key {
+                "tab" => {
+                    view.focus_step(true);
+                }
+                "shift+tab" => {
+                    view.focus_step(false);
+                }
+                "c" => {
+                    let pending = comment(&view, 1, "a comment");
+                    view.add_comment(pending);
+                }
+                key => press(&mut view, &[key]),
+            }
+        }
+        draw(&mut view, 100, 30);
+        for width in [100, 98] {
+            let cached = laid_out(&mut view, width);
+            let viewports: Vec<usize> = view
+                .body
+                .files
+                .iter()
+                .flat_map(|f| &f.hunks)
+                .map(|h| h.pane.viewport())
+                .collect();
+            assert_eq!(cached, laid_out_afresh(&mut view, width), "after {keys:?} at {width}");
+            let fresh: Vec<usize> = view
+                .body
+                .files
+                .iter()
+                .flat_map(|f| &f.hunks)
+                .map(|h| h.pane.viewport())
+                .collect();
+            assert_eq!(viewports, fresh, "after {keys:?} at {width}");
+        }
+    }
+}
+
 #[test]
 fn j_and_k_type_into_the_filter() {
     let mut view = view();

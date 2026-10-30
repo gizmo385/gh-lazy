@@ -296,6 +296,9 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   overflows its pane, over two `GET /user/repos` pages (50, then 10). Listed before `base`, for the
   `table-navigation` and `table-search` scenarios: on the first page, three `parity-bot` names contain `lazy` and two
   start with `gh`. Hand-written: only the fields the apps read are kept.
+- `large-account/`: 1,000 public `parity-bot` repos, `large-0000` to `large-0999`, over 20 `GET /user/repos` pages
+  of 50. Listed before `base`, for the Rust-only `large-account` scenario (#325). Generated, not hand-written: `cargo
+  xtask large-account-fixtures` writes it, and an xtask test fails when the committed files differ from its output.
 - `repos-error/`: base's `GET /user/repos` page 1 answered with a 500 (`{"message": "Server Error"}`) after 1.5 s,
   long enough to capture the loading overlay. Listed before `base`, for the `repos-fetch-error` and
   `repos-cache-error` scenarios. Hand-written.

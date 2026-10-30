@@ -119,6 +119,23 @@ proptest! {
         prop_assert!(used + left <= cells);
     }
 
+    /// The printable-ASCII shortcut in `width` and `take_cells` (#325) counts what the grapheme walk counts.
+    #[test]
+    fn the_ascii_shortcut_matches_the_grapheme_walk(text in prop_oneof!["[ -~]{0,40}", "[ -~\t\r\n\x1b]{0,40}"], cells in 0usize..50) {
+        let walked: usize = graphemes(&text).map(|(_, g)| grapheme_width(g)).sum();
+        prop_assert_eq!(width(&text), walked);
+        let mut used = 0;
+        let mut end = 0;
+        for (start, grapheme) in graphemes(&text) {
+            if used + grapheme_width(grapheme) > cells {
+                break;
+            }
+            used += grapheme_width(grapheme);
+            end = start + grapheme.len();
+        }
+        prop_assert_eq!(take_cells(&text, cells), (&text[..end], used));
+    }
+
     #[test]
     fn sanitized_text_has_no_controls(text in text()) {
         prop_assert!(!sanitize(&text).chars().any(char::is_control));

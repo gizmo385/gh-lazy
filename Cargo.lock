@@ -1046,13 +1046,16 @@ dependencies = [
  "assert_cmd",
  "clap",
  "color-eyre",
+ "fake-gh",
  "insta",
  "lazy-github-core",
  "lazy-github-tui",
+ "portable-pty",
  "serde_json",
  "similar",
  "tokio",
  "tracing",
+ "vt100",
 ]
 
 [[package]]

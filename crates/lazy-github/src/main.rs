@@ -186,6 +186,7 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
 
     // Held until the end of this function, after the terminal is restored, so the last lines reach the file.
     let logging = logging::init(LoggingOptions::from(&config.core));
+    print_log_path_on_panic(config.core.logfile_path.clone());
     tracing::debug!("Starting LazyGithub {}", env!("CARGO_PKG_VERSION"));
     if let Some(pwd) = &original_pwd {
         tracing::debug!("Working directory: {}", pwd.display());
@@ -213,7 +214,7 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
             runtime.block_on(lazy_github_tui::tui::run(app, gh, git, logging.command_log, paths))
         });
     match result {
-        Ok(()) => ExitCode::SUCCESS,
+        Ok(exit) => ExitCode::from(exit.code()),
         Err(report) => {
             // One line with the cause chain, in both places. color-eyre's full report adds ANSI colors and a
             // backtrace that help neither the user nor the log; panics are logged in full by the panic hook.
@@ -222,6 +223,16 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
             ExitCode::FAILURE
         }
     }
+}
+
+/// Chains a panic hook that names the log file after the report the previous hook (color-eyre's) prints. The TUI's
+/// own hook, installed later, restores the terminal before either runs.
+fn print_log_path_on_panic(path: PathBuf) {
+    let previous = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        previous(info);
+        eprintln!("The log file is {}", path.display());
+    }));
 }
 
 #[cfg(test)]

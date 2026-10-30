@@ -20,6 +20,7 @@ use lazy_github_core::github::Github;
 use lazy_github_core::logging::LogLine;
 use ratatui::Terminal;
 use ratatui::backend::{Backend, CrosstermBackend};
+use ratatui::layout::Rect;
 use tokio::sync::mpsc;
 
 use crate::app::App;
@@ -31,12 +32,15 @@ use crate::runtime::Runtime;
 const MAX_EVENTS_PER_FRAME: usize = 256;
 
 /// Puts the terminal into the app's modes and takes them out again exactly once, on [`Self::restore`], on drop, or
-/// from the panic hook through [`Self::restore_fn`], whichever comes first.
+/// from the panic hook through [`Self::restore_fn`], whichever comes first. [`Self::resume`] enters them again after
+/// a restore, for a resume from `SIGTSTP`.
 ///
-/// Raw mode isn't written as bytes, so it's toggled separately with `crossterm::terminal`.
+/// Raw mode isn't written as bytes, so it's toggled with `crossterm::terminal`, and only by a guard made with
+/// [`Self::enter_raw`].
 pub struct TerminalGuard<W: Write> {
     out: W,
     kitty_pushed: bool,
+    raw_mode: bool,
     restored: Arc<AtomicBool>,
 }
 
@@ -47,19 +51,24 @@ impl<W: Write> TerminalGuard<W> {
     /// The guard exists before the first write, so if a write fails partway, dropping it on the `?` restores
     /// whatever was entered.
     pub fn enter(out: W, kitty: bool) -> io::Result<Self> {
+        Self::start(out, kitty, false)
+    }
+
+    /// Turns raw mode on, then does what [`Self::enter`] does. Restoring turns raw mode off again, after the exit
+    /// sequence.
+    pub fn enter_raw(out: W, kitty: bool) -> io::Result<Self> {
+        terminal::enable_raw_mode()?;
+        Self::start(out, kitty, true)
+    }
+
+    fn start(out: W, kitty: bool, raw_mode: bool) -> io::Result<Self> {
         let mut guard = Self {
             out,
             kitty_pushed: false,
+            raw_mode,
             restored: Arc::new(AtomicBool::new(false)),
         };
-        execute!(
-            guard.out,
-            EnterAlternateScreen,
-            Hide,
-            EnableMouseCapture,
-            EnableBracketedPaste,
-            EnableFocusChange
-        )?;
+        write_enter(&mut guard.out)?;
         if kitty {
             execute!(
                 guard.out,
@@ -70,13 +79,32 @@ impl<W: Write> TerminalGuard<W> {
         Ok(guard)
     }
 
-    /// Writes the exit sequence, the enter sequence undone in reverse. Later calls, and the restore closure, write
-    /// nothing.
+    /// Writes the exit sequence, the enter sequence undone in reverse, and turns raw mode off. Later calls, and the
+    /// restore closure, do nothing until [`Self::resume`].
     pub fn restore(&mut self) -> io::Result<()> {
         if self.restored.swap(true, Ordering::SeqCst) {
             return Ok(());
         }
-        write_restore(&mut self.out, self.kitty_pushed)
+        restore_terminal(&mut self.out, self.kitty_pushed, self.raw_mode)
+    }
+
+    /// Enters the modes [`Self::restore`] left, the same ones as at the start. Does nothing while they're still on.
+    pub fn resume(&mut self) -> io::Result<()> {
+        // Cleared first, so a write that fails partway is restored again on drop.
+        if !self.restored.swap(false, Ordering::SeqCst) {
+            return Ok(());
+        }
+        if self.raw_mode {
+            terminal::enable_raw_mode()?;
+        }
+        write_enter(&mut self.out)?;
+        if self.kitty_pushed {
+            execute!(
+                self.out,
+                PushKeyboardEnhancementFlags(KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES)
+            )?;
+        }
+        Ok(())
     }
 
     /// A closure for the panic hook that restores the terminal through a clone of the writer, sharing "already
@@ -87,12 +115,12 @@ impl<W: Write> TerminalGuard<W> {
     {
         let out = Mutex::new(self.out.clone());
         let restored = Arc::clone(&self.restored);
-        let kitty = self.kitty_pushed;
+        let (kitty, raw_mode) = (self.kitty_pushed, self.raw_mode);
         move || {
             if !restored.swap(true, Ordering::SeqCst) {
                 let mut out = out.lock().unwrap_or_else(PoisonError::into_inner);
                 // Nothing can be reported from a panic hook; the report printed next is what matters.
-                let _ = write_restore(&mut *out, kitty);
+                let _ = restore_terminal(&mut *out, kitty, raw_mode);
             }
         }
     }
@@ -102,6 +130,25 @@ impl<W: Write> Drop for TerminalGuard<W> {
     fn drop(&mut self) {
         let _ = self.restore();
     }
+}
+
+fn write_enter(out: &mut impl Write) -> io::Result<()> {
+    execute!(
+        out,
+        EnterAlternateScreen,
+        Hide,
+        EnableMouseCapture,
+        EnableBracketedPaste,
+        EnableFocusChange
+    )
+}
+
+/// The exit sequence, then raw mode off. Raw mode goes off even when a write fails: a shell left in raw mode is the
+/// worse outcome.
+fn restore_terminal(out: &mut impl Write, kitty_pushed: bool, raw_mode: bool) -> io::Result<()> {
+    let written = write_restore(out, kitty_pushed);
+    let raw = if raw_mode { terminal::disable_raw_mode() } else { Ok(()) };
+    written.and(raw)
 }
 
 fn write_restore(out: &mut impl Write, kitty_pushed: bool) -> io::Result<()> {
@@ -143,31 +190,39 @@ impl Write for StdoutWriter {
     }
 }
 
-/// Turns raw mode off on drop.
-struct RawMode;
-
-impl RawMode {
-    fn enable() -> io::Result<Self> {
-        terminal::enable_raw_mode()?;
-        Ok(Self)
-    }
+/// What a signal asks of the loop.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// Only unix delivers signals.
+#[cfg_attr(not(unix), allow(dead_code))]
+enum OsSignal {
+    /// `SIGTERM`, `SIGHUP` or `SIGINT`: quit.
+    Quit(Signal),
+    /// `SIGTSTP`: give the terminal back and stop until `SIGCONT`.
+    Suspend,
+    /// `SIGCONT`: draw everything again, since the screen may have been used meanwhile.
+    Continue,
 }
 
-impl Drop for RawMode {
-    fn drop(&mut self) {
-        let _ = terminal::disable_raw_mode();
-    }
-}
-
-/// Termination signals as a stream. Never yields off unix.
+/// The signals the loop handles, as a stream. Never yields off unix, where `ctrl+c` and `ctrl+z` are keys in raw
+/// mode anyway (Windows console events are #202).
 struct Signals {
     #[cfg(unix)]
     term: tokio::signal::unix::Signal,
     #[cfg(unix)]
     hup: tokio::signal::unix::Signal,
+    #[cfg(unix)]
+    int: tokio::signal::unix::Signal,
+    #[cfg(unix)]
+    tstp: tokio::signal::unix::Signal,
+    #[cfg(unix)]
+    cont: tokio::signal::unix::Signal,
 }
 
 impl Signals {
+    /// Starts listening. From here on these signals' default actions no longer run, so `SIGTSTP` stops the process
+    /// only through [`suspend`].
+    // Off unix there is nothing to set up, so nothing can fail.
+    #[cfg_attr(not(unix), allow(clippy::unnecessary_wraps))]
     fn new() -> io::Result<Self> {
         #[cfg(unix)]
         {
@@ -175,6 +230,9 @@ impl Signals {
             Ok(Self {
                 term: signal(SignalKind::terminate())?,
                 hup: signal(SignalKind::hangup())?,
+                int: signal(SignalKind::interrupt())?,
+                tstp: signal(SignalKind::from_raw(SIGTSTP))?,
+                cont: signal(SignalKind::from_raw(SIGCONT))?,
             })
         }
         #[cfg(not(unix))]
@@ -183,17 +241,82 @@ impl Signals {
         }
     }
 
-    async fn recv(&mut self) -> Signal {
+    async fn recv(&mut self) -> OsSignal {
         #[cfg(unix)]
         {
             tokio::select! {
-                _ = self.term.recv() => Signal::Term,
-                _ = self.hup.recv() => Signal::Hup,
+                _ = self.term.recv() => OsSignal::Quit(Signal::Term),
+                _ = self.hup.recv() => OsSignal::Quit(Signal::Hup),
+                _ = self.int.recv() => OsSignal::Quit(Signal::Int),
+                _ = self.tstp.recv() => OsSignal::Suspend,
+                _ = self.cont.recv() => OsSignal::Continue,
             }
         }
         #[cfg(not(unix))]
         {
             std::future::pending().await
+        }
+    }
+}
+
+// `SIGTSTP` and `SIGCONT`, which tokio has no `SignalKind` for. Linux numbers them 20 and 18; macOS and the BSDs 18
+// and 19.
+#[cfg(any(target_os = "linux", target_os = "android"))]
+const SIGTSTP: i32 = 20;
+#[cfg(any(target_os = "linux", target_os = "android"))]
+const SIGCONT: i32 = 18;
+#[cfg(all(unix, not(any(target_os = "linux", target_os = "android"))))]
+const SIGTSTP: i32 = 18;
+#[cfg(all(unix, not(any(target_os = "linux", target_os = "android"))))]
+const SIGCONT: i32 = 19;
+
+/// Gives the terminal back, stops the process as `SIGTSTP`'s default action would, and takes the terminal again once
+/// a `SIGCONT` resumes it, as Textual's driver does.
+async fn suspend<W: Write>(guard: &mut TerminalGuard<W>) -> io::Result<()> {
+    tracing::debug!("Received SIGTSTP; suspending");
+    guard.restore()?;
+    if let Err(e) = stop_self().await {
+        // Carrying on beats leaving the app running on a restored screen.
+        tracing::warn!("Could not suspend: {e}");
+    }
+    tracing::debug!("Resuming");
+    guard.resume()
+}
+
+/// Sends this process `SIGSTOP`, through `kill(1)` since the workspace forbids the `unsafe` that `raise` needs. The
+/// kernel stops every thread before `kill` itself can exit, so by the time its status is in, the process has been
+/// stopped and continued.
+async fn stop_self() -> io::Result<()> {
+    if cfg!(not(unix)) {
+        return Ok(());
+    }
+    let status = tokio::process::Command::new("kill")
+        .args(["-s", "STOP", &std::process::id().to_string()])
+        .status()
+        .await?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(io::Error::other(format!("kill -s STOP exited with {status}")))
+    }
+}
+
+/// How [`run`] ended.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Exit {
+    /// The user quit.
+    Quit,
+    /// A signal stopped the app.
+    Signal(Signal),
+}
+
+impl Exit {
+    /// The process exit code: 128 plus the signal's number for `SIGTERM` and `SIGHUP`, as a shell reports a process
+    /// the signal killed (Python is killed by them). 0 otherwise: Textual quits normally on `SIGINT`.
+    pub fn code(self) -> u8 {
+        match self {
+            Exit::Quit | Exit::Signal(Signal::Int) => 0,
+            Exit::Signal(signal) => 128 + signal.number(),
         }
     }
 }
@@ -204,6 +327,10 @@ impl Signals {
 /// (in the user's working directory) and config saves go to `paths`. Must be called inside a multi-threaded tokio
 /// runtime.
 ///
+/// `SIGTERM`, `SIGHUP` and `SIGINT` quit as `q` does, and the result says which arrived; `SIGTSTP` gives the
+/// terminal back until the process is continued. In-flight requests are aborted on the way out; dropping the tokio
+/// runtime afterwards kills any `gh` or `git` child still running.
+///
 /// Returns an error when the terminal can't be set up or read, and when any thread panics. The panic hook restores
 /// the terminal at once, and the loop then stops instead of drawing into the restored screen.
 pub async fn run<G: Github>(
@@ -212,7 +339,7 @@ pub async fn run<G: Github>(
     git: GitCli,
     log_rx: mpsc::Receiver<LogLine>,
     paths: ConfigPaths,
-) -> color_eyre::Result<()> {
+) -> color_eyre::Result<Exit> {
     if !io::stdout().is_terminal() {
         bail!("LazyGithub needs a terminal, but stdout is not one");
     }
@@ -220,14 +347,11 @@ pub async fn run<G: Github>(
     // Pushing the kitty flags is what makes `shift+enter` and `ctrl+m` distinguishable (#73).
     let kitty = terminal::supports_keyboard_enhancement().unwrap_or(false);
 
-    // Declared first so it's dropped last, after the modes are written off.
-    let raw_mode = RawMode::enable()?;
-    let mut guard = TerminalGuard::enter(StdoutWriter, kitty)?;
+    let mut guard = TerminalGuard::enter_raw(StdoutWriter, kitty)?;
     let restore = guard.restore_fn();
     let (panic_tx, panics) = mpsc::unbounded_channel();
     install_panic_hook(move || {
         restore();
-        let _ = terminal::disable_raw_mode();
         // Tokio catches panics in spawned tasks, so without this the loop would carry on.
         let _ = panic_tx.send(());
     });
@@ -244,17 +368,24 @@ pub async fn run<G: Github>(
         signals: Some(signals),
     };
     runtime.execute_all(app.init());
-    let result = event_loop(&mut app, &mut runtime, &mut terminal, &mut rx, &mut inputs).await;
+    let result = event_loop(
+        &mut app,
+        &mut runtime,
+        &mut terminal,
+        &mut rx,
+        &mut inputs,
+        Some(&mut guard),
+    )
+    .await;
 
     drop(inputs);
     drop(terminal);
     let restored = guard.restore();
-    drop(raw_mode);
     // The terminal is back, so waiting for an in-flight config save doesn't hold the screen.
     runtime.shutdown().await;
-    result?;
+    let exit = result?;
     restored?;
-    Ok(())
+    Ok(exit)
 }
 
 /// Everything the loop waits on besides the runtime's events.
@@ -267,16 +398,20 @@ struct Inputs {
     signals: Option<Signals>,
 }
 
-async fn event_loop<G: Github, B: Backend>(
+/// Runs `app` until it quits. `guard` is what a `SIGTSTP` restores and resumes; without one the process doesn't
+/// stop, and the screen is only drawn again.
+async fn event_loop<G: Github, B: Backend, W: Write>(
     app: &mut App,
     runtime: &mut Runtime<G>,
     terminal: &mut Terminal<B>,
     rx: &mut mpsc::UnboundedReceiver<Event>,
     inputs: &mut Inputs,
-) -> color_eyre::Result<()>
+    mut guard: Option<&mut TerminalGuard<W>>,
+) -> color_eyre::Result<Exit>
 where
     B::Error: Send + Sync + 'static,
 {
+    let mut exit = Exit::Quit;
     while !app.should_quit() {
         terminal.draw(|frame| app.render(frame))?;
         let deadline = app.next_deadline();
@@ -296,7 +431,24 @@ where
                 Event::CommandLog(line)
             }
             () = sleep_until(deadline), if deadline.is_some() => Event::Deadline,
-            signal = recv_signal(inputs.signals.as_mut()) => Event::Signal(signal),
+            signal = recv_signal(inputs.signals.as_mut()) => match signal {
+                OsSignal::Quit(signal) => {
+                    exit = Exit::Signal(signal);
+                    Event::Signal(signal)
+                }
+                OsSignal::Suspend => {
+                    if let Some(guard) = guard.as_deref_mut() {
+                        suspend(guard).await?;
+                    }
+                    // The next draw writes every cell, over whatever the shell left on the screen.
+                    redraw_all(terminal)?;
+                    continue;
+                }
+                OsSignal::Continue => {
+                    redraw_all(terminal)?;
+                    continue;
+                }
+            },
         };
         runtime.execute_all(app.handle_event(event));
 
@@ -315,10 +467,17 @@ where
             runtime.execute_all(app.handle_event(event));
         }
     }
-    Ok(())
+    Ok(exit)
 }
 
-async fn recv_signal(signals: Option<&mut Signals>) -> Signal {
+/// Clears the screen and makes the next draw write every cell. Not `Terminal::clear`, which asks the terminal for the
+/// cursor position: the reply can't be read while the event reader owns the input, and the wait times out.
+fn redraw_all<B: Backend>(terminal: &mut Terminal<B>) -> Result<(), B::Error> {
+    let size = terminal.size()?;
+    terminal.resize(Rect::new(0, 0, size.width, size.height))
+}
+
+async fn recv_signal(signals: Option<&mut Signals>) -> OsSignal {
     match signals {
         Some(signals) => signals.recv().await,
         None => std::future::pending().await,
@@ -445,6 +604,32 @@ mod tests {
         guard.restore_fn()();
         drop(guard);
         assert_eq!(buf.take(), RESTORE);
+    }
+
+    #[test]
+    fn resume_enters_again_and_arms_the_restore() {
+        let buf = SharedBuf::default();
+        let mut guard = TerminalGuard::enter(buf.clone(), true).unwrap();
+        let restore = guard.restore_fn();
+        // Still entered: nothing to do.
+        guard.resume().unwrap();
+        assert_eq!(buf.take(), format!("{ENTER}{KITTY_PUSH}"));
+        guard.restore().unwrap();
+        guard.resume().unwrap();
+        assert_eq!(buf.take(), format!("{KITTY_POP}{RESTORE}{ENTER}{KITTY_PUSH}"));
+        // The panic hook's closure restores again after a resume, once.
+        restore();
+        restore();
+        drop(guard);
+        assert_eq!(buf.take(), format!("{KITTY_POP}{RESTORE}"));
+    }
+
+    #[test]
+    fn exit_codes_are_128_plus_the_signal_except_for_sigint() {
+        assert_eq!(Exit::Quit.code(), 0);
+        assert_eq!(Exit::Signal(Signal::Hup).code(), 129);
+        assert_eq!(Exit::Signal(Signal::Int).code(), 0);
+        assert_eq!(Exit::Signal(Signal::Term).code(), 143);
     }
 
     /// Fails exactly one write, the `n`th.
@@ -847,12 +1032,19 @@ mod tests {
         let mut terminal = Terminal::new(ratatui::backend::TestBackend::new(20, 5)).unwrap();
         let result = tokio::time::timeout(
             std::time::Duration::from_secs(10),
-            event_loop(&mut app, &mut runtime, &mut terminal, &mut rx, &mut inputs),
+            event_loop(
+                &mut app,
+                &mut runtime,
+                &mut terminal,
+                &mut rx,
+                &mut inputs,
+                None::<&mut TerminalGuard<SharedBuf>>,
+            ),
         )
         .await
         .expect("the loop should stop");
         runtime.shutdown().await;
-        result
+        result.map(drop)
     }
 
     #[tokio::test]

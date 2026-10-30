@@ -53,13 +53,26 @@ pub enum Event {
     Signal(Signal),
 }
 
-/// A termination signal. Only delivered on unix.
+/// A signal that asks the app to quit. Only delivered on unix.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Signal {
     /// `SIGTERM`.
     Term,
-    /// `SIGHUP`.
+    /// `SIGHUP`: the terminal was closed.
     Hup,
+    /// `SIGINT`, sent by another process: in raw mode `ctrl+c` is a key, not a signal.
+    Int,
+}
+
+impl Signal {
+    /// The signal's number, the same on every unix.
+    pub fn number(self) -> u8 {
+        match self {
+            Signal::Hup => 1,
+            Signal::Int => 2,
+            Signal::Term => 15,
+        }
+    }
 }
 
 impl From<crossterm::event::Event> for Event {

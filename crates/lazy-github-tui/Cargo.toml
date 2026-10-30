@@ -31,7 +31,7 @@ ratatui-textarea = { workspace = true }
 regex = { workspace = true }
 # The list sections' cache bounds (`Serialize + DeserializeOwned`) on their items (#228).
 serde = { workspace = true }
-tokio = { workspace = true, features = ["macros", "rt", "signal", "sync", "time"] }
+tokio = { workspace = true, features = ["macros", "process", "rt", "signal", "sync", "time"] }
 tracing = { workspace = true }
 
 [dev-dependencies]

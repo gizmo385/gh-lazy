@@ -32,7 +32,7 @@ use crate::modal::{
     PaletteRun, SettingsDialog, SettingsOutcome, dim,
 };
 use crate::notifications::NotificationPoll;
-use crate::options::AppOptions;
+use crate::options::{AppOptions, TEST_PANIC_ENV, TestPanic};
 use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
 pub use crate::screens::main::Maximized;
 use crate::screens::main::{MainScreen, Toggle};
@@ -198,6 +198,9 @@ impl App {
 
     /// Maps `event` to actions and applies them.
     pub fn handle_event(&mut self, event: Event) -> Vec<Effect> {
+        if matches!(event, Event::Key(_)) {
+            self.test_panic(TestPanic::Update);
+        }
         // Toasts first: one past its timeout is gone before anything sees the event, and a click on a live one is
         // consumed. A deadline needs nothing else.
         self.toasts.expire(self.shared.clock.now());
@@ -213,6 +216,14 @@ impl App {
         out.actions.extend(self.action_for(event));
         self.drain(&mut out);
         out.effects
+    }
+
+    /// Panics at `place` while a dialog is open, when the debug-only [`TestPanic`] trigger asks for it there.
+    fn test_panic(&self, place: TestPanic) {
+        assert!(
+            self.shared.options.test_panic != Some(place) || self.modals.is_empty(),
+            "{TEST_PANIC_ENV} asked for a panic in {place:?}"
+        );
     }
 
     /// The action an event stands for, if any.
@@ -1077,6 +1088,7 @@ impl App {
     /// Draws the whole UI: the base screen, then the dialogs and the toasts.
     pub fn render(&mut self, frame: &mut Frame<'_>) {
         self.render_screens(frame);
+        self.test_panic(TestPanic::Render);
         self.render_modals(frame);
         // `handle_event` already dropped the expired ones: the loop wakes for each deadline.
         self.toasts.render(frame, frame.area(), &self.shared.theme);
@@ -1644,7 +1656,7 @@ mod tests {
 
     #[test]
     fn signals_quit() {
-        for signal in [Signal::Term, Signal::Hup] {
+        for signal in [Signal::Term, Signal::Hup, Signal::Int] {
             let mut app = test_app();
             app.send(Event::Signal(signal));
             assert_eq!(app.effects(), [Effect::Quit]);

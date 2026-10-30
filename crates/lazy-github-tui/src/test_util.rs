@@ -38,6 +38,7 @@ use crate::theme::Theme;
 const TEST_OPTIONS: AppOptions = AppOptions {
     animations: false,
     terminal: "xterm-256color",
+    test_panic: None,
 };
 
 /// An [`App`] under test.

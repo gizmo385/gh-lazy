@@ -20,7 +20,18 @@ tracing = { workspace = true }
 [dev-dependencies]
 assert_cmd = { workspace = true }
 insta = { workspace = true }
+# The `gh` that tests/exit_paths.rs puts on `PATH`, built as the `fake-gh` example below.
+fake-gh = { workspace = true }
+# tests/exit_paths.rs runs the binary in a real terminal, to read back what it leaves there.
+portable-pty = { workspace = true }
 similar = { workspace = true }
+vt100 = { workspace = true }
+
+# `cargo test` builds examples, at target/<profile>/examples/, where tests/exit_paths.rs finds it.
+[[example]]
+name = "fake-gh"
+path = "tests/bin/fake_gh.rs"
+test = false
 
 [lints]
 workspace = true

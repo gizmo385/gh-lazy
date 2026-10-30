@@ -8,6 +8,7 @@ use indexmap::IndexMap;
 use lazy_github_core::config::{Config, ConfigPaths};
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::Github;
+use lazy_github_core::logging::LOG_FILE_ONLY;
 use lazy_github_core::{cache, drafts};
 use tokio::sync::{mpsc, watch};
 use tokio::task::{AbortHandle, JoinHandle};
@@ -271,12 +272,15 @@ impl CacheWriter {
                 let Some((path, text)) = pending.shift_remove_index(0) else {
                     continue;
                 };
+                let draft = drafts::is_draft_path(&path);
                 let applied = tokio::task::spawn_blocking(move || apply_cache_change(&path, text.as_deref())).await;
                 // Logged here rather than on the blocking thread, so the warning reaches the subscriber the writer
-                // runs under.
+                // runs under. A draft's warning shows in the command log as Python's does; a table cache's goes only
+                // to the log file.
                 match applied {
                     Ok(Ok(())) => {}
-                    Ok(Err(warning)) => tracing::warn!("{warning}"),
+                    Ok(Err(warning)) if draft => tracing::warn!("{warning}"),
+                    Ok(Err(warning)) => tracing::warn!(target: LOG_FILE_ONLY, "{warning}"),
                     Err(e) => tracing::warn!("A cache write task failed: {e}"),
                 }
             }

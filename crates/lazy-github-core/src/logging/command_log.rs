@@ -4,6 +4,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use tokio::sync::mpsc;
+use tracing::level_filters::LevelFilter;
 use tracing::{Event, Level, Subscriber};
 use tracing_subscriber::filter::Targets;
 use tracing_subscriber::layer::{Context, Layer};
@@ -13,6 +14,10 @@ use super::format::{LogClock, LogLine};
 
 /// How many lines the command-log channel holds before new lines are dropped.
 pub const COMMAND_LOG_CAPACITY: usize = 1024;
+
+/// The target for events that belong in the log file but not the command log, such as a failed table-cache write
+/// (the user can't act on it, and with an unwritable cache folder there is one per table load).
+pub const LOG_FILE_ONLY: &str = "lazy_github::log_file_only";
 
 /// Turns each event it sees into a [`LogLine`] and hands it to `sink`. [`command_log_layer`] limits it to INFO and
 /// above from `lazy_github*` targets.
@@ -61,7 +66,9 @@ where
         }
     };
     // Target matching is by prefix, so this covers `lazy_github_core` and `lazy_github_tui` too.
-    let filter = Targets::new().with_target("lazy_github", Level::INFO);
+    let filter = Targets::new()
+        .with_target("lazy_github", Level::INFO)
+        .with_target(LOG_FILE_ONLY, LevelFilter::OFF);
     (CommandLogLayer::new(sink, clock).with_filter(filter), rx, dropped)
 }
 
@@ -110,6 +117,18 @@ mod tests {
             ]
         );
         assert_eq!(lines[0].to_string(), "INFO 2026-10-25 01:02:03 - Selected repo foo/bar");
+    }
+
+    #[test]
+    fn log_file_only_events_stay_out() {
+        let (layer, mut rx, _) = command_log_layer(fixed_clock());
+        crate::test_log::keep_callsites_interested();
+        tracing::subscriber::with_default(tracing_subscriber::registry().with(layer), || {
+            tracing::error!(target: LOG_FILE_ONLY, "file only");
+            tracing::warn!(target: "lazy_github_tui", "shown");
+        });
+        let messages: Vec<String> = drain(&mut rx).into_iter().map(|line| line.message).collect();
+        assert_eq!(messages, ["shown"]);
     }
 
     #[test]

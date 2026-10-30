@@ -28,7 +28,7 @@ use tracing_subscriber::layer::{Layer, SubscriberExt as _};
 use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::util::SubscriberInitExt as _;
 
-pub use command_log::{COMMAND_LOG_CAPACITY, CommandLogLayer, command_log_layer};
+pub use command_log::{COMMAND_LOG_CAPACITY, CommandLogLayer, LOG_FILE_ONLY, command_log_layer};
 pub use format::{LogClock, LogLine, system_clock};
 pub use rotating::RotatingFileWriter;
 
@@ -289,11 +289,13 @@ mod tests {
             tracing::trace!(target: "lazy_github_core", "too detailed");
             tracing::info!(target: "hyper::client", "foreign info");
             tracing::warn!(target: "hyper::client", "foreign warning");
+            tracing::warn!(target: LOG_FILE_ONLY, "file only");
         });
         assert_eq!(
             out,
             "DEBUG 2026-10-25 01:02:03 - Running Github CLI command: gh api /user\n\
-             WARNING 2026-10-25 01:02:03 - foreign warning\n"
+             WARNING 2026-10-25 01:02:03 - foreign warning\n\
+             WARNING 2026-10-25 01:02:03 - file only\n"
         );
     }
 

@@ -17,6 +17,8 @@ use lazy_github_core::models::{
     WorkflowRun,
 };
 
+use crate::components::markdown::MarkdownSource;
+
 /// Something the runtime does on the app's behalf.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Effect {
@@ -50,6 +52,14 @@ pub enum Effect {
         id: RequestId,
         /// The file.
         path: PathBuf,
+    },
+    /// Parse a large markdown body ([`MarkdownSource::parse`]) on a blocking thread, so the frame doesn't wait for it.
+    /// The document comes back as `Event::MarkdownParsed` with the same `id`; [`Effect::Cancel`] drops it.
+    ParseMarkdown {
+        /// Which parse this is, from the same counter as GitHub requests.
+        id: RequestId,
+        /// What to parse.
+        source: MarkdownSource,
     },
     /// Write a table cache file (`lazy_github_core::cache::write`), creating its directory. Writes to one path happen
     /// in order, and a newer pending write replaces an older one. A failed write is logged as a warning.

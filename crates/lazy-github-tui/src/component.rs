@@ -13,6 +13,7 @@ use tokio::time::Instant;
 
 use crate::action::Action;
 use crate::clock::Clock;
+use crate::components::markdown::MarkdownSource;
 use crate::effect::{Effect, GitRequest, GithubRequest, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::modal::{Dialog, DialogPane, FieldKind, ModalEntry, ModalKind};
@@ -469,6 +470,14 @@ impl<'a> Cx<'a> {
     pub fn read_cache(&mut self, path: PathBuf) -> RequestId {
         let id = self.next_request_id();
         self.out.effects.push(Effect::ReadCache { id, path });
+        id
+    }
+
+    /// Parses `source` on a blocking thread and returns the parse's id. The document comes back as
+    /// [`Action::MarkdownParsed`] with that id. Ids come from the same counter as [`Self::request`]'s.
+    pub fn parse_markdown(&mut self, source: MarkdownSource) -> RequestId {
+        let id = self.next_request_id();
+        self.out.effects.push(Effect::ParseMarkdown { id, source });
         id
     }
 

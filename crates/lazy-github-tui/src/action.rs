@@ -3,6 +3,7 @@
 use lazy_github_core::logging::LogLine;
 use lazy_github_core::models::Repository;
 
+use crate::components::markdown::Markdown;
 use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
 use crate::keymap::BindingId;
 use crate::modal::{DialogAction, ModalEntry, SettingsOutcome};
@@ -93,6 +94,8 @@ pub enum Action {
     Git(RequestId, GitResponse),
     /// A cache file read finished: its text, `None` when there's no file, or the error as text.
     CacheRead(RequestId, Result<Option<String>, String>),
+    /// A large markdown body finished parsing off the frame.
+    MarkdownParsed(RequestId, Box<Markdown>),
     /// A config save finished.
     ConfigSaved(Result<(), String>),
     /// A timer ticked.

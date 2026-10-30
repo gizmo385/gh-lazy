@@ -299,6 +299,11 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
 - `large-account/`: 1,000 public `parity-bot` repos, `large-0000` to `large-0999`, over 20 `GET /user/repos` pages
   of 50. Listed before `base`, for the Rust-only `large-account` scenario (#325). Generated, not hand-written: `cargo
   xtask large-account-fixtures` writes it, and an xtask test fails when the committed files differ from its output.
+- `large-body/`: `issue-details`' `GET /repos/parity-bot/issue-fixture/issues` page 1 with issue #12's `body`
+  replaced by about 200 KB in the shape of `perf_tests.rs`'s `large_markdown` (`# A very large issue`, paragraphs
+  `Paragraph 0 has ...`, then a 100-row table ending `item-99`), over the 64 KiB a body parses inline. Listed before
+  `issue-details`, for the Rust-only `large-issue-body` scenario (#337). Generated once by a throwaway script and
+  committed; nothing is recorded from GitHub.
 - `repos-error/`: base's `GET /user/repos` page 1 answered with a 500 (`{"message": "Server Error"}`) after 1.5 s,
   long enough to capture the loading overlay. Listed before `base`, for the `repos-fetch-error` and
   `repos-cache-error` scenarios. Hand-written.

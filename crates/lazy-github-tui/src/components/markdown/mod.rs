@@ -53,6 +53,48 @@ impl Markdown {
     pub fn layout_unpadded(&self, width: u16, theme: &Theme) -> Rendered {
         layout::layout(&self.blocks, width, theme, false)
     }
+
+    /// Whether [`Self::layout`] at `width` is more than `rows` rows tall. Stops laying out once it is, so asking
+    /// about a screenful of a long document costs about a screenful.
+    pub fn taller_than(&self, width: u16, rows: usize, theme: &Theme) -> bool {
+        layout::taller_than(&self.blocks, width, theme, true, rows)
+    }
+
+    /// [`Self::taller_than`] for [`Self::layout_unpadded`].
+    pub fn taller_than_unpadded(&self, width: u16, rows: usize, theme: &Theme) -> bool {
+        layout::taller_than(&self.blocks, width, theme, false, rows)
+    }
+}
+
+/// Bodies longer than this many bytes are parsed off the frame ([`MarkdownSource`]); shorter ones inline. GitHub caps
+/// issue and PR bodies at 65,536 characters, so in practice only a README (or a body of multi-byte characters) is
+/// larger.
+pub const OFF_FRAME_BYTES: usize = 64 * 1024;
+
+/// A markdown body to parse, possibly on another thread: the text, and the repo whose `#N` and `@user` references to
+/// expand into links first, if any.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MarkdownSource {
+    /// The raw markdown.
+    pub text: String,
+    /// The full name (`owner/repo`) of the repo to expand references for, or `None` to leave them as text.
+    pub references_of: Option<String>,
+}
+
+impl MarkdownSource {
+    /// Expands the references when asked, then parses. Pure, and a pass over the whole text either way, so a large
+    /// body does both on a blocking thread.
+    pub fn parse(&self) -> Markdown {
+        match &self.references_of {
+            Some(repo) => Markdown::parse(&lazy_github_core::references::expand(&self.text, repo)),
+            None => Markdown::parse(&self.text),
+        }
+    }
+
+    /// Whether the text is too long to parse inside a frame: more than [`OFF_FRAME_BYTES`].
+    pub fn is_large(&self) -> bool {
+        self.text.len() > OFF_FRAME_BYTES
+    }
 }
 
 /// Plain styled text, not markdown, wrapped to `width` cells the way a paragraph wraps, with no padding or margins.

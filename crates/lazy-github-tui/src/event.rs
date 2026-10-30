@@ -3,6 +3,7 @@
 use crossterm::event::{KeyEvent, MouseEvent};
 use lazy_github_core::logging::LogLine;
 
+use crate::components::markdown::Markdown;
 use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
 
 /// An input to the event loop: from the terminal, the runtime, the logger, the clock or the OS.
@@ -40,6 +41,13 @@ pub enum Event {
         id: RequestId,
         /// Its result.
         result: Result<Option<String>, String>,
+    },
+    /// An `Effect::ParseMarkdown` finished.
+    MarkdownParsed {
+        /// The id from the `Effect::ParseMarkdown` that started it.
+        id: RequestId,
+        /// The parsed document.
+        markdown: Box<Markdown>,
     },
     /// An `Effect::SaveConfig` finished. The error is already rendered as text.
     ConfigSaved(Result<(), String>),

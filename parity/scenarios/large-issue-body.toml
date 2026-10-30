@@ -1,0 +1,69 @@
+version = 1
+description = "A large issue body (about 200 KB) is parsed off the frame: it lands below the rule, end reaches its table's last row, and an issue selected while it may still be parsing shows, and only it (#337)"
+gate = true
+# Rust-only: Python stops redrawing for seconds while it mounts a large body's blocks, and an issue selected meanwhile
+# never shows (Py bug B119), as large-account is Rust-only for #325.
+apps = ["rust"]
+parity_rows = ["markdown-links.large-body"]
+sizes = [[160, 48]]
+
+[env]
+# large-body: issue-details' issues page with #12's body replaced by about 200 KB of paragraphs and a 100-row table
+# (`item-0` to `item-99`), over the 64 KiB a body parses inline.
+fixtures = ["large-body", "issue-details", "base"]
+
+[[step]]
+wait = { text = "issue-fixture", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Comments that fail to load", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Issues with bodies and comments.", timeout_ms = 15000 }
+
+[[step]]
+keys = ["3", "enter"]
+
+[[step]]
+wait = { text = "A very large issue", timeout_ms = 15000 }
+
+[[step]]
+capture = "parsed"
+
+[[step]]
+keys = ["tab", "end"]
+
+[[step]]
+wait = { text = "item-99", timeout_ms = 10000 }
+
+[[step]]
+capture = "end"
+
+# #12 is selected again, which parses its body anew, and #11 at once after it, while that parse may still be running.
+# The enter on #12 moves focus to the tab strip, so the second 3 is what lets j move the Issues cursor.
+[[step]]
+keys = ["3", "enter", "3", "j", "enter"]
+
+[[step]]
+wait = { text = "Closed Closed without a body (#11)", timeout_ms = 10000 }
+
+[[step]]
+wait = { stable_ms = 1000 }
+
+[[step]]
+capture = "switched"
+
+[expect.parsed]
+contains = ["Open Crash when the config file is empty (#12) by parity-friend", "A very large issue", "Paragraph 0 has"]
+not_contains = ["panicked"]
+
+[expect.end]
+contains = ["item-99", "item-98"]
+not_contains = ["A very large issue", "panicked"]
+
+[expect.switched]
+contains = ["Closed Closed without a body (#11)", "[5] Issue #11 Details"]
+not_contains = ["A very large issue", "Paragraph 0 has", "panicked"]

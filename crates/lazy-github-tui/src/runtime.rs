@@ -14,6 +14,7 @@ use tokio::sync::{mpsc, watch};
 use tokio::task::{AbortHandle, JoinHandle};
 use tokio::time::{Instant, MissedTickBehavior};
 
+use crate::components::markdown::MarkdownSource;
 use crate::effect::{Effect, RequestId, TimerId};
 use crate::event::Event;
 
@@ -100,6 +101,7 @@ impl<G: Github> Runtime<G> {
                 });
                 self.tasks.insert(id, task.abort_handle());
             }
+            Effect::ParseMarkdown { id, source } => self.parse_markdown(id, source),
             Effect::WriteCache { path, text } => self.cache_writer.write(path, text),
             Effect::RemoveCache { path } => self.cache_writer.remove(path),
             Effect::StartInterval { id, every } => {
@@ -154,6 +156,24 @@ impl<G: Github> Runtime<G> {
             // `App` already stopped the loop; there's nothing to perform.
             Effect::Quit => {}
         }
+    }
+
+    /// Parses `source` on a blocking thread and sends the document back as `Event::MarkdownParsed`. `Effect::Cancel`
+    /// aborts the send; the parse itself runs to the end. A panicked parse is logged and sends nothing.
+    fn parse_markdown(&mut self, id: RequestId, source: MarkdownSource) {
+        let tx = self.tx.clone();
+        let task = tokio::spawn(async move {
+            match tokio::task::spawn_blocking(move || source.parse()).await {
+                Ok(markdown) => {
+                    let _ = tx.send(Event::MarkdownParsed {
+                        id,
+                        markdown: Box::new(markdown),
+                    });
+                }
+                Err(e) => tracing::error!("Parsing the markdown {id} failed: {e}"),
+            }
+        });
+        self.tasks.insert(id, task.abort_handle());
     }
 
     /// Starts performing each effect, in order.
@@ -783,6 +803,36 @@ mod tests {
         let (id, result) = cache_read(&mut rx).await;
         assert_eq!(id, RequestId::new(6));
         assert!(result.is_err(), "{result:?}");
+        runtime.shutdown().await;
+    }
+
+    // Not on a paused clock: the parse runs on a blocking thread.
+    #[tokio::test(flavor = "current_thread")]
+    async fn a_markdown_parse_answers_with_the_document_references_expanded() {
+        use crate::components::markdown::{Markdown, MarkdownSource};
+
+        let dir = TempDir::new();
+        let (mut runtime, mut rx) = runtime(FakeGithub::new(), &dir);
+        let source = MarkdownSource {
+            text: "See #7 and *more*.".into(),
+            references_of: Some("parity-bot/issue-fixture".into()),
+        };
+        runtime.execute(Effect::ParseMarkdown {
+            id: RequestId::new(8),
+            source: source.clone(),
+        });
+        match tokio::time::timeout(Duration::from_secs(10), rx.recv())
+            .await
+            .unwrap()
+            .unwrap()
+        {
+            Event::MarkdownParsed { id, markdown } => {
+                assert_eq!(id, RequestId::new(8));
+                assert_eq!(*markdown, source.parse());
+                assert_ne!(*markdown, Markdown::parse(&source.text), "the references are expanded");
+            }
+            other => panic!("unexpected {other:?}"),
+        }
         runtime.shutdown().await;
     }
 

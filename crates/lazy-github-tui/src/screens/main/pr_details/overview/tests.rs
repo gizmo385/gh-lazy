@@ -12,12 +12,7 @@ fn text(rendered: &Rendered) -> Vec<String> {
 }
 
 fn description(pr: &FullPullRequest) -> Option<Markdown> {
-    let issue = &pr.pr.issue;
-    issue
-        .body
-        .as_deref()
-        .filter(|body| !body.is_empty())
-        .map(|body| Markdown::parse(&references::expand(body, &issue.repo.full_name)))
+    source(pr).map(|source| source.parse())
 }
 
 fn hidden() -> [Section; 3] {
@@ -498,4 +493,44 @@ fn a_click_on_a_maximized_section_hits_its_own_layout() {
     // A width never laid out hits nothing.
     overview.click_section(SectionKind::Checks, 1, 3, 70);
     assert!(overview.is_open(SectionKind::Checks));
+}
+
+#[test]
+fn taller_than_agrees_with_the_layout_and_leaves_the_draw_s_placements_alone() {
+    let theme = Theme::default();
+    let mut overview = loaded_overview();
+    assert!(
+        overview
+            .body
+            .description
+            .as_ref()
+            .and_then(OverviewMarkdown::ready)
+            .is_some()
+    );
+    // A focused section title draws differently, which the header part has to match.
+    overview.focus(OverviewStop::Title(SectionKind::Checks));
+    overview.body.set_focused(true);
+    let body = &mut overview.body;
+    let parsed = body.description.take();
+    // Parsed, none, and still parsing.
+    for description in [parsed, None, Some(OverviewMarkdown::Parsing(RequestId::new(1)))] {
+        body.description = description;
+        body.layouts.clear();
+        for width in [0, 1, 5, 40, 158] {
+            let height = body.layout(width, &theme).lines.len();
+            let mut rows = vec![0, height, height + 1];
+            rows.extend(height.checked_sub(1));
+            for rows in rows {
+                // From the cache, then without it, from a draw at another width.
+                body.layout(width, &theme);
+                assert_eq!(body.taller_than(width, rows, &theme), height > rows, "{width} {rows}");
+                body.layouts.clear();
+                body.placements.clear();
+                body.layout(77, &theme);
+                assert_eq!(body.taller_than(width, rows, &theme), height > rows, "{width} {rows}");
+                assert_eq!(body.last_width, 77);
+                assert_eq!(body.placements.iter().map(|(w, _)| *w).collect::<Vec<_>>(), [77]);
+            }
+        }
+    }
 }

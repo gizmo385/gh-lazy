@@ -2,6 +2,7 @@
 //! terminal or a tokio runtime of its own.
 
 use std::collections::{HashMap, VecDeque};
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -68,6 +69,8 @@ pub struct TestApp {
     effects: Vec<Effect>,
     queued: VecDeque<Effect>,
     timers: HashMap<TimerId, FakeTimer>,
+    /// Whether [`Self::settle`] leaves markdown parses queued, for [`Self::run_held_parses`].
+    hold_parses: bool,
 }
 
 /// How [`TestApp`] answers the git requests for a branch: by default no upstream, nothing on the remote, and a failed
@@ -177,6 +180,7 @@ impl TestApp {
             effects: Vec::new(),
             queued: VecDeque::new(),
             timers: HashMap::new(),
+            hold_parses: false,
         }
     }
 
@@ -394,11 +398,39 @@ impl TestApp {
         }
     }
 
+    /// Makes [`Self::settle`] leave markdown parses ([`Effect::ParseMarkdown`]) queued, as if the blocking thread
+    /// hadn't finished them, until [`Self::run_held_parses`] runs them.
+    pub fn hold_parses(&mut self) -> &mut Self {
+        self.hold_parses = true;
+        self
+    }
+
+    /// Runs the queued markdown parses (the blocking thread's work) and returns their events, oldest first, without
+    /// sending them.
+    pub fn run_held_parses(&mut self) -> Vec<Event> {
+        let (parses, rest): (VecDeque<Effect>, VecDeque<Effect>) = std::mem::take(&mut self.queued)
+            .into_iter()
+            .partition(|effect| matches!(effect, Effect::ParseMarkdown { .. }));
+        self.queued = rest;
+        parses
+            .into_iter()
+            .filter_map(|effect| match effect {
+                Effect::ParseMarkdown { id, source } => Some(Event::MarkdownParsed {
+                    id,
+                    markdown: Box::new(source.parse()),
+                }),
+                _ => None,
+            })
+            .collect()
+    }
+
     /// Runs queued GitHub requests on the [`FakeGithub`], answers queued git requests from
-    /// [`Self::with_local_repo`] and completes queued config saves, feeding each result back, until nothing is left.
+    /// [`Self::with_local_repo`], completes queued config saves and parses queued markdown (unless
+    /// [`Self::hold_parses`]), feeding each result back, until nothing is left.
     pub async fn settle(&mut self) {
         self.answer_setup_cache();
         self.answer_setup_git();
+        let mut held = VecDeque::new();
         while let Some(effect) = self.queued.pop_front() {
             let event = match effect {
                 Effect::Github { id, request } => Event::Github {
@@ -414,10 +446,19 @@ impl TestApp {
                     id,
                     result: Ok(self.cache_files.get(&path).cloned()),
                 },
+                Effect::ParseMarkdown { .. } if self.hold_parses => {
+                    held.push_back(effect);
+                    continue;
+                }
+                Effect::ParseMarkdown { id, source } => Event::MarkdownParsed {
+                    id,
+                    markdown: Box::new(source.parse()),
+                },
                 _ => continue,
             };
             self.send(event);
         }
+        self.queued.extend(held);
     }
 
     /// Moves the fake clock forward by `d`, firing each timer and deadline that falls due on the way, in order.
@@ -512,7 +553,11 @@ impl TestApp {
     fn perform(&mut self, effects: Vec<Effect>) {
         for effect in effects {
             match &effect {
-                Effect::Github { .. } | Effect::Git { .. } | Effect::SaveConfig(_) | Effect::ReadCache { .. } => {
+                Effect::Github { .. }
+                | Effect::Git { .. }
+                | Effect::SaveConfig(_)
+                | Effect::ReadCache { .. }
+                | Effect::ParseMarkdown { .. } => {
                     self.queued.push_back(effect.clone());
                 }
                 Effect::WriteCache { path, text } => {
@@ -524,7 +569,10 @@ impl TestApp {
                 Effect::Cancel(id) => self.queued.retain(|queued| {
                     !matches!(
                         queued,
-                        Effect::Github { id: queued, .. } | Effect::Git { id: queued, .. } | Effect::ReadCache { id: queued, .. }
+                        Effect::Github { id: queued, .. }
+                            | Effect::Git { id: queued, .. }
+                            | Effect::ReadCache { id: queued, .. }
+                            | Effect::ParseMarkdown { id: queued, .. }
                         if queued == id
                     )
                 }),
@@ -567,6 +615,31 @@ pub fn unicode_fixture(path: &str) -> serde_json::Value {
     let fixture: serde_json::Value = serde_json::from_str(&text).unwrap();
     let response = &fixture["response"];
     response.get("body").unwrap_or(&response["body_text"]).clone()
+}
+
+/// A markdown body of about `bytes` bytes, from `# A very large issue`: paragraphs with inline markup (`Paragraph 0
+/// has ...`), then a table of `rows` rows whose last item is `item-<rows - 1>`. The perf cases' and the large-body
+/// tests' data.
+pub fn large_markdown(bytes: usize, rows: usize) -> String {
+    let mut body = String::from("# A very large issue\n\n");
+    let mut table = String::from("| # | Name | Status | Notes |\n| --- | --- | --- | --- |\n");
+    for row in 0..rows {
+        let _ = writeln!(
+            table,
+            "| {row} | `item-{row}` | **open** | See [the docs](https://example.com/{row}) for row {row} |"
+        );
+    }
+    let mut paragraph = 0;
+    while body.len() + table.len() < bytes {
+        let _ = writeln!(
+            body,
+            "Paragraph {paragraph} has *emphasis*, `code`, a [link](https://example.com/p/{paragraph}) and enough \
+             plain words to wrap across several lines of the overview pane at the default width of the app.\n"
+        );
+        paragraph += 1;
+    }
+    body.push_str(&table);
+    body
 }
 
 /// The characters of `buffer`, one line per row, with trailing spaces trimmed.

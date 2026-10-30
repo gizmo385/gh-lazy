@@ -1,6 +1,7 @@
-//! A vertically scrolling view over laid-out lines: Textual's `VerticalScroll` around wrapping text. The text is laid
-//! out at the view's width; when it's taller than the view, it's laid out again two columns narrower, beside a
-//! scrollbar. The intro and the Repo Overview body both draw through it.
+//! A vertically scrolling view over laid-out lines: Textual's `VerticalScroll` around wrapping text. The text is asked
+//! whether it's taller than the view at the view's width ([`Layout::taller_than`]); if it is, it's laid out two
+//! columns narrower, beside a scrollbar, and otherwise at the full width. The intro and the Repo Overview body both
+//! draw through it.
 
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
@@ -22,12 +23,22 @@ const SCROLLBAR_WIDTH: u16 = 2;
 pub trait Layout {
     /// The text laid out `width` cells wide.
     fn layout(&mut self, width: u16, theme: &Theme) -> &Rendered;
+
+    /// Whether the text laid out `width` cells wide is more than `rows` rows tall. A draw asks this before it lays
+    /// out at the width it settles on, so text that can answer without a full layout (a long markdown body) should.
+    fn taller_than(&mut self, width: u16, rows: usize, theme: &Theme) -> bool {
+        self.layout(width, theme).lines.len() > rows
+    }
 }
 
-/// The latest layouts of some text by width and theme: the two a draw beside a scrollbar needs.
+/// The latest layouts of some text by width and theme: the two a draw beside a scrollbar needs. Also the latest
+/// answers to [`Layout::taller_than`] it couldn't give from a layout, since a draw that overflows keeps only the
+/// narrower layout and asks again at the full width every frame.
 #[derive(Debug, Default)]
 pub struct LayoutCache {
     layouts: Vec<(u16, Theme, Rendered)>,
+    /// `(width, theme, rows, taller)`, the latest two.
+    answers: Vec<(u16, Theme, usize, bool)>,
 }
 
 impl LayoutCache {
@@ -45,9 +56,36 @@ impl LayoutCache {
         &self.layouts[index].2
     }
 
-    /// Forgets every layout, for when the text changes.
+    /// The layout for `width` and `theme` if it's cached, without building it.
+    pub fn cached(&self, width: u16, theme: &Theme) -> Option<&Rendered> {
+        self.layouts
+            .iter()
+            .find(|(w, t, _)| *w == width && t == theme)
+            .map(|(_, _, rendered)| rendered)
+    }
+
+    /// Whether the text laid out `width` wide is more than `rows` rows tall: from a cached layout, a cached answer, or
+    /// else `taller`, whose answer is kept.
+    pub fn taller_than(&mut self, width: u16, rows: usize, theme: &Theme, taller: impl FnOnce() -> bool) -> bool {
+        if let Some(rendered) = self.cached(width, theme) {
+            return rendered.lines.len() > rows;
+        }
+        let asked = |&&(w, t, r, _): &&(u16, Theme, usize, bool)| w == width && t == *theme && r == rows;
+        if let Some(&(.., answer)) = self.answers.iter().find(asked) {
+            return answer;
+        }
+        let answer = taller();
+        if self.answers.len() == 2 {
+            self.answers.remove(0);
+        }
+        self.answers.push((width, *theme, rows, answer));
+        answer
+    }
+
+    /// Forgets every layout and answer, for when the text changes.
     pub fn clear(&mut self) {
         self.layouts.clear();
+        self.answers.clear();
     }
 }
 
@@ -132,7 +170,7 @@ impl ScrollView {
     /// area's, less the scrollbar when it overflows.
     pub fn measure(&mut self, area: Rect, theme: &Theme, text: &mut impl Layout) -> u16 {
         let window = usize::from(area.height);
-        let width = if text.layout(area.width, theme).lines.len() > window {
+        let width = if text.taller_than(area.width, window, theme) {
             area.width.saturating_sub(SCROLLBAR_WIDTH)
         } else {
             area.width
@@ -206,7 +244,7 @@ impl ScrollView {
 
     fn draw(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, text: &mut impl Layout, scrollbar: bool) {
         let window = usize::from(area.height);
-        let overflows = scrollbar && text.layout(area.width, theme).lines.len() > window;
+        let overflows = scrollbar && text.taller_than(area.width, window, theme);
         let text_area = if overflows {
             Rect {
                 width: area.width.saturating_sub(SCROLLBAR_WIDTH),
@@ -417,6 +455,45 @@ mod tests {
         }
     }
 
+    /// Text `rows` rows tall, which counts how often it's laid out and answers `taller_than` without laying out, as
+    /// a long markdown body does.
+    struct Counting {
+        text: Numbered,
+        rows: usize,
+        layouts: Vec<u16>,
+    }
+
+    impl Layout for Counting {
+        fn layout(&mut self, width: u16, _theme: &Theme) -> &Rendered {
+            self.layouts.push(width);
+            &self.text.0
+        }
+
+        fn taller_than(&mut self, _width: u16, rows: usize, _theme: &Theme) -> bool {
+            self.rows > rows
+        }
+    }
+
+    #[test]
+    fn a_first_draw_lays_out_once_at_the_width_it_settles_on() {
+        let theme = Theme::default();
+        for (rows, width) in [(10, 8), (3, 10)] {
+            let mut text = Counting {
+                text: Numbered::new(rows),
+                rows,
+                layouts: Vec::new(),
+            };
+            let mut terminal = Terminal::new(TestBackend::new(10, 5)).unwrap();
+            terminal
+                .draw(|frame| ScrollView::default().render(frame, frame.area(), &theme, &mut text))
+                .unwrap();
+            assert_eq!(text.layouts, [width], "{rows} rows");
+            text.layouts.clear();
+            ScrollView::default().measure(Rect::new(0, 0, 10, 5), &theme, &mut text);
+            assert_eq!(text.layouts, [width], "{rows} rows, measured");
+        }
+    }
+
     #[test]
     fn the_cache_keeps_two_layouts() {
         let mut cache = LayoutCache::default();
@@ -436,5 +513,43 @@ mod tests {
             Rendered::default()
         });
         assert_eq!(built, 5);
+        assert!(cache.cached(8, &theme).is_some());
+        assert!(cache.cached(10, &theme).is_none());
+        assert!(cache.cached(8, &Theme::by_name("textual-light").unwrap()).is_none());
+    }
+
+    #[test]
+    fn the_cache_answers_taller_than_from_a_layout_or_a_kept_answer() {
+        let theme = Theme::default();
+        let mut cache = LayoutCache::default();
+        let mut asked = 0;
+        let mut ask = |cache: &mut LayoutCache, width, rows, answer| {
+            cache.taller_than(width, rows, &theme, || {
+                asked += 1;
+                answer
+            })
+        };
+        assert!(ask(&mut cache, 10, 5, true));
+        // Kept: the same question isn't asked again, whatever the closure would say now.
+        assert!(ask(&mut cache, 10, 5, false));
+        assert!(!ask(&mut cache, 10, 6, false));
+        // A cached layout answers for itself: three lines are more than two rows.
+        cache.get(12, &theme, || Rendered {
+            lines: vec![Line::default(); 3],
+            links: Vec::new(),
+        });
+        assert!(ask(&mut cache, 12, 2, false));
+        assert!(!ask(&mut cache, 12, 3, true));
+        cache.clear();
+        assert!(!ask(&mut cache, 10, 5, false));
+        assert_eq!(asked, 3);
+    }
+
+    #[test]
+    fn the_default_taller_than_counts_the_layout() {
+        let theme = Theme::default();
+        let mut text = Numbered::new(5);
+        assert!(text.taller_than(10, 4, &theme));
+        assert!(!text.taller_than(10, 5, &theme));
     }
 }

@@ -17,6 +17,7 @@ use crate::component::{BindingState, ChainLink, Cx, Owner};
 use crate::components::command_log::Wheel;
 use crate::components::diff_view::PendingComment;
 use crate::components::info::Scroll;
+use crate::components::markdown::Markdown;
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::modal::PostedComment;
@@ -140,6 +141,10 @@ impl DetailsBody for PullRequestDetails {
         self.overview.close(cx);
         self.diff.close(cx);
         self.conversation.close(cx);
+    }
+
+    fn on_markdown_parsed(&mut self, id: RequestId, markdown: Box<Markdown>) -> Option<Box<Markdown>> {
+        self.overview.on_markdown_parsed(id, markdown)
     }
 
     fn scroll(&mut self, tab: usize, scroll: Scroll) {

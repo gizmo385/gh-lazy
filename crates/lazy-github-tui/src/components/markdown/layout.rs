@@ -64,6 +64,36 @@ pub(super) fn layout(blocks: &[Block], width: u16, theme: &Theme, padded: bool) 
     rendered
 }
 
+/// Whether [`layout`] would give more than `rows` rows, without building them all: root blocks are stacked until
+/// there are more than `rows`. Rows only ever grow as blocks stack, so stopping early is exact. Each root block is
+/// still laid out whole, but its rows are only counted.
+pub(super) fn taller_than(blocks: &[Block], width: u16, theme: &Theme, padded: bool, rows: usize) -> bool {
+    let width = usize::from(width);
+    if width == 0 {
+        return false;
+    }
+    let pad = if padded && width > 2 * PADDING { PADDING } else { 0 };
+    let painter = Painter { theme };
+    let scope = Scope {
+        under: theme.background(),
+        root: true,
+        in_list: false,
+        bullets: 0,
+    };
+    let mut height = 0;
+    let mut margin: Option<usize> = None;
+    for block in blocks {
+        let (top, bottom) = painter.margins(block, scope);
+        height += margin.map_or(top, |previous| previous.max(top));
+        height += painter.block(block, width - 2 * pad, scope).len();
+        if height > rows {
+            return true;
+        }
+        margin = Some(bottom);
+    }
+    height + margin.unwrap_or(0) > rows
+}
+
 /// A column as a `u16`. Layout is at most a `u16` wide, except for containers nested past their width, which only
 /// lose cells past the edge.
 fn column(x: usize) -> u16 {

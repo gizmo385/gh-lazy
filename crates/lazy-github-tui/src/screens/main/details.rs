@@ -19,7 +19,7 @@ use crate::component::{BindingState, ChainLink, Cx, Owner, RenderCx};
 use crate::components::command_log::Wheel;
 use crate::components::diff_view::PendingComment;
 use crate::components::info::{InfoView, Scroll};
-use crate::components::markdown::Rendered;
+use crate::components::markdown::{Markdown, Rendered};
 use crate::components::scroll_view::{Layout, ScrollView};
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
 use crate::effect::{GithubResponse, RequestId};
@@ -97,6 +97,12 @@ pub(super) trait DetailsBody {
 
     /// The body is being replaced: it cancels whatever it still has in flight.
     fn close(&self, _cx: &mut Cx<'_>) {}
+
+    /// A markdown body parsed off the frame for one of the body's views ([`Cx::parse_markdown`]), or
+    /// `Some(markdown)` handed back when it isn't one.
+    fn on_markdown_parsed(&mut self, _id: RequestId, markdown: Box<Markdown>) -> Option<Box<Markdown>> {
+        Some(markdown)
+    }
 
     /// A `textual.scroll.*` binding with tab `tab`'s content focused.
     fn scroll(&mut self, tab: usize, scroll: Scroll);
@@ -532,6 +538,11 @@ impl DetailsPane {
             }
             other => Some(other),
         }
+    }
+
+    /// Takes a markdown body parsed for the shown body, and hands back any other.
+    pub(super) fn on_markdown_parsed(&mut self, id: RequestId, markdown: Box<Markdown>) -> Option<Box<Markdown>> {
+        self.body.get_mut().on_markdown_parsed(id, markdown)
     }
 
     /// The active tab's links in front of the content's scroll link, with focus inside the content.

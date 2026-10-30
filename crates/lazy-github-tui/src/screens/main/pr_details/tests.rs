@@ -1491,6 +1491,108 @@ fn selecting_another_pull_request_while_a_section_is_maximized_restores_the_layo
     assert_eq!(maximized(&app), None);
 }
 
+// A large description, parsed off the frame (#337).
+
+/// [`app`] with PR 5's description about 200 KB, over the off-frame threshold, and markdown parses held back.
+fn large_description_app() -> TestApp {
+    let mut pr = fixture_pr(5);
+    pr.pr.issue.body = Some(crate::test_util::large_markdown(200_000, 100));
+    let mut app = TestApp::with_github(config(), gh().with_pull_request(NAME, 5, Ok(pr)));
+    app.hold_parses();
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["2"]);
+    app
+}
+
+fn parses(app: &TestApp) -> Vec<RequestId> {
+    app.effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::ParseMarkdown { id, .. } => Some(*id),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn pr_overview_large_description_parsing() {
+    let mut app = large_description_app();
+    app.press(&["enter"]);
+    settle(&mut app);
+    assert_eq!(parses(&app).len(), 1);
+    let screen = app.screen(160, 48);
+    // The sections show; nothing does below the rule.
+    assert!(screen.contains("Status checks: ✘ Failed"), "{screen}");
+    assert!(screen.contains("PR Reviews: ✘ Changes Requested"), "{screen}");
+    assert!(!screen.contains("A very large issue"), "{screen}");
+    let lines: Vec<&str> = screen.lines().collect();
+    let rule = lines.iter().position(|line| line.contains("││────")).unwrap();
+    for line in &lines[rule + 1..lines.len() - 2] {
+        let details: String = line.chars().skip(64).collect();
+        assert_eq!(
+            details.trim_matches(|c| c == '│' || c == '└' || c == '┘' || c == '─' || c == ' '),
+            "",
+            "{screen}"
+        );
+    }
+    insta::assert_snapshot!(screen);
+
+    for event in app.run_held_parses() {
+        app.send(event);
+    }
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("A very large issue"), "{screen}");
+    assert!(screen.contains("Status checks: ✘ Failed"), "{screen}");
+}
+
+#[test]
+fn keys_work_before_a_large_description_lands() {
+    let mut app = large_description_app();
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["tab"]);
+    assert_eq!(main(&app).focus(), FocusTarget::DetailsContent);
+    app.press(&["E"]);
+    assert_eq!(app.app().modals(), [crate::modal::ModalKind::PullRequest]);
+    app.press(&["escape"]);
+    settle(&mut app);
+    // The Diff tab shows the diff.
+    app.press(&["5", "right"]);
+    settle(&mut app);
+    assert_eq!(main(&app).details.tabs().active(), 1);
+    for event in app.run_held_parses() {
+        app.send(event);
+    }
+    app.press(&["left"]);
+    assert!(app.screen(160, 48).contains("A very large issue"));
+}
+
+#[test]
+fn a_new_pr_selection_cancels_the_parse_and_drops_its_late_result() {
+    let mut app = large_description_app();
+    app.press(&["enter"]);
+    settle(&mut app);
+    let [parse] = parses(&app)[..] else {
+        panic!("one parse");
+    };
+    let held = app.run_held_parses();
+    app.press(&["2", "j", "enter"]);
+    settle(&mut app);
+    assert!(cancels(&app).contains(&parse));
+    assert_eq!(main(&app).details_title(), "[5] PR #4 Details");
+    let before = app.screen(160, 48);
+    let out = logs(|| {
+        for event in held {
+            app.send(event);
+        }
+    });
+    assert!(out.contains("Dropping the parsed markdown"), "{out}");
+    let after = app.screen(160, 48);
+    assert_eq!(before, after);
+    assert!(!after.contains("A very large issue"), "{after}");
+}
+
 // `gh` failing mid-session (#323): every request the PR table and Overview make.
 
 mod gh_failures {

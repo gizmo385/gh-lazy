@@ -42,6 +42,7 @@ use crate::components::command_log::{CommandLog, Wheel};
 use crate::components::diff_view::PendingComment;
 use crate::components::hatch::Hatch;
 use crate::components::info::{INFO_BINDINGS, Scroll};
+use crate::components::markdown::Markdown;
 use crate::components::table::{Handled, SEARCHABLE_BINDINGS, TABLE_BINDINGS, TableFocus};
 use crate::components::text_input::{self, INPUT_BINDINGS};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
@@ -828,6 +829,11 @@ impl MainScreen {
         let result = self.repos.on_cache_read(id, result, cx)?;
         let result = self.issue_lists.on_cache_read(id, result, cx)?;
         self.workflows.on_cache_read(id, result, cx)
+    }
+
+    /// Takes a markdown body parsed off the frame for one of the screen's views, and hands back any other.
+    pub fn on_markdown_parsed(&mut self, id: RequestId, markdown: Box<Markdown>) -> Option<Box<Markdown>> {
+        self.details.on_markdown_parsed(id, markdown)
     }
 
     /// The repos section.

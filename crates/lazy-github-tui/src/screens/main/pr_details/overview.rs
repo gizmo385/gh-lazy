@@ -18,7 +18,7 @@ use lazy_github_core::models::review_summary;
 use lazy_github_core::models::{CheckRow, CheckRun, CheckState, CombinedStatus, FullPullRequest, Reactions};
 use lazy_github_core::models::{ReactionKind, User};
 use lazy_github_core::models::{Review, ReviewState, ReviewSummary, ReviewVerdict, check_rows, overall_state};
-use lazy_github_core::{references, time};
+use lazy_github_core::time;
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
@@ -29,7 +29,7 @@ use crate::components::collapsible::{CONTENT_INDENT, Collapsible, Placement, Sec
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
 use crate::components::list_view::ListView;
-use crate::components::markdown::{Markdown, Rendered, TextRun};
+use crate::components::markdown::{Markdown, MarkdownSource, Rendered, TextRun};
 use crate::components::reactions::ReactionsSummary;
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
@@ -40,7 +40,7 @@ use crate::screens::main::MainAction;
 use crate::theme::{Accent, Theme};
 
 use super::super::details::{BodyRenderCx, SectionLayout};
-use super::super::overview_text::{HeaderStyles, accent, append, push_label, push_rule};
+use super::super::overview_text::{HeaderStyles, OverviewMarkdown, accent, append, push_label, push_rule};
 use super::PR_OVERVIEW_BINDINGS;
 
 /// A focused section title's bindings: Textual's `CollapsibleTitle`.
@@ -206,8 +206,9 @@ pub(in crate::screens::main) struct PrOverview {
 #[derive(Debug)]
 struct Body {
     pr: Arc<FullPullRequest>,
-    /// The description with its references expanded, parsed once. `None` when there's none.
-    description: Option<Markdown>,
+    /// The description with its references expanded, parsed once (off the frame when it's large). `None` when
+    /// there's none.
+    description: Option<OverviewMarkdown>,
     sections: [Section; 3],
     stop: OverviewStop,
     /// Whether focus is inside the content, so the stop is drawn focused.
@@ -232,11 +233,7 @@ impl PrOverview {
     /// The Overview of `pr`, scrolled to the top, with the checks and reactions requested: Python's `on_mount`.
     pub(super) fn new(pr: Arc<FullPullRequest>, cx: &mut Cx<'_>) -> Self {
         let issue = &pr.pr.issue;
-        let description = issue
-            .body
-            .as_deref()
-            .filter(|body| !body.is_empty())
-            .map(|body| Markdown::parse(&references::expand(body, &issue.repo.full_name)));
+        let description = source(&pr).map(|source| OverviewMarkdown::new(source, cx));
         let repo = || Box::new(issue.repo.clone());
         let sha = &pr.head.sha;
         let status_id = cx.request(GithubRequest::CommitStatus {
@@ -356,15 +353,31 @@ impl PrOverview {
             ]
         });
         let reacting = self.reacting.user_request.into_iter();
+        let parsing = self.body.description.as_ref().and_then(OverviewMarkdown::pending);
         for id in self
             .requests
             .reactions
             .into_iter()
             .chain(checks.flatten())
             .chain(reacting)
+            .chain(parsing)
         {
             cx.effect(Effect::Cancel(id));
         }
+    }
+
+    /// Takes the description if it's the one being parsed, and hands back any other. It shows from the next draw,
+    /// at the scroll position kept (the draw clamps it).
+    pub(super) fn on_markdown_parsed(&mut self, id: RequestId, markdown: Box<Markdown>) -> Option<Box<Markdown>> {
+        let Some(own) = &mut self.body.description else {
+            return Some(markdown);
+        };
+        let unclaimed = own.on_parsed(id, markdown);
+        if unclaimed.is_none() {
+            self.body.layouts.clear();
+            self.body.placements.clear();
+        }
+        unclaimed
     }
 
     /// Python's `load_reactions`: a failure is logged and, after B16, shown in the title.
@@ -888,8 +901,9 @@ impl Layout for Body {
             placements,
             ..
         } = self;
+        let description = description.as_ref().and_then(OverviewMarkdown::ready);
         layouts.get(width, theme, || {
-            let (rendered, placed) = overview(pr, description.as_ref(), sections, &focus, width, theme);
+            let (rendered, placed) = overview(pr, description, sections, &focus, width, theme);
             placements.retain(|(w, _)| *w != width);
             if placements.len() == 2 {
                 placements.remove(0);
@@ -898,6 +912,38 @@ impl Layout for Body {
             rendered
         })
     }
+
+    /// The header and sections laid out, then only as much of the description as it takes to tell. Leaves
+    /// `last_width` and `placements` alone: they describe the layout a draw used.
+    fn taller_than(&mut self, width: u16, rows: usize, theme: &Theme) -> bool {
+        let focus = SectionKind::ALL.map(|kind| self.section_focus(kind, self.focused));
+        let Body {
+            pr,
+            description,
+            sections,
+            layouts,
+            ..
+        } = self;
+        layouts.taller_than(width, rows, theme, || {
+            let (header, _) = overview(pr, None, sections, &focus, width, theme);
+            let header = header.lines.len();
+            header > rows
+                || description
+                    .as_ref()
+                    .and_then(OverviewMarkdown::ready)
+                    .is_some_and(|description| description.taller_than(width, rows - header, theme))
+        })
+    }
+}
+
+/// What to parse for `pr`'s description: the body, its references expanded. `None` when it has none, or an empty one.
+fn source(pr: &FullPullRequest) -> Option<MarkdownSource> {
+    let issue = &pr.pr.issue;
+    let body = issue.body.as_deref().filter(|body| !body.is_empty())?;
+    Some(MarkdownSource {
+        text: body.to_owned(),
+        references_of: Some(issue.repo.full_name.clone()),
+    })
 }
 
 /// The whole tab laid out `width` cells wide, and where its sections landed.

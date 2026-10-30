@@ -13,7 +13,7 @@ use ratatui::text::Line;
 use crate::component::Cx;
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
-use crate::components::markdown::{Markdown, Rendered, TextRun};
+use crate::components::markdown::{Markdown, MarkdownSource, Rendered, TextRun};
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::theme::{Accent, Theme};
@@ -44,6 +44,8 @@ struct Body {
 enum Readme {
     /// Requested; nothing shows below the rule yet.
     Loading(RequestId),
+    /// Fetched, and too large to parse inside a frame: being parsed off it. Nothing shows below the rule yet.
+    Parsing(RequestId),
     /// Fetched and parsed.
     Loaded(Markdown),
     /// None, empty, or the request failed.
@@ -69,25 +71,36 @@ impl RepoOverview {
         &self.body.repo
     }
 
-    /// The README request still running, if any.
+    /// The README request or parse still running, if any.
     pub(super) fn pending(&self) -> Option<RequestId> {
         match self.body.readme {
-            Readme::Loading(id) => Some(id),
+            Readme::Loading(id) | Readme::Parsing(id) => Some(id),
             Readme::Loaded(_) | Readme::Missing => None,
         }
     }
 
-    /// The overview is going away: cancels its README request if it's still running.
+    /// The overview is going away: cancels its README request or parse if it's still running.
     pub(super) fn close(&self, cx: &mut Cx<'_>) {
         if let Some(id) = self.pending() {
             cx.effect(Effect::Cancel(id));
         }
     }
 
-    /// The README request finished. A failure is only logged: it shows as no README, as in Python.
-    pub(super) fn on_readme(&mut self, result: Result<Option<String>, GhError>) {
+    /// The README request finished. A failure is only logged: it shows as no README, as in Python. A large README is
+    /// parsed off the frame.
+    pub(super) fn on_readme(&mut self, result: Result<Option<String>, GhError>, cx: &mut Cx<'_>) {
         self.body.readme = match result {
-            Ok(Some(text)) if !text.is_empty() => Readme::Loaded(Markdown::parse(&text)),
+            Ok(Some(text)) if !text.is_empty() => {
+                let source = MarkdownSource {
+                    text,
+                    references_of: None,
+                };
+                if source.is_large() {
+                    Readme::Parsing(cx.parse_markdown(source))
+                } else {
+                    Readme::Loaded(source.parse())
+                }
+            }
             Ok(_) => Readme::Missing,
             Err(error) => {
                 tracing::debug!("Fetching the README of {} failed: {error}", self.body.repo.full_name);
@@ -95,6 +108,18 @@ impl RepoOverview {
             }
         };
         self.body.layouts.clear();
+    }
+
+    /// Takes the README if it's the one being parsed, and hands back any other.
+    pub(super) fn on_markdown_parsed(&mut self, id: RequestId, markdown: Box<Markdown>) -> Option<Box<Markdown>> {
+        match self.body.readme {
+            Readme::Parsing(parsing) if parsing == id => {
+                self.body.readme = Readme::Loaded(*markdown);
+                self.body.layouts.clear();
+                None
+            }
+            _ => Some(markdown),
+        }
     }
 
     /// The first visible line.
@@ -121,10 +146,11 @@ impl DetailsBody for RepoOverview {
         &["Repo Overview"]
     }
 
-    fn on_response(&mut self, id: RequestId, response: GithubResponse, _cx: &mut Cx<'_>) -> Option<GithubResponse> {
+    fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
         match response {
-            GithubResponse::RepoReadme(result) if self.pending() == Some(id) => {
-                self.on_readme(result);
+            GithubResponse::RepoReadme(result) if matches!(self.body.readme, Readme::Loading(loading) if loading == id) =>
+            {
+                self.on_readme(result, cx);
                 None
             }
             other => Some(other),
@@ -133,6 +159,10 @@ impl DetailsBody for RepoOverview {
 
     fn close(&self, cx: &mut Cx<'_>) {
         RepoOverview::close(self, cx);
+    }
+
+    fn on_markdown_parsed(&mut self, id: RequestId, markdown: Box<Markdown>) -> Option<Box<Markdown>> {
+        RepoOverview::on_markdown_parsed(self, id, markdown)
     }
 
     fn scroll(&mut self, _tab: usize, scroll: Scroll) {
@@ -153,10 +183,38 @@ impl Layout for Body {
         let Body { repo, readme, layouts } = self;
         layouts.get(width, theme, || overview(repo, readme, width, theme))
     }
+
+    /// The header laid out, then only as much of the README as it takes to tell.
+    fn taller_than(&mut self, width: u16, rows: usize, theme: &Theme) -> bool {
+        let Body { repo, readme, layouts } = self;
+        layouts.taller_than(width, rows, theme, || {
+            let header = header(repo, width, theme).lines.len();
+            let below: &Markdown = match readme {
+                Readme::Loading(_) | Readme::Parsing(_) => return header > rows,
+                Readme::Loaded(markdown) => markdown,
+                Readme::Missing => &NO_README,
+            };
+            header > rows || below.taller_than(width, rows - header, theme)
+        })
+    }
 }
 
 /// The whole body laid out `width` cells wide: the header lines at the left edge, the rule, then the README.
 fn overview(repo: &Repository, readme: &Readme, width: u16, theme: &Theme) -> Rendered {
+    let mut out = header(repo, width, theme);
+    if width == 0 {
+        return out;
+    }
+    match readme {
+        Readme::Loading(_) | Readme::Parsing(_) => {}
+        Readme::Loaded(markdown) => append(&mut out, markdown.layout(width, theme)),
+        Readme::Missing => append(&mut out, NO_README.layout(width, theme)),
+    }
+    out
+}
+
+/// The header lines and the rule, `width` cells wide.
+fn header(repo: &Repository, width: u16, theme: &Theme) -> Rendered {
     let mut out = Rendered::default();
     if width == 0 {
         return out;
@@ -204,12 +262,6 @@ fn overview(repo: &Repository, readme: &Readme, width: u16, theme: &Theme) -> Re
     }
 
     push_rule(&mut out, width, theme);
-
-    match readme {
-        Readme::Loading(_) => {}
-        Readme::Loaded(markdown) => append(&mut out, markdown.layout(width, theme)),
-        Readme::Missing => append(&mut out, NO_README.layout(width, theme)),
-    }
     out
 }
 
@@ -674,11 +726,110 @@ mod app_tests {
     }
 
     #[test]
+    fn taller_than_agrees_with_the_layout() {
+        let theme = Theme::default();
+        let repo = parity_repos()[1].clone();
+        for readme in [
+            Readme::Loaded(Markdown::parse(&fixture_readme("hello-world"))),
+            Readme::Missing,
+            Readme::Loading(RequestId::new(1)),
+            Readme::Parsing(RequestId::new(2)),
+        ] {
+            let mut body = Body {
+                repo: repo.clone(),
+                readme,
+                layouts: LayoutCache::default(),
+            };
+            for width in [0, 1, 5, 40, 158] {
+                let height = body.layout(width, &theme).lines.len();
+                let mut rows = vec![0, height, height + 1];
+                rows.extend(height.checked_sub(1));
+                for rows in rows {
+                    // From the cache, then without it.
+                    body.layout(width, &theme);
+                    assert_eq!(body.taller_than(width, rows, &theme), height > rows, "{width} {rows}");
+                    body.layouts.clear();
+                    assert_eq!(body.taller_than(width, rows, &theme), height > rows, "{width} {rows}");
+                }
+            }
+        }
+    }
+
+    /// [`gh`] with hello-world's README about 200 KB, over the off-frame threshold, and markdown parses held back,
+    /// hello-world selected.
+    fn large_readme_app() -> TestApp {
+        let readme = crate::test_util::large_markdown(200_000, 100);
+        let mut app = app(gh().with_readme("parity-bot/hello-world", Ok(Some(readme))));
+        app.hold_parses();
+        app.press(&["j", "enter"]);
+        settle(&mut app);
+        app
+    }
+
+    fn parses(app: &TestApp) -> Vec<RequestId> {
+        app.effects()
+            .iter()
+            .filter_map(|effect| match effect {
+                Effect::ParseMarkdown { id, .. } => Some(*id),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_large_readme_parses_off_the_frame() {
+        let mut app = large_readme_app();
+        let [parse] = parses(&app)[..] else {
+            panic!("one parse");
+        };
+        assert_eq!(overview(&app).pending(), Some(parse));
+        let screen = app.screen(160, 48);
+        assert!(screen.contains("A first repository for trying things out."), "{screen}");
+        assert!(!screen.contains("A very large issue"), "{screen}");
+        assert!(!screen.contains("No README found."), "{screen}");
+        // Keys work meanwhile.
+        app.press(&["5", "tab", "end"]);
+        assert_eq!(focus(&app), FocusTarget::DetailsContent);
+        assert_eq!(overview(&app).offset(), 0);
+        for event in app.run_held_parses() {
+            app.send(event);
+        }
+        assert_eq!(overview(&app).pending(), None);
+        let screen = app.screen(160, 48);
+        assert!(screen.contains("A very large issue"), "{screen}");
+        app.press(&["end"]);
+        assert!(app.screen(160, 48).contains("item-99"));
+    }
+
+    #[test]
+    fn a_new_selection_cancels_the_readme_parse_and_drops_its_late_result() {
+        let mut app = large_readme_app();
+        let [parse] = parses(&app)[..] else {
+            panic!("one parse");
+        };
+        let held = app.run_held_parses();
+        app.press(&["1", "j", "enter"]);
+        assert!(cancels(&app).contains(&parse));
+        settle(&mut app);
+        assert_eq!(overview(&app).repo().full_name, "parity-bot/lazy-demo");
+        let before = app.screen(160, 48);
+        let out = logs(|| {
+            for event in held {
+                app.send(event);
+            }
+        });
+        assert!(out.contains("Dropping the parsed markdown"), "{out}");
+        let after = app.screen(160, 48);
+        assert_eq!(before, after);
+        assert!(!after.contains("A very large issue"), "{after}");
+    }
+
+    #[test]
     fn repo_overview_light_theme() {
         let mut app = app(gh());
         let repo = parity_repos()[1].clone();
         let mut overview = app.with_cx(|cx| RepoOverview::new(&repo, cx));
-        overview.on_readme(Ok(Some(fixture_readme("hello-world"))));
+        app.with_cx(|cx| overview.on_readme(Ok(Some(fixture_readme("hello-world"))), cx));
         let theme = Theme::by_name("textual-light").unwrap();
         let mut terminal = Terminal::new(TestBackend::new(60, 24)).unwrap();
         terminal

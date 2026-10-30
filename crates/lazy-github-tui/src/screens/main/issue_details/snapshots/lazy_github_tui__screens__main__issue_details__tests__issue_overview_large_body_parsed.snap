@@ -1,0 +1,52 @@
+---
+source: crates/lazy-github-tui/src/screens/main/issue_details/tests.rs
+expression: screen
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/issue-fixture                                                                                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] Issue #12 Details ──────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name           Private                        ││ Overview  Comments                                                                           │
+│ ☆  parity-bot  issue-fixture  ✘                              ││╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                                              ││Open Crash when the config file is empty (#12) by parity-friend                               │
+│                                                              ││                                                                                              │
+│                                                              ││────────────────────────────────────────────────────────────────────────────────────────────  │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                     A very large issue                                       │
+│                                                              ││                                                                                              │
+│                                                              ││  Paragraph 0 has emphasis, code, a link and enough plain words to wrap across several        │
+└──────────────────────────────────────────────────────────────┘│  lines of the overview pane at the default width of the app.                                 │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
+│ #  Status  Author      Title                                 ││  Paragraph 1 has emphasis, code, a link and enough plain words to wrap across several        │
+│ 8  open    parity-bot  A pull request among the issues       ││  lines of the overview pane at the default width of the app.                                 │
+│                                                              ││                                                                                              │
+│                                                              ││  Paragraph 2 has emphasis, code, a link and enough plain words to wrap across several        │
+│                                                              ││  lines of the overview pane at the default width of the app.                                 │
+│                                                              ││                                                                                              │
+│                                                              ││  Paragraph 3 has emphasis, code, a link and enough plain words to wrap across several        │
+│                                                              ││  lines of the overview pane at the default width of the app.                                 │
+│                                                              ││                                                                                              │
+│                                                              ││  Paragraph 4 has emphasis, code, a link and enough plain words to wrap across several        │
+│                                                              ││  lines of the overview pane at the default width of the app.                                 │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│  Paragraph 5 has emphasis, code, a link and enough plain words to wrap across several        │
+┌─ [3] Issues ─────────────────────────────────────────────────┐│  lines of the overview pane at the default width of the app.                                 │
+│ #   Status  Author         Title                             ││                                                                                              │
+│ 12  open    parity-friend  Crash when the config file is empt││  Paragraph 6 has emphasis, code, a link and enough plain words to wrap across several        │
+│ 11  closed  parity-bot     Closed without a body             ││  lines of the overview pane at the default width of the app.                                 │
+│ 10  open    parity-bot     Comments that load slowly         ││                                                                                              │
+│ 9   open    parity-friend  Comments that fail to load        ││  Paragraph 7 has emphasis, code, a link and enough plain words to wrap across several        │
+│                                                            ▏ ││  lines of the overview pane at the default width of the app.                                 │
+│                                                              ││                                                                                              │
+│                                                              ││  Paragraph 8 has emphasis, code, a link and enough plain words to wrap across several        │
+│                                                              ││  lines of the overview pane at the default width of the app.                                 │
+│                                                              ││                                                                                              │
+│                                                              ││  Paragraph 9 has emphasis, code, a link and enough plain words to wrap across several        │
+│                                                              ││  lines of the overview pane at the default width of the app.                                 │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│  Paragraph 10 has emphasis, code, a link and enough plain words to wrap across several       │
+│ Time  Result  Job Name  Run Name  Run #                      ││  lines of the overview pane at the default width of the app.                                 │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  ? Keybindings

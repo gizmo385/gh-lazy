@@ -15,7 +15,7 @@ use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::event::Event;
 use crate::keymap::BindingId;
 use crate::screens::main::{FocusTarget, MainAction, SectionId};
-use crate::test_util::{TestApp, UNICODE_EXTRAS, logs, unicode_fixture};
+use crate::test_util::{TestApp, UNICODE_EXTRAS, large_markdown, logs, unicode_fixture};
 
 fn fixtures() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../parity/fixtures/issue-details")
@@ -717,6 +717,185 @@ fn a_comment_posted_where_there_were_none_goes_below_the_empty_line() {
         screen.find("The first comment").unwrap(),
     );
     assert!(empty < first, "{screen}");
+}
+
+// A large body, parsed off the frame (#337).
+
+/// [`app`] with issue 12's body about 200 KB, over the off-frame threshold, and markdown parses held back.
+fn large_body_app() -> TestApp {
+    let mut page = issues_page();
+    for item in &mut page {
+        if let IssueListItem::Issue(issue) = item
+            && issue.number == 12
+        {
+            issue.body = Some(large_markdown(200_000, 100));
+        }
+    }
+    let gh = gh().with_issue_page("parity-bot/issue-fixture", 1, Ok(page));
+    let mut app = TestApp::with_github(Config::default(), gh);
+    app.hold_parses();
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["3"]);
+    app
+}
+
+/// The id of the last markdown parse the app asked for.
+fn last_parse(app: &TestApp) -> RequestId {
+    app.effects()
+        .iter()
+        .rev()
+        .find_map(|effect| match effect {
+            Effect::ParseMarkdown { id, .. } => Some(*id),
+            _ => None,
+        })
+        .unwrap()
+}
+
+fn land_parses(app: &mut TestApp) {
+    for event in app.run_held_parses() {
+        app.send(event);
+    }
+}
+
+/// Header, blank, rule, blank: and nothing below it.
+fn assert_nothing_below_the_rule(screen: &str) {
+    let lines: Vec<&str> = screen.lines().collect();
+    let header = lines
+        .iter()
+        .position(|line| line.contains("Crash when the config file is empty"))
+        .unwrap();
+    assert!(lines[header + 2].contains("────"), "{screen}");
+    // The Details box's rows below the rule hold only its borders.
+    let left = lines[header].find("Open Crash").unwrap();
+    for line in &lines[header + 3..lines.len() - 2] {
+        let inside: String = line.chars().skip(left).take(80).collect();
+        assert_eq!(inside.trim_end_matches('│').trim(), "", "{screen}");
+    }
+}
+
+#[test]
+fn issue_overview_large_body_parsing() {
+    let mut app = large_body_app();
+    app.press(&["enter"]);
+    settle(&mut app);
+    assert_eq!(title(&app), "[5] Issue #12 Details");
+    let screen = app.screen(160, 48);
+    assert!(!screen.contains("A very large issue"), "{screen}");
+    assert_nothing_below_the_rule(&screen);
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn issue_overview_large_body_parsed() {
+    let mut app = large_body_app();
+    app.press(&["enter"]);
+    settle(&mut app);
+    land_parses(&mut app);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("A very large issue"), "{screen}");
+    assert!(screen.contains("Paragraph 0 has"), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn the_body_lands_at_the_scroll_position_kept() {
+    let mut app = large_body_app();
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.render(160, 48);
+    // Nothing to scroll yet.
+    app.press(&["tab", "end"]);
+    let offset = |app: &TestApp| main(app).details.issue().unwrap().overview().offset();
+    assert_eq!(offset(&app), 0);
+    land_parses(&mut app);
+    app.render(160, 48);
+    assert_eq!(offset(&app), 0);
+    // The key pressed before isn't replayed; a new one scrolls the body.
+    app.press(&["end"]);
+    assert!(app.screen(160, 48).contains("item-99"));
+}
+
+#[test]
+fn keys_work_before_a_large_body_lands() {
+    let mut app = large_body_app();
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["tab"]);
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    // `E` edits the raw body, which is there already.
+    app.press(&["E"]);
+    assert_eq!(app.app().modals(), [crate::modal::ModalKind::EditIssue]);
+    app.press(&["escape"]);
+    // The Comments tab shows its comments.
+    app.press(&["5", "right"]);
+    assert_eq!(tabs(&app).1, 1);
+    settle(&mut app);
+    assert!(app.screen(160, 48).contains("A comment from a deleted account."));
+    // Back on the Overview, the body lands.
+    app.press(&["left"]);
+    land_parses(&mut app);
+    assert!(app.screen(160, 48).contains("A very large issue"));
+}
+
+#[test]
+fn a_new_selection_cancels_the_parse_and_drops_its_late_result() {
+    let mut app = large_body_app();
+    app.press(&["enter"]);
+    settle(&mut app);
+    let parse = last_parse(&app);
+    let source = app
+        .effects()
+        .iter()
+        .find_map(|effect| match effect {
+            Effect::ParseMarkdown { id, source } if *id == parse => Some(source.clone()),
+            _ => None,
+        })
+        .unwrap();
+    app.press(&["3", "j", "enter"]);
+    settle(&mut app);
+    assert!(app.effects().contains(&Effect::Cancel(parse)));
+    assert_eq!(shown_issue(&app), Some(11));
+    // Nothing is left to parse: the cancel dropped it.
+    assert!(app.run_held_parses().is_empty());
+    let before = app.screen(160, 48);
+    // The result comes back anyway, as one already sent can.
+    let out = logs(|| {
+        app.send(Event::MarkdownParsed {
+            id: parse,
+            markdown: Box::new(source.parse()),
+        });
+    });
+    assert!(
+        out.contains(&format!(
+            "DEBUG Dropping the parsed markdown {parse}: nothing is waiting for it"
+        )),
+        "{out}"
+    );
+    let after = app.screen(160, 48);
+    assert_eq!(before, after);
+    assert!(!after.contains("A very large issue"), "{after}");
+}
+
+#[test]
+fn selecting_the_same_issue_again_takes_only_the_new_parse() {
+    let mut app = large_body_app();
+    app.press(&["enter"]);
+    settle(&mut app);
+    let first = last_parse(&app);
+    app.press(&["3", "enter"]);
+    settle(&mut app);
+    let second = last_parse(&app);
+    assert_ne!(first, second);
+    assert!(app.effects().contains(&Effect::Cancel(first)));
+    let events = app.run_held_parses();
+    assert_eq!(events.len(), 1);
+    // The first's result, had it come, would have been dropped: only the second lands.
+    for event in events {
+        assert!(matches!(&event, Event::MarkdownParsed { id, .. } if *id == second));
+        app.send(event);
+    }
+    assert!(app.screen(160, 48).contains("A very large issue"));
 }
 
 // `gh` failing mid-session (#323): the comments.

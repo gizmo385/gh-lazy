@@ -1005,6 +1005,69 @@ fn markdown_linkify_before_emphasis() {
     insta::assert_debug_snapshot!((buffer(&rendered, 40), &rendered.links));
 }
 
+/// `taller_than` says what the layout's height says, padded and unpadded, at `rows` either side of the height.
+fn assert_taller_than_agrees(markdown: &Markdown, theme: &Theme, label: &str) {
+    for width in [0, 1, 5, 40, 158] {
+        for padded in [true, false] {
+            let height = if padded {
+                markdown.layout(width, theme)
+            } else {
+                markdown.layout_unpadded(width, theme)
+            }
+            .lines
+            .len();
+            let mut rows = vec![0, height, height + 1];
+            rows.extend(height.checked_sub(1));
+            for rows in rows {
+                let taller = if padded {
+                    markdown.taller_than(width, rows, theme)
+                } else {
+                    markdown.taller_than_unpadded(width, rows, theme)
+                };
+                assert_eq!(
+                    taller,
+                    height > rows,
+                    "{label}: width {width}, padded {padded}, height {height}, rows {rows}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn taller_than_agrees_with_the_layout() {
+    let deep_quote = format!("{} deep", ">".repeat(200));
+    let deep_list: String = (0..100).map(|i| "  ".repeat(i) + "- item\n").collect();
+    let readme = hello_world_readme();
+    let sources = [
+        "",
+        "  \n\n",
+        "<!-- only html -->",
+        "some text",
+        "# Title\n\nsome text\n\n> quote\n\n- item\n\n```\ncode\n```\n\n---",
+        "## Two\n\n### Three\n\n#### Four\n\ntext",
+        "- a\n  - b\n    - c\n\n1. one\n2. two\n\n10. ten",
+        "> quote\n> > nested\n\n```rust\nfn main() {}\n```\n\n    indented\n\n---\n\nend",
+        "x `c`\n\n```\ncode\n```",
+        "see https://example.com/a/long/path and *more* text that wraps across rows",
+        "中文中文 ab",
+        SAMPLER,
+        README_TABLES,
+        OPTIONS_DESCRIPTION,
+        WRAPPING_TABLE,
+        readme.as_str(),
+        deep_quote.as_str(),
+        deep_list.as_str(),
+        "- \n-\n- a",
+        "| a |\n|---|\n",
+    ];
+    for theme in [dark(), theme("ansi-dark")] {
+        for source in sources {
+            assert_taller_than_agrees(&Markdown::parse(source), &theme, source);
+        }
+    }
+}
+
 mod never_panics {
     use proptest::prelude::*;
 
@@ -1047,6 +1110,20 @@ mod never_panics {
                 prop_assert!(line.width() <= usize::from(width), "{line:?} is wider than {width}");
                 prop_assert!(!line.spans.iter().any(|span| span.content.contains(char::is_control)));
             }
+        }
+
+        #[test]
+        fn taller_than_agrees_with_the_layout(source in source(), width in 0u16..60, rows in 0usize..40) {
+            let markdown = Markdown::parse(&source);
+            let theme = dark();
+            prop_assert_eq!(
+                markdown.taller_than(width, rows, &theme),
+                markdown.layout(width, &theme).lines.len() > rows
+            );
+            prop_assert_eq!(
+                markdown.taller_than_unpadded(width, rows, &theme),
+                markdown.layout_unpadded(width, &theme).lines.len() > rows
+            );
         }
 
         #[test]

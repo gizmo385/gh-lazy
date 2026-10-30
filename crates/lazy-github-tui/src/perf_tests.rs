@@ -19,7 +19,7 @@ use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use serde_json::Value;
 
-use crate::test_util::TestApp;
+use crate::test_util::{TestApp, large_markdown};
 
 /// The longest any frame may take to build in a release build.
 const BUDGET: Duration = Duration::from_millis(50);
@@ -113,6 +113,12 @@ fn shows(app: &mut TestApp, text: &str) {
     assert!(screen.contains(text), "expected {text:?} on screen:\n{screen}");
 }
 
+/// Fails if the screen shows `text`.
+fn hides(app: &mut TestApp, text: &str) {
+    let screen = app.screen(COLS, ROWS);
+    assert!(!screen.contains(text), "expected no {text:?} on screen:\n{screen}");
+}
+
 fn settle(app: &mut TestApp) {
     futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once");
 }
@@ -200,29 +206,6 @@ fn notifications(first: usize, count: usize) -> Vec<Notification> {
             serde_json::from_value(notification).unwrap()
         })
         .collect()
-}
-
-/// A markdown body of about `bytes` bytes: paragraphs with inline markup, then a table of `rows` rows.
-fn large_markdown(bytes: usize, rows: usize) -> String {
-    let mut body = String::from("# A very large issue\n\n");
-    let mut table = String::from("| # | Name | Status | Notes |\n| --- | --- | --- | --- |\n");
-    for row in 0..rows {
-        let _ = writeln!(
-            table,
-            "| {row} | `item-{row}` | **open** | See [the docs](https://example.com/{row}) for row {row} |"
-        );
-    }
-    let mut paragraph = 0;
-    while body.len() + table.len() < bytes {
-        let _ = writeln!(
-            body,
-            "Paragraph {paragraph} has *emphasis*, `code`, a [link](https://example.com/p/{paragraph}) and enough \
-             plain words to wrap across several lines of the overview pane at the default width of the app.\n"
-        );
-        paragraph += 1;
-    }
-    body.push_str(&table);
-    body
 }
 
 // Cases.
@@ -485,10 +468,21 @@ fn perf_markdown_1mb_body() {
     let mut app = TestApp::with_github(Config::default(), gh);
     app.press(&["enter"]);
     settle(&mut app);
+    // The parse runs on a blocking thread in the app, not in a frame: held back here, and run between frames.
+    app.hold_parses();
     let mut frames = Timing::new("markdown body");
     frames.press(&mut app, "3");
-    // The issue's Overview: the body is parsed and laid out here.
+    // The issue's Overview opens at once, with nothing below the rule.
     frames.press(&mut app, "enter");
+    shows(&mut app, "Crash when the config file is empty");
+    hides(&mut app, "A very large issue");
+    let parsed = app.run_held_parses();
+    // The body lands and is laid out once, at the width beside the scrollbar.
+    frames.frame("body parsed", &mut app, |app| {
+        for event in parsed {
+            app.send(event);
+        }
+    });
     shows(&mut app, "A very large issue");
     for key in ["tab", "pagedown", "down", "end"] {
         frames.press(&mut app, key);
@@ -497,5 +491,45 @@ fn perf_markdown_1mb_body() {
     for key in ["up", "home", "pagedown"] {
         frames.press(&mut app, key);
     }
+    frames.finish();
+}
+
+#[test]
+#[ignore = "timing test: run with `cargo xtask perf`"]
+fn perf_markdown_1mb_readme() {
+    let repo: Repository = serde_json::from_value(
+        fixture_body(
+            "repo-overview",
+            "user/repos/GET.direction-asc_page-1_per_page-50_sort-full_name_type-all.json",
+        )[0]
+        .clone(),
+    )
+    .unwrap();
+    let gh = FakeGithub::new()
+        .with_readme(&repo.full_name, Ok(Some(large_markdown(1 << 20, 500))))
+        .with_repositories(vec![repo]);
+    let mut app = TestApp::with_github(Config::default(), gh);
+    app.hold_parses();
+    // Selecting the repo requests its README.
+    app.press(&["enter"]);
+    let mut frames = Timing::new("markdown readme");
+    // The README lands; it's parsed off the frame, so the Repo Overview shows nothing below the rule.
+    frames.frame("readme arrives", &mut app, settle);
+    hides(&mut app, "A very large issue");
+    let parsed = app.run_held_parses();
+    assert_eq!(parsed.len(), 1);
+    frames.frame("readme parsed", &mut app, |app| {
+        for event in parsed {
+            app.send(event);
+        }
+    });
+    shows(&mut app, "A very large issue");
+    frames.press(&mut app, "5");
+    for key in ["tab", "end"] {
+        frames.press(&mut app, key);
+    }
+    shows(&mut app, "item-499");
+    frames.press(&mut app, "home");
+    shows(&mut app, "A very large issue");
     frames.finish();
 }

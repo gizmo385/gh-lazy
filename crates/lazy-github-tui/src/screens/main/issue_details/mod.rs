@@ -15,6 +15,7 @@ use crate::action::Action;
 use crate::component::{ChainLink, Cx, Owner};
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
+use crate::components::markdown::Markdown;
 use crate::effect::{GithubResponse, RequestId};
 use crate::keymap::BindingId;
 use crate::modal::{NewCommentDialog, PostedComment, ReplyTarget};
@@ -59,7 +60,7 @@ impl IssueDetails {
     pub(super) fn new(issue: Issue, cx: &mut Cx<'_>) -> Self {
         let issue = Arc::new(issue);
         Self {
-            overview: IssueOverview::new(Arc::clone(&issue)),
+            overview: IssueOverview::new(Arc::clone(&issue), cx),
             comments: IssueComments::new(&issue, cx),
             issue,
         }
@@ -93,7 +94,12 @@ impl DetailsBody for IssueDetails {
     }
 
     fn close(&self, cx: &mut Cx<'_>) {
+        self.overview.close(cx);
         self.comments.close(cx);
+    }
+
+    fn on_markdown_parsed(&mut self, id: RequestId, markdown: Box<Markdown>) -> Option<Box<Markdown>> {
+        self.overview.on_markdown_parsed(id, markdown)
     }
 
     fn scroll(&mut self, tab: usize, scroll: Scroll) {

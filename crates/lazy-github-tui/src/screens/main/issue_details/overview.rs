@@ -4,18 +4,19 @@
 use std::sync::Arc;
 
 use lazy_github_core::models::{Issue, IssueState};
-use lazy_github_core::references;
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::style::Modifier;
 
+use crate::component::Cx;
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
-use crate::components::markdown::{Markdown, Rendered, TextRun};
+use crate::components::markdown::{Markdown, MarkdownSource, Rendered, TextRun};
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
+use crate::effect::RequestId;
 use crate::theme::{Accent, Theme};
 
-use super::super::overview_text::{HeaderStyles, accent, append, push_label, push_rule};
+use super::super::overview_text::{HeaderStyles, OverviewMarkdown, accent, append, push_label, push_rule};
 
 /// The Overview of one issue, and its scroll position.
 #[derive(Debug)]
@@ -28,19 +29,16 @@ pub(in crate::screens::main) struct IssueOverview {
 #[derive(Debug)]
 struct Body {
     issue: Arc<Issue>,
-    /// The body with its references expanded, parsed once. `None` when there's none.
-    markdown: Option<Markdown>,
+    /// The body with its references expanded, parsed once (off the frame when it's large). `None` when there's
+    /// none.
+    markdown: Option<OverviewMarkdown>,
     layouts: LayoutCache,
 }
 
 impl IssueOverview {
-    /// The Overview of `issue`, scrolled to the top.
-    pub(super) fn new(issue: Arc<Issue>) -> Self {
-        let markdown = issue
-            .body
-            .as_deref()
-            .filter(|body| !body.is_empty())
-            .map(|body| Markdown::parse(&references::expand(body, &issue.repo.full_name)));
+    /// The Overview of `issue`, scrolled to the top. A large body is parsed off the frame.
+    pub(super) fn new(issue: Arc<Issue>, cx: &mut Cx<'_>) -> Self {
+        let markdown = source(&issue).map(|source| OverviewMarkdown::new(source, cx));
         Self {
             scroll: ScrollView::default(),
             body: Body {
@@ -49,6 +47,26 @@ impl IssueOverview {
                 layouts: LayoutCache::default(),
             },
         }
+    }
+
+    /// The Overview is going away: cancels the body's parse if it's still running.
+    pub(super) fn close(&self, cx: &mut Cx<'_>) {
+        if let Some(markdown) = &self.body.markdown {
+            markdown.close(cx);
+        }
+    }
+
+    /// Takes the body if it's the one being parsed, and hands back any other. It shows from the next draw, at the
+    /// scroll position kept (the draw clamps it).
+    pub(super) fn on_markdown_parsed(&mut self, id: RequestId, markdown: Box<Markdown>) -> Option<Box<Markdown>> {
+        let Some(own) = &mut self.body.markdown else {
+            return Some(markdown);
+        };
+        let unclaimed = own.on_parsed(id, markdown);
+        if unclaimed.is_none() {
+            self.body.layouts.clear();
+        }
+        unclaimed
     }
 
     /// The first visible line.
@@ -77,8 +95,35 @@ impl Layout for Body {
             markdown,
             layouts,
         } = self;
-        layouts.get(width, theme, || overview(issue, markdown.as_ref(), width, theme))
+        let markdown = markdown.as_ref().and_then(OverviewMarkdown::ready);
+        layouts.get(width, theme, || overview(issue, markdown, width, theme))
     }
+
+    /// The header laid out, then only as much of the body as it takes to tell.
+    fn taller_than(&mut self, width: u16, rows: usize, theme: &Theme) -> bool {
+        let Body {
+            issue,
+            markdown,
+            layouts,
+        } = self;
+        layouts.taller_than(width, rows, theme, || {
+            let header = overview(issue, None, width, theme).lines.len();
+            header > rows
+                || markdown
+                    .as_ref()
+                    .and_then(OverviewMarkdown::ready)
+                    .is_some_and(|markdown| markdown.taller_than(width, rows - header, theme))
+        })
+    }
+}
+
+/// What to parse for `issue`'s body: the body, its references expanded. `None` when it has none, or an empty one.
+fn source(issue: &Issue) -> Option<MarkdownSource> {
+    let body = issue.body.as_deref().filter(|body| !body.is_empty())?;
+    Some(MarkdownSource {
+        text: body.to_owned(),
+        references_of: Some(issue.repo.full_name.clone()),
+    })
 }
 
 /// The whole tab laid out `width` cells wide.
@@ -125,8 +170,9 @@ mod tests {
     }
 
     fn render(issue: Issue, width: u16) -> Rendered {
-        let tab = IssueOverview::new(Arc::new(issue));
-        overview(&tab.body.issue, tab.body.markdown.as_ref(), width, &Theme::default())
+        let issue = Arc::new(issue);
+        let markdown = source(&issue).map(|source| source.parse());
+        overview(&issue, markdown.as_ref(), width, &Theme::default())
     }
 
     #[test]
@@ -224,6 +270,37 @@ mod tests {
         }
         // The title's `[link=x]` isn't a link.
         assert_eq!(rendered.links.iter().filter(|link| link.row == 0).count(), 2);
+    }
+
+    #[test]
+    fn taller_than_agrees_with_the_layout() {
+        let theme = Theme::default();
+        let issue = Arc::new(fixture_issue(12));
+        let parsed = source(&issue).map(|source| source.parse());
+        assert!(parsed.is_some());
+        // Parsed, and still parsing (the header alone).
+        for markdown in [
+            parsed.map(OverviewMarkdown::Ready),
+            Some(OverviewMarkdown::Parsing(RequestId::new(1))),
+        ] {
+            let mut body = Body {
+                issue: Arc::clone(&issue),
+                markdown,
+                layouts: LayoutCache::default(),
+            };
+            for width in [0, 1, 5, 40, 158] {
+                let height = body.layout(width, &theme).lines.len();
+                let mut rows = vec![0, height, height + 1];
+                rows.extend(height.checked_sub(1));
+                for rows in rows {
+                    // From the cache, then without it.
+                    body.layout(width, &theme);
+                    assert_eq!(body.taller_than(width, rows, &theme), height > rows, "{width} {rows}");
+                    body.layouts.clear();
+                    assert_eq!(body.taller_than(width, rows, &theme), height > rows, "{width} {rows}");
+                }
+            }
+        }
     }
 
     #[test]

@@ -3,17 +3,20 @@
 //!
 //! [`check_expect`] and [`compare`] are pure; [`check_size`] reads the grid dumps, extracts, checks and writes.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+use fake_gh::log::RequestLog;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use super::ci::Finding;
 use super::env::build_config;
 use super::grid::{GRID_VERSION, Grid};
+use super::reference;
 use super::runner::AppRunStatus;
 use super::scenario::{App, Check, Expect, ExpectTabs, Ignore, Roots, Scenario, Step};
+use super::screen;
 use super::structure::{self, Binding, DEFAULT_THEME, Pane, Structure, Table, ThemeColors};
 use super::summary::{CaptureSummary, CheckOutcome};
 use super::{Context, HarnessError, Result};
@@ -33,6 +36,8 @@ pub enum Kind {
     NotContains,
     /// The served requests (drift only: a live Python run against its reference).
     Requests,
+    /// The non-`GET` requests each app sent (cross-app, once per size, on its last capture).
+    Writes,
 }
 
 impl From<Check> for Kind {
@@ -62,6 +67,7 @@ impl Kind {
             Kind::Contains => "contains",
             Kind::NotContains => "not_contains",
             Kind::Requests => "requests",
+            Kind::Writes => "writes",
         }
     }
 }
@@ -495,6 +501,161 @@ pub fn compare(py: &Structure, rs: &Structure, checks: &[Check], ignore: &Ignore
     out
 }
 
+/// How much of a write's body the `writes` mismatch shows.
+const WRITE_BODY_CHARS: usize = 200;
+
+/// One write as the `writes` check keys it. Ordered by its fields, so sets of them list in a stable order.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+struct Write {
+    method: String,
+    /// The path and its query suffix.
+    target: String,
+    /// The body as compact JSON, in full.
+    body: Option<String>,
+}
+
+impl Write {
+    /// `METHOD /path?query body`, the body cut at [`WRITE_BODY_CHARS`].
+    fn display(&self) -> String {
+        let mut line = format!("{} {}", self.method, self.target);
+        if let Some(body) = &self.body {
+            line.push(' ');
+            match body.char_indices().nth(WRITE_BODY_CHARS) {
+                Some((cut, _)) => {
+                    line.push_str(&body[..cut]);
+                    line.push('…');
+                }
+                None => line.push_str(body),
+            }
+        }
+        line
+    }
+}
+
+/// The writes in a request log: every line with a method other than `GET`, served, missed or errored alike, except
+/// those `ignore.writes` covers. A set, so a write sent twice counts once, as in `requests.jsonl`.
+fn writes(log: &str, ignore: &Ignore) -> BTreeSet<Write> {
+    RequestLog::parse(&screen::normalize_log(log))
+        .entries()
+        .iter()
+        .filter(|e| !e.is_ssh())
+        .filter_map(|e| {
+            let method = e.method.as_deref()?;
+            let path = e.path.as_deref()?;
+            if method.eq_ignore_ascii_case("GET") || ignore.covers_write(method, path) {
+                return None;
+            }
+            let query = e.query.as_ref().map(reference::query_suffix).unwrap_or_default();
+            Some(Write {
+                method: method.to_owned(),
+                target: format!("{path}{query}"),
+                body: e.body.as_ref().map(|b| sorted_keys(b).to_string()),
+            })
+        })
+        .collect()
+}
+
+/// `value` with every object's keys in sorted order. Python's `json.dumps` and serde write keys in the order the app
+/// built the object, which isn't part of what was sent, so the comparison and the message use one order.
+fn sorted_keys(value: &Value) -> Value {
+    match value {
+        Value::Object(map) => {
+            let mut entries: Vec<_> = map.iter().collect();
+            entries.sort_by(|a, b| a.0.cmp(b.0));
+            Value::Object(entries.into_iter().map(|(k, v)| (k.clone(), sorted_keys(v))).collect())
+        }
+        Value::Array(items) => Value::Array(items.iter().map(sorted_keys).collect()),
+        other => other.clone(),
+    }
+}
+
+/// Compares the writes in two request logs (a `fake-gh.log` or `requests.jsonl`): one `writes` mismatch listing the
+/// writes found in only one app, or `None` when both sent the same ones. `ignore` holds `ignore.writes` entries.
+pub fn compare_writes(py: &str, rs: &str, ignore: &[String]) -> Option<Mismatch> {
+    let ignore = Ignore {
+        writes: ignore.to_vec(),
+        ..Ignore::default()
+    };
+    let (p, r) = (writes(py, &ignore), writes(rs, &ignore));
+    let only =
+        |a: &BTreeSet<Write>, b: &BTreeSet<Write>| -> Vec<String> { a.difference(b).map(Write::display).collect() };
+    let (only_py, only_rs) = (only(&p, &r), only(&r, &p));
+    let n = only_py.len() + only_rs.len();
+    if n == 0 {
+        return None;
+    }
+    let mut parts = Vec::new();
+    if !only_py.is_empty() {
+        parts.push(format!("only in python: {}", only_py.join(", ")));
+    }
+    if !only_rs.is_empty() {
+        parts.push(format!("only in rust: {}", only_rs.join(", ")));
+    }
+    let count = if n == 1 {
+        "1 write differs".to_owned()
+    } else {
+        format!("{n} writes differ")
+    };
+    Some(Mismatch::cross(
+        Kind::Writes,
+        None,
+        json!(only_py),
+        json!(only_rs),
+        format!("{count}: {}", parts.join("; ")),
+    ))
+}
+
+/// The `writes` mismatch for one size, with the name of the capture it goes on: the scenario's last, since the
+/// writes are the whole run's, not one screen's. Both apps' `fake-gh.log` in `dir` are compared, when both left one.
+fn size_writes(scenario: &Scenario, dir: &Path) -> Result<Option<(String, Mismatch)>> {
+    let Some(last) = scenario.steps.iter().rev().find_map(|step| match step {
+        Step::Capture(c) => Some(c),
+        _ => None,
+    }) else {
+        return Ok(None);
+    };
+    let mut logs = Vec::new();
+    for app in App::ALL {
+        let path = dir.join(app.name()).join("fake-gh.log");
+        match std::fs::read_to_string(&path) {
+            Ok(text) => logs.push(text),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(e) => return Err(HarnessError(format!("reading {}: {e}", path.display()))),
+        }
+    }
+    Ok(match logs.as_slice() {
+        [py, rs] => compare_writes(py, rs, &last.ignore.writes).map(|m| (last.name.clone(), m)),
+        _ => None,
+    })
+}
+
+/// Each app's structure of capture `name`, for the apps in `apps` that dumped it, written to its
+/// `<capture>.structure.json` with its warnings printed.
+fn capture_structures<'a>(
+    scenario: &Scenario,
+    dir: &Path,
+    apps: impl Iterator<Item = &'a App>,
+    theme: &ThemeColors,
+    name: &str,
+) -> Result<BTreeMap<App, Structure>> {
+    let size = dir.file_name().unwrap_or_default().to_string_lossy();
+    let mut structures = BTreeMap::new();
+    for &app in apps {
+        let app_dir = dir.join(app.name());
+        let grid_file = app_dir.join(format!("{name}.grid.json"));
+        if !grid_file.is_file() {
+            continue;
+        }
+        let s = structure::extract(&read_grid(&grid_file)?, theme);
+        write_json(&app_dir.join(format!("{name}.structure.json")), &s)?;
+        for warning in &s.warnings {
+            println!("{} {size} {app} {name}: warning: {warning}", scenario.name);
+        }
+        structures.insert(app, s);
+    }
+    Ok(structures)
+}
+
 /// The theme name the scenario's config selects: `appearance.theme`, defaulting to the Python app's default.
 pub fn scenario_theme(scenario: &Scenario, roots: &Roots) -> Result<String> {
     let file = roots.config_file(&scenario.env.config);
@@ -570,23 +731,11 @@ pub fn check_size(
         .unwrap_or_default();
     let mut summaries = Vec::new();
     let mut findings = Vec::new();
+    let mut writes = size_writes(scenario, dir)?;
     for step in &scenario.steps {
         let Step::Capture(capture) = step else { continue };
         let name = &capture.name;
-        let mut structures: BTreeMap<App, Structure> = BTreeMap::new();
-        for &app in statuses.keys() {
-            let app_dir = dir.join(app.name());
-            let grid_file = app_dir.join(format!("{name}.grid.json"));
-            if !grid_file.is_file() {
-                continue;
-            }
-            let s = structure::extract(&read_grid(&grid_file)?, theme);
-            write_json(&app_dir.join(format!("{name}.structure.json")), &s)?;
-            for warning in &s.warnings {
-                println!("{} {size} {app} {name}: warning: {warning}", scenario.name);
-            }
-            structures.insert(app, s);
-        }
+        let structures = capture_structures(scenario, dir, statuses.keys(), theme, name)?;
 
         let mut lines = Vec::new();
         let mut against = Vec::new();
@@ -614,6 +763,9 @@ pub fn check_size(
             }
             _ => false,
         };
+        if let Some((_, m)) = writes.take_if(|(on, _)| on == name) {
+            cross.push(m);
+        }
         if !cross.is_empty() && !against.contains(&App::Rust) {
             against.push(App::Rust);
         }
@@ -625,7 +777,8 @@ pub fn check_size(
             against.push(App::Python);
         }
 
-        let checked = cross_ran || (expectation.is_some() && !structures.is_empty()) || !drifted.is_empty();
+        let checked =
+            cross_ran || !cross.is_empty() || (expectation.is_some() && !structures.is_empty()) || !drifted.is_empty();
         let mismatches = expect.len() + cross.len() + drifted.len();
         let check = match (checked, mismatches) {
             (false, _) => CheckOutcome::NotApplicable,
@@ -868,6 +1021,8 @@ mod tests {
             Focus,
             Contains,
             NotContains,
+            Requests,
+            Writes,
         ] {
             assert_eq!(serde_json::to_value(kind).unwrap(), kind.as_str(), "{kind:?}");
         }
@@ -922,6 +1077,7 @@ mod tests {
         rs.focused.clear();
         let ignore = Ignore {
             boxes: vec!["Repositories".into()],
+            ..Ignore::default()
         };
         assert_eq!(compare(&py, &rs, &Check::ALL, &ignore), []);
         rename(&mut rs, "[1] Repositories", "[9] Repositories");
@@ -1165,6 +1321,134 @@ mod tests {
                  drifty and review the diff"
             ]
         );
+    }
+
+    /// A fake-gh log line for `method path` with `body`, served unless `miss`.
+    fn logged(method: &str, path: &str, body: &Value, miss: bool) -> String {
+        let entry = json!({
+            "seq": 1, "argv": ["api", path], "command": "api", "method": method, "path": path, "query": {},
+            "accept": "json", "cache": null, "cache_control": null, "body": body,
+            "fixture": if miss { Value::Null } else { json!("base/x.json") }, "status": if miss { 404 } else { 200 },
+            "miss": miss, "error": null
+        });
+        format!("{entry}\n")
+    }
+
+    fn log(lines: &[String]) -> String {
+        lines.concat()
+    }
+
+    const ISSUES: &str = "/repos/o/r/issues";
+
+    #[test]
+    fn equal_writes_compare_equal_and_gets_are_ignored() {
+        let post = logged("POST", ISSUES, &json!({"title": "x"}), false);
+        let py = log(&[logged("GET", "/user", &Value::Null, false), post.clone()]);
+        let rs = log(&[post, logged("GET", "/user/repos", &Value::Null, false)]);
+        assert_eq!(compare_writes(&py, &rs, &[]), None);
+        assert_eq!(compare_writes("", "", &[]), None);
+    }
+
+    #[test]
+    fn body_key_order_doesnt_count() {
+        let body = |text: &str| serde_json::from_str::<Value>(text).unwrap();
+        let py = logged("POST", "/x", &body(r#"{"title":"x","labels":[{"b":1,"a":2}]}"#), false);
+        let rs = logged("POST", "/x", &body(r#"{"labels":[{"a":2,"b":1}],"title":"x"}"#), false);
+        assert_eq!(compare_writes(&py, &rs, &[]), None);
+        let m = compare_writes(&py, "", &[]).unwrap();
+        assert_eq!(m.python, json!([r#"POST /x {"labels":[{"a":2,"b":1}],"title":"x"}"#]));
+    }
+
+    #[test]
+    fn a_write_in_only_one_app_is_listed_under_it() {
+        let post = logged("POST", ISSUES, &json!({"title": "x", "body": "y"}), false);
+        let m = compare_writes(&post, "", &[]).unwrap();
+        assert_eq!(m.check, Kind::Writes);
+        assert_eq!(m.in_box, None);
+        assert_eq!(m.python, json!([r#"POST /repos/o/r/issues {"body":"y","title":"x"}"#]));
+        assert_eq!(m.rust, json!([]));
+        assert_eq!(
+            m.message,
+            r#"1 write differs: only in python: POST /repos/o/r/issues {"body":"y","title":"x"}"#
+        );
+
+        let m = compare_writes("", &logged("DELETE", "/repos/o/r/labels/bug", &Value::Null, false), &[]).unwrap();
+        assert_eq!(m.python, json!([]));
+        assert_eq!(m.rust, json!(["DELETE /repos/o/r/labels/bug"]));
+        assert_eq!(m.message, "1 write differs: only in rust: DELETE /repos/o/r/labels/bug");
+    }
+
+    #[test]
+    fn different_bodies_to_one_path_are_both_listed() {
+        let py = logged("PATCH", "/repos/o/r/issues/1", &json!({"state": "closed"}), false);
+        let rs = logged("PATCH", "/repos/o/r/issues/1", &json!({"state": "open"}), false);
+        let m = compare_writes(&py, &rs, &[]).unwrap();
+        assert_eq!(
+            m.message,
+            r#"2 writes differ: only in python: PATCH /repos/o/r/issues/1 {"state":"closed"}; only in rust: PATCH /repos/o/r/issues/1 {"state":"open"}"#
+        );
+    }
+
+    #[test]
+    fn a_missed_write_is_still_compared() {
+        let served = logged("POST", ISSUES, &json!({"title": "x"}), false);
+        let missed = logged("POST", ISSUES, &json!({"title": "x"}), true);
+        assert_eq!(compare_writes(&served, &missed, &[]), None);
+        let m = compare_writes("", &missed, &[]).unwrap();
+        assert_eq!(m.rust, json!([r#"POST /repos/o/r/issues {"title":"x"}"#]));
+    }
+
+    #[test]
+    fn duplicate_writes_collapse() {
+        let post = logged("POST", ISSUES, &json!({"title": "x"}), false);
+        let mut twice = post.replace("\"seq\":1", "\"seq\":2");
+        twice.insert_str(0, &post);
+        assert_eq!(compare_writes(&post, &twice, &[]), None);
+    }
+
+    #[test]
+    fn the_query_is_part_of_the_key() {
+        let with_query = |q: Value| {
+            let mut line: Value = serde_json::from_str(&logged("PUT", "/x", &Value::Null, false)).unwrap();
+            line["query"] = q;
+            format!("{line}\n")
+        };
+        let m = compare_writes(&with_query(json!({"a": "1"})), &with_query(json!({})), &[]).unwrap();
+        assert_eq!(m.python, json!(["PUT /x?a=1"]));
+        assert_eq!(m.rust, json!(["PUT /x"]));
+    }
+
+    #[test]
+    fn ignored_writes_match_by_method_and_path() {
+        let merge = logged(
+            "PUT",
+            "/repos/o/r/pulls/1/merge",
+            &json!({"merge_method": "squash"}),
+            false,
+        );
+        let ignore = ["PUT /repos/o/r/pulls/1/merge".to_owned()];
+        assert_eq!(compare_writes(&merge, "", &ignore), None);
+        assert!(compare_writes(&merge, "", &["POST /repos/o/r/pulls/1/merge".to_owned()]).is_some());
+        assert!(compare_writes(&merge, "", &["PUT /repos/o/r/pulls/2/merge".to_owned()]).is_some());
+    }
+
+    #[test]
+    fn long_bodies_are_cut() {
+        let text = "a".repeat(300);
+        let m = compare_writes(&logged("POST", ISSUES, &json!({ "body": text }), false), "", &[]).unwrap();
+        let line = m.python[0].as_str().unwrap();
+        let body = line.strip_prefix("POST /repos/o/r/issues ").unwrap();
+        assert_eq!(body.chars().count(), WRITE_BODY_CHARS + 1, "{line}");
+        assert!(body.starts_with(r#"{"body":"aaa"#) && body.ends_with("a…"), "{line}");
+        // Bodies that differ only past the cut still differ.
+        let other = format!("{}b", "a".repeat(299));
+        let m = compare_writes(
+            &logged("POST", ISSUES, &json!({ "body": text }), false),
+            &logged("POST", ISSUES, &json!({ "body": other }), false),
+            &[],
+        )
+        .unwrap();
+        assert_eq!(m.message.matches("…").count(), 2, "{}", m.message);
     }
 
     #[test]

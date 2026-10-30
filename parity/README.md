@@ -792,6 +792,7 @@ move = { at = [100, 1] }         # motion only: park the pointer
 capture = "after-select"
 checks = ["titles", "tabs", "headers", "rows", "cursor", "footer", "focus"]   # default: all of these
 ignore = { boxes = ["Details"] } # skip the listed checks inside boxes whose title contains this text
+# ignore = { writes = ["PUT /repos/o/r/pulls/1/merge"] }   # last capture only: leave a write out of `writes`
 
 [expect.main]                    # optional, checked against EACH app on its own (#93)
 pane_titles = ["", "[1] Repositories", "[2] Pull Requests (empty)"]
@@ -824,7 +825,8 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
   - `paste`: a string. It's sent in bracketed-paste mode (`ESC[200~ … ESC[201~`) if the app has enabled it, else
     verbatim.
   - `capture`: a name. It must be unique in the scenario and match `[a-z0-9-]+`. An implicit
-    `wait.stable_ms = capture_stable_ms` runs first. `checks` and `ignore` are allowed alongside it, and only there.
+    `wait.stable_ms = capture_stable_ms` runs first. `checks` and `ignore` are allowed alongside it, and only there;
+    `ignore.writes` only on the scenario's last capture.
   - `sleep_ms`: a number.
   - `resize = [cols, rows]`: resizes the PTY and the parser.
   - `click`, `wheel` and `move`: mouse steps, below.
@@ -1021,7 +1023,7 @@ Each capture in `captures` carries its structural check:
 - `check` is `pass`, `fail`, or `n/a` when there was nothing to check (no `[expect]` for the capture and no cross-app
   comparison, for example because only one app produced the capture).
 - `against` lists the apps the mismatches count against: an app whose `[expect]` failed, `rust` for any cross-app
-  mismatch, and `python` for drift. An app with a mismatch counts as failed in the result rules above, so a Python
+  mismatch (including [`writes`](#checks), the requests that change something, on the last capture), and `python` for drift. An app with a mismatch counts as failed in the result rules above, so a Python
   `[expect]` failure or drift always fails the run, and a Rust mismatch makes an ungated scenario `rust-not-ready`.
   `mismatches` counts drift too.
 
@@ -1190,7 +1192,8 @@ These rules double as the contract the Rust UI renders to, so that its screens a
 
 ### Checks
 
-`xtask/src/parity/check.rs` checks each capture in two ways and writes `<scenario>/<size>/<capture>.check.json`.
+`xtask/src/parity/check.rs` checks each capture in two ways, compares the two apps' writes once per size, and writes
+`<scenario>/<size>/<capture>.check.json`.
 A capture with nothing to check (`check: "n/a"` in `summary.json`) gets no `check.json`, so the report shows it as
 `not checked` rather than as having no mismatches.
 
@@ -1239,6 +1242,23 @@ the console gets one line per mismatch.
   app is reported once, under `titles`, and skipped by the other checks. Boxes whose title contains an `ignore.boxes`
   entry are skipped by every check but `titles`, and left out of the `focus` lists. Cross-app mismatches count against
   Rust.
+- **`writes`**, cross-app, once per size, when both apps left a `fake-gh.log` (Python's is its live log or its
+  reference's `requests.jsonl`), whether or not the runs passed. It isn't one of a capture's `checks`: it always runs.
+  A write is every log line whose method isn't `GET` (served, missed or errored alike; not `fake-ssh` lines), keyed by
+  method, path, query and body (with object keys sorted, since the order an app builds a JSON object in isn't part of
+  what it sent). Each app's writes are a set, so a write sent twice equals one sent once (a double submit is a
+  unit-test concern). When the sets differ, one mismatch goes on the scenario's last capture, in `cross`: `python`
+  and `rust` hold the writes found only in that app as `METHOD /path?query body` lines (the body as compact JSON, cut
+  at 200 characters with `…`), and the message counts them: `2 writes differ: only in python: POST /repos/o/r/issues
+  {"body":"y","title":"x"}; only in rust: POST /repos/o/r/issues {"title":"x"}`. Like any cross-app mismatch it
+  counts against Rust, and it shows as `cross writes` in `--ci` annotations and as `writes` in the report and
+  `summary.md`. Equal sets add nothing, so a last capture with nothing else to check stays `n/a`.
+
+  For an approved intentional difference, list the write on the last capture as
+  `ignore = { writes = ["PUT /repos/o/r/pulls/1/merge"] }`: an entry is an upper-case method other than `GET`, a space
+  and a path without a query, and drops every write in either app with that method and path. It's a parse error on
+  any other step. `ignore.writes` isn't part of the [capture key](#recorded-references): Python's run doesn't depend
+  on it, so changing it needs no re-record.
 
 ### Reading the report
 
@@ -1428,7 +1448,7 @@ Each input is a git object id from `git hash-object`, run in the repo with a cle
 
 | Input | What it hashes |
 | --- | --- |
-| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `git_remote_branches` (only when set), `key_delay_ms`, `capture_stable_ms`, the size, every step and, only when the scenario sets one, the seed: its name and its files as sorted `[<path relative to the seed dir>, <blob>]` pairs. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore`. |
+| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `git_remote_branches` (only when set), `key_delay_ms`, `capture_stable_ms`, the size, every step and, only when the scenario sets one, the seed: its name and its files as sorted `[<path relative to the seed dir>, <blob>]` pairs. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore.boxes` (not `ignore.writes`). |
 | `fixtures` | Every fixture in the scenario's sets whose request key (method, path, query, accept) equals a served entry in `requests.jsonl`, plus its `body_file`, as sorted `<set>/<relpath> <blob>` lines. For a `--paginate` request, the pages its `Link: rel="next"` headers lead to as well. |
 | `python_app` | `lazy_github/`, `pyproject.toml` and `uv.lock`. |
 | `harness` | `crates/fake-gh/src/`, `crates/fake-gh/Cargo.toml`, `xtask/src/parity/{env,runner,keys,grid}.rs`, `CAPTURE_VERSION` and the `vt100` and `portable-pty` versions in `Cargo.lock`. |
@@ -1444,7 +1464,7 @@ for example a new env var set in a file that isn't hashed.
 | Change | References invalidated |
 | --- | --- |
 | Merging `main` into `rust-main` with changes to `lazy_github/`, `pyproject.toml` or `uv.lock` | all |
-| A scenario's env, steps, `checks` or `ignore`, or the config file it uses | that scenario's |
+| A scenario's env, steps, `checks` or `ignore.boxes`, or the config file it uses | that scenario's |
 | A file in a scenario's seed (`parity/seeds/<name>/`), added, changed or removed | that scenario's (`scenario changed`) |
 | Adding or changing fixtures | those whose Python run requested a changed key |
 | `crates/fake-gh/src/`, `env.rs`, `runner.rs`, `keys.rs` or `grid.rs`, a pinned crate, or `CAPTURE_VERSION` | all |
@@ -1515,8 +1535,8 @@ check the Details box list it in `ignore.boxes` (`table-lazy-load`, `status-bar-
 re-record keeps the stored screen whichever form the run drew. The hidden terminal cursor's position varies too, but
 no check reads it and a re-record doesn't compare it, so it never rewrites a screen.
 
-Re-record a scenario, and commit `parity/references/`, whenever its env, steps, `checks` or `ignore` change. Flipping
-`gate`, editing `parity_rows` or editing `[expect]` needs no re-record.
+Re-record a scenario, and commit `parity/references/`, whenever its env, steps, `checks` or `ignore.boxes` change.
+Flipping `gate`, editing `parity_rows`, editing `[expect]` or editing `ignore.writes` needs no re-record.
 
 ### Testing the harness
 

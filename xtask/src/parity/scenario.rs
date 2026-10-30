@@ -164,6 +164,32 @@ pub struct Ignore {
     /// Skip every check but `titles` inside boxes whose title contains one of these.
     #[serde(default)]
     pub boxes: Vec<String>,
+    /// Leave writes with this `METHOD /path` out of the cross-app `writes` check. Only on the scenario's last
+    /// capture, where that check's mismatch goes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub writes: Vec<String>,
+}
+
+impl Ignore {
+    /// Whether `ignore.writes` covers a write of `method` to `path` (the path without its query).
+    pub fn covers_write(&self, method: &str, path: &str) -> bool {
+        self.writes
+            .iter()
+            .filter_map(|w| w.split_once(' '))
+            .any(|(m, p)| m.eq_ignore_ascii_case(method) && p == path)
+    }
+}
+
+/// Whether `entry` is an `ignore.writes` entry: an upper-case method other than `GET`, one space, and a path that
+/// starts with `/` and has no query or spaces.
+fn is_write_entry(entry: &str) -> bool {
+    entry.split_once(' ').is_some_and(|(method, path)| {
+        !method.is_empty()
+            && method != "GET"
+            && method.chars().all(|c| c.is_ascii_uppercase())
+            && path.starts_with('/')
+            && !path.contains(['?', ' '])
+    })
 }
 
 /// `[expect.<capture>]`: expectations checked against each app on its own (evaluated by #93).
@@ -644,18 +670,7 @@ impl Scenario {
 
         let env = parse_env(raw.env, &loc, roots)?;
 
-        let mut steps = Vec::with_capacity(raw.steps.len());
-        let mut captures = BTreeSet::new();
-        for step in raw.steps {
-            let start = step.span().start;
-            let step = parse_step(step.into_inner(), start, &loc, env.git_remote_branches.is_some())?;
-            if let Step::Capture(c) = &step
-                && !captures.insert(c.name.clone())
-            {
-                return Err(loc.at(start, format!("duplicate capture name {:?}", c.name)));
-            }
-            steps.push(step);
-        }
+        let (steps, captures) = parse_steps(raw.steps, &loc, env.git_remote_branches.is_some())?;
 
         let mut expect = BTreeMap::new();
         for (key, value) in raw.expect {
@@ -682,6 +697,39 @@ impl Scenario {
             expect,
         })
     }
+}
+
+/// The steps, and the capture names. Capture names must be unique, and only the last capture may set
+/// `ignore.writes`.
+fn parse_steps(
+    raw: Vec<Spanned<RawStep>>,
+    loc: &Locator<'_>,
+    has_remote: bool,
+) -> Result<(Vec<Step>, BTreeSet<String>), ScenarioError> {
+    let mut steps = Vec::with_capacity(raw.len());
+    let mut captures = BTreeSet::new();
+    // The start of each capture step with `ignore.writes`, and of the last capture step.
+    let mut ignoring_writes = Vec::new();
+    let mut last_capture = None;
+    for step in raw {
+        let start = step.span().start;
+        let step = parse_step(step.into_inner(), start, loc, has_remote)?;
+        if let Step::Capture(c) = &step {
+            if !captures.insert(c.name.clone()) {
+                return Err(loc.at(start, format!("duplicate capture name {:?}", c.name)));
+            }
+            if !c.ignore.writes.is_empty() {
+                ignoring_writes.push(start);
+            }
+            last_capture = Some(start);
+        }
+        steps.push(step);
+    }
+    // The `writes` mismatch goes on the last capture, so `ignore.writes` anywhere else would do nothing.
+    if let Some(&start) = ignoring_writes.iter().find(|&&s| Some(s) != last_capture) {
+        return Err(loc.at(start, "`ignore.writes` is only allowed on the scenario's last capture"));
+    }
+    Ok((steps, captures))
 }
 
 fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, ScenarioError> {
@@ -898,10 +946,17 @@ fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>, has_remote: bool) -
                 format!("capture name {:?} must match [a-z0-9-]+", name.get_ref()),
             ));
         }
+        let ignore = raw.ignore.unwrap_or_default();
+        if let Some(bad) = ignore.writes.iter().find(|w| !is_write_entry(w)) {
+            return Err(loc.at(
+                start,
+                format!("`ignore.writes` entry {bad:?} must be \"METHOD /path\", with a method other than GET"),
+            ));
+        }
         return Ok(Step::Capture(Capture {
             name: name.into_inner(),
             checks: raw.checks.unwrap_or_else(|| Check::ALL.to_vec()),
-            ignore: raw.ignore.unwrap_or_default(),
+            ignore,
         }));
     }
     if let Some(ms) = raw.sleep_ms {
@@ -1466,6 +1521,38 @@ move = { at = [100, 1] }
             2,
             "only allowed in a capture step",
         );
+    }
+
+    #[test]
+    fn ignore_writes_is_only_allowed_on_the_last_capture() {
+        let last = "version = 1\n[[step]]\ncapture = \"a\"\n[[step]]\ncapture = \"b\"\n\
+                    ignore = { writes = [\"PUT /repos/o/r/pulls/1/merge\"] }\n";
+        let s = parse(last).unwrap();
+        let Step::Capture(c) = &s.steps[1] else {
+            panic!("not a capture")
+        };
+        assert_eq!(c.ignore.writes, ["PUT /repos/o/r/pulls/1/merge"]);
+        assert!(c.ignore.covers_write("PUT", "/repos/o/r/pulls/1/merge"));
+        assert!(!c.ignore.covers_write("POST", "/repos/o/r/pulls/1/merge"));
+        assert!(!c.ignore.covers_write("PUT", "/repos/o/r/pulls/2/merge"));
+
+        assert_error(
+            "version = 1\n[[step]]\ncapture = \"a\"\nignore = { writes = [\"POST /x\"] }\n[[step]]\ncapture = \"b\"\n",
+            2,
+            "only allowed on the scenario's last capture",
+        );
+        assert_error(
+            "version = 1\n[[step]]\nsleep_ms = 1\nignore = { writes = [\"POST /x\"] }\n",
+            2,
+            "only allowed in a capture step",
+        );
+        for bad in ["GET /x", "post /x", "POST x", "POST /x?a=1", "POST"] {
+            assert_error(
+                &format!("version = 1\n[[step]]\ncapture = \"a\"\nignore = {{ writes = [\"{bad}\"] }}\n"),
+                2,
+                "must be \"METHOD /path\"",
+            );
+        }
     }
 
     #[test]

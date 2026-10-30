@@ -15,7 +15,7 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 
 use fake_gh::argv;
-use fake_gh::fixture::{Accept, LoggedRequestMatcher, QueryValue, RequestKey};
+use fake_gh::fixture::{Accept, LoggedRequestMatcher, Query, QueryValue, RequestKey};
 use fake_gh::log::{LogEntry, RequestLog};
 use fake_gh::output::Rendered;
 use fake_gh::store::{FixtureStore, LoadedFixture};
@@ -850,6 +850,22 @@ pub fn agree(scenario: &Scenario, theme: &ThemeColors, a: &Side, b: &Side) -> Ve
     out
 }
 
+/// A logged query as a URL suffix, `?k=v&k2=v2` in key order (a repeated key once per value), or `""` when empty.
+pub fn query_suffix(query: &Query) -> String {
+    let pairs: Vec<String> = query
+        .iter()
+        .flat_map(|(k, v)| match v {
+            QueryValue::One(v) => vec![format!("{k}={v}")],
+            QueryValue::Many(vs) => vs.iter().map(|v| format!("{k}={v}")).collect(),
+        })
+        .collect();
+    if pairs.is_empty() {
+        String::new()
+    } else {
+        format!("?{}", pairs.join("&"))
+    }
+}
+
 /// The served requests in a request log, each as `GET /path?k=v (json)`, or as its command (`auth status`) when it
 /// isn't an API request.
 pub fn served_keys(requests: &str) -> BTreeSet<String> {
@@ -858,22 +874,13 @@ pub fn served_keys(requests: &str) -> BTreeSet<String> {
         .iter()
         .filter(|e| e.is_served())
         .map(|e| match logged_key(e) {
-            Some(key) => {
-                let query: Vec<String> = key
-                    .query
-                    .iter()
-                    .flat_map(|(k, v)| match v {
-                        QueryValue::One(v) => vec![format!("{k}={v}")],
-                        QueryValue::Many(vs) => vs.iter().map(|v| format!("{k}={v}")).collect(),
-                    })
-                    .collect();
-                let query = if query.is_empty() {
-                    String::new()
-                } else {
-                    format!("?{}", query.join("&"))
-                };
-                format!("{} {}{query} ({})", key.method, key.path, key.accept)
-            }
+            Some(key) => format!(
+                "{} {}{} ({})",
+                key.method,
+                key.path,
+                query_suffix(&key.query),
+                key.accept
+            ),
             None => e.command.clone().unwrap_or_else(|| e.argv.join(" ")),
         })
         .collect()
@@ -1094,7 +1101,7 @@ enum KeyStep<'a> {
     Capture {
         name: &'a str,
         checks: &'a [Check],
-        ignore: &'a Ignore,
+        ignore: KeyIgnore<'a>,
     },
     SleepMs(u64),
     Resize(String),
@@ -1105,6 +1112,14 @@ enum KeyStep<'a> {
         count: u16,
     },
     Move(KeyTarget<'a>),
+}
+
+/// A capture's `ignore` in the key: only `boxes`, which recording uses. `writes` only filters the cross-app `writes`
+/// check, which Python's run doesn't depend on, so changing it leaves the reference fresh. Serializes as `Ignore` did
+/// before it had `writes`, so the key is unchanged.
+#[derive(Serialize)]
+struct KeyIgnore<'a> {
+    boxes: &'a [String],
 }
 
 /// A mouse target as written. Without `timeout_ms`, as in [`KeyWait`]; the resolved cell isn't known until the run.
@@ -1165,7 +1180,7 @@ pub fn capture_key(repo: &Path, scenario: &Scenario, size: Size, roots: &Roots) 
             Step::Capture(c) => KeyStep::Capture {
                 name: &c.name,
                 checks: &c.checks,
-                ignore: &c.ignore,
+                ignore: KeyIgnore { boxes: &c.ignore.boxes },
             },
             Step::Sleep(d) => KeyStep::SleepMs(millis(*d)),
             Step::Resize(s) => KeyStep::Resize(s.to_string()),
@@ -2507,6 +2522,7 @@ c fg=#ddedf9 bg=#0178d4 bold
     fn a_timestamp_inside_an_ignored_box_counts_as_identical() {
         let ignore = Ignore {
             boxes: vec!["Command Log".into()],
+            ..Ignore::default()
         };
         let theme = ThemeColors::default();
         let (a, b) = (logged("", ""), logged("04:08:08", "04:09:10"));
@@ -2521,6 +2537,7 @@ c fg=#ddedf9 bg=#0178d4 bold
     fn a_style_change_outside_an_ignored_box_counts_as_different() {
         let ignore = Ignore {
             boxes: vec!["Command Log".into()],
+            ..Ignore::default()
         };
         let theme = ThemeColors::default();
         let a = logged("", "");

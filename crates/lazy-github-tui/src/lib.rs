@@ -8,6 +8,7 @@
 pub mod action;
 pub mod app;
 pub mod backend;
+pub mod bug_report;
 pub mod clock;
 pub mod component;
 pub mod components;

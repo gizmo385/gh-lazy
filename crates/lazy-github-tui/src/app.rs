@@ -15,6 +15,7 @@ use ratatui::widgets::{Block, Clear};
 use tokio::time::Instant;
 
 use crate::action::Action;
+use crate::bug_report::BugReport;
 use crate::clock::Clock;
 use crate::component::{
     BindingState, ChainLink, Component, Cx, GhVersion, LocalRepo, Outbox, Owner, RenderCx, ScreenKind, Shared,
@@ -71,6 +72,13 @@ enum MouseCapture {
     Dialog(usize),
 }
 
+/// The `GhVersion` request in flight, which a bug report waits on too while one runs.
+struct GhVersionRequest {
+    id: RequestId,
+    /// Whether a Debug Info opens when gh answers.
+    debug_info: bool,
+}
+
 /// The whole UI. One value owns all state; [`App::update`] is synchronous and does no I/O.
 pub struct App {
     base: BaseScreen,
@@ -97,8 +105,10 @@ pub struct App {
     local_repo_request: Option<RequestId>,
     /// The `CurrentBranch` request asked with it, until git answers it.
     current_branch_request: Option<RequestId>,
-    /// The `GhVersion` request a Debug Info is waiting on, until gh answers it.
-    gh_version_request: Option<RequestId>,
+    /// The `GhVersion` request a Debug Info or a bug report is waiting on, until gh answers it.
+    gh_version_request: Option<GhVersionRequest>,
+    /// The palette's "Open Bug Report", while it runs.
+    bug_report: BugReport,
     /// The unread count in the status box.
     notifications: NotificationPoll,
     should_quit: bool,
@@ -125,6 +135,7 @@ impl App {
             local_repo_request: None,
             current_branch_request: None,
             gh_version_request: None,
+            bug_report: BugReport::default(),
             notifications: NotificationPoll::default(),
             should_quit: false,
         }
@@ -562,6 +573,7 @@ impl App {
             Action::OpenSettings => self.open_settings(out),
             Action::SettingsClosed(SettingsOutcome::Saved(config)) => self.apply_settings(*config, out),
             Action::ShowDebugInfo => self.show_debug_info(out),
+            Action::OpenBugReport => self.open_bug_report(out),
             Action::Toggle(toggle) => self.toggle(toggle, out),
             Action::Minimize => self.minimize(),
             // Python's `action_open_help`: only this closes the panel, and it doesn't move focus.
@@ -748,26 +760,45 @@ impl App {
     /// session it asks gh for its version and opens once gh answers; a second "Debug Info" meanwhile doesn't ask
     /// again.
     fn show_debug_info(&mut self, out: &mut Outbox) {
-        match &self.shared.gh_version {
-            GhVersion::Known(version) => {
-                // The terminal was read at startup; nothing here reads the environment.
-                let env = DebugEnv {
-                    terminal: self.shared.options.terminal.to_owned(),
-                    ..DebugEnv::detect(|_| None, version.clone())
-                };
-                let dialog = DebugInfoDialog::new(&env, &self.shared.config);
-                Cx::new(&mut self.shared, out).open_dialog(dialog, |()| Action::Consumed);
-            }
-            GhVersion::Unknown if self.gh_version_request.is_none() => {
-                self.gh_version_request = Some(Cx::new(&mut self.shared, out).request(GithubRequest::GhVersion));
-            }
-            GhVersion::Unknown => {}
+        if let Some(env) = self.debug_env() {
+            let dialog = DebugInfoDialog::new(&env, &self.shared.config);
+            Cx::new(&mut self.shared, out).open_dialog(dialog, |()| Action::Consumed);
+        } else {
+            self.ask_gh_version(out).debug_info = true;
         }
     }
 
+    /// The palette's "Open Bug Report": asks for LazyGithub's repo, and for gh's version the first time in a session
+    /// (sharing a request a Debug Info is waiting on). New issue opens once both have answered.
+    fn open_bug_report(&mut self, out: &mut Outbox) {
+        self.bug_report.start(&mut Cx::new(&mut self.shared, out));
+        if self.shared.gh_version == GhVersion::Unknown {
+            self.ask_gh_version(out);
+        }
+    }
+
+    /// Asks gh for its version, unless a request is in flight already.
+    fn ask_gh_version(&mut self, out: &mut Outbox) -> &mut GhVersionRequest {
+        self.gh_version_request.get_or_insert_with(|| GhVersionRequest {
+            id: Cx::new(&mut self.shared, out).request(GithubRequest::GhVersion),
+            debug_info: false,
+        })
+    }
+
+    /// What the debug info shows about this build and machine, once gh has said its version.
+    fn debug_env(&self) -> Option<DebugEnv> {
+        let GhVersion::Known(version) = &self.shared.gh_version else {
+            return None;
+        };
+        // The terminal was read at startup; nothing here reads the environment.
+        Some(DebugEnv {
+            terminal: self.shared.options.terminal.to_owned(),
+            ..DebugEnv::detect(|_| None, version.clone())
+        })
+    }
+
     /// LazyGithub's own commands as they apply now, in `MainScreenCommandProvider.commands` order. They come before
-    /// the system commands, which keeps them first among equal scores (Py bug B86's answer). "Open Bug Report"
-    /// (#195) goes after "Debug Info", ahead of "Refresh notifications".
+    /// the system commands, which keeps them first among equal scores (Py bug B86's answer).
     fn app_commands(&self) -> Vec<PaletteCommand> {
         let command = |name, help, run| PaletteCommand {
             name,
@@ -799,6 +830,7 @@ impl App {
                 PaletteRun::ChangeSettings,
             ),
             command("Debug Info", "View Debug Information", PaletteRun::DebugInfo),
+            command("Open Bug Report", "Open Bug Report", PaletteRun::OpenBugReport),
         ];
         if self.shared.config.notifications.enabled {
             commands.push(command(
@@ -956,15 +988,25 @@ impl App {
 
     /// Hands a response to the screen waiting for it.
     fn route_response(&mut self, id: RequestId, response: GithubResponse, out: &mut Outbox) {
-        if self.gh_version_request == Some(id) {
-            self.gh_version_request = None;
+        if let Some(request) = self.gh_version_request.take_if(|request| request.id == id) {
             if let GithubResponse::GhVersion(result) = response {
                 let version = result
                     .inspect_err(|error| tracing::warn!("Couldn't read gh's version: {error}"))
                     .ok();
                 self.shared.gh_version = GhVersion::Known(version);
-                self.show_debug_info(out);
+                if request.debug_info {
+                    self.show_debug_info(out);
+                }
+                if let Some(env) = self.debug_env() {
+                    self.bug_report.gh_known(&env, &mut Cx::new(&mut self.shared, out));
+                }
             }
+            return;
+        }
+        if self.bug_report.waits_for(id) {
+            let env = self.debug_env();
+            self.bug_report
+                .on_repo(response, env, &mut Cx::new(&mut self.shared, out));
             return;
         }
         // Screens and panes that make other requests claim their responses here by id.

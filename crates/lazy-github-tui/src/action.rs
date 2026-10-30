@@ -58,6 +58,9 @@ pub enum Action {
     SettingsClosed(SettingsOutcome),
     /// The palette's "Debug Info": open the Debug Info modal, once gh has said its version the first time.
     ShowDebugInfo,
+    /// The palette's "Open Bug Report": select gizmo385/gh-lazy, then open New issue there with the bug-report
+    /// template.
+    OpenBugReport,
     /// A palette "Toggle …" command: show or hide a section or the command log on the main screen. `App` applies it,
     /// since hiding the maximized section also restores the layout (Py bug B88's answer).
     Toggle(Toggle),

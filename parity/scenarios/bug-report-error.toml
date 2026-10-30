@@ -1,6 +1,6 @@
 version = 1
 description = "Open Bug Report when gizmo385/gh-lazy can't be loaded: the error toast, no repo selected and no New issue modal"
-gate = false
+gate = true
 parity_rows = [
     "command-palette.open-bug-report",
     "toasts.bug-report-error",

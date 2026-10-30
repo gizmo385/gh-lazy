@@ -85,6 +85,8 @@ pub enum PaletteRun {
     Toggle(Toggle),
     /// "Debug Info": open the Debug Info modal.
     DebugInfo,
+    /// "Open Bug Report": load gizmo385/gh-lazy and open New issue there with the bug-report template.
+    OpenBugReport,
     /// "Refresh notifications": the poll's refresh, now.
     RefreshNotifications,
     /// "Keys": open the help panel, or close it, as `?` does.
@@ -109,6 +111,7 @@ impl PaletteRun {
         match self {
             PaletteRun::Toggle(toggle) => Action::Toggle(toggle),
             PaletteRun::DebugInfo => Action::ShowDebugInfo,
+            PaletteRun::OpenBugReport => Action::OpenBugReport,
             PaletteRun::RefreshNotifications => Action::RefreshNotifications,
             PaletteRun::ToggleHelp => Action::ToggleHelp,
             PaletteRun::Maximize => Action::Maximize { toast: false },

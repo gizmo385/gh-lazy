@@ -2,7 +2,7 @@ version = 1
 description = "Open Bug Report (command palette): gizmo385/gh-lazy becomes the current repo and loads, and New issue opens with the bug-report template and the debug info in its description; then cancelled"
 # The template's library lines differ on purpose (decision debug-info-versions), so [expect] checks only the lines
 # both apps write. Captures ignore the Details box, whose tab underline Python sometimes draws zero-width (#209).
-gate = false
+gate = true
 parity_rows = [
     "command-palette.open-bug-report",
     "modals.debug-bug-report",

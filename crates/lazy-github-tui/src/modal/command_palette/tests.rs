@@ -90,13 +90,14 @@ fn many() -> Vec<PaletteCommand> {
 }
 
 /// LazyGithub's commands with notifications off, as the opening list ends with them.
-const APP_COMMANDS: [&str; 6] = [
+const APP_COMMANDS: [&str; 7] = [
     "Toggle Command Log",
     "Toggle Workflows",
     "Toggle Issues",
     "Toggle Pull Requests",
     "Change Settings",
     "Debug Info",
+    "Open Bug Report",
 ];
 
 /// The opening list: `system` sorted by name, then [`APP_COMMANDS`] (Py bug B87's answer).
@@ -196,6 +197,7 @@ fn lazygithubs_commands_are_in_their_order_before_the_system_ones() {
             ("Toggle Pull Requests", CommandSource::App),
             ("Change Settings", CommandSource::App),
             ("Debug Info", CommandSource::App),
+            ("Open Bug Report", CommandSource::App),
             ("Theme", CommandSource::System),
             ("Quit", CommandSource::System),
             ("Keys", CommandSource::System),
@@ -255,13 +257,14 @@ fn refresh_notifications_is_listed_only_while_notifications_are_on() {
     let mut app = TestApp::new(config);
     futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once");
     app.press(&["ctrl+p"]);
-    // Last among LazyGithub's, after the system commands in the opening list, with "Change Settings" and
-    // "Debug Info" right before.
+    // Last among LazyGithub's, after the system commands in the opening list, with "Change Settings", "Debug Info"
+    // and "Open Bug Report" right before.
     assert!(
         hits(&app).ends_with(&[
             "Toggle Pull Requests",
             "Change Settings",
             "Debug Info",
+            "Open Bug Report",
             "Refresh notifications"
         ]),
         "{:?}",
@@ -442,10 +445,10 @@ fn up_and_down_wrap() {
     let mut app = opened();
     app.press(&["down"]);
     assert_eq!(highlighted(&app), Some("Maximize"));
-    app.press(&["down"; 9]);
+    app.press(&["down"; 10]);
     assert_eq!(highlighted(&app), Some("Keys"));
     app.press(&["up"]);
-    assert_eq!(highlighted(&app), Some("Debug Info"));
+    assert_eq!(highlighted(&app), Some("Open Bug Report"));
 }
 
 #[test]
@@ -591,7 +594,7 @@ fn a_click_on_a_hit_runs_it() {
 #[test]
 fn a_click_outside_the_band_closes_the_palette() {
     // The dimmed screen below the band, the status row above it, and the footer row.
-    for (col, row) in [(40, 30), (5, 1), (3, 47)] {
+    for (col, row) in [(40, 32), (5, 1), (3, 47)] {
         let mut app = opened();
         app.render(160, 48);
         app.click(col, row);

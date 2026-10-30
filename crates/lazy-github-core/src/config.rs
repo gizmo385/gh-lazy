@@ -5,6 +5,7 @@
 //!
 //! There is no global instance. The app owns one [`Config`], changes it in place and calls [`Config::save`].
 
+pub mod doctor;
 mod lax;
 pub mod settings;
 
@@ -92,7 +93,10 @@ pub enum ConfigError {
         message: String,
     },
     /// The config file is valid JSON but a value has the wrong type or isn't allowed.
-    #[error("{}: `{field}`: {message}. Fix the value or run `lazy-github clear-config`.", path.display())]
+    #[error(
+        "{}: `{field}`: {message}. Fix the value or run `lazy-github check-config --fix`.",
+        path.display()
+    )]
     Invalid {
         /// The config file.
         path: PathBuf,
@@ -554,80 +558,30 @@ impl Config {
     }
 
     fn from_json(text: &str, path: &Path) -> Result<Self, ConfigError> {
+        Self::deserialize_json(text).map_err(|(field, err)| load_error(path, &field, &err))
+    }
+
+    /// Deserializes `text`, or says where it failed (empty for the whole file or a syntax error) and why.
+    fn deserialize_json(text: &str) -> Result<Self, (Vec<PathSegment>, serde_json::Error)> {
         let mut deserializer = serde_json::Deserializer::from_str(text);
-        let to_error = |field: String, inner: &serde_json::Error| {
-            let message = strip_position(inner);
-            if inner.is_data() {
-                ConfigError::Invalid {
-                    path: path.to_owned(),
-                    field,
-                    message,
-                }
-            } else {
-                ConfigError::Syntax {
-                    path: path.to_owned(),
-                    line: inner.line(),
-                    column: inner.column(),
-                    message,
-                }
-            }
-        };
         let config = serde_path_to_error::deserialize(&mut deserializer).map_err(|err| {
-            let field = field_path(err.path());
-            to_error(field, err.inner())
+            let field = err.path().iter().map(PathSegment::from).collect();
+            (field, err.into_inner())
         })?;
         // Rejects trailing content after the object, as `json.loads` does.
-        deserializer.end().map_err(|err| to_error(String::new(), &err))?;
+        deserializer.end().map_err(|err| (Vec::new(), err))?;
         Ok(config)
     }
 
     /// Writes the config atomically, creating the config folder if it's missing.
     pub fn save(&self, paths: &ConfigPaths) -> Result<(), ConfigError> {
-        std::fs::create_dir_all(&paths.dir).map_err(|source| ConfigError::Write {
-            path: paths.dir.clone(),
-            source,
-        })?;
-
-        // Write through a symlinked config.json (dotfiles managers), as Python's in-place write does: the temp file
-        // sits next to the real target and the rename replaces the target, not the link. `canonicalize` fails when
-        // the file doesn't exist yet, which is the first save.
-        let target = std::fs::canonicalize(&paths.file).unwrap_or_else(|_| paths.file.clone());
-        let mut tmp_name = target.file_name().unwrap_or_default().to_owned();
-        tmp_name.push(".tmp");
-        let tmp = target.with_file_name(tmp_name);
-
-        let write = || -> std::io::Result<()> {
-            let mut file = std::fs::File::create(&tmp)?;
-            file.write_all(self.to_json_pretty().as_bytes())?;
-            // Keep the mode of an existing file (say, `chmod 600`), as an in-place write would.
-            if let Ok(metadata) = std::fs::metadata(&target) {
-                file.set_permissions(metadata.permissions())?;
-            }
-            file.sync_all()?;
-            drop(file);
-            std::fs::rename(&tmp, &target)
-        };
-        write().map_err(|source| {
-            // Best effort: the original error is the one worth reporting.
-            let _ = std::fs::remove_file(&tmp);
-            ConfigError::Write {
-                path: paths.file.clone(),
-                source,
-            }
-        })
+        write_atomically(paths, &self.to_json_pretty())
     }
 
     /// The exact text [`Self::save`] writes: pydantic's `model_dump_json(indent=4)` format, with 4-space
     /// indentation, non-ASCII unescaped and no trailing newline.
     pub fn to_json_pretty(&self) -> String {
-        let mut out = Vec::new();
-        let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
-        let mut serializer = serde_json::Serializer::with_formatter(&mut out, formatter);
-        // Infallible: every key is a string and every value (paths included, see `lax::serialize_path`) serializes
-        // without error into a `Vec`.
-        self.serialize(&mut serializer).expect("config serializes to JSON");
-        // Infallible: serde_json only writes UTF-8.
-        String::from_utf8(out).expect("serde_json writes UTF-8")
+        to_json_pretty(self)
     }
 
     /// Fills the defaults that depend on the config folder.
@@ -641,21 +595,108 @@ impl Config {
     }
 }
 
-/// The path of a bad value as pydantic writes its `loc`: every segment joined with `.`, list indices included
-/// (`repositories.favorites.0`, where `serde_path_to_error` writes `favorites[0]`).
-fn field_path(path: &serde_path_to_error::Path) -> String {
-    use serde_path_to_error::Segment;
+/// `contents` written atomically to the config file, creating the config folder if it's missing.
+fn write_atomically(paths: &ConfigPaths, contents: &str) -> Result<(), ConfigError> {
+    std::fs::create_dir_all(&paths.dir).map_err(|source| ConfigError::Write {
+        path: paths.dir.clone(),
+        source,
+    })?;
 
-    if path.iter().next().is_none() {
-        // The whole file, which `serde_path_to_error` shows as `.`.
-        return path.to_string();
+    // Write through a symlinked config.json (dotfiles managers), as Python's in-place write does: the temp file
+    // sits next to the real target and the rename replaces the target, not the link. `canonicalize` fails when
+    // the file doesn't exist yet, which is the first save.
+    let target = std::fs::canonicalize(&paths.file).unwrap_or_else(|_| paths.file.clone());
+    let mut tmp_name = target.file_name().unwrap_or_default().to_owned();
+    tmp_name.push(".tmp");
+    let tmp = target.with_file_name(tmp_name);
+
+    let write = || -> std::io::Result<()> {
+        let mut file = std::fs::File::create(&tmp)?;
+        file.write_all(contents.as_bytes())?;
+        // Keep the mode of an existing file (say, `chmod 600`), as an in-place write would.
+        if let Ok(metadata) = std::fs::metadata(&target) {
+            file.set_permissions(metadata.permissions())?;
+        }
+        file.sync_all()?;
+        drop(file);
+        std::fs::rename(&tmp, &target)
+    };
+    write().map_err(|source| {
+        // Best effort: the original error is the one worth reporting.
+        let _ = std::fs::remove_file(&tmp);
+        ConfigError::Write {
+            path: paths.file.clone(),
+            source,
+        }
+    })
+}
+
+/// pydantic's `model_dump_json(indent=4)` format: 4-space indentation, non-ASCII unescaped, no trailing newline.
+fn to_json_pretty(value: &impl Serialize) -> String {
+    let mut out = Vec::new();
+    let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
+    let mut serializer = serde_json::Serializer::with_formatter(&mut out, formatter);
+    // Infallible: every key is a string and every value (paths included, see `lax::serialize_path`) serializes
+    // without error into a `Vec`.
+    value.serialize(&mut serializer).expect("config serializes to JSON");
+    // Infallible: serde_json only writes UTF-8.
+    String::from_utf8(out).expect("serde_json writes UTF-8")
+}
+
+/// The error for a config that failed to deserialize at `field` (see [`Config::deserialize_json`]).
+fn load_error(path: &Path, field: &[PathSegment], err: &serde_json::Error) -> ConfigError {
+    let message = strip_position(err);
+    if err.is_data() {
+        ConfigError::Invalid {
+            path: path.to_owned(),
+            field: field_path(field),
+            message,
+        }
+    } else {
+        ConfigError::Syntax {
+            path: path.to_owned(),
+            line: err.line(),
+            column: err.column(),
+            message,
+        }
+    }
+}
+
+/// One step of the path to a value in the file.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum PathSegment {
+    /// An object key.
+    Key(String),
+    /// A list index.
+    Index(usize),
+    /// A step `serde_path_to_error` couldn't name.
+    Unknown,
+}
+
+impl From<&serde_path_to_error::Segment> for PathSegment {
+    fn from(segment: &serde_path_to_error::Segment) -> Self {
+        use serde_path_to_error::Segment;
+
+        match segment {
+            Segment::Seq { index } => Self::Index(*index),
+            Segment::Map { key } | Segment::Enum { variant: key } => Self::Key(key.clone()),
+            Segment::Unknown => Self::Unknown,
+        }
+    }
+}
+
+/// The path of a bad value as pydantic writes its `loc`: every segment joined with `.`, list indices included
+/// (`repositories.favorites.0`, where `serde_path_to_error` writes `favorites[0]`). The whole file is `.`.
+fn field_path(path: &[PathSegment]) -> String {
+    if path.is_empty() {
+        return ".".to_owned();
     }
     let segments: Vec<String> = path
         .iter()
         .map(|segment| match segment {
-            Segment::Seq { index } => index.to_string(),
-            Segment::Map { key } | Segment::Enum { variant: key } => key.clone(),
-            Segment::Unknown => "?".to_owned(),
+            PathSegment::Key(key) => key.clone(),
+            PathSegment::Index(index) => index.to_string(),
+            PathSegment::Unknown => "?".to_owned(),
         })
         .collect();
     segments.join(".")

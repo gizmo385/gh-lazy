@@ -610,6 +610,221 @@ fn debug_shows_unknown_keys() {
     );
 }
 
+/// `check-config`'s example: two problems in two sections and an unknown key.
+const BROKEN_CONFIG: &str = r#"{
+    "mystery": 1,
+    "issues": {"state_filter": "bogus", "owner_filter": "mine"},
+    "appearance": {"theme": ["nord"], "show_issues": "yes"}
+}"#;
+
+const BROKEN_CONFIG_PROMPTS: &str = r#"Reset issues.state_filter to its default ("all")? [y/N]: Reset appearance.theme to its default ("textual-dark")? [y/N]: "#;
+
+fn broken_config_report(file: &Path) -> String {
+    let file = file.display();
+    format!(
+        "{file}: 2 problems\n  issues.state_filter: found \"bogus\", expected one of \"all\", \"open\", \"closed\"\n  \
+         appearance.theme: found [\"nord\"], expected a theme name\n{file}: unknown key `mystery` (kept)\n"
+    )
+}
+
+fn backup(home: &TempHome) -> PathBuf {
+    home.config_dir().join("config.json.bak")
+}
+
+#[test]
+fn check_config_lists_every_problem_and_exits_1() {
+    let home = TempHome::new("check-report");
+    home.write_config(BROKEN_CONFIG);
+    let output = home.run(&["check-config"]);
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(text(&output.stdout), broken_config_report(&home.config_file()));
+    assert_eq!(text(&output.stderr), "");
+    assert_eq!(std::fs::read_to_string(home.config_file()).unwrap(), BROKEN_CONFIG);
+    assert!(!backup(&home).exists());
+}
+
+#[test]
+fn check_config_without_problems_exits_0() {
+    let home = TempHome::new("check-ok");
+    home.write_config(r#"{"issues": {"state_filter": "open", "later": true}}"#);
+    let output = home.run(&["check-config"]);
+    assert_eq!(output.status.code(), Some(0));
+    let file = home.config_file();
+    assert_eq!(
+        text(&output.stdout),
+        format!(
+            "{0}: no problems\n{0}: unknown key `issues.later` (kept)\n",
+            file.display()
+        )
+    );
+    assert_eq!(text(&output.stderr), "");
+}
+
+#[test]
+fn check_config_without_a_file_uses_the_defaults_and_creates_nothing() {
+    let home = TempHome::new("check-missing");
+    for args in [
+        &["check-config"][..],
+        &["check-config", "--fix"],
+        &["check-config", "--fix", "--no-confirm"],
+    ] {
+        let output = home.run(args);
+        assert_eq!(output.status.code(), Some(0), "{args:?}");
+        assert_eq!(
+            text(&output.stdout),
+            format!(
+                "{} doesn't exist; LazyGithub uses the defaults\n",
+                home.config_file().display()
+            )
+        );
+        assert_eq!(text(&output.stderr), "");
+        assert_eq!(home.contents(), Vec::<PathBuf>::new(), "{args:?}");
+    }
+}
+
+#[test]
+fn check_config_on_invalid_json_points_at_clear_config() {
+    let home = TempHome::new("check-syntax");
+    home.write_config(r#"{"issues": "#);
+    for args in [&["check-config"][..], &["check-config", "--fix", "--no-confirm"]] {
+        let output = home.run(args);
+        assert_eq!(output.status.code(), Some(1), "{args:?}");
+        assert_eq!(text(&output.stdout), "");
+        let stderr = text(&output.stderr);
+        let lines: Vec<&str> = stderr.lines().collect();
+        assert_eq!(lines.len(), 2, "{stderr:?}");
+        assert!(lines[0].starts_with("Error: "), "{stderr:?}");
+        assert!(lines[0].contains("is not valid JSON (line 1, column 11)"), "{stderr:?}");
+        assert_eq!(lines[1], "Run lazy-github clear-config to start over.");
+        assert!(!backup(&home).exists());
+    }
+}
+
+#[test]
+fn check_config_fix_resets_the_fields_answered_yes_after_a_backup() {
+    let home = TempHome::new("check-fix-yes");
+    home.write_config(BROKEN_CONFIG);
+    let output = home
+        .command(&["check-config", "--fix"])
+        .write_stdin("y\nyes\n")
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    assert_eq!(
+        text(&output.stdout),
+        format!(
+            "{}{BROKEN_CONFIG_PROMPTS}Saved a backup in {}\nReset 2 fields\n",
+            broken_config_report(&home.config_file()),
+            backup(&home).display()
+        )
+    );
+    assert_eq!(text(&output.stderr), "");
+    assert_eq!(std::fs::read_to_string(backup(&home)).unwrap(), BROKEN_CONFIG);
+
+    // The repaired file is what the app itself saves, the unknown key and the other values kept.
+    let saved: Value = serde_json::from_str(&std::fs::read_to_string(home.config_file()).unwrap()).unwrap();
+    assert_eq!(saved["issues"]["state_filter"], "all");
+    assert_eq!(saved["issues"]["owner_filter"], "mine");
+    assert_eq!(saved["appearance"]["theme"], "textual-dark");
+    assert_eq!(saved["appearance"]["show_issues"], true);
+    assert_eq!(saved["mystery"], 1);
+    let output = home.run(&["check-config"]);
+    assert_eq!(output.status.code(), Some(0));
+}
+
+#[test]
+fn check_config_fix_answered_no_changes_nothing() {
+    let home = TempHome::new("check-fix-no");
+    home.write_config(BROKEN_CONFIG);
+    let output = home
+        .command(&["check-config", "--fix"])
+        .write_stdin("n\n\n")
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(
+        text(&output.stdout),
+        format!("{}{BROKEN_CONFIG_PROMPTS}", broken_config_report(&home.config_file()))
+    );
+    assert_eq!(text(&output.stderr), "");
+    assert_eq!(std::fs::read_to_string(home.config_file()).unwrap(), BROKEN_CONFIG);
+    assert!(!backup(&home).exists());
+}
+
+#[test]
+fn check_config_fix_keeping_one_field_repairs_the_other_and_exits_1() {
+    let home = TempHome::new("check-fix-some");
+    home.write_config(BROKEN_CONFIG);
+    std::fs::write(backup(&home), "an older backup").unwrap();
+    let output = home
+        .command(&["check-config", "--fix"])
+        .write_stdin("n\ny\n")
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    assert!(
+        text(&output.stdout).ends_with("Reset 1 field\n"),
+        "{}",
+        text(&output.stdout)
+    );
+    // The older backup is replaced.
+    assert_eq!(std::fs::read_to_string(backup(&home)).unwrap(), BROKEN_CONFIG);
+    let output = home.run(&["check-config"]);
+    assert_eq!(output.status.code(), Some(1));
+    let file = home.config_file();
+    assert_eq!(
+        text(&output.stdout),
+        format!(
+            "{0}: 1 problem\n  issues.state_filter: found \"bogus\", expected one of \"all\", \"open\", \"closed\"\n\
+             {0}: unknown key `mystery` (kept)\n",
+            file.display()
+        )
+    );
+}
+
+#[test]
+fn check_config_fix_no_confirm_resets_everything() {
+    let home = TempHome::new("check-fix-all");
+    home.write_config(BROKEN_CONFIG);
+    let output = home.run(&["check-config", "--fix", "--no-confirm"]);
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    assert_eq!(
+        text(&output.stdout),
+        format!(
+            "{}Saved a backup in {}\nReset 2 fields\n",
+            broken_config_report(&home.config_file()),
+            backup(&home).display()
+        )
+    );
+    assert_eq!(std::fs::read_to_string(backup(&home)).unwrap(), BROKEN_CONFIG);
+    let output = home.run(&["check-config"]);
+    assert_eq!(output.status.code(), Some(0));
+    assert_eq!(
+        home.contents(),
+        paths(&[
+            ".config",
+            ".config/lazy-github",
+            ".config/lazy-github/config.json",
+            ".config/lazy-github/config.json.bak"
+        ])
+    );
+}
+
+#[test]
+fn check_config_fix_stops_at_end_of_input() {
+    let home = TempHome::new("check-fix-eof");
+    home.write_config(BROKEN_CONFIG);
+    let output = home
+        .command(&["check-config", "--fix"])
+        .write_stdin("y\n")
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(text(&output.stderr), "Aborted!\n");
+    assert_eq!(std::fs::read_to_string(home.config_file()).unwrap(), BROKEN_CONFIG);
+    assert!(!backup(&home).exists());
+}
+
 /// Regenerates `python-cli.json` with the Python app and checks the committed copy matches.
 #[test]
 #[ignore = "needs uv and the Python app"]

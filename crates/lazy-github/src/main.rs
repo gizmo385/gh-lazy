@@ -31,6 +31,8 @@ struct Cli {
 // docstrings, except `clear-auth`'s, which does something else here.
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Check the config file for values that stop it loading
+    CheckConfig(CheckConfigArgs),
     /// Explains how to log out: LazyGithub uses the GitHub CLI's login
     ClearAuth,
     /// Reset the lazy-github cache
@@ -47,6 +49,17 @@ enum Command {
     Version,
 }
 
+/// The options of `check-config`.
+#[derive(Debug, Args)]
+struct CheckConfigArgs {
+    /// Offer to reset each invalid value to its default, after saving a backup
+    #[arg(long)]
+    fix: bool,
+    /// With --fix, reset every invalid value without asking
+    #[arg(long, requires = "fix")]
+    no_confirm: bool,
+}
+
 /// The option of the subcommands that ask before deleting.
 #[derive(Debug, Args)]
 struct ConfirmArgs {
@@ -60,6 +73,23 @@ fn main() -> ExitCode {
     let cli = Cli::try_parse().unwrap_or_else(|err| err.exit());
     let (stdout, stderr) = (&mut io::stdout(), &mut io::stderr());
     match cli.command.unwrap_or(Command::Run) {
+        Command::CheckConfig(args) if args.fix && !args.no_confirm => abort_on_ctrl_c(move || {
+            let stdin = &mut io::stdin().lock();
+            cli::check_config(
+                ConfigPaths::discover(),
+                true,
+                Some(stdin),
+                &mut io::stdout(),
+                &mut io::stderr(),
+            )
+        }),
+        Command::CheckConfig(args) => cli::check_config(
+            ConfigPaths::discover(),
+            args.fix,
+            None::<&mut io::StdinLock>,
+            stdout,
+            stderr,
+        ),
         Command::ClearAuth => cli::clear_auth(ConfigPaths::discover(), stdout, stderr),
         Command::ClearCache(args) => abort_on_ctrl_c(move || {
             let stdin = &mut io::stdin().lock();
@@ -257,6 +287,16 @@ mod tests {
         let err = Cli::try_parse_from(["lazy-github", "run", "--auth-backend", "GITHUB_CLI"]).unwrap_err();
         assert_eq!(err.kind(), ErrorKind::UnknownArgument);
         assert_eq!(err.exit_code(), 2);
+    }
+
+    #[test]
+    fn check_config_no_confirm_needs_fix() {
+        let err = Cli::try_parse_from(["lazy-github", "check-config", "--no-confirm"]).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::MissingRequiredArgument);
+        assert!(matches!(
+            Cli::try_parse_from(["lazy-github", "check-config", "--fix", "--no-confirm"]).unwrap().command,
+            Some(Command::CheckConfig(args)) if args.fix && args.no_confirm
+        ));
     }
 
     #[test]

@@ -1,6 +1,7 @@
 //! The subcommands other than `run`. Each writes to the `stdout` and `stderr` it's given and returns the exit code,
 //! so the tests can run them without a process. None of them starts logging or creates the config folder.
 
+mod check;
 mod clear;
 mod json;
 
@@ -13,6 +14,7 @@ use lazy_github_core::config::{Config, ConfigError, ConfigPaths};
 use lazy_github_core::debug::{DebugEnv, debug_markdown};
 use serde_json::Value;
 
+pub use check::check_config;
 pub use clear::{aborted, clear_cache, clear_config};
 pub use json::JsonStyle;
 

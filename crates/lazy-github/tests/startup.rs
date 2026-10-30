@@ -89,7 +89,10 @@ fn a_bad_config_value_exits_1_naming_the_field() {
         let stderr = text(&output.stderr);
         assert!(stderr.starts_with("Error: "), "{stderr:?}");
         assert!(stderr.contains("`issues.state_filter`"), "{stderr:?}");
-        assert!(stderr.contains("lazy-github clear-config"), "{stderr:?}");
+        assert!(
+            stderr.contains("Fix the value or run `lazy-github check-config --fix`."),
+            "{stderr:?}"
+        );
         assert_eq!(stderr.lines().count(), 1, "{stderr:?}");
         assert_eq!(text(&output.stdout), "");
     }
@@ -110,6 +113,11 @@ fn invalid_json_exits_1_with_the_position() {
     let stderr = text(&output.stderr);
     assert!(stderr.starts_with("Error: "), "{stderr:?}");
     assert!(stderr.contains("is not valid JSON (line 1, column 15)"), "{stderr:?}");
+    // A file that isn't JSON can't be checked field by field, so it keeps pointing at `clear-config`.
+    assert!(
+        stderr.contains("Fix the file or run `lazy-github clear-config`."),
+        "{stderr:?}"
+    );
     assert_eq!(stderr.lines().count(), 1, "{stderr:?}");
     for traceback in ["Traceback", "panicked", "Location:", "Backtrace"] {
         assert!(!stderr.contains(traceback), "{stderr:?}");

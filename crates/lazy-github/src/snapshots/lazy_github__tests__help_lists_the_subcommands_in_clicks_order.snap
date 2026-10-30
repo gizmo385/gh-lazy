@@ -7,6 +7,7 @@ A terminal UI for GitHub
 Usage: lazy-github [COMMAND]
 
 Commands:
+  check-config  Check the config file for values that stop it loading
   clear-auth    Explains how to log out: LazyGithub uses the GitHub CLI's login
   clear-cache   Reset the lazy-github cache
   clear-config  Reset the user's settings

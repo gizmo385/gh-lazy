@@ -559,7 +559,7 @@ fn bad_enum_value_reports_the_field_path() {
     }
     let shown = err.to_string();
     assert!(shown.contains(&paths.file.display().to_string()), "{shown}");
-    assert!(shown.contains("lazy-github clear-config"), "{shown}");
+    assert!(shown.contains("lazy-github check-config --fix"), "{shown}");
 }
 
 /// The field cases are in `python-parsing.json`; this one is a whole section.

@@ -42,7 +42,7 @@ pub fn confirm(text: &str, stdin: &mut impl BufRead, stdout: &mut impl Write) ->
 }
 
 /// The answer to the prompt, or yes without asking when `stdin` is `None` (`--no-confirm`).
-fn ask(text: &str, stdin: Option<&mut impl BufRead>, stdout: &mut impl Write) -> io::Result<Answer> {
+pub(super) fn ask(text: &str, stdin: Option<&mut impl BufRead>, stdout: &mut impl Write) -> io::Result<Answer> {
     match stdin {
         Some(stdin) => confirm(text, stdin, stdout),
         None => Ok(Answer::Yes),

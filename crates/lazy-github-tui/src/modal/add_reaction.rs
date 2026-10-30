@@ -8,6 +8,7 @@ use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::style::Style;
 
+use super::frame::on_screen;
 use super::{Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, dialog_bindings};
 use crate::action::Action;
 use crate::component::{ChainLink, Component, Cx, RenderCx};
@@ -183,15 +184,17 @@ impl Component for AddReactionDialog {
         let p = theme.palette;
         let under = self.background(p).over(theme.background());
         let areas = Areas::new(area, self.list.height());
+        // A dialog taller than the terminal runs off its bottom edge, which nothing may be drawn past.
+        let heading_area = on_screen(areas.heading, frame.area());
         let buf = frame.buffer_mut();
 
         // `MarkdownH1`: centered, in `$markdown-h1-color` and its text style, the whole row styled.
         let heading = p
             .markdown_h1_text_style
             .apply(Style::new().fg(theme.color(p.markdown_h1_color, under)));
-        let width = usize::from(areas.heading.width);
+        let width = usize::from(heading_area.width);
         let text = format!("{HEADING:^width$}");
-        buf.set_stringn(areas.heading.x, areas.heading.y, text, width, heading);
+        buf.set_stringn(heading_area.x, heading_area.y, text, width, heading);
 
         let focused = self.ring.focused();
         self.list

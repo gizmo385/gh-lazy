@@ -8,7 +8,7 @@ use lazy_github_core::debug::DebugEnv;
 use lazy_github_core::github::GhCliOptions;
 use lazy_github_core::models::Repository;
 use ratatui::Frame;
-use ratatui::layout::{Position, Rect};
+use ratatui::layout::{Position, Rect, Size};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Clear};
@@ -24,6 +24,7 @@ use crate::components::command_log::Wheel;
 use crate::components::footer::{Footer, FooterHit, footer_items};
 use crate::components::help_panel::{HelpPanel, HelpScroll, help_sections, help_width};
 use crate::components::status_bar::{StatusBar, UnreadState};
+use crate::components::too_small::{TooSmall, is_too_small};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
@@ -116,6 +117,9 @@ pub struct App {
     rate_limit: RateLimitWatch,
     /// Warnings from before the main screen, logged once it's up so the command log shows them.
     main_screen_warnings: Vec<String>,
+    /// The terminal's size, from the last resize or frame; `None` until the first. Below the minimum, only the
+    /// "Terminal too small" message is drawn and only quit keys work.
+    size: Option<Size>,
     should_quit: bool,
 }
 
@@ -144,6 +148,7 @@ impl App {
             notifications: NotificationPoll::default(),
             rate_limit: RateLimitWatch::default(),
             main_screen_warnings: Vec::new(),
+            size: None,
             should_quit: false,
         }
     }
@@ -215,11 +220,49 @@ impl App {
                 return Vec::new();
             }
         }
+        if let Event::Resize(width, height) = event {
+            self.size = Some(Size::new(width, height));
+        }
         // Drained even without an action: a key or click may have finished a dialog by itself.
         let mut out = Outbox::default();
-        out.actions.extend(self.action_for(event));
+        let action = if self.too_small() {
+            self.action_while_too_small(event)
+        } else {
+            self.action_for(event)
+        };
+        out.actions.extend(action);
         self.drain(&mut out);
         out.effects
+    }
+
+    /// Whether the terminal is below the minimum size, as of the last resize or frame.
+    pub fn too_small(&self) -> bool {
+        self.size.is_some_and(is_too_small)
+    }
+
+    /// The action for `event` while only "Terminal too small" is on screen: a key that quits the app right now
+    /// quits, and every other key, click and paste is dropped, since nothing they'd act on can be seen. Everything
+    /// else carries on as usual.
+    ///
+    /// `ctrl+q` always quits. `q` quits only where it would at full size: with no dialog open and no text field
+    /// focused, so a `q` typed into an editor while the terminal is briefly small can't throw the text away.
+    fn action_while_too_small(&mut self, event: Event) -> Option<Action> {
+        match event {
+            Event::Key(key) => {
+                let chord = KeyChord::from_event(&key)?;
+                let chain = self.binding_chain();
+                let typing = chain.first().is_some_and(|link| link.owner.types_text());
+                let app_link = chain.iter().any(|link| link.owner == Owner::App);
+                let quits: &[BindingId] = if app_link && !typing {
+                    &[BindingId::AppQuit, BindingId::TextualQuit]
+                } else {
+                    &[BindingId::TextualQuit]
+                };
+                self.shared.keymap.match_in(quits, &chord).map(|_| Action::Quit)
+            }
+            Event::Mouse(_) | Event::Paste(_) => None,
+            event => self.action_for(event),
+        }
     }
 
     /// Panics at `place` while a dialog is open, when the debug-only [`TestPanic`] trigger asks for it there.
@@ -1101,6 +1144,19 @@ impl App {
 
     /// Draws the whole UI: the base screen, then the dialogs and the toasts.
     pub fn render(&mut self, frame: &mut Frame<'_>) {
+        let area = frame.area();
+        self.size = Some(area.as_size());
+        if self.too_small() {
+            // Nothing drawn this frame takes a click.
+            self.footer_hits.clear();
+            frame.render_widget(
+                TooSmall {
+                    theme: &self.shared.theme,
+                },
+                area,
+            );
+            return;
+        }
         self.render_screens(frame);
         self.test_panic(TestPanic::Render);
         self.render_modals(frame);
@@ -1281,6 +1337,12 @@ impl App {
     #[cfg(test)]
     pub(crate) fn top_dialog<D: crate::modal::Dialog>(&self) -> Option<&D> {
         self.modals.last()?.dialog()
+    }
+
+    /// Where the top dialog's interior was in the last frame.
+    #[cfg(test)]
+    pub(crate) fn top_dialog_interior(&self) -> Option<Rect> {
+        Some(self.modals.last()?.interior)
     }
 
     /// The main screen, while it's the base screen.

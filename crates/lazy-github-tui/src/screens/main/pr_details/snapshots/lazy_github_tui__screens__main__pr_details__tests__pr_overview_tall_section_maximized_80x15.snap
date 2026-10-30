@@ -7,10 +7,13 @@ expression: screen
 
     ... Pending ci/docs - Building docs
     ✓ Passed ci/lint - Lint passed
-    ✓ Passed job-1                                                            ▃▃
+    ✓ Passed job-1
     ✓ Passed job-10
     ✓ Passed job-11
-    ✓ Passed job-12
+    ✓ Passed job-12                                                           ▂▂
     ✓ Passed job-13
     ✓ Passed job-14
     ✓ Passed job-15
+    ✓ Passed job-16
+    ✓ Passed job-17
+    ✓ Passed job-18

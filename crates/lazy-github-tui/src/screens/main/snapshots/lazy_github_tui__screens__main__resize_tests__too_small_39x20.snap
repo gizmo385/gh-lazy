@@ -1,0 +1,14 @@
+---
+source: crates/lazy-github-tui/src/screens/main/resize_tests.rs
+expression: "app.screen(39, 20)"
+---
+
+
+
+
+
+
+
+
+
+      Terminal too small (39×20)

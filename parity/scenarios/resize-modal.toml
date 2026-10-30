@@ -1,0 +1,94 @@
+version = 1
+description = "Resizing with New Issue open (#326): the typed title and description survive 160x48 to 80x24, to 30x10 (only \"Terminal too small\", where typing does nothing) and back to 160x48"
+gate = true
+# Python has no minimum size (decisions/terminal-too-small.md), so there's nothing to compare the 30x10 screen with.
+apps = ["rust"]
+parity_rows = ["main-layout.too-small"]
+sizes = [[160, 48]]
+
+[env]
+# The repo New Issue needs: dotfiles, with its lists empty.
+fixtures = ["repo-selected-empty", "base"]
+
+[[step]]
+wait = { text = "dotfiles", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/dotfiles" }
+
+[[step]]
+keys = ["I"]
+
+[[step]]
+wait = { text = "Description" }
+
+# The modal's scroll area has focus: tab to the title, then to the description.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+type = "Resize title"
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+type = "Kept body"
+
+[[step]]
+capture = "typed"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+resize = [80, 24]
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+capture = "small"
+checks = ["titles", "focus", "footer"]
+
+[[step]]
+resize = [30, 10]
+
+[[step]]
+wait = { text = "Terminal too small (30×10)" }
+
+# Dropped while too small: nothing in the dialog can be seen. `q` doesn't quit from the description editor.
+[[step]]
+type = "zzq"
+
+[[step]]
+capture = "too-small"
+checks = ["titles"]
+
+[[step]]
+resize = [160, 48]
+
+[[step]]
+wait = { text = "Kept body" }
+
+[[step]]
+capture = "restored"
+checks = ["titles", "focus", "footer"]
+
+[expect.typed]
+contains = ["Resize title", "Kept body"]
+footer = ["shift+⏎ Submit", "esc Close"]
+
+[expect.small]
+contains = ["Resize title", "Kept body"]
+not_contains = ["Terminal too small"]
+
+[expect.too-small]
+contains = ["Terminal too small (30×10)"]
+not_contains = ["Resize title", "Description"]
+
+[expect.restored]
+contains = ["Resize title", "Kept body", "Description"]
+not_contains = ["zzq", "Terminal too small"]
+footer = ["shift+⏎ Submit", "esc Close"]

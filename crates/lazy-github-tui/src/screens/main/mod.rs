@@ -1848,3 +1848,6 @@ mod settings_save_tests;
 
 #[cfg(test)]
 mod toggle_tests;
+
+#[cfg(test)]
+mod resize_tests;

@@ -374,4 +374,4 @@ impl DetailsBody for PullRequestDetails {
 }
 
 #[cfg(test)]
-mod tests;
+pub(in crate::screens::main) mod tests;

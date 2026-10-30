@@ -12,6 +12,7 @@ use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
 use ratatui::text::Span;
 
+use super::frame::on_screen;
 use super::{Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, dialog_bindings};
 use crate::action::Action;
 use crate::component::{ChainLink, Component, Cx, RenderCx};
@@ -165,6 +166,19 @@ impl Areas {
             track_label,
             track,
             buttons,
+        }
+    }
+
+    /// The rows drawn as text cut to `screen` ([`on_screen`]). The widgets clip themselves, and keep their shape
+    /// where they're cut, as the mouse sees them.
+    fn clipped(self, screen: Rect) -> Self {
+        let clip = |rect: Rect| on_screen(rect, screen);
+        Self {
+            heading: clip(self.heading),
+            label: clip(self.label),
+            rules: self.rules.map(|rule| rule.map(clip)),
+            track_label: self.track_label.map(clip),
+            ..self
         }
     }
 }
@@ -379,7 +393,8 @@ impl<K: LookupKind> Component for LookupDialog<K> {
         let p = theme.palette;
         let under = self.background(p).over(theme.background());
         let text = Style::new().fg(theme.color(p.foreground, under));
-        let areas = Areas::new(area, self.track.is_some());
+        // A dialog taller than the terminal runs off its bottom edge, which nothing may be drawn past.
+        let areas = Areas::new(area, self.track.is_some()).clipped(frame.area());
         let buf = frame.buffer_mut();
 
         // `MarkdownH1`: centered, in `$markdown-h1-color` and its text style, the whole row styled.

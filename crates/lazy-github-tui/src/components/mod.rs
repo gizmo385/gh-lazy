@@ -26,4 +26,5 @@ pub mod tabs;
 pub mod text_editor;
 pub mod text_input;
 pub mod toasts;
+pub mod too_small;
 pub mod tree;

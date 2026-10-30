@@ -10,6 +10,7 @@ use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::Span;
 
+use super::frame::on_screen;
 use super::{Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, dialog_bindings};
 use crate::action::Action;
 use crate::component::{ChainLink, Component, Cx, RenderCx};
@@ -386,16 +387,19 @@ impl Component for TriggerWorkflowDialog {
         let heading = p
             .markdown_h1_text_style
             .apply(Style::new().fg(theme.color(p.markdown_h1_color, under)));
-        let width = usize::from(areas.heading.width);
+        // A dialog taller than the terminal runs off its bottom edge, which nothing may be drawn past.
+        let heading_area = on_screen(areas.heading, screen);
+        let width = usize::from(heading_area.width);
         buf.set_stringn(
-            areas.heading.x,
-            areas.heading.y,
+            heading_area.x,
+            heading_area.y,
             format!("{HEADING:^width$}"),
             width,
             heading,
         );
 
         for (label, rect) in [("Workflow", areas.workflow_label), ("Branch", areas.branch_label)] {
+            let rect = on_screen(rect, screen);
             buf.set_span(rect.x, rect.y, &Span::styled(label, bold), rect.width);
         }
 

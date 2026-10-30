@@ -81,7 +81,7 @@ fn check_runs(number: u64) -> Vec<CheckRun> {
 }
 
 /// The submitted reviews of pull request `number`, each with its comments, as `pull_request_reviews` gives them.
-pub(super) fn reviews(number: u64) -> Vec<Review> {
+pub(in crate::screens::main) fn reviews(number: u64) -> Vec<Review> {
     let path = format!("repos/parity-bot/pr-details/pulls/{number}/reviews/GET.json");
     let all: Vec<Review> = serde_json::from_value(fixture_body(&path)).unwrap();
     all.into_iter()
@@ -98,7 +98,7 @@ pub(super) fn reviews(number: u64) -> Vec<Review> {
 }
 
 /// The comments on pull request `number`.
-pub(super) fn comments(number: u64) -> Vec<IssueComment> {
+pub(in crate::screens::main) fn comments(number: u64) -> Vec<IssueComment> {
     let path = format!("repos/parity-bot/pr-details/issues/{number}/comments/GET.json");
     serde_json::from_value(fixture_body(&path)).unwrap()
 }
@@ -126,7 +126,7 @@ pub(super) const NAME: &str = "parity-bot/pr-details";
 
 /// The fake with the `pr-details` repo, its PRs, their checks, reactions, reviews and comments, and the comments'
 /// reactions.
-pub(super) fn gh() -> FakeGithub {
+pub(in crate::screens::main) fn gh() -> FakeGithub {
     let mut gh = FakeGithub::new()
         .with_repositories(vec![fixture_repo()])
         .with_issue_page(NAME, 1, Ok(issues_page()))
@@ -159,12 +159,12 @@ fn config() -> Config {
     config
 }
 
-pub(super) fn settle(app: &mut TestApp) -> String {
+pub(in crate::screens::main) fn settle(app: &mut TestApp) -> String {
     logs(|| futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once"))
 }
 
 /// The app with `parity-bot/pr-details` selected and its PRs listed, the PR table focused on PR 5.
-pub(super) fn app() -> TestApp {
+pub(in crate::screens::main) fn app() -> TestApp {
     let mut app = TestApp::with_github(config(), gh());
     app.press(&["enter"]);
     settle(&mut app);
@@ -592,7 +592,7 @@ pub(super) fn app_on(gh: FakeGithub) -> TestApp {
 }
 
 /// The app showing the PR `keys` select from the table, every request answered, the tab strip focused.
-pub(super) fn shown(keys: &[&str]) -> TestApp {
+pub(in crate::screens::main) fn shown(keys: &[&str]) -> TestApp {
     let mut app = app();
     app.press(keys);
     settle(&mut app);
@@ -1440,24 +1440,24 @@ fn a_section_taller_than_the_screen_scrolls() {
     assert_eq!(maximized(&app), Some(section_maximized(SectionKind::Checks)));
     app.advance(std::time::Duration::from_secs(5));
     // From the top, with the scrollbar, and no hatch.
-    let screen = app.screen(80, 12);
+    let screen = app.screen(80, 15);
     assert!(screen.lines().nth(1).unwrap().contains("▼ Status checks"), "{screen}");
     assert!(!screen.contains('╱'), "{screen}");
-    insta::assert_snapshot!("pr_overview_tall_section_maximized_80x12", screen);
+    insta::assert_snapshot!("pr_overview_tall_section_maximized_80x15", screen);
     // The wheel scrolls it.
     app.mouse(crossterm::event::MouseEventKind::ScrollDown, 10, 5);
-    let scrolled = app.screen(80, 12);
+    let scrolled = app.screen(80, 15);
     assert!(!scrolled.contains("▼ Status checks"), "{scrolled}");
     // The focused stop scrolls into view: the list's last item.
     app.press(&["tab"]);
     for _ in 0..20 {
         app.press(&["down"]);
     }
-    let screen = app.screen(80, 12);
+    let screen = app.screen(80, 15);
     assert!(screen.contains("✓ Passed job-20"), "{screen}");
     // Back on the title, it scrolls back up.
     app.press(&["tab"]);
-    let screen = app.screen(80, 12);
+    let screen = app.screen(80, 15);
     assert!(screen.contains("▼ Status checks"), "{screen}");
 }
 

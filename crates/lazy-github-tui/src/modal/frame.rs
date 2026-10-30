@@ -73,6 +73,21 @@ pub fn frame_rect_with_margin(area: Rect, (width, height): (u16, u16), margin: u
     }
 }
 
+/// The part of `rect`, inside a frame that may run past the screen's edge, that's on `screen`. A rect wholly off
+/// the screen comes back with no width either, so a row drawn by its width draws nothing.
+pub(crate) fn on_screen(rect: Rect, screen: Rect) -> Rect {
+    let rect = rect.intersection(screen);
+    if rect.is_empty() {
+        Rect {
+            width: 0,
+            height: 0,
+            ..rect
+        }
+    } else {
+        rect
+    }
+}
+
 /// Textual's `thick` border in `border` (usually `$background 80%`), around an interior painted `background`.
 pub struct DialogFrame<'a> {
     /// The theme.

@@ -18,6 +18,7 @@ use crate::components::scroll_view::ScrollView;
 use crate::components::select::{self, DEFAULT_PROMPT, Select};
 use crate::components::switch::Switch;
 use crate::components::text_input::{self, TextInput};
+use crate::fuzzy::fuzzy_match;
 use crate::modal::form::FormScroll;
 use crate::theme::{Paint, Theme};
 
@@ -158,7 +159,7 @@ fn theme_label(name: &str) -> String {
 struct PaneLayout {
     /// The docstring's rows, wrapped.
     doc: Vec<String>,
-    /// Each field's first row.
+    /// Each field's first row. A hidden field takes no rows: its top is where the next shown one starts.
     tops: Vec<u16>,
     /// The content's height.
     height: u16,
@@ -181,11 +182,14 @@ pub(super) enum PaneHit {
     Area,
 }
 
-/// One tab: its section, its fields and its scroll position.
+/// One tab: its section, its fields, which of them the search shows, and its scroll position.
 #[derive(Debug)]
 pub(super) struct SettingsPane {
     section: &'static Section,
     pub(super) fields: Vec<SettingField>,
+    /// Per field, whether the search filter shows it (Textual's `display`). A hidden field takes no rows and no
+    /// focus, but still saves.
+    shown: Vec<bool>,
     pub(super) scroll: FormScroll,
     /// The layout at the last draw, for revealing a field and for the mouse.
     layout: PaneLayout,
@@ -200,6 +204,7 @@ impl SettingsPane {
                 .iter()
                 .map(|field| SettingField::new(field, config))
                 .collect(),
+            shown: vec![true; section.fields.len()],
             scroll: FormScroll::default(),
             layout: PaneLayout::default(),
         }
@@ -210,10 +215,26 @@ impl SettingsPane {
         self.section.title
     }
 
-    /// The pane's focus stops in order: each field's widget, and a list field's checklist after its input.
+    /// Shows only the fields whose field name `query` fuzzy-matches (`show_command_log`, not the label), or
+    /// every field for `None`. Python's `SettingsSection.filter_field_settings`.
+    pub(super) fn filter(&mut self, query: Option<&str>) {
+        for (shown, field) in self.shown.iter_mut().zip(&self.fields) {
+            *shown = query.is_none_or(|query| fuzzy_match(query, field.field.name).is_some());
+        }
+    }
+
+    /// Whether field `index` is shown.
+    pub(super) fn is_shown(&self, index: usize) -> bool {
+        self.shown.get(index).copied().unwrap_or(false)
+    }
+
+    /// The pane's focus stops in order: each shown field's widget, and a list field's checklist after its input.
     pub(super) fn stops(&self) -> Vec<SettingsFocus> {
         let mut stops = Vec::new();
         for (index, field) in self.fields.iter().enumerate() {
+            if !self.is_shown(index) {
+                continue;
+            }
             stops.push(SettingsFocus::Field(index));
             if matches!(field.widget, FieldWidget::List(_)) {
                 stops.push(SettingsFocus::ListItems(index));
@@ -255,6 +276,9 @@ impl SettingsPane {
             SettingsFocus::ListItems(index) => (index, true),
             _ => return None,
         };
+        if !self.is_shown(index) {
+            return None;
+        }
         let top = *self.layout.tops.get(index)?;
         let field = self.fields.get(index)?;
         Some(match &field.widget {
@@ -298,9 +322,12 @@ impl SettingsPane {
         let tops = self
             .fields
             .iter()
-            .map(|field| {
+            .zip(&self.shown)
+            .map(|(field, &shown)| {
                 let top = y;
-                y = y.saturating_add(field.height()).saturating_add(GAP);
+                if shown {
+                    y = y.saturating_add(field.height()).saturating_add(GAP);
+                }
                 top
             })
             .collect();
@@ -314,8 +341,12 @@ impl SettingsPane {
         }
     }
 
-    /// The widget area of field `index` in the content's coordinates (from row 0), as of the last draw.
+    /// The widget area of field `index` in the content's coordinates (from row 0), as of the last draw. `None` for a
+    /// hidden field.
     fn widget_area(&self, index: usize) -> Option<Rect> {
+        if !self.is_shown(index) {
+            return None;
+        }
         let content = self.scroll.content();
         let top = *self.layout.tops.get(index)?;
         let field = self.fields.get(index)?;
@@ -426,6 +457,7 @@ impl SettingsPane {
             Style::new().fg(theme.color(p.foreground.multiply_alpha(DIM_ALPHA), under))
         };
         let fields = &mut self.fields;
+        let shown = &self.shown;
         let plan = &layout;
         self.scroll
             .render(buf, area, theme, fill, layout.height, |content_buf, content| {
@@ -434,7 +466,10 @@ impl SettingsPane {
                 for (row, line) in (PaneLayout::DOC_TOP..).zip(&plan.doc) {
                     content_buf.set_stringn(doc_x, content.y + row, line, doc_width, doc);
                 }
-                for (index, (field, &top)) in fields.iter_mut().zip(&plan.tops).enumerate() {
+                for (index, ((field, &top), &shown)) in fields.iter_mut().zip(&plan.tops).zip(shown).enumerate() {
+                    if !shown {
+                        continue;
+                    }
                     let y = content.y + top;
                     content_buf.set_stringn(content.x + BORDER, y, &field.label, usize::from(plan.column), bold);
                     let widget = Rect {

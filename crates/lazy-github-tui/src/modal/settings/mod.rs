@@ -1,5 +1,6 @@
 //! The Settings modal, "LazyGithub Settings": a tab per config section (#304's [`SECTIONS`]), each listing its
-//! fields with a widget by kind, and Save / Cancel. Save collects every field into a copy of the config; writing and
+//! fields with a widget by kind, and Save / Cancel. `/` opens a search box above the tabs whose `enter` filters every
+//! tab's fields by a fuzzy match on their names. Save collects every field into a copy of the config; writing and
 //! applying it is the opener's. Python's `SettingsModal` and `SettingsContainer`.
 
 mod list_field;
@@ -21,8 +22,9 @@ use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
 use crate::components::select::SelectOutcome;
 use crate::components::selection_list::ListOutcome;
+use crate::components::table::py_strip;
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
-use crate::components::text_input::InputOutcome;
+use crate::components::text_input::{self, InputOutcome, TextInput};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::toast::Toast;
 
@@ -43,6 +45,14 @@ const HEADING_PADDING: u16 = 2;
 
 /// Below the scroll area: the rule, a blank row and the buttons, docked at the bottom.
 const FOOTER_ROWS: u16 = 1 + 1 + ButtonRow::FLUSH_HEIGHT;
+
+/// The search box's first row: below the heading, past the box's `margin-top: 1`.
+const SEARCH_TOP: u16 = HEADING_ROWS + 1;
+
+/// The rows the shown search box pushes the tab strip down: its margins and itself.
+const SEARCH_ROWS: u16 = 1 + text_input::HEIGHT + 1;
+
+const SEARCH_PLACEHOLDER: &str = "Search settings...";
 
 /// The button row's `padding-left: 35`.
 const BUTTONS_LEFT: u16 = 35;
@@ -74,6 +84,8 @@ pub enum SettingsAction {
 /// The modal's focus stops. A field's index is into the active tab's fields.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum SettingsFocus {
+    /// The search box, first in the ring while it's shown.
+    Search,
     /// The tab strip, focused on opening.
     Tabs,
     /// The active tab's scroll area, which Textual's `ScrollableContainer` makes focusable.
@@ -107,6 +119,7 @@ struct Invalid {
 /// Where the interior's parts were drawn last, for the mouse.
 #[derive(Debug, Clone, Copy, Default)]
 struct Areas {
+    search: Rect,
     tabs: Rect,
     scroll: Rect,
 }
@@ -116,6 +129,8 @@ struct Areas {
 pub struct SettingsDialog {
     tabs: TabStrip,
     panes: Vec<SettingsPane>,
+    /// The search box, while it's shown (Python's `ToggleableSearchInput`, hidden until `/`).
+    search: Option<TextInput>,
     ring: FocusRing<SettingsFocus>,
     buttons: ButtonRow,
     areas: Areas,
@@ -132,6 +147,7 @@ impl SettingsDialog {
         let mut dialog = Self {
             tabs: TabStrip::new(panes.iter().map(SettingsPane::title)),
             panes,
+            search: None,
             ring: FocusRing::new([SettingsFocus::Tabs]),
             buttons: ButtonRow::flush("Save"),
             areas: Areas::default(),
@@ -160,11 +176,15 @@ impl SettingsDialog {
         &mut self.panes[self.tabs.active()]
     }
 
-    /// The focus ring for the active tab: the strip, the scroll area, the tab's fields (a disabled one skipped),
-    /// Save and Cancel.
+    /// The focus ring for the active tab: the search box while it's shown, the strip, the scroll area, the tab's
+    /// shown fields (a disabled one skipped), Save and Cancel.
     fn rebuild_ring(&mut self) {
         let pane = self.pane();
-        let mut order = vec![SettingsFocus::Tabs, SettingsFocus::Scroll];
+        let mut order = Vec::new();
+        if self.search.is_some() {
+            order.push(SettingsFocus::Search);
+        }
+        order.extend([SettingsFocus::Tabs, SettingsFocus::Scroll]);
         order.extend(pane.stops());
         order.extend([SettingsFocus::Save, SettingsFocus::Cancel]);
         let disabled: Vec<(SettingsFocus, bool)> = order.iter().map(|&stop| (stop, pane.is_disabled(stop))).collect();
@@ -181,14 +201,24 @@ impl SettingsDialog {
         }
     }
 
-    /// Moves focus with `f`. An open list closes when focus leaves it. A stop that gains focus is scrolled into view,
-    /// and a text input selects its text (Textual's `select_on_focus`, so typing replaces it).
+    /// Moves focus with `f`. An open list closes when focus leaves it, and so does a blank search box. A stop that
+    /// gains focus is scrolled into view, and a text input selects its text (Textual's `select_on_focus`, so typing
+    /// replaces it).
     fn refocus(&mut self, f: impl FnOnce(&mut FocusRing<SettingsFocus>)) {
         let before = self.ring.focused();
         f(&mut self.ring);
         let Some(stop) = self.ring.focused().filter(|&stop| Some(stop) != before) else {
             return;
         };
+        if before == Some(SettingsFocus::Search) {
+            self.blur_search();
+        }
+        if stop == SettingsFocus::Search {
+            if let Some(search) = &mut self.search {
+                search.select_all();
+            }
+            return;
+        }
         let pane = self.pane_mut();
         pane.close_selects();
         if let SettingsFocus::Field(index) = stop
@@ -203,6 +233,41 @@ impl SettingsDialog {
         self.refocus(|ring| {
             ring.focus(stop);
         });
+    }
+
+    /// `/`: shows the search box if it's hidden, and focuses it. Python's `action_search`.
+    fn open_search(&mut self) {
+        if self.search.is_none() {
+            self.search = Some(TextInput::new(SEARCH_PLACEHOLDER));
+            self.rebuild_ring();
+        }
+        self.pane_mut().close_selects();
+        self.focus(SettingsFocus::Search);
+    }
+
+    /// The search box lost focus: it hides when only whitespace is left in it (`ToggleableSearchInput._on_blur`),
+    /// leaving the filter as it was.
+    fn blur_search(&mut self) {
+        if self
+            .search
+            .as_ref()
+            .is_some_and(|search| py_strip(search.value()).is_empty())
+        {
+            self.search = None;
+            self.rebuild_ring();
+        }
+    }
+
+    /// `enter` in the search box: filters every tab by the stripped, lowercased query; a blank one shows everything.
+    /// Focus stays in the box. Python's `handle_submitted_search`.
+    fn submit_search(&mut self) {
+        let Some(search) = &self.search else { return };
+        let query = py_strip(search.value()).to_lowercase();
+        let filter = (!query.is_empty()).then_some(query);
+        for pane in &mut self.panes {
+            pane.filter(filter.as_deref());
+        }
+        self.rebuild_ring();
     }
 
     /// The focused field's widget, with its focus stop.
@@ -254,8 +319,16 @@ impl SettingsDialog {
         }
     }
 
-    /// A key for the focused text input: a list field's `enter` adds its item; a plain field's does nothing.
+    /// A key for the focused text input: the search box's `enter` filters, a list field's adds its item, and a plain
+    /// field's does nothing.
     fn input_key(&mut self, chord: &KeyChord, cx: &Cx<'_>) -> Option<Action> {
+        if self.ring.focused() == Some(SettingsFocus::Search) {
+            let outcome = self.search.as_mut()?.handle_key(chord, cx.keymap(), cx.clipboard());
+            if outcome == InputOutcome::Submitted {
+                self.submit_search();
+            }
+            return Self::input_outcome(outcome);
+        }
         let (stop, widget) = self.focused_widget_mut()?;
         let outcome = match (widget, stop) {
             (FieldWidget::Text(input), _) => input.handle_key(chord, cx.keymap(), cx.clipboard()),
@@ -268,6 +341,10 @@ impl SettingsDialog {
             }
             _ => return None,
         };
+        Self::input_outcome(outcome)
+    }
+
+    fn input_outcome(outcome: InputOutcome) -> Option<Action> {
         match outcome {
             InputOutcome::Changed | InputOutcome::Submitted => Some(Action::Consumed),
             InputOutcome::Copied(text) => Some(Action::Copy(text)),
@@ -287,13 +364,22 @@ impl Component for SettingsDialog {
         match id {
             BindingId::ModalSubmit => Some(Self::action(SettingsAction::Save)),
             BindingId::ModalClose => Some(Self::action(SettingsAction::Cancel)),
-            // Searching the settings is #306's.
-            BindingId::ModalSearch => Some(Action::Unimplemented(id)),
+            // A focused text input, the box included, consumes `/` before this fires.
+            BindingId::ModalSearch => {
+                self.open_search();
+                Some(Action::Consumed)
+            }
             _ => None,
         }
     }
 
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
+        if self.ring.focused() == Some(SettingsFocus::Search) {
+            return self
+                .search
+                .as_ref()
+                .is_some_and(|search| search.consumes_key(key, keymap));
+        }
         match self.focused_widget() {
             Some((_, FieldWidget::Select(select))) => select.consumes_key(key, keymap),
             Some((_, FieldWidget::Text(input))) => input.consumes_key(key, keymap),
@@ -315,7 +401,9 @@ impl Component for SettingsDialog {
 
     fn handle_mouse(&mut self, event: MouseEvent, _area: Rect, cx: &Cx<'_>) -> Option<Action> {
         // A drag that started in a text input, wherever the pointer is now.
-        if self.pane_mut().captured_mouse(event) {
+        if self.search.as_mut().is_some_and(|search| search.captured_mouse(event))
+            || self.pane_mut().captured_mouse(event)
+        {
             return Some(Action::Consumed);
         }
         let press = event.kind == MouseEventKind::Down(MouseButton::Left);
@@ -352,6 +440,14 @@ impl Component for SettingsDialog {
             return Some(Action::Consumed);
         }
         if !press {
+            return Some(Action::Consumed);
+        }
+        if self.search.is_some() && self.areas.search.contains(at) {
+            self.pane_mut().close_selects();
+            self.focus(SettingsFocus::Search);
+            if let Some(search) = &mut self.search {
+                search.press(self.areas.search, event.column);
+            }
             return Some(Action::Consumed);
         }
         if self.areas.tabs.contains(at) {
@@ -403,8 +499,28 @@ impl Component for SettingsDialog {
             .buffer_mut()
             .set_stringn(heading.x, heading.y, format!("{HEADING:^width$}"), width, style);
 
+        // The search box, while shown, between the heading and the strip, which moves down for it.
+        let mut strip_top = HEADING_ROWS;
+        let mut search_area = Rect::default();
+        if let Some(search) = &mut self.search {
+            search_area = Rect {
+                y: area.y.saturating_add(SEARCH_TOP),
+                height: text_input::HEIGHT,
+                ..area
+            }
+            .intersection(area);
+            search.render(
+                frame.buffer_mut(),
+                search_area,
+                theme,
+                under,
+                focus == Some(SettingsFocus::Search),
+            );
+            strip_top += SEARCH_ROWS;
+        }
+
         let tabs = Rect {
-            y: area.y.saturating_add(HEADING_ROWS),
+            y: area.y.saturating_add(strip_top),
             height: TAB_STRIP_HEIGHT,
             ..area
         }
@@ -412,10 +528,12 @@ impl Component for SettingsDialog {
         self.tabs
             .render_over(frame, tabs, theme, focus == Some(SettingsFocus::Tabs), under);
 
-        let top = area.y.saturating_add(HEADING_ROWS + TAB_STRIP_HEIGHT);
+        // The scroll area keeps the height it has without the box: Python's column overflows instead, so the box
+        // pushes the area down under the docked buttons and the rule off the frame.
+        let unshifted = area.y.saturating_add(HEADING_ROWS + TAB_STRIP_HEIGHT);
         let scroll = Rect {
-            y: top,
-            height: area.bottom().saturating_sub(top).saturating_sub(FOOTER_ROWS),
+            y: area.y.saturating_add(strip_top + TAB_STRIP_HEIGHT),
+            height: area.bottom().saturating_sub(unshifted).saturating_sub(FOOTER_ROWS),
             ..area
         }
         .intersection(area);
@@ -444,7 +562,11 @@ impl Component for SettingsDialog {
 
         // An open select's list last, over everything below it.
         self.pane_mut().render_overlay(buf, screen, theme, under);
-        self.areas = Areas { tabs, scroll };
+        self.areas = Areas {
+            search: search_area,
+            tabs,
+            scroll,
+        };
     }
 }
 
@@ -479,6 +601,7 @@ impl Dialog for SettingsDialog {
 
     fn field_chain(&self) -> Vec<ChainLink> {
         let field = match (self.ring.focused(), self.focused_widget()) {
+            (Some(SettingsFocus::Search), _) => FieldKind::TextInput,
             (Some(SettingsFocus::Tabs), _) => FieldKind::Tabs,
             (Some(SettingsFocus::Scroll), _) => FieldKind::Scroll,
             (Some(SettingsFocus::Save | SettingsFocus::Cancel), _) => FieldKind::Button,
@@ -545,11 +668,15 @@ impl Dialog for SettingsDialog {
     }
 
     fn captures_mouse(&self) -> bool {
-        self.pane().is_selecting()
+        self.search.as_ref().is_some_and(TextInput::is_selecting) || self.pane().is_selecting()
     }
 
     fn handle_paste(&mut self, text: &str, _cx: &Cx<'_>) -> Option<Action> {
         let stop = self.ring.focused()?;
+        if stop == SettingsFocus::Search {
+            self.search.as_mut()?.handle_paste(text);
+            return Some(Action::Consumed);
+        }
         let SettingsFocus::Field(index) = stop else {
             return None;
         };

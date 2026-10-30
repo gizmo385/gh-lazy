@@ -705,3 +705,305 @@ fn snapshot_api_disabled_select_styled() {
         crate::test_util::buffer_to_styled_string(&app.render(160, 48))
     );
 }
+
+// Search.
+
+/// The field names of tab `tab`'s fields the filter shows.
+fn shown(app: &TestApp, tab: usize) -> Vec<&'static str> {
+    let pane = &dialog(app).panes[tab];
+    pane.fields
+        .iter()
+        .enumerate()
+        .filter(|&(index, _)| pane.is_shown(index))
+        .map(|(_, field)| field.field.name)
+        .collect()
+}
+
+/// The search box's text, while it's shown.
+fn search_value(app: &TestApp) -> Option<String> {
+    dialog(app).search.as_ref().map(|search| search.value().to_owned())
+}
+
+/// Opens the box with `/`, replaces its text with `query` and submits it.
+fn search(app: &mut TestApp, query: &str) {
+    app.press(&["/"]);
+    assert_eq!(focused(app), Some(SettingsFocus::Search));
+    app.press(&["ctrl+u"]);
+    type_text(app, query);
+    app.press(&["enter"]);
+    app.render(160, 48);
+}
+
+/// The screen cell where `text` starts on the row that holds it.
+fn cell_of(screen: &str, text: &str) -> (u16, u16) {
+    let (row, line) = screen
+        .lines()
+        .enumerate()
+        .find(|(_, line)| line.contains(text))
+        .unwrap_or_else(|| panic!("{text} isn't drawn:\n{screen}"));
+    let at = line.find(text).expect("the line holds it");
+    (
+        u16::try_from(line[..at].chars().count()).expect("on screen"),
+        u16::try_from(row).expect("on screen"),
+    )
+}
+
+#[test]
+fn slash_opens_and_focuses_the_box_from_every_stop_but_a_text_input() {
+    use SettingsFocus::*;
+    let mut config = config();
+    config.repositories.favorites = vec!["a/b".into()];
+    // The strip, the scroll area, a switch, a select, a checklist, Save and Cancel.
+    let stops = [
+        (APPEARANCE, Tabs),
+        (APPEARANCE, Scroll),
+        (APPEARANCE, Field(1)),
+        (APPEARANCE, Field(0)),
+        (REPOSITORIES, ListItems(1)),
+        (APPEARANCE, Save),
+        (APPEARANCE, Cancel),
+    ];
+    for (tab, stop) in stops {
+        let (mut app, _) = opened(&config);
+        go_to_tab(&mut app, tab);
+        tab_to(&mut app, stop);
+        assert!(search_value(&app).is_none(), "{stop:?}");
+        app.press(&["/"]);
+        assert_eq!(focused(&app), Some(Search), "{stop:?}");
+        assert_eq!(search_value(&app).as_deref(), Some(""), "{stop:?}");
+        assert_eq!(app.app().modals(), [ModalKind::Settings]);
+    }
+
+    // A text input types it: a plain one and a list field's.
+    for (tab, index) in [(CACHE, 3), (REPOSITORIES, 1)] {
+        let (mut app, _) = opened(&config);
+        go_to_tab(&mut app, tab);
+        tab_to(&mut app, Field(index));
+        app.press(&["ctrl+u", "/"]);
+        assert_eq!(focused(&app), Some(Field(index)));
+        assert!(search_value(&app).is_none());
+        let value = match widget(&app, tab, index) {
+            FieldWidget::Text(input) => input.value(),
+            FieldWidget::List(list) => list.input.value(),
+            other => panic!("not a text input: {other:?}"),
+        };
+        assert_eq!(value, "/");
+    }
+    // And so does the box itself.
+    let (mut app, _) = opened(&config);
+    app.press(&["/", "a", "/"]);
+    assert_eq!(search_value(&app).as_deref(), Some("a/"));
+}
+
+#[test]
+fn the_box_shows_above_the_strip_with_its_footer() {
+    let (mut app, _) = opened(&config());
+    app.press(&["/"]);
+    assert_eq!(footer(&mut app), ["shift+⏎ Submit", "esc Close", "/ Search"]);
+    let screen = app.screen(160, 48);
+    let (_, heading) = cell_of(&screen, "LazyGithub Settings");
+    // As the reference draws it: the box's text 4 rows below the heading and the strip 3 below that.
+    assert_eq!(cell_of(&screen, "Search settings...").1, heading + 4);
+    assert_eq!(cell_of(&screen, "Appearance  Notifications").1, heading + 7);
+    // `q` types; `escape` closes.
+    app.press(&["q"]);
+    assert_eq!(search_value(&app).as_deref(), Some("q"));
+    app.press(&["escape"]);
+    assert!(app.app().modals().is_empty());
+}
+
+#[test]
+fn nothing_filters_before_enter_and_focus_stays_in_the_box() {
+    let (mut app, _) = opened(&config());
+    app.press(&["/"]);
+    type_text(&mut app, "filter");
+    assert_eq!(shown(&app, PULL_REQUESTS).len(), 6);
+    assert_eq!(shown(&app, APPEARANCE).len(), 5);
+    app.press(&["enter"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::Search));
+    assert_eq!(search_value(&app).as_deref(), Some("filter"));
+    assert_eq!(shown(&app, APPEARANCE), Vec::<&str>::new());
+    assert_eq!(shown(&app, PULL_REQUESTS), ["state_filter", "owner_filter"]);
+}
+
+#[test]
+fn the_filter_spans_every_tab_and_matches_the_snake_case_name() {
+    let (mut app, _) = opened(&config());
+    search(&mut app, "filter");
+    let all: Vec<Vec<&str>> = (0..dialog(&app).panes.len()).map(|tab| shown(&app, tab)).collect();
+    assert_eq!(
+        all,
+        [
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec!["state_filter", "owner_filter"],
+            vec!["state_filter", "owner_filter"],
+            vec![],
+            vec![],
+            vec![],
+        ]
+    );
+    // The name, not the label: an underscore matches, and so do scattered letters.
+    search(&mut app, "command_log");
+    assert_eq!(shown(&app, APPEARANCE), ["show_command_log"]);
+    search(&mut app, "shcl");
+    assert_eq!(shown(&app, APPEARANCE), ["show_command_log"]);
+}
+
+#[test]
+fn the_query_is_stripped_and_lowercased() {
+    let (mut app, _) = opened(&config());
+    search(&mut app, "  FiLTer  ");
+    assert_eq!(shown(&app, PULL_REQUESTS), ["state_filter", "owner_filter"]);
+    // The box keeps what was typed.
+    assert_eq!(search_value(&app).as_deref(), Some("  FiLTer  "));
+}
+
+#[test]
+fn a_blank_query_shows_every_field_again() {
+    let (mut app, _) = opened(&config());
+    search(&mut app, "filter");
+    assert_eq!(shown(&app, CACHE), Vec::<&str>::new());
+    search(&mut app, "   ");
+    for (tab, pane) in dialog(&app).panes.iter().enumerate() {
+        assert_eq!(shown(&app, tab).len(), pane.fields.len(), "{tab}");
+    }
+}
+
+#[test]
+fn the_ring_puts_the_box_first_and_skips_hidden_fields() {
+    use SettingsFocus::*;
+    let (mut app, _) = opened(&config());
+    // Unsubmitted text keeps the box shown as focus goes round, and filters nothing.
+    app.press(&["/", "x"]);
+    assert_eq!(
+        ring_forward(&mut app),
+        [
+            Search,
+            Tabs,
+            Scroll,
+            Field(0),
+            Field(1),
+            Field(2),
+            Field(3),
+            Field(4),
+            Save,
+            Cancel
+        ]
+    );
+    app.press(&["ctrl+u"]);
+    type_text(&mut app, "filter");
+    app.press(&["enter"]);
+    assert_eq!(ring_forward(&mut app), [Search, Tabs, Scroll, Save, Cancel]);
+    // `tab` leaves for the strip with the filter kept, and the other tabs are filtered too.
+    app.press(&["tab"]);
+    assert_eq!(focused(&app), Some(Tabs));
+    app.press(&["right", "right", "right", "right"]);
+    assert_eq!(active_tab(&app), PULL_REQUESTS);
+    assert_eq!(
+        ring_forward(&mut app),
+        [Tabs, Scroll, Field(0), Field(1), Save, Cancel, Search]
+    );
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("State Filter:"), "{screen}");
+    assert!(screen.contains("Owner Filter:"), "{screen}");
+    assert!(!screen.contains("Preferred Merge Method:"), "{screen}");
+    assert!(!screen.contains("Pull Request Template:"), "{screen}");
+}
+
+#[test]
+fn a_tab_with_nothing_left_shows_only_its_docstring() {
+    let (mut app, _) = opened(&config());
+    search(&mut app, "filter");
+    let screen = app.screen(160, 48);
+    assert!(
+        screen.contains("Settings focused on altering the appearance"),
+        "{screen}"
+    );
+    for label in ["Theme:", "Show Command Log:", "Show Pull Requests:"] {
+        assert!(!screen.contains(label), "{label}\n{screen}");
+    }
+}
+
+#[test]
+fn hidden_fields_are_still_saved_as_they_are() {
+    let (mut app, outcome) = opened(&config());
+    // Edit Show Workflows, then hide it.
+    tab_to(&mut app, SettingsFocus::Field(2));
+    app.press(&["enter"]);
+    search(&mut app, "theme");
+    assert_eq!(shown(&app, APPEARANCE), ["theme"]);
+    app.press(&["shift+enter"]);
+    let mut expected = config();
+    expected.appearance.show_workflows = !expected.appearance.show_workflows;
+    assert_eq!(saved(&outcome), expected);
+}
+
+#[test]
+fn the_box_hides_on_blur_when_blank_and_stays_when_not() {
+    let (mut app, _) = opened(&config());
+    // Only whitespace in it: it hides, and leaves the ring.
+    app.press(&["/", "space", "tab"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::Tabs));
+    assert!(search_value(&app).is_none());
+    assert!(!app.screen(160, 48).contains("Search settings..."));
+    app.press(&["shift+tab"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::Cancel));
+
+    // With text in it, it stays, first in the ring, even unsubmitted.
+    app.press(&["/", "x", "shift+tab"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::Cancel));
+    assert_eq!(search_value(&app).as_deref(), Some("x"));
+    app.press(&["tab"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::Search));
+    // `/` from elsewhere focuses it again, its text selected so typing replaces it.
+    app.press(&["tab", "/"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::Search));
+    app.press(&["y"]);
+    assert_eq!(search_value(&app).as_deref(), Some("y"));
+
+    // Emptied after a filter: it hides and the filter stays.
+    search(&mut app, "filter");
+    app.press(&["ctrl+u", "tab"]);
+    assert!(search_value(&app).is_none());
+    assert_eq!(shown(&app, PULL_REQUESTS), ["state_filter", "owner_filter"]);
+}
+
+#[test]
+fn a_click_focuses_the_box_and_a_click_away_hides_it_when_blank() {
+    let (mut app, _) = opened(&config());
+    app.press(&["/"]);
+    type_text(&mut app, "ab");
+    app.press(&["tab"]);
+    let screen = app.screen(160, 48);
+    let (column, row) = cell_of(&screen, "ab ");
+    // Past the end of the text, so the cursor lands there and `ctrl+u` clears it all.
+    app.click(column + 4, row);
+    assert_eq!(focused(&app), Some(SettingsFocus::Search));
+    app.press(&["ctrl+u"]);
+    let (column, row) = cell_of(&screen, "Notifications  Key Bindings");
+    app.click(column, row);
+    assert_eq!(focused(&app), Some(SettingsFocus::Tabs));
+    assert_eq!(active_tab(&app), 1);
+    assert!(search_value(&app).is_none());
+}
+
+#[test]
+fn a_paste_lands_in_the_box() {
+    let (mut app, _) = opened(&config());
+    app.press(&["/"]);
+    app.send(crate::event::Event::Paste("filter".into()));
+    assert_eq!(search_value(&app).as_deref(), Some("filter"));
+}
+
+#[test]
+fn snapshot_search_pull_requests() {
+    let (mut app, _) = opened(&config());
+    app.press(&["/"]);
+    type_text(&mut app, "filter");
+    app.press(&["enter", "tab", "right", "right", "right", "right", "shift+tab"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::Search));
+    insta::assert_snapshot!("search_pull_requests", app.screen(160, 48));
+}

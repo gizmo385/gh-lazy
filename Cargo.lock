@@ -1046,8 +1046,11 @@ dependencies = [
  "assert_cmd",
  "clap",
  "color-eyre",
+ "insta",
  "lazy-github-core",
  "lazy-github-tui",
+ "serde_json",
+ "similar",
  "tokio",
  "tracing",
 ]

@@ -1,5 +1,7 @@
+mod cli;
+
 use std::ffi::OsString;
-use std::io;
+use std::io::{self, IsTerminal as _};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -25,19 +27,38 @@ struct Cli {
     command: Option<Command>,
 }
 
+// Declared in Click's alphabetical order so `--help` lists them as Python does. The doc comments are Python's
+// docstrings, except `clear-auth`'s, which does something else here.
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Run LazyGithub (the default)
+    /// Explains how to log out: LazyGithub uses the GitHub CLI's login
+    ClearAuth,
+    /// Dump the current configuration, as it would be loaded by LazyGithub
+    DumpConfig,
+    /// Run LazyGithub
     Run,
+    /// Prints the current version
+    Version,
 }
 
 fn main() -> ExitCode {
     // Parse first: `--help`, `--version` and usage errors exit here, before anything touches the disk.
     let cli = Cli::try_parse().unwrap_or_else(|err| err.exit());
-    let original_pwd = original_pwd(std::env::var_os(ORIGINAL_PWD_ENV), std::env::current_dir);
+    let (stdout, stderr) = (&mut io::stdout(), &mut io::stderr());
     match cli.command.unwrap_or(Command::Run) {
-        Command::Run => run(original_pwd),
+        Command::ClearAuth => cli::clear_auth(ConfigPaths::discover(), stdout, stderr),
+        Command::DumpConfig => {
+            let style = cli::JsonStyle::detect(env_var, stdout.is_terminal());
+            cli::dump_config(ConfigPaths::discover(), style, stdout, stderr)
+        }
+        Command::Run => run(original_pwd(std::env::var_os(ORIGINAL_PWD_ENV), std::env::current_dir)),
+        Command::Version => cli::version(stdout, stderr),
     }
+}
+
+/// An environment variable as Python's `os.environ` would give it: set but not Unicode still counts as set.
+fn env_var(name: &str) -> Option<String> {
+    std::env::var_os(name).map(|value| value.to_string_lossy().into_owned())
 }
 
 /// The user's working directory: `var` (`LAZY_GITHUB_ORIGINAL_PWD`) if set and non-empty, otherwise `cwd()`, or
@@ -166,5 +187,17 @@ mod tests {
             Cli::try_parse_from(["lazy-github", "run"]).unwrap().command,
             Some(Command::Run)
         ));
+    }
+
+    #[test]
+    fn run_has_no_auth_backend_option() {
+        let err = Cli::try_parse_from(["lazy-github", "run", "--auth-backend", "GITHUB_CLI"]).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::UnknownArgument);
+        assert_eq!(err.exit_code(), 2);
+    }
+
+    #[test]
+    fn help_lists_the_subcommands_in_clicks_order() {
+        insta::assert_snapshot!(Cli::command().render_help().to_string());
     }
 }

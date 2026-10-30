@@ -1155,6 +1155,7 @@ enum KeyWait<'a> {
     StableMs(u64),
     Log(&'a LoggedRequestMatcher),
     RemoteBranch(&'a str),
+    Exited,
 }
 
 fn millis(d: Duration) -> u64 {
@@ -1176,6 +1177,7 @@ pub fn capture_key(repo: &Path, scenario: &Scenario, size: Size, roots: &Roots) 
                 WaitFor::Stable(d) => KeyWait::StableMs(millis(*d)),
                 WaitFor::Log(m) => KeyWait::Log(m),
                 WaitFor::RemoteBranch(b) => KeyWait::RemoteBranch(b),
+                WaitFor::Exited => KeyWait::Exited,
             }),
             Step::Keys(keys) => KeyStep::Keys(keys),
             Step::Type(t) => KeyStep::Type(t),

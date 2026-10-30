@@ -188,6 +188,29 @@ fn an_early_exit_is_reported_with_its_code() {
 }
 
 #[test]
+fn the_exited_wait_passes_on_a_clean_exit_only() {
+    let steps = |key: &str, timeout_ms: u64| {
+        format!(
+            "[[step]]\nwait = {{ text = \"settled\" }}\n\n[[step]]\nkeys = [\"{key}\"]\n\n\
+             [[step]]\nwait = {{ exited = true, timeout_ms = {timeout_ms} }}\n"
+        )
+    };
+    let out = tempfile::tempdir().unwrap();
+    let status = run(&scenario(&steps("ctrl+q", 5000)), out.path());
+    assert_eq!(status.status, RunState::Ok, "{status:?}");
+
+    let out = tempfile::tempdir().unwrap();
+    let status = run(&scenario(&steps("ctrl+d", 5000)), out.path());
+    assert_eq!(status.status, RunState::Exited, "{status:?}");
+    assert_eq!(status.exit_code, Some(3));
+
+    let out = tempfile::tempdir().unwrap();
+    let status = run(&scenario(&steps("x", 300)), out.path());
+    assert_eq!(status.status, RunState::Timeout, "{status:?}");
+    assert_eq!(status.step, Some(2));
+}
+
+#[test]
 fn a_missing_program_is_a_spawn_error() {
     let out = tempfile::tempdir().unwrap();
     let s = scenario("[[step]]\nsleep_ms = 1\n");

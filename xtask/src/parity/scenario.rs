@@ -255,6 +255,8 @@ pub enum WaitFor {
     Log(LoggedRequestMatcher),
     /// The run's local remote (`git_remote_branches`) has `refs/heads/<name>`.
     RemoteBranch(String),
+    /// The app exited with code 0. Only allowed as the last step.
+    Exited,
 }
 
 #[derive(Debug, Clone)]
@@ -566,6 +568,7 @@ struct RawWait {
     stable_ms: Option<u64>,
     log: Option<LoggedRequestMatcher>,
     remote_branch: Option<Spanned<String>>,
+    exited: Option<Spanned<bool>>,
     timeout_ms: Option<u64>,
 }
 
@@ -718,6 +721,15 @@ fn parse_steps(
     let mut last_capture = None;
     for step in raw {
         let start = step.span().start;
+        if let Some(Step::Wait(Wait {
+            until: WaitFor::Exited, ..
+        })) = steps.last()
+        {
+            return Err(loc.at(
+                start,
+                "no step can follow `wait.exited`, which must be the scenario's last step",
+            ));
+        }
         let step = parse_step(step.into_inner(), start, loc, has_remote)?;
         if let Step::Capture(c) = &step {
             if !captures.insert(c.name.clone()) {
@@ -1058,6 +1070,7 @@ fn parse_wait(spanned: Spanned<RawWait>, loc: &Locator<'_>, has_remote: bool) ->
         raw.stable_ms.is_some(),
         raw.log.is_some(),
         raw.remote_branch.is_some(),
+        raw.exited.is_some(),
     ]
     .into_iter()
     .filter(|&b| b)
@@ -1065,7 +1078,7 @@ fn parse_wait(spanned: Spanned<RawWait>, loc: &Locator<'_>, has_remote: bool) ->
     if count != 1 {
         return Err(loc.at(
             start,
-            "`wait` needs exactly one of text, gone, regex, stable_ms, log or remote_branch",
+            "`wait` needs exactly one of text, gone, regex, stable_ms, log, remote_branch or exited",
         ));
     }
     let until = if let Some(text) = raw.text {
@@ -1096,6 +1109,11 @@ fn parse_wait(spanned: Spanned<RawWait>, loc: &Locator<'_>, has_remote: bool) ->
             ));
         }
         WaitFor::RemoteBranch(branch.into_inner())
+    } else if let Some(exited) = raw.exited {
+        if !*exited.get_ref() {
+            return Err(loc.at_span(&exited, "`wait.exited` can only be `true`"));
+        }
+        WaitFor::Exited
     } else {
         unreachable!("exactly one condition is present")
     };
@@ -1372,6 +1390,29 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
             "version = 1\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"git\"\n",
             4,
             "unknown variant `git`",
+        );
+    }
+
+    #[test]
+    fn parses_the_exited_wait_only_as_the_last_step() {
+        let s = parse("version = 1\n[[step]]\nkeys = [\"q\"]\n[[step]]\nwait.exited = true\n").unwrap();
+        assert!(matches!(
+            &s.steps[1],
+            Step::Wait(Wait {
+                until: WaitFor::Exited,
+                ..
+            })
+        ));
+        assert_error(
+            "version = 1\n[[step]]\nwait.exited = true\n[[step]]\nkeys = [\"q\"]\n",
+            4,
+            "no step can follow `wait.exited`",
+        );
+        assert_error("version = 1\n[[step]]\nwait.exited = false\n", 3, "can only be `true`");
+        assert_error(
+            "version = 1\n[[step]]\nwait = { exited = true, text = \"x\" }\n",
+            3,
+            "exactly one of",
         );
     }
 

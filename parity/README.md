@@ -826,6 +826,8 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
     - `remote_branch = "<name>"`: the run's local remote has `refs/heads/<name>` (checked with
       `git --git-dir <bare repo> rev-parse --verify --quiet`), so a scenario can assert that a push happened. Only in
       a scenario with `git_remote_branches`.
+    - `exited = true`: the app has exited with code 0. Any other exit code fails the run as an early exit does.
+      Nothing can follow it, so it's only allowed as the scenario's last step; capture before the key that quits.
 
     Each `wait` takes an optional `timeout_ms` (default 10000). A timeout fails that app's run at that step and dumps
     the screen.

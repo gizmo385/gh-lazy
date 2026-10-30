@@ -21,7 +21,7 @@ use super::env::{LocalRemote, RunEnv};
 use super::grid::{Grid, screen_text};
 use super::keys;
 use super::mouse::{self, MouseReport};
-use super::scenario::{DEFAULT_WAIT_TIMEOUT, MouseTarget, Size, Step, WaitFor};
+use super::scenario::{DEFAULT_WAIT_TIMEOUT, MouseTarget, Size, Step, Wait, WaitFor};
 use super::{Context, Result};
 
 /// How often waits look at the screen. Nothing in the runner sleeps longer than this between checks.
@@ -313,9 +313,29 @@ impl Session {
     }
 
     fn run_steps(&mut self, steps: &[Step], out: &Path) -> std::result::Result<(), (usize, StepError)> {
+        let exits = |step: &Step| {
+            matches!(
+                step,
+                Step::Wait(Wait {
+                    until: WaitFor::Exited,
+                    ..
+                })
+            )
+        };
         for (index, step) in steps.iter().enumerate() {
-            self.check_alive().map_err(|e| (index, e))?;
-            self.step(step, out).map_err(|e| (index, e))?;
+            let result = if exits(step) {
+                self.step(step, out)
+            } else {
+                self.check_alive().and_then(|()| self.step(step, out))
+            };
+            match result {
+                // The step before `wait.exited` (the parser keeps it last) is the one that quits, so the app may
+                // exit before that step's own pause is over; the wait judges the exit.
+                Err(StepError::Exited(_)) if steps.get(index + 1).is_some_and(exits) => {
+                    return self.step(&steps[index + 1], out).map_err(|e| (index + 1, e));
+                }
+                result => result.map_err(|e| (index, e))?,
+            }
         }
         Ok(())
     }
@@ -478,6 +498,9 @@ impl Session {
     }
 
     fn wait(&mut self, until: &WaitFor, timeout: Duration) -> std::result::Result<(), StepError> {
+        if matches!(until, WaitFor::Exited) {
+            return self.wait_exited(timeout);
+        }
         if let WaitFor::Stable(duration) = until {
             let mut stable: Option<(String, Instant)> = None;
             // Stability waits aren't capped by `wait_cap`.
@@ -498,7 +521,7 @@ impl Session {
                 WaitFor::Text(needle) => s.text().lines().any(|row| row.contains(needle.as_str())),
                 WaitFor::Gone(needle) => !s.text().lines().any(|row| row.contains(needle.as_str())),
                 WaitFor::Regex(re) => re.is_match(&s.text()),
-                WaitFor::Stable(_) => unreachable!("handled above"),
+                WaitFor::Stable(_) | WaitFor::Exited => unreachable!("handled above"),
                 WaitFor::Log(matcher) => s.env_log.as_ref().is_some_and(|path| {
                     std::fs::read_to_string(path).is_ok_and(|text| RequestLog::parse(&text).has_served(matcher))
                 }),
@@ -506,6 +529,27 @@ impl Session {
             };
             done.then_some(())
         })
+    }
+
+    /// `wait.exited`: polls every [`POLL`] until the app exits, for up to `timeout` (capped like [`poll`](Self::poll)).
+    /// Exiting with code 0 passes; any other code, or a status that can't be read, fails the run as an early exit
+    /// would.
+    fn wait_exited(&mut self, timeout: Duration) -> std::result::Result<(), StepError> {
+        let timeout = self.wait_cap.map_or(timeout, |cap| timeout.min(cap));
+        let end = (Instant::now() + timeout).min(self.deadline);
+        loop {
+            match self.child.try_wait() {
+                Ok(Some(status)) if status.success() => return Ok(()),
+                Ok(Some(status)) => return Err(StepError::Exited(Some(status.exit_code()))),
+                Err(_) => return Err(StepError::Exited(None)),
+                Ok(None) => {}
+            }
+            let now = Instant::now();
+            if now >= end {
+                return Err(StepError::Timeout);
+            }
+            std::thread::sleep(POLL.min(end - now));
+        }
     }
 
     /// Polls `check` every [`POLL`] until it returns a value, for up to `timeout` (capped by

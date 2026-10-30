@@ -16,10 +16,10 @@ cursor 1 4 hidden
 │                                                              ││  ▶ 👍 2 | 🎉 1 | 👀 4                                                                        │
 │                                                              ││                                                                                              │
 │                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
-│                                                              ││  ▶ Status checks: ✘ Failed                                                                   │
+│                                                              ││  ▶ Status checks: ✘                                                                          │
 │                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                          Loading...                                          │
+│                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
+│                                                              ││  ▶ PR Reviews:                                                                               │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││──────────────────────────────────────────────────────────────────────────────────────────────│
@@ -65,18 +65,18 @@ e..............................................................efrrrrrrrrrrrrrrr
 e..............................................................efssoootooooootooooootoossssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf
 e..............................................................efssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf
 e..............................................................efrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrf
-e..............................................................efssooooooooooooooooouuuuuuuusssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf
+e..............................................................efssoooooooooooooooooussssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf
 e..............................................................efssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf
-e..............................................................efvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvf
-e..............................................................efvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvf
-e..............................................................efvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvf
+e..............................................................efrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrf
+e..............................................................efssooooooooooooosssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf
+e..............................................................efssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf
 e..............................................................ef..............................................................................................f
 e..............................................................efaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaf
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef..............................................................................................f
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbqqb............................................f
 eggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggef..............................................................................................f
-ellllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllef..wwxbbbbbxbbbbbbbb...........................................................................f
-eooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooef..wwbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbx.........................................................f
+ellllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllef..vvwbbbbbwbbbbbbbb...........................................................................f
+eooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooef..vvbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbw.........................................................f
 eooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooef..............................................................................................f
 eooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooef..bbbbbbbqqqqqqqqqqqbbbbbbbbbbbbbbbbbbbbbb....................................................f
 e..............................................................ef..............................................................................................f
@@ -92,13 +92,13 @@ e..............................................................ef...............
 e..............................................................ef..............................................................................................f
 e..............................................................ef..............................................................................................f
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef..............................................................................................f
-eeeeeeeeeeeeeeyyyyyyyeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef..............................................................................................f
+eeeeeeeeeeeeeexxxxxxxeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef..............................................................................................f
 eggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggef..............................................................................................f
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef..............................................................................................f
-eeeeeeeeeeeeeeeeeyyyyyyyeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.................................zAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.f
-eggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggef.................................zABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBAAAAAAAAAAAAAAAAAAAAA.f
-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffffffffffffffffffffffffffffffzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAff
-CCCCDDDDDDDDDDDDDDCCCCDDDDDDDDDDDCCCDDDDDDDDDDDDCCCDDDDDDDDDDDDDDDDDDDDDDCCCDDDDDCCCCDDDDDDDDDDDDDDDDCCCDDDDDDDDDCCCDDDDDDDDDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+eeeeeeeeeeeeeeeeexxxxxxxeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.................................yzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.f
+eggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggef.................................yzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzzzzzzzzzzzzzzzzzzzzz.f
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffffffffffffffffffffffffffffffyzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzff
+BBBBCCCCCCCCCCCCCCBBBBCCCCCCCCCCCBBBCCCCCCCCCCCCBBBCCCCCCCCCCCCCCCCCCCCCCBBBCCCCCBBBBCCCCCCCCCCCCCCCCBBBCCCCCCCCCBBBCCCCCCCCCCCCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 --- legend
 . bg=#121212
 a fg=#004578 bg=#121212
@@ -122,15 +122,14 @@ r fg=#121212 bg=#1e1e1e
 s bg=#1e1e1e
 t default
 u fg=#ff0000 bg=#1e1e1e
-v fg=#0178d4 bg=#262626
-w fg=#57a5e2 bg=#121212
-x fg=#f4bb6e bg=#241d13
-y fg=#4e7bae bg=#121212
-z fg=#4ebf71 bg=#343f49
-A bg=#343f49
-B fg=#e0e0e0 bg=#343f49
-C fg=#ffa62b bg=#242f38 bold
-D fg=#e0e0e0 bg=#242f38
-E bg=#242f38
+v fg=#57a5e2 bg=#121212
+w fg=#f4bb6e bg=#241d13
+x fg=#4e7bae bg=#121212
+y fg=#4ebf71 bg=#343f49
+z bg=#343f49
+A fg=#e0e0e0 bg=#343f49
+B fg=#ffa62b bg=#242f38 bold
+C fg=#e0e0e0 bg=#242f38
+D bg=#242f38
 --- cells
 11 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│"," "," ","▶"," ","👍",""," ","2"," ","|"," ","🎉",""," ","1"," ","|"," ","👀",""," ","4"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

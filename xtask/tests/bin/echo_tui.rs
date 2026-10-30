@@ -12,7 +12,7 @@
 //! and `press` turns on press/release reporting without motion (`?1000h ?1006h`).
 //!
 //! Ctrl+B draws a box titled with the process id at rows 5 to 7, so two runs differ (`tests/record.rs`). Ctrl+D
-//! exits with code 3. `--version` prints a version and exits, as fake-gh's installer and `--record` expect of the
+//! exits with code 3, and Ctrl+Q with code 0. `--version` prints a version and exits, as fake-gh's installer and `--record` expect of the
 //! programs it stands in for.
 
 use std::io::{self, Write};
@@ -91,6 +91,10 @@ fn main() -> io::Result<()> {
                 if key.code == KeyCode::Char('d') && key.modifiers.contains(KeyModifiers::CONTROL) {
                     terminal::disable_raw_mode()?;
                     std::process::exit(3);
+                }
+                if key.code == KeyCode::Char('q') && key.modifiers.contains(KeyModifiers::CONTROL) {
+                    terminal::disable_raw_mode()?;
+                    std::process::exit(0);
                 }
                 if key.code == KeyCode::Char('b') && key.modifiers.contains(KeyModifiers::CONTROL) {
                     let title = format!("┌─ pid {} ", std::process::id());

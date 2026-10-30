@@ -7,7 +7,7 @@ captures = ["open", "title-typed", "status-open", "status-closed", "saving", "up
 scenario = "214773d89608887c0a53efe0d2a8b6a19581eda3"
 fixtures = "51e754ca82292afe7997c95d25638fe40c7eddd9"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "62da7e76547ecbb63e9f20561b0f0c02692784e2"
+harness = "89fd8ec5199f7194e251a19d4da830af25a57643"
 
 [recorded_with]
 python = "3.14.7"

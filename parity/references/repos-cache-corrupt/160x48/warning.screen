@@ -42,7 +42,7 @@ cursor 1 4 hidden
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [4] Workflows ──────────────────────────────────────────────┐└──────────────────────────────────────────────────────────────────────────────────────────────┘
 │ Time  Result  Job Name  Run Name  Run #                      │┌─ [6] Command Log ────────────────────────────────────────────────────────────────────────────┐
-│                                                              ││WARNING 2026-10-27 22:25:55 - Failed to parse cache file '/tmp/lazy-github-parity-gdCNUN/hom  │
+│                                                              ││WARNING 2026-10-30 07:23:47 - Failed to parse cache file '/tmp/lazy-github-parity-82ELAL/hom  │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │

@@ -10,6 +10,7 @@ use std::path::Path;
 use std::process::ExitCode;
 
 use lazy_github_core::config::{Config, ConfigError, ConfigPaths};
+use lazy_github_core::debug::{DebugEnv, debug_markdown};
 use serde_json::Value;
 
 pub use clear::{aborted, clear_cache, clear_config};
@@ -93,6 +94,24 @@ pub fn clear_auth(
     finish(result, stderr)
 }
 
+/// `lazy-github debug`: the debug info (`lazy_github_core::debug`) and a newline. `env` reads an environment
+/// variable; `gh_version` asks gh for its version, once the config has loaded.
+pub fn debug(
+    paths: Result<ConfigPaths, ConfigError>,
+    env: impl Fn(&str) -> Option<String>,
+    gh_version: impl FnOnce() -> Option<String>,
+    stdout: &mut impl Write,
+    stderr: &mut impl Write,
+) -> ExitCode {
+    let config = match paths.and_then(|paths| Config::load(&paths)) {
+        Ok(config) => config,
+        Err(e) => return error(stderr, e),
+    };
+    let env = DebugEnv::detect(env, gh_version());
+    let result = writeln!(stdout, "{}", debug_markdown(&env, &config)).map(|()| ExitCode::SUCCESS);
+    finish(result, stderr)
+}
+
 /// Deletes `path`; `Ok(false)` if there was nothing there.
 fn remove_if_present(path: &Path) -> io::Result<bool> {
     match std::fs::remove_file(path) {
@@ -116,7 +135,7 @@ fn finish(result: io::Result<ExitCode>, stderr: &mut impl Write) -> ExitCode {
 
 #[cfg(test)]
 mod tests {
-    use super::{JsonStyle, clear_auth, dump_config, version};
+    use super::{JsonStyle, clear_auth, debug, dump_config, version};
     use lazy_github_core::config::{ConfigError, ConfigPaths};
     use std::path::PathBuf;
     use std::process::ExitCode;
@@ -212,5 +231,50 @@ mod tests {
         );
         assert!(out.ends_with("To log out, run: gh auth logout\n"), "{out}");
         assert_eq!(text(err), "");
+    }
+
+    #[test]
+    fn debug_prints_the_markdown_and_a_newline() {
+        let tmp = TempDir::new();
+        let paths = tmp.paths();
+        let env = |name: &str| (name == "TERM").then(|| "xterm-256color".to_owned());
+        let (mut out, mut err) = (Vec::new(), Vec::new());
+        let gh = || Some("2.89.0 (fake-gh)".to_owned());
+        assert_eq!(debug(Ok(paths.clone()), env, gh, &mut out, &mut err), ExitCode::SUCCESS);
+        let out = text(out);
+        assert!(
+            out.starts_with(concat!(
+                "# Library Versions\n\n- LazyGithub Version: ",
+                env!("CARGO_PKG_VERSION"),
+                "\n- Rustc Version: "
+            )),
+            "{out}"
+        );
+        assert!(out.contains("\n- Gh Version: 2.89.0 (fake-gh)\n- OS: "), "{out}");
+        assert!(
+            out.contains("\n- Terminal: xterm-256color\n\n# LazyGithub Config\n\n```json\n{\n"),
+            "{out}"
+        );
+        assert!(out.ends_with("\n}\n```\n"), "{out}");
+        assert_eq!(text(err), "");
+        assert!(!paths.dir.exists());
+    }
+
+    #[test]
+    fn debug_with_a_broken_config_asks_gh_nothing() {
+        let tmp = TempDir::new();
+        let paths = tmp.paths();
+        std::fs::create_dir_all(&paths.dir).unwrap();
+        std::fs::write(&paths.file, "{").unwrap();
+        let (mut out, mut err) = (Vec::new(), Vec::new());
+        let gh = || -> Option<String> { panic!("gh was asked") };
+        assert_eq!(
+            debug(Ok(paths), |_: &str| None, gh, &mut out, &mut err),
+            ExitCode::FAILURE
+        );
+        assert_eq!(text(out), "");
+        let err = text(err);
+        assert!(err.starts_with("Error: "), "{err}");
+        assert_eq!(err.lines().count(), 1, "{err}");
     }
 }

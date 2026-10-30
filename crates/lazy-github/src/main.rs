@@ -8,7 +8,7 @@ use std::process::ExitCode;
 use clap::{Args, Parser, Subcommand};
 use lazy_github_core::config::{Config, ConfigPaths};
 use lazy_github_core::git::GitCli;
-use lazy_github_core::github::{GhCli, GhCliOptions};
+use lazy_github_core::github::{GhCli, GhCliOptions, Github as _};
 use lazy_github_core::logging::{self, LoggingOptions};
 use lazy_github_tui::app::App;
 use lazy_github_tui::clock::SystemClock;
@@ -37,6 +37,8 @@ enum Command {
     ClearCache(ConfirmArgs),
     /// Reset the user's settings
     ClearConfig(ConfirmArgs),
+    /// Outputs LazyGithub debug info
+    Debug,
     /// Dump the current configuration, as it would be loaded by LazyGithub
     DumpConfig,
     /// Run LazyGithub
@@ -69,6 +71,7 @@ fn main() -> ExitCode {
             let stdin = (!args.no_confirm).then_some(stdin);
             cli::clear_config(ConfigPaths::discover(), stdin, &mut io::stdout(), &mut io::stderr())
         }),
+        Command::Debug => cli::debug(ConfigPaths::discover(), env_var, gh_version, stdout, stderr),
         Command::DumpConfig => {
             let style = cli::JsonStyle::detect(env_var, stdout.is_terminal());
             cli::dump_config(ConfigPaths::discover(), style, stdout, stderr)
@@ -109,6 +112,16 @@ fn abort_on_ctrl_c(command: impl FnOnce() -> ExitCode + Send + 'static) -> ExitC
 /// An environment variable as Python's `os.environ` would give it: set but not Unicode still counts as set.
 fn env_var(name: &str) -> Option<String> {
     std::env::var_os(name).map(|value| value.to_string_lossy().into_owned())
+}
+
+/// The installed gh's version, or `None` when gh can't be run or prints something unexpected.
+fn gh_version() -> Option<String> {
+    // A runtime of its own, for one `gh --version`: the subcommands other than `run` are otherwise synchronous.
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .ok()?;
+    runtime.block_on(GhCli::default().gh_version()).ok()
 }
 
 /// The user's working directory: `var` (`LAZY_GITHUB_ORIGINAL_PWD`) if set and non-empty, otherwise `cwd()`, or

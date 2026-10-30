@@ -1,0 +1,66 @@
+---
+source: crates/lazy-github-core/src/debug.rs
+expression: "debug_markdown(&fixed_env(), &config)"
+---
+# Library Versions
+
+- LazyGithub Version: 0.1.0
+- Rustc Version: 1.97.0 (0123456789 2026-10-01)
+- Gh Version: 2.89.0 (fake-gh)
+- OS: linux x86_64
+- Terminal: WezTerm 20240203-110809 (xterm-256color)
+
+# LazyGithub Config
+
+```json
+{
+    "appearance": {
+        "theme": "textual-dark",
+        "show_command_log": false,
+        "show_workflows": true,
+        "show_issues": true,
+        "show_pull_requests": true
+    },
+    "notifications": {
+        "enabled": false,
+        "mark_notification_as_read_when_selected": true
+    },
+    "bindings": {
+        "overrides": {}
+    },
+    "repositories": {
+        "additional_repos_to_track": [],
+        "favorites": []
+    },
+    "pull_requests": {
+        "state_filter": "all",
+        "owner_filter": "all",
+        "preferred_merge_method": "squash",
+        "additional_suggested_pr_reviewers": [],
+        "preload_pull_request_for_current_commit": false,
+        "pull_request_template": null
+    },
+    "issues": {
+        "state_filter": "all",
+        "owner_filter": "all"
+    },
+    "cache": {
+        "auth_cache_duration": 86400,
+        "auth_last_checked": null,
+        "cache_directory": "/home/lazy/.config/lazy-github/.cache",
+        "default_ttl": 600,
+        "list_repos_ttl": 86400,
+        "list_issues_ttl": 3600
+    },
+    "core": {
+        "first_start": true,
+        "logfile_path": "/home/lazy/.config/lazy-github/lazy_github.log",
+        "logfile_max_bytes": 5000000,
+        "logfile_count": 5
+    },
+    "api": {
+        "base_url": "https://api.github.com",
+        "client_type": "RAW_HTTP"
+    }
+}
+```

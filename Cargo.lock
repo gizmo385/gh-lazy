@@ -1062,6 +1062,7 @@ dependencies = [
  "etcetera",
  "form_urlencoded",
  "indexmap",
+ "insta",
  "jiff",
  "regex",
  "rstest",

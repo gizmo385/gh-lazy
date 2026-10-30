@@ -48,6 +48,12 @@ pub trait Github: Clone + Send + Sync + 'static {
     /// logged in.
     fn check_auth(&self) -> impl Future<Output = Result<(), GhError>> + Send;
 
+    /// The installed gh's version, for the debug info: `gh --version`'s first line after `gh version `.
+    ///
+    /// Fails with [`GhError::NotInstalled`] when `gh` can't be run and [`GhError::Parse`] when it prints something
+    /// else.
+    fn gh_version(&self) -> impl Future<Output = Result<String, GhError>> + Send;
+
     /// The logged-in user. Fetched once; later calls return the same value.
     fn current_user(&self) -> impl Future<Output = Result<User, GhError>> + Send;
 
@@ -1327,6 +1333,10 @@ fn issue_list_item(response: &GhResponse, repo: &Repository) -> Result<IssueList
 impl Github for GhCli {
     async fn check_auth(&self) -> Result<(), GhError> {
         self.inner.runner.auth_status().await
+    }
+
+    async fn gh_version(&self) -> Result<String, GhError> {
+        self.inner.runner.version().await
     }
 
     async fn current_user(&self) -> Result<User, GhError> {

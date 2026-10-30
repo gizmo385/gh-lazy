@@ -29,6 +29,8 @@ tracing-appender = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["fmt", "registry", "std"] }
 
 [dev-dependencies]
+# Snapshots of the debug info (`debug`).
+insta = { workspace = true }
 rstest = { workspace = true }
 # The diff `config_goldens_are_fresh` prints for a stale golden.
 similar = { workspace = true }

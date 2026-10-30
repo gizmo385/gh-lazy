@@ -486,6 +486,10 @@ mod tests {
             panic!("check_auth exploded");
         }
 
+        async fn gh_version(&self) -> Result<String, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
         async fn current_user(&self) -> Result<lazy_github_core::models::User, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }

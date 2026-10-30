@@ -20,7 +20,7 @@ use super::{GhError, GhRequest, GhResponse};
 /// Each limit covers the whole run: spawning `gh`, writing its input and reading all its output.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GhTimeouts {
-    /// For `gh auth status`.
+    /// For `gh auth status`, and `gh --version`.
     pub auth_status: Duration,
     /// For one `gh api -i` request, unless the request sets [`GhRequest::timeout`].
     pub request: Duration,
@@ -146,6 +146,22 @@ impl GhCli {
         })
     }
 
+    /// The installed gh's version: `gh --version`'s first line after `gh version `, such as `2.62.0 (2024-11-14)`.
+    ///
+    /// Limited by [`GhTimeouts::auth_status`]. Fails with [`GhError::NotInstalled`] when `gh` can't be run,
+    /// [`GhError::Command`] when it exits non-zero and [`GhError::Parse`] when it prints something else.
+    pub async fn version(&self) -> Result<String, GhError> {
+        let limit = self.inner.timeouts.limit(CallKind::AuthStatus, None);
+        let output = self.run(&["--version".into()], None, limit).await?;
+        if !output.status.success() {
+            return Err(GhError::Command {
+                code: output.status.code(),
+                stderr: String::from_utf8_lossy(&output.stderr).trim().to_owned(),
+            });
+        }
+        parse_version(&output.stdout)
+    }
+
     /// The GitHub Enterprise host passed as `--hostname`, or `None` for gh's default host.
     pub(crate) fn hostname(&self) -> Option<&str> {
         self.inner.hostname.as_deref()
@@ -268,6 +284,18 @@ impl GhCli {
     }
 }
 
+/// The version in `gh --version`'s output: its first line after `gh version `.
+fn parse_version(stdout: &[u8]) -> Result<String, GhError> {
+    let text = String::from_utf8_lossy(stdout);
+    text.lines()
+        .next()
+        .and_then(|line| line.strip_prefix("gh version "))
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
+        .map(str::to_owned)
+        .ok_or_else(|| GhError::Parse(format!("unexpected `gh --version` output: {:?}", text.trim())))
+}
+
 /// Everything `stream` yields until end of file, or nothing when the stream wasn't piped.
 async fn read_all(stream: Option<impl AsyncRead + Unpin>) -> io::Result<Vec<u8>> {
     let mut buf = Vec::new();
@@ -346,5 +374,36 @@ mod tests {
             Err(GhError::NotInstalled)
         ));
         assert!(matches!(gh.auth_status().await, Err(GhError::NotInstalled)));
+        assert!(matches!(gh.version().await, Err(GhError::NotInstalled)));
+    }
+
+    #[test]
+    fn version_is_the_first_line_after_gh_version() {
+        assert_eq!(
+            parse_version(b"gh version 2.89.0 (fake-gh)\nhttps://github.com/cli/cli/releases/tag/v2.89.0\n").unwrap(),
+            "2.89.0 (fake-gh)"
+        );
+        assert_eq!(
+            parse_version(b"gh version 2.62.0 (2024-11-14)\r\nhttps://github.com/cli/cli/releases/tag/v2.62.0\r\n")
+                .unwrap(),
+            "2.62.0 (2024-11-14)"
+        );
+    }
+
+    #[test]
+    fn other_version_output_is_a_parse_error() {
+        for garbage in [
+            &b""[..],
+            b"\n",
+            b"gh version \n",
+            b"git version 2.45.0\n",
+            b"usage: gh <command>\n",
+        ] {
+            assert!(
+                matches!(parse_version(garbage), Err(GhError::Parse(_))),
+                "{}",
+                String::from_utf8_lossy(garbage)
+            );
+        }
     }
 }

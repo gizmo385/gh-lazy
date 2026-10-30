@@ -15,7 +15,7 @@ const GOLDEN: &str = "tests/fixtures/cli/python-cli.json";
 
 /// The subcommands whose golden cases run. A case runs when its first argument is listed here; the issues that add a
 /// subcommand add it here.
-const IMPLEMENTED: &[&str] = &["version", "dump-config", "clear-config", "clear-cache"];
+const IMPLEMENTED: &[&str] = &["version", "dump-config", "clear-config", "clear-cache", "debug"];
 
 struct TempHome(PathBuf);
 
@@ -111,6 +111,44 @@ fn cache_dir(home: &TempHome, config: &Value) -> PathBuf {
     }
 }
 
+/// `debug`'s list lines after the LazyGithub version: Rust lists these where Python lists its libraries (decision
+/// `debug-info-versions`).
+const DEBUG_LIST: [&str; 4] = ["- Rustc Version: ", "- Gh Version: ", "- OS: ", "- Terminal: "];
+
+/// The text from the `# LazyGithub Config` line on, which `debug` prints as Python does.
+fn from_config_heading(stdout: &str) -> String {
+    stdout
+        .find("# LazyGithub Config\n")
+        .map_or(stdout, |start| &stdout[start..])
+        .to_owned()
+}
+
+/// How `debug`'s "Library Versions" section differs from Rust's list: the heading, the LazyGithub version, then one
+/// line for each of [`DEBUG_LIST`] with a value.
+fn debug_versions_problems(name: &str, stdout: &str) -> Vec<String> {
+    let head = concat!(
+        "# Library Versions\n\n- LazyGithub Version: ",
+        env!("CARGO_PKG_VERSION"),
+        "\n"
+    );
+    let Some(rest) = stdout.strip_prefix(head) else {
+        return vec![format!("{name}: stdout doesn't start with {head:?}:\n{stdout}")];
+    };
+    let list: Vec<&str> = rest.split("\n\n").next().unwrap_or_default().lines().collect();
+    let shaped = list.len() == DEBUG_LIST.len()
+        && list
+            .iter()
+            .zip(DEBUG_LIST)
+            .all(|(line, prefix)| line.strip_prefix(prefix).is_some_and(|value| !value.is_empty()));
+    if shaped {
+        Vec::new()
+    } else {
+        vec![format!(
+            "{name}: the list after the LazyGithub version isn't {DEBUG_LIST:?}:\n{stdout}"
+        )]
+    }
+}
+
 /// Runs one golden case and describes every way the result differs from Python's.
 fn check_case(case: &Value) -> Vec<String> {
     let name = case["name"].as_str().unwrap();
@@ -150,7 +188,11 @@ fn check_case(case: &Value) -> Vec<String> {
     };
     let mut problems = Vec::new();
     for (field, actual) in [("stdout", &output.stdout), ("stderr", &output.stderr)] {
-        let (expected, actual) = (expect(field), text(actual));
+        let (mut expected, mut actual) = (expect(field), text(actual));
+        if field == "stdout" && args[0] == "debug" {
+            problems.extend(debug_versions_problems(name, &actual));
+            (expected, actual) = (from_config_heading(&expected), from_config_heading(&actual));
+        }
         if expected != actual {
             let diff = similar::TextDiff::from_lines(&expected, &actual)
                 .unified_diff()
@@ -466,6 +508,106 @@ fn ctrl_c_at_the_prompt_aborts() {
     assert_eq!(text(&output.stderr), "Aborted!\n");
     assert_eq!(text(&seen), prompt);
     assert!(home.config_file().is_file());
+}
+
+#[test]
+fn bug_report_template_matches_pythons() {
+    assert_eq!(
+        lazy_github_core::debug::bug_report_template("{debug_info}"),
+        golden()["bug_report_template"].as_str().unwrap()
+    );
+}
+
+/// A directory holding only a `gh` that prints what fake-gh's `gh --version` does, for `PATH`.
+///
+/// fake-gh itself is a binary of another package, which this package's tests can't name, so this stands in for it.
+fn fake_gh_bin() -> TempHome {
+    use std::os::unix::fs::PermissionsExt as _;
+
+    let bin = TempHome::new("fake-gh-bin");
+    let gh = bin.0.join("gh");
+    std::fs::write(
+        &gh,
+        "#!/bin/sh\nprintf 'gh version 2.89.0 (fake-gh)\\nhttps://github.com/cli/cli/releases/tag/v2.89.0\\n'\n",
+    )
+    .unwrap();
+    std::fs::set_permissions(&gh, std::fs::Permissions::from_mode(0o755)).unwrap();
+    // Another test's fork can briefly hold the write handle; running the script fails with `ETXTBSY` until it lets go.
+    let start = std::time::Instant::now();
+    while let Err(e) = std::process::Command::new(&gh).output() {
+        assert!(
+            e.kind() == std::io::ErrorKind::ExecutableFileBusy && start.elapsed().as_secs() < 5,
+            "{e}"
+        );
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    bin
+}
+
+#[test]
+fn debug_lists_the_gh_version_from_path() {
+    let home = TempHome::new("debug-fake-gh");
+    let bin = fake_gh_bin();
+    let output = home.command(&["debug"]).env("PATH", &bin.0).output().unwrap();
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    let stdout = text(&output.stdout);
+    assert!(stdout.contains("\n- Gh Version: 2.89.0 (fake-gh)\n"), "{stdout}");
+    assert!(stdout.contains("\n- Terminal: xterm-256color\n"), "{stdout}");
+    assert_eq!(text(&output.stderr), "");
+}
+
+#[test]
+fn debug_without_gh_says_unknown() {
+    let home = TempHome::new("debug-no-gh");
+    let empty = TempHome::new("debug-empty-path");
+    let output = home.command(&["debug"]).env("PATH", &empty.0).output().unwrap();
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    let stdout = text(&output.stdout);
+    assert!(stdout.contains("\n- Gh Version: unknown\n"), "{stdout}");
+    assert_eq!(text(&output.stderr), "");
+}
+
+#[test]
+fn debug_with_a_broken_config_is_one_error_line() {
+    let home = TempHome::new("debug-broken");
+    home.write_config(r#"{"issues":{"state_filter":"bogus"}}"#);
+    let output = home.run(&["debug"]);
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(text(&output.stdout), "");
+    let stderr = text(&output.stderr);
+    assert!(stderr.starts_with("Error: "), "{stderr:?}");
+    assert!(stderr.contains("`issues.state_filter`"), "{stderr:?}");
+    assert_eq!(stderr.lines().count(), 1, "{stderr:?}");
+}
+
+#[test]
+fn debug_creates_nothing() {
+    let home = TempHome::new("debug-no-side-effects");
+    let output = home.run(&["debug"]);
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    assert_eq!(home.contents(), Vec::<PathBuf>::new());
+
+    // No log file appears in a config folder that's already there.
+    home.write_config("{}");
+    let output = home.run(&["debug"]);
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    assert_eq!(
+        home.contents(),
+        paths(&[".config", ".config/lazy-github", ".config/lazy-github/config.json"])
+    );
+}
+
+#[test]
+fn debug_shows_unknown_keys() {
+    let home = TempHome::new("debug-unknown");
+    home.write_config(r#"{"zzz_new": {"on": true}}"#);
+    let output = home.run(&["debug"]);
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    let stdout = text(&output.stdout);
+    assert!(
+        stdout.ends_with("    \"zzz_new\": {\n        \"on\": true\n    }\n}\n```\n"),
+        "{stdout}"
+    );
 }
 
 /// Regenerates `python-cli.json` with the Python app and checks the committed copy matches.

@@ -4,6 +4,7 @@
 
 pub mod cache;
 pub mod config;
+pub mod debug;
 pub mod diff;
 pub mod drafts;
 pub mod gh;

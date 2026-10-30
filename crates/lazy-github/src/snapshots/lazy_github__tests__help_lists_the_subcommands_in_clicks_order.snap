@@ -10,6 +10,7 @@ Commands:
   clear-auth    Explains how to log out: LazyGithub uses the GitHub CLI's login
   clear-cache   Reset the lazy-github cache
   clear-config  Reset the user's settings
+  debug         Outputs LazyGithub debug info
   dump-config   Dump the current configuration, as it would be loaded by LazyGithub
   run           Run LazyGithub
   version       Prints the current version

@@ -4,4 +4,4 @@ generator = "crates/lazy-github/tests/fixtures/cli/generate.py"
 golden = ["crates/lazy-github/tests/fixtures/cli/python-cli.json"]
 test = "crates/lazy-github/tests/cli.rs"
 fresh_test = "cli_goldens_are_fresh"
-parity_rows = ["cli.dump-config", "cli.version", "cli.clear-config", "cli.clear-cache"]
+parity_rows = ["cli.dump-config", "cli.version", "cli.clear-config", "cli.clear-cache", "cli.debug", "modals.bug-report-template"]

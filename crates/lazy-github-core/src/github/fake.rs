@@ -18,9 +18,12 @@ use crate::models::{
     WorkflowJob, WorkflowRun,
 };
 
+/// The version fake-gh's `gh --version` prints, and what [`FakeGithub::gh_version`] returns unless set.
+const FAKE_GH_VERSION: &str = "2.89.0 (fake-gh)";
+
 /// A [`Github`] that returns canned results and records every call.
 ///
-/// By default `check_auth` succeeds, `list_repositories` returns no repositories, `unread_notification_count` returns
+/// By default `check_auth` succeeds, `gh_version` returns fake-gh's `2.89.0 (fake-gh)`, `list_repositories` returns no repositories, `unread_notification_count` returns
 /// 0, `list_notifications` returns an empty page, `mark_notification_read` and `mark_all_notifications_read` fail with a 422, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` and `pull_request_uncached` fail with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, `collaborators` and `requested_reviewers` return none, `request_reviewers` and `update_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
@@ -32,6 +35,8 @@ pub struct FakeGithub {
 pub enum GithubCall {
     /// [`Github::check_auth`].
     CheckAuth,
+    /// [`Github::gh_version`].
+    GhVersion,
     /// [`Github::current_user`].
     CurrentUser,
     /// [`Github::list_repositories`].
@@ -263,6 +268,8 @@ pub enum GithubCall {
 #[derive(Debug, Default)]
 struct State {
     auth_error: Option<GhError>,
+    /// What `gh_version` returns; `None` is fake-gh's version.
+    gh_version: Option<Result<String, GhError>>,
     user: Option<Result<User, GhError>>,
     repositories: Option<Result<Vec<Repository>, GhError>>,
     unread_count: Option<Result<usize, GhError>>,
@@ -715,6 +722,13 @@ impl FakeGithub {
         self
     }
 
+    /// `gh_version` returns `version`.
+    #[must_use]
+    pub fn with_gh_version(self, version: Result<String, GhError>) -> Self {
+        self.lock().gh_version = Some(version);
+        self
+    }
+
     /// From now on, `check_auth` fails with `error`, or succeeds for `None`. Clones see the change too, so a test can
     /// log in while the app holds the fake.
     pub fn set_auth_error(&self, error: Option<GhError>) {
@@ -766,6 +780,15 @@ impl Github for FakeGithub {
         self.respond(GithubCall::CheckAuth, |state| match &state.auth_error {
             Some(error) => Err(duplicate(error)),
             None => Ok(()),
+        })
+        .await
+    }
+
+    async fn gh_version(&self) -> Result<String, GhError> {
+        self.respond(GithubCall::GhVersion, |state| match &state.gh_version {
+            Some(Ok(version)) => Ok(version.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Ok(FAKE_GH_VERSION.to_owned()),
         })
         .await
     }
@@ -1432,6 +1455,16 @@ mod tests {
         assert!(github.list_repositories(RepoListQuery::all()).await.unwrap().is_empty());
         assert_eq!(github.unread_notification_count().await.unwrap(), 0);
         assert!(matches!(github.current_user().await, Err(GhError::Command { .. })));
+    }
+
+    #[tokio::test]
+    async fn gh_version_is_fake_ghs_unless_set() {
+        assert_eq!(FakeGithub::new().gh_version().await.unwrap(), "2.89.0 (fake-gh)");
+        let github = FakeGithub::new().with_gh_version(Ok("2.62.0 (2024-11-14)".into()));
+        assert_eq!(github.gh_version().await.unwrap(), "2.62.0 (2024-11-14)");
+        assert_eq!(github.calls(), [GithubCall::GhVersion]);
+        let github = FakeGithub::new().with_gh_version(Err(GhError::NotInstalled));
+        assert!(matches!(github.gh_version().await, Err(GhError::NotInstalled)));
     }
 
     #[tokio::test]

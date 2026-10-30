@@ -1714,6 +1714,8 @@ impl Component for MainScreen {
                 .enabled
                 .then_some(Action::Main(MainAction::OpenNotifications)),
             BindingId::LinkPaste => Some(Action::Main(MainAction::OpenPasteLink(None))),
+            BindingId::LinkFollow => Some(Action::ShowLinkHints { external: false }),
+            BindingId::LinkFollowExternal => Some(Action::ShowLinkHints { external: true }),
             BindingId::TextualFocusNext => Some(Action::FocusNext),
             BindingId::TextualFocusPrevious => Some(Action::FocusPrevious),
             // Nothing can be selected yet, so Textual's `check_action` lets ctrl+c through to `help_quit`.

@@ -1,0 +1,53 @@
+---
+source: crates/lazy-github-tui/src/modal/link_hints/tests.rs
+assertion_line: 315
+expression: screen
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/issue-fixture                                                                                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] Issue #12 Details ──────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name           Private                        ││ Overview  Comments                                                                           │
+│ ☆  parity-bot  issue-fixture  ✘                              ││╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                                              ││Open Crash when the config file is empty a#12) by sarity-friend                               │
+│                                                              ││                                                                                              │
+│                                                              ││──────────────────────────────────────────────────────────────────────────────────────────────│
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││  Steps to reproduce                                                                          │
+│                                                              ││                                                                                              │
+│                                                              ││   1. Create an empty config.json                                                             │
+│                                                              ││   2. Run lazy-github and press #5                                                            │
+│                                                              ││                                                                                              │
+│                                                              ││  It fails the same way as d7, and farity-bot/dotfiles#3 has the same error. cc gparity-bot   │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││    Error: the config file is empty (see #9)                                                  │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [2] Pull Requests (empty) ──────────────────────────────────┐│                                                                                              │
+│ #  Status  Author  Title                                     ││  ▌ Workaround: delete the file and start again.                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [3] Issues ─────────────────────────────────────────────────┐│                                                                                              │
+│ #   Status  Author         Title                             ││                                                                                              │
+│ 12  open    parity-friend  Crash when the config file is empt││                                                                                              │
+│                                                            ▏ ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  ? Keybindings

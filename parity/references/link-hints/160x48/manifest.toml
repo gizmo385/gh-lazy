@@ -1,10 +1,10 @@
 # Written by `cargo xtask parity --record`. Don't edit.
 format = 1
 size = "160x48"
-captures = ["no-links", "hints", "cancelled", "no-match", "external", "followed-user", "issue-hints", "followed-issue"]
+captures = ["no-links", "hints", "cancelled", "no-match", "external", "followed-repo", "followed-user", "issue-hints", "followed-issue"]
 
 [inputs]
-scenario = "9be46050e9740c80170a4fb5270ff01711558ca8"
+scenario = "0e3ad1dac6044fc2ddd87d136fe806a46c08a727"
 fixtures = "48f64d99bcd1064c6b34b4249528f658d163348d"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"

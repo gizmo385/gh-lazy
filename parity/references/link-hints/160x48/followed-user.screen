@@ -23,7 +23,7 @@ cursor 1 4 hidden
 │                                  █                                                                                        █                                  │
 └──────────────────────────────────█  Email: user@example.com                                                               █                                  │
 ┌─ [2] Pull Requests ──────────────█                                                                                        █                                  │
-│ #  Status  Author      Title     █  Blog: https://example.com/parity-bot                                                  █                                  │
+│ #  Status  Author  Title         █  Blog: https://example.com/parity-bot                                                  █                                  │
 │ 8  open    parity-bot  A pull req█                                                                                        █                                  │
 │                                  █  Twitter: @paritybot                                                                   █                                  │
 │                                  █                                                                                        █                                  │

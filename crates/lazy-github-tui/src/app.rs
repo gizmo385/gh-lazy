@@ -32,8 +32,8 @@ use crate::event::Event;
 use crate::gh_health::GhHealth;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
 use crate::modal::{
-    CommandPaletteDialog, CommandSource, DebugInfoDialog, DialogFrame, ModalEntry, ModalKind, PaletteCommand,
-    PaletteRun, SettingsDialog, SettingsOutcome, dim,
+    CommandPaletteDialog, CommandSource, DebugInfoDialog, DialogFrame, LinkHintsDialog, ModalEntry, ModalKind,
+    PaletteCommand, PaletteRun, SettingsDialog, SettingsOutcome, dim,
 };
 use crate::notifications::NotificationPoll;
 use crate::options::{AppOptions, TEST_PANIC_ENV, TestPanic};
@@ -692,6 +692,7 @@ impl App {
                 self.set_theme(theme, out);
             }
             Action::OpenSettings => self.open_settings(out),
+            Action::ShowLinkHints { external } => self.show_link_hints(external, out),
             Action::SettingsClosed(SettingsOutcome::Saved(config)) => self.apply_settings(*config, out),
             Action::ShowDebugInfo => self.show_debug_info(out),
             Action::OpenBugReport => self.open_bug_report(out),
@@ -854,6 +855,26 @@ impl App {
         Cx::new(&mut self.shared, out).open_dialog(CommandPaletteDialog::themes(), |run| {
             run.map_or(Action::Consumed, PaletteRun::action)
         });
+    }
+
+    /// [`Action::ShowLinkHints`]: labels over the links the main screen drew in the last frame, or the toast "No links
+    /// visible" when it drew none. Python's `follow_link`. Only the main screen has them, and its chain that binds
+    /// them is cut off under any dialog.
+    fn show_link_hints(&mut self, external: bool, out: &mut Outbox) {
+        if !self.modals.is_empty() || !matches!(self.base, BaseScreen::Main(_)) {
+            return;
+        }
+        match LinkHintsDialog::new(&self.links, external) {
+            None => out
+                .actions
+                .push_back(Action::Notify(Toast::new(Severity::Information, "No links visible"))),
+            Some(hints) => Cx::new(&mut self.shared, out).open_dialog(hints, |picked| {
+                picked.map_or(Action::Consumed, |(target, external)| Action::FollowLink {
+                    target,
+                    external,
+                })
+            }),
+        }
     }
 
     /// [`Action::OpenSettings`]: "Change Settings" opens the Settings modal over the main screen, built from the
@@ -1264,6 +1285,24 @@ impl App {
         self.render_modals(frame);
         // `handle_event` already dropped the expired ones: the loop wakes for each deadline.
         self.toasts.render(frame, frame.area(), &self.shared.theme);
+        self.render_overlays(frame);
+    }
+
+    /// The overlay dialogs (link hints), over everything else, toasts included.
+    fn render_overlays(&mut self, frame: &mut Frame<'_>) {
+        let area = frame.area();
+        let cx = RenderCx {
+            theme: &self.shared.theme,
+            keymap: &self.shared.keymap,
+            now: self.shared.clock.now(),
+            focused: true,
+            focus_within: true,
+            links: None,
+        };
+        for entry in self.modals.iter_mut().filter(|entry| entry.overlay()) {
+            entry.interior = area;
+            entry.render(frame, area, &cx);
+        }
     }
 
     /// The base screen, with the footer and help panel it has under any dialogs.
@@ -1392,6 +1431,10 @@ impl App {
         let top = self.modals.len() - 1;
         let mut hits = Vec::new();
         for (index, (entry, active)) in self.modals.iter_mut().zip(&actives).enumerate() {
+            // Drawn last, by `render_overlays`, over the screen as it is.
+            if entry.overlay() {
+                continue;
+            }
             dim(frame.buffer_mut(), area, &theme);
             if entry.frameless() {
                 entry.interior = area;

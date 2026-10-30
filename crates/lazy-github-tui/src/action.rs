@@ -76,6 +76,12 @@ pub enum Action {
     /// selection dispatches it (the repos table, the current-directory default, and later lookups and links), and
     /// selecting the current repo again reloads everything. Boxed: a `Repository` is big.
     SelectRepo(Box<Repository>),
+    /// `link.follow` (`f`) or `link.follow_external` (`F`, `external`) on the main screen: labels over the links drawn
+    /// in the last frame, or the toast "No links visible".
+    ShowLinkHints {
+        /// Whether the picked link goes to the browser whatever it is.
+        external: bool,
+    },
     /// Follow a link drawn on the main screen: a click on it, or a picked link hint. `external` (link hints' `F`)
     /// opens it in the browser with a toast. Otherwise a pull request, issue or user link opens in the app once it
     /// resolves, and anything else, or a link that doesn't resolve, opens in the browser. Python's

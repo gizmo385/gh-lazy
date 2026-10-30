@@ -1,0 +1,53 @@
+---
+source: crates/lazy-github-tui/src/modal/link_hints/tests.rs
+assertion_line: 384
+expression: screen
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/issue-fixture                                                                                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-bot/issue-fixture Details ───────────────────────────────────────────────────────┐
+│ ★  Owner       Name           Private                        ││ Repo Overview                                                                                │
+│ ☆  parity-bot  issue-fixture  ✘                              ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                                              ││aarity-bot/issue-fixture • Public                                                             │
+│                                                              ││Owned by asrity-bot                                                                           │
+│                                                              ││Default branch: main                                                                          │
+│                                                              ││                                                                                              │
+│                                                              ││Issues with bodies and comments, for the issue details tabs.                                  │
+│                                                              ││                                                                                              │
+│                                                              ││────────────────────────────────────────────────────────────────────────────────────────────  │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                           Links                                              │
+│                                                              ││                                                                                              │
+│                                                              ││  • adnk 1                                                                                    │
+│                                                              ││  • afnk 2                                                                                    │
+│                                                              ││  • agnk 3                                                                                    │
+│                                                              ││  • ahnk 4                                                                                    │
+│                                                              ││  • ajnk 5                                                                                    │
+│                                                              ││  • aknk 6                                                                                    │
+│                                                              ││  • alnk 7                                                                                    │
+│                                                              ││  • aqnk 8                                                                                    │
+│                                                              ││  • awnk 9                                                                                    │
+│                                                              ││  • aenk 10                                                                                   │
+│                                                              ││  • arnk 11                                                                                   │
+│                                                              ││  • atnk 12                                                                                   │
+│                                                              ││  • aynk 13                                                                                   │
+│                                                              ││  • aunk 14                                                                                   │
+│                                                              ││  • aink 15                                                                                   │
+│                                                              ││  • aonk 16                                                                                   │
+│                                                              ││  • apnk 17                                                                                   │
+│                                                              ││  • aznk 18                                                                                   │
+│                                                              ││  • axnk 19                                                                                 ▆▆│
+└──────────────────────────────────────────────────────────────┘│  • acnk 20                                                                                   │
+┌─ [2] Pull Requests (empty) ──────────────────────────────────┐│  • avnk 21                                                                                   │
+│ #  Status  Author  Title                                     ││  • abnk 22                                                                                   │
+└──────────────────────────────────────────────────────────────┘│  • annk 23                                                                                   │
+┌─ [3] Issues (empty) ─────────────────────────────────────────┐│  • amnk 24                                                                                   │
+│ #  Status  Author  Title                                     ││  • sank 25                                                                                   │
+└──────────────────────────────────────────────────────────────┘│  • ssnk 26                                                                                   │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│  • sdnk 27                                                                                   │
+│ Time  Result  Job Name  Run Name  Run #                      ││  • sfnk 28                                                                                   │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Comman

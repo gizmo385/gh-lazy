@@ -44,24 +44,41 @@ pub(super) fn layout(blocks: &[Block], width: u16, theme: &Theme, padded: bool) 
 
     let indent = " ".repeat(pad);
     let mut rendered = Rendered::default();
+    // A table row's links, by cell, until the row ends.
+    let mut table_row: Vec<(usize, LinkSpan)> = Vec::new();
     for (index, row) in rows.into_iter().enumerate() {
-        rendered
-            .links
-            .extend(row.links.into_iter().map(|(columns, target)| LinkSpan {
-                row: index,
-                columns: column(columns.start + pad)..column(columns.end + pad),
-                target,
-            }));
-        rendered.lines.push(if row.spans.is_empty() {
+        let Row { spans, links, table } = row;
+        if table.as_ref().is_none_or(|table| table.first) {
+            push_by_cell(&mut table_row, &mut rendered.links);
+        }
+        let links = links.into_iter().map(|(columns, target)| LinkSpan {
+            row: index,
+            columns: column(columns.start + pad)..column(columns.end + pad),
+            target,
+        });
+        match table {
+            Some(table) => table_row.extend(table.cells.into_iter().zip(links)),
+            None => rendered.links.extend(links),
+        }
+        rendered.lines.push(if spans.is_empty() {
             Line::default()
         } else {
             // Containers nested past the width (a list in a quote one cell wide) lay out wider than it; cut them,
             // whole graphemes only, so no line is wider than the area it's drawn in.
-            let spans = iter::once(Span::raw(indent.clone())).chain(row.spans);
+            let spans = iter::once(Span::raw(indent.clone())).chain(spans);
             Line::from(crate::display::cut_spans(spans, width).0)
         });
     }
+    push_by_cell(&mut table_row, &mut rendered.links);
     rendered
+}
+
+/// Moves a table row's links into `links` cell by cell, each cell's lines in turn: the order Python's link hints
+/// label them in (its widget tree has a widget per cell), which differs from reading order when cells wrap.
+fn push_by_cell(table_row: &mut Vec<(usize, LinkSpan)>, links: &mut Vec<LinkSpan>) {
+    // Stable, so each cell's links keep their line order.
+    table_row.sort_by_key(|&(cell, _)| cell);
+    links.extend(table_row.drain(..).map(|(_, link)| link));
 }
 
 /// Whether [`layout`] would give more than `rows` rows, without building them all: root blocks are stacked until
@@ -105,6 +122,15 @@ fn column(x: usize) -> u16 {
 pub(super) struct Row {
     pub(super) spans: Vec<Span<'static>>,
     pub(super) links: Vec<(Range<usize>, Arc<str>)>,
+    /// For a line of a table row: which cell each link is in.
+    pub(super) table: Option<TableLine>,
+}
+
+/// A line of a table row: whether it's the row's first, and the cell of each of its links, in [`Row::links`] order.
+#[derive(Debug, Default)]
+pub(super) struct TableLine {
+    pub(super) first: bool,
+    pub(super) cells: Vec<usize>,
 }
 
 impl Row {
@@ -208,6 +234,7 @@ impl Painter<'_> {
                         self.fg(self.palette().secondary, scope.under),
                     )],
                     links: Vec::new(),
+                    table: None,
                 },
             ],
             Block::Table { head, rows } => self.table(head, rows, width, scope.under),
@@ -336,6 +363,7 @@ impl Painter<'_> {
                 Row {
                     spans: vec![Span::styled(" ".repeat(width), bg)],
                     links: Vec::new(),
+                    table: None,
                 }
             }
         };
@@ -365,6 +393,7 @@ impl Painter<'_> {
             rows.push(Row {
                 spans,
                 links: Vec::new(),
+                table: None,
             });
         }
         rows.push(blank());

@@ -4,6 +4,8 @@
 {"capture":"no-match"}
 {"url":"https://github.com/parity-bot"}
 {"capture":"external"}
+{"url":"https://github.com/parity-bot/issue-fixture"}
+{"capture":"followed-repo"}
 {"capture":"followed-user"}
 {"capture":"issue-hints"}
 {"capture":"followed-issue"}

@@ -62,8 +62,8 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.confirm-no` | `confirm.no` | `n` | No | Confirm | M3 | parity | #214, #279 | Unit-tested (`modal/confirm/tests.rs`, `everything_else_answers_false`); scenario `pr-new-push-no` answers No. |
 | `keybindings.react-add` | `react.add` | `R` | Add reaction | PR Overview | M3 | parity | #183, #263 | Scenario `pr-reactions`. |
 | `keybindings.link-paste` | `link.paste` | `ctrl+v` | Paste link | main screen | M4 | in progress | #197 | TERM: many terminals turn `ctrl+v` into a paste; a bracketed paste on the main screen opens the modal prefilled (`markdown-links.paste-opens-link-modal`). A focused text input (search box, diff file filter) takes `ctrl+v` first (`textual.input.paste`). Scenario `paste-link`. Rust (#197): `MainScreen::on_binding(LinkPaste)`. |
-| `keybindings.link-follow` | `link.follow` | `f` | Follow link | main screen | M4 | not started | #340 | |
-| `keybindings.link-follow-external` | `link.follow_external` | `F` | Follow link (browser) | main screen | M4 | not started | #340 | |
+| `keybindings.link-follow` | `link.follow` | `f` | Follow link | main screen | M4 | in progress | #340 | Rust (#340): `MainScreen::on_binding` gives `Action::ShowLinkHints { external: false }`. |
+| `keybindings.link-follow-external` | `link.follow_external` | `F` | Follow link (browser) | main screen | M4 | in progress | #340 | Rust (#340): `Action::ShowLinkHints { external: true }`; the pick is `Action::FollowLink { external: true }`. |
 | `keybindings.main-repos-focus` | `main.repos.focus` | `1` | Focus repos table | main view | M1 | parity | #75, #158 | |
 | `keybindings.main-pull-requests-focus` | `main.pull_requests.focus` | `2` | Focus PRs table | main view | M1 | parity | #75, #158 | |
 | `keybindings.main-issues-focus` | `main.issues.focus` | `3` | Focus issues table | main view | M1 | parity | #75, #158 | |

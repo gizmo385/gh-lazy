@@ -16,6 +16,7 @@ mod focus;
 pub mod form;
 mod frame;
 mod issue_form;
+mod link_hints;
 mod lookup;
 mod new_comment;
 mod new_issue;
@@ -56,6 +57,7 @@ pub use debug_info::{DebugInfoAction, DebugInfoDialog};
 pub use edit_issue::{EditIssueAction, EditIssueDialog};
 pub use focus::{FocusMove, FocusRing};
 pub use frame::{DIM_FACTOR, DialogFrame, default_border, dim, frame_rect, frame_rect_with_margin};
+pub use link_hints::{HINT_ALPHABET, LinkHintsDialog, hint_codes};
 pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup, number};
 pub use new_comment::{NewCommentAction, NewCommentDialog, PostedComment, ReplyTarget};
 pub use new_issue::{NewIssueAction, NewIssueDialog};
@@ -131,6 +133,8 @@ pub enum ModalKind {
     DebugInfo,
     /// [`PasteLinkDialog`]: "Paste a web GitHub link:".
     PasteLink,
+    /// [`LinkHintsDialog`]: the labels over the main screen's links.
+    LinkHints,
     /// The stack's test dialog (`test_util::TestDialog`, which isn't built into the app), by its id. Nothing in the
     /// app opens one.
     Test(u8),
@@ -325,6 +329,13 @@ pub trait Dialog: Component + Send + 'static {
     /// scrollbar, and hands [`Component::render`] and [`Component::handle_mouse`] the whole screen, so every mouse
     /// event reaches the dialog. Textual's command palette, a band across a full-screen modal.
     fn frameless(&self) -> bool {
+        false
+    }
+
+    /// Whether the dialog is a transparent overlay: the screen under it isn't dimmed and keeps its footer, nothing is
+    /// framed, and the dialog draws over everything, toasts included, with the whole screen as its area. Python's
+    /// `LinkHintScreen`, a `ModalScreen` with a transparent background.
+    fn overlay(&self) -> bool {
         false
     }
 

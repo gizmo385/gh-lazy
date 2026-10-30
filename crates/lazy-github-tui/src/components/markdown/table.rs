@@ -8,7 +8,7 @@ use ratatui::style::Style;
 use ratatui::text::Span;
 
 use super::Inline;
-use super::layout::{Painter, Row};
+use super::layout::{Painter, Row, TableLine};
 use super::parse::is_space;
 use crate::theme::{Paint, ThemeColor};
 
@@ -110,20 +110,29 @@ impl Painter<'_> {
             })
             .collect();
         let height = laid_out.iter().map(Vec::len).max().unwrap_or(0).max(1);
-        let mut lines: Vec<Row> = iter::repeat_with(|| Row {
-            spans: vec![Span::styled("│", styles.line)],
-            links: Vec::new(),
-        })
-        .take(height)
-        .collect();
+        let mut lines: Vec<Row> = (0..height)
+            .map(|y| Row {
+                spans: vec![Span::styled("│", styles.line)],
+                links: Vec::new(),
+                table: Some(TableLine {
+                    first: y == 0,
+                    cells: Vec::new(),
+                }),
+            })
+            .collect();
         // The header's fill takes its color, as Textual styles the whole header cell; a body cell's is plain.
         let fill = if header { styles.header } else { styles.bg };
-        for (cell_rows, &width) in laid_out.into_iter().zip(widths) {
+        for (cell, (cell_rows, &width)) in laid_out.into_iter().zip(widths).enumerate() {
             let top = if header { height - cell_rows.len() } else { 0 };
             let mut cell_rows = cell_rows.into_iter();
             for (y, line) in lines.iter_mut().enumerate() {
                 let content = if y >= top { cell_rows.next() } else { None };
+                let before = line.links.len();
                 push_cell(line, content, width, fill, styles.bg);
+                let added = line.links.len() - before;
+                if let Some(table) = &mut line.table {
+                    table.cells.extend(iter::repeat_n(cell, added));
+                }
                 line.spans.push(Span::styled("│", styles.line));
             }
         }
@@ -170,6 +179,7 @@ fn keyline(widths: &[usize], [left, middle, right]: [char; 3], style: Style) -> 
     Row {
         spans: vec![Span::styled(text, style)],
         links: Vec::new(),
+        table: None,
     }
 }
 

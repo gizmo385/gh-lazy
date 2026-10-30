@@ -170,6 +170,11 @@ impl ModalEntry {
         self.dialog.frameless()
     }
 
+    /// [`Dialog::overlay`].
+    pub(crate) fn overlay(&self) -> bool {
+        self.dialog.overlay()
+    }
+
     pub(crate) fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         self.dialog.render(frame, area, cx);
     }
@@ -232,6 +237,7 @@ trait AnyDialog: Send {
     fn border(&self, palette: &Palette) -> ThemeColor;
     fn shows_footer(&self) -> bool;
     fn frameless(&self) -> bool;
+    fn overlay(&self) -> bool;
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>);
     fn take_reply(&mut self) -> Option<Action>;
     #[cfg(test)]
@@ -342,6 +348,10 @@ impl<D: Dialog> AnyDialog for Open<D> {
 
     fn frameless(&self) -> bool {
         self.dialog.frameless()
+    }
+
+    fn overlay(&self) -> bool {
+        self.dialog.overlay()
     }
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {

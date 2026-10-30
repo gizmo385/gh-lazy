@@ -1,9 +1,8 @@
 version = 1
-description = "Link hints (f / F): \"No links visible\" with nothing to follow, the labels over the Repo Overview's links, escape and a non-matching letter cancel, F opens the owner externally, f follows the owner to the profile modal and an issue body's #7 to issue 7 in-app"
-# Not built yet (#196): gate = false, so the Rust side shows as rust-not-ready in the report until it lands. The labels
-# are drawn over the link text itself ("aarity-bot/issue-fixture" is the label "a" over "parity-bot/issue-fixture"),
+description = "Link hints (f / F): \"No links visible\" with nothing to follow, the labels over the Repo Overview's links, escape and a non-matching letter cancel, F opens the owner externally, f sends the repo title to the browser, follows the owner to the profile modal and an issue body's #7 to issue 7 in-app"
+# The labels are drawn over the link text itself ("aarity-bot/issue-fixture" is the label "a" over "parity-bot/issue-fixture"),
 # so [expect] checks them as text. Toasts stay up for 5 s and stack bottom-right inside the Details box.
-gate = false
+gate = true
 parity_rows = [
     "markdown-links.link-hints",
     "markdown-links.hint-labels",
@@ -98,6 +97,26 @@ wait = { text = "Opening https://github.com/parity-bot externally" }
 capture = "external"
 checks = ["titles", "focus"]
 
+# f on the repo title: a bare repo link goes to the browser, with nothing shown in the app.
+[[step]]
+keys = ["f"]
+
+[[step]]
+wait = { text = "Owned by sarity-bot" }
+
+[[step]]
+keys = ["a"]
+
+[[step]]
+wait = { text = "Owned by parity-bot" }
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+capture = "followed-repo"
+checks = ["titles", "focus"]
+
 # f on the owner opens the profile modal in-app.
 [[step]]
 keys = ["f"]
@@ -111,9 +130,11 @@ keys = ["s"]
 [[step]]
 wait = { text = "Followers: 12" }
 
+# No titles: Python's two-row strip at the bottom of the profile (Py bug B50) hides the Workflows box's border at
+# 160x48, as in `user-profile`'s `organization` capture.
 [[step]]
 capture = "followed-user"
-checks = ["titles"]
+checks = []
 
 [[step]]
 keys = ["escape"]
@@ -173,6 +194,11 @@ not_contains = ["aarity-bot", "sarity-bot"]
 contains = ["Opening https://github.com/parity-bot externally", "Owned by parity-bot"]
 not_contains = ["Followers: 12"]
 opened = ["https://github.com/parity-bot"]
+
+[expect.followed-repo]
+contains = ["parity-bot/issue-fixture • Public", "Owned by parity-bot"]
+not_contains = ["aarity-bot", "Followers: 12"]
+opened = ["https://github.com/parity-bot", "https://github.com/parity-bot/issue-fixture"]
 
 [expect.followed-user]
 contains = ["Followers: 12"]

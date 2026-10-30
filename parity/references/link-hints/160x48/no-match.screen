@@ -23,7 +23,7 @@ cursor 1 4 hidden
 │                                                              ││  Issues with bodies and comments.                                                            │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
-│ #  Status  Author      Title                                 ││                                                                                              │
+│ #  Status  Author  Title                                     ││                                                                                              │
 │ 8  open    parity-bot  A pull request among the issues       ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │

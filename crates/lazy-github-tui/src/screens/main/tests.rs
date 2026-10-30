@@ -426,14 +426,16 @@ fn the_chain_follows_focus() {
 }
 
 #[test]
-fn bindings_not_built_yet_are_consumed() {
-    // `f` on the screen: no effect, and nothing quits.
+fn link_keys_with_nothing_to_follow_only_toast() {
+    // `f` on a screen with no links: the toast, no effect, and nothing quits.
     let mut app = TestApp::new(Config::default());
+    app.render(160, 48);
     app.press(&["f"]);
     assert_eq!(app.effects(), []);
+    assert_eq!(app.app().toasts().len(), 1);
     // ctrl+c still reaches `help_quit` past the screen's copy binding.
     app.press(&["ctrl+c"]);
-    assert_eq!(app.app().toasts().len(), 1);
+    assert_eq!(app.app().toasts().len(), 2);
 }
 
 #[test]

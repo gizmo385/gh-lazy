@@ -31,5 +31,5 @@ listed with that modal under [Modals](./modals.md).
 | `toasts.rerun-failed` | "Failed to re-run workflow", "Failed to re-run failed jobs" | error / "Error" | `ui/widgets/workflow_run_details.py` | M3 | parity | #188, #265 | Scenario `workflow-rerun-error`. |
 | `toasts.workflow-nothing-to-trigger` | "No repository selected", "No workflows found in this repository" | warning | `ui/widgets/workflows.py` | M3 | parity | #188, #264 | |
 | `toasts.workflow-triggered` | "Successfully triggered workflow" | information | `ui/widgets/workflows.py` | M3 | parity | #188, #264 | Py bug B68. |
-| `toasts.no-links-visible` | "No links visible" | information | `ui/widgets/link_hints.py` | M4 | not started | #340 | |
-| `toasts.opening-externally` | "Opening <url> externally" | information | `ui/widgets/link_hints.py` | M4 | not started | #340 | |
+| `toasts.no-links-visible` | "No links visible" | information | `ui/widgets/link_hints.py` | M4 | in progress | #340 | Rust (#340): `App::show_link_hints` when the last frame drew no links. Scenario `link-hints` `no-links`. |
+| `toasts.opening-externally` | "Opening <url> externally" | information | `ui/widgets/link_hints.py` | M4 | in progress | #340 | Rust (#340): `Action::FollowLink { external: true }` in `App::apply`, with `Effect::OpenUrl`, shown even if no browser starts. Scenario `link-hints` `external`. |

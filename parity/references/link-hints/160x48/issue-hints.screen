@@ -19,7 +19,7 @@ cursor 1 4 hidden
 │                                                              ││   1. Create an empty config.json                                                             │
 └──────────────────────────────────────────────────────────────┘│   2. Run lazy-github and press #5                                                            │
 ┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
-│ #  Status  Author      Title                                 ││  It fails the same way as d7, and farity-bot/dotfiles#3 has the same error. cc gparity-bot   │
+│ #  Status  Author  Title                                     ││  It fails the same way as d7, and farity-bot/dotfiles#3 has the same error. cc gparity-bot   │
 │ 8  open    parity-bot  A pull request among the issues       ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││    Error: the config file is empty (see #9)                                                  │

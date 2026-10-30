@@ -18,6 +18,7 @@ use crate::components::button::{ButtonMouse, ButtonRow, Pressed};
 use crate::components::select::{self, Select, SelectOutcome};
 use crate::components::text_input::{self, InputOutcome, TextInput};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
+use crate::gh_health::report_unhandled;
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::toast::Toast;
 
@@ -250,14 +251,14 @@ impl TriggerWorkflowDialog {
         self.output = Some(false);
     }
 
-    fn on_branches(&mut self, result: Result<Vec<Branch>, GhError>) {
+    fn on_branches(&mut self, result: Result<Vec<Branch>, GhError>, cx: &mut Cx<'_>) {
         match result {
             Ok(branches) => {
                 let names: Vec<String> = branches.into_iter().map(|branch| branch.name).collect();
                 self.branch.set_suggestions(names);
             }
-            // Python's worker raises and Textual logs it; the input just gets no suggestions.
-            Err(error) => tracing::debug!("Fetching the branches for the trigger dialog failed: {error}"),
+            // Python's worker raises, which ends the app; here the input just gets no suggestions (#323).
+            Err(error) => report_unhandled("Error fetching branches for the trigger dialog", &error, cx),
         }
     }
 
@@ -498,7 +499,7 @@ impl Dialog for TriggerWorkflowDialog {
         match response {
             GithubResponse::ListBranches(result) if self.branches_request == Some(id) => {
                 self.branches_request = None;
-                self.on_branches(result);
+                self.on_branches(result, cx);
             }
             GithubResponse::DispatchWorkflow(result) if self.dispatch == Some(id) => {
                 self.dispatch = None;

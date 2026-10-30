@@ -896,6 +896,10 @@ fn run_scenario(scenario: &Scenario, python: Option<PythonSource>, context: &Run
 /// CI time. The app is up within a second, so a ready step finishes well inside this.
 const UNGATED_WAIT_CAP: Duration = Duration::from_secs(3);
 
+/// The variable a debug build of the Rust app reads its test `gh` time limit from, in milliseconds: the same name as
+/// `lazy_github_core::gh::GH_TIMEOUT_ENV`, which xtask doesn't depend on.
+const GH_TIMEOUT_ENV: &str = "LAZY_GITHUB_GH_TIMEOUT_MS";
+
 /// `--jobs`, or the CPU count up to [`DEFAULT_MAX_JOBS`].
 fn jobs(arg: Option<u16>) -> usize {
     arg.map_or_else(
@@ -926,6 +930,11 @@ pub(super) fn run_app(
         }
         std::fs::create_dir_all(out).with_context(|| format!("creating {}", out.display()))?;
         let mut env = env::prepare(scenario, app, size, paths, out, options.keep_home)?;
+        // Set here rather than in env.rs, a reference input, so the recorded references stay fresh. Only a debug
+        // build of the Rust app reads it (`lazy_github_core::gh::GH_TIMEOUT_ENV`).
+        if let (App::Rust, Some(ms)) = (app, scenario.env.gh_timeout_ms) {
+            env.command.env(GH_TIMEOUT_ENV, ms.to_string());
+        }
         if options.cap_ungated_waits && !gates {
             env.timing.wait_cap = Some(UNGATED_WAIT_CAP);
         }

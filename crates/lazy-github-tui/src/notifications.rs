@@ -124,7 +124,13 @@ impl NotificationPoll {
             Ok(()) => {
                 self.in_flight = Some(InFlight::Counting(cx.request(GithubRequest::UnreadNotificationCount)));
             }
-            // The count keeps its last value, as in Python.
+            // On a failure the count keeps its last value, as in Python. "Please login" would misreport a missing gh
+            // (Python says it anyway); the poll pauses after this one.
+            Err(error @ GhError::NotInstalled) => {
+                tracing::error!("Notifications auth check failed: {error}");
+                cx.notify(Toast::error(error.to_string()).with_title(LOGIN_TOAST_TITLE));
+            }
+            // Any other failure is "please login", as in Python.
             Err(error) => {
                 tracing::debug!("Notifications auth check failed: {error}");
                 cx.notify(Toast::error(LOGIN_MESSAGE).with_title(LOGIN_TOAST_TITLE));
@@ -465,5 +471,36 @@ mod tests {
         assert_eq!(out, "INFO Selected repo parity-bot/lazy-fixture\n");
         assert_eq!(app.app().current_repo(), Some(&repo));
         assert!(status_row(&mut app).starts_with("│Current repo: parity-bot/lazy-fixture "));
+    }
+
+    // `gh` failing mid-session (#323).
+
+    #[test]
+    fn every_failure_of_the_auth_check_ends_the_refresh() {
+        crate::test_util::assert_gh_failures_surface(
+            || TestApp::with_github(enabled(), FakeGithub::new().with_unread_count(Ok(2))),
+            |app| app.advance(REFRESH_INTERVAL),
+            |app| {
+                if app.app().notifications_refreshing() {
+                    return Err("still refreshing".into());
+                }
+                // The count keeps its last value.
+                match app.app().unread() {
+                    UnreadState::Count(2) => Ok(()),
+                    other => Err(format!("{other:?}")),
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn every_failure_of_the_count_shows_zero_and_logs() {
+        for (name, error) in crate::test_util::gh_failures() {
+            let mut app = TestApp::with_github(enabled(), FakeGithub::new().with_unread_count(Err(error)));
+            let out = logs(|| settle(&mut app));
+            assert!(out.contains(&format!("ERROR {FETCH_FAILED_MESSAGE}")), "{name}: {out}");
+            assert!(!app.app().notifications_refreshing(), "{name}");
+            assert_eq!(app.app().unread(), UnreadState::Count(0), "{name}");
+        }
     }
 }

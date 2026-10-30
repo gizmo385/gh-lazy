@@ -335,7 +335,14 @@ fn a_failure_toasts_and_changes_nothing_else() {
 fn a_missing_pull_request_fails_the_same_way() {
     let mut app = TestApp::with_github(
         config(),
-        gh().with_pull_request("parity-bot/pr-details", 5, Err(GhError::NotInstalled)),
+        gh().with_pull_request(
+            "parity-bot/pr-details",
+            5,
+            Err(GhError::Command {
+                code: Some(1),
+                stderr: "error connecting to api.github.com".into(),
+            }),
+        ),
     );
     app.press(&["enter"]);
     settle(&mut app);
@@ -1482,4 +1489,155 @@ fn selecting_another_pull_request_while_a_section_is_maximized_restores_the_layo
     settle(&mut app);
     assert_eq!(shown_pr(&app), Some(5));
     assert_eq!(maximized(&app), None);
+}
+
+// `gh` failing mid-session (#323): every request the PR table and Overview make.
+
+mod gh_failures {
+    use super::*;
+    use crate::screens::main::MainAction;
+    use crate::screens::main::pr_details::PullRequestTarget;
+    use crate::test_util::{assert_gh_failures_surface, gh_failures};
+
+    fn nothing_pending(app: &TestApp) -> Result<(), String> {
+        match main(app).pending_pr {
+            Some(_) => Err("a pull request is still pending".into()),
+            None => Ok(()),
+        }
+    }
+
+    fn settle_quietly(app: &mut TestApp) {
+        futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once");
+    }
+
+    #[test]
+    fn selecting_a_pull_request() {
+        assert_gh_failures_surface(
+            app,
+            |app| {
+                app.press(&["enter"]);
+            },
+            |app| {
+                nothing_pending(app)?;
+                match shown_pr(app) {
+                    Some(number) => Err(format!("PR {number} shows")),
+                    None => Ok(()),
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn the_overview_sections() {
+        let show = |app: &mut TestApp| {
+            app.dispatch(Action::Main(MainAction::OpenPullRequest {
+                target: PullRequestTarget::Full(Box::new(fixture_pr(5))),
+                focus: true,
+            }));
+        };
+        assert_gh_failures_surface(app, show, |app| {
+            let screen = app.screen(160, 48);
+            for line in ["Status checks: failed to load", "Reactions: failed to load"] {
+                if !screen.contains(line) {
+                    return Err(format!("no {line:?}\n{screen}"));
+                }
+            }
+            Ok(())
+        });
+    }
+
+    #[test]
+    fn the_reaction_user() {
+        assert_gh_failures_surface(
+            || overview_focused(gh()),
+            |app| {
+                app.press(&["R"]);
+            },
+            |app| {
+                if !modals(app).is_empty() {
+                    return Err("a dialog opened".into());
+                }
+                // `R` asks again.
+                let before = app.gh().calls().len();
+                app.press(&["R"]);
+                if app.gh().calls().len() == before {
+                    settle_quietly(app);
+                }
+                if app.gh().calls().len() > before {
+                    Ok(())
+                } else {
+                    Err("R is stuck".into())
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn posting_a_reaction() {
+        use lazy_github_core::models::ReactionKind::Rocket;
+
+        assert_gh_failures_surface(
+            || {
+                let mut app = overview_focused(gh());
+                app.press(&["R"]);
+                settle_quietly(&mut app);
+                app.press(&["end", "space"]);
+                app
+            },
+            |app| {
+                app.press(&["tab", "enter"]);
+            },
+            |app| {
+                if posted(app) != [Rocket] {
+                    return Err(format!("posted {:?}", posted(app)));
+                }
+                if !modals(app).is_empty() {
+                    return Err("the dialog stayed".into());
+                }
+                Ok(())
+            },
+        );
+    }
+
+    #[test]
+    fn merging() {
+        assert_gh_failures_surface(
+            || merge_ready(config(), gh(), &["enter"]),
+            |app| {
+                app.press(&["ctrl+m"]);
+            },
+            |app| {
+                let expected = Toast::error("Pull request 5 could not be merged").with_title("Error Merging PR");
+                if !toasts(app).contains(&expected) {
+                    return Err(format!("{:?}", toasts(app)));
+                }
+                // ctrl+m merges again.
+                app.press(&["ctrl+m"]);
+                settle_quietly(app);
+                if merges(app).len() == 2 {
+                    Ok(())
+                } else {
+                    Err("ctrl+m is stuck".into())
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn the_refetch_after_a_merge() {
+        for (name, error) in gh_failures() {
+            let mut app = merge_ready(config(), gh().with_merge(5, Ok(merge_result(true))), &["enter"]);
+            // The merge itself works; the refetch past the cache, the call after it, fails.
+            let merge = app.gh().calls().len();
+            app.gh().fail_from(merge + 1, error);
+            app.press(&["ctrl+m"]);
+            settle(&mut app);
+            assert_eq!(fetched(&app), [(5, false), (5, true)], "{name}");
+            assert!(nothing_pending(&app).is_ok(), "{name}");
+            // It toasts as a failed selection does, after the merge's toast.
+            let toasts = toasts(&app);
+            assert!(toasts.len() >= 2, "{name}: {toasts:?}");
+            assert_eq!(shown_pr(&app), Some(5), "{name}");
+        }
+    }
 }

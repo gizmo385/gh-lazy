@@ -33,6 +33,7 @@ use crate::components::markdown::{Markdown, Rendered, TextRun};
 use crate::components::reactions::ReactionsSummary;
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
+use crate::gh_health::report_unhandled;
 use crate::keymap::BindingId;
 use crate::modal::AddReactionDialog;
 use crate::screens::main::MainAction;
@@ -404,8 +405,9 @@ impl PrOverview {
     fn open_add_reaction(&mut self, result: Result<User, GhError>, cx: &mut Cx<'_>) {
         let user = match result {
             Ok(user) => user,
+            // Python's worker raises, which ends the app (#323).
             Err(error) => {
-                tracing::error!("Error fetching the current user for a reaction: {error}");
+                report_unhandled("Error fetching the current user for a reaction", &error, cx);
                 return;
             }
         };

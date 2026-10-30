@@ -131,7 +131,9 @@ impl PrDiff {
                     view.show_review_form(user.login == author);
                 }
             }
-            Err(error) => tracing::debug!("Fetching the current user for the review form failed: {error}"),
+            // Python fetches the user with the diff and shows "Error fetching diff" when it fails; here the diff
+            // still shows, and the log says why there's no form.
+            Err(error) => tracing::error!("Error fetching the current user for the review form: {error}"),
         }
     }
 

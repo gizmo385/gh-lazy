@@ -27,6 +27,7 @@ use crate::components::status_bar::{StatusBar, UnreadState};
 use crate::components::too_small::{TooSmall, is_too_small};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
+use crate::gh_health::GhHealth;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
 use crate::modal::{
     CommandPaletteDialog, CommandSource, DebugInfoDialog, DialogFrame, ModalEntry, ModalKind, PaletteCommand,
@@ -115,6 +116,8 @@ pub struct App {
     notifications: NotificationPoll,
     /// Whether GitHub is rate limiting the app, which pauses the notifications poll.
     rate_limit: RateLimitWatch,
+    /// Whether `gh` is missing, logged out or hanging, which toasts once and may pause the notifications poll.
+    gh_health: GhHealth,
     /// Warnings from before the main screen, logged once it's up so the command log shows them.
     main_screen_warnings: Vec<String>,
     /// The terminal's size, from the last resize or frame; `None` until the first. Below the minimum, only the
@@ -147,6 +150,7 @@ impl App {
             bug_report: BugReport::default(),
             notifications: NotificationPoll::default(),
             rate_limit: RateLimitWatch::default(),
+            gh_health: GhHealth::default(),
             main_screen_warnings: Vec::new(),
             size: None,
             should_quit: false,
@@ -708,6 +712,10 @@ impl App {
             {
                 tracing::debug!("Skipping the notifications poll: GitHub is rate limiting requests");
             }
+            // So does a missing or logged-out gh, until a request succeeds.
+            Action::Timer(TimerId::Notifications) if self.gh_health.is_unusable() => {
+                tracing::debug!("Skipping the notifications poll: gh is missing or logged out");
+            }
             Action::Timer(TimerId::Notifications) => out.actions.push_back(Action::RefreshNotifications),
             Action::Timer(id) => {
                 // The other timers belong to the open dialogs, top first.
@@ -1067,6 +1075,10 @@ impl App {
         // Every response counts, even one nothing waits for any more.
         if let Some(error) = response.error() {
             self.rate_limit.observe(error, &mut Cx::new(&mut self.shared, out));
+        }
+        // The startup and authentication screens say what's wrong with gh themselves.
+        if matches!(self.base, BaseScreen::Main(_)) {
+            self.gh_health.observe(&response, &mut Cx::new(&mut self.shared, out));
         }
         if let Some(request) = self.gh_version_request.take_if(|request| request.id == id) {
             if let GithubResponse::GhVersion(result) = response {

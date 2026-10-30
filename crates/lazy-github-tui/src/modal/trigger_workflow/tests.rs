@@ -294,7 +294,11 @@ fn the_branch_names_complete_and_right_accepts() {
 #[test]
 fn failed_branches_leave_the_input_without_suggestions() {
     let (mut app, _) = open_on(gh().with_branches(NAME, Err(unprocessable())), fixture_repo());
-    assert!(toasts(&app).is_empty());
+    // Python's worker raises, which ends the app: here it's the generic API error (#323).
+    assert_eq!(
+        toasts(&app),
+        [Toast::error("GitHub API request failed (HTTP 422): Unprocessable Entity").with_title("API Error")]
+    );
     app.press(&["tab", "r", "e", "l"]);
     let row = branch_row(&mut app);
     assert!(row.contains("▊  rel "), "{row}");
@@ -408,5 +412,54 @@ fn still_no_workflows_warns() {
         assert_eq!(workflow_lists(&app), 2);
         assert_eq!(toasts(&app), [Toast::warning("No workflows found in this repository")]);
         assert!(modals(&app).is_empty());
+    }
+}
+
+// `gh` failing mid-session (#323): the branches and the dispatch.
+
+mod gh_failures {
+    use super::*;
+    use crate::test_util::assert_gh_failures_surface;
+
+    #[test]
+    fn the_branches() {
+        assert_gh_failures_surface(
+            || TestApp::with_github(Config::default(), gh()),
+            |app| {
+                app.with_cx(|cx| {
+                    let dialog = TriggerWorkflowDialog::new(fixture_repo(), &workflows(), cx);
+                    cx.open_dialog(dialog, |_| Action::Consumed);
+                });
+            },
+            |app| {
+                // Open, with the default branch and no suggestions.
+                if modals(app) == [ModalKind::TriggerWorkflow] {
+                    Ok(())
+                } else {
+                    Err(format!("{:?}", modals(app)))
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn the_dispatch() {
+        assert_gh_failures_surface(
+            || open().0,
+            |app| {
+                app.press(&["enter", "down", "enter", "shift+enter"]);
+            },
+            |app| {
+                if modals(app) != [ModalKind::TriggerWorkflow] {
+                    return Err(format!("{:?}", modals(app)));
+                }
+                let before = dispatches(app).len();
+                app.press(&["shift+enter"]);
+                futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+                (dispatches(app).len() > before)
+                    .then_some(())
+                    .ok_or_else(|| "Trigger is stuck".into())
+            },
+        );
     }
 }

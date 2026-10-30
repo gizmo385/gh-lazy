@@ -37,6 +37,7 @@ use crate::components::switch::Switch;
 use crate::components::text_editor::{EditorOutcome, EditorVariant, TextEditor};
 use crate::components::text_input::{InputOutcome, TextInput};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
+use crate::gh_health::report_unhandled;
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::{Accent, Paint, Theme};
 
@@ -481,15 +482,15 @@ impl PullRequestDialog {
         self.output = Some(None);
     }
 
-    fn on_branches(&mut self, result: Result<Vec<Branch>, GhError>) {
+    fn on_branches(&mut self, result: Result<Vec<Branch>, GhError>, cx: &mut Cx<'_>) {
         match result {
             Ok(branches) => {
                 let names: Vec<String> = branches.into_iter().map(|branch| branch.name).collect();
                 self.base.set_suggestions(names.clone());
                 self.compare.set_suggestions(names);
             }
-            // Python's worker raises and Textual logs it; the inputs just get no suggestions.
-            Err(error) => tracing::debug!("Fetching the branches for Create PR failed: {error}"),
+            // Python's worker raises, which ends the app; here the inputs just get no suggestions (#323).
+            Err(error) => report_unhandled("Error fetching branches for the pull request dialog", &error, cx),
         }
     }
 
@@ -953,7 +954,7 @@ impl Dialog for PullRequestDialog {
         match response {
             GithubResponse::ListBranches(result) if self.branches_request == Some(id) => {
                 self.branches_request = None;
-                self.on_branches(result);
+                self.on_branches(result, cx);
                 None
             }
             GithubResponse::RequestedReviewers(result) if self.requested_request == Some(id) => {
@@ -964,8 +965,11 @@ impl Dialog for PullRequestDialog {
                         self.reviewers.add_existing(logins);
                         self.sync_ring();
                     }
-                    // Python's worker raises and Textual logs it; nobody is listed.
-                    Err(error) => tracing::debug!("Fetching the requested reviewers for Edit PR failed: {error}"),
+                    // Python's `list_requested_reviewers` logs (its message) and lists nobody.
+                    Err(error) => {
+                        tracing::error!("Error creating review requests");
+                        tracing::debug!("Fetching the requested reviewers for Edit PR failed: {error}");
+                    }
                 }
                 None
             }

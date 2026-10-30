@@ -787,3 +787,31 @@ async fn child_notifications_server_errors() {
     assert!(gh.mark_notification_read(9_100_001).await.is_err_and(is_500));
     assert!(gh.mark_all_notifications_read().await.is_err_and(is_500));
 }
+
+/// `gh` removed after startup and put back (#323): the request in between is `NotInstalled`, and the next one spawns
+/// `gh` again and works.
+#[test]
+fn gh_removed_mid_session_is_not_installed_until_it_comes_back() {
+    let log = run_child("child_gh_removed_mid_session", "logged-in", &["base"]);
+    let commands: Vec<&str> = log.iter().map(|line| line["command"].as_str().unwrap()).collect();
+    // Only the two runs while it was there reached fake-gh.
+    assert_eq!(commands, ["auth status", "auth status"]);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_gh_removed_mid_session() {
+    let Some(gh) = client() else { return };
+    let program = PathBuf::from(std::env::var_os(GH_BIN_ENV).unwrap());
+    let moved = program.with_extension("moved");
+    gh.check_auth().await.unwrap();
+    std::fs::rename(&program, &moved).unwrap();
+    let error = gh.check_auth().await.unwrap_err();
+    assert!(matches!(error, GhError::NotInstalled), "{error:?}");
+    assert!(matches!(
+        gh.unread_notification_count().await,
+        Err(GhError::NotInstalled)
+    ));
+    std::fs::rename(&moved, &program).unwrap();
+    gh.check_auth().await.unwrap();
+}

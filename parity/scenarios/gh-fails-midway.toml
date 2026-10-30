@@ -1,0 +1,56 @@
+version = 1
+description = "gh failing mid-session: once the main screen is up, selecting a repo gets a 500 (issues), a 502 (workflows), a 401 (README) and a response past the shortened gh time limit (runs). One toast says gh isn't logged in, one that it timed out; each list logs its own error and nothing is left loading"
+gate = true
+apps = ["rust"]
+parity_rows = ["toasts.gh-unavailable"]
+sizes = [[160, 48]]
+
+[env]
+# errors-midway fails dotfiles' issues, workflows, runs and README; base has the user and the repos list.
+fixtures = ["errors-midway", "base"]
+# A debug build's test-only limit for every gh call, so the 30 s runs response times out in 2 s.
+gh_timeout_ms = 2000
+
+[env.config_overrides]
+appearance = { show_command_log = true }
+
+[[step]]
+wait = { text = "dotfiles", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "To proceed, please log into the Github CLI", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "gh did not respond within 2 seconds", timeout_ms = 15000 }
+
+[[step]]
+capture = "toasts"
+
+# Both toasts time out after 5 s, uncovering the command log (whose lines also say "API Error").
+[[step]]
+wait = { gone = "▌ API Error", timeout_ms = 15000 }
+
+[[step]]
+capture = "log"
+
+[expect.toasts]
+contains = [
+    "API Error",
+    "To proceed, please log into the Github CLI",
+    "gh did not respond within 2 seconds",
+    "No README found.",
+]
+not_contains = ["Loading", "panicked"]
+
+[expect.log]
+# Each list's own line, and the hung request; nothing is left loading.
+contains = [
+    "API Error fetching issues and PRs from Github API",
+    "Error retrieving actions from the Github API",
+    "gh did not respond within 2 seconds, so it was stopped",
+    "Error retrieving action runs from the Github API",
+]
+not_contains = ["Loading", "panicked"]

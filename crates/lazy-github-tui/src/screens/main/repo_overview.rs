@@ -513,7 +513,9 @@ mod app_tests {
             let out = settle(&mut app);
             let screen = app.screen(160, 48);
             assert!(screen.contains("No README found."), "{case}\n{screen}");
-            assert!(app.app().toasts().is_empty(), "{case}");
+            // A hung gh toasts that it timed out (`gh_health`); the README itself raises none.
+            let expected = usize::from(case == "timeout");
+            assert_eq!(app.app().toasts().len(), expected, "{case}");
             // Only debug lines: nothing reaches the command log.
             assert!(out.lines().all(|line| line.starts_with("DEBUG")), "{case}: {out}");
         }

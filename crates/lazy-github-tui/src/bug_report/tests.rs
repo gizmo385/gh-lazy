@@ -316,3 +316,44 @@ fn bug_report_160x48() {
     });
     insta::assert_snapshot!(buffer_to_styled_string(&app.render(160, 48)));
 }
+
+// `gh` failing mid-session (#323): the repo and gh's version.
+
+mod gh_failures {
+    use super::*;
+    use crate::test_util::assert_gh_failures_surface;
+
+    #[test]
+    fn the_repo_and_the_gh_version() {
+        assert_gh_failures_surface(
+            || TestApp::with_github(Config::default(), gh()),
+            run_bug_report,
+            |app| {
+                if !app.app().modals().is_empty() {
+                    return Err(format!("{:?}", app.app().modals()));
+                }
+                // It can run again.
+                let before = repo_requests(app).len();
+                run_bug_report(app);
+                (repo_requests(app).len() > before)
+                    .then_some(())
+                    .ok_or_else(|| "the command is stuck".into())
+            },
+        );
+    }
+
+    #[test]
+    fn the_gh_version_for_debug_info() {
+        assert_gh_failures_surface(
+            || TestApp::with_github(Config::default(), gh()),
+            |app| run_palette(app, "debug info"),
+            |app| {
+                if app.app().modals() == [ModalKind::DebugInfo] {
+                    Ok(())
+                } else {
+                    Err(format!("{:?}", app.app().modals()))
+                }
+            },
+        );
+    }
+}

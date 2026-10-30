@@ -354,6 +354,10 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   hosts and emails (no blank lines or `Word:` lines, which Python drops: Py bug B47), and PR 3's diff by one whose
   `---` line isn't followed by `+++`, which neither app parses. Listed before `pr-details` and `base`, for the
   `linkify-diff-error` scenario. Hand-written.
+- `errors-midway/`: `parity-bot/dotfiles` failing once the main screen is up: its `issues` page 1 (`state=all`)
+  answered with a 500, `actions/workflows` page 1 with a 502 and an HTML body, its README with a 401 (`Bad
+  credentials`), and `actions/runs` page 1 after 30 s (`delay_ms = 30000`), past the scenario's `gh_timeout_ms`.
+  Listed before `base`, for the Rust-only `gh-fails-midway` scenario (#323). Hand-written.
 - `lists-error/`: `parity-bot/dotfiles`' `issues` page 1 (`state=all`), `actions/workflows` page 1 and `actions/runs`
   page 1, each answered with a 500 (`{"message": "Server Error"}`) after 1.5 s. Listed before `repo-selected-empty`
   (the README) and `base`, for the `lists-fetch-error` scenario. Hand-written.
@@ -712,6 +716,9 @@ report first.
   and the seed, so the app can't save its config or create its log file, cache or drafts there. Write permission
   comes back when the run finishes, so the run dir can be removed. Unix only (a read-only folder on Windows still
   takes new files), and meaningless as root, which writes anyway; such scenarios are Rust-only (`apps = ["rust"]`).
+- With `gh_timeout_ms = <n>`, the Rust app runs with `LAZY_GITHUB_GH_TIMEOUT_MS=<n>`, which a debug build reads as
+  the time limit of every `gh` call (release builds ignore it), so a hung `gh` times out in seconds. It's set outside
+  `env.rs` and only for the Rust app; Python has no time limit. Such scenarios are Rust-only (`apps = ["rust"]`).
 - `work/` is the app's working directory. When the scenario sets `git_remote = "owner/name"`, it's made a git repo:
   - `git init -q -b <git_branch, default main>`
   - `git remote add origin https://github.com/owner/name.git`, or `git@github.com:owner/name.git` with
@@ -778,6 +785,7 @@ git_remote_branches = ["main"]   # optional: a local remote for origin with thes
                                  # environment); needs git_remote_protocol = "ssh"
 seed = "repos-cache"             # optional: parity/seeds/<name>/, copied into home/ and work/ (see Seeds)
 config_dir_read_only = false     # optional: make home/.config/lazy-github read-only (see The isolated environment)
+gh_timeout_ms = 2000             # optional: the Rust app's time limit for every gh call (see The isolated environment)
 
 [env.config_overrides]           # optional, deep-merged over the config file
 appearance = { show_command_log = true }
@@ -1474,7 +1482,7 @@ Each input is a git object id from `git hash-object`, run in the repo with a cle
 
 | Input | What it hashes |
 | --- | --- |
-| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `git_remote_branches` (only when set), `key_delay_ms`, `capture_stable_ms`, the size, every step and, only when the scenario sets one, the seed: its name and its files as sorted `[<path relative to the seed dir>, <blob>]` pairs; and `config_dir_read_only` only when `true`. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore.boxes` (not `ignore.writes`). |
+| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `git_remote_branches` (only when set), `key_delay_ms`, `capture_stable_ms`, the size, every step and, only when the scenario sets one, the seed: its name and its files as sorted `[<path relative to the seed dir>, <blob>]` pairs; `config_dir_read_only` only when `true`; and `gh_timeout_ms` only when set. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore.boxes` (not `ignore.writes`). |
 | `fixtures` | Every fixture in the scenario's sets whose request key (method, path, query, accept) equals a served entry in `requests.jsonl`, plus its `body_file`, as sorted `<set>/<relpath> <blob>` lines. For a `--paginate` request, the pages its `Link: rel="next"` headers lead to as well. |
 | `python_app` | `lazy_github/`, `pyproject.toml` and `uv.lock`. |
 | `harness` | `crates/fake-gh/src/`, `crates/fake-gh/Cargo.toml`, `xtask/src/parity/{env,runner,keys,grid}.rs`, `CAPTURE_VERSION` and the `vt100` and `portable-pty` versions in `Cargo.lock`. |

@@ -168,7 +168,9 @@ impl PullRequestDialog {
     /// The reviewers already requested answered (a failure counts as none). With anyone listed, the listed logins
     /// not among them are requested, even when that's none, as Python does; with nobody listed, it's done.
     fn on_requested(&mut self, pr: Box<FullPullRequest>, result: Result<Vec<String>, GhError>, cx: &mut Cx<'_>) {
+        // Python's `list_requested_reviewers` logs (its message) and answers none.
         let requested = result.unwrap_or_else(|error| {
+            tracing::error!("Error creating review requests");
             tracing::debug!("Fetching the requested reviewers failed: {error}");
             Vec::new()
         });

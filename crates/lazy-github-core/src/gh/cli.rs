@@ -39,6 +39,40 @@ impl Default for GhTimeouts {
     }
 }
 
+/// The environment variable that, in a debug build, sets every limit of [`GhTimeouts::from_env`] to this many
+/// milliseconds, so a test of a hanging `gh` takes seconds. Release builds ignore it.
+pub const GH_TIMEOUT_ENV: &str = "LAZY_GITHUB_GH_TIMEOUT_MS";
+
+impl GhTimeouts {
+    /// [`GhTimeouts::default`], or in a debug build with [`GH_TIMEOUT_ENV`] set to a whole number of milliseconds,
+    /// that limit for every kind of call.
+    pub fn from_env() -> Self {
+        if cfg!(debug_assertions) {
+            Self::with_override(std::env::var(GH_TIMEOUT_ENV).ok().as_deref())
+        } else {
+            Self::default()
+        }
+    }
+
+    /// The defaults, or `millis` (a [`GH_TIMEOUT_ENV`] value) for every kind of call when it's a positive number.
+    fn with_override(millis: Option<&str>) -> Self {
+        match millis
+            .and_then(|value| value.trim().parse::<u64>().ok())
+            .filter(|&ms| ms > 0)
+        {
+            Some(ms) => {
+                let limit = Duration::from_millis(ms);
+                Self {
+                    auth_status: limit,
+                    request: limit,
+                    paginate: limit,
+                }
+            }
+            None => Self::default(),
+        }
+    }
+}
+
 /// The kinds of `gh` call, each with its own default limit in [`GhTimeouts`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum CallKind {
@@ -184,7 +218,7 @@ impl GhCli {
                 detail,
             },
             other => {
-                log_rate_limit(&other);
+                log_failure(&other, &output.stdout);
                 other
             }
         })
@@ -267,8 +301,10 @@ impl GhCli {
                 if let Err(error) = child.kill().await {
                     debug!("Couldn't kill the timed-out gh: {error}");
                 }
-                debug!("gh {command_line} timed out after {}s and was killed", limit.as_secs());
-                return Err(GhError::Timeout { after: limit });
+                let error = GhError::Timeout { after: limit };
+                // In the command log, as the toast it leads to doesn't say which request hung.
+                warn!("{error}, so it was stopped: gh {command_line}");
+                return Err(error);
             }
         };
         match written {
@@ -287,15 +323,20 @@ impl GhCli {
     }
 }
 
-/// Puts a rate-limited response in the command log, with the headers that say when the limit lifts.
-fn log_rate_limit(error: &GhError) {
-    if let GhError::Http { status, .. } = error
-        && error.rate_limit().is_some()
-    {
-        warn!(
-            "GitHub API rate limit reached (HTTP {status}): {}",
-            error.rate_limit_headers()
-        );
+/// Logs what the caller's own error line leaves out. A rate-limited response goes to the command log with the
+/// headers that say when the limit lifts, and a failure with no HTTP response (offline, say) with `gh`'s error
+/// output. Output that isn't an HTTP response goes to the log file only, as it may be long or binary.
+fn log_failure(error: &GhError, stdout: &[u8]) {
+    match error {
+        GhError::Http { status, .. } if error.rate_limit().is_some() => {
+            warn!(
+                "GitHub API rate limit reached (HTTP {status}): {}",
+                error.rate_limit_headers()
+            );
+        }
+        GhError::Command { .. } => warn!("{error}"),
+        GhError::Parse(_) => debug!("gh printed: {}", super::response::excerpt(stdout)),
+        _ => {}
     }
 }
 
@@ -362,6 +403,22 @@ mod tests {
         assert_eq!(timeouts.limit(CallKind::Paginate, long), Duration::from_mins(10));
         // `auth status` has no request to carry an override.
         assert_eq!(timeouts.limit(CallKind::AuthStatus, long), Duration::from_secs(20));
+    }
+
+    #[test]
+    fn the_test_override_sets_every_limit() {
+        let short = Duration::from_millis(1500);
+        assert_eq!(
+            GhTimeouts::with_override(Some("1500")),
+            GhTimeouts {
+                auth_status: short,
+                request: short,
+                paginate: short,
+            }
+        );
+        for ignored in [None, Some(""), Some("0"), Some("soon"), Some("-5")] {
+            assert_eq!(GhTimeouts::with_override(ignored), GhTimeouts::default(), "{ignored:?}");
+        }
     }
 
     #[test]

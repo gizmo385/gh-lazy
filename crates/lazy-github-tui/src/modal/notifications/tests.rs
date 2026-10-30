@@ -997,3 +997,82 @@ async fn nothing_is_cached() {
             .all(|effect| !matches!(effect, Effect::WriteCache { .. }))
     );
 }
+
+// `gh` failing mid-session (#323): the pages and the marks.
+
+mod gh_failures {
+    use super::*;
+    use crate::effect::Effect;
+    use crate::test_util::assert_gh_failures_surface;
+
+    fn listed() -> TestApp {
+        TestApp::with_github(enabled(), github().with_unread_count(Ok(4)))
+    }
+
+    fn opened() -> TestApp {
+        let mut app = listed();
+        futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+        app.press(&["ctrl+n"]);
+        app
+    }
+
+    fn sent(app: &TestApp, wanted: fn(&GithubRequest) -> bool) -> usize {
+        app.effects()
+            .iter()
+            .filter(|effect| matches!(effect, Effect::Github { request, .. } if wanted(request)))
+            .count()
+    }
+
+    #[test]
+    fn the_first_page() {
+        assert_gh_failures_surface(
+            listed,
+            |app| {
+                app.press(&["ctrl+n"]);
+            },
+            |app| {
+                if app.app().modals() == [ModalKind::Notifications] {
+                    Ok(())
+                } else {
+                    Err(format!("{:?}", app.app().modals()))
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn marking_one_read() {
+        let marks = |request: &GithubRequest| matches!(request, GithubRequest::MarkNotificationRead(_));
+        assert_gh_failures_surface(
+            opened,
+            |app| {
+                app.press(&["R"]);
+            },
+            |app| {
+                let before = sent(app, marks);
+                app.press(&["R"]);
+                (sent(app, marks) > before)
+                    .then_some(())
+                    .ok_or_else(|| "R is stuck".into())
+            },
+        );
+    }
+
+    #[test]
+    fn marking_all_read() {
+        let marks = |request: &GithubRequest| matches!(request, GithubRequest::MarkAllNotificationsRead);
+        assert_gh_failures_surface(
+            opened,
+            |app| {
+                app.press(&["ctrl+r"]);
+            },
+            |app| {
+                let before = sent(app, marks);
+                app.press(&["ctrl+r"]);
+                (sent(app, marks) > before)
+                    .then_some(())
+                    .ok_or_else(|| "ctrl+r is stuck".into())
+            },
+        );
+    }
+}

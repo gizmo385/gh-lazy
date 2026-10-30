@@ -950,3 +950,111 @@ fn pr_conversation_comment_reactions_maximized_160x48() {
     app.click(20, row + 1);
     assert_eq!(stop(&app), ConversationStop::Comment(c7001, CommentStop::Block));
 }
+
+// `gh` failing mid-session (#323): the reviews, the comments, their reactions and posting.
+
+mod gh_failures {
+    use super::*;
+    use crate::screens::main::MainAction;
+    use crate::screens::main::pr_details::PullRequestTarget;
+    use crate::test_util::{assert_gh_failures_surface, gh_failures};
+
+    #[test]
+    fn the_reviews_and_comments() {
+        assert_gh_failures_surface(
+            app,
+            |app| {
+                app.dispatch(Action::Main(MainAction::OpenPullRequest {
+                    target: PullRequestTarget::Full(Box::new(fixture_pr(5))),
+                    focus: true,
+                }));
+            },
+            |app| {
+                app.press(&["5", "right", "right"]);
+                let screen = app.screen(160, 48);
+                if screen.contains("│Failed to load reviews and comments ") {
+                    Ok(())
+                } else {
+                    Err(format!("no failure line\n{screen}"))
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn a_comment_s_reactions_only_log() {
+        for index in 0..gh_failures().len() {
+            let comments = [7001, 7002]
+                .map(CommentRef::Issue)
+                .into_iter()
+                .chain([9001, 9002, 9003].map(CommentRef::Review));
+            let mut gh = gh();
+            let mut name = "";
+            for comment in comments {
+                // The failures aren't `Clone`: a fresh one per comment.
+                let (failure, error) = gh_failures().swap_remove(index);
+                name = failure;
+                gh = gh.with_comment_reactions(NAME, comment, Err(error));
+            }
+            let mut app = app_on(gh);
+            app.press(&["enter"]);
+            let out = settle(&mut app);
+            // Python's `lg.debug`: the comment shows without reactions.
+            assert!(
+                out.contains("DEBUG Could not find comment with ID 9001"),
+                "{name}: {out}"
+            );
+            app.press(&["5", "right", "right"]);
+            let block = conversation(&app).block(CommentRef::Review(9001)).unwrap();
+            assert!(!block.has_reactions(), "{name}");
+            assert!(!app.screen(160, 48).contains("Loading"), "{name}");
+        }
+    }
+
+    /// The dialog stays with its text, and its submit sends again.
+    fn dialog_still_works(app: &mut TestApp) -> Result<(), String> {
+        if !dialog_open(app) {
+            return Err("the dialog closed".into());
+        }
+        let before = writes(app).len();
+        app.press(&["shift+enter"]);
+        if writes(app).len() > before {
+            Ok(())
+        } else {
+            Err("submit is stuck".into())
+        }
+    }
+
+    #[test]
+    fn posting_a_new_comment() {
+        assert_gh_failures_surface(
+            || {
+                let mut app = conversation_on(writing_gh());
+                tab_to(&mut app, ConversationStop::Review(0));
+                app
+            },
+            |app| {
+                app.press(&["n"]);
+                post_yes(app);
+            },
+            dialog_still_works,
+        );
+    }
+
+    #[test]
+    fn replying_to_a_review_comment() {
+        assert_gh_failures_surface(
+            || {
+                let mut app = conversation_on(writing_gh());
+                let c9001 = block(&app, CommentRef::Review(9001));
+                tab_to(&mut app, ConversationStop::Comment(c9001, CommentStop::Block));
+                app
+            },
+            |app| {
+                app.press(&["r"]);
+                post_yes(app);
+            },
+            dialog_still_works,
+        );
+    }
+}

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/dotfiles/actions/workflows",
+    "query": {
+      "page": "1",
+      "per_page": "30"
+    }
+  },
+  "response": {
+    "status": 502,
+    "headers": {
+      "Content-Type": "text/html; charset=utf-8"
+    },
+    "body_text": "<html><body><h1>502 Bad Gateway</h1></body></html>\n"
+  },
+  "note": "Hand-written for gh-fails-midway: a 502 from GitHub's front end, with an HTML body and no JSON message."
+}

@@ -238,6 +238,9 @@ pub struct EnvSpec {
     /// `config_dir_read_only`: the config folder (`home/.config/lazy-github`) is made read-only once it's filled, so
     /// the app can't write its config, log file or cache there. Unix only.
     pub config_dir_read_only: bool,
+    /// `gh_timeout_ms`: the Rust app (a debug build) runs every `gh` call with this time limit instead of its
+    /// defaults, so a scenario can show a timeout in seconds. Python has no limit and ignores it.
+    pub gh_timeout_ms: Option<u64>,
 }
 
 /// What a `wait` step waits for.
@@ -515,6 +518,7 @@ struct RawEnv {
     seed: Option<Spanned<String>>,
     #[serde(default)]
     config_dir_read_only: bool,
+    gh_timeout_ms: Option<Spanned<u64>>,
 }
 
 #[derive(Deserialize)]
@@ -828,6 +832,11 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
 
     let seed = raw.seed.map(|seed| parse_seed(seed, loc, roots)).transpose()?;
 
+    let gh_timeout_ms = match raw.gh_timeout_ms {
+        Some(ms) if *ms.get_ref() == 0 => return Err(loc.at_span(&ms, "`env.gh_timeout_ms` must be at least 1")),
+        other => other.map(Spanned::into_inner),
+    };
+
     Ok(EnvSpec {
         fixtures,
         config,
@@ -839,6 +848,7 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
         config_overrides,
         seed,
         config_dir_read_only: raw.config_dir_read_only,
+        gh_timeout_ms,
     })
 }
 
@@ -1284,6 +1294,15 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
         assert_eq!(s.env.git_branch, "main");
         assert_eq!(s.env.seed, None);
         assert!(!s.env.config_dir_read_only);
+        assert_eq!(s.env.gh_timeout_ms, None);
+    }
+
+    #[test]
+    fn parses_a_gh_time_limit() {
+        let s = parse("version = 1\n[env]\ngh_timeout_ms = 1500\n").unwrap();
+        assert_eq!(s.env.gh_timeout_ms, Some(1500));
+        let error = parse("version = 1\n[env]\ngh_timeout_ms = 0\n").unwrap_err();
+        assert!(error.message.contains("gh_timeout_ms"), "{error:?}");
     }
 
     #[test]

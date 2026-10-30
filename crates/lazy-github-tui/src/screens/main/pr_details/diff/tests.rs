@@ -1198,3 +1198,88 @@ fn pr_diff_tab_area_maximized_from_submit_160x48() {
     assert!(!screen.contains("[1] Repositories"), "{screen}");
     insta::assert_snapshot!(screen);
 }
+
+// `gh` failing mid-session (#323): the diff, the viewer's user and the review.
+
+mod gh_failures {
+    use super::*;
+    use crate::action::Action;
+    use crate::screens::main::MainAction;
+    use crate::screens::main::pr_details::PullRequestTarget;
+    use crate::test_util::{assert_gh_failures_surface, gh_failures};
+
+    /// The PR table focused on PR 5, nothing shown yet.
+    fn pr_table(gh: FakeGithub) -> TestApp {
+        let mut app = TestApp::with_github(config(), gh);
+        app.press(&["enter"]);
+        settle(&mut app);
+        app.press(&["2"]);
+        app
+    }
+
+    fn show_pr_5(app: &mut TestApp) {
+        app.dispatch(Action::Main(MainAction::OpenPullRequest {
+            target: PullRequestTarget::Full(Box::new(fixture_pr(5))),
+            focus: true,
+        }));
+    }
+
+    #[test]
+    fn the_diff_says_why_in_the_tab() {
+        for (name, error) in gh_failures() {
+            let mut app = pr_table(reviewer_gh());
+            app.gh().fail_from_now(error);
+            show_pr_5(&mut app);
+            settle(&mut app);
+            app.press(&["right"]);
+            let screen = app.screen(160, 48);
+            assert!(screen.contains("││Error fetching diff ("), "{name}: {screen}");
+            assert!(!screen.contains("Loading"), "{name}: {screen}");
+            // Nothing else is asked for: the form needs the diff.
+            assert!(!app.gh().calls().contains(&GithubCall::CurrentUser), "{name}");
+        }
+    }
+
+    #[test]
+    fn without_the_viewer_the_diff_shows_with_no_form() {
+        for (name, error) in gh_failures() {
+            let mut app = pr_table(gh().with_user_error(error));
+            show_pr_5(&mut app);
+            let out = logs(|| futures_util::FutureExt::now_or_never(app.settle()).unwrap());
+            assert!(app.gh().calls().contains(&GithubCall::CurrentUser), "{name}");
+            assert!(
+                out.contains("ERROR Error fetching the current user for the review form"),
+                "{name}: {out}"
+            );
+            app.press(&["right"]);
+            let screen = app.screen(160, 48);
+            assert!(screen.contains("Filter files"), "{name}: {screen}");
+            assert_eq!(view(&app).review_button(), None, "{name}");
+        }
+    }
+
+    #[test]
+    fn submitting_a_review() {
+        assert_gh_failures_surface(
+            reviewing,
+            |app| {
+                app.press(&["tab", "tab", "enter"]);
+            },
+            |app| {
+                if view(app).is_submitting() {
+                    return Err("still submitting".into());
+                }
+                if view(app).pending().len() != 1 {
+                    return Err("the pending comment is gone".into());
+                }
+                // The button works again.
+                app.press(&["enter"]);
+                if view(app).is_submitting() {
+                    Ok(())
+                } else {
+                    Err("the button is stuck".into())
+                }
+            },
+        );
+    }
+}

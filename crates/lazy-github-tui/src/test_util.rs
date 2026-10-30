@@ -569,6 +569,93 @@ pub fn buffer_to_string(buffer: &Buffer) -> String {
     out
 }
 
+/// One failure per way a `gh` call can fail mid-session (#323), named for test messages: missing, logged out (exit 4
+/// and an HTTP 401), offline, an HTTP 500 and 502, output that isn't a response, a body that doesn't decode, a broken
+/// pipe and a timeout.
+#[cfg(test)]
+pub fn gh_failures() -> Vec<(&'static str, lazy_github_core::gh::GhError)> {
+    use lazy_github_core::gh::GhError;
+    use serde::de::Error as _;
+    let http = |status| GhError::Http {
+        status,
+        message: String::new(),
+        body: Vec::new(),
+        headers: Vec::new(),
+    };
+    vec![
+        ("not installed", GhError::NotInstalled),
+        (
+            "logged out",
+            GhError::NotAuthenticated {
+                hostname: None,
+                detail: "To get started with GitHub CLI, please run:  gh auth login".into(),
+            },
+        ),
+        ("HTTP 401", http(401)),
+        (
+            "offline",
+            GhError::Command {
+                code: Some(1),
+                stderr: "error connecting to api.github.com".into(),
+            },
+        ),
+        ("HTTP 500", http(500)),
+        ("HTTP 502", http(502)),
+        (
+            "garbage",
+            GhError::Parse("gh output did not start with an HTTP status line".into()),
+        ),
+        (
+            "truncated",
+            GhError::Decode(serde_json::Error::custom("EOF while parsing an object")),
+        ),
+        (
+            "broken pipe",
+            GhError::Io(std::io::Error::from(std::io::ErrorKind::BrokenPipe)),
+        ),
+        (
+            "timeout",
+            GhError::Timeout {
+                after: Duration::from_secs(30),
+            },
+        ),
+    ]
+}
+
+/// #323's check for one kind of request. For each of [`gh_failures`]: builds the app with `setup` (and settles it),
+/// makes every `gh` call from then on fail that way, runs `trigger` and every request it leads to, and asserts that
+/// the failure showed (a new toast, or an `ERROR` or `WARN` log line, which the command log shows) and that nothing
+/// is left loading: no "Loading" is drawn and `settled` passes. `settled` checks what's particular to the request,
+/// such as a dialog's button working again, and says what's wrong when it isn't.
+#[cfg(test)]
+pub fn assert_gh_failures_surface(
+    setup: impl Fn() -> TestApp,
+    trigger: impl Fn(&mut TestApp),
+    settled: impl Fn(&mut TestApp) -> Result<(), String>,
+) {
+    use futures_util::FutureExt as _;
+    for (name, error) in gh_failures() {
+        let mut app = setup();
+        app.settle().now_or_never().expect("the fake answers at once");
+        let toasts = app.app().toasts().len();
+        app.gh().fail_from_now(error);
+        let out = logs(|| {
+            trigger(&mut app);
+            app.settle().now_or_never().expect("the fake answers at once");
+        });
+        let told = app.app().toasts().len() > toasts
+            || out
+                .lines()
+                .any(|line| line.starts_with("ERROR") || line.starts_with("WARN"));
+        assert!(told, "{name}: no toast or log line\n{out}");
+        let screen = app.screen(160, 48);
+        assert!(!screen.contains("Loading"), "{name}: still loading\n{screen}");
+        if let Err(problem) = settled(&mut app) {
+            panic!("{name}: {problem}");
+        }
+    }
+}
+
 /// What `f` logs at `DEBUG` and above, as `LEVEL message` lines.
 #[cfg(test)]
 pub fn logs(f: impl FnOnce()) -> String {

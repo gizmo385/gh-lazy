@@ -298,3 +298,23 @@ fn the_auth_screen_colors() {
     assert_eq!(buffer[(2, 28)].symbol(), "q");
     assert!(buffer[(2, 28)].modifier.contains(Modifier::BOLD));
 }
+
+/// `gh` failing at startup (#323): every failure of the startup check ends on the authentication screen, which says
+/// why and keeps polling, with nothing left loading.
+#[test]
+fn every_gh_failure_of_the_startup_check_shows_the_authentication_screen() {
+    for (name, error) in crate::test_util::gh_failures() {
+        let expected = if matches!(error, GhError::NotInstalled) {
+            AuthReason::NotInstalled
+        } else {
+            AuthReason::NotLoggedIn
+        };
+        let mut app = on_auth_screen(error);
+        assert_eq!(reason(app.app()), Some(expected), "{name}");
+        assert!(!app.screen(160, 48).contains("Loading"), "{name}");
+        // The poll checks again.
+        let before = check_auths(&app);
+        app.advance(AUTH_POLL_INTERVAL);
+        assert_eq!(check_auths(&app), before + 1, "{name}");
+    }
+}

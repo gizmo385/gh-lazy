@@ -24,9 +24,9 @@ impl GhResponse {
         find_header(&self.headers, name)
     }
 
-    /// Decodes the body as JSON.
+    /// Decodes the body as JSON. A body that doesn't decode is logged (to the log file only).
     pub fn json<T: DeserializeOwned>(&self) -> Result<T, GhError> {
-        Ok(serde_json::from_slice(&self.body)?)
+        serde_json::from_slice(&self.body).map_err(|error| undecodable(error, &self.body))
     }
 
     /// The body as text, replacing invalid UTF-8.
@@ -215,9 +215,29 @@ pub fn interpret(exit: Option<i32>, stdout: &[u8], stderr: &[u8], paginated: boo
 pub(crate) fn decode_pages<T: DeserializeOwned>(body: &[u8]) -> Result<Vec<T>, GhError> {
     let mut items = Vec::new();
     for page in serde_json::Deserializer::from_slice(body).into_iter::<Vec<T>>() {
-        items.extend(page?);
+        items.extend(page.map_err(|error| undecodable(error, body))?);
     }
     Ok(items)
+}
+
+/// How much of a raw body [`excerpt`] keeps.
+const EXCERPT_BYTES: usize = 2048;
+
+/// The start of `raw` as text, for the log: at most [`EXCERPT_BYTES`], invalid UTF-8 replaced, with the full length
+/// when it's cut.
+pub(super) fn excerpt(raw: &[u8]) -> String {
+    let text = String::from_utf8_lossy(&raw[..raw.len().min(EXCERPT_BYTES)]);
+    if raw.len() > EXCERPT_BYTES {
+        format!("{text}... ({} bytes in all)", raw.len())
+    } else {
+        text.into_owned()
+    }
+}
+
+/// A body that didn't decode: the raw body goes to the log file, and the error to the caller.
+fn undecodable(error: serde_json::Error, body: &[u8]) -> GhError {
+    tracing::debug!("gh response that didn't decode ({error}): {}", excerpt(body));
+    GhError::Decode(error)
 }
 
 #[cfg(test)]
@@ -272,6 +292,19 @@ mod tests {
         assert!(decode_pages::<u32>(b"").unwrap().is_empty());
         assert_eq!(decode_pages::<u32>(b"[1,2]\n[3]").unwrap(), [1, 2, 3]);
         assert!(matches!(decode_pages::<u32>(b"[1,\"x\"]"), Err(GhError::Decode(_))));
+    }
+
+    #[test]
+    fn excerpts_are_cut_and_lossy() {
+        assert_eq!(excerpt(b"plain"), "plain");
+        assert_eq!(excerpt(b"\xffok"), "\u{fffd}ok");
+        let long = vec![b'x'; EXCERPT_BYTES + 10];
+        let text = excerpt(&long);
+        assert!(
+            text.ends_with(&format!("... ({} bytes in all)", EXCERPT_BYTES + 10)),
+            "{text}"
+        );
+        assert_eq!(text.chars().filter(|&c| c == 'x').count(), EXCERPT_BYTES);
     }
 
     #[test]

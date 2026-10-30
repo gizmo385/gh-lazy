@@ -843,13 +843,14 @@ impl Default for GhCliOptions {
 }
 
 impl From<&Config> for GhCliOptions {
-    /// The config has no time limits (Python has none to mirror), so these are always the defaults.
+    /// The config has no time limits (Python has none to mirror), so these are the defaults, or the test override
+    /// [`GhTimeouts::from_env`] reads in a debug build.
     fn from(config: &Config) -> Self {
         Self {
             program: PathBuf::from("gh"),
             hostname: hostname_for_base_url(&config.api.base_url),
             ttls: CacheTtls::from(&config.cache),
-            timeouts: GhTimeouts::default(),
+            timeouts: GhTimeouts::from_env(),
         }
     }
 }

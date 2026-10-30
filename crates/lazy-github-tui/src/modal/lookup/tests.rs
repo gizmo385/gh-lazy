@@ -45,7 +45,14 @@ fn github() -> FakeGithub {
         .with_repository("o/found", Ok(Some(repo("o/found"))))
         .with_repository("o/new", Ok(Some(repo("o/new"))))
         .with_repository("o/missing", Ok(None))
-        .with_repository("o/broken", Err(GhError::NotInstalled))
+        // A failure that's only the lookup's: a missing gh would toast as well (`gh_health`).
+        .with_repository(
+            "o/broken",
+            Err(GhError::Command {
+                code: Some(1),
+                stderr: "error connecting to api.github.com".into(),
+            }),
+        )
 }
 
 /// The main screen with `O` pressed on the repos table.

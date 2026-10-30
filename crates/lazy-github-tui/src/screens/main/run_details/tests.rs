@@ -1378,3 +1378,118 @@ fn run_logs_no_jobs_160x48() {
     let mut app = logs_tab(40);
     insta::assert_snapshot!(app.screen(160, 48));
 }
+
+// `gh` failing mid-session (#323): the jobs, both tabs' logs, the re-runs and the refetch.
+
+mod gh_failures {
+    use super::*;
+    use crate::test_util::{assert_gh_failures_surface, gh_failures};
+
+    fn nothing_loading(app: &mut TestApp) -> Result<(), String> {
+        let screen = app.screen(160, 48);
+        if screen.contains("Loading") {
+            Err(format!("still loading\n{screen}"))
+        } else {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn the_jobs() {
+        assert_gh_failures_surface(
+            app,
+            |app| {
+                app.press(&["enter"]);
+            },
+            |app| {
+                // Every tab has something other than a loading line.
+                for keys in [&["5"][..], &["right"], &["right"]] {
+                    app.press(keys);
+                    nothing_loading(app)?;
+                }
+                Ok(())
+            },
+        );
+    }
+
+    #[test]
+    fn a_job_s_logs_on_the_jobs_tab() {
+        assert_gh_failures_surface(
+            || jobs_tab(42),
+            |app| {
+                app.press(&["tab", "tab", "down", "l"]);
+            },
+            |app| {
+                let screen = app.screen(160, 48);
+                // A toast may cover the end of the line.
+                if !screen.contains("No logs available or failed to") {
+                    return Err(format!("no fallback\n{screen}"));
+                }
+                // `l` asks again.
+                let before = log_calls(app).len();
+                app.press(&["l"]);
+                futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+                (log_calls(app).len() > before)
+                    .then_some(())
+                    .ok_or_else(|| "l is stuck".into())
+            },
+        );
+    }
+
+    #[test]
+    fn the_logs_tab() {
+        assert_gh_failures_surface(
+            || selected(42),
+            |app| {
+                app.press(&["5", "right", "right"]);
+            },
+            |app| match logs_state(app) {
+                super::super::logs::LogsState::Done => nothing_loading(app),
+                other => Err(format!("{other:?}")),
+            },
+        );
+    }
+
+    #[test]
+    fn a_rerun() {
+        for (tabs, failed_only) in [(2, false), (3, true)] {
+            assert_gh_failures_surface(
+                || on_button(gh(), tabs),
+                |app| {
+                    app.press(&["enter"]);
+                },
+                |app| {
+                    if reruns(app).0 != [(RUN_42, failed_only)] {
+                        return Err(format!("{:?}", reruns(app)));
+                    }
+                    // The button works again, past its debounce.
+                    app.advance(std::time::Duration::from_millis(300));
+                    app.press(&["enter"]);
+                    futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+                    (reruns(app).0.len() == 2)
+                        .then_some(())
+                        .ok_or_else(|| "the button is stuck".into())
+                },
+            );
+        }
+    }
+
+    #[test]
+    fn the_refetch_after_a_rerun() {
+        for (name, error) in gh_failures() {
+            let mut app = on_button(gh().with_rerun(RUN_42, true, Ok(())), 3);
+            // The re-run works; the refetch, the call after it, fails.
+            let rerun = app.gh().calls().len();
+            app.gh().fail_from(rerun + 1, error);
+            app.press(&["enter"]);
+            let out = settle(&mut app);
+            assert!(
+                out.contains("ERROR Error fetching workflow run 5000042 after a re-run"),
+                "{name}: {out}"
+            );
+            // The run shows again, as it was.
+            assert_eq!(details(&app).run(), &fixture_run(42), "{name}");
+            assert_eq!(focus(&app), FocusTarget::DetailsTabs, "{name}");
+        }
+    }
+}

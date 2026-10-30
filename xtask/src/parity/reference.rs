@@ -1072,6 +1072,9 @@ struct CaptureKey<'a> {
     /// Only `true`: left out for the default, so keys from before the field existed don't change.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     config_dir_read_only: bool,
+    /// Left out unless set, so keys from before the field existed don't change.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    gh_timeout_ms: Option<u64>,
 }
 
 /// A seed in the capture key: its name and each file's `[path relative to the seed dir, blob id]`, sorted by path.
@@ -1220,6 +1223,7 @@ pub fn capture_key(repo: &Path, scenario: &Scenario, size: Size, roots: &Roots) 
             None => None,
         },
         config_dir_read_only: scenario.env.config_dir_read_only,
+        gh_timeout_ms: scenario.env.gh_timeout_ms,
     };
     serde_json::to_string(&key).context("serializing the capture key")
 }
@@ -1826,6 +1830,16 @@ contains = ["Hi"]
         let read_only = variant("[env]\n", "[env]\nconfig_dir_read_only = true\n");
         let key: Value = serde_json::from_str(&key_of(&read_only, SIZE, &roots)).unwrap();
         assert_eq!(key["config_dir_read_only"], Value::Bool(true));
+    }
+
+    #[test]
+    fn the_capture_key_has_the_gh_time_limit_only_when_set() {
+        let (_dir, roots) = key_roots();
+        let default = key_of(KEYED, SIZE, &roots);
+        assert!(!default.contains("gh_timeout_ms"), "{default}");
+        let limited = variant("[env]\n", "[env]\ngh_timeout_ms = 2000\n");
+        let key: Value = serde_json::from_str(&key_of(&limited, SIZE, &roots)).unwrap();
+        assert_eq!(key["gh_timeout_ms"], Value::from(2000));
     }
 
     #[test]

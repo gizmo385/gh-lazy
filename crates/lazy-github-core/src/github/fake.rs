@@ -348,6 +348,9 @@ struct State {
     /// What `update_pull_request` returns, by pull request number; numbers not set fail with a 422.
     pull_request_updates: HashMap<u64, Result<(), GhError>>,
     latency: Option<Duration>,
+    /// Injected failure: every call from this index on (counting every call, from 0) fails with the error, whatever
+    /// is canned for it.
+    failure: Option<(usize, GhError)>,
     calls: Vec<GithubCall>,
 }
 
@@ -743,6 +746,32 @@ impl FakeGithub {
         self
     }
 
+    /// Fault injection: the `n`th call (counting every call made, from 0) and every call after it fail with `error`,
+    /// whatever is canned for them. `pull_request_diff` fails with the [`DiffFetchError`] the real client makes of
+    /// `error`.
+    #[must_use]
+    pub fn with_failure_from(self, n: usize, error: GhError) -> Self {
+        self.lock().failure = Some((n, error));
+        self
+    }
+
+    /// Fault injection, as [`Self::with_failure_from`] does, on a fake already in use. Clones see the change too, so
+    /// a test can break `gh` while the app holds the fake.
+    pub fn fail_from(&self, n: usize, error: GhError) {
+        self.lock().failure = Some((n, error));
+    }
+
+    /// Fault injection: from the next call on, every call fails with `error`, as [`Self::fail_from`] does.
+    pub fn fail_from_now(&self, error: GhError) {
+        let next = self.lock().calls.len();
+        self.fail_from(next, error);
+    }
+
+    /// Ends an injected failure: later calls answer from the canned results again.
+    pub fn stop_failing(&self) {
+        self.lock().failure = None;
+    }
+
     /// Every call made so far, oldest first.
     pub fn calls(&self) -> Vec<GithubCall> {
         self.lock().calls.clone()
@@ -761,12 +790,18 @@ impl FakeGithub {
 }
 
 impl FakeGithub {
-    /// Records `call`, computes its result from the canned state, then waits out the latency. The lock is released
-    /// before waiting, so the future stays `Send`.
-    async fn respond<T>(&self, call: GithubCall, result: impl FnOnce(&State) -> T) -> T {
+    /// Records `call`, computes its result from the canned state (or the injected failure), then waits out the
+    /// latency. The lock is released before waiting, so the future stays `Send`.
+    async fn respond<T: Injectable>(&self, call: GithubCall, result: impl FnOnce(&State) -> T) -> T {
         let (result, latency) = {
             let state = self.record(call);
-            (result(&state), state.latency)
+            // `record` pushed this call, so its index is one less than the count.
+            let index = state.calls.len() - 1;
+            let result = match &state.failure {
+                Some((from, error)) if index >= *from => T::injected(duplicate(error)),
+                _ => result(&state),
+            };
+            (result, state.latency)
         };
         if let Some(latency) = latency {
             tokio::time::sleep(latency).await;
@@ -1304,6 +1339,23 @@ impl Github for FakeGithub {
 }
 
 /// A copy of `error`, as [`duplicate`] makes for a [`GhError`].
+/// A result an injected failure can stand in for.
+trait Injectable {
+    fn injected(error: GhError) -> Self;
+}
+
+impl<T> Injectable for Result<T, GhError> {
+    fn injected(error: GhError) -> Self {
+        Err(error)
+    }
+}
+
+impl Injectable for Result<String, DiffFetchError> {
+    fn injected(error: GhError) -> Self {
+        Err(DiffFetchError::from(error))
+    }
+}
+
 fn duplicate_diff_error(error: &DiffFetchError) -> DiffFetchError {
     match error {
         DiffFetchError::NotFound => DiffFetchError::NotFound,
@@ -1460,6 +1512,38 @@ mod tests {
                 GithubCall::UnreadNotificationCount,
             ]
         );
+    }
+
+    #[tokio::test]
+    async fn an_injected_failure_fails_the_nth_call_and_every_later_one() {
+        let github = FakeGithub::new()
+            .with_user(octocat())
+            .with_failure_from(1, GhError::NotInstalled);
+        github.check_auth().await.unwrap();
+        assert!(matches!(github.current_user().await, Err(GhError::NotInstalled)));
+        assert!(matches!(github.check_auth().await, Err(GhError::NotInstalled)));
+        // The diff fails as the real client's would: an HTTP status keeps its own variant.
+        github.fail_from_now(GhError::Timeout {
+            after: Duration::from_secs(30),
+        });
+        assert!(matches!(
+            github.pull_request_diff(&repo("a"), 1).await,
+            Err(DiffFetchError::Gh(GhError::Timeout { .. }))
+        ));
+        github.fail_from_now(GhError::Http {
+            status: 502,
+            message: String::new(),
+            body: Vec::new(),
+            headers: Vec::new(),
+        });
+        assert!(matches!(
+            github.pull_request_diff(&repo("a"), 1).await,
+            Err(DiffFetchError::Http(502))
+        ));
+        // Failed calls are still recorded, and stopping goes back to the canned results.
+        github.stop_failing();
+        assert_eq!(github.current_user().await.unwrap(), octocat());
+        assert_eq!(github.calls().len(), 6);
     }
 
     #[tokio::test]

@@ -475,3 +475,71 @@ fn edit_pr_disabled_branch_row() {
     }
     insta::assert_snapshot!(crate::test_util::buffer_to_styled_string(&branches));
 }
+
+// `gh` failing mid-session (#323): the requested reviewers on open, the update and the listing on Update.
+
+mod gh_failures {
+    use super::*;
+    use crate::test_util::{assert_gh_failures_surface, gh_failures, logs};
+
+    #[test]
+    fn the_requested_reviewers_on_open() {
+        for (name, error) in gh_failures() {
+            let gh = edit_gh().with_requested_reviewers(REPO, 5, Err(error));
+            let mut app = selected(TestApp::with_github(Config::default(), gh));
+            app.press(&["E"]);
+            let out = logs(|| {
+                futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+            });
+            assert!(is_open(&app), "{name}");
+            // Python's `list_requested_reviewers` message.
+            assert!(out.contains("ERROR Error creating review requests"), "{name}: {out}");
+        }
+    }
+
+    #[test]
+    fn updating() {
+        assert_gh_failures_surface(
+            || {
+                let mut app = editing();
+                type_text(&mut app, "Kept title");
+                app
+            },
+            |app| {
+                app.press(&["shift+enter"]);
+            },
+            |app| {
+                if !is_open(app) {
+                    return Err("the dialog closed".into());
+                }
+                let before = updates(app).len();
+                app.press(&["shift+enter"]);
+                futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+                (updates(app).len() > before)
+                    .then_some(())
+                    .ok_or_else(|| "Update is stuck".into())
+            },
+        );
+    }
+
+    #[test]
+    fn the_listing_and_the_review_request_on_update() {
+        // Nothing changed: Update lists the requested reviewers, then requests parity-reviewer, both failing.
+        assert_gh_failures_surface(
+            editing,
+            |app| {
+                app.press(&["shift+enter"]);
+            },
+            |app| {
+                let failed = messages(app)
+                    .iter()
+                    .any(|(title, _)| title.as_deref() == Some("Error requesting reviews"));
+                if !failed {
+                    return Err(format!("{:?}", messages(app)));
+                }
+                // The chain is over: the dialog closed, as it does after any review request.
+                (!is_open(app)).then_some(()).ok_or_else(|| "still open".into())
+            },
+        );
+    }
+}

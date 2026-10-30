@@ -718,3 +718,32 @@ fn a_comment_posted_where_there_were_none_goes_below_the_empty_line() {
     );
     assert!(empty < first, "{screen}");
 }
+
+// `gh` failing mid-session (#323): the comments.
+
+mod gh_failures {
+    use super::*;
+    use crate::test_util::assert_gh_failures_surface;
+
+    #[test]
+    fn the_comments() {
+        assert_gh_failures_surface(
+            app,
+            |app| {
+                app.press(&["enter"]);
+            },
+            |app| {
+                if comments(app).is_loading() {
+                    return Err("still loading".into());
+                }
+                app.press(&["right"]);
+                let screen = app.screen(160, 48);
+                if screen.contains("│No comments available") {
+                    Ok(())
+                } else {
+                    Err(format!("no fallback\n{screen}"))
+                }
+            },
+        );
+    }
+}

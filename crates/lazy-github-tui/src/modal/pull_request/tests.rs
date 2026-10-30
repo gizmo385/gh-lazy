@@ -303,7 +303,18 @@ fn no_suggestions_when_the_branches_fail() {
     type_text(&mut app, "new");
     let view = dialog_view(&mut app);
     assert!(!view.row(14).contains("new-feature"), "{}", view.row(14));
-    assert!(toasts(&app).is_empty());
+    // Python's worker raises, which ends the app: here it's the generic API error (#323).
+    assert_eq!(
+        app.app()
+            .toasts()
+            .iter()
+            .map(|toast| (toast.title.clone(), toast.message.to_string()))
+            .collect::<Vec<_>>(),
+        [(
+            Some("API Error".to_owned()),
+            "GitHub API request failed (HTTP 500): boom".to_owned()
+        )]
+    );
 }
 
 // Focus and keys.
@@ -948,4 +959,117 @@ fn a_frame_past_the_right_edge_is_cut_the_same_on_every_row() {
         assert_ne!(screen[(47, y)].symbol(), "█", "row {y} is cut at the screen's edge");
     }
     insta::assert_snapshot!(app.screen(48, 16));
+}
+
+// `gh` failing mid-session (#323): opening Create PR, looking up a reviewer, creating and requesting reviews.
+
+mod gh_failures {
+    use super::*;
+    use crate::test_util::{assert_gh_failures_surface, gh_failures};
+
+    fn creates(app: &TestApp) -> usize {
+        super::creates(app).len()
+    }
+
+    #[test]
+    fn opening() {
+        // The branches and the collaborators: the dialog opens without suggestions.
+        assert_gh_failures_surface(
+            || selected(TestApp::with_github(Config::default(), gh())),
+            |app| {
+                app.press(&["P"]);
+            },
+            |app| {
+                if is_open(app) {
+                    Ok(())
+                } else {
+                    Err("the dialog didn't open".into())
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn looking_up_a_reviewer() {
+        assert_gh_failures_surface(
+            || {
+                let mut app = opened();
+                app.press(&["tab", "tab"]);
+                type_text(&mut app, "parity-friend");
+                app
+            },
+            |app| {
+                app.press(&["enter"]);
+            },
+            |app| {
+                let refused = messages(app)
+                    .iter()
+                    .any(|(_, message)| message.starts_with("Could not find user"));
+                if !refused {
+                    return Err(format!("{:?}", messages(app)));
+                }
+                is_open(app).then_some(()).ok_or_else(|| "the dialog closed".into())
+            },
+        );
+    }
+
+    #[test]
+    fn creating() {
+        assert_gh_failures_surface(
+            || filled_in(TestApp::with_github(Config::default(), gh()), "T", "b", ""),
+            |app| {
+                app.press(&["shift+enter"]);
+            },
+            |app| {
+                let expected = titled(
+                    "Error creating pull request",
+                    "Check that your branches are valid and that a PR does not already exist",
+                );
+                if !messages(app).contains(&expected) {
+                    return Err(format!("{:?}", messages(app)));
+                }
+                // The branch check may ask to push the branch, over the dialog.
+                if app.app().modals().first() != Some(&ModalKind::PullRequest) {
+                    return Err("the dialog closed".into());
+                }
+                // Answer the branch check (no to any push), then Create works again.
+                futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+                if app.app().modals() != [ModalKind::PullRequest] {
+                    app.press(&["escape"]);
+                }
+                let before = creates(app);
+                app.press(&["shift+enter"]);
+                futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+                (creates(app) > before)
+                    .then_some(())
+                    .ok_or_else(|| "Create is stuck".into())
+            },
+        );
+    }
+
+    #[test]
+    fn requesting_reviews_after_creating() {
+        for (name, error) in gh_failures() {
+            let friend = serde_json::from_value(fixture_body("pr-edit", "users/parity-friend/GET.json")).unwrap();
+            let gh = creating_gh(Ok(created()))
+                .with_review_request(10, Err(error))
+                .with_profile("parity-friend", Ok(friend));
+            let mut app = filled_in(TestApp::with_github(Config::default(), gh), "T", "b", "");
+            app.press(&["tab"]);
+            type_text(&mut app, "parity-friend");
+            app.press(&["enter"]);
+            settle(&mut app);
+            app.press(&["shift+enter"]);
+            settle(&mut app);
+            assert!(!is_open(&app), "{name}: closed either way");
+            assert!(
+                messages(&app).contains(&titled(
+                    "Error requesting reviews",
+                    "Could not request reviews from parity-friend"
+                )),
+                "{name}: {:?}",
+                messages(&app)
+            );
+        }
+    }
 }

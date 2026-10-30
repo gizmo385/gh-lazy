@@ -30,14 +30,14 @@ expression: "app.screen(160, 48)"
 │                             █                                                ▊▁▁▁▁▁▁▁▁▎                                        █                             │
 │                             █                                                                                                  █                             │
 │                             █                                                                                                  █ting in any activate         │
-└─────────────────────────────█ Show Workflows:                                ▊▔▔▔▔▔▔▔▔▎                                        █itself. This means that you  │
-┌─ [3] Issues ────────────────█                                                ▊        ▎                                      ▄▄█                             │
+└─────────────────────────────█ Show Workflows:                                ▊▔▔▔▔▔▔▔▔▎                                      ▇▇█itself. This means that you  │
+┌─ [3] Issues ────────────────█                                                ▊        ▎                                        █                             │
 │ #  Status  Author  Title    █                                                ▊▁▁▁▁▁▁▁▁▎                                        █                             │
 │                             █                                                                                                  █                             │
 │                             █                                                                                                  █                             │
 │                             █ Show Issues:                                   ▊▔▔▔▔▔▔▔▔▎                                        █                             │
 │                             █                                                ▊        ▎                                        █tly only supports listing    │
-│                             █                                                ▊▁▁▁▁▁▁▁▁▎                                        █e currently selected repo,   │
+│                             █                                                                                                  █e currently selected repo,   │
 │                             █──────────────────────────────────────────────────────────────────────────────────────────────────█.                            │
 └─────────────────────────────█                                                                                                  █                             │
 ┌─ [4] Workflows ─────────────█                                   ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                               █                             │

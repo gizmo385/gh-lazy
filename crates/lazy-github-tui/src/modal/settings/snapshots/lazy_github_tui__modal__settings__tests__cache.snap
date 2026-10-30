@@ -28,8 +28,8 @@ expression: "app.screen(160, 48)"
 │                             █                                                ▊  None                                       ▎   █                             │
 │                             █                                                ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎   █                             │
 │                             █                                                                                                  █                             │
-│                             █                                                                                                  █                             │
-│                             █ Cache Directory:                               ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎ ▃▃█ting in any activate         │
+│                             █                                                                                                ▅▅█                             │
+│                             █ Cache Directory:                               ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎   █ting in any activate         │
 └─────────────────────────────█                                                ▊  /home/me/.config/lazy-github/.cache        ▎   █itself. This means that you  │
 ┌─ [3] Issues ────────────────█                                                ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎   █                             │
 │ #  Status  Author  Title    █                                                                                                  █                             │

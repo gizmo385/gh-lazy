@@ -1,6 +1,5 @@
 ---
 source: crates/lazy-github-tui/src/modal/settings/tests.rs
-assertion_line: 1191
 expression: "app.screen(160, 48)"
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -19,7 +18,7 @@ expression: "app.screen(160, 48)"
 │                             █                                                                                                  █                             │
 │                             █  Custom keybinding overrides for LazyGithub. When rebinding, pressing ESCAPE will reset to       █                             │
 │                             █  the default binding.                                                                            █with!                        │
-│                             █                                                                                                ▃▃█                             │
+│                             █                                                                                                ▆▆█                             │
 │                             █                                                                                                  █                             │
 │                             █ Command Palette: ctrl+p                                                                          █                             │
 └─────────────────────────────█                                                                                                  █                             │
@@ -38,7 +37,7 @@ expression: "app.screen(160, 48)"
 │                             █                                                                                                  █                             │
 │                             █ Table page left: ^                                                                               █                             │
 │                             █                                                                                                  █tly only supports listing    │
-│                             █ Table page right: $                                                                              █e currently selected repo,   │
+│                             █                                                                                                  █e currently selected repo,   │
 │                             █──────────────────────────────────────────────────────────────────────────────────────────────────█.                            │
 └─────────────────────────────█                                                                                                  █                             │
 ┌─ [4] Workflows ─────────────█                                   ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                               █                             │

@@ -35,9 +35,9 @@ expression: "crate::test_util::buffer_to_styled_string(&app.render(160, 48))"
 │ #  Status  Author  Title    █                                                │ ▐X▌ octo/one                                │   █                             │
 │                             █                                                │ ▐X▌ octo/two                                │   █                             │
 │                             █                                                └─────────────────────────────────────────────┘   █                             │
-│                             █                                                                                                  █                             │
+│                             █                                                                                                ▆▆█                             │
 │                             █                                                                                                  █tly only supports listing    │
-│                             █                                                                                                ▇▇█e currently selected repo,   │
+│                             █                                                                                                  █e currently selected repo,   │
 │                             █──────────────────────────────────────────────────────────────────────────────────────────────────█.                            │
 └─────────────────────────────█                                                                                                  █                             │
 ┌─ [4] Workflows ─────────────█                                   ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                               █                             │
@@ -84,21 +84,21 @@ ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhy
 cwwwwwwwwwwwwwwwwwwwwwwwwwwwwwfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhyzABACCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCzyhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhyzDEDzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhFFfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhGGfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhHHHHHHHHHHHHHHHHIIIIIIIIIIIIIIIIhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-cwwwwwwwwwwwwwwwwwwwwwwwwwwwwwfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhJJJJJKKKKKKJJJJJLLLLMMMMMMMMLLLLhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhNNNNNNNNNNNNNNNNOOOOOOOOOOOOOOOOhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhIIIIIIIIIIIIIIIIJJJJJJJJJJJJJJJJhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+cwwwwwwwwwwwwwwwwwwwwwwwwwwwwwfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhKKKKKLLLLLLKKKKKMMMMNNNNNNNNMMMMhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhOOOOOOOOOOOOOOOOPPPPPPPPPPPPPPPPhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-PPPPPPPPPQQQQQQQPPPQQQQQQPPPQQQQQQQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+QQQQQQQQQRRRRRRRQQQRRRRRRQQQRRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 --- legend
 . fg=#0a263a bg=#121212
 a fg=#646464 bg=#121212
@@ -133,15 +133,16 @@ C fg=#ddedf9 bg=#0178d4 BOLD
 D fg=#242f38 bg=#272727
 E fg=#8ad4a1 bg=#242f38
 F fg=#003054 bg=#000000 REVERSED
-G fg=#004578 bg=#4f4f4f
-H fg=#7ae998 bg=#4ebf71
-I fg=#e76580 bg=#b93c5b
-J fg=#0a180e bg=#4ebf71
-K fg=#0a180e bg=#4ebf71 BOLD
-L fg=#f5e5e9 bg=#b93c5b
-M fg=#f5e5e9 bg=#b93c5b BOLD
-N fg=#008139 bg=#4ebf71
-O fg=#780028 bg=#b93c5b
-P fg=#ffa62b bg=#242f38 BOLD
-Q fg=#e0e0e0 bg=#242f38
-R fg=Reset bg=#242f38
+G fg=#e0e0e0 bg=#000000
+H fg=#004578 bg=#4f4f4f
+I fg=#7ae998 bg=#4ebf71
+J fg=#e76580 bg=#b93c5b
+K fg=#0a180e bg=#4ebf71
+L fg=#0a180e bg=#4ebf71 BOLD
+M fg=#f5e5e9 bg=#b93c5b
+N fg=#f5e5e9 bg=#b93c5b BOLD
+O fg=#008139 bg=#4ebf71
+P fg=#780028 bg=#b93c5b
+Q fg=#ffa62b bg=#242f38 BOLD
+R fg=#e0e0e0 bg=#242f38
+S fg=Reset bg=#242f38

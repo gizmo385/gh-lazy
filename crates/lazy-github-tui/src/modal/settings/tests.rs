@@ -17,6 +17,7 @@ const REPOSITORIES: usize = 3;
 const PULL_REQUESTS: usize = 4;
 const ISSUES: usize = 5;
 const CACHE: usize = 6;
+const CORE: usize = 7;
 const API: usize = 8;
 
 /// The default config as loading gives it: with its paths, which Save won't take blank.
@@ -391,6 +392,18 @@ fn a_focused_field_below_the_fold_is_scrolled_into_view() {
 }
 
 // Keys.
+
+#[test]
+fn the_rules_top_margin_leaves_the_core_tab_one_row_to_scroll() {
+    // The scroll area stops a blank row above the rule, so at 160x48 the Core tab overflows by one row, as Python's
+    // does.
+    let (mut app, _) = opened(&config());
+    go_to_tab(&mut app, CORE);
+    tab_to(&mut app, SettingsFocus::Scroll);
+    app.press(&["end"]);
+    app.render(160, 48);
+    assert_eq!(dialog(&app).panes[CORE].scroll.offset(), 1);
+}
 
 #[test]
 fn q_closes_from_a_switch_but_types_in_an_input_and_escape_closes_from_an_input() {

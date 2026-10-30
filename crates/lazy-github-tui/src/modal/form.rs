@@ -286,10 +286,11 @@ impl FormScroll {
         if in_view.contains(&usize::from(rows.start)) && usize::from(rows.end) <= in_view.end {
             return;
         }
-        // `Region.center` and the `int(... + 0.5)` of `scroll_to_region`, which truncates toward zero.
+        // `Region.center` (a float for both, so an odd window's middle is half a row down) and the `int(... + 0.5)`
+        // of `scroll_to_region`, which truncates toward zero.
         let middle = f64::from(with_margin.start) + f64::from(with_margin.end - with_margin.start) / 2.0;
         #[allow(clippy::cast_precision_loss)] // offsets and windows are screen-sized
-        let window_middle = offset as f64 + (window / 2) as f64;
+        let window_middle = offset as f64 + window as f64 / 2.0;
         #[allow(clippy::cast_possible_truncation)] // a difference of screen-sized rows
         let delta = (middle - window_middle + 0.5).trunc() as i64;
         let target = i64::try_from(offset).unwrap_or(i64::MAX).saturating_add(delta).max(0);

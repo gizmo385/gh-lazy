@@ -44,8 +44,11 @@ const HEADING_MARGIN_TOP: u16 = 2;
 /// The `Markdown` widget's `padding: 0 2`, inside which the heading is centered.
 const HEADING_PADDING: u16 = 2;
 
-/// Below the scroll area: the rule, a blank row and the buttons, docked at the bottom.
-const FOOTER_ROWS: u16 = 1 + 1 + ButtonRow::FLUSH_HEIGHT;
+/// The `Rule`'s `margin: 1 0`: a blank row above it and one below.
+const RULE_MARGIN: u16 = 1;
+
+/// Below the scroll area: the rule and its margins, then the buttons, docked at the bottom.
+const FOOTER_ROWS: u16 = RULE_MARGIN + 1 + RULE_MARGIN + ButtonRow::FLUSH_HEIGHT;
 
 /// The search box's first row: below the heading, past the box's `margin-top: 1`.
 const SEARCH_TOP: u16 = HEADING_ROWS + 1;
@@ -555,11 +558,12 @@ impl Component for SettingsDialog {
         let buf = frame.buffer_mut();
         self.pane_mut().render(buf, scroll, theme, under, focus);
 
-        // `Rule`: a `─` line in `$secondary` across the interior, right below the scroll area.
+        // `Rule`: a `─` line in `$secondary` across the interior, past its top margin below the scroll area.
         let rule_style = Style::new().fg(theme.color(p.secondary, under));
-        if scroll.bottom() < area.bottom() {
+        let rule_y = scroll.bottom().saturating_add(RULE_MARGIN);
+        if rule_y < area.bottom() {
             let width = usize::from(area.width);
-            buf.set_stringn(area.x, scroll.bottom(), "─".repeat(width), width, rule_style);
+            buf.set_stringn(area.x, rule_y, "─".repeat(width), width, rule_style);
         }
 
         // The buttons, docked at the bottom, `padding-left: 35` in.

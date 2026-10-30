@@ -5,14 +5,16 @@
   marked read in the modal since then flipped to `unread: false`. When the modal opens and that file holds at least
   one thread, both tabs show the saved threads at once, with the active tab's table focused and the line "Showing
   saved notifications - refreshing..." under the heading, instead of the loading overlay. The live first page then
-  replaces them: the cursor stays on its thread, the tab follows the live rows unless the user picked one, and marks
+  replaces them: a cursor still on the top row stays on the top row, one the user moved follows its thread, the tab follows the live rows unless the user picked one, and marks
   made meanwhile carry over. If the live page fails, the saved threads stay, the line becomes "Showing saved
   notifications - refresh failed" and nothing pages. With no file, an empty one or a bad one, the modal loads as
   Python's does. The 60 s unread poll is unchanged.
 - Decided by: Chris, 2026-10-30. He asked for a cache the modal reads (#332) and accepted the recommendations on
   storage (D1: `notifications.json` on disk), saved rows (D2: fully usable, marks carried over) and the poll (D3:
-  unchanged).
-- Link: https://github.com/gizmo385/gh-lazy/issues/332#issuecomment-6532916867
+  unchanged). He then accepted the cursor rule above, which the implementation chose over "the cursor stays on its
+  thread" so a newer thread on top doesn't move a cursor the user hasn't moved.
+- Link: https://github.com/gizmo385/gh-lazy/issues/332#issuecomment-6532916867,
+  https://github.com/gizmo385/gh-lazy/issues/332#issuecomment-6533608919
 - Rows: `modals.notifications-cached`, `modals.notifications-cached-refresh`, `caches-drafts.notifications-json`
 
 Python fetches the first page every time the modal opens and shows the loading overlay until it answers, so the

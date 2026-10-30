@@ -9,9 +9,10 @@
   made meanwhile carry over. If the live page fails, the saved threads stay, the line becomes "Showing saved
   notifications - refresh failed" and nothing pages. With no file, an empty one or a bad one, the modal loads as
   Python's does. The 60 s unread poll is unchanged.
-- Decided by: Chris, 2026-10-30, asked for a cache the modal reads (#332). The storage, stale-row and poll choices
-  are pending his answers on #332; this file and the rows follow the recommendations there until he answers.
-- Link: https://github.com/gizmo385/gh-lazy/issues/332
+- Decided by: Chris, 2026-10-30. He asked for a cache the modal reads (#332) and accepted the recommendations on
+  storage (D1: `notifications.json` on disk), saved rows (D2: fully usable, marks carried over) and the poll (D3:
+  unchanged).
+- Link: https://github.com/gizmo385/gh-lazy/issues/332#issuecomment-6532916867
 - Rows: `modals.notifications-cached`, `modals.notifications-cached-refresh`, `caches-drafts.notifications-json`
 
 Python fetches the first page every time the modal opens and shows the loading overlay until it answers, so the

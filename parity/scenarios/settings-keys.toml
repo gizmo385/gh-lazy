@@ -147,6 +147,10 @@ keys = ["right", "right"]
 [[step]]
 wait = { text = "Custom keybinding overrides" }
 
+# Python mounts the rows after the tab's docstring.
+[[step]]
+wait = { text = "Keybindings: exclamation_mark" }
+
 [[step]]
 capture = "reopened"
 checks = ["footer"]

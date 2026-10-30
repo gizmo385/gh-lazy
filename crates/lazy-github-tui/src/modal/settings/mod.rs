@@ -576,6 +576,18 @@ impl Component for SettingsDialog {
             height: ButtonRow::FLUSH_HEIGHT,
         }
         .intersection(area);
+        // The docked row (`width: auto`) covers its `padding-left` too: with the search box shown, the scroll area
+        // reaches under it, and the row hides what's there.
+        let docked = Rect {
+            x: area.x,
+            width: buttons.right().saturating_sub(area.x),
+            ..buttons
+        };
+        let fill = Style::new().fg(theme.color(p.foreground, under)).bg(theme.paint(under));
+        for position in docked.positions() {
+            buf[position].reset();
+            buf[position].set_style(fill);
+        }
         self.buttons
             .render(buf, buttons, theme, focus.and_then(SettingsFocus::button));
 

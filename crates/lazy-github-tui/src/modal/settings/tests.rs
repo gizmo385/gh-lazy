@@ -830,6 +830,29 @@ fn the_box_shows_above_the_strip_with_its_footer() {
 }
 
 #[test]
+fn the_docked_buttons_hide_the_scroll_area_under_their_padding() {
+    // With the box shown the scroll area reaches under the buttons; Python's docked row (padding included) hides
+    // what's there, so the Appearance tab's labels don't show left of Save.
+    let (mut app, _) = opened(&config());
+    app.press(&["/"]);
+    let screen = app.screen(160, 48);
+    let (save_x, save_y) = cell_of(&screen, "Save");
+    let lines: Vec<&str> = screen.lines().collect();
+    let left = cell_of(&screen, "Appearance  Notifications").0;
+    for row in save_y - 1..=save_y + 1 {
+        let line: String = lines[usize::from(row)]
+            .chars()
+            .skip(usize::from(left))
+            .take(usize::from(save_x - left))
+            .collect();
+        assert!(
+            line.chars().all(|c| c == ' ' || c == '▔' || c == '▁'),
+            "row {row}: {line:?}\n{screen}"
+        );
+    }
+}
+
+#[test]
 fn nothing_filters_before_enter_and_focus_stays_in_the_box() {
     let (mut app, _) = opened(&config());
     app.press(&["/"]);

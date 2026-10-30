@@ -33,10 +33,15 @@ regex = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true, features = ["macros", "process", "rt", "signal", "sync", "time"] }
 tracing = { workspace = true }
+# Graphemes and cell widths in `display`, measured as ratatui's buffer lays text out (#327).
+unicode-segmentation = { workspace = true }
+unicode-width = { workspace = true }
 
 [dev-dependencies]
 insta = { workspace = true }
 lazy-github-core = { workspace = true, features = ["test-util"] }
+# Arbitrary text for the never-panics tests (#327).
+proptest = { workspace = true }
 rstest = { workspace = true }
 serde_json = { workspace = true }
 # The diff `bindings_goldens_are_fresh` prints for a stale golden.

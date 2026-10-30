@@ -32,11 +32,12 @@ pub struct Cell {
 }
 
 impl Cell {
-    /// A cell with `value`, drawn as `display`.
+    /// A cell with `value`, drawn as `display`. Control characters in `display` are drawn as U+FFFD, so they can't
+    /// throw the row's columns out of line.
     pub fn new(value: CellValue, display: impl Into<Line<'static>>) -> Self {
         Self {
             value,
-            display: display.into(),
+            display: crate::display::sanitize_line(display.into()),
         }
     }
 

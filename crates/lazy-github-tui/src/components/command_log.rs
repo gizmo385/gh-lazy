@@ -295,8 +295,8 @@ fn is_line_boundary(c: char) -> bool {
 
 /// Textual's `Log._process_line`: tabs expanded to 8-column stops, then U+0000–U+0014 replaced with U+FFFD.
 ///
-/// The other C0 controls and DEL are replaced too, which Textual doesn't do: drawn raw, an escape would reach the
-/// terminal and corrupt the screen.
+/// The other C0 controls, DEL and the C1 controls are replaced too, which Textual doesn't do: drawn raw, an escape
+/// would reach the terminal and corrupt the screen (Py bug B34).
 fn process_row(row: &str) -> String {
     let mut out = String::with_capacity(row.len());
     let mut column = 0;
@@ -307,7 +307,7 @@ fn process_row(row: &str) -> String {
             column += spaces;
             continue;
         }
-        out.push(if c.is_ascii_control() { '\u{FFFD}' } else { c });
+        out.push(crate::display::sanitize_char(c));
         // Python counts characters, not cells, for tab stops.
         column += 1;
     }

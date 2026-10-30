@@ -2734,6 +2734,28 @@ mod tests {
         assert_eq!(diff_text(diff_response("200 OK", body)).unwrap(), body);
     }
 
+    /// `gh api -i` output with `body` as raw bytes, which needn't be UTF-8.
+    fn raw_text_response(body: &[u8]) -> Result<GhResponse, GhError> {
+        let mut stdout = b"HTTP/2.0 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n".to_vec();
+        stdout.extend_from_slice(body);
+        gh::interpret(Some(0), &stdout, b"", false)
+    }
+
+    #[test]
+    fn invalid_utf8_in_a_diff_or_a_log_is_replaced_not_an_error() {
+        // A binary file's bytes in a diff, and a log line with a stray Latin-1 byte.
+        let diff = b"diff --git a/logo.bin b/logo.bin\n--- a/logo.bin\n+++ b/logo.bin\n@@ -1 +1 @@\n-\x89PNG\xff\n+\xfe\xff ok\n";
+        let text = diff_text(raw_text_response(diff)).unwrap();
+        assert!(
+            text.contains("-\u{fffd}PNG\u{fffd}\n+\u{fffd}\u{fffd} ok\n"),
+            "{text:?}"
+        );
+        assert_eq!(crate::diff::parse(&text).unwrap().files.len(), 1);
+
+        let log = job_log_text(raw_text_response(b"caf\xe9 \xc3\n")).unwrap();
+        assert_eq!(log.as_deref(), Some("caf\u{fffd} \u{fffd}\n"));
+    }
+
     #[test]
     fn diff_errors_read_as_the_tab_shows_them() {
         let error = |status: &str| diff_text(diff_response(status, r#"{"message":"x"}"#)).unwrap_err();

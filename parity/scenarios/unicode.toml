@@ -1,0 +1,108 @@
+version = 1
+description = "Wide, combining, zero-width and right-to-left text: the PR table's columns stay aligned, and the PR's title, branch, body (a paragraph, a list and a table) and diff lay out by cell width"
+# Zero-width characters are kept out of the table: ratatui doesn't write them to the terminal, Textual does, so the
+# cells differ though they look the same. ZWJ emoji sequences are left out: terminals (and the harness's vt100 parser) disagree on their width, so they're
+# covered by the unit tests only. Control characters are too: Python sends them to the terminal raw (Py bug B34). The
+# footer is left out of the cross-app checks: Python spells `^p Command Pallete` (Py bug B14).
+gate = true
+parity_rows = [
+    "pull-requests.columns",
+    "pull-requests.overview-header",
+    "pull-requests.overview-body",
+    "diff-viewer.hunk-pane",
+    "diff-viewer.file-header",
+]
+sizes = [[160, 48]]
+
+[env]
+# unicode replaces pr-details' PR titles, PR 5's title, body and head branch, and PR 5's diff.
+fixtures = ["unicode", "pr-details", "base"]
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "視覚カーソルを追加", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Ελληνικά", timeout_ms = 15000 }
+
+[[step]]
+capture = "table"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+# Python drops an enter that follows a focus key at once, so the PR table gets a moment to take focus.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "機能/カーソル", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "作業中", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Status checks:", timeout_ms = 5000 }
+
+# Not `tabs`: right after a selection Python sometimes draws the tab underline zero-width (#209).
+[[step]]
+capture = "overview"
+checks = ["titles", "headers", "rows", "cursor", "focus"]
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "日本語.md", timeout_ms = 15000 }
+
+# Tab: the diff's scroll area, the filter, the README.md section's title, its hunk's title; enter opens the hunk.
+[[step]]
+keys = ["tab", "tab", "tab", "tab", "enter"]
+
+[[step]]
+wait = { text = "Line: 1/8", timeout_ms = 5000 }
+
+[[step]]
+capture = "diff"
+checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
+
+[expect.table]
+contains = [
+    "視覚カーソルを追加 🚀 viewer",
+    "Release 0.2.0 🇯🇵 한국어 지원",
+    "תמיכה בעברית and Ελληνικά",
+]
+not_contains = ["Traceback", "�"]
+
+[expect.overview]
+contains = [
+    "視覚カーソルを追加 🚀 viewer",
+    "機能/カーソル",
+    "概要",
+    "🚀 速い",
+    "한국어: 커서를 추가합니다",
+    "עברית: שלום עולם",
+    "名前",
+    "ビルド",
+]
+not_contains = ["Traceback", "�"]
+
+[expect.diff]
+contains = [
+    "▼ 📄 README.md (+4 -1)",
+    "▼ Lines 1-7 (+4 -1) • # ビューアー 📄",
+    "│ עברית: שלום עולם",
+    "│ 全角の行: 🇯🇵 🇫🇷 と a",
+    "▼ 📄 日本語.md (+3)",
+]
+not_contains = ["Traceback", "�"]

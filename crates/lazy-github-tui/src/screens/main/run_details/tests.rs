@@ -12,7 +12,7 @@ use serde_json::Value;
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::event::Event;
 use crate::screens::main::{FocusTarget, MainScreen, SectionId};
-use crate::test_util::{TestApp, logs};
+use crate::test_util::{TestApp, UNICODE_EXTRAS, logs, unicode_fixture};
 
 fn fixtures() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../parity/fixtures/run-details")
@@ -1100,6 +1100,27 @@ fn the_wheel_scrolls_the_tree_over_it() {
 fn run_jobs_160x48() {
     let mut app = jobs_tab(42);
     insta::assert_snapshot!(app.screen(160, 48));
+}
+
+/// The build job's log from the `unicode` fixture set (#327), with a line of what the parity scenario leaves out: a
+/// ZWJ sequence and control characters, ANSI colors among them. Python doesn't color by ANSI escapes in a log either
+/// (it shows the log in a markdown fence), so they're drawn as text with U+FFFD for the ESC.
+#[test]
+fn run_jobs_logs_unicode_160x48() {
+    let log = unicode_fixture("repos/parity-bot/run-fixture/actions/jobs/6000001/logs/GET.json");
+    let log = format!(
+        "{}2026-03-04T05:06:15.0000000Z \x1b[1;32mok\x1b[0m{UNICODE_EXTRAS}\n",
+        log.as_str().unwrap()
+    );
+    let first_job = fixture_jobs(fixture_run(42).id)[0].id;
+    let mut app = app_with(gh().with_job_logs(first_job, Ok(Some(log))));
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["right", "tab", "tab", "down", "enter", "l"]);
+    settle(&mut app);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("�[1;32mok�[0m"), "{screen}");
+    insta::assert_snapshot!(screen);
 }
 
 #[test]

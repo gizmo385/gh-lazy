@@ -52,7 +52,11 @@ mod monokai {
 /// ([`Line::style`]). The pane keeps that background on context lines and lays its own over the others. Without a
 /// grammar they come back unstyled, so the pane's text color and backgrounds show.
 pub fn code_spans(file: &ChangedFile, hunk: &Hunk) -> Vec<Line<'static>> {
-    let texts: Vec<String> = hunk.lines.iter().map(|line| expand_tabs(&code_text(line))).collect();
+    let texts: Vec<String> = hunk
+        .lines
+        .iter()
+        .map(|line| crate::display::sanitize(&expand_tabs(&code_text(line))).into_owned())
+        .collect();
     let Some(syntax) = highlight::syntax_for_file(&file.path) else {
         return texts.into_iter().map(Line::from).collect();
     };

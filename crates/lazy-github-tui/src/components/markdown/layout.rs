@@ -55,11 +55,10 @@ pub(super) fn layout(blocks: &[Block], width: u16, theme: &Theme, padded: bool) 
         rendered.lines.push(if row.spans.is_empty() {
             Line::default()
         } else {
-            Line::from(
-                iter::once(Span::raw(indent.clone()))
-                    .chain(row.spans)
-                    .collect::<Vec<_>>(),
-            )
+            // Containers nested past the width (a list in a quote one cell wide) lay out wider than it; cut them,
+            // whole graphemes only, so no line is wider than the area it's drawn in.
+            let spans = iter::once(Span::raw(indent.clone())).chain(row.spans);
+            Line::from(crate::display::cut_spans(spans, width).0)
         });
     }
     rendered
@@ -404,10 +403,15 @@ impl Painter<'_> {
 
 /// Plain styled text wrapped to `width`, laid out with no padding: [`super::wrap_text`].
 pub(super) fn plain(runs: &[super::TextRun], width: u16) -> Rendered {
+    let texts: Vec<_> = runs
+        .iter()
+        .map(|run| crate::display::sanitize_text(&run.text))
+        .collect();
     let runs: Vec<StyledRun<'_>> = runs
         .iter()
-        .map(|run| StyledRun {
-            text: &run.text,
+        .zip(&texts)
+        .map(|(run, text)| StyledRun {
+            text,
             style: run.style,
             link: run.link.as_ref(),
         })

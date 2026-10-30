@@ -461,7 +461,7 @@ impl<T> Select<T> {
             for x in row_x..row_x + row_width {
                 buf[(x, y)].set_symbol(" ").set_style(base);
             }
-            let text = Span::styled(label, style);
+            let text = Span::styled(crate::display::sanitize(label), style);
             buf.set_span(row_x + 1, y, &text, row_width.saturating_sub(2));
         }
     }

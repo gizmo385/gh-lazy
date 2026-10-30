@@ -12,6 +12,7 @@ pub mod bug_report;
 pub mod clock;
 pub mod component;
 pub mod components;
+pub mod display;
 pub mod effect;
 pub mod event;
 pub mod fuzzy;

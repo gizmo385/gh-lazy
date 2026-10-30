@@ -333,6 +333,34 @@ fn pane_screen(f: usize, h: usize, moves: usize, width: u16) -> String {
 }
 
 #[test]
+fn invalid_utf8_and_controls_in_a_diff_are_drawn_as_replacement_characters() {
+    // A binary file's bytes, as `gh` prints them: the body is decoded lossily (`GhResponse::text`).
+    let bytes = b"diff --git a/logo.bin b/logo.bin\n--- a/logo.bin\n+++ b/logo.bin\n@@ -1 +1 @@\n-\x89PNG\xff\n+\xfe\x1b[0m ok\n";
+    let parsed = diff::parse(&String::from_utf8_lossy(bytes)).unwrap();
+    let (file, hunk) = (&parsed.files[0], &parsed.files[0].hunks[0]);
+    let theme = Theme::default();
+    let layout = HunkPane::new(hunk).layout(file, hunk, 40, &theme, true, theme.background());
+    let rows: Vec<String> = layout.lines.iter().map(ToString::to_string).collect();
+    assert!(
+        rows.iter().any(|row| row.contains("│ \u{fffd}PNG\u{fffd}")),
+        "{rows:#?}"
+    );
+    assert!(
+        rows.iter().any(|row| row.contains("│ \u{fffd}\u{fffd}[0m ok")),
+        "{rows:#?}"
+    );
+    // Every boxed row is the pane's width: each replacement character takes the one cell it's counted as.
+    assert!(
+        layout
+            .lines
+            .iter()
+            .filter(|line| line.width() > 0)
+            .all(|line| line.width() == 40),
+        "{rows:#?}"
+    );
+}
+
+#[test]
 fn pr_diff_hunk_highlighted_rust() {
     insta::assert_snapshot!(pane_screen(VIEWER, 1, 0, 76));
 }

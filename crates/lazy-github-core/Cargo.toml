@@ -31,6 +31,8 @@ tracing-subscriber = { workspace = true, features = ["fmt", "registry", "std"] }
 [dev-dependencies]
 # Snapshots of the debug info (`debug`).
 insta = { workspace = true }
+# Arbitrary text for the never-panics tests (#327).
+proptest = { workspace = true }
 rstest = { workspace = true }
 # The diff `config_goldens_are_fresh` prints for a stale golden.
 similar = { workspace = true }

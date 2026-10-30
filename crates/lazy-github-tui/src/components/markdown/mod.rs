@@ -35,10 +35,11 @@ pub struct Markdown {
 
 impl Markdown {
     /// Parses `source` as `markdown-it`'s `gfm-like` preset reads it, which Python uses: `CommonMark` with tables and
-    /// `~~` strikethrough. Raw HTML is dropped (inline tags lose their markup but keep their text).
+    /// `~~` strikethrough. Raw HTML is dropped (inline tags lose their markup but keep their text). Control
+    /// characters other than line breaks and tabs are drawn as U+FFFD.
     pub fn parse(source: &str) -> Markdown {
         Markdown {
-            blocks: parse::parse(source),
+            blocks: parse::parse(&crate::display::sanitize_text(source)),
         }
     }
 
@@ -60,7 +61,8 @@ pub fn wrap_text(runs: &[TextRun], width: u16) -> Rendered {
     layout::plain(runs, width)
 }
 
-/// A run of plain text in one style, for [`wrap_text`].
+/// A run of plain text in one style, for [`wrap_text`]. Control characters other than line breaks and tabs are drawn
+/// as U+FFFD.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextRun {
     /// The text, shown as is.

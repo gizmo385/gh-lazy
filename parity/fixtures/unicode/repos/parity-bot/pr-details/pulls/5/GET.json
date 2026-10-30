@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/5"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+      "comments_url": "https://api.github.com/repos/parity-bot/pr-details/issues/5/comments",
+      "html_url": "https://github.com/parity-bot/pr-details/pull/5",
+      "id": 8300005,
+      "node_id": "PR_kwDOPrDetails0005",
+      "number": 5,
+      "title": "視覚カーソルを追加 🚀 viewer",
+      "user": {
+        "login": "parity-friend",
+        "id": 1000002,
+        "node_id": "U_kgDO1000002",
+        "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/parity-friend",
+        "html_url": "https://github.com/parity-friend",
+        "type": "User",
+        "site_admin": false
+      },
+      "state": "open",
+      "locked": false,
+      "assignee": null,
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-01T08:30:00Z",
+      "updated_at": "2026-02-01T08:30:00Z",
+      "closed_at": null,
+      "author_association": "CONTRIBUTOR",
+      "draft": false,
+      "body": "## 概要\n\nビューアーにカーソルを追加します。`j` と `k` で移動し、現在の行は `>` で示されます。長い日本語の段落は単語の区切りなしで折り返される必要があります。\n\n- 🚀 速い\n- Café crème, naı̈ve and résumé\n- 한국어: 커서를 추가합니다\n- עברית: שלום עולם\n- 🇯🇵 🇫🇷 flags\n\n| 名前 | 状態 |\n| --- | --- |\n| ビルド | ✅ 成功 |\n| résumé | 🚧 作業中 |\n",
+      "diff_url": "https://github.com/parity-bot/pr-details/pull/5.diff",
+      "patch_url": "https://github.com/parity-bot/pr-details/pull/5.patch",
+      "issue_url": "https://api.github.com/repos/parity-bot/pr-details/issues/5",
+      "commits_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5/commits",
+      "review_comments_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5/comments",
+      "statuses_url": "https://api.github.com/repos/parity-bot/pr-details/statuses/c0ffee5555555555555555555555555555555555",
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "requested_reviewers": [],
+      "head": {
+        "label": "parity-friend:機能/カーソル",
+        "ref": "機能/カーソル",
+        "sha": "c0ffee5555555555555555555555555555555555",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDO1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        }
+      },
+      "base": {
+        "label": "parity-bot:main",
+        "ref": "main",
+        "sha": "0000000000000000000000000000000000000000",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        }
+      },
+      "merged": false,
+      "mergeable": null,
+      "comments": 0,
+      "review_comments": 0,
+      "commits": 3,
+      "additions": 12,
+      "deletions": 6,
+      "changed_files": 5
+    },
+    "delay_ms": 1000
+  },
+  "note": "Hand-written for the unicode scenario (#327): wide (CJK, emoji, a flag), combining, zero-width and right-to-left text. PR 5 as in pr-details, with a unicode title, body and head branch. Served after 1 s."
+}

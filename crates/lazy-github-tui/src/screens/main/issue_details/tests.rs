@@ -15,7 +15,7 @@ use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::event::Event;
 use crate::keymap::BindingId;
 use crate::screens::main::{FocusTarget, MainAction, SectionId};
-use crate::test_util::{TestApp, logs};
+use crate::test_util::{TestApp, UNICODE_EXTRAS, logs, unicode_fixture};
 
 fn fixtures() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../parity/fixtures/issue-details")
@@ -321,6 +321,39 @@ fn issue_overview_160x48() {
 fn issue_overview_100x30() {
     let mut app = selected(0);
     insta::assert_snapshot!(app.screen(100, 30));
+}
+
+/// Issue 12 titled and described with the `unicode` fixture set's PR 5 title and body (#327), its title also holding
+/// what the parity scenario leaves out: a ZWJ sequence and control characters.
+#[test]
+fn issue_overview_unicode_160x48() {
+    let pr = unicode_fixture("repos/parity-bot/pr-details/pulls/5/GET.json");
+    let repo = fixture_repo();
+    let page = fixture_body("repos/parity-bot/issue-fixture/issues/GET.page-1_per_page-30_state-all.json");
+    let items = page
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| {
+            let mut item = item.clone();
+            if item["number"] == 12 {
+                item["title"] = format!("{}{UNICODE_EXTRAS}", pr["title"].as_str().unwrap()).into();
+                item["body"] = pr["body"].clone();
+            }
+            IssueListItem::from_api_item(item, &repo).unwrap()
+        })
+        .collect();
+    let mut app = TestApp::with_github(
+        Config::default(),
+        gh().with_issue_page("parity-bot/issue-fixture", 1, Ok(items)),
+    );
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["3", "enter"]);
+    settle(&mut app);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("�[31mred�[0m�2J��"), "{screen}");
+    insta::assert_snapshot!(screen);
 }
 
 #[test]

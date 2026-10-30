@@ -11,10 +11,10 @@ use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
-use ratatui::text::Span;
 
 use super::option_nav;
 use super::text_input::TallBorder;
+use crate::display;
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::theme::{Paint, Theme, ThemeColor};
 
@@ -40,9 +40,6 @@ const GUTTER: u16 = 4;
 
 /// `OptionList`'s `padding: 0 1`, inside its border.
 const PADDING: u16 = 1;
-
-/// Textual's `text-overflow: ellipsis`.
-const ELLIPSIS: &str = "…";
 
 /// What a key, a binding or a click did to the list.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -403,24 +400,8 @@ fn draw_solid_box(buf: &mut Buffer, area: Rect, border: Style, fill: Style) {
 }
 
 /// `label` cut to `width` cells, ending in `…` when it doesn't fit (`text-wrap: nowrap; text-overflow: ellipsis`).
-fn fit(label: &str, width: usize) -> Cow<'_, str> {
-    if Span::raw(label).width() <= width {
-        return Cow::Borrowed(label);
-    }
-    let Some(mut left) = width.checked_sub(1) else {
-        return Cow::Borrowed("");
-    };
-    let mut cut = String::new();
-    for grapheme in Span::raw(label).styled_graphemes(Style::new()) {
-        let cells = Span::raw(grapheme.symbol).width();
-        if cells > left {
-            break;
-        }
-        left -= cells;
-        cut.push_str(grapheme.symbol);
-    }
-    cut.push_str(ELLIPSIS);
-    Cow::Owned(cut)
+fn fit(label: &str, width: usize) -> String {
+    display::truncate(&display::sanitize(label), width).into_owned()
 }
 
 /// The list's styles for one frame, from `OptionList`'s and `SelectionList`'s CSS.

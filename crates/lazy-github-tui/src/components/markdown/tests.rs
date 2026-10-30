@@ -1004,3 +1004,57 @@ fn markdown_linkify_before_emphasis() {
     let rendered = Markdown::parse("see http://a.com/*b* and *c*").layout(40, &dark());
     insta::assert_debug_snapshot!((buffer(&rendered, 40), &rendered.links));
 }
+
+mod never_panics {
+    use proptest::prelude::*;
+
+    use super::*;
+
+    /// Arbitrary text: any `char`s, controls, unassigned and private-use code points included (`any::<String>()` leaves
+    /// out the "Other" categories).
+    fn text() -> impl Strategy<Value = String> {
+        proptest::collection::vec(any::<char>(), 0..64).prop_map(String::from_iter)
+    }
+
+    /// Markdown-shaped text: block and inline syntax mixed with arbitrary characters, controls, wide and combining
+    /// characters included.
+    fn source() -> impl Strategy<Value = String> {
+        let piece = prop_oneof![
+            text(),
+            Just("\n".to_owned()),
+            Just("\n\n".to_owned()),
+            Just("# ".to_owned()),
+            Just("- ".to_owned()),
+            Just("1. ".to_owned()),
+            Just("> ".to_owned()),
+            Just("```\n".to_owned()),
+            Just("| a | 日本 |\n| --- | --- |\n| 👨\u{200d}👩\u{200d}👧 | e\u{301} |\n".to_owned()),
+            Just("**".to_owned()),
+            Just("`".to_owned()),
+            Just("[x](http://a.com) www.b.org ".to_owned()),
+            Just("\t".to_owned()),
+            Just("\x1b[31m".to_owned()),
+            Just("全角文字".to_owned()),
+        ];
+        proptest::collection::vec(piece, 0..16).prop_map(|pieces| pieces.concat())
+    }
+
+    proptest! {
+        #[test]
+        fn rendered_lines_fit_the_width(source in source(), width in 0u16..60) {
+            let rendered = render(&source, width);
+            for line in &rendered.lines {
+                prop_assert!(line.width() <= usize::from(width), "{line:?} is wider than {width}");
+                prop_assert!(!line.spans.iter().any(|span| span.content.contains(char::is_control)));
+            }
+        }
+
+        #[test]
+        fn plain_text_fits_the_width(text in text(), width in 0u16..60) {
+            let rendered = wrap_text(&[TextRun::new(text, Style::new())], width);
+            for line in &rendered.lines {
+                prop_assert!(line.width() <= usize::from(width), "{line:?} is wider than {width}");
+            }
+        }
+    }
+}

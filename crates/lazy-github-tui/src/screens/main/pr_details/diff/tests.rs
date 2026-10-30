@@ -6,7 +6,7 @@ use std::path::Path;
 use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::github::{DiffFetchError, DraftReviewComment, FakeGithub, GithubCall, NewReview, ReviewEvent};
-use lazy_github_core::models::{IssueListItem, Review, User};
+use lazy_github_core::models::{FullPullRequest, IssueListItem, Review, User};
 use serde_json::Value;
 
 use crate::backend::tests::VtTerminal;
@@ -19,7 +19,7 @@ use crate::modal::{CommandPaletteDialog, ModalKind};
 use crate::screens::main::details::{MaximizeScope, SectionKey, SectionRef};
 use crate::screens::main::pr_details::tests::{fixture_pr, fixture_repo};
 use crate::screens::main::{FocusTarget, Maximized};
-use crate::test_util::{TestApp, logs};
+use crate::test_util::{TestApp, UNICODE_EXTRAS, logs, unicode_fixture};
 
 use super::PrDiff;
 
@@ -113,6 +113,71 @@ fn footer(app: &mut TestApp) -> String {
 const README: usize = 0;
 const OLD: usize = 3;
 const VIEWER: usize = 4;
+
+/// [`gh`] with the `unicode` fixture set's PR titles, PR 5 and PR 5's diff (#327), plus what the parity scenario
+/// leaves out: PR 5's title and a diff line also hold [`UNICODE_EXTRAS`], and the README hunk gains a full-width line
+/// too long for the hunk pane.
+fn unicode_gh() -> FakeGithub {
+    let repo = fixture_repo();
+    let items: Vec<IssueListItem> = unicode_fixture(&format!("{ISSUES}/GET.page-1_per_page-30_state-all.json"))
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| {
+            let mut item = item.clone();
+            if item["number"] == 5 {
+                item["title"] = with_extras(&item["title"]);
+            }
+            IssueListItem::from_api_item(item, &repo).unwrap()
+        })
+        .collect();
+    let mut pr = unicode_fixture("repos/parity-bot/pr-details/pulls/5/GET.json");
+    pr["title"] = with_extras(&pr["title"]);
+    let pr = FullPullRequest::from_api(pr, &repo).unwrap();
+    let diff = unicode_fixture("repos/parity-bot/pr-details/pulls/5/GET.diff.json")
+        .as_str()
+        .unwrap()
+        .replace("@@ -1,4 +1,7 @@", "@@ -1,4 +1,9 @@")
+        .replace(
+            " 終わり\n",
+            &format!(
+                "+全角文字の行がとても長い場合でも、ペインの幅で文字が半分に切れてはいけません。ここから先は切り取られます。\n\
+                 +ZWJ and controls:{UNICODE_EXTRAS}\n 終わり\n"
+            ),
+        );
+    gh().with_issue_page(NAME, 1, Ok(items))
+        .with_pull_request(NAME, 5, Ok(pr))
+        .with_pull_request_diff(NAME, 5, Ok(diff))
+}
+
+const ISSUES: &str = "repos/parity-bot/pr-details/issues";
+
+fn with_extras(title: &Value) -> Value {
+    format!("{}{UNICODE_EXTRAS}", title.as_str().unwrap()).into()
+}
+
+#[test]
+fn pr_table_and_overview_unicode_160x48() {
+    let mut app = TestApp::with_github(config(), unicode_gh());
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["2", "enter"]);
+    settle(&mut app);
+    let screen = app.screen(160, 48);
+    // Control characters are drawn as U+FFFD, and nothing is drawn raw.
+    assert!(screen.contains("�[31mred�[0m�2J�� (#5)"), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn pr_diff_unicode_160x48() {
+    let mut app = diff_tab_with(config(), unicode_gh(), &["enter"]);
+    // The scroll area, the filter, README.md's title, its hunk's title; enter opens the hunk.
+    app.press(&["tab", "tab", "tab", "tab", "enter"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("Line: 1/10"), "{screen}");
+    insta::assert_snapshot!(screen);
+}
 
 #[test]
 fn the_tab_shows_the_spinner_until_the_diff_arrives() {

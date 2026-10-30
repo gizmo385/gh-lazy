@@ -198,7 +198,7 @@ impl<T> Tree<T> {
     pub fn add(&mut self, parent: Option<NodeId>, label: Line<'static>, data: T, expandable: bool) -> NodeId {
         let id = NodeId(self.nodes.len());
         self.nodes.push(Node {
-            label,
+            label: crate::display::sanitize_line(label),
             data,
             parent,
             children: Vec::new(),
@@ -223,7 +223,7 @@ impl<T> Tree<T> {
     /// the content width isn't measured again. Extra labels are ignored, and nodes past the last label keep theirs.
     pub fn restyle_labels(&mut self, labels: impl IntoIterator<Item = Line<'static>>) {
         for (node, label) in self.nodes.iter_mut().zip(labels) {
-            node.label = label;
+            node.label = crate::display::sanitize_line(label);
         }
     }
 

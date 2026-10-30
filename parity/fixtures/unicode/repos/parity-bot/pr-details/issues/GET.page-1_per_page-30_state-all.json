@@ -1,0 +1,189 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/issues",
+    "query": {
+      "page": "1",
+      "per_page": "30",
+      "state": "all"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/issues/5",
+        "repository_url": "https://api.github.com/repos/parity-bot/pr-details",
+        "comments_url": "https://api.github.com/repos/parity-bot/pr-details/issues/5/comments",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5",
+        "id": 8300005,
+        "node_id": "PR_kwDOPrDetails0005",
+        "number": 5,
+        "title": "視覚カーソルを追加 🚀 viewer",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDO1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        },
+        "labels": [],
+        "state": "open",
+        "locked": false,
+        "assignee": null,
+        "assignees": [],
+        "milestone": null,
+        "comments": 0,
+        "created_at": "2026-02-01T08:30:00Z",
+        "updated_at": "2026-02-01T08:30:00Z",
+        "closed_at": null,
+        "author_association": "CONTRIBUTOR",
+        "draft": false,
+        "pull_request": {
+          "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+          "html_url": "https://github.com/parity-bot/pr-details/pull/5",
+          "diff_url": "https://github.com/parity-bot/pr-details/pull/5.diff",
+          "patch_url": "https://github.com/parity-bot/pr-details/pull/5.patch",
+          "merged_at": null
+        },
+        "body": "## 概要\n\nビューアーにカーソルを追加します。`j` と `k` で移動し、現在の行は `>` で示されます。長い日本語の段落は単語の区切りなしで折り返される必要があります。\n\n- 🚀 速い\n- Café crème, naı̈ve and résumé\n- 한국어: 커서를 추가합니다\n- עברית: שלום עולם\n- 🇯🇵 🇫🇷 flags\n\n| 名前 | 状態 |\n| --- | --- |\n| ビルド | ✅ 成功 |\n| résumé | 🚧 作業中 |\n",
+        "closed_by": null
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/issues/4",
+        "repository_url": "https://api.github.com/repos/parity-bot/pr-details",
+        "comments_url": "https://api.github.com/repos/parity-bot/pr-details/issues/4/comments",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/4",
+        "id": 8300004,
+        "node_id": "PR_kwDOPrDetails0004",
+        "number": 4,
+        "title": "Café crème: résumé 📄",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "labels": [],
+        "state": "closed",
+        "locked": false,
+        "assignee": null,
+        "assignees": [],
+        "milestone": null,
+        "comments": 0,
+        "created_at": "2026-01-20T09:00:00Z",
+        "updated_at": "2026-01-25T17:45:00Z",
+        "closed_at": "2026-01-25T17:45:00Z",
+        "author_association": "OWNER",
+        "draft": false,
+        "pull_request": {
+          "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/4",
+          "html_url": "https://github.com/parity-bot/pr-details/pull/4",
+          "diff_url": "https://github.com/parity-bot/pr-details/pull/4.diff",
+          "patch_url": "https://github.com/parity-bot/pr-details/pull/4.patch",
+          "merged_at": null
+        },
+        "body": "Superseded by the new renderer.",
+        "closed_by": null
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/issues/3",
+        "repository_url": "https://api.github.com/repos/parity-bot/pr-details",
+        "comments_url": "https://api.github.com/repos/parity-bot/pr-details/issues/3/comments",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/3",
+        "id": 8300003,
+        "node_id": "PR_kwDOPrDetails0003",
+        "number": 3,
+        "title": "Release 0.2.0 🇯🇵 한국어 지원",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "labels": [],
+        "state": "closed",
+        "locked": false,
+        "assignee": null,
+        "assignees": [],
+        "milestone": null,
+        "comments": 0,
+        "created_at": "2026-01-10T14:00:00Z",
+        "updated_at": "2026-01-12T16:20:00Z",
+        "closed_at": "2026-01-12T16:20:00Z",
+        "author_association": "OWNER",
+        "draft": false,
+        "pull_request": {
+          "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/3",
+          "html_url": "https://github.com/parity-bot/pr-details/pull/3",
+          "diff_url": "https://github.com/parity-bot/pr-details/pull/3.diff",
+          "patch_url": "https://github.com/parity-bot/pr-details/pull/3.patch",
+          "merged_at": "2026-01-12T16:20:00Z"
+        },
+        "body": null,
+        "closed_by": null
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/issues/2",
+        "repository_url": "https://api.github.com/repos/parity-bot/pr-details",
+        "comments_url": "https://api.github.com/repos/parity-bot/pr-details/issues/2/comments",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/2",
+        "id": 8300002,
+        "node_id": "PR_kwDOPrDetails0002",
+        "number": 2,
+        "title": "תמיכה בעברית and Ελληνικά",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDO1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        },
+        "labels": [],
+        "state": "open",
+        "locked": false,
+        "assignee": null,
+        "assignees": [],
+        "milestone": null,
+        "comments": 0,
+        "created_at": "2026-01-05T11:00:00Z",
+        "updated_at": "2026-01-05T11:00:00Z",
+        "closed_at": null,
+        "author_association": "CONTRIBUTOR",
+        "draft": true,
+        "pull_request": {
+          "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/2",
+          "html_url": "https://github.com/parity-bot/pr-details/pull/2",
+          "diff_url": "https://github.com/parity-bot/pr-details/pull/2.diff",
+          "patch_url": "https://github.com/parity-bot/pr-details/pull/2.patch",
+          "merged_at": null
+        },
+        "body": null,
+        "closed_by": null
+      }
+    ]
+  },
+  "note": "Hand-written for the unicode scenario (#327): wide (CJK, emoji, a flag), combining, zero-width and right-to-left text. Page 1 of list_issues, as in pr-details, with every title replaced."
+}

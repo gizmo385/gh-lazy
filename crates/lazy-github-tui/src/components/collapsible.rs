@@ -173,7 +173,7 @@ impl Collapsible {
         spans.extend(
             title
                 .iter()
-                .map(|run| Span::styled(run.text.clone(), text.patch(run.style))),
+                .map(|run| Span::styled(crate::display::sanitize(&run.text).into_owned(), text.patch(run.style))),
         );
         spans.push(Span::styled(" ", padding));
         let mut title_line = Line::from(spans);
@@ -226,31 +226,8 @@ impl Collapsible {
 
 /// Cuts `line` to `width` cells, dropping whole spans past it and shortening the one that crosses it.
 fn truncate(line: &mut Line<'static>, width: u16) {
-    let mut left = usize::from(width);
-    let mut kept = Vec::with_capacity(line.spans.len());
-    for span in line.spans.drain(..) {
-        if left == 0 {
-            break;
-        }
-        let span_width = span.width();
-        if span_width <= left {
-            left -= span_width;
-            kept.push(span);
-        } else {
-            let mut text = String::new();
-            for grapheme in span.styled_graphemes(Style::new()) {
-                let w = Span::raw(grapheme.symbol).width();
-                if w > left {
-                    break;
-                }
-                left -= w;
-                text.push_str(grapheme.symbol);
-            }
-            kept.push(Span::styled(text, span.style));
-            break;
-        }
-    }
-    line.spans = kept;
+    let spans = std::mem::take(&mut line.spans);
+    line.spans = crate::display::cut_spans(spans, usize::from(width)).0;
 }
 
 #[cfg(test)]

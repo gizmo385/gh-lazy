@@ -535,6 +535,25 @@ impl TestApp {
     }
 }
 
+/// Text the `unicode` parity scenario leaves out, for the snapshot tests to add to that set's text (#327): a ZWJ
+/// emoji sequence, whose width terminals disagree on, and control characters, which Python sends to the terminal
+/// raw: an ANSI color, a C1 CSI, DEL and a bell.
+#[cfg(test)]
+pub const UNICODE_EXTRAS: &str = " 👨\u{200d}👩\u{200d}👧 \x1b[31mred\x1b[0m\u{9b}2J\x7f\x07";
+
+/// The response of the `unicode` parity fixture set's (#327) fixture at `path`: its JSON `body`, or its `body_text`
+/// as a string.
+#[cfg(test)]
+pub fn unicode_fixture(path: &str) -> serde_json::Value {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../parity/fixtures/unicode")
+        .join(path);
+    let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+    let fixture: serde_json::Value = serde_json::from_str(&text).unwrap();
+    let response = &fixture["response"];
+    response.get("body").unwrap_or(&response["body_text"]).clone()
+}
+
 /// The characters of `buffer`, one line per row, with trailing spaces trimmed.
 pub fn buffer_to_string(buffer: &Buffer) -> String {
     let area = buffer.area;

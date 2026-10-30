@@ -6,6 +6,7 @@ use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Block;
 
+use crate::display;
 use crate::theme::Theme;
 
 /// The cells a title row spends around the title itself: two corners, plus one `─` and one blank on each side.
@@ -30,6 +31,8 @@ pub(super) fn titled_box<'a>(title: &str, dim: Option<&str>, width: u16, focused
     };
     let border = Style::new().fg(theme.color(slot, theme.background()));
     let block = Block::bordered().border_style(border);
+    let title = display::sanitize(title);
+    let title = title.as_ref();
     let full = match dim {
         Some(suffix) => Cow::Owned(format!("{title} {suffix}")),
         None => Cow::Borrowed(title),
@@ -71,28 +74,11 @@ fn fit_title(title: &str, width: usize) -> Option<Cow<'_, str>> {
     if title.is_empty() {
         return None;
     }
-    if cell_width(title) <= room {
-        return Some(Cow::Borrowed(title));
-    }
-    // Keep whole characters up to `room - 1` cells and the ellipsis takes the last one. As in Rich's
-    // `set_cell_size`, a wide character that would straddle the cut is dropped and its cell left blank.
-    let mut kept = String::new();
-    let mut used = 0;
-    for ch in title.chars() {
-        let w = cell_width(ch.encode_utf8(&mut [0; 4]));
-        if used + w > room - 1 {
-            break;
-        }
-        kept.push(ch);
-        used += w;
-    }
-    kept.extend(std::iter::repeat_n(' ', room - 1 - used));
-    kept.push('…');
-    Some(Cow::Owned(kept))
+    Some(display::truncate(title, room))
 }
 
 fn cell_width(s: &str) -> usize {
-    Span::raw(s).width()
+    display::width(s)
 }
 
 #[cfg(test)]

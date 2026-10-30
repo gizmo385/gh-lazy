@@ -518,3 +518,50 @@ fn every_change_lands_in_one_hunk_and_positions_increase() {
         }
     }
 }
+
+mod never_panics {
+    use proptest::prelude::*;
+
+    use super::*;
+
+    /// Arbitrary text: any `char`s, controls, unassigned and private-use code points included (`any::<String>()` leaves
+    /// out the "Other" categories).
+    fn text() -> impl Strategy<Value = String> + Clone {
+        proptest::collection::vec(any::<char>(), 0..64).prop_map(String::from_iter)
+    }
+
+    /// Diff-shaped lines: section, file and hunk headers, markers and arbitrary text, controls and wide characters
+    /// included, so the parser gets deep into a section as often as it fails early.
+    fn diff_line() -> impl Strategy<Value = String> {
+        let text = text();
+        prop_oneof![
+            text.clone().prop_map(|path| format!("diff --git a/{path} b/{path}")),
+            text.clone().prop_map(|path| format!("--- a/{path}")),
+            text.clone().prop_map(|path| format!("+++ b/{path}")),
+            (0u32..5, 0u32..5, 0u32..5, 0u32..5, text.clone())
+                .prop_map(|(a, b, c, d, t)| format!("@@ -{a},{b} +{c},{d} @@ {t}")),
+            text.clone().prop_map(|t| format!("+{t}")),
+            text.clone().prop_map(|t| format!("-{t}")),
+            text.clone().prop_map(|t| format!(" {t}")),
+            text,
+        ]
+    }
+
+    proptest! {
+        #[test]
+        fn on_arbitrary_text(text in text()) {
+            let _ = parse(&text);
+        }
+
+        #[test]
+        fn on_diff_shaped_lines(lines in proptest::collection::vec(diff_line(), 0..24)) {
+            let _ = parse(&lines.join("\n"));
+        }
+
+        #[test]
+        fn on_lossily_decoded_bytes(bytes in proptest::collection::vec(any::<u8>(), 0..512)) {
+            let text = String::from_utf8_lossy(&bytes);
+            let _ = parse(&format!("diff --git a/f b/f\n--- a/f\n+++ b/f\n@@ -1 +1 @@\n{text}"));
+        }
+    }
+}

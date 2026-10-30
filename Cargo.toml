@@ -25,6 +25,10 @@ ratatui = "0.30"
 crossterm = "0.29"
 # `StreamExt` over crossterm's `EventStream` in the event loop (#72).
 futures-util = { version = "0.3", default-features = false }
+# Grapheme clusters and their cell widths for the shared width and truncation helpers (#327), the same crates and
+# versions ratatui measures text with.
+unicode-segmentation = "1.13"
+unicode-width = "0.2"
 # The multi-line editor's buffer (lines, cursor, selection, edits); the app draws it and maps Textual's keys (#256).
 # `default-features = false`: no `crossterm` feature, since the app never calls `TextArea::input`.
 ratatui-textarea = { version = "0.9", default-features = false }
@@ -74,6 +78,8 @@ portable-pty = "0.9"
 vt100 = "0.18"
 # Per-run temp dirs in the parity harness.
 tempfile = "3"
+# Property tests that the markdown renderer, the diff parser and the width helpers take any text (#327).
+proptest = { version = "1", default-features = false, features = ["std"] }
 # Unified text diffs of the two apps' captures in the parity report (#69, #94).
 similar = "2"
 

@@ -17,6 +17,7 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::Clear;
 use tokio::time::Instant;
 
+use crate::display;
 use crate::theme::{Paint, Rgb, Theme};
 use crate::toast::{Severity, Toast};
 
@@ -245,7 +246,7 @@ fn toast_lines(toast: &Toast, content_width: u16, theme: &Theme) -> Vec<Line<'st
             Severity::Error => palette.text_error,
         };
         let style = base.fg(theme.color(color, panel)).bold();
-        let cells: Vec<(char, Style)> = title.chars().map(|c| (c, style)).collect();
+        let cells: Vec<(char, Style)> = title.chars().map(|c| (shown(c), style)).collect();
         lines.extend(wrap(&cells, width));
     }
     let cells: Vec<(char, Style)> = toast
@@ -254,7 +255,7 @@ fn toast_lines(toast: &Toast, content_width: u16, theme: &Theme) -> Vec<Line<'st
         .iter()
         .flat_map(|span| {
             let style = span_style(base, toast.message.style.patch(span.style), theme);
-            span.content.chars().map(move |c| (c, style))
+            span.content.chars().map(move |c| (shown(c), style))
         })
         .collect();
     lines.extend(wrap(&cells, width));
@@ -271,6 +272,11 @@ fn span_style(base: Style, span: Style, theme: &Theme) -> Style {
         None => {}
     }
     style
+}
+
+/// What a toast draws for `c`: a control character other than a line break as U+FFFD, as everywhere else.
+fn shown(c: char) -> char {
+    if c == '\n' { c } else { display::sanitize_char(c) }
 }
 
 /// The width of `c` in cells.

@@ -13,6 +13,7 @@ use ratatui::text::{Line, Span};
 use super::buffer_line;
 use super::highlight::code_spans;
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
+use crate::display;
 use crate::theme::{Accent, Paint, Rgb, RichAnsi, Theme};
 
 /// The most rows the pane takes, its border included (`max-height: 25`).
@@ -263,30 +264,7 @@ fn max_lines(horizontal: bool) -> usize {
 
 /// `spans` cut to `width` cells, then filled out to it in `fill`.
 fn cut(spans: Vec<Span<'static>>, width: usize, fill: Style) -> Vec<Span<'static>> {
-    let mut left = width;
-    let mut kept = Vec::with_capacity(spans.len() + 1);
-    for span in spans {
-        if left == 0 {
-            break;
-        }
-        let span_width = span.width();
-        if span_width <= left {
-            left -= span_width;
-            kept.push(span);
-            continue;
-        }
-        let mut text = String::new();
-        for grapheme in span.styled_graphemes(Style::new()) {
-            let w = Span::raw(grapheme.symbol).width();
-            if w > left {
-                break;
-            }
-            left -= w;
-            text.push_str(grapheme.symbol);
-        }
-        kept.push(Span::styled(text, span.style));
-        break;
-    }
+    let (mut kept, left) = display::cut_spans(spans, width);
     if left > 0 {
         kept.push(Span::styled(" ".repeat(left), fill));
     }

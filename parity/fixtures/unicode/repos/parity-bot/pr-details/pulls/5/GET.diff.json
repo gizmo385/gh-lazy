@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/5",
+    "accept": "diff"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain; charset=utf-8"
+    },
+    "body_text": "diff --git a/README.md b/README.md\nindex 7777777..8888888 100644\n--- a/README.md\n+++ b/README.md\n@@ -1,4 +1,7 @@ # ビューアー 📄\n # ビューアー 📄\n \n-小さなページャーです。\n+小さなページャーです。`j` と `k` でカーソルを動かします 🚀\n+Café crème, résumé and 한국어 lines keep their columns.\n+עברית: שלום עולם\n+全角の行: 🇯🇵 🇫🇷 と a​b の幅\n 終わり\ndiff --git a/docs/日本語.md b/docs/日本語.md\nnew file mode 100644\nindex 0000000..6666666\n--- /dev/null\n+++ b/docs/日本語.md\n@@ -0,0 +1,3 @@\n+# 使い方\n+\n+日本語のドキュメントです。\n"
+  },
+  "note": "Hand-written for the unicode scenario (#327): wide (CJK, emoji, a flag), combining, zero-width and right-to-left text. PR 5's diff: README.md (one hunk) and an added docs/日本語.md."
+}

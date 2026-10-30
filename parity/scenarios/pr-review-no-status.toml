@@ -1,0 +1,107 @@
+version = 1
+description = "Diff review: Submit Review with the Review Status set to its blank option is refused with an error toast and posts nothing"
+# The same way into the Submit review form as pr-review. The status list's blank option ("Select") sits above Approved.
+gate = true
+parity_rows = [
+    "toasts.review-status-missing",
+]
+sizes = [[160, 48]]
+
+[env]
+fixtures = ["pr-details", "base"]
+config_overrides.appearance.show_issues = false
+config_overrides.appearance.show_workflows = false
+
+[[step]]
+wait.text = "pr-details"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "parity-friend"
+wait.timeout_ms = 15000
+
+# Python drops an enter that follows a focus key at once, so the PR table gets a moment to take focus.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Opened on"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait.text = "Review Status:"
+
+[[step]]
+keys = ["1"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["shift+tab", "shift+tab", "shift+tab"]
+
+[[step]]
+wait.stable_ms = 300
+
+# Open the list (Commented is highlighted), up three times to the blank option.
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Changes Requested"
+
+[[step]]
+keys = ["up", "up", "up", "enter"]
+
+[[step]]
+wait.gone = "Commented"
+
+# Python drops keys that come while the select's list is still closing.
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+capture = "status-blank"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Please select a status for the new review!"
+
+[[step]]
+capture = "refused"
+checks = ["titles", "focus"]
+
+[expect.status-blank]
+contains = ["Review Status:", "Select", "Review summary", "Submit Review"]
+not_contains = ["Commented", "Traceback"]
+
+[expect.refused]
+contains = ["Please select a status for the new review!", "Review Status:", "Submit Review"]
+not_contains = ["New review created!", "Traceback"]

@@ -1,0 +1,76 @@
+version = 1
+description = "Create PR push prompt answered No: n closes the confirm, nothing is pushed and the New Pull Request form stays open with its fields"
+# The same push prompt as pr-new-push (origin served by fake-ssh from a local bare repo with only `main`), answered n.
+gate = true
+parity_rows = [
+    "keybindings.confirm-no",
+]
+sizes = [[160, 48]]
+
+[env]
+# pr-create: POST .../pulls for this body answers 422.
+fixtures = ["pr-create", "pr-details", "base"]
+git_remote = "parity-bot/pr-details"
+git_remote_protocol = "ssh"
+git_branch = "new-feature"
+git_remote_branches = ["main"]
+config_overrides.appearance.show_issues = false
+config_overrides.appearance.show_workflows = false
+
+[[step]]
+wait.text = "Add a cursor to the viewer"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["P"]
+
+[[step]]
+wait.text = "no configured upstream"
+
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+type = "Parity PR"
+
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/pulls"
+wait.log.body.title = "Parity PR"
+wait.log.body.draft = false
+wait.log.body.base = "main"
+wait.log.body.head = "parity-bot:new-feature"
+
+[[step]]
+wait.text = "may not exist"
+
+[[step]]
+capture = "push-prompt"
+checks = ["footer"]
+
+[[step]]
+keys = ["n"]
+
+[[step]]
+wait.gone = "Do you want to create it?"
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+capture = "declined"
+checks = ["titles", "focus"]
+
+[expect.push-prompt]
+contains = ["Warning: Branch new-feature may not exist", "Do you want to create it?"]
+footer = ["y Yes", "n No", "q Close"]
+
+[expect.declined]
+contains = ["New Pull Request", "Parity PR", "new-feature"]
+not_contains = ["Do you want to create it?", "Pushed branch", "Traceback"]

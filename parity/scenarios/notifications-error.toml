@@ -1,0 +1,104 @@
+version = 1
+description = "Notifications modal (ctrl+n) errors: a failed first page leaves both tabs empty and logs the failure; reopened, the first page loads, and a failed second page of Unread logs it again and keeps the rows"
+# The modal's thick border isn't a box to the structure extractor (parity/README.md, "Limits"), so its tabs and rows
+# are checked per app with [expect], and the footer cross-app. The command log's lines carry the time, which differs
+# between the apps, so the captures with the log ignore its box and [expect] checks the lines.
+gate = true
+parity_rows = [
+    "modals.notifications-errors",
+]
+sizes = [[160, 48]]
+
+[env]
+# notifications-error over notifications-modal: GET /notifications?all=true&page=1 answers 500 the first time and
+# notifications-modal's page after that; the Unread tab's page 2 (all=false) answers 500.
+fixtures = ["notifications-error", "notifications-modal", "pr-details", "base"]
+
+[env.config_overrides]
+notifications = { enabled = true }
+appearance = { show_command_log = true }
+
+[[step]]
+wait = { text = "• Unread Notifications: 4", timeout_ms = 15000 }
+
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { log = { method = "GET", path = "/notifications", query = { all = "true", page = "1", per_page = "50" } } }
+
+[[step]]
+wait = { text = "✓Read" }
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+capture = "first-page-failed"
+checks = ["footer"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "✓Read" }
+
+[[step]]
+wait = { regex = 'ERROR \d{4}-\d\d-\d\d \d\d:\d\d:\d\d - Failed to retrieve notifications from the Github API' }
+
+[[step]]
+capture = "first-page-logged"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Command Log"] }
+
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { text = "Add the notifications modal", timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["j"]
+
+[[step]]
+wait = { log = { method = "GET", path = "/notifications", query = { all = "false", page = "2", per_page = "50" } } }
+
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+capture = "later-page-failed"
+checks = ["footer"]
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "✓Read" }
+
+[[step]]
+wait = { regex = '(?s)Failed to retrieve notifications from the Github API.*Failed to retrieve notifications from the Github API' }
+
+[[step]]
+capture = "later-page-logged"
+checks = ["titles", "focus"]
+ignore = { boxes = ["Command Log"] }
+
+[expect.first-page-failed]
+contains = ["Notifications", "•Unread", "✓Read"]
+not_contains = ["Traceback", "Add the notifications modal", "v1.0.0"]
+
+[expect.first-page-logged]
+contains = ["Failed to retrieve notifications from the Github API"]
+not_contains = ["Traceback", "✓Read"]
+
+[expect.later-page-failed]
+contains = ["Notifications", "Add the notifications modal", "Typo in the install docs", "Closed pull request with nothing"]
+not_contains = ["Traceback"]
+
+[expect.later-page-logged]
+contains = ["Failed to retrieve notifications from the Github API"]
+not_contains = ["Traceback", "✓Read"]

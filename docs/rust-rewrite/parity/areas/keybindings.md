@@ -15,7 +15,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.app-maximize-widget` | `app.maximize_widget` | `M` | Maximize | app | M1 | parity | #75, #158 | |
 | `keybindings.app-open-help` | `app.open_help` | `?` | Keybindings | app | M1 | parity | #76, #108, #158 | Toggles the help panel (`main-layout.help-panel`). TERM: shifted character; override may be saved as `question_mark`. |
 | `keybindings.conversation-comment-new` | `conversation.comment.new` | `n` | New Comment | PR Conversation, Issue Comments | M3 | parity | #182, #260, #261 | |
-| `keybindings.conversation-review-reply` | `conversation.review.reply` | `r` | Reply to Review | review block | M3 | parity | #182, #261 | Same key as `conversation.comment.reply`; the innermost focused block wins. Unit-tested (`r_on_a_review_replies_with_an_issue_comment`, the comment's `r` winning in `r_on_a_review_comment_replies_in_its_thread`); scenario `pr-comment` sends the comment's `r` only. |
+| `keybindings.conversation-review-reply` | `conversation.review.reply` | `r` | Reply to Review | review block | M3 | parity | #182, #261 | Same key as `conversation.comment.reply`; the innermost focused block wins. Unit-tested (`r_on_a_review_replies_with_an_issue_comment`, the comment's `r` winning in `r_on_a_review_comment_replies_in_its_thread`); scenario `pr-comment` sends the comment's `r`, and `pr-review-reply` the review's. |
 | `keybindings.conversation-comment-reply` | `conversation.comment.reply` | `r` | Reply to Comment | comment block | M3 | parity | #182, #260, #261 | |
 | `keybindings.issue-new` | `issue.new` | `I` | New Issue | selections pane | M3 | parity | #181, #258 | |
 | `keybindings.issue-edit` | `issue.edit` | `E` | Edit Issue | issues table, Issue Overview | M3 | parity | #181, #259 | |
@@ -59,7 +59,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.textual-input-group` | (Textual `Input`) | | Help panel "Input" group with a text input focused: the inherited scroll keys (`↑` Scroll Up, `↓` Scroll Down), `←`/`→`, `home ^a`, `end ^e`, `pgup`/`pgdn`, `^pgup`/`^pgdn`, then the rest of `Input.BINDINGS` in order, 29 rows | table search box, dialog inputs | M3 | parity | #145, #252 | The six scroll keys are consumed by the input. Scenario `help-panel-input`. |
 | `keybindings.modal-search` | `modal.search` | `/` | Search | Settings | M4 | not started | #306 | Not while a text input (it types `/`) or a Key Bindings row (it captures `slash`) has focus. Scenario `settings-search`. |
 | `keybindings.confirm-yes` | `confirm.yes` | `y` | Yes | Confirm | M3 | parity | #214, #279 | |
-| `keybindings.confirm-no` | `confirm.no` | `n` | No | Confirm | M3 | parity | #214, #279 | Unit-tested (`modal/confirm/tests.rs`, `everything_else_answers_false`); no scenario answers No. |
+| `keybindings.confirm-no` | `confirm.no` | `n` | No | Confirm | M3 | parity | #214, #279 | Unit-tested (`modal/confirm/tests.rs`, `everything_else_answers_false`); scenario `pr-new-push-no` answers No. |
 | `keybindings.react-add` | `react.add` | `R` | Add reaction | PR Overview | M3 | parity | #183, #263 | Scenario `pr-reactions`. |
 | `keybindings.link-paste` | `link.paste` | `ctrl+v` | Paste link | main screen | M4 | not started | #197 | TERM: many terminals turn `ctrl+v` into a paste; consider also opening the modal on a bracketed-paste event on the main screen. |
 | `keybindings.link-follow` | `link.follow` | `f` | Follow link | main screen | M4 | not started | #196 | |

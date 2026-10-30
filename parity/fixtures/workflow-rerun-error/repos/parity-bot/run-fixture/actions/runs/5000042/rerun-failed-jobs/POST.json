@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "POST",
+    "path": "/repos/parity-bot/run-fixture/actions/runs/5000042/rerun-failed-jobs"
+  },
+  "response": {
+    "status": 403,
+    "body": {
+      "message": "Must have admin rights to Repository.",
+      "documentation_url": "https://docs.github.com/rest/actions/workflow-runs#re-run-failed-jobs-from-a-workflow-run",
+      "status": "403"
+    }
+  },
+  "note": "hand-written: re-running run 42's failed jobs is refused"
+}

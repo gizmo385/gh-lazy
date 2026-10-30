@@ -1,0 +1,95 @@
+version = 1
+description = "Run Overview re-run buttons when GitHub refuses: Re-run Failed Jobs and Re-run Workflow each post their request and toast an Error, and the run stays as it was"
+# The same steps as workflow-rerun, with both POSTs answering 403. shift+tab from the Repositories table wraps to the
+# last focus stop on the screen, the Overview's last button, in both apps.
+gate = true
+parity_rows = [
+    "toasts.rerun-failed",
+]
+sizes = [[160, 48]]
+
+[env]
+# workflow-rerun-error over workflow-write: POST .../runs/5000042/rerun and .../rerun-failed-jobs answer 403.
+fixtures = ["workflow-rerun-error", "workflow-write", "run-details", "base"]
+
+[[step]]
+wait.text = "run-fixture"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Fix the flaky test"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.text = "Workflow runs with jobs and logs."
+wait.timeout_ms = 15000
+
+# Python drops an enter that follows a focus key at once, so the Workflows table gets a moment to take focus.
+[[step]]
+keys = ["4"]
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Workflow Run #42 Details"
+
+[[step]]
+wait.text = "deploy (9s)"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["1", "shift+tab"]
+
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/run-fixture/actions/runs/5000042/rerun-failed-jobs"
+
+[[step]]
+wait.text = "Failed to re-run failed jobs"
+
+[[step]]
+capture = "failed-jobs-error"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["1", "shift+tab", "shift+tab"]
+
+[[step]]
+wait.stable_ms = 300
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/run-fixture/actions/runs/5000042/rerun"
+
+[[step]]
+wait.text = "Failed to re-run workflow"
+
+[[step]]
+capture = "workflow-error"
+checks = ["titles", "focus"]
+
+[expect.failed-jobs-error]
+focused = ["[5] Workflow Run #42 Details"]
+contains = ["Error", "Failed to re-run failed jobs", "Re-run Workflow", "Re-run Failed Jobs", "deploy (9s)"]
+not_contains = ["Re-run Started", "Traceback"]
+
+[expect.workflow-error]
+focused = ["[5] Workflow Run #42 Details"]
+contains = ["Error", "Failed to re-run workflow"]
+not_contains = ["Re-run Started", "Traceback"]

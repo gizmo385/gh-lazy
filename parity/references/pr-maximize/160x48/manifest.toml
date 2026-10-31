@@ -4,10 +4,10 @@ size = "160x48"
 captures = ["body-noop", "reactions-title", "reactions-open", "restored", "reactions-list", "checks-title", "reviews-title", "focus-key", "restored-prs"]
 
 [inputs]
-scenario = "eb7d8cb4f504d332fffa998df1c056a69a95e0f5"
+scenario = "3846d8af1170b4f8db08e0999e13481e351dba94"
 fixtures = "f08beddbcecbffb29234d9f65e3b95c0aa7e36cf"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"
+harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"
 
 [recorded_with]
 python = "3.14.7"

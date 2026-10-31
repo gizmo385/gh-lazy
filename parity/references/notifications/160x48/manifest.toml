@@ -7,7 +7,7 @@ captures = ["loading", "open", "moved", "read-tab", "unread-tab", "marked-one", 
 scenario = "479c491b8390e04070605ef0f29e8d557aad8bbb"
 fixtures = "d8a5693c7774612b5e44f1ef7ae2a9927d699265"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"
+harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"
 
 [recorded_with]
 python = "3.14.7"

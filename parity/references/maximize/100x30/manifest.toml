@@ -4,10 +4,10 @@ size = "100x30"
 captures = ["max", "restored", "max-details"]
 
 [inputs]
-scenario = "9d3915a7eb627a5eb598298074138ba4f4530614"
+scenario = "62adf056e3259a212ece1128ce81622030d0b7db"
 fixtures = "152ce9bbfa49430b36bca9ef5e2ae1189ea76b00"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"
+harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"
 
 [recorded_with]
 python = "3.14.7"

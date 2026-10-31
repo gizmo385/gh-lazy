@@ -7,7 +7,7 @@ captures = ["overview", "jobs", "job-expanded", "job-logs", "step-logs", "no-log
 scenario = "4e4e13e290b47b8f6af8f457d7e6458e0323887e"
 fixtures = "6dd65ab1ffcaf9ba317d52db8f6dcd9e95014aa7"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "0e82fbfb25cb54253ebbf6f51f382ddcaa13a1a5"
+harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"
 
 [recorded_with]
 python = "3.14.7"

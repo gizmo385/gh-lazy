@@ -764,8 +764,14 @@ fn reviewing_with(config: Config) -> TestApp {
     settle(&mut app);
     app.press(&["tab", "tab", "tab", "tab", "enter", "tab", "j", "j", "j"]);
     add(&mut app, "Mention the arrow keys too.");
-    // From the repos table, back to the end of the screen's ring.
-    app.press(&["1", "shift+tab", "shift+tab", "shift+tab"]);
+    // From the repos table, back to the end of the screen's ring (past the command log, when it's shown).
+    app.press(&["1"]);
+    for _ in 0..4 {
+        app.press(&["shift+tab"]);
+        if focus(&app) == FocusTarget::DetailsContent && stop(&app) == DiffStop::ReviewStatus {
+            break;
+        }
+    }
     assert_eq!(stop(&app), DiffStop::ReviewStatus);
     app
 }
@@ -943,6 +949,157 @@ fn pr_review_form_author() {
     settle(&mut app);
     app.press(&["1", "shift+tab"]);
     insta::assert_snapshot!(app.screen(160, 48));
+}
+
+// The review status's open list near the screen's bottom (#364).
+
+/// [`reviewing_with`] at 160x48, scrolled up three notches as the `pr-review` scenario does, with the review status's
+/// list open: it doesn't fit below the box, so it's moved up until its bottom border is on the footer row.
+fn status_list_near_bottom(config: Config) -> TestApp {
+    let mut app = reviewing_with(config);
+    // The comment's toast would cover part of the list.
+    app.advance(std::time::Duration::from_secs(30));
+    open_near_bottom(&mut app);
+    app
+}
+
+/// Scrolls the focused review status's tab up three notches at 160x48 and opens the list.
+fn open_near_bottom(app: &mut TestApp) {
+    app.render(160, 48);
+    for _ in 0..3 {
+        app.mouse(MouseEventKind::ScrollUp, 110, 30);
+        app.render(160, 48);
+    }
+    app.press(&["enter"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("Changes Requested"), "{screen}");
+}
+
+/// The open list's cells, from the last frame: from its left edge `▊` to its right edge `▎` on the footer row, and up
+/// six rows (the border and the four rows).
+fn status_list_cells(app: &mut TestApp) -> (std::ops::RangeInclusive<u16>, std::ops::RangeInclusive<u16>) {
+    let screen = app.screen(160, 48);
+    let last = screen.lines().last().unwrap();
+    let left = last
+        .chars()
+        .position(|c| c == '▊')
+        .expect("the list's bottom-left corner");
+    let right = last
+        .chars()
+        .position(|c| c == '▎')
+        .expect("the list's bottom-right corner");
+    let columns = u16::try_from(left).unwrap()..=u16::try_from(right).unwrap();
+    (columns, 42..=47)
+}
+
+fn status_open(app: &TestApp) -> bool {
+    view(app).status_open()
+}
+
+#[test]
+fn pr_diff_status_list_over_footer() {
+    let mut app = status_list_near_bottom(config());
+    let screen = app.screen(160, 48);
+    let last = screen.lines().last().unwrap();
+    assert!(last.starts_with(" esc Dismiss menu"), "{last}");
+    assert!(last.contains("▊▁▁▁") && last.ends_with("▁▎"), "{last}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn pr_diff_status_list_over_command_log() {
+    let mut config = config();
+    config.appearance.show_command_log = true;
+    let mut app = status_list_near_bottom(config);
+    let screen = app.screen(160, 48);
+    // The log's box is drawn first, so its border doesn't cut through the list.
+    for option in ["▊  Select", "▊  Approved", "▊  Changes Requested", "▊  Commented"] {
+        assert!(screen.contains(option), "{option}: {screen}");
+    }
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn a_press_on_the_list_on_the_footer_row_runs_no_footer_binding() {
+    let mut app = status_list_near_bottom(config());
+    let (columns, _) = status_list_cells(&mut app);
+    // Inside the list's bottom border, under where the footer's `^p Command Palette` item would reach.
+    app.click(*columns.start() + 1, 47);
+    assert!(modals(&app).is_empty(), "{:?}", modals(&app));
+    assert!(status_open(&app));
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    assert_eq!(stop(&app), DiffStop::ReviewStatus);
+}
+
+#[test]
+fn a_press_on_the_option_over_the_details_border_picks_it() {
+    let mut app = reviewing();
+    // Approved first, so the pick shows.
+    app.press(&["enter", "up", "up", "enter"]);
+    assert_eq!(view(&app).review_status(), Some(Some(ReviewEvent::Approve)));
+    open_near_bottom(&mut app);
+    let screen = app.screen(160, 48);
+    let row = screen.lines().nth(46).unwrap();
+    assert!(row.contains("▊  Commented") && row.starts_with('└'), "{row}");
+    app.click(70, 46);
+    assert!(!status_open(&app));
+    assert_eq!(view(&app).review_status(), Some(Some(ReviewEvent::Comment)));
+    assert_eq!(focus(&app), FocusTarget::DetailsContent);
+    assert_eq!(stop(&app), DiffStop::ReviewStatus);
+}
+
+#[test]
+fn toasts_still_draw_over_the_open_list() {
+    let mut app = reviewing();
+    open_near_bottom(&mut app);
+    let screen = app.screen(160, 48);
+    let row = screen
+        .lines()
+        .find(|line| line.contains("▊  Changes Requested"))
+        .expect("the list's row");
+    assert!(row.contains("New comment added"), "{screen}");
+}
+
+#[test]
+fn with_the_list_closed_the_footer_row_press_runs_the_footer_item() {
+    let mut app = status_list_near_bottom(config());
+    let (columns, _) = status_list_cells(&mut app);
+    app.press(&["escape"]);
+    assert!(!status_open(&app));
+    let screen = app.screen(160, 48);
+    let last = screen.lines().last().unwrap();
+    let palette = last.find("^p Command").expect("the palette's footer item");
+    let column = u16::try_from(last[..palette].chars().count()).unwrap();
+    // The footer's items changed with the focus; the row the list covered is the footer's again.
+    let main = app.app().main_screen().unwrap();
+    assert!(columns.clone().all(|column| !main.popup_contains(column, 47)));
+    app.click(column + 1, 47);
+    assert_eq!(modals(&app), [ModalKind::CommandPalette]);
+}
+
+#[test]
+fn the_screen_s_popup_is_the_open_list_s_cells() {
+    let mut app = status_list_near_bottom(config());
+    let (columns, rows) = status_list_cells(&mut app);
+    let main = app.app().main_screen().unwrap();
+    for row in rows.clone() {
+        for column in columns.clone() {
+            assert!(main.popup_contains(column, row), "({column}, {row})");
+        }
+        assert!(!main.popup_contains(*columns.start() - 1, row));
+        assert!(!main.popup_contains(*columns.end() + 1, row));
+    }
+    for column in columns.clone() {
+        assert!(!main.popup_contains(column, *rows.start() - 1));
+    }
+    app.press(&["escape"]);
+    app.render(160, 48);
+    let main = app.app().main_screen().unwrap();
+    for row in rows {
+        for column in columns.clone() {
+            assert!(!main.popup_contains(column, row), "({column}, {row})");
+        }
+    }
 }
 
 // M in the Diff tab (#288).

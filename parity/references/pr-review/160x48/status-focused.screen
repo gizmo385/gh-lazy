@@ -1,6 +1,6 @@
 lazy-github-screen 1
 size 160x48
-cursor 37 69 hidden
+cursor 47 69 hidden
 --- text
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │Current repo: parity-bot/pr-details                                                                                                                           │
@@ -84,21 +84,21 @@ dlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldeppppppppppppppp
 dllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllde............................................................................................wwe
 d..............................................................de............................................................................................wwe
 d..............................................................debbbbbbbbbbbbbb..............................................................................wwe
-d..............................................................dexyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyzwwe
-d..............................................................dexAAlllllllllAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAzwwe
-d..............................................................dexyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyzwwe
-d..............................................................deCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDkwwe
-d..............................................................deCEEFGGGGGGGGGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHEEkwwe
-d..............................................................deCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDkwwe
+d..............................................................dexyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyykwwe
+d..............................................................dexzzAAAAAAAAAzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzBzzkwwe
+d..............................................................dexyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyykwwe
+d..............................................................deCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDEwwe
+d..............................................................deCFFGGGGGGGGGGGGGGllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllFFEwwe
+d..............................................................deCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDEwwe
 d..............................................................de............................................................................................wwe
-d..............................................................de.IIIIIIIIIIIIIIII................JKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKwe
-d..............................................................de.LLLLLLLLLLLLLLLM................JKNNNNNNNNNNNNNNNNNNNNNNNNKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKwe
-d..............................................................de.OOOOOOOOOOOOOOOO................JKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKwe
+d..............................................................de.HHHHHHHHHHHHHHHH................IJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJwe
+d..............................................................de.KKKKKKKKKKKKKKKL................IJMMMMMMMMMMMMMMMMMMMMMMMMJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJwe
+d..............................................................de.NNNNNNNNNNNNNNNN................IJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJwe
 d..............................................................de............................................................................................wwe
-d..............................................................de.................................PKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKwe
-d..............................................................de.................................PKNNNNNNNNNNNNNNNNNKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKwe
-ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeePKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKee
-QQQRRRRRRRRRRQQQRRRRRRRRRRRRRRQQQRRRRRRRRRRRRRQQQQRRRRRRRRRRRQQQRRRRRRRRRRRRQQQRRRRRRRRRRRRRRRRRRRRRRQQQRRRRRQQQQRRRRRRRRRRRRRRRRQQQRRRRRRRRRQQQRRRRRRRRRRRRrrrr
+d..............................................................de.................................OJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJwe
+d..............................................................de.................................OJMMMMMMMMMMMMMMMMMJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJwe
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeOJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJee
+PPPQQQQQQQQQQPPPQQQQQQQQQQQQQQPPPQQQQQQQQQQQQQPPPPQQQQQQQQQQQPPPQQQQQQQQQQQQPPPQQQQQQQQQQQQQQQQQQQQQQPPPQQQQQPPPPQQQQQQQQQQQQQQQQPPPQQQQQQQQQPPPQQQQQQQQQQQQrrrr
 --- legend
 . bg=#121212
 a fg=#004578 bg=#121212
@@ -124,24 +124,23 @@ t fg=#ffcf56 bg=#fea62b
 u fg=#b86b00 bg=#fea62b
 v fg=#003054 bg=#000000
 w fg=#003054 bg=#121212 inverse
-x fg=#191919 bg=#121212 inverse
-y fg=#191919 bg=#1e1e1e
-z fg=#191919 bg=#121212
-A bg=#1e1e1e
-B fg=#7f7f7f bg=#1e1e1e
-C fg=#0178d4 bg=#121212 inverse
-D fg=#0178d4 bg=#272727
-E bg=#272727
-F fg=#121212 bg=#e0e0e0
-G fg=#797979 bg=#272727
-H fg=#e0e0e0 bg=#272727
-I fg=#7ae998 bg=#4ebf71
-J fg=#fea62b bg=#343f49
-K bg=#343f49
-L fg=#0a180e bg=#4ebf71 bold
-M bg=#4ebf71
-N fg=#e0e0e0 bg=#343f49
-O fg=#008139 bg=#4ebf71
-P fg=#4ebf71 bg=#343f49
-Q fg=#ffa62b bg=#242f38 bold
-R fg=#e0e0e0 bg=#242f38
+x fg=#0178d4 bg=#121212 inverse
+y fg=#0178d4 bg=#272727
+z bg=#272727
+A fg=#e0e0e0 bg=#272727
+B fg=#838383 bg=#272727
+C fg=#191919 bg=#121212 inverse
+D fg=#191919 bg=#1e1e1e
+E fg=#191919 bg=#121212
+F bg=#1e1e1e
+G fg=#737373 bg=#1e1e1e
+H fg=#7ae998 bg=#4ebf71
+I fg=#fea62b bg=#343f49
+J bg=#343f49
+K fg=#0a180e bg=#4ebf71 bold
+L bg=#4ebf71
+M fg=#e0e0e0 bg=#343f49
+N fg=#008139 bg=#4ebf71
+O fg=#4ebf71 bg=#343f49
+P fg=#ffa62b bg=#242f38 bold
+Q fg=#e0e0e0 bg=#242f38

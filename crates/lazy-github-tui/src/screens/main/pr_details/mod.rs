@@ -184,6 +184,17 @@ impl DetailsBody for PullRequestDetails {
         }
     }
 
+    // Only the Diff tab has popups: its review status's open list.
+    fn render_popups(&mut self, tab: usize, frame: &mut Frame<'_>, theme: &Theme) {
+        if PrTab::at(tab) == PrTab::Diff {
+            self.diff.render_popups(frame, theme);
+        }
+    }
+
+    fn popup_contains(&self, tab: usize, column: u16, row: u16) -> bool {
+        PrTab::at(tab) == PrTab::Diff && self.diff.popup_contains(column, row)
+    }
+
     fn next_deadline(&self, tab: usize, now: tokio::time::Instant, animations: bool) -> Option<tokio::time::Instant> {
         match PrTab::at(tab) {
             PrTab::Overview => self.overview.next_deadline(now, animations),

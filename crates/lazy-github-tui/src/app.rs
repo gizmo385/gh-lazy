@@ -474,10 +474,11 @@ impl App {
         if mouse.kind == MouseEventKind::Down(MouseButton::Left) {
             let position = Position::new(mouse.column, mouse.row);
             // An open select's list can cover the footer row, and takes the click there.
-            let covered = self
-                .modals
-                .last()
-                .is_some_and(|top| top.popup_contains(mouse.column, mouse.row));
+            let covered = match (self.modals.last(), &self.base) {
+                (Some(top), _) => top.popup_contains(mouse.column, mouse.row),
+                (None, BaseScreen::Main(main)) => main.popup_contains(mouse.column, mouse.row),
+                (None, _) => false,
+            };
             if !covered && let Some(hit) = self.footer_hits.iter().find(|hit| hit.rect.contains(position)).copied() {
                 if !hit.enabled {
                     return Some(Action::Bell);
@@ -499,6 +500,10 @@ impl App {
         let BaseScreen::Main(main) = &mut self.base else {
             return None;
         };
+        // A popup covers the links under it.
+        if main.popup_contains(mouse.column, mouse.row) {
+            return main.handle_mouse(mouse);
+        }
         let followed = link_click(&self.links, &mut self.pressed_link, mouse, |release| {
             // A release over the content does nothing else today.
             let _ = main.handle_mouse(release);
@@ -1429,12 +1434,21 @@ impl App {
                 };
                 let hits = footer.hits(footer_area);
                 // Hits are in item order, so the hit's index is the item's.
+                // Not through a popup over the footer.
+                let mouse = mouse.filter(|mouse| match &self.base {
+                    BaseScreen::Main(main) => !main.popup_contains(mouse.x, mouse.y),
+                    _ => true,
+                });
                 footer.hovered = mouse.and_then(|mouse| hits.iter().position(|hit| hit.rect.contains(mouse)));
                 frame.render_widget(footer, footer_area);
                 hits
             }
             None => Vec::new(),
         };
+        // Popups last, over the footer too, as Textual's `overlay: screen`; dialogs, toasts and overlays draw after.
+        if let BaseScreen::Main(main) = &mut self.base {
+            main.render_popups(frame, &cx);
+        }
         self.links = links.take();
         self.hyperlinks.capture(frame.buffer_mut(), &hyperlinks.take());
     }

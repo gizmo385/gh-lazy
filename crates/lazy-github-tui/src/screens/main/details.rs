@@ -114,6 +114,16 @@ pub(super) trait DetailsBody {
     /// Draws tab `tab`'s content into `area`. `focused` says whether focus is inside it ([`FocusTarget::DetailsContent`]).
     fn render(&mut self, tab: usize, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool);
 
+    /// Draws what tab `tab`'s content pops out over the whole screen (an open select's list), after everything else
+    /// on the base screen, as Textual's `overlay: screen`. Placed against the last [`Self::render`].
+    fn render_popups(&mut self, _tab: usize, _frame: &mut Frame<'_>, _theme: &Theme) {}
+
+    /// Whether screen cell `(column, row)` is on one of tab `tab`'s popups as last drawn
+    /// ([`Self::render_popups`]), which take the mouse there ahead of anything under them.
+    fn popup_contains(&self, _tab: usize, _column: u16, _row: u16) -> bool {
+        false
+    }
+
     /// The inner focus ring: the stops inside tab `tab`'s content (a collapsible's title, a button), which
     /// `tab` / `shift+tab` walk before leaving the content. Moves one stop `forward` or back and says whether it
     /// moved; `false` at either end lets focus leave the content, to the next target of the main ring. The content
@@ -653,6 +663,18 @@ impl DetailsPane {
             return;
         }
         self.body.get_mut().click(tab, position);
+    }
+
+    /// [`DetailsBody::render_popups`] in the active tab. A maximized section shows none: the tab isn't drawn.
+    pub(super) fn render_popups(&mut self, frame: &mut Frame<'_>, theme: &Theme) {
+        if self.section_view.drawn.is_none() {
+            self.body.get_mut().render_popups(self.tabs.active(), frame, theme);
+        }
+    }
+
+    /// [`DetailsBody::popup_contains`] in the active tab.
+    pub(super) fn popup_contains(&self, column: u16, row: u16) -> bool {
+        self.section_view.drawn.is_none() && self.body.get().popup_contains(self.tabs.active(), column, row)
     }
 
     /// [`DetailsBody::maximize_scope`] in the active tab.

@@ -661,7 +661,7 @@ impl DiffView {
     }
 
     /// Whether the review status's list is open.
-    fn status_open(&self) -> bool {
+    pub(crate) fn status_open(&self) -> bool {
         self.body
             .form
             .as_ref()
@@ -932,6 +932,15 @@ impl DiffView {
         self.focus(stop);
     }
 
+    /// Whether screen cell `(column, row)` is on the review status's open list, as last drawn by
+    /// [`Self::render_popups`]. The list takes every mouse event there, ahead of whatever is drawn under it.
+    pub fn popup_contains(&self, column: u16, row: u16) -> bool {
+        matches!(
+            &self.body.form,
+            Some(ReviewForm { status: Some(status), .. }) if status.overlay_contains(column, row)
+        )
+    }
+
     /// Whether a press on the filter or the review summary started a drag that hasn't been released: the owner keeps
     /// the mouse for the viewer until then and hands it [`Self::captured_mouse`].
     pub fn captures_mouse(&self) -> bool {
@@ -1147,12 +1156,13 @@ impl DiffView {
         }
         self.scroll.render(frame, area, theme, &mut self.body);
         self.area = area;
-        self.render_status_list(frame, area, theme);
     }
 
-    /// The review status's open list, last, over the view and past it if need be, as Textual's `overlay: screen`
-    /// draws it: right below the box, moved up to fit the screen.
-    fn render_status_list(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme) {
+    /// What the viewer draws over the whole screen, after everything else on it (the command log, the status bar,
+    /// the footer): the review status's open list, as Textual's `overlay: screen` draws it, right below the box and
+    /// moved up to fit the screen. Placed against the last [`Self::render`].
+    pub fn render_popups(&mut self, frame: &mut Frame<'_>, theme: &Theme) {
+        let area = self.area;
         let width = self.body.last_width;
         let Some(rows) = self
             .body

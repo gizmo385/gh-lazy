@@ -133,6 +133,58 @@ wait = { gone = "O Lookup Repository" }
 capture = "status-focused"
 checks = ["titles", "focus"]
 
+# Scrolled up three notches, the box is near the details' bottom: the open list doesn't fit below it, and moves up
+# until its bottom border is on the footer row, over the footer (#364).
+[[step]]
+wheel = { at = [110, 30], direction = "up" }
+
+[[step]]
+wait.stable_ms = 400
+
+[[step]]
+wheel = { at = [110, 30], direction = "up" }
+
+[[step]]
+wait.stable_ms = 400
+
+[[step]]
+wheel = { at = [110, 30], direction = "up" }
+
+[[step]]
+wait.stable_ms = 400
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Changes Requested"
+
+[[step]]
+capture = "status-list-bottom"
+checks = ["titles", "focus"]
+
+# The list's bottom border, on the footer row: nothing happens, no footer binding runs.
+[[step]]
+click = { at = [66, 47] }
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+capture = "status-list-footer-click"
+checks = ["titles", "focus"]
+
+# Commented, the last option, on the details box's bottom border row: picked, and the list closes.
+[[step]]
+click = { at = [70, 46] }
+
+[[step]]
+wait.gone = "Changes Requested"
+
+[[step]]
+capture = "status-list-picked"
+checks = ["titles", "focus"]
+
 [[step]]
 keys = ["enter", "up", "up", "enter"]
 
@@ -236,6 +288,19 @@ not_contains = ["Commenting on:", "Traceback"]
 
 [expect.status-focused]
 contains = ["Review Status:", "Commented", "Review summary", "Submit Review", "Pending Comments:", "Mention the arrow keys too."]
+
+[expect.status-list-bottom]
+contains = ["Changes Requested"]
+not_contains = ["Palette ▁"]
+
+[expect.status-list-footer-click]
+contains = ["Changes Requested"]
+not_contains = ["Search for commands"]
+focused = ["[5] PR #5 Details"]
+
+[expect.status-list-picked]
+contains = ["Review Status:", "Commented"]
+not_contains = ["Changes Requested"]
 
 [expect.submitted]
 contains = ["New review created!"]

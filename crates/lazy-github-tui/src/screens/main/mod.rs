@@ -1269,15 +1269,24 @@ impl MainScreen {
     /// moves their cursor.
     pub fn handle_mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
         let at = Position::new(mouse.column, mouse.row);
+        // A popup is over everything on the screen, so nothing under it sees the event.
+        let popup = self.popup_contains(mouse.column, mouse.row);
         let over = SectionId::ALL
             .into_iter()
-            .find(|&id| self.table_areas[id.index()].is_some_and(|area| area.contains(at)));
+            .find(|&id| !popup && self.table_areas[id.index()].is_some_and(|area| area.contains(at)));
         // Moves elsewhere still reach the other tables, so their hover clears when the pointer leaves.
         if mouse.kind == MouseEventKind::Moved {
             for id in SectionId::ALL.into_iter().filter(|&id| Some(id) != over) {
                 let area = self.table_areas[id.index()].unwrap_or_default();
                 let _ = self.table_mut(id).handle_mouse(mouse, area);
             }
+        }
+        if popup {
+            // A press picks an option, or does nothing on the list's border; other events have nothing to do there.
+            if mouse.kind == MouseEventKind::Down(MouseButton::Left) {
+                self.details.click(at);
+            }
+            return Some(Action::Consumed);
         }
         if let Some(id) = over {
             return self.table_mouse(id, mouse, at);
@@ -1305,6 +1314,28 @@ impl MainScreen {
             }
             _ => self.wheel(&mouse),
         }
+    }
+
+    /// Whether screen cell `(column, row)` is on a popup of the screen as last drawn ([`Self::render_popups`]): the
+    /// diff viewer's open review status list. It takes the mouse there, ahead of the footer and what's under it.
+    pub fn popup_contains(&self, column: u16, row: u16) -> bool {
+        self.details_drawn() && self.details.popup_contains(column, row)
+    }
+
+    /// Draws what pops out of the screen's widgets (an open select's list) over the whole frame, after the screen,
+    /// its status bar and the footer, as Textual's `overlay: screen` layer. Placed against the last
+    /// [`Self::render`] or [`Self::render_maximized`].
+    pub fn render_popups(&mut self, frame: &mut Frame<'_>, cx: &RenderCx<'_>) {
+        if self.details_drawn() {
+            self.details.render_popups(frame, cx.theme);
+        }
+    }
+
+    /// Whether the last frame drew the details content: a maximized table or command log hides it, and its popups.
+    fn details_drawn(&self) -> bool {
+        self.hits
+            .iter()
+            .any(|&(_, target)| target == FocusTarget::DetailsContent)
     }
 
     /// Whether a text input on the screen has the mouse: a left press on a search box or an input in the details (the

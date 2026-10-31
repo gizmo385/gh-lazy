@@ -673,7 +673,14 @@ fn the_status_list_opens_over_the_view() {
     view.show_review_form(false);
     view.focus(DiffStop::ReviewStatus);
     press(&mut view, &["enter"]);
-    let screen = draw(&mut view, 80, 30);
+    let mut terminal = Terminal::new(TestBackend::new(80, 30)).unwrap();
+    terminal
+        .draw(|frame| {
+            view.render(frame, frame.area(), &Theme::default(), true);
+            view.render_popups(frame, &Theme::default());
+        })
+        .unwrap();
+    let screen = buffer_to_string(terminal.backend().buffer());
     for option in ["Approved", "Changes Requested", "Commented"] {
         assert!(screen.contains(option), "{option}: {screen}");
     }

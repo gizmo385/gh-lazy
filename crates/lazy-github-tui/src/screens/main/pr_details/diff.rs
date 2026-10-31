@@ -197,6 +197,18 @@ impl PrDiff {
         }
     }
 
+    /// [`DiffView::render_popups`], once the diff is in.
+    pub(super) fn render_popups(&mut self, frame: &mut Frame<'_>, theme: &Theme) {
+        if let Some(view) = self.view_mut() {
+            view.render_popups(frame, theme);
+        }
+    }
+
+    /// [`DiffView::popup_contains`], once the diff is in.
+    pub(super) fn popup_contains(&self, column: u16, row: u16) -> bool {
+        self.view().is_some_and(|view| view.popup_contains(column, row))
+    }
+
     /// When the loading overlay's next frame is due.
     pub(super) fn next_deadline(&self, now: Instant, animations: bool) -> Option<Instant> {
         (animations && matches!(self.state, DiffState::Loading { .. })).then_some(now + loading::FRAME_INTERVAL)

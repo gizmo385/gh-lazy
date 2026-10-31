@@ -18,6 +18,7 @@ use ratatui::style::{Modifier, Style};
 use ratatui::text::Span;
 use tokio::time::Instant;
 
+use super::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
 use super::text_input::{TallBorder, printable};
 use super::{disabled, option_nav};
 use crate::keymap::{BindingId, KeyChord, Keymap};
@@ -355,7 +356,14 @@ impl<T> Select<T> {
             return SelectOutcome::Consumed;
         }
         let area = self.overlay_area;
-        let inside = event.row > area.y && event.row + 1 < area.bottom();
+        let window = usize::from(area.height.saturating_sub(2));
+        // The scrollbar's columns, when there is one, pick nothing.
+        let bar_left = if self.rows() > window {
+            area.right().saturating_sub(2 + scrollbar::VERTICAL_WIDTH)
+        } else {
+            area.right()
+        };
+        let inside = event.row > area.y && event.row + 1 < area.bottom() && event.column < bar_left;
         let scroll = self.overlay.as_ref().map_or(0, |overlay| overlay.scroll);
         let row = scroll + usize::from(event.row.saturating_sub(area.y + 1));
         if inside && row < self.rows() {
@@ -448,8 +456,24 @@ impl<T> Select<T> {
             return;
         }
         let row_x = area.x + 2;
-        let row_width = area.width - 4;
+        let mut row_width = area.width - 4;
         let window = usize::from(area.height.saturating_sub(2));
+        // `overflow-y: auto`: a scrollbar between the options and the list's right padding once they overflow.
+        if self.rows() > window && row_width > scrollbar::VERTICAL_WIDTH {
+            row_width -= scrollbar::VERTICAL_WIDTH;
+            let bar = Rect {
+                x: row_x + row_width,
+                y: area.y + 1,
+                width: scrollbar::VERTICAL_WIDTH,
+                height: area.height.saturating_sub(2),
+            };
+            let state = ScrollbarState {
+                content: self.rows(),
+                window,
+                position: overlay.scroll,
+            };
+            scrollbar::render(buf, bar, Axis::Vertical, state, styles.scrollbar);
+        }
         let labels = std::iter::once((self.prompt.as_ref(), true))
             .chain(self.options.iter().map(|(label, _)| (label.as_ref(), false)));
         for (dy, (row, (label, blank))) in labels.enumerate().skip(overlay.scroll).take(window).enumerate() {
@@ -530,6 +554,8 @@ struct OverlayStyles {
     /// What the dim blank row is drawn over in [`Self::option`] and [`Self::highlight`].
     option_bg: Paint,
     highlight_bg: Paint,
+    /// `$scrollbar` and `$scrollbar-background` over the list.
+    scrollbar: ScrollbarColors,
 }
 
 impl OverlayStyles {
@@ -538,6 +564,7 @@ impl OverlayStyles {
         let bg = theme.tint(p.surface.over(under), p.foreground, 5.0);
         let border = theme.color(p.border, bg);
         let highlight_bg = p.block_cursor_background.over(bg);
+        let back = p.scrollbar_background.over(bg);
         Self {
             option: Style::new().fg(theme.color(p.foreground, bg)).bg(theme.paint(bg)),
             highlight: p.block_cursor_text_style.apply(
@@ -553,6 +580,12 @@ impl OverlayStyles {
             right: Style::new().fg(border).bg(theme.paint(under)),
             option_bg: bg,
             highlight_bg,
+            scrollbar: ScrollbarColors {
+                bar: theme.color(p.scrollbar, back),
+                back: theme.paint(back),
+                fg: theme.color(p.foreground, bg),
+                bg: theme.paint(bg),
+            },
         }
     }
 

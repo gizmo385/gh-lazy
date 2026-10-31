@@ -366,6 +366,13 @@ pub trait Dialog: Component + Send + 'static {
         false
     }
 
+    /// Whether screen cell `(column, row)` is on something the dialog draws past its interior: an open select's
+    /// list, which can reach over the frame and the footer row. `App` hands mouse events there to the dialog, ahead
+    /// of the footer's items.
+    fn popup_contains(&self, _column: u16, _row: u16) -> bool {
+        false
+    }
+
     /// A bracketed paste while the dialog is on top. `cx` gives the time an editor's undo batches by.
     fn handle_paste(&mut self, _text: &str, _cx: &Cx<'_>) -> Option<Action> {
         None

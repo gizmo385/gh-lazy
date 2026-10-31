@@ -86,13 +86,18 @@ impl ModalEntry {
         self.dialog.handle_key(key, cx)
     }
 
-    /// A mouse event, which only reaches the dialog inside its interior.
+    /// A mouse event, which only reaches the dialog inside its interior or on one of its popups
+    /// ([`Dialog::popup_contains`]).
     pub(crate) fn handle_mouse(&mut self, event: MouseEvent, cx: &Cx<'_>) -> Option<Action> {
         let interior = self.interior;
-        interior
-            .contains((event.column, event.row).into())
-            .then(|| self.dialog.handle_mouse(event, interior, cx))
-            .flatten()
+        let reaches =
+            interior.contains((event.column, event.row).into()) || self.popup_contains(event.column, event.row);
+        reaches.then(|| self.dialog.handle_mouse(event, interior, cx)).flatten()
+    }
+
+    /// [`Dialog::popup_contains`].
+    pub(crate) fn popup_contains(&self, column: u16, row: u16) -> bool {
+        self.dialog.popup_contains(column, row)
     }
 
     /// Whether a field of the dialog has the mouse ([`Dialog::captures_mouse`]).
@@ -220,6 +225,7 @@ trait AnyDialog: Send {
     fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action>;
     fn handle_mouse(&mut self, event: MouseEvent, area: Rect, cx: &Cx<'_>) -> Option<Action>;
     fn captures_mouse(&self) -> bool;
+    fn popup_contains(&self, column: u16, row: u16) -> bool;
     fn handle_paste(&mut self, text: &str, cx: &Cx<'_>) -> Option<Action>;
     fn update(&mut self, action: DialogAction, cx: &mut Cx<'_>);
     fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse>;
@@ -291,6 +297,10 @@ impl<D: Dialog> AnyDialog for Open<D> {
 
     fn captures_mouse(&self) -> bool {
         self.dialog.captures_mouse()
+    }
+
+    fn popup_contains(&self, column: u16, row: u16) -> bool {
+        self.dialog.popup_contains(column, row)
     }
 
     fn handle_paste(&mut self, text: &str, cx: &Cx<'_>) -> Option<Action> {

@@ -410,6 +410,13 @@ impl IssueForm {
         self.title.is_selecting() || self.body.is_selecting()
     }
 
+    /// Whether screen cell `(column, row)` is on the open status list.
+    pub(super) fn popup_contains(&self, column: u16, row: u16) -> bool {
+        self.status
+            .as_ref()
+            .is_some_and(|status| status.overlay_contains(column, row))
+    }
+
     pub(super) fn handle_paste(&mut self, text: &str, cx: &Cx<'_>) -> Option<Action> {
         match self.ring.focused() {
             Some(IssueField::Title) => self.title.handle_paste(text),

@@ -485,6 +485,10 @@ impl Dialog for TriggerWorkflowDialog {
         self.branch.is_selecting()
     }
 
+    fn popup_contains(&self, column: u16, row: u16) -> bool {
+        self.workflow.overlay_contains(column, row)
+    }
+
     fn handle_paste(&mut self, text: &str, _cx: &Cx<'_>) -> Option<Action> {
         self.ring.is_focused(TriggerField::Branch).then(|| {
             let _ = self.edit(|input| {

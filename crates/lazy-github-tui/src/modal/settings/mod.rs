@@ -703,6 +703,10 @@ impl Dialog for SettingsDialog {
         self.search.as_ref().is_some_and(TextInput::is_selecting) || self.pane().is_selecting()
     }
 
+    fn popup_contains(&self, column: u16, row: u16) -> bool {
+        self.pane().overlay_contains(column, row)
+    }
+
     fn handle_paste(&mut self, text: &str, _cx: &Cx<'_>) -> Option<Action> {
         let stop = self.ring.focused()?;
         if stop == SettingsFocus::Search {

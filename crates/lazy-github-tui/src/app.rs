@@ -469,7 +469,12 @@ impl App {
     fn route_mouse(&mut self, mouse: MouseEvent) -> Option<Action> {
         if mouse.kind == MouseEventKind::Down(MouseButton::Left) {
             let position = Position::new(mouse.column, mouse.row);
-            if let Some(hit) = self.footer_hits.iter().find(|hit| hit.rect.contains(position)).copied() {
+            // An open select's list can cover the footer row, and takes the click there.
+            let covered = self
+                .modals
+                .last()
+                .is_some_and(|top| top.popup_contains(mouse.column, mouse.row));
+            if !covered && let Some(hit) = self.footer_hits.iter().find(|hit| hit.rect.contains(position)).copied() {
                 if !hit.enabled {
                     return Some(Action::Bell);
                 }
@@ -1396,8 +1401,8 @@ impl App {
     }
 
     /// Each dialog, bottom to top, over everything drawn before it, dimmed: its frame centered above the bottom row,
-    /// its interior, and its footer on the bottom row; a frameless one draws on the whole screen. Only the top footer's
-    /// items take clicks.
+    /// its footer on the bottom row, then its interior, whose open select list may cover the footer; a frameless one
+    /// draws on the whole screen. Only the top footer's items take clicks.
     fn render_modals(&mut self, frame: &mut Frame<'_>) {
         if self.modals.is_empty() {
             return;
@@ -1454,8 +1459,8 @@ impl App {
                 },
                 rect,
             );
-            entry.interior = DialogFrame::interior(rect);
-            entry.render(frame, entry.interior, &cx);
+            // The footer before the interior: what pops out of the dialog (an open select's list, moved up to fit
+            // the screen) draws over the footer row, as Textual's `overlay: screen` does.
             if entry.shows_footer() {
                 let items = footer_items(active);
                 let mut footer = Footer {
@@ -1474,6 +1479,8 @@ impl App {
                 frame.render_widget(Clear, footer_area);
                 frame.render_widget(footer, footer_area);
             }
+            entry.interior = DialogFrame::interior(rect);
+            entry.render(frame, entry.interior, &cx);
         }
         self.footer_hits = hits;
     }

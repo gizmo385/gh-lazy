@@ -4,6 +4,7 @@
 use std::sync::{Arc, Mutex};
 
 use lazy_github_core::config::{IssueOwnerFilter, IssueStateFilter, MergeMethod};
+use ratatui::style::Color;
 
 use super::*;
 use crate::components::footer::footer_items;
@@ -696,6 +697,65 @@ fn snapshot_select_open() {
     tab_to(&mut app, SettingsFocus::Field(2));
     app.press(&["enter"]);
     insta::assert_snapshot!("select_open", app.screen(160, 48));
+}
+
+/// Opens Appearance's Theme list.
+fn open_theme_list(app: &mut TestApp) {
+    tab_to(app, SettingsFocus::Field(0));
+    app.press(&["enter"]);
+}
+
+#[test]
+fn snapshot_theme_list_with_a_scrollbar() {
+    // More themes than the list's ten rows: Python's `theme-list` capture of `settings-save` at 160x48 has the
+    // scrollbar in columns 122-123, the thumb down to a `▃` on row 26, and the options stopping at column 121.
+    let (mut app, _) = opened(&config());
+    open_theme_list(&mut app);
+    let buf = app.render(160, 48);
+    let bar: String = (22..32).map(|y| buf[(122, y)].symbol().to_owned()).collect();
+    assert_eq!(bar, "    ▃     ");
+    assert_eq!(buf[(123, 26)].symbol(), "▃");
+    assert_eq!(buf[(122, 22)].fg, Color::Rgb(0x00, 0x30, 0x54));
+    assert_eq!(buf[(122, 22)].bg, Color::Rgb(0x27, 0x27, 0x27));
+    assert_eq!(buf[(122, 26)].bg, Color::Rgb(0x00, 0x00, 0x00));
+    assert_eq!(buf[(122, 27)].bg, Color::Rgb(0x00, 0x00, 0x00));
+    // The highlighted Textual Dark row ends before the scrollbar; the list's padding and border follow it.
+    assert_eq!(buf[(121, 23)].bg, Color::Rgb(0x01, 0x78, 0xd4));
+    assert_eq!(buf[(124, 23)].bg, Color::Rgb(0x27, 0x27, 0x27));
+    assert_eq!(buf[(125, 23)].symbol(), "▎");
+    insta::assert_snapshot!("theme_list_styled", crate::test_util::buffer_to_styled_string(&buf));
+}
+
+#[test]
+fn snapshot_theme_list_over_the_footer() {
+    // At 100x30 the list moves up to fit the screen and its bottom border takes the footer's row, as in Python.
+    let (mut app, _) = opened(&config());
+    open_theme_list(&mut app);
+    let buf = app.render(100, 30);
+    assert_eq!(buf[(49, 29)].symbol(), "▊");
+    assert_eq!(buf[(50, 29)].symbol(), "▁");
+    assert_eq!(buf[(95, 29)].symbol(), "▎");
+    insta::assert_snapshot!("theme_list_narrow", app.screen(100, 30));
+}
+
+#[test]
+fn a_click_on_the_list_over_the_footer_is_the_lists() {
+    let (mut app, _) = opened(&config());
+    open_theme_list(&mut app);
+    let _ = app.render(100, 30);
+    let is_open = |app: &TestApp| matches!(widget(app, APPEARANCE, 0), FieldWidget::Select(s) if s.is_open());
+    // The bottom border, on the footer's row: the list takes the click, and nothing happens.
+    app.click(60, 29);
+    assert!(is_open(&app));
+    assert_eq!(app.app().modals(), [ModalKind::Settings]);
+    // Flexoki's row, over the frame's bottom border, outside the dialog's interior: still the list's, and picks it.
+    let _ = app.render(100, 30);
+    app.click(60, 28);
+    assert!(!is_open(&app));
+    match widget(&app, APPEARANCE, 0) {
+        FieldWidget::Select(select) => assert_eq!(select.value(), Some(&"flexoki")),
+        other => panic!("Theme is a select, not {other:?}"),
+    }
 }
 
 #[test]

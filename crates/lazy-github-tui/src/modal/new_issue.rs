@@ -203,6 +203,10 @@ impl Dialog for NewIssueDialog {
         self.form.captures_mouse()
     }
 
+    fn popup_contains(&self, column: u16, row: u16) -> bool {
+        self.form.popup_contains(column, row)
+    }
+
     fn handle_paste(&mut self, text: &str, cx: &Cx<'_>) -> Option<Action> {
         self.form.handle_paste(text, cx)
     }

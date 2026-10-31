@@ -403,6 +403,30 @@ fn a_long_list_scrolls_to_its_highlight() {
     assert!(!text.contains("Select a workflow"), "{text}");
 }
 
+#[test]
+fn a_long_list_has_a_scrollbar_that_picks_nothing() {
+    let theme = Theme::default();
+    let mut select = many();
+    let _ = select.open();
+    let mut buf = Buffer::empty(Rect::new(0, 0, 30, 16));
+    select.render_overlay(
+        &mut buf,
+        Rect::new(0, 0, 30, 3),
+        Rect::new(0, 0, 30, 16),
+        &theme,
+        theme.background(),
+    );
+    // Rows 3 to 14: thirteen rows in a ten-row window, so a scrollbar in columns 26-27, between the options and the
+    // list's right padding, its thumb at the top.
+    assert_eq!(buf[(26, 4)].modifier, Modifier::REVERSED);
+    assert_eq!(buf[(26, 13)].bg, Color::Rgb(0, 0, 0));
+    assert_eq!(buf[(25, 4)].bg, Color::Rgb(0x01, 0x78, 0xd4));
+    assert_eq!(select.handle_overlay_mouse(&press_at(26, 6)), SelectOutcome::Consumed);
+    assert!(select.is_open());
+    assert_eq!(select.handle_overlay_mouse(&press_at(25, 6)), SelectOutcome::Changed);
+    assert_eq!(select.value(), Some(&1));
+}
+
 // In a dialog's chain.
 
 /// The footer of a dialog with Edit issue's screen bindings while a select's box or its open list has focus.

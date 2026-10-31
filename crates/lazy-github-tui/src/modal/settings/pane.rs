@@ -292,6 +292,14 @@ impl SettingsPane {
     }
 
     /// The open select, if any.
+    /// Whether screen cell `(column, row)` is on an open select's list.
+    pub(super) fn overlay_contains(&self, column: u16, row: u16) -> bool {
+        self.fields.iter().any(|field| match &field.widget {
+            FieldWidget::Select(select) => select.overlay_contains(column, row),
+            _ => false,
+        })
+    }
+
     pub(super) fn open_select_mut(&mut self) -> Option<&mut Select<&'static str>> {
         self.fields.iter_mut().find_map(|field| match &mut field.widget {
             FieldWidget::Select(select) if select.is_open() => Some(select),

@@ -46,6 +46,11 @@ wait = { text = "Custom keybinding overrides" }
 [[step]]
 keys = ["tab", "tab", "tab", "tab"]
 
+# Python moves focus a tick after a tab (Py bug B121). The focused row's $accent box isn't a wait.focused marker,
+# but its left edge sits right before the label.
+[[step]]
+wait = { text = "│Keybindings: ?" }
+
 [[step]]
 capture = "row-focused"
 checks = ["footer"]
@@ -90,7 +95,13 @@ keys = ["!"]
 wait = { text = "Keybindings: exclamation_mark" }
 
 [[step]]
-keys = ["shift+tab", "shift+tab", "shift+tab", "shift+tab", "shift+tab", "shift+tab", "enter"]
+keys = ["shift+tab", "shift+tab", "shift+tab", "shift+tab", "shift+tab", "shift+tab"]
+
+[[step]]
+wait = { focused = "Save" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Settings updated" }

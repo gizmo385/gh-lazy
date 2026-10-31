@@ -53,16 +53,10 @@ wait = { stable_ms = 500 }
 capture = "tab"
 checks = ["footer"]
 
-# The scroll area, then Additional Repos To Track's input. Under load Python drops the second of two quick tabs here, so
-# they go one at a time; a focused text input turns the footer's "q Close" into "esc Close".
+# The scroll area, then Additional Repos To Track's input. Python moves focus a tick after a tab (Py bug B121), so the
+# typing waits for the input's focus: a focused text input turns the footer's "q Close" into "esc Close".
 [[step]]
-keys = ["tab"]
-
-[[step]]
-wait = { stable_ms = 300 }
-
-[[step]]
-keys = ["tab"]
+keys = ["tab", "tab"]
 
 [[step]]
 wait = { text = "esc Close" }
@@ -111,10 +105,22 @@ checks = ["footer"]
 
 # Favorites' checklist: uncheck parity-bot/dotfiles, then Save.
 [[step]]
-keys = ["tab", "space"]
+keys = ["tab"]
 
 [[step]]
-keys = ["tab", "enter"]
+wait = { focused = "parity-bot/dotfiles" }
+
+[[step]]
+keys = ["space"]
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Save" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Settings updated" }

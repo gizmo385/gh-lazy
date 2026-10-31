@@ -54,9 +54,16 @@ wait = { gone = "Show Command Log" }
 capture = "search-appearance"
 checks = ["footer"]
 
-# tab leaves the search box for the tab strip; the filter stays.
+# tab leaves the search box for the tab strip; the filter stays. Python moves focus a tick after a tab (Py bug B121),
+# so right waits for the strip's active tab to show it.
 [[step]]
-keys = ["tab", "right", "right", "right", "right"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Appearance" }
+
+[[step]]
+keys = ["right", "right", "right", "right"]
 
 [[step]]
 wait = { text = "Changes how pull requests are retrieved" }

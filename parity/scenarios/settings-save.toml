@@ -39,9 +39,16 @@ keys = ["enter"]
 [[step]]
 wait = { text = "LazyGithub Settings" }
 
-# The scroll area, then the Theme select: open its list and pick Nord (two below Textual Dark).
+# The scroll area, then the Theme select: open its list and pick Nord (two below Textual Dark). Python moves focus a
+# tick after a tab (Py bug B121), so each key for the new focus waits for it to show.
 [[step]]
-keys = ["tab", "tab", "enter"]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { focused = "Theme:" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Textual Light" }
@@ -57,20 +64,22 @@ keys = ["down", "down", "enter"]
 wait = { gone = "Textual Light" }
 
 # Python hands focus back to the select a moment after its list closes, and keys sent before that reopen the list
-# (#352): wait for the modal's footer to replace the list's, then let it settle.
+# (#352): wait for the modal's footer to replace the list's, then for the select's focus outline.
 [[step]]
 wait = { text = "q Close" }
 
 [[step]]
-wait = { stable_ms = 500 }
+wait = { focused = "Theme:" }
 
 # Show Command Log, Show Workflows, Show Issues: turn Show Issues off.
 [[step]]
-keys = ["tab", "tab", "tab", "enter"]
+keys = ["tab", "tab", "tab"]
 
-# Nothing on screen but the switch shows the toggle landed, so let it settle before leaving (#352).
 [[step]]
-wait = { stable_ms = 500 }
+wait = { focused = "Show Issues:" }
+
+[[step]]
+keys = ["enter"]
 
 # Back to the tab strip, then the Notifications tab's Enabled switch: on. Python routes a key to the widget focused
 # when it reads the key, so right waits for the shift+tabs to land (#352).
@@ -78,7 +87,7 @@ wait = { stable_ms = 500 }
 keys = ["shift+tab", "shift+tab", "shift+tab", "shift+tab", "shift+tab"]
 
 [[step]]
-wait = { stable_ms = 500 }
+wait = { focused = "Appearance" }
 
 [[step]]
 keys = ["right"]
@@ -86,12 +95,17 @@ keys = ["right"]
 [[step]]
 wait = { text = "Mark Notification As Read When Selected" }
 
-# Textual switches the pane a moment after the strip: let it settle before moving focus into it.
 [[step]]
-wait = { stable_ms = 500 }
+wait = { focused = "Notifications" }
 
 [[step]]
-keys = ["tab", "tab", "enter"]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { focused = "Enabled:" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 capture = "edited"
@@ -102,7 +116,7 @@ checks = ["footer"]
 keys = ["tab", "tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+wait = { focused = "Save" }
 
 [[step]]
 keys = ["enter"]
@@ -139,9 +153,17 @@ wait = { text = "LazyGithub Settings" }
 capture = "reopened"
 checks = ["footer"]
 
-# Show Workflows off, then escape: nothing is saved and the section stays.
+# Show Workflows off, then escape: nothing is saved and the section stays. The modal is in Nord now, so the switch's
+# focus outline is in Nord's $border, which wait.focused (reading the config's textual-dark colors) can't see, and
+# nothing else on screen shows the move: give Python's late focus (Py bug B121) a moment instead.
 [[step]]
-keys = ["tab", "tab", "tab", "tab", "enter", "escape"]
+keys = ["tab", "tab", "tab", "tab"]
+
+[[step]]
+sleep_ms = 500
+
+[[step]]
+keys = ["enter", "escape"]
 
 [[step]]
 wait = { gone = "LazyGithub Settings" }

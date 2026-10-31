@@ -74,9 +74,17 @@ capture = "overview"
 checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Tab: the body, then the reactions title; enter opens it. (Further stops depend on load order in Python, so the
-# scenario stops here; the unit tests cover the rest of the ring.)
+# scenario stops here; the unit tests cover the rest of the ring.) Python moves focus a tick after a tab (Py bug
+# B121), so enter waits for the reactions title's focus (the emoji split its cursor into runs: the wait matches the
+# first). Its bindings in the footer can't show it: the body has them too.
 [[step]]
-keys = ["tab", "tab", "enter"]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { focused = "▶ 👍" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "👀: parity-bot", timeout_ms = 5000 }

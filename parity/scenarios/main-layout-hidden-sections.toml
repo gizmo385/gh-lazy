@@ -44,8 +44,12 @@ wait = { gone = "O Lookup Repository" }
 capture = "hidden-prs"
 checks = ["titles", "focus"]
 
+# Python moves focus a tick after a tab (Py bug B121).
 [[step]]
 keys = ["tab"]
+
+[[step]]
+wait = { focused = "[1] Repositories" }
 
 [[step]]
 capture = "tab"

@@ -68,9 +68,17 @@ wait = { text = "Jobs for Run #42", timeout_ms = 15000 }
 capture = "jobs"
 checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
-# Tab: the tab's scroll area, then the tree. Down puts the cursor on the first job, enter expands it.
+# Tab: the tab's scroll area, then the tree. Down puts the cursor on the first job, enter expands it. Python moves
+# focus a tick after a tab (Py bug B121), so down waits for the tree's bindings to lead the footer (the tree draws no
+# cursor until down).
 [[step]]
-keys = ["tab", "tab", "down", "enter"]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { regex = '(?m)^ l View Job Logs  ' }
+
+[[step]]
+keys = ["down", "enter"]
 
 [[step]]
 wait = { text = "Run cargo build (completed)", timeout_ms = 15000 }

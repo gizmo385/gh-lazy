@@ -111,9 +111,15 @@ wait = { gone = "T Trigger Workflow" }
 capture = "no-log"
 checks = ["titles", "tabs", "focus"]
 
-# Tab from the tab strip goes to the details content, then wraps to the repos table; Shift+Tab goes back.
+# Tab from the tab strip goes to the details content, then wraps to the repos table; Shift+Tab goes back. Python
+# moves focus a tick after a tab (Py bug B121), so each capture waits for the move to show.
 [[step]]
 keys = ["tab"]
+
+# The Introduction content shows no focus marker and the footer doesn't change: the move only takes the cursor off
+# the Introduction tab, which wait.focused can't wait for (it waits for a marker, not for one to go). So sleep.
+[[step]]
+sleep_ms = 500
 
 [[step]]
 capture = "tab-content"
@@ -123,11 +129,17 @@ checks = ["titles", "tabs", "focus"]
 keys = ["tab"]
 
 [[step]]
+wait = { focused = "[1] Repositories" }
+
+[[step]]
 capture = "tab-wrap"
 checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["shift+tab"]
+
+[[step]]
+wait = { focused = "[5] Details" }
 
 [[step]]
 capture = "shift-tab"

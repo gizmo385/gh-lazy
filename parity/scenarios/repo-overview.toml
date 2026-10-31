@@ -59,6 +59,12 @@ wait = { focused = "Details" }
 [[step]]
 keys = ["tab"]
 
+# Python moves focus a tick after a tab (Py bug B121), but nothing on screen shows this move: the content draws no
+# focus marker, the footer is the same with the strip focused, and the only change is the cursor leaving the Repo
+# Overview tab, which wait.focused can't wait for (it waits for a marker, not for one to go). So sleep.
+[[step]]
+sleep_ms = 500
+
 [[step]]
 capture = "content-focused"
 checks = ["titles", "headers", "rows", "cursor", "focus"]

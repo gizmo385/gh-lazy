@@ -7,7 +7,7 @@ cursor 1 4 hidden
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-bot/hello-world Details ─────────────────────────────────────────────────────────┐
 │ ★  Owner       Name         Private                          ││ Repo Overview                                                                                │
-│ ☆  parity-bot  dotfiles     ✘                                ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     ✘                                ││╸╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
 │ ☆  parity-bot  hello-world  ✘                                ││parity-bot/hello-world • Public                                                               │
 │ ☆  parity-bot  lazy-demo    ✘                                ││Owned by parity-bot                                                                           │
 │                                                              ││Default branch: main                                                                          │
@@ -56,47 +56,47 @@ abbbbbbbbbbbbbbccccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 dfgffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde.bbbbbbbbbbbbb................................................................................e
-dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdeijjjjjjjjjjjjjiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiie
-dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkdellllllllllllllllllllllbbbcccccc.............................................................mme
-dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdebbbbbbbbbnnnnnnnnnn.........................................................................mme
-d..............................................................debbbbbbbbbbbbbbbboooo........................................................................mme
-d..............................................................de............................................................................................mme
-d..............................................................debbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...................................................mme
-d..............................................................de............................................................................................mme
-d..............................................................deaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaamme
-d..............................................................de............................................................................................mme
-d..............................................................de............................................................................................mme
-d..............................................................de............................................................................................mme
-d..............................................................de..pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp..mme
-d..............................................................de............................................................................................mme
-d..............................................................de..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbboooobbqqqqqqbbrrrrrrrrrrrbbbbbbbnnnnb......mme
-d..............................................................de..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...................................................mme
-d..............................................................de............................................................................................mme
-d..............................................................de............................................................................................mme
-d..............................................................de..sssssss...................................................................................mme
-d..............................................................de............................................................................................mme
-d..............................................................de..ttttbbbbbbbbbbbbbb........................................................................mme
-d..............................................................de..ttttbbbbrrrrrrrrrrrr......................................................................mme
-d..............................................................de............................................................................................mme
-d..............................................................de..ttbbb.....................................................................................mme
-d..............................................................de..ttbbb.....................................................................................mme
-d..............................................................de..ttttbbbbbbbbbbbbbbbb......................................................................mme
-d..............................................................de............................................................................................mme
-d..............................................................de..uvwwwwwwwwwwwwwwvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv..mme
-d..............................................................de............................................................................................mme
-d..............................................................de..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx..mme
-d..............................................................de..xxyyyyzzzzzzxxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA..BBe
-d..............................................................de..xxyyyyzzzzzzxxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA..CCe
-d..............................................................de..xxxxxxxxxxxxxxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA..CCe
-dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde............................................................................................CCe
-dddddddddddddddddddddDDDDDDDdddddddddddddddddddddddddddddddddddde............................................................................................CCe
-dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa..CCe
-dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde............................................................................................CCe
-ddddddddddddddDDDDDDDddddddddddddddddddddddddddddddddddddddddddde..EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE..CCe
-dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..E.jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj.E.jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj.E..CCe
-dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE..CCe
-dddddddddddddddddDDDDDDDdddddddddddddddddddddddddddddddddddddddde..E.b.....................................E.b............................................E..CCe
-dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE..CCe
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdeiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiie
+djjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjdekkkkkkkkkkkkkkkkkkkkkkbbbcccccc.............................................................lle
+dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdebbbbbbbbbmmmmmmmmmm.........................................................................lle
+d..............................................................debbbbbbbbbbbbbbbbnnnn........................................................................lle
+d..............................................................de............................................................................................lle
+d..............................................................debbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...................................................lle
+d..............................................................de............................................................................................lle
+d..............................................................deaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalle
+d..............................................................de............................................................................................lle
+d..............................................................de............................................................................................lle
+d..............................................................de............................................................................................lle
+d..............................................................de..oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo..lle
+d..............................................................de............................................................................................lle
+d..............................................................de..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbnnnnbbppppppbbqqqqqqqqqqqbbbbbbbmmmmb......lle
+d..............................................................de..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...................................................lle
+d..............................................................de............................................................................................lle
+d..............................................................de............................................................................................lle
+d..............................................................de..rrrrrrr...................................................................................lle
+d..............................................................de............................................................................................lle
+d..............................................................de..ssssbbbbbbbbbbbbbb........................................................................lle
+d..............................................................de..ssssbbbbqqqqqqqqqqqq......................................................................lle
+d..............................................................de............................................................................................lle
+d..............................................................de..ssbbb.....................................................................................lle
+d..............................................................de..ssbbb.....................................................................................lle
+d..............................................................de..ssssbbbbbbbbbbbbbbbb......................................................................lle
+d..............................................................de............................................................................................lle
+d..............................................................de..tuvvvvvvvvvvvvvvuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu..lle
+d..............................................................de............................................................................................lle
+d..............................................................de..wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww..lle
+d..............................................................de..wwxxxxyyyyyywwzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz..AAe
+d..............................................................de..wwxxxxyyyyyywwzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz..BBe
+d..............................................................de..wwwwwwwwwwwwwwzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz..BBe
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde............................................................................................BBe
+dddddddddddddddddddddCCCCCCCdddddddddddddddddddddddddddddddddddde............................................................................................BBe
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa..BBe
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde............................................................................................BBe
+ddddddddddddddCCCCCCCddddddddddddddddddddddddddddddddddddddddddde..DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD..BBe
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..D.EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE.D.EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE.D..BBe
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD..BBe
+dddddddddddddddddCCCCCCCdddddddddddddddddddddddddddddddddddddddde..D.b.....................................D.b............................................D..BBe
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD..BBe
 ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 FFFFGGGGGGGGGGGFFFGGGGGGGGGGGGFFFGGGGGGGGGGGGGGGGGGGGGGFFFGGGGGFFFFGGGGGGGGGGGGGGGGFFFGGGGGGGGGFFFGGGGGGGGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 --- legend
@@ -110,28 +110,28 @@ f fg=#e0e0e0 bg=#242f38 bold
 g fg=#98e024 bg=#242f38 bold
 h fg=#e0e0e0 bg=#1e1e1e
 i fg=#262626 bg=#121212
-j fg=#0178d4 bg=#121212
-k fg=#e0e0e0 bg=#153854
-l fg=#e0e0e0 bg=#121212 bold underline
-m fg=#003054 bg=#121212 inverse
-n fg=#e0e0e0 bg=#121212 underline
-o fg=#e0e0e0 bg=#121212 bold
-p fg=#0178d4 bg=#121212 bold
-q fg=#e0e0e0 bg=#121212 italic
-r fg=#f4bb6e bg=#241d13
-s fg=#0178d4 bg=#121212 underline
-t fg=#57a5e2 bg=#121212
-u fg=#345b7a bg=#1b1b1b
-v bg=#1b1b1b
-w fg=#e0e0e0 bg=#1b1b1b
-x bg=#101010
-y fg=#ffc473 bg=#101010
-z fg=#ffffff bg=#101010
-A fg=#d2d2d2 bg=#101010
-B fg=#003054 bg=#000000 inverse
-C fg=#e0e0e0 bg=#000000
-D fg=#4e7bae bg=#121212
-E fg=#3b3b3b bg=#121212
+j fg=#e0e0e0 bg=#153854
+k fg=#e0e0e0 bg=#121212 bold underline
+l fg=#003054 bg=#121212 inverse
+m fg=#e0e0e0 bg=#121212 underline
+n fg=#e0e0e0 bg=#121212 bold
+o fg=#0178d4 bg=#121212 bold
+p fg=#e0e0e0 bg=#121212 italic
+q fg=#f4bb6e bg=#241d13
+r fg=#0178d4 bg=#121212 underline
+s fg=#57a5e2 bg=#121212
+t fg=#345b7a bg=#1b1b1b
+u bg=#1b1b1b
+v fg=#e0e0e0 bg=#1b1b1b
+w bg=#101010
+x fg=#ffc473 bg=#101010
+y fg=#ffffff bg=#101010
+z fg=#d2d2d2 bg=#101010
+A fg=#003054 bg=#000000 inverse
+B fg=#e0e0e0 bg=#000000
+C fg=#4e7bae bg=#121212
+D fg=#3b3b3b bg=#121212
+E fg=#0178d4 bg=#121212
 F fg=#ffa62b bg=#242f38 bold
 G fg=#e0e0e0 bg=#242f38
 H bg=#242f38

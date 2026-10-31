@@ -51,9 +51,13 @@ wait = { text = "Workaround: delete the file", timeout_ms = 15000 }
 capture = "overview"
 checks = ["titles", "headers", "rows", "cursor", "focus"]
 
-# The Overview's content: `E Edit Issue` joins the footer.
+# The Overview's content: `E Edit Issue` joins the footer. Python moves focus a tick after a tab (Py bug B121), so
+# the capture waits for the footer to lead with it.
 [[step]]
 keys = ["tab"]
+
+[[step]]
+wait = { regex = '(?m)^ E Edit Issue  ' }
 
 [[step]]
 capture = "overview-content"
@@ -79,6 +83,9 @@ checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 # Tab: the comments' scroll area, then the first comment, drawn with a dashed border.
 [[step]]
 keys = ["tab", "tab"]
+
+[[step]]
+wait = { focused = "I can reproduce it on main" }
 
 [[step]]
 capture = "comment-focused"

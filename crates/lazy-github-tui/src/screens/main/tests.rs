@@ -109,6 +109,7 @@ fn borders_follow_focus() {
                     focused: true,
                     focus_within: true,
                     links: None,
+                    hyperlinks: None,
                 };
                 screen.render(frame, frame.area(), &cx);
             })

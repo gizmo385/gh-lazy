@@ -171,6 +171,7 @@ impl DetailsBody for PullRequestDetails {
             animations: false,
             focused,
             links: None,
+            hyperlinks: None,
         };
         self.render_timed(tab, frame, area, &cx);
     }

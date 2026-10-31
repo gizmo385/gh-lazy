@@ -17,6 +17,7 @@ pub mod effect;
 pub mod event;
 pub mod fuzzy;
 pub mod gh_health;
+pub mod hyperlink;
 pub mod keymap;
 pub mod modal;
 pub mod notifications;

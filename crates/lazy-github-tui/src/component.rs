@@ -581,4 +581,8 @@ pub struct RenderCx<'a> {
     /// Where the views that draw links record them, for this frame's [`LinkMap`](crate::components::link_map::LinkMap):
     /// the main screen's draw has one, and a view drawn without one records nothing.
     pub links: Option<&'a LinkSink>,
+    /// Where the few views that draw terminal hyperlinks (OSC 8) record them, for this frame's
+    /// [`Hyperlinks`](crate::hyperlink::Hyperlinks). Kept apart from [`Self::links`]: a terminal hyperlink is opened by
+    /// the terminal, and isn't an in-app link unless the view records it in both.
+    pub hyperlinks: Option<&'a LinkSink>,
 }

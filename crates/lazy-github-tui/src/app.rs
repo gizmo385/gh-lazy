@@ -30,6 +30,7 @@ use crate::components::too_small::{TooSmall, is_too_small};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::event::Event;
 use crate::gh_health::GhHealth;
+use crate::hyperlink::Hyperlinks;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
 use crate::modal::{
     CommandPaletteDialog, CommandSource, DebugInfoDialog, DialogFrame, LinkHintsDialog, ModalEntry, ModalKind,
@@ -131,6 +132,8 @@ pub struct App {
     links: LinkMap,
     /// The links the top dialog's markdown drew in the last frame, for clicks.
     dialog_links: LinkMap,
+    /// The terminal hyperlinks (OSC 8) the last frame shows, for the terminal loop to write.
+    hyperlinks: Hyperlinks,
     /// The link a left press landed on, until the release: a click follows it when both land on it.
     pressed_link: Option<ScreenLink>,
     /// Where the mouse was at the last mouse event, for hover highlights. Each frame checks it against that frame's
@@ -179,6 +182,7 @@ impl App {
             footer_hits: Vec::new(),
             links: LinkMap::default(),
             dialog_links: LinkMap::default(),
+            hyperlinks: Hyperlinks::default(),
             pressed_link: None,
             mouse: None,
             mouse_capture: None,
@@ -525,6 +529,11 @@ impl App {
     #[cfg(test)]
     pub(crate) fn dialog_links(&self) -> &LinkMap {
         &self.dialog_links
+    }
+
+    /// The terminal hyperlinks the last frame shows, on the cells nothing was drawn over.
+    pub fn hyperlinks(&self) -> &Hyperlinks {
+        &self.hyperlinks
     }
 
     /// Tries each binding a key fired in one link, in order, until one applies (Textual's `_check_bindings`).
@@ -1296,6 +1305,7 @@ impl App {
     pub fn render(&mut self, frame: &mut Frame<'_>) {
         let area = frame.area();
         self.size = Some(area.as_size());
+        self.hyperlinks = Hyperlinks::default();
         if self.too_small() {
             // Nothing drawn this frame takes a click.
             self.footer_hits.clear();
@@ -1315,6 +1325,7 @@ impl App {
         // `handle_event` already dropped the expired ones: the loop wakes for each deadline.
         self.toasts.render(frame, frame.area(), &self.shared.theme);
         self.render_overlays(frame);
+        self.hyperlinks.retain_drawn(frame.buffer_mut());
     }
 
     /// The overlay dialogs (link hints), over everything else, toasts included.
@@ -1327,6 +1338,7 @@ impl App {
             focused: true,
             focus_within: true,
             links: None,
+            hyperlinks: None,
         };
         for entry in self.modals.iter_mut().filter(|entry| entry.overlay()) {
             entry.interior = area;
@@ -1353,6 +1365,7 @@ impl App {
             area,
         );
         let links = LinkSink::default();
+        let hyperlinks = LinkSink::default();
         let cx = RenderCx {
             theme,
             keymap: &self.shared.keymap,
@@ -1360,6 +1373,7 @@ impl App {
             focused: true,
             focus_within: true,
             links: Some(&links),
+            hyperlinks: Some(&hyperlinks),
         };
         let footer_area = match &mut self.base {
             BaseScreen::Startup(_) => None,
@@ -1422,6 +1436,7 @@ impl App {
             None => Vec::new(),
         };
         self.links = links.take();
+        self.hyperlinks.capture(frame.buffer_mut(), &hyperlinks.take());
     }
 
     /// Each dialog, bottom to top, over everything drawn before it, dimmed: its frame centered above the bottom row,
@@ -1440,7 +1455,9 @@ impl App {
             })
             .collect();
         let theme = self.shared.theme;
-        // Only the top dialog takes clicks, so only its links are kept.
+        // Only the top dialog takes clicks, so only its links are kept. Every dialog's terminal hyperlinks are,
+        // each dialog's taken as soon as it's drawn, before the next one dims it.
+        let hyperlinks = LinkSink::default();
         let cx = RenderCx {
             theme: &theme,
             keymap: &self.shared.keymap,
@@ -1448,6 +1465,7 @@ impl App {
             focused: true,
             focus_within: true,
             links: None,
+            hyperlinks: Some(&hyperlinks),
         };
         let links = LinkSink::default();
         let top_cx = RenderCx {
@@ -1475,6 +1493,7 @@ impl App {
             if entry.frameless() {
                 entry.interior = area;
                 entry.render(frame, area, cx);
+                self.hyperlinks.capture(frame.buffer_mut(), &hyperlinks.take());
                 continue;
             }
             let rect = entry.frame(area);
@@ -1512,6 +1531,7 @@ impl App {
             }
             entry.interior = DialogFrame::interior(rect);
             entry.render(frame, entry.interior, cx);
+            self.hyperlinks.capture(frame.buffer_mut(), &hyperlinks.take());
         }
         self.footer_hits = hits;
         self.dialog_links = links.take();

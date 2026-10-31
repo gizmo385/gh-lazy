@@ -107,6 +107,7 @@ fn draw<T: TableItem>(table: &mut SearchableTable<T>, focused: bool, width: u16,
                 focused,
                 focus_within: focused,
                 links: None,
+                hyperlinks: None,
             };
             table.render(frame, frame.area(), &cx);
         })

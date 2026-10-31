@@ -26,6 +26,7 @@ use tokio::sync::mpsc;
 use crate::app::App;
 use crate::backend::WideEmojiBackend;
 use crate::event::{Event, Signal};
+use crate::hyperlink::{HyperlinkBackend, HyperlinkWriter};
 use crate::runtime::Runtime;
 
 /// How many already-queued events are applied between two draws, at most, so a flood can't starve drawing.
@@ -400,7 +401,7 @@ struct Inputs {
 
 /// Runs `app` until it quits. `guard` is what a `SIGTSTP` restores and resumes; without one the process doesn't
 /// stop, and the screen is only drawn again.
-async fn event_loop<G: Github, B: Backend, W: Write>(
+async fn event_loop<G: Github, B: HyperlinkBackend, W: Write>(
     app: &mut App,
     runtime: &mut Runtime<G>,
     terminal: &mut Terminal<B>,
@@ -412,8 +413,15 @@ where
     B::Error: Send + Sync + 'static,
 {
     let mut exit = Exit::Quit;
+    let mut hyperlinks = HyperlinkWriter::for_terminal();
     while !app.should_quit() {
-        terminal.draw(|frame| app.render(frame))?;
+        let mut link_writes = Vec::new();
+        terminal.draw(|frame| {
+            app.render(frame);
+            link_writes = hyperlinks.prepare(frame.buffer_mut(), app.hyperlinks());
+        })?;
+        // After the frame, as ratatui's buffer can't hold a hyperlink.
+        HyperlinkWriter::write(terminal.backend_mut(), &link_writes)?;
         let deadline = app.next_deadline();
         let event = tokio::select! {
             biased;

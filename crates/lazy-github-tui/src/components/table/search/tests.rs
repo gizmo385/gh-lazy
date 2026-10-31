@@ -114,6 +114,7 @@ fn draw(table: &mut SearchableTable<Repo>, focused: bool) -> Buffer {
                 focused,
                 focus_within: focused,
                 links: None,
+                hyperlinks: None,
             };
             table.render(frame, frame.area(), &cx);
         })

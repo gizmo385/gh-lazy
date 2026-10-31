@@ -431,6 +431,7 @@ fn draw(dialog: &mut NewCommentDialog) -> String {
                 focused: true,
                 focus_within: true,
                 links: None,
+                hyperlinks: None,
             };
             dialog.render(frame, super::super::DialogFrame::interior(rect), &cx);
         })
@@ -548,6 +549,7 @@ fn links_in_the_quote_and_the_preview_land_where_they_are_drawn() {
                 focused: true,
                 focus_within: true,
                 links: Some(&sink),
+                hyperlinks: None,
             };
             let rect = Rect::new(0, 0, 100, 50);
             dialog.render(frame, super::super::DialogFrame::interior(rect), &cx);

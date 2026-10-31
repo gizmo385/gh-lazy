@@ -360,3 +360,36 @@ fn user_profile_organization_160x48() {
     let mut app = app_with(UserProfileDialog::new(parity_org(), Vec::new()));
     insta::assert_snapshot!(app.screen(160, 48));
 }
+
+// Terminal hyperlinks (#356).
+
+#[test]
+fn the_login_is_a_terminal_hyperlink_and_the_bio_links_are_not() {
+    let mut user = parity_bot();
+    user.bio = Some("See [the docs](https://example.com/docs).".to_owned());
+    let mut app = app_with(UserProfileDialog::new(user, parity_bot_repos()));
+    let screen = app.screen(120, 40);
+    let (row, line) = screen
+        .lines()
+        .enumerate()
+        .find(|(_, line)| line.contains("(@parity-bot)"))
+        .unwrap();
+    let column = line[..line.find("@parity-bot").unwrap()].chars().count();
+    assert_eq!(
+        app.hyperlinks(120, 40),
+        [(
+            (u16::try_from(column).unwrap(), u16::try_from(row).unwrap()),
+            "@parity-bot".to_owned(),
+            "https://github.com/parity-bot".to_owned()
+        )]
+    );
+}
+
+#[test]
+fn a_login_scrolled_out_of_view_is_not_linked() {
+    let mut app = full_app();
+    app.press(&["j", "j", "j", "j"]);
+    let screen = app.screen(120, 12);
+    assert!(!screen.contains("@parity-bot)"), "{screen}");
+    assert!(app.hyperlinks(120, 12).is_empty());
+}

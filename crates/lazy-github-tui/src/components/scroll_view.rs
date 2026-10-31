@@ -13,7 +13,7 @@ use ratatui::widgets::Paragraph;
 use super::command_log::{WHEEL_ROWS, Wheel};
 use super::info::Scroll;
 use super::link_map::LinkSink;
-use super::markdown::Rendered;
+use super::markdown::{LinkSpan, Rendered};
 use crate::theme::Theme;
 
 /// Textual's vertical scrollbar width.
@@ -235,11 +235,21 @@ impl ScrollView {
     /// Records into `links` the links of `text` as the last [`Self::render`] in `area` drew them: laid out at the width
     /// it got, scrolled to its offset, and cut to the rows and columns on screen.
     pub fn record_links(&self, area: Rect, theme: &Theme, text: &mut impl Layout, links: &LinkSink) {
-        let width = Self::content_width(area, self.last.0);
+        let width = self.text_width(area);
         let rendered = text.layout(width, theme);
-        links
-            .borrow_mut()
-            .record(Rect { width, ..area }, self.offset, &rendered.links);
+        self.record_spans(area, &rendered.links, links);
+    }
+
+    /// Records into `links` some of the link `spans` of the text the last [`Self::render`] in `area` drew, laid out
+    /// at [`Self::text_width`], as [`Self::record_links`] records all of them.
+    pub fn record_spans(&self, area: Rect, spans: &[LinkSpan], links: &LinkSink) {
+        let width = self.text_width(area);
+        links.borrow_mut().record(Rect { width, ..area }, self.offset, spans);
+    }
+
+    /// The width the last [`Self::render`] in `area` laid its text out at.
+    pub fn text_width(&self, area: Rect) -> u16 {
+        Self::content_width(area, self.last.0)
     }
 
     /// Draws `text`, with a scrollbar in the last two columns when it overflows.

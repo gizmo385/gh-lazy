@@ -33,7 +33,7 @@ use crate::keymap::BindingId;
 use crate::theme::Theme;
 
 use super::MainAction;
-use super::details::{DetailsBody, MaximizeScope};
+use super::details::{BodyRenderCx, DetailsBody, MaximizeScope};
 pub(super) use jobs::JobsTab;
 pub(super) use logs::LogsTab;
 use logs::Next;
@@ -322,9 +322,17 @@ impl DetailsBody for RunDetails {
 
     fn render(&mut self, tab: usize, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool) {
         match RunTab::at(tab) {
-            RunTab::Overview => self.overview.render(frame, area, theme, focused),
+            RunTab::Overview => self.overview.render(frame, area, theme, focused, None),
             RunTab::Jobs => self.jobs_tab.render(frame, area, theme, focused),
             RunTab::Logs => self.logs_tab.render(frame, area, theme),
+        }
+    }
+
+    /// The Overview records its `(#N)` terminal hyperlink.
+    fn render_timed(&mut self, tab: usize, frame: &mut Frame<'_>, area: Rect, cx: &BodyRenderCx<'_>) {
+        match RunTab::at(tab) {
+            RunTab::Overview => self.overview.render(frame, area, cx.theme, cx.focused, cx.hyperlinks),
+            _ => self.render(tab, frame, area, cx.theme, cx.focused),
         }
     }
 

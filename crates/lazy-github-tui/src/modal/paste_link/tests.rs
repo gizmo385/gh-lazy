@@ -329,6 +329,7 @@ fn draw(dialog: &mut PasteLinkDialog) -> String {
                 focused: true,
                 focus_within: true,
                 links: None,
+                hyperlinks: None,
             };
             dialog.render(frame, DialogFrame::interior(area), &cx);
         })

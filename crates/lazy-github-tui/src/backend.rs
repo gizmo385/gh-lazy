@@ -36,6 +36,11 @@ impl<B> WideEmojiBackend<B> {
     pub const fn inner(&self) -> &B {
         &self.inner
     }
+
+    /// The wrapped backend, to write to it directly (the hyperlink sequences, `crate::hyperlink`).
+    pub const fn inner_mut(&mut self) -> &mut B {
+        &mut self.inner
+    }
 }
 
 /// Whether the terminal may draw `cell` narrower than ratatui counts it: a wide cell holding U+FE0F.

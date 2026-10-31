@@ -138,6 +138,21 @@ impl ProfileBody {
             .collect()
     }
 
+    /// The cells `@login` covers in the layout `width` wide: the header's link, a terminal hyperlink to the profile,
+    /// as Python's. The bio's links aren't, as Textual's `Markdown` follows those itself.
+    fn login_links(&mut self, width: u16, theme: &Theme) -> Vec<LinkSpan> {
+        let inner = content_width(width);
+        if inner == 0 {
+            return Vec::new();
+        }
+        let lines = Lines::new(inner, theme);
+        // The header is the body's first linked text, so its spans lead the body's.
+        let count = markdown::wrap_text(&lines.header_runs(&self.user), lines.width)
+            .links
+            .len();
+        self.layout(width, theme).links.iter().take(count).cloned().collect()
+    }
+
     /// The content lines the table takes at `width` (the body's text width), as laid out.
     fn table_rows(&mut self, width: u16, theme: &Theme) -> Option<std::ops::Range<usize>> {
         let height = usize::from(table_height(self.table.as_ref()?, content_width(width)));
@@ -312,6 +327,10 @@ impl Component for UserProfileDialog {
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
         self.scroll.render(frame, area, theme, &mut self.body);
+        if let Some(hyperlinks) = cx.hyperlinks {
+            let login = self.body.login_links(self.scroll.text_width(area), theme);
+            self.scroll.record_spans(area, &login, hyperlinks);
+        }
         self.table_view = None;
         self.last_table_rows = None;
 
@@ -558,6 +577,12 @@ impl Lines {
 
     /// "<name> (@login) — <type>", and a rule.
     fn header(&mut self, user: &FullUser) {
+        self.label(&self.header_runs(user));
+        self.rule();
+    }
+
+    /// The header's text, `@login` linking to the profile.
+    fn header_runs(&self, user: &FullUser) -> [TextRun; 4] {
         let login = &user.user.login;
         let name = user
             .user
@@ -571,13 +596,12 @@ impl Lines {
             .filter(|kind| !kind.is_empty())
             .unwrap_or("User")
             .to_lowercase();
-        self.label(&[
+        [
             TextRun::new(name, self.bold),
             TextRun::new(" (", self.text),
             TextRun::link(format!("@{login}"), self.text, user.user.html_url.clone()),
             TextRun::new(format!(") — {kind}"), self.text),
-        ]);
-        self.rule();
+        ]
     }
 
     /// Company, Location, Email, Blog and Twitter, each when set and not empty, and a rule when any is.

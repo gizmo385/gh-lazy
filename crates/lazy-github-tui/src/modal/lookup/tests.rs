@@ -553,6 +553,7 @@ fn draw<K: LookupKind>(dialog: &mut LookupDialog<K>) -> String {
                 focused: true,
                 focus_within: true,
                 links: None,
+                hyperlinks: None,
             };
             dialog.render(frame, DialogFrame::interior(area), &cx);
         })

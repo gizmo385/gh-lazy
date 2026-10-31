@@ -264,6 +264,8 @@ pub(super) struct BodyRenderCx<'a> {
     pub(super) focused: bool,
     /// Where the links the content draws are recorded, when the frame keeps them.
     pub(super) links: Option<&'a LinkSink>,
+    /// Where the terminal hyperlinks the content draws are recorded, when the frame keeps them.
+    pub(super) hyperlinks: Option<&'a LinkSink>,
 }
 
 /// A tab switch: `textual.tabs.next_tab`, `textual.tabs.previous_tab` or a click on a tab.
@@ -778,6 +780,7 @@ impl DetailsPane {
             animations: self.animations,
             focused: focus == FocusTarget::DetailsContent,
             links: cx.links,
+            hyperlinks: cx.hyperlinks,
         };
         self.body.get_mut().render_timed(tab, frame, body, &body_cx);
         [(tabs, FocusTarget::DetailsTabs), (body, FocusTarget::DetailsContent)]

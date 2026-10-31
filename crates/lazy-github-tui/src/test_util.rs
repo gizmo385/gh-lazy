@@ -556,6 +556,21 @@ impl TestApp {
         terminal.backend().buffer().clone()
     }
 
+    /// Draws the app at `cols` x `rows` and returns the terminal hyperlinks it shows, each as its first cell, its text
+    /// and its URL.
+    pub fn hyperlinks(&mut self, cols: u16, rows: u16) -> Vec<((u16, u16), String, String)> {
+        self.render(cols, rows);
+        self.app
+            .hyperlinks()
+            .runs()
+            .iter()
+            .map(|run| {
+                let text = run.cells.iter().map(ratatui::buffer::Cell::symbol).collect();
+                ((run.x, run.y), text, run.url.to_string())
+            })
+            .collect()
+    }
+
     /// Draws the app and returns its characters, one line per row: the standard snapshot.
     pub fn screen(&mut self, cols: u16, rows: u16) -> String {
         buffer_to_string(&self.render(cols, rows))

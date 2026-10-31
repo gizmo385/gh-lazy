@@ -1493,3 +1493,40 @@ mod gh_failures {
         }
     }
 }
+
+// Terminal hyperlinks (#356).
+
+#[test]
+fn the_run_number_is_a_terminal_hyperlink_but_no_in_app_link() {
+    let mut app = selected(42);
+    let (row, column) = find(&mut app, "(#42)");
+    let url = fixture_run(42).html_url;
+    assert_eq!(
+        app.hyperlinks(160, 48),
+        [((column, row), "(#42)".to_owned(), url.clone())]
+    );
+    // Not a click or hint target (#196).
+    assert!(app.app().links().iter().all(|link| *link.target != *url));
+}
+
+#[test]
+fn a_dialog_over_the_overview_leaves_only_its_own_hyperlinks() {
+    let mut app = selected(42);
+    let user: lazy_github_core::models::FullUser =
+        serde_json::from_value(serde_json::json!({"login": "a", "id": 7, "html_url": "https://github.com/a"})).unwrap();
+    app.with_cx(|cx| {
+        cx.open_dialog(crate::modal::UserProfileDialog::new(user, Vec::new()), |_| {
+            crate::action::Action::Consumed
+        });
+    });
+    let links = app.hyperlinks(160, 48);
+    let texts: Vec<&str> = links.iter().map(|(_, text, _)| text.as_str()).collect();
+    // The dimmed screen below isn't linked.
+    assert_eq!(texts, ["@a"]);
+}
+
+#[test]
+fn a_terminal_too_small_has_no_hyperlinks() {
+    let mut app = selected(42);
+    assert!(app.hyperlinks(20, 5).is_empty());
+}

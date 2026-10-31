@@ -17,6 +17,7 @@ use ratatui::text::Line;
 use crate::components::button::{self, Button, ButtonVariant};
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
+use crate::components::link_map::LinkSink;
 use crate::components::markdown::{Markdown, Rendered, TextRun};
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::theme::Theme;
@@ -196,9 +197,20 @@ impl RunOverview {
     }
 
     /// Draws the body into `area`, and the shown buttons over the blank rows it leaves for them. `focused` says whether
-    /// focus is inside the content.
-    pub(super) fn render(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool) {
+    /// focus is inside the content. The body's only link, `(#N)`, is a terminal hyperlink, recorded into `hyperlinks`
+    /// when the frame keeps them; it's no in-app link (#196).
+    pub(super) fn render(
+        &mut self,
+        frame: &mut Frame<'_>,
+        area: Rect,
+        theme: &Theme,
+        focused: bool,
+        hyperlinks: Option<&LinkSink>,
+    ) {
         self.scroll.render(frame, area, theme, &mut self.body);
+        if let Some(hyperlinks) = hyperlinks {
+            self.scroll.record_links(area, theme, &mut self.body, hyperlinks);
+        }
         self.button_areas.clear();
         let (content, window) = self.scroll.last_size();
         let offset = self.scroll.offset();
@@ -312,12 +324,14 @@ fn overview(
     let heading = |out: &mut Rendered, label: &str| push_label(out, &[TextRun::new(label, bold)], width);
 
     let (status, tint) = run_status(run);
-    // The title as typed: Python passes it as a markup variable, so brackets in it are text.
+    // The title as typed: Python passes it as a markup variable, so brackets in it are text. `(#N)` links to the run
+    // in the browser, through the terminal.
     let header = [
         TextRun::new(status, tint.style(theme)),
         TextRun::new(" ", text),
         TextRun::new(run.display_title.as_str(), bold),
-        TextRun::new(format!(" (#{})", run.run_number), text),
+        TextRun::new(" ", text),
+        TextRun::link(format!("(#{})", run.run_number), text, run.html_url.as_str()),
     ];
     push_label(&mut out, &header, width);
     append(&mut out, fields.layout(width, theme));
@@ -442,9 +456,14 @@ mod tests {
         assert_eq!(header[0].content, "✗ Failure");
         assert_eq!(header[0].style.fg, Some(theme.accent(crate::theme::Accent::Red)));
         assert!(header[2].style.add_modifier.contains(Modifier::BOLD));
-        assert!(!header[3].style.add_modifier.contains(Modifier::BOLD));
-        // No links: `(#42)` is plain text here (#196).
-        assert!(rendered.links.is_empty());
+        assert!(!header[4].style.add_modifier.contains(Modifier::BOLD));
+        // The one link is `(#42)`, the run's page, which the Overview records as a terminal hyperlink only (#196, #356).
+        let links: Vec<_> = rendered
+            .links
+            .iter()
+            .map(|l| (l.row, l.columns.clone(), &*l.target))
+            .collect();
+        assert_eq!(links, [(0, 29..34, run.html_url.as_str())]);
     }
 
     #[test]

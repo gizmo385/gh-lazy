@@ -15,7 +15,7 @@ mod palette;
 
 use std::fmt;
 
-use ratatui::style::{Color, Style};
+use ratatui::style::{Color, Modifier, Style};
 
 pub use accent::{Accent, RichAnsi};
 pub use color::{AnsiColor, Paint, Rgb, TextStyle, ThemeColor};
@@ -26,6 +26,9 @@ use palette::{BUILTIN, ThemeDef};
 
 /// The theme Python falls back to for an unknown name, and the default.
 const DEFAULT: &str = "textual-dark";
+
+/// The alpha Textual draws Rich's `dim` text color at: blended 66% of the way from what's under it.
+const RICH_DIM_ALPHA: f64 = 0.66;
 
 /// One of Textual's built-in themes. A small `Copy` handle onto its static palette.
 #[derive(Clone, Copy, PartialEq)]
@@ -127,6 +130,17 @@ impl Theme {
     pub fn fg_on(&self, fg: ThemeColor, bg: ThemeColor, under: Paint) -> Style {
         let bg = bg.over(under);
         Style::new().fg(self.paint(fg.over(bg))).bg(self.paint(bg))
+    }
+
+    /// `style`, whose text is `fg` drawn over `under`, with Rich's `dim` (`[dim]…[/dim]` markup) applied as Textual
+    /// resolves it: `fg` at 66% alpha over `under`. Textual can't blend the terminal's own colors, so an ANSI `fg`
+    /// keeps its color and gets SGR 2, leaving the dimming to the terminal.
+    #[must_use]
+    pub fn rich_dim(&self, style: Style, fg: ThemeColor, under: Paint) -> Style {
+        match fg {
+            ThemeColor::Ansi(_) => style.add_modifier(Modifier::DIM),
+            fg => style.fg(self.color(fg.multiply_alpha(RICH_DIM_ALPHA), under)),
+        }
     }
 
     /// Textual's `background-tint: <tint> <percent>%` on `base`, as focused `DataTable`s and `Log`s use

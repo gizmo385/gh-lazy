@@ -13,10 +13,7 @@ use ratatui::widgets::{Block, Paragraph, StatefulWidget, Widget};
 use crate::components::command_log::{WHEEL_ROWS, Wheel};
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
 use crate::keymap::ActiveBinding;
-use crate::theme::{AnsiColor, Paint, Theme, ThemeColor};
-
-/// Rich's `dim`, as Textual resolves it: the text color blended 66% of the way from the background.
-const DIM_FACTOR: f64 = 0.66;
+use crate::theme::{AnsiColor, Paint, Theme};
 
 /// The panel's left border glyph (Textual's `vkey` border).
 const BORDER: &str = "▏";
@@ -98,11 +95,7 @@ impl HelpStyles {
         let palette = theme.palette;
         let bg = theme.background();
         let description = Style::new().fg(theme.color(palette.foreground, bg));
-        let tooltip = match palette.foreground {
-            // Textual can't blend the terminal's own colors, so the terminal dims them.
-            ThemeColor::Ansi(_) => description.add_modifier(Modifier::DIM),
-            fg => Style::new().fg(theme.color(fg.multiply_alpha(DIM_FACTOR), bg)),
-        };
+        let tooltip = theme.rich_dim(description, palette.foreground, bg);
         Self {
             key: Style::new()
                 .fg(theme.color(palette.text_accent, bg))

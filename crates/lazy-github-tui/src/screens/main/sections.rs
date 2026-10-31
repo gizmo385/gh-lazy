@@ -2,7 +2,7 @@
 
 use std::borrow::Cow;
 
-use ratatui::style::{Modifier, Style};
+use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Block;
 
@@ -17,8 +17,8 @@ const TITLE_RESERVED: usize = 6;
 pub(super) const EMPTY_SUFFIX: &str = "(empty)";
 
 /// A box `width` cells wide titled `┌─ {title} ─…┐`, its border and title in `$success` when focus is within it
-/// and `$primary-lighten-3` otherwise. A `dim` suffix follows the title after a blank, dimmed, as a compact
-/// section's ` (empty)` is.
+/// and `$primary-lighten-3` otherwise. A `dim` suffix follows the title after a blank, dimmed the way Textual
+/// resolves Rich's `dim` ([`Theme::rich_dim`]), as a compact section's ` (empty)` is.
 ///
 /// Like Textual, a title too long for the box is cut to `width - 6` cells ending in `…`, keeping the `─` before
 /// the closing corner, and a box with no room for any title cell draws none. The title and its suffix are cut as
@@ -30,6 +30,7 @@ pub(super) fn titled_box<'a>(title: &str, dim: Option<&str>, width: u16, focused
         theme.palette.primary_lighten_3
     };
     let border = Style::new().fg(theme.color(slot, theme.background()));
+    let dimmed_style = theme.rich_dim(border, slot, theme.background());
     let block = Block::bordered().border_style(border);
     let title = display::sanitize(title);
     let title = title.as_ref();
@@ -49,7 +50,7 @@ pub(super) fn titled_box<'a>(title: &str, dim: Option<&str>, width: u16, focused
     let (plain, dimmed) = split_at_cell(&fitted, dim_from);
     let mut spans = vec![Span::styled("─", border), Span::styled(format!(" {plain}"), border)];
     if !dimmed.is_empty() {
-        spans.push(Span::styled(dimmed.to_owned(), border.add_modifier(Modifier::DIM)));
+        spans.push(Span::styled(dimmed.to_owned(), dimmed_style));
     }
     spans.push(Span::styled(" ", border));
     block.title(Line::from(spans))
@@ -85,14 +86,14 @@ fn cell_width(s: &str) -> usize {
 mod tests {
     use ratatui::Terminal;
     use ratatui::backend::TestBackend;
+    use ratatui::style::{Color, Modifier};
 
     use super::*;
 
-    fn top_buffer(title: &str, dim: Option<&str>, width: u16) -> ratatui::buffer::Buffer {
-        let theme = Theme::default();
+    fn top_buffer(title: &str, dim: Option<&str>, width: u16, theme: &Theme) -> ratatui::buffer::Buffer {
         let mut terminal = Terminal::new(TestBackend::new(width, 3)).unwrap();
         terminal
-            .draw(|frame| frame.render_widget(titled_box(title, dim, width, false, &theme), frame.area()))
+            .draw(|frame| frame.render_widget(titled_box(title, dim, width, false, theme), frame.area()))
             .unwrap();
         terminal.backend().buffer().clone()
     }
@@ -101,20 +102,37 @@ mod tests {
         dim_row(title, None, width).0
     }
 
-    /// The top row, and under it a `d` for each dim cell.
+    /// The top row, and under it a `d` for each cell styled unlike the border, as only dim cells are.
     fn dim_row(title: &str, dim: Option<&str>, width: u16) -> (String, String) {
-        let buffer = top_buffer(title, dim, width);
+        let buffer = top_buffer(title, dim, width, &Theme::default());
         let row = (0..width).map(|x| buffer[(x, 0)].symbol()).collect();
+        let border = buffer[(0, 0)].style();
         let dims = (0..width)
-            .map(|x| {
-                if buffer[(x, 0)].modifier.contains(Modifier::DIM) {
-                    'd'
-                } else {
-                    ' '
-                }
-            })
+            .map(|x| if buffer[(x, 0)].style() == border { ' ' } else { 'd' })
             .collect::<String>();
         (row, dims.trim_end().to_owned())
+    }
+
+    #[test]
+    fn the_empty_suffix_is_blended_toward_the_background_like_textuals_dim() {
+        // textual-dark: the unfocused border `#6db2ff` at 66% over `#121212` is `#4e7bae`, as Textual draws it.
+        let buffer = top_buffer("[4] Workflows", Some(EMPTY_SUFFIX), 40, &Theme::default());
+        let cell = &buffer[(17, 0)];
+        assert_eq!(cell.symbol(), "(");
+        assert_eq!(cell.fg, Color::Rgb(0x4e, 0x7b, 0xae));
+        assert!(!cell.modifier.contains(Modifier::DIM));
+        assert_eq!(buffer[(3, 0)].fg, Color::Rgb(0x6d, 0xb2, 0xff));
+    }
+
+    #[test]
+    fn on_an_ansi_theme_the_terminal_dims_the_empty_suffix() {
+        let theme = Theme::by_name("ansi-dark").unwrap();
+        let buffer = top_buffer("[4] Workflows", Some(EMPTY_SUFFIX), 40, &theme);
+        let (title, suffix) = (&buffer[(3, 0)], &buffer[(17, 0)]);
+        assert_eq!(suffix.symbol(), "(");
+        assert_eq!(suffix.fg, title.fg);
+        assert!(suffix.modifier.contains(Modifier::DIM));
+        assert!(!title.modifier.contains(Modifier::DIM));
     }
 
     #[test]

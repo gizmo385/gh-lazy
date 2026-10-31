@@ -71,9 +71,6 @@ const NO_MATCHES_AFTER: Duration = Duration::from_millis(500);
 /// The row shown then.
 const NO_MATCHES: &str = "No matches found";
 
-/// Rich's `dim`, as Textual resolves it: the text color blended 66% of the way from the background.
-const DIM_ALPHA: f64 = 0.66;
-
 /// The `hkey black 50%` rules around the input.
 const INPUT_RULE_ALPHA: f64 = 0.5;
 
@@ -704,12 +701,7 @@ impl ListStyles {
             if let Some(text_style) = text_style {
                 name = text_style.apply(name);
             }
-            let help = match fg {
-                // Textual can't blend the terminal's own colors, so the terminal dims them.
-                ThemeColor::Ansi(_) => name.add_modifier(Modifier::DIM),
-                fg => name.fg(theme.color(fg.multiply_alpha(DIM_ALPHA), bg)),
-            }
-            .remove_modifier(Modifier::BOLD);
+            let help = theme.rich_dim(name, fg, bg).remove_modifier(Modifier::BOLD);
             HitStyles { name, help }
         };
         // `CommandList:ansi` highlights with the focused cursor's colors.

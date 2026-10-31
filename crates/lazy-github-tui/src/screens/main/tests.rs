@@ -1833,20 +1833,19 @@ fn compact_prs() -> TestApp {
     app
 }
 
-/// The cells of the PR box's title row that are dim, as `d`s.
+/// The cells of the PR box's title row that are dim, as `d`s: blended toward the background, so drawn in another
+/// color than the title's `[`.
 fn dim_title(app: &mut TestApp) -> String {
     let buffer = app.render(100, 30);
     let row = (0..30)
         .find(|&y| buffer[(3, y)].symbol() == "[" && buffer[(4, y)].symbol() == "2")
         .expect("the PR box's title row");
-    (0..100)
-        .map(|x| {
-            if buffer[(x, row)].modifier.contains(ratatui::style::Modifier::DIM) {
-                'd'
-            } else {
-                ' '
-            }
-        })
+    let title = buffer[(3, row)].style();
+    let corner = (0..100)
+        .find(|&x| buffer[(x, row)].symbol() == "┐")
+        .expect("the PR box's top-right corner");
+    (0..corner)
+        .map(|x| if buffer[(x, row)].style() == title { ' ' } else { 'd' })
         .collect::<String>()
         .trim_end()
         .to_owned()

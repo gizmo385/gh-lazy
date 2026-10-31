@@ -50,7 +50,7 @@ wait.timeout_ms = 15000
 keys = ["5"]
 
 [[step]]
-wait = { gone = "O Lookup" }
+wait = { focused = "Details" }
 
 [[step]]
 keys = ["right"]

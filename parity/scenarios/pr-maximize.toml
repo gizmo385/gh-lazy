@@ -165,7 +165,8 @@ checks = ["titles", "focus"]
 [[step]]
 keys = ["2"]
 
-# No text shows the move (the maximized section hides the table and the footer), so this sleeps for it (Py bug B98).
+# Nothing on screen shows the move (the maximized section hides the table, its focus border and the footer; the
+# screen stays as it was), so no wait can see it and this sleeps for it (Py bug B98). The move shows after escape.
 [[step]]
 sleep_ms = 500
 
@@ -178,6 +179,10 @@ keys = ["escape"]
 
 [[step]]
 wait = { text = "[5] PR #5 Details" }
+
+# The focus move from 2 above first shows here, on the restored PR table's border.
+[[step]]
+wait = { focused = "[2] Pull Requests" }
 
 [[step]]
 capture = "restored-prs"

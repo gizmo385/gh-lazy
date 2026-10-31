@@ -14,18 +14,13 @@ appearance = { show_command_log = true }
 [[step]]
 wait = { text = "Repositories", timeout_ms = 15000 }
 
-# The repos table's bindings show once Python has settled, so the `gone` wait after the focus key means something.
-[[step]]
-wait = { text = "O Lookup Repository" }
-
-# The footer drops the repos table's bindings once 5 has moved focus to the details (Py bug B98: wait before more
-# keys). The tab to the content after it has no signal of its own, but keys are handled in order, so M reaches the
-# content.
+# Wait for 5 to move focus to the details (Py bug B98) before more keys. The tab to the content after it has no signal
+# of its own, but keys are handled in order, so M reaches the content.
 [[step]]
 keys = ["5"]
 
 [[step]]
-wait = { gone = "O Lookup" }
+wait = { focused = "Details" }
 
 [[step]]
 keys = ["tab"]

@@ -23,7 +23,7 @@ use std::sync::Arc;
 use ratatui::style::Style;
 use ratatui::text::Line;
 
-use crate::theme::Theme;
+use crate::theme::{Paint, Theme};
 
 pub use wrap::wrap;
 
@@ -45,13 +45,19 @@ impl Markdown {
 
     /// Lays the document out `width` cells wide in `theme`'s colors. A width of 0 gives no lines.
     pub fn layout(&self, width: u16, theme: &Theme) -> Rendered {
-        layout::layout(&self.blocks, width, theme, true)
+        self.layout_over(width, theme, theme.background())
+    }
+
+    /// [`Self::layout`] over `under`, the background of the widget it sits in, rather than the screen's: colors with
+    /// alpha, such as inline code's `$warning 10%` background, blend into it as Textual's transparent `Markdown` does.
+    pub fn layout_over(&self, width: u16, theme: &Theme, under: Paint) -> Rendered {
+        layout::layout(&self.blocks, width, theme, true, under)
     }
 
     /// [`Self::layout`] without the document's `padding: 0 2`, as a comment block's body has it
     /// (`IssueCommentContainer Markdown { padding-bottom: 0 }`, which Textual stores as `padding: 0`, every edge).
     pub fn layout_unpadded(&self, width: u16, theme: &Theme) -> Rendered {
-        layout::layout(&self.blocks, width, theme, false)
+        layout::layout(&self.blocks, width, theme, false, theme.background())
     }
 
     /// Whether [`Self::layout`] at `width` is more than `rows` rows tall. Stops laying out once it is, so asking

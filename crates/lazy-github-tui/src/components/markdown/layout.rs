@@ -26,7 +26,7 @@ const FENCE_PADDING: usize = 2;
 /// Pygments' `tabsize`, which Textual's highlighter passes: tabs expand before the code is tokenized.
 const TAB_SIZE: usize = 8;
 
-pub(super) fn layout(blocks: &[Block], width: u16, theme: &Theme, padded: bool) -> Rendered {
+pub(super) fn layout(blocks: &[Block], width: u16, theme: &Theme, padded: bool, under: Paint) -> Rendered {
     let width = usize::from(width);
     if width == 0 {
         return Rendered::default();
@@ -35,7 +35,7 @@ pub(super) fn layout(blocks: &[Block], width: u16, theme: &Theme, padded: bool) 
     let pad = if padded && width > 2 * PADDING { PADDING } else { 0 };
     let painter = Painter { theme };
     let scope = Scope {
-        under: theme.background(),
+        under,
         root: true,
         in_list: false,
         bullets: 0,

@@ -22,7 +22,7 @@ use crate::components::markdown::{self, LinkSpan, Markdown, Rendered, TextRun};
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::components::table::{Cell, CellValue, Column, Handled, SearchableTable, SortSpec, TableEvent, TableItem};
 use crate::keymap::BindingId;
-use crate::theme::{Palette, Theme, ThemeColor};
+use crate::theme::{Paint, Palette, Theme, ThemeColor};
 
 /// The dialog's screen bindings: only `modal.close` of its own.
 const PROFILE_BINDINGS: &[BindingId] = dialog_bindings![ModalClose];
@@ -490,7 +490,8 @@ fn profile_lines(
     lines.blank();
     lines.header(user);
     if let Some(bio) = bio {
-        lines.push(bio.layout(lines.width, theme));
+        // Textual's `Markdown` is transparent: the bio sits on the container's `$surface-lighten-1`.
+        lines.push(bio.layout_over(lines.width, theme, lines.under));
         // The markdown's last margin, then the rule's.
         lines.blank();
         lines.rule();
@@ -512,6 +513,8 @@ struct Lines {
     bold: Style,
     dim: Style,
     rule: Style,
+    /// The container's background, which the lines are drawn on.
+    under: Paint,
 }
 
 impl Lines {
@@ -528,6 +531,7 @@ impl Lines {
             dim,
             // `Rule { color: $secondary }`.
             rule: Style::new().fg(theme.color(palette.secondary, under)),
+            under,
         }
     }
 

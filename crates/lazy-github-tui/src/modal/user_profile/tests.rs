@@ -393,3 +393,26 @@ fn a_login_scrolled_out_of_view_is_not_linked() {
     assert!(!screen.contains("@parity-bot)"), "{screen}");
     assert!(app.hyperlinks(120, 12).is_empty());
 }
+
+// Colors (#359).
+
+#[test]
+fn inline_code_in_the_bio_blends_over_the_dialogs_background() {
+    use ratatui::style::Color;
+
+    let mut app = full_app();
+    let buf = app.render(160, 48);
+    let screen = crate::test_util::buffer_to_string(&buf);
+    let (row, line) = screen
+        .lines()
+        .enumerate()
+        .find(|(_, line)| line.contains("Keeps dotfiles"))
+        .unwrap();
+    let column = line[..line.find("dotfiles").unwrap()].chars().count();
+    let (x, y) = (u16::try_from(column).unwrap(), u16::try_from(row).unwrap());
+    // Python's cells for `dotfiles` in the `user-profile` and `link-hints` scenarios (textual-dark): `$warning 10%`
+    // blended into the container's `$surface-lighten-1` (#2d2d2d), not into the screen's `$background`.
+    assert_eq!(buf[(x, y)].fg, Color::Rgb(0xf5, 0xbc, 0x6f));
+    assert_eq!(buf[(x, y)].bg, Color::Rgb(0x3d, 0x36, 0x2c));
+    assert_eq!(buf[(x - 1, y)].bg, Color::Rgb(0x2d, 0x2d, 0x2d));
+}

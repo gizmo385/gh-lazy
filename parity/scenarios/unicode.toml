@@ -57,6 +57,14 @@ wait = { text = "作業中", timeout_ms = 15000 }
 [[step]]
 wait = { text = "Status checks:", timeout_ms = 5000 }
 
+# Under load Python draws the PR before it retitles the details and moves focus there: wait for both, and for the
+# reviews' title.
+[[step]]
+wait = { focused = "PR #5 Details" }
+
+[[step]]
+wait = { text = "PR Reviews" }
+
 # Not `tabs`: right after a selection Python sometimes draws the tab underline zero-width (#209).
 [[step]]
 capture = "overview"
@@ -81,6 +89,10 @@ keys = ["enter"]
 
 [[step]]
 wait = { text = "Line: 1/8", timeout_ms = 5000 }
+
+# Python draws the hunk's position before its lines.
+[[step]]
+wait = { text = "lines keep their columns." }
 
 [[step]]
 capture = "diff"

@@ -5,6 +5,8 @@ description = "M in the PR Conversation and Diff tabs: the scroll areas do nothi
 gate = true
 parity_rows = ["pull-requests.collapsible", "main-layout.maximize"]
 sizes = [[160, 48]]
+# Seven maximizes and waiting out the 5 s toast take Python past the default 30 s run under load.
+timeout_ms = 60000
 
 [env]
 fixtures = ["pr-details", "base"]

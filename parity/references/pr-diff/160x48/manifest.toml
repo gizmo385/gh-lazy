@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["files", "hunk-open", "hunk-focused", "line-cursor", "filtered", "filter-cleared"]
 
 [inputs]
-scenario = "70a0adb5e21d3d86ac574c1a66a8cb0596ea37f1"
+scenario = "04f2ce530b023a2a411df2b5f47a7da482a7d28d"
 fixtures = "f08beddbcecbffb29234d9f65e3b95c0aa7e36cf"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"

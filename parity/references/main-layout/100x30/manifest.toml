@@ -4,7 +4,7 @@ size = "100x30"
 captures = ["start", "prs", "issues", "workflows", "details", "details-again", "no-log", "tab-content", "tab-wrap", "shift-tab"]
 
 [inputs]
-scenario = "73155ba3d962993a7191124af608bdb067771aed"
+scenario = "2ece2866e22b1cec8a3d94cbbc1c815f6c27f39e"
 fixtures = "152ce9bbfa49430b36bca9ef5e2ae1189ea76b00"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"

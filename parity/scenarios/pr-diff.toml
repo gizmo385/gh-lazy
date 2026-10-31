@@ -119,6 +119,10 @@ keys = ["escape"]
 [[step]]
 wait = { text = "README.md", timeout_ms = 5000 }
 
+# Python redraws the footer for the new focus a moment later.
+[[step]]
+wait = { text = "^v Paste link  f Follow link  F Follow link (browser)" }
+
 [[step]]
 capture = "filter-cleared"
 checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]

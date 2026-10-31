@@ -39,6 +39,13 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 [[step]]
 wait = { text = "No repository selected" }
 
+# Under load Python draws the repos table's bindings and the Details underline a moment after the rest.
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+wait = { regex = "╸━+╺" }
+
 # Table headers and rows arrive with M2. The footer is cut off at "^p Comman" (160) and "^v Paste lin" (100), in
 # both apps. A cut item only has to start the expected one, so the list runs to the end.
 [[step]]

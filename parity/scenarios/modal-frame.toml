@@ -21,6 +21,10 @@ keys = ["O"]
 [[step]]
 wait = { text = "Repository (owner/name):", timeout_ms = 10000 }
 
+# Python draws the dialog's footer a moment after the dialog.
+[[step]]
+wait = { text = "esc Close" }
+
 [[step]]
 capture = "open"
 

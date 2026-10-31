@@ -41,8 +41,9 @@ wait = { text = "O Lookup Issue" }
 [[step]]
 keys = ["E"]
 
+# Not "Status": the Issues table's header has it too. The dialog's footer is drawn once the dialog is.
 [[step]]
-wait.text = "Status"
+wait.text = "shift+⏎ Submit"
 
 [[step]]
 capture = "open"
@@ -141,8 +142,9 @@ wait = { regex = '(?m)^ E Edit Issue  ' }
 [[step]]
 keys = ["E"]
 
+# Not "Status": the Issues table's header has it too. The dialog's footer is drawn once the dialog is.
 [[step]]
-wait.text = "Status"
+wait.text = "shift+⏎ Submit"
 
 [[step]]
 capture = "from-overview"

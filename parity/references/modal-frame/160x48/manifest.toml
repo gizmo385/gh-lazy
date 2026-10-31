@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["open", "q-typed", "switch-focused", "submit-focused", "wrapped", "closed-with-q", "closed-with-escape"]
 
 [inputs]
-scenario = "6e43c37eeda09b10b61c09f117f81b8dd4a0c22f"
+scenario = "02b79dfd58934f7467f07b23cadd83e4f2ff188f"
 fixtures = "152ce9bbfa49430b36bca9ef5e2ae1189ea76b00"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"

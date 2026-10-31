@@ -42,13 +42,13 @@ cursor 47 36 hidden
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌ Creating PR...                                             │
-│                                                              ││                                 ▌                                                            │
 │                                                              ││                                                                                              │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌ Successfully created PR!                                   │
-└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  / Search  O Lookup Pull Request  E Edit PR  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palle
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -91,14 +91,14 @@ o..............................................................od...............
 o..............................................................od..............................................................................................d
 o..............................................................od..............................................................................................d
 o..............................................................od..............................................................................................d
-o..............................................................od.................................sttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt.d
-o..............................................................od.................................stuuuuuuuuuuuuuutttttttttttttttttttttttttttttttttttttttttttt.d
-o..............................................................od.................................sttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt.d
 o..............................................................od..............................................................................................d
-o..............................................................od.................................sttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt.d
-o..............................................................od.................................stuuuuuuuuuuuuuuuuuuuuuuuutttttttttttttttttttttttttttttttttt.d
-ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooddddddddddddddddddddddddddddddddddstttttttttttttttttttttttttttttttttttttttttttttttttttttttttttdd
-vvvwwwwwwwvvvwwwwwwwwwwwwwwwwwwwwvvvwwwwwwwwvvvwwwwwwwwwwvvvwwwwwwwwwwvvvwwwwwwwvvvvwwwwwwwwwwwvvvwwwwwwwwwwwwvvvwwwwwwwwwwwwwwwwwwwwwwvvvwwwwwvvvvwwwwwwwwwwwww
+o..............................................................od..............................................................................................d
+o..............................................................od..............................................................................................d
+o..............................................................od..............................................................................................d
+o..............................................................od..............................................................................................d
+o..............................................................od..............................................................................................d
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooodddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+ssstttttttsssttttttttttttttttttttsssttttttttsssttttttttttsssttttttttttssstttttttsssstttttttttttsssttttttttttttsssttttttttttttttttttttttssstttttssssttttttttttttt
 --- legend
 . bg=#121212
 a fg=#004578 bg=#121212
@@ -119,8 +119,5 @@ o fg=#4ebf71 bg=#121212
 p fg=#e0e0e0 bg=#2d3740 bold
 q fg=#ddedf9 bg=#0178d4 bold
 r fg=#e0e0e0 bg=#272727
-s fg=#4ebf71 bg=#343f49
-t bg=#343f49
-u fg=#e0e0e0 bg=#343f49
-v fg=#ffa62b bg=#242f38 bold
-w fg=#e0e0e0 bg=#242f38
+s fg=#ffa62b bg=#242f38 bold
+t fg=#e0e0e0 bg=#242f38

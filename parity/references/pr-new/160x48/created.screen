@@ -38,9 +38,9 @@ cursor 1 4 hidden
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Error while pushing branch missing-branch to remote        │
+│                                                              ││                                 ▌                                                            │
 │                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                 ▌ Creating PR...                                             │
@@ -87,18 +87,18 @@ d..............................................................de...............
 d..............................................................de..............................................................................................e
 d..............................................................de..............................................................................................e
 d..............................................................de..............................................................................................e
-d..............................................................de..............................................................................................e
-d..............................................................de..............................................................................................e
-d..............................................................de..............................................................................................e
-d..............................................................de..............................................................................................e
 d..............................................................de.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
-d..............................................................de.................................rsttttttttttttttssssssssssssssssssssssssssssssssssssssssssss.e
+d..............................................................de.................................rstttttttttttttttttttttttttttuuuuuuuuuuuuuuttttttttttsssssss.e
 d..............................................................de.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
 d..............................................................de..............................................................................................e
-d..............................................................de.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
-d..............................................................de.................................rsttttttttttttttttttttttttssssssssssssssssssssssssssssssssss.e
-ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeersssssssssssssssssssssssssssssssssssssssssssssssssssssssssssee
-uuuuvvvvvvvvvvvuuuvvvvvvvvvvvvuuuvvvvvvvvvvvvvvvvvvvvvvuuuvvvvvuuuuvvvvvvvvvvvvvvvvuuuvvvvvvvvvuuuvvvvvvvvvvvvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+d..............................................................de.................................vsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
+d..............................................................de.................................vsttttttttttttttssssssssssssssssssssssssssssssssssssssssssss.e
+d..............................................................de.................................vsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
+d..............................................................de..............................................................................................e
+d..............................................................de.................................vsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
+d..............................................................de.................................vsttttttttttttttttttttttttssssssssssssssssssssssssssssssssss.e
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeevsssssssssssssssssssssssssssssssssssssssssssssssssssssssssssee
+wwwwxxxxxxxxxxxwwwxxxxxxxxxxxxwwwxxxxxxxxxxxxxxxxxxxxxxwwwxxxxxwwwwxxxxxxxxxxxxxxxxwwwxxxxxxxxxwwwxxxxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
 --- legend
 . bg=#121212
 a fg=#004578 bg=#121212
@@ -118,9 +118,11 @@ n fg=#e0e0e0 bg=#1e1e1e
 o fg=#e0e0e0 bg=#121212 bold
 p fg=#e0e0e0 bg=#121212 underline
 q fg=#ff0000 bg=#121212
-r fg=#4ebf71 bg=#343f49
+r fg=#b93c5b bg=#343f49
 s bg=#343f49
 t fg=#e0e0e0 bg=#343f49
-u fg=#ffa62b bg=#242f38 bold
-v fg=#e0e0e0 bg=#242f38
-w bg=#242f38
+u fg=#ff0000 bg=#343f49
+v fg=#4ebf71 bg=#343f49
+w fg=#ffa62b bg=#242f38 bold
+x fg=#e0e0e0 bg=#242f38
+y bg=#242f38

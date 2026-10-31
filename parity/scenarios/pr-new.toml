@@ -149,10 +149,11 @@ wait = { focused = "Draft" }
 [[step]]
 keys = ["space", "tab", "tab"]
 
-# The dialog scrolls the editor to its top, so its `Description` label is out of view: the empty editor's only
-# text is its first line number.
+# Focusing the editor scrolls the dialog to put it at the top, which takes the heading out of view (the title, the
+# step before, leaves it in view). Not wait.focused: Python can leave the first refused submit's toast up for good
+# (under load it outlived a 15 s wait), over the editor's right edge, which hides the editor's outline.
 [[step]]
-wait = { focused = "1" }
+wait = { gone = "New Pull Request" }
 
 [[step]]
 type = "First line"
@@ -188,6 +189,10 @@ wait.text = "Successfully created PR!"
 [[step]]
 wait.text = "Open Parity PR (#10) by parity-bot"
 wait.timeout_ms = 15000
+
+# Python retitles and focuses the details a moment after drawing the new PR in them.
+[[step]]
+wait = { focused = "[5] PR #10 Details" }
 
 [[step]]
 capture = "created"

@@ -36,9 +36,6 @@ const PADDING_X: usize = 2;
 /// `UserReposTable { max-height: 20 }`: header, rows and scrollbar.
 const MAX_TABLE_HEIGHT: u16 = 20;
 
-/// Rich's `dim`, as Textual draws it: the text color at this alpha over the background.
-const DIM_ALPHA: f64 = 0.66;
-
 /// Python's `private_string`.
 const PRIVATE: &str = "✓";
 const PUBLIC: &str = "✘";
@@ -522,11 +519,7 @@ impl Lines {
         let palette = theme.palette;
         let under = palette.surface_lighten_1.over(theme.background());
         let text = Style::new().fg(theme.color(palette.foreground, under));
-        let dim = if theme.ansi {
-            text.add_modifier(Modifier::DIM)
-        } else {
-            Style::new().fg(theme.color(palette.foreground.multiply_alpha(DIM_ALPHA), under))
-        };
+        let dim = theme.rich_dim(text, palette.foreground, under);
         Self {
             out: Rendered::default(),
             width: u16::try_from(width).unwrap_or(u16::MAX),

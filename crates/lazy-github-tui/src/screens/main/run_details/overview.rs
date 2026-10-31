@@ -327,7 +327,7 @@ fn overview(
     // The title as typed: Python passes it as a markup variable, so brackets in it are text. `(#N)` links to the run
     // in the browser, through the terminal.
     let header = [
-        TextRun::new(status, tint.style(theme)),
+        TextRun::new(status, text.patch(tint.style(theme))),
         TextRun::new(" ", text),
         TextRun::new(run.display_title.as_str(), bold),
         TextRun::new(" ", text),
@@ -349,7 +349,7 @@ fn overview(
             for job in jobs {
                 let (icon, tint) = job_icon(&job.status, job.conclusion.as_ref());
                 let line = [
-                    TextRun::new(icon, tint.style(theme)),
+                    TextRun::new(icon, text.patch(tint.style(theme))),
                     TextRun::new(
                         format!(" {} ({})", job.name, duration(job.started_at, job.completed_at)),
                         text,

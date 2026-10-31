@@ -7,12 +7,16 @@ use lazy_github_core::config::Config;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::github::{FakeGithub, GithubCall};
 use lazy_github_core::models::{Repository, Workflow, WorkflowJob, WorkflowRun};
+use ratatui::buffer::{Buffer, Cell};
+use ratatui::layout::Rect;
+use ratatui::style::{Color, Modifier};
 use serde_json::Value;
 
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::event::Event;
 use crate::screens::main::{FocusTarget, MainScreen, SectionId};
 use crate::test_util::{TestApp, UNICODE_EXTRAS, logs, unicode_fixture};
+use crate::theme::Theme;
 
 fn fixtures() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../parity/fixtures/run-details")
@@ -1529,4 +1533,127 @@ fn a_dialog_over_the_overview_leaves_only_its_own_hyperlinks() {
 fn a_terminal_too_small_has_no_hyperlinks() {
     let mut app = selected(42);
     assert!(app.hyperlinks(20, 5).is_empty());
+}
+
+// Rich's `[dim]` on the jobs' icons, resolved as Textual's `ANSIToTruecolor` filter does (#363).
+
+/// The cell `skip` columns into the first `needle` on screen.
+fn cell_at(app: &mut TestApp, needle: &str, skip: u16) -> Cell {
+    let (row, column) = find(app, needle);
+    app.render(160, 48)[(column + skip, row)].clone()
+}
+
+/// `(fg, bg, bold, dim)` of a cell.
+fn look(cell: &Cell) -> (Color, Color, bool, bool) {
+    (
+        cell.fg,
+        cell.bg,
+        cell.modifier.contains(Modifier::BOLD),
+        cell.modifier.contains(Modifier::DIM),
+    )
+}
+
+/// `rows` rows of the screen from the one with `needle`, `width` columns from where it starts, with their styles.
+fn styled_rows(app: &mut TestApp, needle: &str, width: u16, rows: u16) -> String {
+    let (row, column) = find(app, needle);
+    let buffer = app.render(160, 48);
+    let area = Rect::new(column, row, width, rows);
+    let mut out = Buffer::empty(area);
+    for position in area.positions() {
+        out[position] = buffer[position].clone();
+    }
+    crate::test_util::buffer_to_styled_string(&out)
+}
+
+fn no_cell_is_dim(buffer: &Buffer) -> bool {
+    buffer
+        .content()
+        .iter()
+        .all(|cell| !cell.modifier.contains(Modifier::DIM))
+}
+
+fn rgb(hex: u32) -> Color {
+    let [_, r, g, b] = hex.to_be_bytes();
+    Color::Rgb(r, g, b)
+}
+
+/// The skipped `lint` job's `−` is the tree row's own text color dimmed toward that row's background, following
+/// focus and the cursor; the values are Python's (`run-details` `jobs` / `job-logs` and a Textual probe).
+#[test]
+fn a_skipped_jobs_icon_is_dimmed_against_its_own_row() {
+    let mut app = jobs_tab(42);
+    assert_eq!(
+        look(&cell_at(&mut app, "▶ − lint", 2)),
+        (rgb(0x9e_9e_9e), rgb(0x1e_1e_1e), false, false),
+        "blurred tree"
+    );
+    app.press(&["tab", "tab"]);
+    assert!(tree_focused(&app));
+    assert_eq!(
+        look(&cell_at(&mut app, "▶ − lint", 2)),
+        (rgb(0xa1_a1_a1), rgb(0x27_27_27), false, false),
+        "focused tree"
+    );
+    app.press(&["down", "down", "down"]);
+    assert_eq!(tree_cursor(&app), Some(2));
+    assert_eq!(
+        look(&cell_at(&mut app, "▶ − lint", 2)),
+        (rgb(0x92_c5_ec), rgb(0x01_78_d4), true, false),
+        "focused cursor"
+    );
+    app.press(&["tab"]);
+    assert_eq!(focus(&app), FocusTarget::Table(SectionId::Repos));
+    assert_eq!(
+        look(&cell_at(&mut app, "▶ − lint", 2)),
+        (rgb(0x9a_a6_b0), rgb(0x15_38_54), false, false),
+        "blurred cursor"
+    );
+    assert!(no_cell_is_dim(&app.render(160, 48)));
+}
+
+/// The Overview's `−` keeps `$foreground` dimmed on the pane's background, as before the frame-wide pass.
+#[test]
+fn the_overviews_skipped_icon_is_dimmed_against_the_pane() {
+    let mut app = selected(42);
+    assert_eq!(
+        look(&cell_at(&mut app, "− lint (", 0)),
+        (rgb(0x99_99_99), rgb(0x12_12_12), false, false)
+    );
+}
+
+/// The pass runs on the finished frame: a dialog's backdrop over the dim icon leaves no `DIM` behind.
+#[test]
+fn a_dialog_over_a_dim_icon_leaves_no_dim_cell() {
+    let mut app = jobs_tab(42);
+    let user: lazy_github_core::models::FullUser =
+        serde_json::from_value(serde_json::json!({"login": "a", "id": 7, "html_url": "https://github.com/a"})).unwrap();
+    app.with_cx(|cx| {
+        cx.open_dialog(crate::modal::UserProfileDialog::new(user, Vec::new()), |_| {
+            crate::action::Action::Consumed
+        });
+    });
+    assert!(no_cell_is_dim(&app.render(160, 48)));
+}
+
+#[test]
+fn jobs_tree_cursor_on_a_skipped_job_styles() {
+    let mut app = jobs_tab(42);
+    app.press(&["tab", "tab", "down", "down", "down"]);
+    insta::assert_snapshot!(styled_rows(&mut app, "▶ ✓ build", 24, 4));
+}
+
+/// On the ANSI themes Textual leaves `dim` to the terminal: SGR 2 over the cursor's colors (`color(0)` on
+/// `color(7)`), kept bold.
+#[test]
+fn jobs_tree_cursor_on_a_skipped_job_ansi_dark_styles() {
+    let theme = Theme::by_name("ansi-dark").unwrap();
+    let mut app = TestApp::with_github_and_theme(Config::default(), gh(), theme);
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["4", "enter"]);
+    settle(&mut app);
+    app.press(&["right", "tab", "tab", "down", "down", "down"]);
+    let icon = cell_at(&mut app, "▶ − lint", 2);
+    assert_eq!(look(&icon), (Color::Black, Color::Gray, true, true), "{icon:?}");
+    insta::assert_snapshot!(styled_rows(&mut app, "▶ ✓ build", 24, 4));
 }

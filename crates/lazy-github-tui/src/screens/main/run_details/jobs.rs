@@ -489,7 +489,7 @@ mod tests {
     use super::*;
     use crate::screens::main::run_details::status::Tint;
     use crate::screens::main::run_details::tests::fixture_jobs;
-    use crate::theme::Accent;
+    use crate::theme::{Accent, ColorDepth, ColorMode};
 
     /// The tree's lines, drawn 60 cells wide.
     fn lines(tree: &mut Tree<JobRef>) -> Vec<String> {
@@ -605,7 +605,12 @@ mod tests {
     #[test]
     fn a_theme_switch_recolors_the_labels_and_keeps_the_cursor_and_expansion() {
         let keymap = Keymap::new(&indexmap::IndexMap::new());
-        let light = Theme::by_name("textual-light").expect("a built-in theme");
+        let light = Theme::by_name("textual-light")
+            .expect("a built-in theme")
+            .with_color_mode(ColorMode {
+                depth: ColorDepth::EightBit,
+                no_color: false,
+            });
         let draw = |tab: &mut JobsTab| {
             let area = Rect::new(0, 0, 60, 20);
             let mut buf = Buffer::empty(area);
@@ -621,7 +626,7 @@ mod tests {
             let _ = tab.tree.handle(TreeAction::CursorDown);
             let _ = tab.tree.handle(TreeAction::ToggleExpandAll);
         }
-        // The skipped `lint` job's `−` is dimmed from the theme's foreground, which differs.
+        // The icons' accent colors are reduced to the terminal's colors, which the theme carries.
         assert_ne!(draw(&mut built_light), draw(&mut switched));
         switched.retheme(&light);
         assert_eq!(draw(&mut built_light), draw(&mut switched));

@@ -2,6 +2,7 @@ use crossterm::event::{KeyModifiers, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
+use ratatui::style::Color;
 
 use super::*;
 use crate::component::{BindingState, ChainLink, ScreenKind};
@@ -223,6 +224,41 @@ fn disabled_items_are_dim() {
         for x in [1, 4] {
             assert_eq!(buf[(x, 0)].modifier.contains(Modifier::DIM), !enabled);
         }
+    }
+}
+
+/// Textual's filter turns `FooterKey.-disabled`'s dim into a blend on truecolor themes (values from a Textual probe
+/// on `textual-dark`), and leaves it to the terminal on the ANSI themes.
+#[test]
+fn a_disabled_item_is_dimmed_the_textual_way_by_the_frames_dim_pass() {
+    let draw = |theme: &Theme| {
+        let mut buf = Buffer::empty(Rect::new(0, 0, 8, 1));
+        Footer {
+            items: &[quit_item(false)],
+            hovered: None,
+            theme,
+        }
+        .render(buf.area, &mut buf);
+        let area = buf.area;
+        theme.resolve_dim(&mut buf, area);
+        buf
+    };
+    let buf = draw(&Theme::default());
+    let (key, description) = (&buf[(1, 0)], &buf[(4, 0)]);
+    assert_eq!((key.symbol(), description.symbol()), ("q", "u"));
+    let panel = Color::Rgb(0x24, 0x2f, 0x38);
+    assert_eq!(
+        (key.fg, key.bg, key.modifier),
+        (Color::Rgb(0xb4, 0x7d, 0x2f), panel, Modifier::BOLD)
+    );
+    assert_eq!(
+        (description.fg, description.bg, description.modifier),
+        (Color::Rgb(0xa0, 0xa3, 0xa6), panel, Modifier::empty())
+    );
+
+    let buf = draw(&Theme::by_name("ansi-dark").unwrap());
+    for x in [1, 4] {
+        assert!(buf[(x, 0)].modifier.contains(Modifier::DIM), "{:?}", buf[(x, 0)]);
     }
 }
 

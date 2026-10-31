@@ -11,7 +11,8 @@ use crate::theme::{Paint, Theme};
 const OPACITY: f64 = 0.7;
 
 /// Fades the cells of `area` already drawn into `buf` toward `under`, the parent's background. The ANSI themes can't
-/// blend, so their cells are dimmed instead.
+/// blend, so their cells are dimmed instead. Textual leaves them as they are there; keeping a disabled cue is an
+/// intentional diff (`docs/rust-rewrite/parity/decisions/disabled-fields-dim-on-ansi.md`).
 ///
 /// Textual applies the opacity twice to a widget's background: once as it composites the background over its
 /// parent's, and again as it blends the rendered cells into the parent. Text is blended once. (Its translucent border

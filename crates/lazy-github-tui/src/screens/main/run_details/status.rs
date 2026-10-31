@@ -9,9 +9,6 @@ use ratatui::style::{Modifier, Style};
 
 use crate::theme::{Accent, Theme};
 
-/// Rich's `dim`, as Textual draws it: the text color at this alpha over the background.
-const DIM_ALPHA: f64 = 0.66;
-
 /// The color a status is drawn in: one of the fixed accent colors, or Rich's `dim`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(in crate::screens::main) enum Tint {
@@ -22,20 +19,13 @@ pub(in crate::screens::main) enum Tint {
 }
 
 impl Tint {
-    /// The style for text in this tint on the details pane's background.
+    /// The style for text in this tint, patched over the text style it's drawn in. Rich's `dim` is
+    /// `Modifier::DIM` alone, so it dims whatever color the text has where it's drawn (a tree row's, or its cursor's),
+    /// which [`Theme::resolve_dim`] blends at the end of the frame as Textual does.
     pub(in crate::screens::main) fn style(self, theme: &Theme) -> Style {
         match self {
             Tint::Accent(accent) => Style::new().fg(theme.accent(accent)),
-            Tint::Dim => {
-                let palette = theme.palette;
-                if theme.ansi {
-                    Style::new()
-                        .fg(theme.color(palette.foreground, theme.background()))
-                        .add_modifier(Modifier::DIM)
-                } else {
-                    Style::new().fg(theme.color(palette.foreground.multiply_alpha(DIM_ALPHA), theme.background()))
-                }
-            }
+            Tint::Dim => Style::new().add_modifier(Modifier::DIM),
         }
     }
 }
@@ -166,12 +156,11 @@ mod tests {
     }
 
     #[test]
-    fn dim_is_the_foreground_faded_or_the_dim_attribute() {
+    fn dim_is_the_dim_attribute_over_the_texts_own_color() {
+        for theme in [Theme::default(), Theme::by_name("ansi-dark").unwrap()] {
+            assert_eq!(Tint::Dim.style(&theme), Style::new().add_modifier(Modifier::DIM));
+        }
         let theme = Theme::default();
-        assert_ne!(
-            Tint::Dim.style(&theme).fg,
-            Some(theme.color(theme.palette.foreground, theme.background()))
-        );
         assert_eq!(
             Tint::Accent(Accent::Red).style(&theme).fg,
             Some(theme.accent(Accent::Red))

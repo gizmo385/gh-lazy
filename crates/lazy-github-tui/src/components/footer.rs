@@ -131,7 +131,8 @@ impl Widget for Footer<'_> {
             .enumerate()
             .flat_map(|(index, item)| {
                 let (key_style, description_style) = if self.hovered == Some(index) { hovered } else { plain };
-                // Textual's `FooterKey.-disabled` is `text-style: dim`.
+                // Textual's `FooterKey.-disabled` is `text-style: dim`, which `Theme::resolve_dim` blends at the end of
+                // the frame on the truecolor themes.
                 let dim = if item.enabled {
                     Style::new()
                 } else {

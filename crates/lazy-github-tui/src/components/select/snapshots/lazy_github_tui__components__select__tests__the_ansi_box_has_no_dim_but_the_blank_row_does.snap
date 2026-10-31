@@ -1,0 +1,29 @@
+---
+source: crates/lazy-github-tui/src/components/select/tests.rs
+expression: buffer_to_styled_string(&buf)
+---
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊  Select                 ▲  ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊  Select                    ▎
+▊  Open                      ▎
+▊  Closed                    ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+
+--- styles
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+.bbbbbbbbbbbbbbbbbbbbbbbbbbbba
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+.bcddddddcccccccccccccccccccba
+.bbbbbbbbbbbbbbbbbbbbbbbbbbbba
+.bbbbbbbbbbbbbbbbbbbbbbbbbbbba
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+--- legend
+. fg=Magenta bg=Reset REVERSED
+a fg=Magenta bg=Reset
+b fg=Reset bg=Reset
+c fg=Black bg=Gray BOLD
+d fg=Black bg=Gray BOLD | DIM

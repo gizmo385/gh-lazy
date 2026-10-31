@@ -38,9 +38,6 @@ const GAP: u16 = 2;
 /// An `Input`'s `width: 70`, which the grid cell narrows.
 const MAX_INPUT_WIDTH: u16 = 70;
 
-/// Rich's `dim`, as Textual draws `[dim]` text: the text color at this alpha over its background.
-const DIM_ALPHA: f64 = 0.66;
-
 /// The template field's placeholder (Python's `PathInput`).
 const PATH_PLACEHOLDER: &str = "Enter file path...";
 
@@ -525,13 +522,7 @@ impl SettingsPane {
         let bold = Style::new()
             .fg(theme.color(p.foreground, under))
             .add_modifier(Modifier::BOLD);
-        let doc = if theme.ansi {
-            Style::new()
-                .fg(theme.color(p.foreground, under))
-                .add_modifier(Modifier::DIM)
-        } else {
-            Style::new().fg(theme.color(p.foreground.multiply_alpha(DIM_ALPHA), under))
-        };
+        let doc = theme.rich_dim(Style::new().fg(theme.color(p.foreground, under)), p.foreground, under);
         let fields = &mut self.fields;
         let shown = &self.shown;
         let keys = &self.keys;

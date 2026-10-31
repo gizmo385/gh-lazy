@@ -15,6 +15,8 @@ mod palette;
 
 use std::fmt;
 
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
 
 pub use accent::{Accent, RichAnsi};
@@ -135,11 +137,46 @@ impl Theme {
     /// `style`, whose text is `fg` drawn over `under`, with Rich's `dim` (`[dim]…[/dim]` markup) applied as Textual
     /// resolves it: `fg` at 66% alpha over `under`. Textual can't blend the terminal's own colors, so an ANSI `fg`
     /// keeps its color and gets SGR 2, leaving the dimming to the terminal.
+    ///
+    /// This resolves the dim eagerly, which is only needed where the color must be known while drawing. Setting
+    /// `Modifier::DIM` gives the same cell, since [`Theme::resolve_dim`] blends it at the end of every frame.
     #[must_use]
     pub fn rich_dim(&self, style: Style, fg: ThemeColor, under: Paint) -> Style {
         match fg {
             ThemeColor::Ansi(_) => style.add_modifier(Modifier::DIM),
             fg => style.fg(self.color(fg.multiply_alpha(RICH_DIM_ALPHA), under)),
+        }
+    }
+
+    /// Textual's `ANSIToTruecolor` dim step, over the cells of `area` in a drawn frame: on a non-ANSI theme every
+    /// cell with `Modifier::DIM` gets its fg blended 66% of the way from its bg toward its fg, and loses `DIM`. A
+    /// cell whose bg is the terminal's default blends toward [`Theme::background`], as Textual falls back to the
+    /// screen's background. A no-op on the ANSI themes, where Textual leaves `dim` to the terminal as SGR 2.
+    ///
+    /// So `Modifier::DIM` in a style means Textual's `dim` (Rich `[dim]`, `style="dim"` or TCSS `text-style: dim`)
+    /// on every theme. A cell whose fg (or bg) has no RGB, such as the terminal's default color, keeps `DIM`.
+    pub fn resolve_dim(&self, buf: &mut Buffer, area: Rect) {
+        if self.ansi {
+            return;
+        }
+        let screen = match self.background() {
+            Paint::Rgb(rgb) => Some(rgb),
+            Paint::Ansi(_) => None,
+        };
+        for position in area.intersection(buf.area).positions() {
+            let cell = &mut buf[position];
+            if !cell.modifier.contains(Modifier::DIM) {
+                continue;
+            }
+            let bg = match cell.bg {
+                Color::Reset => screen,
+                bg => depth::rgb_of(bg),
+            };
+            let (Some(bg), Some(fg)) = (bg, depth::rgb_of(cell.fg)) else {
+                continue;
+            };
+            cell.fg = self.paint(Paint::Rgb(bg.blend(fg, RICH_DIM_ALPHA)));
+            cell.modifier.remove(Modifier::DIM);
         }
     }
 
@@ -523,5 +560,94 @@ mod tests {
             assert_eq!(ansi.color(ansi.palette.primary, ansi.background()), Color::Blue);
             assert_eq!(ansi.paint(ansi.background()), Color::Reset);
         }
+    }
+
+    fn rgb(hex: u32) -> Color {
+        let [_, r, g, b] = hex.to_be_bytes();
+        Color::Rgb(r, g, b)
+    }
+
+    /// One cell of `fg` on `bg` with `modifier`, through [`Theme::resolve_dim`].
+    fn resolved(theme: &Theme, fg: Color, bg: Color, modifier: Modifier) -> (Color, Color, Modifier) {
+        let area = Rect::new(0, 0, 1, 1);
+        let mut buf = Buffer::empty(area);
+        buf[(0, 0)]
+            .set_symbol("x")
+            .set_style(Style::new().fg(fg).bg(bg).add_modifier(modifier));
+        theme.resolve_dim(&mut buf, area);
+        let cell = &buf[(0, 0)];
+        (cell.fg, cell.bg, cell.modifier)
+    }
+
+    /// Textual's `dim_color`, checked against its output (a probe on Textual 8.2.5).
+    #[rstest]
+    #[case("textual-dark", 0xff_a6_2b, 0x24_2f_38, 0xb4_7d_2f)]
+    #[case("textual-dark", 0xe0_e0_e0, 0x1e_1e_1e, 0x9e_9e_9e)]
+    #[case("textual-dark", 0xe0_e0_e0, 0x27_27_27, 0xa1_a1_a1)]
+    #[case("textual-dark", 0xdd_ed_f9, 0x01_78_d4, 0x92_c5_ec)]
+    #[case("nord", 0x2e_34_40, 0x88_c0_d0, 0x4c_63_70)]
+    fn resolve_dim_blends_the_fg_from_the_cells_bg(
+        #[case] name: &str,
+        #[case] fg: u32,
+        #[case] bg: u32,
+        #[case] dimmed: u32,
+    ) {
+        assert_eq!(
+            resolved(&theme(name), rgb(fg), rgb(bg), Modifier::DIM),
+            (rgb(dimmed), rgb(bg), Modifier::empty())
+        );
+    }
+
+    #[test]
+    fn resolve_dim_keeps_the_other_modifiers_and_skips_undimmed_cells() {
+        let dark = theme("textual-dark");
+        let (fg, bg) = (rgb(0xff_a6_2b), rgb(0x24_2f_38));
+        assert_eq!(
+            resolved(&dark, fg, bg, Modifier::DIM | Modifier::BOLD | Modifier::ITALIC),
+            (rgb(0xb4_7d_2f), bg, Modifier::BOLD | Modifier::ITALIC)
+        );
+        assert_eq!(resolved(&dark, fg, bg, Modifier::BOLD), (fg, bg, Modifier::BOLD));
+    }
+
+    #[test]
+    fn resolve_dim_falls_back_to_the_screen_background_and_keeps_dim_without_an_fg() {
+        let dark = theme("textual-dark");
+        // `#e0e0e0` over the screen's `#121212`.
+        assert_eq!(
+            resolved(&dark, rgb(0xe0_e0_e0), Color::Reset, Modifier::DIM),
+            (rgb(0x99_99_99), Color::Reset, Modifier::empty())
+        );
+        let bg = rgb(0x1e_1e_1e);
+        assert_eq!(
+            resolved(&dark, Color::Reset, bg, Modifier::DIM),
+            (Color::Reset, bg, Modifier::DIM)
+        );
+    }
+
+    #[test]
+    fn resolve_dim_leaves_the_ansi_themes_to_the_terminal() {
+        for name in ["ansi-dark", "ansi-light"] {
+            let ansi = theme(name);
+            for (fg, bg) in [
+                (Color::Black, Color::Gray),
+                (Color::Reset, Color::Reset),
+                (rgb(0xe0_e0_e0), rgb(0x1e_1e_1e)),
+            ] {
+                let modifier = Modifier::DIM | Modifier::BOLD;
+                assert_eq!(resolved(&ansi, fg, bg, modifier), (fg, bg, modifier), "{name}");
+            }
+        }
+    }
+
+    /// Reduced colors are blended as the RGB they stand for and reduced again.
+    #[test]
+    fn resolve_dim_reduces_the_blend_to_the_color_mode() {
+        let eight_bit = theme("textual-dark").with_color_mode(ColorMode {
+            depth: ColorDepth::EightBit,
+            no_color: false,
+        });
+        let (fg, _, modifier) = resolved(&eight_bit, Color::Indexed(254), Color::Indexed(234), Modifier::DIM);
+        assert!(matches!(fg, Color::Indexed(_)), "{fg:?}");
+        assert_eq!(modifier, Modifier::empty());
     }
 }

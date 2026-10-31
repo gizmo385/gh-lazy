@@ -1,0 +1,20 @@
+---
+source: crates/lazy-github-tui/src/screens/main/run_details/tests.rs
+expression: "styled_rows(&mut app, \"▶ ✓ build\", 24, 4)"
+---
+▶ ✓ build (completed)
+▶ ✗ test (completed)
+▶ − lint (completed)
+▶ ○ deploy (completed)
+--- styles
+..a.....................
+..b.....................
+..cddddddddddddddddd....
+..e.....................
+--- legend
+. fg=Reset bg=Reset
+a fg=#adff2f bg=Reset
+b fg=#ff0000 bg=Reset
+c fg=Black bg=Gray BOLD | DIM
+d fg=Black bg=Gray BOLD
+e fg=#ffff00 bg=Reset

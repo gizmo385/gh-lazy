@@ -513,7 +513,8 @@ impl BoxStyles {
             let border = theme.color(border_color, under);
             return Self {
                 text,
-                muted: text.add_modifier(Modifier::DIM),
+                // `$foreground 50%` is the terminal's default color, which Textual can't fade: plain, not dim.
+                muted: text,
                 left: Style::new().fg(border).bg(default).add_modifier(Modifier::REVERSED),
                 inner: Style::new().fg(border).bg(default),
                 right: Style::new().fg(border).bg(default),

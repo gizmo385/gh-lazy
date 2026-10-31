@@ -135,7 +135,12 @@ impl TestApp {
 
     /// Like [`Self::new`], drawn with `theme` (for example one reduced to a 256-color terminal).
     pub fn with_theme(config: Config, theme: Theme) -> Self {
-        let mut test = Self::entered(config, theme, FakeGithub::new(), TEST_OPTIONS);
+        Self::with_github_and_theme(config, FakeGithub::new(), theme)
+    }
+
+    /// Like [`Self::with_github`], drawn with `theme`.
+    pub fn with_github_and_theme(config: Config, gh: FakeGithub, theme: Theme) -> Self {
+        let mut test = Self::entered(config, theme, gh, TEST_OPTIONS);
         test.answer_setup_cache();
         test.answer_repos();
         test.drop_setup_cache_writes();

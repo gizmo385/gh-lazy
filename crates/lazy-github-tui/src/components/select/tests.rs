@@ -352,6 +352,34 @@ fn the_colors_are_pythons() {
     assert_eq!(buf[(1, 3)].fg, Color::Rgb(0x01, 0x78, 0xd4));
 }
 
+/// On the ANSI themes Textual's `$foreground 50%` is the terminal's default color, so the prompt and the arrow are
+/// plain; only the open list's blank row is Rich `dim`, SGR 2 there.
+#[test]
+fn the_ansi_box_has_no_dim_but_the_blank_row_does() {
+    let theme = Theme::by_name("ansi-dark").unwrap();
+    let mut buf = Buffer::empty(Rect::new(0, 0, 30, 9));
+    let mut select = status(None);
+    select.render_box(&mut buf, Rect::new(0, 0, 30, 3), &theme, under(&theme), true);
+    assert_eq!((buf[(3, 1)].symbol(), buf[(26, 1)].symbol()), ("S", "▼"));
+    for x in [3, 26] {
+        assert!(!buf[(x, 1)].modifier.contains(Modifier::DIM), "{:?}", buf[(x, 1)]);
+    }
+    let _ = select.open();
+    select.render_box(&mut buf, Rect::new(0, 0, 30, 3), &theme, under(&theme), true);
+    select.render_overlay(
+        &mut buf,
+        Rect::new(0, 0, 30, 3),
+        Rect::new(0, 0, 30, 9),
+        &theme,
+        under(&theme),
+    );
+    assert_eq!(buf[(26, 1)].symbol(), "▲");
+    assert!(!buf[(26, 1)].modifier.contains(Modifier::DIM));
+    assert_eq!(buf[(3, 4)].symbol(), "S");
+    assert!(buf[(3, 4)].modifier.contains(Modifier::DIM), "{:?}", buf[(3, 4)]);
+    insta::assert_snapshot!(buffer_to_styled_string(&buf));
+}
+
 /// The box on rows 0 to 2 and its open list, with a button row on rows 4 to 6 underneath, on a screen `rows` tall.
 fn draw_open(mut select: Select<&'static str>, rows: u16) -> String {
     let theme = Theme::default();

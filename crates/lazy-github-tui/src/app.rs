@@ -1330,6 +1330,8 @@ impl App {
         // `handle_event` already dropped the expired ones: the loop wakes for each deadline.
         self.toasts.render(frame, frame.area(), &self.shared.theme);
         self.render_overlays(frame);
+        // Last, over the composited frame, as Textual's line filter runs on what it writes.
+        self.shared.theme.resolve_dim(frame.buffer_mut(), area);
         self.hyperlinks.retain_drawn(frame.buffer_mut());
     }
 

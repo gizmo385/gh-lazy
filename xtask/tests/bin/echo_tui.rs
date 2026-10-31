@@ -11,7 +11,8 @@
 //! Mouse capture is on (crossterm's any-motion SGR mode) unless `ECHO_TUI_MOUSE` says otherwise: `off` leaves it off,
 //! and `press` turns on press/release reporting without motion (`?1000h ?1006h`).
 //!
-//! Ctrl+B draws a box titled with the process id at rows 5 to 7, so two runs differ (`tests/record.rs`). Ctrl+D
+//! Ctrl+B draws a box titled with the process id at rows 5 to 7, so two runs differ (`tests/record.rs`). Ctrl+F draws
+//! a focused button, ` Save ` in bold reverse, at row 8 (`wait.focused`). Ctrl+D
 //! exits with code 3, and Ctrl+Q with code 0. `--version` prints a version and exits, as fake-gh's installer and `--record` expect of the
 //! programs it stands in for.
 
@@ -95,6 +96,18 @@ fn main() -> io::Result<()> {
                 if key.code == KeyCode::Char('q') && key.modifiers.contains(KeyModifiers::CONTROL) {
                     terminal::disable_raw_mode()?;
                     std::process::exit(0);
+                }
+                if key.code == KeyCode::Char('f') && key.modifiers.contains(KeyModifiers::CONTROL) {
+                    queue!(
+                        out,
+                        cursor::MoveTo(2, 8),
+                        style::SetAttribute(style::Attribute::Bold),
+                        style::SetAttribute(style::Attribute::Reverse),
+                        style::Print(" Save "),
+                        style::SetAttribute(style::Attribute::Reset),
+                    )?;
+                    out.flush()?;
+                    continue;
                 }
                 if key.code == KeyCode::Char('b') && key.modifiers.contains(KeyModifiers::CONTROL) {
                     let title = format!("┌─ pid {} ", std::process::id());

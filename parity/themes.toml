@@ -3,9 +3,19 @@
 #
 # focus: the border color of the focused pane, Textual's $success. Measured from the Python startup dump
 # (xtask/tests/grids/python/startup-160x48.grid.json): the focused "[1] Repositories" border.
+#
+# border and block_cursor are optional; wait.focused needs them (parity/README.md, `wait.focused`), and a scenario
+# that uses it on a theme without them fails when the run is planned.
+# border: a focused field's `tall` outline, Textual's $border. Measured from the Python dump of issue-new's `typed`
+# capture (xtask/tests/grids/python/issue-new-typed-160x48.grid.json): the Description editor's outline.
+# block_cursor: the focused widget's cursor background, Textual's $block-cursor-background. Measured from the Python
+# startup dump (the focused table's highlighted row) and pr-maximize's `reviews-title` (the focused collapsible's
+# title).
 
 [textual-dark]
 focus = "#4ebf71"
+border = "#0178d4"
+block_cursor = "#0178d4"
 
 # Measured from the Python dumps of the theme-* scenarios: the focused "[1] Repositories" border at start.
 [catppuccin-latte]
@@ -18,3 +28,5 @@ focus = "idx:2"
 # An unknown theme name falls back to textual-dark (theme-unknown).
 [no-such-theme]
 focus = "#4ebf71"
+border = "#0178d4"
+block_cursor = "#0178d4"

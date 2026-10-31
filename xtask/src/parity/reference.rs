@@ -38,7 +38,8 @@ pub const CAPTURE_VERSION: u32 = 1;
 pub const MANIFEST_FORMAT: u32 = 1;
 /// The Python app and its dependencies (`python_app`). Repo-relative, `/`-separated.
 pub const PYTHON_APP_INPUTS: &[&str] = &["lazy_github", "pyproject.toml", "uv.lock"];
-/// The capture harness (`harness`): `gh` output, the environment, the PTY, key encoding and the grid dump.
+/// The capture harness (`harness`): `gh` output, the environment, the PTY, key encoding, the grid dump, and what
+/// `wait.focused` reads (its detector and the theme colors it uses), which decide when a capture is taken.
 pub const HARNESS_INPUTS: &[&str] = &[
     "crates/fake-gh/src",
     "crates/fake-gh/Cargo.toml",
@@ -47,6 +48,8 @@ pub const HARNESS_INPUTS: &[&str] = &[
     "xtask/src/parity/keys.rs",
     "xtask/src/parity/mouse.rs",
     "xtask/src/parity/grid.rs",
+    "xtask/src/parity/focus.rs",
+    "parity/themes.toml",
 ];
 /// Paths that need live Python in CI without being reference inputs: the Python-backed `#[ignore]`d tests and the
 /// workflow itself. [`plan`] adds every path the `parity/goldens/*.toml` manifests name.
@@ -1168,6 +1171,7 @@ enum KeyWait<'a> {
     Text(&'a str),
     Gone(&'a str),
     Regex(&'a str),
+    Focused(&'a str),
     StableMs(u64),
     Log(&'a LoggedRequestMatcher),
     RemoteBranch(&'a str),
@@ -1190,6 +1194,7 @@ pub fn capture_key(repo: &Path, scenario: &Scenario, size: Size, roots: &Roots) 
                 WaitFor::Text(t) => KeyWait::Text(t),
                 WaitFor::Gone(t) => KeyWait::Gone(t),
                 WaitFor::Regex(re) => KeyWait::Regex(re.as_str()),
+                WaitFor::Focused(l) => KeyWait::Focused(l),
                 WaitFor::Stable(d) => KeyWait::StableMs(millis(*d)),
                 WaitFor::Log(m) => KeyWait::Log(m),
                 WaitFor::RemoteBranch(b) => KeyWait::RemoteBranch(b),
@@ -1919,6 +1924,18 @@ contains = ["Hi"]
     }
 
     #[test]
+    fn the_capture_key_spells_the_focused_wait() {
+        let (_dir, roots) = key_roots();
+        let with = |step: &str| key_of(&variant("keys = [\"j\"]", step), SIZE, &roots);
+        let focused = with("wait = { focused = \"Save\" }");
+        assert_eq!(with("wait = { focused = \"Save\", timeout_ms = 50 }"), focused);
+        assert_ne!(with("wait = { focused = \"Cancel\" }"), focused);
+        assert_ne!(with("wait = { text = \"Save\" }"), focused);
+        let key: Value = serde_json::from_str(&focused).unwrap();
+        assert_eq!(key["steps"][1], serde_json::json!({"wait": {"focused": "Save"}}));
+    }
+
+    #[test]
     fn the_capture_key_hashes_mouse_steps_as_written() {
         let (_dir, roots) = key_roots();
         let with = |step: &str| key_of(&variant("keys = [\"j\"]", step), SIZE, &roots);
@@ -2239,6 +2256,8 @@ contains = ["Hi"]
             ),
             ("python_app", "uv.lock", "version = 2\n".to_owned()),
             ("harness", "xtask/src/parity/runner.rs", "// changed\n".to_owned()),
+            ("harness", "xtask/src/parity/focus.rs", "// changed\n".to_owned()),
+            ("harness", "parity/themes.toml", "[x]\nfocus = \"#000000\"\n".to_owned()),
         ];
         for (input, file, contents) in edits {
             let (repo, demo) = fresh_demo();
@@ -2250,7 +2269,7 @@ contains = ["Hi"]
     #[test]
     fn what_isnt_an_input_never_makes_a_reference_stale() {
         let (repo, _) = fresh_demo();
-        repo.write("parity/themes.toml", "x = 1\n");
+        repo.write("xtask/src/parity/structure.rs", "// not an input\n");
         repo.write("xtask/src/parity/check.rs", "// not an input\n");
         repo.write("lazy_github/__pycache__/x.pyc", "bytecode");
         repo.write(".gitignore", "__pycache__/\n");
@@ -2675,6 +2694,8 @@ parity_rows = ["config.theme"]
             "lazy_github/ui/new_screen.py",
             "uv.lock",
             "xtask/src/parity/runner.rs",
+            "xtask/src/parity/focus.rs",
+            "parity/themes.toml",
             "crates/fake-gh/src/lib.rs",
             "xtask/tests/python_app.rs",
             "crates/fake-gh/tests/python_client.rs",

@@ -364,6 +364,7 @@ pub fn run_scenarios(
         None => args,
     };
     let plan = Plan::new(args, scenarios)?;
+    check_focus_colors(scenarios, themes, roots)?;
     let freshness = freshnesses(repo, scenarios, &plan, &args.sizes, roots)?;
     let problems = problems_reading(scenarios, &plan, &args.sizes, &freshness);
     if !problems.is_empty() {
@@ -472,6 +473,8 @@ fn report_dir(repo: &Path, args: &ParityArgs, default: &str) -> Result<PathBuf> 
 /// `--record`: builds fake-gh, syncs the venv, records, deletes orphans and prints a count. Exit 0 when every
 /// selected reference is fresh at the end, 1 when some couldn't be recorded.
 fn record_references(repo: &Path, scenarios: &[Scenario], roots: Roots, args: &ParityArgs) -> Result<u8> {
+    let themes = Themes::load(&repo.join("parity/themes.toml"))?;
+    check_focus_colors(scenarios, &themes, &roots)?;
     let needs_python = scenarios.iter().any(|s| s.apps.contains(&App::Python));
     build_and_sync(repo, args, &["fake-gh"], needs_python)?;
     let paths = paths(repo, args, roots)?;
@@ -481,7 +484,6 @@ fn record_references(repo: &Path, scenarios: &[Scenario], roots: Roots, args: &P
         String::new()
     };
     let out = report_dir(repo, args, "record")?;
-    let themes = Themes::load(&repo.join("parity/themes.toml"))?;
     let options = record::Options {
         force: args.force,
         all: args.all || args.scenarios.is_empty(),
@@ -502,6 +504,15 @@ fn record_references(repo: &Path, scenarios: &[Scenario], roots: Roots, args: &P
     } else {
         EXIT_FAILED
     })
+}
+
+/// Fails, before anything is built or started, when a scenario uses `wait.focused` and its theme lacks the colors it
+/// reads ([`check::focus_colors`]).
+fn check_focus_colors(scenarios: &[Scenario], themes: &Themes, roots: &Roots) -> Result<()> {
+    for scenario in scenarios {
+        check::focus_colors(scenario, themes, roots)?;
+    }
+    Ok(())
 }
 
 /// `<python> --version`'s version number, for `recorded_with.python`.
@@ -938,6 +949,7 @@ pub(super) fn run_app(
         if options.cap_ungated_waits && !gates {
             env.timing.wait_cap = Some(UNGATED_WAIT_CAP);
         }
+        env.focus = check::focus_colors(scenario, options.themes, &paths.roots)?;
         // Held until the run (and its `--keep-home` copy) is done; dropping it cleans up the run dir.
         let read_only = match &env.run_dir {
             Some(run_dir) if scenario.env.config_dir_read_only => Some(ReadOnlyConfigDir::new(run_dir.path())?),

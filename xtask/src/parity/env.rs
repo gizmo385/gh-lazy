@@ -11,6 +11,7 @@ use portable_pty::CommandBuilder;
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
+use super::focus::FocusColors;
 use super::scenario::{App, Roots, Scenario, Size, Timing};
 use super::{Context, HarnessError, Result};
 
@@ -41,6 +42,8 @@ pub struct RunEnv {
     pub keep_into: Option<PathBuf>,
     /// The bare repo `origin` reaches over fake-ssh (`git_remote_branches`), for `wait.remote_branch`.
     pub remote: Option<LocalRemote>,
+    /// The scenario theme's colors, for `wait.focused`. All `None` until the caller sets them.
+    pub focus: FocusColors,
 }
 
 /// A run's local remote: the bare repo at `<run>/remotes/<owner>/<name>.git` that fake-ssh serves for `origin`.
@@ -77,6 +80,7 @@ impl RunEnv {
             run_dir: None,
             keep_into: None,
             remote: None,
+            focus: FocusColors::default(),
         }
     }
 
@@ -248,6 +252,7 @@ pub fn prepare(
         run_dir: Some(run_dir),
         keep_into: keep_home.then(|| out.to_owned()),
         remote: local_remote,
+        focus: FocusColors::default(),
     })
 }
 

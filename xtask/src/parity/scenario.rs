@@ -254,6 +254,8 @@ pub enum WaitFor {
     Gone(String),
     /// The pattern matches the screen, rows joined by `\n`.
     Regex(Regex),
+    /// The screen shows focus on something whose label contains this text ([`super::focus`]).
+    Focused(String),
     /// The screen's characters haven't changed for this long.
     Stable(Duration),
     /// fake-gh's log has a served request matching this.
@@ -368,6 +370,19 @@ pub struct Scenario {
 }
 
 impl Scenario {
+    /// Whether a step waits with `wait.focused`, which needs the theme's focus colors.
+    pub fn uses_focused_wait(&self) -> bool {
+        self.steps.iter().any(|s| {
+            matches!(
+                s,
+                Step::Wait(Wait {
+                    until: WaitFor::Focused(_),
+                    ..
+                })
+            )
+        })
+    }
+
     /// The names of the scenario's captures, in step order.
     pub fn capture_names(&self) -> impl Iterator<Item = &str> {
         self.steps.iter().filter_map(|s| match s {
@@ -571,6 +586,7 @@ struct RawWait {
     text: Option<String>,
     gone: Option<String>,
     regex: Option<Spanned<String>>,
+    focused: Option<Spanned<String>>,
     stable_ms: Option<u64>,
     log: Option<LoggedRequestMatcher>,
     remote_branch: Option<Spanned<String>>,
@@ -775,10 +791,10 @@ fn parse_steps(
 
 /// Python moves focus a tick after a focus key (Py bug B98), so on a loaded machine a key sent right after one, or a
 /// capture, can reach the section that had focus before. A focus key must therefore end its `keys` step, and the next
-/// step must wait on a condition that shows the focus moved, e.g. the new section's bindings in the footer. A
-/// `stable_ms` wait doesn't count: a busy Python can hold the screen still past it. Where no text shows the move
-/// (focus moving behind a maximized section), an explicit `sleep_ms` is allowed instead. `starts` are the steps'
-/// offsets.
+/// step must wait on a condition that shows the focus moved: `wait.focused` on the section's title, or its bindings in
+/// the footer. A `stable_ms` wait doesn't count: a busy Python can hold the screen still past it. Where nothing on
+/// screen shows the move (focus moving behind a maximized section), an explicit `sleep_ms` is allowed instead.
+/// `starts` are the steps' offsets.
 fn check_focus_waits(steps: &[Step], starts: &[usize], loc: &Locator<'_>) -> Result<(), ScenarioError> {
     for (i, step) in steps.iter().enumerate() {
         let Step::Keys(keys) = step else { continue };
@@ -805,7 +821,7 @@ fn check_focus_waits(steps: &[Step], starts: &[usize], loc: &Locator<'_>) -> Res
                 starts[i],
                 format!(
                     "focus key {:?} must be followed by a `wait` that shows the focus moved (not `stable_ms`), e.g. \
-                     the section's bindings in the footer: Python moves focus a tick late (Py bug B98)",
+                     `focused = \"<section title>\"`: Python moves focus a tick late (Py bug B98)",
                     keys[pos]
                 ),
             ));
@@ -1138,6 +1154,7 @@ fn parse_wait(spanned: Spanned<RawWait>, loc: &Locator<'_>, has_remote: bool) ->
         raw.text.is_some(),
         raw.gone.is_some(),
         raw.regex.is_some(),
+        raw.focused.is_some(),
         raw.stable_ms.is_some(),
         raw.log.is_some(),
         raw.remote_branch.is_some(),
@@ -1149,7 +1166,7 @@ fn parse_wait(spanned: Spanned<RawWait>, loc: &Locator<'_>, has_remote: bool) ->
     if count != 1 {
         return Err(loc.at(
             start,
-            "`wait` needs exactly one of text, gone, regex, stable_ms, log, remote_branch or exited",
+            "`wait` needs exactly one of text, gone, regex, focused, stable_ms, log, remote_branch or exited",
         ));
     }
     let until = if let Some(text) = raw.text {
@@ -1159,6 +1176,14 @@ fn parse_wait(spanned: Spanned<RawWait>, loc: &Locator<'_>, has_remote: bool) ->
     } else if let Some(pattern) = raw.regex {
         let re = Regex::new(pattern.get_ref()).map_err(|e| loc.at_span(&pattern, format!("invalid regex: {e}")))?;
         WaitFor::Regex(re)
+    } else if let Some(label) = raw.focused {
+        if label.get_ref().is_empty() {
+            return Err(loc.at_span(
+                &label,
+                "`wait.focused` can't be empty: give part of the focused thing's label",
+            ));
+        }
+        WaitFor::Focused(label.into_inner())
     } else if let Some(ms) = raw.stable_ms {
         WaitFor::Stable(Duration::from_millis(ms))
     } else if let Some(log) = raw.log {
@@ -1666,6 +1691,7 @@ move = { at = [100, 1] }
         for next in [
             "wait = { text = \"O Lookup Issue\" }",
             "wait = { gone = \"x\" }",
+            "wait = { focused = \"[3] Issues\" }",
             "sleep_ms = 500",
         ] {
             let source = format!("version = 1\n[[step]]\nkeys = [\"escape\", \"3\"]\n[[step]]\n{next}\n");
@@ -1675,6 +1701,31 @@ move = { at = [100, 1] }
         parse("version = 1\n[[step]]\nkeys = [\"7\", \"j\"]\n").unwrap();
         // Rust focuses at once, so a Rust-only scenario may send a focus key with more keys.
         parse("version = 1\napps = [\"rust\"]\n[[step]]\nkeys = [\"3\", \"enter\"]\n").unwrap();
+    }
+
+    #[test]
+    fn parses_the_focused_wait_and_rejects_an_empty_one() {
+        let s = parse("version = 1\n[[step]]\nwait = { focused = \"Description\", timeout_ms = 500 }\n").unwrap();
+        assert!(
+            matches!(&s.steps[0], Step::Wait(Wait { until: WaitFor::Focused(l), timeout })
+            if l == "Description" && *timeout == Duration::from_millis(500))
+        );
+        assert!(s.uses_focused_wait());
+        assert!(
+            !parse("version = 1\n[[step]]\nwait = { text = \"x\" }\n")
+                .unwrap()
+                .uses_focused_wait()
+        );
+        assert_error(
+            "version = 1\n[[step]]\nsleep_ms = 1\n[[step]]\nwait = { focused = \"\" }\n",
+            5,
+            "`wait.focused` can't be empty",
+        );
+        assert_error(
+            "version = 1\n[[step]]\nwait = { focused = \"x\", text = \"y\" }\n",
+            3,
+            "exactly one of text, gone, regex, focused,",
+        );
     }
 
     #[test]

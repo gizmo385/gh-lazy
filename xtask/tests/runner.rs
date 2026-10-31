@@ -145,6 +145,51 @@ fn a_step_timeout_dumps_the_screen() {
     let saved: serde_json::Value = serde_json::from_str(&read(&out.path().join("status.json"))).unwrap();
     assert_eq!(saved["status"], "timeout");
     assert_eq!(saved["step"], 1);
+    assert!(saved.get("message").is_none(), "{saved}");
+}
+
+#[test]
+fn the_focused_wait_passes_once_the_marker_shows() {
+    let out = tempfile::tempdir().unwrap();
+    // The button kind needs no theme color, so the runner's default colors are enough.
+    let s = scenario(
+        "[[step]]\nwait = { text = \"settled\" }\n\n[[step]]\nkeys = [\"ctrl+f\"]\n\n\
+         [[step]]\nwait = { focused = \"Sav\", timeout_ms = 5000 }\n",
+    );
+    let status = run(&s, out.path());
+    assert_eq!(status.status, RunState::Ok, "{status:?}");
+}
+
+#[test]
+fn a_focused_wait_timeout_says_what_is_focused() {
+    let out = tempfile::tempdir().unwrap();
+    let s = scenario(
+        "[[step]]\nwait = { text = \"settled\" }\n\n[[step]]\nwait = { focused = \"Save\", timeout_ms = 300 }\n",
+    );
+    let status = run(&s, out.path());
+    assert_eq!(status.status, RunState::Timeout, "{status:?}");
+    assert_eq!(
+        status.message.as_deref(),
+        Some("wait.focused \"Save\": focused now: nothing")
+    );
+
+    let s = scenario(
+        "[[step]]\nwait = { text = \"settled\" }\n\n[[step]]\nkeys = [\"ctrl+f\"]\n\n\
+         [[step]]\nwait = { focused = \"Cancel\", timeout_ms = 500 }\n",
+    );
+    let status = run(&s, out.path());
+    assert_eq!(status.status, RunState::Timeout, "{status:?}");
+    assert_eq!(status.step, Some(2));
+    let saved: serde_json::Value = serde_json::from_str(&read(&out.path().join("status.json"))).unwrap();
+    assert_eq!(
+        saved["message"],
+        "wait.focused \"Cancel\": focused now: button \"Save\""
+    );
+    assert!(
+        status
+            .describe()
+            .ends_with(": wait.focused \"Cancel\": focused now: button \"Save\"")
+    );
 }
 
 #[test]

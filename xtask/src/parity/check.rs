@@ -12,12 +12,13 @@ use serde_json::{Value, json};
 
 use super::ci::Finding;
 use super::env::build_config;
+use super::focus::FocusColors;
 use super::grid::{GRID_VERSION, Grid};
 use super::reference;
 use super::runner::AppRunStatus;
 use super::scenario::{App, Check, Expect, ExpectTabs, Ignore, Roots, Scenario, Step};
 use super::screen;
-use super::structure::{self, Binding, DEFAULT_THEME, Pane, Structure, Table, ThemeColors};
+use super::structure::{self, Binding, DEFAULT_THEME, Pane, Structure, Table, ThemeColors, Themes};
 use super::summary::{CaptureSummary, CheckOutcome};
 use super::{Context, HarnessError, Result};
 
@@ -700,6 +701,35 @@ pub fn scenario_theme(scenario: &Scenario, roots: &Roots) -> Result<String> {
         .to_owned())
 }
 
+/// The colors `wait.focused` reads in the scenario's theme. A scenario that uses `wait.focused` needs its theme in
+/// `parity/themes.toml` with `focus`, `border` and `block_cursor`; otherwise this fails, naming the theme and the
+/// missing key, so the run stops before anything starts.
+pub fn focus_colors(scenario: &Scenario, themes: &Themes, roots: &Roots) -> Result<FocusColors> {
+    let theme = scenario_theme(scenario, roots)?;
+    let colors = themes.focus_colors(&theme);
+    if !scenario.uses_focused_wait() {
+        return Ok(colors);
+    }
+    if !themes.contains(&theme) {
+        return Err(HarnessError(format!(
+            "{}: `wait.focused` needs theme {theme:?} in parity/themes.toml, which has no entry for it",
+            scenario.path.display()
+        )));
+    }
+    let keys = [
+        ("focus", &colors.pane),
+        ("border", &colors.border),
+        ("block_cursor", &colors.block_cursor),
+    ];
+    if let Some((key, _)) = keys.iter().find(|(_, color)| color.is_none()) {
+        return Err(HarnessError(format!(
+            "{}: `wait.focused` needs `{key}` for theme {theme:?} in parity/themes.toml",
+            scenario.path.display()
+        )));
+    }
+    Ok(colors)
+}
+
 fn read_grid(path: &Path) -> Result<Grid> {
     let text = std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
     let grid: Grid = serde_json::from_str(&text).with_context(|| format!("parsing {}", path.display()))?;
@@ -1268,6 +1298,50 @@ mod tests {
     }
 
     /// A scenario `drifty` whose capture checks `rows`, and a live grid whose table differs from the stored one.
+    #[test]
+    fn a_focused_wait_needs_its_themes_focus_colors() {
+        let repo = crate::parity::cli::repo_root();
+        let roots = Roots {
+            fixtures: repo.join("parity/fixtures"),
+            configs: repo.join("parity/configs"),
+            seeds: repo.join("parity/seeds"),
+        };
+        let themes = Themes::parse(
+            "[textual-dark]\nfocus = \"#4ebf71\"\nborder = \"#0178d4\"\nblock_cursor = \"#0178d4\"\n\
+             [partial]\nfocus = \"#4ebf71\"\nborder = \"#0178d4\"\n",
+        )
+        .unwrap();
+        let scenario = |theme: &str, wait: &str| {
+            let source = format!(
+                "version = 1\n[env]\nconfig_overrides = {{ appearance = {{ theme = \"{theme}\" }} }}\n\
+                 [[step]]\nwait = {wait}\n"
+            );
+            Scenario::parse(Path::new("parity/scenarios/focusy.toml"), &source, &roots).unwrap()
+        };
+        let focused = "{ focused = \"Save\" }";
+
+        let colors = focus_colors(&scenario("textual-dark", focused), &themes, &roots).unwrap();
+        assert_eq!(colors.border.as_deref(), Some("#0178d4"));
+
+        let missing = focus_colors(&scenario("nord", focused), &themes, &roots)
+            .unwrap_err()
+            .to_string();
+        assert!(missing.contains("parity/scenarios/focusy.toml"), "{missing}");
+        assert!(missing.contains("theme \"nord\" in parity/themes.toml"), "{missing}");
+
+        let partial = focus_colors(&scenario("partial", focused), &themes, &roots)
+            .unwrap_err()
+            .to_string();
+        assert!(
+            partial.contains("needs `block_cursor` for theme \"partial\""),
+            "{partial}"
+        );
+
+        // A scenario without the wait runs on any theme.
+        let plain = focus_colors(&scenario("nord", "{ text = \"x\" }"), &themes, &roots).unwrap();
+        assert_eq!(plain, FocusColors::default());
+    }
+
     fn drifted_table() -> (Scenario, ThemeColors, Grid, Grid) {
         let repo = crate::parity::cli::repo_root();
         let roots = Roots {

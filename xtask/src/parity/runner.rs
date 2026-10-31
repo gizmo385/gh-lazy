@@ -18,6 +18,7 @@ use portable_pty::{Child, MasterPty, PtySize, native_pty_system};
 use serde::{Deserialize, Serialize};
 
 use super::env::{LocalRemote, RunEnv};
+use super::focus::{self, FocusColors, Focused};
 use super::grid::{Grid, screen_text};
 use super::keys;
 use super::mouse::{self, MouseReport};
@@ -157,9 +158,12 @@ pub fn run(env: RunEnv, steps: &[Step], out: &Path) -> Result<AppRunStatus> {
             let result = session.run_steps(steps, out);
             let status = match result {
                 Ok(()) => AppRunStatus::new(RunState::Ok, None, None),
-                Err((index, StepError::Timeout)) => {
+                Err((index, StepError::Timeout(message))) => {
                     session.dump_failure(out)?;
-                    AppRunStatus::new(RunState::Timeout, Some(index), None)
+                    AppRunStatus {
+                        message,
+                        ..AppRunStatus::new(RunState::Timeout, Some(index), None)
+                    }
                 }
                 Err((index, StepError::Exited(code))) => {
                     session.dump_failure(out)?;
@@ -213,7 +217,8 @@ pub fn write_status(status: &AppRunStatus, out: &Path) -> Result<()> {
 
 /// Why a step stopped the run.
 enum StepError {
-    Timeout,
+    /// With what the wait saw instead, when it can say (`wait.focused`).
+    Timeout(Option<String>),
     Exited(Option<u32>),
     /// The step can't run against the app as it is; the message says why.
     Failed(String),
@@ -243,6 +248,8 @@ struct Session {
     /// The run's local remote, for `wait.remote_branch`.
     remote: Option<LocalRemote>,
     timing: super::scenario::Timing,
+    /// [`RunEnv::focus`].
+    focus: FocusColors,
 }
 
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -312,6 +319,7 @@ impl Session {
             browser_log: env.browser_log.clone(),
             remote: env.remote.clone(),
             timing: env.timing,
+            focus: env.focus.clone(),
         })
     }
 
@@ -503,7 +511,7 @@ impl Session {
                 return Ok(());
             }
             if now >= self.deadline {
-                return Err(StepError::Timeout);
+                return Err(StepError::Timeout(None));
             }
             std::thread::sleep(POLL.min(end - now));
         }
@@ -528,12 +536,23 @@ impl Session {
                 }
             });
         }
+        if let WaitFor::Focused(needle) = until {
+            return self
+                .poll(timeout, |s| s.focused().iter().any(|f| f.matches(needle)).then_some(()))
+                .map_err(|e| match e {
+                    StepError::Timeout(_) => StepError::Timeout(Some(format!(
+                        "wait.focused {needle:?}: focused now: {}",
+                        focus::describe(&self.focused())
+                    ))),
+                    e => e,
+                });
+        }
         self.poll(timeout, |s| {
             let done = match until {
                 WaitFor::Text(needle) => s.text().lines().any(|row| row.contains(needle.as_str())),
                 WaitFor::Gone(needle) => !s.text().lines().any(|row| row.contains(needle.as_str())),
                 WaitFor::Regex(re) => re.is_match(&s.text()),
-                WaitFor::Stable(_) | WaitFor::Exited => unreachable!("handled above"),
+                WaitFor::Stable(_) | WaitFor::Exited | WaitFor::Focused(_) => unreachable!("handled above"),
                 WaitFor::Log(matcher) => s.env_log.as_ref().is_some_and(|path| {
                     std::fs::read_to_string(path).is_ok_and(|text| RequestLog::parse(&text).has_served(matcher))
                 }),
@@ -558,7 +577,7 @@ impl Session {
             }
             let now = Instant::now();
             if now >= end {
-                return Err(StepError::Timeout);
+                return Err(StepError::Timeout(None));
             }
             std::thread::sleep(POLL.min(end - now));
         }
@@ -589,7 +608,7 @@ impl Session {
             self.check_alive()?;
             let now = Instant::now();
             if now >= end {
-                return Err(StepError::Timeout);
+                return Err(StepError::Timeout(None));
             }
             std::thread::sleep(POLL.min(end - now));
         }
@@ -597,6 +616,12 @@ impl Session {
 
     fn text(&self) -> String {
         screen_text(lock(&self.parser).screen())
+    }
+
+    /// The focus markers on screen now, in the run's theme colors.
+    fn focused(&self) -> Vec<Focused> {
+        let grid = Grid::from_screen(lock(&self.parser).screen());
+        focus::focused(&grid, &self.focus)
     }
 
     fn dump_failure(&self, out: &Path) -> Result<()> {

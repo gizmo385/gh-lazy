@@ -868,6 +868,8 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
     - `text = "<substring>"`: appears on any row
     - `gone = "<substring>"`: no longer on any row
     - `regex = "<pattern>"`: matched against the screen with rows joined by `\n` (Rust `regex` syntax)
+    - `focused = "<text>"`: the screen shows focus on something whose label contains the text (a plain substring
+      test), read from the focus markers both apps draw. See [Focus waits](#focus-waits). Not empty.
     - `stable_ms = <n>`: the screen's characters are unchanged for n ms. Colors and the cursor are ignored, so a
       blinking cursor doesn't reset the timer.
     - `log = { method = "PUT", path = "/repos/o/r/pulls/1/merge" }`: the fake-gh log has a served request matching
@@ -881,11 +883,11 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
     Each `wait` takes an optional `timeout_ms` (default 10000). A timeout fails that app's run at that step and dumps
     the screen.
   - `keys`: a list of key specs, below. In a scenario Python runs, a focus key (`1` to `6`) must end its step, and
-    the next step must be a `wait` other than `stable_ms`, or a `sleep_ms` where no text can show the move. Python
-    moves focus a tick after the key (Py bug B98), so a key or capture sent right after it can reach the section that
-    had focus before (#314). Wait on the new section's bindings in the footer (`text = "O Lookup Issue"`), or, for a
-    section with none of its own (Details, the command log), on the old section's leaving it
-    (`gone = "O Lookup"`).
+    the next step must be a `wait` other than `stable_ms`, or a `sleep_ms` where nothing on screen can show the move.
+    Python moves focus a tick after the key (Py bug B98), so a key or capture sent right after it can reach the
+    section that had focus before (#314). Wait on the new section's focus border (`focused = "[3] Issues"`,
+    `focused = "Details"`, `focused = "Command Log"`), or on its bindings in the footer (`text = "O Lookup Issue"`).
+    A `sleep_ms` is for a move nothing shows, such as focus moving behind a maximized section; say why in a comment.
   - `type`: a string sent verbatim.
   - `paste`: a string. It's sent in bracketed-paste mode (`ESC[200~ … ESC[201~`) if the app has enabled it, else
     verbatim.
@@ -954,6 +956,45 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
   of URLs the app had opened in the browser by the capture (none of them empty).
 - `checks`, `ignore` and `[expect]` are evaluated by the structural check, below.
 
+### Focus waits
+
+`wait = { focused = "<text>" }` passes once the app's screen shows focus on something whose label contains `<text>`.
+It runs per app on that app's own screen, polled every 20 ms like the other waits, with the usual `timeout_ms`. It's
+for focus moves no text shows: in dialogs focus is a border color, a reversed button label or a highlighted tab, and
+Python moves focus late (Py bugs B98 and B121), so a key or capture sent right after a focus move can reach the old
+widget. The detector is `xtask/src/parity/focus.rs`, which traces its own outlines (it doesn't use `structure.rs`).
+
+It knows four kinds of focus marker, each read from the screen alone in the scenario theme's colors:
+
+| Kind | Drawn as (`textual-dark`) | Label(s) it matches against |
+| --- | --- | --- |
+| Pane | a closed box outline (light, rounded, heavy, double, ascii, or Textual's heavy-dashed `┏╍┓╏┗┛`) whose border cells are all in `focus` (`$success`, `#4ebf71`) | the title, or for an untitled box (a comment) its interior text |
+| Field | a Textual `tall` outline (`▊` left column, `▔` top row, `▁` bottom row, `▎` right column) whose cells are all in `border` (`$border`, `#0178d4`) | the interior text (placeholder, value or choice); the text on the row directly above the outline, from its left column to its right (a `Label` such as `Description` or `Issue Number:`); and the text to the left of the outline on each of its rows, back to the nearest border or outline glyph (settings rows such as `Theme:`) |
+| Button | a run of at least two non-blank cells on one row that are both bold and inverse | the run's text, trimmed (`Save`, `Lookup`) |
+| Cursor | a run of cells on one row whose background is `block_cursor` (`$block-cursor-background`, `#0178d4`) | the run's text, trimmed (the focused tab strip's active tab, a focused collapsible title such as `▶ PR Reviews: ✘ Changes Requested`, a focused table's or list's highlighted row) |
+
+- Matching is a plain substring test on each label, with box-drawing and block-element glyphs (U+2500 to U+259F)
+  stripped and the ends trimmed. An interior's rows are trimmed and joined with one space. So `focused = "Details"`
+  matches `[5] PR #5 Details`, and `focused = "Description"` matches the new-issue editor.
+- Several markers can be on screen at once (a focused pane and the cursor of its focused table, say); the wait passes
+  if any matches.
+- On a timeout the run fails as any wait does (`timeout`, `failure.txt`), and `status.json`'s `message` names the
+  wait and every marker on screen instead, each with its labels:
+  `wait.focused "Description": focused now: button "Save"`, or `focused now: nothing`.
+- **Theme keys.** The colors come from the scenario theme's entry in `parity/themes.toml` (keyed by
+  `appearance.theme`, as for the [focus check](#focus)): `focus` for panes, `border` for fields and `block_cursor`
+  for cursors. Buttons need no color. A scenario that uses `wait.focused` while its theme has no entry, or lacks one
+  of those keys, fails when the run is planned (exit 2, before anything starts), naming the theme and the key. Only
+  `textual-dark` and `no-such-theme` have `border` and `block_cursor` so far; measure them from Python dumps as
+  `focus` was before using the wait on another theme.
+- **Limits.** A theme whose `$button-focus-text-style` isn't bold reverse draws buttons the detector can't see. A
+  focus that moves to something hidden (behind a maximized section, a widget scrolled out of view, a pane whose
+  bottom edge is off screen) shows no marker, so nothing can wait for it: use `sleep_ms` with a comment, as
+  `pr-maximize`'s `focus-key` does. Something unfocused drawn in one of the colors (a highlight that stays on the
+  block-cursor background after focus leaves, an outline that happens to be in `$border`) is a false marker, so pick
+  a label only the newly focused widget has. In Python, keys bound below the screen do nothing while nothing has
+  focus (Py bug B88), so a focus key there shows no move either.
+
 ### Keeping the suite fast
 
 Every scenario runs in CI on every PR, once per size and per app, and Actions minutes are the limit. Startup
@@ -967,8 +1008,8 @@ scenario:
 - **One size by default.** Add `[100, 30]` (or another size) only for rows about layout, clipping or wrapping: pane
   sizes, a footer or header cut at the edge, text that wraps. Focus, content, counts and key dispatch don't change
   with the size.
-- **Wait on a signal.** Before a capture, wait for `text`, `gone`, `regex` or `log` on the thing the capture is
-  about. Don't add `stable_ms` waits or `sleep_ms` to cover a slow redraw: the capture's own `capture_stable_ms`
+- **Wait on a signal.** Before a capture, wait for `text`, `gone`, `regex`, `focused` or `log` on the thing the
+  capture is about; after a key that moves focus, `focused` on where it lands. Don't add `stable_ms` waits or `sleep_ms` to cover a slow redraw: the capture's own `capture_stable_ms`
   wait already runs, and a concrete wait ends as soon as the screen is ready. A `gone` wait also beats `sleep_ms`
   for a timer (`gone = "View Maximized"`, not `sleep_ms = 5500`).
 - **One timer per behavior.** Checks that wait out a timer (a toast expiring, a refresh interval) cost their whole
@@ -1052,8 +1093,8 @@ Each app run writes `status.json`:
  "misses": [], "errors": []}
 ```
 
-- `status` is `ok` (every step ran), `timeout` (a step or the whole run took too long), `exited` (the app exited
-  before the last step), `step-failed` (a step couldn't run against the app as it was, e.g. a mouse step before the
+- `status` is `ok` (every step ran), `timeout` (a step or the whole run took too long; after a `wait.focused`,
+  `message` says what was focused instead), `exited` (the app exited before the last step), `step-failed` (a step couldn't run against the app as it was, e.g. a mouse step before the
   app turned on mouse reporting; `message` says why) or `spawn-error` (the PTY or the app couldn't be started;
   `message` says why).
 - `step` is the index of the failing step, and `exit_code` the app's exit code when it exited.
@@ -1527,7 +1568,7 @@ Each input is a git object id from `git hash-object`, run in the repo with a cle
 | `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `git_remote_branches` (only when set), `key_delay_ms`, `capture_stable_ms`, the size, every step and, only when the scenario sets one, the seed: its name and its files as sorted `[<path relative to the seed dir>, <blob>]` pairs; `config_dir_read_only` only when `true`; and `gh_timeout_ms` only when set. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore.boxes` (not `ignore.writes`). |
 | `fixtures` | Every fixture in the scenario's sets whose request key (method, path, query, accept) equals a served entry in `requests.jsonl`, plus its `body_file`, as sorted `<set>/<relpath> <blob>` lines. For a `--paginate` request, the pages its `Link: rel="next"` headers lead to as well. |
 | `python_app` | `lazy_github/`, `pyproject.toml` and `uv.lock`. |
-| `harness` | `crates/fake-gh/src/`, `crates/fake-gh/Cargo.toml`, `xtask/src/parity/{env,runner,keys,grid}.rs`, `CAPTURE_VERSION` and the `vt100` and `portable-pty` versions in `Cargo.lock`. |
+| `harness` | `crates/fake-gh/src/`, `crates/fake-gh/Cargo.toml`, `xtask/src/parity/{env,runner,keys,mouse,grid,focus}.rs`, `parity/themes.toml` (the colors `wait.focused` reads), `CAPTURE_VERSION` and the `vt100` and `portable-pty` versions in `Cargo.lock`. |
 
 The file sets (`python_app`, `harness`) are the files `git ls-files -co --exclude-standard` lists (tracked, plus
 untracked but not ignored: local edits count and `__pycache__` doesn't), each hashed from the working tree after
@@ -1543,8 +1584,8 @@ for example a new env var set in a file that isn't hashed.
 | A scenario's env, steps, `checks` or `ignore.boxes`, or the config file it uses | that scenario's |
 | A file in a scenario's seed (`parity/seeds/<name>/`), added, changed or removed | that scenario's (`scenario changed`) |
 | Adding or changing fixtures | those whose Python run requested a changed key |
-| `crates/fake-gh/src/`, `env.rs`, `runner.rs`, `keys.rs` or `grid.rs`, a pinned crate, or `CAPTURE_VERSION` | all |
-| `[expect]`, `gate`, `parity_rows`, `description`, timeouts, `apps`, `check.rs`, `structure.rs`, `report.rs` or `themes.toml` | none |
+| `crates/fake-gh/src/`, `env.rs`, `runner.rs`, `keys.rs`, `mouse.rs`, `grid.rs`, `focus.rs` or `themes.toml`, a pinned crate, or `CAPTURE_VERSION` | all |
+| `[expect]`, `gate`, `parity_rows`, `description`, timeouts, `apps`, `check.rs`, `structure.rs` or `report.rs` | none |
 
 `[expect]` and the checks run against the stored screen on every run, which is why they need no re-record.
 
@@ -1633,6 +1674,11 @@ Flipping `gate`, editing `parity_rows`, editing `[expect]` or editing `ignore.wr
   mapping letters to styles (`g fg=#4ebf71 bg=#121212 bold inverse`); `xtask/src/parity/test_grid.rs` documents the
   format. When the Python screen changes, refresh the dumps from a `--python-only` run and review the snapshot diff
   with `cargo insta review`.
+- The `wait.focused` detector (`xtask/src/parity/focus.rs`) is unit-tested the same way: Python dumps of a focused
+  pane, button, field (labelled inside, above and to the left), collapsible title and dashed comment box in
+  `xtask/tests/grids/python/` (copied there, not read from `parity/references/`, which re-recording changes), and
+  synthetic grids for mixed-color outlines, single reversed cells and missing theme colors. `echo_tui` draws a
+  focused button on Ctrl+F, and `tests/runner.rs` waits for it and checks a timeout's `message`.
 - The report has `insta` snapshots (`summary.md`, the text diff, the HTML of a small grid pair) in
   `xtask/src/parity/snapshots/`, and `xtask/tests/report.rs` writes a whole report from synthetic dumps. Review
   snapshot changes with `cargo insta review`, or rerun with `INSTA_UPDATE=always` and read the diff.

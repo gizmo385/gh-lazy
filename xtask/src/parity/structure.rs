@@ -11,6 +11,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
+use super::focus::FocusColors;
 use super::grid::{Grid, Style};
 use super::{Context, HarnessError, Result};
 
@@ -112,20 +113,44 @@ pub struct Themes(BTreeMap<String, ThemeEntry>);
 #[serde(deny_unknown_fields)]
 struct ThemeEntry {
     focus: String,
+    /// `$border`: a focused field's outline, for `wait.focused`.
+    border: Option<String>,
+    /// `$block-cursor-background`: the focused widget's cursor, for `wait.focused`.
+    block_cursor: Option<String>,
 }
 
 impl Themes {
     pub fn parse(source: &str) -> std::result::Result<Self, String> {
         let entries: BTreeMap<String, ThemeEntry> = toml::from_str(source).map_err(|e| e.to_string())?;
         for (name, entry) in &entries {
-            if !is_hex_color(&entry.focus) && !is_indexed_color(&entry.focus) {
-                return Err(format!(
-                    "[{name}] focus = {:?} isn't a #rrggbb or idx:<n> color",
-                    entry.focus
-                ));
+            let colors = [
+                ("focus", Some(&entry.focus)),
+                ("border", entry.border.as_ref()),
+                ("block_cursor", entry.block_cursor.as_ref()),
+            ];
+            for (key, value) in colors {
+                if let Some(value) = value.filter(|v| !is_hex_color(v) && !is_indexed_color(v)) {
+                    return Err(format!("[{name}] {key} = {value:?} isn't a #rrggbb or idx:<n> color"));
+                }
             }
         }
         Ok(Self(entries))
+    }
+
+    /// Whether `name` has an entry.
+    pub fn contains(&self, name: &str) -> bool {
+        self.0.contains_key(name)
+    }
+
+    /// The colors `wait.focused` reads for theme `name`; all `None` when it has no entry.
+    pub fn focus_colors(&self, name: &str) -> FocusColors {
+        let entry = self.0.get(name);
+        let lower = |c: Option<&String>| c.map(|c| c.to_ascii_lowercase());
+        FocusColors {
+            pane: lower(entry.map(|e| &e.focus)),
+            border: lower(entry.and_then(|e| e.border.as_ref())),
+            block_cursor: lower(entry.and_then(|e| e.block_cursor.as_ref())),
+        }
     }
 
     pub fn load(path: &Path) -> Result<Self> {
@@ -1230,8 +1255,44 @@ mod tests {
         assert!(Themes::parse("[x]\nfocus = \"idx:256\"\n").is_err());
         assert!(Themes::parse("[x]\nfocus = \"idx:\"\n").is_err());
         assert!(Themes::parse("[x]\nfocus = \"#000000\"\nother = 1\n").is_err());
+        assert!(!themes.contains("nord"));
+        assert_eq!(themes.focus_colors("nord"), FocusColors::default());
         let repo = Themes::load(&crate::parity::cli::repo_root().join("parity/themes.toml")).unwrap();
         assert_eq!(repo.colors(DEFAULT_THEME), dark());
+        let dark_focus = FocusColors {
+            pane: Some("#4ebf71".into()),
+            border: Some("#0178d4".into()),
+            block_cursor: Some("#0178d4".into()),
+        };
+        assert_eq!(repo.focus_colors(DEFAULT_THEME), dark_focus);
+        assert_eq!(repo.focus_colors("no-such-theme"), dark_focus);
+        assert_eq!(repo.focus_colors("ansi-dark").border, None);
+    }
+
+    #[test]
+    fn themes_toml_reads_the_focused_wait_colors() {
+        let themes = Themes::parse(
+            "[textual-dark]\nfocus = \"#4ebf71\"\nborder = \"#0178D4\"\nblock_cursor = \"idx:4\"\n\
+             [only-focus]\nfocus = \"#4ebf71\"\n",
+        )
+        .unwrap();
+        assert_eq!(
+            themes.focus_colors("textual-dark"),
+            FocusColors {
+                pane: Some("#4ebf71".into()),
+                border: Some("#0178d4".into()),
+                block_cursor: Some("idx:4".into()),
+            }
+        );
+        let partial = themes.focus_colors("only-focus");
+        assert_eq!((partial.border, partial.block_cursor), (None, None));
+        assert!(themes.contains("only-focus"));
+        for bad in ["border = \"blue\"", "block_cursor = \"#12345\"", "block_cursor = 4"] {
+            assert!(
+                Themes::parse(&format!("[x]\nfocus = \"#000000\"\n{bad}\n")).is_err(),
+                "{bad}"
+            );
+        }
     }
 
     fn snapshot(size: &str) -> String {

@@ -6,6 +6,7 @@ pub mod ci;
 pub mod cli;
 pub mod diff;
 pub mod env;
+pub mod focus;
 pub mod grid;
 pub mod keys;
 pub mod mouse;

@@ -30,7 +30,7 @@ use crate::components::markdown::{LinkSpan, Markdown, Rendered};
 use crate::components::text_editor::{EditorBorder, EditorOutcome, EditorPadding, EditorVariant, TextEditor};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::theme::Theme;
+use crate::theme::{Paint, Theme};
 use crate::toast::Toast;
 
 /// The dialog's screen bindings: `modal.submit` (Py bug B17's recommendation; Python binds only `modal.close`), then
@@ -313,18 +313,19 @@ impl NewCommentDialog {
 
     /// The reply heading, its quote and its rule, `width` cells wide, as lines; the reply's rows cut them off.
     /// The heading, the quote and the rule, with the quote's links on their rows below the heading.
-    fn reply_lines(&self, width: u16, theme: &Theme, text: Style) -> Rendered {
+    fn reply_lines(&self, width: u16, theme: &Theme, text: Style, under: Paint) -> Rendered {
         let Some((line, quote)) = &self.heading else {
             return Rendered::default();
         };
-        let quote = quote.layout(width, theme);
+        // Textual's `Markdown` is transparent: the quote sits on the container's `$surface-lighten-3`.
+        let quote = quote.layout_over(width, theme, under);
         let mut lines = vec![Line::styled(line.clone(), text)];
         lines.extend(quote.lines);
         // The quote's paragraph margin, then the `Rule` with its `margin: 1 0`.
         lines.push(Line::default());
         lines.push(Line::styled(
             "─".repeat(usize::from(width)),
-            Style::new().fg(theme.color(theme.palette.secondary, theme.background())),
+            Style::new().fg(theme.color(theme.palette.secondary, under)),
         ));
         Rendered {
             lines,
@@ -434,7 +435,7 @@ impl Component for NewCommentDialog {
             ..screen
         });
         let rows = Rows::new(area.height, self.target != ReplyTarget::None);
-        let reply = self.reply_lines(window.width, theme, text);
+        let reply = self.reply_lines(window.width, theme, text, under);
         let focused = self.ring.focused();
         let (editor, preview, buttons) = (&mut self.editor, &self.preview, &mut self.buttons);
         // The links drawn, in form rows and columns from the form's left edge.
@@ -460,7 +461,14 @@ impl Component for NewCommentDialog {
                     focused == Some(CommentField::Editor),
                 );
                 draw_lines(buf, label(rows.preview_label), &[Line::styled("Preview", text)]);
-                links.extend(render_preview(buf, content, rows.preview.clone(), preview, theme));
+                links.extend(render_preview(
+                    buf,
+                    content,
+                    rows.preview.clone(),
+                    preview,
+                    theme,
+                    under,
+                ));
                 buttons.render(
                     buf,
                     rect(rows.buttons.clone()),
@@ -484,6 +492,7 @@ fn render_preview(
     rows: Range<u16>,
     preview: &Markdown,
     theme: &Theme,
+    under: Paint,
 ) -> Vec<LinkSpan> {
     let area = Rect {
         x: content.x + 1,
@@ -491,7 +500,8 @@ fn render_preview(
         width: content.width.saturating_sub(2),
         height: (rows.end - rows.start).saturating_sub(BOX_TOP + 1),
     };
-    let rendered = preview.layout_unpadded(area.width, theme);
+    // The preview box has no background of its own, so its markdown sits on the container's too.
+    let rendered = preview.layout_unpadded_over(area.width, theme, under);
     draw_lines(buf, area, &rendered.lines);
     let top = rows.start + BOX_TOP;
     links_within(&rendered.links, top..top + area.height, 1)

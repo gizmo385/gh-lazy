@@ -113,14 +113,14 @@ i fg=#003054 bg=#4f4f4f REVERSED
 j fg=#0178d4 bg=#4f4f4f BOLD
 k fg=#0b3a5f bg=#121212 BOLD
 l fg=#57a5e2 bg=#4f4f4f
-m fg=#e0e0e0 bg=#101010
+m fg=#e0e0e0 bg=#474747
 n fg=#003054 bg=#000000 REVERSED
-o fg=#ffffff bg=#101010
+o fg=#ffffff bg=#474747
 p fg=#e0e0e0 bg=#000000
 q fg=#646464 bg=#191d21 BOLD
-r fg=#57a5e2 bg=#101010 BOLD
-s fg=#7dc092 bg=#101010
-t fg=#71ac84 bg=#101010 BOLD
+r fg=#57a5e2 bg=#474747 BOLD
+s fg=#83c598 bg=#474747
+t fg=#7cb78f bg=#474747 BOLD
 u fg=#7ae998 bg=#55c076
 v fg=#e76580 bg=#b93c5b
 w fg=#0b180f bg=#55c076 BOLD | REVERSED

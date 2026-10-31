@@ -57,7 +57,12 @@ impl Markdown {
     /// [`Self::layout`] without the document's `padding: 0 2`, as a comment block's body has it
     /// (`IssueCommentContainer Markdown { padding-bottom: 0 }`, which Textual stores as `padding: 0`, every edge).
     pub fn layout_unpadded(&self, width: u16, theme: &Theme) -> Rendered {
-        layout::layout(&self.blocks, width, theme, false, theme.background())
+        self.layout_unpadded_over(width, theme, theme.background())
+    }
+
+    /// [`Self::layout_unpadded`] over `under`, as [`Self::layout_over`] is [`Self::layout`] over it.
+    pub fn layout_unpadded_over(&self, width: u16, theme: &Theme, under: Paint) -> Rendered {
+        layout::layout(&self.blocks, width, theme, false, under)
     }
 
     /// Whether [`Self::layout`] at `width` is more than `rows` rows tall. Stops laying out once it is, so asking

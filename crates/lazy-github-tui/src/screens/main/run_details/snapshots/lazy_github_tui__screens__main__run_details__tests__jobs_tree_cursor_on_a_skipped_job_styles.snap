@@ -14,7 +14,7 @@ expression: "styled_rows(&mut app, \"▶ ✓ build\", 24, 4)"
 --- legend
 . fg=#e0e0e0 bg=#272727
 a fg=#adff2f bg=#272727
-b fg=#ff0000 bg=#272727
+b fg=#f4005f bg=#272727
 c fg=#92c5ec bg=#0178d4 BOLD
 d fg=#ddedf9 bg=#0178d4 BOLD
-e fg=#ffff00 bg=#272727
+e fg=#fd971f bg=#272727

@@ -23,10 +23,10 @@ use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::components::tree::{Tree, TreeAction};
 use crate::effect::RequestId;
 use crate::keymap::{BindingId, Keymap};
-use crate::theme::Theme;
+use crate::theme::{Accent, RichAnsi, Theme};
 
 use super::super::overview_text::{HeaderStyles, append, push_label, push_rule};
-use super::status::job_icon;
+use super::status::{Tint, job_icon};
 
 /// The fewest rows the tree takes.
 const TREE_MIN_ROWS: usize = 20;
@@ -469,9 +469,21 @@ fn job_tree(jobs: &[WorkflowJob], theme: &Theme) -> Tree<JobRef> {
 fn label(name: &str, status: &JobStatus, conclusion: Option<&JobConclusion>, theme: &Theme) -> Line<'static> {
     let (icon, tint) = job_icon(status, conclusion);
     Line::from(vec![
-        Span::styled(icon, tint.style(theme)),
+        Span::styled(icon, tree_tint(tint).style(theme)),
         Span::raw(format!(" {name} ({})", status.as_str())),
     ])
+}
+
+/// The Overview's tint as the tree shows it. Python's tree labels are Rich markup (Textual's `Tree.process_label`),
+/// not Textual's, so `red`, `yellow` and `cyan` are the ANSI colors through the terminal theme. Rich has no
+/// `greenyellow`, which leaves Python's `✓` uncolored; Rust keeps it greenyellow (Py bug B120).
+fn tree_tint(tint: Tint) -> Tint {
+    match tint {
+        Tint::Accent(Accent::Red) => Tint::RichAnsi(RichAnsi::Red),
+        Tint::Accent(Accent::Yellow) => Tint::RichAnsi(RichAnsi::Yellow),
+        Tint::Accent(Accent::Cyan) => Tint::RichAnsi(RichAnsi::Cyan),
+        other => other,
+    }
 }
 
 /// Logs as the markdown that shows them: one fenced block, verbatim, cut after [`MAX_LOG_CHARS`] characters with a
@@ -487,9 +499,8 @@ pub(super) fn logs_markdown(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::screens::main::run_details::status::Tint;
     use crate::screens::main::run_details::tests::fixture_jobs;
-    use crate::theme::{Accent, ColorDepth, ColorMode};
+    use crate::theme::{ColorDepth, ColorMode};
 
     /// The tree's lines, drawn 60 cells wide.
     fn lines(tree: &mut Tree<JobRef>) -> Vec<String> {
@@ -568,12 +579,63 @@ mod tests {
         // Py bug B63: a yellow `⋯`, not a dim `?`.
         let queued = label("test", &JobStatus::Queued, None, &theme);
         assert_eq!(queued.spans[0].content, "⋯");
-        assert_eq!(queued.spans[0].style, Tint::Accent(Accent::Yellow).style(&theme));
+        assert_eq!(queued.spans[0].style, Tint::RichAnsi(RichAnsi::Yellow).style(&theme));
         let running = label("build", &JobStatus::InProgress, None, &theme);
-        assert_eq!(running.spans[0].style, Tint::Accent(Accent::Cyan).style(&theme));
+        assert_eq!(running.spans[0].style, Tint::RichAnsi(RichAnsi::Cyan).style(&theme));
         let pending = label("step", &JobStatus::Pending, None, &theme);
         assert_eq!(pending.to_string(), "? step (pending)");
         assert_eq!(pending.spans[0].style, Tint::Dim.style(&theme));
+    }
+
+    #[test]
+    fn icons_are_rich_ansi_colors_except_the_greenyellow_check() {
+        let icon_fg = |theme: &Theme, status: JobStatus, conclusion: Option<JobConclusion>| {
+            label("job", &status, conclusion.as_ref(), theme).spans[0].style.fg
+        };
+        let dark = Theme::default();
+        let light = Theme::by_name("textual-light").unwrap();
+        let rgb = |r, g, b| Some(ratatui::style::Color::Rgb(r, g, b));
+        let completed = |c| (JobStatus::Completed, Some(c));
+        let rows = [
+            // Py bug B120: Python's `✓` takes the row's color; Rust keeps the Overview's greenyellow.
+            (
+                completed(JobConclusion::Success),
+                rgb(0xAD, 0xFF, 0x2F),
+                rgb(0xAD, 0xFF, 0x2F),
+            ),
+            (
+                completed(JobConclusion::Failure),
+                rgb(0xF4, 0x00, 0x5F),
+                rgb(0xAA, 0x37, 0x31),
+            ),
+            (
+                completed(JobConclusion::Cancelled),
+                rgb(0xFD, 0x97, 0x1F),
+                rgb(0xCB, 0x90, 0x00),
+            ),
+            (
+                (JobStatus::InProgress, None),
+                rgb(0x58, 0xD1, 0xEB),
+                rgb(0x00, 0x83, 0xB2),
+            ),
+            ((JobStatus::Queued, None), rgb(0xFD, 0x97, 0x1F), rgb(0xCB, 0x90, 0x00)),
+        ];
+        for ((status, conclusion), on_dark, on_light) in rows {
+            assert_eq!(
+                icon_fg(&dark, status.clone(), conclusion.clone()),
+                on_dark,
+                "{status:?} {conclusion:?}"
+            );
+            assert_eq!(
+                icon_fg(&light, status.clone(), conclusion.clone()),
+                on_light,
+                "{status:?} {conclusion:?}"
+            );
+        }
+        // The ANSI themes leave them to the terminal's palette.
+        let ansi = Theme::by_name("ansi-dark").unwrap();
+        let failed = icon_fg(&ansi, JobStatus::Completed, Some(JobConclusion::Failure));
+        assert_eq!(failed, Some(ratatui::style::Color::Red));
     }
 
     const TRUNCATED: &str = "\n\n... (logs truncated, too long to display)";

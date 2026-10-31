@@ -39,14 +39,15 @@ impl Accent {
     }
 }
 
-/// An ANSI color from Rich markup inside `DataTable` cells (`[green]★[/]`) or a Rich `Text` style (the diff viewer's
-/// `green` counts). Outside the ANSI themes, Textual paints these through its terminal theme: MONOKAI for dark themes,
+/// An ANSI color from Rich markup inside `DataTable` cells (`[green]★[/]`) and `Tree` labels (the Jobs tab's `[red]✗`),
+/// or a Rich `Text` style (the diff viewer's `green` counts). Outside the ANSI themes, Textual paints these through its terminal theme: MONOKAI for dark themes,
 /// ALABASTER for light ones.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum RichAnsi {
     Green,
     Red,
     Yellow,
+    Cyan,
 }
 
 impl RichAnsi {
@@ -56,6 +57,7 @@ impl RichAnsi {
             RichAnsi::Green => Rgb::new(0x98, 0xE0, 0x24),
             RichAnsi::Red => Rgb::new(0xF4, 0x00, 0x5F),
             RichAnsi::Yellow => Rgb::new(0xFD, 0x97, 0x1F),
+            RichAnsi::Cyan => Rgb::new(0x58, 0xD1, 0xEB),
         }
     }
 
@@ -65,6 +67,7 @@ impl RichAnsi {
             RichAnsi::Green => Rgb::new(0x44, 0x8C, 0x27),
             RichAnsi::Red => Rgb::new(0xAA, 0x37, 0x31),
             RichAnsi::Yellow => Rgb::new(0xCB, 0x90, 0x00),
+            RichAnsi::Cyan => Rgb::new(0x00, 0x83, 0xB2),
         }
     }
 }

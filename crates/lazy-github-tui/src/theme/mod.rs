@@ -256,6 +256,7 @@ impl Theme {
                 RichAnsi::Green => Paint::Ansi(AnsiColor::Green),
                 RichAnsi::Red => Paint::Ansi(AnsiColor::Red),
                 RichAnsi::Yellow => Paint::Ansi(AnsiColor::Yellow),
+                RichAnsi::Cyan => Paint::Ansi(AnsiColor::Cyan),
             }
         } else if self.dark {
             c.dark().into()
@@ -436,6 +437,10 @@ mod tests {
         assert_eq!(dark.rich_ansi(RichAnsi::Green), Color::Rgb(0x98, 0xE0, 0x24));
         assert_eq!(light.rich_ansi(RichAnsi::Green), Color::Rgb(0x44, 0x8C, 0x27));
         assert_eq!(theme("ansi-light").rich_ansi(RichAnsi::Green), Color::Green);
+        // Rich's `cyan` (the Jobs tree's `⋯`): MONOKAI's and ALABASTER's color 6.
+        assert_eq!(dark.rich_ansi(RichAnsi::Cyan), Color::Rgb(0x58, 0xD1, 0xEB));
+        assert_eq!(light.rich_ansi(RichAnsi::Cyan), Color::Rgb(0x00, 0x83, 0xB2));
+        assert_eq!(theme("ansi-dark").rich_ansi(RichAnsi::Cyan), Color::Cyan);
     }
 
     /// A bordered block with a focused and an unfocused border, a `$text` on `$panel` line and a blurred cursor row.

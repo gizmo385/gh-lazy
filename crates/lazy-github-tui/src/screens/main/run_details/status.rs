@@ -7,13 +7,15 @@ use jiff::Timestamp;
 use lazy_github_core::models::{JobConclusion, JobStatus, WorkflowRun};
 use ratatui::style::{Modifier, Style};
 
-use crate::theme::{Accent, Theme};
+use crate::theme::{Accent, RichAnsi, Theme};
 
-/// The color a status is drawn in: one of the fixed accent colors, or Rich's `dim`.
+/// The color a status is drawn in: one of the fixed accent colors, a Rich ANSI color, or Rich's `dim`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(in crate::screens::main) enum Tint {
-    /// `[greenyellow]`, `[red]`, ...
+    /// `[greenyellow]`, `[red]`, ... as Textual markup reads them.
     Accent(Accent),
+    /// `[red]`, `[yellow]`, `[cyan]` as Rich markup reads them (the Jobs tree's labels).
+    RichAnsi(RichAnsi),
     /// `[dim]`.
     Dim,
 }
@@ -25,6 +27,7 @@ impl Tint {
     pub(in crate::screens::main) fn style(self, theme: &Theme) -> Style {
         match self {
             Tint::Accent(accent) => Style::new().fg(theme.accent(accent)),
+            Tint::RichAnsi(c) => Style::new().fg(theme.rich_ansi(c)),
             Tint::Dim => Style::new().add_modifier(Modifier::DIM),
         }
     }
@@ -164,6 +167,10 @@ mod tests {
         assert_eq!(
             Tint::Accent(Accent::Red).style(&theme).fg,
             Some(theme.accent(Accent::Red))
+        );
+        assert_eq!(
+            Tint::RichAnsi(RichAnsi::Red).style(&theme).fg,
+            Some(theme.rich_ansi(RichAnsi::Red))
         );
     }
 }

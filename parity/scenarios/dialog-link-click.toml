@@ -1,0 +1,81 @@
+version = 1
+description = "Clicking a link in a dialog's markdown: a link in the New comment preview opens in the browser, with nothing shown in the app and the dialog still open (Textual's Markdown keeps open_links in dialogs)"
+gate = true
+parity_rows = [
+    "markdown-links.link-click",
+]
+sizes = [[160, 48]]
+
+[env]
+# The `issue-comment` scenario's: issue 12's Comments tab, where `n` opens New comment. Nothing is posted.
+fixtures = ["issue-write", "issue-details", "base"]
+
+[[step]]
+wait.text = "issue-fixture"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Issues with bodies and comments."
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Workaround: delete the file"
+wait.timeout_ms = 15000
+
+# The Comments tab, then into its scroll area, where `n` is bound.
+[[step]]
+keys = ["5"]
+
+[[step]]
+wait = { gone = "O Lookup" }
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait.text = "A comment from a deleted account."
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["tab", "n"]
+
+[[step]]
+wait.text = "Post Comment"
+
+[[step]]
+type = "see [zzdocs](https://example.com/docs) here"
+
+[[step]]
+wait.text = "see zzdocs here"
+
+# A click as soon as the preview shows the text sometimes missed the link in Python: let it settle first.
+[[step]]
+wait = { stable_ms = 500 }
+
+# "zzdocs" in the preview.
+[[step]]
+click = { text = "see zzdocs here", offset = [5, 0] }
+
+[[step]]
+wait = { stable_ms = 1000 }
+
+[[step]]
+capture = "clicked"
+checks = ["titles", "focus"]
+
+[expect.clicked]
+contains = ["New comment", "Preview", "see zzdocs here", "Post Comment"]
+not_contains = ["Opening", "Traceback"]
+opened = ["https://example.com/docs"]

@@ -198,6 +198,10 @@ impl Component for DebugInfoDialog {
             ..text_area
         };
         self.scroll.render(frame, self.body_area, theme, &mut self.body);
+        // Textual's `Markdown` keeps `open_links` here, so a click on a link opens it.
+        if let Some(links) = cx.links {
+            self.scroll.record_links(self.body_area, theme, &mut self.body, links);
+        }
 
         let focused = match self.ring.focused() {
             Some(DebugField::Copy) => Some(Pressed::Submit),

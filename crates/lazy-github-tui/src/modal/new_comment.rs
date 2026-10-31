@@ -26,7 +26,7 @@ use crate::action::Action;
 use crate::component::{ChainLink, Component, Cx, RenderCx};
 use crate::components::button::{ButtonMouse, ButtonRow, Pressed};
 use crate::components::command_log::{WHEEL_ROWS, Wheel};
-use crate::components::markdown::Markdown;
+use crate::components::markdown::{LinkSpan, Markdown, Rendered};
 use crate::components::text_editor::{EditorBorder, EditorOutcome, EditorPadding, EditorVariant, TextEditor};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
@@ -312,19 +312,24 @@ impl NewCommentDialog {
     }
 
     /// The reply heading, its quote and its rule, `width` cells wide, as lines; the reply's rows cut them off.
-    fn reply_lines(&self, width: u16, theme: &Theme, text: Style) -> Vec<Line<'static>> {
+    /// The heading, the quote and the rule, with the quote's links on their rows below the heading.
+    fn reply_lines(&self, width: u16, theme: &Theme, text: Style) -> Rendered {
         let Some((line, quote)) = &self.heading else {
-            return Vec::new();
+            return Rendered::default();
         };
+        let quote = quote.layout(width, theme);
         let mut lines = vec![Line::styled(line.clone(), text)];
-        lines.extend(quote.layout(width, theme).lines);
+        lines.extend(quote.lines);
         // The quote's paragraph margin, then the `Rule` with its `margin: 1 0`.
         lines.push(Line::default());
         lines.push(Line::styled(
             "─".repeat(usize::from(width)),
             Style::new().fg(theme.color(theme.palette.secondary, theme.background())),
         ));
-        lines
+        Rendered {
+            lines,
+            links: quote.links.into_iter().map(|span| shift(span, 1, 0)).collect(),
+        }
     }
 }
 
@@ -432,6 +437,8 @@ impl Component for NewCommentDialog {
         let reply = self.reply_lines(window.width, theme, text);
         let focused = self.ring.focused();
         let (editor, preview, buttons) = (&mut self.editor, &self.preview, &mut self.buttons);
+        // The links drawn, in form rows and columns from the form's left edge.
+        let mut links = Vec::new();
         self.scroll
             .render(frame.buffer_mut(), window, theme, fill, area.height, |buf, content| {
                 let rect = |range: Range<u16>| Rect {
@@ -440,7 +447,8 @@ impl Component for NewCommentDialog {
                     ..content
                 };
                 if let Some(range) = rows.reply.clone() {
-                    draw_lines(buf, rect(range), &reply);
+                    draw_lines(buf, rect(range.clone()), &reply.lines);
+                    links.extend(links_within(&reply.links, range, 0));
                 }
                 let label = |y: u16| rect(y..y + 1);
                 draw_lines(buf, label(rows.editor_label), &[Line::styled("New comment", text)]);
@@ -452,7 +460,7 @@ impl Component for NewCommentDialog {
                     focused == Some(CommentField::Editor),
                 );
                 draw_lines(buf, label(rows.preview_label), &[Line::styled("Preview", text)]);
-                render_preview(buf, content, rows.preview.clone(), preview, theme);
+                links.extend(render_preview(buf, content, rows.preview.clone(), preview, theme));
                 buttons.render(
                     buf,
                     rect(rows.buttons.clone()),
@@ -460,19 +468,51 @@ impl Component for NewCommentDialog {
                     focused.and_then(CommentField::button),
                 );
             });
+        // Textual's `Markdown` keeps `open_links` here, so a click on the quote's or the preview's links opens them.
+        if let Some(sink) = cx.links {
+            self.scroll.record_links(sink, &links);
+        }
     }
 }
 
 /// The preview: the text as markdown, inside the box's blank border and below its top padding, with no side padding
 /// (`padding-top: 1` leaves Textual's other edges at 0).
-fn render_preview(buf: &mut Buffer, content: Rect, rows: Range<u16>, preview: &Markdown, theme: &Theme) {
+/// Returns the links it drew, in form rows and columns from the form's left edge.
+fn render_preview(
+    buf: &mut Buffer,
+    content: Rect,
+    rows: Range<u16>,
+    preview: &Markdown,
+    theme: &Theme,
+) -> Vec<LinkSpan> {
     let area = Rect {
         x: content.x + 1,
         y: content.y + rows.start + BOX_TOP,
         width: content.width.saturating_sub(2),
         height: (rows.end - rows.start).saturating_sub(BOX_TOP + 1),
     };
-    draw_lines(buf, area, &preview.layout_unpadded(area.width, theme).lines);
+    let rendered = preview.layout_unpadded(area.width, theme);
+    draw_lines(buf, area, &rendered.lines);
+    let top = rows.start + BOX_TOP;
+    links_within(&rendered.links, top..top + area.height, 1)
+}
+
+/// `span` moved down `rows` rows and right `columns` columns.
+fn shift(mut span: LinkSpan, rows: usize, columns: u16) -> LinkSpan {
+    span.row += rows;
+    span.columns = span.columns.start + columns..span.columns.end + columns;
+    span
+}
+
+/// The `spans` of text drawn from form row `rows.start` and `columns` in, moved to the form's rows and columns, less
+/// those cut off below `rows`.
+fn links_within(spans: &[LinkSpan], rows: Range<u16>, columns: u16) -> Vec<LinkSpan> {
+    let height = usize::from(rows.end.saturating_sub(rows.start));
+    spans
+        .iter()
+        .filter(|span| span.row < height)
+        .map(|span| shift(span.clone(), usize::from(rows.start), columns))
+        .collect()
 }
 
 impl Dialog for NewCommentDialog {

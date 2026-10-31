@@ -18,7 +18,7 @@ use crate::action::Action;
 use crate::component::{ChainLink, Component, Cx, RenderCx};
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
-use crate::components::markdown::{self, Markdown, Rendered, TextRun};
+use crate::components::markdown::{self, LinkSpan, Markdown, Rendered, TextRun};
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::components::table::{Cell, CellValue, Column, Handled, SearchableTable, SortSpec, TableEvent, TableItem};
 use crate::keymap::BindingId;
@@ -118,6 +118,26 @@ impl Layout for ProfileBody {
 }
 
 impl ProfileBody {
+    /// The bio's links laid out at `width`, the body's text width: those below the header, the only other link.
+    /// Textual's `Markdown` keeps `open_links` in the dialog, so a click on one opens it, while the header's link is a
+    /// `Label`'s, which Textual doesn't follow.
+    fn bio_links(&mut self, width: u16, theme: &Theme) -> Vec<LinkSpan> {
+        let inner = content_width(width);
+        if self.bio.is_none() || inner == 0 {
+            return Vec::new();
+        }
+        let mut header = Lines::new(inner, theme);
+        header.blank();
+        header.header(&self.user);
+        let below = header.out.lines.len();
+        self.layout(width, theme)
+            .links
+            .iter()
+            .filter(|span| span.row >= below)
+            .cloned()
+            .collect()
+    }
+
     /// The content lines the table takes at `width` (the body's text width), as laid out.
     fn table_rows(&mut self, width: u16, theme: &Theme) -> Option<std::ops::Range<usize>> {
         let height = usize::from(table_height(self.table.as_ref()?, content_width(width)));
@@ -302,6 +322,12 @@ impl Component for UserProfileDialog {
         } else {
             area.width
         };
+        if let Some(links) = cx.links {
+            let bio = self.body.bio_links(width, theme);
+            links
+                .borrow_mut()
+                .record(Rect { width, ..area }, self.scroll.offset(), &bio);
+        }
         let Some(rows) = self.body.table_rows(width, theme) else {
             return;
         };

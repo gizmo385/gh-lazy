@@ -92,6 +92,9 @@ pub enum Action {
         /// Whether it goes to the browser whatever it is.
         external: bool,
     },
+    /// Open a link in the browser with nothing shown in the app: a click on a link in a dialog's markdown, which
+    /// Textual's `Markdown` opens itself (`open_links`).
+    OpenInBrowser(Arc<str>),
 
     // Screens.
     /// The authentication screen's own actions.

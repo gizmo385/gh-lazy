@@ -197,6 +197,45 @@ fn the_login_links_to_the_profile() {
     assert_eq!(login.columns, 14..25);
 }
 
+// Links (#355): the bio is a Textual `Markdown`, which keeps `open_links` in the dialog, so a click on one of its links
+// opens it in the browser. The header's link is a `Label`'s, which Textual doesn't follow.
+
+#[test]
+fn a_click_on_a_link_in_the_bio_opens_it_in_the_browser() {
+    let mut user = parity_bot();
+    user.bio = Some("Docs at [zzdocs](https://example.com/docs).".into());
+    let mut app = app_with(UserProfileDialog::new(user, parity_bot_repos()));
+    let buffer = app.render(160, 48);
+    let links: Vec<_> = app.app().dialog_links().iter().cloned().collect();
+    assert_eq!(links.len(), 1, "only the bio's: {links:?}");
+    let link = &links[0];
+    assert_eq!(&*link.target, "https://example.com/docs");
+    let text: String = (link.x..link.x + link.width)
+        .map(|x| buffer[(x, link.y)].symbol().to_owned())
+        .collect();
+    assert_eq!(text, "zzdocs");
+
+    app.click(link.x, link.y);
+    let opened: Vec<_> = app
+        .effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            crate::effect::Effect::OpenUrl(url) => Some(url.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(opened, ["https://example.com/docs"]);
+    assert!(is_open(&app));
+    assert!(replies(&app).is_empty());
+}
+
+#[test]
+fn without_a_bio_nothing_in_the_dialog_is_clickable() {
+    let mut app = app_with(UserProfileDialog::new(parity_org(), Vec::new()));
+    app.render(160, 48);
+    assert!(app.app().dialog_links().is_empty());
+}
+
 // Focus and keys.
 
 #[test]

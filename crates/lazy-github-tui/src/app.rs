@@ -46,14 +46,15 @@ use crate::theme::Theme;
 use crate::toast::{Severity, Toast, Toasts};
 
 /// A click on a link drawn in the last frame (`links`): the press and the release on the same link follow it, after the
-/// release reaches the screen as any does (Textual's `Click` on a `Markdown` link). `pressed` holds the link a left
-/// press landed on until the release. `None` for any other event.
+/// release reaches the screen or dialog as any does (`release`; Textual's `Click` on a `Markdown` link). `pressed`
+/// holds the link a left press landed on until the release. The link's target on the release that follows one, `None`
+/// for any other event.
 fn link_click(
     links: &LinkMap,
     pressed: &mut Option<ScreenLink>,
-    main: &mut MainScreen,
     mouse: MouseEvent,
-) -> Option<Action> {
+    release: impl FnOnce(MouseEvent),
+) -> Option<Arc<str>> {
     let here = links.at(mouse.column, mouse.row);
     match mouse.kind {
         MouseEventKind::Down(MouseButton::Left) => {
@@ -64,12 +65,8 @@ fn link_click(
             let pressed = pressed.take()?;
             let here = here.filter(|&link| *link == pressed)?;
             let target = Arc::clone(&here.target);
-            // A release over the content does nothing else today.
-            let _ = main.handle_mouse(mouse);
-            Some(Action::FollowLink {
-                target,
-                external: false,
-            })
+            release(mouse);
+            Some(target)
         }
         _ => None,
     }
@@ -132,6 +129,8 @@ pub struct App {
     footer_hits: Vec<FooterHit>,
     /// The links the main screen drew in the last frame, for clicks and link hints.
     links: LinkMap,
+    /// The links the top dialog's markdown drew in the last frame, for clicks.
+    dialog_links: LinkMap,
     /// The link a left press landed on, until the release: a click follows it when both land on it.
     pressed_link: Option<ScreenLink>,
     /// Where the mouse was at the last mouse event, for hover highlights. Each frame checks it against that frame's
@@ -179,6 +178,7 @@ impl App {
             help_scroll: HelpScroll::default(),
             footer_hits: Vec::new(),
             links: LinkMap::default(),
+            dialog_links: LinkMap::default(),
             pressed_link: None,
             mouse: None,
             mouse_capture: None,
@@ -482,14 +482,28 @@ impl App {
             }
         }
         if let Some(top) = self.modals.last_mut() {
-            let mut scratch = Outbox::default();
-            return top.handle_mouse(mouse, &Cx::new(&mut self.shared, &mut scratch));
+            let shared = &mut self.shared;
+            let opened = link_click(&self.dialog_links, &mut self.pressed_link, mouse, |release| {
+                // A release over a dialog's markdown does nothing else.
+                let _ = top.handle_mouse(release, &Cx::new(shared, &mut Outbox::default()));
+            });
+            if let Some(target) = opened {
+                return Some(Action::OpenInBrowser(target));
+            }
+            return top.handle_mouse(mouse, &Cx::new(&mut self.shared, &mut Outbox::default()));
         }
         let BaseScreen::Main(main) = &mut self.base else {
             return None;
         };
-        if let Some(action) = link_click(&self.links, &mut self.pressed_link, main, mouse) {
-            return Some(action);
+        let followed = link_click(&self.links, &mut self.pressed_link, mouse, |release| {
+            // A release over the content does nothing else today.
+            let _ = main.handle_mouse(release);
+        });
+        if let Some(target) = followed {
+            return Some(Action::FollowLink {
+                target,
+                external: false,
+            });
         }
         // The panel docks over the screen's right edge, and the wheel over it scrolls it.
         if self.help_open
@@ -505,6 +519,12 @@ impl App {
     /// The links drawn on the main screen in the last frame.
     pub fn links(&self) -> &LinkMap {
         &self.links
+    }
+
+    /// The links the top dialog drew in the last frame.
+    #[cfg(test)]
+    pub(crate) fn dialog_links(&self) -> &LinkMap {
+        &self.dialog_links
     }
 
     /// Tries each binding a key fired in one link, in order, until one applies (Textual's `_check_bindings`).
@@ -746,6 +766,9 @@ impl App {
                     format!("Opening {target} externally"),
                 ));
             }
+            // A link clicked in a dialog's markdown: Textual's `Markdown` opens it itself (`open_links`), with nothing
+            // shown in the app.
+            Action::OpenInBrowser(target) => out.effects.push(Effect::OpenUrl(target.to_string())),
             Action::FollowLink {
                 target,
                 external: false,
@@ -1277,6 +1300,7 @@ impl App {
             // Nothing drawn this frame takes a click.
             self.footer_hits.clear();
             self.links = LinkMap::default();
+            self.dialog_links = LinkMap::default();
             frame.render_widget(
                 TooSmall {
                     theme: &self.shared.theme,
@@ -1405,6 +1429,7 @@ impl App {
     /// draws on the whole screen. Only the top footer's items take clicks.
     fn render_modals(&mut self, frame: &mut Frame<'_>) {
         if self.modals.is_empty() {
+            self.dialog_links = LinkMap::default();
             return;
         }
         let area = frame.area();
@@ -1415,7 +1440,7 @@ impl App {
             })
             .collect();
         let theme = self.shared.theme;
-        // Links in dialogs aren't followed (#339's scope): the frame's map is the main screen's.
+        // Only the top dialog takes clicks, so only its links are kept.
         let cx = RenderCx {
             theme: &theme,
             keymap: &self.shared.keymap,
@@ -1423,6 +1448,11 @@ impl App {
             focused: true,
             focus_within: true,
             links: None,
+        };
+        let links = LinkSink::default();
+        let top_cx = RenderCx {
+            links: Some(&links),
+            ..cx
         };
         let available = Rect {
             height: area.height.saturating_sub(1),
@@ -1441,9 +1471,10 @@ impl App {
                 continue;
             }
             dim(frame.buffer_mut(), area, &theme);
+            let cx = if index == top { &top_cx } else { &cx };
             if entry.frameless() {
                 entry.interior = area;
-                entry.render(frame, area, &cx);
+                entry.render(frame, area, cx);
                 continue;
             }
             let rect = entry.frame(area);
@@ -1480,9 +1511,10 @@ impl App {
                 frame.render_widget(footer, footer_area);
             }
             entry.interior = DialogFrame::interior(rect);
-            entry.render(frame, entry.interior, &cx);
+            entry.render(frame, entry.interior, cx);
         }
         self.footer_hits = hits;
+        self.dialog_links = links.take();
     }
 
     /// The open dialogs' kinds, bottom to top.

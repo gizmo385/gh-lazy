@@ -454,3 +454,119 @@ fn new_comment_preview_with_bold_and_a_code_span() {
     dialog.preview_stale = true;
     insta::assert_snapshot!(draw(&mut dialog));
 }
+
+// Links (#355): Textual's `Markdown` keeps `open_links` in the dialog, so a click on a link in the quote or the preview
+// opens it in the browser, with nothing shown in the app.
+
+fn opened(app: &TestApp) -> Vec<String> {
+    app.effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::OpenUrl(url) => Some(url.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+/// The text in `buffer` under `link`'s cells.
+fn link_text(buffer: &Buffer, link: &crate::components::link_map::ScreenLink) -> String {
+    (link.x..link.x + link.width)
+        .map(|x| buffer[(x, link.y)].symbol().to_owned())
+        .collect()
+}
+
+#[test]
+fn a_click_on_a_link_in_the_preview_opens_it_in_the_browser() {
+    let mut app = comments_tab();
+    app.press(&["n"]);
+    app.send(Event::Paste("see [zzdocs](https://example.com/docs) here".into()));
+    let buffer = app.render(160, 48);
+    let links: Vec<_> = app.app().dialog_links().iter().cloned().collect();
+    assert_eq!(links.len(), 1, "{links:?}");
+    let link = &links[0];
+    assert_eq!(&*link.target, "https://example.com/docs");
+    assert_eq!(link_text(&buffer, link), "zzdocs");
+    // The main screen's links aren't clickable under the dialog.
+    assert!(
+        app.app().links().iter().all(|l| !l.contains(link.x, link.y)),
+        "{:?}",
+        app.app().links()
+    );
+
+    app.click(link.x + 2, link.y);
+    assert_eq!(opened(&app), ["https://example.com/docs"]);
+    assert!(is_open(&app));
+    assert!(toasts(&app).is_empty(), "{:?}", toasts(&app));
+    assert!(posts(&app).is_empty());
+}
+
+#[test]
+fn a_press_on_a_link_and_a_release_off_it_open_nothing() {
+    let mut app = comments_tab();
+    app.press(&["n"]);
+    app.send(Event::Paste("see [zzdocs](https://example.com/docs) here".into()));
+    app.render(160, 48);
+    let link = app.app().dialog_links().iter().next().cloned().unwrap();
+    app.mouse(
+        crossterm::event::MouseEventKind::Down(MouseButton::Left),
+        link.x,
+        link.y,
+    );
+    app.mouse(
+        crossterm::event::MouseEventKind::Up(MouseButton::Left),
+        link.x + link.width,
+        link.y,
+    );
+    assert!(opened(&app).is_empty());
+    assert!(is_open(&app));
+}
+
+#[test]
+fn links_in_the_quote_and_the_preview_land_where_they_are_drawn() {
+    use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
+
+    let mut quoted = comments()[0].clone();
+    quoted.body = "Read [the guide](https://example.com/guide) first".into();
+    let mut dialog = NewCommentDialog::new(fixture_repo(), 12, ReplyTarget::IssueComment(Box::new(quoted)));
+    let _ = dialog.editor.handle_paste(
+        "Line one\n\nand <https://example.com/auto>",
+        tokio::time::Instant::now(),
+    );
+    dialog.preview_stale = true;
+
+    let theme = Theme::default();
+    let keymap = Keymap::defaults();
+    let sink = crate::components::link_map::LinkSink::default();
+    let mut terminal = Terminal::new(TestBackend::new(100, 51)).unwrap();
+    terminal
+        .draw(|frame| {
+            let cx = RenderCx {
+                theme: &theme,
+                keymap: &keymap,
+                now: tokio::time::Instant::now(),
+                focused: true,
+                focus_within: true,
+                links: Some(&sink),
+            };
+            let rect = Rect::new(0, 0, 100, 50);
+            dialog.render(frame, super::super::DialogFrame::interior(rect), &cx);
+        })
+        .unwrap();
+    let buffer = terminal.backend().buffer();
+    let links: Vec<_> = sink.take().iter().cloned().collect();
+    let drawn: Vec<(String, String)> = links
+        .iter()
+        .map(|link| (link.target.to_string(), link_text(buffer, link)))
+        .collect();
+    assert_eq!(
+        drawn,
+        [
+            ("https://example.com/guide".to_owned(), "the guide".to_owned()),
+            (
+                "https://example.com/auto".to_owned(),
+                "https://example.com/auto".to_owned()
+            ),
+        ]
+    );
+}

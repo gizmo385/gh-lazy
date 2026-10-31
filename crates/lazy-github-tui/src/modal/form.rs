@@ -16,6 +16,8 @@ use ratatui::style::{Modifier, Style};
 
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
+use crate::components::link_map::LinkSink;
+use crate::components::markdown::LinkSpan;
 use crate::components::scroll_view::ScrollView;
 use crate::theme::{Paint, Theme};
 
@@ -223,6 +225,16 @@ impl FormScroll {
         scratch.set_style(content, fill);
         draw(&mut scratch, content);
         self.view.render_buffer(buf, area, theme, &scratch, self.scrollbar);
+    }
+
+    /// Records the links of the last draw, `spans` in form rows and in columns from the form's left edge: those in
+    /// view land on screen, where a click finds them.
+    pub fn record_links(&self, links: &LinkSink, spans: &[LinkSpan]) {
+        let area = Rect {
+            width: self.content.width,
+            ..self.area
+        };
+        links.borrow_mut().record(area, self.view.offset(), spans);
     }
 
     /// The form row on screen row `row`, if it's in the scroll area.

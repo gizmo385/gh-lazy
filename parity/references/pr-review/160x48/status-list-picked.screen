@@ -1,6 +1,6 @@
 lazy-github-screen 1
 size 160x48
-cursor 37 69 hidden
+cursor 47 69 hidden
 --- text
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │Current repo: parity-bot/pr-details                                                                                                                           │
@@ -42,13 +42,13 @@ cursor 37 69 hidden
 │                                                              ││                                                                                              │
 │                                                              ││Review Status:                                                                                │
 │                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  │
-│                                                              ││▊  Commented                                                                            ▼  ▎  │
-│                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  │
-│                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  │
+│                                                              ││▊  Commented                     ▌                                                            │
+│                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▌ Comment cannot be empty!                                   │
+│                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▌                                                            │
 │                                                              ││▊  Review summary                                                                          ▎▅▅│
-│                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  │
-│                                                              ││                                                                                              │
-└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+│                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▌                                                            │
+│                                                              ││                                 ▌ New comment added                                          │
+└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pallete  M Maximize  ? Keybindings
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -91,14 +91,14 @@ d..............................................................de...............
 d..............................................................de............................................................................................yye
 d..............................................................debbbbbbbbbbbbbb..............................................................................yye
 d..............................................................deBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCkyye
-d..............................................................deBDDEEEEEEEEEDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDFDDkyye
-d..............................................................deBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCkyye
-d..............................................................deGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHIyye
-d..............................................................deGmmJJJJJJJJJJJJJJllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllmmIKKe
-d..............................................................deGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHInne
-d..............................................................de............................................................................................nne
-ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-LLLMMMMMMMMMMLLLMMMMMMMMMMMMMMLLLMMMMMMMMMMMMMLLLLMMMMMMMMMMMLLLMMMMMMMMMMMMLLLMMMMMMMMMMMMMMMMMMMMMMLLLMMMMMLLLLMMMMMMMMMMMMMMMMLLLMMMMMMMMMLLLMMMMMMMMMMMMvvvv
+d..............................................................deBDDEEEEEEEEEDDDDDDDDDDDDDDDDDDDDDFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGye
+d..............................................................deBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCFGHHHHHHHHHHHHHHHHHHHHHHHHGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGye
+d..............................................................deIJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGye
+d..............................................................deImmKKKKKKKKKKKKKKllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllmmLMMe
+d..............................................................deIJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJNGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGne
+d..............................................................de.................................NGHHHHHHHHHHHHHHHHHGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGne
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeNGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGee
+OOOPPPPPPPPPPOOOPPPPPPPPPPPPPPOOOPPPPPPPPPPPPPOOOOPPPPPPPPPPPOOOPPPPPPPPPPPPOOOPPPPPPPPPPPPPPPPPPPPPPOOOPPPPPOOOOPPPPPPPPPPPPPPPPOOOPPPPPPPPPOOOPPPPPPPPPPPPvvvv
 --- legend
 . bg=#121212
 a fg=#004578 bg=#121212
@@ -132,11 +132,14 @@ B fg=#0178d4 bg=#121212 inverse
 C fg=#0178d4 bg=#272727
 D bg=#272727
 E fg=#e0e0e0 bg=#272727
-F fg=#838383 bg=#272727
-G fg=#191919 bg=#121212 inverse
-H fg=#191919 bg=#1e1e1e
-I fg=#191919 bg=#121212
-J fg=#737373 bg=#1e1e1e
-K fg=#003054 bg=#000000 inverse
-L fg=#ffa62b bg=#242f38 bold
-M fg=#e0e0e0 bg=#242f38
+F fg=#fea62b bg=#343f49
+G bg=#343f49
+H fg=#e0e0e0 bg=#343f49
+I fg=#191919 bg=#121212 inverse
+J fg=#191919 bg=#1e1e1e
+K fg=#737373 bg=#1e1e1e
+L fg=#191919 bg=#121212
+M fg=#003054 bg=#000000 inverse
+N fg=#4ebf71 bg=#343f49
+O fg=#ffa62b bg=#242f38 bold
+P fg=#e0e0e0 bg=#242f38

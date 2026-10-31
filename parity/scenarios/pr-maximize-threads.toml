@@ -46,15 +46,15 @@ wait = { text = "Review from parity-bot", timeout_ms = 5000 }
 [[step]]
 wait = { stable_ms = 1000 }
 
-# Python applies a focus move only after keys already queued behind it, so each M below waits for the screen to settle
-# after the tab before it.
+# Python moves focus a tick after a tab (Py bug B121), so each M below waits for the tab before it to show.
 #
-# The scroll area: a no-op, with nothing to wait for (a maximize here would take the toast from `review-title`).
+# The scroll area: a no-op, with nothing to wait for (a maximize here would take the toast from `review-title`). Its
+# focus shows as its binding leading the footer.
 [[step]]
 keys = ["tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+wait = { regex = '(?m)^ n New Comment  ' }
 
 [[step]]
 keys = ["M"]
@@ -67,7 +67,7 @@ checks = ["titles", "tabs", "focus"]
 keys = ["tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+wait = { focused = "Review from parity-bot" }
 
 [[step]]
 keys = ["M"]
@@ -90,7 +90,7 @@ wait = { text = "[5] PR #5 Details" }
 keys = ["tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+wait = { focused = "Should the cursor wrap at the end?" }
 
 [[step]]
 keys = ["M"]
@@ -116,14 +116,13 @@ keys = ["1"]
 [[step]]
 wait = { text = "O Lookup Repository" }
 
+# Python scrolls the comment into view with its bottom edge still under the details' border, so wait.focused can't
+# see its box: wait for the comment's bindings to lead the footer instead.
 [[step]]
 keys = ["shift+tab"]
 
 [[step]]
-wait = { gone = "O Lookup Repository" }
-
-[[step]]
-wait = { stable_ms = 300 }
+wait = { regex = '(?m)^ r Reply to Comment  ' }
 
 [[step]]
 keys = ["M"]
@@ -141,12 +140,13 @@ keys = ["escape"]
 [[step]]
 wait = { text = "[5] PR #5 Details" }
 
-# The stop before it: the previous comment's reactions title, which maximizes the reactions section.
+# The stop before it: the previous comment's reactions title, which maximizes the reactions section. The emoji split
+# its cursor into runs, so the wait matches the first.
 [[step]]
 keys = ["shift+tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+wait = { focused = "▶ 👍" }
 
 [[step]]
 keys = ["M"]
@@ -210,7 +210,7 @@ wait = { text = "Filter files (press '/' to focus, ESC to clear)" }
 keys = ["tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+wait = { focused = "README.md" }
 
 [[step]]
 keys = ["M"]
@@ -232,7 +232,7 @@ wait = { text = "[5] PR #5 Details" }
 keys = ["tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+wait = { focused = "Lines 3-7" }
 
 [[step]]
 keys = ["M"]
@@ -256,11 +256,12 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Line: 1/6", timeout_ms = 5000 }
 
+# The hunk pane, whose bindings lead the footer.
 [[step]]
 keys = ["tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+wait = { text = "j Line down" }
 
 [[step]]
 keys = ["M"]

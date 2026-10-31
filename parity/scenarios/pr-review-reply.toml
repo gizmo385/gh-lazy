@@ -67,9 +67,9 @@ wait.stable_ms = 1000
 [[step]]
 keys = ["tab", "tab"]
 
-# Python draws the focus boxes a moment after the focus moves.
+# Python moves focus a tick after a tab (Py bug B121): wait for the review's title to show it.
 [[step]]
-wait.stable_ms = 500
+wait = { focused = "Review from parity-bot" }
 
 [[step]]
 capture = "review-focused"

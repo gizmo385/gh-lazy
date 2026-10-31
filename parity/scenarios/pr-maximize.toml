@@ -44,16 +44,16 @@ wait = { text = "Status checks:", timeout_ms = 5000 }
 [[step]]
 wait = { text = "👍 2", timeout_ms = 5000 }
 
-# Python applies a focus move only after keys already queued behind it, so each M below waits for the screen to settle
-# after the tab before it.
+# Python moves focus a tick after a tab (Py bug B121), so each M below waits for the tab before it to show.
 #
 # The body is a scrolling container, which Textual doesn't maximize. A no-op draws nothing to wait for; if M did
-# maximize here, `reactions-title` would miss the one-time toast.
+# maximize here, `reactions-title` would miss the one-time toast. The body's focus shows as the PR's bindings leading
+# the footer.
 [[step]]
 keys = ["tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+wait = { regex = '(?m)^ \^m Merge PR  ' }
 
 [[step]]
 keys = ["M"]
@@ -62,11 +62,12 @@ keys = ["M"]
 capture = "body-noop"
 checks = ["titles", "headers", "rows", "cursor", "focus"]
 
+# The reactions title: the emoji split its cursor into runs, so the wait matches the first.
 [[step]]
 keys = ["tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+wait = { focused = "▶ 👍" }
 
 [[step]]
 keys = ["M"]
@@ -100,12 +101,14 @@ wait = { text = "[5] PR #5 Details" }
 capture = "restored"
 checks = ["titles", "headers", "rows", "cursor", "focus"]
 
-# The open section's list maximizes the section too.
+# The open section's list maximizes the section too. The list draws no focus marker and the footer stays the same,
+# so the move only takes the cursor off the title, which wait.focused can't wait for (it waits for a marker, not for
+# one to go): sleep for Python's late focus (Py bug B121).
 [[step]]
 keys = ["tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+sleep_ms = 500
 
 [[step]]
 keys = ["M"]
@@ -127,7 +130,7 @@ wait = { text = "[5] PR #5 Details" }
 keys = ["tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+wait = { focused = "Status checks" }
 
 [[step]]
 keys = ["M"]
@@ -149,7 +152,7 @@ wait = { text = "[5] PR #5 Details" }
 keys = ["tab"]
 
 [[step]]
-wait = { stable_ms = 300 }
+wait = { focused = "PR Reviews" }
 
 [[step]]
 keys = ["M"]

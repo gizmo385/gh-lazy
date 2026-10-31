@@ -52,17 +52,13 @@ keys = ["1"]
 [[step]]
 wait = { text = "O Lookup Repository" }
 
-[[step]]
-wait.stable_ms = 500
-
+# Back around the ring from the repos table: Submit Review, the summary, the status select. Python moves focus a tick
+# after a tab (Py bug B121), so each key for the new focus waits for it to show.
 [[step]]
 keys = ["shift+tab", "shift+tab", "shift+tab"]
 
 [[step]]
-wait = { gone = "O Lookup Repository" }
-
-[[step]]
-wait.stable_ms = 300
+wait = { focused = "Review Status:" }
 
 # Open the list (Commented is highlighted), up three times to the blank option.
 [[step]]
@@ -77,9 +73,9 @@ keys = ["up", "up", "up", "enter"]
 [[step]]
 wait.gone = "Commented"
 
-# Python drops keys that come while the select's list is still closing.
+# Python hands focus back to the select a moment after its list closes, and drops keys that come before that.
 [[step]]
-wait.stable_ms = 300
+wait = { focused = "Review Status:" }
 
 [[step]]
 capture = "status-blank"
@@ -89,13 +85,13 @@ checks = ["titles", "focus"]
 keys = ["tab"]
 
 [[step]]
-wait.stable_ms = 300
+wait = { focused = "Review summary" }
 
 [[step]]
 keys = ["tab"]
 
 [[step]]
-wait.stable_ms = 300
+wait = { focused = "Submit Review" }
 
 [[step]]
 keys = ["enter"]

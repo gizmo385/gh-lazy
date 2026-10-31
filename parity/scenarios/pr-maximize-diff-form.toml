@@ -106,6 +106,7 @@ wait = { gone = "/ Filter Files" }
 [[step]]
 wait = { stable_ms = 600 }
 
+# Python moves focus a tick after a tab (Py bug B121), so each M or ctrl+p below waits for the move to show.
 [[step]]
 keys = ["1"]
 
@@ -113,16 +114,10 @@ keys = ["1"]
 wait = { text = "O Lookup Repository" }
 
 [[step]]
-wait = { stable_ms = 600 }
-
-[[step]]
 keys = ["shift+tab"]
 
 [[step]]
-wait = { gone = "O Lookup Repository" }
-
-[[step]]
-wait = { stable_ms = 600 }
+wait = { focused = "Submit Review" }
 
 [[step]]
 keys = ["M"]
@@ -145,7 +140,7 @@ wait = { text = "[5] PR #5 Details" }
 keys = ["shift+tab"]
 
 [[step]]
-wait = { stable_ms = 600 }
+wait = { focused = "Review summary" }
 
 [[step]]
 keys = ["ctrl+p"]
@@ -184,7 +179,7 @@ wait = { text = "[5] PR #5 Details" }
 keys = ["shift+tab"]
 
 [[step]]
-wait = { stable_ms = 600 }
+wait = { focused = "Review Status:" }
 
 [[step]]
 keys = ["M"]

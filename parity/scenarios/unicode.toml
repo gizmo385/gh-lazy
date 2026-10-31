@@ -69,8 +69,15 @@ keys = ["right"]
 wait = { text = "日本語.md", timeout_ms = 15000 }
 
 # Tab: the diff's scroll area, the filter, the README.md section's title, its hunk's title; enter opens the hunk.
+# Python moves focus a tick after a tab (Py bug B121), so enter waits for the hunk's title to show it.
 [[step]]
-keys = ["tab", "tab", "tab", "tab", "enter"]
+keys = ["tab", "tab", "tab", "tab"]
+
+[[step]]
+wait = { focused = "Lines 1-7" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Line: 1/8", timeout_ms = 5000 }

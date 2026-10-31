@@ -56,15 +56,28 @@ keys = ["right"]
 wait.text = "README.md"
 
 # The scroll area, the filter, README.md's title, its hunk's title: enter opens the hunk; tab into its pane and down
-# to its fourth line, `+Run ...`.
+# to its fourth line, `+Run ...`. Python moves focus a tick after a tab (Py bug B121), so each key for the new focus
+# waits for it to show: the hunk's title, then the pane's bindings leading the footer.
 [[step]]
-keys = ["tab", "tab", "tab", "tab", "enter"]
+keys = ["tab", "tab", "tab", "tab"]
+
+[[step]]
+wait = { focused = "Lines 3-7" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.text = "Line: 1/6"
 
 [[step]]
-keys = ["tab", "j", "j", "j"]
+keys = ["tab"]
+
+[[step]]
+wait = { text = "j Line down" }
+
+[[step]]
+keys = ["j", "j", "j"]
 
 [[step]]
 wait.text = "Line: 4/6"
@@ -93,12 +106,12 @@ checks = ["titles", "focus"]
 [[step]]
 type = "Mention the arrow keys too."
 
-# Python sometimes drops an enter that follows the tab at once.
+# An enter that follows the tab at once can reach the editor (Py bug B121): wait for the button.
 [[step]]
 keys = ["tab"]
 
 [[step]]
-wait.stable_ms = 300
+wait = { focused = "Add Comment" }
 
 [[step]]
 keys = ["enter"]
@@ -120,14 +133,12 @@ keys = ["1"]
 [[step]]
 wait = { text = "O Lookup Repository" }
 
-[[step]]
-wait.stable_ms = 500
-
+# Back around the ring from the repos table: Submit Review, the summary, the status select.
 [[step]]
 keys = ["shift+tab", "shift+tab", "shift+tab"]
 
 [[step]]
-wait = { gone = "O Lookup Repository" }
+wait = { focused = "Review Status:" }
 
 [[step]]
 capture = "status-focused"
@@ -191,15 +202,15 @@ keys = ["enter", "up", "up", "enter"]
 [[step]]
 wait.text = "Approved"
 
-# Python drops keys that come while the select's list is still closing.
+# Python hands focus back to the select a moment after its list closes, and drops keys that come before that.
 [[step]]
-wait.stable_ms = 300
+wait = { focused = "Review Status:" }
 
 [[step]]
 keys = ["tab"]
 
 [[step]]
-wait.stable_ms = 300
+wait = { focused = "Review summary" }
 
 [[step]]
 type = "Looks good."
@@ -208,7 +219,7 @@ type = "Looks good."
 keys = ["tab"]
 
 [[step]]
-wait.stable_ms = 300
+wait = { focused = "Submit Review" }
 
 [[step]]
 keys = ["enter"]

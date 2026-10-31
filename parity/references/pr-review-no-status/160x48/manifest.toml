@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["status-blank", "refused"]
 
 [inputs]
-scenario = "66015fa8cdd2b3022b5692ebbd1f18b7c9597344"
+scenario = "165fbb109fd56bb76124bbbbe6ed3bb9820e1b82"
 fixtures = "f08beddbcecbffb29234d9f65e3b95c0aa7e36cf"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"

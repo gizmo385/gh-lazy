@@ -45,7 +45,14 @@ capture = "invalid"
 checks = ["titles", "footer"]
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+[[step]]
+wait = { focused = "Open" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Unknown link" }
@@ -74,7 +81,13 @@ wait = { text = "Paste a web GitHub link:" }
 type = "https://github.com/parity-bot/missing/pull/1"
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Open" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Could not resolve link!" }
@@ -123,7 +136,13 @@ wait = { text = "Paste a web GitHub link:" }
 type = "https://github.com/parity-bot/issue-fixture/issues/12"
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Open" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Opening issue for link" }
@@ -146,7 +165,13 @@ wait = { text = "Paste a web GitHub link:" }
 type = "https://github.com/parity-bot/pr-details/issues/5#issuecomment-1"
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Open" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "PR #5 Details", timeout_ms = 15000 }
@@ -168,7 +193,13 @@ wait = { text = "Paste a web GitHub link:" }
 type = "https://github.com/parity-bot/pr-details"
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Open" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Opening repository for link" }
@@ -190,7 +221,13 @@ wait = { text = "Paste a web GitHub link:" }
 type = "https://github.com/parity-bot"
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Open" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Followers: 12" }
@@ -203,7 +240,13 @@ checks = []
 
 # A repo picked in the profile (tab focuses its table) is selected, and not added to the repos table.
 [[step]]
-keys = ["tab", "j", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Shell configuration" }
+
+[[step]]
+keys = ["j", "enter"]
 
 [[step]]
 wait = { text = "Current repo: parity-bot/profile-only" }

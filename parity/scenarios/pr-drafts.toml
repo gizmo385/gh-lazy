@@ -67,7 +67,14 @@ wait.gone = "Restored saved PR draft"
 wait.timeout_ms = 15000
 
 [[step]]
-keys = ["tab", "tab", "tab", "tab", "enter"]
+keys = ["tab", "tab", "tab", "tab"]
+
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+[[step]]
+wait = { focused = "Cancel" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.gone = "New Pull Request"

@@ -90,15 +90,15 @@ v.............................klllllllllllllllllllllllllllllllllllllllllllllllll
 v.............................klllllllllllllllllllllllllllllllOOOOOOOOOOOOOOOOlPPPPPPPPPPPPPPPPllllllllllllllllllllllllllllllluulk.............................d
 v.............................klllllllllllllllllllllllllllllllQQQQRRRRRRRRQQQQlSSSSTTTTTTTTSSSSllllllllllllllllllllllllllllllluulk.............................d
 v.............................klllllllllllllllllllllllllllllllUUUUUUUUUUUUUUUUlVVVVVVVVVVVVVVVVllllllllllllllllllllllllllllllluulk.............................d
-v.............................kllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllluulk.............................d
-v.............................kllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllk.............................d
-v.............................kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.............................d
+v.............................kllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllluulkWWWWWWWWWWWWWWWWWWWWWWWWWWWW.d
+v.............................kllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllkWWWWWWWWWWWWWWWWWWWWWWWWWWWW.d
+v.............................kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkWWWWWWWWWWWWWWWWWWWWWWWWWWWW.d
 v..............................................................vd..............................................................................................d
-v..............................................................vd.................................WXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.d
-v..............................................................vd.................................WXYYYYYYYYYYYYYYYYYYYYYYYYYYYXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.d
-v..............................................................vd.................................WXZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZXXXXXXXXXXXX.d
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvddddddddddddddddddddddddddddddddddWXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXdd
-0001111111000111111111111111111110001111111100011111111110001111111111000111111100001111111111100011111111111100011111111111111111111110001111100001111111111111
+v..............................................................vd.................................XYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY.d
+v..............................................................vd.................................XYZZZZZZZZZZZZZZZZZZZZZZZZZZZYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY.d
+v..............................................................vd.................................XY0000000000000000000000000000000000000000000000YYYYYYYYYYYY.d
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvddddddddddddddddddddddddddddddddddXYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYdd
+1112222222111222222222222222222221112222222211122222222221112222222222111222222211112222222222211122222222222211122222222222222222222221112222211112222222222222
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#0a263a bg=#121212
@@ -149,9 +149,10 @@ S bg=#b93c5b
 T fg=#f5e5e9 bg=#b93c5b bold
 U fg=#008139 bg=#4ebf71
 V fg=#780028 bg=#b93c5b
-W fg=#b93c5b bg=#343f49
-X bg=#343f49
-Y fg=#d17e92 bg=#343f49 bold
-Z fg=#e0e0e0 bg=#343f49
-0 fg=#704d1c bg=#191d21 bold
-1 fg=#646464 bg=#191d21
+W fg=#e0e0e0 bg=#1f2428
+X fg=#b93c5b bg=#343f49
+Y bg=#343f49
+Z fg=#d17e92 bg=#343f49 bold
+0 fg=#e0e0e0 bg=#343f49
+1 fg=#704d1c bg=#191d21 bold
+2 fg=#646464 bg=#191d21

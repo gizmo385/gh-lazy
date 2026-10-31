@@ -40,10 +40,10 @@ cursor 1 4 hidden
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌ Invalid Issue Number                                       │
-│                                                              ││                                 ▌ Must enter a valid issue number!                           │
-│                                                              ││                                 ▌                                                            │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘│                                 ▌                                                            │
 ┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                 ▌ Unknown Issue                                              │
@@ -89,14 +89,14 @@ nrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrstnd...............
 n..............................................................nd..............................................................................................d
 n..............................................................nd..............................................................................................d
 n..............................................................nd..............................................................................................d
-n..............................................................nd.................................uvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
-n..............................................................nd.................................uvwwwwwwwwwwwwwwwwwwwwvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
-n..............................................................nd.................................uvxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxvvvvvvvvvvvvvvvvvvvvvvvvvv.d
-n..............................................................nd.................................uvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
+n..............................................................nd..............................................................................................d
+n..............................................................nd..............................................................................................d
+n..............................................................nd..............................................................................................d
+n..............................................................nd..............................................................................................d
 n..............................................................nd..............................................................................................d
 nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnd.................................uvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
-dddddddddddddddddyyyyyyyddddddddddddddddddddddddddddddddddddddddd.................................uvwwwwwwwwwwwwwvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
-deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd.................................uvxxxxxxxxxxxxxxxxxxxxxvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
+dddddddddddddddddwwwwwwwddddddddddddddddddddddddddddddddddddddddd.................................uvxxxxxxxxxxxxxvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
+deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedd.................................uvyyyyyyyyyyyyyyyyyyyyyvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv.d
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddduvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvdd
 zzzAAAAAAAzzzAAAAAAAAAAAAAzzzAAAAAAAAAAAzzzAAAAAAAAAAzzzAAAAAAAAAAzzzAAAAAAAzzzzAAAAAAAAAAAzzzAAAAAAAAAAAAzzzAAAAAAAAAAAAAAAAAAAAAAzzzAAAAAzzzzAAAAAAAAAAAAAAAAz
 --- legend
@@ -123,8 +123,8 @@ s fg=#003054 bg=#000000
 t fg=#e0e0e0 bg=#000000
 u fg=#b93c5b bg=#343f49
 v bg=#343f49
-w fg=#d17e92 bg=#343f49 bold
-x fg=#e0e0e0 bg=#343f49
-y fg=#4e7bae bg=#121212
+w fg=#4e7bae bg=#121212
+x fg=#d17e92 bg=#343f49 bold
+y fg=#e0e0e0 bg=#343f49
 z fg=#ffa62b bg=#242f38 bold
 A fg=#e0e0e0 bg=#242f38

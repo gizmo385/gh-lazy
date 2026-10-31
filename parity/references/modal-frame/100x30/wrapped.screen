@@ -42,27 +42,27 @@ diiiiiiiiiiiiiiiiiiic..jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj..c
 dlllllllllllllllllllc..........................................................chhhhhhhhhhhhhhhhhmme
 dlllllllllllllllllllcnnnnnnnnnnnnnnnnnnnnnnnn..................................chhhhhhhhhhhhhhhhhmme
 dhhhhhhhhhhhhhhhhhhhcoppppppppppppppppppppppppppppppppppppppppppppppppppppppppqcrrrrrrrrrrrrrrrhhmme
-dhhhhhhhhhhhhhhhhhhhcosstuvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvssqchhhhhhhhhhhhhhhhhmme
+dhhhhhhhhhhhhhhhhhhhcosstuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuussqchhhhhhhhhhhhhhhhhmme
 dhhhhhhhhhhhhhhhhhhhcoppppppppppppppppppppppppppppppppppppppppppppppppppppppppqcbbbbbbbbbbbhhhhhhmme
 dhhhhhhhhhhhhhhhhhhhc..........................................................cbbbbbbbbbbbbbbhhhmme
-ddddddddddddddddddddcwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwcbbbbbbbbbbbbbhhhhmme
+ddddddddddddddddddddcvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvcbbbbbbbbbbbbbhhhhmme
 eeeeeeeeeeeeeeeeeeeec..........................................................cbbbbbbbbbbbhhhhhhmme
-exxxxxxxxxxxxxxxxxxxcyyyyyyyyyyyyyyyyyyyyyyyyyyyy..............................cbbbbbbbbbbbbbbbhhmme
-ehhhhhhhhhhhhhhhhhhhczAAAAAAAAB................................................chhhhhhhhhhhhhhhhhmme
-ehhhhhhhhhhhhhhhhhhhczCCDDEECCB................................................chhhhhhhhhhhhhhhhhmme
-eeeeeeeeeeeeeeeeeeeeczAAAAAAAAB................................................cFFFFFFFFFFFFFFhhhGGe
-eeeeeeeeeeeeeeeeeeeec..........................................................chhhhhhhhhhhhhhhhhHHe
-exxxxxxxxxxxxxxxxxxxcwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwchhhhhhhhhhhhhhhhhHHe
-ehhhhhhhhhhhhhhhhhhhc..........................................................chhhhhhhhhhhhhhhhhHHe
-ehhhhhhhhhhhhhhhhhhhc..........................................................chhhhhhhhhhhhhhhhhHHe
-eeeeeeeeeeeeeeeeeeeec............IIIIIIIIIIIIIIII.JJJJJJJJJJJJJJJJ.............chhhhhhhhhhhhhhhhhHHe
-eeeeeeeeeeeeeeeeeeeec............KKKKLLLLLLLLKKKK.MMMMNNNNNNNNMMMM.............cbbbbbbbbbbbbbhhhhHHe
-exxxxxxxxxxxxxxxxxxxc............OOOOOOOOOOOOOOOO.PPPPPPPPPPPPPPPP.............cbbbbbbbbbbbbbbbhhHHe
-eQQQQQQQQQQQQQQQQQQQc..........................................................cbbbbbbbbbbhhhhhhhHHe
-ehhhhhhhhhhhhhhhhhhhccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbbbbbbbbbbbhhhhhhHHe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhHHe
+ewwwwwwwwwwwwwwwwwwwcxxxxxxxxxxxxxxxxxxxxxxxxxxxx..............................cbbbbbbbbbbbbbbbhhmme
+ehhhhhhhhhhhhhhhhhhhcyzzzzzzzzA................................................chhhhhhhhhhhhhhhhhmme
+ehhhhhhhhhhhhhhhhhhhcyBBCCDDBBA................................................chhhhhhhhhhhhhhhhhmme
+eeeeeeeeeeeeeeeeeeeecyzzzzzzzzA................................................cEEEEEEEEEEEEEEhhhFFe
+eeeeeeeeeeeeeeeeeeeec..........................................................chhhhhhhhhhhhhhhhhGGe
+ewwwwwwwwwwwwwwwwwwwcvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvchhhhhhhhhhhhhhhhhGGe
+ehhhhhhhhhhhhhhhhhhhc..........................................................chhhhhhhhhhhhhhhhhGGe
+ehhhhhhhhhhhhhhhhhhhc..........................................................chhhhhhhhhhhhhhhhhGGe
+eeeeeeeeeeeeeeeeeeeec............HHHHHHHHHHHHHHHH.IIIIIIIIIIIIIIII.............chhhhhhhhhhhhhhhhhGGe
+eeeeeeeeeeeeeeeeeeeec............JJJJKKKKKKKKJJJJ.LLLLMMMMMMMMLLLL.............cbbbbbbbbbbbbbhhhhGGe
+ewwwwwwwwwwwwwwwwwwwc............NNNNNNNNNNNNNNNN.OOOOOOOOOOOOOOOO.............cbbbbbbbbbbbbbbbhhGGe
+ePPPPPPPPPPPPPPPPPPPc..........................................................cbbbbbbbbbbhhhhhhhGGe
+ehhhhhhhhhhhhhhhhhhhccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbbbbbbbbbbbhhhhhhGGe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhGGe
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-RRRRRRRRRSSSSSSSRRRRRSSSSSSTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+QQQQQQQQQRRRRRRRQQQQQRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 --- legend
 . bg=#4f4f4f
 a fg=#0a263a bg=#121212
@@ -85,29 +85,28 @@ q fg=#b93c5b bg=#4f4f4f
 r fg=#0b3a5f bg=#121212 bold
 s bg=#272727
 t fg=#e0e0e0 bg=#2d4e74
-u fg=#121212 bg=#e0e0e0
-v fg=#e0e0e0 bg=#272727
-w fg=#004578 bg=#4f4f4f
-x fg=#646464 bg=#191d21 bold
-y fg=#e0e0e0 bg=#4f4f4f
-z fg=#191919 bg=#4f4f4f inverse
-A fg=#191919 bg=#1e1e1e
-B fg=#191919 bg=#4f4f4f
-C bg=#1e1e1e
-D fg=#242f38 bg=#1e1e1e inverse
-E fg=#e0e0e0 bg=#000f18
-F fg=#646464 bg=#121212 bold
-G fg=#0a1e2c bg=#0a0a0a inverse
-H fg=#646464 bg=#0a0a0a
-I fg=#7ae998 bg=#4ebf71
-J fg=#e76580 bg=#b93c5b
-K bg=#4ebf71
-L fg=#0a180e bg=#4ebf71 bold
-M bg=#b93c5b
-N fg=#f5e5e9 bg=#b93c5b bold
-O fg=#008139 bg=#4ebf71
-P fg=#780028 bg=#b93c5b
-Q fg=#0a1e2c bg=#161616 inverse
-R fg=#ffa62b bg=#242f38 bold
-S fg=#e0e0e0 bg=#242f38
-T bg=#242f38
+u fg=#e0e0e0 bg=#272727
+v fg=#004578 bg=#4f4f4f
+w fg=#646464 bg=#191d21 bold
+x fg=#e0e0e0 bg=#4f4f4f
+y fg=#191919 bg=#4f4f4f inverse
+z fg=#191919 bg=#1e1e1e
+A fg=#191919 bg=#4f4f4f
+B bg=#1e1e1e
+C fg=#242f38 bg=#1e1e1e inverse
+D fg=#e0e0e0 bg=#000f18
+E fg=#646464 bg=#121212 bold
+F fg=#0a1e2c bg=#0a0a0a inverse
+G fg=#646464 bg=#0a0a0a
+H fg=#7ae998 bg=#4ebf71
+I fg=#e76580 bg=#b93c5b
+J bg=#4ebf71
+K fg=#0a180e bg=#4ebf71 bold
+L bg=#b93c5b
+M fg=#f5e5e9 bg=#b93c5b bold
+N fg=#008139 bg=#4ebf71
+O fg=#780028 bg=#b93c5b
+P fg=#0a1e2c bg=#161616 inverse
+Q fg=#ffa62b bg=#242f38 bold
+R fg=#e0e0e0 bg=#242f38
+S bg=#242f38

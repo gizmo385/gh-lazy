@@ -34,8 +34,9 @@ keys = ["P"]
 [[step]]
 wait.text = "no configured upstream"
 
+# The title has focus once Python has moved it there; typing before that would be lost.
 [[step]]
-wait.stable_ms = 300
+wait = { focused = "Title" }
 
 [[step]]
 type = "Parity PR"
@@ -103,7 +104,7 @@ keys = ["2"]
 wait = { text = "O Lookup Pull Request" }
 
 [[step]]
-wait.stable_ms = 500
+wait = { focused = "[2] Pull Requests" }
 
 [[step]]
 keys = ["P"]

@@ -129,8 +129,9 @@ type = "Add a cursor to the diff viewer"
 [[step]]
 keys = ["tab"]
 
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
 [[step]]
-wait.stable_ms = 300
+wait = { focused = "Adds a cursor to the viewer" }
 
 [[step]]
 keys = ["tab"]
@@ -202,6 +203,9 @@ checks = ["titles", "focus"]
 # parity-reviewer (the existing request); toggling it takes it off the list.
 [[step]]
 keys = ["tab"]
+
+[[step]]
+wait = { focused = "Current Reviewers" }
 
 [[step]]
 capture = "list-focused"
@@ -277,8 +281,9 @@ wait.stable_ms = 500
 [[step]]
 keys = ["tab"]
 
+# The Overview's content has focus once its merge key shows in the footer.
 [[step]]
-wait.stable_ms = 500
+wait = { text = "^m Merge PR" }
 
 [[step]]
 keys = ["E"]

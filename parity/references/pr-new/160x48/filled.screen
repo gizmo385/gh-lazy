@@ -31,20 +31,20 @@ cursor 10 48 hidden
 │ #  Status  Author         Ti█ ▊                                                                                            ▎   █                             │
 │ 5  open    parity-friend  Ad█ ▊                                                                                            ▎   █                             │
 │ 4  closed  parity-bot     Dr█ ▊                                                                                            ▎   █                             │
-│ 3  closed  parity-bot     Re█ ▊                                                                 ▌                                                            │
-│ 2  open    parity-friend  Tr█ ▊                                                                 ▌ Invalid PR!                                                │
-│                             █ ▊                                                                 ▌ Missing required fields!                                   │
-│                             █ ▊                                                                 ▌                                                            │
+│ 3  closed  parity-bot     Re█ ▊                                                                                            ▎   █                             │
+│ 2  open    parity-friend  Tr█ ▊                                                                                            ▎   █                             │
 │                             █ ▊                                                                                            ▎   █                             │
-│                             █ ▊                                                                 ▌                                                            │
-│                             █ ▊                                                                 ▌ Creating PR...                                             │
-│                             █ ▊                                                                 ▌                                                            │
+│                             █ ▊                                                                                            ▎   █                             │
+│                             █ ▊                                                                                            ▎   █                             │
+│                             █ ▊                                                                                            ▎▄▄ █                             │
+│                             █ ▊                                                                                            ▎   █                             │
+│                             █ ▊                                                                                            ▎   █                             │
 │                             █ ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎   █                             │
-│                             █                                                                   ▌                                                            │
-│                             █ ──────────────────────────────────────────────────────────────────▌ Error creating pull request                                │
-│                             █                                                                   ▌ Check that your branches are valid and that a PR does not  │
-│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌ already exist                                              │
-│                                                              ││                                 ▌                                                            │
+│                             █                                                                                                  █                             │
+│                             █ ──────────────────────────────────────────────────────────────────────────────────────────────   █                             │
+│                             █                                                                                                  █                             │
+│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
+│                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                 ▌ Error while pushing branch missing-branch to remote        │
@@ -80,25 +80,25 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeemnos..............................................
 eAAAAAAAAAAAAAAAAAAAAAAAAAAAAAmnos..........................................................................................sqzznmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
 eBBBBBBBBBBBBBBBBBBBBBBBBBBBBBmnos..........................................................................................sqzznmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
 eCCCCCCCCCCCCCCCCCCCCCCCCCCCCCmnos..........................................................................................sqzznmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
-eCCCCCCCCCCCCCCCCCCCCCCCCCCCCCmnos................................................................DEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEhe
-eCCCCCCCCCCCCCCCCCCCCCCCCCCCCCmnos................................................................DEFFFFFFFFFFFEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEhe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnos................................................................DEGGGGGGGGGGGGGGGGGGGGGGGGEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEhe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnos................................................................DEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEhe
+eCCCCCCCCCCCCCCCCCCCCCCCCCCCCCmnos..........................................................................................sqzznmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+eCCCCCCCCCCCCCCCCCCCCCCCCCCCCCmnos..........................................................................................sqzznmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
 ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnos..........................................................................................sqzznmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnos................................................................HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEhe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnos................................................................HEGGGGGGGGGGGGGGEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEhe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnos................................................................HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnos..........................................................................................sqzznmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnos..........................................................................................sqzznmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnos..........................................................................................sqDDnmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnos..........................................................................................sqrrnmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnos..........................................................................................sqrrnmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
 ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnoppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqrrnmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEhe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIDEFFFFFFFFFFFFFFFFFFFFFFFFFFFEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEhe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnDEGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGEhe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmDEGGGGGGGGGGGGGEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEhe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnrrnmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEErrnmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
 ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEhe
-ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhDEGGGGGGGGGGGGGGGGGGGGGGGGGGGJJJJJJJJJJJJJJGGGGGGGGGGEEEEEEEhe
-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEee
-KKKLLLLLLLKKKKLLLLLLLLLLLLLLLLKKKLLLLLLLLLLLLLLLLLLKKKLLLLLLLLLLKKKLLLLLLLLLLKKKLLLLLLLKKKKLLLLLLLLLLLKKKLLLLLLLLLLLLKKKLLLLLLLLLLLLLLLLLLLLLLKKKLLLLLKKKKLLLLLL
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGhe
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhFGHHHHHHHHHHHHHHHHHHHHHHHHHHHIIIIIIIIIIIIIIHHHHHHHHHHGGGGGGGhe
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGee
+JJJKKKKKKKJJJJKKKKKKKKKKKKKKKKJJJKKKKKKKKKKKKKKKKKKJJJKKKKKKKKKKJJJKKKKKKKKKKJJJKKKKKKKJJJJKKKKKKKKKKKJJJKKKKKKKKKKKKJJJKKKKKKKKKKKKKKKKKKKKKKJJJKKKKKJJJJKKKKKK
 --- legend
 . fg=#f8f8f2 bg=#272822
 a fg=#0a263a bg=#121212
@@ -130,12 +130,11 @@ z fg=#003054 bg=#4f4f4f inverse
 A fg=#646464 bg=#191d21 bold
 B fg=#646464 bg=#13212c
 C fg=#646464 bg=#161616
-D fg=#b93c5b bg=#343f49
-E bg=#343f49
-F fg=#d17e92 bg=#343f49 bold
-G fg=#e0e0e0 bg=#343f49
-H fg=#4ebf71 bg=#343f49
-I fg=#004578 bg=#4f4f4f
-J fg=#ff0000 bg=#343f49
-K fg=#704d1c bg=#191d21 bold
-L fg=#646464 bg=#191d21
+D fg=#003054 bg=#000000 inverse
+E fg=#004578 bg=#4f4f4f
+F fg=#b93c5b bg=#343f49
+G bg=#343f49
+H fg=#e0e0e0 bg=#343f49
+I fg=#ff0000 bg=#343f49
+J fg=#704d1c bg=#191d21 bold
+K fg=#646464 bg=#191d21

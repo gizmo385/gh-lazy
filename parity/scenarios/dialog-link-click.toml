@@ -49,7 +49,14 @@ wait.text = "A comment from a deleted account."
 wait.timeout_ms = 15000
 
 [[step]]
-keys = ["tab", "n"]
+keys = ["tab"]
+
+# Python moves focus a tick after a tab (Py bug B121): the scroll area has it once the footer offers `n`.
+[[step]]
+wait = { text = "n New Comment" }
+
+[[step]]
+keys = ["n"]
 
 [[step]]
 wait.text = "Post Comment"

@@ -38,9 +38,9 @@ cursor 21 85 hidden
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Opening issue for link                                     │
+│                                                              ││                                 ▌                                                            │
 │                                                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘│                                 ▌                                                            │
 ┌─ [3] Issues (empty) ─────────────────────────────────────────┐│                                 ▌ Opening pull request for link                              │
@@ -87,16 +87,16 @@ d..............................................................de...............
 d..............................................................de..............................................................................................e
 d..............................................................de..............................................................................................e
 d..............................................................de..............................................................................................e
-d..............................................................de..............................................................................................e
-d..............................................................de..............................................................................................e
-d..............................................................de..............................................................................................e
+d..............................................................de.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
+d..............................................................de.................................rsttttttttttttttttttttttssssssssssssssssssssssssssssssssssss.e
+d..............................................................de.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
 d..............................................................de..............................................................................................e
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
-ddddddddddddddtttttttddddddddddddddddddddddddddddddddddddddddddde.................................rsuuuuuuuuuuuuuuuuuuuuuuuuuuuuusssssssssssssssssssssssssssss.e
+dddddddddddddduuuuuuuddddddddddddddddddddddddddddddddddddddddddde.................................rstttttttttttttttttttttttttttttsssssssssssssssssssssssssssss.e
 dvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvwxxxyyde.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..............................................................................................e
-dddddddddddddddddtttttttdddddddddddddddddddddddddddddddddddddddde.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
-dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde.................................rsuuuuuuuuuuuuuuuuuuuuuuuuuuusssssssssssssssssssssssssssssss.e
+ddddddddddddddddduuuuuuudddddddddddddddddddddddddddddddddddddddde.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde.................................rstttttttttttttttttttttttttttsssssssssssssssssssssssssssssss.e
 ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeersssssssssssssssssssssssssssssssssssssssssssssssssssssssssssee
 zzzzAAAAAAAAAAAzzzAAAAAAAAAAAAzzzAAAAAAAAAAAAAAAAAAAAAAzzzAAAAAzzzzAAAAAAAAAAAAAAAAzzzAAAAAAAAAzzzAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
 --- legend
@@ -120,8 +120,8 @@ p fg=#e0e0e0 bg=#121212 bold
 q fg=#0178d4 bg=#121212 bold
 r fg=#4ebf71 bg=#343f49
 s bg=#343f49
-t fg=#4e7bae bg=#121212
-u fg=#e0e0e0 bg=#343f49
+t fg=#e0e0e0 bg=#343f49
+u fg=#4e7bae bg=#121212
 v fg=#003054 bg=#1e1e1e inverse
 w fg=#003054 bg=#000000
 x fg=#e0e0e0 bg=#000000

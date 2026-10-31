@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["open", "invalid", "unknown", "closed", "not-found", "pull-request", "issue", "issue-is-pull-request", "repository", "user", "user-repo"]
 
 [inputs]
-scenario = "f69bad2babff8c3187275348bf5c81209d2bd8ab"
+scenario = "5951bcfc7d0a176b7fe5105aeab17e877e5c36ca"
 fixtures = "0261ee02f10bc0a718dfb9a6f83e1c4409cfe089"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"

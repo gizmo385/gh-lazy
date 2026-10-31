@@ -26,27 +26,58 @@ wait = { text = "Repository (owner/name):" }
 
 # The switch: tab focuses it, space turns it on.
 [[step]]
-keys = ["tab", "space"]
+keys = ["tab"]
+
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+[[step]]
+wait = { focused = "Continue t" }
+
+[[step]]
+keys = ["space"]
 
 [[step]]
 capture = "switch-on"
 
 # Lookup with nothing typed.
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Lookup" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 capture = "empty"
 
 # A name that isn't owner/name.
 [[step]]
-keys = ["shift+tab", "shift+tab"]
+keys = ["shift+tab"]
+
+[[step]]
+wait = { focused = "Continue t" }
+
+[[step]]
+keys = ["shift+tab"]
+
+# The input holds nothing yet, so it's invalid: focused, its outline is drawn in `$error`, not `$border`,
+# which wait.focused doesn't read (#360), and nothing else on screen shows the move. So the first hop waits on
+# its marker, and the last one sleeps (Py bug B121).
+[[step]]
+sleep_ms = 500
 
 [[step]]
 type = "nope"
 
 [[step]]
-keys = ["tab", "tab", "enter"]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { focused = "Lookup" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 capture = "invalid"
@@ -54,7 +85,19 @@ capture = "invalid"
 # A name GitHub doesn't know, submitted from the input with modal.submit: shift+enter, in the kitty keyboard
 # protocol's encoding (CSI 13;2 u), which both apps read.
 [[step]]
-keys = ["shift+tab", "shift+tab"]
+keys = ["shift+tab"]
+
+[[step]]
+wait = { focused = "Continue t" }
+
+[[step]]
+keys = ["shift+tab"]
+
+# The input holds `nope`, so it's invalid: focused, its outline is drawn in `$error`, not `$border`,
+# which wait.focused doesn't read (#360), and nothing else on screen shows the move. So the first hop waits on
+# its marker, and the last one sleeps (Py bug B121).
+[[step]]
+sleep_ms = 500
 
 [[step]]
 type = "parity-org/missing"
@@ -71,13 +114,28 @@ capture = "not-found"
 # A repo that exists: the modal closes, the repo joins the table and is selected. The input still has focus; leaving
 # and coming back selects its text, so typing replaces it.
 [[step]]
-keys = ["tab", "shift+tab"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Continue t" }
+
+[[step]]
+keys = ["shift+tab"]
+
+[[step]]
+wait = { focused = "Repository (owner/name):" }
 
 [[step]]
 type = "parity-org/lookup-me"
 
 [[step]]
-keys = ["tab", "tab", "enter"]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { focused = "Lookup" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { gone = "Repository (owner/name):" }

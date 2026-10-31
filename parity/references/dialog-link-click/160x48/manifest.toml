@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["clicked"]
 
 [inputs]
-scenario = "11db378d9eeaf026ab589e75e780e9ae1f83591b"
+scenario = "1e9890410a37bf962e175311d5ade15cdbc59ef5"
 fixtures = "ed4284e420c63feff0ca479b50affd9bd8f9c0da"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"

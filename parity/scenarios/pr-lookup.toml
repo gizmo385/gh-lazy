@@ -44,7 +44,14 @@ capture = "dialog"
 
 # The input has focus; tab reaches Lookup. With nothing typed: error "Must enter a valid pull request number!".
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+[[step]]
+wait = { focused = "Lookup" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Must enter a valid pull request number!", timeout_ms = 5000 }
@@ -56,11 +63,22 @@ capture = "empty-number"
 [[step]]
 keys = ["shift+tab"]
 
+# The input is empty and so invalid: focused, its outline is drawn in `$error`, not `$border`, which wait.focused
+# doesn't read (#360), and nothing else on screen shows the move. Sleep so the shift+tab lands (Py bug B121).
+[[step]]
+sleep_ms = 500
+
 [[step]]
 type = "42"
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Lookup" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Could not find pull request!", timeout_ms = 5000 }
@@ -70,13 +88,25 @@ capture = "unknown-number"
 
 # 9 instead: the dialog closes, PR 9 joins the table and its details open.
 [[step]]
-keys = ["shift+tab", "backspace", "backspace"]
+keys = ["shift+tab"]
+
+[[step]]
+wait = { focused = "Pull Request Number:" }
+
+[[step]]
+keys = ["backspace", "backspace"]
 
 [[step]]
 type = "9"
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Lookup" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "[5] PR #9 Details", timeout_ms = 15000 }

@@ -36,6 +36,10 @@ checks = ["rows", "footer"]
 [[step]]
 keys = ["tab"]
 
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+[[step]]
+wait = { focused = "Continue t" }
+
 [[step]]
 capture = "switch-focused"
 checks = ["footer"]
@@ -44,11 +48,26 @@ checks = ["footer"]
 keys = ["tab"]
 
 [[step]]
+wait = { focused = "Lookup" }
+
+[[step]]
 capture = "submit-focused"
 checks = ["footer"]
 
 [[step]]
-keys = ["tab", "tab"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Cancel" }
+
+[[step]]
+keys = ["tab"]
+
+# The input holds `q`, so it's invalid: focused, its outline is drawn in `$error`, not `$border`,
+# which wait.focused doesn't read (#360), and nothing else on screen shows the move. So the first hop waits on
+# its marker, and the last one sleeps (Py bug B121).
+[[step]]
+sleep_ms = 500
 
 [[step]]
 capture = "wrapped"
@@ -56,7 +75,13 @@ checks = ["footer"]
 
 # Back on the switch, q closes.
 [[step]]
-keys = ["tab", "q"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Continue t" }
+
+[[step]]
+keys = ["q"]
 
 [[step]]
 wait = { gone = "Repository (owner/name):", timeout_ms = 10000 }

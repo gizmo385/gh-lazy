@@ -49,7 +49,15 @@ wait.timeout_ms = 15000
 wait.text = "👍 2"
 
 [[step]]
-keys = ["tab", "R"]
+keys = ["tab"]
+
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+# The Overview's content has focus once the footer offers `R`.
+[[step]]
+wait = { text = "R Add reaction" }
+
+[[step]]
+keys = ["R"]
 
 [[step]]
 wait.text = "Add a new reaction"
@@ -68,7 +76,13 @@ capture = "checked"
 checks = ["titles", "focus", "footer"]
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Submit" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.log.method = "POST"

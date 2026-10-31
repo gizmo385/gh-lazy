@@ -81,10 +81,19 @@ type = "Parity PR"
 
 # Back past the Draft switch to Compare.
 [[step]]
-keys = ["shift+tab", "shift+tab"]
+keys = ["shift+tab"]
 
 [[step]]
-wait.stable_ms = 300
+wait = { focused = "Draft" }
+
+[[step]]
+keys = ["shift+tab"]
+
+# The input holds nothing yet, so it's invalid: focused, its outline is drawn in `$error`, not `$border`,
+# which wait.focused doesn't read (#360), and nothing else on screen shows the move. So the first hop waits on
+# its marker, and the last one sleeps (Py bug B121).
+[[step]]
+sleep_ms = 500
 
 [[step]]
 type = "missing-branch"
@@ -132,7 +141,18 @@ checks = ["footer"]
 
 # Accept the suggestion, turn Draft on, and type a description.
 [[step]]
-keys = ["right", "tab", "space", "tab", "tab"]
+keys = ["right", "tab"]
+
+[[step]]
+wait = { focused = "Draft" }
+
+[[step]]
+keys = ["space", "tab", "tab"]
+
+# The dialog scrolls the editor to its top, so its `Description` label is out of view: the empty editor's only
+# text is its first line number.
+[[step]]
+wait = { focused = "1" }
 
 [[step]]
 type = "First line"
@@ -213,7 +233,13 @@ wait.text = "New Pull Request"
 wait.stable_ms = 500
 
 [[step]]
-keys = ["tab", "tab", "tab", "tab", "enter"]
+keys = ["tab", "tab", "tab", "tab"]
+
+[[step]]
+wait = { focused = "Cancel" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.gone = "New Pull Request"

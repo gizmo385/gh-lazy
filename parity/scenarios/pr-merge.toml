@@ -58,6 +58,10 @@ wait.text = "Superseded by the new renderer."
 [[step]]
 keys = ["tab"]
 
+# Python moves focus a tick after a tab (Py bug B121): the merge key shows in the footer once the content has it.
+[[step]]
+wait = { text = "^m Merge PR" }
+
 [[step]]
 capture = "overview-content"
 checks = ["titles", "focus"]
@@ -100,6 +104,9 @@ wait.text = "Status checks:"
 keys = ["tab"]
 
 [[step]]
+wait = { text = "^m Merge PR" }
+
+[[step]]
 type = "\u001b[109;5u"
 
 [[step]]
@@ -134,6 +141,9 @@ wait.text = "Status checks:"
 
 [[step]]
 keys = ["tab"]
+
+[[step]]
+wait = { text = "^m Merge PR" }
 
 [[step]]
 type = "\u001b[109;5u"

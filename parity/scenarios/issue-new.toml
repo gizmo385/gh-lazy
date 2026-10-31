@@ -61,9 +61,16 @@ wait.text = "Description"
 capture = "open"
 checks = ["titles", "focus", "footer"]
 
-# Tab to the title, the description and Save, and press it with an empty title.
+# Tab to the title, the description and Save, and press it with an empty title. Python moves focus a tick after
+# each tab (Py bug B121), so `enter` waits for Save to show it.
 [[step]]
-keys = ["tab", "tab", "tab", "enter"]
+keys = ["tab", "tab", "tab"]
+
+[[step]]
+wait = { focused = "Save" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.text = "Must have a non-empty issue title!"
@@ -76,10 +83,16 @@ checks = ["titles", "focus", "footer"]
 keys = ["shift+tab", "shift+tab"]
 
 [[step]]
+wait = { focused = "Title" }
+
+[[step]]
 type = "Parity title"
 
 [[step]]
 keys = ["tab"]
+
+[[step]]
+wait = { focused = "Description" }
 
 [[step]]
 type = "First line"
@@ -132,7 +145,13 @@ keys = ["I"]
 wait.text = "Description"
 
 [[step]]
-keys = ["tab", "tab", "tab", "tab", "enter"]
+keys = ["tab", "tab", "tab", "tab"]
+
+[[step]]
+wait = { focused = "Cancel" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.gone = "Description"

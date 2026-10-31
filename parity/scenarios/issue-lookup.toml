@@ -45,7 +45,14 @@ checks = ["titles", "footer"]
 
 # Lookup with nothing typed: the number doesn't parse.
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+[[step]]
+wait = { focused = "Lookup" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Must enter a valid issue number!", timeout_ms = 10000 }
@@ -58,11 +65,22 @@ checks = ["titles", "footer"]
 [[step]]
 keys = ["shift+tab"]
 
+# The input is empty and so invalid: focused, its outline is drawn in `$error`, not `$border`, which wait.focused
+# doesn't read (#360), and nothing else on screen shows the move. Sleep so the shift+tab lands (Py bug B121).
+[[step]]
+sleep_ms = 500
+
 [[step]]
 type = "404"
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Lookup" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Could not find issue!", timeout_ms = 10000 }
@@ -73,13 +91,25 @@ checks = ["titles", "footer"]
 
 # Issue 3 isn't on the listed page: it's added to the table and selected.
 [[step]]
-keys = ["shift+tab", "backspace", "backspace", "backspace"]
+keys = ["shift+tab"]
+
+[[step]]
+wait = { focused = "Issue Number:" }
+
+[[step]]
+keys = ["backspace", "backspace", "backspace"]
 
 [[step]]
 type = "3"
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Lookup" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "An old issue on no listed page (#3)", timeout_ms = 10000 }
@@ -105,7 +135,13 @@ wait = { text = "Search for an issue by number:", timeout_ms = 10000 }
 type = "12"
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Lookup" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "Crash when the config file is empty (#12)", timeout_ms = 10000 }
@@ -132,7 +168,13 @@ wait = { text = "Search for an issue by number:", timeout_ms = 10000 }
 type = "8"
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Lookup" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { text = "A pull request among the issues (#8)", timeout_ms = 10000 }

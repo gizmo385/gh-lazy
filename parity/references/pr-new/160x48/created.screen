@@ -28,19 +28,19 @@ cursor 1 4 hidden
 │                                                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
-│ #  Status  Author         Title                              ││                                 ▌                                                            │
-│ 1  open    parity-bot     Parity PR                          ││                                 ▌ Creating PR...                                             │
-│ 5  open    parity-friend  Add a cursor to the viewer         ││                                 ▌                                                            │
+│ #  Status  Author         Title                              ││                                                                                              │
+│ 1  open    parity-bot     Parity PR                          ││                                                                                              │
+│ 5  open    parity-friend  Add a cursor to the viewer         ││                                                                                              │
 │ 4  closed  parity-bot     Drop the legacy renderer           ││                                                                                              │
-│ 3  closed  parity-bot     Release 0.2.0                      ││                                 ▌                                                            │
-│ 2   open    parity-friend  Try a faster parser               ││                                 ▌ Error creating pull request                                │
-│                                                              ││                                 ▌ Check that your branches are valid and that a PR does not  │
-│                                                              ││                                 ▌ already exist                                              │
-│                                                              ││                                 ▌                                                            │
+│ 3  closed  parity-bot     Release 0.2.0                      ││                                                                                              │
+│ 2   open    parity-friend  Try a faster parser               ││                                                                                              │
 │                                                              ││                                                                                              │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌ Error while pushing branch missing-branch to remote        │
-│                                                              ││                                 ▌                                                            │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                 ▌ Creating PR...                                             │
@@ -77,19 +77,19 @@ d..............................................................de...............
 d..............................................................de..............................................................................................e
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..............................................................................................e
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..............................................................................................e
-dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
-dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkde.................................rsttttttttttttttssssssssssssssssssssssssssssssssssssssssssss.e
-dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnde.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkde..............................................................................................e
 dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnde..............................................................................................e
-dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnde.................................usssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
-dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnde.................................usvvvvvvvvvvvvvvvvvvvvvvvvvvvsssssssssssssssssssssssssssssss.e
-d..............................................................de.................................usttttttttttttttttttttttttttttttttttttttttttttttttttttttttts.e
-d..............................................................de.................................ustttttttttttttsssssssssssssssssssssssssssssssssssssssssssss.e
-d..............................................................de.................................usssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
+dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnde..............................................................................................e
+dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnde..............................................................................................e
+dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnde..............................................................................................e
 d..............................................................de..............................................................................................e
-d..............................................................de.................................usssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
-d..............................................................de.................................ustttttttttttttttttttttttttttwwwwwwwwwwwwwwttttttttttsssssss.e
-d..............................................................de.................................usssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
 d..............................................................de..............................................................................................e
 d..............................................................de.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
 d..............................................................de.................................rsttttttttttttttssssssssssssssssssssssssssssssssssssssssssss.e
@@ -98,7 +98,7 @@ d..............................................................de...............
 d..............................................................de.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.e
 d..............................................................de.................................rsttttttttttttttttttttttttssssssssssssssssssssssssssssssssss.e
 ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeersssssssssssssssssssssssssssssssssssssssssssssssssssssssssssee
-xxxxyyyyyyyyyyyxxxyyyyyyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyyyxxxyyyyyxxxxyyyyyyyyyyyyyyyyxxxyyyyyyyyyxxxyyyyyyyyyyyyzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+uuuuvvvvvvvvvvvuuuvvvvvvvvvvvvuuuvvvvvvvvvvvvvvvvvvvvvvuuuvvvvvuuuuvvvvvvvvvvvvvvvvuuuvvvvvvvvvuuuvvvvvvvvvvvvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 --- legend
 . bg=#121212
 a fg=#004578 bg=#121212
@@ -121,9 +121,6 @@ q fg=#ff0000 bg=#121212
 r fg=#4ebf71 bg=#343f49
 s bg=#343f49
 t fg=#e0e0e0 bg=#343f49
-u fg=#b93c5b bg=#343f49
-v fg=#d17e92 bg=#343f49 bold
-w fg=#ff0000 bg=#343f49
-x fg=#ffa62b bg=#242f38 bold
-y fg=#e0e0e0 bg=#242f38
-z bg=#242f38
+u fg=#ffa62b bg=#242f38 bold
+v fg=#e0e0e0 bg=#242f38
+w bg=#242f38

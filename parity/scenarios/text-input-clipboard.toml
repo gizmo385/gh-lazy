@@ -23,7 +23,17 @@ type = "parity-bot/dotfiles"
 
 # Away to the switch and back: the input selects all its text when it gets focus.
 [[step]]
-keys = ["tab", "shift+tab"]
+keys = ["tab"]
+
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+[[step]]
+wait = { focused = "Continue t" }
+
+[[step]]
+keys = ["shift+tab"]
+
+[[step]]
+wait = { focused = "Repository (owner/name):" }
 
 [[step]]
 capture = "selected"

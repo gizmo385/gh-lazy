@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["open", "restored", "cleared"]
 
 [inputs]
-scenario = "8f6b91d115aca26c952ca8d5544218f970b9f672"
+scenario = "9974bd059ea2bfc8c25487e549c981726c4d6fe1"
 fixtures = "3b866993d199b2e22fab7b2fd14b35adf7b57af7"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"

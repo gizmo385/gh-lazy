@@ -33,6 +33,10 @@ checks = ["titles", "headers", "rows", "cursor"]
 [[step]]
 keys = ["tab"]
 
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+[[step]]
+wait = { focused = "Shell configuration" }
+
 [[step]]
 capture = "tabbed"
 checks = ["rows", "cursor"]

@@ -60,7 +60,15 @@ wait.text = "A comment from a deleted account."
 wait.timeout_ms = 15000
 
 [[step]]
-keys = ["tab", "n"]
+keys = ["tab"]
+
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+# The scroll area has focus once the footer offers `n`.
+[[step]]
+wait = { text = "n New Comment" }
+
+[[step]]
+keys = ["n"]
 
 [[step]]
 wait.text = "Post Comment"
@@ -80,7 +88,13 @@ capture = "preview"
 checks = ["titles", "focus"]
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Post Comment" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.log.method = "POST"
@@ -100,6 +114,9 @@ checks = ["titles", "tabs", "focus"]
 # Focus came back to the scroll area: two tabs reach the second comment, the deleted account's.
 [[step]]
 keys = ["tab", "tab"]
+
+[[step]]
+wait = { focused = "A comment from a deleted account." }
 
 # The footer shows whole here, `^p Command Pallete` included (Py bug B14, which Rust fixes), so it's left out of the
 # cross-app checks; [expect] checks its comment keys on the screen.
@@ -122,7 +139,13 @@ checks = ["titles", "focus"]
 type = "Agreed, thanks."
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Post Comment" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.log.method = "POST"

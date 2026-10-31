@@ -74,9 +74,9 @@ wait.stable_ms = 1000
 [[step]]
 keys = ["tab", "tab", "tab"]
 
-# Python draws the focus boxes a moment after the focus moves.
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
 [[step]]
-wait.stable_ms = 500
+wait = { focused = "Should the cursor wrap at the end?" }
 
 [[step]]
 capture = "comment-focused"
@@ -96,7 +96,13 @@ checks = ["titles", "focus"]
 type = "It stops, yes."
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Post Comment" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.log.method = "POST"
@@ -124,7 +130,13 @@ checks = ["titles", "focus"]
 type = "Ship it."
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Post Comment" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.log.method = "POST"

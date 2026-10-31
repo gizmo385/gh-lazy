@@ -114,7 +114,14 @@ keys = ["enter"]
 wait = { text = "Library Versions" }
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+[[step]]
+wait = { focused = "Close" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait = { gone = "Library Versions" }

@@ -94,7 +94,20 @@ checks = ["titles", "focus", "footer"]
 
 # The branch input selects `main` when it gets focus; backspace empties it, and Trigger refuses.
 [[step]]
-keys = ["tab", "backspace", "tab", "enter"]
+keys = ["tab"]
+
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+[[step]]
+wait = { focused = "Branch" }
+
+[[step]]
+keys = ["backspace", "tab"]
+
+[[step]]
+wait = { focused = "Trigger" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.text = "You must enter a branch!"
@@ -105,6 +118,11 @@ checks = ["titles", "focus", "footer"]
 
 [[step]]
 keys = ["shift+tab"]
+
+# The input is empty and so invalid: focused, its outline is drawn in `$error`, not `$border`, which wait.focused
+# doesn't read (#360), and nothing else on screen shows the move. Sleep so the shift+tab lands (Py bug B121).
+[[step]]
+sleep_ms = 500
 
 [[step]]
 type = "rel"
@@ -121,7 +139,13 @@ capture = "accepted"
 checks = ["titles", "focus", "footer"]
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Trigger" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.log.method = "POST"

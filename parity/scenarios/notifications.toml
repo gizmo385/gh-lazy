@@ -32,6 +32,10 @@ keys = ["ctrl+n"]
 [[step]]
 wait = { text = "Notifications  " }
 
+# The heading draws before Python mounts the tabs: wait for them so the capture doesn't catch the modal half built.
+[[step]]
+wait = { text = "•Unread" }
+
 [[step]]
 capture = "loading"
 checks = ["footer"]
@@ -101,6 +105,10 @@ checks = ["footer"]
 # Off the table, onto the scrolling container: the table's keys leave the footer.
 [[step]]
 keys = ["tab"]
+
+# Python moves focus a tick after a tab (Py bug B121): the footer leads with `r` once the table has lost it.
+[[step]]
+wait = { regex = '(?m)^ r View Read Notifications' }
 
 [[step]]
 capture = "tabbed"

@@ -52,6 +52,10 @@ checks = ["titles", "focus", "footer"]
 [[step]]
 keys = ["tab"]
 
+# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
+[[step]]
+wait = { focused = "Title" }
+
 [[step]]
 type = "Crash when the config file is blank"
 
@@ -60,7 +64,13 @@ capture = "title-typed"
 checks = ["titles", "focus", "footer"]
 
 [[step]]
-keys = ["tab", "enter"]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Status" }
+
+[[step]]
+keys = ["enter"]
 
 [[step]]
 wait.text = "Closed"
@@ -78,7 +88,13 @@ checks = ["titles", "focus", "footer"]
 
 # The description, then Save.
 [[step]]
-keys = ["tab", "tab", "enter"]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { focused = "Save" }
+
+[[step]]
+keys = ["enter"]
 
 # Python never shows "Saving..." (Py bug B69): [expect] checks only the progress toast.
 [[step]]
@@ -116,7 +132,14 @@ keys = ["j", "enter"]
 wait.text = "Closed without a body (#11)"
 
 [[step]]
-keys = ["tab", "E"]
+keys = ["tab"]
+
+# The Overview's content has focus once the footer leads with its `E`.
+[[step]]
+wait = { regex = '(?m)^ E Edit Issue  ' }
+
+[[step]]
+keys = ["E"]
 
 [[step]]
 wait.text = "Status"

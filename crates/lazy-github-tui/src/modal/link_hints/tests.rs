@@ -281,6 +281,30 @@ async fn f_labels_the_repo_overviews_title_and_owner() {
 }
 
 #[tokio::test]
+async fn labels_are_bold_only_and_drop_the_links_underline() {
+    let mut app = repo_overview().await;
+    let before = app.render(160, 48);
+    app.press(&["f"]);
+    let buf = app.render(160, 48);
+    let mut labels = 0;
+    for y in 0..buf.area.height {
+        for x in 0..buf.area.width {
+            let cell = &buf[(x, y)];
+            if before[(x, y)].modifier.contains(Modifier::UNDERLINED) && cell.symbol() != before[(x, y)].symbol() {
+                assert_eq!(
+                    cell.modifier,
+                    Modifier::BOLD,
+                    "label cell ({x}, {y}) is {:?}",
+                    cell.modifier
+                );
+                labels += 1;
+            }
+        }
+    }
+    assert_eq!(labels, 2, "the title's and the owner's labels");
+}
+
+#[tokio::test]
 async fn escape_cancels_and_the_main_screen_keeps_focus() {
     let mut app = repo_overview().await;
     app.press(&["f", "escape"]);

@@ -160,7 +160,10 @@ impl Component for LinkHintsDialog {
         let style = Style::new()
             .fg(theme.color(ThemeColor::BLACK, under))
             .bg(theme.paint(under))
-            .add_modifier(Modifier::BOLD);
+            .add_modifier(Modifier::BOLD)
+            // Python's labels are widgets of their own, painting only this style; here they're drawn over the link,
+            // whose underline (or any other modifier) would otherwise show through.
+            .remove_modifier(Modifier::all().difference(Modifier::BOLD));
         let width = self.hints.iter().map(|hint| hint.code.len()).max().unwrap_or(0);
         let screen = frame.area();
         let buf = frame.buffer_mut();

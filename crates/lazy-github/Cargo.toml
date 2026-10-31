@@ -24,6 +24,10 @@ serde_json = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "signal", "sync"] }
 tracing = { workspace = true }
 
+# The release binaries' allocator on musl (#357), set in `main.rs`. Other targets keep the system allocator.
+[target.'cfg(target_env = "musl")'.dependencies]
+mimalloc = { workspace = true }
+
 [dev-dependencies]
 assert_cmd = { workspace = true }
 insta = { workspace = true }

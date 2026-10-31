@@ -1,6 +1,7 @@
 //! `cargo xtask perf`: the large-data timing tests in `lazy-github-tui` (`src/perf_tests.rs`, #325), in a release
 //! build, one process per case so each case's peak RSS is its own. They're `#[ignore]`d, so the required CI job never
-//! runs them; this does, locally or in the non-required "Perf" workflow.
+//! runs them; this does, locally or in the release workflow's `perf` job, which times the musl builds on prerelease
+//! rehearsals (`--target`, #357).
 //!
 //! Each case prints a `PERF case=... slowest_ms=... peak_rss_mib=...` line; the summary table is made from those.
 
@@ -17,6 +18,10 @@ pub struct PerfArgs {
     /// Only the cases whose test name contains this, such as `diff` or `markdown`.
     #[arg(long)]
     pub case: Option<String>,
+    /// Build and run the tests for this target, such as `x86_64-unknown-linux-musl`: the release rehearsal times the
+    /// musl build the Linux binaries ship as (#357). Defaults to the host.
+    #[arg(long)]
+    pub target: Option<String>,
 }
 
 /// One case's `PERF` line, as the test printed it.
@@ -74,19 +79,23 @@ pub fn run(repo: &Path, args: &PerfArgs) -> ExitCode {
     }
 }
 
-fn cargo_test(repo: &Path, test_args: &[&str]) -> Command {
+fn cargo_test(repo: &Path, target: Option<&str>, test_args: &[&str]) -> Command {
     let cargo = std::env::var_os("CARGO").unwrap_or_else(|| OsString::from("cargo"));
     let mut command = Command::new(cargo);
     command
         .current_dir(repo)
-        .args(["test", "--release", "--quiet", "-p", "lazy-github-tui", "--lib", "--"])
-        .args(test_args);
+        .args(["test", "--release", "--quiet", "-p", "lazy-github-tui", "--lib"]);
+    if let Some(target) = target {
+        command.args(["--target", target]);
+    }
+    command.arg("--").args(test_args);
     command
 }
 
 /// Runs every case, printing each one's output and then a table. `Ok(false)` when a case failed.
 fn run_cases(repo: &Path, args: &PerfArgs) -> Result<bool, String> {
-    let list = cargo_test(repo, &["--ignored", "--list", PREFIX])
+    let target = args.target.as_deref();
+    let list = cargo_test(repo, target, &["--ignored", "--list", PREFIX])
         .output()
         .map_err(|e| format!("running cargo test: {e}"))?;
     if !list.status.success() {
@@ -106,7 +115,7 @@ fn run_cases(repo: &Path, args: &PerfArgs) -> Result<bool, String> {
     let mut all_passed = true;
     for name in &names {
         println!("== {name}");
-        let output = cargo_test(repo, &["--ignored", "--exact", name, "--nocapture"])
+        let output = cargo_test(repo, target, &["--ignored", "--exact", name, "--nocapture"])
             .output()
             .map_err(|e| format!("running {name}: {e}"))?;
         let stdout = String::from_utf8_lossy(&output.stdout);

@@ -78,6 +78,7 @@ process spawning.
 | Time | `jiff` (or `chrono`) | Relative timestamps in tables. |
 | Tests | `insta` snapshots of `TestBackend` buffers, `rstest`, `assert_cmd` | Unit, snapshot and CLI tests. |
 | PTY harness | `portable-pty` + `vt100` | Drives either app in a real pseudo-terminal for parity capture (see §6). |
+| Allocator | `mimalloc` on musl targets only; the system allocator elsewhere | The Linux release binaries are static musl builds, and musl's allocator misses the 50 ms frame budget on large bodies and diffs (#357). Only musl builds compile its C code, so `cargo install` on glibc, macOS and Windows needs no C compiler. |
 
 These are recommendations for the M0 design issues to confirm; swapping one is a design-agent decision recorded in the
 issue, not an implementer's ad-hoc call.
@@ -250,3 +251,8 @@ Recorded 2026-10-25 by Chris:
 11. Multi-line editors use `ratatui-textarea`, with Textual's TextArea keys mapped on top. Single-line inputs stay
     on the in-house `TextInput` (#85).
 12. The modal dialog frame (#178) moves to M2, since M2's lookup and user-profile modals need it.
+
+Recorded 2026-10-30 by Chris:
+
+13. musl builds use `mimalloc` as the global allocator, a target-specific dependency of the `lazy-github` binary.
+    glibc, macOS and Windows keep the system allocator (§4, #357).

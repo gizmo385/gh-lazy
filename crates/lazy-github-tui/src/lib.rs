@@ -34,3 +34,9 @@ pub mod test_util;
 
 #[cfg(test)]
 mod perf_tests;
+
+// The `lazy-github` binary's allocator on musl (#357), so the unit tests, and the perf tests' frame budgets in
+// particular, measure what the release binaries run.
+#[cfg(all(test, target_env = "musl"))]
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;

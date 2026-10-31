@@ -63,6 +63,10 @@ regex = "1"
 # Canonical HTTP reason phrases for fake-gh's `-i` status line.
 http = "1"
 color-eyre = "0.6"
+# The global allocator on musl targets only (#357): musl's allocator misses the 50 ms frame budget on large bodies and
+# diffs. It builds C code, so glibc, macOS and Windows keep the system allocator and `cargo install` needs no C
+# compiler there. `default-features = false`: no `secure` hardening, which costs speed.
+mimalloc = { version = "0.1.52", default-features = false }
 
 # Logging
 tracing = "0.1"

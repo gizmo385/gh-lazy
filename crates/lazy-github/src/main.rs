@@ -15,6 +15,12 @@ use lazy_github_tui::clock::SystemClock;
 use lazy_github_tui::options::AppOptions;
 use lazy_github_tui::theme::{ColorMode, Theme};
 
+// musl's allocator is slow enough that rendering a large body or diff misses the 50 ms frame budget, and the Linux
+// release binaries are static musl builds (#357). Everywhere else the system allocator is fast enough.
+#[cfg(target_env = "musl")]
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 /// The variable the git helpers read the user's working directory from. The `gh-lazy` extension script and Nix
 /// wrappers set it before changing directory; otherwise it's the current directory.
 const ORIGINAL_PWD_ENV: &str = "LAZY_GITHUB_ORIGINAL_PWD";

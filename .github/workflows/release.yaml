@@ -30,6 +30,11 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  # mimalloc, the allocator on musl (#357), is C, built by cc-rs. On the musl targets cc-rs looks for
+  # `<arch>-linux-musl-gcc`, which musl-tools doesn't install; its `musl-gcc` compiles for the runner's own arch, and
+  # each Linux job builds for its runner's arch.
+  CC_x86_64_unknown_linux_musl: musl-gcc
+  CC_aarch64_unknown_linux_musl: musl-gcc
 
 jobs:
   # Decides whether to release, and what. A push to main that doesn't bump the version stops here.
@@ -151,6 +156,50 @@ jobs:
         path: dist/gh-lazy-*
         if-no-files-found: error
         retention-days: 7
+
+  # Prerelease rehearsals only: the large-data timing tests (#325) built for the musl targets the Linux binaries ship
+  # as, with their allocator (#357), so a rehearsal shows whether the release binaries keep the 50 ms frame budget.
+  # Shared runners' timings vary, so the release doesn't wait on this; the summary table is on the run page.
+  perf:
+    name: Perf (${{ matrix.name }})
+    needs: plan
+    if: needs.plan.outputs.release == 'true' && needs.plan.outputs.prerelease == 'true'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - name: linux-amd64
+          runner: ubuntu-latest
+          target: x86_64-unknown-linux-musl
+        - name: linux-arm64
+          runner: ubuntu-24.04-arm
+          target: aarch64-unknown-linux-musl
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - name: Install musl tools
+      run: sudo apt-get update && sudo apt-get install -y musl-tools
+    - name: Install toolchain
+      env:
+        TARGET: ${{ matrix.target }}
+      run: |
+        rustup toolchain install
+        rustup target add "$TARGET"
+    - uses: Swatinem/rust-cache@v2
+      with:
+        key: perf-${{ matrix.name }}
+    - name: Timing tests
+      env:
+        TARGET: ${{ matrix.target }}
+      run: |
+        status=0
+        cargo xtask perf --target "$TARGET" > perf.txt || status=$?
+        cat perf.txt
+        { echo "### Timing tests ($TARGET)"; grep '^|' perf.txt || true; } >> "$GITHUB_STEP_SUMMARY"
+        exit "$status"
 
   # Packages and verifies lazy-github-core, lazy-github-tui and lazy-github together (#204), in parallel with the
   # builds. Cargo verifies them against a local overlay, so this works before they exist on crates.io. The GitHub

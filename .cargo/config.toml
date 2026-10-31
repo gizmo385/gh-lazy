@@ -1,2 +1,11 @@
 [alias]
 xtask = "run --package xtask --"
+
+# mimalloc, the allocator on musl targets (#357), commits each 1 GiB arena up front on Linux by default. Then a frame
+# that allocates a lot (the job logs' Logs tab) took anywhere from 15 to 80 ms; committing on demand keeps it at the
+# 15 ms end and leaves the other timing tests unchanged. Only mimalloc compiles C for these targets. These are the
+# compiled-in default, so `MIMALLOC_ARENA_EAGER_COMMIT` still overrides it at run time, and a `CFLAGS_<target>` already
+# in the environment wins over this one.
+[env]
+CFLAGS_x86_64_unknown_linux_musl = "-DMI_DEFAULT_ARENA_EAGER_COMMIT=0"
+CFLAGS_aarch64_unknown_linux_musl = "-DMI_DEFAULT_ARENA_EAGER_COMMIT=0"

@@ -1,0 +1,178 @@
+version = 1
+description = "Diff review on the continuous diff (#388): c on a line of the body opens Add Comment, an empty comment is refused, the comment goes to Pending Comments with the body keeping focus and its cursor, and the review posts it with the line's diff position"
+# Rust-only: the line is reached the new way, `tab` into the body and `j` down to it (decision
+# diff-continuous-view), which Python's keys can't follow. `pr-review` keeps the review form's steps both apps share.
+# shift+enter is sent as CSI 13;2 u.
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "diff-viewer.add-comment",
+    "diff-viewer.pending-comments",
+    "keybindings.diff-add-comment",
+]
+sizes = [[160, 48]]
+
+[env]
+# pr-write over pr-details: POST .../pulls/5/reviews answers the review this scenario submits (APPROVE, PR 5's head
+# sha, "Looks good." and the README.md comment at diff position 4).
+fixtures = ["pr-write", "pr-details", "base"]
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "parity-friend", timeout_ms = 15000 }
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Opened on", timeout_ms = 15000 }
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "README.md", timeout_ms = 15000 }
+
+# Into the body (README.md's header), then down to the hunk's fourth line, `+Run ...`.
+[[step]]
+keys = ["tab", "j", "j", "j", "j"]
+
+[[step]]
+wait = { text = "Line: 4/6" }
+
+[[step]]
+keys = ["c"]
+
+[[step]]
+wait = { text = "Commenting on:" }
+
+# The dialog has no footer of its own: the dimmed screen below keeps its footer.
+[[step]]
+capture = "add-open"
+
+[[step]]
+type = "\u001b[13;2u"
+
+[[step]]
+wait = { text = "Comment cannot be empty!" }
+
+[[step]]
+capture = "add-empty"
+
+[[step]]
+type = "Mention the arrow keys too."
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Add Comment" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "New comment added" }
+
+[[step]]
+wait = { gone = "Commenting on:" }
+
+# Focus is back on the body, its cursor on the same line.
+[[step]]
+capture = "pending"
+
+# From the repos table, back around the ring: Submit Review, the summary, the status select. Approved, a summary,
+# then Submit Review.
+[[step]]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["shift+tab", "shift+tab", "shift+tab"]
+
+[[step]]
+wait = { focused = "Review Status:" }
+
+[[step]]
+capture = "status-focused"
+
+[[step]]
+keys = ["enter", "up", "up", "enter"]
+
+[[step]]
+wait = { text = "Approved" }
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Review summary" }
+
+[[step]]
+type = "Looks good."
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Submit Review" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/pulls/5/reviews"
+wait.log.body.event = "APPROVE"
+wait.log.body.commit_id = "c0ffee5555555555555555555555555555555555"
+wait.log.body.body = "Looks good."
+wait.log.body.comments = [ { path = "README.md", body = "Mention the arrow keys too.", position = 4 } ]
+
+[[step]]
+wait = { text = "New review created!" }
+
+# The PR is fetched again and shown as a fresh selection (B15).
+[[step]]
+wait = { text = "Opened on" }
+
+[[step]]
+capture = "submitted"
+
+[expect.add-open]
+contains = ["Add Comment", "Commenting on:", "+Run `viewer FILE`, then press `j` and `k` to move.", "Comment:", "Cancel"]
+
+[expect.add-empty]
+contains = ["Comment cannot be empty!", "Commenting on:"]
+
+[expect.pending]
+focused = ["[5] PR #5 Details"]
+contains = ["New comment added", "►    5  │ Run `viewer FILE`, then press", "j Line down  k Line up  c Add Comment"]
+not_contains = ["Commenting on:", "Traceback"]
+
+[expect.status-focused]
+contains = [
+    "Pending Comments:",
+    "README.md:5 - +Run `viewer FILE`, then press `j` and `k` to move.",
+    "Mention the arrow keys too.",
+    "Review Status:",
+    "Commented",
+    "Submit Review",
+]
+
+[expect.submitted]
+contains = ["New review created!", "Overview  Diff  Conversation"]
+not_contains = ["Traceback"]

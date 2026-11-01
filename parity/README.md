@@ -450,10 +450,10 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   `PATCH .../issues/12` renames and closes issue 12 after 1.5 s, and `POST .../issues/12/comments` answers a new
   comment for each of the two bodies `issue-comment` posts. Hand-written.
 - `pr-write/`: write requests for `parity-bot/pr-details`, listed before `pr-details` and `base`, for the `pr-merge`,
-  `pr-reactions`, `pr-comment` and `pr-review` scenarios (M3, #182, #183, #187). `POST .../pulls/5/reviews` for the
-  review `pr-review` submits; `PUT .../pulls/5/merge` for the squash method and PR 5's
-  head sha (merged), `GET .../pulls/5` merged once that was served (`when.after`, for Rust's refetch), `PUT
-  .../pulls/4/merge` (405); `POST .../issues/5/reactions` answering 201 for five kinds; `POST
+  `pr-reactions`, `pr-comment`, `pr-review` and `diff-review` scenarios (M3, #182, #183, #187, #388). `POST
+  .../pulls/5/reviews` for the reviews `pr-review` (no comments) and `diff-review` (one comment) submit; `PUT
+  .../pulls/5/merge` for the squash method and PR 5's head sha (merged), `GET .../pulls/5` merged once that was served
+  (`when.after`, for Rust's refetch), `PUT .../pulls/4/merge` (405); `POST .../issues/5/reactions` answering 201 for five kinds; `POST
   .../pulls/5/comments/9001/replies` and `POST .../issues/5/comments` for the bodies `pr-comment` posts, with
   `GET .../issues/5/comments` and `GET .../pulls/5/reviews/501/comments` including the new comments once they were
   posted, and the new comments' reactions (the 404 Python gets on the issue-comment path for the review reply, B54).

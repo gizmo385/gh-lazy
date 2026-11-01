@@ -1,11 +1,13 @@
 version = 1
-description = "M in the PR Conversation and Diff tabs: the scroll areas do nothing; a review's title or a comment in it maximizes the review; a comment's reactions title its reactions; a comment outside a review the details tab area; the diff filter types M; a file's or hunk's title, or the hunk pane, maximizes that section"
+description = "M in the PR Conversation tab: the scroll area does nothing; a review's title or a comment in it maximizes the review; a comment's reactions title its reactions; a comment outside a review the details tab area"
+# The Diff tab's captures (the filter typing M, a file's and a hunk's title, the hunk pane) went with #388: the Diff
+# tab is one continuous diff, whose `M` maximizes the tab area (Rust-only `diff-navigation`, `maximized`).
 # A maximized section has no boxes, tables or tabs, so those captures are checked through [expect] `contains` and
 # `not_contains`. The footer is hidden while maximized.
 gate = true
 parity_rows = ["pull-requests.collapsible", "main-layout.maximize"]
 sizes = [[160, 48]]
-# Seven maximizes and waiting out the 5 s toast take Python past the default 30 s run under load.
+# Four maximizes take Python close to the default 30 s run under load.
 timeout_ms = 60000
 
 [env]
@@ -160,121 +162,6 @@ wait = { gone = "[5] PR #5 Details" }
 capture = "comment-reactions"
 checks = ["titles", "focus"]
 
-[[step]]
-keys = ["escape"]
-
-[[step]]
-wait = { text = "[5] PR #5 Details" }
-
-# The Diff tab.
-[[step]]
-keys = ["5"]
-
-[[step]]
-wait = { focused = "Details" }
-
-[[step]]
-keys = ["left"]
-
-[[step]]
-wait = { text = "README.md", timeout_ms = 15000 }
-
-# The scroll area, then the file filter (whose chain adds `/ Filter Files` to the footer): an Input, which types the
-# M, as the table search box does (Py bug B38).
-[[step]]
-keys = ["tab", "tab"]
-
-[[step]]
-wait = { text = "/ Filter Files" }
-
-# The one-time toast from `review-title` times out first, so one in `filter-types` would be new. A run quicker than
-# its 5 s still has it up here.
-[[step]]
-wait = { gone = "View Maximized", timeout_ms = 10000 }
-
-[[step]]
-keys = ["M"]
-
-[[step]]
-wait = { text = "▊  M" }
-
-[[step]]
-capture = "filter-types"
-checks = ["titles", "tabs", "focus"]
-
-[[step]]
-keys = ["backspace"]
-
-[[step]]
-wait = { text = "Filter files (press '/' to focus, ESC to clear)" }
-
-[[step]]
-keys = ["tab"]
-
-[[step]]
-wait = { focused = "README.md" }
-
-[[step]]
-keys = ["M"]
-
-[[step]]
-wait = { gone = "[5] PR #5 Details" }
-
-[[step]]
-capture = "file-title"
-checks = ["titles", "focus"]
-
-[[step]]
-keys = ["escape"]
-
-[[step]]
-wait = { text = "[5] PR #5 Details" }
-
-[[step]]
-keys = ["tab"]
-
-[[step]]
-wait = { focused = "Lines 3-7" }
-
-[[step]]
-keys = ["M"]
-
-[[step]]
-wait = { gone = "[5] PR #5 Details" }
-
-[[step]]
-capture = "hunk-title"
-checks = ["titles", "focus"]
-
-[[step]]
-keys = ["escape"]
-
-[[step]]
-wait = { text = "[5] PR #5 Details" }
-
-[[step]]
-keys = ["enter"]
-
-[[step]]
-wait = { text = "Line: 1/6", timeout_ms = 5000 }
-
-# The hunk pane, whose bindings lead the footer.
-[[step]]
-keys = ["tab"]
-
-[[step]]
-wait = { text = "j Line down" }
-
-[[step]]
-keys = ["M"]
-
-[[step]]
-wait = { gone = "[5] PR #5 Details" }
-
-[[step]]
-capture = "hunk-pane"
-checks = ["titles", "focus"]
-
 [expect.conversation-noop]
 focused = ["[5] PR #5 Details"]
 contains = ["n New Comment"]
@@ -299,23 +186,3 @@ not_contains = ["[5] PR #5 Details", "Quit"]
 pane_titles = []
 contains = ["  ▶ 👍 1 | 🚀 1"]
 not_contains = ["Rebased on main", "Overview  Diff  Conversation"]
-
-[expect.filter-types]
-focused = ["[5] PR #5 Details"]
-contains = ["▊  M"]
-not_contains = ["View Maximized"]
-
-[expect.file-title]
-pane_titles = []
-contains = ["  ▼ 📄 README.md (+3 -1)", "      ▶ Lines 3-7 (+3 -1) • A tiny pager."]
-not_contains = ["app.css", "Filter files"]
-
-[expect.hunk-title]
-pane_titles = []
-contains = ["  ▶ Lines 3-7 (+3 -1) • A tiny pager."]
-not_contains = ["README.md", "app.css"]
-
-[expect.hunk-pane]
-pane_titles = [""]
-contains = ["  ▼ Lines 3-7 (+3 -1) • A tiny pager.", "## Usage"]
-not_contains = ["README.md", "app.css"]

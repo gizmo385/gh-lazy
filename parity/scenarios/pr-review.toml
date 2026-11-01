@@ -1,22 +1,19 @@
 version = 1
-description = "Diff review: c on a hunk line opens Add Comment, an empty comment is refused, the comment goes to Pending Comments, the Submit review form (Review Status, summary) posts the review with the remaining comment's diff position; the PR author's form has only the summary and Add Comments"
-# Python shows a pending comment's line as the hunk-relative index (README.md:3) and Rust the line's real number
-# (README.md:5, Py bug B22's recommendation), and after the submit Rust refetches the PR (B15), so neither is in
-# [expect]. shift+enter is sent as CSI 13;2 u, which both apps read.
+description = "Diff review: the Submit review form (Review Status, summary) at the end of the Diff tab, reached from the repos table, posts the review; the PR author's form has only the summary and Add Comments"
+# Add Comment and the pending comments are reached through the diff's lines, which Python's keys and Rust's continuous
+# diff (#388, decision diff-continuous-view) reach differently, so they're in the Rust-only `diff-review`; both apps
+# still reach the form from the repos table with shift+tab. After the submit Rust refetches the PR (B15), so that
+# isn't in [expect].
 gate = true
 parity_rows = [
-    "diff-viewer.add-comment",
-    "diff-viewer.pending-comments",
     "diff-viewer.submit-review",
-    "keybindings.diff-add-comment",
-    "toasts.comment-empty",
     "toasts.comment-review-added",
 ]
 sizes = [[160, 48]]
 
 [env]
-# pr-write over pr-details: POST .../pulls/5/reviews answers the review only for the body this scenario submits
-# (APPROVE, PR 5's head sha, "Looks good." and the README.md comment at diff position 4).
+# pr-write over pr-details: POST .../pulls/5/reviews answers the review only for the bodies submitted: this
+# scenario's (APPROVE, PR 5's head sha, "Looks good." and no comments) and diff-review's.
 fixtures = ["pr-write", "pr-details", "base"]
 config_overrides.appearance.show_issues = false
 config_overrides.appearance.show_workflows = false
@@ -54,77 +51,6 @@ keys = ["right"]
 
 [[step]]
 wait.text = "README.md"
-
-# The scroll area, the filter, README.md's title, its hunk's title: enter opens the hunk; tab into its pane and down
-# to its fourth line, `+Run ...`. Python moves focus a tick after a tab (Py bug B121), so each key for the new focus
-# waits for it to show: the hunk's title, then the pane's bindings leading the footer.
-[[step]]
-keys = ["tab", "tab", "tab", "tab"]
-
-[[step]]
-wait = { focused = "Lines 3-7" }
-
-[[step]]
-keys = ["enter"]
-
-[[step]]
-wait.text = "Line: 1/6"
-
-[[step]]
-keys = ["tab"]
-
-[[step]]
-wait = { text = "j Line down" }
-
-[[step]]
-keys = ["j", "j", "j"]
-
-[[step]]
-wait.text = "Line: 4/6"
-
-[[step]]
-keys = ["c"]
-
-[[step]]
-wait.text = "Commenting on:"
-
-# The dialog has no footer of its own: the dimmed screen below keeps its footer, as in Python.
-[[step]]
-capture = "add-open"
-checks = ["titles", "focus"]
-
-[[step]]
-type = "\u001b[13;2u"
-
-[[step]]
-wait.text = "Comment cannot be empty!"
-
-[[step]]
-capture = "add-empty"
-checks = ["titles", "focus"]
-
-[[step]]
-type = "Mention the arrow keys too."
-
-# An enter that follows the tab at once can reach the editor (Py bug B121): wait for the button.
-[[step]]
-keys = ["tab"]
-
-[[step]]
-wait = { focused = "Add Comment" }
-
-[[step]]
-keys = ["enter"]
-
-[[step]]
-wait.text = "New comment added"
-
-[[step]]
-wait.gone = "Commenting on:"
-
-[[step]]
-capture = "pending"
-checks = ["titles", "focus"]
 
 # Review Status: open the list (Commented is highlighted), up twice to Approved.
 [[step]]
@@ -230,7 +156,7 @@ wait.log.path = "/repos/parity-bot/pr-details/pulls/5/reviews"
 wait.log.body.event = "APPROVE"
 wait.log.body.commit_id = "c0ffee5555555555555555555555555555555555"
 wait.log.body.body = "Looks good."
-wait.log.body.comments = [ { path = "README.md", body = "Mention the arrow keys too.", position = 4 } ]
+wait.log.body.comments = []
 
 [[step]]
 wait.text = "New review created!"
@@ -286,19 +212,8 @@ wait = { gone = "O Lookup Repository" }
 capture = "author-form"
 checks = ["titles", "focus"]
 
-[expect.add-open]
-contains = ["Add Comment", "Commenting on:", "+Run `viewer FILE`, then press `j` and `k` to move.", "Comment:", "Cancel"]
-
-[expect.add-empty]
-contains = ["Comment cannot be empty!", "Commenting on:"]
-
-[expect.pending]
-focused = ["[5] PR #5 Details"]
-contains = ["New comment added"]
-not_contains = ["Commenting on:", "Traceback"]
-
 [expect.status-focused]
-contains = ["Review Status:", "Commented", "Review summary", "Submit Review", "Pending Comments:", "Mention the arrow keys too."]
+contains = ["Review Status:", "Commented", "Review summary", "Submit Review"]
 
 [expect.status-list-bottom]
 contains = ["Changes Requested"]

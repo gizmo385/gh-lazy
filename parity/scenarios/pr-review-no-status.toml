@@ -43,8 +43,13 @@ wait.timeout_ms = 15000
 [[step]]
 keys = ["right"]
 
+# The diff first, then a moment for the review form, which follows the current user. Rust's form is below the diff's
+# lines, out of view until focus reaches it (#388).
 [[step]]
-wait.text = "Review Status:"
+wait.text = "README.md"
+
+[[step]]
+wait.stable_ms = 600
 
 [[step]]
 keys = ["1"]

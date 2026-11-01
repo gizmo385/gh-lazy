@@ -11,11 +11,14 @@
 - Rows: `diff-viewer.viewer`, `diff-viewer.file-header`, `diff-viewer.hunk-header`, `diff-viewer.hunk-pane`,
   `diff-viewer.line-cursor`, `diff-viewer.hunk-navigation`, `diff-viewer.focus-ring`, `diff-viewer.file-filter`,
   `keybindings.diff-cursor-down`, `keybindings.diff-cursor-up`, `keybindings.diff-next-hunk`,
-  `keybindings.diff-previous-hunk`
+  `keybindings.diff-previous-hunk`, `diff-viewer.maximize`, `diff-viewer.position-line`, `diff-viewer.body-mouse`
 
-Status: decided; being built. #387 builds the continuous body as a component on its own, with nothing visible yet.
-#388 wires it into the Diff tab: it adds the new row ids (`diff-viewer.maximize`, `diff-viewer.position-line`,
-`diff-viewer.body-mouse`) to the matrix and to `Rows`, and moves the rows above to `intentional diff`.
+Status: decided; being built. #387 built the continuous body as a component on its own. #388 wired it into the Diff
+tab (the focus ring, the filter, `c` on the cursor's line, the mouse, `M` maximizing the tab area), added the rows
+`diff-viewer.maximize`, `diff-viewer.position-line` and `diff-viewer.body-mouse`, and moved the rows above to
+`intentional diff`; the Diff tab's scenarios are Rust-only (`diff-navigation`, `diff-review`, `diff-unicode`), and
+`pr-diff`, `pr-review` and `pr-maximize-diff-form` keep what both apps share (the tab, the review form). #389 adds
+folding, file jumps and the sticky header.
 
 Why: reading a pull request in the Python layout takes a focus change per hunk, every hunk opens in its own box with
 its own scroll (at most 22 lines), `j` stops dead at the end of a hunk, and nothing moves between files. Two scroll

@@ -1,10 +1,10 @@
 # Written by `cargo xtask parity --record`. Don't edit.
 format = 1
 size = "160x48"
-captures = ["table", "overview", "diff"]
+captures = ["table", "overview"]
 
 [inputs]
-scenario = "65eda07ca9776de2794e8f6aceaef7a3dc896740"
+scenario = "499571c30466142862f8b89b958415173d42979a"
 fixtures = "2d0dcbafeb1658bbe3fce26ef586f695363c61b3"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"

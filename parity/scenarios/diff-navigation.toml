@@ -1,0 +1,249 @@
+version = 1
+description = "PR Diff tab as one continuous diff (#388): tab lands on the body, j crosses from a hunk's last line to the next file's header, J jumps hunks across files, / filters and enter puts the cursor on the first shown file, escape clears, a click moves the cursor, M maximizes the tab area, and the palette's Maximize from the filter"
+# Rust-only: the Diff tab is one continuous diff with a line cursor (decision diff-continuous-view), which Python's
+# keys can't follow. The captures check the cursor through the position row under the body (`<path>  Line: n/m`, or
+# `N hunks` on a header), waited on with a regex since the path also shows in its file's header.
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "diff-viewer.viewer",
+    "diff-viewer.file-header",
+    "diff-viewer.hunk-header",
+    "diff-viewer.hunk-pane",
+    "diff-viewer.line-cursor",
+    "diff-viewer.hunk-navigation",
+    "diff-viewer.focus-ring",
+    "diff-viewer.file-filter",
+    "diff-viewer.diff-parser",
+    "diff-viewer.maximize",
+    "diff-viewer.position-line",
+    "diff-viewer.body-mouse",
+    "keybindings.diff-cursor-down",
+    "keybindings.diff-cursor-up",
+    "keybindings.diff-next-hunk",
+    "keybindings.diff-previous-hunk",
+    "keybindings.diff-filter-files",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+# PR 5's diff: README.md (one hunk of 6 lines), assets/app.css (added, 3), build.rs (4), docs/old.md (deleted) and
+# src/viewer.rs (two hunks, of 8 and 9 lines).
+fixtures = ["pr-details", "base"]
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "parity-friend", timeout_ms = 15000 }
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Opened on", timeout_ms = 15000 }
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "README.md", timeout_ms = 15000 }
+
+# From the tab strip, focus lands on the body, its cursor on README.md's header: Add Comment is hidden there.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { text = "j Line down" }
+
+[[step]]
+capture = "body-top"
+
+# One j onto the hunk's first line (the separator can't hold the cursor), five more to its last, and one past it
+# onto assets/app.css's header.
+[[step]]
+keys = ["j", "j", "j", "j", "j", "j", "j"]
+
+[[step]]
+wait = { regex = "assets/app\\.css +1 hunk" }
+
+[[step]]
+capture = "crossed-hunk"
+
+# J: assets/app.css's hunk, build.rs's, src/viewer.rs's first and then its second.
+[[step]]
+keys = ["J", "J", "J", "J"]
+
+[[step]]
+wait = { regex = "src/viewer\\.rs +Line: 1/9" }
+
+[[step]]
+capture = "next-hunk"
+
+# / focuses the filter; enter puts the cursor on the first shown file's header and focuses the body.
+[[step]]
+keys = ["/"]
+
+[[step]]
+type = "viewer"
+
+[[step]]
+wait = { gone = "README.md" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { regex = "src/viewer\\.rs +2 hunks" }
+
+[[step]]
+capture = "filtered"
+
+# / again, then escape: the filter clears and the body has focus again, the cursor where it was.
+[[step]]
+keys = ["/"]
+
+[[step]]
+wait = { text = "^p Command Palette" }
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "Filter files (press '/' to focus, ESC to clear)" }
+
+[[step]]
+wait = { text = "j Line down" }
+
+[[step]]
+capture = "filter-cleared"
+
+# A click on a line moves the cursor there: assets/app.css's second line.
+[[step]]
+click = { text = "color: yellow;" }
+
+[[step]]
+wait = { regex = "assets/app\\.css +Line: 2/3" }
+
+[[step]]
+capture = "clicked"
+
+# M on the body maximizes the details tab area: the tab strip, the filter, the body and its position row.
+[[step]]
+keys = ["M"]
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "maximized"
+
+# Escape restores, focus and cursor kept. From the filter, M types, so the palette's Maximize maximizes the tab area,
+# without the one-time toast.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[5] PR #5 Details" }
+
+[[step]]
+keys = ["/"]
+
+[[step]]
+wait = { text = "^p Command Palette" }
+
+[[step]]
+wait = { stable_ms = 600 }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "max"
+
+[[step]]
+wait = { text = "Maximize the focused widget" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "Maximize the focused widget" }
+
+[[step]]
+wait = { gone = "[5] PR #5 Details" }
+
+[[step]]
+capture = "filter"
+
+# Escape restores before the filter sees it, so the filter keeps focus.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { text = "[5] PR #5 Details" }
+
+[[step]]
+capture = "filter-restored"
+
+[expect.body-top]
+focused = ["[5] PR #5 Details"]
+tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Diff" }
+contains = [
+    "Filter files (press '/' to focus, ESC to clear)",
+    "README.md (+3 -1)",
+    "Lines 3-7 (+3 -1) • A tiny pager.",
+    "assets/app.css (+3)",
+    "j Line down  k Line up  J Next Hunk  K Previous Hunk  / Filter Files",
+]
+not_contains = ["Traceback", "c Add Comment"]
+
+[expect.crossed-hunk]
+focused = ["[5] PR #5 Details"]
+contains = ["j Line down  k Line up  J Next Hunk"]
+not_contains = ["c Add Comment"]
+
+[expect.next-hunk]
+focused = ["[5] PR #5 Details"]
+contains = ["Lines 22-28 (+3 -2) • impl Viewer {", "j Line down  k Line up  c Add Comment  J Next Hunk"]
+
+[expect.filtered]
+focused = ["[5] PR #5 Details"]
+contains = ["viewer", "src/viewer.rs (+5 -2)", "j Line down  k Line up  J Next Hunk"]
+not_contains = ["README.md", "assets/app.css", "build.rs"]
+
+[expect.filter-cleared]
+focused = ["[5] PR #5 Details"]
+contains = ["Filter files (press '/' to focus, ESC to clear)", "assets/app.css (+3)", "src/viewer.rs (+5 -2)", "j Line down"]
+
+[expect.clicked]
+focused = ["[5] PR #5 Details"]
+contains = ["j Line down  k Line up  c Add Comment"]
+
+[expect.maximized]
+pane_titles = []
+# A maximized view has no footer; the cursor stays on the line clicked.
+contains = ["Overview  Diff  Conversation", "Filter files (press '/' to focus, ESC to clear)", "View Maximized", "►    2  │   color: yellow;"]
+not_contains = ["[1] Repositories"]
+
+[expect.filter]
+pane_titles = []
+contains = ["Overview  Diff  Conversation", "Filter files (press '/' to focus, ESC to clear)"]
+not_contains = ["[1] Repositories", "[2] Pull Requests"]
+
+[expect.filter-restored]
+focused = ["[5] PR #5 Details"]
+contains = ["Filter files (press '/' to focus, ESC to clear)", "/ Filter Files  ^p Command Pal"]

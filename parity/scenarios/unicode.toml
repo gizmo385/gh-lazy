@@ -1,5 +1,7 @@
 version = 1
-description = "Wide, combining, zero-width and right-to-left text: the PR table's columns stay aligned, and the PR's title, branch, body (a paragraph, a list and a table) and diff lay out by cell width"
+description = "Wide, combining, zero-width and right-to-left text: the PR table's columns stay aligned, and the PR's title, branch and body (a paragraph, a list and a table) lay out by cell width"
+# The diff's capture is in the Rust-only `diff-unicode`: since #388 the Diff tab is one continuous diff, whose keys
+# Python can't follow.
 # Zero-width characters are kept out of the table: ratatui doesn't write them to the terminal, Textual does, so the
 # cells differ though they look the same. ZWJ emoji sequences are left out: terminals (and the harness's vt100 parser) disagree on their width, so they're
 # covered by the unit tests only. Control characters are too: Python sends them to the terminal raw (Py bug B34). The
@@ -9,8 +11,6 @@ parity_rows = [
     "pull-requests.columns",
     "pull-requests.overview-header",
     "pull-requests.overview-body",
-    "diff-viewer.hunk-pane",
-    "diff-viewer.file-header",
 ]
 sizes = [[160, 48]]
 
@@ -70,34 +70,6 @@ wait = { text = "PR Reviews" }
 capture = "overview"
 checks = ["titles", "headers", "rows", "cursor", "focus"]
 
-[[step]]
-keys = ["right"]
-
-[[step]]
-wait = { text = "日本語.md", timeout_ms = 15000 }
-
-# Tab: the diff's scroll area, the filter, the README.md section's title, its hunk's title; enter opens the hunk.
-# Python moves focus a tick after a tab (Py bug B121), so enter waits for the hunk's title to show it.
-[[step]]
-keys = ["tab", "tab", "tab", "tab"]
-
-[[step]]
-wait = { focused = "Lines 1-7" }
-
-[[step]]
-keys = ["enter"]
-
-[[step]]
-wait = { text = "Line: 1/8", timeout_ms = 5000 }
-
-# Python draws the hunk's position before its lines.
-[[step]]
-wait = { text = "lines keep their columns." }
-
-[[step]]
-capture = "diff"
-checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
-
 [expect.table]
 contains = [
     "視覚カーソルを追加 🚀 viewer",
@@ -116,15 +88,5 @@ contains = [
     "עברית: שלום עולם",
     "名前",
     "ビルド",
-]
-not_contains = ["Traceback", "�"]
-
-[expect.diff]
-contains = [
-    "▼ 📄 README.md (+4 -1)",
-    "▼ Lines 1-7 (+4 -1) • # ビューアー 📄",
-    "│ עברית: שלום עולם",
-    "│ 全角の行: 🇯🇵 🇫🇷 と a",
-    "▼ 📄 日本語.md (+3)",
 ]
 not_contains = ["Traceback", "�"]

@@ -1,0 +1,62 @@
+version = 1
+description = "Wide, combining and right-to-left text in the continuous diff (#388): file headers and code lines lay out by cell width, the line cursor on the first hunk"
+# Rust-only: the Diff tab is one continuous diff (decision diff-continuous-view), whose keys Python can't follow; this
+# is the diff capture `unicode` had.
+gate = true
+apps = ["rust"]
+parity_rows = ["diff-viewer.hunk-pane", "diff-viewer.file-header"]
+sizes = [[160, 48]]
+
+[env]
+# unicode replaces pr-details' PR titles, PR 5's title, body and head branch, and PR 5's diff.
+fixtures = ["unicode", "pr-details", "base"]
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "視覚カーソルを追加", timeout_ms = 15000 }
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "機能/カーソル", timeout_ms = 15000 }
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "日本語.md", timeout_ms = 15000 }
+
+# Into the body, then the first hunk's first line.
+[[step]]
+keys = ["tab", "J"]
+
+[[step]]
+wait = { text = "Line: 1/8" }
+
+[[step]]
+capture = "diff"
+
+[expect.diff]
+focused = ["[5] PR #5 Details"]
+contains = [
+    "README.md (+4 -1)",
+    "Lines 1-7 (+4 -1) • # ビューアー 📄",
+    "│ עברית: שלום עולם",
+    "│ 全角の行: 🇯🇵 🇫🇷 と a",
+    "日本語.md (+3)",
+    "lines keep their columns.",
+]
+not_contains = ["Traceback", "�"]

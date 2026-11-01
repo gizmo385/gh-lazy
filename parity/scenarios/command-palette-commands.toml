@@ -267,16 +267,6 @@ checks = ["titles"]
 ignore = { boxes = ["Details"] }
 
 [[step]]
-keys = ["1"]
-
-# Nothing on screen shows a move here, so this sleeps (the focus-key lint's exception). In Python nothing has focus
-# after the log was hidden (Py bug B88), and `1` is bound on the main view, which isn't in the binding chain then, so
-# it does nothing: no pane takes the focus border and the footer keeps the app's bindings (#353 tried
-# `wait.focused`, which never passes in Python). Rust already has the Repositories table focused (B88's answer).
-[[step]]
-sleep_ms = 500
-
-[[step]]
 keys = ["ctrl+p"]
 
 [[step]]

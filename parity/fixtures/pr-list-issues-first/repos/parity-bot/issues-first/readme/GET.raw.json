@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/issues-first/readme",
+    "accept": "raw"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/vnd.github.raw; charset=utf-8"
+    },
+    "body_text": "# issues-first\n\nThe newest 30 issues-endpoint items are all issues; 36 older ones are pull requests.\n"
+  },
+  "note": "hand-written: the README the repo overview shows"
+}

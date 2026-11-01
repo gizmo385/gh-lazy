@@ -60,6 +60,10 @@ pub struct Roles {
     pub command_palette: CommandPalette,
     /// Link hint labels.
     pub hints: Hints,
+    /// Tables (`DataTable`).
+    pub table: Table,
+    /// Disabled fields.
+    pub disabled: Disabled,
 }
 
 /// A foreground and background pair: `fg` is drawn over `bg`, and `bg` over what's under it.
@@ -551,6 +555,22 @@ pub struct Hints {
     pub label: Highlight,
 }
 
+/// Tables (`DataTable`).
+#[derive(Debug, PartialEq)]
+pub struct Table {
+    /// The header row (`$foreground` on `$panel`, tinted with the table while focused; `ansi_default` on
+    /// `ansi_bright_blue` on terminal-color themes, `&:ansi > .datatable--header`, where the tint has no effect).
+    pub header: Pair,
+}
+
+/// Disabled fields.
+#[derive(Debug, PartialEq)]
+pub struct Disabled {
+    /// Whether a disabled input, switch or select is dimmed (SGR 2) rather than faded toward its parent's background
+    /// (`opacity: 0.7`): on terminal-color themes, which can't blend.
+    pub dimmed: bool,
+}
+
 const NO_STYLE: TextStyle = TextStyle {
     add: Modifier::empty(),
     sub: Modifier::empty(),
@@ -946,6 +966,20 @@ impl Roles {
                     style: add(Modifier::BOLD),
                 },
             },
+            table: Table {
+                header: if s.ansi {
+                    Pair {
+                        fg: ThemeColor::Ansi(AnsiColor::Default),
+                        bg: ThemeColor::Ansi(AnsiColor::BrightBlue),
+                    }
+                } else {
+                    Pair {
+                        fg: p.foreground,
+                        bg: p.panel,
+                    }
+                },
+            },
+            disabled: Disabled { dimmed: s.ansi },
         }
     }
 
@@ -1193,7 +1227,7 @@ pub(super) mod walk {
     walk_fields! {
         Roles {
             surface, text, brand, status, border, cursor, scrollbar, input, footer, button, switch, select,
-            checkbox, tree, tabs, markdown, syntax, marks, diff, command_palette, hints,
+            checkbox, tree, tabs, markdown, syntax, marks, diff, command_palette, hints, table, disabled,
         }
         Pair { fg, bg }
         Highlight { fg, bg, style }
@@ -1238,5 +1272,7 @@ pub(super) mod walk {
         }
         CommandPalette { band, input_rule, list_rule, icon, highlight }
         Hints { label }
+        Table { header }
+        Disabled { dimmed }
     }
 }

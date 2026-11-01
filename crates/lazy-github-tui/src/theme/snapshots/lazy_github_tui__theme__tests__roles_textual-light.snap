@@ -270,3 +270,6 @@ command_palette.highlight.style        none
 hints.label.fg                         #000000  (#000000)
 hints.label.bg                         #FEA62B  (#FEA62B)
 hints.label.style                      add BOLD
+table.header.fg                        #1F1F1F  (#1F1F1F)
+table.header.bg                        #D0D0D0  (#D0D0D0)
+disabled.dimmed                        false

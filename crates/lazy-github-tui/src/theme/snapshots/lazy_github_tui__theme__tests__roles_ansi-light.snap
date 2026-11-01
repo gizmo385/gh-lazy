@@ -270,3 +270,6 @@ command_palette.highlight.style        add BOLD
 hints.label.fg                         #000000  (#000000)
 hints.label.bg                         ansi_bright_red  (ansi_bright_red)
 hints.label.style                      add BOLD
+table.header.fg                        ansi_default  (ansi_default)
+table.header.bg                        ansi_bright_blue  (ansi_bright_blue)
+disabled.dimmed                        true

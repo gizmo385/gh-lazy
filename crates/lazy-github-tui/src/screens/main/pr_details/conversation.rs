@@ -2,6 +2,11 @@
 //! threads of inline comments it starts, then the pull request's comments, all in one scroll area. Python's
 //! `PrConversationTabPane`, `ReviewContainer` and `ReviewConversation`.
 //!
+//! A review's section is decided by the threads it starts, not by its raw comments: one with neither a body nor a
+//! thread of its own (its comments are replies drawn in another review's thread, or replies to a missing comment) is
+//! hidden when it's a comment review, and otherwise closed, holding one line (#346). Python opens such a section with
+//! nothing in it.
+//!
 //! The reviews and the comments are requested with the pull request, whatever tab is active; the tab shows the loading
 //! overlay until both have answered. Then each shown comment's reactions are requested, and added to its block as
 //! they arrive. The same reviews fill the Overview's reviews section.
@@ -15,7 +20,9 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use lazy_github_core::gh::GhError;
-use lazy_github_core::models::{CommentRef, FullPullRequest, IssueComment, Review, ReviewState, review_threads};
+use lazy_github_core::models::{
+    CommentRef, FullPullRequest, IssueComment, Review, ReviewState, Thread, review_threads,
+};
 use lazy_github_core::references;
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
@@ -59,7 +66,7 @@ const EMPTY: &str = "No reviews or comments available";
 /// What shows when the reviews or the comments couldn't be fetched (Py bug B16).
 const FAILED: &str = "Failed to load reviews and comments";
 
-/// What a review with neither a body nor comments holds.
+/// What a review with neither a body nor a thread of its own holds.
 const NO_CONTENT: &str = "No additional review content";
 
 /// A focus stop inside the Conversation.
@@ -169,13 +176,40 @@ struct ReviewSection {
 /// What a review's section holds.
 #[derive(Debug)]
 enum ReviewContents {
-    /// Neither a body nor comments.
+    /// Neither a body nor a thread of its own.
     Nothing,
-    /// The body, when it has one, then its threads, each the blocks of its comments in order.
+    /// The body, when it has one, then its threads, each the blocks of its comments in order. Always a body or at
+    /// least one thread.
     Content {
         body: Option<Markdown>,
         threads: Vec<Vec<usize>>,
     },
+}
+
+/// How one submitted review shows in the Conversation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ReviewShape {
+    /// Not at all: a comment review with neither a body nor a thread of its own. Python hides every body-less
+    /// comment review (Py bug B10); one that starts threads shows.
+    Hidden,
+    /// A closed section holding [`NO_CONTENT`]: neither a body nor a thread of its own (#346).
+    Empty,
+    /// A section with the body, when it has one, then its threads: open unless the review was dismissed.
+    Content { open: bool },
+}
+
+/// How `review` shows, given the threads it starts. Decided by the threads, not by `review.comments`: a review whose
+/// comments are all replies drawn elsewhere starts none, and would otherwise open with nothing in it.
+fn review_shape(review: &Review, threads: &[Thread<'_>]) -> ReviewShape {
+    if !review.body.is_empty() || !threads.is_empty() {
+        ReviewShape::Content {
+            open: review.state != ReviewState::Dismissed,
+        }
+    } else if review.state == ReviewState::Commented {
+        ReviewShape::Hidden
+    } else {
+        ReviewShape::Empty
+    }
 }
 
 impl ReviewSection {
@@ -420,7 +454,7 @@ impl PrConversation {
     }
 
     /// Builds the content from the answers, and requests the reactions of every comment it shows: Python's
-    /// `handle_reviews_loaded`.
+    /// `handle_reviews_loaded`. Each review shows by [`review_shape`].
     fn load(&mut self, reviews: &[Review], comments: &[IssueComment], cx: &mut Cx<'_>) {
         let repo = &self.pr.pr.issue.repo;
         let mut blocks = Vec::new();
@@ -428,34 +462,32 @@ impl PrConversation {
         let mut items = Vec::new();
         let threads = review_threads(reviews);
         for (review, threads) in reviews.iter().zip(threads) {
-            // Python hides every comment review without a body (Py bug B10); one that starts threads shows.
-            if review.body.is_empty() && review.state == ReviewState::Commented && threads.is_empty() {
-                continue;
-            }
-            let contents = if review.body.is_empty() && review.comments.is_empty() {
-                ReviewContents::Nothing
-            } else {
-                let body = (!review.body.is_empty())
-                    .then(|| Markdown::parse(&references::expand(&review.body, &repo.full_name)));
-                let threads = threads
-                    .iter()
-                    .map(|thread| {
-                        thread
-                            .iter()
-                            .map(|comment| {
-                                blocks.push((
-                                    CommentRef::Review(comment.comment.id),
-                                    CommentBlock::new(&comment.comment, &repo.full_name),
-                                ));
-                                targets.push(ReplyTarget::ReviewComment(Box::new((*comment).clone())));
-                                blocks.len() - 1
-                            })
-                            .collect()
-                    })
-                    .collect();
-                ReviewContents::Content { body, threads }
+            let (contents, open) = match review_shape(review, &threads) {
+                ReviewShape::Hidden => continue,
+                ReviewShape::Empty => (ReviewContents::Nothing, false),
+                ReviewShape::Content { open } => {
+                    let body = (!review.body.is_empty())
+                        .then(|| Markdown::parse(&references::expand(&review.body, &repo.full_name)));
+                    let threads: Vec<Vec<usize>> = threads
+                        .iter()
+                        .map(|thread| {
+                            thread
+                                .iter()
+                                .map(|comment| {
+                                    blocks.push((
+                                        CommentRef::Review(comment.comment.id),
+                                        CommentBlock::new(&comment.comment, &repo.full_name),
+                                    ));
+                                    targets.push(ReplyTarget::ReviewComment(Box::new((*comment).clone())));
+                                    blocks.len() - 1
+                                })
+                                .collect()
+                        })
+                        .collect();
+                    debug_assert!(body.is_some() || !threads.is_empty(), "a section with content has some");
+                    (ReviewContents::Content { body, threads }, open)
+                }
             };
-            let open = review.state != ReviewState::Dismissed && !matches!(contents, ReviewContents::Nothing);
             items.push(Item::Review(ReviewSection {
                 target: ReplyTarget::Review(Box::new(review.clone())),
                 login: review.user.login.clone(),

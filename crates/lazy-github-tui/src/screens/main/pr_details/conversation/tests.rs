@@ -1058,3 +1058,213 @@ mod gh_failures {
         );
     }
 }
+
+// Body-less reviews (#346), against the `pr-conversation-bodyless` overlay: PR 5's reviews replaced by one of each
+// shape.
+
+mod bodyless {
+    use std::path::Path;
+
+    use lazy_github_core::models::{Review, review_threads};
+
+    use super::super::{ReviewShape, review_shape};
+    use super::*;
+
+    /// The response body of the overlay's review fixture at `path`.
+    fn overlay_body(path: &str) -> serde_json::Value {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../parity/fixtures/pr-conversation-bodyless/repos/parity-bot/pr-details/pulls/5/reviews")
+            .join(path);
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+        let fixture: serde_json::Value = serde_json::from_str(&text).unwrap();
+        fixture["response"]["body"].clone()
+    }
+
+    /// PR 5's reviews in the overlay, each with its comments: 501 (a body, root 9001), 511 (commented, root 9011),
+    /// 514 (commented, only 9014 replying to 9011), 512 (approved, root 9012), 516 (approved, no comments), 513
+    /// (approved, only 9013 replying to 9001) and 515 (changes requested, only 9015 replying to the missing 8999).
+    fn bodyless_reviews() -> Vec<Review> {
+        let all: Vec<Review> = serde_json::from_value(overlay_body("GET.json")).unwrap();
+        all.into_iter()
+            .map(|mut review| {
+                review.comments =
+                    serde_json::from_value(overlay_body(&format!("{}/comments/GET.json", review.id))).unwrap();
+                review
+            })
+            .collect()
+    }
+
+    /// Each review's shape and the comment ids of each thread it starts, by review id.
+    fn shapes(reviews: &[Review]) -> Vec<(u64, ReviewShape, Vec<Vec<u64>>)> {
+        reviews
+            .iter()
+            .zip(review_threads(reviews))
+            .map(|(review, threads)| {
+                let ids = threads
+                    .iter()
+                    .map(|thread| thread.iter().map(|comment| comment.comment.id).collect())
+                    .collect();
+                (review.id, review_shape(review, &threads), ids)
+            })
+            .collect()
+    }
+
+    fn shape_of(reviews: &[Review], id: u64) -> (ReviewShape, Vec<Vec<u64>>) {
+        let (_, shape, threads) = shapes(reviews).into_iter().find(|(review, ..)| *review == id).unwrap();
+        (shape, threads)
+    }
+
+    fn set_state(reviews: &mut [Review], id: u64, state: ReviewState) {
+        reviews.iter_mut().find(|review| review.id == id).unwrap().state = state;
+    }
+
+    const OPEN: ReviewShape = ReviewShape::Content { open: true };
+
+    #[test]
+    fn a_review_with_a_body_shows_its_threads_as_before() {
+        // 501's thread also holds 513's reply 9013.
+        assert_eq!(shape_of(&bodyless_reviews(), 501), (OPEN, vec![vec![9001, 9013]]));
+    }
+
+    #[test]
+    fn a_body_less_comment_review_with_a_thread_is_open() {
+        // (a) B10's answer: shown, with its thread, which holds 514's reply.
+        assert_eq!(shape_of(&bodyless_reviews(), 511), (OPEN, vec![vec![9011, 9014]]));
+    }
+
+    #[test]
+    fn a_body_less_approval_with_a_thread_is_open() {
+        // (b)
+        assert_eq!(shape_of(&bodyless_reviews(), 512), (OPEN, vec![vec![9012]]));
+    }
+
+    #[test]
+    fn a_body_less_approval_that_only_replies_is_empty() {
+        // (c) Its reply 9013 is in 501's thread (above).
+        assert_eq!(shape_of(&bodyless_reviews(), 513), (ReviewShape::Empty, vec![]));
+    }
+
+    #[test]
+    fn a_body_less_comment_review_that_only_replies_is_hidden() {
+        // (d) Its reply 9014 is in 511's thread (above).
+        assert_eq!(shape_of(&bodyless_reviews(), 514), (ReviewShape::Hidden, vec![]));
+    }
+
+    #[test]
+    fn a_reply_to_a_missing_comment_is_shown_nowhere() {
+        // (e)
+        let reviews = bodyless_reviews();
+        assert_eq!(shape_of(&reviews, 515), (ReviewShape::Empty, vec![]));
+        assert!(
+            shapes(&reviews)
+                .iter()
+                .all(|(_, _, threads)| !threads.iter().flatten().any(|&id| id == 9015))
+        );
+    }
+
+    #[test]
+    fn a_body_less_dismissed_review_that_only_replies_is_empty() {
+        // (f)
+        let mut reviews = bodyless_reviews();
+        set_state(&mut reviews, 513, ReviewState::Dismissed);
+        assert_eq!(shape_of(&reviews, 513), (ReviewShape::Empty, vec![]));
+    }
+
+    #[test]
+    fn a_review_with_no_comments_is_empty_unless_it_comments() {
+        let mut reviews = bodyless_reviews();
+        assert_eq!(shape_of(&reviews, 516), (ReviewShape::Empty, vec![]));
+        set_state(&mut reviews, 516, ReviewState::Commented);
+        assert_eq!(shape_of(&reviews, 516), (ReviewShape::Hidden, vec![]));
+    }
+
+    #[test]
+    fn a_dismissed_review_with_content_starts_closed() {
+        let mut reviews = bodyless_reviews();
+        set_state(&mut reviews, 501, ReviewState::Dismissed);
+        set_state(&mut reviews, 512, ReviewState::Dismissed);
+        assert_eq!(shape_of(&reviews, 501).0, ReviewShape::Content { open: false });
+        assert_eq!(shape_of(&reviews, 512).0, ReviewShape::Content { open: false });
+    }
+
+    fn bodyless_on(reviews: Vec<Review>) -> TestApp {
+        conversation_on(gh().with_pull_request_reviews(NAME, 5, Ok(reviews)))
+    }
+
+    #[test]
+    fn reviews_with_nothing_of_their_own_start_closed() {
+        let app = bodyless_on(bodyless_reviews());
+        let conversation = conversation(&app);
+        // 501, 511, 512, 516, 513, 515: 514 is hidden.
+        let open: Vec<bool> = (0..6).map(|index| conversation.is_open(index)).collect();
+        assert_eq!(open, [true, true, true, false, false, false]);
+        assert_eq!(conversation.block_index(CommentRef::Review(9015)), None);
+    }
+
+    #[test]
+    fn the_focus_ring_stops_only_on_closed_sections_titles() {
+        // (g)
+        let mut app = bodyless_on(bodyless_reviews());
+        app.press(&["tab"]);
+        assert_eq!(stop(&app), ConversationStop::Scroll);
+        let mut walked = Vec::new();
+        loop {
+            app.press(&["tab"]);
+            if focus(&app) != FocusTarget::DetailsContent {
+                break;
+            }
+            walked.push(stop(&app));
+        }
+        let comment = |id| ConversationStop::Comment(block(&app, id), CommentStop::Block);
+        let reactions = |id| ConversationStop::Comment(block(&app, id), CommentStop::ReactionsTitle);
+        assert_eq!(
+            walked,
+            [
+                ConversationStop::Review(0),
+                comment(CommentRef::Review(9001)),
+                reactions(CommentRef::Review(9001)),
+                comment(CommentRef::Review(9013)),
+                ConversationStop::Review(1),
+                comment(CommentRef::Review(9011)),
+                comment(CommentRef::Review(9014)),
+                ConversationStop::Review(2),
+                comment(CommentRef::Review(9012)),
+                ConversationStop::Review(3),
+                ConversationStop::Review(4),
+                ConversationStop::Review(5),
+                comment(CommentRef::Issue(7001)),
+                reactions(CommentRef::Issue(7001)),
+                comment(CommentRef::Issue(7002)),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_closed_empty_review_opens_to_one_line() {
+        let mut reviews = bodyless_reviews();
+        set_state(&mut reviews, 513, ReviewState::Dismissed);
+        let mut app = bodyless_on(reviews);
+        tab_to(&mut app, ConversationStop::Review(4));
+        let screen = app.screen(160, 100);
+        assert!(screen.contains("▶ Review from parity-carol (Dismissed)"), "{screen}");
+        app.press(&["enter"]);
+        assert!(conversation(&app).is_open(4));
+        let screen = app.screen(160, 100);
+        // The line, and nothing else, between its title and the next review's.
+        let (_, after) = screen
+            .split_once("▼ Review from parity-carol (Dismissed)")
+            .unwrap_or_else(|| panic!("{screen}"));
+        let (inside, _) = after.split_once("Review from").unwrap();
+        assert!(inside.contains("    No additional review content"), "{screen}");
+        assert!(!inside.contains("See the thread above."), "{screen}");
+    }
+
+    #[test]
+    fn pr_conversation_bodyless_reviews() {
+        let mut app = bodyless_on(bodyless_reviews());
+        let screen = app.screen(160, 100);
+        assert!(!screen.contains("▼ Review from parity-carol"), "{screen}");
+        assert!(!screen.contains("See the thread above."), "{screen}");
+        insta::assert_snapshot!(screen);
+    }
+}

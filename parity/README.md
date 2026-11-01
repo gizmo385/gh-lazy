@@ -357,6 +357,14 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   diffs (`GET .../pulls/<n>` with accept `diff`, which `gh pr diff` reads too): PR 5's five files, PR 3's and PR
   9's small ones, and a 406 for PR 4. Plus its README and empty workflows and runs. Listed before `base`.
   Hand-written, generated once by a throwaway script; edit the JSON directly.
+- `pr-conversation-bodyless/`: PR 5's reviews replaced by body-less reviews of each shape (#346): `GET
+  .../pulls/5/reviews` and each review's `GET .../reviews/<id>/comments`. 501 (commented, with a body and root 9001,
+  as in `pr-details`), 511 (commented, no body, root 9011: a github.com "Add single comment"), 514 (commented, no body,
+  only 9014 replying to 9011), 512 (approved, no body, root 9012), 516 (approved, no body, no comments), 513
+  (approved, no body, only 9013 replying to 9001) and 515 (changes requested, no body, only 9015 replying to the
+  missing 8999). Plus each new comment's reactions (`[]` on `/pulls/comments/<id>/reactions`, and the 404 on
+  `/issues/comments/<id>/reactions`, Py bug B54). Listed before `pr-details` and `base`, for the Rust-only
+  `pr-conversation-bodyless` scenario. Hand-written.
 - `prs-70/`: the repo `parity-bot/lazy-fixture`, added to base's `GET /user/repos` page, with 70 pull requests over
   `GET /repos/parity-bot/lazy-fixture/issues` pages of 30 (`state=all`, as `list_issues` sends them: 30, 30, 10, then
   an empty page 4), plus its README and empty workflows and runs. Listed before `base`, for the `table-lazy-load`

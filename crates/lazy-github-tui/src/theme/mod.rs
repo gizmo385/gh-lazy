@@ -4,7 +4,8 @@
 //! `gen/dump_themes.py` dumps Textual 8.2.5's results into the generated, committed `palette` module. Colors with
 //! alpha or `auto` are composited over what they're drawn on with Textual's arithmetic ([`ThemeColor::over`]), so a
 //! cell gets the same RGB in both apps. The result is then reduced to what the terminal shows ([`ColorMode`]), as Rich
-//! does it. Components take every color from here.
+//! does it. Components take every color from here: by what it's for from [`Theme::roles`] ([`Roles`], filled from
+//! the palette), or from the palette by Textual's name while they move onto roles.
 
 mod accent;
 mod color;
@@ -12,8 +13,10 @@ mod depth;
 #[rustfmt::skip]
 #[allow(clippy::enum_glob_use, clippy::unreadable_literal)]
 mod palette;
+mod roles;
 
 use std::fmt;
+use std::sync::LazyLock;
 
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
@@ -23,8 +26,15 @@ pub use accent::{Accent, RichAnsi};
 pub use color::{AnsiColor, Paint, Rgb, TextStyle, ThemeColor};
 pub use depth::{ColorDepth, ColorMode, downsample};
 pub use palette::Palette;
+pub use roles::{
+    Border, Brand, Button, ButtonColors, Checkbox, CommandPalette, Cursor, Diff, Footer, Highlight, Hints, Ink, Input,
+    Markdown, Marks, Pair, Roles, Scrollbar, Select, Status, Surface, Switch, Syntax, Tabs, Text, TokenStyle, Tree,
+};
 
 use palette::{BUILTIN, ThemeDef};
+
+/// Each built-in theme's roles, in [`BUILTIN`] order, built from its palette on first use.
+static ROLES: LazyLock<[Roles; 21]> = LazyLock::new(|| std::array::from_fn(|i| Roles::from_palette(&BUILTIN[i])));
 
 /// The theme Python falls back to for an unknown name, and the default.
 const DEFAULT: &str = "textual-dark";
@@ -41,22 +51,32 @@ pub struct Theme {
     pub dark: bool,
     /// Whether it uses the terminal's own 16 colors (`ansi-dark`, `ansi-light`).
     pub ansi: bool,
-    /// Its colors and text styles.
+    /// Its colors and text styles, as Textual names them. Callers move to [`Theme::roles`].
     pub palette: &'static Palette,
+    /// Its colors and text styles by what they're for.
+    roles: &'static Roles,
     /// What the terminal shows, which every color is reduced to. Set by [`Theme::from_config`]; truecolor for
     /// [`Theme::by_name`], [`Theme::all`] and [`Theme::default`].
     mode: ColorMode,
 }
 
 impl Theme {
-    fn from_def(def: &'static ThemeDef) -> Self {
+    /// The built-in theme at `index` in [`BUILTIN`].
+    fn builtin(index: usize) -> Self {
+        let def: &'static ThemeDef = &BUILTIN[index];
         Self {
             name: def.name,
             dark: def.dark,
             ansi: def.ansi,
             palette: &def.palette,
+            roles: &ROLES[index],
             mode: ColorMode::default(),
         }
+    }
+
+    /// Its colors and text styles by what they're for in this app.
+    pub fn roles(&self) -> &'static Roles {
+        self.roles
     }
 
     /// This theme, with its colors reduced to `mode`. The mode belongs to the terminal, not the theme: switching
@@ -73,7 +93,7 @@ impl Theme {
 
     /// The built-in theme called exactly `name`.
     pub fn by_name(name: &str) -> Option<Theme> {
-        BUILTIN.iter().find(|def| def.name == name).map(Self::from_def)
+        BUILTIN.iter().position(|def| def.name == name).map(Self::builtin)
     }
 
     /// The theme for `appearance.theme`, reduced to the terminal's color `mode`: an unknown name renders as
@@ -90,7 +110,7 @@ impl Theme {
 
     /// Every built-in theme, in Textual's order.
     pub fn all() -> impl Iterator<Item = Theme> {
-        BUILTIN.iter().map(Self::from_def)
+        (0..BUILTIN.len()).map(Self::builtin)
     }
 
     /// The name the Python app shows for this theme: `name.title().replace("-", " ")`, so `rose-pine-moon` is
@@ -224,53 +244,25 @@ impl Theme {
     /// The background of a markdown code block: Textual's `MarkdownFence` CSS, `black 10%` on dark themes and
     /// `white 30%` on light ones. ANSI themes give fences no background.
     pub fn markdown_fence_background(&self) -> ThemeColor {
-        if self.ansi {
-            ThemeColor::Transparent
-        } else if self.dark {
-            ThemeColor::Rgba {
-                r: 0,
-                g: 0,
-                b: 0,
-                a: 0.1,
-            }
-        } else {
-            ThemeColor::Rgba {
-                r: 255,
-                g: 255,
-                b: 255,
-                a: 0.3,
-            }
-        }
+        self.roles.markdown.fence_bg
     }
 
     /// A fixed markup color, the same in every theme.
     pub fn accent(&self, a: Accent) -> Color {
-        self.paint(a.rgb().into())
+        self.color(self.roles.accent(a), self.background())
     }
 
     /// A Rich ANSI color in a table cell: the terminal's own color under the ANSI themes, and Textual's terminal theme
     /// otherwise.
     pub fn rich_ansi(&self, c: RichAnsi) -> Color {
-        let paint = if self.ansi {
-            match c {
-                RichAnsi::Green => Paint::Ansi(AnsiColor::Green),
-                RichAnsi::Red => Paint::Ansi(AnsiColor::Red),
-                RichAnsi::Yellow => Paint::Ansi(AnsiColor::Yellow),
-                RichAnsi::Cyan => Paint::Ansi(AnsiColor::Cyan),
-            }
-        } else if self.dark {
-            c.dark().into()
-        } else {
-            c.light().into()
-        };
-        self.paint(paint)
+        self.color(self.roles.rich_ansi(c), self.background())
     }
 }
 
 impl Default for Theme {
     /// `textual-dark`, Textual's default theme.
     fn default() -> Self {
-        Self::from_def(&BUILTIN[0])
+        Self::builtin(0)
     }
 }
 
@@ -654,5 +646,213 @@ mod tests {
         let (fg, _, modifier) = resolved(&eight_bit, Color::Indexed(254), Color::Indexed(234), Modifier::DIM);
         assert!(matches!(fg, Color::Indexed(_)), "{fg:?}");
         assert_eq!(modifier, Modifier::empty());
+    }
+
+    /// A role color as written: `#RRGGBB`, with its alpha if it has one, `auto`, an ANSI name or `transparent`.
+    fn raw(c: ThemeColor) -> String {
+        match c {
+            ThemeColor::Rgba { r, g, b, a } if a >= 1.0 => format!("#{r:02X}{g:02X}{b:02X}"),
+            ThemeColor::Rgba { r, g, b, a } => format!("#{r:02X}{g:02X}{b:02X} a={a}"),
+            ThemeColor::Auto { alpha } => format!("auto a={alpha}"),
+            ThemeColor::Ansi(c) => ansi_name(c),
+            ThemeColor::Transparent => "transparent".to_owned(),
+        }
+    }
+
+    /// Textual's name for an ANSI color: `ansi_bright_black`.
+    fn ansi_name(c: AnsiColor) -> String {
+        let mut name = "ansi".to_owned();
+        for ch in format!("{c:?}").chars() {
+            if ch.is_uppercase() {
+                name.push('_');
+            }
+            name.extend(ch.to_lowercase());
+        }
+        name
+    }
+
+    fn paint_name(paint: Paint) -> String {
+        match paint {
+            Paint::Rgb(Rgb { r, g, b }) => format!("#{r:02X}{g:02X}{b:02X}"),
+            Paint::Ansi(c) => ansi_name(c),
+        }
+    }
+
+    fn style_name(style: TextStyle) -> String {
+        match (style.add.is_empty(), style.sub.is_empty()) {
+            (true, true) => "none".to_owned(),
+            (false, true) => format!("add {:?}", style.add),
+            (true, false) => format!("sub {:?}", style.sub),
+            (false, false) => format!("add {:?}, sub {:?}", style.add, style.sub),
+        }
+    }
+
+    /// Every role of `theme`, one per line: its path, the color resolved over [`Theme::background`] at truecolor
+    /// with the value as written, the text style, or the flag.
+    fn roles_listing(theme: &Theme) -> String {
+        use std::fmt::Write as _;
+
+        use roles::walk::{Leaf, Walk};
+
+        let mut leaves = Vec::new();
+        theme.roles().walk("", &mut leaves);
+        let screen = theme.background();
+        let color = |c: ThemeColor| format!("{}  ({})", paint_name(c.over(screen)), raw(c));
+        let mut out = String::new();
+        for (path, leaf) in leaves {
+            let value = match leaf {
+                Leaf::Color(c) | Leaf::MaybeColor(Some(c)) => color(c),
+                Leaf::MaybeColor(None) => "none".to_owned(),
+                Leaf::Style(style) => style_name(style),
+                Leaf::Flag(flag) => flag.to_string(),
+            };
+            writeln!(out, "{path:<38} {value}").unwrap();
+        }
+        out
+    }
+
+    /// The regression guard for the role data: every role of every built-in theme.
+    #[test]
+    fn roles_snapshot() {
+        for theme in Theme::all() {
+            insta::assert_snapshot!(format!("roles_{}", theme.name), roles_listing(&theme));
+        }
+    }
+
+    #[test]
+    fn roles_are_per_theme() {
+        assert!(std::ptr::eq(
+            theme("nord").roles(),
+            Theme::by_name("nord").unwrap().roles()
+        ));
+        assert!(!std::ptr::eq(theme("nord").roles(), theme("textual-dark").roles()));
+        assert_eq!(Theme::default().roles(), theme("textual-dark").roles());
+    }
+
+    /// For one dark, one light and one terminal-color theme, a role per group is the palette expression its call site
+    /// uses today.
+    #[rstest]
+    #[case("textual-dark")]
+    #[case("catppuccin-latte")]
+    #[case("ansi-dark")]
+    fn roles_match_the_palette_expressions_they_replace(#[case] name: &str) {
+        let t = theme(name);
+        let (p, r) = (t.palette, t.roles());
+        let black = ThemeColor::BLACK;
+        let white = ThemeColor::Rgba {
+            r: 255,
+            g: 255,
+            b: 255,
+            a: 1.0,
+        };
+
+        assert_eq!(r.surface.screen, p.background);
+        assert_eq!(r.surface.pane, p.surface);
+        assert_eq!(r.surface.dialog, p.surface_lighten_3);
+        assert_eq!(r.surface.focus_tint, p.foreground.multiply_alpha(0.05));
+        assert_eq!(
+            r.surface.scrim,
+            if t.ansi {
+                ThemeColor::Transparent
+            } else {
+                p.background.multiply_alpha(0.6)
+            }
+        );
+        assert_eq!(r.text.plain, p.foreground);
+        assert_eq!(r.text.muted, p.text_muted);
+        assert_eq!(r.brand.accent, p.accent);
+        assert_eq!(r.status.warning, p.warning);
+        assert_eq!(r.border.pane_focused, p.success);
+        assert_eq!(r.border.section_title, p.primary_lighten_3);
+        assert_eq!(r.border.dialog, p.background.multiply_alpha(0.8));
+        assert_eq!(r.cursor.focused.bg, p.block_cursor_background);
+        assert_eq!(r.cursor.blurred.style, p.block_cursor_blurred_text_style);
+        assert_eq!(r.scrollbar.track, p.scrollbar_background);
+        assert_eq!(r.input.selection.bg, p.input_selection_background);
+        assert_eq!(r.input.invalid_blurred, p.error.multiply_alpha(0.6));
+        assert_eq!(r.footer.key.fg, p.footer_key_foreground);
+        assert_eq!(r.button.primary.dark, p.primary_darken_3);
+        assert_eq!(r.button.outlined, t.ansi);
+        assert_eq!(r.switch.track, p.panel_darken_2);
+        assert_eq!(r.select.muted, p.foreground.multiply_alpha(0.5));
+        assert_eq!(r.checkbox.on, p.text_success);
+        assert_eq!(r.tabs.bar_active, p.block_cursor_background);
+        assert_eq!(r.markdown.h3.fg, p.markdown_h3_color);
+        assert_eq!(r.markdown.link.style, p.link_style);
+        assert_eq!(r.markdown.fence_bg, t.markdown_fence_background());
+        assert_eq!(r.diff.border, p.primary_lighten_1);
+        assert_eq!(r.hints.label.bg, p.warning);
+        assert_eq!(r.command_palette.list_rule, black);
+
+        match name {
+            "textual-dark" => {
+                assert_eq!(r.markdown.fence_bg, black.multiply_alpha(0.1));
+                assert_eq!(r.markdown.table_bg, ThemeColor::Transparent);
+                assert_eq!(r.markdown.quote_bar, p.text_primary.multiply_alpha(0.5));
+                assert_eq!(r.markdown.code_bg, p.warning.multiply_alpha(0.1));
+                assert_eq!(r.switch.off, p.panel);
+                assert_eq!(r.tree.guide, p.surface_lighten_2);
+                assert_eq!(r.tree.guide_focused, p.surface_lighten_3);
+                assert_eq!(r.tabs.bar_focused, p.foreground.multiply_alpha(0.3));
+                assert!(r.tabs.label_style.add.is_empty());
+                assert_eq!(r.input.cursor.fg, p.input_cursor_foreground);
+                assert_eq!(r.input.editor_cursor.bg, p.input_cursor_background);
+                assert_eq!(r.border.help, p.foreground.multiply_alpha(0.3));
+                assert_eq!(r.command_palette.band, p.panel_darken_1);
+                assert_eq!(r.command_palette.highlight.bg, p.block_cursor_blurred_background);
+                assert_eq!(r.button.success.label, p.button_color_foreground);
+                assert_eq!(r.syntax.keyword.fg, Some(p.text_accent));
+            }
+            "catppuccin-latte" => {
+                assert_eq!(r.markdown.fence_bg, white.multiply_alpha(0.3));
+                assert_eq!(r.markdown.table_bg, white.multiply_alpha(0.3));
+                assert_eq!(r.markdown.quote_bar, p.text_secondary);
+                assert_eq!(r.markdown.code, p.text_error.multiply_alpha(0.95));
+                assert_eq!(r.markdown.code_bg, p.error.multiply_alpha(0.05));
+                assert_eq!(r.switch.off, p.primary.multiply_alpha(0.15));
+                assert_eq!(r.tree.guide_focused, p.surface_darken_1);
+                assert_eq!(r.input.editor_cursor.fg, p.text.multiply_alpha(0.9));
+                assert_eq!(r.input.editor_cursor.bg, p.foreground.multiply_alpha(0.7));
+                assert_eq!(r.command_palette.band, p.surface);
+            }
+            "ansi-dark" => {
+                assert_eq!(r.markdown.fence_bg, ThemeColor::Transparent);
+                assert!(!r.markdown.fence_inset);
+                assert_eq!(r.markdown.code_bg, ThemeColor::Transparent);
+                assert_eq!(r.switch.off, ThemeColor::Ansi(AnsiColor::Red));
+                assert_eq!(r.tree.guide, p.ansi_background);
+                assert_eq!(r.tabs.bar, p.border_blurred);
+                assert_eq!(r.tabs.label_style.add, Modifier::DIM);
+                assert_eq!(r.tabs.label_active_style.add, Modifier::BOLD);
+                assert_eq!(r.input.cursor.fg, ThemeColor::Ansi(AnsiColor::Black));
+                assert_eq!(r.input.cursor.bg, ThemeColor::Ansi(AnsiColor::White));
+                assert_eq!(r.input.editor_cursor.style.add, Modifier::REVERSED);
+                assert_eq!(r.input.placeholder_style.add, Modifier::DIM);
+                assert_eq!(r.border.help, ThemeColor::Ansi(AnsiColor::Black));
+                assert_eq!(r.command_palette.highlight.bg, p.block_cursor_background);
+                assert_eq!(r.button.success.label, p.success);
+                assert_eq!(r.syntax.keyword.fg, Some(ThemeColor::Ansi(AnsiColor::Magenta)));
+                assert_eq!(r.marks.starred, ThemeColor::Ansi(AnsiColor::Green));
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    /// The marks stay the same in every built-in theme, as the Python app's literal markup colors do.
+    #[test]
+    fn marks_are_fixed_across_themes() {
+        let first = Theme::default().roles();
+        for t in Theme::all() {
+            let r = t.roles();
+            assert_eq!(r.marks.positive, first.marks.positive, "{}", t.name);
+            assert_eq!(r.marks.negative, first.marks.negative, "{}", t.name);
+            assert_eq!(r.marks.merged, first.marks.merged, "{}", t.name);
+            assert_eq!(r.diff.added_bg, first.diff.added_bg, "{}", t.name);
+            assert_eq!(t.color(r.marks.pending, t.background()), t.accent(Accent::Yellow));
+            assert_eq!(
+                t.color(r.marks.job_running, t.background()),
+                t.rich_ansi(RichAnsi::Cyan)
+            );
+        }
     }
 }

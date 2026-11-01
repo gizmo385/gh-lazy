@@ -1,0 +1,272 @@
+---
+source: crates/lazy-github-tui/src/theme/mod.rs
+expression: roles_listing(&theme)
+---
+surface.screen                         ansi_default  (ansi_default)
+surface.pane                           ansi_default  (transparent)
+surface.header                         ansi_default  (transparent)
+surface.raised                         ansi_default  (transparent)
+surface.dialog                         ansi_default  (transparent)
+surface.card                           ansi_default  (transparent)
+surface.boost                          ansi_default  (transparent)
+surface.scrim                          ansi_default  (transparent)
+surface.focus_tint                     ansi_default  (ansi_default)
+surface.hatch                          ansi_default  (transparent)
+text.normal                            ansi_default  (ansi_default)
+text.plain                             ansi_default  (ansi_default)
+text.muted                             ansi_default  (ansi_default)
+text.disabled                          ansi_default  (ansi_default)
+text.primary                           ansi_blue  (ansi_blue)
+text.secondary                         ansi_cyan  (ansi_cyan)
+text.accent                            ansi_green  (ansi_green)
+text.success                           ansi_green  (ansi_green)
+text.warning                           ansi_yellow  (ansi_yellow)
+text.error                             ansi_red  (ansi_red)
+brand.primary                          ansi_blue  (ansi_blue)
+brand.secondary                        ansi_cyan  (ansi_cyan)
+brand.accent                           ansi_green  (ansi_green)
+status.success                         ansi_green  (ansi_green)
+status.warning                         ansi_yellow  (ansi_yellow)
+status.error                           ansi_red  (ansi_red)
+border.pane_focused                    ansi_green  (ansi_green)
+border.section_title                   ansi_blue  (ansi_blue)
+border.field_focused                   ansi_magenta  (ansi_magenta)
+border.field                           ansi_black  (ansi_black)
+border.rule                            ansi_cyan  (ansi_cyan)
+border.status_bar                      ansi_cyan  (ansi_cyan)
+border.dialog                          ansi_default  (ansi_default)
+border.emphasis                        ansi_green  (ansi_green)
+border.conversation                    ansi_default  (ansi_default)
+border.review                          ansi_green  (ansi_green)
+border.help                            ansi_black  (ansi_black)
+cursor.focused.fg                      ansi_black  (ansi_black)
+cursor.focused.bg                      ansi_white  (ansi_white)
+cursor.focused.style                   add BOLD
+cursor.blurred.fg                      ansi_default  (ansi_default)
+cursor.blurred.bg                      ansi_default  (ansi_default)
+cursor.blurred.style                   none
+cursor.hover_bg                        ansi_default  (ansi_default)
+scrollbar.thumb                        ansi_blue  (ansi_blue)
+scrollbar.track                        ansi_black  (ansi_black)
+scrollbar.corner                       ansi_default  (ansi_default)
+input.cursor.fg                        ansi_black  (ansi_black)
+input.cursor.bg                        ansi_white  (ansi_white)
+input.cursor.style                     none
+input.editor_cursor.fg                 ansi_bright_white  (ansi_bright_white)
+input.editor_cursor.bg                 ansi_black  (ansi_black)
+input.editor_cursor.style              add REVERSED
+input.selection.fg                     ansi_black  (ansi_black)
+input.selection.bg                     ansi_bright_blue  (ansi_bright_blue)
+input.placeholder                      ansi_default  (ansi_default)
+input.placeholder_style                add DIM
+input.invalid                          ansi_red  (ansi_red)
+input.invalid_blurred                  ansi_red  (ansi_red)
+footer.bar                             ansi_default  (ansi_default)
+footer.item                            ansi_default  (ansi_default)
+footer.hover                           ansi_default  (ansi_default)
+footer.key.fg                          ansi_magenta  (ansi_magenta)
+footer.key.bg                          ansi_default  (transparent)
+footer.description.fg                  ansi_default  (ansi_default)
+footer.description.bg                  ansi_default  (ansi_default)
+button.outlined                        true
+button.focus_style                     add BOLD | REVERSED
+button.disabled_border                 ansi_black  (ansi_black)
+button.default.bg                      ansi_default  (transparent)
+button.default.light                   ansi_default  (transparent)
+button.default.dark                    ansi_default  (transparent)
+button.default.border                  ansi_black  (ansi_black)
+button.default.label                   ansi_default  (ansi_default)
+button.default.label_disabled          ansi_default  (ansi_default)
+button.primary.bg                      ansi_blue  (ansi_blue)
+button.primary.light                   ansi_blue  (ansi_blue)
+button.primary.dark                    ansi_blue  (ansi_blue)
+button.primary.border                  ansi_blue  (ansi_blue)
+button.primary.label                   ansi_blue  (ansi_blue)
+button.primary.label_disabled          ansi_blue  (ansi_blue)
+button.success.bg                      ansi_green  (ansi_green)
+button.success.light                   ansi_green  (ansi_green)
+button.success.dark                    ansi_green  (ansi_green)
+button.success.border                  ansi_green  (ansi_green)
+button.success.label                   ansi_green  (ansi_green)
+button.success.label_disabled          ansi_green  (ansi_green)
+button.warning.bg                      ansi_yellow  (ansi_yellow)
+button.warning.light                   ansi_yellow  (ansi_yellow)
+button.warning.dark                    ansi_yellow  (ansi_yellow)
+button.warning.border                  ansi_yellow  (ansi_yellow)
+button.warning.label                   ansi_yellow  (ansi_yellow)
+button.warning.label_disabled          ansi_yellow  (ansi_yellow)
+button.error.bg                        ansi_red  (ansi_red)
+button.error.light                     ansi_red  (ansi_red)
+button.error.dark                      ansi_red  (ansi_red)
+button.error.border                    ansi_red  (ansi_red)
+button.error.label                     ansi_red  (ansi_red)
+button.error.label_disabled            ansi_red  (ansi_red)
+switch.track                           ansi_default  (transparent)
+switch.on                              ansi_green  (ansi_green)
+switch.off                             ansi_red  (ansi_red)
+select.muted                           ansi_default  (ansi_default)
+checkbox.bg                            ansi_default  (transparent)
+checkbox.off                           ansi_default  (transparent)
+checkbox.on                            ansi_green  (ansi_green)
+tree.guide                             ansi_black  (ansi_black)
+tree.guide_focused                     ansi_black  (ansi_black)
+tree.guide_selected                    ansi_white  (ansi_white)
+tabs.label                             ansi_default  (ansi_default)
+tabs.label_style                       add DIM
+tabs.label_active                      ansi_default  (ansi_default)
+tabs.label_active_style                add BOLD
+tabs.bar                               ansi_black  (ansi_black)
+tabs.bar_focused                       ansi_black  (ansi_black)
+tabs.bar_active                        ansi_white  (ansi_white)
+markdown.h1.fg                         ansi_magenta  (ansi_magenta)
+markdown.h1.bg                         ansi_default  (transparent)
+markdown.h1.style                      add BOLD
+markdown.h2.fg                         ansi_bright_blue  (ansi_bright_blue)
+markdown.h2.bg                         ansi_default  (transparent)
+markdown.h2.style                      add UNDERLINED
+markdown.h3.fg                         ansi_blue  (ansi_blue)
+markdown.h3.bg                         ansi_default  (transparent)
+markdown.h3.style                      none
+markdown.h4.fg                         ansi_cyan  (ansi_cyan)
+markdown.h4.bg                         ansi_default  (transparent)
+markdown.h4.style                      add BOLD
+markdown.h5.fg                         ansi_cyan  (ansi_cyan)
+markdown.h5.bg                         ansi_default  (transparent)
+markdown.h5.style                      none
+markdown.h6.fg                         ansi_cyan  (ansi_cyan)
+markdown.h6.bg                         ansi_default  (transparent)
+markdown.h6.style                      add UNDERLINED
+markdown.link.fg                       ansi_blue  (ansi_blue)
+markdown.link.style                    add UNDERLINED
+markdown.fence_bg                      ansi_default  (transparent)
+markdown.fence_inset                   false
+markdown.code                          ansi_yellow  (ansi_yellow)
+markdown.code_bg                       ansi_default  (transparent)
+markdown.quote_bg                      ansi_default  (transparent)
+markdown.quote_bar                     ansi_blue  (ansi_blue)
+markdown.bullet                        ansi_blue  (ansi_blue)
+markdown.table_bg                      ansi_default  (transparent)
+markdown.table_header                  ansi_blue  (ansi_blue)
+markdown.table_line                    ansi_default  (ansi_default)
+syntax.text                            ansi_default  (ansi_default)
+syntax.comment.fg                      none
+syntax.comment.bg                      none
+syntax.comment.style                   add DIM | ITALIC
+syntax.error.fg                        ansi_red  (ansi_red)
+syntax.error.bg                        none
+syntax.error.style                     none
+syntax.generic_strong.fg               none
+syntax.generic_strong.bg               none
+syntax.generic_strong.style            add BOLD
+syntax.generic_emph.fg                 none
+syntax.generic_emph.bg                 none
+syntax.generic_emph.style              add ITALIC
+syntax.generic_heading.fg              ansi_blue  (ansi_blue)
+syntax.generic_heading.bg              none
+syntax.generic_heading.style           add UNDERLINED
+syntax.generic_subheading.fg           ansi_blue  (ansi_blue)
+syntax.generic_subheading.bg           none
+syntax.generic_subheading.style        none
+syntax.keyword.fg                      ansi_magenta  (ansi_magenta)
+syntax.keyword.bg                      none
+syntax.keyword.style                   add BOLD
+syntax.keyword_constant.fg             ansi_cyan  (ansi_cyan)
+syntax.keyword_constant.bg             none
+syntax.keyword_constant.style          none
+syntax.keyword_namespace.fg            ansi_magenta  (ansi_magenta)
+syntax.keyword_namespace.bg            none
+syntax.keyword_namespace.style         none
+syntax.number.fg                       ansi_yellow  (ansi_yellow)
+syntax.number.bg                       none
+syntax.number.style                    none
+syntax.string.fg                       none
+syntax.string.bg                       none
+syntax.string.style                    none
+syntax.string_backtick.fg              ansi_bright_black  (ansi_bright_black)
+syntax.string_backtick.bg              none
+syntax.string_backtick.style           none
+syntax.string_doc.fg                   ansi_green  (ansi_green)
+syntax.string_doc.bg                   none
+syntax.string_doc.style                add ITALIC
+syntax.string_double.fg                ansi_green  (ansi_green)
+syntax.string_double.bg                none
+syntax.string_double.style             none
+syntax.name.fg                         ansi_default  (ansi_default)
+syntax.name.bg                         none
+syntax.name.style                      none
+syntax.name_attribute.fg               none
+syntax.name_attribute.bg               none
+syntax.name_attribute.style            none
+syntax.name_builtin.fg                 ansi_cyan  (ansi_cyan)
+syntax.name_builtin.bg                 none
+syntax.name_builtin.style              none
+syntax.name_builtin_pseudo.fg          none
+syntax.name_builtin_pseudo.bg          none
+syntax.name_builtin_pseudo.style       add ITALIC
+syntax.name_class.fg                   ansi_yellow  (ansi_yellow)
+syntax.name_class.bg                   none
+syntax.name_class.style                none
+syntax.name_constant.fg                ansi_red  (ansi_red)
+syntax.name_constant.bg                none
+syntax.name_constant.style             none
+syntax.name_decorator.fg               ansi_blue  (ansi_blue)
+syntax.name_decorator.bg               none
+syntax.name_decorator.style            add BOLD
+syntax.name_function.fg                ansi_blue  (ansi_blue)
+syntax.name_function.bg                none
+syntax.name_function.style             none
+syntax.name_tag.fg                     ansi_blue  (ansi_blue)
+syntax.name_tag.bg                     none
+syntax.name_tag.style                  add BOLD
+syntax.name_variable.fg                ansi_default  (ansi_default)
+syntax.name_variable.bg                none
+syntax.name_variable.style             none
+syntax.operator.fg                     ansi_default  (ansi_default)
+syntax.operator.bg                     none
+syntax.operator.style                  none
+syntax.operator_word.fg                ansi_magenta  (ansi_magenta)
+syntax.operator_word.bg                none
+syntax.operator_word.style             none
+syntax.plain.fg                        none
+syntax.plain.bg                        none
+syntax.plain.style                     none
+marks.positive                         #ADFF2F  (#ADFF2F)
+marks.negative                         #FF0000  (#FF0000)
+marks.merged                           #DA70D6  (#DA70D6)
+marks.pending                          #FFFF00  (#FFFF00)
+marks.running                          #00FFFF  (#00FFFF)
+marks.warning                          #FFFF00  (#FFFF00)
+marks.name                             #ADFF2F  (#ADFF2F)
+marks.count_added                      #ADFF2F  (#ADFF2F)
+marks.count_removed                    #FF0000  (#FF0000)
+marks.auth_border                      #FF0000  (#FF0000)
+marks.auth_command                     #008000  (#008000)
+marks.starred                          ansi_green  (ansi_green)
+marks.job_failed                       ansi_red  (ansi_red)
+marks.job_pending                      ansi_yellow  (ansi_yellow)
+marks.job_running                      ansi_cyan  (ansi_cyan)
+diff.added_bg                          #0A3A0A  (#0A3A0A)
+diff.removed_bg                        #3A0A0A  (#3A0A0A)
+diff.added_current_bg                  #006400  (#006400)
+diff.removed_current_bg                #8B0000  (#8B0000)
+diff.context_current_bg                ansi_yellow  (ansi_yellow)
+diff.stat_added                        ansi_green  (ansi_green)
+diff.stat_removed                      ansi_red  (ansi_red)
+diff.border_focused                    ansi_green  (ansi_green)
+diff.border                            ansi_blue  (ansi_blue)
+diff.indicator.fg                      ansi_default  (ansi_default)
+diff.indicator.bg                      ansi_green  (ansi_green)
+diff.review_header.fg                  ansi_default  (ansi_default)
+diff.review_header.bg                  ansi_green  (ansi_green)
+diff.review_header.style               add BOLD
+diff.review_body                       ansi_default  (transparent)
+command_palette.band                   ansi_default  (transparent)
+command_palette.input_rule             #000000  (#000000 a=0.5)
+command_palette.list_rule              #000000  (#000000)
+command_palette.icon                   #000000  (#000000)
+command_palette.highlight.fg           ansi_black  (ansi_black)
+command_palette.highlight.bg           ansi_white  (ansi_white)
+command_palette.highlight.style        add BOLD
+hints.label.fg                         #000000  (#000000)
+hints.label.bg                         ansi_yellow  (ansi_yellow)
+hints.label.style                      add BOLD

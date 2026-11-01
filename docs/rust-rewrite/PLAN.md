@@ -70,6 +70,7 @@ process spawning.
 | Diff highlighting | `syntect` (or `two-face` for bundled syntaxes) | Split diff viewer syntax colors. |
 | Fuzzy matching | In-house port of Textual's `FuzzySearch` | Command palette and settings search. The visible order and highlighted letters come from Textual's own scoring, which `nucleo-matcher` doesn't reproduce, and it's about 80 lines (#191, #299). Table search and the diff file filter are substring matches in Python. |
 | Serialization | `serde`, `serde_json` | Models and config. Unknown fields ignored, defaults everywhere. |
+| Theme files | `toml` | Built-in and user theme files: one file per theme listing its roles, with comments and nested tables (`[cursor.focused]`). Already the workspace's parser for xtask's fixture recipes and parity scenarios (#378). |
 | CLI | `clap` (derive) | `run`, `dump-config`, `clear-config`, etc. mirror the Python `click` commands. |
 | Errors | `thiserror` in `core`, `color-eyre` in the binary | Typed errors where they're handled, pretty reports where they aren't. |
 | Logging | `tracing`, `tracing-subscriber`, `tracing-appender` | Rolling file log at the configured `logfile_path`; the in-app command log is a tracing layer. |
@@ -107,8 +108,8 @@ deserialize into typed `serde` models. Tests use an in-memory impl; parity runs 
 
 **Config.** `Config` mirrors `lazy_github/lib/config.py` field for field, reads and writes the same
 `~/.config/lazy-github/config.json`, ignores fields it doesn't know (e.g. `api.client_type`), and preserves them on save
-where practical. Theme names map Textual's built-in theme names to ratatui palettes so a saved `"theme": "nord"` still
-works.
+where practical. Themes are app-owned data files (`crates/lazy-github-tui/themes/<name>.toml`, one per built-in theme,
+each listing every color role), with the names Python users have, so a saved `"theme": "nord"` still works.
 
 **Local caches and drafts.** The per-repo table caches (`lib/cache.py`) and PR drafts (`lib/pr_drafts.py`) keep the same
 file names and JSON shape so switching implementations doesn't lose state.

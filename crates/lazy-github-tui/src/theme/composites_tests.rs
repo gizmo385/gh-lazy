@@ -1,13 +1,14 @@
 //! Checks [`ThemeColor::over`] against Textual's own compositing, for every built-in theme.
 //!
-//! `fixtures/themes/composites.json` is written by `src/theme/gen/dump_themes.py`, which also generates the palettes:
+//! `tests/fixtures/themes/composites.json` is written by `src/theme/gen/dump_themes.py`, which also generates the palettes:
 //! for each theme, Textual's `Color.parse(bg) + Color.parse(fg)` for a handful of pairs the app draws.
 
-use lazy_github_tui::theme::{AnsiColor, Paint, Palette, Rgb, Theme, ThemeColor};
 use ratatui::style::Color;
 use serde_json::Value;
 
-const FIXTURE: &str = include_str!("fixtures/themes/composites.json");
+use super::{AnsiColor, Paint, Palette, Rgb, Theme, ThemeColor};
+
+const FIXTURE: &str = include_str!("../../tests/fixtures/themes/composites.json");
 
 /// A pair's operand, as Textual CSS.
 fn operand(palette: &Palette, css: &str) -> ThemeColor {
@@ -87,7 +88,7 @@ fn compositing_matches_textual_for_every_theme() {
             assert_eq!(theme.color(fg_color, under), want_color, "{name}: {fg} over {bg}");
             match (want, under) {
                 // The ANSI themes paint the terminal's own colors.
-                (Paint::Ansi(_), _) => assert!(theme.ansi, "{name}: {fg} over {bg} is ANSI"),
+                (Paint::Ansi(_), _) => assert!(theme.terminal_colors, "{name}: {fg} over {bg} is ANSI"),
                 // The focused DataTable/Log tint, through the theme's helper.
                 (Paint::Rgb(want), Paint::Rgb(base)) if fg == "$foreground 5%" => {
                     assert_eq!(

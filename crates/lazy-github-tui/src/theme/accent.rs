@@ -5,7 +5,7 @@ use super::color::Rgb;
 /// A named color from Textual markup (`[greenyellow]…`), with Textual's RGB for that name, or a hex color the Python
 /// app styles text with (the diff viewer's line backgrounds).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Accent {
+pub(super) enum Accent {
     GreenYellow,
     Red,
     Orchid,
@@ -23,7 +23,7 @@ pub enum Accent {
 }
 
 impl Accent {
-    pub const fn rgb(self) -> Rgb {
+    pub(super) const fn rgb(self) -> Rgb {
         match self {
             Accent::GreenYellow => Rgb::new(0xAD, 0xFF, 0x2F),
             Accent::Red => Rgb::new(0xFF, 0x00, 0x00),
@@ -43,7 +43,7 @@ impl Accent {
 /// or a Rich `Text` style (the diff viewer's `green` counts). Outside the ANSI themes, Textual paints these through its terminal theme: MONOKAI for dark themes,
 /// ALABASTER for light ones.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum RichAnsi {
+pub(super) enum RichAnsi {
     Green,
     Red,
     Yellow,
@@ -52,7 +52,7 @@ pub enum RichAnsi {
 
 impl RichAnsi {
     /// The color under a dark theme (MONOKAI).
-    pub const fn dark(self) -> Rgb {
+    pub(super) const fn dark(self) -> Rgb {
         match self {
             RichAnsi::Green => Rgb::new(0x98, 0xE0, 0x24),
             RichAnsi::Red => Rgb::new(0xF4, 0x00, 0x5F),
@@ -62,7 +62,7 @@ impl RichAnsi {
     }
 
     /// The color under a light theme (ALABASTER).
-    pub const fn light(self) -> Rgb {
+    pub(super) const fn light(self) -> Rgb {
         match self {
             RichAnsi::Green => Rgb::new(0x44, 0x8C, 0x27),
             RichAnsi::Red => Rgb::new(0xAA, 0x37, 0x31),

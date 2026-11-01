@@ -10,7 +10,7 @@ use super::color::{rgb, rgba, AnsiColor, TextStyle, ThemeColor, ThemeColor::*};
 /// One theme's colors and text styles: every variable Textual's `ColorSystem.generate` gives all built-in
 /// themes, named after the CSS variable (`$primary-lighten-3` is `primary_lighten_3`).
 #[derive(Debug, PartialEq)]
-pub struct Palette {
+pub(super) struct Palette {
     /// `$text-primary`.
     pub text_primary: ThemeColor,
     /// `$text-secondary`.

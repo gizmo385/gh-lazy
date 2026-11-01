@@ -215,7 +215,7 @@ def main() -> None:
         "/// One theme's colors and text styles: every variable Textual's `ColorSystem.generate` gives all built-in",
         "/// themes, named after the CSS variable (`$primary-lighten-3` is `primary_lighten_3`).",
         "#[derive(Debug, PartialEq)]",
-        "pub struct Palette {",
+        "pub(super) struct Palette {",
     ]
     for name in shared:
         kind = "TextStyle" if is_text_style(name) else "ThemeColor"

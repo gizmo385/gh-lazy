@@ -1016,32 +1016,6 @@ impl Roles {
             },
         }
     }
-
-    /// Which role an [`Accent`] stands for, while callers still name accents (until #377).
-    pub(super) fn accent(&self, a: Accent) -> ThemeColor {
-        match a {
-            Accent::GreenYellow => self.marks.positive,
-            Accent::Red => self.marks.negative,
-            Accent::Orchid => self.marks.merged,
-            Accent::Yellow => self.marks.pending,
-            Accent::Cyan => self.marks.running,
-            Accent::Green => self.marks.auth_command,
-            Accent::DiffRemoved => self.diff.removed_bg,
-            Accent::DiffAdded => self.diff.added_bg,
-            Accent::DiffRemovedCurrent => self.diff.removed_current_bg,
-            Accent::DiffAddedCurrent => self.diff.added_current_bg,
-        }
-    }
-
-    /// Which role a [`RichAnsi`] color stands for, while callers still name them (until #377).
-    pub(super) fn rich_ansi(&self, c: RichAnsi) -> ThemeColor {
-        match c {
-            RichAnsi::Green => self.marks.starred,
-            RichAnsi::Red => self.marks.job_failed,
-            RichAnsi::Yellow => self.marks.job_pending,
-            RichAnsi::Cyan => self.marks.job_running,
-        }
-    }
 }
 
 /// A disabled button's `opacity`, on its label.

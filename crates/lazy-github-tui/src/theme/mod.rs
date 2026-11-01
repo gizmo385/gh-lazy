@@ -4,11 +4,13 @@
 //! `gen/dump_themes.py` dumps Textual 8.2.5's results into the generated, committed `palette` module. Colors with
 //! alpha or `auto` are composited over what they're drawn on with Textual's arithmetic ([`ThemeColor::over`]), so a
 //! cell gets the same RGB in both apps. The result is then reduced to what the terminal shows ([`ColorMode`]), as Rich
-//! does it. Components take every color from here: by what it's for from [`Theme::roles`] ([`Roles`], filled from
-//! the palette), or from the palette by Textual's name while they move onto roles.
+//! does it. Components take every color from here, by what it's for: [`Theme::roles`] ([`Roles`], filled from the
+//! palette, which stays inside this module).
 
 mod accent;
 mod color;
+#[cfg(test)]
+mod composites_tests;
 mod depth;
 #[rustfmt::skip]
 #[allow(clippy::enum_glob_use, clippy::unreadable_literal)]
@@ -22,17 +24,15 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
 
-pub use accent::{Accent, RichAnsi};
 pub use color::{AnsiColor, Paint, Rgb, TextStyle, ThemeColor};
 pub use depth::{ColorDepth, ColorMode, downsample};
-pub use palette::Palette;
 pub use roles::{
     Border, Brand, Button, ButtonColors, Checkbox, CommandPalette, Cursor, Diff, Footer, Highlight, Hints, Ink, Input,
     Markdown, Marks, Pair, Roles, Screenshot, Scrollbar, Select, Status, Surface, Switch, Syntax, Tabs, Text,
     TokenStyle, Tree,
 };
 
-use palette::{BUILTIN, ThemeDef};
+use palette::{BUILTIN, Palette, ThemeDef};
 
 /// Each built-in theme's roles, in [`BUILTIN`] order, built from its palette on first use.
 static ROLES: LazyLock<[Roles; 21]> = LazyLock::new(|| std::array::from_fn(|i| Roles::from_palette(&BUILTIN[i])));
@@ -48,12 +48,10 @@ const RICH_DIM_ALPHA: f64 = 0.66;
 pub struct Theme {
     /// Textual's name for it, as written in the config (`textual-dark`).
     pub name: &'static str,
-    /// Whether it's a dark theme.
-    pub dark: bool,
-    /// Whether it uses the terminal's own 16 colors (`ansi-dark`, `ansi-light`).
-    pub ansi: bool,
-    /// Its colors and text styles, as Textual names them. Callers move to [`Theme::roles`].
-    pub palette: &'static Palette,
+    /// Whether it uses the terminal's own 16 colors (`ansi-dark`, `ansi-light`), which Textual can't blend.
+    terminal_colors: bool,
+    /// Its colors and text styles, as Textual names them, which [`Self::roles`] are filled from.
+    palette: &'static Palette,
     /// Its colors and text styles by what they're for.
     roles: &'static Roles,
     /// What the terminal shows, which every color is reduced to. Set by [`Theme::from_config`]; truecolor for
@@ -67,8 +65,7 @@ impl Theme {
         let def: &'static ThemeDef = &BUILTIN[index];
         Self {
             name: def.name,
-            dark: def.dark,
-            ansi: def.ansi,
+            terminal_colors: def.ansi,
             palette: &def.palette,
             roles: &ROLES[index],
             mode: ColorMode::default(),
@@ -177,7 +174,7 @@ impl Theme {
     /// So `Modifier::DIM` in a style means Textual's `dim` (Rich `[dim]`, `style="dim"` or TCSS `text-style: dim`)
     /// on every theme. A cell whose fg (or bg) has no RGB, such as the terminal's default color, keeps `DIM`.
     pub fn resolve_dim(&self, buf: &mut Buffer, area: Rect) {
-        if self.ansi {
+        if self.terminal_colors {
             return;
         }
         let screen = match self.background() {
@@ -223,7 +220,7 @@ impl Theme {
     /// Textual blends before Rich reduces colors to the terminal's depth; a reduced color is blended as the RGB it
     /// stands for, and reduced again.
     pub fn dim(&self, color: Color, factor: f64) -> Color {
-        if self.ansi {
+        if self.terminal_colors {
             return color;
         }
         let (Some(rgb), Paint::Rgb(background)) = (depth::rgb_of(color), self.background()) else {
@@ -240,23 +237,6 @@ impl Theme {
             return color;
         };
         self.paint(Paint::Rgb(rgb.blend(under, 1.0 - opacity)))
-    }
-
-    /// The background of a markdown code block: Textual's `MarkdownFence` CSS, `black 10%` on dark themes and
-    /// `white 30%` on light ones. ANSI themes give fences no background.
-    pub fn markdown_fence_background(&self) -> ThemeColor {
-        self.roles.markdown.fence_bg
-    }
-
-    /// A fixed markup color, the same in every theme.
-    pub fn accent(&self, a: Accent) -> Color {
-        self.color(self.roles.accent(a), self.background())
-    }
-
-    /// A Rich ANSI color in a table cell: the terminal's own color under the ANSI themes, and Textual's terminal theme
-    /// otherwise.
-    pub fn rich_ansi(&self, c: RichAnsi) -> Color {
-        self.color(self.roles.rich_ansi(c), self.background())
     }
 }
 
@@ -311,6 +291,11 @@ mod tests {
 
     fn theme(name: &str) -> Theme {
         Theme::by_name(name).unwrap()
+    }
+
+    /// The terminal color of the mark `pick` chooses, drawn as is over the screen.
+    fn mark(theme: &Theme, pick: impl FnOnce(&Marks) -> ThemeColor) -> Color {
+        theme.color(pick(&theme.roles().marks), theme.background())
     }
 
     fn hex(text: &str) -> ThemeColor {
@@ -375,7 +360,7 @@ mod tests {
         );
 
         let ansi = theme("ansi-dark");
-        assert!(ansi.ansi && ansi.dark);
+        assert!(ansi.terminal_colors);
         assert_eq!(ansi.palette.primary, ThemeColor::Ansi(AnsiColor::Blue));
         assert_eq!(ansi.palette.surface, ThemeColor::Transparent);
         assert_eq!(ansi.background(), Paint::Ansi(AnsiColor::Default));
@@ -420,20 +405,20 @@ mod tests {
         let dark = theme("textual-dark");
         let light = theme("textual-light");
         for t in [dark, light, theme("nord")] {
-            assert_eq!(t.accent(Accent::GreenYellow), Color::Rgb(0xAD, 0xFF, 0x2F));
-            assert_eq!(t.accent(Accent::Orchid), Color::Rgb(0xDA, 0x70, 0xD6));
-            assert_eq!(t.accent(Accent::Red), Color::Rgb(0xFF, 0x00, 0x00));
-            assert_eq!(t.accent(Accent::Yellow), Color::Rgb(0xFF, 0xFF, 0x00));
-            assert_eq!(t.accent(Accent::Cyan), Color::Rgb(0x00, 0xFF, 0xFF));
-            assert_eq!(t.accent(Accent::Green), Color::Rgb(0x00, 0x80, 0x00));
+            assert_eq!(mark(&t, |m| m.positive), Color::Rgb(0xAD, 0xFF, 0x2F));
+            assert_eq!(mark(&t, |m| m.merged), Color::Rgb(0xDA, 0x70, 0xD6));
+            assert_eq!(mark(&t, |m| m.negative), Color::Rgb(0xFF, 0x00, 0x00));
+            assert_eq!(mark(&t, |m| m.pending), Color::Rgb(0xFF, 0xFF, 0x00));
+            assert_eq!(mark(&t, |m| m.running), Color::Rgb(0x00, 0xFF, 0xFF));
+            assert_eq!(mark(&t, |m| m.auth_command), Color::Rgb(0x00, 0x80, 0x00));
         }
-        assert_eq!(dark.rich_ansi(RichAnsi::Green), Color::Rgb(0x98, 0xE0, 0x24));
-        assert_eq!(light.rich_ansi(RichAnsi::Green), Color::Rgb(0x44, 0x8C, 0x27));
-        assert_eq!(theme("ansi-light").rich_ansi(RichAnsi::Green), Color::Green);
+        assert_eq!(mark(&dark, |m| m.starred), Color::Rgb(0x98, 0xE0, 0x24));
+        assert_eq!(mark(&light, |m| m.starred), Color::Rgb(0x44, 0x8C, 0x27));
+        assert_eq!(mark(&theme("ansi-light"), |m| m.starred), Color::Green);
         // Rich's `cyan` (the Jobs tree's `⋯`): MONOKAI's and ALABASTER's color 6.
-        assert_eq!(dark.rich_ansi(RichAnsi::Cyan), Color::Rgb(0x58, 0xD1, 0xEB));
-        assert_eq!(light.rich_ansi(RichAnsi::Cyan), Color::Rgb(0x00, 0x83, 0xB2));
-        assert_eq!(theme("ansi-dark").rich_ansi(RichAnsi::Cyan), Color::Cyan);
+        assert_eq!(mark(&dark, |m| m.job_running), Color::Rgb(0x58, 0xD1, 0xEB));
+        assert_eq!(mark(&light, |m| m.job_running), Color::Rgb(0x00, 0x83, 0xB2));
+        assert_eq!(mark(&theme("ansi-dark"), |m| m.job_running), Color::Cyan);
     }
 
     /// A bordered block with a focused and an unfocused border, a `$text` on `$panel` line and a blurred cursor row.
@@ -519,8 +504,8 @@ mod tests {
             eight_bit.color(p.block_cursor_blurred_background, surface),
             downsample(Rgb::new(0x15, 0x38, 0x54), eight_bit.color_mode())
         );
-        assert_eq!(eight_bit.accent(Accent::Red), Color::Indexed(196));
-        assert_eq!(eight_bit.rich_ansi(RichAnsi::Green), Color::Indexed(112));
+        assert_eq!(mark(&eight_bit, |m| m.negative), Color::Indexed(196));
+        assert_eq!(mark(&eight_bit, |m| m.starred), Color::Indexed(112));
     }
 
     #[test]
@@ -548,7 +533,7 @@ mod tests {
         for c in [p.primary, p.error, p.foreground, p.surface] {
             assert_eq!(ansi.color(c, ansi.background()), Color::Reset);
         }
-        assert_eq!(ansi.rich_ansi(RichAnsi::Green), Color::Reset);
+        assert_eq!(mark(&ansi, |m| m.starred), Color::Reset);
     }
 
     #[test]
@@ -753,7 +738,7 @@ mod tests {
         assert_eq!(r.surface.focus_tint, p.foreground.multiply_alpha(0.05));
         assert_eq!(
             r.surface.scrim,
-            if t.ansi {
+            if t.terminal_colors {
                 ThemeColor::Transparent
             } else {
                 p.background.multiply_alpha(0.6)
@@ -773,14 +758,13 @@ mod tests {
         assert_eq!(r.input.invalid_blurred, p.error.multiply_alpha(0.6));
         assert_eq!(r.footer.key.fg, p.footer_key_foreground);
         assert_eq!(r.button.primary.dark, p.primary_darken_3);
-        assert_eq!(r.button.outlined, t.ansi);
+        assert_eq!(r.button.outlined, t.terminal_colors);
         assert_eq!(r.switch.track, p.panel_darken_2);
         assert_eq!(r.select.muted, p.foreground.multiply_alpha(0.5));
         assert_eq!(r.checkbox.on, p.text_success);
         assert_eq!(r.tabs.bar_active, p.block_cursor_background);
         assert_eq!(r.markdown.h3.fg, p.markdown_h3_color);
         assert_eq!(r.markdown.link.style, p.link_style);
-        assert_eq!(r.markdown.fence_bg, t.markdown_fence_background());
         assert_eq!(r.diff.border, p.primary_lighten_1);
         assert_eq!(r.hints.label.bg, p.warning);
         assert_eq!(r.command_palette.list_rule, black);
@@ -848,12 +832,8 @@ mod tests {
             assert_eq!(r.marks.positive, first.marks.positive, "{}", t.name);
             assert_eq!(r.marks.negative, first.marks.negative, "{}", t.name);
             assert_eq!(r.marks.merged, first.marks.merged, "{}", t.name);
+            assert_eq!(r.marks.pending, first.marks.pending, "{}", t.name);
             assert_eq!(r.diff.added_bg, first.diff.added_bg, "{}", t.name);
-            assert_eq!(t.color(r.marks.pending, t.background()), t.accent(Accent::Yellow));
-            assert_eq!(
-                t.color(r.marks.job_running, t.background()),
-                t.rich_ansi(RichAnsi::Cyan)
-            );
         }
     }
 }

@@ -36,7 +36,9 @@ keys = ["j", "j", "j", "enter"]
 [[step]]
 wait = { text = "Lazy fixture pull request 70", timeout_ms = 15000 }
 
-# The bottom row leaves 1 remaining, which asks for page 2.
+# The bottom row leaves 1 remaining, which asks for page 2: Python's from the issues endpoint, Rust's from /pulls
+# (#384). Its rows go in below the cursor, so once the screen settles a second G reaches the new bottom row, which
+# asks for page 3.
 [[step]]
 keys = ["2"]
 
@@ -47,7 +49,13 @@ wait = { text = "O Lookup Pull Request" }
 keys = ["G"]
 
 [[step]]
-wait = { log = { method = "GET", path = "/repos/parity-bot/lazy-fixture/issues", query = { page = "2", per_page = "30", state = "all" } }, timeout_ms = 15000 }
+wait = { stable_ms = 1000 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Lazy fixture pull request 11", timeout_ms = 15000 }
 
 # Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and no wait settles it.
 # These captures are about the PR table, so the Details box is ignored: a re-record keeps the stored screen.
@@ -56,12 +64,15 @@ capture = "after-page-2"
 checks = ["rows", "cursor"]
 ignore = { boxes = ["Details"] }
 
-# Page 2 doesn't move the cursor (row 29 of 60); the new bottom row asks for page 3.
+# Page 3 doesn't move the cursor (row 59 of 70); G reaches its bottom row, which asks for page 4.
+[[step]]
+wait = { stable_ms = 1000 }
+
 [[step]]
 keys = ["G"]
 
 [[step]]
-wait = { log = { method = "GET", path = "/repos/parity-bot/lazy-fixture/issues", query = { page = "3", per_page = "30", state = "all" } }, timeout_ms = 15000 }
+wait = { regex = 'Lazy fixture pull request 1\s', timeout_ms = 15000 }
 
 [[step]]
 capture = "after-page-3"

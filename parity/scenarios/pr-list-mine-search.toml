@@ -1,0 +1,41 @@
+version = 1
+description = "pull_requests.owner_filter = mine searches is:pr repo:<repo> author:@me: the PR table lists only parity-bot's PRs, though the newest 30 issues-endpoint items are all issues (#384)"
+gate = true
+# Rust-only: Python lists `mine` through the issues endpoint with creator=<login>, whose page 1 here holds no PRs
+# (Py bug B180), and the fix is decision pr-list-from-pulls-endpoint.
+apps = ["rust"]
+parity_rows = ["pull-requests.filters"]
+sizes = [[160, 48]]
+
+[env]
+# pr-list-issues-first's search page 1 holds parity-bot's 24 PRs of issues-first. PRs whose number is a multiple of 3
+# are parity-friend's, so 42 isn't among them.
+fixtures = ["pr-list-issues-first", "base"]
+
+[env.config_overrides]
+pull_requests = { owner_filter = "mine" }
+
+[[step]]
+wait = { text = "issues-first", timeout_ms = 15000 }
+
+[[step]]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["j", "j", "enter"]
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { order = "desc", page = "1", per_page = "30", q = "is:pr repo:parity-bot/issues-first author:@me", sort = "created" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Issues first pull request 44", timeout_ms = 15000 }
+
+[[step]]
+capture = "loaded"
+
+[expect.loaded]
+contains = ["Issues first pull request 44", "Issues first pull request 43", "Issues first issue 75"]
+not_contains = ["Issues first pull request 42", "[2] Pull Requests (empty)", "panicked"]

@@ -1,0 +1,77 @@
+version = 1
+description = "A repo whose newest 30 issues-endpoint items are all issues still lists its PRs, from /pulls, and paging the PR table asks /pulls for page 2, never the issues endpoint (#384)"
+gate = true
+# Rust-only: Python's PR table is empty here (Py bug B180), and the fix is decision pr-list-from-pulls-endpoint.
+apps = ["rust"]
+parity_rows = ["pull-requests.rows-from-issues", "pull-requests.table", "searchable-tables.lazy-loading"]
+sizes = [[160, 48]]
+
+[env]
+# pr-list-issues-first adds parity-bot/issues-first, third on base's repos page: its issues pages hold issues 75 to
+# 46, then 45 to 16 and 15 to 1, where every number up to 45 that isn't a multiple of 5 is a PR. Its /pulls pages
+# hold PRs 44 to 8, then 7 to 1, then none.
+fixtures = ["pr-list-issues-first", "base"]
+
+[[step]]
+wait = { text = "issues-first", timeout_ms = 15000 }
+
+[[step]]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["j", "j", "enter"]
+
+[[step]]
+wait = { text = "Issues first pull request 44", timeout_ms = 15000 }
+
+[[step]]
+capture = "loaded"
+
+# G puts the cursor on the last PR of page 1, which asks /pulls for page 2.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/issues-first/pulls", query = { direction = "desc", page = "2", per_page = "30", sort = "created", state = "all" } }, timeout_ms = 15000 }
+
+# The page's rows go in below the cursor, so nothing on screen changes when they land.
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { regex = 'pull request 1\s', timeout_ms = 15000 }
+
+[[step]]
+capture = "page-2"
+
+[expect.loaded]
+contains = ["[2] Pull Requests", "Issues first pull request 44", "Issues first issue 75"]
+not_contains = ["[2] Pull Requests (empty)", "panicked"]
+
+# Issues 45 to 10 are only on the issues endpoint's pages 2 and 3, which the PR table never asks for. (Issue 5 would
+# match issues 50 to 59, in the Issues table.)
+[expect.page-2]
+contains = ["Issues first pull request 7", "Issues first pull request 6"]
+not_contains = [
+  "Issues first issue 45",
+  "Issues first issue 40",
+  "Issues first issue 35",
+  "Issues first issue 30",
+  "Issues first issue 25",
+  "Issues first issue 20",
+  "Issues first issue 15",
+  "Issues first issue 10",
+  "panicked",
+]

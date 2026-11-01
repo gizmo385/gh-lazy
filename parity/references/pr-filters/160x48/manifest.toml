@@ -4,7 +4,7 @@ size = "160x48"
 captures = ["loaded", "page-2"]
 
 [inputs]
-scenario = "d65e3275c624efb92e056ed16a810d4344c63f49"
+scenario = "05800bff5bb41c7be269deb3959975496e056cfb"
 fixtures = "f12c80ea7d996d47c9d52b8d1cef78f20f1c03a6"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"

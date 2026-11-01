@@ -61,6 +61,7 @@ input.placeholder                      #949597  (auto a=0.38)
 input.placeholder_style                none
 input.invalid                          #D10F39  (#D10F39)
 input.invalid_blurred                  #DD6984  (#D10F39 a=0.6)
+input.terminal_colors                  false
 footer.bar                             #CCD0DA  (#CCD0DA)
 footer.item                            #EFF1F5  (transparent)
 footer.hover                           #D7D9DC  (#000000 a=0.09803921568627451)
@@ -105,6 +106,7 @@ switch.track                           #A3A6B0  (#A3A6B0)
 switch.on                              #40A02B  (#40A02B)
 switch.off                             #DFD5F4  (#8839EF a=0.15)
 select.muted                           #9DA0AF  (#4C4F69 a=0.5)
+select.terminal_colors                 false
 checkbox.bg                            #CCD0DA  (#CCD0DA)
 checkbox.off                           #A3A6B0  (#A3A6B0)
 checkbox.on                            #2A691C  (#2A691C)
@@ -260,6 +262,7 @@ diff.review_header.fg                  #1F1F1F  (auto a=0.87)
 diff.review_header.bg                  #FD640B  (#FD640B)
 diff.review_header.style               add BOLD
 diff.review_body                       #CCD0DA  (#CCD0DA)
+diff.review_comment_border             #DB8A78  (#DB8A78)
 command_palette.band                   #E6E9EF  (#E6E9EF)
 command_palette.input_rule             #77787A  (#000000 a=0.5)
 command_palette.list_rule              #000000  (#000000)

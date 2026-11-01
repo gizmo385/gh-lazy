@@ -237,6 +237,9 @@ pub struct Input {
     pub invalid: ThemeColor,
     /// An unfocused invalid input's border (`$error 60%`).
     pub invalid_blurred: ThemeColor,
+    /// Whether inputs are drawn in the terminal's own colors (`Input:ansi`): its default text on its default
+    /// background, whatever they're drawn over.
+    pub terminal_colors: bool,
 }
 
 /// The key-binding footer.
@@ -309,6 +312,9 @@ pub struct Switch {
 pub struct Select {
     /// The closed select's prompt while nothing is chosen (`$foreground 50%`).
     pub muted: ThemeColor,
+    /// Whether the closed select is drawn in the terminal's own colors (`SelectCurrent:ansi`): its default text on
+    /// its default background, whatever it's drawn over, the prompt included.
+    pub terminal_colors: bool,
 }
 
 /// The selection list's check boxes.
@@ -531,6 +537,8 @@ pub struct Diff {
     pub review_header: Highlight,
     /// A pending review comment's body (`$panel`).
     pub review_body: ThemeColor,
+    /// A pending review comment's box (`$secondary`).
+    pub review_comment_border: ThemeColor,
 }
 
 /// The command palette.
@@ -721,6 +729,7 @@ impl Source<'_> {
             placeholder_style: self.on_ansi(Modifier::DIM),
             invalid: p.error,
             invalid_blurred: p.error.multiply_alpha(0.6),
+            terminal_colors: self.ansi,
         }
     }
 
@@ -887,6 +896,7 @@ impl Source<'_> {
                 style: add(Modifier::BOLD),
             },
             review_body: p.panel,
+            review_comment_border: p.secondary,
         }
     }
 }
@@ -931,6 +941,7 @@ impl Roles {
             switch: s.switch(),
             select: Select {
                 muted: p.foreground.multiply_alpha(0.5),
+                terminal_colors: s.ansi,
             },
             checkbox: Checkbox {
                 bg: p.panel,
@@ -1242,12 +1253,15 @@ pub(super) mod walk {
         }
         Cursor { focused, blurred, hover_bg }
         Scrollbar { thumb, track, corner }
-        Input { cursor, editor_cursor, selection, placeholder, placeholder_style, invalid, invalid_blurred }
+        Input {
+            cursor, editor_cursor, selection, placeholder, placeholder_style, invalid, invalid_blurred,
+            terminal_colors,
+        }
         Footer { bar, item, hover, key, description }
         Button { outlined, focus_style, disabled_border, default, primary, success, warning, error }
         ButtonColors { bg, light, dark, border, label, label_disabled }
         Switch { track, on, off }
-        Select { muted }
+        Select { muted, terminal_colors }
         Checkbox { bg, off, on }
         Tree { guide, guide_focused, guide_selected }
         Tabs { label, label_style, label_active, label_active_style, bar, bar_focused, bar_active }
@@ -1268,7 +1282,7 @@ pub(super) mod walk {
         }
         Diff {
             added_bg, removed_bg, added_current_bg, removed_current_bg, context_current_bg, stat_added,
-            stat_removed, border_focused, border, indicator, review_header, review_body,
+            stat_removed, border_focused, border, indicator, review_header, review_body, review_comment_border,
         }
         CommandPalette { band, input_rule, list_rule, icon, highlight }
         Hints { label }

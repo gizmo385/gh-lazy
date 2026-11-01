@@ -61,6 +61,7 @@ input.placeholder                      ansi_default  (ansi_default)
 input.placeholder_style                add DIM
 input.invalid                          ansi_red  (ansi_red)
 input.invalid_blurred                  ansi_red  (ansi_red)
+input.terminal_colors                  true
 footer.bar                             ansi_default  (ansi_default)
 footer.item                            ansi_default  (ansi_default)
 footer.hover                           ansi_white  (ansi_white)
@@ -105,6 +106,7 @@ switch.track                           ansi_default  (transparent)
 switch.on                              ansi_green  (ansi_green)
 switch.off                             ansi_blue  (ansi_blue)
 select.muted                           ansi_default  (ansi_default)
+select.terminal_colors                 true
 checkbox.bg                            ansi_default  (transparent)
 checkbox.off                           ansi_default  (transparent)
 checkbox.on                            ansi_green  (ansi_green)
@@ -260,6 +262,7 @@ diff.review_header.fg                  ansi_default  (ansi_default)
 diff.review_header.bg                  ansi_magenta  (ansi_magenta)
 diff.review_header.style               add BOLD
 diff.review_body                       ansi_default  (transparent)
+diff.review_comment_border             ansi_cyan  (ansi_cyan)
 command_palette.band                   ansi_default  (transparent)
 command_palette.input_rule             #000000  (#000000 a=0.5)
 command_palette.list_rule              #000000  (#000000)

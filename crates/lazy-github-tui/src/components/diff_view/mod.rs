@@ -635,6 +635,8 @@ impl DiffView {
                 if status.on_binding(id) == SelectOutcome::Ignored {
                     return None;
                 }
+                // The view may have scrolled it out (the wheel): a list opened or moved in shows with its box.
+                self.reveal = Some(Reveal::Stop(DiffStop::ReviewStatus));
             }
             (Owner::DiffFilter, BindingId::TextualFileFilterClear) => self.clear_filter(),
             // The filter and the summary took their editing keys before the chain.
@@ -645,7 +647,8 @@ impl DiffView {
     }
 
     /// A key before the binding chain, at `now`: the focused filter or review summary takes printable keys and its
-    /// editing keys, and the review status's open list its search keys. `enter` leaves the filter for the body, the
+    /// editing keys, and the review status's open list its search keys; a key in the summary or the list scrolls it
+    /// back into view. `enter` leaves the filter for the body, the
     /// cursor on the first shown file's header, and does nothing in the summary. Paste types `clipboard`, and copy
     /// and cut hand the text to the app's clipboard.
     pub fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str, now: Instant) -> Option<Action> {
@@ -655,6 +658,7 @@ impl DiffView {
                     InputOutcome::Copied(text) => Action::Copy(text),
                     InputOutcome::Changed | InputOutcome::Submitted | InputOutcome::Ignored => Action::Consumed,
                 };
+                self.reveal = Some(Reveal::Stop(DiffStop::ReviewSummary));
                 return Some(action);
             }
             (
@@ -664,6 +668,7 @@ impl DiffView {
                 }),
             ) if status.consumes_key(key, keymap) => {
                 let _ = status.handle_key(key, keymap, now);
+                self.reveal = Some(Reveal::Stop(DiffStop::ReviewStatus));
                 return Some(Action::Consumed);
             }
             _ => {}

@@ -1,4 +1,4 @@
-//! Add Comment (`diff.add_comment` on a hunk pane): the diff line being commented on, shown in a read-only input, a
+//! Add Comment (`diff.add_comment` on a line of the diff body): the diff line being commented on, shown in a read-only input, a
 //! comment editor, then Add Comment and Cancel. It sends nothing: it closes with the comment's text, which the diff
 //! viewer keeps as a pending comment until the review is submitted. Python's `AddCommentModal`.
 //!

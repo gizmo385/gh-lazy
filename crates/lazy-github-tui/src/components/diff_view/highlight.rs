@@ -1,4 +1,4 @@
-//! Syntax colors for a hunk pane, after Python's `UnifiedDiffPane._compute_syntax_highlighting`: the hunk's code is
+//! Syntax colors for a hunk's lines, after Python's `UnifiedDiffPane._compute_syntax_highlighting`: the hunk's code is
 //! tokenized by file type and drawn in Pygments' monokai style, whatever the app theme.
 //!
 //! The grammars and the scope-to-token table are the markdown fences' ([`highlight`]); only the colors differ. The

@@ -7,7 +7,7 @@
 //! colored differently, and a fence without a language stays plain where Python guesses one: both accepted as an
 //! intentional diff (`docs/rust-rewrite/parity/decisions/markdown-code-highlighting.md`).
 //!
-//! The diff viewer's hunk panes (#237) share the grammars and the scope-to-token table, through [`syntax_for_file`]
+//! The diff viewer's hunks (#237) share the grammars and the scope-to-token table, through [`syntax_for_file`]
 //! and [`tokenize`], and color the tokens with Pygments' monokai style instead.
 
 use std::ops::Range;
@@ -21,7 +21,7 @@ use super::layout::Painter;
 use crate::theme::{Paint, Syntax, TokenStyle};
 
 /// bat's grammars (`two-face`): syntect's bundled ones and more, such as TOML and Dockerfile. Loaded once, on the
-/// first fence with a language or the first hunk pane opened, and never if nothing needs them: with the first
+/// first fence with a language or the first diff line drawn, and never if nothing needs them: with the first
 /// highlight, about 30 ms in a release build and 0.4 s in a debug one (see `the_syntax_set_loads_once`).
 static SYNTAXES: LazyLock<SyntaxSet> = LazyLock::new(two_face::syntax::extra_newlines);
 

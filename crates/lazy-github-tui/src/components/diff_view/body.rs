@@ -830,7 +830,7 @@ impl DiffBody {
                 }
                 .map_or_else(|| " ".repeat(4), |n| format!("{n:>4}"));
                 let background = line_background(diff_line.kind, current, theme);
-                // A context line keeps the highlighter's background (monokai's), as the hunk panes' do.
+                // A context line keeps the highlighter's background (monokai's), as Python's hunk panes do.
                 let code_style = styles.code.bg(background
                     .or_else(|| code.and_then(|code| code.style.bg).map(|bg| reduce(bg, theme)))
                     .unwrap_or_else(|| theme.paint(styles.base)));

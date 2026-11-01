@@ -11,39 +11,39 @@ expression: screen
 │                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
 │                                                              ││▊  Filter files (press '/' to focus, ESC to clear)                                           ▎│
 │                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
-│                                                              ││     5  │     lines: Vec<String>,                                                             │
-│                                                              ││     6  │     cursor: usize,                                                                  │
-│                                                              ││     7  │ }                                                                                   │
-│                                                              ││     8  │                                                                                     │
-│                                                              ││  Lines 22-28 (+3 -2) • impl Viewer {                                                         │
-│                                                              ││    22  │     pub fn render(&self) -> io::Result<()> {                                        │
-│                                                              ││    21  │         for line in &self.lines {                                                   │
-│                                                              ││    22  │             println!("{line}");                                                     │
-│                                                              ││    23  │         for (i, line) in self.lines.iter().enumerate() {                            │
 │                                                              ││    24  │             let marker = if i == self.cursor { ">" } else { " " };                  │
 │                                                              ││    25  │             println!("{marker} {line}");                                            │
-│                                                              ││    26  │         }                                                                         ▃▃│
+│                                                              ││    26  │         }                                                                           │
 │                                                              ││    27  │         Ok(())                                                                      │
 │                                                              ││    28  │     }                                                                               │
 │                                                              ││ src/viewer.rs                                                                    Line: 2/9   │
-└──────────────────────────────────────────────────────────────┘│                                                                                              │
-┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
-│ #  Status  Author         Title                              ││                                     Pending Comments:                                        │
-│ 5  open    parity-friend  Add a cursor to the viewer         ││                                                                                              │
-│ 4  closed  parity-bot     Drop the legacy renderer           ││                                                                                              │
-│ 3  closed  parity-bot     Release 0.2.0                      ││                                                                                              │
-│ 2  open    parity-friend  Try a faster parser                ││┌──────────────────────────────────────────────────────────────────────────────────────────┐  │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                     Pending Comments:                                        │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││┌──────────────────────────────────────────────────────────────────────────────────────────┐  │
 │                                                              │││                                                                                          │  │
 │                                                              │││                                                                                          │  │
-│                                                              │││ ┌──────────────────────────────────────────────────────────────────────────────────────┐ │  │
-│                                                              │││ │                                                                                      │ │  │
-│                                                              │││ │ README.md:5 - +Run `viewer FILE`, then press `j` and `k` to move.                    │ │  │
-│                                                              │││ │                                                                                      │ │  │
-│                                                              │││ │                                                                                      │ │▅▅│
-│                                                              │││ │  Mention the arrow keys too.                                                         │ │  │
-│                                                              │││ │                                                                                      │ │  │
+└──────────────────────────────────────────────────────────────┘││ ┌──────────────────────────────────────────────────────────────────────────────────────┐ │▂▂│
+┌─ [2] Pull Requests ──────────────────────────────────────────┐││ │                                                                                      │ │  │
+│ #  Status  Author         Title                              │││ │ README.md:5 - +Run `viewer FILE`, then press `j` and `k` to move.                    │ │  │
+│ 5  open    parity-friend  Add a cursor to the viewer         │││ │                                                                                      │ │  │
+│ 4  closed  parity-bot     Drop the legacy renderer           │││ │                                                                                      │ │  │
+│ 3  closed  parity-bot     Release 0.2.0                      │││ │  Mention the arrow keys too.                                                         │ │  │
+│ 2  open    parity-friend  Try a faster parser                │││ │                                                                                      │ │  │
 │                                                              │││ │                                                                                      │ │  │
 │                                                              │││ │ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                                                     │ │  │
+│                                                              │││ │      Remove                                                                          │ │  │
+│                                                              │││ │ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                                                     │ │  │
+│                                                              │││ │                                                                                      │ │  │
+│                                                              │││ └──────────────────────────────────────────────────────────────────────────────────────┘ │  │
+│                                                              │││                                                                                          │  │
+│                                                              │││                                                                                          │  │
+│                                                              ││└──────────────────────────────────────────────────────────────────────────────────────────┘  │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                            ▄▄│
 │                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  │
 │                                                              ││▊  Select                                                                                  ▎  │
 │                                                              ││▊  Approved                                                                                ▎  │

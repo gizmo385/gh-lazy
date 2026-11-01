@@ -174,7 +174,7 @@ fn pr_repo() -> Repository {
 }
 
 /// A unified diff of `files` files, each one hunk of `lines` changed lines: half removed, half added, with a little
-/// context, in Rust so the hunk panes highlight it.
+/// context, in Rust so the diff body highlights it.
 fn large_diff(files: usize, lines: usize) -> String {
     let mut diff = String::new();
     for file in 0..files {

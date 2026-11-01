@@ -208,10 +208,12 @@ terminals) and improvements that aren't tied to how the Python app does things: 
 `enhancement` and recorded as an intentional diff where it changes a parity row. Split out from the old "Hardening and
 cutover" milestone (Chris, 2026-10-29).
 
-**M6 Release and cutover.** Windows added to CI and its status decided. Packaging: release workflow building binaries
+**M6 Release and cutover.** Windows deferred past 1.0 (Chris, 2026-10-31; #202, `decisions/windows-deferred.md`). Packaging: release workflow building binaries
 for `gh extension install` (precompiled gh extension, e.g. `cli/gh-extension-precompile`), `cargo install`, and an
 updated Nix flake. README rewrite. Cutover PR `rust-main` → `main` that removes the Python code, the PyPI publish
-workflow and `uv.lock`, with a final `python` release note.
+workflow and `uv.lock`, with a final `python` release note. With Python gone, the parity harness becomes general Rust tests that drive the app through the fake `gh` and
+generate its visuals (screen captures and rendered images) as reviewed snapshots, instead of comparing against Python
+(Chris, 2026-10-31; designed in #207).
 
 ## 9. Process
 

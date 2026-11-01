@@ -6,14 +6,17 @@
 //!   `q, escape`).
 //! - [`Keymap`] applies `bindings.overrides` and answers which binding a key fires. Components never match raw keys.
 //! - [`active_bindings`] walks a binding chain for the footer and help panel.
+//! - [`BINDING_GROUPS`] groups the rebindable bindings by area, for the Settings Key Bindings list.
 
 mod active;
+mod groups;
 mod ids;
 mod key;
 #[allow(clippy::module_inception)] // The file layout #73 specifies: ids.rs, key.rs, keymap.rs.
 mod keymap;
 
 pub use active::{ActiveBinding, active_bindings};
+pub use groups::{BINDING_GROUPS, BindingGroup};
 pub use ids::{BindingDef, BindingId};
 pub use key::{KeyChord, KeySpec, textual_name};
 pub use keymap::Keymap;

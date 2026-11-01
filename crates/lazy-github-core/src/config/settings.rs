@@ -262,9 +262,9 @@ pub static SECTIONS: &[Section] = &[
     Section {
         key: "bindings",
         title: "Key Bindings",
-        doc: Some(
-            "Custom keybinding overrides for LazyGithub. When rebinding, pressing ESCAPE will reset to the default binding.",
-        ),
+        // Python's docstring goes on: "When rebinding, pressing ESCAPE will reset to the default binding." In the
+        // reworked list `escape` cancels a capture instead (#381, decision settings-key-bindings-list).
+        doc: Some("Custom keybinding overrides for LazyGithub."),
         fields: &[],
     },
     Section {

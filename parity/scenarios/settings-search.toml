@@ -106,9 +106,9 @@ footer = ["shift+⏎ Submit", "esc Close", "/ Search"]
 contains = ["filter", "State Filter:", "Owner Filter:"]
 not_contains = ["Preferred Merge Method:", "Pull Request Template:"]
 
-# The tab's binding rows are #194's, which adds back "Filter Files: /" (the row the filter keeps) here.
+# The binding the filter keeps: Python shows it as "Filter Files: /", Rust's list (#381) in columns.
 [expect.search-key-bindings]
-contains = ["filter", "Custom keybinding overrides for LazyGithub", "Filter Files: /"]
+contains = ["filter", "Custom keybinding overrides for LazyGithub", "Filter Files"]
 not_contains = ["Command Pallete: ctrl+p"]
 
 [expect.closed]

@@ -1,0 +1,265 @@
+version = 1
+description = "Settings Key Bindings list (#381): one focus stop, a grouped one-line list; enter waits for a key and replaces the binding's keys, a adds one, escape cancels the wait, r resets; a key equal to the default by parsed key is the default; Save applies the keymap at once and reopening shows the change"
+# Rust only: the list is an intentional diff from Python's one row per binding (decision settings-key-bindings-list).
+# The modal is loose text (see settings.toml). The list fills the tab, so 100x30 shows only its first group's first
+# bindings: the expectations name what both sizes show. The harness can't send shift+enter, so Save is reached with
+# tab from the list.
+gate = true
+apps = ["rust"]
+parity_rows = ["modals.settings-key-rebinding"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+[[step]]
+keys = ["right", "right"]
+
+[[step]]
+wait = { text = "Custom keybinding overrides" }
+
+# The scroll area, then the list, with its first binding highlighted.
+[[step]]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { focused = "Quit" }
+
+[[step]]
+capture = "groups"
+
+# Quit, Command Palette, Maximize, Keybindings.
+[[step]]
+keys = ["down", "down", "down"]
+
+[[step]]
+wait = { focused = "Keybindings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "press a key" }
+
+[[step]]
+capture = "capturing"
+
+[[step]]
+keys = ["!"]
+
+[[step]]
+wait = { text = "*  Keybindings                !" }
+
+[[step]]
+capture = "replaced"
+
+[[step]]
+keys = ["a"]
+
+[[step]]
+wait = { text = "press a key" }
+
+[[step]]
+keys = ["?"]
+
+[[step]]
+wait = { text = "*  Keybindings                !, ?" }
+
+[[step]]
+capture = "added"
+
+[[step]]
+keys = ["r"]
+
+[[step]]
+wait = { text = "   Keybindings                ?                 app.open_help" }
+
+[[step]]
+capture = "reset"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "press a key" }
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "press a key" }
+
+[[step]]
+capture = "cancelled"
+
+# q is recorded, not Close.
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "press a key" }
+
+[[step]]
+keys = ["q"]
+
+[[step]]
+wait = { text = "*  Keybindings                q" }
+
+[[step]]
+capture = "q-recorded"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "press a key" }
+
+[[step]]
+keys = ["!"]
+
+[[step]]
+wait = { text = "*  Keybindings                !" }
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Save" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Settings updated" }
+
+[[step]]
+capture = "saved"
+
+# ? no longer opens the help panel; ! does.
+[[step]]
+keys = ["?"]
+
+[[step]]
+capture = "old-key"
+
+[[step]]
+keys = ["!"]
+
+[[step]]
+wait = { text = "Cursor up" }
+
+[[step]]
+capture = "new-key"
+
+[[step]]
+keys = ["!"]
+
+[[step]]
+wait = { gone = "Cursor up" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+[[step]]
+keys = ["right", "right"]
+
+[[step]]
+wait = { text = "Custom keybinding overrides" }
+
+# Down to Keybindings, which 100x30 shows only once the list scrolls.
+[[step]]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { focused = "Quit" }
+
+[[step]]
+keys = ["down", "down", "down"]
+
+[[step]]
+wait = { focused = "Keybindings" }
+
+[[step]]
+capture = "reopened"
+
+[expect.groups]
+contains = ["Custom keybinding overrides for LazyGithub.", "General", "Quit", "app.quit", "app.quit · default q"]
+not_contains = ["When rebinding"]
+footer = ["⏎ Change key", "a Add key", "r Reset", "shift+⏎ Submit", "q Close", "/ Search"]
+
+[expect.capturing]
+contains = ["press a key", "Press the new key for Keybindings. esc cancels."]
+footer = ["esc Cancel"]
+
+[expect.replaced]
+contains = ["*  Keybindings                !                 app.open_help", "app.open_help · default ? · changed"]
+footer = ["⏎ Change key", "a Add key", "r Reset", "shift+⏎ Submit", "q Close", "/ Search"]
+
+[expect.added]
+contains = ["*  Keybindings                !, ?              app.open_help"]
+
+[expect.reset]
+contains = ["   Keybindings                ?                 app.open_help", "app.open_help · default ?"]
+not_contains = ["* Keybindings", "changed"]
+
+[expect.cancelled]
+contains = ["   Keybindings                ?                 app.open_help"]
+not_contains = ["press a key"]
+footer = ["⏎ Change key", "a Add key", "r Reset", "shift+⏎ Submit", "q Close", "/ Search"]
+
+[expect.q-recorded]
+contains = ["LazyGithub Settings", "*  Keybindings                q                 app.open_help"]
+footer = ["⏎ Change key", "a Add key", "r Reset", "shift+⏎ Submit", "q Close", "/ Search"]
+
+[expect.saved]
+focused = ["[1] Repositories"]
+contains = ["Settings updated"]
+not_contains = ["LazyGithub Settings"]
+
+[expect.old-key]
+not_contains = ["Cursor up"]
+
+[expect.new-key]
+contains = ["Cursor up"]
+
+[expect.reopened]
+contains = ["*  Keybindings                !                 app.open_help", "app.open_help · default ? · changed"]

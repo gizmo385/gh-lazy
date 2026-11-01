@@ -1040,6 +1040,7 @@ impl Dialog for NotificationsDialog {
             | FieldKind::Select
             | FieldKind::SelectOverlay
             | FieldKind::SelectionList
+            | FieldKind::KeyList
             | FieldKind::KeyCapture => None,
         }
     }

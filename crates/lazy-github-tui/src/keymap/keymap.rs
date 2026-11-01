@@ -294,6 +294,18 @@ mod tests {
     ];
 
     #[test]
+    fn an_override_naming_an_internal_id_is_ignored() {
+        let keymap = keymap(&[("settings.keys.change", "x"), ("textual.app.quit", "x")]);
+        assert!(!keymap.is_overridden(BindingId::SettingsKeysChange));
+        assert_eq!(
+            keymap.match_in(&[BindingId::SettingsKeysChange], &key("enter")),
+            Some(BindingId::SettingsKeysChange)
+        );
+        assert_eq!(keymap.match_in(&[BindingId::SettingsKeysChange], &key("x")), None);
+        assert!(!keymap.is_overridden(BindingId::TextualQuit));
+    }
+
+    #[test]
     fn the_python_example_end_to_end() {
         let keymap = python_example();
         assert_eq!(keymap.match_in(MAIN_FOCUS, &key("9")), Some(BindingId::MainReposFocus));

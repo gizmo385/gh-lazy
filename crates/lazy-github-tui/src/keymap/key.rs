@@ -283,10 +283,11 @@ fn key_code(name: &str) -> Option<KeyCode> {
 /// `alt+shift+x`). Other non-ASCII characters are written as themselves (`£`, where Textual writes `pound_sign`;
 /// decision `key-names-non-ascii-literal`).
 ///
-/// `None` for `tab` and `escape`, which a Settings row doesn't record, and for keys Textual has no name for.
+/// `None` for `escape`, which cancels a capture in the Settings Key Bindings list instead of being recorded, and for
+/// keys Textual has no name for. `tab` is named (`tab`, `shift+tab`).
 pub fn textual_name(chord: &KeyChord) -> Option<String> {
     let key = match chord.code {
-        KeyCode::Tab | KeyCode::Esc => return None,
+        KeyCode::Esc => return None,
         KeyCode::Char(c) => match PUNCTUATION.iter().find(|&&(_, punctuation)| punctuation == c) {
             Some(&(name, _)) => name.to_owned(),
             None if c == ' ' => "space".to_owned(),
@@ -611,14 +612,15 @@ mod tests {
         textual_name(&chord).unwrap_or_else(|| panic!("{chord:?} has no name"))
     }
 
-    /// Every key a Settings row can record: printable ASCII, `space`, the named keys and `f1`-`f24`.
+    /// Every key the Settings Key Bindings list can record: printable ASCII, `space`, the named keys but `escape`, and
+    /// `f1`-`f24`.
     fn recordable_codes() -> Vec<KeyCode> {
         let mut codes: Vec<KeyCode> = (' '..='~').map(KeyCode::Char).collect();
         codes.extend(
             NAMED_KEYS
                 .iter()
                 .map(|&(_, code)| code)
-                .filter(|code| !matches!(code, KeyCode::Tab | KeyCode::Esc | KeyCode::Char(_))),
+                .filter(|code| !matches!(code, KeyCode::Esc | KeyCode::Char(_))),
         );
         codes.extend((1..=24).map(KeyCode::F));
         codes
@@ -664,6 +666,8 @@ mod tests {
     #[case(KeyChord::new(KeyCode::Up, KeyModifiers::CONTROL | KeyModifiers::SHIFT), "ctrl+shift+up")]
     #[case(KeyChord::new(KeyCode::Char(' '), KeyModifiers::SHIFT), "shift+space")]
     #[case(KeyChord::new(KeyCode::Enter, KeyModifiers::SHIFT), "shift+enter")]
+    #[case(plain(KeyCode::Tab), "tab")]
+    #[case(KeyChord::new(KeyCode::BackTab, KeyModifiers::NONE), "shift+tab")]
     fn textual_names(#[case] chord: KeyChord, #[case] expected: &str) {
         assert_eq!(named(chord), expected);
     }
@@ -675,12 +679,10 @@ mod tests {
     }
 
     #[rstest]
-    #[case(plain(KeyCode::Tab))]
-    #[case(KeyChord::new(KeyCode::BackTab, KeyModifiers::NONE))]
     #[case(plain(KeyCode::Esc))]
     #[case(plain(KeyCode::CapsLock))]
     #[case(plain(KeyCode::F(25)))]
-    fn keys_a_row_does_not_record(#[case] chord: KeyChord) {
+    fn keys_the_list_does_not_record(#[case] chord: KeyChord) {
         assert_eq!(textual_name(&chord), None);
     }
 }

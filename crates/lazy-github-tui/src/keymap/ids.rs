@@ -5,6 +5,7 @@
 
 /// What a binding is: its default keys and how the footer and help panel show it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(clippy::struct_excessive_bools)] // Independent flags, as Textual's `Binding` has them.
 pub struct BindingDef {
     /// The binding.
     pub id: BindingId,
@@ -27,6 +28,9 @@ pub struct BindingDef {
     pub priority: bool,
     /// Left out of the help panel (Textual's `system=True`).
     pub system: bool,
+    /// A Rust-only editor key with a fixed default: `bindings.overrides` can't name it and the Key Bindings tab
+    /// doesn't list it, as for the `textual.*` built-ins (decision settings-key-bindings-list, D3).
+    pub internal: bool,
 }
 
 impl BindingDef {
@@ -48,6 +52,7 @@ impl BindingDef {
             key_display: None,
             priority: false,
             system: false,
+            internal: false,
         }
     }
 
@@ -73,6 +78,11 @@ impl BindingDef {
 
     const fn system(mut self) -> Self {
         self.system = true;
+        self
+    }
+
+    const fn internal(mut self) -> Self {
+        self.internal = true;
         self
     }
 }
@@ -199,6 +209,13 @@ registry! {
     MainCommandLogFocus("main.command_log.focus", "6", "focus_section('LazyGithubCommandLog')", "Focus command log")
         .hidden()
         .tooltip("Focus the command log, where actions taken by LazyGithub are shown");
+
+    // Rust-only editor keys, fixed under internal ids (decision settings-key-bindings-list, D3): the Settings Key
+    // Bindings list (#381).
+    SettingsKeysChange("settings.keys.change", "enter", "change_key", "Change key").internal();
+    SettingsKeysAdd("settings.keys.add", "a", "add_key", "Add key").internal();
+    SettingsKeysReset("settings.keys.reset", "r", "reset_key", "Reset").internal();
+    SettingsKeysCancel("settings.keys.cancel", "escape", "cancel_capture", "Cancel").internal();
 
     // Textual built-ins. Python has no ids for them, so overrides never reach them. All are hidden but the select
     // overlay's `escape`.
@@ -368,13 +385,14 @@ registry! {
 }
 
 impl BindingId {
-    /// The id as `bindings.overrides` spells it, or `None` for a Textual built-in, which can't be overridden.
+    /// The id as `bindings.overrides` spells it, or `None` for a Textual built-in or an internal editor key, which
+    /// can't be overridden.
     pub fn config_id(self) -> Option<&'static str> {
-        let name = self.def().name;
-        (!name.starts_with("textual.")).then_some(name)
+        let def = self.def();
+        (!def.internal && !def.name.starts_with("textual.")).then_some(def.name)
     }
 
-    /// The binding a `bindings.overrides` key names. `textual.*` ids name nothing.
+    /// The binding a `bindings.overrides` key names. `textual.*` and internal ids name nothing.
     pub fn from_config_id(id: &str) -> Option<Self> {
         Self::ALL
             .iter()
@@ -424,6 +442,20 @@ mod tests {
         assert_eq!(BindingId::from_config_id("textual.app.quit"), None);
         assert_eq!(BindingId::from_config_id("app.nope"), None);
         assert_eq!(BindingId::AppQuit.config_id(), Some("app.quit"));
+    }
+
+    #[test]
+    fn internal_ids_cant_be_overridden() {
+        for id in [
+            BindingId::SettingsKeysChange,
+            BindingId::SettingsKeysAdd,
+            BindingId::SettingsKeysReset,
+            BindingId::SettingsKeysCancel,
+        ] {
+            assert!(id.def().internal);
+            assert_eq!(id.config_id(), None);
+            assert_eq!(BindingId::from_config_id(id.def().name), None);
+        }
     }
 
     #[test]

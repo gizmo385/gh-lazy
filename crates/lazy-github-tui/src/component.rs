@@ -243,6 +243,7 @@ impl Owner {
                 | FieldKind::Scroll
                 | FieldKind::Table
                 | FieldKind::Tabs
+                | FieldKind::KeyList
                 | FieldKind::KeyCapture
                 | FieldKind::Select
                 | FieldKind::SelectOverlay

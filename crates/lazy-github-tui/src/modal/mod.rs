@@ -174,7 +174,10 @@ pub enum FieldKind {
     SelectionList,
     /// Textual's `Tabs` ([`crate::components::tabs::TabStrip`]): `left` and `right` switch tabs.
     Tabs,
-    /// A Settings Key Bindings row: it takes every key but `tab` and `shift+tab` itself, so it binds none.
+    /// The Settings Key Bindings list (#381): the `OptionList` keys move its highlight, and change, add and reset
+    /// act on the highlighted binding.
+    KeyList,
+    /// The Settings Key Bindings list waiting for a key: it records every key but its cancel key itself.
     KeyCapture,
 }
 
@@ -205,7 +208,8 @@ impl FieldKind {
             FieldKind::SelectOverlay => SELECT_OVERLAY_BINDINGS,
             FieldKind::SelectionList => SELECTION_LIST_BINDINGS,
             FieldKind::Tabs => TABS_BINDINGS,
-            FieldKind::KeyCapture => &[],
+            FieldKind::KeyList => settings::KEY_LIST_BINDINGS,
+            FieldKind::KeyCapture => settings::KEY_CAPTURE_BINDINGS,
         };
         ChainLink::new(Owner::DialogField(kind, self), bindings)
     }

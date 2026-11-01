@@ -70,9 +70,10 @@ fn there_are_no_extra_ids() {
         .map(|binding| text(binding, "id").to_owned())
         .collect();
     for &id in BindingId::ALL {
-        let name = id.def().name;
+        let def = id.def();
+        let name = def.name;
         assert!(
-            name.starts_with("textual.") || python.contains(name),
+            name.starts_with("textual.") || def.internal || python.contains(name),
             "{name} isn't a Python binding id"
         );
     }

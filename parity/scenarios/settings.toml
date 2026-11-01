@@ -70,12 +70,12 @@ keys = ["right"]
 wait = { text = "Custom keybinding overrides" }
 
 # Python draws each row's key a moment after the tab's text (its labels are RichLogs written before mount), so wait
-# for the first and last rows' keys (#352).
+# for the first and last rows' keys (#352). Rust's list (#381) shows them in columns, without the colon.
 [[step]]
-wait = { text = "e: ctrl+p" }
+wait = { regex = 'e: ctrl\+p|Command Palette +\^p' }
 
 [[step]]
-wait = { text = "Quit: q" }
+wait = { regex = 'Quit:? +q' }
 
 [[step]]
 capture = "key-bindings"
@@ -188,14 +188,14 @@ contains = [
     "Mark Notification As Read When Selected:",
 ]
 
-# "e: ctrl+p" is the first binding row: Python spells it "Command Pallete" (Py bug B14), Rust "Command Palette".
+# Only what both apps show: Rust's tab is a grouped list since #381 (decision settings-key-bindings-list), with a
+# shorter docstring, and Python spells "Command Pallete" (Py bug B14).
 [expect.key-bindings]
 contains = [
-    "Custom keybinding overrides for LazyGithub. When rebinding, pressing ESCAPE will reset to",
-    "e: ctrl+p",
-    "Maximize: M",
-    "Keybindings: ?",
-    "Quit: q",
+    "Custom keybinding overrides for LazyGithub.",
+    "Maximize",
+    "Keybindings",
+    "Quit",
 ]
 
 [expect.repositories]

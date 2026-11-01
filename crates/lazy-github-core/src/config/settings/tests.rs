@@ -50,9 +50,7 @@ fn sections_are_in_config_order_with_python_titles_and_docstrings() {
             (
                 "bindings",
                 "Key Bindings",
-                Some(
-                    "Custom keybinding overrides for LazyGithub. When rebinding, pressing ESCAPE will reset to the default binding."
-                )
+                Some("Custom keybinding overrides for LazyGithub.")
             ),
             ("repositories", "Repositories", Some("Repository-specific settings")),
             (

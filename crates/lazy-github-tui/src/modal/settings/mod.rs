@@ -3,21 +3,24 @@
 //! tab's fields by a fuzzy match on their names. Save collects every field into a copy of the config; writing and
 //! applying it is the opener's. Python's `SettingsModal` and `SettingsContainer`.
 
+mod key_list;
 mod key_row;
 mod list_field;
 mod pane;
 
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
+use crossterm::event::{KeyEvent, MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::config::Config;
 use lazy_github_core::config::settings::SECTIONS;
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
 use ratatui::style::Style;
 
+use self::key_list::KeyListOutcome;
+pub(super) use self::key_list::{KEY_CAPTURE_BINDINGS, KEY_LIST_BINDINGS};
 use self::pane::{FieldWidget, PaneHit, SettingsPane};
 use super::{Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, dialog_bindings};
 use crate::action::Action;
-use crate::component::{ChainLink, Component, Cx, RenderCx};
+use crate::component::{BindingState, ChainLink, Component, Cx, RenderCx};
 use crate::components::button::{ButtonMouse, ButtonRow, Pressed};
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
@@ -98,8 +101,8 @@ pub(super) enum SettingsFocus {
     Field(usize),
     /// A list field's checklist.
     ListItems(usize),
-    /// A Key Bindings row.
-    KeyRow(usize),
+    /// The Key Bindings list, one stop (#381).
+    KeyList,
     Save,
     Cancel,
 }
@@ -298,8 +301,8 @@ impl SettingsDialog {
     /// B90, answered).
     fn collect(&self, base: &Config) -> Result<Config, Invalid> {
         let mut config = base.clone();
-        for row in self.panes.iter().flat_map(|pane| &pane.keys) {
-            row.save(&mut config.bindings.overrides);
+        for keys in self.panes.iter().filter_map(|pane| pane.keys.as_ref()) {
+            keys.save(&mut config.bindings.overrides);
         }
         for (tab, pane) in self.panes.iter().enumerate() {
             for (index, field) in pane.fields.iter().enumerate() {
@@ -326,6 +329,11 @@ impl SettingsDialog {
                 cx.notify(Toast::error(invalid.message).with_title(INVALID_TITLE));
             }
         }
+    }
+
+    /// Whether the active tab's Key Bindings list is waiting for a key.
+    fn is_capturing(&self) -> bool {
+        self.pane().is_capturing()
     }
 
     /// A key for the focused text input: the search box's `enter` filters, a list field's adds its item, and a plain
@@ -382,10 +390,24 @@ impl Component for SettingsDialog {
         }
     }
 
+    /// While the Key Bindings list waits for a key, the footer offers only its cancel key: submit, close and search
+    /// are keys it records.
+    fn binding_state(&self, id: BindingId, _cx: &Cx<'_>) -> BindingState {
+        let screen = matches!(
+            id,
+            BindingId::ModalSubmit | BindingId::ModalClose | BindingId::ModalSearch
+        );
+        if screen && self.is_capturing() {
+            BindingState::Hidden
+        } else {
+            BindingState::Enabled
+        }
+    }
+
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
-        // A key row takes every key but the focus moves (priority bindings have already run).
-        if let Some(SettingsFocus::KeyRow(_)) = self.ring.focused() {
-            return key.code != KeyCode::Tab || !(key.mods - KeyModifiers::SHIFT).is_empty();
+        // The Key Bindings list, waiting for a key, takes every key (priority bindings have already run).
+        if self.ring.focused() == Some(SettingsFocus::KeyList) {
+            return self.is_capturing();
         }
         if self.ring.focused() == Some(SettingsFocus::Search) {
             return self
@@ -403,10 +425,9 @@ impl Component for SettingsDialog {
 
     fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action> {
         let chord = KeyChord::from_event(&key)?;
-        if let Some(SettingsFocus::KeyRow(index)) = self.ring.focused() {
-            let row = self.pane_mut().keys.get_mut(index)?;
-            row.capture(&chord);
-            return Some(Action::Consumed);
+        if self.ring.focused() == Some(SettingsFocus::KeyList) {
+            let keys = self.pane_mut().keys.as_mut()?;
+            return (keys.capture(&chord, cx.keymap()) == KeyListOutcome::Consumed).then_some(Action::Consumed);
         }
         if let Some((_, FieldWidget::Select(select))) = self.focused_widget_mut() {
             return match select.handle_key(&chord, cx.keymap(), cx.now()) {
@@ -425,6 +446,13 @@ impl Component for SettingsDialog {
             return Some(Action::Consumed);
         }
         let press = event.kind == MouseEventKind::Down(MouseButton::Left);
+        // While the Key Bindings list waits for a key, the mouse does nothing but end the wait.
+        if self.is_capturing() {
+            if press && let Some(keys) = &mut self.pane_mut().keys {
+                keys.cancel_capture();
+            }
+            return Some(Action::Consumed);
+        }
         let at = Position::new(event.column, event.row);
         let hit = self.pane().hit(event.column, event.row);
         if let Some(select) = self.pane_mut().open_select_mut() {
@@ -453,7 +481,7 @@ impl Component for SettingsDialog {
         }
         if let Some(wheel) = Wheel::from_mouse(&event) {
             if self.areas.scroll.contains(at) {
-                self.pane_mut().scroll.wheel(wheel);
+                self.pane_mut().wheel(wheel, event.column, event.row);
             }
             return Some(Action::Consumed);
         }
@@ -476,6 +504,11 @@ impl Component for SettingsDialog {
             return Some(Action::Consumed);
         }
         match hit {
+            Some(PaneHit::Stop(SettingsFocus::KeyList)) if self.ring.is_enabled(SettingsFocus::KeyList) => {
+                let focused = self.ring.focused() == Some(SettingsFocus::KeyList);
+                self.focus(SettingsFocus::KeyList);
+                self.pane_mut().press_keys(event, focused);
+            }
             Some(PaneHit::Stop(stop)) if self.ring.is_enabled(stop) => {
                 // Focus first (an input selects its text), then the press lands.
                 self.focus(stop);
@@ -635,7 +668,8 @@ impl Dialog for SettingsDialog {
             (Some(SettingsFocus::Tabs), _) => FieldKind::Tabs,
             (Some(SettingsFocus::Scroll), _) => FieldKind::Scroll,
             (Some(SettingsFocus::Save | SettingsFocus::Cancel), _) => FieldKind::Button,
-            (Some(SettingsFocus::KeyRow(_)), _) => FieldKind::KeyCapture,
+            (Some(SettingsFocus::KeyList), _) if self.is_capturing() => FieldKind::KeyCapture,
+            (Some(SettingsFocus::KeyList), _) => FieldKind::KeyList,
             (_, Some((_, FieldWidget::Switch(_)))) => FieldKind::Switch,
             (_, Some((_, FieldWidget::Select(select)))) if select.is_open() => FieldKind::SelectOverlay,
             (_, Some((_, FieldWidget::Select(_)))) => FieldKind::Select,
@@ -692,6 +726,10 @@ impl Dialog for SettingsDialog {
                 }
                 _ => None,
             },
+            FieldKind::KeyList => {
+                let keys = self.pane_mut().keys.as_mut()?;
+                (keys.on_binding(id) == KeyListOutcome::Consumed).then_some(Action::Consumed)
+            }
             // `consumes_key` already gave the input every key it binds.
             FieldKind::TextInput => Some(Action::Consumed),
             FieldKind::TextEditor | FieldKind::Table | FieldKind::KeyCapture => None,

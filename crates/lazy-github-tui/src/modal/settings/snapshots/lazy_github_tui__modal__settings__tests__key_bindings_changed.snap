@@ -16,27 +16,27 @@ expression: "app.screen(160, 48)"
 │                             █━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█ou have selected a           │
 │                             █                                                                                                  █l be retrieved and           │
 │                             █                                                                                                  █                             │
-│                             █  Custom keybinding overrides for LazyGithub. When rebinding, pressing ESCAPE will reset to       █                             │
-│                             █  the default binding.                                                                            █with!                        │
-│                             █                                                                                                ▆▆█                             │
-│                             █                                                                                                  █                             │
-│                             █ Command Palette: ctrl+p                                                                          █                             │
-└─────────────────────────────█                                                                                                  █                             │
-┌─ [2] Pull Requests ─────────█ Maximize: M                                                                                      █PR diff, and participating   │
-│ #  Status  Author  Title    █                                                                                                  █reate a new PR for the       │
-│                             █ ┌────────────────────────────────────────────────────────────────────────────────────────────┐   █                             │
-│                             █ │Keybindings: ?                                                                              │   █                             │
-│                             █ └────────────────────────────────────────────────────────────────────────────────────────────┘   █                             │
-│                             █ Quit: q                                                                                          █                             │
-│                             █                                                                                                  █                             │
-│                             █ Table cursor down: j                                                                             █ting in any activate         │
-└─────────────────────────────█                                                                                                  █itself. This means that you  │
-┌─ [3] Issues ────────────────█ Table cursor up: k                                                                               █                             │
-│ #  Status  Author  Title    █                                                                                                  █                             │
-│                             █ Table page down: J                                                                               █                             │
-│                             █                                                                                                  █                             │
-│                             █ Table page left: ^                                                                               █                             │
-│                             █                                                                                                  █tly only supports listing    │
+│                             █  Custom keybinding overrides for LazyGithub.                                                     █                             │
+│                             █                                                                                                  █with!                        │
+│                             █ General                                                                                          █                             │
+│                             █    Quit                       q                 app.quit                                         █                             │
+│                             █    Command Palette            ^p                app.command_palette                              █                             │
+└─────────────────────────────█ *  Maximize                   f2                app.maximize_widget                              █                             │
+┌─ [2] Pull Requests ─────────█ *  Keybindings                ?, !              app.open_help                                 ▂▂ █PR diff, and participating   │
+│ #  Status  Author  Title    █    Notifications              ^n                notifications.open                               █reate a new PR for the       │
+│                             █    Paste link                 ^v                link.paste                                       █                             │
+│                             █    Follow link                f                 link.follow                                      █                             │
+│                             █    Follow link (browser)      F                 link.follow_external                             █                             │
+│                             █    View User                  u                 user.view_profile                                █                             │
+│                             █ Focus                                                                                            █                             │
+│                             █    Focus repos table          1                 main.repos.focus                                 █ting in any activate         │
+└─────────────────────────────█    Focus PRs table            2                 main.pull_requests.focus                         █itself. This means that you  │
+┌─ [3] Issues ────────────────█    Focus issues table         3                 main.issues.focus                                █                             │
+│ #  Status  Author  Title    █    Focus workflows table      4                 main.workflows.focus                             █                             │
+│                             █    Focus details tabs         5                 main.details.focus                               █                             │
+│                             █    Focus command log          6                 main.command_log.focus                           █                             │
+│                             █ Tables                                                                                           █                             │
+│                             █ app.open_help · default ? · changed                                                              █tly only supports listing    │
 │                             █                                                                                                  █e currently selected repo,   │
 │                             █──────────────────────────────────────────────────────────────────────────────────────────────────█.                            │
 └─────────────────────────────█                                                                                                  █                             │
@@ -49,4 +49,4 @@ expression: "app.screen(160, 48)"
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
- shift+⏎ Submit  q Close  / Search
+ ⏎ Change key  a Add key  r Reset  shift+⏎ Submit  q Close  / Search

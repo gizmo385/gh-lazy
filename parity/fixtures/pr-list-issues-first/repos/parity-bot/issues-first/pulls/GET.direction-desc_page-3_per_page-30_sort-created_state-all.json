@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/issues-first/pulls",
+    "query": {
+      "direction": "desc",
+      "page": "3",
+      "per_page": "30",
+      "sort": "created",
+      "state": "all"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": []
+  },
+  "note": "hand-written: page 3 of GET /repos/parity-bot/issues-first/pulls (state=all, newest first): 0 pull requests (none), the issues pages' PRs regrouped, with pull request ids 5384000 + n"
+}

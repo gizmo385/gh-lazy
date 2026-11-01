@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/search/issues",
+    "query": {
+      "order": "desc",
+      "page": "2",
+      "per_page": "30",
+      "q": "is:pr repo:parity-bot/issues-first author:@me",
+      "sort": "created"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "total_count": 24,
+      "incomplete_results": false,
+      "items": []
+    }
+  },
+  "note": "hand-written: page 2 of GET /search/issues for parity-bot's pull requests in parity-bot/issues-first: 0 of 24, as search items (issue ids, `draft` and `pull_request`)"
+}

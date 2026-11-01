@@ -465,6 +465,29 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   (201, PR 10, after 1 s), and the non-draft from `new-feature` with no body (422, then 201 once the 422 was served,
   `when.after`). PR 10 itself, its diff (empty), reviews, issue comments, reactions and the status and check runs of
   its head sha. Hand-written.
+- `pr-list-issues-first/`: `parity-bot/issues-first` (id 2000384), third on base's `GET /user/repos` page, with its
+  repo, README and empty workflows and runs. Its issues endpoint (`state=all`) holds issues 75 to 46 on page 1, 45 to
+  16 on page 2, 15 to 1 on page 3 and nothing on page 4; every number up to 45 that isn't a multiple of 5 is a pull
+  request (36), by `parity-friend` when its number is a multiple of 3 and by `parity-bot` otherwise. Its `/pulls`
+  pages (`state=all`, `sort=created`, `direction=desc`) hold PRs 44 to 8, then 7 to 1, then none, as `/pulls` items
+  with pull request ids `5384000 + n`; `GET /search/issues` for `is:pr repo:parity-bot/issues-first author:@me` holds
+  parity-bot's 24 PRs on page 1 (`total_count: 24`) and none on page 2. Listed before `base`, for Python's Py bug
+  B180 (its PR table stays empty) and the Rust-only `pr-list-from-pulls` and `pr-list-mine-search` scenarios (#384).
+  Hand-written; the generator below skips it.
+
+### Generated PR list pages
+
+The Rust app's PR table lists `GET /repos/{owner}/{repo}/pulls` (`pull_requests.owner_filter = all`) or searches
+`GET /search/issues` with `q=is:pr repo:{owner}/{repo} author:@me[ is:open| is:closed]` (`mine`), where Python takes
+the PRs out of the issues endpoint's pages (#384, decision `pr-list-from-pulls-endpoint`). So that both apps' PR
+tables show the same rows, every `GET /repos/{owner}/{repo}/issues` list fixture in every set but
+`pr-list-issues-first` has a mirror next to it, written by `cargo xtask pr-list-fixtures`: a `/pulls` page with the
+same `state`, `page` and `per_page` plus `sort=created&direction=desc`, or, for a `creator` page, a search page with
+`sort=created&order=desc` and `{total_count, incomplete_results: false, items}`, `total_count` counting the PRs over
+all that query's pages. The body holds the page's items with `draft`, verbatim and in order; the status, the headers
+but `Link`, a failed page's body, `delay_ms` and `when` are copied, and the `note` names the source. Pages are
+mirrored one to one, so a page with no PRs gives an empty `/pulls` page, which ends Rust's paging. Edit the issues
+page and re-run the generator; an xtask test fails when the committed mirrors differ from its output.
 - `pr-preload/`: `GET /repos/parity-bot/pr-details/commits/<sha>/pulls` for the harness's git commit (the same SHA on
   every run, see [The isolated environment](#the-isolated-environment)), answering PR 5 alone. Listed before
   `pr-details` and `base`, for the `pr-preload` scenario (#198). Hand-written.

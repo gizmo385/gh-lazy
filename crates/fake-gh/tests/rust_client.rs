@@ -398,6 +398,77 @@ async fn child_list_issues_page_2() {
     assert!(items.iter().all(|item| item.issue().repo == repo));
 }
 
+/// `parity-bot/issues-first`, as `pr-list-issues-first` records it.
+fn issues_first() -> Repository {
+    let path = common::repo_root().join("parity/fixtures/pr-list-issues-first/repos/parity-bot/issues-first/GET.json");
+    let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    serde_json::from_value(fixture["response"]["body"].clone()).unwrap()
+}
+
+#[test]
+fn list_pull_requests_lists_pulls() {
+    let log = run_child("child_list_pull_requests", "logged-in", &["pr-list-issues-first"]);
+    assert_eq!(log.len(), 1, "{log:#?}");
+    assert_eq!(
+        strings(&log[0]["argv"]),
+        [
+            "api",
+            "-i",
+            "-X",
+            "GET",
+            "--cache",
+            "600s",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "/repos/parity-bot/issues-first/pulls?state=all&sort=created&direction=desc&page=1&per_page=30"
+        ]
+    );
+    assert_eq!(log[0]["status"], 200);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_list_pull_requests() {
+    let Some(gh) = client() else { return };
+    let repo = issues_first();
+    let query = IssueListQuery::first_page(IssueStateFilter::All, IssueOwnerFilter::All);
+    let prs = gh.list_pull_requests(&repo, query).await.unwrap();
+    // The issues endpoint's page 1 holds no PRs; /pulls' holds the 30 newest.
+    let numbers: Vec<u64> = prs.iter().map(|pr| pr.issue.number).collect();
+    let expected: Vec<u64> = (8..=44).rev().filter(|n| n % 5 != 0).collect();
+    assert_eq!(numbers, expected);
+    // `/pulls` items carry the pull request's own id.
+    assert!(prs.iter().all(|pr| pr.issue.id == 5_384_000 + pr.issue.number));
+    assert!(prs.iter().all(|pr| pr.issue.repo == repo));
+}
+
+#[test]
+fn list_pull_requests_for_mine_searches_without_the_user() {
+    let log = run_child("child_list_my_pull_requests", "logged-in", &["pr-list-issues-first"]);
+    // One search, and no `GET /user` before it.
+    assert_eq!(log.len(), 1, "{log:#?}");
+    assert_eq!(
+        strings(&log[0]["argv"]).last().copied(),
+        Some(
+            "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Fissues-first+author%3A%40me&sort=created&order=desc&page=1&per_page=30"
+        )
+    );
+    assert_eq!(log[0]["status"], 200);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_list_my_pull_requests() {
+    let Some(gh) = client() else { return };
+    let repo = issues_first();
+    let query = IssueListQuery::first_page(IssueStateFilter::All, IssueOwnerFilter::Mine);
+    let prs = gh.list_pull_requests(&repo, query).await.unwrap();
+    assert_eq!(prs.len(), 24);
+    assert!(prs.iter().all(|pr| pr.issue.user.login == "parity-bot"));
+    assert_eq!(prs[0].issue.number, 44);
+    assert!(prs.iter().all(|pr| pr.issue.repo == repo));
+}
+
 #[test]
 fn mine_fetches_the_login_once() {
     // `prs-70`'s first two pages, as answers to `state=open&creator=parity-bot`.

@@ -33,6 +33,9 @@ enum Task {
     Perf(xtask::perf::PerfArgs),
     /// Write the generated `large-account` parity fixture set (1,000 repos over 20 pages) under parity/fixtures/.
     LargeAccountFixtures,
+    /// Write the generated `/pulls` and `/search/issues` parity fixtures that mirror each set's issues-endpoint
+    /// pages (#384) under parity/fixtures/.
+    PrListFixtures,
     /// Decide what a run of the release workflow releases (tag, version, prerelease, crates) and print it as
     /// `key=value` lines for `$GITHUB_OUTPUT`. Exits non-zero, with the reason, when the run must not release.
     ReleasePlan(xtask::release::ReleasePlanArgs),
@@ -65,6 +68,7 @@ fn main() -> ExitCode {
         Some(Task::ParitySite(args)) => xtask::site::run(&xtask::parity::cli::repo_root(), &args),
         Some(Task::Perf(args)) => xtask::perf::run(&xtask::parity::cli::repo_root(), &args),
         Some(Task::LargeAccountFixtures) => xtask::large_account::run(&xtask::parity::cli::repo_root()),
+        Some(Task::PrListFixtures) => xtask::pr_list_fixtures::run(&xtask::parity::cli::repo_root()),
         Some(Task::ReleasePlan(args)) => xtask::release::run(&xtask::parity::cli::repo_root(), &args),
     }
 }

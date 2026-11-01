@@ -142,3 +142,22 @@ proptest! {
         prop_assert_eq!(width(&sanitize(&text)), Span::raw(sanitize(&text).into_owned()).width());
     }
 }
+
+#[test]
+fn skip_spans_drops_cells_from_the_left_across_spans() {
+    let red = Style::new().fg(ratatui::style::Color::Red);
+    let spans = vec![Span::raw("abc"), Span::styled("defg", red), Span::raw("hi")];
+    let text = |spans: &[Span<'_>]| spans.iter().map(|s| s.content.as_ref()).collect::<String>();
+    assert_eq!(text(&skip_spans(spans.clone(), 0)), "abcdefghi");
+    assert_eq!(text(&skip_spans(spans.clone(), 3)), "defghi");
+    let skipped = skip_spans(spans.clone(), 4);
+    assert_eq!(text(&skipped), "efghi");
+    assert_eq!(skipped[0].style, red);
+    assert!(skip_spans(spans, 20).is_empty());
+}
+
+#[test]
+fn skip_spans_leaves_a_cut_wide_grapheme_as_a_space() {
+    assert_eq!(skip_spans([Span::raw("a日本")], 2)[0].content, " 本");
+    assert_eq!(skip_spans([Span::raw("a日本")], 3)[0].content, "本");
+}

@@ -165,5 +165,40 @@ pub fn cut_spans<'a>(spans: impl IntoIterator<Item = Span<'a>>, width: usize) ->
     (kept, left)
 }
 
+/// `spans` without their first `cells` cells, for text panned sideways. A wide grapheme cut by the edge leaves its
+/// cells right of the edge as spaces in its style, so what follows keeps its column.
+pub fn skip_spans<'a>(spans: impl IntoIterator<Item = Span<'a>>, cells: usize) -> Vec<Span<'a>> {
+    let mut skip = cells;
+    let mut kept = Vec::new();
+    for span in spans {
+        if skip == 0 {
+            kept.push(span);
+            continue;
+        }
+        let span_width = self::width(&span.content);
+        if span_width <= skip {
+            skip -= span_width;
+            continue;
+        }
+        let mut used = 0;
+        let mut rest = String::new();
+        for (start, grapheme) in graphemes(&span.content) {
+            if used >= skip {
+                rest.push_str(&span.content[start..]);
+                break;
+            }
+            used += grapheme_width(grapheme);
+            if used > skip {
+                rest.extend(std::iter::repeat_n(' ', used - skip));
+            }
+        }
+        skip = 0;
+        if !rest.is_empty() {
+            kept.push(Span::styled(rest, span.style));
+        }
+    }
+    kept
+}
+
 #[cfg(test)]
 mod tests;

@@ -182,6 +182,9 @@ pub enum Owner {
     DiffViewer,
     /// A focused hunk pane in the diff viewer (`UnifiedDiffPane`): the line cursor and add comment.
     HunkPane,
+    /// The continuous diff body with focus (#387): the line cursor, hunk jumps, paging and panning, add comment and
+    /// the filter key.
+    DiffBody,
     /// The diff viewer's focused file filter (`FileFilterInput`, an `Input`).
     DiffFilter,
     /// The command log.
@@ -229,6 +232,7 @@ impl Owner {
             | Owner::RunJobs
             | Owner::DiffViewer
             | Owner::HunkPane
+            | Owner::DiffBody
             | Owner::CommandLog
             // Textual's `TextArea` has no group title: its keys are an untitled section.
             | Owner::DialogField(
@@ -268,8 +272,8 @@ impl Owner {
     /// since `diff.cursor_down` and `diff.cursor_up` have no description.
     pub fn binding_label(self, id: BindingId) -> Option<&'static str> {
         match (self, id) {
-            (Owner::HunkPane, BindingId::DiffCursorDown) => Some("Line down"),
-            (Owner::HunkPane, BindingId::DiffCursorUp) => Some("Line up"),
+            (Owner::HunkPane | Owner::DiffBody, BindingId::DiffCursorDown) => Some("Line down"),
+            (Owner::HunkPane | Owner::DiffBody, BindingId::DiffCursorUp) => Some("Line up"),
             _ => None,
         }
     }

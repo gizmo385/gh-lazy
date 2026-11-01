@@ -8,6 +8,7 @@
 //! ([`DiffStop`]) computed from what's shown and open, and a text input (the filter) that takes its keys before the
 //! binding chain, as the table's search box does.
 
+mod body;
 mod highlight;
 mod pane;
 mod review;
@@ -23,6 +24,7 @@ use ratatui::layout::{Position, Rect};
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 
+pub use body::{Cursor, CursorPosition, DIFF_BODY_BINDINGS, DiffBody, Row};
 pub use highlight::code_spans;
 pub use pane::{HunkPane, PaneLayout};
 pub use review::{DiffLineRef, MissingStatus, PendingComment, line_text};

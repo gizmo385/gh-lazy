@@ -19,7 +19,10 @@ use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use serde_json::Value;
 
+use crate::components::diff_view::DiffBody;
+use crate::keymap::BindingId;
 use crate::test_util::{TestApp, large_markdown};
+use crate::theme::Theme;
 
 /// The longest any frame may take to build in a release build.
 const BUDGET: Duration = Duration::from_millis(50);
@@ -60,6 +63,19 @@ impl Timing {
         let start = Instant::now();
         step(app);
         self.terminal.draw(|frame| app.app_mut().render(frame)).unwrap();
+        self.frames.push((label.into(), start.elapsed()));
+    }
+
+    /// Runs `step` on the diff body alone and draws it over the whole terminal, timing both as one frame.
+    fn body_frame(&mut self, label: impl Into<String>, body: &mut DiffBody, step: impl FnOnce(&mut DiffBody)) {
+        let start = Instant::now();
+        step(body);
+        self.terminal
+            .draw(|frame| {
+                let area = frame.area();
+                body.render(frame.buffer_mut(), area, &Theme::default(), true);
+            })
+            .unwrap();
         self.frames.push((label.into(), start.elapsed()));
     }
 
@@ -311,6 +327,41 @@ fn perf_pr_diff_300_files() {
     }
     for key in ["K", "end", "home", "pagedown", "down", "up"] {
         frames.press(&mut app, key);
+    }
+    frames.finish();
+}
+
+/// The continuous diff body on its own (#387), before the Diff tab shows it (#388): the same 300-file diff, built,
+/// then moved through hunk by hunk, line by line and by the page and end keys.
+#[test]
+#[ignore = "timing test: run with `cargo xtask perf`"]
+fn perf_diff_body_300_files() {
+    let text = large_diff(300, 67);
+    let mut frames = Timing::new("diff body");
+    let mut body = None;
+    let start = Instant::now();
+    let built = body.insert(DiffBody::new(lazy_github_core::diff::parse(&text).unwrap()));
+    frames.frames.push(("build".into(), start.elapsed()));
+    frames.body_frame("first draw", built, |_| {});
+    let press = |frames: &mut Timing, body: &mut DiffBody, id: BindingId| {
+        frames.body_frame(format!("{id:?}"), body, |body| {
+            assert!(body.handle(id));
+        });
+    };
+    for _ in 0..300 {
+        press(&mut frames, built, BindingId::DiffNextHunk);
+    }
+    assert_eq!(built.cursor_line().map(|line| line.file), Some(299));
+    for _ in 0..10 {
+        press(&mut frames, built, BindingId::DiffCursorDown);
+        press(&mut frames, built, BindingId::DiffCursorUp);
+    }
+    for id in [
+        BindingId::TextualScrollEnd,
+        BindingId::TextualScrollHome,
+        BindingId::TextualScrollPageDown,
+    ] {
+        press(&mut frames, built, id);
     }
     frames.finish();
 }

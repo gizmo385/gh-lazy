@@ -1,22 +1,21 @@
 # The Diff tab is one continuous diff with a line cursor
 
-- Decision: Proposed, waiting on Chris (#344, D1). The Diff tab shows every unfolded file's hunks as one continuous
-  list of rows, under the file filter: a header row per file (its full path and counts), a separator row per hunk,
-  then the hunk's lines. One line cursor moves through it, crossing hunk and file boundaries (`j`/`k`), and `J`/`K`
-  jump hunks. There are no hunk sections, no hunk pane boxes with their own scroll, and no per-pane `Line: n/m`; one
-  position row under the diff says where the cursor is. The inner focus ring is the filter, the diff, then the review
-  form. `M` on the diff maximizes the details tab area. Python nests a collapsible per file and per hunk, with a
-  25-row pane per open hunk.
-- Decided by: pending: Chris, on #344 (proposed by the design agent, 2026-10-31)
+- Decision: The Diff tab shows every unfolded file's hunks as one continuous list of rows, under the file filter: a
+  header row per file (its full path and counts), a separator row per hunk, then the hunk's lines. One line cursor
+  moves through it, crossing hunk and file boundaries (`j`/`k`), and `J`/`K` jump hunks. There are no hunk sections,
+  no hunk pane boxes with their own scroll, and no per-pane `Line: n/m`; one position row under the diff says where
+  the cursor is. The inner focus ring is the filter, the diff, then the review form. `M` on the diff maximizes the
+  details tab area. Python nests a collapsible per file and per hunk, with a 25-row pane per open hunk.
+- Decided by: Chris, 2026-11-01, on #344 (D1 a; proposed by the design agent, 2026-10-31)
 - Link: #344, #177 (M5 improvements, Chris 2026-10-30)
 - Rows: `diff-viewer.viewer`, `diff-viewer.file-header`, `diff-viewer.hunk-header`, `diff-viewer.hunk-pane`,
   `diff-viewer.line-cursor`, `diff-viewer.hunk-navigation`, `diff-viewer.focus-ring`, `diff-viewer.file-filter`,
   `keybindings.diff-cursor-down`, `keybindings.diff-cursor-up`, `keybindings.diff-next-hunk`,
   `keybindings.diff-previous-hunk`
 
-Status: proposed. When Chris answers D1 on #344, the implementer of the first sub-issue sets `Decided by`, adds the
-new row ids (`diff-viewer.maximize`, `diff-viewer.position-line`, `diff-viewer.body-mouse`) to `Rows`, and moves the
-rows above to `intentional diff`.
+Status: decided; being built. #387 builds the continuous body as a component on its own, with nothing visible yet.
+#388 wires it into the Diff tab: it adds the new row ids (`diff-viewer.maximize`, `diff-viewer.position-line`,
+`diff-viewer.body-mouse`) to the matrix and to `Rows`, and moves the rows above to `intentional diff`.
 
 Why: reading a pull request in the Python layout takes a focus change per hunk, every hunk opens in its own box with
 its own scroll (at most 22 lines), `j` stops dead at the end of a hunk, and nothing moves between files. Two scroll

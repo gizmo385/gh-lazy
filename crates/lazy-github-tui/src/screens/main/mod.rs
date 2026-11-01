@@ -1536,6 +1536,7 @@ impl MainScreen {
             | Owner::RunJobs
             | Owner::DiffViewer
             | Owner::HunkPane
+            | Owner::DiffBody
             | Owner::DiffFilter => self.details.on_binding(owner, id),
             Owner::SearchableTable(section) if id == BindingId::TableSearch => {
                 self.open_search(section);

@@ -1,0 +1,133 @@
+---
+source: crates/lazy-github-tui/src/components/diff_view/body/tests.rs
+expression: "buffer_to_styled_string(&draw(&mut body, 160, 48, true))"
+---
+▼ 📄  README.md (+3 -1)
+  Lines 3-7 (+3 -1) • A tiny pager.
+     3  │ ## Usage
+     4  │
+     5  │ Run `viewer FILE`.
+     5  │ Run `viewer FILE`, then press `j` and `k` to move.
+     6  │
+     7  │ The current line is marked with `>`.
+▼ 📄  assets/app.css (+3)
+  Lines 1-3 (+3)
+     1  │ .cursor {
+     2  │   color: yellow;
+     3  │ }
+▼ 📄  build.rs (+1)
+  Lines 1-4 (+1)
+     1  │ fn main() {
+     2  │     println!("cargo:rerun-if-changed=build.rs");
+     3  │     println!("cargo:rerun-if-changed=assets");
+     4  │ }
+▶ 🗑️   docs/old.md (deleted)
+▼ 📄  src/viewer.rs (+5 -2)
+  Lines 1-8 (+2)
+     1  │ use std::io;
+     2  │ use std::fmt;
+     3  │
+     4  │ pub struct Viewer {
+     5  │     lines: Vec<String>,
+     6  │     cursor: usize,
+     7  │ }
+     8  │
+  Lines 22-28 (+3 -2) • impl Viewer {
+    22  │     pub fn render(&self) -> io::Result<()> {
+    21  │         for line in &self.lines {
+    22  │             println!("{line}");
+    23  │         for (i, line) in self.lines.iter().enumerate() {
+    24  │             let marker = if i == self.cursor { ">" } else { " " };
+    25  │             println!("{marker} {line}");
+    26  │         }
+    27  │         Ok(())
+    28  │     }
+
+
+
+
+
+
+
+ README.md                                                                                                                                               1 hunk
+--- styles
+...a............bb.cc...........................................................................................................................................
+dddddddddddddeedffdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+gggggggggghhhhhhhhiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+ggggggggggiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+ggggggggggjjjjkkkkkkkkkkkkkjllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll
+ggggggggggmmmmnnnnnnnnnnnnnmmmmmmmmmmmmmnnnmmmmmnnnmmmmmmmmmoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ggggggggggoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ggggggggggmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnnnmoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+pppapppppppppppppppppqqppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
+dddddddddddddeeddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggrrrrrrrmmooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ggggggggggmmsssssmmssssssmoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ggggggggggmooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+pppapppppppppppqqppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
+dddddddddddddeeddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggttuvvvvuuuuiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+gggggggggguuuuuuuuuuuuuwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwuuiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+ggggggggggmmmmmmmmmmmmmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnmmoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+gggggggggguiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+pppapppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
+pppappppppppppppppppqqpxxppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
+dddddddddddddeeddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+ggggggggggtttuuuuuuuuuiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+ggggggggggsssmmmmmmmmmmooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ggggggggggiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+ggggggggggtttuttttttuvvvvvvuuiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+gggggggggguuuuuuuuuuuuuuuuuuuuuuuiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+ggggggggggmmmmmmmmmmmmsssssmoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+gggggggggguiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+ggggggggggiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+dddddddddddddddeedffdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+gggggggggguuuutttuttuvvvvvvuyuuuuuuuuuuuuuuuuuuuuuuuuuiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+ggggggggggjjjjjjjjzzzjjjjjjAAjAjjjjjjjjjjjjlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll
+ggggggggggjjjjjjjjjjjjjjjjjjjjjkzzzzzzkjjlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll
+ggggggggggmmmmmmmmsssmmmmmmmmmmmBBmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ggggggggggmmmmmmmmmmmmsssmmmmmmmmBmssmmmBBmmmmmmmmmmmmmmmnnnmmmssssmmmnnnmmmoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ggggggggggmmmmmmmmmmmmmmmmmmmmmnssssssssnssssssnmmoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+gggggggggguuuuuuuuuiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+gggggggggguuuuuuuuuuuuuuiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+gggggggggguuuuuiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+--- legend
+. fg=#ddedf9 bg=#0178d4 BOLD
+a fg=Reset bg=Reset
+b fg=#98e024 bg=#0178d4 BOLD
+c fg=#f4005f bg=#0178d4 BOLD
+d fg=#a5a5a5 bg=#1e1e1e
+e fg=#98e024 bg=#1e1e1e
+f fg=#f4005f bg=#1e1e1e
+g fg=#e0e0e0 bg=#1e1e1e
+h fg=#959077 bg=#272822
+i fg=#e0e0e0 bg=#272822
+j fg=#f8f8f2 bg=#3a0a0a
+k fg=#e6db74 bg=#3a0a0a
+l fg=#e0e0e0 bg=#3a0a0a
+m fg=#f8f8f2 bg=#0a3a0a
+n fg=#e6db74 bg=#0a3a0a
+o fg=#e0e0e0 bg=#0a3a0a
+p fg=#e2e2e2 bg=#262626 BOLD
+q fg=#98e024 bg=#262626 BOLD
+r fg=#a6e22e bg=#0a3a0a
+s fg=#66d9ef bg=#0a3a0a
+t fg=#66d9ef bg=#272822
+u fg=#f8f8f2 bg=#272822
+v fg=#a6e22e bg=#272822
+w fg=#e6db74 bg=#272822
+x fg=#f4005f bg=#262626 BOLD
+y fg=#ff4689 bg=#272822
+z fg=#66d9ef bg=#3a0a0a
+A fg=#ff4689 bg=#3a0a0a
+B fg=#ff4689 bg=#0a3a0a
+C fg=Reset bg=#1e1e1e
+D fg=#211505 bg=#fea62b

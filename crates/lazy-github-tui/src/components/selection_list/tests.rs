@@ -278,7 +278,7 @@ fn a_click_on_an_option_highlights_and_toggles_it() {
 // Drawing, textual-dark over a dialog's `$surface-lighten-3`.
 
 fn under(theme: &Theme) -> Paint {
-    theme.palette.surface_lighten_3.over(theme.background())
+    theme.roles().surface.dialog.over(theme.background())
 }
 
 fn draw<T>(list: &mut SelectionList<T>, width: u16, focused: bool) -> String {
@@ -415,11 +415,11 @@ fn a_dialog_footer_shows_none_of_the_lists_keys() {
 #[test]
 fn a_solid_border_is_a_thin_box_even_when_empty() {
     let theme = Theme::default();
-    let under = theme.palette.surface.over(theme.background());
+    let under = theme.roles().surface.pane.over(theme.background());
     let area = Rect::new(0, 0, 10, 4);
     let rows = |list: &mut SelectionList<&'static str>| {
         let mut buf = Buffer::empty(area);
-        list.render_solid(&mut buf, area, &theme, under, false, theme.palette.primary);
+        list.render_solid(&mut buf, area, &theme, under, false, theme.roles().brand.primary);
         (0..list.height())
             .map(|y| (0..10).map(|x| buf[(x, y)].symbol().to_owned()).collect::<String>())
             .collect::<Vec<_>>()

@@ -135,7 +135,7 @@ fn the_width_is_the_label_and_padding_at_least_16() {
 /// Each variant in a column, unfocused, focused and disabled, on the test dialog's background.
 fn variants(theme: &Theme) -> String {
     let mut buf = Buffer::empty(Rect::new(0, 0, 54, 15));
-    let under = theme.palette.surface_lighten_3.over(theme.background());
+    let under = theme.roles().surface.dialog.over(theme.background());
     for cell in &mut buf.content {
         cell.set_bg(theme.paint(under));
     }

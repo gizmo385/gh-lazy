@@ -9,9 +9,9 @@
 - Rows: `main-layout.focus-lost`, `command-palette.toggle-command-log`, `command-palette.toggle-workflows`,
   `command-palette.toggle-issues`, `command-palette.toggle-pull-requests`
 
-In Python, hiding the focused widget drops focus: no pane shows the focus color, the footer shrinks to the screen's
-and the app's bindings, table keys and `M` do nothing, and the screen looks as if it stopped responding until a
-focus key or `tab`. The Rust main screen has no "nothing focused" state, and the first stop is where Python's next
-`tab` lands anyway. Everything else about the toggles (what they show and hide, the requests on showing a section
-again, session only) matches Python; the scenario `command-palette-commands` compares only the titles in its
+In Python, hiding the focused widget drops focus: no pane shows the focus color, the footer shrinks to the screen's and
+the app's bindings, table keys, focus keys and `M` do nothing, and the screen looks as if it stopped responding until
+`tab`, `shift+tab` or a modal closing. The Rust main screen has no "nothing focused" state, and the first stop is where
+Python's next `tab` lands anyway. Everything else about the toggles (what they show and hide, the requests on showing a
+section again, session only) matches Python; the scenario `command-palette-commands` compares only the titles in its
 `log-hidden` capture, where the two apps' focus differs.

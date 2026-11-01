@@ -3,6 +3,10 @@
 //! Python treats a rate-limited response as any other HTTP error (decision `rate-limit-toast`). Requests the user
 //! asks for still run while limited, each failing with its own error. A `--paginate` call has no headers to say when
 //! the limit lifts, so its window is a minute ([`lazy_github_core::gh::RATE_LIMIT_FALLBACK`], #333).
+//!
+//! GitHub's search endpoints have their own limit (`X-RateLimit-Resource: search`, 30 requests a minute), kept in a
+//! window of its own with its own toast: running out of searches doesn't stop the rest of the API, so it doesn't pause
+//! the poll (#393, decision `search-issues-and-prs`).
 
 use jiff::Timestamp;
 use lazy_github_core::gh::GhError;
@@ -18,34 +22,76 @@ pub fn toast_message(at: &str) -> String {
     format!("GitHub API rate limit reached. Try again at {at}")
 }
 
-/// Whether GitHub is rate limiting the app, and until when. `App` owns one for the life of the app.
+/// The toast's message for a search limit lifting at `at`, a local `HH:MM`.
+pub fn search_toast_message(at: &str) -> String {
+    format!("GitHub search rate limit reached. Try again at {at}")
+}
+
+/// The search bucket's name in `X-RateLimit-Resource`.
+const SEARCH_RESOURCE: &str = "search";
+
+/// Whether GitHub is rate limiting the app, and until when, per bucket. `App` owns one for the life of the app.
 #[derive(Debug, Default)]
 pub struct RateLimitWatch {
+    /// The core API, and every response that doesn't name the search bucket.
+    core: Window,
+    /// The search endpoints.
+    search: Window,
+}
+
+/// One bucket's limit.
+#[derive(Debug, Default)]
+struct Window {
     /// When the latest limit lifts. Kept after it has passed, which is harmless: [`Self::is_limited`] compares.
     until: Option<Timestamp>,
 }
 
+impl Window {
+    /// Records a limit lifting at `reset`, seen at `now`. Whether it opens a new window (rather than extending the
+    /// one in force), so it should toast.
+    fn hit(&mut self, reset: Timestamp, now: Timestamp) -> bool {
+        if let Some(until) = self.until.as_mut().filter(|until| now < **until) {
+            *until = (*until).max(reset);
+            return false;
+        }
+        self.until = Some(reset);
+        true
+    }
+
+    fn is_limited(&self, now: Timestamp) -> bool {
+        self.until.is_some_and(|until| now < until)
+    }
+}
+
 impl RateLimitWatch {
-    /// A request failed with `error`. When that's a rate limit, records when it lifts and, unless the app was already
-    /// limited, shows the toast. A second limited response in the same window only moves the end later.
+    /// A request failed with `error`. When that's a rate limit, records when it lifts in its bucket's window and,
+    /// unless that bucket was already limited, shows the bucket's toast. A second limited response in the same window
+    /// only moves the end later.
     pub fn observe(&mut self, error: &GhError, cx: &mut Cx<'_>) {
         let Some(limit) = error.rate_limit() else {
             return;
         };
         let now = cx.local_now();
         let reset = limit.reset(now.timestamp());
-        if let Some(until) = self.until.as_mut().filter(|until| now.timestamp() < **until) {
-            *until = (*until).max(reset);
+        let search = error
+            .rate_limit_resource()
+            .is_some_and(|resource| resource.eq_ignore_ascii_case(SEARCH_RESOURCE));
+        let (window, message): (_, fn(&str) -> String) = if search {
+            (&mut self.search, search_toast_message)
+        } else {
+            (&mut self.core, toast_message)
+        };
+        if !window.hit(reset, now.timestamp()) {
             return;
         }
-        self.until = Some(reset);
         let at = reset.to_zoned(now.time_zone().clone()).strftime("%H:%M").to_string();
-        cx.notify(Toast::error(toast_message(&at)).with_title(TOAST_TITLE));
+        cx.notify(Toast::error(message(&at)).with_title(TOAST_TITLE));
     }
 
-    /// Whether a limit is in force at `now`.
+    /// Whether the core API's limit is in force at `now`: what pauses the notifications poll. A search limit doesn't
+    /// count.
     pub fn is_limited(&self, now: Timestamp) -> bool {
-        self.until.is_some_and(|until| now < until)
+        self.core.is_limited(now)
     }
 }
 
@@ -265,6 +311,133 @@ mod tests {
         let mut app = TestApp::loading(Config::default(), FakeGithub::new().with_repositories_error(forbidden));
         settle(&mut app);
         assert!(rate_limit_toasts(&app).is_empty());
+    }
+
+    // #393: the search bucket.
+
+    /// A search-bucket 403 that lifts `minutes` after the clock's start.
+    fn search_limited(minutes: i64) -> GhError {
+        http(
+            403,
+            &[
+                ("X-RateLimit-Limit", "30".to_owned()),
+                ("X-RateLimit-Remaining", "0".to_owned()),
+                ("X-RateLimit-Reset", (START + minutes * 60).to_string()),
+                ("X-RateLimit-Resource", "search".to_owned()),
+            ],
+        )
+    }
+
+    /// The search's answer arriving at the app, as the runtime would deliver it.
+    fn search_answer(app: &mut TestApp, error: GhError) {
+        let response = crate::effect::GithubResponse::SearchIssues(Err(error.into()));
+        app.send(crate::event::Event::Github {
+            id: crate::effect::RequestId::new(999),
+            response,
+        });
+    }
+
+    #[test]
+    fn a_search_limit_toasts_once_per_window_and_the_poll_keeps_ticking() {
+        let mut app = TestApp::with_github(enabled(), FakeGithub::new().with_unread_count(Ok(1)));
+        settle(&mut app);
+        assert_eq!(refreshes(&app), 1);
+        search_answer(&mut app, search_limited(5));
+        search_answer(&mut app, search_limited(6));
+        assert_eq!(
+            rate_limit_toasts(&app),
+            ["GitHub search rate limit reached. Try again at 12:05"]
+        );
+        // The poll's next tick runs. By then the toast has timed out, and another search limit in the window
+        // doesn't show it again.
+        app.advance(REFRESH_INTERVAL);
+        settle(&mut app);
+        assert_eq!(refreshes(&app), 2);
+        search_answer(&mut app, search_limited(5));
+        assert!(rate_limit_toasts(&app).is_empty());
+
+        // A core limit in the search window still toasts its own message and pauses the poll.
+        app.gh().set_unread_count(Err(primary(10)));
+        app.advance(REFRESH_INTERVAL);
+        settle(&mut app);
+        assert_eq!(
+            rate_limit_toasts(&app),
+            ["GitHub API rate limit reached. Try again at 12:10"]
+        );
+        app.advance(REFRESH_INTERVAL);
+        settle(&mut app);
+        assert_eq!(refreshes(&app), 3, "the 12:03 tick is skipped");
+
+        // Past the search window (12:05, extended to 12:06), a new search limit toasts again.
+        app.advance(Duration::from_mins(4));
+        search_answer(&mut app, search_limited(20));
+        assert_eq!(
+            rate_limit_toasts(&app),
+            ["GitHub search rate limit reached. Try again at 12:20"]
+        );
+    }
+
+    #[test]
+    fn a_core_limit_is_unchanged_by_the_search_window() {
+        let mut watch = RateLimitWatch::default();
+        let now = Timestamp::from_second(START).unwrap();
+        assert!(watch.search.hit(Timestamp::from_second(START + 600).unwrap(), now));
+        assert!(!watch.is_limited(now));
+        assert!(watch.core.hit(Timestamp::from_second(START + 60).unwrap(), now));
+        assert!(watch.is_limited(now));
+        assert!(!watch.is_limited(Timestamp::from_second(START + 60).unwrap()));
+    }
+
+    #[test]
+    fn the_resource_header_is_read_in_any_case_and_other_resources_are_core() {
+        let mut app = TestApp::new(Config::default());
+        let graphql = http(
+            403,
+            &[
+                ("x-ratelimit-remaining", "0".to_owned()),
+                ("x-ratelimit-reset", (START + 120).to_string()),
+                ("x-ratelimit-resource", "graphql".to_owned()),
+            ],
+        );
+        search_answer(&mut app, graphql);
+        assert_eq!(
+            rate_limit_toasts(&app),
+            ["GitHub API rate limit reached. Try again at 12:02"]
+        );
+        let search = http(
+            429,
+            &[
+                ("x-ratelimit-remaining", "0".to_owned()),
+                ("x-ratelimit-reset", (START + 180).to_string()),
+                ("x-ratelimit-resource", "Search".to_owned()),
+            ],
+        );
+        search_answer(&mut app, search);
+        assert_eq!(
+            rate_limit_toasts(&app)[1],
+            "GitHub search rate limit reached. Try again at 12:03"
+        );
+    }
+
+    #[test]
+    fn a_search_error_hands_its_gh_error_to_the_watch_and_the_rest_none() {
+        use lazy_github_core::github::SearchError;
+
+        let response = crate::effect::GithubResponse::SearchIssues(Err(search_limited(5).into()));
+        assert_eq!(response.error().and_then(GhError::rate_limit_resource), Some("search"));
+        for error in [
+            SearchError::Empty,
+            SearchError::PastLimit,
+            SearchError::Invalid {
+                messages: vec!["bad".into()],
+            },
+        ] {
+            assert!(
+                crate::effect::GithubResponse::SearchIssues(Err(error))
+                    .error()
+                    .is_none()
+            );
+        }
     }
 
     #[test]

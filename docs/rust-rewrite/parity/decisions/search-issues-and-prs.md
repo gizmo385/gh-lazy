@@ -1,17 +1,21 @@
 # Issues and pull requests can be searched through GitHub's search endpoint
 
-- Decision: Proposed, waiting on Chris (#386, D1 to D5). A "Search issues and pull requests" modal sends a query in
-  GitHub's search syntax to `GET /search/issues` (with `advanced_search=true`, so `AND`, `OR` and parentheses work
-  as on github.com), scoped to the selected repo by default, and lists the hits from every page GitHub returns, up
-  to its 1,000-result cap. `enter` on a hit opens it in Details. It opens with `s` on the Pull Requests and Issues
-  tables (`search.open`, a Rust-only id) and from the command palette. Recent queries are kept, and saved queries
+- Decision: A "Search issues and pull requests" modal sends a query in GitHub's search syntax to `GET /search/issues`
+  (with `advanced_search=true`, so `AND`, `OR` and parentheses work as on github.com), scoped by a select (the
+  selected repo by default) unless the query names a scope itself, and lists the hits from every page GitHub returns,
+  up to its 1,000-result cap. `enter` on a hit opens it in Details, selecting its repo first when it's another. It
+  opens with `s` on the Pull Requests and Issues tables (`search.open`, a Rust-only id) and from the command palette. Recent queries are kept, and saved queries
   live in a new `search.saved_queries` config field. The Python app has no search beyond the `/` box, which only
   filters the rows already loaded. A rate limit on GitHub's separate search bucket (30 requests a minute) shows its
   own toast, "GitHub search rate limit reached. Try again at <HH:MM>", once per search window, and doesn't pause
   the notifications poll, which uses the core bucket.
-- Decided by: pending: Chris, on #386 (proposed by the design agent, 2026-11-01)
+- Decided by: Chris, 2026-11-01, on #386: D1 a (a Search modal), D2 a (a scope select of This repo, This owner,
+  Favorites and tracked repos (up to 20) and All of GitHub, overridden by a scope typed in the query), D3 a (the last
+  20 queries persisted, plus saved queries in config as palette commands), D4 a (`s` on the PR and Issues tables,
+  `ctrl+s` saves, both rebindable Rust-only ids), D5 b (opening a hit from another repo switches the selected repo,
+  sharing the code path with notifications, #405). Proposed by the design agent, 2026-11-01
 - Link: #386 (parent; #393, #394, #395), #44 and #59 (the Python-era requests), #177 (M5 improvements, Chris 2026-10-30)
-- Rows: `toasts.rate-limited`
+- Rows: `toasts.rate-limited`, `toasts.search-rate-limited`
 
 New behavior, not tied to the Python app (an M5 improvement). It adds new matrix rows instead of changing
 existing ones, apart from the rate-limit split on `toasts.rate-limited`. The sub-issues add the rows and list them

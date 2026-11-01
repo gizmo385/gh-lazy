@@ -24,3 +24,7 @@ each page's headers with `--paginate -i` instead (option 1 on #333) would have c
 fake-gh and the parity harness depend on. A 403 with headers that quotes the text but has requests left (a permission
 error) stays its own error.
 Proactive throttling from `X-RateLimit-Remaining` before it reaches zero is out of scope.
+
+A limit on GitHub's search bucket (`X-RateLimit-Resource: search`) has its own window and toast and doesn't pause the
+notifications poll: row `toasts.search-rate-limited`, decision [search-issues-and-prs](search-issues-and-prs.md)
+(#393).

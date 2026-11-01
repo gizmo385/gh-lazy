@@ -9,7 +9,8 @@ use lazy_github_core::gh::GhError;
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{
     DiffFetchError, GhCliOptions, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue,
-    NewPullRequest, NewReview, NotificationQuery, PageQuery, PullRequestUpdate, RepoListQuery,
+    NewPullRequest, NewReview, NotificationQuery, PageQuery, PullRequestUpdate, RepoListQuery, SearchError, SearchPage,
+    SearchQuery,
 };
 use lazy_github_core::links::{GithubLink, LinkSubject, resolve_github_link};
 use lazy_github_core::models::{
@@ -176,6 +177,8 @@ pub enum GithubRequest {
         /// The filters and page.
         query: IssueListQuery,
     },
+    /// [`Github::search_issues`].
+    SearchIssues(SearchQuery),
     /// [`Github::unread_notification_count`].
     UnreadNotificationCount,
     /// [`Github::list_notifications`].
@@ -444,6 +447,8 @@ pub enum GithubResponse {
         /// The page.
         result: Result<Vec<PartialPullRequest>, GhError>,
     },
+    /// [`Github::search_issues`].
+    SearchIssues(Result<SearchPage, SearchError>),
     /// [`Github::unread_notification_count`].
     UnreadNotificationCount(Result<usize, GhError>),
     /// [`Github::list_notifications`].
@@ -539,6 +544,7 @@ impl GithubResponse {
             GithubResponse::ListRepositories(result) => result.as_ref().err(),
             GithubResponse::ListIssues(result) => result.as_ref().err(),
             GithubResponse::ListPullRequests { result, .. } => result.as_ref().err(),
+            GithubResponse::SearchIssues(result) => result.as_ref().err().and_then(SearchError::gh_error),
             GithubResponse::UnreadNotificationCount(result) => result.as_ref().err(),
             GithubResponse::ListNotifications(result) => result.as_ref().err(),
             GithubResponse::MarkNotificationRead(result) => result.as_ref().err(),
@@ -601,6 +607,7 @@ impl GithubRequest {
                 query,
                 result: gh.list_pull_requests(&repo, query).await,
             },
+            GithubRequest::SearchIssues(query) => GithubResponse::SearchIssues(gh.search_issues(&query).await),
             GithubRequest::UnreadNotificationCount => {
                 GithubResponse::UnreadNotificationCount(gh.unread_notification_count().await)
             }

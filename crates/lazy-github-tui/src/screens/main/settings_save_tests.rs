@@ -98,6 +98,7 @@ fn loads(app: &TestApp, from: usize) -> Vec<&'static str> {
         .iter()
         .filter_map(|effect| match effect {
             Effect::Github { request, .. } => match request {
+                GithubRequest::ListPullRequests { .. } => Some("pull requests"),
                 GithubRequest::ListIssues { .. } => Some("issues"),
                 GithubRequest::ListWorkflows { .. } => Some("workflows"),
                 GithubRequest::ListWorkflowRuns { .. } => Some("runs"),
@@ -126,14 +127,14 @@ fn selected(config: Config) -> TestApp {
     let repo = one();
     let gh = FakeGithub::new()
         .with_repositories(vec![repo.clone()])
-        .with_issue_page(
+        .with_list_page(
             "octo/one",
             1,
-            Ok(vec![
+            vec![
                 item(&repo, 3, Kind::OpenPr),
                 item(&repo, 2, Kind::Issue),
                 item(&repo, 1, Kind::OpenPr),
-            ]),
+            ],
         )
         .with_run_page(
             "octo/one",
@@ -280,8 +281,11 @@ fn a_section_shown_with_a_repo_selected_loads_once() {
     });
     let from = app.effects().len();
     save(&mut app, &config);
-    // One page for both tables, as the palette toggle loads them.
-    assert_eq!(loads(&app, from), ["issues", "runs cache", "workflows", "runs"]);
+    // A first page per table, as the palette toggle loads them.
+    assert_eq!(
+        loads(&app, from),
+        ["pull requests", "issues", "runs cache", "workflows", "runs"]
+    );
     settle(&mut app);
     assert_eq!(main(&app).issue_lists.issues_table().row_count(), 1);
     assert_eq!(main(&app).issue_lists.prs_table().row_count(), 2);

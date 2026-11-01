@@ -58,7 +58,7 @@ fn issues_page() -> Vec<IssueListItem> {
 fn gh(created: Option<Issue>) -> FakeGithub {
     let gh = FakeGithub::new()
         .with_repositories(vec![fixture_repo()])
-        .with_issue_page(REPO, 1, Ok(issues_page()));
+        .with_list_page(REPO, 1, issues_page());
     match created {
         Some(issue) => gh.with_created_issue(Ok(issue)),
         None => gh,

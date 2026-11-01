@@ -77,10 +77,10 @@ fn github(prs: Result<Vec<PartialPullRequest>, GhError>) -> FakeGithub {
     let repo = pr_details();
     FakeGithub::new()
         .with_repositories(vec![other(), pr_details()])
-        .with_issue_page(
+        .with_list_page(
             "parity-bot/pr-details",
             1,
-            Ok(vec![item(&repo, 7, Kind::OpenPr), item(&repo, 5, Kind::OpenPr)]),
+            vec![item(&repo, 7, Kind::OpenPr), item(&repo, 5, Kind::OpenPr)],
         )
         .with_commit_pull_requests("parity-bot/pr-details", SHA, prs)
         .with_pull_request("parity-bot/pr-details", 5, Ok(full_pr(5)))

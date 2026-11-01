@@ -67,7 +67,7 @@ fn posted(file: &str) -> IssueComment {
 fn gh() -> FakeGithub {
     FakeGithub::new()
         .with_repositories(vec![fixture_repo()])
-        .with_issue_page(REPO, 1, Ok(issues_page()))
+        .with_list_page(REPO, 1, issues_page())
         .with_issue_comments(REPO, 12, Ok(comments()))
         .with_posted_comment("A **new** comment", Ok(posted("POST.json")))
         .with_posted_comment("Agreed, thanks.", Ok(posted("POST.2.json")))

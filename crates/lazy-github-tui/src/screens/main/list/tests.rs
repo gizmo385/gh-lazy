@@ -682,3 +682,101 @@ fn a_read_or_page_for_a_repo_no_longer_selected_is_ignored() {
     app.with_cx(|cx| section.first_page(Some(numbered(7..=7).into()), cx));
     assert_eq!(cache_writes(&app).last(), Some(&(cache_path("octo/third"), vec![7])));
 }
+
+// The section's own first page (#384).
+
+/// A section begun for `octo/lists` that requested its own first page, and that request's id.
+fn requesting(app: &mut TestApp) -> (Section, RequestId) {
+    let mut section = section();
+    app.with_cx(|cx| {
+        section.begin(&repo("octo", "lists", false), cx);
+        section.request_first_page(cx);
+    });
+    let [(id, ref name, page, per_page)] = page_requests(app)[..] else {
+        panic!("one first page: {:?}", page_requests(app));
+    };
+    assert_eq!((name.as_str(), page, per_page), ("octo/lists", 1, PER_PAGE));
+    (section, id)
+}
+
+#[test]
+fn a_requested_first_page_fills_the_table_and_turns_paging_on() {
+    let mut app = TestApp::new(Config::default());
+    let (mut section, id) = requesting(&mut app);
+    assert!(section.table().is_loading());
+    assert!(
+        app.with_cx(|cx| section.on_response(id, page_response(1..=30), cx))
+            .is_none()
+    );
+    assert_eq!(section.table().row_count(), 30);
+    assert!(!section.table().is_loading());
+    assert!(!section.compact());
+    assert_eq!(lazy(&section), (1, true, None));
+    // It's answered: a second answer is handed back.
+    assert!(
+        app.with_cx(|cx| section.on_response(id, page_response(1..=3), cx))
+            .is_some()
+    );
+}
+
+#[test]
+fn an_empty_requested_first_page_is_compact() {
+    let mut app = TestApp::new(Config::default());
+    let (mut section, id) = requesting(&mut app);
+    let log = logs(|| {
+        assert!(
+            app.with_cx(|cx| section.on_response(id, GithubResponse::ListIssues(Ok(Vec::new())), cx))
+                .is_none()
+        );
+    });
+    assert_eq!(log, "");
+    assert!(section.compact());
+    assert!(!section.table().is_loading());
+}
+
+#[test]
+fn a_failed_requested_first_page_logs_and_is_compact_without_rows() {
+    let mut app = TestApp::new(Config::default());
+    // `END` sources end paging on a failed later page; a first page is the same either way.
+    let mut section: ListSection<TestSource<true>> = ListSection::new(AppOptions::default());
+    app.with_cx(|cx| {
+        section.begin(&repo("octo", "lists", false), cx);
+        section.request_first_page(cx);
+    });
+    let (id, ..) = page_requests(&app)[0];
+    let log = logs(|| assert!(app.with_cx(|cx| section.on_response(id, http_error(), cx)).is_none()));
+    assert!(log.contains("ERROR Test page failed"), "{log}");
+    assert!(section.compact());
+    assert!(!section.table().is_loading());
+    assert_eq!(lazy(&section), (1, true, None));
+}
+
+#[test]
+fn a_new_first_page_or_repo_cancels_the_one_in_flight() {
+    let mut app = TestApp::new(Config::default());
+    let (mut section, first) = requesting(&mut app);
+    app.with_cx(|cx| section.request_first_page(cx));
+    let (second, ..) = page_requests(&app)[1];
+    assert_eq!(cancels(&app), [first]);
+    // The replaced request's late answer is handed back.
+    assert!(
+        app.with_cx(|cx| section.on_response(first, page_response(1..=3), cx))
+            .is_some()
+    );
+    assert_eq!(section.table().row_count(), 0);
+    app.with_cx(|cx| section.begin(&repo("octo", "other", false), cx));
+    assert!(cancels(&app).contains(&second));
+    assert!(
+        app.with_cx(|cx| section.on_response(second, page_response(1..=3), cx))
+            .is_some()
+    );
+    assert_eq!(section.table().row_count(), 0);
+}
+
+#[test]
+fn no_first_page_is_requested_before_any_repo() {
+    let mut app = TestApp::new(Config::default());
+    let mut section = section();
+    app.with_cx(|cx| section.request_first_page(cx));
+    assert_eq!(page_requests(&app), []);
+}

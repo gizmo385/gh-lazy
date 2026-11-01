@@ -68,7 +68,7 @@ fn updated() -> Issue {
 fn gh(updated: Option<Issue>) -> FakeGithub {
     let gh = FakeGithub::new()
         .with_repositories(vec![fixture_repo()])
-        .with_issue_page(REPO, 1, Ok(issues_page()));
+        .with_list_page(REPO, 1, issues_page());
     match updated {
         Some(issue) => gh.with_updated_issue(Ok(issue)),
         None => gh,

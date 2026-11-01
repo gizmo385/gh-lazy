@@ -62,7 +62,7 @@ fn settle(app: &mut TestApp) {
 fn gh(page: Vec<IssueListItem>) -> FakeGithub {
     FakeGithub::new()
         .with_repositories(vec![fixture_repo()])
-        .with_issue_page(REPO, 1, Ok(page))
+        .with_list_page(REPO, 1, page)
         .with_pull_request(REPO, 3, Ok(pull_request(3)))
         .with_pull_request(REPO, 5, Ok(pull_request(5)))
         .with_pull_request_update(5, Ok(()))

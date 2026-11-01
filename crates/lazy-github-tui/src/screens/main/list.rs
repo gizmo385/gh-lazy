@@ -1,8 +1,9 @@
 //! A repo-scoped, lazily paged list section: the table of the Pull Requests, Issues and Workflows sections. Python
 //! spreads this over `LazilyLoadedDataTable` and the `LazyGithubContainer` around it.
 //!
-//! The section owns the later pages. Its first page belongs to its owner, which requests it (PRs and issues share
-//! theirs) and hands the result to [`ListSection::first_page`].
+//! The section owns the later pages. Its first page is either its own too ([`ListSection::request_first_page`], as
+//! the Pull Requests and Issues sections do) or its owner's, which requests it and hands the result to
+//! [`ListSection::first_page`] (the Workflows section, whose first page is two requests).
 //!
 //! The section also keeps the repo's table cache (`<owner>_<repo>_<name>.json`, Python's `cache_name`): the cached
 //! rows show under the loading overlay until the first page answers, and every row is written back after each page.
@@ -41,13 +42,14 @@ pub(super) trait ListSource {
     /// How the rows sort.
     fn sort() -> SortSpec;
 
-    /// The request for one later page, built from the repo and the config at that moment.
+    /// The request for one page, built from the repo and the config at that moment.
     fn page_request(repo: &Repository, page: u32, per_page: u32, config: &Config) -> GithubRequest;
 
     /// This source's page out of a response, or the response handed back if it isn't one.
     fn page_items(response: GithubResponse) -> Result<Result<Page<Self::Item>, GhError>, GithubResponse>;
 
-    /// What a failed later page does, after logging the section's line.
+    /// Logs the section's line for a failed page, and says what a failed later page does to paging. A failed first
+    /// page logs the same line and keeps whatever rows the table has.
     fn page_failed(error: &GhError) -> PageFailure;
 }
 
@@ -76,6 +78,8 @@ pub(super) struct ListSection<S: ListSource> {
     table: SearchableTable<S::Item>,
     repo: Option<Repository>,
     page: Option<PageRequest>,
+    /// The first page in flight, when the section requested it itself ([`Self::request_first_page`]).
+    first: Option<RequestId>,
     /// The cache read in flight for the repo.
     cache: Option<RequestId>,
     compact: bool,
@@ -88,6 +92,7 @@ impl<S: ListSource> std::fmt::Debug for ListSection<S> {
             .field("loading", &self.table.is_loading())
             .field("repo", &self.repo.as_ref().map(|repo| &repo.full_name))
             .field("page", &self.page)
+            .field("first", &self.first)
             .field("cache", &self.cache)
             .field("compact", &self.compact)
             .finish()
@@ -101,6 +106,7 @@ impl<S: ListSource> ListSection<S> {
             table: SearchableTable::new(S::columns(), S::sort()).with_options(options),
             repo: None,
             page: None,
+            first: None,
             cache: None,
             compact: false,
         }
@@ -128,7 +134,7 @@ impl<S: ListSource> ListSection<S> {
         self.repo.as_ref()
     }
 
-    /// A repo was selected: the part of #170's `load_repo` contract every list pane shares. The page in flight is
+    /// A repo was selected: the part of #170's `load_repo` contract every list pane shares. The pages in flight are
     /// cancelled, the rows clear (cursor and scroll back to 0, paging off) and the loading overlay shows. `compact`
     /// stays as it was until the first page lands, as in Python.
     ///
@@ -140,6 +146,7 @@ impl<S: ListSource> ListSection<S> {
             .take()
             .map(|page| page.id)
             .into_iter()
+            .chain(self.first.take())
             .chain(self.cache.take())
         {
             cx.effect(Effect::Cancel(id));
@@ -154,6 +161,24 @@ impl<S: ListSource> ListSection<S> {
     /// page then replaces the rows.
     pub(super) fn retarget(&mut self, repo: &Repository) {
         self.repo = Some(repo.clone());
+    }
+
+    /// Requests page 1 for the repo the rows are for, with the config's filters, replacing any first page in flight.
+    /// [`Self::on_response`] then takes it to [`Self::first_page`] and [`Self::refresh_compact`], logging the
+    /// section's line first if it failed.
+    pub(super) fn request_first_page(&mut self, cx: &mut Cx<'_>) {
+        if let Some(id) = self.first.take() {
+            cx.effect(Effect::Cancel(id));
+        }
+        let Some(repo) = &self.repo else {
+            tracing::debug!(
+                name = S::CACHE_NAME,
+                "no first page to request before any repo was selected"
+            );
+            return;
+        };
+        let request = S::page_request(repo, 1, PER_PAGE, cx.config());
+        self.first = Some(cx.request(request));
     }
 
     /// Takes the result of the section's cache read, and hands back any other.
@@ -274,14 +299,31 @@ impl<S: ListSource> ListSection<S> {
         }
     }
 
-    /// Takes the response to the page in flight, and hands back any other. A page asked for before the last
-    /// [`Self::begin`] was cancelled there, so if it still arrives it's handed back and dropped (Py bug B45).
+    /// Takes the response to the first or a later page in flight, and hands back any other. A page asked for before
+    /// the last [`Self::begin`] or [`Self::request_first_page`] was cancelled there, so if it still arrives it's handed
+    /// back and dropped (Py bug B45).
     pub(super) fn on_response(
         &mut self,
         id: RequestId,
         response: GithubResponse,
         cx: &mut Cx<'_>,
     ) -> Option<GithubResponse> {
+        if self.first == Some(id) {
+            let result = match S::page_items(response) {
+                Ok(result) => result,
+                Err(other) => return Some(other),
+            };
+            self.first = None;
+            let page = result
+                .map_err(|error| {
+                    // Only for its log line: a failed first page keeps the rows, whatever a later one would do.
+                    let _ = S::page_failed(&error);
+                })
+                .ok();
+            self.first_page(page, cx);
+            self.refresh_compact();
+            return None;
+        }
         let Some(request) = self.page.filter(|page| page.id == id) else {
             return Some(response);
         };

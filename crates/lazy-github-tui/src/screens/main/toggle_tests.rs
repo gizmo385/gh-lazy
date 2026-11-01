@@ -43,6 +43,7 @@ fn loads(app: &TestApp, from: usize) -> Vec<&'static str> {
         .iter()
         .filter_map(|effect| match effect {
             Effect::Github { request, .. } => match request {
+                GithubRequest::ListPullRequests { .. } => Some("pull requests"),
                 GithubRequest::ListIssues { .. } => Some("issues"),
                 GithubRequest::ListWorkflows { .. } => Some("workflows"),
                 GithubRequest::ListWorkflowRuns { .. } => Some("runs"),
@@ -63,14 +64,14 @@ fn selected(config: Config) -> TestApp {
     let repo = one();
     let gh = FakeGithub::new()
         .with_repositories(vec![repo.clone(), repo_two()])
-        .with_issue_page(
+        .with_list_page(
             "octo/one",
             1,
-            Ok(vec![
+            vec![
                 item(&repo, 3, Kind::OpenPr),
                 item(&repo, 2, Kind::Issue),
                 item(&repo, 1, Kind::OpenPr),
-            ]),
+            ],
         )
         .with_run_page(
             "octo/one",
@@ -206,8 +207,8 @@ fn showing_issues_or_prs_requests_the_first_page_once_without_clearing() {
         assert!(loads(&app, from).is_empty(), "hiding requests nothing");
         toggle(&mut app, section);
         assert!(shown(&app, id));
-        // One page for both tables, no cache read, and the rows stay until it lands.
-        assert_eq!(loads(&app, from), ["issues"]);
+        // One first page per table, no cache read, and the rows stay until they land.
+        assert_eq!(loads(&app, from), ["pull requests", "issues"]);
         assert_eq!(rows(&app), (2, 1));
         assert!(!main(&app).issue_lists.issues_table().is_loading());
         settle(&mut app);

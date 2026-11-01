@@ -212,7 +212,7 @@ fn github() -> FakeGithub {
             "parity-bot/issue-fixture",
             Ok(Some(readme("links/repos/parity-bot/issue-fixture/readme/GET.raw.json"))),
         )
-        .with_issue_page("parity-bot/issue-fixture", 1, Ok(vec![issue("issue-details", 12)]))
+        .with_list_page("parity-bot/issue-fixture", 1, vec![issue("issue-details", 12)])
         .with_repository("parity-bot/issue-fixture", Ok(Some(repo.clone())))
         .with_issue("parity-bot/issue-fixture", 7, Ok(issue("links", 7)))
 }

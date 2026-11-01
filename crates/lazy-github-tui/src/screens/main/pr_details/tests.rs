@@ -129,7 +129,7 @@ pub(super) const NAME: &str = "parity-bot/pr-details";
 pub(in crate::screens::main) fn gh() -> FakeGithub {
     let mut gh = FakeGithub::new()
         .with_repositories(vec![fixture_repo()])
-        .with_issue_page(NAME, 1, Ok(issues_page()))
+        .with_list_page(NAME, 1, issues_page())
         .with_pull_request(NAME, 2, Err(server_error()));
     for number in [5, 4, 3, 9] {
         let sha = fixture_pr(number).head.sha;

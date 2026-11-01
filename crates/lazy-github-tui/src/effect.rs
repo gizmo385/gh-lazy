@@ -169,6 +169,13 @@ pub enum GithubRequest {
         /// The filters and page.
         query: IssueListQuery,
     },
+    /// [`Github::list_pull_requests`].
+    ListPullRequests {
+        /// The repo whose pull requests to list.
+        repo: Box<Repository>,
+        /// The filters and page.
+        query: IssueListQuery,
+    },
     /// [`Github::unread_notification_count`].
     UnreadNotificationCount,
     /// [`Github::list_notifications`].
@@ -429,6 +436,14 @@ pub enum GithubResponse {
     ListRepositories(Result<Vec<Repository>, GhError>),
     /// [`Github::list_issues`].
     ListIssues(Result<Vec<IssueListItem>, GhError>),
+    /// [`Github::list_pull_requests`], with the query it was asked with: whether a page is the last one depends on
+    /// it (a search ends at GitHub's result cap).
+    ListPullRequests {
+        /// The filters and page asked for.
+        query: IssueListQuery,
+        /// The page.
+        result: Result<Vec<PartialPullRequest>, GhError>,
+    },
     /// [`Github::unread_notification_count`].
     UnreadNotificationCount(Result<usize, GhError>),
     /// [`Github::list_notifications`].
@@ -523,6 +538,7 @@ impl GithubResponse {
             GithubResponse::CurrentUser(result) => result.as_ref().err(),
             GithubResponse::ListRepositories(result) => result.as_ref().err(),
             GithubResponse::ListIssues(result) => result.as_ref().err(),
+            GithubResponse::ListPullRequests { result, .. } => result.as_ref().err(),
             GithubResponse::UnreadNotificationCount(result) => result.as_ref().err(),
             GithubResponse::ListNotifications(result) => result.as_ref().err(),
             GithubResponse::MarkNotificationRead(result) => result.as_ref().err(),
@@ -581,6 +597,10 @@ impl GithubRequest {
                 GithubResponse::ListRepositories(gh.list_repositories(query).await)
             }
             GithubRequest::ListIssues { repo, query } => GithubResponse::ListIssues(gh.list_issues(&repo, query).await),
+            GithubRequest::ListPullRequests { repo, query } => GithubResponse::ListPullRequests {
+                query,
+                result: gh.list_pull_requests(&repo, query).await,
+            },
             GithubRequest::UnreadNotificationCount => {
                 GithubResponse::UnreadNotificationCount(gh.unread_notification_count().await)
             }

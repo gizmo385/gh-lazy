@@ -65,7 +65,7 @@ fn gh() -> FakeGithub {
     renamed.pr.issue.title = "Renamed since the list".into();
     FakeGithub::new()
         .with_repositories(vec![fixture_repo()])
-        .with_issue_page(REPO, 1, Ok(issues_page()))
+        .with_list_page(REPO, 1, issues_page())
         .with_pull_request(REPO, 9, Ok(fixture_pr(9)))
         .with_pull_request(REPO, 5, Ok(renamed))
         .with_pull_request(REPO, 42, Err(not_found()))

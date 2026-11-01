@@ -68,7 +68,7 @@ fn fixture_comments(number: u64) -> Vec<IssueComment> {
 fn gh() -> FakeGithub {
     FakeGithub::new()
         .with_repositories(vec![fixture_repo()])
-        .with_issue_page("parity-bot/issue-fixture", 1, Ok(issues_page()))
+        .with_list_page("parity-bot/issue-fixture", 1, issues_page())
         .with_issue_comments("parity-bot/issue-fixture", 12, Ok(fixture_comments(12)))
         .with_issue_comments("parity-bot/issue-fixture", 10, Ok(fixture_comments(10)))
         .with_readme(
@@ -345,7 +345,7 @@ fn issue_overview_unicode_160x48() {
         .collect();
     let mut app = TestApp::with_github(
         Config::default(),
-        gh().with_issue_page("parity-bot/issue-fixture", 1, Ok(items)),
+        gh().with_list_page("parity-bot/issue-fixture", 1, items),
     );
     app.press(&["enter"]);
     settle(&mut app);
@@ -731,7 +731,7 @@ fn large_body_app() -> TestApp {
             issue.body = Some(large_markdown(200_000, 100));
         }
     }
-    let gh = gh().with_issue_page("parity-bot/issue-fixture", 1, Ok(page));
+    let gh = gh().with_list_page("parity-bot/issue-fixture", 1, page);
     let mut app = TestApp::with_github(Config::default(), gh);
     app.hold_parses();
     app.press(&["enter"]);

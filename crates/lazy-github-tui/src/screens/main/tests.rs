@@ -916,11 +916,19 @@ fn table_keys_move_the_cursor_quietly_and_select_selects() {
     assert_eq!(out, "INFO Selected repo parity-bot/lazy-demo\n");
     // The columns fit, so `l` falls through the whole chain.
     assert!(app.app_mut().action_for(Event::Key(key_event("l"))).is_none());
-    // The only effects are the selection's PR and issue caches and first page, the runs cache, the workflows and
-    // runs, and the overview's README.
+    // The only effects are the selection's PR and issue caches and their first pages, the runs cache, the workflows
+    // and runs, and the overview's README.
     let [
         Effect::ReadCache { .. },
         Effect::ReadCache { .. },
+        Effect::Github {
+            request:
+                GithubRequest::ListPullRequests {
+                    repo: pr_repo,
+                    query: pr_query,
+                },
+            ..
+        },
         Effect::Github {
             request: GithubRequest::ListIssues { repo, query },
             ..
@@ -940,9 +948,10 @@ fn table_keys_move_the_cursor_quietly_and_select_selects() {
         },
     ] = app.effects()
     else {
-        panic!("one first-page request: {:?}", app.effects());
+        panic!("a first-page request per table: {:?}", app.effects());
     };
     assert_eq!((repo.full_name.as_str(), query.page), ("parity-bot/lazy-demo", 1));
+    assert_eq!((pr_repo.full_name.as_str(), pr_query.page), ("parity-bot/lazy-demo", 1));
 }
 
 #[test]
@@ -1885,7 +1894,7 @@ fn prs_loaded() -> TestApp {
     ];
     let gh = FakeGithub::new()
         .with_repositories(octo_repos())
-        .with_issue_page("octo/one", 1, Ok(page));
+        .with_list_page("octo/one", 1, page);
     let mut app = TestApp::with_github(Config::default(), gh);
     app.press(&["enter"]);
     settle_logged(&mut app);
@@ -1957,7 +1966,7 @@ fn issues_loaded() -> TestApp {
     ];
     let gh = FakeGithub::new()
         .with_repositories(octo_repos())
-        .with_issue_page("octo/one", 1, Ok(page));
+        .with_list_page("octo/one", 1, page);
     let mut app = TestApp::with_github(Config::default(), gh);
     app.press(&["enter"]);
     settle_logged(&mut app);

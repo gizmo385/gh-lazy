@@ -58,7 +58,7 @@ fn issues_page() -> Vec<IssueListItem> {
 pub(super) fn gh() -> FakeGithub {
     FakeGithub::new()
         .with_repositories(vec![fixture_repo()])
-        .with_issue_page(REPO, 1, Ok(issues_page()))
+        .with_list_page(REPO, 1, issues_page())
         .with_branches(REPO, Ok(branches()))
         .with_collaborators(REPO, Ok(vec!["parity-friend".into(), "parity-reviewer".into()]))
 }

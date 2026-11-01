@@ -60,7 +60,7 @@ fn settle(app: &mut TestApp) {
 fn app(config: Config) -> TestApp {
     let gh = FakeGithub::new()
         .with_repositories(vec![fixture_repo()])
-        .with_issue_page(REPO, 1, Ok(issues_page()));
+        .with_list_page(REPO, 1, issues_page());
     let mut app = TestApp::with_github(config, gh);
     app.press(&["enter"]);
     settle(&mut app);

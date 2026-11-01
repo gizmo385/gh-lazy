@@ -46,7 +46,7 @@ fn runs() -> Vec<lazy_github_core::models::WorkflowRun> {
 fn gh() -> FakeGithub {
     FakeGithub::new()
         .with_repositories(vec![ci()])
-        .with_issue_page("octo/ci", 1, Ok(first_page()))
+        .with_list_page("octo/ci", 1, first_page())
         .with_run_page("octo/ci", 1, Ok(runs()))
 }
 
@@ -209,7 +209,7 @@ fn move_cursor(app: &mut TestApp, section: SectionId, binding: BindingId) {
 fn paging_prs() -> TestApp {
     let repo = ci();
     let page: Vec<IssueListItem> = (1..=30).rev().map(|n| item(&repo, n, Kind::OpenPr)).collect();
-    let gh = gh().with_issue_page("octo/ci", 1, Ok(page));
+    let gh = gh().with_list_page("octo/ci", 1, page);
     let mut app = TestApp::with_github(Config::default(), gh);
     app.dispatch(Action::SelectRepo(Box::new(ci())));
     settle(&mut app);
@@ -221,7 +221,7 @@ fn page_requests(app: &TestApp, section: SectionId) -> usize {
     requests(app)
         .iter()
         .filter(|request| match (section, request) {
-            (SectionId::PullRequests, GithubRequest::ListIssues { query, .. }) => query.page > 1,
+            (SectionId::PullRequests, GithubRequest::ListPullRequests { query, .. }) => query.page > 1,
             (SectionId::Workflows, GithubRequest::ListWorkflowRuns { page, .. }) => page.page > 1,
             _ => false,
         })

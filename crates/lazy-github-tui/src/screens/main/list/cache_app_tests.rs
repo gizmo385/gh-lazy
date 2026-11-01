@@ -87,6 +87,7 @@ fn restored_sections_after_failed_fetches_100x30() {
             crate::screens::main::repos::repo("octo", "two", false),
         ])
         .with_issue_page("octo/one", 1, Err(server_error()))
+        .with_pull_request_page("octo/one", 1, Err(server_error()))
         .with_run_page("octo/one", 1, Err(server_error()));
     let mut app = with_caches(TestApp::with_github(cache_config(), gh), &repo);
     app.press(&["enter"]);

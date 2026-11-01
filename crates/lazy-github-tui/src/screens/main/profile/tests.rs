@@ -325,11 +325,7 @@ fn authors_github() -> FakeGithub {
         issue.user.login = "parity-friend".into();
     }
     github()
-        .with_issue_page(
-            "parity-bot/dotfiles",
-            1,
-            Ok(vec![item(&dotfiles, 2, Kind::OpenPr), issue]),
-        )
+        .with_list_page("parity-bot/dotfiles", 1, vec![item(&dotfiles, 2, Kind::OpenPr), issue])
         .with_profile("parity-friend", Ok(parity_friend()))
         .with_user_repos("parity-friend", Ok(parity_friend_repos()))
 }

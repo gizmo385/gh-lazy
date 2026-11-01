@@ -50,7 +50,7 @@ fn gh() -> FakeGithub {
         .collect();
     let mut gh = FakeGithub::new()
         .with_repositories(vec![repo])
-        .with_issue_page(NAME, 1, Ok(items))
+        .with_list_page(NAME, 1, items)
         .with_pull_request_diff(NAME, 4, Err(DiffFetchError::TooLarge));
     for number in [5, 4, 3, 9] {
         gh = gh.with_pull_request(NAME, number, Ok(fixture_pr(number)));
@@ -145,7 +145,7 @@ fn unicode_gh() -> FakeGithub {
                  +ZWJ and controls:{UNICODE_EXTRAS}\n 終わり\n"
             ),
         );
-    gh().with_issue_page(NAME, 1, Ok(items))
+    gh().with_list_page(NAME, 1, items)
         .with_pull_request(NAME, 5, Ok(pr))
         .with_pull_request_diff(NAME, 5, Ok(diff))
 }

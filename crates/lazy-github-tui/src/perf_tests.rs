@@ -296,7 +296,7 @@ fn perf_pr_diff_300_files() {
     let diff = large_diff(300, 67);
     let gh = FakeGithub::new()
         .with_repositories(vec![repo])
-        .with_issue_page(PR_REPO, 1, Ok(items))
+        .with_list_page(PR_REPO, 1, items)
         .with_pull_request(PR_REPO, 5, Ok(pr))
         .with_pull_request_diff(PR_REPO, 5, Ok(diff));
     let mut config = Config::default();
@@ -513,7 +513,7 @@ fn perf_markdown_1mb_body() {
     let issue = IssueListItem::from_api_item(item, &repo).unwrap();
     let gh = FakeGithub::new()
         .with_repositories(vec![repo])
-        .with_issue_page("parity-bot/issue-fixture", 1, Ok(vec![issue]))
+        .with_list_page("parity-bot/issue-fixture", 1, vec![issue])
         .with_issue_comments("parity-bot/issue-fixture", 12, Ok(Vec::new()))
         .with_readme("parity-bot/issue-fixture", Ok(Some("Issues.\n".into())));
     let mut app = TestApp::with_github(Config::default(), gh);

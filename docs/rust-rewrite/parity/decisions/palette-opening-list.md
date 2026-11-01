@@ -16,6 +16,6 @@ LazyGithub's and Textual's hits come in an order that depends on memory addresse
 picks one of the orders Python sometimes shows.
 
 The scenario `command-palette` checks the system commands in the opening list with `[expect]` and leaves the rest out
-of the cross-app check. The opening list is also shorter than Python's by "Screenshot"
-([palette-screenshot-deferred](./palette-screenshot-deferred.md)) and, until #192, by "Theme"
+of the cross-app check. The opening list was also shorter than Python's by "Screenshot" until #291
+([palette-screenshot-deferred](./palette-screenshot-deferred.md), superseded) and, until #192, by "Theme"
 (`command-palette.theme`, its own row).

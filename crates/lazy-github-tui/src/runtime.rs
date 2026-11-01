@@ -13,6 +13,7 @@ use lazy_github_core::config::{Config, ConfigPaths};
 use lazy_github_core::git::GitCli;
 use lazy_github_core::github::Github;
 use lazy_github_core::logging::LOG_FILE_ONLY;
+use lazy_github_core::screen::{Screen, SvgOptions};
 use lazy_github_core::{cache, drafts};
 use tokio::sync::{mpsc, watch};
 use tokio::task::{AbortHandle, JoinHandle};
@@ -21,6 +22,7 @@ use tokio::time::{Instant, MissedTickBehavior};
 use crate::components::markdown::MarkdownSource;
 use crate::effect::{Effect, RequestId, TimerId};
 use crate::event::Event;
+use crate::screenshot::{DownloadsEnv, ScreenshotError};
 
 /// How the runtime opens a URL: [`browser::open`], or a recorder in tests.
 type Opener = Arc<dyn Fn(String) -> OpenFuture + Send + Sync>;
@@ -41,6 +43,8 @@ pub struct Runtime<G: Github> {
     /// The terminal, for the bell and the clipboard.
     terminal: Box<dyn Write + Send>,
     opener: Opener,
+    /// Where screenshots are saved.
+    downloads: DownloadsEnv,
 }
 
 impl<G: Github> Runtime<G> {
@@ -59,7 +63,15 @@ impl<G: Github> Runtime<G> {
             cache_writer,
             terminal: Box::new(io::stdout()),
             opener: Arc::new(|url: String| -> OpenFuture { Box::pin(async move { browser::open(&url).await }) }),
+            downloads: DownloadsEnv::from_env(),
         }
+    }
+
+    /// Saves screenshots as if the app had started in `downloads` instead of the process's environment.
+    #[cfg(test)]
+    fn with_downloads(mut self, downloads: DownloadsEnv) -> Self {
+        self.downloads = downloads;
+        self
     }
 
     /// Sends the bell and the clipboard to `terminal` instead of stdout.
@@ -109,17 +121,7 @@ impl<G: Github> Runtime<G> {
             }
             Effect::SaveConfig(config) => self.saver.save(config),
             Effect::ReconfigureGithub(options) => self.gh.reconfigure(options),
-            Effect::ReadCache { id, path } => {
-                let tx = self.tx.clone();
-                let task = tokio::spawn(async move {
-                    let result = match tokio::task::spawn_blocking(move || cache::read(&path)).await {
-                        Ok(read) => read.map_err(|e| e.to_string()),
-                        Err(e) => Err(format!("the read task failed: {e}")),
-                    };
-                    let _ = tx.send(Event::CacheRead { id, result });
-                });
-                self.tasks.insert(id, task.abort_handle());
-            }
+            Effect::ReadCache { id, path } => self.read_cache(id, path),
             Effect::ParseMarkdown { id, source } => self.parse_markdown(id, source),
             Effect::WriteCache { path, text } => self.cache_writer.write(path, text),
             Effect::RemoveCache { path } => self.cache_writer.remove(path),
@@ -181,9 +183,47 @@ impl<G: Github> Runtime<G> {
                     }
                 });
             }
+            Effect::SaveScreenshot {
+                file_name,
+                screen,
+                options,
+            } => self.save_screenshot(file_name, *screen, options),
             // `App` already stopped the loop; there's nothing to perform.
             Effect::Quit => {}
         }
+    }
+
+    /// Reads a cache file on a blocking thread and sends its text back as `Event::CacheRead`. `Effect::Cancel` aborts
+    /// the send.
+    fn read_cache(&mut self, id: RequestId, path: PathBuf) {
+        let tx = self.tx.clone();
+        let task = tokio::spawn(async move {
+            let result = match tokio::task::spawn_blocking(move || cache::read(&path)).await {
+                Ok(read) => read.map_err(|e| e.to_string()),
+                Err(e) => Err(format!("the read task failed: {e}")),
+            };
+            let _ = tx.send(Event::CacheRead { id, result });
+        });
+        self.tasks.insert(id, task.abort_handle());
+    }
+
+    /// Writes a screenshot on a blocking thread and sends the outcome back as `Event::ScreenshotSaved`. Nobody cancels
+    /// it, and two in flight just write two files.
+    fn save_screenshot(&mut self, file_name: String, screen: Screen, options: SvgOptions) {
+        let tx = self.tx.clone();
+        let downloads = self.downloads.clone();
+        tokio::spawn(async move {
+            let name = file_name.clone();
+            let result = match tokio::task::spawn_blocking(move || downloads.save(&file_name, &screen, &options)).await
+            {
+                Ok(result) => result,
+                Err(err) => Err(ScreenshotError {
+                    path: PathBuf::from(name),
+                    message: format!("the save task failed: {err}"),
+                }),
+            };
+            let _ = tx.send(Event::ScreenshotSaved(result));
+        });
     }
 
     /// Parses `source` on a blocking thread and sends the document back as `Event::MarkdownParsed`. `Effect::Cancel`
@@ -430,6 +470,63 @@ mod tests {
             .output()
             .unwrap();
         assert!(output.status.success(), "git {args:?}: {output:?}");
+    }
+
+    /// Saves a two-cell screenshot as if the app had started with `home`, and returns what the runtime answers.
+    async fn save_screenshot_in(home: &Path, dir: &TempDir) -> Result<PathBuf, ScreenshotError> {
+        let (runtime, mut rx) = runtime(FakeGithub::new(), dir);
+        let mut runtime = runtime.with_downloads(DownloadsEnv {
+            home: Some(home.to_path_buf()),
+            xdg_config_home: None,
+        });
+        let mut screen = Screen::new(2, 1);
+        if let Some(cell) = screen.cell_mut(0, 0) {
+            cell.symbol = "a".to_owned();
+        }
+        runtime.execute(Effect::SaveScreenshot {
+            file_name: "LazyGithub_2026-10-25T12_00_00.svg".to_owned(),
+            screen: Box::new(screen),
+            options: SvgOptions {
+                title: "LazyGithub".to_owned(),
+                default_fg: (255, 255, 255),
+                default_bg: (0, 0, 0),
+            },
+        });
+        let event = tokio::time::timeout(Duration::from_secs(10), rx.recv())
+            .await
+            .unwrap()
+            .unwrap();
+        runtime.shutdown().await;
+        match event {
+            Event::ScreenshotSaved(result) => result,
+            other => panic!("unexpected {other:?}"),
+        }
+    }
+
+    // Not on a paused clock: the write is on a real blocking thread.
+    #[tokio::test(flavor = "current_thread")]
+    async fn save_screenshot_writes_the_svg_into_downloads() {
+        let dir = TempDir::new();
+        let home = dir.0.join("home");
+        std::fs::create_dir_all(home.join("Downloads")).unwrap();
+        let path = save_screenshot_in(&home, &dir).await.unwrap();
+        assert_eq!(path, home.join("Downloads").join("LazyGithub_2026-10-25T12_00_00.svg"));
+        let svg = std::fs::read_to_string(&path).unwrap();
+        assert!(svg.starts_with("<svg") && svg.contains(">a </text>"), "{svg}");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn save_screenshot_without_downloads_reports_the_error_and_creates_nothing() {
+        let dir = TempDir::new();
+        let home = dir.0.join("home");
+        std::fs::create_dir_all(&home).unwrap();
+        let error = save_screenshot_in(&home, &dir).await.unwrap_err();
+        assert_eq!(
+            error.path,
+            home.join("Downloads").join("LazyGithub_2026-10-25T12_00_00.svg")
+        );
+        assert!(!error.message.is_empty());
+        assert!(!home.join("Downloads").exists());
     }
 
     // Not on a paused clock: the git child is a real process, and auto-advancing time would trip its timeout.

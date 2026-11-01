@@ -25,6 +25,7 @@ pub mod options;
 pub mod rate_limit;
 pub mod runtime;
 pub mod screens;
+pub mod screenshot;
 pub mod theme;
 pub mod toast;
 pub mod tui;

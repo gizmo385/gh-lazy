@@ -622,7 +622,12 @@ impl TestApp {
                     self.timers.remove(id);
                 }
                 Effect::ReconfigureGithub(options) => self.gh.reconfigure(options.clone()),
-                Effect::Bell | Effect::SetClipboard(_) | Effect::OpenUrl(_) | Effect::Quit => {}
+                // Only the terminal loop emits `SaveScreenshot`, after a frame; `App` never does.
+                Effect::Bell
+                | Effect::SetClipboard(_)
+                | Effect::OpenUrl(_)
+                | Effect::SaveScreenshot { .. }
+                | Effect::Quit => {}
             }
             self.effects.push(effect);
         }

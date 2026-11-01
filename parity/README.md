@@ -496,6 +496,9 @@ the seeds' cache directories.
   with three threads: 9100901 "Saved unread thread" (unread) and 9100902 "Saved read thread" (read), which only
   it has, then 9100001 "Add the notifications modal" saved as read (the live page has it unread). For the
   `notifications-cache` scenario.
+- `screenshot-downloads/`: an empty `home/Downloads/.keep`, so the isolated `HOME` has the Downloads directory the
+  palette's "Screenshot" saves into (neither app creates it). For the `command-palette-screenshot` scenario; its
+  `-error` twin runs without it.
 
 ## Recording fixtures
 

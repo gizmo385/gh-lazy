@@ -114,7 +114,10 @@ fn styled(app: &mut TestApp) -> String {
 #[test]
 fn ctrl_p_opens_the_palette_with_the_input_focused() {
     let mut app = opened();
-    assert_eq!(hits(&app), opening(&["Keys", "Maximize", "Quit", "Theme"]));
+    assert_eq!(
+        hits(&app),
+        opening(&["Keys", "Maximize", "Quit", "Screenshot", "Theme"])
+    );
     assert_eq!(highlighted(&app), Some("Keys"));
     // The input takes printable keys, `q` and `?` included.
     type_text(&mut app, "q?1");
@@ -169,7 +172,10 @@ fn keys_says_whether_it_shows_or_hides_the_help_panel() {
 fn maximize_is_offered_when_m_would_maximize_and_minimize_while_maximized() {
     let mut app = TestApp::new(Config::default());
     app.press(&["M", "ctrl+p"]);
-    assert_eq!(hits(&app), opening(&["Keys", "Minimize", "Quit", "Theme"]));
+    assert_eq!(
+        hits(&app),
+        opening(&["Keys", "Minimize", "Quit", "Screenshot", "Theme"])
+    );
     assert_eq!(help_texts(&app)[1], "Minimize the widget and restore to normal size");
 
     // `M` does nothing in the details content, so neither is offered.
@@ -180,7 +186,23 @@ fn maximize_is_offered_when_m_would_maximize_and_minimize_while_maximized() {
         Some(FocusTarget::DetailsContent)
     );
     app.press(&["ctrl+p"]);
-    assert_eq!(hits(&app), opening(&["Keys", "Quit", "Theme"]));
+    assert_eq!(hits(&app), opening(&["Keys", "Quit", "Screenshot", "Theme"]));
+}
+
+#[test]
+fn screenshot_is_always_the_last_system_command() {
+    // Textual yields it last, whatever else is offered.
+    for keys in [&["ctrl+p"][..], &["M", "ctrl+p"], &["?", "ctrl+p"]] {
+        let mut app = TestApp::new(Config::default());
+        app.press(keys);
+        let palette = palette(&app).expect("the palette is open");
+        let last = palette.commands.last().expect("commands");
+        assert_eq!(last.name, "Screenshot");
+        assert_eq!(last.help, Some("Save an SVG 'screenshot' of the current screen"));
+        assert_eq!(last.source, CommandSource::System);
+        assert_eq!(last.run, PaletteRun::Screenshot);
+    }
+    assert!(matches!(PaletteRun::Screenshot.action(), Action::Screenshot));
 }
 
 #[test]
@@ -202,6 +224,7 @@ fn lazygithubs_commands_are_in_their_order_before_the_system_ones() {
             ("Quit", CommandSource::System),
             ("Keys", CommandSource::System),
             ("Maximize", CommandSource::System),
+            ("Screenshot", CommandSource::System),
         ]
     );
     let helps: Vec<_> = palette.commands[..4].iter().filter_map(|c| c.help).collect();
@@ -377,7 +400,10 @@ fn the_query_is_stripped_and_a_blank_one_lists_everything() {
     assert_eq!(hits(&app), ["Keys"]);
     app.press(&["ctrl+u"]);
     type_text(&mut app, "   ");
-    assert_eq!(hits(&app), opening(&["Keys", "Maximize", "Quit", "Theme"]));
+    assert_eq!(
+        hits(&app),
+        opening(&["Keys", "Maximize", "Quit", "Screenshot", "Theme"])
+    );
     // A blank query never says it found nothing.
     app.advance(Duration::from_secs(1));
     assert!(!palette(&app).is_some_and(CommandPaletteDialog::shows_no_matches));
@@ -445,7 +471,7 @@ fn up_and_down_wrap() {
     let mut app = opened();
     app.press(&["down"]);
     assert_eq!(highlighted(&app), Some("Maximize"));
-    app.press(&["down"; 10]);
+    app.press(&["down"; 11]);
     assert_eq!(highlighted(&app), Some("Keys"));
     app.press(&["up"]);
     assert_eq!(highlighted(&app), Some("Open Bug Report"));
@@ -512,7 +538,10 @@ fn enter_runs_the_highlighted_hit_after_the_palette_closes() {
     let mut app = with_commands(many());
     app.press(&["down", "enter"]);
     assert_eq!(app.app().modals(), [ModalKind::CommandPalette]);
-    assert_eq!(hits(&app), opening(&["Keys", "Maximize", "Quit", "Theme"]));
+    assert_eq!(
+        hits(&app),
+        opening(&["Keys", "Maximize", "Quit", "Screenshot", "Theme"])
+    );
 }
 
 #[test]
@@ -594,7 +623,7 @@ fn a_click_on_a_hit_runs_it() {
 #[test]
 fn a_click_outside_the_band_closes_the_palette() {
     // The dimmed screen below the band, the status row above it, and the footer row.
-    for (col, row) in [(40, 32), (5, 1), (3, 47)] {
+    for (col, row) in [(40, 34), (5, 1), (3, 47)] {
         let mut app = opened();
         app.render(160, 48);
         app.click(col, row);

@@ -1,0 +1,29 @@
+---
+source: crates/lazy-github-core/src/screen/tests.rs
+expression: sample().to_svg(&options())
+---
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80" viewBox="0 0 120 80" xml:space="preserve">
+<title>LazyGithub</title>
+<style>
+text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono', monospace; font-size: 16.67px; white-space: pre; }
+.s0 { fill: #007acc; }
+.s1 { fill: #ffff00; font-weight: bold; }
+.s2 { fill: #e0e0e0; }
+.s3 { fill: #121212; }
+.s4 { fill: #e0e0e0; font-style: italic; opacity: 0.66; }
+</style>
+<rect width="120" height="80" fill="#121212"/>
+<g shape-rendering="crispEdges">
+<rect x="10" y="40" width="30" height="20" fill="#e0e0e0"/>
+</g>
+<text class="s0" x="0" y="15" textLength="120" lengthAdjust="spacingAndGlyphs">┌──────────┐</text>
+<text class="s0" x="0" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="35" textLength="50" lengthAdjust="spacingAndGlyphs">Repos</text>
+<text class="s2" x="70" y="35" textLength="20" lengthAdjust="spacingAndGlyphs">🔎</text>
+<text class="s0" x="110" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s0" x="0" y="55" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="10" y="55" textLength="30" lengthAdjust="spacingAndGlyphs">sel</text>
+<text class="s4" x="50" y="55" textLength="30" lengthAdjust="spacingAndGlyphs">a&lt;b</text>
+<text class="s0" x="110" y="55" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s0" x="0" y="75" textLength="120" lengthAdjust="spacingAndGlyphs">└──────────┘</text>
+</svg>

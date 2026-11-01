@@ -1,5 +1,6 @@
 //! What happened, in app terms. `App::update` turns each one into state changes and effects.
 
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use lazy_github_core::logging::LogLine;
@@ -11,6 +12,7 @@ use crate::keymap::BindingId;
 use crate::modal::{DialogAction, ModalEntry, SettingsOutcome};
 use crate::screens::auth::AuthAction;
 use crate::screens::main::{FocusTarget, MainAction, Toggle};
+use crate::screenshot::ScreenshotError;
 use crate::toast::Toast;
 
 /// The closed set of things `App::update` handles. It grows one variant per feature: screens and components add one
@@ -64,6 +66,9 @@ pub enum Action {
     /// The palette's "Open Bug Report": select gizmo385/gh-lazy, then open New issue there with the bug-report
     /// template.
     OpenBugReport,
+    /// The palette's "Screenshot", once the palette has closed: save the next frame, which no longer shows it, as an
+    /// SVG in the Downloads directory.
+    Screenshot,
     /// A palette "Toggle …" command: show or hide a section or the command log on the main screen. `App` applies it,
     /// since hiding the maximized section also restores the layout (Py bug B88's answer).
     Toggle(Toggle),
@@ -119,6 +124,8 @@ pub enum Action {
     MarkdownParsed(RequestId, Box<Markdown>),
     /// A config save finished.
     ConfigSaved(Result<(), String>),
+    /// A screenshot save finished: the file written, or the one it tried and why it failed.
+    ScreenshotSaved(Result<PathBuf, ScreenshotError>),
     /// A timer ticked.
     Timer(TimerId),
     /// A command-log line arrived.

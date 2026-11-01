@@ -416,10 +416,17 @@ where
     let mut hyperlinks = HyperlinkWriter::for_terminal();
     while !app.should_quit() {
         let mut link_writes = Vec::new();
-        terminal.draw(|frame| {
+        let frame = terminal.draw(|frame| {
             app.render(frame);
             link_writes = hyperlinks.prepare(frame.buffer_mut(), app.hyperlinks());
         })?;
+        // The palette's "Screenshot" saves this frame: the first one drawn after the palette closed.
+        let screenshot = app
+            .take_screenshot_request()
+            .map(|request| request.into_effect(frame.buffer));
+        if let Some(effect) = screenshot {
+            runtime.execute(effect);
+        }
         // After the frame, as ratatui's buffer can't hold a hyperlink.
         HyperlinkWriter::write(terminal.backend_mut(), &link_writes)?;
         let deadline = app.next_deadline();

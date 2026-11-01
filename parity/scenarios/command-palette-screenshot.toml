@@ -1,0 +1,53 @@
+version = 1
+description = "The palette's Screenshot (Textual's system command): found by a query, run with enter, the palette closes and the frame is saved as an SVG in the seeded Downloads directory, with the Saved screenshot toast"
+# The toast's path holds the run directory and the time, so the captures check titles and focus, and the texts are
+# checked per app with [expect].
+gate = true
+parity_rows = [
+    "command-palette.screenshot",
+    "toasts.screenshot-saved",
+]
+
+[env]
+fixtures = ["base"]
+seed = "screenshot-downloads"
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "screensh"
+
+[[step]]
+wait = { text = "Save an SVG" }
+
+[[step]]
+capture = "query"
+checks = ["titles", "focus"]
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Saved screenshot to" }
+
+[[step]]
+capture = "saved"
+checks = ["titles", "focus"]
+
+[expect.query]
+contains = ["🔎 screensh", "Screenshot", "Save an SVG 'screenshot' of the current screen"]
+not_contains = ["Quit the application", "Change the current theme"]
+
+[expect.saved]
+contains = ["Screenshot", "Saved screenshot to"]
+not_contains = ["Search for commands", "Failed to save screenshot"]

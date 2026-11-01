@@ -1,10 +1,13 @@
 //! Everything the event loop can receive.
 
+use std::path::PathBuf;
+
 use crossterm::event::{KeyEvent, MouseEvent};
 use lazy_github_core::logging::LogLine;
 
 use crate::components::markdown::Markdown;
 use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
+use crate::screenshot::ScreenshotError;
 
 /// An input to the event loop: from the terminal, the runtime, the logger, the clock or the OS.
 #[derive(Debug)]
@@ -51,6 +54,8 @@ pub enum Event {
     },
     /// An `Effect::SaveConfig` finished. The error is already rendered as text.
     ConfigSaved(Result<(), String>),
+    /// An `Effect::SaveScreenshot` finished: the file written, or the one it tried and why it failed.
+    ScreenshotSaved(Result<PathBuf, ScreenshotError>),
     /// A timer ticked.
     Timer(TimerId),
     /// A line for the command log, from the logging layer.

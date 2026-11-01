@@ -100,6 +100,8 @@ pub enum PaletteRun {
     SetTheme(&'static str),
     /// "Change Settings": open the Settings modal.
     ChangeSettings,
+    /// "Screenshot": save the screen, as it looks once the palette has closed, as an SVG.
+    Screenshot,
 }
 
 impl PaletteRun {
@@ -117,6 +119,7 @@ impl PaletteRun {
             PaletteRun::ChooseTheme => Action::OpenThemePalette,
             PaletteRun::SetTheme(name) => Action::SetTheme(name),
             PaletteRun::ChangeSettings => Action::OpenSettings,
+            PaletteRun::Screenshot => Action::Screenshot,
         }
     }
 }

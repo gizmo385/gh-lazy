@@ -1,0 +1,13 @@
+---
+source: crates/lazy-github-tui/src/screenshot/tests.rs
+expression: toast_corner(&mut app)
+---
+                                                               │
+                                                               │
+                                                               │
+  ▌                                                            │
+  ▌ Screenshot                                                 │
+  ▌ Saved screenshot to                                        │
+  ▌ '/home/u/Downloads/LazyGithub_2026-10-25T12_00_00.svg'     │
+──▌                                                           ─┘
+ link  f Follow link  F Follow link (browser)  q Quit  ^p Comman

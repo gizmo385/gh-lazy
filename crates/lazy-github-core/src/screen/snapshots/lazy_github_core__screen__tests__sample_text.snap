@@ -1,0 +1,8 @@
+---
+source: crates/lazy-github-core/src/screen/tests.rs
+expression: sample().to_text()
+---
+┌──────────┐
+│Repos 🔎  │
+│sel a<b   │
+└──────────┘

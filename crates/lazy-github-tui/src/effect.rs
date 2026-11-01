@@ -17,6 +17,7 @@ use lazy_github_core::models::{
     Notification, PartialPullRequest, ReactionKind, Reactions, RepoName, Repository, Review, ReviewComment, User,
     Workflow, WorkflowJob, WorkflowRun,
 };
+use lazy_github_core::screen::{Screen, SvgOptions};
 
 use crate::components::markdown::MarkdownSource;
 
@@ -106,6 +107,16 @@ pub enum Effect {
     /// Open this URL in the user's browser (`lazy_github_core::browser::open`), in the background. Nothing comes back:
     /// a failure is only logged, as Python ignores `webbrowser.open`'s answer.
     OpenUrl(String),
+    /// Save `screen` as an SVG named `file_name` in the Downloads directory, replacing a file of that name, on a
+    /// blocking thread. The directory isn't created. The result comes back as `Event::ScreenshotSaved`.
+    SaveScreenshot {
+        /// The file's name, without a directory.
+        file_name: String,
+        /// The frame to save. Boxed: it's every cell of the terminal.
+        screen: Box<Screen>,
+        /// The SVG's title and default colors.
+        options: SvgOptions,
+    },
     /// Stop the event loop after the current batch of events.
     Quit,
 }

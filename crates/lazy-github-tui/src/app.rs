@@ -43,6 +43,7 @@ use crate::screens::auth::{AuthAction, AuthReason, AuthScreen};
 pub use crate::screens::main::Maximized;
 use crate::screens::main::{MainScreen, Toggle};
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
+use crate::screenshot::{self, ScreenshotRequest};
 use crate::theme::Theme;
 use crate::toast::{Severity, Toast, Toasts};
 
@@ -150,6 +151,8 @@ pub struct App {
     gh_version_request: Option<GhVersionRequest>,
     /// The palette's "Open Bug Report", while it runs.
     bug_report: BugReport,
+    /// The palette's "Screenshot", until the terminal loop takes it after the next frame.
+    screenshot: Option<ScreenshotRequest>,
     /// The unread count in the status box.
     notifications: NotificationPoll,
     /// Whether GitHub is rate limiting the app, which pauses the notifications poll.
@@ -190,6 +193,7 @@ impl App {
             current_branch_request: None,
             gh_version_request: None,
             bug_report: BugReport::default(),
+            screenshot: None,
             notifications: NotificationPoll::default(),
             rate_limit: RateLimitWatch::default(),
             gh_health: GhHealth::default(),
@@ -328,6 +332,7 @@ impl App {
             Event::CacheRead { id, result } => Some(Action::CacheRead(id, result)),
             Event::MarkdownParsed { id, markdown } => Some(Action::MarkdownParsed(id, markdown)),
             Event::ConfigSaved(result) => Some(Action::ConfigSaved(result)),
+            Event::ScreenshotSaved(result) => Some(Action::ScreenshotSaved(result)),
             Event::Timer(id) => Some(Action::Timer(id)),
             Event::CommandLog(line) => Some(Action::CommandLog(line)),
             Event::Signal(signal) => {
@@ -536,6 +541,12 @@ impl App {
         &self.dialog_links
     }
 
+    /// The screenshot asked for since the last frame, if any, for the terminal loop to save from the frame it draws
+    /// next: by then the palette that asked for it has closed, as Textual waits for it to.
+    pub fn take_screenshot_request(&mut self) -> Option<ScreenshotRequest> {
+        self.screenshot.take()
+    }
+
     /// The terminal hyperlinks the last frame shows, on the cells nothing was drawn over.
     pub fn hyperlinks(&self) -> &Hyperlinks {
         &self.hyperlinks
@@ -735,6 +746,18 @@ impl App {
             Action::SettingsClosed(SettingsOutcome::Saved(config)) => self.apply_settings(*config, out),
             Action::ShowDebugInfo => self.show_debug_info(out),
             Action::OpenBugReport => self.open_bug_report(out),
+            Action::Screenshot => {
+                let now = self.shared.clock.local_now().datetime();
+                self.screenshot = Some(ScreenshotRequest::new(&now, &self.shared.theme));
+            }
+            Action::ScreenshotSaved(Ok(path)) => {
+                tracing::info!("Saved a screenshot to {}", path.display());
+                self.toasts.push(screenshot::saved_toast(&path, &self.shared.theme));
+            }
+            Action::ScreenshotSaved(Err(error)) => {
+                tracing::warn!("Failed to save a screenshot to {error}");
+                self.toasts.push(screenshot::failed_toast(&error));
+            }
             Action::Toggle(toggle) => self.toggle(toggle, out),
             Action::Minimize => self.minimize(),
             // Python's `action_open_help`: only this closes the panel, and it doesn't move focus.
@@ -1062,8 +1085,7 @@ impl App {
         commands
     }
 
-    /// Textual's system commands as they apply on `main` now, in `App.get_system_commands` order. "Screenshot" is
-    /// deferred (#291).
+    /// Textual's system commands as they apply on `main` now, in `App.get_system_commands` order.
     fn system_commands(&self, main: &MainScreen) -> Vec<PaletteCommand> {
         let command = |name, help, run| PaletteCommand {
             name,
@@ -1093,6 +1115,11 @@ impl App {
         } else if main.maximize_target().is_some() {
             commands.push(command("Maximize", "Maximize the focused widget", PaletteRun::Maximize));
         }
+        commands.push(command(
+            "Screenshot",
+            "Save an SVG 'screenshot' of the current screen",
+            PaletteRun::Screenshot,
+        ));
         commands
     }
 

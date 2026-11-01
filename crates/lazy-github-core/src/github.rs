@@ -27,6 +27,10 @@ pub mod search;
 
 #[cfg(any(test, feature = "test-util"))]
 pub use fake::{FakeGithub, GithubCall};
+pub use search::{
+    HitKind, SEARCH_MAX_REPOS, SEARCH_PER_PAGE, SEARCH_RESULT_CAP, SearchError, SearchHit, SearchPage, SearchQuery,
+    SearchQueryError, SearchScope,
+};
 
 /// Page size for `/user/repos`. Kept at Python's 50 so both apps request the same pages and share fixtures.
 const REPOS_PER_PAGE: &str = "50";
@@ -117,6 +121,14 @@ pub trait Github: Clone + Send + Sync + 'static {
         repo: &Repository,
         query: IssueListQuery,
     ) -> impl Future<Output = Result<Vec<PartialPullRequest>, GhError>> + Send;
+
+    /// One page of `GET /search/issues` for `query`: issues and pull requests from any repository, in GitHub's
+    /// order. Never `--paginate`d; cached only when [`SearchQuery::cached`].
+    ///
+    /// Fails with [`SearchError::Empty`] without sending anything when the query has nothing to search for,
+    /// [`SearchError::Invalid`] when GitHub can't read it, [`SearchError::PastLimit`] for a page past
+    /// [`SEARCH_RESULT_CAP`], and [`SearchError::Gh`] for anything else, a body or hit that doesn't decode included.
+    fn search_issues(&self, query: &SearchQuery) -> impl Future<Output = Result<SearchPage, SearchError>> + Send;
 
     /// The README of `full_name` as raw markdown, verbatim, or `None` when the repo has none (404).
     ///
@@ -1033,7 +1045,10 @@ impl GhCli {
                 request.cache = Some(self.ttls().default);
                 request
             }
-            IssueOwnerFilter::Mine => self.search_issues_request(&pull_request_search_query(repo, query)),
+            IssueOwnerFilter::Mine => self
+                .search_issues_request(&pull_request_search_query(repo, query))
+                // `pull_request_search_q` always starts `is:pr`, so the text is never empty.
+                .expect("the PR search's text is never empty"),
         }
     }
 
@@ -1474,13 +1489,15 @@ fn commit_pull_requests(response: &GhResponse, repo: &Repository) -> Result<Vec<
 
 /// The search for [`Github::list_pull_requests`]' [`IssueOwnerFilter::Mine`] page: the logged-in user's pull
 /// requests in `repo` with `query`'s state, newest first.
-fn pull_request_search_query(repo: &Repository, query: IssueListQuery) -> search::SearchIssuesQuery {
-    search::SearchIssuesQuery {
-        q: search::pull_request_search_q(repo, query.state),
+/// The text names its repo, so no scope is added and it's sent as it is.
+fn pull_request_search_query(repo: &Repository, query: IssueListQuery) -> SearchQuery {
+    SearchQuery {
         sort: Some("created"),
         order: Some("desc"),
         page: query.page,
         per_page: query.per_page,
+        cached: true,
+        ..SearchQuery::new(search::pull_request_search_q(repo, query.state), SearchScope::All)
     }
 }
 
@@ -1499,13 +1516,10 @@ fn pulls_page(response: Result<GhResponse, GhError>, repo: &Repository) -> Resul
 
 /// The pull requests among a search page's items, each tagged with `repo`. An item without `draft` isn't one (the
 /// issues endpoint's rule) and is dropped; one that doesn't decode fails the page.
-fn searched_pull_requests(
-    page: search::SearchIssuesPage,
-    repo: &Repository,
-) -> Result<Vec<PartialPullRequest>, GhError> {
+fn searched_pull_requests(page: SearchPage, repo: &Repository) -> Result<Vec<PartialPullRequest>, GhError> {
     let mut pull_requests = Vec::with_capacity(page.items.len());
-    for item in page.items {
-        match IssueListItem::from_api_item(item, repo)? {
+    for hit in page.items {
+        match hit.to_issue_list_item(repo)? {
             IssueListItem::PullRequest(pull_request) => pull_requests.push(pull_request),
             IssueListItem::Issue(issue) => {
                 tracing::debug!(number = issue.number, "Dropping a search result without `draft`");
@@ -1597,8 +1611,15 @@ impl Github for GhCli {
             .await;
         match query.owner {
             IssueOwnerFilter::All => pulls_page(response, repo),
-            IssueOwnerFilter::Mine => searched_pull_requests(search::search_issues_page(&response?)?, repo),
+            IssueOwnerFilter::Mine => searched_pull_requests(search::search_page(&response?)?, repo),
         }
+    }
+
+    async fn search_issues(&self, query: &SearchQuery) -> Result<SearchPage, SearchError> {
+        // One page per call: the caller asks for the next while `SearchPage::is_last` says there is one.
+        let request = self.search_issues_request(query)?;
+        let response = self.runner().request(request).await?;
+        Ok(search::search_page(&response)?)
     }
 
     async fn repo_readme(&self, full_name: &str) -> Result<Option<String>, GhError> {
@@ -2634,12 +2655,12 @@ mod tests {
                 "600s",
                 "-H",
                 "Accept: application/vnd.github+json",
-                "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Flazy-fixture+author%3A%40me&sort=created&order=desc&page=1&per_page=30"
+                "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Flazy-fixture+author%3A%40me&advanced_search=true&sort=created&order=desc&page=1&per_page=30"
             ]
         );
         assert_eq!(
             endpoint(&list_pull_requests_argv(&defaults, mine(IssueStateFilter::Open))),
-            "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Flazy-fixture+author%3A%40me+is%3Aopen&sort=created&order=desc&page=1&per_page=30"
+            "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Flazy-fixture+author%3A%40me+is%3Aopen&advanced_search=true&sort=created&order=desc&page=1&per_page=30"
         );
         let page_2 = IssueListQuery {
             page: 2,
@@ -2647,7 +2668,7 @@ mod tests {
         };
         assert_eq!(
             endpoint(&list_pull_requests_argv(&defaults, page_2)),
-            "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Flazy-fixture+author%3A%40me+is%3Aclosed&sort=created&order=desc&page=2&per_page=30"
+            "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Flazy-fixture+author%3A%40me+is%3Aclosed&advanced_search=true&sort=created&order=desc&page=2&per_page=30"
         );
     }
 
@@ -2705,9 +2726,9 @@ mod tests {
     }
 
     /// A search page holding `items`.
-    fn search_page(items: &[serde_json::Value]) -> search::SearchIssuesPage {
+    fn search_page(items: &[serde_json::Value]) -> SearchPage {
         let body = serde_json::json!({"total_count": items.len(), "incomplete_results": false, "items": items});
-        search::search_issues_page(&json_response("200 OK", &body.to_string()).unwrap()).unwrap()
+        search::search_page(&json_response("200 OK", &body.to_string()).unwrap()).unwrap()
     }
 
     #[test]
@@ -2715,18 +2736,30 @@ mod tests {
         let repo = lazy_fixture();
         let mut issue = pulls_item(9, false);
         issue.as_object_mut().unwrap().remove("draft");
+        issue["repository_url"] = "https://api.github.com/repos/parity-bot/lazy-fixture".into();
         let mut searched = pulls_item(8, true);
-        // Search items carry the issue's id and `pull_request`.
+        // Search items carry the issue's id, `repository_url` and `pull_request`.
         searched["id"] = 6_115_963_243_u64.into();
+        searched["repository_url"] = "https://api.github.com/repos/parity-bot/lazy-fixture".into();
         searched["pull_request"] = serde_json::json!({"merged_at": null});
         let prs = searched_pull_requests(search_page(&[issue, searched]), &repo).unwrap();
         assert_eq!(prs.len(), 1);
         assert_eq!((prs[0].issue.number, prs[0].issue.id), (8, 6_115_963_243));
         assert!(prs[0].draft);
         assert_eq!(prs[0].issue.repo, repo);
-        // An item that doesn't decode fails the page.
+        // A hit that doesn't decode as a pull request (no `id`, `locked`, ...) fails the page.
+        let bare = serde_json::json!({
+            "repository_url": "https://api.github.com/repos/parity-bot/lazy-fixture",
+            "number": 1,
+            "title": "t",
+            "state": "open",
+            "user": {"login": "parity-bot"},
+            "updated_at": "2026-01-02T20:00:00Z",
+            "html_url": "https://github.com/parity-bot/lazy-fixture/pull/1",
+            "draft": false,
+        });
         assert!(matches!(
-            searched_pull_requests(search_page(&[serde_json::json!({"number": 1, "draft": false})]), &repo),
+            searched_pull_requests(search_page(&[bare]), &repo),
             Err(GhError::Decode(_))
         ));
     }
@@ -2734,8 +2767,7 @@ mod tests {
     #[test]
     fn a_failed_search_is_an_error() {
         let decode = |response: Result<GhResponse, GhError>| {
-            response
-                .and_then(|response| searched_pull_requests(search::search_issues_page(&response)?, &lazy_fixture()))
+            response.and_then(|response| searched_pull_requests(search::search_page(&response)?, &lazy_fixture()))
         };
         assert!(matches!(
             decode(json_response(

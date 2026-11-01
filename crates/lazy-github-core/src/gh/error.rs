@@ -164,6 +164,15 @@ impl GhError {
         Timestamp::from_second(reset).ok().map(RateLimit::Until)
     }
 
+    /// The rate-limit bucket an HTTP failure counted against, from `X-RateLimit-Resource`: `core` for most of the
+    /// API, `search` for the search endpoints (their own 30-a-minute limit), and so on. `None` without the header.
+    pub fn rate_limit_resource(&self) -> Option<&str> {
+        let GhError::Http { headers, .. } = self else {
+            return None;
+        };
+        find_header(headers, "x-ratelimit-resource")
+    }
+
     /// The rate-limit headers of an HTTP failure as `Name: value` pairs joined with `", "`, in GitHub's spelling.
     /// Empty when there are none.
     pub fn rate_limit_headers(&self) -> String {
@@ -312,6 +321,7 @@ mod tests {
             error.rate_limit_headers(),
             "X-RateLimit-Remaining: 0, X-RateLimit-Reset: 1792933200, X-RateLimit-Limit: 5000, X-RateLimit-Resource: core"
         );
+        assert_eq!(error.rate_limit_resource(), Some("core"));
         // A 429 with the same headers is the same limit.
         let error = http(
             429,
@@ -365,6 +375,8 @@ mod tests {
         assert_eq!(http(500, &[("Retry-After", "60")]).rate_limit(), None);
         assert_eq!(GhError::NotInstalled.rate_limit(), None);
         assert_eq!(GhError::NotInstalled.rate_limit_headers(), "");
+        assert_eq!(GhError::NotInstalled.rate_limit_resource(), None);
+        assert_eq!(permission.rate_limit_resource(), None);
     }
 
     fn http_message(status: u16, message: &str) -> GhError {

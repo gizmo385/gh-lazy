@@ -489,7 +489,7 @@ the PRs out of the issues endpoint's pages (#384, decision `pr-list-from-pulls-e
 tables show the same rows, every `GET /repos/{owner}/{repo}/issues` list fixture in every set but
 `pr-list-issues-first` has a mirror next to it, written by `cargo xtask pr-list-fixtures`: a `/pulls` page with the
 same `state`, `page` and `per_page` plus `sort=created&direction=desc`, or, for a `creator` page, a search page with
-`sort=created&order=desc` and `{total_count, incomplete_results: false, items}`, `total_count` counting the PRs over
+`advanced_search=true&sort=created&order=desc` and `{total_count, incomplete_results: false, items}`, `total_count` counting the PRs over
 all that query's pages. The body holds the page's items with `draft`, verbatim and in order; the status, the headers
 but `Link`, a failed page's body, `delay_ms` and `when` are copied, and the `note` names the source. Pages are
 mirrored one to one, so a page with no PRs gives an empty `/pulls` page, which ends Rust's paging. Edit the issues
@@ -503,6 +503,14 @@ page and re-run the generator; an xtask test fails when the committed mirrors di
   .../workflows/7000002/dispatches` for `release` (204) and `.../workflows/7000001/dispatches` for `main` (422),
   `POST .../runs/5000042/rerun` and `.../rerun-failed-jobs` (201), and `GET .../runs/5000042` (for Rust's refetch;
   Python never asks). Hand-written.
+- `search/`: `GET /search/issues` pages (`advanced_search=true`, `per_page=50`), for the Rust-only `search-*`
+  scenarios (#386; the first entries from #393, #394 adds the rest). `q=repo:parity-bot/pr-details (is:pr is:open)`
+  page 1: pr-details' open PRs 9, 5 and 2 (a draft), `total_count` 3. `q=is:pr author:@me`: page 1 with 50 hits
+  across `parity-bot/pr-details` and `parity-bot/issue-fixture` (`total_count` 1234, a `Link` with `rel="next"`),
+  page 20 with 7, and page 21 the 422 "Only the first 1000 search results are available".
+  `q=repo:parity-bot/pr-details (rate limited)` page 1: a 403 on the search bucket (`X-RateLimit-Resource: search`,
+  exhausted until 2100). Items as GitHub sends them (`search_type`, `score`, `draft`, `pull_request.merged_at`).
+  Hand-written: nothing is recorded, so user-scoped search can't leak a real account's data.
 
 ## Seeds
 

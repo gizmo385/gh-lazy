@@ -4,6 +4,7 @@
     "method": "GET",
     "path": "/search/issues",
     "query": {
+      "advanced_search": "true",
       "order": "desc",
       "page": "3",
       "per_page": "30",

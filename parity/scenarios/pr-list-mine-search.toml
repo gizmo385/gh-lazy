@@ -28,7 +28,7 @@ wait = { text = "O Lookup Repository" }
 keys = ["j", "j", "enter"]
 
 [[step]]
-wait = { log = { method = "GET", path = "/search/issues", query = { order = "desc", page = "1", per_page = "30", q = "is:pr repo:parity-bot/issues-first author:@me", sort = "created" } }, timeout_ms = 15000 }
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", order = "desc", page = "1", per_page = "30", q = "is:pr repo:parity-bot/issues-first author:@me", sort = "created" } }, timeout_ms = 15000 }
 
 [[step]]
 wait = { text = "Issues first pull request 44", timeout_ms = 15000 }

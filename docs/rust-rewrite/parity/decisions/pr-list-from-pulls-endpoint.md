@@ -2,9 +2,9 @@
 
 - Decision: The PR table's pages come from `GET /repos/{owner}/{repo}/pulls?state=<s>&sort=created&direction=desc`
   for `pull_requests.owner_filter = all`, and from `GET /search/issues` with
-  `q=is:pr repo:<owner>/<repo> author:@me[ is:open| is:closed]&sort=created&order=desc` for `mine`, 30 per page.
-  Every page is all PRs, so a repo whose newest issues-endpoint items are issues still shows its PRs, and paging
-  never fetches pages of issues. The Issues table keeps `GET /repos/{owner}/{repo}/issues`, now as its own request:
+  `q=is:pr repo:<owner>/<repo> author:@me[ is:open| is:closed]&advanced_search=true&sort=created&order=desc` for
+  `mine` (`advanced_search` since #393, which shares the search request), 30 per page. Every page is all PRs, so a
+  repo whose newest issues-endpoint items are issues still shows its PRs, and paging never fetches pages of issues. The Issues table keeps `GET /repos/{owner}/{repo}/issues`, now as its own request:
   the two tables no longer share a first page. A repo with pull requests turned off (`/pulls` answers 404) shows an
   empty PR table with no error line, as Python's empty issues page does.
 - Decided by: Chris, 2026-10-31 (#384: "owner preference: the proper one", with the endpoint for `mine` left to the

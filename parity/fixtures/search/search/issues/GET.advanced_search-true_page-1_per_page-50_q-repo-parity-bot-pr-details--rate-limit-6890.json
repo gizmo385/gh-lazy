@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/search/issues",
+    "query": {
+      "advanced_search": "true",
+      "page": "1",
+      "per_page": "50",
+      "q": "repo:parity-bot/pr-details (rate limited)"
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-RateLimit-Limit": "30",
+      "X-RateLimit-Remaining": "0",
+      "X-RateLimit-Reset": "4102444800",
+      "X-RateLimit-Resource": "search"
+    },
+    "body": {
+      "message": "API rate limit exceeded for user ID 1000001. If you reach out to GitHub Support for help, please include the request ID 0000:000000:0000000:0000000:00000000.",
+      "documentation_url": "https://docs.github.com/rest/overview/rate-limits-for-the-rest-api",
+      "status": "403"
+    }
+  },
+  "note": "hand-written for search: the search bucket's rate limit (X-RateLimit-Resource: search), exhausted until 2100-01-01 00:00 UTC"
+}

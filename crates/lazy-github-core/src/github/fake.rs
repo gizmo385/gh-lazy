@@ -1,6 +1,6 @@
 //! An in-memory [`Github`] for tests.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::io;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Duration;
@@ -9,7 +9,7 @@ use serde::de::Error as _;
 
 use super::{
     DiffFetchError, Github, IssueListQuery, IssueUpdate, MergeRequest, MergeResult, NewIssue, NewPullRequest,
-    NewReview, NotificationQuery, PageQuery, PullRequestUpdate, RepoListQuery,
+    NewReview, NotificationQuery, PageQuery, PullRequestUpdate, RepoListQuery, SearchError, SearchPage, SearchQuery,
 };
 use crate::gh::GhError;
 use crate::models::{
@@ -24,7 +24,7 @@ const FAKE_GH_VERSION: &str = "2.89.0 (fake-gh)";
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `gh_version` returns fake-gh's `2.89.0 (fake-gh)`, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_notifications` returns an empty page, `mark_notification_read` and `mark_all_notifications_read` fail with a 422, `list_issues`, `list_pull_requests`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `pull_requests_for_commit`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, `collaborators` and `requested_reviewers` return none, `request_reviewers` and `update_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_notifications` returns an empty page, `mark_notification_read` and `mark_all_notifications_read` fail with a 422, `list_issues`, `list_pull_requests`, `list_workflows` and `list_workflow_runs` return an empty page, `search_issues` answers from the queue [`Self::with_search_page`] fills and then with an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `pull_requests_for_commit`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, `collaborators` and `requested_reviewers` return none, `request_reviewers` and `update_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -63,6 +63,8 @@ pub enum GithubCall {
         /// The filters and page.
         query: IssueListQuery,
     },
+    /// [`Github::search_issues`].
+    SearchIssues(SearchQuery),
     /// [`Github::repo_readme`], with the repo's full name.
     RepoReadme(String),
     /// [`Github::repository`], with the full name asked for.
@@ -290,6 +292,8 @@ struct State {
     issue_pages: HashMap<(String, u32), Result<Vec<IssueListItem>, GhError>>,
     /// Keyed by `full_name` and page.
     pull_request_pages: HashMap<(String, u32), Result<Vec<PartialPullRequest>, GhError>>,
+    /// What `search_issues` answers, in order, whatever the query.
+    search_pages: VecDeque<Result<SearchPage, SearchError>>,
     /// Keyed by `full_name`.
     readmes: HashMap<String, Result<Option<String>, GhError>>,
     /// Keyed by `full_name`.
@@ -471,6 +475,19 @@ impl FakeGithub {
             .pull_request_pages
             .insert((full_name.to_owned(), page_number), page);
         self
+    }
+
+    /// Queues `page` as the answer to the next unanswered `search_issues` call, whatever its query. Once the queue
+    /// is empty, searches answer an empty page.
+    #[must_use]
+    pub fn with_search_page(self, page: Result<SearchPage, SearchError>) -> Self {
+        self.push_search_page(page);
+        self
+    }
+
+    /// [`Self::with_search_page`] on a fake already in use. Clones see the change too.
+    pub fn push_search_page(&self, page: Result<SearchPage, SearchError>) {
+        self.lock().search_pages.push_back(page);
     }
 
     /// `repo_readme` returns `readme` for the repository named `full_name`. Repos not set have no README.
@@ -804,8 +821,8 @@ impl FakeGithub {
     }
 
     /// Fault injection: the `n`th call (counting every call made, from 0) and every call after it fail with `error`,
-    /// whatever is canned for them. `pull_request_diff` fails with the [`DiffFetchError`] the real client makes of
-    /// `error`.
+    /// whatever is canned for them. `pull_request_diff` and `search_issues` fail with the [`DiffFetchError`] and
+    /// [`SearchError`] the real client makes of `error`.
     #[must_use]
     pub fn with_failure_from(self, n: usize, error: GhError) -> Self {
         self.lock().failure = Some((n, error));
@@ -964,6 +981,21 @@ impl Github for FakeGithub {
             Some(Ok(items)) => Ok(items.clone()),
             Some(Err(error)) => Err(duplicate(error)),
             None => Ok(Vec::new()),
+        })
+        .await
+    }
+
+    async fn search_issues(&self, query: &SearchQuery) -> Result<SearchPage, SearchError> {
+        // Taken before `respond` records the call, so an injected failure still uses up its answer.
+        let next = self.lock().search_pages.pop_front();
+        self.respond(GithubCall::SearchIssues(query.clone()), |_| {
+            next.unwrap_or_else(|| {
+                Ok(SearchPage {
+                    total_count: 0,
+                    incomplete_results: false,
+                    items: Vec::new(),
+                })
+            })
         })
         .await
     }
@@ -1439,6 +1471,12 @@ impl Injectable for Result<String, DiffFetchError> {
     }
 }
 
+impl Injectable for Result<SearchPage, SearchError> {
+    fn injected(error: GhError) -> Self {
+        Err(SearchError::from(error))
+    }
+}
+
 fn duplicate_diff_error(error: &DiffFetchError) -> DiffFetchError {
     match error {
         DiffFetchError::NotFound => DiffFetchError::NotFound,
@@ -1802,6 +1840,49 @@ mod tests {
             ]
         );
         assert_eq!(github.calls().len(), 4);
+    }
+
+    #[tokio::test]
+    async fn searches_answer_from_the_queue_in_order() {
+        use crate::github::SearchScope;
+
+        let page = |total_count| SearchPage {
+            total_count,
+            incomplete_results: false,
+            items: Vec::new(),
+        };
+        let github = FakeGithub::new()
+            .with_search_page(Ok(page(7)))
+            .with_search_page(Err(SearchError::PastLimit));
+        let first = SearchQuery::new("bug", SearchScope::Repo("octocat/a".into()));
+        let second = SearchQuery {
+            page: 2,
+            ..first.clone()
+        };
+
+        assert_eq!(github.search_issues(&first).await.unwrap().total_count, 7);
+        assert!(matches!(
+            github.search_issues(&second).await,
+            Err(SearchError::PastLimit)
+        ));
+        // Once the queue is empty, an empty page.
+        assert_eq!(github.search_issues(&first).await.unwrap(), page(0));
+        github.push_search_page(Ok(page(3)));
+        assert_eq!(github.search_issues(&first).await.unwrap().total_count, 3);
+        assert_eq!(
+            github.calls()[..2],
+            [
+                GithubCall::SearchIssues(first.clone()),
+                GithubCall::SearchIssues(second)
+            ]
+        );
+
+        // An injected failure is the search error the real client makes of it.
+        github.fail_from_now(GhError::NotInstalled);
+        assert!(matches!(
+            github.search_issues(&first).await,
+            Err(SearchError::Gh(GhError::NotInstalled))
+        ));
     }
 
     #[tokio::test]

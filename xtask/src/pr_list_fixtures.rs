@@ -236,6 +236,7 @@ fn mirror(source: &Source, total_counts: &BTreeMap<SearchId, usize>) -> Result<F
             "/search/issues".to_owned(),
             query_from_pairs([
                 ("q", q.as_str()),
+                ("advanced_search", "true"),
                 ("sort", "created"),
                 ("order", "desc"),
                 ("page", page),
@@ -471,6 +472,7 @@ mod tests {
                 search["request"]["query"]["q"],
                 "is:pr repo:parity-bot/browse-fixture author:@me is:open"
             );
+            assert_eq!(search["request"]["query"]["advanced_search"], "true");
             assert_eq!(search["request"]["query"]["sort"], "created");
             assert_eq!(search["request"]["query"]["order"], "desc");
             assert_eq!(search["response"]["body"]["total_count"], 20);

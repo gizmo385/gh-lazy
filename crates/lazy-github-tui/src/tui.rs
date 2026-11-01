@@ -736,6 +736,13 @@ mod tests {
             std::future::pending().await
         }
 
+        async fn search_issues(
+            &self,
+            _query: &lazy_github_core::github::SearchQuery,
+        ) -> Result<lazy_github_core::github::SearchPage, lazy_github_core::github::SearchError> {
+            std::future::pending().await
+        }
+
         async fn repo_readme(&self, _full_name: &str) -> Result<Option<String>, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }

@@ -5,7 +5,7 @@
 use lazy_github_core::config::{Config, IssueOwnerFilter};
 use lazy_github_core::gh::GhError;
 use lazy_github_core::github::IssueListQuery;
-use lazy_github_core::github::search::SEARCH_RESULT_CAP;
+use lazy_github_core::github::search::reaches_result_cap;
 #[cfg(test)]
 use lazy_github_core::models::IssueListItem;
 use lazy_github_core::models::{PartialPullRequest, Repository};
@@ -35,8 +35,7 @@ impl TableItem for PartialPullRequest {
 /// rule), or for a search when no later page can hold a result: page 34 of 30 reaches GitHub's 1,000-result cap,
 /// and page 35 would answer 422.
 pub(super) fn pull_requests_page(items: Vec<PartialPullRequest>, query: IssueListQuery) -> Page<PartialPullRequest> {
-    let capped =
-        query.owner == IssueOwnerFilter::Mine && query.page.saturating_mul(query.per_page) >= SEARCH_RESULT_CAP;
+    let capped = query.owner == IssueOwnerFilter::Mine && reaches_result_cap(query.page, query.per_page);
     Page {
         last: items.is_empty() || capped,
         items,

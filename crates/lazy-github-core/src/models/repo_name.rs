@@ -39,6 +39,27 @@ impl RepoName {
         })
     }
 
+    /// Parses a repository's API URL, such as an issue's `repository_url`: `https://<api host>/repos/{owner}/{name}`,
+    /// or GitHub Enterprise's `https://<host>/api/v3/repos/{owner}/{name}`. Any path ending in
+    /// `/repos/{owner}/{name}` is accepted; anything else, other schemes included, gives `None`.
+    pub fn from_api_url(url: &str) -> Option<Self> {
+        let (scheme, rest) = url.trim().split_once("://")?;
+        if !(scheme.eq_ignore_ascii_case("https") || scheme.eq_ignore_ascii_case("http")) {
+            return None;
+        }
+        let (host, path) = rest.split_at(rest.find('/')?);
+        let path = path.strip_suffix('/').unwrap_or(path);
+        let (rest, name) = path.rsplit_once('/')?;
+        let (rest, owner) = rest.rsplit_once('/')?;
+        if host.is_empty() || !rest.ends_with("/repos") || owner.is_empty() || name.is_empty() {
+            return None;
+        }
+        Some(Self {
+            owner: owner.to_owned(),
+            name: name.to_owned(),
+        })
+    }
+
     /// The owner: a user or organization login.
     pub fn owner(&self) -> &str {
         &self.owner
@@ -143,6 +164,26 @@ mod tests {
     #[case::empty("", None)]
     fn edge_cases(#[case] url: &str, #[case] expected: Option<&str>) {
         assert_eq!(parsed(url).as_deref(), expected, "{url}");
+    }
+
+    #[rstest]
+    #[case::github("https://api.github.com/repos/cli/cli", Some("cli/cli"))]
+    #[case::enterprise("https://ghe.example.com/api/v3/repos/o/my.repo", Some("o/my.repo"))]
+    #[case::trailing_slash("https://api.github.com/repos/o/n/", Some("o/n"))]
+    #[case::html_url("https://github.com/o/n", None)]
+    #[case::extra_segment("https://api.github.com/repos/o/n/issues", None)]
+    #[case::owner_only("https://api.github.com/repos/o", None)]
+    #[case::empty_owner("https://api.github.com/repos//n", None)]
+    #[case::no_scheme("api.github.com/repos/o/n", None)]
+    #[case::other_scheme("ftp://api.github.com/repos/o/n", None)]
+    #[case::no_host("https:///repos/o/n", None)]
+    #[case::empty("", None)]
+    fn parses_api_urls(#[case] url: &str, #[case] expected: Option<&str>) {
+        assert_eq!(
+            RepoName::from_api_url(url).map(|repo| repo.to_string()).as_deref(),
+            expected,
+            "{url}"
+        );
     }
 
     #[test]

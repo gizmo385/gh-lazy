@@ -450,7 +450,7 @@ fn list_pull_requests_for_mine_searches_without_the_user() {
     assert_eq!(
         strings(&log[0]["argv"]).last().copied(),
         Some(
-            "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Fissues-first+author%3A%40me&sort=created&order=desc&page=1&per_page=30"
+            "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Fissues-first+author%3A%40me&advanced_search=true&sort=created&order=desc&page=1&per_page=30"
         )
     );
     assert_eq!(log[0]["status"], 200);
@@ -885,4 +885,98 @@ async fn child_gh_removed_mid_session() {
     ));
     std::fs::rename(&moved, &program).unwrap();
     gh.check_auth().await.unwrap();
+}
+
+// #393: `GET /search/issues`, through the `search` set.
+
+#[test]
+fn search_issues_sends_the_scoped_query_and_decodes_the_hits() {
+    let log = run_child("child_search_issues", "logged-in", &["search"]);
+    let endpoints: Vec<&str> = log
+        .iter()
+        .map(|entry| *strings(&entry["argv"]).last().unwrap())
+        .collect();
+    assert_eq!(
+        endpoints,
+        [
+            "/search/issues?q=repo%3Aparity-bot%2Fpr-details+%28is%3Apr+is%3Aopen%29&advanced_search=true&page=1&per_page=50",
+            "/search/issues?q=is%3Apr+author%3A%40me&advanced_search=true&page=1&per_page=50",
+            "/search/issues?q=is%3Apr+author%3A%40me&advanced_search=true&page=20&per_page=50",
+            "/search/issues?q=is%3Apr+author%3A%40me&advanced_search=true&page=21&per_page=50",
+            "/search/issues?q=repo%3Aparity-bot%2Fpr-details+%28rate+limited%29&advanced_search=true&page=1&per_page=50",
+        ]
+    );
+    // A search the user submits is never answered from gh's cache.
+    assert!(log.iter().all(|entry| !strings(&entry["argv"]).contains(&"--cache")));
+    let statuses: Vec<u64> = log.iter().map(|entry| entry["status"].as_u64().unwrap()).collect();
+    assert_eq!(statuses, [200, 200, 200, 422, 403]);
+}
+
+#[tokio::test]
+#[ignore = "run by its parent test, with fake-gh's environment set"]
+async fn child_search_issues() {
+    use lazy_github_core::github::{HitKind, SearchError, SearchQuery, SearchScope};
+
+    let Some(gh) = client() else { return };
+
+    let query = SearchQuery::new("is:pr is:open", SearchScope::Repo("parity-bot/pr-details".into()));
+    let page = gh.search_issues(&query).await.unwrap();
+    assert_eq!(page.total_count, 3);
+    assert!(page.is_last(1, query.per_page));
+    let hits: Vec<(String, u64, HitKind)> = page
+        .items
+        .iter()
+        .map(|hit| (hit.repo.to_string(), hit.number, hit.kind))
+        .collect();
+    let open = |draft| HitKind::PullRequest { draft, merged: false };
+    assert_eq!(
+        hits,
+        [
+            ("parity-bot/pr-details".to_owned(), 9, open(false)),
+            ("parity-bot/pr-details".to_owned(), 5, open(false)),
+            ("parity-bot/pr-details".to_owned(), 2, open(true)),
+        ]
+    );
+
+    // All of GitHub: 1,234 results, so the 1,000-result cap ends paging at page 20.
+    let mine = SearchQuery::new("is:pr author:@me", SearchScope::All);
+    let first = gh.search_issues(&mine).await.unwrap();
+    assert_eq!((first.total_count, first.items.len()), (1234, 50));
+    assert!(!first.is_last(1, mine.per_page));
+    let repos: std::collections::BTreeSet<String> = first.items.iter().map(|hit| hit.repo.to_string()).collect();
+    assert_eq!(
+        repos.into_iter().collect::<Vec<_>>(),
+        ["parity-bot/issue-fixture", "parity-bot/pr-details"]
+    );
+    assert!(first.items.iter().all(|hit| hit.author == "parity-bot"));
+    let last = gh
+        .search_issues(&SearchQuery {
+            page: 20,
+            ..mine.clone()
+        })
+        .await
+        .unwrap();
+    assert_eq!(last.items.len(), 7);
+    assert!(last.is_last(20, mine.per_page));
+    assert!(matches!(
+        gh.search_issues(&SearchQuery {
+            page: 21,
+            ..mine.clone()
+        })
+        .await,
+        Err(SearchError::PastLimit)
+    ));
+
+    // The search bucket's limit keeps its headers.
+    let limited = SearchQuery::new("rate limited", SearchScope::Repo("parity-bot/pr-details".into()));
+    let error = gh.search_issues(&limited).await.unwrap_err();
+    let gh_error = error.gh_error().expect("a gh error");
+    assert!(gh_error.rate_limit().is_some(), "{gh_error:?}");
+    assert_eq!(gh_error.rate_limit_resource(), Some("search"));
+
+    // An empty query sends nothing.
+    assert!(matches!(
+        gh.search_issues(&SearchQuery::new("  ", SearchScope::All)).await,
+        Err(SearchError::Empty)
+    ));
 }

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/prs-only/readme",
+    "accept": "raw"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/vnd.github.raw; charset=utf-8"
+    },
+    "body_text": "# prs-only\n\nThe newest 150 issues-endpoint items are all pull requests.\n"
+  },
+  "note": "hand-written: the README the repo overview shows"
+}

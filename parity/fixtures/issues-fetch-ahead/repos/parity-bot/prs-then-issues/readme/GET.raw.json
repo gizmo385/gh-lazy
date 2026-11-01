@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/prs-then-issues/readme",
+    "accept": "raw"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/vnd.github.raw; charset=utf-8"
+    },
+    "body_text": "# prs-then-issues\n\nIssues-endpoint pages 1 and 2 are all pull requests; page 3 is all issues.\n"
+  },
+  "note": "hand-written: the README the repo overview shows"
+}

@@ -474,6 +474,12 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   parity-bot's 24 PRs on page 1 (`total_count: 24`) and none on page 2. Listed before `base`, for Python's Py bug
   B180 (its PR table stays empty) and the Rust-only `pr-list-from-pulls` and `pr-list-mine-search` scenarios (#384).
   Hand-written; the generator below skips it.
+- `issues-fetch-ahead/`: `parity-bot/prs-only` (id 2000398) and `parity-bot/prs-then-issues` (id 2000399), fourth and
+  fifth on base's `GET /user/repos` page, each with its repo, README and empty workflows and runs. prs-then-issues'
+  issues endpoint (`state=all`) holds PRs 90 to 61 on page 1, PRs 60 to 31 on page 2 and issues 30 to 1 on page 3;
+  prs-only's holds PRs 160 to 11 on pages 1 to 5. Neither has a later page, so asking for one is a fixture miss. Listed
+  before `base`, for Py bug B181 and the Rust-only `issues-fetch-ahead` scenario (#399). The issues pages are
+  hand-written; their `/pulls` mirrors are generated, as below.
 
 ### Generated PR list pages
 

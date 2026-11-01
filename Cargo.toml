@@ -87,6 +87,9 @@ insta = "1"
 rstest = "0.28"
 assert_cmd = "2"
 portable-pty = "0.9"
+# The `Termios` that `portable_pty::MasterPty::get_termios` returns, for tests/exit_paths.rs to read the terminal's
+# flags after the app exits (#373). Pinned to portable-pty's own nix, whose type that method returns.
+nix = { version = "0.28", default-features = false, features = ["term"] }
 vt100 = "0.18"
 # Per-run temp dirs in the parity harness.
 tempfile = "3"

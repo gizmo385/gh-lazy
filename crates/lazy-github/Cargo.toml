@@ -38,6 +38,10 @@ portable-pty = { workspace = true }
 similar = { workspace = true }
 vt100 = { workspace = true }
 
+# tests/exit_paths.rs reads the terminal's flags from the pty master after the app exits (#373).
+[target.'cfg(unix)'.dev-dependencies]
+nix = { workspace = true }
+
 # `cargo test` builds examples, at target/<profile>/examples/, where tests/exit_paths.rs finds it.
 [[example]]
 name = "fake-gh"

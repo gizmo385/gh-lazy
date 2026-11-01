@@ -6,8 +6,9 @@
 //! `SIGKILL` (`kill_on_drop`) can end it early: the kernel's `SIGHUP` to the terminal's process group when the app
 //! exits doesn't count.
 //!
-//! After the app exits, `stty -a` runs on the same terminal: raw mode must be off. Unix-only: signals are the subject,
-//! and the `gh` stand-in is a shell script.
+//! After the app exits, the terminal's flags are read from the pty master: raw mode must be off. Nothing new runs on
+//! the terminal by then, since macOS revokes it once the app, its session leader, exits (#373). Unix-only: signals
+//! are the subject, and the `gh` stand-in is a shell script.
 #![cfg(unix)]
 
 use std::io::{Read, Write};
@@ -17,7 +18,8 @@ use std::sync::mpsc;
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
 
-use portable_pty::{CommandBuilder, MasterPty, PtySize, SlavePty, native_pty_system};
+use nix::sys::termios::LocalFlags;
+use portable_pty::{CommandBuilder, MasterPty, PtySize, native_pty_system};
 
 /// How long any one wait may take before the test fails.
 const TIMEOUT: Duration = Duration::from_secs(30);
@@ -33,9 +35,12 @@ const RESTORE: &str =
     "\x1b[?1004l\x1b[?2004l\x1b[?1006l\x1b[?1015l\x1b[?1003l\x1b[?1002l\x1b[?1000l\x1b[?1049l\x1b[?25h";
 const ENTER_ALTERNATE_SCREEN: &str = "\x1b[?1049h";
 
-/// Printed by the shell after the app is gone, so everything before it is the app's.
-const AFTER_APP: &str = "__AFTER_APP__";
-const STTY_DONE: &str = "__STTY_DONE__";
+/// The `lflag` bits raw mode clears and a cooked terminal has: line editing, echo and signal keys, by `stty` name.
+const COOKED: [(&str, LocalFlags); 3] = [
+    ("icanon", LocalFlags::ICANON),
+    ("echo", LocalFlags::ECHO),
+    ("isig", LocalFlags::ISIG),
+];
 
 /// `target/<profile>/examples/<name>`, built by `cargo test`.
 fn example(name: &str) -> PathBuf {
@@ -223,10 +228,19 @@ fn signal(pid: u32, name: &str) {
     assert!(status.success(), "kill -s {name} {pid}");
 }
 
+/// What the master has read so far.
+#[derive(Default)]
+struct Received {
+    bytes: Vec<u8>,
+    /// The read hit end of file (macOS) or `EIO` (Linux): nothing holds the terminal's slave side open any more, so
+    /// `bytes` is everything the app and its children wrote.
+    closed: bool,
+}
+
 /// Everything the terminal has received, with a condvar to wait on.
 #[derive(Default)]
 struct Output {
-    bytes: Mutex<Vec<u8>>,
+    received: Mutex<Received>,
     grew: Condvar,
 }
 
@@ -236,9 +250,8 @@ struct Pty {
     output: Arc<Output>,
     writer: Arc<Mutex<Box<dyn Write + Send>>>,
     exit: mpsc::Receiver<u32>,
-    // Kept open so the terminal outlives the app, for `stty`.
-    slave: Box<dyn SlavePty + Send>,
-    _master: Box<dyn MasterPty + Send>,
+    // Kept open after the app exits, to read the terminal's flags.
+    master: Box<dyn MasterPty + Send>,
 }
 
 impl Pty {
@@ -252,6 +265,9 @@ impl Pty {
             })
             .unwrap();
         let mut child = pair.slave.spawn_command(command).unwrap();
+        // The app holds the slave now. Closing ours lets the master's reads end once the app and every child it
+        // started have closed the terminal, which is how `finish` knows it has all the output.
+        drop(pair.slave);
         let pid = child.process_id().unwrap();
         let (exit_tx, exit) = mpsc::channel();
         std::thread::spawn(move || {
@@ -268,13 +284,14 @@ impl Pty {
                 // Queries answered so far, by kind.
                 let mut answered = [0; 2];
                 while let Ok(n @ 1..) = reader.read(&mut buf) {
-                    let mut bytes = output.bytes.lock().unwrap();
+                    let mut received = output.received.lock().unwrap();
+                    let bytes = &mut received.bytes;
                     bytes.extend_from_slice(&buf[..n]);
                     // crossterm asks for the kitty protocol and then DA1; answering DA1 alone says "no kitty"
                     // without waiting out its timeout. The cursor position is asked at startup; any answer does.
                     let replies: [(&str, &[u8]); 2] = [("\x1b[c", b"\x1b[?62;22c"), ("\x1b[6n", b"\x1b[1;1R")];
                     for ((query, reply), answered) in replies.into_iter().zip(&mut answered) {
-                        let asked = count(&bytes, query);
+                        let asked = count(bytes, query);
                         for _ in *answered..asked {
                             let _ = writer.lock().unwrap().write_all(reply);
                         }
@@ -282,6 +299,8 @@ impl Pty {
                     }
                     output.grew.notify_all();
                 }
+                output.received.lock().unwrap().closed = true;
+                output.grew.notify_all();
             });
         }
         Self {
@@ -289,8 +308,7 @@ impl Pty {
             output,
             writer,
             exit,
-            slave: pair.slave,
-            _master: pair.master,
+            master: pair.master,
         }
     }
 
@@ -302,16 +320,40 @@ impl Pty {
 
     /// Blocks until `done` holds for the output so far, and returns that output.
     fn wait_output(&self, what: &str, done: impl Fn(&str) -> bool) -> String {
+        self.wait_received(what, |_, text| done(text))
+    }
+
+    /// Blocks until `done` holds for what the master has read so far, and returns the output.
+    fn wait_received(&self, what: &str, done: impl Fn(&Received, &str) -> bool) -> String {
         let deadline = Instant::now() + TIMEOUT;
-        let mut bytes = self.output.bytes.lock().unwrap();
+        let mut received = self.output.received.lock().unwrap();
         loop {
-            let text = String::from_utf8_lossy(&bytes).into_owned();
-            if done(&text) {
+            let text = String::from_utf8_lossy(&received.bytes).into_owned();
+            if done(&received, &text) {
                 return text;
             }
             let left = deadline.saturating_duration_since(Instant::now());
             assert!(!left.is_zero(), "timed out waiting for {what}; output: {text:?}");
-            bytes = self.output.grew.wait_timeout(bytes, left).unwrap().0;
+            received = self.output.grew.wait_timeout(received, left).unwrap().0;
+        }
+    }
+
+    /// The terminal's local mode flags, as the app (or the last process to set them) left them.
+    ///
+    /// `tcgetattr` on the master reports the slave's settings: Linux's `tty_mode_ioctl` redirects a pty master's
+    /// termios ioctls to its slave (`tty->link`), and on macOS both sides share one `struct tty`.
+    fn local_flags(&self) -> LocalFlags {
+        self.master
+            .get_termios()
+            .expect("tcgetattr on the pty master failed")
+            .local_flags
+    }
+
+    /// Fails unless the terminal is in raw mode now: line editing, echo and signal keys are all off.
+    fn assert_raw(&self) {
+        let flags = self.local_flags();
+        for (name, flag) in COOKED {
+            assert!(!flags.contains(flag), "{name} is on while the app runs: {flags:?}");
         }
     }
 
@@ -325,28 +367,27 @@ impl Pty {
         });
     }
 
-    /// Blocks until the app has exited, and returns its exit code, everything it wrote and the terminal's `stty -a`
+    /// Blocks until the app has exited, and returns its exit code, everything it wrote and the terminal's flags
     /// afterwards.
     fn finish(self) -> Finished {
         let code = self
             .exit
             .recv_timeout(TIMEOUT)
             .unwrap_or_else(|_| panic!("the app didn't exit; output: {:?}", self.output_text()));
-        let mut stty = CommandBuilder::new("sh");
-        stty.args(["-c", &format!("echo {AFTER_APP}; stty -a; echo {STTY_DONE}")]);
-        let mut child = self.slave.spawn_command(stty).unwrap();
-        child.wait().unwrap();
-        let out = self.wait_output("stty", |out| out.contains(&format!("{STTY_DONE}\r\n")));
-        let (app, after) = out.split_once(AFTER_APP).unwrap();
+        // Reaping the app doesn't mean the master has read all it wrote; the reads ending does.
+        let output = self.wait_received(
+            "the terminal to close after the app exited (does a gh child still hold it?)",
+            |received, _| received.closed,
+        );
         Finished {
             code,
-            output: app.to_owned(),
-            stty: after.to_owned(),
+            output,
+            flags: self.local_flags(),
         }
     }
 
     fn output_text(&self) -> String {
-        String::from_utf8_lossy(&self.output.bytes.lock().unwrap()).into_owned()
+        String::from_utf8_lossy(&self.output.received.lock().unwrap().bytes).into_owned()
     }
 }
 
@@ -361,16 +402,15 @@ struct Finished {
     code: u32,
     /// Everything the app wrote to the terminal.
     output: String,
-    /// `stty -a` once the app was gone.
-    stty: String,
+    /// The terminal's local mode flags once the app was gone.
+    flags: LocalFlags,
 }
 
 impl Finished {
     /// The terminal is out of raw mode: line editing, echo and signal keys are back.
     fn assert_cooked(&self) {
-        let flags: Vec<&str> = self.stty.split([' ', ';', '\r', '\n', '\t']).collect();
-        for flag in ["icanon", "echo", "isig"] {
-            assert!(flags.contains(&flag), "{flag} is off after exit: {}", self.stty);
+        for (name, flag) in COOKED {
+            assert!(self.flags.contains(flag), "{name} is off after exit: {:?}", self.flags);
         }
     }
 
@@ -404,6 +444,10 @@ fn start_in_flight(sandbox: &Sandbox, extra_env: &[(&str, &str)]) -> Pty {
 fn quitting_with_q_restores_and_kills_the_gh_child() {
     let sandbox = Sandbox::new("q");
     let pty = start_in_flight(&sandbox, &[]);
+    // Raw mode is on before the alternate screen. Raw here and cooked after exit shows the master reports the flags
+    // the app sets, not a copy of its own that never changes.
+    pty.wait_output("the alternate screen", |out| out.contains(ENTER_ALTERNATE_SCREEN));
+    pty.assert_raw();
     pty.send("q");
     let finished = pty.finish();
     assert_eq!(finished.code, 0);
@@ -557,6 +601,26 @@ fn a_config_error_is_printed_on_an_untouched_terminal() {
         finished.output
     );
     finished.assert_cooked();
+}
+
+/// `SIGKILL` gives the app no chance to restore, and the check after exit sees raw mode left on: the terminal's flags
+/// outlive the app, so the cooked flags the other tests see are the app's doing. Without `gh`, so no child of the
+/// killed app holds the terminal open.
+#[test]
+fn the_check_after_exit_sees_raw_mode_left_by_a_killed_app() {
+    let sandbox = Sandbox::new("kill");
+    let pty = Pty::spawn(sandbox.command_with_path(sandbox.root.join("bin"), &[]));
+    pty.wait_screen("installed");
+    signal(pty.pid, "KILL");
+    let finished = pty.finish();
+    assert!(!finished.output.contains(RESTORE), "{:?}", tail(&finished.output));
+    for (name, flag) in COOKED {
+        assert!(
+            !finished.flags.contains(flag),
+            "{name} is on after SIGKILL: {:?}",
+            finished.flags
+        );
+    }
 }
 
 /// Without `gh` the app shows its "not installed" screen; quitting from there restores as from anywhere else.

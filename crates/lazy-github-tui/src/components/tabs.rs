@@ -5,12 +5,12 @@
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
-use ratatui::style::{Modifier, Style};
+use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Widget};
 
 use crate::keymap::BindingId;
-use crate::theme::{Accent, Paint, Theme};
+use crate::theme::{Marks, Paint, Theme, ThemeColor};
 
 /// Rows the strip takes.
 pub const TAB_STRIP_HEIGHT: u16 = 2;
@@ -18,13 +18,31 @@ pub const TAB_STRIP_HEIGHT: u16 = 2;
 /// Textual's `Tabs` bindings, while the strip has focus.
 pub const TABS_BINDINGS: &[BindingId] = &[BindingId::TextualTabsPrevious, BindingId::TextualTabsNext];
 
+/// What a marked tab label's color says, which picks its [`Marks`] role.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LabelMark {
+    /// A good state ([`Marks::positive`]).
+    Positive,
+    /// A bad state ([`Marks::negative`]).
+    Negative,
+}
+
+impl LabelMark {
+    fn color(self, marks: &Marks) -> ThemeColor {
+        match self {
+            LabelMark::Positive => marks.positive,
+            LabelMark::Negative => marks.negative,
+        }
+    }
+}
+
 /// Tab names and which one is active.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TabStrip {
     names: Vec<String>,
-    /// A fixed color per label, from the label's markup (`[red]•Unread[/red]`): it replaces the label's own color,
-    /// active or not, in every theme. `None` for a plain label.
-    accents: Vec<Option<Accent>>,
+    /// A mark color per label, from the label's markup (`[red]•Unread[/red]`): it replaces the label's own color,
+    /// active or not. `None` for a plain label.
+    marks: Vec<Option<LabelMark>>,
     active: usize,
 }
 
@@ -33,21 +51,18 @@ impl TabStrip {
     pub fn new(names: impl IntoIterator<Item = impl Into<String>>) -> Self {
         let names: Vec<String> = names.into_iter().map(Into::into).collect();
         Self {
-            accents: vec![None; names.len()],
+            marks: vec![None; names.len()],
             names,
             active: 0,
         }
     }
 
-    /// A strip of labels each drawn in a fixed color, with the first active: Python's tab titles written as markup.
-    pub fn accented(tabs: impl IntoIterator<Item = (impl Into<String>, Accent)>) -> Self {
-        let (names, accents) = tabs
-            .into_iter()
-            .map(|(name, accent)| (name.into(), Some(accent)))
-            .unzip();
+    /// A strip of labels each drawn in a mark's color, with the first active: Python's tab titles written as markup.
+    pub fn marked(tabs: impl IntoIterator<Item = (impl Into<String>, LabelMark)>) -> Self {
+        let (names, marks) = tabs.into_iter().map(|(name, mark)| (name.into(), Some(mark))).unzip();
         Self {
             names,
-            accents,
+            marks,
             active: 0,
         }
     }
@@ -116,34 +131,24 @@ impl TabStrip {
     /// [`Self::render`] over a parent whose background is `under`, such as a dialog's interior: the translucent
     /// label and bar colors blend with it.
     pub fn render_over(&self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool, under: Paint) {
-        let palette = theme.palette;
+        let roles = theme.roles();
         // Textual's `Tab`: `padding: 0 1`, `$foreground 50%`, and `$foreground` when active. In a focused `Tabs`,
         // the active tab is `$block-cursor-foreground` on `$block-cursor-background` with its text style, padding
         // included.
         // On ANSI themes (`Tab:ansi`), labels are dim and the active one is bold instead.
+        let tabs = &roles.tabs;
         let (active_label, active_padding) = if focused {
-            let style = palette.block_cursor_text_style.apply(theme.fg_on(
-                palette.block_cursor_foreground,
-                palette.block_cursor_background,
-                under,
-            ));
-            let padding = Style::new().bg(theme.color(palette.block_cursor_background, under));
+            let c = roles.cursor.focused;
+            let style = c.style.apply(theme.fg_on(c.fg, c.bg, under));
+            let padding = Style::new().bg(theme.color(c.bg, under));
             (style, padding)
         } else {
-            let style = Style::new().fg(theme.color(palette.foreground, under));
-            let style = if theme.ansi {
-                style.add_modifier(Modifier::BOLD)
-            } else {
-                style
-            };
+            let style = tabs
+                .label_active_style
+                .apply(Style::new().fg(theme.color(tabs.label_active, under)));
             (style, Style::new())
         };
-        let label = Style::new().fg(theme.color(palette.foreground.multiply_alpha(0.5), under));
-        let label = if theme.ansi {
-            label.add_modifier(Modifier::DIM)
-        } else {
-            label
-        };
+        let label = tabs.label_style.apply(Style::new().fg(theme.color(tabs.label, under)));
         let mut spans = Vec::new();
         let mut highlight = (0, 0);
         let mut x = 0;
@@ -156,8 +161,8 @@ impl TabStrip {
                 (label, Style::new())
             };
             // The markup's color wins over the tab's own, as Textual applies a label's content style over the widget's.
-            let style = match self.accents.get(i).copied().flatten() {
-                Some(accent) => style.fg(theme.accent(accent)),
+            let style = match self.marks.get(i).copied().flatten() {
+                Some(mark) => style.fg(theme.color(mark.color(&roles.marks), theme.background())),
                 None => style,
             };
             spans.extend([
@@ -176,14 +181,10 @@ impl TabStrip {
         if area.height >= TAB_STRIP_HEIGHT {
             // Textual's `Underline`: `$block-cursor-background` on a `$foreground 10%` bar, `30%` when focused. On ANSI
             // themes the bar is `$border-blurred`, focused or not.
-            let bar_color = if theme.ansi {
-                palette.border_blurred
-            } else {
-                palette.foreground.multiply_alpha(if focused { 0.3 } else { 0.1 })
-            };
+            let bar_color = if focused { tabs.bar_focused } else { tabs.bar };
             let bar = UnderlineBar {
                 highlight,
-                highlight_style: Style::new().fg(theme.color(palette.block_cursor_background, under)),
+                highlight_style: Style::new().fg(theme.color(tabs.bar_active, under)),
                 style: Style::new().fg(theme.color(bar_color, under)),
             };
             frame.render_widget(
@@ -320,9 +321,9 @@ mod tests {
     #[test]
     fn accented_labels_keep_their_color_active_or_not() {
         // The Notifications tabs: `[red]•Unread[/red]` and `[greenyellow]✓Read[/]`, over `$surface-lighten-3`.
-        let strip = TabStrip::accented([("•Unread", Accent::Red), ("✓Read", Accent::GreenYellow)]);
+        let strip = TabStrip::marked([("•Unread", LabelMark::Negative), ("✓Read", LabelMark::Positive)]);
         let theme = Theme::default();
-        let under = theme.palette.surface_lighten_3.over(theme.background());
+        let under = theme.roles().surface.dialog.over(theme.background());
         let mut terminal = Terminal::new(TestBackend::new(20, 2)).unwrap();
         terminal
             .draw(|frame| strip.render_over(frame, frame.area(), &theme, false, under))

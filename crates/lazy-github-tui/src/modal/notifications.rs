@@ -36,10 +36,9 @@ use crate::components::table::{
     Cell, CellValue, Column, Handled, Page, SEARCHABLE_BINDINGS, SearchableTable, SortSpec, TableEvent, TableFocus,
     TableItem, py_strip,
 };
-use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
+use crate::components::tabs::{LabelMark, TAB_STRIP_HEIGHT, TabStrip};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::theme::Accent;
 use crate::toast::Toast;
 
 /// Threads per page: Python's `NOTIFICATIONS_PAGE_COUNT`, which `gh` sends as `per_page`.
@@ -355,7 +354,7 @@ impl NotificationsDialog {
             page: 1,
         }));
         Self {
-            tabs: TabStrip::accented([("•Unread", Accent::Red), ("✓Read", Accent::GreenYellow)]),
+            tabs: TabStrip::marked([("•Unread", LabelMark::Negative), ("✓Read", LabelMark::Positive)]),
             active: NotificationsTab::Unread,
             tables: [table(), table()],
             focus: Focus::Container,

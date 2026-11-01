@@ -1,0 +1,65 @@
+version = 1
+description = "An Issues table whose first pages hold only PRs asks for the next page at once while it's empty, up to 5 pages in all (#399)"
+gate = true
+# Rust-only: Python's Issues table stays empty here and never pages (Py bug B181); fetching ahead is decision
+# issues-fetch-ahead.
+apps = ["rust"]
+parity_rows = ["issues.filters"]
+sizes = [[160, 48]]
+
+[env]
+# issues-fetch-ahead adds parity-bot/prs-only and parity-bot/prs-then-issues, fourth and fifth on base's repos page.
+# prs-then-issues' issues pages 1 and 2 are PRs 90 to 31 and page 3 is issues 30 to 1; prs-only's pages 1 to 5 are
+# PRs 160 to 11. Neither has a page after those: a request for one is a fixture miss, which fails the run, so the
+# scenario passing means prs-then-issues asked for no page 4 and prs-only for no page 6.
+fixtures = ["issues-fetch-ahead", "base"]
+
+[[step]]
+wait = { text = "prs-then-issues", timeout_ms = 15000 }
+
+[[step]]
+keys = ["1"]
+
+[[step]]
+wait = { text = "O Lookup Repository" }
+
+[[step]]
+keys = ["j", "j", "j", "j", "enter"]
+
+# No key is pressed in the Issues table: pages 2 and 3 are asked for while it's empty, and page 3's issues fill it.
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/prs-then-issues/issues", query = { page = "3", per_page = "30", state = "all" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Prs then issues issue 30", timeout_ms = 15000 }
+
+# Thirty rows leave the cursor far from the end, so nothing asks for page 4 (a miss) while the screen settles.
+[[step]]
+wait = { stable_ms = 1000 }
+
+[[step]]
+capture = "filled"
+
+# prs-only, one row up: five pages of PRs, then it stops with the table empty.
+[[step]]
+keys = ["k", "enter"]
+
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/prs-only/issues", query = { page = "5", per_page = "30", state = "all" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "[3] Issues (empty)", timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 1000 }
+
+[[step]]
+capture = "capped"
+
+[expect.filled]
+contains = ["[3] Issues", "Prs then issues issue 30", "Prs then issues pull request 90"]
+not_contains = ["[3] Issues (empty)", "API Error", "panicked"]
+
+[expect.capped]
+contains = ["[3] Issues (empty)", "Prs only pull request 160"]
+not_contains = ["Prs then issues", "API Error", "panicked"]

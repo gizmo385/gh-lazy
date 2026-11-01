@@ -124,8 +124,8 @@ impl Component for ConfirmDialog {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let under = self.background(theme.palette).over(theme.background());
-        let text = Style::new().fg(theme.color(theme.palette.foreground, under));
+        let under = self.background(theme.roles()).over(theme.background());
+        let text = Style::new().fg(theme.color(theme.roles().text.plain, under));
         let content = Rect {
             x: area.x.saturating_add(PADDING),
             width: area.width.saturating_sub(2 * PADDING),

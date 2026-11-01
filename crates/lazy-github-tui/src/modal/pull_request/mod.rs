@@ -27,7 +27,7 @@ use self::draft::DraftFile;
 use self::layout::{BranchColumns, FormRows, Part};
 use self::submit::{BranchFollowUp, Submit};
 use super::form::FormScroll;
-use super::{Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, dialog_bindings};
+use super::{Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, dialog_bindings, mark};
 use crate::action::Action;
 use crate::component::{ChainLink, Component, Cx, RenderCx};
 use crate::components::button::{ButtonMouse, ButtonRow, Pressed};
@@ -39,7 +39,7 @@ use crate::components::text_input::{InputOutcome, TextInput};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::gh_health::report_unhandled;
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::theme::{Accent, Paint, Theme};
+use crate::theme::{Paint, Theme};
 
 pub use reviewers::{ReviewersField, ReviewersFocus, ReviewersOutcome, removing_toast};
 
@@ -666,9 +666,9 @@ impl Component for PullRequestDialog {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let under = self.background(theme.palette).over(theme.background());
+        let under = self.background(theme.roles()).over(theme.background());
         let fill = Style::new()
-            .fg(theme.color(theme.palette.foreground, under))
+            .fg(theme.color(theme.roles().text.plain, under))
             .bg(theme.paint(under));
         let inner = area.inner(Margin::new(PADDING, PADDING));
         let rows = self.rows();
@@ -763,15 +763,14 @@ fn draw_static(
     heading: &str,
     warning: bool,
 ) {
-    let p = theme.palette;
-    let text = Style::new().fg(theme.color(p.foreground, under));
+    let r = theme.roles();
+    let text = Style::new().fg(theme.color(r.text.plain, under));
     let bold = text.add_modifier(Modifier::BOLD);
 
     // `MarkdownH1`: centered inside the `Markdown` widget's padding, in `$markdown-h1-color` and its text style.
     let block = rows.area(Part::Heading, content);
-    let h1 = p
-        .markdown_h1_text_style
-        .apply(Style::new().fg(theme.color(p.markdown_h1_color, under)));
+    let h1_role = r.markdown.h1;
+    let h1 = h1_role.style.apply(Style::new().fg(theme.color(h1_role.fg, under)));
     let width = usize::from(content.width.saturating_sub(2 * layout::HEADING_PADDING));
     buf.set_stringn(
         content.x + layout::HEADING_PADDING,
@@ -785,7 +784,7 @@ fn draw_static(
         // `[yellow]Warning:[/yellow] ...`, centered across the content (`content-align: center middle`).
         let area = rows.area(Part::Warning, content);
         let line = Line::from(vec![
-            Span::styled(WARNING, Style::new().fg(theme.accent(Accent::Yellow))),
+            Span::styled(WARNING, Style::new().fg(mark(theme, |m| m.warning))),
             Span::styled(NO_UPSTREAM, text),
         ]);
         let width = u16::try_from(line.width()).unwrap_or(u16::MAX);
@@ -819,7 +818,7 @@ fn draw_static(
         buf.set_stringn(content.x, rows.area(part, content).y, label, width, bold);
     }
     // `Rule { color: $secondary }`, with its `margin: 1 0`.
-    let rule = Style::new().fg(theme.color(p.secondary, under));
+    let rule = Style::new().fg(theme.color(r.border.rule, under));
     for part in [Part::FirstRule, Part::SecondRule] {
         let y = rows.area(part, content).y + 1;
         buf.set_stringn(content.x, y, "─".repeat(width), width, rule);

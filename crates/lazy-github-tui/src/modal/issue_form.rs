@@ -433,7 +433,7 @@ impl IssueForm {
     pub(super) fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>, under: Paint) {
         let theme = cx.theme;
         let fill = Style::new()
-            .fg(theme.color(theme.palette.foreground, under))
+            .fg(theme.color(theme.roles().text.plain, under))
             .bg(theme.paint(under));
         let (scroll_area, buttons_area) = split(area, self.buttons.height());
         let layout = self.layout(scroll_area.height);

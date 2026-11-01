@@ -313,12 +313,12 @@ fn draw(dialog: &mut PasteLinkDialog) -> String {
     terminal
         .draw(|frame| {
             let area = frame.area();
-            let background = dialog.background(theme.palette);
+            let background = dialog.background(theme.roles());
             frame.render_widget(
                 DialogFrame {
                     theme: &theme,
                     background,
-                    border: dialog.border(theme.palette),
+                    border: dialog.border(theme.roles()),
                 },
                 area,
             );

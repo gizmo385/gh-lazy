@@ -888,8 +888,8 @@ impl Component for NotificationsDialog {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let p = theme.palette;
-        let under = self.background(p).over(theme.background());
+        let r = theme.roles();
+        let under = self.background(r).over(theme.background());
 
         // `MarkdownH1`: centered, in `$markdown-h1-color` and its text style.
         let heading = Rect {
@@ -899,9 +899,8 @@ impl Component for NotificationsDialog {
             height: 1,
         }
         .intersection(area);
-        let style = p
-            .markdown_h1_text_style
-            .apply(Style::new().fg(theme.color(p.markdown_h1_color, under)));
+        let h1 = r.markdown.h1;
+        let style = h1.style.apply(Style::new().fg(theme.color(h1.fg, under)));
         let width = usize::from(heading.width);
         frame
             .buffer_mut()
@@ -915,7 +914,7 @@ impl Component for NotificationsDialog {
                 ..heading
             }
             .intersection(area);
-            let muted = Style::new().fg(theme.color(p.text_muted, under));
+            let muted = Style::new().fg(theme.color(r.text.muted, under));
             let width = usize::from(row.width);
             frame
                 .buffer_mut()

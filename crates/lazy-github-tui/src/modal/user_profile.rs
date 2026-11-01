@@ -22,7 +22,7 @@ use crate::components::markdown::{self, LinkSpan, Markdown, Rendered, TextRun};
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::components::table::{Cell, CellValue, Column, Handled, SearchableTable, SortSpec, TableEvent, TableItem};
 use crate::keymap::BindingId;
-use crate::theme::{Paint, Palette, Theme, ThemeColor};
+use crate::theme::{Paint, Roles, Theme, ThemeColor};
 
 /// The dialog's screen bindings: only `modal.close` of its own.
 const PROFILE_BINDINGS: &[BindingId] = dialog_bindings![ModalClose];
@@ -423,8 +423,8 @@ impl Dialog for UserProfileDialog {
         (WIDTH, available.height * 9 / 10)
     }
 
-    fn background(&self, palette: &Palette) -> ThemeColor {
-        palette.surface_lighten_1
+    fn background(&self, roles: &Roles) -> ThemeColor {
+        roles.surface.card
     }
 
     fn take_output(&mut self) -> Option<Option<Repository>> {
@@ -519,10 +519,10 @@ struct Lines {
 
 impl Lines {
     fn new(width: usize, theme: &Theme) -> Self {
-        let palette = theme.palette;
-        let under = palette.surface_lighten_1.over(theme.background());
-        let text = Style::new().fg(theme.color(palette.foreground, under));
-        let dim = theme.rich_dim(text, palette.foreground, under);
+        let r = theme.roles();
+        let under = r.surface.card.over(theme.background());
+        let text = Style::new().fg(theme.color(r.text.plain, under));
+        let dim = theme.rich_dim(text, r.text.plain, under);
         Self {
             out: Rendered::default(),
             width: u16::try_from(width).unwrap_or(u16::MAX),
@@ -530,7 +530,7 @@ impl Lines {
             bold: text.add_modifier(Modifier::BOLD),
             dim,
             // `Rule { color: $secondary }`.
-            rule: Style::new().fg(theme.color(palette.secondary, under)),
+            rule: Style::new().fg(theme.color(r.border.rule, under)),
             under,
         }
     }

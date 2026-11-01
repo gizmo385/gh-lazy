@@ -44,11 +44,11 @@ use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::BindingId;
 use crate::modal::{NewCommentDialog, ReplyTarget};
-use crate::theme::{Accent, Paint, Theme};
+use crate::theme::{Paint, Theme};
 
 use super::super::MainAction;
 use super::super::details::{BodyRenderCx, MaximizeScope, SectionKey, SectionLayout, SectionRef};
-use super::super::overview_text::accent;
+use super::super::overview_text::mark;
 use super::overview::PrOverview;
 
 /// `PrConversationTabPane.BINDINGS`: a new comment (#182), in the footer while focus is anywhere in the tab.
@@ -1022,7 +1022,7 @@ impl PrConversation {
                 loading::render(frame.buffer_mut(), area, theme, cx.animations, elapsed);
             }
             State::Failed => {
-                let style = Style::new().fg(theme.color(theme.palette.foreground, theme.background()));
+                let style = Style::new().fg(theme.color(theme.roles().text.plain, theme.background()));
                 frame.render_widget(Paragraph::new(Line::styled(FAILED, style)), area);
             }
             State::Loaded(body) => {
@@ -1204,7 +1204,7 @@ fn conversation(
         return (out, placements);
     }
     if items.is_empty() {
-        let style = Style::new().fg(theme.color(theme.palette.foreground, theme.background()));
+        let style = Style::new().fg(theme.color(theme.roles().text.plain, theme.background()));
         append(&mut out, markdown::wrap_text(&[TextRun::new(EMPTY, style)], width), 0);
         return (out, placements);
     }
@@ -1272,7 +1272,7 @@ fn place_review(
     let border = boxed.then(|| {
         let under = theme.background();
         Style::new()
-            .fg(theme.color(theme.palette.success_lighten_3, under))
+            .fg(theme.color(theme.roles().border.review, under))
             .bg(theme.paint(under))
     });
     let top = out.lines.len() + usize::from(boxed);
@@ -1305,8 +1305,8 @@ fn place_review(
 /// `Review from <login> (<state>)`, the state approved in greenyellow, changes requested in red, else title-cased.
 fn review_title(review: &ReviewSection, theme: &Theme) -> Vec<TextRun> {
     let state = match review.state {
-        ReviewState::Approved => TextRun::new("Approved", accent(theme, Accent::GreenYellow)),
-        ReviewState::ChangesRequested => TextRun::new("Changes Requested", accent(theme, Accent::Red)),
+        ReviewState::Approved => TextRun::new("Approved", mark(theme, theme.roles().marks.positive)),
+        ReviewState::ChangesRequested => TextRun::new("Changes Requested", mark(theme, theme.roles().marks.negative)),
         ReviewState::Commented | ReviewState::Dismissed | ReviewState::Pending => {
             TextRun::new(review.state.title(), Style::new())
         }
@@ -1332,7 +1332,7 @@ fn review_contents(
     let mut out = Rendered::default();
     let under = content.under;
     let fill = Style::new().bg(theme.paint(under));
-    let text = Style::new().fg(theme.color(theme.palette.foreground, under));
+    let text = Style::new().fg(theme.color(theme.roles().text.plain, under));
     match &review.contents {
         ReviewContents::Nothing => {
             append(
@@ -1350,7 +1350,7 @@ fn review_contents(
             }
             // `ReviewConversation { border-left: solid $secondary-background; margin-bottom: 1 }`.
             let border = Style::new()
-                .fg(theme.color(theme.palette.secondary_background, under))
+                .fg(theme.color(theme.roles().border.conversation, under))
                 .bg(theme.paint(under));
             for thread in threads {
                 for &block in thread {

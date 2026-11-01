@@ -14,7 +14,6 @@ use crate::action::Action;
 use crate::component::{Component, Cx, RenderCx};
 use crate::components::link_map::LinkMap;
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::theme::ThemeColor;
 
 /// The letters labels are made of, in the order they're handed out: the home row first.
 pub const HINT_ALPHABET: &str = "asdfghjklqwertyuiopzxcvbnm";
@@ -156,14 +155,14 @@ impl Component for LinkHintsDialog {
     /// edge.
     fn render(&mut self, frame: &mut Frame<'_>, _area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let under = theme.palette.warning.over(theme.background());
-        let style = Style::new()
-            .fg(theme.color(ThemeColor::BLACK, under))
-            .bg(theme.paint(under))
-            .add_modifier(Modifier::BOLD)
+        let label = theme.roles().hints.label;
+        let under = label.bg.over(theme.background());
+        let style = label
+            .style
+            .apply(Style::new().fg(theme.color(label.fg, under)).bg(theme.paint(under)))
             // Python's labels are widgets of their own, painting only this style; here they're drawn over the link,
             // whose underline (or any other modifier) would otherwise show through.
-            .remove_modifier(Modifier::all().difference(Modifier::BOLD));
+            .remove_modifier(Modifier::all().difference(label.style.add));
         let width = self.hints.iter().map(|hint| hint.code.len()).max().unwrap_or(0);
         let screen = frame.area();
         let buf = frame.buffer_mut();

@@ -100,12 +100,12 @@ impl KeyRow {
     /// Draws the row into `area` (its full height) over `under`: the bold label and the value, boxed in `$accent`
     /// while focused.
     pub(super) fn render(&self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focused: bool) {
-        let p = theme.palette;
-        let text = Style::new().fg(theme.color(p.foreground, under));
+        let r = theme.roles();
+        let text = Style::new().fg(theme.color(r.text.plain, under));
         let mut line = area;
         if focused {
             Block::bordered()
-                .border_style(Style::new().fg(theme.color(p.accent, under)))
+                .border_style(Style::new().fg(theme.color(r.border.emphasis, under)))
                 .render(area, buf);
             line = Rect {
                 x: area.x.saturating_add(1),

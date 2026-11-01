@@ -37,10 +37,10 @@ use crate::gh_health::report_unhandled;
 use crate::keymap::BindingId;
 use crate::modal::AddReactionDialog;
 use crate::screens::main::MainAction;
-use crate::theme::{Accent, Theme};
+use crate::theme::Theme;
 
 use super::super::details::{BodyRenderCx, SectionLayout};
-use super::super::overview_text::{HeaderStyles, OverviewMarkdown, accent, append, push_label, push_rule};
+use super::super::overview_text::{HeaderStyles, OverviewMarkdown, append, mark, push_label, push_rule};
 use super::PR_OVERVIEW_BINDINGS;
 
 /// A focused section title's bindings: Textual's `CollapsibleTitle`.
@@ -967,11 +967,11 @@ fn overview(
     let issue = &pr.pr.issue;
 
     let state = if pr.merged_at.is_some() {
-        TextRun::new("Merged", accent(theme, Accent::Orchid))
+        TextRun::new("Merged", mark(theme, theme.roles().marks.merged))
     } else if issue.closed_at.is_some() {
-        TextRun::new("closed", accent(theme, Accent::Red))
+        TextRun::new("closed", mark(theme, theme.roles().marks.negative))
     } else {
-        TextRun::new("Open", accent(theme, Accent::GreenYellow))
+        TextRun::new("Open", mark(theme, theme.roles().marks.positive))
     };
     // The title as typed: Python passes it as a markup variable, so brackets in it are text.
     let title = [
@@ -992,9 +992,15 @@ fn overview(
         separator(),
         TextRun::new(plural(pr.changed_files, "file changed", "files changed"), text),
         separator(),
-        TextRun::new(format!("+{}", pr.additions), accent(theme, Accent::GreenYellow)),
+        TextRun::new(
+            format!("+{}", pr.additions),
+            mark(theme, theme.roles().marks.count_added),
+        ),
         separator(),
-        TextRun::new(format!("-{}", pr.deletions), accent(theme, Accent::Red)),
+        TextRun::new(
+            format!("-{}", pr.deletions),
+            mark(theme, theme.roles().marks.count_removed),
+        ),
         separator(),
         TextRun::new(format!("{}:{}", pr.head.user.login, pr.head.name), bold),
         TextRun::new(" → ", text),
@@ -1158,21 +1164,22 @@ fn check_row(row: &CheckRow, theme: &Theme) -> Vec<TextRun> {
 
 /// Python's `CheckStatusState.to_display`.
 fn check_state(state: CheckState, theme: &Theme) -> TextRun {
+    let marks = &theme.roles().marks;
     let (text, color) = match state {
-        CheckState::Success => ("✓ Passed", Accent::GreenYellow),
-        CheckState::Pending => ("... Pending", Accent::Yellow),
-        CheckState::Failure => ("✘ Failed", Accent::Red),
-        CheckState::Error => ("✘ Errored", Accent::Red),
+        CheckState::Success => ("✓ Passed", marks.positive),
+        CheckState::Pending => ("... Pending", marks.pending),
+        CheckState::Failure => ("✘ Failed", marks.negative),
+        CheckState::Error => ("✘ Errored", marks.negative),
     };
-    TextRun::new(text, accent(theme, color))
+    TextRun::new(text, mark(theme, color))
 }
 
 /// Python's `ReviewState.to_display`: approved and changes requested with a mark in their color, the rest
 /// title-cased.
 fn review_state(state: ReviewState, theme: &Theme) -> TextRun {
     match state {
-        ReviewState::Approved => TextRun::new("✓ Approved", accent(theme, Accent::GreenYellow)),
-        ReviewState::ChangesRequested => TextRun::new("✘ Changes Requested", accent(theme, Accent::Red)),
+        ReviewState::Approved => TextRun::new("✓ Approved", mark(theme, theme.roles().marks.positive)),
+        ReviewState::ChangesRequested => TextRun::new("✘ Changes Requested", mark(theme, theme.roles().marks.negative)),
         ReviewState::Commented | ReviewState::Dismissed | ReviewState::Pending => {
             TextRun::new(state.title(), Style::new())
         }

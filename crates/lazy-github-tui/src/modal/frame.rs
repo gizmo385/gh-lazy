@@ -5,24 +5,16 @@ use ratatui::layout::Rect;
 use ratatui::style::Style;
 use ratatui::widgets::Widget;
 
-use crate::theme::{Palette, Theme, ThemeColor};
+use crate::theme::{Theme, ThemeColor};
 
 /// How far each cell below a modal moves toward `$background`: Textual's `ModalScreen` has
 /// `background: $background 60%`.
 pub const DIM_FACTOR: f64 = 0.6;
 
-/// The frame's border color, as a dialog's `border: thick $background 80%` writes it.
-const BORDER_ALPHA: f64 = 0.8;
-
-/// The border most dialogs have: `thick $background 80%`, for [`crate::modal::Dialog::border`].
-pub fn default_border(palette: &Palette) -> ThemeColor {
-    palette.background.multiply_alpha(BORDER_ALPHA)
-}
-
 /// Dims every cell of `area` in `buf`, foreground and background, as a modal screen's translucent background does to
-/// the screens under it. A no-op on the ANSI themes ([`Theme::dim`]).
+/// the screens under it. A no-op on the ANSI themes, whose scrim is transparent ([`Theme::dim`]).
 pub fn dim(buf: &mut Buffer, area: Rect, theme: &Theme) {
-    if theme.ansi {
+    if theme.roles().surface.scrim == ThemeColor::Transparent {
         return;
     }
     let area = area.intersection(buf.area);
@@ -88,7 +80,7 @@ pub(crate) fn on_screen(rect: Rect, screen: Rect) -> Rect {
     }
 }
 
-/// Textual's `thick` border in `border` (usually `$background 80%`), around an interior painted `background`.
+/// Textual's `thick` border in `border` (usually the dialog border role), around an interior painted `background`.
 pub struct DialogFrame<'a> {
     /// The theme.
     pub theme: &'a Theme,
@@ -114,7 +106,6 @@ impl Widget for DialogFrame<'_> {
             return;
         }
         let theme = self.theme;
-        let palette = theme.palette;
         // A modal screen's own background is `$background` at 60% over the app's `$background`, which is
         // `$background` again: that's what the dialog's translucent border is drawn on.
         let screen = theme.background();
@@ -122,7 +113,7 @@ impl Widget for DialogFrame<'_> {
         let border = self.border.over(screen);
         let border = Style::new().fg(theme.paint(border)).bg(theme.paint(background));
         let interior = Style::new()
-            .fg(theme.color(palette.foreground, background))
+            .fg(theme.color(theme.roles().text.plain, background))
             .bg(theme.paint(background));
         // `visible` isn't empty, so neither is `area`.
         let (left, right, top, bottom) = (area.left(), area.right() - 1, area.top(), area.bottom() - 1);
@@ -187,8 +178,8 @@ mod tests {
             let mut buf = Buffer::empty(Rect::new(0, 0, 10, 6));
             DialogFrame {
                 theme: &theme,
-                background: theme.palette.surface,
-                border: default_border(theme.palette),
+                background: theme.roles().surface.pane,
+                border: theme.roles().border.dialog,
             }
             .render(frame, &mut buf);
             buf

@@ -29,8 +29,8 @@ pub struct Toast {
     /// The bold first line, if any.
     pub title: Option<String>,
     /// The body, word-wrapped to the toast. Spans may be bold (or carry other modifiers) and may set an exact RGB
-    /// foreground from an [`Accent`](crate::theme::Accent), which is how Python's markup renders; the rest is colored
-    /// from the theme. A `\n` starts a new line.
+    /// foreground from a mark ([`Marks`](crate::theme::Marks)), which is how Python's markup renders; the rest is
+    /// colored from the theme. A `\n` starts a new line.
     pub message: Line<'static>,
     /// How long after it's raised the toast disappears by itself.
     pub timeout: Duration,

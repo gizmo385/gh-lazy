@@ -99,13 +99,12 @@ impl Areas {
 
     /// Draws the heading, the label and the rules over the interior's `under` color.
     pub(super) fn render_text(&self, buf: &mut Buffer, heading: &str, label: &str, theme: &Theme, under: Paint) {
-        let p = theme.palette;
-        let text = Style::new().fg(theme.color(p.foreground, under));
+        let r = theme.roles();
+        let text = Style::new().fg(theme.color(r.text.plain, under));
 
         // `MarkdownH1`: centered, in `$markdown-h1-color` and its text style, the whole row styled.
-        let heading_style = p
-            .markdown_h1_text_style
-            .apply(Style::new().fg(theme.color(p.markdown_h1_color, under)));
+        let h1 = r.markdown.h1;
+        let heading_style = h1.style.apply(Style::new().fg(theme.color(h1.fg, under)));
         let width = usize::from(self.heading.width);
         let heading_text = format!("{heading:^width$}");
         buf.set_stringn(self.heading.x, self.heading.y, heading_text, width, heading_style);
@@ -114,7 +113,7 @@ impl Areas {
         buf.set_span(self.label.x, self.label.y, &label, self.label.width);
 
         // `Rule { color: $secondary }`.
-        let rule = Style::new().fg(theme.color(p.secondary, under));
+        let rule = Style::new().fg(theme.color(r.border.rule, under));
         for rect in self.rules.into_iter().flatten() {
             buf.set_stringn(
                 rect.x,

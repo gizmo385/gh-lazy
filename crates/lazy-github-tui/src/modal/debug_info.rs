@@ -274,15 +274,15 @@ impl Dialog for DebugInfoDialog {
 /// The markdown laid out `width` wide, then the rule: the markdown's last margin, which collapses with the rule's
 /// `margin: 1 0`, the rule across the width in `$secondary`, and its bottom margin.
 fn body_lines(markdown: &Markdown, width: u16, theme: &Theme) -> Rendered {
-    let palette = theme.palette;
-    let under = palette.surface_lighten_3.over(theme.background());
+    let r = theme.roles();
+    let under = r.surface.dialog.over(theme.background());
     // Textual's `Markdown` is transparent: the code block's translucent background blends into the dialog's
     // `$surface-lighten-3`, not the screen's `$background`.
     let mut out = markdown.layout_over(width, theme, under);
     if width == 0 {
         return out;
     }
-    let rule = Style::new().fg(theme.color(palette.secondary, under));
+    let rule = Style::new().fg(theme.color(r.border.rule, under));
     out.lines.push(Line::default());
     out.lines
         .push(Line::from(Span::styled("─".repeat(usize::from(width)), rule)));

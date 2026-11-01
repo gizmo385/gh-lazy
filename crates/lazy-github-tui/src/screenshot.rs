@@ -16,16 +16,11 @@ use ratatui::text::{Line, Span};
 
 use crate::components::table::py_repr_str;
 use crate::effect::Effect;
-use crate::theme::{AnsiColor, Paint, Theme};
+use crate::theme::{AnsiColor, Paint, Rgb, Theme};
 use crate::toast::Toast;
 
 /// The toasts' title, as Textual's.
 const TOAST_TITLE: &str = "Screenshot";
-
-/// What [`SvgOptions`] uses for the terminal's default colors when the theme leaves them to the terminal (the ANSI
-/// themes), which a screenshot can't ask.
-const ANSI_DEFAULT_DARK: ((u8, u8, u8), (u8, u8, u8)) = ((0xd4, 0xd4, 0xd4), (0x1e, 0x1e, 0x1e));
-const ANSI_DEFAULT_LIGHT: ((u8, u8, u8), (u8, u8, u8)) = ((0x1e, 0x1e, 0x1e), (0xff, 0xff, 0xff));
 
 /// A screenshot asked for, waiting for the next frame.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -137,24 +132,22 @@ fn screen_color(color: Color) -> screen::Color {
     }
 }
 
-/// The SVG's title and default colors: the theme's background and its foreground over it.
+/// The SVG's title and default colors: the theme's background and its foreground over it. Where the theme leaves
+/// them to the terminal (the ANSI themes), which a screenshot can't ask, they're the screenshot roles' fixed colors.
 fn svg_options(theme: &Theme) -> SvgOptions {
+    let roles = theme.roles();
     let background = theme.background();
-    let foreground = theme.palette.foreground.over(background);
-    let defaults = if theme.dark {
-        ANSI_DEFAULT_DARK
-    } else {
-        ANSI_DEFAULT_LIGHT
-    };
+    let foreground = roles.text.plain.over(background);
     SvgOptions {
         title: screen::SCREENSHOT_TITLE.to_owned(),
-        default_fg: paint_rgb(foreground, defaults.0),
-        default_bg: paint_rgb(background, defaults.1),
+        default_fg: paint_rgb(foreground, roles.screenshot.default_fg),
+        default_bg: paint_rgb(background, roles.screenshot.default_bg),
     }
 }
 
 /// The RGB a paint shows: exact, an ANSI color as xterm draws it, or `default` for the terminal's default color.
-fn paint_rgb(paint: Paint, default: (u8, u8, u8)) -> (u8, u8, u8) {
+fn paint_rgb(paint: Paint, default: Rgb) -> (u8, u8, u8) {
+    let default = (default.r, default.g, default.b);
     match paint {
         Paint::Rgb(rgb) => (rgb.r, rgb.g, rgb.b),
         Paint::Ansi(AnsiColor::Default) => default,
@@ -223,11 +216,11 @@ pub fn save(dir: &Path, file_name: &str, screen: &Screen, options: &SvgOptions) 
 
 /// Textual's toast for a saved screenshot: the path as Python's `repr`, in `$text-success`.
 pub fn saved_toast(path: &Path, theme: &Theme) -> Toast {
-    let palette = theme.palette;
+    let roles = theme.roles();
     // The toast's own background, which the color is composited over.
-    let panel = palette.panel_lighten_1.over(theme.background());
+    let panel = roles.surface.raised.over(theme.background());
     // Exact: the toast reduces span colors to the terminal's depth when it draws them.
-    let color = match palette.text_success.over(panel) {
+    let color = match roles.text.success.over(panel) {
         Paint::Rgb(rgb) => Color::Rgb(rgb.r, rgb.g, rgb.b),
         Paint::Ansi(ansi) => Color::from(ansi),
     };

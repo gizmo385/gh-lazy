@@ -7,16 +7,21 @@ use jiff::Timestamp;
 use lazy_github_core::models::{JobConclusion, JobStatus, WorkflowRun};
 use ratatui::style::{Modifier, Style};
 
-use crate::theme::{Accent, RichAnsi, Theme};
+use super::super::overview_text::mark;
+use crate::theme::Theme;
 
-/// The color a status is drawn in: one of the fixed accent colors, a Rich ANSI color, or Rich's `dim`.
+/// What a status means, which picks its color: one of the marks, or Rich's `dim`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(in crate::screens::main) enum Tint {
-    /// `[greenyellow]`, `[red]`, ... as Textual markup reads them.
-    Accent(Accent),
-    /// `[red]`, `[yellow]`, `[cyan]` as Rich markup reads them (the Jobs tree's labels).
-    RichAnsi(RichAnsi),
-    /// `[dim]`.
+    /// Succeeded (`[greenyellow]`).
+    Positive,
+    /// Failed (`[red]`).
+    Negative,
+    /// Cancelled or queued (`[yellow]`).
+    Pending,
+    /// In progress (`[cyan]`).
+    Running,
+    /// Anything else (`[dim]`).
     Dim,
 }
 
@@ -25,9 +30,12 @@ impl Tint {
     /// `Modifier::DIM` alone, so it dims whatever color the text has where it's drawn (a tree row's, or its cursor's),
     /// which [`Theme::resolve_dim`] blends at the end of the frame as Textual does.
     pub(in crate::screens::main) fn style(self, theme: &Theme) -> Style {
+        let marks = &theme.roles().marks;
         match self {
-            Tint::Accent(accent) => Style::new().fg(theme.accent(accent)),
-            Tint::RichAnsi(c) => Style::new().fg(theme.rich_ansi(c)),
+            Tint::Positive => mark(theme, marks.positive),
+            Tint::Negative => mark(theme, marks.negative),
+            Tint::Pending => mark(theme, marks.pending),
+            Tint::Running => mark(theme, marks.running),
             Tint::Dim => Style::new().add_modifier(Modifier::DIM),
         }
     }
@@ -37,12 +45,12 @@ impl Tint {
 /// it's none of the known ones (a run that timed out reads `completed`).
 pub(in crate::screens::main) fn run_status(run: &WorkflowRun) -> (Cow<'_, str>, Tint) {
     let (text, tint) = match (run.status.as_str(), run.conclusion.as_deref()) {
-        ("completed", Some("success")) => ("✓ Success", Tint::Accent(Accent::GreenYellow)),
-        ("completed", Some("failure")) => ("✗ Failure", Tint::Accent(Accent::Red)),
-        ("completed", Some("cancelled")) => ("○ Cancelled", Tint::Accent(Accent::Yellow)),
+        ("completed", Some("success")) => ("✓ Success", Tint::Positive),
+        ("completed", Some("failure")) => ("✗ Failure", Tint::Negative),
+        ("completed", Some("cancelled")) => ("○ Cancelled", Tint::Pending),
         ("completed", Some("skipped")) => ("− Skipped", Tint::Dim),
-        ("in_progress", _) => ("⋯ In Progress", Tint::Accent(Accent::Cyan)),
-        ("queued", _) => ("⋯ Queued", Tint::Accent(Accent::Yellow)),
+        ("in_progress", _) => ("⋯ In Progress", Tint::Running),
+        ("queued", _) => ("⋯ Queued", Tint::Pending),
         (status, _) => return (Cow::Borrowed(status), Tint::Dim),
     };
     (Cow::Borrowed(text), tint)
@@ -55,12 +63,12 @@ pub(in crate::screens::main) fn job_icon(
     conclusion: Option<&JobConclusion>,
 ) -> (&'static str, Tint) {
     match (status, conclusion) {
-        (JobStatus::Completed, Some(JobConclusion::Success)) => ("✓", Tint::Accent(Accent::GreenYellow)),
-        (JobStatus::Completed, Some(JobConclusion::Failure)) => ("✗", Tint::Accent(Accent::Red)),
-        (JobStatus::Completed, Some(JobConclusion::Cancelled)) => ("○", Tint::Accent(Accent::Yellow)),
+        (JobStatus::Completed, Some(JobConclusion::Success)) => ("✓", Tint::Positive),
+        (JobStatus::Completed, Some(JobConclusion::Failure)) => ("✗", Tint::Negative),
+        (JobStatus::Completed, Some(JobConclusion::Cancelled)) => ("○", Tint::Pending),
         (JobStatus::Completed, Some(JobConclusion::Skipped)) => ("−", Tint::Dim),
-        (JobStatus::InProgress, _) => ("⋯", Tint::Accent(Accent::Cyan)),
-        (JobStatus::Queued, _) => ("⋯", Tint::Accent(Accent::Yellow)),
+        (JobStatus::InProgress, _) => ("⋯", Tint::Running),
+        (JobStatus::Queued, _) => ("⋯", Tint::Pending),
         _ => ("?", Tint::Dim),
     }
 }
@@ -99,15 +107,14 @@ mod tests {
 
     #[test]
     fn run_statuses() {
-        let accent = Tint::Accent;
         let rows = [
-            ("completed", Some("success"), "✓ Success", accent(Accent::GreenYellow)),
-            ("completed", Some("failure"), "✗ Failure", accent(Accent::Red)),
-            ("completed", Some("cancelled"), "○ Cancelled", accent(Accent::Yellow)),
+            ("completed", Some("success"), "✓ Success", Tint::Positive),
+            ("completed", Some("failure"), "✗ Failure", Tint::Negative),
+            ("completed", Some("cancelled"), "○ Cancelled", Tint::Pending),
             ("completed", Some("skipped"), "− Skipped", Tint::Dim),
-            ("in_progress", None, "⋯ In Progress", accent(Accent::Cyan)),
-            ("in_progress", Some("success"), "⋯ In Progress", accent(Accent::Cyan)),
-            ("queued", None, "⋯ Queued", accent(Accent::Yellow)),
+            ("in_progress", None, "⋯ In Progress", Tint::Running),
+            ("in_progress", Some("success"), "⋯ In Progress", Tint::Running),
+            ("queued", None, "⋯ Queued", Tint::Pending),
             ("completed", Some("timed_out"), "completed", Tint::Dim),
             ("completed", None, "completed", Tint::Dim),
             ("waiting", None, "waiting", Tint::Dim),
@@ -125,19 +132,18 @@ mod tests {
     fn job_icons() {
         use JobConclusion as C;
         use JobStatus as S;
-        let accent = Tint::Accent;
         let completed = |conclusion: C| job_icon(&S::Completed, Some(&conclusion));
-        assert_eq!(completed(C::Success), ("✓", accent(Accent::GreenYellow)));
-        assert_eq!(completed(C::Failure), ("✗", accent(Accent::Red)));
-        assert_eq!(completed(C::Cancelled), ("○", accent(Accent::Yellow)));
+        assert_eq!(completed(C::Success), ("✓", Tint::Positive));
+        assert_eq!(completed(C::Failure), ("✗", Tint::Negative));
+        assert_eq!(completed(C::Cancelled), ("○", Tint::Pending));
         assert_eq!(completed(C::Skipped), ("−", Tint::Dim));
         for other in [C::Neutral, C::TimedOut, C::ActionRequired, C::Other("new".into())] {
             assert_eq!(completed(other), ("?", Tint::Dim));
         }
         assert_eq!(job_icon(&S::Completed, None), ("?", Tint::Dim));
-        assert_eq!(job_icon(&S::InProgress, None), ("⋯", accent(Accent::Cyan)));
+        assert_eq!(job_icon(&S::InProgress, None), ("⋯", Tint::Running));
         // A queued job shows `⋯` in yellow, never `?` (Py bug B63 is the Jobs tab's).
-        assert_eq!(job_icon(&S::Queued, None), ("⋯", accent(Accent::Yellow)));
+        assert_eq!(job_icon(&S::Queued, None), ("⋯", Tint::Pending));
         for other in [S::Waiting, S::Pending, S::Requested, S::Other("new".into())] {
             assert_eq!(job_icon(&other, None), ("?", Tint::Dim), "{other:?}");
         }
@@ -165,12 +171,8 @@ mod tests {
         }
         let theme = Theme::default();
         assert_eq!(
-            Tint::Accent(Accent::Red).style(&theme).fg,
-            Some(theme.accent(Accent::Red))
-        );
-        assert_eq!(
-            Tint::RichAnsi(RichAnsi::Red).style(&theme).fg,
-            Some(theme.rich_ansi(RichAnsi::Red))
+            Tint::Negative.style(&theme).fg,
+            Some(theme.color(theme.roles().marks.negative, theme.background()))
         );
     }
 }

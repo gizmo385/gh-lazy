@@ -17,7 +17,7 @@ use crate::component::{Component, Cx, RenderCx};
 use crate::components::info::InfoView;
 use crate::effect::{Effect, GithubRequest, RequestId, TimerId};
 use crate::keymap::BindingId;
-use crate::theme::{Accent, Theme};
+use crate::theme::Theme;
 
 /// How often `gh auth status` is re-run, as Python's `set_interval(5, …)`.
 pub const AUTH_POLL_INTERVAL: Duration = Duration::from_secs(5);
@@ -137,7 +137,7 @@ impl Component for AuthScreen {
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
         // Python's literal CSS `red`, not a theme slot (#77 may change this).
-        let border_style = Style::new().fg(theme.accent(Accent::Red));
+        let border_style = Style::new().fg(theme.color(theme.roles().marks.auth_border, theme.background()));
         let block = Self::block(border_style).title(Line::from(vec![
             Span::styled("-", border_style),
             Span::styled(" GitHub Authentication ", border_style),
@@ -161,7 +161,7 @@ impl Component for AuthScreen {
         let message_height = u16::try_from(message.len()).unwrap_or(u16::MAX);
         frame.render_widget(Paragraph::new(message), row(inner.y, message_height));
         let rule_y = inner.y.saturating_add(message_height).saturating_add(1);
-        let rule_style = Style::new().fg(theme.color(theme.palette.secondary, theme.background()));
+        let rule_style = Style::new().fg(theme.color(theme.roles().border.rule, theme.background()));
         frame.render_widget(
             Paragraph::new(Line::styled("─".repeat(usize::from(inner.width)), rule_style)),
             row(rule_y, 1),
@@ -191,10 +191,10 @@ impl AuthScreen {
 
     /// The message, word-wrapped to `width` as Textual's `Static` does.
     fn message_lines(&self, width: usize, theme: &Theme) -> Vec<Line<'static>> {
-        let plain = Style::new().fg(theme.color(theme.palette.foreground, theme.background()));
+        let plain = Style::new().fg(theme.color(theme.roles().text.plain, theme.background()));
         let words: Vec<(String, Style)> = match self.reason {
             AuthReason::NotLoggedIn => {
-                let green = plain.fg(theme.accent(Accent::Green));
+                let green = plain.fg(theme.color(theme.roles().marks.auth_command, theme.background()));
                 let lead = "To proceed, please log into the Github CLI via".split(' ');
                 lead.map(|w| (w.to_owned(), plain))
                     .chain(["gh", "auth", "login"].map(|w| (w.to_owned(), green)))

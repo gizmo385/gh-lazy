@@ -12,7 +12,7 @@ use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Cx, Owner, RenderCx, ScreenKind};
 use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::theme::{Palette, ThemeColor};
+use crate::theme::{Roles, ThemeColor};
 
 /// An open dialog and what to do with its output. Made by [`Cx::open_dialog`](crate::component::Cx::open_dialog).
 pub struct ModalEntry {
@@ -159,12 +159,12 @@ impl ModalEntry {
         self.dialog.frame(area)
     }
 
-    pub(crate) fn background(&self, palette: &Palette) -> ThemeColor {
-        self.dialog.background(palette)
+    pub(crate) fn background(&self, roles: &Roles) -> ThemeColor {
+        self.dialog.background(roles)
     }
 
-    pub(crate) fn border(&self, palette: &Palette) -> ThemeColor {
-        self.dialog.border(palette)
+    pub(crate) fn border(&self, roles: &Roles) -> ThemeColor {
+        self.dialog.border(roles)
     }
 
     pub(crate) fn shows_footer(&self) -> bool {
@@ -239,8 +239,8 @@ trait AnyDialog: Send {
     ) -> Option<Result<Option<String>, String>>;
     fn next_deadline(&self, now: Instant) -> Option<Instant>;
     fn frame(&self, area: Rect) -> Rect;
-    fn background(&self, palette: &Palette) -> ThemeColor;
-    fn border(&self, palette: &Palette) -> ThemeColor;
+    fn background(&self, roles: &Roles) -> ThemeColor;
+    fn border(&self, roles: &Roles) -> ThemeColor;
     fn shows_footer(&self) -> bool;
     fn frameless(&self) -> bool;
     fn overlay(&self) -> bool;
@@ -344,12 +344,12 @@ impl<D: Dialog> AnyDialog for Open<D> {
         self.dialog.frame(area)
     }
 
-    fn background(&self, palette: &Palette) -> ThemeColor {
-        self.dialog.background(palette)
+    fn background(&self, roles: &Roles) -> ThemeColor {
+        self.dialog.background(roles)
     }
 
-    fn border(&self, palette: &Palette) -> ThemeColor {
-        self.dialog.border(palette)
+    fn border(&self, roles: &Roles) -> ThemeColor {
+        self.dialog.border(roles)
     }
 
     fn shows_footer(&self) -> bool {

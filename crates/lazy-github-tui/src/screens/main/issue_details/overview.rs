@@ -14,10 +14,10 @@ use crate::components::info::Scroll;
 use crate::components::markdown::{Markdown, MarkdownSource, Rendered, TextRun};
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::effect::RequestId;
-use crate::theme::{Accent, Theme};
+use crate::theme::Theme;
 
 use super::super::details::BodyRenderCx;
-use super::super::overview_text::{HeaderStyles, OverviewMarkdown, accent, append, push_label, push_rule};
+use super::super::overview_text::{HeaderStyles, OverviewMarkdown, append, mark, push_label, push_rule};
 
 /// The Overview of one issue, and its scroll position.
 #[derive(Debug)]
@@ -138,8 +138,8 @@ fn overview(issue: &Issue, markdown: Option<&Markdown>, width: u16, theme: &Them
     }
     let HeaderStyles { text, link } = HeaderStyles::new(theme);
     let state = match issue.state {
-        IssueState::Open => TextRun::new("Open", accent(theme, Accent::GreenYellow)),
-        IssueState::Closed => TextRun::new("Closed", accent(theme, Accent::Orchid)),
+        IssueState::Open => TextRun::new("Open", mark(theme, theme.roles().marks.positive)),
+        IssueState::Closed => TextRun::new("Closed", mark(theme, theme.roles().marks.merged)),
     };
     // Py bug B11: Python reads the title as markup and leaves its `[b]` open. The title is drawn as typed, in bold,
     // and only the title.
@@ -198,7 +198,10 @@ mod tests {
         );
         let header = &rendered.lines[0].spans;
         assert_eq!(header[0].content, "Open");
-        assert_eq!(header[0].style.fg, Some(theme.accent(Accent::GreenYellow)));
+        assert_eq!(
+            header[0].style.fg,
+            Some(theme.color(theme.roles().marks.positive, theme.background()))
+        );
         assert!(header[2].style.add_modifier.contains(Modifier::BOLD));
         for span in &header[3..] {
             assert!(!span.style.add_modifier.contains(Modifier::BOLD), "{span:?}");
@@ -244,7 +247,10 @@ mod tests {
                 "",
             ]
         );
-        assert_eq!(rendered.lines[0].spans[0].style.fg, Some(theme.accent(Accent::Orchid)));
+        assert_eq!(
+            rendered.lines[0].spans[0].style.fg,
+            Some(theme.color(theme.roles().marks.merged, theme.background()))
+        );
     }
 
     #[test]

@@ -454,7 +454,10 @@ mod tests {
         let rendered = overview(&run, &tab.body.fields, &tab.body.commit, None, 1, 94, &theme);
         let header = &rendered.lines[0].spans;
         assert_eq!(header[0].content, "✗ Failure");
-        assert_eq!(header[0].style.fg, Some(theme.accent(crate::theme::Accent::Red)));
+        assert_eq!(
+            header[0].style.fg,
+            Some(theme.color(theme.roles().marks.negative, theme.background()))
+        );
         assert!(header[2].style.add_modifier.contains(Modifier::BOLD));
         assert!(!header[4].style.add_modifier.contains(Modifier::BOLD));
         // The one link is `(#42)`, the run's page, which the Overview records as a terminal hyperlink only (#196, #356).

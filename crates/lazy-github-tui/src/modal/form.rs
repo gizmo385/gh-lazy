@@ -96,12 +96,12 @@ impl<F: Copy + Eq> FormLayout<F> {
 
     /// Draws the labels and the rules into `content`; the dialog draws the fields.
     pub fn render_static(&self, buf: &mut Buffer, content: Rect, theme: &Theme, under: Paint) {
-        let p = theme.palette;
+        let r = theme.roles();
         let label = Style::new()
-            .fg(theme.color(p.foreground, under))
+            .fg(theme.color(r.text.plain, under))
             .add_modifier(Modifier::BOLD);
         // `Rule { color: $secondary }`.
-        let rule = Style::new().fg(theme.color(p.secondary, under));
+        let rule = Style::new().fg(theme.color(r.border.rule, under));
         let width = usize::from(content.width);
         for &(block, top) in &self.blocks {
             let y = content.y + top;

@@ -181,17 +181,16 @@ impl Component for AddReactionDialog {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let p = theme.palette;
-        let under = self.background(p).over(theme.background());
+        let r = theme.roles();
+        let under = self.background(r).over(theme.background());
         let areas = Areas::new(area, self.list.height());
         // A dialog taller than the terminal runs off its bottom edge, which nothing may be drawn past.
         let heading_area = on_screen(areas.heading, frame.area());
         let buf = frame.buffer_mut();
 
         // `MarkdownH1`: centered, in `$markdown-h1-color` and its text style, the whole row styled.
-        let heading = p
-            .markdown_h1_text_style
-            .apply(Style::new().fg(theme.color(p.markdown_h1_color, under)));
+        let h1 = r.markdown.h1;
+        let heading = h1.style.apply(Style::new().fg(theme.color(h1.fg, under)));
         let width = usize::from(heading_area.width);
         let text = format!("{HEADING:^width$}");
         buf.set_stringn(heading_area.x, heading_area.y, text, width, heading);

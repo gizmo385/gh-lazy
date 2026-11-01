@@ -13,7 +13,7 @@ use lazy_github_core::models::{JobConclusion, JobStatus, WorkflowJob};
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Position, Rect};
-use ratatui::style::Modifier;
+use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 
 use crate::components::command_log::Wheel;
@@ -23,9 +23,9 @@ use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::components::tree::{Tree, TreeAction};
 use crate::effect::RequestId;
 use crate::keymap::{BindingId, Keymap};
-use crate::theme::{Accent, RichAnsi, Theme};
+use crate::theme::Theme;
 
-use super::super::overview_text::{HeaderStyles, append, push_label, push_rule};
+use super::super::overview_text::{HeaderStyles, append, mark, push_label, push_rule};
 use super::status::{Tint, job_icon};
 
 /// The fewest rows the tree takes.
@@ -469,20 +469,21 @@ fn job_tree(jobs: &[WorkflowJob], theme: &Theme) -> Tree<JobRef> {
 fn label(name: &str, status: &JobStatus, conclusion: Option<&JobConclusion>, theme: &Theme) -> Line<'static> {
     let (icon, tint) = job_icon(status, conclusion);
     Line::from(vec![
-        Span::styled(icon, tree_tint(tint).style(theme)),
+        Span::styled(icon, tree_style(tint, theme)),
         Span::raw(format!(" {name} ({})", status.as_str())),
     ])
 }
 
 /// The Overview's tint as the tree shows it. Python's tree labels are Rich markup (Textual's `Tree.process_label`),
-/// not Textual's, so `red`, `yellow` and `cyan` are the ANSI colors through the terminal theme. Rich has no
-/// `greenyellow`, which leaves Python's `✓` uncolored; Rust keeps it greenyellow (Py bug B120).
-fn tree_tint(tint: Tint) -> Tint {
+/// not Textual's, so `red`, `yellow` and `cyan` are the jobs tree's own marks (the ANSI colors through the terminal
+/// theme). Rich has no `greenyellow`, which leaves Python's `✓` uncolored; Rust keeps it greenyellow (Py bug B120).
+fn tree_style(tint: Tint, theme: &Theme) -> Style {
+    let marks = &theme.roles().marks;
     match tint {
-        Tint::Accent(Accent::Red) => Tint::RichAnsi(RichAnsi::Red),
-        Tint::Accent(Accent::Yellow) => Tint::RichAnsi(RichAnsi::Yellow),
-        Tint::Accent(Accent::Cyan) => Tint::RichAnsi(RichAnsi::Cyan),
-        other => other,
+        Tint::Negative => mark(theme, marks.job_failed),
+        Tint::Pending => mark(theme, marks.job_pending),
+        Tint::Running => mark(theme, marks.job_running),
+        Tint::Positive | Tint::Dim => tint.style(theme),
     }
 }
 
@@ -579,9 +580,9 @@ mod tests {
         // Py bug B63: a yellow `⋯`, not a dim `?`.
         let queued = label("test", &JobStatus::Queued, None, &theme);
         assert_eq!(queued.spans[0].content, "⋯");
-        assert_eq!(queued.spans[0].style, Tint::RichAnsi(RichAnsi::Yellow).style(&theme));
+        assert_eq!(queued.spans[0].style, mark(&theme, theme.roles().marks.job_pending));
         let running = label("build", &JobStatus::InProgress, None, &theme);
-        assert_eq!(running.spans[0].style, Tint::RichAnsi(RichAnsi::Cyan).style(&theme));
+        assert_eq!(running.spans[0].style, mark(&theme, theme.roles().marks.job_running));
         let pending = label("step", &JobStatus::Pending, None, &theme);
         assert_eq!(pending.to_string(), "? step (pending)");
         assert_eq!(pending.spans[0].style, Tint::Dim.style(&theme));

@@ -847,7 +847,7 @@ fn yes_outside_a_clone_of_the_repo_fails_without_git() {
         let toast = app.app().toasts().iter().last().unwrap();
         assert_eq!(
             toast.message.spans[1].style.fg,
-            Some(crate::theme::Theme::default().accent(crate::theme::Accent::Red))
+            Some(crate::modal::mark(&crate::theme::Theme::default(), |m| m.negative))
         );
     }
 }

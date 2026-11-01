@@ -7,7 +7,7 @@ use ratatui::text::{Line, Span};
 use crate::component::Cx;
 use crate::components::markdown::{self, Markdown, MarkdownSource, Rendered, TextRun};
 use crate::effect::{Effect, RequestId};
-use crate::theme::{Accent, Theme};
+use crate::theme::{Theme, ThemeColor};
 
 /// An overview's markdown body: parsed, or being parsed off the frame. Nothing shows below the rule until it's
 /// ready, as Python's `Markdown` is empty until its first blocks mount.
@@ -72,7 +72,7 @@ pub(super) struct HeaderStyles {
 
 impl HeaderStyles {
     pub(super) fn new(theme: &Theme) -> Self {
-        let text = Style::new().fg(theme.color(theme.palette.foreground, theme.background()));
+        let text = Style::new().fg(theme.color(theme.roles().text.plain, theme.background()));
         Self {
             text,
             link: text.add_modifier(Modifier::UNDERLINED),
@@ -80,9 +80,9 @@ impl HeaderStyles {
     }
 }
 
-/// Text in one of the fixed accent colors, as Python's `[greenyellow]` markup.
-pub(super) fn accent(theme: &Theme, accent: Accent) -> Style {
-    Style::new().fg(theme.accent(accent))
+/// Text in a mark's color ([`crate::theme::Marks`]), as Python's `[greenyellow]` markup: drawn as is over the screen.
+pub(super) fn mark(theme: &Theme, color: ThemeColor) -> Style {
+    Style::new().fg(theme.color(color, theme.background()))
 }
 
 /// Adds `more` below what's in `out`, moving its links down with it.
@@ -103,7 +103,7 @@ pub(super) fn push_label(out: &mut Rendered, runs: &[TextRun], width: u16) {
 /// Adds Textual's `Rule` as the overviews style it (`color: $secondary; margin: 1 0`): a blank row, a line of `─`
 /// across `width`, and a blank row.
 pub(super) fn push_rule(out: &mut Rendered, width: u16, theme: &Theme) {
-    let rule = Style::new().fg(theme.color(theme.palette.secondary, theme.background()));
+    let rule = Style::new().fg(theme.color(theme.roles().border.rule, theme.background()));
     out.lines.push(Line::default());
     out.lines
         .push(Line::from(Span::styled("─".repeat(usize::from(width)), rule)));

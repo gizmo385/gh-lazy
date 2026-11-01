@@ -290,9 +290,9 @@ impl<K: LookupKind> Component for LookupDialog<K> {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let p = theme.palette;
-        let under = self.background(p).over(theme.background());
-        let text = Style::new().fg(theme.color(p.foreground, under));
+        let r = theme.roles();
+        let under = self.background(r).over(theme.background());
+        let text = Style::new().fg(theme.color(r.text.plain, under));
         // A dialog taller than the terminal runs off its bottom edge, which nothing may be drawn past.
         let areas = Areas::new(area, self.track.is_some()).clipped(frame.area());
         let buf = frame.buffer_mut();

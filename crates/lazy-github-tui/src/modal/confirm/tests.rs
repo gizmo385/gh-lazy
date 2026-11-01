@@ -7,12 +7,18 @@ use ratatui::text::{Line, Span};
 use super::*;
 use crate::components::footer::footer_items;
 use crate::test_util::{TestApp, buffer_to_styled_string};
-use crate::theme::{Accent, Theme};
+use crate::theme::Theme;
 use crate::toast::{Severity, Toast};
+
+/// The marks' warning color, on the default theme.
+fn warning_mark() -> ratatui::style::Color {
+    let theme = Theme::default();
+    crate::modal::mark(&theme, |m| m.warning)
+}
 
 /// Create PR's push-branch question, with its "Warning:" and branch in yellow.
 fn branch_warning() -> Line<'static> {
-    let yellow = Style::new().fg(Theme::default().accent(Accent::Yellow));
+    let yellow = Style::new().fg(warning_mark());
     Line::from(vec![
         Span::styled("Warning:", yellow),
         Span::raw(" Branch "),
@@ -222,7 +228,7 @@ fn the_layout_matches_pythons_capture() {
         assert_eq!(rust, python, "row {y}");
     }
     let buffer = app.render(160, 48);
-    let yellow = Theme::default().accent(Accent::Yellow);
+    let yellow = warning_mark();
     assert_eq!(buffer[(59, 20)].fg, yellow, "Warning:");
     assert_eq!(buffer[(76, 20)].fg, yellow, "feature/x");
     assert_ne!(buffer[(68, 20)].fg, yellow, "Branch");

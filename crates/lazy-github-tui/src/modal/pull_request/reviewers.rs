@@ -24,8 +24,8 @@ use crate::components::selection_list::{ListOutcome, SelectionList};
 use crate::components::text_input::{self, InputOutcome, TextInput};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::modal::FieldKind;
-use crate::theme::{Accent, Paint, Theme};
+use crate::modal::{FieldKind, mark};
+use crate::theme::{Paint, Theme};
 use crate::toast::Toast;
 
 const LABEL: &str = "Reviewers";
@@ -160,7 +160,7 @@ impl ReviewersField {
             }
             Err(error) => {
                 tracing::debug!("Looking up the reviewer {login} failed: {error}");
-                let yellow = Style::new().fg(cx.theme().accent(Accent::Yellow));
+                let yellow = Style::new().fg(mark(cx.theme(), |m| m.warning));
                 cx.notify(Toast::error(Line::from(vec![
                     Span::raw("Could not find user "),
                     Span::styled(login, yellow),
@@ -372,7 +372,7 @@ impl ReviewersField {
         if area.is_empty() {
             return;
         }
-        let text = Style::new().fg(theme.color(theme.palette.foreground, under));
+        let text = Style::new().fg(theme.color(theme.roles().text.plain, under));
         let width = usize::from(area.width);
         buf.set_stringn(area.x, area.y, LABEL, width, text.add_modifier(Modifier::BOLD));
         let input = self.area_of(ReviewersFocus::Input, area);

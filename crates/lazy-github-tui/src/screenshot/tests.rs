@@ -213,7 +213,9 @@ fn without_a_home_the_save_fails_with_a_message() {
 #[test]
 fn ansi_themes_fall_back_to_fixed_default_colors() {
     let options = svg_options(&Theme::by_name("ansi-dark").unwrap());
-    assert_eq!(options.default_bg, ANSI_DEFAULT_DARK.1);
+    assert_eq!(options.default_fg, (0xd4, 0xd4, 0xd4));
+    assert_eq!(options.default_bg, (0x1e, 0x1e, 0x1e));
     let options = svg_options(&Theme::by_name("ansi-light").unwrap());
-    assert_eq!(options.default_bg, ANSI_DEFAULT_LIGHT.1);
+    assert_eq!(options.default_fg, (0x1e, 0x1e, 0x1e));
+    assert_eq!(options.default_bg, (0xff, 0xff, 0xff));
 }

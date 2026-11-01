@@ -1543,12 +1543,12 @@ impl App {
             if rect.bottom() > available.bottom() {
                 screen_scrollbar(frame.buffer_mut(), available, rect, &theme);
             }
-            let background = entry.background(theme.palette);
+            let background = entry.background(theme.roles());
             frame.render_widget(
                 DialogFrame {
                     theme: &theme,
                     background,
-                    border: entry.border(theme.palette),
+                    border: entry.border(theme.roles()),
                 },
                 rect,
             );

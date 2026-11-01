@@ -496,8 +496,8 @@ impl Component for SettingsDialog {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let p = theme.palette;
-        let under = self.background(p).over(theme.background());
+        let r = theme.roles();
+        let under = self.background(r).over(theme.background());
         let focus = self.ring.focused();
         let screen = frame.area();
 
@@ -509,9 +509,8 @@ impl Component for SettingsDialog {
             height: 1,
         }
         .intersection(area);
-        let style = p
-            .markdown_h1_text_style
-            .apply(Style::new().fg(theme.color(p.markdown_h1_color, under)));
+        let h1 = r.markdown.h1;
+        let style = h1.style.apply(Style::new().fg(theme.color(h1.fg, under)));
         let width = usize::from(heading.width);
         frame
             .buffer_mut()
@@ -559,7 +558,7 @@ impl Component for SettingsDialog {
         self.pane_mut().render(buf, scroll, theme, under, focus);
 
         // `Rule`: a `─` line in `$secondary` across the interior, past its top margin below the scroll area.
-        let rule_style = Style::new().fg(theme.color(p.secondary, under));
+        let rule_style = Style::new().fg(theme.color(r.border.rule, under));
         let rule_y = scroll.bottom().saturating_add(RULE_MARGIN);
         if rule_y < area.bottom() {
             let width = usize::from(area.width);
@@ -583,7 +582,7 @@ impl Component for SettingsDialog {
             width: buttons.right().saturating_sub(area.x),
             ..buttons
         };
-        let fill = Style::new().fg(theme.color(p.foreground, under)).bg(theme.paint(under));
+        let fill = Style::new().fg(theme.color(r.text.plain, under)).bg(theme.paint(under));
         for position in docked.positions() {
             buf[position].reset();
             buf[position].set_style(fill);

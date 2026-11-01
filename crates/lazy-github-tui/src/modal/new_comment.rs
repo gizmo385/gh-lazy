@@ -325,7 +325,7 @@ impl NewCommentDialog {
         lines.push(Line::default());
         lines.push(Line::styled(
             "─".repeat(usize::from(width)),
-            Style::new().fg(theme.color(theme.palette.secondary, under)),
+            Style::new().fg(theme.color(theme.roles().border.rule, under)),
         ));
         Rendered {
             lines,
@@ -422,8 +422,8 @@ impl Component for NewCommentDialog {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let under = self.background(theme.palette).over(theme.background());
-        let text = Style::new().fg(theme.color(theme.palette.foreground, under));
+        let under = self.background(theme.roles()).over(theme.background());
+        let text = Style::new().fg(theme.color(theme.roles().text.plain, under));
         let fill = text.bg(theme.paint(under));
         if std::mem::take(&mut self.preview_stale) {
             self.preview = Markdown::parse(&self.editor.text());

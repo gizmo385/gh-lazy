@@ -244,7 +244,7 @@ impl Component for PasteLinkDialog {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let under = self.background(theme.palette).over(theme.background());
+        let under = self.background(theme.roles()).over(theme.background());
         // A dialog taller than the terminal runs off its bottom edge, which nothing may be drawn past.
         let areas = Areas::new(area, false).clipped(frame.area());
         let buf = frame.buffer_mut();

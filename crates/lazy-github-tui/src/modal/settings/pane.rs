@@ -512,17 +512,17 @@ impl SettingsPane {
         under: Paint,
         focus: Option<SettingsFocus>,
     ) {
-        let p = theme.palette;
+        let r = theme.roles();
         let mut layout = self.layout(area.width, focus);
         let narrowed = ScrollView::content_width(area, usize::from(layout.height));
         if narrowed != area.width {
             layout = self.layout(narrowed, focus);
         }
-        let fill = Style::new().fg(theme.color(p.foreground, under)).bg(theme.paint(under));
+        let fill = Style::new().fg(theme.color(r.text.plain, under)).bg(theme.paint(under));
         let bold = Style::new()
-            .fg(theme.color(p.foreground, under))
+            .fg(theme.color(r.text.plain, under))
             .add_modifier(Modifier::BOLD);
-        let doc = theme.rich_dim(Style::new().fg(theme.color(p.foreground, under)), p.foreground, under);
+        let doc = theme.rich_dim(Style::new().fg(theme.color(r.text.plain, under)), r.text.plain, under);
         let fields = &mut self.fields;
         let shown = &self.shown;
         let keys = &self.keys;
@@ -569,8 +569,14 @@ impl SettingsPane {
                                 ..input
                             };
                             let items_focused = focus == Some(SettingsFocus::ListItems(index));
-                            list.list
-                                .render_solid(content_buf, checklist, theme, under, items_focused, p.primary);
+                            list.list.render_solid(
+                                content_buf,
+                                checklist,
+                                theme,
+                                under,
+                                items_focused,
+                                r.brand.primary,
+                            );
                         }
                     }
                 }

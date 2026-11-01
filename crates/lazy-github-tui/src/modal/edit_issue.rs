@@ -152,7 +152,7 @@ impl Component for EditIssueDialog {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let under = self.background(theme.palette).over(theme.background());
+        let under = self.background(theme.roles()).over(theme.background());
         self.form.render(frame, area, cx, under);
     }
 }

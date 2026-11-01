@@ -22,7 +22,7 @@ use crate::components::command_log::{WHEEL_ROWS, Wheel};
 use crate::components::text_editor::{EditorOutcome, EditorVariant, TextEditor};
 use crate::components::text_input::{self, TextInput};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::theme::{Palette, ThemeColor};
+use crate::theme::{Roles, ThemeColor};
 use crate::toast::Toast;
 
 /// The dialog's screen bindings: `modal.submit`, then `modal.close`.
@@ -250,12 +250,12 @@ impl Component for AddCommentDialog {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let under = self.background(theme.palette).over(theme.background());
-        let text = Style::new().fg(theme.color(theme.palette.foreground, under));
+        let under = self.background(theme.roles()).over(theme.background());
+        let text = Style::new().fg(theme.color(theme.roles().text.plain, under));
         let fill = text.bg(theme.paint(under));
         // `Label { color: $text; text-style: bold }`.
         let label = Style::new()
-            .fg(theme.color(theme.palette.text, under))
+            .fg(theme.color(theme.roles().text.normal, under))
             .add_modifier(Modifier::BOLD);
         let focused = self.ring.focused();
         let (line, editor, buttons) = (&mut self.line, &mut self.editor, &mut self.buttons);
@@ -312,13 +312,13 @@ impl Dialog for AddCommentDialog {
     }
 
     /// `background: $surface`.
-    fn background(&self, palette: &Palette) -> ThemeColor {
-        palette.surface
+    fn background(&self, roles: &Roles) -> ThemeColor {
+        roles.surface.pane
     }
 
     /// `border: thick $accent`.
-    fn border(&self, palette: &Palette) -> ThemeColor {
-        palette.accent
+    fn border(&self, roles: &Roles) -> ThemeColor {
+        roles.border.emphasis
     }
 
     /// Python's modal has no footer of its own: the screen's shows under the dim.

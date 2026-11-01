@@ -418,8 +418,8 @@ fn draw(dialog: &mut NewCommentDialog) -> String {
             frame.render_widget(
                 super::super::DialogFrame {
                     theme: &theme,
-                    background: theme.palette.surface_lighten_3,
-                    border: super::super::default_border(theme.palette),
+                    background: theme.roles().surface.dialog,
+                    border: theme.roles().border.dialog,
                 },
                 rect,
             );

@@ -15,8 +15,7 @@ use super::{Mode, PrField, PullRequestAction, PullRequestDialog};
 use crate::action::Action;
 use crate::component::Cx;
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId};
-use crate::modal::{ConfirmDialog, DialogAction};
-use crate::theme::Accent;
+use crate::modal::{ConfirmDialog, DialogAction, mark};
 use crate::toast::Toast;
 
 /// A submit in flight. While there is one, another submit does nothing.
@@ -288,7 +287,7 @@ impl PullRequestDialog {
                 match result {
                     Ok(()) => cx.notify(Toast::info(Line::from(vec![
                         Span::raw("Pushed branch "),
-                        Span::styled(branch, Style::new().fg(cx.theme().accent(Accent::GreenYellow))),
+                        Span::styled(branch, Style::new().fg(mark(cx.theme(), |m| m.name))),
                         Span::raw(" to remote"),
                     ]))),
                     Err(error) => {
@@ -305,7 +304,7 @@ impl PullRequestDialog {
     /// The branch may not be on the remote (or the check failed): the Confirm asks whether to push it. Its answer
     /// comes back as [`PullRequestAction::PushAnswer`].
     fn ask_to_push(&mut self, branch: String, cx: &mut Cx<'_>) {
-        let yellow = Style::new().fg(cx.theme().accent(Accent::Yellow));
+        let yellow = Style::new().fg(mark(cx.theme(), |m| m.warning));
         let question = Line::from(vec![
             Span::styled("Warning:", yellow),
             Span::raw(" Branch "),
@@ -342,7 +341,7 @@ impl PullRequestDialog {
 
 /// "Error while pushing branch <branch> to remote", the branch in red.
 fn push_failed(branch: &str, cx: &mut Cx<'_>) {
-    let red = Style::new().fg(cx.theme().accent(Accent::Red));
+    let red = Style::new().fg(mark(cx.theme(), |m| m.negative));
     cx.notify(Toast::error(Line::from(vec![
         Span::raw("Error while pushing branch "),
         Span::styled(branch.to_owned(), red),

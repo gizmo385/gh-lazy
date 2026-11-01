@@ -30,6 +30,7 @@ mod trigger_workflow;
 mod user_profile;
 
 use ratatui::layout::Rect;
+use ratatui::style::Color;
 use tokio::time::Instant;
 
 use crate::action::Action;
@@ -45,7 +46,7 @@ use crate::components::text_editor::TEXT_EDITOR_BINDINGS;
 use crate::components::text_input::INPUT_BINDINGS;
 use crate::effect::{GitResponse, GithubResponse, RequestId, TimerId};
 use crate::keymap::BindingId;
-use crate::theme::{Palette, ThemeColor};
+use crate::theme::{Marks, Roles, Theme, ThemeColor};
 
 pub use add_comment::{AddCommentAction, AddCommentDialog};
 pub use add_reaction::{AddReactionAction, AddReactionDialog};
@@ -56,7 +57,7 @@ pub use confirm::{ConfirmAction, ConfirmDialog};
 pub use debug_info::{DebugInfoAction, DebugInfoDialog};
 pub use edit_issue::{EditIssueAction, EditIssueDialog};
 pub use focus::{FocusMove, FocusRing};
-pub use frame::{DIM_FACTOR, DialogFrame, default_border, dim, frame_rect, frame_rect_with_margin};
+pub use frame::{DIM_FACTOR, DialogFrame, dim, frame_rect, frame_rect_with_margin};
 pub use link_hints::{HINT_ALPHABET, LinkHintsDialog, hint_codes};
 pub use lookup::{LookupAction, LookupDialog, LookupKind, LookupTarget, RepoLookup, number};
 pub use new_comment::{NewCommentAction, NewCommentDialog, PostedComment, ReplyTarget};
@@ -71,6 +72,12 @@ pub use settings::{SettingsAction, SettingsDialog, SettingsOutcome};
 pub use stack::ModalEntry;
 pub use trigger_workflow::{TriggerWorkflowAction, TriggerWorkflowDialog};
 pub use user_profile::{UserProfileAction, UserProfileDialog};
+
+/// The terminal color of the mark `pick` chooses, such as a warning's yellow: marks are drawn as is, so this holds in
+/// a toast or a dialog as on the screen.
+pub(crate) fn mark(theme: &Theme, pick: impl FnOnce(&Marks) -> ThemeColor) -> Color {
+    theme.color(pick(&theme.roles().marks), theme.background())
+}
 
 /// Textual's `Screen.BINDINGS`, which every modal screen has before the dialog's own: `tab`, `shift+tab` and the
 /// `ctrl+c` copy. A dialog's [`Component::bindings`] starts with these; [`dialog_bindings!`] writes them.
@@ -310,14 +317,14 @@ pub trait Dialog: Component + Send + 'static {
         frame_rect(area, self.size(available))
     }
 
-    /// The interior's background: `$surface-lighten-3` unless the dialog says otherwise.
-    fn background(&self, palette: &Palette) -> ThemeColor {
-        palette.surface_lighten_3
+    /// The interior's background: the dialog surface (`$surface-lighten-3`) unless the dialog says otherwise.
+    fn background(&self, roles: &Roles) -> ThemeColor {
+        roles.surface.dialog
     }
 
-    /// The frame's border color: `$background 80%` ([`default_border`]) unless the dialog says otherwise.
-    fn border(&self, palette: &Palette) -> ThemeColor {
-        default_border(palette)
+    /// The frame's border color: the dialog border (`$background 80%`) unless the dialog says otherwise.
+    fn border(&self, roles: &Roles) -> ThemeColor {
+        roles.border.dialog
     }
 
     /// Whether the bottom row shows the dialog's footer. False for Create/Edit PR and the command palette.

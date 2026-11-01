@@ -255,7 +255,7 @@ fn an_unknown_user_toasts_with_the_login_in_yellow_and_keeps_the_text() {
         let toast = h.app.app().toasts().iter().next().unwrap();
         assert_eq!(
             toast.message.spans[1].style.fg,
-            Some(Theme::default().accent(Accent::Yellow))
+            Some(crate::modal::mark(&Theme::default(), |m| m.warning))
         );
         assert_eq!(h.field.input_value(), "nobody-here");
         assert!(h.field.reviewers().is_empty());
@@ -438,7 +438,7 @@ fn draw(field: &mut ReviewersField, focus: Option<ReviewersFocus>) -> String {
     let theme = Theme::default();
     let area = Rect::new(0, 0, 50, field.height());
     let mut buf = Buffer::empty(area);
-    let under = theme.palette.surface_lighten_3.over(theme.background());
+    let under = theme.roles().surface.dialog.over(theme.background());
     field.render(&mut buf, area, &theme, under, focus);
     buffer_to_styled_string(&buf)
 }

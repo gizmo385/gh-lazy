@@ -146,14 +146,23 @@ fn an_open_pull_request() {
         ]
     );
     let header = &rendered.lines[0].spans;
-    assert_eq!(header[0].style.fg, Some(theme.accent(Accent::GreenYellow)));
+    assert_eq!(
+        header[0].style.fg,
+        Some(theme.color(theme.roles().marks.positive, theme.background()))
+    );
     assert!(header[2].style.add_modifier.contains(Modifier::BOLD));
     assert!(!header[4].style.add_modifier.contains(Modifier::BOLD));
     let summary = &rendered.lines[1].spans;
     let plus = summary.iter().find(|span| span.content == "+12").unwrap();
     let minus = summary.iter().find(|span| span.content == "-6").unwrap();
-    assert_eq!(plus.style.fg, Some(theme.accent(Accent::GreenYellow)));
-    assert_eq!(minus.style.fg, Some(theme.accent(Accent::Red)));
+    assert_eq!(
+        plus.style.fg,
+        Some(theme.color(theme.roles().marks.count_added, theme.background()))
+    );
+    assert_eq!(
+        minus.style.fg,
+        Some(theme.color(theme.roles().marks.count_removed, theme.background()))
+    );
     let head = summary
         .iter()
         .find(|span| span.content == "parity-friend:cursor")
@@ -182,7 +191,10 @@ fn closed_and_merged_states() {
     let closed = fixture_pr(4);
     let (rendered, _) = layout(&closed, &hidden(), 94);
     assert_eq!(text(&rendered)[0], "closed Drop the legacy renderer (#4) by parity-bot");
-    assert_eq!(rendered.lines[0].spans[0].style.fg, Some(theme.accent(Accent::Red)));
+    assert_eq!(
+        rendered.lines[0].spans[0].style.fg,
+        Some(theme.color(theme.roles().marks.negative, theme.background()))
+    );
     assert_eq!(
         lines(&closed, 94)[..8],
         [
@@ -199,7 +211,10 @@ fn closed_and_merged_states() {
 
     let merged = fixture_pr(3);
     let (rendered, _) = layout(&merged, &hidden(), 94);
-    assert_eq!(rendered.lines[0].spans[0].style.fg, Some(theme.accent(Accent::Orchid)));
+    assert_eq!(
+        rendered.lines[0].spans[0].style.fg,
+        Some(theme.color(theme.roles().marks.merged, theme.background()))
+    );
     // A merged pull request is closed too: Merged wins.
     assert!(merged.pr.issue.closed_at.is_some());
     assert_eq!(
@@ -366,15 +381,16 @@ fn a_status_without_a_description_has_no_dash() {
 #[test]
 fn check_states_read_as_python_draws_them() {
     let theme = Theme::default();
+    let marks = &theme.roles().marks;
     for (state, text, color) in [
-        (CheckState::Success, "✓ Passed", Accent::GreenYellow),
-        (CheckState::Pending, "... Pending", Accent::Yellow),
-        (CheckState::Failure, "✘ Failed", Accent::Red),
-        (CheckState::Error, "✘ Errored", Accent::Red),
+        (CheckState::Success, "✓ Passed", marks.positive),
+        (CheckState::Pending, "... Pending", marks.pending),
+        (CheckState::Failure, "✘ Failed", marks.negative),
+        (CheckState::Error, "✘ Errored", marks.negative),
     ] {
         let run = check_state(state, &theme);
         assert_eq!(run.text, text);
-        assert_eq!(run.style.fg, Some(theme.accent(color)));
+        assert_eq!(run.style.fg, Some(theme.color(color, theme.background())));
     }
 }
 

@@ -1174,8 +1174,8 @@ impl Component for TestDialog {
 
     fn render(&mut self, frame: &mut ratatui::Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let under = self.background(theme.palette).over(theme.background());
-        let text = Style::new().fg(theme.color(theme.palette.foreground, under));
+        let under = self.background(theme.roles()).over(theme.background());
+        let text = Style::new().fg(theme.color(theme.roles().text.plain, under));
         let row = |offset: u16| Rect {
             y: area.y + offset,
             height: 1,

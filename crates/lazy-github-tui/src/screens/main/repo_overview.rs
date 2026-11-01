@@ -17,10 +17,10 @@ use crate::components::link_map::LinkSink;
 use crate::components::markdown::{Markdown, MarkdownSource, Rendered, TextRun};
 use crate::components::scroll_view::{Layout, LayoutCache, ScrollView};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
-use crate::theme::{Accent, Theme};
+use crate::theme::Theme;
 
 use super::details::{BodyRenderCx, DetailsBody};
-use super::overview_text::{HeaderStyles, accent, append, push_label, push_rule};
+use super::overview_text::{HeaderStyles, append, mark, push_label, push_rule};
 
 /// What shows below the rule when there's no README, or it couldn't be fetched: Python's `*No README found.*`.
 static NO_README: LazyLock<Markdown> = LazyLock::new(|| Markdown::parse("*No README found.*"));
@@ -244,13 +244,13 @@ fn header(repo: &Repository, width: u16, theme: &Theme) -> Rendered {
         TextRun::new(" • ", text),
     ];
     title.push(if repo.private {
-        TextRun::new("Private", accent(theme, Accent::Red))
+        TextRun::new("Private", mark(theme, theme.roles().marks.negative))
     } else {
-        TextRun::new("Public", accent(theme, Accent::GreenYellow))
+        TextRun::new("Public", mark(theme, theme.roles().marks.positive))
     });
     if repo.archived == Some(true) {
         title.push(TextRun::new(" • ", text));
-        title.push(TextRun::new("Archived", accent(theme, Accent::Orchid)));
+        title.push(TextRun::new("Archived", mark(theme, theme.roles().marks.merged)));
     }
     push_label(&mut out, &title, width);
 
@@ -339,10 +339,13 @@ mod tests {
                 .add_modifier
                 .contains(Modifier::BOLD | Modifier::UNDERLINED)
         );
-        assert_eq!(spans[2].style.fg, Some(theme.accent(Accent::GreenYellow)));
+        assert_eq!(
+            spans[2].style.fg,
+            Some(theme.color(theme.roles().marks.positive, theme.background()))
+        );
         assert_eq!(
             rendered.lines[6].spans[0].style.fg,
-            Some(theme.color(theme.palette.secondary, theme.background()))
+            Some(theme.color(theme.roles().border.rule, theme.background()))
         );
         let links: Vec<(usize, std::ops::Range<u16>, &str)> = rendered
             .links
@@ -382,8 +385,14 @@ mod tests {
             ]
         );
         let theme = Theme::default();
-        assert_eq!(rendered.lines[0].spans[2].style.fg, Some(theme.accent(Accent::Red)));
-        assert_eq!(rendered.lines[1].spans[0].style.fg, Some(theme.accent(Accent::Orchid)));
+        assert_eq!(
+            rendered.lines[0].spans[2].style.fg,
+            Some(theme.color(theme.roles().marks.negative, theme.background()))
+        );
+        assert_eq!(
+            rendered.lines[1].spans[0].style.fg,
+            Some(theme.color(theme.roles().marks.merged, theme.background()))
+        );
         assert!(rendered.lines[6].spans[1].style.add_modifier.contains(Modifier::ITALIC));
         let no_branch = Repository {
             default_branch: None,

@@ -71,9 +71,6 @@ const NO_MATCHES_AFTER: Duration = Duration::from_millis(500);
 /// The row shown then.
 const NO_MATCHES: &str = "No matches found";
 
-/// The `hkey black 50%` rules around the input.
-const INPUT_RULE_ALPHA: f64 = 0.5;
-
 /// What running a palette command does. The opener turns it into an [`Action`] with [`PaletteRun::action`] once
 /// the palette has closed. #195 adds its own.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -553,7 +550,7 @@ impl Component for CommandPaletteDialog {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let p = theme.palette;
+        let roles = &theme.roles().command_palette;
         let rows = self.list_rows();
         self.layout = Layout::new(area, rows);
         self.scroll = self.scroll.min(self.max_scroll());
@@ -561,16 +558,16 @@ impl Component for CommandPaletteDialog {
         if band.is_empty() {
             return;
         }
-        let band_bg = if theme.dark { p.panel_darken_1 } else { p.surface }.over(theme.background());
+        let band_bg = roles.band.over(theme.background());
         let fill = Style::new()
-            .fg(theme.color(p.foreground, band_bg))
+            .fg(theme.color(theme.roles().text.plain, band_bg))
             .bg(theme.paint(band_bg));
         let buf = frame.buffer_mut();
         for position in band.positions() {
             buf[position].reset();
             buf[position].set_symbol(" ").set_style(fill);
         }
-        let rule = |alpha: f64| fill.fg(theme.color(ThemeColor::BLACK.multiply_alpha(alpha), band_bg));
+        let rule = |color: ThemeColor| fill.fg(theme.color(color, band_bg));
         let rule_row = |buf: &mut Buffer, y: u16, symbol: &str, style: Style| {
             if y < band.bottom() {
                 for x in band.left()..band.right() {
@@ -578,7 +575,7 @@ impl Component for CommandPaletteDialog {
                 }
             }
         };
-        rule_row(buf, band.y, "▔", rule(INPUT_RULE_ALPHA));
+        rule_row(buf, band.y, "▔", rule(roles.input_rule));
 
         // `SearchIcon { color: #000 }`.
         let icon_row = band.y + 2;
@@ -587,14 +584,14 @@ impl Component for CommandPaletteDialog {
                 band.x + ICON_X,
                 icon_row,
                 ICON,
-                fill.fg(theme.color(ThemeColor::BLACK, band_bg)),
+                fill.fg(theme.color(roles.icon, band_bg)),
             );
         }
         self.input.render(buf, text, theme, band_bg, true);
 
         let input_bottom = band.y + 1 + INPUT_ROWS;
         if rows == 0 {
-            rule_row(buf, input_bottom, "▁", rule(INPUT_RULE_ALPHA));
+            rule_row(buf, input_bottom, "▁", rule(roles.input_rule));
             return;
         }
         let styles = ListStyles::new(theme, band_bg);
@@ -612,7 +609,7 @@ impl Component for CommandPaletteDialog {
             scrollbar::render(buf, bar, Axis::Vertical, state, styles.scrollbar);
         }
         // `CommandList { border-bottom: hkey black }`.
-        rule_row(buf, list.bottom(), "▁", rule(1.0));
+        rule_row(buf, list.bottom(), "▁", rule(roles.list_rule));
     }
 }
 
@@ -693,7 +690,7 @@ struct ListStyles {
 
 impl ListStyles {
     fn new(theme: &Theme, band: Paint) -> Self {
-        let p = theme.palette;
+        let roles = theme.roles();
         let hit = |fg: ThemeColor, bg: ThemeColor, text_style: Option<TextStyle>| {
             let bg = bg.over(band);
             // `CommandList > .option-list--option { color: $foreground; text-style: bold }`, then the highlight's.
@@ -707,31 +704,19 @@ impl ListStyles {
             let help = theme.rich_dim(name, fg, bg).remove_modifier(Modifier::BOLD);
             HitStyles { name, help }
         };
-        // `CommandList:ansi` highlights with the focused cursor's colors.
-        let highlighted = if theme.ansi {
-            hit(
-                p.block_cursor_foreground,
-                p.block_cursor_background,
-                Some(p.block_cursor_text_style),
-            )
-        } else {
-            hit(
-                p.block_cursor_blurred_foreground,
-                p.block_cursor_blurred_background,
-                Some(p.block_cursor_blurred_text_style),
-            )
-        };
-        let back = p.scrollbar_background.over(band);
+        let highlight = roles.command_palette.highlight;
+        let highlighted = hit(highlight.fg, highlight.bg, Some(highlight.style));
+        let back = roles.scrollbar.track.over(band);
         Self {
-            option: hit(p.foreground, ThemeColor::Transparent, None),
+            option: hit(roles.text.plain, ThemeColor::Transparent, None),
             highlighted,
             disabled: Style::new()
-                .fg(theme.color(p.text_disabled, band))
+                .fg(theme.color(roles.text.disabled, band))
                 .bg(theme.paint(band)),
             scrollbar: ScrollbarColors {
-                bar: theme.color(p.scrollbar, back),
+                bar: theme.color(roles.scrollbar.thumb, back),
                 back: theme.paint(back),
-                fg: theme.color(p.foreground, band),
+                fg: theme.color(roles.text.plain, band),
                 bg: theme.paint(band),
             },
         }

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/comments/9014/reactions",
+    "query": {
+      "page": "1",
+      "per_page": "100"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": []
+  },
+  "note": "Hand-written for #346: body-less reviews in the PR Conversation. Overrides pr-details' PR 5 reviews."
+}

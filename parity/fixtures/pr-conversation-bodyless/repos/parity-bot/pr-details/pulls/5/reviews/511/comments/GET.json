@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/5/reviews/511/comments"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/comments/9011",
+        "pull_request_review_id": 511,
+        "id": 9011,
+        "node_id": "PRRC_kwDO9011",
+        "diff_hunk": "@@ -1,6 +1,8 @@",
+        "path": "src/cursor.rs",
+        "position": 6,
+        "original_position": 6,
+        "commit_id": "c0ffee5555555555555555555555555555555555",
+        "original_commit_id": "c0ffee5555555555555555555555555555555555",
+        "user": {
+          "login": "parity-friend",
+          "id": 1000002,
+          "node_id": "U_kgDO1000002",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-friend",
+          "html_url": "https://github.com/parity-friend",
+          "type": "User",
+          "site_admin": false
+        },
+        "body": "Nit: rename `pos` to `cursor`.",
+        "created_at": "2026-02-02T11:00:00Z",
+        "updated_at": "2026-02-02T11:00:00Z",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#discussion_r9011",
+        "pull_request_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+        "author_association": "CONTRIBUTOR"
+      }
+    ]
+  },
+  "note": "Hand-written for #346: body-less reviews in the PR Conversation. Overrides pr-details' PR 5 reviews."
+}

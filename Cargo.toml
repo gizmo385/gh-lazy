@@ -56,7 +56,8 @@ indexmap = { version = "2", features = ["serde"] }
 clap = { version = "4.6", features = ["derive"] }
 thiserror = "2"
 form_urlencoded = "1"
-# Fixture recipes for `cargo xtask record-fixtures`, and parity scenarios (`toml::Spanned` gives file:line errors).
+# Fixture recipes for `cargo xtask record-fixtures`, parity scenarios and theme files (`toml::Spanned` gives file:line
+# errors).
 toml = "1"
 # Secret and email patterns in the fixture scrubber, and parity `wait.regex` steps.
 regex = "1"

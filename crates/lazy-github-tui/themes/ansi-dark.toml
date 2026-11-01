@@ -1,0 +1,427 @@
+# Ansi Dark: Textual 8.2.5's built-in theme, frozen as data (#378). Every role is required; what each one is
+# for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax in src/theme/file.rs.
+display_name = "Ansi Dark"
+appearance = "dark"
+terminal_colors = true
+
+[surface]
+screen = "default"
+pane = "transparent"
+header = "transparent"
+raised = "transparent"
+dialog = "transparent"
+card = "transparent"
+boost = "transparent"
+scrim = "transparent"
+focus_tint = "default"
+hatch = "transparent"
+
+[text]
+normal = "default"
+plain = "default"
+muted = "default"
+disabled = "default"
+primary = "ansi:blue"
+secondary = "ansi:cyan"
+accent = "ansi:green"
+success = "ansi:green"
+warning = "ansi:yellow"
+error = "ansi:red"
+
+[brand]
+primary = "ansi:blue"
+secondary = "ansi:cyan"
+accent = "ansi:green"
+
+[status]
+success = "ansi:green"
+warning = "ansi:yellow"
+error = "ansi:red"
+
+[border]
+pane_focused = "ansi:green"
+section_title = "ansi:blue"
+field_focused = "ansi:magenta"
+field = "ansi:black"
+rule = "ansi:cyan"
+status_bar = "ansi:cyan"
+dialog = "default"
+emphasis = "ansi:green"
+conversation = "default"
+review = "ansi:green"
+help = "ansi:black"
+
+[cursor]
+hover_bg = "default"
+
+[cursor.focused]
+fg = "ansi:black"
+bg = "ansi:white"
+style = "bold"
+
+[cursor.blurred]
+fg = "default"
+bg = "default"
+style = "none"
+
+[scrollbar]
+thumb = "ansi:blue"
+track = "ansi:black"
+corner = "default"
+
+[input]
+placeholder = "default"
+placeholder_style = "dim"
+invalid = "ansi:red"
+invalid_blurred = "ansi:red"
+terminal_colors = true
+
+[input.cursor]
+fg = "ansi:black"
+bg = "ansi:white"
+style = "none"
+
+[input.editor_cursor]
+fg = "ansi:bright-white"
+bg = "ansi:black"
+style = "reverse"
+
+[input.selection]
+fg = "ansi:black"
+bg = "ansi:bright-blue"
+
+[footer]
+bar = "default"
+item = "default"
+hover = "default"
+
+[footer.key]
+fg = "ansi:magenta"
+bg = "transparent"
+
+[footer.description]
+fg = "default"
+bg = "default"
+
+[button]
+outlined = true
+focus_style = "bold reverse"
+disabled_border = "ansi:black"
+
+[button.default]
+bg = "transparent"
+light = "transparent"
+dark = "transparent"
+border = "ansi:black"
+label = "default"
+label_disabled = "default"
+
+[button.primary]
+bg = "ansi:blue"
+light = "ansi:blue"
+dark = "ansi:blue"
+border = "ansi:blue"
+label = "ansi:blue"
+label_disabled = "ansi:blue"
+
+[button.success]
+bg = "ansi:green"
+light = "ansi:green"
+dark = "ansi:green"
+border = "ansi:green"
+label = "ansi:green"
+label_disabled = "ansi:green"
+
+[button.warning]
+bg = "ansi:yellow"
+light = "ansi:yellow"
+dark = "ansi:yellow"
+border = "ansi:yellow"
+label = "ansi:yellow"
+label_disabled = "ansi:yellow"
+
+[button.error]
+bg = "ansi:red"
+light = "ansi:red"
+dark = "ansi:red"
+border = "ansi:red"
+label = "ansi:red"
+label_disabled = "ansi:red"
+
+[switch]
+track = "transparent"
+on = "ansi:green"
+off = "ansi:red"
+
+[select]
+muted = "default"
+terminal_colors = true
+
+[checkbox]
+bg = "transparent"
+off = "transparent"
+on = "ansi:green"
+
+[tree]
+guide = "ansi:black"
+guide_focused = "ansi:black"
+guide_selected = "ansi:white"
+
+[tabs]
+label = "default"
+label_style = "dim"
+label_active = "default"
+label_active_style = "bold"
+bar = "ansi:black"
+bar_focused = "ansi:black"
+bar_active = "ansi:white"
+
+[markdown]
+fence_bg = "transparent"
+fence_inset = false
+code = "ansi:yellow"
+code_bg = "transparent"
+quote_bg = "transparent"
+quote_bar = "ansi:blue"
+bullet = "ansi:blue"
+table_bg = "transparent"
+table_header = "ansi:blue"
+table_line = "default"
+
+[markdown.h1]
+fg = "ansi:magenta"
+bg = "transparent"
+style = "bold"
+
+[markdown.h2]
+fg = "ansi:bright-blue"
+bg = "transparent"
+style = "underline"
+
+[markdown.h3]
+fg = "ansi:blue"
+bg = "transparent"
+style = "none"
+
+[markdown.h4]
+fg = "ansi:cyan"
+bg = "transparent"
+style = "bold"
+
+[markdown.h5]
+fg = "ansi:cyan"
+bg = "transparent"
+style = "none"
+
+[markdown.h6]
+fg = "ansi:cyan"
+bg = "transparent"
+style = "underline"
+
+[markdown.link]
+fg = "ansi:blue"
+style = "underline"
+
+[syntax]
+text = "default"
+
+[syntax.comment]
+fg = "none"
+bg = "none"
+style = "dim italic"
+
+[syntax.error]
+fg = "ansi:red"
+bg = "none"
+style = "none"
+
+[syntax.generic_strong]
+fg = "none"
+bg = "none"
+style = "bold"
+
+[syntax.generic_emph]
+fg = "none"
+bg = "none"
+style = "italic"
+
+[syntax.generic_heading]
+fg = "ansi:blue"
+bg = "none"
+style = "underline"
+
+[syntax.generic_subheading]
+fg = "ansi:blue"
+bg = "none"
+style = "none"
+
+[syntax.keyword]
+fg = "ansi:magenta"
+bg = "none"
+style = "bold"
+
+[syntax.keyword_constant]
+fg = "ansi:cyan"
+bg = "none"
+style = "none"
+
+[syntax.keyword_namespace]
+fg = "ansi:magenta"
+bg = "none"
+style = "none"
+
+[syntax.number]
+fg = "ansi:yellow"
+bg = "none"
+style = "none"
+
+[syntax.string]
+fg = "none"
+bg = "none"
+style = "none"
+
+[syntax.string_backtick]
+fg = "ansi:bright-black"
+bg = "none"
+style = "none"
+
+[syntax.string_doc]
+fg = "ansi:green"
+bg = "none"
+style = "italic"
+
+[syntax.string_double]
+fg = "ansi:green"
+bg = "none"
+style = "none"
+
+[syntax.name]
+fg = "default"
+bg = "none"
+style = "none"
+
+[syntax.name_attribute]
+fg = "none"
+bg = "none"
+style = "none"
+
+[syntax.name_builtin]
+fg = "ansi:cyan"
+bg = "none"
+style = "none"
+
+[syntax.name_builtin_pseudo]
+fg = "none"
+bg = "none"
+style = "italic"
+
+[syntax.name_class]
+fg = "ansi:yellow"
+bg = "none"
+style = "none"
+
+[syntax.name_constant]
+fg = "ansi:red"
+bg = "none"
+style = "none"
+
+[syntax.name_decorator]
+fg = "ansi:blue"
+bg = "none"
+style = "bold"
+
+[syntax.name_function]
+fg = "ansi:blue"
+bg = "none"
+style = "none"
+
+[syntax.name_tag]
+fg = "ansi:blue"
+bg = "none"
+style = "bold"
+
+[syntax.name_variable]
+fg = "default"
+bg = "none"
+style = "none"
+
+[syntax.operator]
+fg = "default"
+bg = "none"
+style = "none"
+
+[syntax.operator_word]
+fg = "ansi:magenta"
+bg = "none"
+style = "none"
+
+[syntax.plain]
+fg = "none"
+bg = "none"
+style = "none"
+
+[marks]
+positive = "#ADFF2F"
+negative = "#FF0000"
+merged = "#DA70D6"
+pending = "#FFFF00"
+running = "#00FFFF"
+warning = "#FFFF00"
+name = "#ADFF2F"
+count_added = "#ADFF2F"
+count_removed = "#FF0000"
+auth_border = "#FF0000"
+auth_command = "#008000"
+starred = "ansi:green"
+job_failed = "ansi:red"
+job_pending = "ansi:yellow"
+job_running = "ansi:cyan"
+
+[diff]
+added_bg = "#0A3A0A"
+removed_bg = "#3A0A0A"
+added_current_bg = "#006400"
+removed_current_bg = "#8B0000"
+context_current_bg = "ansi:yellow"
+stat_added = "ansi:green"
+stat_removed = "ansi:red"
+border_focused = "ansi:green"
+border = "ansi:blue"
+review_body = "transparent"
+review_comment_border = "ansi:cyan"
+
+[diff.indicator]
+fg = "default"
+bg = "ansi:green"
+
+[diff.review_header]
+fg = "default"
+bg = "ansi:green"
+style = "bold"
+
+[command_palette]
+band = "transparent"
+input_rule = "#000000 50%"
+list_rule = "#000000"
+icon = "#000000"
+
+[command_palette.highlight]
+fg = "ansi:black"
+bg = "ansi:white"
+style = "bold"
+
+[hints.label]
+fg = "#000000"
+bg = "ansi:yellow"
+style = "bold"
+
+[table.header]
+fg = "default"
+bg = "ansi:bright-blue"
+
+[disabled]
+dimmed = true
+
+[screenshot]
+default_fg = "#D4D4D4"
+default_bg = "#1E1E1E"

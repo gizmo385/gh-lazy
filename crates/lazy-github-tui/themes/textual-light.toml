@@ -1,0 +1,427 @@
+# Textual Light: Textual 8.2.5's built-in theme, frozen as data (#378). Every role is required; what each one is
+# for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax in src/theme/file.rs.
+display_name = "Textual Light"
+appearance = "light"
+terminal_colors = false
+
+[surface]
+screen = "#E0E0E0"
+pane = "#D8D8D8"
+header = "#D0D0D0"
+raised = "#E5E5E5"
+dialog = "#FFFFFF"
+card = "#EDEDED"
+boost = "#000000 0%"
+scrim = "#E0E0E0 60%"
+focus_tint = "#1F1F1F 5%"
+hatch = "#D0D0D0"
+
+[text]
+normal = "auto 87%"
+plain = "#1F1F1F"
+muted = "auto 60%"
+disabled = "auto 38%"
+primary = "#002D4F"
+secondary = "#004F8B"
+accent = "#A86D1C"
+success = "#337E4A"
+warning = "#A86D1C"
+error = "#7A273C"
+
+[brand]
+primary = "#004578"
+secondary = "#0178D4"
+accent = "#FEA62B"
+
+[status]
+success = "#4EBF71"
+warning = "#FEA62B"
+error = "#B93C5B"
+
+[border]
+pane_focused = "#4EBF71"
+section_title = "#507BB3"
+field_focused = "#004578"
+field = "#D0D1D0"
+rule = "#0178D4"
+status_bar = "#0178D4"
+dialog = "#E0E0E0 80%"
+emphasis = "#FEA62B"
+conversation = "#0178D4"
+review = "#8FFFAC"
+help = "#1F1F1F 30%"
+
+[cursor]
+hover_bg = "#00000019"
+
+[cursor.focused]
+fg = "auto 87%"
+bg = "#004578"
+style = "bold"
+
+[cursor.blurred]
+fg = "#1F1F1F"
+bg = "#0045784C"
+style = "none"
+
+[scrollbar]
+thumb = "#7994A9"
+track = "#CACACA"
+corner = "#CACACA"
+
+[input]
+placeholder = "auto 38%"
+placeholder_style = "none"
+invalid = "#B93C5B"
+invalid_blurred = "#B93C5B 60%"
+terminal_colors = false
+
+[input.cursor]
+fg = "#E0E0E0"
+bg = "#1F1F1F"
+style = "none"
+
+[input.editor_cursor]
+fg = "auto 78.3%"
+bg = "#1F1F1F 70%"
+style = "none"
+
+[input.selection]
+fg = "#1F1F1F"
+bg = "#23568B 40%"
+
+[footer]
+bar = "#D0D0D0"
+item = "transparent"
+hover = "#00000019"
+
+[footer.key]
+fg = "#0178D4"
+bg = "transparent"
+
+[footer.description]
+fg = "#1F1F1F"
+bg = "transparent"
+
+[button]
+outlined = false
+focus_style = "bold reverse"
+disabled_border = "#D0D1D0"
+
+[button.default]
+bg = "#D8D8D8"
+light = "#EDEDED"
+dark = "#C3C3C3"
+border = "#D0D1D0"
+label = "#1F1F1F"
+label_disabled = "#1F1F1F 60%"
+
+[button.primary]
+bg = "#004578"
+light = "#507BB3"
+dark = "#001541"
+border = "#004578"
+label = "auto 87%"
+label_disabled = "auto 52.2%"
+
+[button.success]
+bg = "#4EBF71"
+light = "#7AE998"
+dark = "#008139"
+border = "#4EBF71"
+label = "auto 87%"
+label_disabled = "auto 52.2%"
+
+[button.warning]
+bg = "#FEA62B"
+light = "#FFCF56"
+dark = "#B86B00"
+border = "#FEA62B"
+label = "auto 87%"
+label_disabled = "auto 52.2%"
+
+[button.error]
+bg = "#B93C5B"
+light = "#E76580"
+dark = "#780028"
+border = "#B93C5B"
+label = "auto 87%"
+label_disabled = "auto 52.2%"
+
+[switch]
+track = "#A6A6A6"
+on = "#4EBF71"
+off = "#004578 15%"
+
+[select]
+muted = "#1F1F1F 50%"
+terminal_colors = false
+
+[checkbox]
+bg = "#D0D0D0"
+off = "#A6A6A6"
+on = "#337E4A"
+
+[tree]
+guide = "#C3C3C3"
+guide_focused = "#C3C3C3"
+guide_selected = "#004578"
+
+[tabs]
+label = "#1F1F1F 50%"
+label_style = "none"
+label_active = "#1F1F1F"
+label_active_style = "none"
+bar = "#1F1F1F 10%"
+bar_focused = "#1F1F1F 30%"
+bar_active = "#004578"
+
+[markdown]
+fence_bg = "#FFFFFF 30%"
+fence_inset = true
+code = "#7A273C 95%"
+code_bg = "#B93C5B 5%"
+quote_bg = "#000000 0%"
+quote_bar = "#004F8B"
+bullet = "#004F8B"
+table_bg = "#FFFFFF 30%"
+table_header = "#004578"
+table_line = "#1F1F1F 20%"
+
+[markdown.h1]
+fg = "#004578"
+bg = "transparent"
+style = "bold"
+
+[markdown.h2]
+fg = "#004578"
+bg = "transparent"
+style = "underline"
+
+[markdown.h3]
+fg = "#004578"
+bg = "transparent"
+style = "bold"
+
+[markdown.h4]
+fg = "#1F1F1F"
+bg = "transparent"
+style = "bold underline"
+
+[markdown.h5]
+fg = "#1F1F1F"
+bg = "transparent"
+style = "bold"
+
+[markdown.h6]
+fg = "#1F1F1F 60%"
+bg = "transparent"
+style = "bold"
+
+[markdown.link]
+fg = "auto 87%"
+style = "underline"
+
+[syntax]
+text = "auto"
+
+[syntax.comment]
+fg = "auto 60%"
+bg = "none"
+style = "none"
+
+[syntax.error]
+fg = "#7A273C"
+bg = "#D4AEB8"
+style = "none"
+
+[syntax.generic_strong]
+fg = "none"
+bg = "none"
+style = "bold"
+
+[syntax.generic_emph]
+fg = "none"
+bg = "none"
+style = "italic"
+
+[syntax.generic_heading]
+fg = "#002D4F"
+bg = "none"
+style = "underline"
+
+[syntax.generic_subheading]
+fg = "#002D4F"
+bg = "none"
+style = "none"
+
+[syntax.keyword]
+fg = "#A86D1C"
+bg = "none"
+style = "none"
+
+[syntax.keyword_constant]
+fg = "#337E4A 80%"
+bg = "none"
+style = "bold"
+
+[syntax.keyword_namespace]
+fg = "#7A273C"
+bg = "none"
+style = "none"
+
+[syntax.number]
+fg = "#A86D1C"
+bg = "none"
+style = "none"
+
+[syntax.string]
+fg = "#337E4A"
+bg = "none"
+style = "none"
+
+[syntax.string_backtick]
+fg = "auto 60%"
+bg = "none"
+style = "none"
+
+[syntax.string_doc]
+fg = "#337E4A 80%"
+bg = "none"
+style = "italic"
+
+[syntax.string_double]
+fg = "#337E4A 90%"
+bg = "none"
+style = "none"
+
+[syntax.name]
+fg = "#002D4F"
+bg = "none"
+style = "none"
+
+[syntax.name_attribute]
+fg = "#A86D1C"
+bg = "none"
+style = "none"
+
+[syntax.name_builtin]
+fg = "#A86D1C"
+bg = "none"
+style = "none"
+
+[syntax.name_builtin_pseudo]
+fg = "none"
+bg = "none"
+style = "italic"
+
+[syntax.name_class]
+fg = "#A86D1C"
+bg = "none"
+style = "bold"
+
+[syntax.name_constant]
+fg = "#7A273C"
+bg = "none"
+style = "none"
+
+[syntax.name_decorator]
+fg = "#002D4F"
+bg = "none"
+style = "bold"
+
+[syntax.name_function]
+fg = "#A86D1C"
+bg = "none"
+style = "underline"
+
+[syntax.name_tag]
+fg = "#002D4F"
+bg = "none"
+style = "bold"
+
+[syntax.name_variable]
+fg = "#004F8B"
+bg = "none"
+style = "none"
+
+[syntax.operator]
+fg = "none"
+bg = "none"
+style = "bold"
+
+[syntax.operator_word]
+fg = "#7A273C"
+bg = "none"
+style = "bold"
+
+[syntax.plain]
+fg = "none"
+bg = "none"
+style = "none"
+
+[marks]
+positive = "#ADFF2F"
+negative = "#FF0000"
+merged = "#DA70D6"
+pending = "#FFFF00"
+running = "#00FFFF"
+warning = "#FFFF00"
+name = "#ADFF2F"
+count_added = "#ADFF2F"
+count_removed = "#FF0000"
+auth_border = "#FF0000"
+auth_command = "#008000"
+starred = "#448C27"
+job_failed = "#AA3731"
+job_pending = "#CB9000"
+job_running = "#0083B2"
+
+[diff]
+added_bg = "#0A3A0A"
+removed_bg = "#3A0A0A"
+added_current_bg = "#006400"
+removed_current_bg = "#8B0000"
+context_current_bg = "#CB9000"
+stat_added = "#448C27"
+stat_removed = "#AA3731"
+border_focused = "#FEA62B"
+border = "#23568B"
+review_body = "#D0D0D0"
+review_comment_border = "#0178D4"
+
+[diff.indicator]
+fg = "auto 87%"
+bg = "#FEA62B"
+
+[diff.review_header]
+fg = "auto 87%"
+bg = "#FEA62B"
+style = "bold"
+
+[command_palette]
+band = "#D8D8D8"
+input_rule = "#000000 50%"
+list_rule = "#000000"
+icon = "#000000"
+
+[command_palette.highlight]
+fg = "#1F1F1F"
+bg = "#0045784C"
+style = "none"
+
+[hints.label]
+fg = "#000000"
+bg = "#FEA62B"
+style = "bold"
+
+[table.header]
+fg = "#1F1F1F"
+bg = "#D0D0D0"
+
+[disabled]
+dimmed = false
+
+[screenshot]
+default_fg = "#1E1E1E"
+default_bg = "#FFFFFF"

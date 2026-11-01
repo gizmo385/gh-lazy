@@ -1,0 +1,427 @@
+# Atom One Dark: Textual 8.2.5's built-in theme, frozen as data (#378). Every role is required; what each one is
+# for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax in src/theme/file.rs.
+display_name = "Atom One Dark"
+appearance = "dark"
+terminal_colors = false
+
+[surface]
+screen = "#282C34"
+pane = "#3B414D"
+header = "#4F5666"
+raised = "#616878"
+dialog = "#707684"
+card = "#4C525E"
+boost = "#000000 0%"
+scrim = "#282C34 60%"
+focus_tint = "#ABB2BF 5%"
+hatch = "#4F5666"
+
+[text]
+normal = "auto 87%"
+plain = "#ABB2BF"
+muted = "auto 60%"
+disabled = "auto 38%"
+primary = "#96CAF4"
+secondary = "#D9A5E8"
+accent = "#C2A5D6"
+success = "#97F597"
+warning = "#E9CC92"
+error = "#F59797"
+
+[brand]
+primary = "#61AFEF"
+secondary = "#C678DD"
+accent = "#A378C2"
+
+[status]
+success = "#62F062"
+warning = "#DDB25B"
+error = "#EF6262"
+
+[border]
+pane_focused = "#62F062"
+section_title = "#A4EDFF"
+field_focused = "#61AFEF"
+field = "#353B47"
+rule = "#C678DD"
+status_bar = "#C678DD"
+dialog = "#282C34 80%"
+emphasis = "#A378C2"
+conversation = "#5B5567"
+review = "#A8FF9F"
+help = "#ABB2BF 30%"
+
+[cursor]
+hover_bg = "#00000019"
+
+[cursor.focused]
+fg = "auto 87%"
+bg = "#61AFEF"
+style = "bold"
+
+[cursor.blurred]
+fg = "#ABB2BF"
+bg = "#61AFEF4C"
+style = "none"
+
+[scrollbar]
+thumb = "#355674"
+track = "#181C23"
+corner = "#181C23"
+
+[input]
+placeholder = "auto 38%"
+placeholder_style = "none"
+invalid = "#EF6262"
+invalid_blurred = "#EF6262 60%"
+terminal_colors = false
+
+[input.cursor]
+fg = "#282C34"
+bg = "#ABB2BF"
+style = "none"
+
+[input.editor_cursor]
+fg = "#282C34"
+bg = "#ABB2BF"
+style = "none"
+
+[input.selection]
+fg = "#ABB2BF"
+bg = "#77C3FF 40%"
+
+[footer]
+bar = "#4F5666"
+item = "transparent"
+hover = "#00000019"
+
+[footer.key]
+fg = "#A378C2"
+bg = "transparent"
+
+[footer.description]
+fg = "#ABB2BF"
+bg = "transparent"
+
+[button]
+outlined = false
+focus_style = "bold reverse"
+disabled_border = "#353B47"
+
+[button.default]
+bg = "#3B414D"
+light = "#4C525E"
+dark = "#2A303B"
+border = "#353B47"
+label = "#ABB2BF"
+label_disabled = "#ABB2BF 60%"
+
+[button.primary]
+bg = "#61AFEF"
+light = "#A4EDFF"
+dark = "#0074AF"
+border = "#61AFEF"
+label = "auto 87%"
+label_disabled = "auto 52.2%"
+
+[button.success]
+bg = "#62F062"
+light = "#91FF8A"
+dark = "#00AF22"
+border = "#62F062"
+label = "auto 87%"
+label_disabled = "auto 52.2%"
+
+[button.warning]
+bg = "#DDB25B"
+light = "#FFDB82"
+dark = "#9C7721"
+border = "#DDB25B"
+label = "auto 87%"
+label_disabled = "auto 52.2%"
+
+[button.error]
+bg = "#EF6262"
+light = "#FF8B87"
+dark = "#AA1F2E"
+border = "#EF6262"
+label = "auto 87%"
+label_disabled = "auto 52.2%"
+
+[switch]
+track = "#2C3342"
+on = "#62F062"
+off = "#4F5666"
+
+[select]
+muted = "#ABB2BF 50%"
+terminal_colors = false
+
+[checkbox]
+bg = "#4F5666"
+off = "#2C3342"
+on = "#97F597"
+
+[tree]
+guide = "#5E6471"
+guide_focused = "#707684"
+guide_selected = "#61AFEF"
+
+[tabs]
+label = "#ABB2BF 50%"
+label_style = "none"
+label_active = "#ABB2BF"
+label_active_style = "none"
+bar = "#ABB2BF 10%"
+bar_focused = "#ABB2BF 30%"
+bar_active = "#61AFEF"
+
+[markdown]
+fence_bg = "#000000 10%"
+fence_inset = true
+code = "#E9CC92 95%"
+code_bg = "#DDB25B 10%"
+quote_bg = "#000000 0%"
+quote_bar = "#96CAF4 50%"
+bullet = "#96CAF4"
+table_bg = "transparent"
+table_header = "#61AFEF"
+table_line = "#ABB2BF 20%"
+
+[markdown.h1]
+fg = "#61AFEF"
+bg = "transparent"
+style = "bold"
+
+[markdown.h2]
+fg = "#61AFEF"
+bg = "transparent"
+style = "underline"
+
+[markdown.h3]
+fg = "#61AFEF"
+bg = "transparent"
+style = "bold"
+
+[markdown.h4]
+fg = "#ABB2BF"
+bg = "transparent"
+style = "bold underline"
+
+[markdown.h5]
+fg = "#ABB2BF"
+bg = "transparent"
+style = "bold"
+
+[markdown.h6]
+fg = "#ABB2BF 60%"
+bg = "transparent"
+style = "bold"
+
+[markdown.link]
+fg = "auto 87%"
+style = "underline"
+
+[syntax]
+text = "auto"
+
+[syntax.comment]
+fg = "auto 60%"
+bg = "none"
+style = "none"
+
+[syntax.error]
+fg = "#F59797"
+bg = "#643C41"
+style = "none"
+
+[syntax.generic_strong]
+fg = "none"
+bg = "none"
+style = "bold"
+
+[syntax.generic_emph]
+fg = "none"
+bg = "none"
+style = "italic"
+
+[syntax.generic_heading]
+fg = "#96CAF4"
+bg = "none"
+style = "underline"
+
+[syntax.generic_subheading]
+fg = "#96CAF4"
+bg = "none"
+style = "none"
+
+[syntax.keyword]
+fg = "#C2A5D6"
+bg = "none"
+style = "none"
+
+[syntax.keyword_constant]
+fg = "#97F597 80%"
+bg = "none"
+style = "bold"
+
+[syntax.keyword_namespace]
+fg = "#F59797"
+bg = "none"
+style = "none"
+
+[syntax.number]
+fg = "#E9CC92"
+bg = "none"
+style = "none"
+
+[syntax.string]
+fg = "#97F597"
+bg = "none"
+style = "none"
+
+[syntax.string_backtick]
+fg = "auto 60%"
+bg = "none"
+style = "none"
+
+[syntax.string_doc]
+fg = "#97F597 80%"
+bg = "none"
+style = "italic"
+
+[syntax.string_double]
+fg = "#97F597 90%"
+bg = "none"
+style = "none"
+
+[syntax.name]
+fg = "#96CAF4"
+bg = "none"
+style = "none"
+
+[syntax.name_attribute]
+fg = "#E9CC92"
+bg = "none"
+style = "none"
+
+[syntax.name_builtin]
+fg = "#C2A5D6"
+bg = "none"
+style = "none"
+
+[syntax.name_builtin_pseudo]
+fg = "none"
+bg = "none"
+style = "italic"
+
+[syntax.name_class]
+fg = "#E9CC92"
+bg = "none"
+style = "bold"
+
+[syntax.name_constant]
+fg = "#F59797"
+bg = "none"
+style = "none"
+
+[syntax.name_decorator]
+fg = "#96CAF4"
+bg = "none"
+style = "bold"
+
+[syntax.name_function]
+fg = "#E9CC92"
+bg = "none"
+style = "underline"
+
+[syntax.name_tag]
+fg = "#96CAF4"
+bg = "none"
+style = "bold"
+
+[syntax.name_variable]
+fg = "#D9A5E8"
+bg = "none"
+style = "none"
+
+[syntax.operator]
+fg = "none"
+bg = "none"
+style = "bold"
+
+[syntax.operator_word]
+fg = "#F59797"
+bg = "none"
+style = "bold"
+
+[syntax.plain]
+fg = "none"
+bg = "none"
+style = "none"
+
+[marks]
+positive = "#ADFF2F"
+negative = "#FF0000"
+merged = "#DA70D6"
+pending = "#FFFF00"
+running = "#00FFFF"
+warning = "#FFFF00"
+name = "#ADFF2F"
+count_added = "#ADFF2F"
+count_removed = "#FF0000"
+auth_border = "#FF0000"
+auth_command = "#008000"
+starred = "#98E024"
+job_failed = "#F4005F"
+job_pending = "#FD971F"
+job_running = "#58D1EB"
+
+[diff]
+added_bg = "#0A3A0A"
+removed_bg = "#3A0A0A"
+added_current_bg = "#006400"
+removed_current_bg = "#8B0000"
+context_current_bg = "#FD971F"
+stat_added = "#98E024"
+stat_removed = "#F4005F"
+border_focused = "#A378C2"
+border = "#77C3FF"
+review_body = "#4F5666"
+review_comment_border = "#C678DD"
+
+[diff.indicator]
+fg = "auto 87%"
+bg = "#A378C2"
+
+[diff.review_header]
+fg = "auto 87%"
+bg = "#A378C2"
+style = "bold"
+
+[command_palette]
+band = "#3D4453"
+input_rule = "#000000 50%"
+list_rule = "#000000"
+icon = "#000000"
+
+[command_palette.highlight]
+fg = "#ABB2BF"
+bg = "#61AFEF4C"
+style = "none"
+
+[hints.label]
+fg = "#000000"
+bg = "#DDB25B"
+style = "bold"
+
+[table.header]
+fg = "#ABB2BF"
+bg = "#4F5666"
+
+[disabled]
+dimmed = false
+
+[screenshot]
+default_fg = "#D4D4D4"
+default_bg = "#1E1E1E"

@@ -1,31 +1,24 @@
 //! Checks [`ThemeColor::over`] against Textual's own compositing, for every built-in theme.
 //!
-//! `tests/fixtures/themes/composites.json` is written by `src/theme/gen/dump_themes.py`, which also generates the palettes:
-//! for each theme, Textual's `Color.parse(bg) + Color.parse(fg)` for a handful of pairs the app draws.
+//! `tests/fixtures/themes/composites.json` holds test vectors frozen from Textual 8.2.5: for each theme, Textual's
+//! `Color.parse(bg) + Color.parse(fg)` for a handful of pairs the app draws, each operand keyed by the role that holds
+//! that color. No generator exists any more; the vectors are data, like the theme files.
 
 use ratatui::style::Color;
 use serde_json::Value;
 
-use super::{AnsiColor, Paint, Palette, Rgb, Theme, ThemeColor};
+use super::roles::walk::{Leaf, Walk};
+use super::{AnsiColor, Paint, Rgb, Theme, ThemeColor};
 
 const FIXTURE: &str = include_str!("../../tests/fixtures/themes/composites.json");
 
-/// A pair's operand, as Textual CSS.
-fn operand(palette: &Palette, css: &str) -> ThemeColor {
-    match css {
-        "$text" => palette.text,
-        "$text-muted" => palette.text_muted,
-        "$foreground-muted" => palette.foreground_muted,
-        "$background" => palette.background,
-        "$surface" => palette.surface,
-        "$panel" => palette.panel,
-        "$panel-lighten-1" => palette.panel_lighten_1,
-        "$block-cursor-foreground" => palette.block_cursor_foreground,
-        "$block-cursor-background" => palette.block_cursor_background,
-        "$block-cursor-blurred-background" => palette.block_cursor_blurred_background,
-        "$boost" => palette.boost,
-        "$foreground 5%" => palette.foreground.multiply_alpha(5.0 / 100.0),
-        other => panic!("composites.json names {other:?}; add it here"),
+/// The color of the role at `path`.
+fn role(theme: &Theme, path: &str) -> ThemeColor {
+    let mut leaves = Vec::new();
+    theme.roles().walk("", &mut leaves);
+    match leaves.into_iter().find(|(p, _)| p == path) {
+        Some((_, Leaf::Color(c))) => c,
+        other => panic!("composites.json names {path:?}, which is {other:?}, not a color role"),
     }
 }
 
@@ -78,8 +71,8 @@ fn compositing_matches_textual_for_every_theme() {
             let (fg, bg) = (pair["fg"].as_str().unwrap(), pair["bg"].as_str().unwrap());
             let want = expected(pair["result"].as_str().unwrap());
             // Textual parses a transparent background as black with zero alpha, and blends with that black.
-            let under = operand(theme.palette, bg).over(Paint::Rgb(Rgb::BLACK));
-            let fg_color = operand(theme.palette, fg);
+            let under = role(&theme, bg).over(Paint::Rgb(Rgb::BLACK));
+            let fg_color = role(&theme, fg);
             assert_eq!(fg_color.over(under), want, "{name}: {fg} over {bg}");
             let want_color = match want {
                 Paint::Rgb(c) => Color::Rgb(c.r, c.g, c.b),
@@ -89,10 +82,10 @@ fn compositing_matches_textual_for_every_theme() {
             match (want, under) {
                 // The ANSI themes paint the terminal's own colors.
                 (Paint::Ansi(_), _) => assert!(theme.terminal_colors, "{name}: {fg} over {bg} is ANSI"),
-                // The focused DataTable/Log tint, through the theme's helper.
-                (Paint::Rgb(want), Paint::Rgb(base)) if fg == "$foreground 5%" => {
+                // The focused DataTable/Log tint (`$foreground 5%`), through the theme's helper.
+                (Paint::Rgb(want), Paint::Rgb(base)) if fg == "surface.focus_tint" => {
                     assert_eq!(
-                        theme.tint(Paint::Rgb(base), theme.palette.foreground, 5.0),
+                        theme.tint(Paint::Rgb(base), theme.roles().text.plain, 5.0),
                         Paint::Rgb(want),
                         "{name}: tint"
                     );
@@ -102,5 +95,5 @@ fn compositing_matches_textual_for_every_theme() {
             checked += 1;
         }
     }
-    assert_eq!(checked, 21 * 10);
+    assert_eq!(checked, 21 * 9);
 }

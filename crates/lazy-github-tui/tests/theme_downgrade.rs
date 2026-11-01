@@ -1,9 +1,10 @@
-//! Checks [`downsample`] against Rich's own `Color.downgrade`, for every opaque RGB variable of every built-in theme.
+//! Checks [`downsample`] against Rich's own `Color.downgrade`.
 //!
-//! `fixtures/themes/downgrade.json` is written by `src/theme/gen/dump_themes.py --downgrade`: for each theme variable,
-//! its RGB and the xterm-256 and 16-color indices Rich picks for it.
+//! `fixtures/themes/downgrade.json` holds test vectors frozen from Rich 15.0.0 (through Textual 8.2.5): every opaque
+//! RGB color the built-in themes had, with the xterm-256 and 16-color indices Rich picks for it. No generator exists
+//! any more; the vectors are data.
 
-use lazy_github_tui::theme::{ColorDepth, ColorMode, Rgb, Theme, downsample};
+use lazy_github_tui::theme::{ColorDepth, ColorMode, Rgb, downsample};
 use ratatui::style::Color;
 use serde_json::Value;
 
@@ -40,39 +41,30 @@ fn rgb(hex: &str) -> Rgb {
 }
 
 #[test]
-fn downsampling_matches_rich_for_every_theme_color() {
+fn downsampling_matches_rich() {
     let fixture: Value = serde_json::from_str(FIXTURE).unwrap();
-    let themes = fixture["themes"].as_object().unwrap();
-    assert_eq!(
-        themes.keys().map(String::as_str).collect::<Vec<_>>(),
-        Theme::all().map(|t| t.name).collect::<Vec<_>>()
-    );
-
-    let mut checked = 0;
-    for (name, variables) in themes {
-        for (var, row) in variables.as_object().unwrap() {
-            let row = row.as_array().unwrap();
-            let color = rgb(row[0].as_str().unwrap());
-            let eight_bit = u8::try_from(row[1].as_u64().unwrap()).unwrap();
-            let standard = STANDARD[usize::try_from(row[2].as_u64().unwrap()).unwrap()];
-            assert_eq!(
-                downsample(color, mode(ColorDepth::EightBit)),
-                Color::Indexed(eight_bit),
-                "{name}: ${var} {color:?} at 8-bit"
-            );
-            assert_eq!(
-                downsample(color, mode(ColorDepth::Standard)),
-                standard,
-                "{name}: ${var} {color:?} at 16 colors"
-            );
-            assert_eq!(
-                downsample(color, mode(ColorDepth::TrueColor)),
-                Color::Rgb(color.r, color.g, color.b),
-                "{name}: ${var}"
-            );
-            checked += 1;
-        }
+    let colors = fixture["colors"].as_array().unwrap();
+    for row in colors {
+        let row = row.as_array().unwrap();
+        let color = rgb(row[0].as_str().unwrap());
+        let eight_bit = u8::try_from(row[1].as_u64().unwrap()).unwrap();
+        let standard = STANDARD[usize::try_from(row[2].as_u64().unwrap()).unwrap()];
+        assert_eq!(
+            downsample(color, mode(ColorDepth::EightBit)),
+            Color::Indexed(eight_bit),
+            "{color:?} at 8-bit"
+        );
+        assert_eq!(
+            downsample(color, mode(ColorDepth::Standard)),
+            standard,
+            "{color:?} at 16 colors"
+        );
+        assert_eq!(
+            downsample(color, mode(ColorDepth::TrueColor)),
+            Color::Rgb(color.r, color.g, color.b),
+            "{color:?}"
+        );
     }
-    // Every RGB theme has over a hundred opaque variables; the two ANSI themes have none.
-    assert!(checked > 2000, "only {checked} colors checked");
+    // The distinct colors of the 19 RGB themes' variables; the two ANSI themes had none.
+    assert_eq!(colors.len(), 1558);
 }

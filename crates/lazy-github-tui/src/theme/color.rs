@@ -225,21 +225,7 @@ pub enum ThemeColor {
     Transparent,
 }
 
-/// An opaque [`ThemeColor::Rgba`], for the generated palette.
-pub(super) const fn rgb(r: u8, g: u8, b: u8) -> ThemeColor {
-    ThemeColor::Rgba { r, g, b, a: 1.0 }
-}
-
-/// A [`ThemeColor::Rgba`], for the generated palette.
-pub(super) const fn rgba(r: u8, g: u8, b: u8, a: f64) -> ThemeColor {
-    ThemeColor::Rgba { r, g, b, a }
-}
-
 impl ThemeColor {
-    /// CSS's `black`, which some of Textual's built-in widgets use as it is (the command palette's `hkey black`
-    /// rules and `SearchIcon { color: #000 }`), whatever the theme.
-    pub const BLACK: ThemeColor = rgb(0, 0, 0);
-
     /// The paint a cell gets when `self` is drawn over `under`, with Textual's arithmetic (`under + self`).
     ///
     /// An ANSI color always wins, since Textual can't blend the terminal's colors. Anything else blends with the
@@ -325,6 +311,14 @@ impl TextStyle {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const fn rgb(r: u8, g: u8, b: u8) -> ThemeColor {
+        ThemeColor::Rgba { r, g, b, a: 1.0 }
+    }
+
+    const fn rgba(r: u8, g: u8, b: u8, a: f64) -> ThemeColor {
+        ThemeColor::Rgba { r, g, b, a }
+    }
 
     #[test]
     fn blend_truncates_like_textual() {

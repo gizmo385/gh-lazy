@@ -24,7 +24,7 @@ const FAKE_GH_VERSION: &str = "2.89.0 (fake-gh)";
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `gh_version` returns fake-gh's `2.89.0 (fake-gh)`, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_notifications` returns an empty page, `mark_notification_read` and `mark_all_notifications_read` fail with a 422, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` and `pull_request_uncached` fail with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `pull_requests_for_commit`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, `collaborators` and `requested_reviewers` return none, `request_reviewers` and `update_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_notifications` returns an empty page, `mark_notification_read` and `mark_all_notifications_read` fail with a 422, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `pull_requests_for_commit`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, `collaborators` and `requested_reviewers` return none, `request_reviewers` and `update_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -87,13 +87,6 @@ pub enum GithubCall {
     UserRepos(String),
     /// [`Github::pull_request`].
     PullRequest {
-        /// The repository's full name.
-        full_name: String,
-        /// The pull request's number.
-        number: u64,
-    },
-    /// [`Github::pull_request_uncached`].
-    PullRequestUncached {
         /// The repository's full name.
         full_name: String,
         /// The pull request's number.
@@ -1004,16 +997,6 @@ impl Github for FakeGithub {
         self.respond(call, |state| canned_pull_request(state, &key)).await
     }
 
-    /// Answers from the same canned pull requests as `pull_request`.
-    async fn pull_request_uncached(&self, repo: &Repository, number: u64) -> Result<FullPullRequest, GhError> {
-        let key = (repo.full_name.clone(), number);
-        let call = GithubCall::PullRequestUncached {
-            full_name: repo.full_name.clone(),
-            number,
-        };
-        self.respond(call, |state| canned_pull_request(state, &key)).await
-    }
-
     async fn workflow_run_jobs(&self, _repo: &Repository, run_id: u64) -> Result<Vec<WorkflowJob>, GhError> {
         self.respond(GithubCall::WorkflowRunJobs(run_id), |state| {
             canned_page(state.run_jobs.get(&run_id))
@@ -1753,14 +1736,6 @@ mod tests {
         assert_eq!(
             github.calls()[0],
             GithubCall::PullRequest {
-                full_name: "octocat/a".into(),
-                number: 5
-            }
-        );
-        assert_eq!(github.pull_request_uncached(&repo("a"), 5).await.unwrap(), pr);
-        assert_eq!(
-            github.calls()[3],
-            GithubCall::PullRequestUncached {
                 full_name: "octocat/a".into(),
                 number: 5
             }

@@ -65,6 +65,19 @@ impl Accept {
     }
 }
 
+/// Cached reads that a write makes stale, declared on the write's [`GhRequest::stales`]. The next read in scope
+/// refreshes `gh`'s cached copy (see [`GhRequest::refresh`]).
+///
+/// Paths compare ASCII case-insensitively, since GitHub treats owner and repo names so.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CacheScope {
+    /// This path and everything under it, with any query: `/repos/o/r/issues/5` covers `.../issues/5/comments` but
+    /// not `.../issues/50`.
+    Subtree(String),
+    /// This path with any query, nothing under it: `/repos/o/r/issues`, the shared issue and pull request list.
+    Path(String),
+}
+
 /// One GitHub REST API request, run through `gh api`.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct GhRequest {
@@ -88,6 +101,11 @@ pub struct GhRequest {
     /// How long this one request may run before `gh` is killed, overriding the runner's limit for its kind (see
     /// [`GhTimeouts`](super::GhTimeouts)). For calls known to run long, such as log downloads.
     pub timeout: Option<Duration>,
+    /// For a cached `GET`, fetch past `gh`'s cache and overwrite its copy: `--cache 1ns` in place of `--cache <ttl>s`.
+    /// Ignored when `cache` is unset or zero. The runner sets it for a read a write made stale.
+    pub refresh: bool,
+    /// For a write, the cached reads it makes stale. The runner marks them when the write finishes, worked or not.
+    pub stales: Vec<CacheScope>,
 }
 
 impl GhRequest {
@@ -135,7 +153,12 @@ impl GhRequest {
             && ttl.as_secs() > 0
         {
             args.push("--cache".into());
-            args.push(format!("{}s", ttl.as_secs()).into());
+            // Any stored entry is older than a nanosecond, so gh fetches, then stores the answer for later reads.
+            if self.refresh {
+                args.push("1ns".into());
+            } else {
+                args.push(format!("{}s", ttl.as_secs()).into());
+            }
         }
         if paginate {
             args.push("--paginate".into());
@@ -248,10 +271,42 @@ mod tests {
     }
 
     #[test]
-    fn post_with_body_reads_stdin_and_never_caches() {
+    fn refresh_get_asks_for_one_nanosecond() {
+        let mut req = GhRequest::get("/repos/o/r/issues/5/comments");
+        req.cache = Some(Duration::from_mins(10));
+        req.refresh = true;
+        assert_eq!(
+            argv(&req, None, true),
+            [
+                "api",
+                "-X",
+                "GET",
+                "--cache",
+                "1ns",
+                "--paginate",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/o/r/issues/5/comments"
+            ]
+        );
+    }
+
+    #[test]
+    fn refresh_with_zero_ttl_sends_no_cache() {
+        let mut req = GhRequest::get("/user");
+        req.refresh = true;
+        assert!(!argv(&req, None, false).contains(&"--cache".to_owned()));
+        req.cache = Some(Duration::ZERO);
+        assert!(!argv(&req, None, false).contains(&"--cache".to_owned()));
+    }
+
+    #[test]
+    fn writes_never_cache() {
         let mut req = GhRequest::new(Method::Post, "/repos/o/r/issues");
         req.body = Some(json!({"title": "hi"}));
         req.cache = Some(Duration::from_mins(10));
+        req.refresh = true;
+        req.stales = vec![CacheScope::Path("/repos/o/r/issues".into())];
         req.headers = vec![("X-Custom".into(), "yes".into())];
         assert_eq!(
             argv(&req, None, false),

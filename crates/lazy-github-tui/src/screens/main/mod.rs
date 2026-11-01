@@ -616,24 +616,13 @@ impl MainScreen {
         self.preload.cancel(cx);
     }
 
-    /// `MainAction::OpenPullRequest`: a table row (or a just-merged pull request, past the cache) is fetched first, and
-    /// nothing changes until it arrives; a full pull request shows at once. Python's `MainViewPane.load_pull_request`.
+    /// `MainAction::OpenPullRequest`: a table row (or a just-merged pull request) is fetched first, and nothing changes
+    /// until it arrives; a full pull request shows at once. Python's `MainViewPane.load_pull_request`.
     fn open_pull_request(&mut self, target: PullRequestTarget, focus: bool, cx: &mut Cx<'_>) {
         self.cancel_pending_selection(cx);
         match target {
             PullRequestTarget::Partial(pr) => {
                 let id = cx.request(GithubRequest::PullRequest {
-                    repo: Box::new(pr.issue.repo),
-                    number: pr.issue.number,
-                });
-                self.pending_pr = Some(PendingPullRequest {
-                    id,
-                    focus,
-                    origin: PullRequestOrigin::Selection,
-                });
-            }
-            PullRequestTarget::Uncached(pr) => {
-                let id = cx.request(GithubRequest::PullRequestUncached {
                     repo: Box::new(pr.issue.repo),
                     number: pr.issue.number,
                 });

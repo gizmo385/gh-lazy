@@ -5,12 +5,15 @@
 
 mod cli;
 mod error;
+mod marks;
 mod request;
 mod response;
 
 pub use cli::{GH_TIMEOUT_ENV, GhCli, GhTimeouts};
 pub use error::{GhError, RATE_LIMIT_FALLBACK, RateLimit};
-pub use request::{Accept, GhRequest, Method};
+pub use request::{Accept, CacheScope, GhRequest, Method};
+
+pub(crate) use marks::CacheMarks;
 pub use response::{GhResponse, interpret};
 
 #[cfg(test)]

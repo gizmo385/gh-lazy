@@ -4,16 +4,17 @@ use std::ffi::OsString;
 use std::io;
 use std::path::PathBuf;
 use std::process::{Output, Stdio};
-use std::sync::Arc;
-use std::time::Duration;
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::time::{Duration, Instant};
 
 use serde::de::DeserializeOwned;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 use tokio::process::Command;
 use tracing::{debug, warn};
 
+use super::marks::{CacheKey, CacheMarks};
 use super::response::{decode_pages, interpret};
-use super::{GhError, GhRequest, GhResponse};
+use super::{CacheScope, GhError, GhRequest, GhResponse, Method};
 
 /// How long each kind of `gh` call may run before it's killed.
 ///
@@ -92,7 +93,10 @@ impl GhTimeouts {
     }
 }
 
-/// Runs requests through the `gh` CLI. Cheap to clone; clones share configuration.
+/// Runs requests through the `gh` CLI. Cheap to clone; clones share configuration and the cache marks.
+///
+/// A write's [`GhRequest::stales`] are marked when it finishes, and the next cached `GET` each covers is sent as a
+/// refresh (`--cache 1ns`), so the app never reads back the copy from before its own write.
 #[derive(Debug, Clone)]
 pub struct GhCli {
     inner: Arc<GhCliInner>,
@@ -103,6 +107,7 @@ struct GhCliInner {
     program: PathBuf,
     hostname: Option<String>,
     timeouts: GhTimeouts,
+    marks: Arc<Mutex<CacheMarks>>,
 }
 
 impl Default for GhCli {
@@ -120,6 +125,7 @@ impl GhCli {
                 program: program.into(),
                 hostname,
                 timeouts: GhTimeouts::default(),
+                marks: Arc::default(),
             }),
         }
     }
@@ -131,22 +137,28 @@ impl GhCli {
         self
     }
 
+    /// This client sharing `marks` with every other client made with them, so a reconfigured runner still refreshes
+    /// what the old one's writes made stale. Marks are kept for `retention`, the longest cache TTL configured.
+    #[must_use]
+    pub(crate) fn with_cache_marks(mut self, marks: Arc<Mutex<CacheMarks>>, retention: Duration) -> Self {
+        lock(&marks).set_retention(retention);
+        Arc::make_mut(&mut self.inner).marks = marks;
+        self
+    }
+
     /// Runs one request with `gh api -i`.
     pub async fn request(&self, req: GhRequest) -> Result<GhResponse, GhError> {
-        let args = req.argv(self.hostname(), false);
-        let limit = self.inner.timeouts.limit(CallKind::Request, req.timeout);
-        let output = self.run(&args, req.body.as_ref(), limit).await?;
-        self.interpret(&output, false)
+        self.run_tracked(req, CallKind::Request, |req, hostname| req.argv(hostname, false))
+            .await
     }
 
     /// Runs a `GET` with `gh api --paginate` and returns the items of every page.
     ///
     /// Only for endpoints whose every page is wanted at once; lazily loaded tables page explicitly with `request`.
     pub async fn paginate<T: DeserializeOwned>(&self, req: GhRequest) -> Result<Vec<T>, GhError> {
-        let args = req.argv(self.hostname(), true);
-        let limit = self.inner.timeouts.limit(CallKind::Paginate, req.timeout);
-        let output = self.run(&args, req.body.as_ref(), limit).await?;
-        let response = self.interpret(&output, true)?;
+        let response = self
+            .run_tracked(req, CallKind::Paginate, |req, hostname| req.argv(hostname, true))
+            .await?;
         decode_pages(&response.body)
     }
 
@@ -154,10 +166,52 @@ impl GhCli {
     ///
     /// For endpoints whose pages are objects wrapping the list, such as a run's jobs.
     pub async fn paginate_slurp<T: DeserializeOwned>(&self, req: GhRequest) -> Result<Vec<T>, GhError> {
-        let args = req.slurp_argv(self.hostname());
-        let limit = self.inner.timeouts.limit(CallKind::Paginate, req.timeout);
+        self.run_tracked(req, CallKind::Paginate, GhRequest::slurp_argv)
+            .await?
+            .json()
+    }
+
+    /// Runs `req` with the arguments `build_argv` makes, keeping the cache marks: a stale cached read goes as a refresh and
+    /// clears its mark when it succeeds, and a write marks what it makes stale when it finishes.
+    async fn run_tracked(
+        &self,
+        mut req: GhRequest,
+        kind: CallKind,
+        build_argv: impl FnOnce(&GhRequest, Option<&str>) -> Vec<OsString>,
+    ) -> Result<GhResponse, GhError> {
+        let refresh = self.prepare_refresh(&mut req);
+        // Marked however the write ends, a timeout or a dropped future included: it may have happened anyway, and a
+        // write that didn't only costs one extra fetch. Not before it ends, or a read already running could clear
+        // the mark with the copy from before the write.
+        let _mark = (req.method != Method::Get && !req.stales.is_empty()).then(|| MarkWhenDone {
+            marks: Arc::clone(&self.inner.marks),
+            scopes: std::mem::take(&mut req.stales),
+        });
+        let args = build_argv(&req, self.hostname());
+        let limit = self.inner.timeouts.limit(kind, req.timeout);
         let output = self.run(&args, req.body.as_ref(), limit).await?;
-        self.interpret(&output, true)?.json()
+        let response = self.interpret(&output, kind == CallKind::Paginate)?;
+        if let Some((key, started)) = refresh {
+            lock(&self.inner.marks).refreshed(key, started);
+        }
+        Ok(response)
+    }
+
+    /// Sets [`GhRequest::refresh`] on a cached `GET` that a write made stale. Returns its key and start time when it's
+    /// a refresh, to record once it succeeds; a failure leaves the mark so the next read tries again.
+    fn prepare_refresh(&self, req: &mut GhRequest) -> Option<(CacheKey, Instant)> {
+        if req.method != Method::Get {
+            return None;
+        }
+        // `argv` sends no `--cache` below a second either.
+        let ttl = req.cache.filter(|ttl| ttl.as_secs() > 0)?;
+        let key = CacheKey::new(req.path_with_query(), req.accept.as_str());
+        let started = Instant::now();
+        if !req.refresh && !lock(&self.inner.marks).needs_refresh(&key, ttl, started) {
+            return None;
+        }
+        req.refresh = true;
+        Some((key, started))
     }
 
     /// Checks `gh auth status [--hostname h]`: `Ok` when logged in, otherwise [`GhError::NotAuthenticated`].
@@ -320,6 +374,24 @@ impl GhCli {
             );
         }
         Ok(output)
+    }
+}
+
+/// The marks, locked. Never held across an await. A panic while it was held can't leave the marks half-written in a
+/// way that matters: at worst one mark or record is missing, which costs a cached read or an extra fetch.
+fn lock(marks: &Mutex<CacheMarks>) -> MutexGuard<'_, CacheMarks> {
+    marks.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+/// Marks a write's scopes stale when dropped, so every way the write can end marks them.
+struct MarkWhenDone {
+    marks: Arc<Mutex<CacheMarks>>,
+    scopes: Vec<CacheScope>,
+}
+
+impl Drop for MarkWhenDone {
+    fn drop(&mut self) {
+        lock(&self.marks).mark(&self.scopes, Instant::now());
     }
 }
 

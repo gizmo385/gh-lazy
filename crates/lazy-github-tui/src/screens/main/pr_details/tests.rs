@@ -1103,14 +1103,13 @@ fn merges(app: &TestApp) -> Vec<(u64, lazy_github_core::github::MergeRequest)> {
         .collect()
 }
 
-/// The pull request fetches made, by number, and whether each skipped gh's cache.
-fn fetched(app: &TestApp) -> Vec<(u64, bool)> {
+/// The pull request fetches made, by number.
+fn fetched(app: &TestApp) -> Vec<u64> {
     app.gh()
         .calls()
         .into_iter()
         .filter_map(|call| match call {
-            GithubCall::PullRequest { number, .. } => Some((number, false)),
-            GithubCall::PullRequestUncached { number, .. } => Some((number, true)),
+            GithubCall::PullRequest { number, .. } => Some(number),
             _ => None,
         })
         .collect()
@@ -1158,7 +1157,7 @@ fn an_already_merged_pull_request_warns_and_sends_nothing() {
 fn a_merge_toasts_and_shows_the_pull_request_fetched_again() {
     let gh = gh().with_merge(5, Ok(merge_result(true)));
     let mut app = merge_ready(config(), gh, &["enter"]);
-    assert_eq!(fetched(&app), [(5, false)]);
+    assert_eq!(fetched(&app), [5]);
     // Once merged, GitHub answers with the merged pull request.
     let mut merged = fixture_pr(5);
     merged.merged_at = fixture_pr(3).merged_at;
@@ -1183,8 +1182,9 @@ fn a_merge_toasts_and_shows_the_pull_request_fetched_again() {
                 .with_title("PR Merged")
         ]
     );
-    // Fetched again past the cache and shown as a fresh selection: the tabs rebuilt and the strip focused.
-    assert_eq!(fetched(&app), [(5, false), (5, true)]);
+    // Fetched again (the merge's cache mark makes it a refresh, #383) and shown as a fresh selection: the tabs
+    // rebuilt and the strip focused.
+    assert_eq!(fetched(&app), [5, 5]);
     assert_eq!(focus(&app), FocusTarget::DetailsTabs);
     assert_eq!(
         tabs(&app),
@@ -1201,7 +1201,7 @@ fn a_failed_refetch_toasts_as_a_failed_selection() {
     let _ = app.gh().clone().with_pull_request(NAME, 5, Err(server_error()));
     app.press(&["ctrl+m"]);
     settle(&mut app);
-    assert_eq!(fetched(&app), [(5, false), (5, true)]);
+    assert_eq!(fetched(&app), [5, 5]);
     let toasts = toasts(&app);
     assert_eq!(toasts.len(), 2, "{toasts:?}");
     assert_eq!(
@@ -1232,7 +1232,7 @@ fn a_refused_or_unmerged_merge_toasts_and_changes_nothing() {
             toasts(&app),
             [Toast::error("Pull request 4 could not be merged").with_title("Error Merging PR")]
         );
-        assert_eq!(fetched(&app), [(4, false)], "no refetch");
+        assert_eq!(fetched(&app), [4], "no refetch");
         assert_eq!(focus(&app), FocusTarget::DetailsContent);
     }
 }
@@ -1729,12 +1729,12 @@ mod gh_failures {
     fn the_refetch_after_a_merge() {
         for (name, error) in gh_failures() {
             let mut app = merge_ready(config(), gh().with_merge(5, Ok(merge_result(true))), &["enter"]);
-            // The merge itself works; the refetch past the cache, the call after it, fails.
+            // The merge itself works; the refetch, the call after it, fails.
             let merge = app.gh().calls().len();
             app.gh().fail_from(merge + 1, error);
             app.press(&["ctrl+m"]);
             settle(&mut app);
-            assert_eq!(fetched(&app), [(5, false), (5, true)], "{name}");
+            assert_eq!(fetched(&app), [5, 5], "{name}");
             assert!(nothing_pending(&app).is_ok(), "{name}");
             // It toasts as a failed selection does, after the merge's toast.
             let toasts = toasts(&app);

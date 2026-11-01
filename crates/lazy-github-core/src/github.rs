@@ -8,13 +8,13 @@
 
 use std::future::Future;
 use std::path::PathBuf;
-use std::sync::{Arc, PoisonError, RwLock};
+use std::sync::{Arc, Mutex, PoisonError, RwLock};
 use std::time::Duration;
 
 use tokio::sync::OnceCell;
 
 use crate::config::{CacheSettings, Config, IssueOwnerFilter, IssueStateFilter, MergeMethod};
-use crate::gh::{self, Accept, GhError, GhRequest, GhResponse, GhTimeouts, Method};
+use crate::gh::{self, Accept, CacheScope, GhError, GhRequest, GhResponse, GhTimeouts, Method};
 use crate::models::{
     Branch, CheckRun, CombinedStatus, CommentRef, FullPullRequest, FullUser, Issue, IssueComment, IssueListItem,
     IssueState, Notification, PartialPullRequest, ReactionKind, Reactions, Repository, Review, ReviewComment,
@@ -162,16 +162,6 @@ pub trait Github: Clone + Send + Sync + 'static {
     /// Fails on any HTTP error status (a 404 included) or `gh` failure, or with [`GhError::Decode`] when the body
     /// doesn't decode.
     fn pull_request(
-        &self,
-        repo: &Repository,
-        number: u64,
-    ) -> impl Future<Output = Result<FullPullRequest, GhError>> + Send;
-
-    /// [`Github::pull_request`] fetched past `gh`'s cache, for a pull request that just changed on GitHub (merged), so
-    /// a cached copy from before the change can't come back. The answer isn't cached either.
-    ///
-    /// Fails as [`Github::pull_request`] does.
-    fn pull_request_uncached(
         &self,
         repo: &Repository,
         number: u64,
@@ -358,7 +348,7 @@ pub trait Github: Clone + Send + Sync + 'static {
     fn list_branches(&self, repo: &Repository) -> impl Future<Output = Result<Vec<Branch>, GhError>> + Send;
 
     /// [`Github::list_branches`] fetched past `gh`'s cache, so a branch pushed a moment ago is listed (Create PR; owner
-    /// decision on #278). The answer isn't cached either.
+    /// decision on #278). The answer replaces the cached copy, so a later [`Github::list_branches`] lists it too.
     ///
     /// Fails as [`Github::list_branches`] does.
     fn list_branches_uncached(&self, repo: &Repository) -> impl Future<Output = Result<Vec<Branch>, GhError>> + Send;
@@ -916,14 +906,22 @@ struct Configured {
     ttls: CacheTtls,
     /// Per host: a new `--hostname` may be another user.
     current_user: Arc<OnceCell<User>>,
+    /// The reads the app's writes made stale, kept through every reconfigure (another host only costs an extra
+    /// refresh). In memory only.
+    cache_marks: Arc<Mutex<gh::CacheMarks>>,
 }
 
 impl Configured {
-    fn new(options: GhCliOptions, current_user: Arc<OnceCell<User>>) -> Self {
+    fn new(options: GhCliOptions, current_user: Arc<OnceCell<User>>, cache_marks: Arc<Mutex<gh::CacheMarks>>) -> Self {
+        let ttls = options.ttls;
+        let retention = ttls.default.max(ttls.list_repos).max(ttls.list_issues);
         Self {
-            runner: gh::GhCli::new(options.program, options.hostname).with_timeouts(options.timeouts),
-            ttls: options.ttls,
+            runner: gh::GhCli::new(options.program, options.hostname)
+                .with_timeouts(options.timeouts)
+                .with_cache_marks(Arc::clone(&cache_marks), retention),
+            ttls,
             current_user,
+            cache_marks,
         }
     }
 }
@@ -938,7 +936,7 @@ impl GhCli {
     /// A client that runs `gh` as `options` say.
     pub fn new(options: GhCliOptions) -> Self {
         Self {
-            inner: Arc::new(RwLock::new(Configured::new(options, Arc::default()))),
+            inner: Arc::new(RwLock::new(Configured::new(options, Arc::default(), Arc::default()))),
         }
     }
 
@@ -1048,14 +1046,9 @@ impl GhCli {
 
     /// `GET /repos/{owner}/{repo}/pulls/{number}`, cached for the default TTL as Python's `github_headers()` asks.
     fn pull_request_request(&self, repo: &Repository, number: u64) -> GhRequest {
-        let mut request = Self::pull_request_uncached_request(repo, number);
+        let mut request = GhRequest::get(format!("/repos/{}/{}/pulls/{number}", repo.owner.login, repo.name));
         request.cache = Some(self.ttls().default);
         request
-    }
-
-    /// `GET /repos/{owner}/{repo}/pulls/{number}` without `--cache`, so `gh` neither reads nor writes its cache.
-    fn pull_request_uncached_request(repo: &Repository, number: u64) -> GhRequest {
-        GhRequest::get(format!("/repos/{}/{}/pulls/{number}", repo.owner.login, repo.name))
     }
 
     /// `GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs`, uncached and without a query: Python sends neither, so
@@ -1179,6 +1172,7 @@ impl GhCli {
             format!("/repos/{}/{}/issues", repo.owner.login, repo.name),
         );
         request.body = Some(serde_json::to_value(issue)?);
+        request.stales = vec![list_scope(repo)];
         Ok(request)
     }
 
@@ -1189,6 +1183,7 @@ impl GhCli {
             format!("/repos/{}/{}/issues/{number}", repo.owner.login, repo.name),
         );
         request.body = Some(serde_json::to_value(update)?);
+        request.stales = item_and_list_scopes(repo, number);
         Ok(request)
     }
 
@@ -1199,6 +1194,7 @@ impl GhCli {
             format!("/repos/{}/{}/issues/{number}/comments", repo.owner.login, repo.name),
         );
         request.body = Some(serde_json::json!({ "body": body }));
+        request.stales = item_scopes(repo, number);
         request
     }
 
@@ -1212,6 +1208,7 @@ impl GhCli {
             ),
         );
         request.body = Some(serde_json::json!({ "body": body }));
+        request.stales = item_scopes(repo, pr_number);
         request
     }
 
@@ -1222,21 +1219,23 @@ impl GhCli {
             format!("/repos/{}/{}/issues/{number}/reactions", repo.owner.login, repo.name),
         );
         request.body = Some(serde_json::json!({ "content": kind.api_name() }));
+        request.stales = item_scopes(repo, number);
         request
     }
 
     /// `GET /repos/{owner}/{repo}/branches`, starting at page 1 of [`DEFAULT_PER_PAGE`] as Python's does (later pages
     /// follow GitHub's links, B79), cached for the default TTL as Python's `github_headers()` asks.
     fn list_branches_request(&self, repo: &Repository) -> GhRequest {
-        let mut request = Self::list_branches_uncached_request(repo);
+        let mut request = GhRequest::get(format!("/repos/{}/{}/branches", repo.owner.login, repo.name));
+        request.query = PageQuery::default().params();
         request.cache = Some(self.ttls().default);
         request
     }
 
-    /// [`Self::list_branches_request`] without `--cache`.
-    fn list_branches_uncached_request(repo: &Repository) -> GhRequest {
-        let mut request = GhRequest::get(format!("/repos/{}/{}/branches", repo.owner.login, repo.name));
-        request.query = PageQuery::default().params();
+    /// [`Self::list_branches_request`] as a refresh: fetched past gh's cache, and the answer stored for later reads.
+    fn list_branches_uncached_request(&self, repo: &Repository) -> GhRequest {
+        let mut request = self.list_branches_request(repo);
+        request.refresh = true;
         request
     }
 
@@ -1244,6 +1243,7 @@ impl GhCli {
     fn create_pull_request_request(repo: &Repository, pr: &NewPullRequest) -> Result<GhRequest, GhError> {
         let mut request = GhRequest::new(Method::Post, format!("/repos/{}/{}/pulls", repo.owner.login, repo.name));
         request.body = Some(serde_json::to_value(pr)?);
+        request.stales = vec![list_scope(repo)];
         Ok(request)
     }
 
@@ -1296,6 +1296,7 @@ impl GhCli {
     fn request_reviewers_request(repo: &Repository, number: u64, reviewers: &[String]) -> Result<GhRequest, GhError> {
         let mut request = Self::requested_reviewers_request(Method::Post, repo, number);
         request.body = Some(serde_json::to_value(ReviewRequest { reviewers })?);
+        request.stales = item_scopes(repo, number);
         Ok(request)
     }
 
@@ -1310,6 +1311,7 @@ impl GhCli {
             format!("/repos/{}/{}/pulls/{number}", repo.owner.login, repo.name),
         );
         request.body = Some(serde_json::to_value(update)?);
+        request.stales = item_and_list_scopes(repo, number);
         Ok(request)
     }
 
@@ -1320,6 +1322,7 @@ impl GhCli {
             format!("/repos/{}/{}/pulls/{number}/merge", repo.owner.login, repo.name),
         );
         request.body = Some(serde_json::to_value(merge)?);
+        request.stales = item_and_list_scopes(repo, number);
         Ok(request)
     }
 
@@ -1330,6 +1333,7 @@ impl GhCli {
             format!("/repos/{}/{}/pulls/{number}/reviews", repo.owner.login, repo.name),
         );
         request.body = Some(serde_json::to_value(review)?);
+        request.stales = item_scopes(repo, number);
         Ok(request)
     }
 
@@ -1362,6 +1366,28 @@ impl GhCli {
         request.body = Some(serde_json::json!({ "read": "true" }));
         request
     }
+}
+
+/// What a write to issue or pull request `number` of `repo` makes stale: everything under `issues/{number}` and
+/// `pulls/{number}`. Issues and pull requests share numbers, and a pull request's comments live under `issues/`.
+fn item_scopes(repo: &Repository, number: u64) -> Vec<CacheScope> {
+    let base = format!("/repos/{}/{}", repo.owner.login, repo.name);
+    vec![
+        CacheScope::Subtree(format!("{base}/issues/{number}")),
+        CacheScope::Subtree(format!("{base}/pulls/{number}")),
+    ]
+}
+
+/// [`item_scopes`] and [`list_scope`]: a write that changes what the list shows of the item (title, state).
+fn item_and_list_scopes(repo: &Repository, number: u64) -> Vec<CacheScope> {
+    let mut scopes = item_scopes(repo, number);
+    scopes.push(list_scope(repo));
+    scopes
+}
+
+/// The shared issue and pull request list of `repo`, every page and filter of it.
+fn list_scope(repo: &Repository) -> CacheScope {
+    CacheScope::Path(format!("/repos/{}/{}/issues", repo.owner.login, repo.name))
 }
 
 /// The number of items in a JSON array body, without decoding the items.
@@ -1408,7 +1434,8 @@ impl Github for GhCli {
         } else {
             Arc::default()
         };
-        *configured = Configured::new(options, current_user);
+        let cache_marks = Arc::clone(&configured.cache_marks);
+        *configured = Configured::new(options, current_user, cache_marks);
     }
 
     async fn check_auth(&self) -> Result<(), GhError> {
@@ -1503,11 +1530,6 @@ impl Github for GhCli {
     async fn pull_request(&self, repo: &Repository, number: u64) -> Result<FullPullRequest, GhError> {
         let response = self.runner().request(self.pull_request_request(repo, number)).await?;
         full_pull_request(&response, repo)
-    }
-
-    async fn pull_request_uncached(&self, repo: &Repository, number: u64) -> Result<FullPullRequest, GhError> {
-        let request = Self::pull_request_uncached_request(repo, number);
-        full_pull_request(&self.runner().request(request).await?, repo)
     }
 
     async fn workflow_run_jobs(&self, repo: &Repository, run_id: u64) -> Result<Vec<WorkflowJob>, GhError> {
@@ -1627,7 +1649,7 @@ impl Github for GhCli {
     }
 
     async fn list_branches_uncached(&self, repo: &Repository) -> Result<Vec<Branch>, GhError> {
-        let request = Self::list_branches_uncached_request(repo);
+        let request = self.list_branches_uncached_request(repo);
         self.runner().paginate(request).await
     }
 
@@ -2909,23 +2931,6 @@ mod tests {
     }
 
     #[test]
-    fn the_uncached_pull_request_argv_has_no_cache() {
-        let gh = GhCli::new(GhCliOptions::from(&Config::default()));
-        assert_eq!(
-            strings(GhCli::pull_request_uncached_request(&pr_details_repo(), 5).argv(gh.runner().hostname(), false)),
-            [
-                "api",
-                "-i",
-                "-X",
-                "GET",
-                "-H",
-                "Accept: application/vnd.github+json",
-                "/repos/parity-bot/pr-details/pulls/5"
-            ]
-        );
-    }
-
-    #[test]
     fn pull_requests_decode_with_their_repo() {
         let repo = pr_details_repo();
         let pr = |number: u64| {
@@ -3360,14 +3365,19 @@ mod tests {
     }
 
     #[test]
-    fn the_uncached_branches_argv_pages_with_no_cache() {
+    fn the_uncached_branches_argv_pages_as_a_refresh() {
         let gh = GhCli::new(GhCliOptions::from(&Config::default()));
         assert_eq!(
-            strings(GhCli::list_branches_uncached_request(&run_fixture_repo()).argv(gh.runner().hostname(), true)),
+            strings(
+                gh.list_branches_uncached_request(&run_fixture_repo())
+                    .argv(gh.runner().hostname(), true)
+            ),
             [
                 "api",
                 "-X",
                 "GET",
+                "--cache",
+                "1ns",
                 "--paginate",
                 "-H",
                 "Accept: application/vnd.github+json",
@@ -4357,5 +4367,130 @@ mod tests {
             commit_pull_requests(&api_response(r#"[{"number": 1}]"#), &asked),
             Err(GhError::Decode(_))
         ));
+    }
+
+    /// Everything under issue or pull request `n` of `parity-bot/pr-details`.
+    fn item(n: u64) -> Vec<CacheScope> {
+        vec![
+            CacheScope::Subtree(format!("/repos/parity-bot/pr-details/issues/{n}")),
+            CacheScope::Subtree(format!("/repos/parity-bot/pr-details/pulls/{n}")),
+        ]
+    }
+
+    /// The issue and pull request list of `parity-bot/pr-details`.
+    fn list() -> CacheScope {
+        CacheScope::Path("/repos/parity-bot/pr-details/issues".into())
+    }
+
+    #[test]
+    fn create_issue_makes_the_list_stale() {
+        let issue = NewIssue {
+            title: "T".into(),
+            body: String::new(),
+        };
+        let request = GhCli::create_issue_request(&pr_details_repo(), &issue).unwrap();
+        assert_eq!(request.stales, [list()]);
+    }
+
+    #[test]
+    fn update_issue_makes_the_item_and_the_list_stale() {
+        let update = IssueUpdate {
+            title: "T".into(),
+            body: String::new(),
+            state: Some(IssueState::Closed),
+        };
+        let request = GhCli::update_issue_request(&pr_details_repo(), 12, &update).unwrap();
+        assert_eq!(request.stales, [item(12), vec![list()]].concat());
+    }
+
+    #[test]
+    fn create_issue_comment_makes_the_item_stale() {
+        let request = GhCli::create_issue_comment_request(&pr_details_repo(), 5, "Ship it.");
+        assert_eq!(request.stales, item(5));
+    }
+
+    #[test]
+    fn reply_to_review_comment_makes_the_pull_request_stale() {
+        let request = GhCli::reply_to_review_comment_request(&pr_details_repo(), 5, 9001, "Yes.");
+        assert_eq!(request.stales, item(5));
+    }
+
+    #[test]
+    fn create_review_makes_the_pull_request_stale() {
+        let review = NewReview {
+            event: ReviewEvent::Comment,
+            commit_id: "c0ffee".into(),
+            body: "Hm.".into(),
+            comments: Vec::new(),
+        };
+        let request = GhCli::create_review_request(&pr_details_repo(), 5, &review).unwrap();
+        assert_eq!(request.stales, item(5));
+    }
+
+    #[test]
+    fn add_issue_reaction_makes_the_item_stale() {
+        let request = GhCli::add_issue_reaction_request(&pr_details_repo(), 5, ReactionKind::Heart);
+        assert_eq!(request.stales, item(5));
+    }
+
+    #[test]
+    fn merge_pull_request_makes_the_pull_request_and_the_list_stale() {
+        let merge = MergeRequest {
+            merge_method: MergeMethod::Squash,
+            sha: "c0ffee".into(),
+        };
+        let request = GhCli::merge_pull_request_request(&pr_details_repo(), 5, &merge).unwrap();
+        assert_eq!(request.stales, [item(5), vec![list()]].concat());
+    }
+
+    #[test]
+    fn create_pull_request_makes_the_list_stale() {
+        let request = GhCli::create_pull_request_request(&pr_details_repo(), &new_pull_request("")).unwrap();
+        assert_eq!(request.stales, [list()]);
+    }
+
+    #[test]
+    fn update_pull_request_makes_the_pull_request_and_the_list_stale() {
+        let update = PullRequestUpdate {
+            title: "T".into(),
+            body: String::new(),
+            base: "main".into(),
+        };
+        let request = GhCli::update_pull_request_request(&pr_details_repo(), 4, &update).unwrap();
+        assert_eq!(request.stales, [item(4), vec![list()]].concat());
+    }
+
+    #[test]
+    fn request_reviewers_makes_the_pull_request_stale() {
+        let request = GhCli::request_reviewers_request(&pr_details_repo(), 5, &["octocat".to_owned()]).unwrap();
+        assert_eq!(request.stales, item(5));
+    }
+
+    #[test]
+    fn writes_whose_reads_are_uncached_make_nothing_stale() {
+        let repo = pr_details_repo();
+        for request in [
+            GhCli::dispatch_workflow_request(&repo, 1, "main"),
+            GhCli::rerun_request(&repo, 2, "rerun"),
+            GhCli::rerun_request(&repo, 2, "rerun-failed-jobs"),
+            GhCli::mark_notification_read_request(3),
+            GhCli::mark_all_notifications_read_request(),
+        ] {
+            assert!(request.stales.is_empty(), "{}", request.path);
+        }
+    }
+
+    #[test]
+    fn reads_make_nothing_stale() {
+        let gh = GhCli::default();
+        let repo = pr_details_repo();
+        for request in [
+            gh.pull_request_request(&repo, 5),
+            gh.issue_request(&repo, 5),
+            gh.pull_request_reviews_request(&repo, 5),
+            gh.list_branches_request(&repo),
+        ] {
+            assert!(request.stales.is_empty() && !request.refresh, "{}", request.path);
+        }
     }
 }

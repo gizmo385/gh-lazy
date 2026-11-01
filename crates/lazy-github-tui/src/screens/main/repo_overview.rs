@@ -854,7 +854,7 @@ mod app_tests {
         let repo = parity_repos()[1].clone();
         let mut overview = app.with_cx(|cx| RepoOverview::new(&repo, cx));
         app.with_cx(|cx| overview.on_readme(Ok(Some(fixture_readme("hello-world"))), cx));
-        let theme = Theme::by_name("textual-light").unwrap();
+        let theme = Theme::by_name("light").unwrap();
         let mut terminal = Terminal::new(TestBackend::new(60, 24)).unwrap();
         terminal
             .draw(|frame| overview.render(frame, frame.area(), &theme))

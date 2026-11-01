@@ -81,7 +81,7 @@ fn bad_values_in_two_sections_are_listed_in_file_order() {
 fn a_list_or_object_theme_is_a_problem() {
     let report = check(r#"{"appearance":{"theme":{"name":"nord"}}}"#, &paths()).unwrap();
     assert_eq!(report.problems.len(), 1);
-    assert_eq!(report.problems[0].fix, Fix::Reset(json!("textual-dark")));
+    assert_eq!(report.problems[0].fix, Fix::Reset(json!("dark")));
     assert_eq!(
         report.problems[0].to_string(),
         r#"appearance.theme: found {"name":"nord"}, expected a theme name"#

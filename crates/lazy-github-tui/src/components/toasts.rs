@@ -651,13 +651,13 @@ mod tests {
     #[test]
     fn toast_info_titled() {
         let mut toasts = stack([Toast::info("Settings updated").with_title("Saved")]);
-        insta::assert_debug_snapshot!(draw(&mut toasts, &theme("textual-dark"), 100, 30));
+        insta::assert_debug_snapshot!(draw(&mut toasts, &theme("dark"), 100, 30));
     }
 
     #[test]
     fn toast_warning_untitled() {
         let mut toasts = stack([Toast::warning("This PR has already been merged!")]);
-        insta::assert_debug_snapshot!(draw(&mut toasts, &theme("textual-dark"), 100, 30));
+        insta::assert_debug_snapshot!(draw(&mut toasts, &theme("dark"), 100, 30));
     }
 
     #[test]
@@ -667,7 +667,7 @@ mod tests {
              wrap over several lines, with an overlong https://github.com/gizmo385/gh-lazy/issues/79/word.",
         )
         .with_title("Failed to Load Notifications")]);
-        insta::assert_debug_snapshot!(draw(&mut toasts, &theme("textual-dark"), 100, 30));
+        insta::assert_debug_snapshot!(draw(&mut toasts, &theme("dark"), 100, 30));
     }
 
     #[test]
@@ -678,7 +678,7 @@ mod tests {
             Toast::warning("Comment cannot be empty!"),
             Toast::error("Pull request 12 could not be merged").with_title("Error Merging PR"),
         ]);
-        insta::assert_debug_snapshot!(draw(&mut toasts, &theme("textual-dark"), 100, 30));
+        insta::assert_debug_snapshot!(draw(&mut toasts, &theme("dark"), 100, 30));
     }
 
     #[test]
@@ -688,7 +688,7 @@ mod tests {
             let toast = Toast::info(format!("Toast number {n}"));
             if n <= 6 { toast.with_title("Stacked") } else { toast }
         }));
-        let buffer = draw(&mut toasts, &theme("textual-dark"), 100, 30);
+        let buffer = draw(&mut toasts, &theme("dark"), 100, 30);
         let screen = buffer_to_string(&buffer);
         let rows: Vec<&str> = screen.lines().collect();
         assert!(rows[0].contains("▌ Toast number 3"), "{:?}", rows[0]);
@@ -699,7 +699,7 @@ mod tests {
     #[test]
     fn toast_bold_span() {
         let mut toasts = stack([maximize_toast()]);
-        insta::assert_debug_snapshot!(draw(&mut toasts, &theme("textual-dark"), 100, 30));
+        insta::assert_debug_snapshot!(draw(&mut toasts, &theme("dark"), 100, 30));
     }
 
     #[test]

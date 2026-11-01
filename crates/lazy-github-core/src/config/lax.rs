@@ -143,14 +143,14 @@ where
     T::deserialize(de::value::StringDeserializer::new(name))
 }
 
-/// A theme name. Python's `mode="before"` validator looks the value up in Textual's built-in themes and falls back to
-/// `textual-dark`, so an unknown name (matched exactly, case included), a number, a bool or `null` loads as
-/// `textual-dark`, which the next save writes back. A list or an object is a field error: Python's lookup raises
-/// `TypeError` on it and crashes at startup (Py bug B39).
+/// A theme name. Any string loads as written, so a name the UI's catalog doesn't know (a typo, a deleted user theme)
+/// survives the next save, where Python rewrites it as its default. A number, a bool or `null` loads as
+/// [`super::DEFAULT_THEME`], which the next save writes, as in Python. A list or an object is a field error: Python's
+/// lookup raises `TypeError` on it and crashes at startup (Py bug B39).
 pub(super) fn theme<'de, D: Deserializer<'de>>(deserializer: D) -> Result<String, D::Error> {
     const EXPECTING: &str = "a theme name";
     match serde_json::Value::deserialize(deserializer)? {
-        serde_json::Value::String(name) if super::TEXTUAL_THEMES.contains(&name.as_str()) => Ok(name),
+        serde_json::Value::String(name) => Ok(name),
         serde_json::Value::Array(_) => Err(de::Error::invalid_type(de::Unexpected::Seq, &EXPECTING)),
         serde_json::Value::Object(_) => Err(de::Error::invalid_type(de::Unexpected::Map, &EXPECTING)),
         _ => Ok(super::DEFAULT_THEME.to_owned()),

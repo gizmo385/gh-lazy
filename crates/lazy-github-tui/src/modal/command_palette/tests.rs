@@ -690,7 +690,7 @@ fn a_tall_list_scrolled_to_the_bottom_160x48() {
 
 #[test]
 fn opening_list_in_other_themes() {
-    for name in ["textual-light", "ansi-dark"] {
+    for name in ["light", "ansi-dark"] {
         let theme = crate::theme::Theme::by_name(name).expect("a built-in theme");
         let mut app = TestApp::with_theme(Config::default(), theme);
         app.press(&["ctrl+p"]);
@@ -764,9 +764,11 @@ fn the_theme_palette_lists_every_theme_by_name_one_row_each() {
             "catppuccin-latte",
             "catppuccin-macchiato",
             "catppuccin-mocha",
+            "dark",
             "dracula",
             "flexoki",
             "gruvbox",
+            "light",
             "monokai",
             "nord",
             "rose-pine",
@@ -774,8 +776,6 @@ fn the_theme_palette_lists_every_theme_by_name_one_row_each() {
             "rose-pine-moon",
             "solarized-dark",
             "solarized-light",
-            "textual-dark",
-            "textual-light",
             "tokyo-night",
         ]
     );
@@ -817,7 +817,7 @@ fn picking_a_theme_switches_it_for_the_session_keeping_the_color_mode() {
         depth: ColorDepth::EightBit,
         no_color: false,
     };
-    let mut app = themes_opened(Theme::from_config("textual-dark", mode));
+    let mut app = themes_opened(Theme::from_config("dark", mode));
     type_text(&mut app, "nor");
     app.press(&["enter"]);
     assert!(app.app().modals().is_empty());
@@ -825,7 +825,7 @@ fn picking_a_theme_switches_it_for_the_session_keeping_the_color_mode() {
     assert_eq!(theme.name, "nord");
     assert_eq!(theme.color_mode(), mode);
     // Session only (Py bug B27, answered: keep parity): the config keeps its theme and nothing is saved.
-    assert_eq!(app.app().config().appearance.theme, "textual-dark");
+    assert_eq!(app.app().config().appearance.theme, "dark");
     assert!(!saved_config(&app));
     assert!(repos_focused(&app));
 }
@@ -835,10 +835,10 @@ fn moving_the_highlight_previews_nothing_and_escape_keeps_the_theme() {
     let mut app = themes_opened(Theme::default());
     app.press(&["down", "down"]);
     assert_eq!(highlighted(&app), Some("atom-one-dark"));
-    assert_eq!(app.app().theme().name, "textual-dark");
+    assert_eq!(app.app().theme().name, "dark");
     app.press(&["escape"]);
     assert!(app.app().modals().is_empty());
-    assert_eq!(app.app().theme().name, "textual-dark");
+    assert_eq!(app.app().theme().name, "dark");
     assert!(!saved_config(&app));
     assert!(repos_focused(&app));
 }

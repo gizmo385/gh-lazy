@@ -5,8 +5,8 @@
 use std::ops::Range;
 
 use crossterm::event::MouseEvent;
+use lazy_github_core::config::Config;
 use lazy_github_core::config::settings::{Field, FieldKind, FieldValue, Section};
-use lazy_github_core::config::{Config, TEXTUAL_THEMES};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
@@ -22,7 +22,7 @@ use crate::components::switch::Switch;
 use crate::components::text_input::{self, TextInput};
 use crate::fuzzy::fuzzy_match;
 use crate::modal::form::FormScroll;
-use crate::theme::{Paint, Theme};
+use crate::theme::{Catalog, Paint, Theme};
 
 /// The section's blank border, each side.
 const BORDER: u16 = 1;
@@ -61,13 +61,21 @@ pub(super) struct SettingField {
     pub(super) field: &'static Field,
     label: String,
     pub(super) widget: FieldWidget,
+    /// The theme field's stored name, resolved: the option that leaves the name as written, so Save doesn't turn an
+    /// untouched alias (`textual-dark`) into its theme's name. `None` for an unknown name and other fields.
+    unchanged: Option<&'static str>,
 }
 
 impl SettingField {
     fn new(field: &'static Field, config: &Config) -> Self {
+        let mut unchanged = None;
         let widget = match field.get(config) {
             FieldValue::Bool(on) => FieldWidget::Switch(Switch::new(on)),
             FieldValue::Choice(value) => FieldWidget::Select(choice_select(field.kind, value)),
+            FieldValue::Name(name) => {
+                unchanged = Catalog::builtin().resolve(&name).theme().map(|theme| theme.name);
+                FieldWidget::Select(theme_select(unchanged))
+            }
             FieldValue::List(items) => FieldWidget::List(ListField::new(items)),
             FieldValue::Text(text) => {
                 let placeholder = if field.kind == FieldKind::OptionalPath {
@@ -84,6 +92,7 @@ impl SettingField {
             field,
             label: field.label(),
             widget,
+            unchanged,
         }
     }
 
@@ -108,10 +117,14 @@ impl SettingField {
     }
 
     /// The edited value to write back, or `None` to leave the field as it was: a select on its blank option (Py bug
-    /// B89, answered).
+    /// B89, answered), or the theme select still on the theme the stored name stands for.
     pub(super) fn value(&self) -> Option<FieldValue> {
         Some(match &self.widget {
             FieldWidget::Switch(switch) => FieldValue::Bool(switch.value()),
+            FieldWidget::Select(select) if self.field.kind == FieldKind::Theme => {
+                let name = select.value().copied().filter(|&name| Some(name) != self.unchanged)?;
+                FieldValue::Name(name.to_owned())
+            }
             FieldWidget::Select(select) => FieldValue::Choice(select.value().copied()?),
             FieldWidget::Text(input) => FieldValue::Text(input.value().to_owned()),
             FieldWidget::List(list) => FieldValue::List(list.value()),
@@ -138,8 +151,7 @@ fn choice_select(kind: FieldKind, value: &'static str) -> Select<&'static str> {
             .filter(|c| c.value == value)
             .map(|c| (c.label.to_owned(), c.value))
             .collect(),
-        FieldKind::Theme => TEXTUAL_THEMES.iter().map(|&name| (theme_label(name), name)).collect(),
-        FieldKind::Bool | FieldKind::List | FieldKind::OptionalPath | FieldKind::Text(_) => {
+        FieldKind::Theme | FieldKind::Bool | FieldKind::List | FieldKind::OptionalPath | FieldKind::Text(_) => {
             vec![(value.to_owned(), value)]
         }
     };
@@ -148,9 +160,14 @@ fn choice_select(kind: FieldKind, value: &'static str) -> Select<&'static str> {
     select
 }
 
-/// A theme's option label: Python's `name.title().replace("-", " ")`, such as "Textual Dark".
-fn theme_label(name: &str) -> String {
-    Theme::by_name(name).map_or_else(|| name.to_owned(), |theme| theme.display_name())
+/// The theme select: every theme in catalog order, labeled by its display name, on `selected` (a theme's own name),
+/// or on the blank option for a name no theme has.
+fn theme_select(selected: Option<&'static str>) -> Select<&'static str> {
+    let options = Catalog::builtin()
+        .themes()
+        .map(|theme| (theme.display_name(), theme.name))
+        .collect::<Vec<_>>();
+    Select::new(DEFAULT_PROMPT, options, selected.as_ref())
 }
 
 /// Where a pane's parts go, in rows from the top of its content, at one width.

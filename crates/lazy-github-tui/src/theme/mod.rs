@@ -20,7 +20,7 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
 
-pub use catalog::Catalog;
+pub use catalog::{Catalog, Resolved};
 pub use color::{AnsiColor, Paint, Rgb, TextStyle, ThemeColor};
 pub use depth::{ColorDepth, ColorMode, downsample};
 pub use file::{Appearance, ThemeFileError};
@@ -30,8 +30,8 @@ pub use roles::{
     TokenStyle, Tree,
 };
 
-/// The theme Python falls back to for an unknown name, and the default.
-const DEFAULT: &str = "textual-dark";
+/// The default theme, and what an unknown name is drawn as. Python's `textual-dark`, renamed (#379).
+const DEFAULT: &str = "dark";
 
 /// The alpha Textual draws Rich's `dim` text color at: blended 66% of the way from what's under it.
 const RICH_DIM_ALPHA: f64 = 0.66;
@@ -39,9 +39,9 @@ const RICH_DIM_ALPHA: f64 = 0.66;
 /// A theme from the [`Catalog`]. A small `Copy` handle onto its static roles.
 #[derive(Clone, Copy, PartialEq)]
 pub struct Theme {
-    /// Its name, as written in the config (`textual-dark`).
+    /// Its name, as a config writes it (`dark`).
     pub name: &'static str,
-    /// The name Settings shows (`Textual Dark`).
+    /// The name Settings shows (`Dark`).
     display_name: &'static str,
     /// Whether it's a light or a dark theme.
     appearance: Appearance,
@@ -77,20 +77,18 @@ impl Theme {
         self.mode
     }
 
-    /// The built-in theme called exactly `name`.
+    /// The built-in theme called exactly `name`, or that `name` is an alias of (`textual-dark`).
     pub fn by_name(name: &str) -> Option<Theme> {
         Catalog::builtin().get(name)
     }
 
-    /// The theme for `appearance.theme`, reduced to the terminal's color `mode`: an unknown name renders as
-    /// `textual-dark`, silently, as in Python. To switch themes at runtime, pass the current theme's
-    /// [`Theme::color_mode`].
+    /// The theme for `appearance.theme`, reduced to the terminal's color `mode`: an alias draws as its theme, and
+    /// an unknown name as the default theme (the app warns about that once, at startup). To switch themes at
+    /// runtime, pass the current theme's [`Theme::color_mode`].
     pub fn from_config(name: &str, mode: ColorMode) -> Theme {
-        Self::by_name(name)
-            .unwrap_or_else(|| {
-                tracing::debug!("unknown theme {name:?}, using {DEFAULT}");
-                Self::default()
-            })
+        Catalog::builtin()
+            .resolve(name)
+            .theme_or_default()
             .with_color_mode(mode)
     }
 
@@ -216,7 +214,7 @@ impl Theme {
 }
 
 impl Default for Theme {
-    /// `textual-dark`, Textual's default theme.
+    /// `dark`: Textual's default theme, `textual-dark`, renamed.
     fn default() -> Self {
         Catalog::builtin()
             .get(DEFAULT)
@@ -244,8 +242,8 @@ mod tests {
     use super::*;
 
     const NAMES: [&str; 21] = [
-        "textual-dark",
-        "textual-light",
+        "dark",
+        "light",
         "nord",
         "gruvbox",
         "catppuccin-mocha",
@@ -285,16 +283,13 @@ mod tests {
     #[test]
     fn all_lists_textuals_themes_in_order() {
         assert_eq!(Theme::all().map(|t| t.name).collect::<Vec<_>>(), NAMES);
-        assert_eq!(Theme::default().name, "textual-dark");
+        assert_eq!(Theme::default().name, "dark");
     }
 
-    /// The config loads only the names in `TEXTUAL_THEMES`, so that list must be exactly the themes drawn here.
+    /// A new config names the default theme.
     #[test]
-    fn config_theme_names_are_the_builtin_themes() {
-        use lazy_github_core::config::{DEFAULT_THEME, TEXTUAL_THEMES};
-
-        assert_eq!(Theme::all().map(|t| t.name).collect::<Vec<_>>(), TEXTUAL_THEMES);
-        assert_eq!(Theme::default().name, DEFAULT_THEME);
+    fn the_config_default_is_the_default_theme() {
+        assert_eq!(Theme::default().name, lazy_github_core::config::DEFAULT_THEME);
     }
 
     #[test]
@@ -309,9 +304,9 @@ mod tests {
     #[case("Nord")]
     #[case("")]
     #[case("no-such-theme")]
-    fn unknown_names_render_as_textual_dark(#[case] name: &str) {
+    fn unknown_names_render_as_dark(#[case] name: &str) {
         assert_eq!(Theme::by_name(name), None);
-        assert_eq!(Theme::from_config(name, ColorMode::default()), theme("textual-dark"));
+        assert_eq!(Theme::from_config(name, ColorMode::default()), theme("dark"));
         let mode = ColorMode {
             depth: ColorDepth::Standard,
             no_color: true,
@@ -322,7 +317,7 @@ mod tests {
     /// Spot checks against Textual's output, which the theme files were frozen from.
     #[test]
     fn roles_match_textuals_output() {
-        let dark = theme("textual-dark");
+        let dark = theme("dark");
         let r = dark.roles();
         assert_eq!(r.border.section_title, hex("#6DB2FF"));
         assert_eq!(r.status.success, hex("#4EBF71"));
@@ -360,13 +355,14 @@ mod tests {
         let base = Paint::Rgb(Rgb::new(30, 30, 30));
         assert_eq!(ansi.tint(base, ThemeColor::Ansi(AnsiColor::Red), 5.0), base);
         assert_eq!(
-            theme("textual-dark").tint(base, hex("#E0E0E0"), 5.0),
+            theme("dark").tint(base, hex("#E0E0E0"), 5.0),
             Paint::Rgb(Rgb::new(39, 39, 39))
         );
     }
 
     #[rstest]
-    #[case("textual-dark", "Textual Dark")]
+    #[case("dark", "Dark")]
+    #[case("light", "Light")]
     #[case("catppuccin-mocha", "Catppuccin Mocha")]
     #[case("rose-pine-moon", "Rose Pine Moon")]
     #[case("ansi-light", "Ansi Light")]
@@ -376,8 +372,8 @@ mod tests {
 
     #[test]
     fn fixed_colors_ignore_the_theme() {
-        let dark = theme("textual-dark");
-        let light = theme("textual-light");
+        let dark = theme("dark");
+        let light = theme("light");
         for t in [dark, light, theme("nord")] {
             assert_eq!(mark(&t, |m| m.positive), Color::Rgb(0xAD, 0xFF, 0x2F));
             assert_eq!(mark(&t, |m| m.merged), Color::Rgb(0xDA, 0x70, 0xD6));
@@ -439,9 +435,9 @@ mod tests {
     }
 
     #[rstest]
-    #[case("textual-dark")]
+    #[case("dark")]
     #[case("nord")]
-    #[case("textual-light")]
+    #[case("light")]
     #[case("ansi-dark")]
     fn themed_widget_snapshot(#[case] name: &str) {
         insta::assert_debug_snapshot!(format!("themed_widget_{name}"), themed_widget(&theme(name)));
@@ -452,13 +448,13 @@ mod tests {
     #[case("standard", ColorDepth::Standard)]
     fn themed_widget_snapshot_at_depth(#[case] label: &str, #[case] depth: ColorDepth) {
         let mode = ColorMode { depth, no_color: false };
-        let theme = theme("textual-dark").with_color_mode(mode);
-        insta::assert_debug_snapshot!(format!("themed_widget_textual-dark_{label}"), themed_widget(&theme));
+        let theme = theme("dark").with_color_mode(mode);
+        insta::assert_debug_snapshot!(format!("themed_widget_dark_{label}"), themed_widget(&theme));
     }
 
     #[test]
     fn color_mode_applies_after_compositing() {
-        let truecolor = theme("textual-dark");
+        let truecolor = theme("dark");
         assert_eq!(truecolor.color_mode(), ColorMode::default());
         let eight_bit = truecolor.with_color_mode(ColorMode {
             depth: ColorDepth::EightBit,
@@ -485,7 +481,7 @@ mod tests {
             depth: ColorDepth::TrueColor,
             no_color: true,
         };
-        let dark = theme("textual-dark").with_color_mode(no_color);
+        let dark = theme("dark").with_color_mode(no_color);
         assert_eq!(
             dark.color(dark.roles().brand.primary, dark.background()),
             Color::Rgb(101, 101, 101)
@@ -535,10 +531,10 @@ mod tests {
 
     /// Textual's `dim_color`, checked against its output (a probe on Textual 8.2.5).
     #[rstest]
-    #[case("textual-dark", 0xff_a6_2b, 0x24_2f_38, 0xb4_7d_2f)]
-    #[case("textual-dark", 0xe0_e0_e0, 0x1e_1e_1e, 0x9e_9e_9e)]
-    #[case("textual-dark", 0xe0_e0_e0, 0x27_27_27, 0xa1_a1_a1)]
-    #[case("textual-dark", 0xdd_ed_f9, 0x01_78_d4, 0x92_c5_ec)]
+    #[case("dark", 0xff_a6_2b, 0x24_2f_38, 0xb4_7d_2f)]
+    #[case("dark", 0xe0_e0_e0, 0x1e_1e_1e, 0x9e_9e_9e)]
+    #[case("dark", 0xe0_e0_e0, 0x27_27_27, 0xa1_a1_a1)]
+    #[case("dark", 0xdd_ed_f9, 0x01_78_d4, 0x92_c5_ec)]
     #[case("nord", 0x2e_34_40, 0x88_c0_d0, 0x4c_63_70)]
     fn resolve_dim_blends_the_fg_from_the_cells_bg(
         #[case] name: &str,
@@ -554,7 +550,7 @@ mod tests {
 
     #[test]
     fn resolve_dim_keeps_the_other_modifiers_and_skips_undimmed_cells() {
-        let dark = theme("textual-dark");
+        let dark = theme("dark");
         let (fg, bg) = (rgb(0xff_a6_2b), rgb(0x24_2f_38));
         assert_eq!(
             resolved(&dark, fg, bg, Modifier::DIM | Modifier::BOLD | Modifier::ITALIC),
@@ -565,7 +561,7 @@ mod tests {
 
     #[test]
     fn resolve_dim_falls_back_to_the_screen_background_and_keeps_dim_without_an_fg() {
-        let dark = theme("textual-dark");
+        let dark = theme("dark");
         // `#e0e0e0` over the screen's `#121212`.
         assert_eq!(
             resolved(&dark, rgb(0xe0_e0_e0), Color::Reset, Modifier::DIM),
@@ -596,7 +592,7 @@ mod tests {
     /// Reduced colors are blended as the RGB they stand for and reduced again.
     #[test]
     fn resolve_dim_reduces_the_blend_to_the_color_mode() {
-        let eight_bit = theme("textual-dark").with_color_mode(ColorMode {
+        let eight_bit = theme("dark").with_color_mode(ColorMode {
             depth: ColorDepth::EightBit,
             no_color: false,
         });
@@ -676,14 +672,24 @@ mod tests {
         }
     }
 
+    /// Python's names for Textual's own themes draw exactly as their renamed themes, from the same roles.
+    #[rstest]
+    #[case("textual-dark", "dark")]
+    #[case("textual-light", "light")]
+    fn aliases_draw_as_their_theme(#[case] alias: &str, #[case] name: &str) {
+        let drawn = Theme::from_config(alias, ColorMode::default());
+        assert_eq!(drawn.name, name);
+        assert!(std::ptr::eq(drawn.roles(), theme(name).roles()));
+    }
+
     #[test]
     fn roles_are_per_theme() {
         assert!(std::ptr::eq(
             theme("nord").roles(),
             Theme::by_name("nord").unwrap().roles()
         ));
-        assert!(!std::ptr::eq(theme("nord").roles(), theme("textual-dark").roles()));
-        assert_eq!(Theme::default().roles(), theme("textual-dark").roles());
+        assert!(!std::ptr::eq(theme("nord").roles(), theme("dark").roles()));
+        assert_eq!(Theme::default().roles(), theme("dark").roles());
     }
 
     /// The marks stay the same in every built-in theme, as the Python app's literal markup colors do.

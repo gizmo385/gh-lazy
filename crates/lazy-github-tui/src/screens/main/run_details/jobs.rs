@@ -594,7 +594,7 @@ mod tests {
             label("job", &status, conclusion.as_ref(), theme).spans[0].style.fg
         };
         let dark = Theme::default();
-        let light = Theme::by_name("textual-light").unwrap();
+        let light = Theme::by_name("light").unwrap();
         let rgb = |r, g, b| Some(ratatui::style::Color::Rgb(r, g, b));
         let completed = |c| (JobStatus::Completed, Some(c));
         let rows = [
@@ -668,7 +668,7 @@ mod tests {
     #[test]
     fn a_theme_switch_recolors_the_labels_and_keeps_the_cursor_and_expansion() {
         let keymap = Keymap::new(&indexmap::IndexMap::new());
-        let light = Theme::by_name("textual-light")
+        let light = Theme::by_name("light")
             .expect("a built-in theme")
             .with_color_mode(ColorMode {
                 depth: ColorDepth::EightBit,

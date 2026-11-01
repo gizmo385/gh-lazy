@@ -883,7 +883,6 @@ mod tests {
             Box::new(config)
         };
 
-        // Real theme names, since an unknown one loads back as `textual-dark`.
         runtime.execute(Effect::SaveConfig(config("nord")));
         // The saver takes the first snapshot and starts writing it.
         run_ready_tasks().await;

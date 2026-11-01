@@ -386,7 +386,7 @@ fn a_wrapped_header_sits_at_the_bottom_of_its_row() {
 
 #[test]
 fn light_tables_have_their_own_background() {
-    let rendered = Markdown::parse("| Name | Value |\n|---|---|\n| a | 1 |").layout(30, &theme("textual-light"));
+    let rendered = Markdown::parse("| Name | Value |\n|---|---|\n| a | 1 |").layout(30, &theme("light"));
     let buf = buffer(&rendered, 30);
     // As Textual draws it: `white 30%` under the table, the keylines `$foreground 20%` over that.
     assert_eq!((buf[(2, 0)].fg, buf[(2, 0)].bg), (rgb(0xC0C0C0), rgb(0xE9E9E9)));
@@ -704,7 +704,7 @@ fn markdown_inline_styles() {
 
 #[test]
 fn markdown_light_theme() {
-    let rendered = Markdown::parse(SAMPLER).layout(40, &theme("textual-light"));
+    let rendered = Markdown::parse(SAMPLER).layout(40, &theme("light"));
     insta::assert_debug_snapshot!(buffer(&rendered, 40));
 }
 
@@ -835,7 +835,7 @@ fn ansi_themes_use_the_ansi_highlight_themes() {
 fn a_theme_change_recolors_the_highlighting() {
     let markdown = Markdown::parse("```sh\necho hello\n```");
     let dark = buffer(&markdown.layout(20, &dark()), 20);
-    let light = buffer(&markdown.layout(20, &theme("textual-light")), 20);
+    let light = buffer(&markdown.layout(20, &theme("light")), 20);
     assert_eq!(dark[(4, 2)].fg, rgb(0xFFC473));
     assert_ne!(light[(4, 2)].fg, dark[(4, 2)].fg);
     assert_ne!(light[(4, 2)].fg, light[(9, 2)].fg);

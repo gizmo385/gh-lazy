@@ -59,9 +59,13 @@ fn expected(result: &str) -> Paint {
 fn compositing_matches_textual_for_every_theme() {
     let fixture: Value = serde_json::from_str(FIXTURE).unwrap();
     let themes = fixture["themes"].as_object().unwrap();
+    // Keyed by Textual's names, so `textual-dark` is the theme it's an alias of.
     assert_eq!(
-        themes.keys().map(String::as_str).collect::<Vec<_>>(),
-        Theme::all().map(|t| t.name).collect::<Vec<_>>()
+        themes
+            .keys()
+            .map(|name| Theme::by_name(name).map(|t| t.name))
+            .collect::<Vec<_>>(),
+        Theme::all().map(|t| Some(t.name)).collect::<Vec<_>>()
     );
 
     let mut checked = 0;

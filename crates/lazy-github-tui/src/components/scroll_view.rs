@@ -536,7 +536,7 @@ mod tests {
         assert_eq!(built, 5);
         assert!(cache.cached(8, &theme).is_some());
         assert!(cache.cached(10, &theme).is_none());
-        assert!(cache.cached(8, &Theme::by_name("textual-light").unwrap()).is_none());
+        assert!(cache.cached(8, &Theme::by_name("light").unwrap()).is_none());
     }
 
     #[test]

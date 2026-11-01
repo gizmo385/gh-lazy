@@ -21,12 +21,12 @@ expression: "crate::test_util::buffer_to_styled_string(&buf)"
 │                             █                                                                                                  █                             │
 │                             █                                                                                                  █                             │
 │                             █ Theme:                                         ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎   █                             │
-└─────────────────────────────█                                                ▊  Textual Dark                            ▲  ▎   █                             │
+└─────────────────────────────█                                                ▊  Dark                                    ▲  ▎   █                             │
 ┌─ [2] Pull Requests ─────────█                                                ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎   █PR diff, and participating   │
 │ #  Status  Author  Title    █                                                ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎   █reate a new PR for the       │
 │                             █                                                ▊  Select                                     ▎   █                             │
-│                             █ Show Command Log:                              ▊  Textual Dark                               ▎   █                             │
-│                             █                                                ▊  Textual Light                              ▎   █                             │
+│                             █ Show Command Log:                              ▊  Dark                                       ▎   █                             │
+│                             █                                                ▊  Light                                      ▎   █                             │
 │                             █                                                ▊  Nord                                       ▎   █                             │
 │                             █                                                ▊  Gruvbox                                 ▃▃ ▎   █                             │
 │                             █                                                ▊  Catppuccin Mocha                           ▎   █ting in any activate         │

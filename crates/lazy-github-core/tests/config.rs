@@ -64,7 +64,45 @@ fn dt(s: &str) -> DateTime {
 #[test]
 fn default_matches_python_byte_for_byte() {
     let config = Config::default_in(&ConfigPaths::in_dir("/home/lazy/.config/lazy-github"));
-    assert_eq!(config.to_json_pretty(), fixture("python-default.json"));
+    // But for the default theme's name, renamed from Textual's (app-owned-themes D2).
+    let python = fixture("python-default.json").replace(r#""theme": "textual-dark""#, r#""theme": "dark""#);
+    assert_eq!(config.to_json_pretty(), python);
+}
+
+/// Any string loads as written and a save writes it back, so a renamed theme's old name (an alias the UI resolves)
+/// and a name the UI doesn't know both survive (app-owned-themes D2, D5). Other scalars load as the default, as in
+/// Python; a list or an object is a field error (Py bug B39).
+#[rstest]
+#[case::alias(r#""textual-dark""#, "textual-dark")]
+#[case::canonical(r#""dark""#, "dark")]
+#[case::unknown(r#""no-such""#, "no-such")]
+#[case::case_sensitive(r#""Nord""#, "Nord")]
+#[case::number("5", "dark")]
+#[case::bool("true", "dark")]
+#[case::null("null", "dark")]
+fn theme_names_load_as_written(#[case] input: &str, #[case] loaded: &str) {
+    let (_tmp, paths, c) = load_ok(&format!(r#"{{"appearance": {{"theme": {input}}}}}"#));
+    assert_eq!(c.appearance.theme, loaded);
+    c.save(&paths).unwrap();
+    let saved: Value = serde_json::from_str(&std::fs::read_to_string(&paths.file).unwrap()).unwrap();
+    assert_eq!(saved["appearance"]["theme"], loaded);
+}
+
+#[rstest]
+#[case::list(r#"["nord"]"#)]
+#[case::object(r#"{"name": "nord"}"#)]
+fn a_list_or_object_theme_is_a_field_error(#[case] input: &str) {
+    let (_tmp, _paths, result) = load_text(&format!(r#"{{"appearance": {{"theme": {input}}}}}"#));
+    assert!(
+        matches!(&result, Err(ConfigError::Invalid { field, .. }) if field == "appearance.theme"),
+        "{result:?}"
+    );
+}
+
+#[test]
+fn the_default_theme_is_dark() {
+    let config = Config::default_in(&ConfigPaths::in_dir("lazy-github"));
+    assert_eq!(config.appearance.theme, "dark");
 }
 
 /// Regenerates `python-default.json`, `python-full.json` and `python-parsing.json` with the Python app and checks the
@@ -247,8 +285,8 @@ fn keys(value: &Value) -> Vec<&str> {
 fn unknown_fields_survive_a_round_trip_after_known_keys() {
     let text = fixture("unknown-fields.json");
     let (_tmp, paths, c) = load_ok(&text);
-    // An unknown theme loads as the default, as in Python, so it's the one known value that changes.
-    assert_eq!(c.appearance.theme, "textual-dark");
+    // An unknown theme is kept as written (app-owned-themes D5), where Python would rewrite it as its default.
+    assert_eq!(c.appearance.theme, "not-a-real-theme");
     // Override strings are kept raw, Textual key names included.
     assert_eq!(c.bindings.overrides["app.help"], "question_mark");
     assert_eq!(c.bindings.overrides["common.search"], "slash");
@@ -256,10 +294,9 @@ fn unknown_fields_survive_a_round_trip_after_known_keys() {
     assert_eq!(c.bindings.overrides["common.table.select"], "q, escape");
     c.save(&paths).unwrap();
 
-    let mut input: Value = serde_json::from_str(&text).unwrap();
+    let input: Value = serde_json::from_str(&text).unwrap();
     let output: Value = serde_json::from_str(&std::fs::read_to_string(&paths.file).unwrap()).unwrap();
-    assert_eq!(output["appearance"]["theme"], "textual-dark");
-    input["appearance"]["theme"] = "textual-dark".into();
+    assert_eq!(output["appearance"]["theme"], "not-a-real-theme");
     assert_contains(&output, &input, "");
     assert_eq!(output["api"]["client_type"], "GITHUB_CLI");
 
@@ -419,6 +456,36 @@ const PARSE_DIFFS: &[(&str, &str, Expected, &str)] = &[
         Expected::Rejected("appearance.theme"),
         "B39: Python's theme validator raises TypeError for an unhashable value, which crashes startup; Rust reports \
          the field instead",
+    ),
+    (
+        "appearance.theme",
+        r#""Nord""#,
+        Expected::Saved(r#""Nord""#),
+        "app-owned-themes D5: a name the app doesn't know is kept as written, not rewritten as the default",
+    ),
+    (
+        "appearance.theme",
+        r#""not-a-real-theme""#,
+        Expected::Saved(r#""not-a-real-theme""#),
+        "app-owned-themes D5: a name the app doesn't know is kept as written, not rewritten as the default",
+    ),
+    (
+        "appearance.theme",
+        r#""""#,
+        Expected::Saved(r#""""#),
+        "app-owned-themes D5: a name the app doesn't know is kept as written, not rewritten as the default",
+    ),
+    (
+        "appearance.theme",
+        "5",
+        Expected::Saved(r#""dark""#),
+        "app-owned-themes D2: the default theme is called dark, not textual-dark",
+    ),
+    (
+        "appearance.theme",
+        "null",
+        Expected::Saved(r#""dark""#),
+        "app-owned-themes D2: the default theme is called dark, not textual-dark",
     ),
 ];
 

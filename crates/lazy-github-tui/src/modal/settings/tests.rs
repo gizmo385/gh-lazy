@@ -187,15 +187,83 @@ fn the_theme_field_shows_the_configs_theme_not_the_sessions() {
     app.press(&["enter"]);
     assert!(app.app().modals().is_empty());
     assert_eq!(app.app().theme().name, "nord");
-    assert_eq!(app.app().config().appearance.theme, "textual-dark");
+    assert_eq!(app.app().config().appearance.theme, "dark");
     app.press(&["ctrl+p"]);
     type_text(&mut app, "change settings");
     app.press(&["enter"]);
-    match widget(&app, APPEARANCE, 0) {
-        FieldWidget::Select(select) => assert_eq!(select.value(), Some(&"textual-dark")),
+    assert_eq!(theme_value(&app), Some("dark"));
+    assert!(app.screen(160, 48).contains("Dark"));
+}
+
+/// The text in the theme select's box: the row under its label's, which is the box's top edge.
+fn theme_box(app: &mut TestApp) -> String {
+    let screen = app.screen(160, 48);
+    let lines: Vec<&str> = screen.lines().collect();
+    let label = lines
+        .iter()
+        .position(|line| line.contains("Theme:"))
+        .expect("the theme row");
+    lines[label + 1].to_owned()
+}
+
+/// The theme select's value.
+fn theme_value(app: &TestApp) -> Option<&'static str> {
+    match widget(app, APPEARANCE, 0) {
+        FieldWidget::Select(select) => select.value().copied(),
         other => panic!("Theme is a select, not {other:?}"),
     }
-    assert!(app.screen(160, 48).contains("Textual Dark"));
+}
+
+/// Python's name for the default theme selects the theme it's an alias of, and an untouched select leaves the name as
+/// written, so the Python app reading the file still knows it (app-owned-themes D2).
+#[test]
+fn an_alias_shows_its_theme_and_survives_save() {
+    let mut config = config();
+    config.appearance.theme = "textual-dark".into();
+    let (mut app, outcome) = opened(&config);
+    assert_eq!(theme_value(&app), Some("dark"));
+    let row = theme_box(&mut app);
+    assert!(row.contains("Dark") && !row.contains("Textual"), "{row}");
+    app.press(&["shift+enter"]);
+    assert_eq!(saved(&outcome).appearance.theme, "textual-dark");
+}
+
+/// Picking its own theme again doesn't count as a change either.
+#[test]
+fn picking_an_aliases_theme_keeps_the_alias() {
+    let mut config = config();
+    config.appearance.theme = "textual-light".into();
+    let (mut app, outcome) = opened(&config);
+    open_theme_list(&mut app);
+    app.press(&["enter"]);
+    assert_eq!(theme_value(&app), Some("light"));
+    app.press(&["shift+enter"]);
+    assert_eq!(saved(&outcome).appearance.theme, "textual-light");
+}
+
+#[test]
+fn picking_another_theme_writes_its_name() {
+    let mut config = config();
+    config.appearance.theme = "textual-dark".into();
+    let (mut app, outcome) = opened(&config);
+    open_theme_list(&mut app);
+    type_text(&mut app, "nord");
+    app.press(&["enter"]);
+    app.press(&["shift+enter"]);
+    assert_eq!(saved(&outcome).appearance.theme, "nord");
+}
+
+/// A name no theme has shows the blank option, and Save leaves it as written (app-owned-themes D5).
+#[test]
+fn an_unknown_theme_shows_the_blank_and_survives_save() {
+    let mut config = config();
+    config.appearance.theme = "no-such-theme".into();
+    let (mut app, outcome) = opened(&config);
+    assert_eq!(theme_value(&app), None);
+    let row = theme_box(&mut app);
+    assert!(row.contains("Select"), "{row}");
+    app.press(&["shift+enter"]);
+    assert_eq!(saved(&outcome).appearance.theme, "no-such-theme");
 }
 
 // Widgets.
@@ -241,10 +309,7 @@ fn selects_list_the_blank_first_and_client_type_only_its_value() {
     let FieldWidget::Select(theme) = widget(&app, APPEARANCE, 0) else {
         panic!("Theme is a select");
     };
-    assert_eq!(
-        theme.labels().take(3).collect::<Vec<_>>(),
-        ["Textual Dark", "Textual Light", "Nord"]
-    );
+    assert_eq!(theme.labels().take(3).collect::<Vec<_>>(), ["Dark", "Light", "Nord"]);
     assert_eq!(theme.labels().count(), 21);
     let FieldWidget::Select(merge) = widget(&app, PULL_REQUESTS, 2) else {
         panic!("Preferred Merge Method is a select");
@@ -717,7 +782,7 @@ fn snapshot_theme_list_with_a_scrollbar() {
     assert_eq!(buf[(122, 22)].bg, Color::Rgb(0x27, 0x27, 0x27));
     assert_eq!(buf[(122, 26)].bg, Color::Rgb(0x00, 0x00, 0x00));
     assert_eq!(buf[(122, 27)].bg, Color::Rgb(0x00, 0x00, 0x00));
-    // The highlighted Textual Dark row ends before the scrollbar; the list's padding and border follow it.
+    // The highlighted Dark row ends before the scrollbar; the list's padding and border follow it.
     assert_eq!(buf[(121, 23)].bg, Color::Rgb(0x01, 0x78, 0xd4));
     assert_eq!(buf[(124, 23)].bg, Color::Rgb(0x27, 0x27, 0x27));
     assert_eq!(buf[(125, 23)].symbol(), "▎");

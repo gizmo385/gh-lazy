@@ -256,10 +256,14 @@ fn enum_values_round_trip_through_serde() {
     }
 }
 
+fn name(name: &str) -> FieldValue {
+    FieldValue::Name(name.to_owned())
+}
+
 #[test]
 fn get_shows_each_kind() {
     let c = config();
-    assert_eq!(field("appearance", "theme").get(&c), FieldValue::Choice("textual-dark"));
+    assert_eq!(field("appearance", "theme").get(&c), name("dark"));
     assert_eq!(field("appearance", "show_issues").get(&c), FieldValue::Bool(true));
     assert_eq!(field("repositories", "favorites").get(&c), FieldValue::List(vec![]));
     assert_eq!(
@@ -277,16 +281,14 @@ fn get_shows_each_kind() {
     assert_eq!(field("api", "client_type").get(&c), FieldValue::Choice("GITHUB_CLI"));
 
     let mut c = config();
-    c.appearance.theme = "rose-pine-moon".to_owned();
+    c.appearance.theme = "no-such-theme".to_owned();
     c.repositories.favorites = vec!["b/b".to_owned(), "a/a".to_owned()];
     c.pull_requests.pull_request_template = Some(PathBuf::from("/home/u/template.md"));
     c.cache.auth_last_checked = Some("2026-10-24T18:30:05".parse().unwrap());
     c.cache.cache_directory = PathBuf::from("/home/u/.config/lazy-github/.cache");
     c.core.logfile_count = -3;
-    assert_eq!(
-        field("appearance", "theme").get(&c),
-        FieldValue::Choice("rose-pine-moon")
-    );
+    // Shown as written: only the UI knows which themes exist.
+    assert_eq!(field("appearance", "theme").get(&c), name("no-such-theme"));
     assert_eq!(
         field("repositories", "favorites").get(&c),
         FieldValue::List(vec!["b/b".to_owned(), "a/a".to_owned()])
@@ -309,6 +311,14 @@ fn get_shows_each_kind() {
     );
 }
 
+/// Core doesn't know the themes, so any name is written as given; the UI offers only the ones it knows.
+#[test]
+fn set_writes_any_theme_name() {
+    let mut c = config();
+    field("appearance", "theme").set(&mut c, name("my-theme")).unwrap();
+    assert_eq!(c.appearance.theme, "my-theme");
+}
+
 #[test]
 fn client_type_shows_github_cli_whatever_the_file_says() {
     let mut c = config();
@@ -324,9 +334,7 @@ fn set_writes_bools_choices_themes_and_lists() {
     field("appearance", "show_command_log")
         .set(&mut c, FieldValue::Bool(true))
         .unwrap();
-    field("appearance", "theme")
-        .set(&mut c, FieldValue::Choice("nord"))
-        .unwrap();
+    field("appearance", "theme").set(&mut c, name("nord")).unwrap();
     field("pull_requests", "preferred_merge_method")
         .set(&mut c, FieldValue::Choice("rebase"))
         .unwrap();
@@ -450,7 +458,11 @@ fn set_refuses_a_value_of_the_wrong_kind() {
         Err(FieldError::Mismatch)
     );
     assert_eq!(
-        field("appearance", "theme").set(&mut c, FieldValue::Choice("not-a-theme")),
+        field("appearance", "theme").set(&mut c, FieldValue::Choice("nord")),
+        Err(FieldError::Mismatch)
+    );
+    assert_eq!(
+        field("appearance", "theme").set(&mut c, name("")),
         Err(FieldError::Mismatch)
     );
     assert_eq!(

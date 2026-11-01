@@ -192,42 +192,18 @@ impl MergeMethod {
     }
 }
 
-/// The names of Textual's built-in themes, in Textual's order: the only values `appearance.theme` loads as. The UI
-/// crate's theme list is checked against this one.
-pub const TEXTUAL_THEMES: &[&str] = &[
-    "textual-dark",
-    "textual-light",
-    "nord",
-    "gruvbox",
-    "catppuccin-mocha",
-    "dracula",
-    "tokyo-night",
-    "monokai",
-    "flexoki",
-    "catppuccin-latte",
-    "catppuccin-frappe",
-    "catppuccin-macchiato",
-    "solarized-light",
-    "solarized-dark",
-    "rose-pine",
-    "rose-pine-moon",
-    "rose-pine-dawn",
-    "atom-one-dark",
-    "atom-one-light",
-    "ansi-dark",
-    "ansi-light",
-];
-
-/// The theme of a new config, and what any value outside [`TEXTUAL_THEMES`] loads as.
-pub const DEFAULT_THEME: &str = "textual-dark";
+/// The theme of a new config, and what a number, a bool or `null` loads as. Which names exist is the UI's business
+/// (its theme catalog), so a string loads as written, and a name the catalog doesn't know is drawn as its default.
+pub const DEFAULT_THEME: &str = "dark";
 
 /// Settings that change the appearance of LazyGithub, including which sections are shown.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 #[allow(clippy::struct_excessive_bools)] // One bool per setting, mirroring the file.
 pub struct AppearanceSettings {
-    /// The Textual theme name, one of [`TEXTUAL_THEMES`] once loaded: an unknown name or a scalar loads as
-    /// [`DEFAULT_THEME`], as in Python, so the next save writes that. A list or an object is rejected (Py bug B39).
+    /// The theme's name, as written: a name the UI doesn't know is kept, so the next save writes it back unchanged.
+    /// A number, a bool or `null` loads as [`DEFAULT_THEME`], as in Python. A list or an object is rejected (Py bug
+    /// B39).
     #[serde(deserialize_with = "lax::theme")]
     pub theme: String,
     /// Whether the command log is shown on startup.

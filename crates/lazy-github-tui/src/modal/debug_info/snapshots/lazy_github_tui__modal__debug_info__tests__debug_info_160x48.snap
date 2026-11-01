@@ -24,7 +24,7 @@ expression: "styled(&mut app(), 160, 48)"
 └───────────────█                                                                                                                            ▇▇█               │
 ┌─ [2] Pull Requ█    {                                                                                                                         █articipating   │
 │ #  Status  Aut█        "appearance": {                                                                                                       █ for the       │
-│               █            "theme": "textual-dark",                                                                                          █               │
+│               █            "theme": "dark",                                                                                                  █               │
 │               █            "show_command_log": false,                                                                                        █               │
 │               █            "show_workflows": true,                                                                                           █               │
 │               █            "show_issues": true,                                                                                              █               │
@@ -73,7 +73,7 @@ baaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
 bbbbbbbbbbbbbbbbfhhmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmhhnnfaaaaaaaaaaaaaaac
 ccccccccccccccccfhhmmommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmhhppfaaaaaaaaaaaaaaac
 cqqqqqqqqqqqqqqqfhhmmoooorrrrrrrrrrrrooommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmhhppfaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaafhhmmoooooooorrrrrrroossssssssssssssommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmhhppfaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaafhhmmoooooooorrrrrrroossssssommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmhhppfaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaafhhmmoooooooorrrrrrrrrrrrrrrrrrootttttommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmhhppfaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaafhhmmoooooooorrrrrrrrrrrrrrrroottttommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmhhppfaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaafhhmmoooooooorrrrrrrrrrrrroottttommmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmhhppfaaaaaaaaaaaaaaac

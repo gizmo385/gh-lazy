@@ -299,7 +299,7 @@ mod tests {
 
     #[test]
     fn switch_states_light() {
-        insta::assert_snapshot!(states(&Theme::by_name("textual-light").unwrap()));
+        insta::assert_snapshot!(states(&Theme::by_name("light").unwrap()));
     }
 
     #[test]

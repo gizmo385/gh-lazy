@@ -18,9 +18,11 @@ expression: "styled(&mut themes_opened(Theme::default()))"
   catppuccin-latte
   catppuccin-macchiato
   catppuccin-mocha
+  dark
   dracula
   flexoki
   gruvbox
+  light
   monokai
   nord
   rose-pine
@@ -28,8 +30,6 @@ expression: "styled(&mut themes_opened(Theme::default()))"
   rose-pine-moon
   solarized-dark
   solarized-light
-  textual-dark
-  textual-light
   tokyo-night
 ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
 │ #  Status  Author  Title                                     ││                                                                                              │

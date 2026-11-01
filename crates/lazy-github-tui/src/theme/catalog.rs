@@ -7,10 +7,11 @@ use super::depth::ColorMode;
 use super::file::{ThemeFile, ThemeFileError};
 
 /// The built-in themes, by name, with their files' text, in Textual's order, which is the order Settings lists them
-/// in. Python users' configs name these, so the names stay as Textual has them.
+/// in. Python users' configs name these, so the names stay as Textual has them, except for Textual's own two, which
+/// [`ALIASES`] keeps working under their old names.
 const BUILTIN: [(&str, &str); 21] = [
-    ("textual-dark", include_str!("../../themes/textual-dark.toml")),
-    ("textual-light", include_str!("../../themes/textual-light.toml")),
+    ("dark", include_str!("../../themes/dark.toml")),
+    ("light", include_str!("../../themes/light.toml")),
     ("nord", include_str!("../../themes/nord.toml")),
     ("gruvbox", include_str!("../../themes/gruvbox.toml")),
     ("catppuccin-mocha", include_str!("../../themes/catppuccin-mocha.toml")),
@@ -35,9 +36,10 @@ const BUILTIN: [(&str, &str); 21] = [
     ("ansi-light", include_str!("../../themes/ansi-light.toml")),
 ];
 
-/// Other names a built-in theme answers to, as `(alias, name)`: none yet. Renaming a theme (#379) keeps its old name
-/// working here, so configs that name it still load.
-const ALIASES: &[(&str, &str)] = &[];
+/// Other names a built-in theme answers to, as `(alias, name)`: the Textual-branded names of the two Textual themes,
+/// which Python configs hold (`textual-dark` is Python's default). A config keeps an alias until the user picks a theme
+/// in Settings, so the Python app reading the same file still finds a name it knows.
+const ALIASES: &[(&str, &str)] = &[("textual-dark", "dark"), ("textual-light", "light")];
 
 /// A set of themes, each with a unique name.
 pub struct Catalog {
@@ -96,9 +98,58 @@ impl Catalog {
         self.themes.iter().find(|theme| theme.name == name).copied()
     }
 
+    /// What a config's `appearance.theme` names: a theme by its own name, a theme by an alias, or nothing this
+    /// catalog has. Exact and case-sensitive, as in Python.
+    pub fn resolve(&self, name: &str) -> Resolved {
+        match self.get(name) {
+            Some(theme) if theme.name == name => Resolved::Exact(theme),
+            Some(theme) => Resolved::Alias {
+                theme,
+                written: name.to_owned(),
+            },
+            None => Resolved::Unknown {
+                written: name.to_owned(),
+            },
+        }
+    }
+
     /// Every theme, in order.
     pub fn themes(&self) -> impl Iterator<Item = Theme> + '_ {
         self.themes.iter().copied()
+    }
+}
+
+/// What [`Catalog::resolve`] found for a name.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Resolved {
+    /// The theme of that name.
+    Exact(Theme),
+    /// The theme `written` is an alias of, such as `dark` for `textual-dark`.
+    Alias {
+        /// The theme the alias names.
+        theme: Theme,
+        /// The alias, as the config has it.
+        written: String,
+    },
+    /// No theme has that name: it's drawn as the default theme, and left as `written` in the config.
+    Unknown {
+        /// The name, as the config has it.
+        written: String,
+    },
+}
+
+impl Resolved {
+    /// The theme the name stands for, if any.
+    pub fn theme(&self) -> Option<Theme> {
+        match self {
+            Resolved::Exact(theme) | Resolved::Alias { theme, .. } => Some(*theme),
+            Resolved::Unknown { .. } => None,
+        }
+    }
+
+    /// The theme the name stands for, or the default theme for an unknown name.
+    pub fn theme_or_default(&self) -> Theme {
+        self.theme().unwrap_or_default()
     }
 }
 
@@ -197,6 +248,50 @@ mod tests {
         assert!(catalog.get("One").is_none());
         assert!(catalog.get("nord").is_none());
         assert_eq!(catalog.themes().map(|t| t.name).collect::<Vec<_>>(), ["one", "two"]);
+    }
+
+    #[test]
+    fn resolve_tells_names_aliases_and_unknown_names_apart() {
+        let catalog = Catalog::builtin();
+        let dark = catalog.get("dark").unwrap();
+        let light = catalog.get("light").unwrap();
+        assert_eq!(catalog.resolve("dark"), Resolved::Exact(dark));
+        assert_eq!(catalog.resolve("nord"), Resolved::Exact(catalog.get("nord").unwrap()));
+        assert_eq!(
+            catalog.resolve("textual-dark"),
+            Resolved::Alias {
+                theme: dark,
+                written: "textual-dark".to_owned()
+            }
+        );
+        assert_eq!(
+            catalog.resolve("textual-light"),
+            Resolved::Alias {
+                theme: light,
+                written: "textual-light".to_owned()
+            }
+        );
+        for name in ["no-such-theme", "Nord", ""] {
+            let resolved = catalog.resolve(name);
+            assert_eq!(
+                resolved,
+                Resolved::Unknown {
+                    written: name.to_owned()
+                }
+            );
+            assert_eq!(resolved.theme(), None);
+            assert_eq!(resolved.theme_or_default(), Theme::default());
+        }
+        assert_eq!(catalog.resolve("textual-light").theme_or_default(), light);
+    }
+
+    /// Every alias names a built-in theme, and none shadows one.
+    #[test]
+    fn aliases_name_builtin_themes() {
+        for &(alias, name) in ALIASES {
+            assert!(BUILTIN.iter().any(|(n, _)| *n == name), "{alias} -> {name}");
+            assert!(BUILTIN.iter().all(|(n, _)| *n != alias), "{alias}");
+        }
     }
 
     #[test]

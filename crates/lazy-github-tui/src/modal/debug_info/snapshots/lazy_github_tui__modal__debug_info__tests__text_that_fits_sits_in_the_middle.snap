@@ -30,7 +30,7 @@ expression: "app.screen(160, 100)"
 │               █                                                                                                                              █               │
 │               █    {                                                                                                                         █               │
 │               █        "appearance": {                                                                                                       █tivate         │
-│               █            "theme": "textual-dark",                                                                                          █eans that you  │
+│               █            "theme": "dark",                                                                                                  █eans that you  │
 │               █            "show_command_log": false,                                                                                        █               │
 │               █            "show_workflows": true,                                                                                           █               │
 │               █            "show_issues": true,                                                                                              █               │

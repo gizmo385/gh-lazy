@@ -15,7 +15,7 @@ expression: "debug_markdown(&fixed_env(), &config)"
 ```json
 {
     "appearance": {
-        "theme": "textual-dark",
+        "theme": "dark",
         "show_command_log": false,
         "show_workflows": true,
         "show_issues": true,

@@ -44,7 +44,7 @@ pub use crate::screens::main::Maximized;
 use crate::screens::main::{MainScreen, Toggle};
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
 use crate::screenshot::{self, ScreenshotRequest};
-use crate::theme::Theme;
+use crate::theme::{Catalog, Resolved, Theme};
 use crate::toast::{Severity, Toast, Toasts};
 
 /// A click on a link drawn in the last frame (`links`): the press and the release on the same link follow it, after the
@@ -161,6 +161,9 @@ pub struct App {
     gh_health: GhHealth,
     /// Warnings from before the main screen, logged once it's up so the command log shows them.
     main_screen_warnings: Vec<String>,
+    /// Toasts about startup problems, raised when the first screen after the blank startup one (auth or main) shows,
+    /// so they don't time out unseen while the auth check runs.
+    first_screen_toasts: Vec<Toast>,
     /// The terminal's size, from the last resize or frame; `None` until the first. Below the minimum, only the
     /// "Terminal too small" message is drawn and only quit keys work.
     size: Option<Size>,
@@ -173,6 +176,10 @@ impl App {
     /// components. [`Self::init`] decides where it goes next.
     pub fn new(config: Config, theme: Theme, options: AppOptions, clock: impl Clock + 'static) -> Self {
         let keymap = Keymap::new(&config.bindings.overrides);
+        let first_screen_toasts = match Catalog::builtin().resolve(&config.appearance.theme) {
+            Resolved::Unknown { written } => vec![unknown_theme_toast(&written)],
+            Resolved::Exact(_) | Resolved::Alias { .. } => Vec::new(),
+        };
         Self {
             base: BaseScreen::Startup(StartupScreen::default()),
             modals: Vec::new(),
@@ -198,6 +205,7 @@ impl App {
             rate_limit: RateLimitWatch::default(),
             gh_health: GhHealth::default(),
             main_screen_warnings: Vec::new(),
+            first_screen_toasts,
             size: None,
             should_quit: false,
         }
@@ -253,6 +261,13 @@ impl App {
         for warning in self.main_screen_warnings.drain(..) {
             tracing::warn!("{warning}");
         }
+        self.raise_first_screen_toasts(out);
+    }
+
+    /// Raises the startup toasts, once: the first screen past the blank startup one is up.
+    fn raise_first_screen_toasts(&mut self, out: &mut Outbox) {
+        out.actions
+            .extend(self.first_screen_toasts.drain(..).map(Action::Notify));
     }
 
     /// Maps `event` to actions and applies them.
@@ -1329,6 +1344,7 @@ impl App {
             Err(error) => {
                 tracing::debug!("Triggering auth with github");
                 self.base = BaseScreen::Auth(AuthScreen::open(AuthReason::from_error(&error), &mut cx));
+                self.raise_first_screen_toasts(out);
             }
         }
     }
@@ -1745,6 +1761,13 @@ fn quit_hint() -> Toast {
     Toast::new(Severity::Information, message).with_title("Do you want to quit?")
 }
 
+/// The warning for an `appearance.theme` no theme has: the app draws the default theme and leaves the name in the
+/// config, where Python silently rewrites it (app-owned-themes D5).
+fn unknown_theme_toast(name: &str) -> Toast {
+    let default = Theme::default().name;
+    Toast::warning(format!("No theme is called \"{name}\". Using \"{default}\".")).with_title("Unknown theme")
+}
+
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
@@ -2069,6 +2092,56 @@ mod tests {
         app.send(Event::CommandLog(line("on the main screen")));
         let log = app.app().main_screen().unwrap().command_log();
         assert_eq!(log.lines(), ["INFO 2026-10-25 01:02:03 - on the main screen"]);
+    }
+
+    fn with_theme(name: &str) -> Config {
+        let mut config = Config::default();
+        config.appearance.theme = name.into();
+        config
+    }
+
+    fn unknown_theme_warning() -> Toast {
+        Toast::warning(r#"No theme is called "no-such-theme". Using "dark"."#).with_title("Unknown theme")
+    }
+
+    /// app-owned-themes D5: a name no theme has draws the default theme, and warns once the first screen is up.
+    #[test]
+    fn an_unknown_theme_warns_once_the_main_screen_is_up() {
+        let mut app = TestApp::on_startup(with_theme("no-such-theme"), lazy_github_core::github::FakeGithub::new());
+        assert_eq!(app.app().screen(), None);
+        assert!(app.app().toasts().is_empty());
+        futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+        assert_eq!(app.app().screen(), Some(ScreenKind::Main));
+        assert!(app.app().toasts().iter().eq([&unknown_theme_warning()]));
+        assert_eq!(app.app().theme().name, "dark");
+        // Only the first time.
+        app.app_mut().update(Action::EnterMain);
+        assert_eq!(app.app().toasts().len(), 1);
+        insta::assert_snapshot!("unknown_theme_toast", app.screen(100, 30));
+    }
+
+    #[test]
+    fn an_unknown_theme_warns_on_the_authentication_screen() {
+        let gh = lazy_github_core::github::FakeGithub::new().with_auth_error(
+            lazy_github_core::gh::GhError::NotAuthenticated {
+                hostname: None,
+                detail: "You are not logged into any GitHub hosts.".into(),
+            },
+        );
+        let mut app = TestApp::on_startup(with_theme("no-such-theme"), gh);
+        futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+        assert_eq!(app.app().screen(), Some(ScreenKind::Auth));
+        assert!(app.app().toasts().iter().eq([&unknown_theme_warning()]));
+    }
+
+    #[test]
+    fn a_known_theme_or_an_alias_doesnt_warn() {
+        for name in ["dark", "nord", "textual-dark", "textual-light"] {
+            let mut app = TestApp::on_startup(with_theme(name), lazy_github_core::github::FakeGithub::new());
+            futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+            assert_eq!(app.app().screen(), Some(ScreenKind::Main), "{name}");
+            assert!(app.app().toasts().is_empty(), "{name}");
+        }
     }
 
     #[test]

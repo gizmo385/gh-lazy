@@ -186,11 +186,18 @@ fn check_case(case: &Value) -> Vec<String> {
     let output = command.output().unwrap();
 
     let expect = |field: &str| {
-        case[field]
+        let expected = case[field]
             .as_str()
             .unwrap()
             .replace("<HOME>", home.path())
-            .replace("<VERSION>", env!("CARGO_PKG_VERSION"))
+            .replace("<VERSION>", env!("CARGO_PKG_VERSION"));
+        // Without a file, the default config shows: its theme is Python's `textual-dark`, renamed `dark`
+        // (app-owned-themes D2). A file that names `textual-dark` keeps it, so only the default changes.
+        if config.is_null() {
+            expected.replace(r#""theme": "textual-dark""#, r#""theme": "dark""#)
+        } else {
+            expected
+        }
     };
     let mut problems = Vec::new();
     for (field, actual) in [("stdout", &output.stdout), ("stderr", &output.stderr)] {
@@ -626,7 +633,7 @@ const BROKEN_CONFIG: &str = r#"{
     "appearance": {"theme": ["nord"], "show_issues": "yes"}
 }"#;
 
-const BROKEN_CONFIG_PROMPTS: &str = r#"Reset issues.state_filter to its default ("all")? [y/N]: Reset appearance.theme to its default ("textual-dark")? [y/N]: "#;
+const BROKEN_CONFIG_PROMPTS: &str = r#"Reset issues.state_filter to its default ("all")? [y/N]: Reset appearance.theme to its default ("dark")? [y/N]: "#;
 
 fn broken_config_report(file: &Path) -> String {
     let file = file.display();
@@ -734,7 +741,7 @@ fn check_config_fix_resets_the_fields_answered_yes_after_a_backup() {
     let saved: Value = serde_json::from_str(&std::fs::read_to_string(home.config_file()).unwrap()).unwrap();
     assert_eq!(saved["issues"]["state_filter"], "all");
     assert_eq!(saved["issues"]["owner_filter"], "mine");
-    assert_eq!(saved["appearance"]["theme"], "textual-dark");
+    assert_eq!(saved["appearance"]["theme"], "dark");
     assert_eq!(saved["appearance"]["show_issues"], true);
     assert_eq!(saved["mystery"], 1);
     let output = home.run(&["check-config"]);

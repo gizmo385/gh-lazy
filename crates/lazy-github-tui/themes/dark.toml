@@ -1,6 +1,7 @@
-# Textual Dark: Textual 8.2.5's built-in theme, frozen as data (#378). Every role is required; what each one is
-# for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax in src/theme/file.rs.
-display_name = "Textual Dark"
+# Dark: Textual 8.2.5's built-in textual-dark theme, frozen as data (#378) and renamed (#379). Every role
+# is required; what each one is for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax in
+# src/theme/file.rs.
+display_name = "Dark"
 appearance = "dark"
 terminal_colors = false
 

@@ -249,7 +249,8 @@ impl CommandPaletteDialog {
         Self::with_placeholder(commands, PLACEHOLDER)
     }
 
-    /// Textual's theme palette (`search_themes`): every built-in theme by name, sorted, with no help lines. The
+    /// Textual's theme palette (`search_themes`): every built-in theme by its own name (aliases such as
+    /// `textual-dark` aren't listed), sorted, with no help lines. The
     /// empty query lists them in that order, the first highlighted rather than the current theme, and equal scores
     /// keep it. Picking one hands back [`PaletteRun::SetTheme`].
     pub fn themes() -> Self {

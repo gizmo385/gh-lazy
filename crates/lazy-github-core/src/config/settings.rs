@@ -9,7 +9,7 @@
 use std::path::PathBuf;
 
 use super::lax::{naive_datetime, parse_int_str};
-use super::{Config, DEFAULT_THEME, IssueOwnerFilter, IssueStateFilter, MergeMethod, TEXTUAL_THEMES};
+use super::{Config, IssueOwnerFilter, IssueStateFilter, MergeMethod};
 
 /// One tab of the Settings modal: a `config.json` section.
 #[derive(Debug)]
@@ -44,7 +44,8 @@ pub enum FieldKind {
     Bool,
     /// One of a fixed set of values, in this order. The value is a [`FieldValue::Choice`] of a [`Choice::value`].
     Choice(&'static [Choice]),
-    /// A theme name from [`TEXTUAL_THEMES`], in that order. The value is a [`FieldValue::Choice`].
+    /// A theme name. The value is a [`FieldValue::Name`]: the stored name as written, which may be one the UI's theme
+    /// catalog doesn't know. The UI lists the options, since only it knows the themes.
     Theme,
     /// A list of strings. The value is a [`FieldValue::List`].
     List,
@@ -84,8 +85,10 @@ pub struct Choice {
 pub enum FieldValue {
     /// A [`FieldKind::Bool`] value.
     Bool(bool),
-    /// A [`FieldKind::Choice`], [`FieldKind::Theme`] or [`FieldKind::ReadOnlyChoice`] value.
+    /// A [`FieldKind::Choice`] or [`FieldKind::ReadOnlyChoice`] value.
     Choice(&'static str),
+    /// A [`FieldKind::Theme`] value: a theme's name.
+    Name(String),
     /// A [`FieldKind::List`] value.
     List(Vec<String>),
     /// A [`FieldKind::Text`] or [`FieldKind::OptionalPath`] value, as shown or typed.
@@ -232,14 +235,14 @@ pub static SECTIONS: &[Section] = &[
                 section: "appearance",
                 name: "theme",
                 kind: FieldKind::Theme,
-                get: |c| FieldValue::Choice(theme_name(&c.appearance.theme)),
-                set: |c, v| {
-                    let name = choice(&v)?;
-                    if !TEXTUAL_THEMES.contains(&name) {
-                        return Err(FieldError::Mismatch);
+                get: |c| FieldValue::Name(c.appearance.theme.clone()),
+                // Any name: the UI offers only the themes it knows.
+                set: |c, v| match v {
+                    FieldValue::Name(name) if !name.is_empty() => {
+                        c.appearance.theme = name;
+                        Ok(())
                     }
-                    name.clone_into(&mut c.appearance.theme);
-                    Ok(())
+                    _ => Err(FieldError::Mismatch),
                 },
             },
             bool_field!(appearance.show_command_log),
@@ -485,16 +488,6 @@ fn text(value: FieldValue) -> Result<String, FieldError> {
         FieldValue::Text(text) => Ok(text),
         _ => Err(FieldError::Mismatch),
     }
-}
-
-/// The `'static` name of a loaded theme. Loading leaves only names in [`TEXTUAL_THEMES`]; anything else (set in code)
-/// shows as the default, which is what it would load as.
-fn theme_name(theme: &str) -> &'static str {
-    TEXTUAL_THEMES
-        .iter()
-        .copied()
-        .find(|name| *name == theme)
-        .unwrap_or(DEFAULT_THEME)
 }
 
 /// Python's `str.title()` for ASCII text: a letter after a non-letter is upper-cased, any other letter lower-cased.

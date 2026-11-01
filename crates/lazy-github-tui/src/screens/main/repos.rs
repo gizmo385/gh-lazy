@@ -871,8 +871,8 @@ mod app_tests {
         };
         let dark = star_color(&Theme::default());
         assert_eq!(star_colors(&mut app), [dark, dark]);
-        app.dispatch(Action::SetTheme("textual-light"));
-        let light = star_color(&Theme::from_config("textual-light", Theme::default().color_mode()));
+        app.dispatch(Action::SetTheme("light"));
+        let light = star_color(&Theme::from_config("light", Theme::default().color_mode()));
         assert_ne!(light, dark);
         assert_eq!(star_colors(&mut app), [light, light]);
     }

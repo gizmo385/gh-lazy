@@ -190,7 +190,7 @@ impl PrDiff {
             }
             DiffState::Failed(message) => {
                 let theme = cx.theme;
-                let style = Style::new().fg(theme.color(theme.palette.foreground, theme.background()));
+                let style = Style::new().fg(theme.color(theme.roles().text.plain, theme.background()));
                 frame.render_widget(Paragraph::new(Line::styled(message.as_str(), style)), area);
             }
             DiffState::Loaded(view) => view.render(frame, area, cx.theme, cx.focused),

@@ -8,7 +8,7 @@ use lazy_github_core::diff::{DiffLine, Hunk, LineKind};
 use lazy_github_core::github::{DraftReviewComment, NewReview, ReviewEvent};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
-use ratatui::style::{Modifier, Style};
+use ratatui::style::Style;
 use ratatui::widgets::{Block, Widget};
 
 use super::buffer_line;
@@ -195,7 +195,7 @@ pub(super) fn layout_form(
 ) -> FormPlaced {
     let under = theme.background();
     let base = Style::new()
-        .fg(theme.color(theme.palette.foreground, under))
+        .fg(theme.color(theme.roles().text.plain, under))
         .bg(theme.paint(under));
     let status_rows = if form.status.is_some() {
         1 + usize::from(select::HEIGHT)
@@ -277,12 +277,16 @@ pub(super) fn layout_pending(
     if comments.is_empty() || width == 0 {
         return Vec::new();
     }
-    let p = theme.palette;
+    let roles = theme.roles();
     let under = theme.background();
-    let base = Style::new().fg(theme.color(p.foreground, under)).bg(theme.paint(under));
-    let panel = p.panel.over(under);
-    let muted = Style::new().fg(theme.color(p.text_muted, under));
-    let body_text = Style::new().fg(theme.color(p.text, panel)).bg(theme.paint(panel));
+    let base = Style::new()
+        .fg(theme.color(roles.text.plain, under))
+        .bg(theme.paint(under));
+    let panel = roles.diff.review_body.over(under);
+    let muted = Style::new().fg(theme.color(roles.text.muted, under));
+    let body_text = Style::new()
+        .fg(theme.color(roles.text.normal, panel))
+        .bg(theme.paint(panel));
     // Inside the container's border and padding, then each preview's.
     let inner = width.saturating_sub(2 * BOX_SIDE);
     let text_width = inner.saturating_sub(2 * BOX_SIDE);
@@ -311,7 +315,8 @@ pub(super) fn layout_pending(
     buf.set_style(area, base);
 
     // The header: bold `$text` on `$accent`, centered on its first row.
-    let accent = p.accent.over(under);
+    let review_header = roles.diff.review_header;
+    let accent = review_header.bg.over(under);
     let header = Rect::new(0, 2, width, 3);
     buf.set_style(header, Style::new().bg(theme.paint(accent)));
     let header_width = u16::try_from(HEADER.len()).unwrap_or(u16::MAX);
@@ -320,18 +325,19 @@ pub(super) fn layout_pending(
         header.y,
         HEADER,
         usize::from(width),
-        Style::new()
-            .fg(theme.color(p.text, accent))
-            .bg(theme.paint(accent))
-            .add_modifier(Modifier::BOLD),
+        review_header.style.apply(
+            Style::new()
+                .fg(theme.color(review_header.fg, accent))
+                .bg(theme.paint(accent)),
+        ),
     );
 
     let row = |r: usize| u16::try_from(r).unwrap_or(u16::MAX);
     let container_top = top;
     Block::bordered()
-        .border_style(Style::new().fg(theme.color(p.accent, under)))
+        .border_style(Style::new().fg(theme.color(roles.border.emphasis, under)))
         .render(Rect::new(0, row(container_top), width, row(container)), &mut buf);
-    let secondary = Style::new().fg(theme.color(p.secondary, under));
+    let secondary = Style::new().fg(theme.color(roles.diff.review_comment_border, under));
     let mut placed = Vec::with_capacity(comments.len());
     let mut y = container_top + 3;
     for (index, preview) in previews.iter().enumerate() {

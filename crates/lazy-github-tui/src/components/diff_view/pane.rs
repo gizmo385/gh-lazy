@@ -14,7 +14,7 @@ use super::buffer_line;
 use super::highlight::HunkCode;
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
 use crate::display;
-use crate::theme::{Accent, Paint, Rgb, RichAnsi, Theme};
+use crate::theme::{Paint, Rgb, Theme};
 
 /// The most rows the pane takes, its border included (`max-height: 25`).
 const MAX_HEIGHT: usize = 25;
@@ -318,51 +318,53 @@ struct Styles {
 
 impl Styles {
     fn new(theme: &Theme, focused: bool, under: Paint) -> Self {
-        let palette = theme.palette;
+        let roles = theme.roles();
         let border = if focused {
-            palette.accent
+            roles.diff.border_focused
         } else {
-            palette.primary_lighten_1
+            roles.diff.border
         };
-        let surface = palette.surface.over(under);
-        let back = palette.scrollbar_background.over(surface);
+        let surface = roles.surface.pane.over(under);
+        let back = roles.scrollbar.track.over(surface);
+        let indicator = roles.diff.indicator;
         Self {
             border: Style::new().fg(theme.color(border, under)).bg(theme.paint(under)),
             gutter: Style::new()
-                .fg(theme.color(palette.foreground, surface))
+                .fg(theme.color(roles.text.plain, surface))
                 .bg(theme.paint(surface)),
             surface,
-            indicator: theme.fg_on(palette.text, palette.accent, under),
+            indicator: theme.fg_on(indicator.fg, indicator.bg, under),
             scrollbar: ScrollbarColors {
-                bar: theme.color(palette.scrollbar, back),
+                bar: theme.color(roles.scrollbar.thumb, back),
                 back: theme.paint(back),
-                fg: theme.color(palette.foreground, surface),
+                fg: theme.color(roles.text.plain, surface),
                 bg: theme.paint(surface),
             },
             corner: Style::new()
                 .fg(Color::Reset)
-                .bg(theme.color(palette.scrollbar_corner_color, surface)),
+                .bg(theme.color(roles.scrollbar.corner, surface)),
         }
     }
 
     /// A line's own background. Removed and added lines are tinted red and green, brighter on the current line; the
     /// current context line is yellow, and other context lines have none.
     fn background(kind: LineKind, current: bool, theme: &Theme) -> Option<Color> {
-        match (kind, current) {
-            (LineKind::Removed, false) => Some(theme.accent(Accent::DiffRemoved)),
-            (LineKind::Added, false) => Some(theme.accent(Accent::DiffAdded)),
-            (LineKind::Removed, true) => Some(theme.accent(Accent::DiffRemovedCurrent)),
-            (LineKind::Added, true) => Some(theme.accent(Accent::DiffAddedCurrent)),
-            (LineKind::Context | LineKind::NoNewline, true) => Some(theme.rich_ansi(RichAnsi::Yellow)),
-            (LineKind::Context | LineKind::NoNewline, false) => None,
-        }
+        let diff = &theme.roles().diff;
+        let color = match (kind, current) {
+            (LineKind::Removed, false) => diff.removed_bg,
+            (LineKind::Added, false) => diff.added_bg,
+            (LineKind::Removed, true) => diff.removed_current_bg,
+            (LineKind::Added, true) => diff.added_current_bg,
+            (LineKind::Context | LineKind::NoNewline, true) => diff.context_current_bg,
+            (LineKind::Context | LineKind::NoNewline, false) => return None,
+        };
+        Some(theme.color(color, theme.background()))
     }
 
     /// A line's code: the text color on `background`, or on the surface without one.
     fn code(&self, background: Option<Color>, theme: &Theme) -> Style {
-        let palette = theme.palette;
         Style::new()
-            .fg(theme.color(palette.foreground, self.surface))
+            .fg(theme.color(theme.roles().text.plain, self.surface))
             .bg(background.unwrap_or_else(|| theme.paint(self.surface)))
     }
 }
@@ -447,6 +449,8 @@ mod tests {
         let (file, hunk) = hunk(README);
         let theme = Theme::default();
         let monokai = Some(theme.paint(Rgb::new(0x27, 0x28, 0x22).into()));
+        let diff = &theme.roles().diff;
+        let drawn = |c| Some(theme.color(c, theme.background()));
         let mut pane = HunkPane::new(&hunk);
         pane.cursor_down();
         let layout = pane.layout(&file, &hunk, 70, &theme, false, theme.background());
@@ -457,10 +461,10 @@ mod tests {
             assert!(backgrounds.iter().all(|b| *b == bg), "row {row}: {backgrounds:?}");
         };
         all(2, monokai);
-        all(3, Some(theme.rich_ansi(RichAnsi::Yellow)));
-        all(4, Some(theme.accent(Accent::DiffRemoved)));
-        all(5, Some(theme.accent(Accent::DiffAdded)));
-        all(7, Some(theme.accent(Accent::DiffAdded)));
+        all(3, drawn(diff.context_current_bg));
+        all(4, drawn(diff.removed_bg));
+        all(5, drawn(diff.added_bg));
+        all(7, drawn(diff.added_bg));
         // The token colors stay on the tinted lines: `viewer FILE` is a Markdown inline code span.
         let code = layout.lines[4]
             .spans
@@ -475,9 +479,7 @@ mod tests {
         let layout = pane.layout(&file, &hunk, 70, &theme, false, theme.background());
         let backgrounds = code_backgrounds(&layout, 5);
         assert!(
-            backgrounds
-                .iter()
-                .all(|b| *b == Some(theme.accent(Accent::DiffAddedCurrent))),
+            backgrounds.iter().all(|b| *b == drawn(diff.added_current_bg)),
             "{backgrounds:?}"
         );
         all(2, monokai);
@@ -491,14 +493,14 @@ mod tests {
         let mut pane = HunkPane::new(&hunk);
         pane.cursor_down();
         let layout = pane.layout(&file, &hunk, 40, &theme, false, theme.background());
-        let surface = theme.palette.surface.over(theme.background());
+        let surface = theme.roles().surface.pane.over(theme.background());
         let backgrounds = code_backgrounds(&layout, 2);
         assert!(
             backgrounds.iter().all(|b| *b == Some(theme.paint(surface))),
             "{backgrounds:?}"
         );
         let foreground = layout.lines[2].spans[2].style.fg;
-        assert_eq!(foreground, Some(theme.color(theme.palette.foreground, surface)));
+        assert_eq!(foreground, Some(theme.color(theme.roles().text.plain, surface)));
     }
 
     #[test]

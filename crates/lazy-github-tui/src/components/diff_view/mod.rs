@@ -40,7 +40,7 @@ use super::text_input::{self, INPUT_BINDINGS, InputOutcome, TextInput};
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Owner};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::theme::{RichAnsi, Theme};
+use crate::theme::Theme;
 use tokio::time::Instant;
 
 /// The filter's placeholder. It names the default key even with `diff.filter_files` rebound, as Python's does.
@@ -1338,7 +1338,7 @@ impl Body {
         out.lines
             .extend(filter_lines(&mut self.filter, width, theme, filter_focused));
         if let Some(notice) = &self.notice {
-            let text = Style::new().fg(theme.color(theme.palette.foreground, theme.background()));
+            let text = Style::new().fg(theme.color(theme.roles().text.plain, theme.background()));
             let notice = markdown::wrap_text(&[TextRun::new(notice.as_str(), text)], width);
             out.lines.extend(notice.lines);
         }
@@ -1596,7 +1596,7 @@ fn buffer_line(buf: &Buffer, y: u16) -> Line<'static> {
 
 /// A deleted file's contents: `file was removed` in `$error`, between blank rows (its `margin: 1 0`).
 fn removed_notice(width: u16, theme: &Theme) -> Rendered {
-    let style = Style::new().fg(theme.color(theme.palette.error, theme.background()));
+    let style = Style::new().fg(theme.color(theme.roles().status.error, theme.background()));
     let mut out = Rendered::default();
     out.lines.push(Line::default());
     out.lines
@@ -1607,6 +1607,7 @@ fn removed_notice(width: u16, theme: &Theme) -> Rendered {
 
 /// A file or hunk label as title runs: its counts green and red, as Python's `Text` styles them.
 fn title(label: &Label, theme: &Theme) -> Vec<TextRun> {
+    let diff = &theme.roles().diff;
     let plain = |text: String| TextRun::new(text, Style::new());
     let mut runs = vec![plain(label.text.clone())];
     let Counts { additions, deletions } = label.counts;
@@ -1615,7 +1616,7 @@ fn title(label: &Label, theme: &Theme) -> Vec<TextRun> {
         if additions > 0 {
             runs.push(TextRun::new(
                 format!("+{additions}"),
-                Style::new().fg(theme.rich_ansi(RichAnsi::Green)),
+                Style::new().fg(theme.color(diff.stat_added, theme.background())),
             ));
         }
         if additions > 0 && deletions > 0 {
@@ -1624,7 +1625,7 @@ fn title(label: &Label, theme: &Theme) -> Vec<TextRun> {
         if deletions > 0 {
             runs.push(TextRun::new(
                 format!("-{deletions}"),
-                Style::new().fg(theme.rich_ansi(RichAnsi::Red)),
+                Style::new().fg(theme.color(diff.stat_removed, theme.background())),
             ));
         }
         runs.push(plain(")".into()));

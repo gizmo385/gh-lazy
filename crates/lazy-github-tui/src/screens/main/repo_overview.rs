@@ -300,6 +300,7 @@ mod tests {
             },
             description: Some("A first repository.".into()),
             permissions: None,
+            has_issues: true,
         }
     }
 

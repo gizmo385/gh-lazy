@@ -393,6 +393,7 @@ pub(super) fn repo(owner: &str, name: &str, private: bool) -> Repository {
         },
         description: None,
         permissions: None,
+        has_issues: true,
     }
 }
 

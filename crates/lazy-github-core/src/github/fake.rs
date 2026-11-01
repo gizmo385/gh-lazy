@@ -1557,6 +1557,7 @@ mod tests {
             owner: octocat(),
             description: None,
             permissions: None,
+            has_issues: true,
         }
     }
 

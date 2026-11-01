@@ -117,6 +117,7 @@ mod tests {
             },
             description: None,
             permissions: None,
+            has_issues: true,
         }
     }
 

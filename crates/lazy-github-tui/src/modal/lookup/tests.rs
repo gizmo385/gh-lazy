@@ -35,6 +35,7 @@ fn repo(full_name: &str) -> Repository {
         },
         description: None,
         permissions: None,
+        has_issues: true,
     }
 }
 

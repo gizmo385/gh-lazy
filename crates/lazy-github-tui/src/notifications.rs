@@ -464,6 +464,7 @@ mod tests {
             },
             description: None,
             permissions: None,
+            has_issues: true,
         };
         let out = logs(|| {
             app.app_mut().update(Action::SelectRepo(Box::new(repo.clone())));

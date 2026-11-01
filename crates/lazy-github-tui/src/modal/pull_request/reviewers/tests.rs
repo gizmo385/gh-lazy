@@ -52,6 +52,7 @@ fn repo() -> Repository {
         },
         description: None,
         permissions: None,
+        has_issues: true,
     }
 }
 

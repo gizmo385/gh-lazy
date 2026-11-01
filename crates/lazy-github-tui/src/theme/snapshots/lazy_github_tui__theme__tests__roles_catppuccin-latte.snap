@@ -276,3 +276,5 @@ hints.label.style                      add BOLD
 table.header.fg                        #4C4F69  (#4C4F69)
 table.header.bg                        #CCD0DA  (#CCD0DA)
 disabled.dimmed                        false
+screenshot.default_fg                  #1E1E1E  (#1E1E1E)
+screenshot.default_bg                  #FFFFFF  (#FFFFFF)

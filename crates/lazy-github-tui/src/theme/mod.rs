@@ -28,7 +28,8 @@ pub use depth::{ColorDepth, ColorMode, downsample};
 pub use palette::Palette;
 pub use roles::{
     Border, Brand, Button, ButtonColors, Checkbox, CommandPalette, Cursor, Diff, Footer, Highlight, Hints, Ink, Input,
-    Markdown, Marks, Pair, Roles, Scrollbar, Select, Status, Surface, Switch, Syntax, Tabs, Text, TokenStyle, Tree,
+    Markdown, Marks, Pair, Roles, Screenshot, Scrollbar, Select, Status, Surface, Switch, Syntax, Tabs, Text,
+    TokenStyle, Tree,
 };
 
 use palette::{BUILTIN, ThemeDef};

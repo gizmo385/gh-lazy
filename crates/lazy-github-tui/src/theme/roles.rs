@@ -64,6 +64,8 @@ pub struct Roles {
     pub table: Table,
     /// Disabled fields.
     pub disabled: Disabled,
+    /// SVG screenshots.
+    pub screenshot: Screenshot,
 }
 
 /// A foreground and background pair: `fg` is drawn over `bg`, and `bg` over what's under it.
@@ -579,6 +581,16 @@ pub struct Disabled {
     pub dimmed: bool,
 }
 
+/// SVG screenshots: what they draw the terminal's default colors as, where the theme leaves a color to the terminal
+/// (the terminal-color themes), since a screenshot can't ask the terminal. Exact RGB, as the SVG writes it.
+#[derive(Debug, PartialEq)]
+pub struct Screenshot {
+    /// The terminal's default text color (`#D4D4D4` on dark themes, `#1E1E1E` on light ones).
+    pub default_fg: Rgb,
+    /// The terminal's default background (`#1E1E1E` on dark themes, `#FFFFFF` on light ones).
+    pub default_bg: Rgb,
+}
+
 const NO_STYLE: TextStyle = TextStyle {
     add: Modifier::empty(),
     sub: Modifier::empty(),
@@ -991,6 +1003,17 @@ impl Roles {
                 },
             },
             disabled: Disabled { dimmed: s.ansi },
+            screenshot: if s.dark {
+                Screenshot {
+                    default_fg: Rgb::new(0xD4, 0xD4, 0xD4),
+                    default_bg: Rgb::new(0x1E, 0x1E, 0x1E),
+                }
+            } else {
+                Screenshot {
+                    default_fg: Rgb::new(0x1E, 0x1E, 0x1E),
+                    default_bg: Rgb::WHITE,
+                }
+            },
         }
     }
 
@@ -1198,6 +1221,12 @@ pub(super) mod walk {
         }
     }
 
+    impl Walk for Rgb {
+        fn walk(&self, path: &str, out: &mut Vec<(String, Leaf)>) {
+            out.push((path.to_owned(), Leaf::Color(opaque(*self))));
+        }
+    }
+
     impl Walk for Option<ThemeColor> {
         fn walk(&self, path: &str, out: &mut Vec<(String, Leaf)>) {
             out.push((path.to_owned(), Leaf::MaybeColor(*self)));
@@ -1239,6 +1268,7 @@ pub(super) mod walk {
         Roles {
             surface, text, brand, status, border, cursor, scrollbar, input, footer, button, switch, select,
             checkbox, tree, tabs, markdown, syntax, marks, diff, command_palette, hints, table, disabled,
+            screenshot,
         }
         Pair { fg, bg }
         Highlight { fg, bg, style }
@@ -1288,5 +1318,6 @@ pub(super) mod walk {
         Hints { label }
         Table { header }
         Disabled { dimmed }
+        Screenshot { default_fg, default_bg }
     }
 }

@@ -87,6 +87,12 @@ impl ListSource for IssuesSource {
         log_fetch_failure(error);
         PageFailure::Retry
     }
+
+    /// The issues endpoint mixes in PRs, so its newest pages can hold no issues (Py bug B181). A repo with issues
+    /// turned off lists only PRs there, so it never fetches ahead.
+    fn fetches_ahead_while_empty(repo: &Repository) -> bool {
+        repo.has_issues
+    }
 }
 
 /// Page 1 with the `issues.*` filters.

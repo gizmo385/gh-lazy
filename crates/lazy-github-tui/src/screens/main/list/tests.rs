@@ -10,6 +10,8 @@ use super::*;
 use crate::components::loading::FRAME_INTERVAL;
 use crate::components::table::{Cell, Handled};
 use crate::keymap::BindingId;
+use crate::screens::main::issues::IssuesSource;
+use crate::screens::main::pull_requests::{Kind, item};
 use crate::screens::main::repos::repo;
 use crate::screens::main::section_table::{SectionTable, earliest_deadline};
 use crate::test_util::{TestApp, logs};
@@ -779,4 +781,218 @@ fn no_first_page_is_requested_before_any_repo() {
     let mut section = section();
     app.with_cx(|cx| section.request_first_page(cx));
     assert_eq!(page_requests(&app), []);
+}
+
+// Fetching ahead while the Issues table is empty (Py bug B181, #399).
+
+type IssuesSection = ListSection<IssuesSource>;
+
+/// An issues-endpoint page of `prs` PRs then `issues` issues, numbered down from `top`.
+fn mixed_page(top: u64, prs: u64, issues: u64) -> GithubResponse {
+    let repo = repo("octo", "lists", false);
+    let items = (0..prs + issues)
+        .map(|offset| {
+            let kind = if offset < prs { Kind::OpenPr } else { Kind::Issue };
+            item(&repo, top - offset, kind)
+        })
+        .collect();
+    GithubResponse::ListIssues(Ok(items))
+}
+
+/// A page of 30 PRs, numbered down from `top`.
+fn prs_page(top: u64) -> GithubResponse {
+    mixed_page(top, 30, 0)
+}
+
+/// An Issues section begun for `repo` that requested its own first page.
+fn issues_requesting(app: &mut TestApp, repo: &Repository) -> IssuesSection {
+    let mut section = ListSection::new(AppOptions {
+        animations: false,
+        ..AppOptions::default()
+    });
+    app.with_cx(|cx| {
+        section.begin(repo, cx);
+        section.request_first_page(cx);
+    });
+    section
+}
+
+/// The id and page number of the last page request.
+fn last_request(app: &TestApp) -> (RequestId, u32) {
+    let (id, _, page, _) = *page_requests(app).last().expect("a page request");
+    (id, page)
+}
+
+fn pages_asked(app: &TestApp) -> Vec<u32> {
+    page_requests(app).iter().map(|(_, _, page, _)| *page).collect()
+}
+
+/// Answers the last page request with `response`, which the section must take.
+fn answer(app: &mut TestApp, section: &mut IssuesSection, response: GithubResponse) {
+    let (id, _) = last_request(app);
+    assert!(app.with_cx(|cx| section.on_response(id, response, cx)).is_none());
+}
+
+#[test]
+fn an_issues_table_left_empty_fetches_ahead_until_a_page_adds_rows() {
+    let mut app = TestApp::new(Config::default());
+    let mut section = issues_requesting(&mut app, &repo("octo", "lists", false));
+    answer(&mut app, &mut section, prs_page(90));
+    // Page 2 is asked for with no cursor move, under the overlay, and the section isn't compact yet.
+    assert_eq!(pages_asked(&app), [1, 2]);
+    assert!(section.table().is_loading());
+    assert!(!section.compact());
+    assert_eq!(lazy(&section), (1, true, Some(2)));
+    answer(&mut app, &mut section, prs_page(60));
+    assert_eq!(pages_asked(&app), [1, 2, 3]);
+    assert!(section.table().is_loading());
+    // Page 3's ten issues fill the table; ten rows leave the cursor more than five from the end, so nothing more.
+    answer(&mut app, &mut section, mixed_page(30, 20, 10));
+    assert_eq!(pages_asked(&app), [1, 2, 3]);
+    assert_eq!(section.table().row_count(), 10);
+    assert!(!section.table().is_loading());
+    assert!(!section.compact());
+    assert_eq!(lazy(&section), (3, true, None));
+}
+
+#[test]
+fn a_fetched_ahead_page_with_few_issues_hands_over_to_lazy_loading() {
+    let mut app = TestApp::new(Config::default());
+    let mut section = issues_requesting(&mut app, &repo("octo", "lists", false));
+    answer(&mut app, &mut section, prs_page(120));
+    answer(&mut app, &mut section, mixed_page(90, 27, 3));
+    // Three rows put the cursor within five of the end, which asks for page 3 as any first rows would.
+    assert_eq!(pages_asked(&app), [1, 2, 3]);
+    assert!(!section.table().is_loading());
+    assert!(!section.compact());
+    answer(&mut app, &mut section, prs_page(60));
+    assert_eq!(pages_asked(&app), [1, 2, 3], "rows in the table: no fetching ahead");
+    assert_eq!(section.table().row_count(), 3);
+}
+
+#[test]
+fn fetching_ahead_stops_at_an_empty_page() {
+    let mut app = TestApp::new(Config::default());
+    let mut section = issues_requesting(&mut app, &repo("octo", "lists", false));
+    answer(&mut app, &mut section, prs_page(30));
+    answer(&mut app, &mut section, GithubResponse::ListIssues(Ok(Vec::new())));
+    assert_eq!(pages_asked(&app), [1, 2]);
+    assert!(!section.table().is_loading());
+    assert!(section.compact());
+    assert_eq!(lazy(&section), (2, false, None));
+}
+
+#[test]
+fn an_empty_first_page_fetches_nothing_ahead() {
+    let mut app = TestApp::new(Config::default());
+    let mut section = issues_requesting(&mut app, &repo("octo", "lists", false));
+    answer(&mut app, &mut section, GithubResponse::ListIssues(Ok(Vec::new())));
+    assert_eq!(pages_asked(&app), [1]);
+    assert!(!section.table().is_loading());
+    assert!(section.compact());
+}
+
+#[test]
+fn fetching_ahead_stops_after_five_pages_in_all() {
+    let mut app = TestApp::new(Config::default());
+    let mut section = issues_requesting(&mut app, &repo("octo", "lists", false));
+    for top in [300, 270, 240, 210, 180] {
+        assert!(section.table().is_loading());
+        answer(&mut app, &mut section, prs_page(top));
+    }
+    assert_eq!(pages_asked(&app), [1, 2, 3, 4, 5]);
+    assert_eq!(FETCH_AHEAD_PAGES, 5);
+    assert!(!section.table().is_loading());
+    assert!(section.compact());
+    // Paging stays on, with no row for a cursor move to ask from.
+    assert_eq!(lazy(&section), (5, true, None));
+}
+
+#[test]
+fn a_failed_page_stops_fetching_ahead_and_logs_the_api_error_line() {
+    let mut app = TestApp::new(Config::default());
+    let mut section = issues_requesting(&mut app, &repo("octo", "lists", false));
+    answer(&mut app, &mut section, prs_page(60));
+    let log = logs(|| answer(&mut app, &mut section, http_error()));
+    assert!(
+        log.contains("ERROR API Error fetching issues and PRs from Github API"),
+        "{log}"
+    );
+    assert_eq!(pages_asked(&app), [1, 2]);
+    assert!(!section.table().is_loading());
+    assert!(section.compact());
+    // B43: the paging state stays, for a retry on a cursor move.
+    assert_eq!(lazy(&section), (1, true, None));
+}
+
+#[test]
+fn a_repo_with_issues_off_fetches_nothing_ahead() {
+    let mut app = TestApp::new(Config::default());
+    let repo = Repository {
+        has_issues: false,
+        ..repo("octo", "lists", false)
+    };
+    let mut section = issues_requesting(&mut app, &repo);
+    answer(&mut app, &mut section, prs_page(30));
+    assert_eq!(pages_asked(&app), [1]);
+    assert!(!section.table().is_loading());
+    assert!(section.compact());
+}
+
+#[test]
+fn a_repo_switch_cancels_the_page_fetched_ahead() {
+    let mut app = TestApp::new(Config::default());
+    let mut section = issues_requesting(&mut app, &repo("octo", "lists", false));
+    answer(&mut app, &mut section, prs_page(30));
+    let (ahead, page) = last_request(&app);
+    assert_eq!(page, 2);
+    app.with_cx(|cx| {
+        section.begin(&repo("octo", "other", false), cx);
+        section.request_first_page(cx);
+    });
+    assert!(cancels(&app).contains(&ahead));
+    // B45: its late answer is handed back, and the new repo's first page is answered as usual.
+    assert!(
+        app.with_cx(|cx| section.on_response(ahead, mixed_page(30, 0, 30), cx))
+            .is_some()
+    );
+    assert_eq!(section.table().row_count(), 0);
+    assert!(section.table().is_loading());
+    answer(&mut app, &mut section, mixed_page(30, 0, 30));
+    assert_eq!(section.table().row_count(), 30);
+    assert!(!section.table().is_loading());
+    assert_eq!(pages_asked(&app), [1, 2, 1]);
+}
+
+#[test]
+fn a_new_first_page_cancels_the_page_fetched_ahead() {
+    let mut app = TestApp::new(Config::default());
+    let mut section = issues_requesting(&mut app, &repo("octo", "lists", false));
+    answer(&mut app, &mut section, prs_page(30));
+    let (ahead, _) = last_request(&app);
+    app.with_cx(|cx| section.request_first_page(cx));
+    assert!(cancels(&app).contains(&ahead));
+    assert!(
+        app.with_cx(|cx| section.on_response(ahead, mixed_page(30, 0, 30), cx))
+            .is_some()
+    );
+    assert_eq!(section.table().row_count(), 0);
+}
+
+#[test]
+fn a_source_that_does_not_fetch_ahead_stays_empty() {
+    let mut app = TestApp::new(Config::default());
+    let mut section = section();
+    app.with_cx(|cx| {
+        section.begin(&repo("octo", "lists", false), cx);
+        section.first_page(
+            Some(Page {
+                items: Vec::new(),
+                last: false,
+            }),
+            cx,
+        );
+    });
+    assert!(pages_asked(&app).is_empty());
+    assert!(!section.table().is_loading());
 }

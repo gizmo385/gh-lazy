@@ -5,6 +5,10 @@
 //! the Pull Requests and Issues sections do) or its owner's, which requests it and hands the result to
 //! [`ListSection::first_page`] (the Workflows section, whose first page is two requests).
 //!
+//! A source can fetch ahead while its table is empty ([`ListSource::fetches_ahead_while_empty`]): the Issues table,
+//! whose pages can hold only PRs (Py bug B181), asks for the next page at once rather than waiting for a cursor move
+//! it has no row for.
+//!
 //! The section also keeps the repo's table cache (`<owner>_<repo>_<name>.json`, Python's `cache_name`): the cached
 //! rows show under the loading overlay until the first page answers, and every row is written back after each page.
 
@@ -24,6 +28,9 @@ use crate::options::AppOptions;
 
 /// Items per page, and so the size of a first page: Python's `batch_size=30`.
 pub(super) const PER_PAGE: u32 = 30;
+
+/// The most pages, the first included, a section loads in a row while its table stays empty (Py bug B181).
+pub(super) const FETCH_AHEAD_PAGES: u32 = 5;
 
 /// What fills one kind of list section: its columns, its items and how it asks for a page of them.
 pub(super) trait ListSource {
@@ -51,6 +58,13 @@ pub(super) trait ListSource {
     /// Logs the section's line for a failed page, and says what a failed later page does to paging. A failed first
     /// page logs the same line and keeps whatever rows the table has.
     fn page_failed(error: &GhError) -> PageFailure;
+
+    /// Whether a page that leaves `repo`'s table empty, though the API had items on it, asks for the next page at
+    /// once, up to [`FETCH_AHEAD_PAGES`] in all: true for a source that filters its pages, whose own items can all be
+    /// on later ones. Off by default.
+    fn fetches_ahead_while_empty(_repo: &Repository) -> bool {
+        false
+    }
 }
 
 /// What a failed later page does to paging (Py bug B43).
@@ -82,6 +96,9 @@ pub(super) struct ListSection<S: ListSource> {
     first: Option<RequestId>,
     /// The cache read in flight for the repo.
     cache: Option<RequestId>,
+    /// The later page in flight was asked for to fill an empty table, not by a cursor move: when it lands, the
+    /// section asks for another or stops loading.
+    ahead: bool,
     compact: bool,
 }
 
@@ -94,6 +111,7 @@ impl<S: ListSource> std::fmt::Debug for ListSection<S> {
             .field("page", &self.page)
             .field("first", &self.first)
             .field("cache", &self.cache)
+            .field("ahead", &self.ahead)
             .field("compact", &self.compact)
             .finish()
     }
@@ -108,6 +126,7 @@ impl<S: ListSource> ListSection<S> {
             page: None,
             first: None,
             cache: None,
+            ahead: false,
             compact: false,
         }
     }
@@ -151,6 +170,7 @@ impl<S: ListSource> ListSection<S> {
         {
             cx.effect(Effect::Cancel(id));
         }
+        self.ahead = false;
         self.table.clear();
         self.table.set_loading(true);
         self.cache = Some(cx.read_cache(cache_file::<S>(repo, cx.config())));
@@ -165,10 +185,15 @@ impl<S: ListSource> ListSection<S> {
 
     /// Requests page 1 for the repo the rows are for, with the config's filters, replacing any first page in flight.
     /// [`Self::on_response`] then takes it to [`Self::first_page`] and [`Self::refresh_compact`], logging the
-    /// section's line first if it failed.
+    /// section's line first if it failed. A page being fetched ahead for the old first page is cancelled too.
     pub(super) fn request_first_page(&mut self, cx: &mut Cx<'_>) {
         if let Some(id) = self.first.take() {
             cx.effect(Effect::Cancel(id));
+        }
+        if std::mem::take(&mut self.ahead)
+            && let Some(page) = self.page.take()
+        {
+            cx.effect(Effect::Cancel(page.id));
         }
         let Some(repo) = &self.repo else {
             tracing::debug!(
@@ -220,21 +245,40 @@ impl<S: ListSource> ListSection<S> {
     /// `RowHighlighted` does. Paging counts the kept cached rows, as Python's `remaining` does. Either way every row
     /// is written to the cache, which after a failure rewrites what was read.
     ///
-    /// The first page's [`Page::last`] isn't read: Python only ends paging on a later page, and a first page with no
-    /// rows has no cursor to move.
+    /// The first page's [`Page::last`] doesn't end paging: Python only ends it on a later page, and a first page with
+    /// no rows has no cursor to move. It does say whether to fetch ahead: a page that leaves the table empty asks for
+    /// page 2 at once when the source fetches ahead, and the overlay stays up until [`Self::on_response`] stops.
     pub(super) fn first_page(&mut self, page: Option<Page<S::Item>>, cx: &mut Cx<'_>) {
+        let mut more = false;
         if let Some(page) = page {
             if self.table.row_count() > 0 {
                 self.table.clear();
             }
             self.table.enable_lazy_load(PER_PAGE, 1);
+            more = !page.last;
             let event = self.table.insert_many(page.items, &());
             self.follow(event.as_ref(), cx);
         } else {
             self.table.enable_lazy_load(PER_PAGE, 1);
         }
-        self.table.set_loading(false);
         self.save_cache(cx);
+        if !(more && self.fetch_ahead(1, cx)) {
+            self.table.set_loading(false);
+        }
+    }
+
+    /// Asks for the page after `loaded` when the table is still empty, `loaded` wasn't the API's last page and the
+    /// source fetches ahead for the repo, below the [`FETCH_AHEAD_PAGES`] cap. Says whether it asked.
+    fn fetch_ahead(&mut self, loaded: u32, cx: &mut Cx<'_>) -> bool {
+        let wanted = loaded < FETCH_AHEAD_PAGES
+            && self.table.items().len() == 0
+            && self.repo.as_ref().is_some_and(S::fetches_ahead_while_empty);
+        let Some(event) = wanted.then(|| self.table.load_next_page()).flatten() else {
+            return false;
+        };
+        self.follow(Some(&event), cx);
+        self.ahead = self.page.is_some();
+        self.ahead
     }
 
     /// Python's `save_to_cache`: writes every item in the table, in insertion order, to the cache file of the repo
@@ -321,7 +365,10 @@ impl<S: ListSource> ListSection<S> {
                 })
                 .ok();
             self.first_page(page, cx);
-            self.refresh_compact();
+            // While it fetches ahead, the section stays as compact as it was until loading stops.
+            if !self.ahead {
+                self.refresh_compact();
+            }
             return None;
         }
         let Some(request) = self.page.filter(|page| page.id == id) else {
@@ -332,6 +379,7 @@ impl<S: ListSource> ListSection<S> {
             Err(other) => return Some(other),
         };
         self.page = None;
+        let ahead = std::mem::take(&mut self.ahead);
         let result = match result {
             Ok(page) => Ok(page),
             Err(error) => match S::page_failed(&error) {
@@ -342,11 +390,20 @@ impl<S: ListSource> ListSection<S> {
                 }),
             },
         };
+        let more = matches!(&result, Ok(page) if !page.last);
         let loaded = self.table.page_loaded(request.generation, request.page, result, &());
         if loaded.applied {
             self.save_cache(cx);
         }
         self.follow(loaded.event.as_ref(), cx);
+        if ahead {
+            // A failed page stops here too: its line is logged, and paging retries on a cursor move as usual.
+            let asked = loaded.applied && loaded.event.is_none() && more && self.fetch_ahead(request.page, cx);
+            if !asked {
+                self.table.set_loading(false);
+                self.refresh_compact();
+            }
+        }
         None
     }
 

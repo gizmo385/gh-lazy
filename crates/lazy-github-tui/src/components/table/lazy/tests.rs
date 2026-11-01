@@ -223,6 +223,26 @@ fn a_page_with_no_items_that_is_not_the_last_keeps_paging_on() {
 }
 
 #[test]
+fn load_next_page_asks_for_the_next_page_unless_one_is_in_flight_or_paging_ended() {
+    let mut table = table();
+    assert_eq!(table.load_next_page(), None, "paging is off");
+    table.enable_lazy_load(30, 1);
+    let ask = table.load_next_page();
+    assert_eq!(
+        ask,
+        Some(TableEvent::LoadMore {
+            generation: 0,
+            page: 2,
+            per_page: 30
+        })
+    );
+    assert_eq!(table.load_next_page(), None, "page 2 is in flight");
+    let page = table.page_loaded(0, 2, Ok(Vec::new().into()), &());
+    assert!(page.applied);
+    assert_eq!(table.load_next_page(), None, "an empty page ended paging");
+}
+
+#[test]
 fn a_last_page_with_items_ends_paging() {
     let mut table = thirty();
     assert_eq!(press(&mut table, "G"), load_more(0, 2, 30));

@@ -143,6 +143,22 @@ impl<T: TableItem> SearchableTable<T> {
         })
     }
 
+    /// Asks for the page after the last loaded one without a cursor move, unless paging is off or ended or a page
+    /// is already in flight. The owner fetches it and hands it to [`Self::page_loaded`] as for any other ask.
+    pub fn load_next_page(&mut self) -> Option<TableEvent<T::Key>> {
+        let lazy = self.lazy.as_mut()?;
+        if lazy.in_flight.is_some() || !lazy.can_load_more {
+            return None;
+        }
+        let page = lazy.current_batch + 1;
+        lazy.in_flight = Some(page);
+        Some(TableEvent::LoadMore {
+            generation: self.generation,
+            page,
+            per_page: lazy.batch_size,
+        })
+    }
+
     /// A page the owner fetched for a [`TableEvent::LoadMore`] arrived.
     ///
     /// A page from an older [`Self::generation`] (the table was cleared since), or one that isn't the page in

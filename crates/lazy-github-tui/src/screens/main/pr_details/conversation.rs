@@ -846,7 +846,7 @@ impl PrConversation {
                 .blocks
                 .iter()
                 .any(|(of, block)| *of == comment && block.has_reactions()),
-            SectionRef::Overview(_) | SectionRef::File(_) | SectionRef::Hunk(..) => false,
+            SectionRef::Overview(_) => false,
         }
     }
 
@@ -933,7 +933,7 @@ impl PrConversation {
                     layout,
                 });
             }
-            SectionRef::Overview(_) | SectionRef::File(_) | SectionRef::Hunk(..) => return None,
+            SectionRef::Overview(_) => return None,
         }
         let focus_rows = focused
             .then(|| body.rows_in(&placements, Reveal::Stop(body.stop)))

@@ -50,10 +50,6 @@ pub(super) enum SectionRef {
     Review(usize),
     /// The reactions section of a comment in the PR Conversation.
     CommentReactions(CommentRef),
-    /// A file of the PR Diff, by index.
-    File(usize),
-    /// A hunk of the PR Diff: the file, then the hunk.
-    Hunk(usize, usize),
 }
 
 /// What `M` maximizes with focus inside the details content: Textual's nearest maximizable ancestor of the focused

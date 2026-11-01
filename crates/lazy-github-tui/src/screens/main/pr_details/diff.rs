@@ -1,6 +1,6 @@
 //! A pull request's Diff tab: Python's `PrDiffTabPane`. The diff is fetched with the pull request, whatever tab is
 //! active; until it arrives the tab shows the loading overlay, then the diff viewer, or one line saying why there's
-//! no diff. `c` on a hunk pane opens Add Comment, whose comment joins the viewer's pending comments.
+//! no diff. `c` on a line of the diff body opens Add Comment, whose comment joins the viewer's pending comments.
 //!
 //! Once the diff is in, the tab asks for the current user, to show the Submit review form the viewer may use (the
 //! author's, or a reviewer's), and submits the review from it.
@@ -23,9 +23,7 @@ use tokio::time::Instant;
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Cx, Owner};
 use crate::components::command_log::Wheel;
-use crate::components::diff_view::{
-    DiffMaximize, DiffSection, DiffStop, DiffView, MissingStatus, PendingComment, ViewMouse,
-};
+use crate::components::diff_view::{DiffStop, DiffView, MissingStatus, PendingComment, ViewMouse};
 use crate::components::info::Scroll;
 use crate::components::loading;
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
@@ -35,7 +33,7 @@ use crate::theme::Theme;
 use crate::toast::Toast;
 
 use super::super::MainAction;
-use super::super::details::{BodyRenderCx, MaximizeScope, SectionKey, SectionLayout, SectionRef};
+use super::super::details::{BodyRenderCx, MaximizeScope};
 use super::PullRequestTarget;
 
 /// The Diff tab: its pull request, where the diff is, and the requests the review form waits on.
@@ -240,60 +238,12 @@ impl PrDiff {
         self.view().map(DiffView::chain).unwrap_or_default()
     }
 
-    // Maximize: the viewer's file and hunk sections, by the keys the details pane knows them by.
-
+    /// Every stop of the viewer maximizes the details tab area: none sits in a section of its own.
     pub(super) fn maximize_scope(&self) -> MaximizeScope {
-        let Some(view) = self.view() else {
-            return MaximizeScope::Nothing;
-        };
-        match view.maximize_scope() {
-            DiffMaximize::Nothing => MaximizeScope::Nothing,
-            DiffMaximize::TabArea => MaximizeScope::TabArea,
-            DiffMaximize::Section(section) => {
-                let section = match section {
-                    DiffSection::File(f) => SectionRef::File(f),
-                    DiffSection::Hunk(f, h) => SectionRef::Hunk(f, h),
-                };
-                MaximizeScope::Section(SectionKey(section))
-            }
-        }
-    }
-
-    pub(super) fn shows_section(&self, section: SectionRef) -> bool {
-        diff_section(section).is_some_and(|section| self.view().is_some_and(|view| view.shows_section(section)))
-    }
-
-    pub(super) fn layout_section(
-        &mut self,
-        section: SectionRef,
-        width: u16,
-        theme: &Theme,
-        focused: bool,
-    ) -> Option<SectionLayout> {
-        let alone = self
-            .view_mut()?
-            .layout_section(diff_section(section)?, width, theme, focused)?;
-        Some(SectionLayout {
-            rendered: alone.rendered,
-            focus_rows: alone.focus_rows,
-        })
-    }
-
-    pub(super) fn focus_step_in(&mut self, section: SectionRef, forward: bool) {
-        if let (Some(section), Some(view)) = (diff_section(section), self.view_mut()) {
-            view.focus_step_in(section, forward);
-        }
-    }
-
-    pub(super) fn focus_section(&mut self, section: SectionRef) {
-        if let (Some(section), Some(view)) = (diff_section(section), self.view_mut()) {
-            view.focus_section(section);
-        }
-    }
-
-    pub(super) fn click_section(&mut self, section: SectionRef, row: usize, column: u16, width: u16) {
-        if let (Some(section), Some(view)) = (diff_section(section), self.view_mut()) {
-            view.click_section(section, row, column, width);
+        if self.view().is_some() {
+            MaximizeScope::TabArea
+        } else {
+            MaximizeScope::Nothing
         }
     }
 
@@ -307,7 +257,11 @@ impl PrDiff {
     pub(super) fn on_binding(&mut self, owner: Owner, id: BindingId) -> Option<Action> {
         let view = self.view_mut()?;
         let command = match (owner, id) {
-            (Owner::HunkPane, BindingId::DiffAddComment) => true,
+            // On a header or a `file was removed` row the binding is hidden and does nothing.
+            (Owner::DiffBody, BindingId::DiffAddComment) if view.comment_target().is_none() => {
+                return Some(Action::Consumed);
+            }
+            (Owner::DiffBody, BindingId::DiffAddComment) => true,
             (Owner::DetailsButton, BindingId::TextualButtonPress) => view.stop() == DiffStop::ReviewSubmit,
             _ => false,
         };
@@ -317,11 +271,11 @@ impl PrDiff {
         view.on_binding(owner, id)
     }
 
-    /// Python's `action_add_comment` and `on_trigger_add_comment` (Add Comment for the focused pane's current line,
+    /// Python's `action_add_comment` and `on_trigger_add_comment` (Add Comment for the body's cursor line,
     /// whose comment comes back as [`MainAction::DiffCommentAdded`]), and `on_trigger_review_submission`.
     pub(super) fn command(&mut self, owner: Owner, id: BindingId, cx: &mut Cx<'_>) {
         match (owner, id) {
-            (Owner::HunkPane, BindingId::DiffAddComment) => self.add_comment_dialog(cx),
+            (Owner::DiffBody, BindingId::DiffAddComment) => self.add_comment_dialog(cx),
             (Owner::DetailsButton, BindingId::TextualButtonPress) => self.submit_review(cx),
             _ => {}
         }
@@ -409,15 +363,6 @@ impl PrDiff {
 
     pub(super) fn handle_paste(&mut self, text: &str) -> bool {
         self.view_mut().is_some_and(|view| view.handle_paste(text))
-    }
-}
-
-/// The viewer's section a key names, if it's one of the Diff tab's.
-fn diff_section(section: SectionRef) -> Option<DiffSection> {
-    match section {
-        SectionRef::File(f) => Some(DiffSection::File(f)),
-        SectionRef::Hunk(f, h) => Some(DiffSection::Hunk(f, h)),
-        SectionRef::Overview(_) | SectionRef::Review(_) | SectionRef::CommentReactions(_) => None,
     }
 }
 

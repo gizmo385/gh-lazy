@@ -8,7 +8,11 @@
 //! what it's on ([`Cursor`]), never as a row number, so folding or filtering other files never moves it to another
 //! line. Drawing lays out and colors only the rows on screen.
 //!
-//! This is the component on its own; the Diff tab (`DiffView`) owns it from #388 on.
+//! The Diff tab (`DiffView`) owns it and scrolls it together with the pending comments and the review form below it:
+//! [`DiffBody::fit`], [`DiffBody::set_scroll`] and [`DiffBody::draw`] are for that owner, and [`DiffBody::render`]
+//! draws the body on its own, with its own scrollbar.
+
+use std::ops::Range;
 
 use lazy_github_core::diff::{ChangedFile, Counts, Diff, LineKind};
 use ratatui::buffer::Buffer;
@@ -282,6 +286,9 @@ pub struct DiffBody {
     height: usize,
     /// The cells the code had at the last draw, which panning goes by.
     code_width: usize,
+    /// The rows an owner draws after the position row, in the same scroll ([`Self::fit`]): the body may scroll that
+    /// far past its own last row.
+    trailing: usize,
 }
 
 impl DiffBody {
@@ -296,6 +303,7 @@ impl DiffBody {
             pan: 0,
             height: 0,
             code_width: 0,
+            trailing: 0,
         };
         body.settle();
         body
@@ -387,8 +395,70 @@ impl DiffBody {
         };
         self.height = height;
         self.code_width = usize::from(width).saturating_sub(bar + GUTTER_WIDTH);
+        self.trailing = 0;
         self.clamp_pan();
         self.follow();
+    }
+
+    /// Takes the size an owner that scrolls the body along with other content draws it at: `width` the cells its
+    /// rows get (the owner's scrollbar left out), `rows` how many of them show at most (the position row not
+    /// counted), and `trailing` the rows the owner draws after the position row in the same scroll. Unlike
+    /// [`Self::resize`] it doesn't scroll: the owner says when the cursor is revealed ([`Self::reveal_cursor`]).
+    pub fn fit(&mut self, width: u16, rows: usize, trailing: usize) {
+        self.height = rows;
+        self.code_width = usize::from(width).saturating_sub(GUTTER_WIDTH);
+        self.trailing = trailing;
+        self.clamp_pan();
+    }
+
+    /// Scrolls so row `row` is the first one an owner's scroll shows, without moving the cursor. It may be past the
+    /// last row when the owner shows what follows the body ([`Self::fit`]'s `trailing`).
+    pub fn set_scroll(&mut self, row: usize) {
+        self.scroll = row;
+    }
+
+    /// Scrolls as little as possible to bring the cursor's row inside its margin, as a cursor move does.
+    pub fn reveal_cursor(&mut self) {
+        self.follow();
+    }
+
+    /// Moves the cursor, without scrolling, to the row nearest it among `rows` that can hold it, when it's outside
+    /// them: what the wheel does once the cursor's row has scrolled out of view, as `less` and vim do.
+    pub fn keep_cursor_in(&mut self, rows: Range<usize>) {
+        let Some(row) = self.cursor_row() else {
+            return;
+        };
+        if rows.is_empty() || rows.contains(&row) {
+            return;
+        }
+        let last = rows.end - 1;
+        let target = if row < rows.start {
+            self.cursor_from(rows.start, true).filter(|&r| r <= last)
+        } else {
+            self.cursor_from(last, false).filter(|&r| r >= rows.start)
+        };
+        if let Some(cursor) = target.and_then(|r| self.row(r)).and_then(Row::cursor) {
+            self.cursor = Some(cursor);
+        }
+    }
+
+    /// A click on row `row`: the cursor moves to it, or from a hunk separator to the hunk's first line, without
+    /// scrolling. Says whether the row was there.
+    pub fn click_row(&mut self, row: usize) -> bool {
+        let Some(target) = self.cursor_from(row, true) else {
+            return false;
+        };
+        if let Some(cursor) = self.row(target).and_then(Row::cursor) {
+            self.cursor = Some(cursor);
+        }
+        true
+    }
+
+    /// The first shown file's header takes the cursor, scrolled into view.
+    pub fn cursor_to_first_file(&mut self) {
+        if let Some(row) = self.cursor_from(0, true) {
+            self.move_to(row);
+        }
     }
 
     /// A binding of [`DIFF_BODY_BINDINGS`]. Says whether it's the body's to handle: every one but Add Comment and
@@ -604,7 +674,9 @@ impl DiffBody {
                 self.scroll = row + margin + 1 - height;
             }
         }
-        self.scroll = self.scroll.min(self.index.total.saturating_sub(height));
+        self.scroll = self
+            .scroll
+            .min((self.index.total + self.trailing).saturating_sub(height));
     }
 
     /// Draws the visible rows in `area` less its last row, with a scrollbar when they overflow, then the position
@@ -626,19 +698,8 @@ impl DiffBody {
         } else {
             area.width
         };
-        let cursor = self.cursor;
-        let visible = self.index.total.saturating_sub(self.scroll).min(height);
-        for dy in 0..visible {
-            let Some(row) = self.row(self.scroll + dy) else {
-                break;
-            };
-            // `dy` is below the area's height, a u16.
-            let y = area.y + u16::try_from(dy).unwrap_or(u16::MAX);
-            let rect = Rect::new(area.x, y, text_width, 1);
-            let current = cursor.is_some_and(|cursor| cursor.row() == row);
-            let (spans, fill) = self.row_spans(row, current, focused, usize::from(text_width), theme, &styles);
-            put(buf, rect, spans, fill);
-        }
+        let rows = Rect::new(area.x, area.y, text_width, area.height - 1);
+        self.draw_rows(buf, rows, focused, theme, &styles);
         if bar {
             let rect = Rect::new(area.x + text_width, area.y, area.width - text_width, area.height - 1);
             let state = ScrollbarState {
@@ -648,6 +709,54 @@ impl DiffBody {
             };
             scrollbar::render(buf, rect, Axis::Vertical, state, styles.scrollbar);
         }
+        self.draw_position(buf, area, &styles);
+    }
+
+    /// Draws the rows from the scroll position in `area` less its last row, and the position row in the last row,
+    /// with no scrollbar and without scrolling or taking the area's size: for an owner that scrolls the body along
+    /// with other content ([`Self::fit`]), which gives it only the rows of the body it shows. With no file shown,
+    /// the area is left blank.
+    pub fn draw(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, focused: bool) {
+        let area = area.intersection(buf.area);
+        let styles = Styles::new(theme);
+        Clear.render(area, buf);
+        buf.set_style(area, Style::new().bg(theme.paint(styles.base)));
+        if self.index.total == 0 || area.height == 0 {
+            return;
+        }
+        let rows = Rect::new(area.x, area.y, area.width, area.height - 1);
+        self.draw_rows(buf, rows, focused, theme, &styles);
+        self.draw_position(buf, area, &styles);
+    }
+
+    /// The colors of the scrollbar beside the body, for an owner that draws its own.
+    pub fn scrollbar_colors(theme: &Theme) -> ScrollbarColors {
+        Styles::new(theme).scrollbar
+    }
+
+    /// The rows from the scroll position, as many as fit in `area`.
+    fn draw_rows(&mut self, buf: &mut Buffer, area: Rect, focused: bool, theme: &Theme, styles: &Styles) {
+        let cursor = self.cursor;
+        let visible = self
+            .index
+            .total
+            .saturating_sub(self.scroll)
+            .min(usize::from(area.height));
+        for dy in 0..visible {
+            let Some(row) = self.row(self.scroll + dy) else {
+                break;
+            };
+            // `dy` is below the area's height, a u16.
+            let y = area.y + u16::try_from(dy).unwrap_or(u16::MAX);
+            let rect = Rect::new(area.x, y, area.width, 1);
+            let current = cursor.is_some_and(|cursor| cursor.row() == row);
+            let (spans, fill) = self.row_spans(row, current, focused, usize::from(area.width), theme, styles);
+            put(buf, rect, spans, fill);
+        }
+    }
+
+    /// The position row, in `area`'s last row.
+    fn draw_position(&self, buf: &mut Buffer, area: Rect, styles: &Styles) {
         if let Some(position) = self.position() {
             let rect = Rect::new(area.x, area.bottom() - 1, area.width, 1);
             put(

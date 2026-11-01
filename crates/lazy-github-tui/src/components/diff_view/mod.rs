@@ -1,22 +1,23 @@
-//! The split diff viewer: Python's `SplitDiffViewer` in its `DiffViewerContainer`. From the top, scrolling together:
-//! the file filter, then one collapsible section per file, each holding one collapsible section per hunk, each
-//! holding the hunk's [`HunkPane`].
+//! The Diff tab's viewer (#344, decision `diff-continuous-view`): the file filter at the top, then one scroll holding
+//! the continuous diff body ([`DiffBody`]) and its position row, the pending review comments ([`PendingComment`],
+//! #272), which Add Comment adds, and once the owner shows it the Submit review form (#273), which the owner submits.
 //!
-//! The viewer doesn't know about pull requests: it takes a parsed [`Diff`]. After the files come the pending review
-//! comments ([`PendingComment`], #272), which Add Comment adds, and once the owner shows it, the Submit review form
-//! (#273), which the owner submits. Inside the details content it has an inner focus ring
-//! ([`DiffStop`]) computed from what's shown and open, and a text input (the filter) that takes its keys before the
-//! binding chain, as the table's search box does.
+//! The viewer doesn't know about pull requests: it takes a parsed [`Diff`]. Inside the details content it has an inner
+//! focus ring ([`DiffStop`]): the filter, the body, then the Remove buttons and the form's fields. The filter is a
+//! text input that takes its keys before the binding chain, as the table's search box does.
+//!
+//! The body draws only the rows on screen, so the scroll isn't a laid-out text: [`Window`] maps its rows to the body's
+//! rows, the position row and the lines of the pending comments and the form (the "tail", laid out each frame, as
+//! it's short). While the body's rows fill the view, its position row stays at the view's bottom.
 
 mod body;
 mod highlight;
-mod pane;
 mod review;
 
 use std::ops::Range;
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
-use lazy_github_core::diff::{ChangedFile, Counts, Diff, Label};
+use lazy_github_core::diff::Diff;
 use lazy_github_core::github::{NewReview, ReviewEvent};
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
@@ -26,17 +27,16 @@ use ratatui::text::{Line, Span};
 
 pub use body::{Cursor, CursorPosition, DIFF_BODY_BINDINGS, DiffBody, Row};
 pub use highlight::code_spans;
-pub use pane::{HunkPane, PaneLayout};
 pub use review::{DiffLineRef, MissingStatus, PendingComment, line_text};
 
 use review::{ButtonPlaced, FormFocus, FormPlaced, ReviewForm};
 
 use super::button::BUTTON_BINDINGS;
-use super::collapsible::{CONTENT_INDENT, Collapsible, Placement, SectionFocus};
 use super::command_log::Wheel;
 use super::info::Scroll;
-use super::markdown::{self, LinkSpan, Rendered, TextRun};
-use super::scroll_view::{Layout, ScrollView};
+use super::markdown::{self, Rendered, TextRun};
+use super::scroll_view::ScrollView;
+use super::scrollbar::{self, Axis, ScrollbarState};
 use super::select::{SELECT_BINDINGS, SELECT_OVERLAY_BINDINGS, SelectOutcome};
 use super::text_input::{self, INPUT_BINDINGS, InputOutcome, TextInput};
 use crate::action::Action;
@@ -48,25 +48,16 @@ use tokio::time::Instant;
 /// The filter's placeholder. It names the default key even with `diff.filter_files` rebound, as Python's does.
 const FILTER_PLACEHOLDER: &str = "Filter files (press '/' to focus, ESC to clear)";
 
-/// What an open deleted file shows.
-const FILE_REMOVED: &str = "file was removed";
+/// How many rows a wheel notch scrolls the view, as `less` and vim scroll (Textual's containers scroll two).
+const WHEEL_ROWS: usize = 3;
 
-/// `SplitDiffViewer.BINDINGS`: next and previous hunk, and the filter key, while focus is anywhere in the viewer.
+/// `SplitDiffViewer.BINDINGS`: next and previous hunk, and the filter key, with focus on the filter, a Remove button
+/// or the review form. The body's own link ([`DIFF_BODY_BINDINGS`]) has them too.
 pub const DIFF_VIEWER_BINDINGS: &[BindingId] = &[
     BindingId::DiffNextHunk,
     BindingId::DiffPreviousHunk,
     BindingId::DiffFilterFiles,
 ];
-
-/// `UnifiedDiffPane.BINDINGS`: the line cursor (hard-coded `j` / `k` in Python, Py bug B9) and add comment (#187).
-pub const HUNK_PANE_BINDINGS: &[BindingId] = &[
-    BindingId::DiffCursorDown,
-    BindingId::DiffCursorUp,
-    BindingId::DiffAddComment,
-];
-
-/// A focused section title's bindings: Textual's `CollapsibleTitle`.
-const TITLE_BINDINGS: &[BindingId] = &[BindingId::TextualCollapsibleToggle];
 
 /// The focused filter's bindings: `FileFilterInput`'s `escape`, which it takes before anything else, then
 /// [`text_input::INPUT_BINDINGS`].
@@ -97,22 +88,15 @@ const FILTER_BINDINGS: &[BindingId] = &[
     BindingId::TextualInputPaste,
 ];
 
-/// A focus stop inside the viewer, in ring order: the scroll area, the filter, then each shown file's title, and
-/// inside an open file each hunk's title and, when that hunk is open, its pane; then each pending comment's Remove
-/// button, then the review form's status (not on the author's form), summary and button. Files, hunks and comments
+/// A focus stop inside the viewer, in ring order: the filter, the body (while it has rows), then each pending
+/// comment's Remove button, then the review form's status (not on the author's form), summary and button. Comments
 /// are by index.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DiffStop {
-    /// The scrolling area itself (`DiffViewerContainer`).
-    Scroll,
     /// The file filter.
     Filter,
-    /// A file section's title.
-    FileTitle(usize),
-    /// A hunk section's title: the file, then the hunk.
-    HunkTitle(usize, usize),
-    /// A hunk's pane: the file, then the hunk.
-    Pane(usize, usize),
+    /// The continuous diff body and its line cursor.
+    Body,
     /// A pending comment's Remove button.
     RemoveComment(usize),
     /// The review form's status select, its list open or closed.
@@ -121,53 +105,6 @@ pub enum DiffStop {
     ReviewSummary,
     /// The review form's button: "Submit Review", or the author's "Add Comments".
     ReviewSubmit,
-}
-
-/// What maximize targets from a focused stop, by its nearest maximizable ancestor.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DiffMaximize {
-    /// No ancestor allows it: the scroll area.
-    Nothing,
-    /// The details tab area holding the viewer.
-    TabArea,
-    /// A file's or hunk's section.
-    Section(DiffSection),
-}
-
-/// A collapsible section of the viewer, for the section maximize view: a file's, or a hunk's (the file, then the
-/// hunk), by index.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum DiffSection {
-    /// A file's section, with its hunks' sections inside.
-    File(usize),
-    /// A hunk's section, with its pane inside.
-    Hunk(usize, usize),
-}
-
-impl DiffSection {
-    /// Whether `stop` is inside the section: its title, or a stop in its contents.
-    fn holds(self, stop: DiffStop) -> bool {
-        match self {
-            DiffSection::File(f) => stop.file() == Some(f),
-            DiffSection::Hunk(f, h) => stop.hunk() == Some((f, h)),
-        }
-    }
-}
-
-/// A section laid out alone.
-#[derive(Debug, Clone, Default)]
-pub struct SectionAlone {
-    /// Its rows.
-    pub rendered: Rendered,
-    /// The focused stop's rows, when it's inside the section.
-    pub focus_rows: Option<Range<usize>>,
-}
-
-/// Where a section laid out alone landed.
-#[derive(Debug, Clone)]
-enum AlonePlaced {
-    File(FilePlaced),
-    Hunk(HunkPlaced),
 }
 
 /// What a mouse event other than a press did to the viewer.
@@ -181,108 +118,158 @@ pub enum ViewMouse {
     SubmitReview,
 }
 
-impl DiffStop {
-    /// The file the stop is in, if any.
-    fn file(self) -> Option<usize> {
-        match self {
-            DiffStop::FileTitle(f) | DiffStop::HunkTitle(f, _) | DiffStop::Pane(f, _) => Some(f),
-            DiffStop::Scroll
-            | DiffStop::Filter
-            | DiffStop::RemoveComment(_)
-            | DiffStop::ReviewStatus
-            | DiffStop::ReviewSummary
-            | DiffStop::ReviewSubmit => None,
-        }
-    }
-
-    /// The hunk the stop is in, if any.
-    fn hunk(self) -> Option<(usize, usize)> {
-        match self {
-            DiffStop::HunkTitle(f, h) | DiffStop::Pane(f, h) => Some((f, h)),
-            DiffStop::Scroll
-            | DiffStop::Filter
-            | DiffStop::FileTitle(_)
-            | DiffStop::RemoveComment(_)
-            | DiffStop::ReviewStatus
-            | DiffStop::ReviewSummary
-            | DiffStop::ReviewSubmit => None,
-        }
-    }
-}
-
-/// One file's section.
-#[derive(Debug)]
-struct FileSection {
-    file: ChangedFile,
-    section: Collapsible,
-    hunks: Vec<HunkSection>,
-    /// Whether the filter keeps it.
-    shown: bool,
-    /// The section's latest layouts, the two a draw beside a scrollbar needs. A change anywhere in the view lays
-    /// the whole view out again, and with hundreds of hunks open that's too slow for one frame, so each file keeps
-    /// its own and only the files whose look changed are laid out again (#325).
-    layouts: Vec<FileLayout>,
-    /// How many layouts the section has had, which stamps each one.
-    stamps: u64,
-}
-
-/// One file's section laid out from its top row, and what it was laid out from.
-#[derive(Debug)]
-struct FileLayout {
-    key: FileKey,
-    /// Which of the file's layouts this is, so a view put together from it can tell it's still current.
-    stamp: u64,
-    rendered: Rendered,
-    placed: FilePlaced,
-}
-
-/// Everything a file's section layout depends on that can change: the width, the theme, focus, which sections are
-/// open, and each pane's current line and scroll. The file's own diff never changes.
-#[derive(Debug, Clone, PartialEq)]
-struct FileKey {
-    width: u16,
-    theme: Theme,
-    focus: FileFocus,
-    section: Collapsible,
-    hunks: Vec<(Collapsible, usize, usize)>,
-}
-
-/// One hunk's section and pane.
-#[derive(Debug)]
-struct HunkSection {
-    section: Collapsible,
-    pane: HunkPane,
-}
-
 /// What the next draw scrolls into view.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Reveal {
-    /// A focused stop: its row, or the pane's rows.
+    /// The body's cursor, inside its margin.
+    Cursor,
+    /// A stop after the body: a Remove button or a form field.
     Stop(DiffStop),
-    /// A section that opened or closed: all of its rows. A hunk is `(file, Some(hunk))`.
-    Section(usize, Option<usize>),
 }
 
-/// The diff viewer: everything that scrolls, its scroll position and its inner focus.
+/// The rows of the scroll under the filter: the body's rows, its position row (while it has rows), then the tail's
+/// lines; and how many show at once.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct Window {
+    body: usize,
+    tail: usize,
+    height: usize,
+}
+
+/// What a window shows at one scroll offset.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Split {
+    /// The body's rows shown, from the view's top.
+    body: Range<usize>,
+    /// The view row of the position row, when it shows.
+    position: Option<usize>,
+    /// The tail's lines shown.
+    tail: Range<usize>,
+    /// The view row of the first of them.
+    tail_top: usize,
+}
+
+impl Window {
+    fn position_rows(self) -> usize {
+        usize::from(self.body > 0)
+    }
+
+    /// Every row, in scroll order.
+    fn content(self) -> usize {
+        self.body + self.position_rows() + self.tail
+    }
+
+    /// Tail line `line`'s row in the scroll.
+    fn tail_row(self, line: usize) -> usize {
+        self.body + self.position_rows() + line
+    }
+
+    /// What shows from row `offset` on. Rows follow one another in scroll order, but while the body's rows fill the
+    /// view the position row takes its last row.
+    fn split(self, offset: usize) -> Split {
+        let height = self.height;
+        let tail_from = |start: usize, top: usize| {
+            let start = start.min(self.tail);
+            start..(start + height.saturating_sub(top)).min(self.tail)
+        };
+        if self.body == 0 || offset > self.body {
+            let start = offset.saturating_sub(self.body + self.position_rows());
+            return Split {
+                body: offset..offset,
+                position: None,
+                tail: tail_from(start, 0),
+                tail_top: 0,
+            };
+        }
+        let shown = (self.body - offset).min(height.saturating_sub(1));
+        Split {
+            body: offset..offset + shown,
+            position: (height > 0).then_some(shown),
+            tail: tail_from(0, shown + 1),
+            tail_top: shown + 1,
+        }
+    }
+}
+
+/// The pending comments and the form laid out, for one draw: their lines, and where their stops landed in them.
+#[derive(Debug, Default)]
+struct Tail {
+    rendered: Rendered,
+    placed: TailPlaced,
+}
+
+/// Where the tail's stops landed, by line.
+#[derive(Debug, Clone, Default)]
+struct TailPlaced {
+    /// Each pending comment's Remove button.
+    removes: Vec<ButtonPlaced>,
+    /// The review form's fields, while it shows.
+    form: Option<FormPlaced>,
+}
+
+impl TailPlaced {
+    /// The lines of a stop after the body.
+    fn lines_of(&self, stop: DiffStop) -> Option<Range<usize>> {
+        match stop {
+            DiffStop::RemoveComment(i) => self.removes.get(i).map(|p| p.rows.clone()),
+            DiffStop::ReviewStatus => self.form.as_ref()?.status.clone(),
+            DiffStop::ReviewSummary => self.form.as_ref().map(|p| p.summary.clone()),
+            DiffStop::ReviewSubmit => self.form.as_ref().map(|p| p.submit.rows.clone()),
+            DiffStop::Filter | DiffStop::Body => None,
+        }
+    }
+
+    /// The stop drawn at `line` and column `x` of the tail.
+    fn hit(&self, line: usize, x: u16) -> Option<DiffStop> {
+        if let Some(index) = self.removes.iter().position(|placed| placed.contains(line, x)) {
+            return Some(DiffStop::RemoveComment(index));
+        }
+        let form = self.form.as_ref()?;
+        if form.status.as_ref().is_some_and(|rows| rows.contains(&line)) {
+            Some(DiffStop::ReviewStatus)
+        } else if form.summary.contains(&line) {
+            Some(DiffStop::ReviewSummary)
+        } else if form.submit.contains(line, x) {
+            Some(DiffStop::ReviewSubmit)
+        } else {
+            None
+        }
+    }
+}
+
+/// Where the last draw put things, for clicks and the status's open list.
+#[derive(Debug, Clone, Default)]
+struct Drawn {
+    /// The whole view.
+    area: Rect,
+    /// The scroll under the filter, its scrollbar included.
+    region: Rect,
+    /// The columns the scroll's rows got, the scrollbar left out.
+    width: u16,
+    window: Window,
+    tail: TailPlaced,
+}
+
+/// What a screen cell of the last draw is.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Hit {
+    Filter,
+    /// A body row, by its row number.
+    Row(usize),
+    /// The body's position row.
+    Position,
+    /// A stop after the body.
+    Stop(DiffStop),
+    Nothing,
+}
+
+/// The diff viewer: the filter, the body, the pending comments and the form, the scroll they share, and the inner
+/// focus.
 #[derive(Debug)]
 pub struct DiffView {
-    scroll: ScrollView,
-    body: Body,
-    reveal: Option<Reveal>,
-    /// Where the view was drawn last, for clicks.
-    area: Rect,
-    /// A left press landed on this button and its release hasn't come yet: the two make a click.
-    armed: Option<DiffStop>,
-    /// Where a section laid out alone (maximized) landed, by section and width: the latest two.
-    alone: Vec<(DiffSection, u16, AlonePlaced)>,
-}
-
-/// Everything that scrolls, with its layouts.
-#[derive(Debug)]
-struct Body {
     filter: TextInput,
-    files: Vec<FileSection>,
-    /// A line under the filter in place of the files: why the diff couldn't be parsed.
+    body: DiffBody,
+    /// A line under the filter in place of the body: why the diff couldn't be parsed.
     notice: Option<String>,
     /// The comments added with Add Comment, in the order they were added.
     pending: Vec<PendingComment>,
@@ -291,292 +278,229 @@ struct Body {
     stop: DiffStop,
     /// Whether focus is inside the content, so the stop is drawn focused.
     focused: bool,
-    layouts: Layouts,
-    /// Where things landed in each cached layout, by width.
-    placements: Vec<(u16, Placements)>,
-    /// The width of the last layout asked for: the one the last draw used.
-    last_width: u16,
-}
-
-/// The whole view's latest layouts, the two a draw beside a scrollbar needs. A change marks them stale rather than
-/// dropping them: the next layout at the same width keeps the rows of every file that looks the same, so a key that
-/// changes one file costs that file, not the whole diff (#325).
-#[derive(Debug, Default)]
-struct Layouts {
-    entries: Vec<Assembled>,
-}
-
-impl Layouts {
-    /// Marks every layout stale, for when anything in the view changes.
-    fn clear(&mut self) {
-        for entry in &mut self.entries {
-            entry.fresh = false;
-        }
-    }
-}
-
-/// The view laid out at one width.
-#[derive(Debug)]
-struct Assembled {
-    width: u16,
-    theme: Theme,
-    /// Whether nothing changed since it was laid out.
-    fresh: bool,
-    rendered: Rendered,
-    /// Each shown file's layout stamp and rows, by file index.
-    files: Vec<Option<(u64, Range<usize>)>>,
-}
-
-/// Where the shown files landed in a layout, by file index (`None` for a file the filter hides).
-#[derive(Debug, Clone, Default)]
-struct Placements {
-    files: Vec<Option<FilePlaced>>,
-    /// Each pending comment's Remove button.
-    removes: Vec<ButtonPlaced>,
-    /// The review form's fields, while it shows.
-    form: Option<FormPlaced>,
-}
-
-#[derive(Debug, Clone, Default)]
-struct FilePlaced {
-    section: Placement,
-    /// By hunk index; empty while the file is closed.
-    hunks: Vec<HunkPlaced>,
-}
-
-#[derive(Debug, Clone, Default)]
-struct HunkPlaced {
-    /// With its title's columns from the view's left edge.
-    section: Placement,
-    /// The pane's rows, its margins included; empty while the hunk is closed.
-    pane: Range<usize>,
-    /// How many lines the pane showed at once, when it was laid out: a cached layout gives it back to the pane.
-    viewport: Option<usize>,
+    /// The scroll under the filter, in [`Window`] rows. The body scrolls with it: the body's own scroll is set from
+    /// it before the body moves or is drawn, and read back after a move.
+    scroll: ScrollView,
+    reveal: Option<Reveal>,
+    drawn: Drawn,
+    /// A left press landed on this button and its release hasn't come yet: the two make a click.
+    armed: Option<DiffStop>,
 }
 
 impl DiffView {
-    /// The viewer of `diff`: every file open but deleted ones, every hunk closed, the scroll area focused.
+    /// The viewer of `diff`: every file unfolded but deleted ones, the cursor on the first file's header.
     pub fn new(diff: Diff) -> Self {
-        let files = diff
-            .files
-            .into_iter()
-            .map(|file| {
-                let hunks = file
-                    .hunks
-                    .iter()
-                    .map(|hunk| HunkSection {
-                        section: Collapsible::new(false),
-                        pane: HunkPane::new(hunk),
-                    })
-                    .collect();
-                FileSection {
-                    section: Collapsible::new(!file.deleted),
-                    file,
-                    hunks,
-                    shown: true,
-                    layouts: Vec::new(),
-                    stamps: 0,
-                }
-            })
-            .collect();
-        Self::with_body(files, None)
+        Self::build(DiffBody::new(diff), None)
     }
 
     /// A diff that couldn't be parsed: the filter, then `error parsing diff - please view on github: <reason>`.
     pub fn invalid(reason: &str) -> Self {
-        Self::with_body(
-            Vec::new(),
+        Self::build(
+            DiffBody::new(Diff { files: Vec::new() }),
             Some(format!("error parsing diff - please view on github: {reason}")),
         )
     }
 
-    fn with_body(files: Vec<FileSection>, notice: Option<String>) -> Self {
+    fn build(body: DiffBody, notice: Option<String>) -> Self {
+        let stop = if body.rows() > 0 {
+            DiffStop::Body
+        } else {
+            DiffStop::Filter
+        };
         Self {
+            filter: TextInput::new(FILTER_PLACEHOLDER),
+            body,
+            notice,
+            pending: Vec::new(),
+            form: None,
+            stop,
+            focused: false,
             scroll: ScrollView::default(),
-            body: Body {
-                filter: TextInput::new(FILTER_PLACEHOLDER),
-                files,
-                notice,
-                pending: Vec::new(),
-                form: None,
-                stop: DiffStop::Scroll,
-                focused: false,
-                layouts: Layouts::default(),
-                placements: Vec::new(),
-                last_width: 0,
-            },
             reveal: None,
-            area: Rect::default(),
+            drawn: Drawn::default(),
             armed: None,
-            alone: Vec::new(),
         }
     }
 
     /// The focused stop, if focus is inside the viewer.
     pub fn stop(&self) -> DiffStop {
-        self.body.stop
+        self.stop
     }
 
-    /// The first visible row.
+    /// The first visible row of the scroll under the filter.
     pub fn offset(&self) -> usize {
         self.scroll.offset()
     }
 
-    /// The filter's text.
-    pub fn filter_text(&self) -> &str {
-        self.body.filter.value()
+    /// The continuous diff body.
+    pub fn body(&self) -> &DiffBody {
+        &self.body
     }
 
-    /// Whether file `file`'s section is open.
-    pub fn is_file_open(&self, file: usize) -> bool {
-        self.body.files.get(file).is_some_and(|f| f.section.is_open())
+    /// The filter's text.
+    pub fn filter_text(&self) -> &str {
+        self.filter.value()
     }
 
     /// Whether the filter keeps file `file`.
     pub fn is_file_shown(&self, file: usize) -> bool {
-        self.body.files.get(file).is_some_and(|f| f.shown)
-    }
-
-    /// Whether hunk `hunk` of file `file` is open.
-    pub fn is_hunk_open(&self, file: usize, hunk: usize) -> bool {
-        self.hunk(file, hunk).is_some_and(|h| h.section.is_open())
-    }
-
-    /// The pane of hunk `hunk` of file `file`.
-    pub fn pane(&self, file: usize, hunk: usize) -> Option<&HunkPane> {
-        self.hunk(file, hunk).map(|h| &h.pane)
-    }
-
-    fn hunk(&self, file: usize, hunk: usize) -> Option<&HunkSection> {
-        self.body.files.get(file)?.hunks.get(hunk)
+        self.body.is_shown(file)
     }
 
     /// The pending comments, in the order they were added.
     pub fn pending(&self) -> &[PendingComment] {
-        &self.body.pending
+        &self.pending
     }
 
-    /// Shows the Submit review form after the files and the pending comments: the author's (`author`, only a summary
+    /// Shows the Submit review form after the body and the pending comments: the author's (`author`, only a summary
     /// and "Add Comments") or a reviewer's. A diff that couldn't be parsed shows no form, as in Python.
     pub fn show_review_form(&mut self, author: bool) {
-        if self.body.notice.is_none() && self.body.form.is_none() {
-            self.body.form = Some(ReviewForm::new(author));
-            self.body.layouts.clear();
+        if self.notice.is_none() && self.form.is_none() {
+            self.form = Some(ReviewForm::new(author));
         }
     }
 
     /// Whether the review form shows.
     pub fn has_review_form(&self) -> bool {
-        self.body.form.is_some()
+        self.form.is_some()
     }
 
     /// The review status chosen: `None` without a form or on the author's form, `Some(None)` for the blank option.
     pub fn review_status(&self) -> Option<Option<ReviewEvent>> {
-        let status = self.body.form.as_ref()?.status.as_ref()?;
+        let status = self.form.as_ref()?.status.as_ref()?;
         Some(status.value().copied())
     }
 
     /// The review summary as typed, while the form shows.
     pub fn review_summary(&self) -> Option<&str> {
-        self.body.form.as_ref().map(|form| form.summary.value())
+        self.form.as_ref().map(|form| form.summary.value())
     }
 
     /// The review form's button label, while the form shows.
     pub fn review_button(&self) -> Option<&str> {
-        self.body.form.as_ref().map(|form| form.submit.label())
+        self.form.as_ref().map(|form| form.submit.label())
     }
 
     /// The review the form would send for commit `commit_id`, with every pending comment in the order they were
     /// added. `None` without a form.
     pub fn review_request(&self, commit_id: &str) -> Option<Result<NewReview, MissingStatus>> {
-        let form = self.body.form.as_ref()?;
-        Some(form.review(commit_id, &self.body.pending))
+        let form = self.form.as_ref()?;
+        Some(form.review(commit_id, &self.pending))
     }
 
     /// Whether a submitted review is in flight: the button is disabled until the answer comes.
     pub fn is_submitting(&self) -> bool {
-        self.body.form.as_ref().is_some_and(|form| form.submit.disabled())
+        self.form.as_ref().is_some_and(|form| form.submit.disabled())
     }
 
     /// Disables the review form's button while a review is in flight, or enables it again.
     pub fn set_submitting(&mut self, submitting: bool) {
-        if let Some(form) = &mut self.body.form {
+        if let Some(form) = &mut self.form {
             form.submit.set_disabled(submitting);
-            self.body.layouts.clear();
         }
     }
 
-    /// What Add Comment comments on with a hunk pane focused: the pane's current line, with an empty body.
+    /// What Add Comment comments on with the body focused: the diff line under the cursor, with an empty body. `None`
+    /// on a file header or a `file was removed` row.
     pub fn comment_target(&self) -> Option<PendingComment> {
-        let DiffStop::Pane(f, h) = self.body.stop else {
+        if self.stop != DiffStop::Body {
             return None;
-        };
-        let file = self.body.files.get(f)?;
-        let line = DiffLineRef {
-            file: f,
-            hunk: h,
-            line: file.hunks.get(h)?.pane.cursor(),
-        };
-        PendingComment::on(&file.file.path, file.file.hunks.get(h)?, line)
+        }
+        let line = self.body.cursor_line()?;
+        let file = self.body.file(line.file)?;
+        PendingComment::on(&file.path, file.hunks.get(line.hunk)?, line)
     }
 
     /// Adds `comment` after the others, showing the section with the first one. Focus stays where it is.
     pub fn add_comment(&mut self, comment: PendingComment) {
-        self.body.pending.push(comment);
-        self.body.layouts.clear();
+        self.pending.push(comment);
     }
 
     /// Drops pending comment `index`, hiding the section with the last one. A focused Remove button that goes takes
     /// focus to the stop before it, as Textual does when the focused widget is removed.
     fn remove_comment(&mut self, index: usize) {
-        if index >= self.body.pending.len() {
+        if index >= self.pending.len() {
             return;
         }
-        let stop = match self.body.stop {
+        let stop = match self.stop {
             DiffStop::RemoveComment(i) if i == index => {
                 let stops = self.stops();
-                let at = stops.iter().position(|&stop| stop == self.body.stop).unwrap_or(0);
+                let at = stops.iter().position(|&stop| stop == self.stop).unwrap_or(0);
                 Some(stops[at.saturating_sub(1)])
             }
             DiffStop::RemoveComment(i) if i > index => Some(DiffStop::RemoveComment(i - 1)),
             _ => None,
         };
-        self.body.pending.remove(index);
-        self.body.layouts.clear();
+        self.pending.remove(index);
         if let Some(stop) = stop {
             self.focus(stop);
         }
     }
 
-    /// A `textual.scroll.*` binding with the viewer focused.
+    /// A `textual.scroll.*` binding the focused stop doesn't take: up, down and the page keys scroll the view, and
+    /// left and right pan the body's code.
     pub fn scroll(&mut self, scroll: Scroll) {
-        self.scroll.scroll(scroll);
+        match scroll {
+            Scroll::Left | Scroll::PageLeft => self.pan(BindingId::TextualScrollLeft),
+            Scroll::Right | Scroll::PageRight => self.pan(BindingId::TextualScrollRight),
+            Scroll::Up | Scroll::Down | Scroll::Home | Scroll::End | Scroll::PageUp | Scroll::PageDown => {
+                self.scroll.scroll(scroll);
+                self.keep_cursor_in_view();
+            }
+        }
     }
 
-    /// A wheel notch over the viewer.
+    /// A wheel notch over the viewer: up and down scroll the view three rows, and the cursor stays on a row in view;
+    /// sideways pans the body's code.
     pub fn wheel(&mut self, wheel: Wheel) {
-        self.scroll.wheel(wheel);
+        match wheel {
+            Wheel::Up => {
+                self.scroll.scroll_to(self.scroll.offset().saturating_sub(WHEEL_ROWS));
+                self.keep_cursor_in_view();
+            }
+            Wheel::Down => {
+                self.scroll.scroll_to(self.scroll.offset() + WHEEL_ROWS);
+                self.keep_cursor_in_view();
+            }
+            Wheel::Left => self.pan(BindingId::TextualScrollLeft),
+            Wheel::Right => self.pan(BindingId::TextualScrollRight),
+        }
+    }
+
+    fn pan(&mut self, id: BindingId) {
+        // Panning is one of the body's own bindings; it always takes it.
+        let _ = self.body.handle(id);
+    }
+
+    /// After the view scrolled: a cursor whose row went out of view moves to the nearest row still in it.
+    fn keep_cursor_in_view(&mut self) {
+        let split = self.drawn.window.split(self.scroll.offset());
+        self.body.keep_cursor_in(split.body);
+    }
+
+    /// Runs `f` on the body scrolled to the view's offset, then scrolls the view to wherever the body went.
+    fn with_body<T>(&mut self, f: impl FnOnce(&mut DiffBody) -> T) -> T {
+        self.body.set_scroll(self.scroll.offset());
+        let out = f(&mut self.body);
+        self.scroll.scroll_to(self.body.scroll());
+        out
     }
 
     // Focus.
 
-    /// The inner focus ring, from what's shown and open.
+    /// Whether the body is a stop: it has rows to show.
+    fn has_body(&self) -> bool {
+        self.body.rows() > 0
+    }
+
+    /// The inner focus ring, from what's shown.
     fn stops(&self) -> Vec<DiffStop> {
-        let mut stops = vec![DiffStop::Scroll, DiffStop::Filter];
-        for (f, file) in self.body.files.iter().enumerate().filter(|(_, file)| file.shown) {
-            stops.push(DiffStop::FileTitle(f));
-            if !file.section.is_open() || file.file.deleted {
-                continue;
-            }
-            for (h, hunk) in file.hunks.iter().enumerate() {
-                stops.push(DiffStop::HunkTitle(f, h));
-                if hunk.section.is_open() {
-                    stops.push(DiffStop::Pane(f, h));
-                }
-            }
+        let mut stops = vec![DiffStop::Filter];
+        if self.has_body() {
+            stops.push(DiffStop::Body);
         }
-        stops.extend((0..self.body.pending.len()).map(DiffStop::RemoveComment));
-        if let Some(form) = &self.body.form {
+        stops.extend((0..self.pending.len()).map(DiffStop::RemoveComment));
+        if let Some(form) = &self.form {
             if form.status.is_some() {
                 stops.push(DiffStop::ReviewStatus);
             }
@@ -585,14 +509,14 @@ impl DiffView {
         stops
     }
 
-    /// Moves to `stop` and scrolls it into view at the next draw. Focus moving onto the filter selects its text, as
-    /// Textual's `Input` does on focus.
+    /// Moves to `stop` and scrolls it into view at the next draw: the body's cursor, or a stop after the body (the
+    /// filter is always in view). Focus moving onto the filter selects its text, as Textual's `Input` does on focus.
     fn focus(&mut self, stop: DiffStop) {
-        let before = self.body.stop;
+        let before = self.stop;
         if stop == DiffStop::Filter && before != DiffStop::Filter {
-            self.body.filter.select_all();
+            self.filter.select_all();
         }
-        if let Some(form) = &mut self.body.form {
+        if let Some(form) = &mut self.form {
             if stop == DiffStop::ReviewSummary && before != DiffStop::ReviewSummary {
                 form.summary.select_all();
             }
@@ -603,16 +527,18 @@ impl DiffView {
                 status.close();
             }
         }
-        self.body.set_stop(stop);
-        if stop != DiffStop::Scroll {
-            self.reveal = Some(Reveal::Stop(stop));
-        }
+        self.stop = stop;
+        self.reveal = match stop {
+            DiffStop::Filter => None,
+            DiffStop::Body => Some(Reveal::Cursor),
+            other => Some(Reveal::Stop(other)),
+        };
     }
 
     /// One stop `forward` or back; `false` past either end, where focus leaves the viewer.
     pub fn focus_step(&mut self, forward: bool) -> bool {
         let stops = self.stops();
-        let at = stops.iter().position(|&stop| stop == self.body.stop).unwrap_or(0);
+        let at = stops.iter().position(|&stop| stop == self.stop).unwrap_or(0);
         let next = if forward {
             at.checked_add(1).filter(|&next| next < stops.len())
         } else {
@@ -627,27 +553,28 @@ impl DiffView {
         }
     }
 
-    /// Focus enters from before: the scroll area.
+    /// Focus enters from before: the body, so `j` moves the cursor at once; the filter when there's no body.
     pub fn focus_first(&mut self) {
-        self.focus(DiffStop::Scroll);
+        let first = if self.has_body() {
+            DiffStop::Body
+        } else {
+            DiffStop::Filter
+        };
+        self.focus(first);
     }
 
     /// Focus enters from after: the last stop.
     pub fn focus_last(&mut self) {
-        let last = self.stops().last().copied().unwrap_or(DiffStop::Scroll);
+        let last = self.stops().last().copied().unwrap_or(DiffStop::Filter);
         self.focus(last);
     }
 
     /// The chain links in front of the content's scroll link, for the focused stop.
     pub fn chain(&self) -> Vec<ChainLink> {
         let viewer = ChainLink::new(Owner::DiffViewer, DIFF_VIEWER_BINDINGS);
-        match self.body.stop {
-            DiffStop::Scroll => vec![viewer],
+        match self.stop {
             DiffStop::Filter => vec![ChainLink::new(Owner::DiffFilter, FILTER_BINDINGS), viewer],
-            DiffStop::FileTitle(_) | DiffStop::HunkTitle(..) => {
-                vec![ChainLink::new(Owner::CollapsibleTitle, TITLE_BINDINGS), viewer]
-            }
-            DiffStop::Pane(..) => vec![ChainLink::new(Owner::HunkPane, HUNK_PANE_BINDINGS), viewer],
+            DiffStop::Body => vec![ChainLink::new(Owner::DiffBody, DIFF_BODY_BINDINGS)],
             DiffStop::RemoveComment(_) | DiffStop::ReviewSubmit => {
                 vec![ChainLink::new(Owner::DetailsButton, BUTTON_BINDINGS), viewer]
             }
@@ -664,18 +591,16 @@ impl DiffView {
 
     /// Whether the review status's list is open.
     pub(crate) fn status_open(&self) -> bool {
-        self.body
-            .form
+        self.form
             .as_ref()
             .and_then(|form| form.status.as_ref())
             .is_some_and(super::select::Select::is_open)
     }
 
-    /// How the footer and help panel show a binding of [`Self::chain`]. With the scroll area focused the viewer's
-    /// keys work but aren't shown: in Python the scroll area is outside the `SplitDiffViewer` that binds them, so
-    /// its footer doesn't list them.
-    pub fn binding_state(&self, owner: Owner, _id: BindingId) -> BindingState {
-        if owner == Owner::DiffViewer && self.body.stop == DiffStop::Scroll {
+    /// How the footer and help panel show a binding of [`Self::chain`]: Add Comment is hidden while the cursor isn't
+    /// on a diff line.
+    pub fn binding_state(&self, owner: Owner, id: BindingId) -> BindingState {
+        if (owner, id) == (Owner::DiffBody, BindingId::DiffAddComment) && self.body.cursor_line().is_none() {
             BindingState::Hidden
         } else {
             BindingState::Enabled
@@ -686,44 +611,32 @@ impl DiffView {
     /// (`diff.add_comment`) isn't the viewer's: it opens a dialog, which the Diff tab does.
     pub fn on_binding(&mut self, owner: Owner, id: BindingId) -> Option<Action> {
         match (owner, id) {
-            (Owner::CollapsibleTitle, BindingId::TextualCollapsibleToggle) => match self.body.stop {
-                DiffStop::FileTitle(f) => self.toggle(f, None),
-                DiffStop::HunkTitle(f, h) => self.toggle(f, Some(h)),
-                _ => return None,
-            },
-            (Owner::HunkPane, BindingId::DiffCursorDown | BindingId::DiffCursorUp) => {
-                let DiffStop::Pane(f, h) = self.body.stop else {
+            (Owner::DiffBody | Owner::DiffViewer, BindingId::DiffFilterFiles) => self.focus(DiffStop::Filter),
+            (Owner::DiffBody, BindingId::DiffAddComment) => return None,
+            (Owner::DiffBody, _) => {
+                if !self.with_body(|body| body.handle(id)) {
                     return None;
-                };
-                let pane = &mut self.body.files[f].hunks[h].pane;
-                let moved = if id == BindingId::DiffCursorDown {
-                    pane.cursor_down()
-                } else {
-                    pane.cursor_up()
-                };
-                if moved {
-                    self.body.layouts.clear();
                 }
             }
-            (Owner::DetailsButton, BindingId::TextualButtonPress) => match self.body.stop {
+            // `J` / `K` from the Remove buttons or the form: the body takes focus and its cursor jumps.
+            (Owner::DiffViewer, BindingId::DiffNextHunk | BindingId::DiffPreviousHunk) => {
+                if !self.has_body() {
+                    return None;
+                }
+                self.focus(DiffStop::Body);
+                self.with_body(|body| body.handle(id));
+            }
+            (Owner::DetailsButton, BindingId::TextualButtonPress) => match self.stop {
                 DiffStop::RemoveComment(index) => self.remove_comment(index),
                 _ => return None,
             },
             (Owner::DetailsSelect | Owner::DetailsSelectOverlay, _) => {
-                let status = self.body.form.as_mut()?.status.as_mut()?;
+                let status = self.form.as_mut()?.status.as_mut()?;
                 if status.on_binding(id) == SelectOutcome::Ignored {
                     return None;
                 }
-                self.body.layouts.clear();
             }
-            (Owner::DiffViewer, BindingId::DiffNextHunk) => self.jump_to_hunk(true),
-            (Owner::DiffViewer, BindingId::DiffPreviousHunk) => self.jump_to_hunk(false),
-            (Owner::DiffViewer, BindingId::DiffFilterFiles) => self.focus(DiffStop::Filter),
-            (Owner::DiffFilter, BindingId::TextualFileFilterClear) => {
-                self.body.filter.set_value("");
-                self.apply_filter();
-                self.focus(DiffStop::Scroll);
-            }
+            (Owner::DiffFilter, BindingId::TextualFileFilterClear) => self.clear_filter(),
             // The filter and the summary took their editing keys before the chain.
             (Owner::DiffFilter | Owner::DetailsInput, _) => {}
             _ => return None,
@@ -732,17 +645,16 @@ impl DiffView {
     }
 
     /// A key before the binding chain, at `now`: the focused filter or review summary takes printable keys and its
-    /// editing keys, and the review status's open list its search keys. `enter` leaves the filter for the first shown
-    /// file's first hunk (Py bug B59), and does nothing in the summary. Paste types `clipboard`, and copy and cut hand
-    /// the text to the app's clipboard.
+    /// editing keys, and the review status's open list its search keys. `enter` leaves the filter for the body, the
+    /// cursor on the first shown file's header, and does nothing in the summary. Paste types `clipboard`, and copy
+    /// and cut hand the text to the app's clipboard.
     pub fn handle_key(&mut self, key: &KeyChord, keymap: &Keymap, clipboard: &str, now: Instant) -> Option<Action> {
-        match (self.body.stop, &mut self.body.form) {
+        match (self.stop, &mut self.form) {
             (DiffStop::ReviewSummary, Some(form)) if form.summary.consumes_key(key, keymap) => {
                 let action = match form.summary.handle_key(key, keymap, clipboard) {
                     InputOutcome::Copied(text) => Action::Copy(text),
                     InputOutcome::Changed | InputOutcome::Submitted | InputOutcome::Ignored => Action::Consumed,
                 };
-                self.body.layouts.clear();
                 return Some(action);
             }
             (
@@ -752,17 +664,15 @@ impl DiffView {
                 }),
             ) if status.consumes_key(key, keymap) => {
                 let _ = status.handle_key(key, keymap, now);
-                self.body.layouts.clear();
                 return Some(Action::Consumed);
             }
             _ => {}
         }
-        let filter = &mut self.body.filter;
-        if self.body.stop != DiffStop::Filter || !filter.consumes_key(key, keymap) {
+        if self.stop != DiffStop::Filter || !self.filter.consumes_key(key, keymap) {
             return None;
         }
         let mut action = Action::Consumed;
-        match filter.handle_key(key, keymap, clipboard) {
+        match self.filter.handle_key(key, keymap, clipboard) {
             InputOutcome::Changed => self.apply_filter(),
             InputOutcome::Submitted => self.leave_filter(),
             // A cut changes the text, so the filter applies again.
@@ -772,108 +682,60 @@ impl DiffView {
             }
             InputOutcome::Ignored => {}
         }
-        self.body.layouts.clear();
         Some(action)
     }
 
     /// A bracketed paste: its first line goes into the filter or the review summary while it has focus. Says whether
     /// it did.
     pub fn handle_paste(&mut self, text: &str) -> bool {
-        if let (DiffStop::ReviewSummary, Some(form)) = (self.body.stop, &mut self.body.form) {
+        if let (DiffStop::ReviewSummary, Some(form)) = (self.stop, &mut self.form) {
             form.summary.handle_paste(text);
-            self.body.layouts.clear();
             return true;
         }
-        if self.body.stop != DiffStop::Filter {
+        if self.stop != DiffStop::Filter {
             return false;
         }
-        self.body.filter.handle_paste(text);
+        self.filter.handle_paste(text);
         self.apply_filter();
         true
     }
 
-    /// Shows the files whose full path contains the filter's text, ignoring case; all of them when it's empty.
+    /// Shows the files whose full path contains the filter's text, ignoring case; all of them when it's empty. A
+    /// cursor in a file it hides moves to the first shown file's header.
     fn apply_filter(&mut self) {
-        let needle = self.body.filter.value().to_lowercase();
-        for file in &mut self.body.files {
-            file.shown = needle.is_empty() || file.file.path.to_lowercase().contains(&needle);
-        }
-        self.body.layouts.clear();
+        let needle = self.filter.value().to_owned();
+        self.with_body(|body| body.set_filter(&needle));
     }
 
-    /// `enter` in the filter. Python focuses the first pane whatever its hunk, so a closed one has focus where it
-    /// can't be seen (Py bug B59); this focuses the first shown file's first hunk: its pane when it's open, else its
-    /// title (or the file's title, when the file is closed).
+    /// `enter` in the filter: the body, the cursor on the first shown file's header. Python focuses the first pane
+    /// whatever its hunk (Py bug B59); there are no panes here. With no file shown, focus stays.
     fn leave_filter(&mut self) {
-        let first = self
-            .body
-            .files
-            .iter()
-            .enumerate()
-            .filter(|(_, file)| file.shown)
-            .find(|(_, file)| !file.file.deleted && !file.hunks.is_empty());
-        let stop = match first {
-            Some((f, file)) if !file.section.is_open() => DiffStop::FileTitle(f),
-            Some((f, file)) if file.hunks[0].section.is_open() => DiffStop::Pane(f, 0),
-            Some((f, _)) => DiffStop::HunkTitle(f, 0),
-            None => DiffStop::Scroll,
-        };
-        self.focus(stop);
-    }
-
-    /// `J` / `K` (Py bug B8): the next or previous hunk's pane among the shown files, opening its file and hunk.
-    /// From outside any hunk, the first or the last; at either end, nothing.
-    fn jump_to_hunk(&mut self, forward: bool) {
-        let hunks: Vec<(usize, usize)> = self
-            .body
-            .files
-            .iter()
-            .enumerate()
-            .filter(|(_, file)| file.shown && !file.file.deleted)
-            .flat_map(|(f, file)| (0..file.hunks.len()).map(move |h| (f, h)))
-            .collect();
-        let target = match self.body.stop.hunk().and_then(|at| hunks.iter().position(|&h| h == at)) {
-            Some(i) if forward => hunks.get(i + 1),
-            Some(i) => i.checked_sub(1).and_then(|i| hunks.get(i)),
-            None if forward => hunks.first(),
-            None => hunks.last(),
-        };
-        let Some(&(f, h)) = target else {
-            return;
-        };
-        let file = &mut self.body.files[f];
-        file.section.set_open(true);
-        file.hunks[h].section.set_open(true);
-        self.body.layouts.clear();
-        self.focus(DiffStop::Pane(f, h));
-    }
-
-    /// Opens or closes a file's section or, with `hunk`, one of its hunks' sections, and scrolls it into view, as
-    /// Textual's `Collapsible` does after a toggle.
-    fn toggle(&mut self, file: usize, hunk: Option<usize>) {
-        let Some(section) = self.body.files.get_mut(file) else {
-            return;
-        };
-        match hunk {
-            Some(h) => {
-                if let Some(hunk) = section.hunks.get_mut(h) {
-                    hunk.section.toggle();
-                }
-            }
-            None => section.section.toggle(),
+        if self.has_body() {
+            self.focus(DiffStop::Body);
+            self.with_body(DiffBody::cursor_to_first_file);
         }
-        self.body.layouts.clear();
-        self.reveal = Some(Reveal::Section(file, hunk));
     }
 
-    /// A left press at a screen cell, against the last frame: a title focuses and toggles its section, a pane or the
-    /// filter takes focus (the filter's cursor moving to the press), and anything else focuses the scroll area.
+    /// `escape` in the filter: it clears, and the body takes focus with the cursor where it was.
+    fn clear_filter(&mut self) {
+        self.filter.set_value("");
+        self.apply_filter();
+        if self.has_body() {
+            self.focus(DiffStop::Body);
+        }
+    }
+
+    // The mouse.
+
+    /// A left press at a screen cell, against the last frame: a body row focuses the body and takes the cursor (a
+    /// hunk separator gives it to the hunk's first line), the filter or the summary takes focus with its cursor at the
+    /// press, the status select opens or closes, and a button is armed for the release.
     pub fn click(&mut self, position: Position) {
         self.armed = None;
         // The status's open list is drawn over everything: a press on it picks, and one anywhere else closes it.
         if let Some(ReviewForm {
             status: Some(status), ..
-        }) = &mut self.body.form
+        }) = &mut self.form
             && status.is_open()
         {
             let event = MouseEvent {
@@ -882,63 +744,64 @@ impl DiffView {
                 row: position.y,
                 modifiers: crossterm::event::KeyModifiers::NONE,
             };
-            self.body.layouts.clear();
             if status.handle_overlay_mouse(&event) != SelectOutcome::Ignored {
                 return;
             }
             status.close();
         }
-        let stop = self.stop_at(position);
-        match stop {
-            DiffStop::FileTitle(f) => self.toggle(f, None),
-            DiffStop::HunkTitle(f, h) => self.toggle(f, Some(h)),
-            DiffStop::Filter => {
-                self.focus(stop);
-                // Only the columns matter to the press.
-                let input = Rect {
-                    width: self.body.last_width,
-                    height: text_input::HEIGHT,
-                    ..self.area
-                };
-                self.body.filter.press(input, position.x);
-                self.body.layouts.clear();
-                return;
+        // Only the columns matter to an input's press.
+        let input = Rect {
+            height: text_input::HEIGHT,
+            ..self.drawn.area
+        };
+        match self.hit(position) {
+            Hit::Filter => {
+                self.focus(DiffStop::Filter);
+                self.filter.press(input, position.x);
             }
-            DiffStop::RemoveComment(_) | DiffStop::ReviewSubmit => self.armed = Some(stop),
-            DiffStop::ReviewStatus => {
+            Hit::Row(row) => {
+                if self.body.click_row(row) {
+                    // The row is in view already: the click doesn't scroll.
+                    self.focus(DiffStop::Body);
+                    self.reveal = None;
+                }
+            }
+            Hit::Position => {
+                self.focus(DiffStop::Body);
+                self.reveal = None;
+            }
+            Hit::Stop(stop @ (DiffStop::RemoveComment(_) | DiffStop::ReviewSubmit)) => {
+                self.armed = Some(stop);
                 self.focus(stop);
+            }
+            Hit::Stop(DiffStop::ReviewStatus) => {
+                self.focus(DiffStop::ReviewStatus);
                 if let Some(ReviewForm {
                     status: Some(status), ..
-                }) = &mut self.body.form
+                }) = &mut self.form
                 {
                     let _ = status.toggle();
                 }
-                self.body.layouts.clear();
-                return;
             }
-            DiffStop::ReviewSummary => {
-                self.focus(stop);
+            Hit::Stop(DiffStop::ReviewSummary) => {
+                self.focus(DiffStop::ReviewSummary);
                 let input = Rect {
-                    width: self.body.last_width,
-                    height: text_input::HEIGHT,
-                    ..self.area
+                    width: self.drawn.width,
+                    ..input
                 };
-                if let Some(form) = &mut self.body.form {
+                if let Some(form) = &mut self.form {
                     form.summary.press(input, position.x);
                 }
-                self.body.layouts.clear();
-                return;
             }
-            DiffStop::Pane(..) | DiffStop::Scroll => {}
+            Hit::Stop(DiffStop::Filter | DiffStop::Body) | Hit::Nothing => {}
         }
-        self.focus(stop);
     }
 
     /// Whether screen cell `(column, row)` is on the review status's open list, as last drawn by
     /// [`Self::render_popups`]. The list takes every mouse event there, ahead of whatever is drawn under it.
     pub fn popup_contains(&self, column: u16, row: u16) -> bool {
         matches!(
-            &self.body.form,
+            &self.form,
             Some(ReviewForm { status: Some(status), .. }) if status.overlay_contains(column, row)
         )
     }
@@ -946,19 +809,14 @@ impl DiffView {
     /// Whether a press on the filter or the review summary started a drag that hasn't been released: the owner keeps
     /// the mouse for the viewer until then and hands it [`Self::captured_mouse`].
     pub fn captures_mouse(&self) -> bool {
-        self.body.filter.is_selecting() || self.body.form.as_ref().is_some_and(|form| form.summary.is_selecting())
+        self.filter.is_selecting() || self.form.as_ref().is_some_and(|form| form.summary.is_selecting())
     }
 
     /// A mouse event while the viewer has the mouse, wherever the pointer is: the input being dragged over takes the
     /// left drags and the release ([`TextInput::captured_mouse`]). Says whether it took the event.
     pub fn captured_mouse(&mut self, event: MouseEvent) -> bool {
-        let summary = self.body.form.as_mut().map(|form| &mut form.summary);
-        let taken = self.body.filter.captured_mouse(event) || summary.is_some_and(|input| input.captured_mouse(event));
-        if taken {
-            // The cursor and selection moved, and the cached layouts hold the inputs as drawn.
-            self.body.layouts.clear();
-        }
-        taken
+        let summary = self.form.as_mut().map(|form| &mut form.summary);
+        self.filter.captured_mouse(event) || summary.is_some_and(|input| input.captured_mouse(event))
     }
 
     /// A mouse event other than a press: the left release that completes a click on a button presses it.
@@ -969,7 +827,7 @@ impl DiffView {
         let Some(armed) = self.armed.take() else {
             return ViewMouse::Ignored;
         };
-        if self.stop_at(Position::new(event.column, event.row)) != armed {
+        if self.hit(Position::new(event.column, event.row)) != Hit::Stop(armed) {
             return ViewMouse::Ignored;
         }
         match armed {
@@ -982,347 +840,38 @@ impl DiffView {
         }
     }
 
-    /// The stop drawn at a screen cell.
-    fn stop_at(&self, position: Position) -> DiffStop {
-        let area = self.area;
-        let width = self.body.last_width;
-        if !area.contains(position) || position.x >= area.x.saturating_add(width) {
-            return DiffStop::Scroll;
+    /// What the last frame drew at a screen cell.
+    fn hit(&self, position: Position) -> Hit {
+        let drawn = &self.drawn;
+        if !drawn.area.contains(position) {
+            return Hit::Nothing;
         }
-        let row = self.scroll.offset() + usize::from(position.y - area.y);
-        let x = position.x - area.x;
-        if row < usize::from(text_input::HEIGHT) {
-            return DiffStop::Filter;
+        if position.y < drawn.region.y {
+            return Hit::Filter;
         }
-        let Some(placements) = self.body.placements(width) else {
-            return DiffStop::Scroll;
-        };
-        for (f, placed) in placements.files.iter().enumerate() {
-            let Some(placed) = placed else { continue };
-            if let Some(stop) = hit_file(placed, f, row, x) {
-                return stop;
-            }
+        if self.notice.is_some() || position.x >= drawn.region.x.saturating_add(drawn.width) {
+            return Hit::Nothing;
         }
-        if let Some(index) = placements.removes.iter().position(|placed| placed.contains(row, x)) {
-            return DiffStop::RemoveComment(index);
+        let dy = usize::from(position.y - drawn.region.y);
+        let split = drawn.window.split(self.scroll.offset());
+        if dy < split.body.len() {
+            return Hit::Row(split.body.start + dy);
         }
-        if let Some(form) = &placements.form {
-            if form.status.as_ref().is_some_and(|rows| rows.contains(&row)) {
-                return DiffStop::ReviewStatus;
-            }
-            if form.summary.contains(&row) {
-                return DiffStop::ReviewSummary;
-            }
-            if form.submit.contains(row, x) {
-                return DiffStop::ReviewSubmit;
-            }
+        if split.position == Some(dy) {
+            return Hit::Position;
         }
-        DiffStop::Scroll
-    }
-
-    // Maximize.
-
-    /// What maximize targets from the focused stop: a file's title, its file's section; a hunk's title or pane, its
-    /// hunk's. The filter, the Remove buttons and the review form sit outside every section, so their nearest
-    /// maximizable ancestor is the details tab area; the scroll area itself doesn't allow it.
-    pub fn maximize_scope(&self) -> DiffMaximize {
-        match self.body.stop {
-            DiffStop::FileTitle(f) => DiffMaximize::Section(DiffSection::File(f)),
-            DiffStop::HunkTitle(f, h) | DiffStop::Pane(f, h) => DiffMaximize::Section(DiffSection::Hunk(f, h)),
-            DiffStop::Filter
-            | DiffStop::RemoveComment(_)
-            | DiffStop::ReviewStatus
-            | DiffStop::ReviewSummary
-            | DiffStop::ReviewSubmit => DiffMaximize::TabArea,
-            DiffStop::Scroll => DiffMaximize::Nothing,
-        }
-    }
-
-    /// Whether `section` is drawn: a file the filter keeps, or a hunk of an open one.
-    pub fn shows_section(&self, section: DiffSection) -> bool {
-        match section {
-            DiffSection::File(f) => self.body.files.get(f).is_some_and(|file| file.shown),
-            DiffSection::Hunk(f, h) => {
-                self.body.files.get(f).is_some_and(|file| {
-                    file.shown && file.section.is_open() && !file.file.deleted && h < file.hunks.len()
-                })
-            }
-        }
-    }
-
-    /// One stop `forward` or back among `section`'s stops, wrapping; from a stop outside it, its first.
-    pub fn focus_step_in(&mut self, section: DiffSection, forward: bool) {
-        let stops: Vec<DiffStop> = self.stops().into_iter().filter(|&stop| section.holds(stop)).collect();
-        let Some(&first) = stops.first() else { return };
-        let next = match stops.iter().position(|&stop| stop == self.body.stop) {
-            Some(at) if forward => stops[(at + 1) % stops.len()],
-            Some(at) => stops[(at + stops.len() - 1) % stops.len()],
-            None => first,
-        };
-        self.focus(next);
-    }
-
-    /// Focus enters maximized `section`: its title.
-    pub fn focus_section(&mut self, section: DiffSection) {
-        if let Some(first) = self.stops().into_iter().find(|&stop| section.holds(stop)) {
-            self.focus(first);
-        }
-    }
-
-    /// `section` laid out alone `width` wide, focused as in the viewer, `focused` saying whether focus is inside the
-    /// content. A hunk's pane is laid out for this width, its line cursor kept. `None` while it isn't drawn.
-    pub fn layout_section(
-        &mut self,
-        section: DiffSection,
-        width: u16,
-        theme: &Theme,
-        focused: bool,
-    ) -> Option<SectionAlone> {
-        if !self.shows_section(section) {
-            return None;
-        }
-        let stop = self.body.stop;
-        let mut rendered = Rendered::default();
-        let (placed, focus_rows) = match section {
-            DiffSection::File(f) => {
-                let focus = self.body.file_focus(f, focused);
-                let placed = layout_file(&mut rendered, &mut self.body.files[f], &focus, width, theme);
-                let rows = match stop {
-                    DiffStop::FileTitle(_) => Some(title_rows(&placed.section)),
-                    DiffStop::HunkTitle(_, h) => placed.hunks.get(h).map(|hunk| title_rows(&hunk.section)),
-                    DiffStop::Pane(_, h) => placed.hunks.get(h).map(|hunk| hunk.pane.clone()),
-                    _ => None,
-                };
-                (AlonePlaced::File(placed), rows)
-            }
-            DiffSection::Hunk(f, h) => {
-                let focus = self.body.file_focus(f, focused);
-                let FileSection { file, hunks, .. } = &mut self.body.files[f];
-                let placed = layout_hunk(&mut rendered, &mut hunks[h], file, h, &focus, width, theme);
-                let rows = match stop {
-                    DiffStop::HunkTitle(..) => Some(title_rows(&placed.section)),
-                    DiffStop::Pane(..) => Some(placed.pane.clone()),
-                    _ => None,
-                };
-                (AlonePlaced::Hunk(placed), rows)
-            }
-        };
-        // The pane's viewport now follows this width: the viewer lays it out afresh when it's drawn again.
-        self.body.layouts.clear();
-        let focus_rows = focus_rows.filter(|_| focused && section.holds(stop));
-        self.alone.retain(|(s, w, _)| (*s, *w) != (section, width));
-        if self.alone.len() == 2 {
-            self.alone.remove(0);
-        }
-        self.alone.push((section, width, placed));
-        Some(SectionAlone { rendered, focus_rows })
-    }
-
-    /// A left press on maximized `section` at `row` and `column` of its layout `width` wide, as of the last frame:
-    /// as in the viewer, a title focusing and toggling its section and the pane taking focus; anything else focuses
-    /// the scroll area.
-    pub fn click_section(&mut self, section: DiffSection, row: usize, column: u16, width: u16) {
-        let placed = self
-            .alone
-            .iter()
-            .find(|(s, w, _)| (*s, *w) == (section, width))
-            .map(|(_, _, placed)| placed);
-        let stop = match (section, placed) {
-            (DiffSection::File(f), Some(AlonePlaced::File(placed))) if column < width => {
-                hit_file(placed, f, row, column)
-            }
-            (DiffSection::Hunk(f, h), Some(AlonePlaced::Hunk(placed))) if column < width => {
-                hit_hunk(placed, f, h, row, column, 0)
-            }
-            _ => None,
-        }
-        .unwrap_or(DiffStop::Scroll);
-        match stop {
-            DiffStop::FileTitle(f) => self.toggle(f, None),
-            DiffStop::HunkTitle(f, h) => self.toggle(f, Some(h)),
-            _ => {}
-        }
-        self.focus(stop);
+        let line = dy
+            .checked_sub(split.tail_top)
+            .map(|below| split.tail.start + below)
+            .filter(|line| split.tail.contains(line));
+        line.and_then(|line| drawn.tail.hit(line, position.x - drawn.region.x))
+            .map_or(Hit::Nothing, Hit::Stop)
     }
 
     // Drawing.
 
-    /// Draws the viewer into `area`, `focused` when focus is inside the details content.
-    pub fn render(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool) {
-        self.body.set_focused(focused);
-        if let Some(reveal) = self.reveal.take() {
-            let width = self.scroll.measure(area, theme, &mut self.body);
-            if let Some(rows) = self.body.rows_to_reveal(reveal, width) {
-                self.scroll.reveal(rows);
-            }
-        }
-        self.scroll.render(frame, area, theme, &mut self.body);
-        self.area = area;
-    }
-
-    /// What the viewer draws over the whole screen, after everything else on it (the command log, the status bar,
-    /// the footer): the review status's open list, as Textual's `overlay: screen` draws it, right below the box and
-    /// moved up to fit the screen. Placed against the last [`Self::render`].
-    pub fn render_popups(&mut self, frame: &mut Frame<'_>, theme: &Theme) {
-        let area = self.area;
-        let width = self.body.last_width;
-        let Some(rows) = self
-            .body
-            .placements(width)
-            .and_then(|placements| placements.form.as_ref())
-            .and_then(|form| form.status.clone())
-        else {
-            return;
-        };
-        let offset = self.scroll.offset();
-        let Some(ReviewForm {
-            status: Some(status), ..
-        }) = &mut self.body.form
-        else {
-            return;
-        };
-        if !status.is_open() {
-            return;
-        }
-        // The box's rows on screen, kept inside the view when it's scrolled out of it.
-        let top =
-            i64::from(area.y) + i64::try_from(rows.start).unwrap_or(i64::MAX) - i64::try_from(offset).unwrap_or(0);
-        let top = top.clamp(i64::from(area.y), i64::from(area.bottom().saturating_sub(1)));
-        let below = Rect {
-            x: area.x,
-            y: u16::try_from(top).unwrap_or(area.y),
-            width,
-            height: crate::components::select::HEIGHT,
-        };
-        let screen = frame.area();
-        status.render_overlay(frame.buffer_mut(), below, screen, theme, theme.background());
-    }
-}
-
-impl Body {
-    fn set_stop(&mut self, stop: DiffStop) {
-        if self.stop != stop {
-            self.stop = stop;
-            self.layouts.clear();
-        }
-    }
-
-    /// Focus moved in or out of the content. Only a stop other than the scroll area looks different.
-    fn set_focused(&mut self, focused: bool) {
-        if self.focused != focused {
-            self.focused = focused;
-            if self.stop != DiffStop::Scroll {
-                self.layouts.clear();
-            }
-        }
-    }
-
-    fn placements(&self, width: u16) -> Option<&Placements> {
-        self.placements.iter().find(|(w, _)| *w == width).map(|(_, p)| p)
-    }
-
-    /// The rows to scroll into view for `reveal`, in the layout `width` wide.
-    fn rows_to_reveal(&self, reveal: Reveal, width: u16) -> Option<Range<usize>> {
-        let placements = self.placements(width)?;
-        let file = |f: usize| placements.files.get(f)?.as_ref();
-        let hunk = |f: usize, h: usize| file(f)?.hunks.get(h);
-        let title = |placement: &Placement| placement.title_row..placement.title_row + 1;
-        match reveal {
-            Reveal::Stop(DiffStop::Scroll) => None,
-            Reveal::Stop(DiffStop::Filter) => Some(0..usize::from(text_input::HEIGHT)),
-            Reveal::Stop(DiffStop::FileTitle(f)) => file(f).map(|p| title(&p.section)),
-            Reveal::Stop(DiffStop::HunkTitle(f, h)) => hunk(f, h).map(|p| title(&p.section)),
-            Reveal::Stop(DiffStop::Pane(f, h)) => hunk(f, h).map(|p| p.pane.clone()),
-            Reveal::Stop(DiffStop::RemoveComment(i)) => placements.removes.get(i).map(|p| p.rows.clone()),
-            Reveal::Stop(DiffStop::ReviewStatus) => placements.form.as_ref()?.status.clone(),
-            Reveal::Stop(DiffStop::ReviewSummary) => placements.form.as_ref().map(|p| p.summary.clone()),
-            Reveal::Stop(DiffStop::ReviewSubmit) => placements.form.as_ref().map(|p| p.submit.rows.clone()),
-            Reveal::Section(f, None) => file(f).map(|p| p.section.rows.clone()),
-            Reveal::Section(f, Some(h)) => hunk(f, h).map(|p| p.section.rows.clone()),
-        }
-    }
-
-    /// How file `f`'s sections look with focus where it is, `focused` saying whether focus is inside the content.
-    fn file_focus(&self, f: usize, focused: bool) -> FileFocus {
-        FileFocus {
-            section: self.section_focus(f, None, focused),
-            hunks: (0..self.files[f].hunks.len())
-                .map(|h| self.section_focus(f, Some(h), focused))
-                .collect(),
-            pane: match self.stop {
-                DiffStop::Pane(file, h) if focused && file == f => Some(h),
-                _ => None,
-            },
-        }
-    }
-
-    /// How the section of file `file` or, with `hunk`, of one of its hunks looks with focus where it is.
-    fn section_focus(&self, file: usize, hunk: Option<usize>, focused: bool) -> SectionFocus {
-        if !focused {
-            return SectionFocus::default();
-        }
-        let stop = self.stop;
-        match hunk {
-            None => SectionFocus {
-                title: stop == DiffStop::FileTitle(file),
-                within: stop.file() == Some(file),
-            },
-            Some(h) => SectionFocus {
-                title: stop == DiffStop::HunkTitle(file, h),
-                within: stop.hunk() == Some((file, h)),
-            },
-        }
-    }
-}
-
-impl Layout for Body {
-    fn layout(&mut self, width: u16, theme: &Theme) -> &Rendered {
-        self.last_width = width;
-        let found = self
-            .layouts
-            .entries
-            .iter()
-            .position(|entry| entry.width == width && entry.theme == *theme);
-        let index = match found {
-            Some(index) if self.layouts.entries[index].fresh => index,
-            Some(index) => {
-                let stale = self.layouts.entries.remove(index);
-                let assembled = self.assemble(width, theme, Some(stale));
-                self.layouts.entries.push(assembled);
-                self.layouts.entries.len() - 1
-            }
-            None => {
-                if self.layouts.entries.len() == 2 {
-                    self.layouts.entries.remove(0);
-                }
-                let assembled = self.assemble(width, theme, None);
-                self.layouts.entries.push(assembled);
-                self.layouts.entries.len() - 1
-            }
-        };
-        &self.layouts.entries[index].rendered
-    }
-}
-
-impl Body {
-    /// The whole view laid out `width` cells wide, with where things landed noted in [`Body::placements`]. Each
-    /// file's rows come from its own layouts; a file whose layout `stale` already holds keeps those rows, moved
-    /// rather than copied.
-    fn assemble(&mut self, width: u16, theme: &Theme, stale: Option<Assembled>) -> Assembled {
-        let mut assembled = Assembled {
-            width,
-            theme: *theme,
-            fresh: true,
-            rendered: Rendered::default(),
-            files: Vec::new(),
-        };
-        if width == 0 {
-            return assembled;
-        }
-        let focus: Vec<FileFocus> = (0..self.files.len())
-            .map(|f| self.file_focus(f, self.focused))
-            .collect();
-        let filter_focused = self.focused && self.stop == DiffStop::Filter;
+    /// The pending comments and the form laid out `width` cells wide, focused as the view is.
+    fn layout_tail(&mut self, width: u16, theme: &Theme) -> Tail {
         let remove_focused = match self.stop {
             DiffStop::RemoveComment(index) if self.focused => Some(index),
             _ => None,
@@ -1333,244 +882,148 @@ impl Body {
             DiffStop::ReviewSubmit if self.focused => Some(FormFocus::Submit),
             _ => None,
         };
-        let (mut old_lines, old_files) =
-            stale.map_or_else(Default::default, |stale| (stale.rendered.lines, stale.files));
-        let out = &mut assembled.rendered;
-        let mut placed = Placements::default();
-        out.lines
-            .extend(filter_lines(&mut self.filter, width, theme, filter_focused));
+        let mut rendered = Rendered::default();
+        let removes = review::layout_pending(&mut rendered, &self.pending, remove_focused, width, theme);
+        let form = self
+            .form
+            .as_mut()
+            .map(|form| review::layout_form(&mut rendered, form, form_focused, width, theme));
+        Tail {
+            rendered,
+            placed: TailPlaced { removes, form },
+        }
+    }
+
+    /// Draws the viewer into `area`, `focused` when focus is inside the details content.
+    pub fn render(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool) {
+        self.focused = focused;
+        let resized = self.drawn.area != area;
+        let buf = frame.buffer_mut();
+        let filter_rows = text_input::HEIGHT.min(area.height);
+        let filter_area = Rect {
+            height: filter_rows,
+            ..area
+        };
+        let filter_focused = focused && self.stop == DiffStop::Filter;
+        self.filter
+            .render(buf, filter_area, theme, theme.background(), filter_focused);
+        let region = Rect {
+            y: area.y + filter_rows,
+            height: area.height - filter_rows,
+            ..area
+        };
+        self.drawn.area = area;
+        self.drawn.region = region;
         if let Some(notice) = &self.notice {
             let text = Style::new().fg(theme.color(theme.roles().text.plain, theme.background()));
-            let notice = markdown::wrap_text(&[TextRun::new(notice.as_str(), text)], width);
-            out.lines.extend(notice.lines);
-        }
-        for (f, (file, focus)) in self.files.iter_mut().zip(&focus).enumerate() {
-            if !file.shown {
-                placed.files.push(None);
-                assembled.files.push(None);
-                continue;
+            let lines = markdown::wrap_text(&[TextRun::new(notice.as_str(), text)], region.width).lines;
+            for (y, line) in (region.y..region.bottom()).zip(&lines) {
+                buf.set_line(region.x, y, line, region.width);
             }
-            let index = cached_file(file, focus, width, theme);
-            let layout = &file.layouts[index];
-            let base = out.lines.len();
-            match old_files.get(f).cloned().flatten() {
-                Some((stamp, rows)) if stamp == layout.stamp && rows.len() == layout.rendered.lines.len() => {
-                    out.lines.extend(old_lines[rows].iter_mut().map(std::mem::take));
+            self.drawn.width = region.width;
+            self.drawn.window = Window::default();
+            self.drawn.tail = TailPlaced::default();
+            return;
+        }
+        let height = usize::from(region.height);
+        // The tail at the full width, then again beside the scrollbar when everything doesn't fit.
+        let mut width = region.width;
+        let mut tail = self.layout_tail(width, theme);
+        let mut window = Window {
+            body: self.body.rows(),
+            tail: tail.rendered.lines.len(),
+            height,
+        };
+        let overflows = window.content() > height;
+        if overflows {
+            width = region.width.saturating_sub(scrollbar::VERTICAL_WIDTH);
+            tail = self.layout_tail(width, theme);
+            window.tail = tail.rendered.lines.len();
+        }
+        self.scroll.resize(window.content(), height);
+        self.body.fit(width, height.saturating_sub(1), window.tail);
+        let reveal = self
+            .reveal
+            .take()
+            .or_else(|| (resized && self.stop == DiffStop::Body).then_some(Reveal::Cursor));
+        match reveal {
+            Some(Reveal::Cursor) => self.with_body(DiffBody::reveal_cursor),
+            Some(Reveal::Stop(stop)) => {
+                if let Some(lines) = tail.placed.lines_of(stop) {
+                    self.scroll
+                        .reveal(window.tail_row(lines.start)..window.tail_row(lines.end));
                 }
-                _ => out.lines.extend(layout.rendered.lines.iter().cloned()),
             }
-            out.links.extend(layout.rendered.links.iter().map(|link| LinkSpan {
-                row: link.row + base,
-                ..link.clone()
-            }));
-            placed.files.push(Some(shift_file(&layout.placed, base)));
-            assembled.files.push(Some((layout.stamp, base..out.lines.len())));
+            None => {}
         }
-        placed.removes = review::layout_pending(out, &self.pending, remove_focused, width, theme);
-        if let Some(form) = &mut self.form {
-            placed.form = Some(review::layout_form(out, form, form_focused, width, theme));
+        let offset = self.scroll.offset();
+        self.body.set_scroll(offset);
+        let split = window.split(offset);
+        // Rows are bounded by the region's height, a u16.
+        let row = |dy: usize| region.y.saturating_add(u16::try_from(dy).unwrap_or(u16::MAX));
+        if let Some(position) = split.position {
+            let rows = Rect {
+                width,
+                height: u16::try_from(position + 1).unwrap_or(u16::MAX),
+                ..region
+            };
+            let body_focused = focused && self.stop == DiffStop::Body;
+            self.body.draw(buf, rows, theme, body_focused);
         }
-        self.placements.retain(|(w, _)| *w != width);
-        if self.placements.len() == 2 {
-            self.placements.remove(0);
+        for (dy, line) in (split.tail_top..).zip(&tail.rendered.lines[split.tail.clone()]) {
+            buf.set_line(region.x, row(dy), line, width);
         }
-        self.placements.push((width, placed));
-        assembled
-    }
-}
-
-/// How one file's sections look with focus where it is.
-#[derive(Debug, Clone, PartialEq)]
-struct FileFocus {
-    section: SectionFocus,
-    /// By hunk index.
-    hunks: Vec<SectionFocus>,
-    /// The hunk whose pane has focus.
-    pane: Option<usize>,
-}
-
-/// The index in `file`'s layouts of its section laid out from its state now, `width` cells wide: one it already has,
-/// or else a new one from [`layout_file`].
-fn cached_file(file: &mut FileSection, focus: &FileFocus, width: u16, theme: &Theme) -> usize {
-    let key = FileKey {
-        width,
-        theme: *theme,
-        focus: focus.clone(),
-        section: file.section,
-        hunks: file
-            .hunks
-            .iter()
-            .map(|hunk| (hunk.section, hunk.pane.cursor(), hunk.pane.scroll()))
-            .collect(),
-    };
-    if let Some(index) = file.layouts.iter().position(|layout| layout.key == key) {
-        // Laying the panes out sets their viewports, and a maximized hunk may have changed one since.
-        for (hunk, placed) in file.hunks.iter_mut().zip(&file.layouts[index].placed.hunks) {
-            if let Some(viewport) = placed.viewport {
-                hunk.pane.set_viewport(viewport);
-            }
+        if overflows {
+            let bar = Rect {
+                x: region.x + width,
+                width: region.width - width,
+                ..region
+            };
+            let state = ScrollbarState {
+                content: window.content(),
+                window: height,
+                position: offset,
+            };
+            scrollbar::render(buf, bar, Axis::Vertical, state, DiffBody::scrollbar_colors(theme));
         }
-        return index;
+        self.drawn.width = width;
+        self.drawn.window = window;
+        self.drawn.tail = tail.placed;
     }
-    let mut rendered = Rendered::default();
-    let placed = layout_file(&mut rendered, file, focus, width, theme);
-    if file.layouts.len() == 2 {
-        file.layouts.remove(0);
-    }
-    file.stamps += 1;
-    file.layouts.push(FileLayout {
-        key,
-        stamp: file.stamps,
-        rendered,
-        placed,
-    });
-    file.layouts.len() - 1
-}
 
-/// `placed`, laid out from row 0, moved down `by` rows.
-fn shift_file(placed: &FilePlaced, by: usize) -> FilePlaced {
-    let shift_section = |section: &Placement| Placement {
-        rows: shift(&section.rows, by),
-        title_row: section.title_row + by,
-        title_columns: section.title_columns.clone(),
-        content: shift(&section.content, by),
-    };
-    FilePlaced {
-        section: shift_section(&placed.section),
-        hunks: placed
-            .hunks
-            .iter()
-            .map(|hunk| HunkPlaced {
-                section: shift_section(&hunk.section),
-                pane: shift(&hunk.pane, by),
-                viewport: hunk.viewport,
-            })
-            .collect(),
+    /// What the viewer draws over the whole screen, after everything else on it (the command log, the status bar,
+    /// the footer): the review status's open list, as Textual's `overlay: screen` draws it, right below the box and
+    /// moved up to fit the screen. Placed against the last [`Self::render`].
+    pub fn render_popups(&mut self, frame: &mut Frame<'_>, theme: &Theme) {
+        let drawn = &self.drawn;
+        let Some(lines) = drawn.tail.form.as_ref().and_then(|form| form.status.clone()) else {
+            return;
+        };
+        let split = drawn.window.split(self.scroll.offset());
+        let region = drawn.region;
+        let width = drawn.width;
+        let Some(ReviewForm {
+            status: Some(status), ..
+        }) = &mut self.form
+        else {
+            return;
+        };
+        if !status.is_open() {
+            return;
+        }
+        // The box's rows on screen, kept inside the view when it's scrolled out of it.
+        let as_i64 = |n: usize| i64::try_from(n).unwrap_or(i64::MAX);
+        let top = i64::from(region.y) + as_i64(split.tail_top) + as_i64(lines.start) - as_i64(split.tail.start);
+        let top = top.clamp(i64::from(region.y), i64::from(region.bottom().saturating_sub(1)));
+        let below = Rect {
+            x: region.x,
+            y: u16::try_from(top).unwrap_or(region.y),
+            width,
+            height: crate::components::select::HEIGHT,
+        };
+        let screen = frame.area();
+        status.render_overlay(frame.buffer_mut(), below, screen, theme, theme.background());
     }
-}
-
-/// Adds `file`'s section to `out`, `width` cells wide, and returns where it and its hunks landed.
-fn layout_file(out: &mut Rendered, file: &mut FileSection, focus: &FileFocus, width: u16, theme: &Theme) -> FilePlaced {
-    let FileSection {
-        file: changed,
-        section,
-        hunks: sections,
-        ..
-    } = file;
-    let mut hunks = Vec::new();
-    let placement = section.layout(
-        out,
-        &title(&changed.label(), theme),
-        focus.section,
-        width,
-        theme,
-        |cx| {
-            if changed.deleted {
-                return removed_notice(cx.width, theme);
-            }
-            let mut inner = Rendered::default();
-            for (h, hunk) in sections.iter_mut().enumerate() {
-                let placed = layout_hunk(&mut inner, hunk, changed, h, focus, cx.width, theme);
-                hunks.push(placed);
-            }
-            inner
-        },
-    );
-    // The hunks were laid out inside the file's contents: move them to the view's rows and columns.
-    let offset = placement.content.start;
-    for hunk in &mut hunks {
-        let section = &mut hunk.section;
-        section.rows = shift(&section.rows, offset);
-        section.title_row += offset;
-        section.content = shift(&section.content, offset);
-        section.title_columns =
-            section.title_columns.start + CONTENT_INDENT..section.title_columns.end + CONTENT_INDENT;
-        hunk.pane = shift(&hunk.pane, offset);
-    }
-    FilePlaced {
-        section: placement,
-        hunks,
-    }
-}
-
-/// Adds hunk `h` of `changed` to `out`, a file's contents `width` cells wide, and returns where it landed in them.
-fn layout_hunk(
-    out: &mut Rendered,
-    hunk: &mut HunkSection,
-    changed: &ChangedFile,
-    h: usize,
-    focus: &FileFocus,
-    width: u16,
-    theme: &Theme,
-) -> HunkPlaced {
-    let focused = focus.pane == Some(h);
-    let mut pane_rows = 0..0;
-    let mut viewport = None;
-    let HunkSection { section, pane } = hunk;
-    let section = section.layout(
-        out,
-        &title(&changed.hunks[h].label(), theme),
-        focus.hunks[h],
-        width,
-        theme,
-        |content| {
-            let layout = pane.layout(changed, &changed.hunks[h], content.width, theme, focused, content.under);
-            viewport = Some(layout.viewport);
-            pane_rows = 0..layout.lines.len();
-            Rendered {
-                lines: layout.lines,
-                links: Vec::new(),
-            }
-        },
-    );
-    if let Some(viewport) = viewport {
-        pane.set_viewport(viewport);
-    }
-    HunkPlaced {
-        pane: shift(&pane_rows, section.content.start),
-        section,
-        viewport,
-    }
-}
-
-/// What a cell of file `f`'s section, placed at `placed`, lands on, by row and column in its layout.
-fn hit_file(placed: &FilePlaced, f: usize, row: usize, x: u16) -> Option<DiffStop> {
-    let at = &placed.section;
-    if row == at.title_row && at.title_columns.contains(&x) {
-        return Some(DiffStop::FileTitle(f));
-    }
-    placed
-        .hunks
-        .iter()
-        .enumerate()
-        .find_map(|(h, hunk)| hit_hunk(hunk, f, h, row, x, CONTENT_INDENT))
-}
-
-/// What a cell of hunk `h` of file `f`, placed at `placed` with its section `indent` columns in, lands on.
-fn hit_hunk(placed: &HunkPlaced, f: usize, h: usize, row: usize, x: u16, indent: u16) -> Option<DiffStop> {
-    if row == placed.section.title_row && placed.section.title_columns.contains(&x) {
-        return Some(DiffStop::HunkTitle(f, h));
-    }
-    // The box, between its margins, from the hunk's contents' indent.
-    let boxed = placed.pane.start + 1..placed.pane.end.saturating_sub(1);
-    (boxed.contains(&row) && x >= indent + CONTENT_INDENT).then_some(DiffStop::Pane(f, h))
-}
-
-/// A section's title row, as rows.
-fn title_rows(placement: &Placement) -> Range<usize> {
-    placement.title_row..placement.title_row + 1
-}
-
-fn shift(rows: &Range<usize>, by: usize) -> Range<usize> {
-    rows.start + by..rows.end + by
-}
-
-/// The filter's three rows, drawn as the table's search box is and read back as lines.
-fn filter_lines(filter: &mut TextInput, width: u16, theme: &Theme, focused: bool) -> Vec<Line<'static>> {
-    let area = Rect::new(0, 0, width, text_input::HEIGHT);
-    let mut buf = Buffer::empty(area);
-    filter.render(&mut buf, area, theme, theme.background(), focused);
-    (0..area.height).map(|y| buffer_line(&buf, y)).collect()
 }
 
 /// Row `y` of `buf` as a line of styled spans, a span per run of cells with the same style.
@@ -1594,48 +1047,6 @@ fn buffer_line(buf: &Buffer, y: u16) -> Line<'static> {
         }
     }
     Line::from(spans)
-}
-
-/// A deleted file's contents: `file was removed` in `$error`, between blank rows (its `margin: 1 0`).
-fn removed_notice(width: u16, theme: &Theme) -> Rendered {
-    let style = Style::new().fg(theme.color(theme.roles().status.error, theme.background()));
-    let mut out = Rendered::default();
-    out.lines.push(Line::default());
-    out.lines
-        .extend(markdown::wrap_text(&[TextRun::new(FILE_REMOVED, style)], width).lines);
-    out.lines.push(Line::default());
-    out
-}
-
-/// A file or hunk label as title runs: its counts green and red, as Python's `Text` styles them.
-fn title(label: &Label, theme: &Theme) -> Vec<TextRun> {
-    let diff = &theme.roles().diff;
-    let plain = |text: String| TextRun::new(text, Style::new());
-    let mut runs = vec![plain(label.text.clone())];
-    let Counts { additions, deletions } = label.counts;
-    if !label.counts.is_empty() {
-        runs.push(plain(" (".into()));
-        if additions > 0 {
-            runs.push(TextRun::new(
-                format!("+{additions}"),
-                Style::new().fg(theme.color(diff.stat_added, theme.background())),
-            ));
-        }
-        if additions > 0 && deletions > 0 {
-            runs.push(plain(" ".into()));
-        }
-        if deletions > 0 {
-            runs.push(TextRun::new(
-                format!("-{deletions}"),
-                Style::new().fg(theme.color(diff.stat_removed, theme.background())),
-            ));
-        }
-        runs.push(plain(")".into()));
-    }
-    if !label.suffix.is_empty() {
-        runs.push(plain(label.suffix.clone()));
-    }
-    runs
 }
 
 #[cfg(test)]

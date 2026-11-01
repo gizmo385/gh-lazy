@@ -245,8 +245,7 @@ impl DetailsBody for PullRequestDetails {
     fn shows_section(&self, tab: usize, key: SectionKey) -> bool {
         match (PrTab::at(tab), key.0) {
             (PrTab::Overview, SectionRef::Overview(kind)) => self.overview.shows_section(kind),
-            (PrTab::Overview, _) => false,
-            (PrTab::Diff, section) => self.diff.shows_section(section),
+            (PrTab::Overview | PrTab::Diff, _) => false,
             (PrTab::Conversation, section) => self.conversation.shows_section(section),
         }
     }
@@ -261,8 +260,7 @@ impl DetailsBody for PullRequestDetails {
     ) -> Option<SectionLayout> {
         match (PrTab::at(tab), key.0) {
             (PrTab::Overview, SectionRef::Overview(kind)) => self.overview.layout_section(kind, width, theme, focused),
-            (PrTab::Overview, _) => None,
-            (PrTab::Diff, section) => self.diff.layout_section(section, width, theme, focused),
+            (PrTab::Overview | PrTab::Diff, _) => None,
             (PrTab::Conversation, section) => self.conversation.layout_section(section, width, theme, focused),
         }
     }
@@ -270,8 +268,7 @@ impl DetailsBody for PullRequestDetails {
     fn focus_step_in(&mut self, tab: usize, key: SectionKey, forward: bool) {
         match (PrTab::at(tab), key.0) {
             (PrTab::Overview, SectionRef::Overview(kind)) => self.overview.focus_step_in(kind, forward),
-            (PrTab::Overview, _) => {}
-            (PrTab::Diff, section) => self.diff.focus_step_in(section, forward),
+            (PrTab::Overview | PrTab::Diff, _) => {}
             (PrTab::Conversation, section) => self.conversation.focus_step_in(section, forward),
         }
     }
@@ -279,8 +276,7 @@ impl DetailsBody for PullRequestDetails {
     fn focus_section(&mut self, tab: usize, key: SectionKey) {
         match (PrTab::at(tab), key.0) {
             (PrTab::Overview, SectionRef::Overview(kind)) => self.overview.focus_section(kind),
-            (PrTab::Overview, _) => {}
-            (PrTab::Diff, section) => self.diff.focus_section(section),
+            (PrTab::Overview | PrTab::Diff, _) => {}
             (PrTab::Conversation, section) => self.conversation.focus_section(section),
         }
     }
@@ -288,8 +284,7 @@ impl DetailsBody for PullRequestDetails {
     fn click_section(&mut self, tab: usize, key: SectionKey, row: usize, column: u16, width: u16) {
         match (PrTab::at(tab), key.0) {
             (PrTab::Overview, SectionRef::Overview(kind)) => self.overview.click_section(kind, row, column, width),
-            (PrTab::Overview, _) => {}
-            (PrTab::Diff, section) => self.diff.click_section(section, row, column, width),
+            (PrTab::Overview | PrTab::Diff, _) => {}
             (PrTab::Conversation, section) => self.conversation.click_section(section, row, column, width),
         }
     }

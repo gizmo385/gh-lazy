@@ -10,13 +10,13 @@ use lazy_github_core::models::{FullPullRequest, IssueListItem, Review, User};
 use serde_json::Value;
 
 use crate::backend::tests::VtTerminal;
-use crate::components::diff_view::{DiffStop, DiffView};
+use crate::components::diff_view::{Cursor, DiffLineRef, DiffStop, DiffView};
 use crossterm::event::{MouseButton, MouseEventKind};
 
 use crate::effect::{Effect, GithubRequest, GithubResponse};
 use crate::event::Event;
 use crate::modal::{CommandPaletteDialog, ModalKind};
-use crate::screens::main::details::{MaximizeScope, SectionKey, SectionRef};
+use crate::screens::main::details::MaximizeScope;
 use crate::screens::main::pr_details::tests::{fixture_pr, fixture_repo};
 use crate::screens::main::{FocusTarget, Maximized};
 use crate::test_util::{TestApp, UNICODE_EXTRAS, logs, unicode_fixture};
@@ -111,8 +111,20 @@ fn footer(app: &mut TestApp) -> String {
 }
 
 const README: usize = 0;
+const CSS: usize = 1;
 const OLD: usize = 3;
 const VIEWER: usize = 4;
+
+/// Where the body's cursor is.
+fn cursor(app: &TestApp) -> Option<Cursor> {
+    view(app).body().cursor()
+}
+
+/// The cursor on a line, as [`cursor`] gives it.
+#[allow(clippy::unnecessary_wraps)]
+fn on_line(file: usize, hunk: usize, line: usize) -> Option<Cursor> {
+    Some(Cursor::Line(DiffLineRef { file, hunk, line }))
+}
 
 /// [`gh`] with the `unicode` fixture set's PR titles, PR 5 and PR 5's diff (#327), plus what the parity scenario
 /// leaves out: PR 5's title and a diff line also hold [`UNICODE_EXTRAS`], and the README hunk gains a full-width line
@@ -172,8 +184,8 @@ fn pr_table_and_overview_unicode_160x48() {
 #[test]
 fn pr_diff_unicode_160x48() {
     let mut app = diff_tab_with(config(), unicode_gh(), &["enter"]);
-    // The scroll area, the filter, README.md's title, its hunk's title; enter opens the hunk.
-    app.press(&["tab", "tab", "tab", "tab", "enter"]);
+    // Into the body, then the first hunk's first line.
+    app.press(&["tab", "J"]);
     let screen = app.screen(160, 48);
     assert!(screen.contains("Line: 1/10"), "{screen}");
     insta::assert_snapshot!(screen);
@@ -285,35 +297,32 @@ fn an_empty_diff_shows_only_the_filter() {
 fn pr_diff_files_160x48() {
     let mut app = diff_tab();
     let screen = app.screen(160, 48);
-    // In diff order, deleted files closed, every hunk closed, paths as they are (Py bug B55). The test screen writes
-    // a cell after each wide character.
-    let titles: Vec<&str> = screen
+    // One continuous body: each file's header with its full path (Py bug B55 is gone with the basename), each hunk's
+    // separator and lines, the deleted file folded. The test screen writes a cell after each wide character.
+    let headers: Vec<&str> = screen
         .lines()
         .filter_map(|line| line.find(['▼', '▶']).map(|at| line[at..].trim_end_matches([' ', '│'])))
         .collect();
     assert_eq!(
-        titles,
+        headers,
         [
             "▼ 📄  README.md (+3 -1)",
-            "▶ Lines 3-7 (+3 -1) • A tiny pager.",
-            "▼ 📄  app.css (+3)",
-            "▶ Lines 1-3 (+3)",
+            "▼ 📄  assets/app.css (+3)",
             "▼ 📄  build.rs (+1)",
-            "▶ Lines 1-4 (+1)",
-            "▶ 🗑️   old.md (deleted)",
-            "▼ 📄  viewer.rs (+5 -2)",
-            "▶ Lines 1-8 (+2)",
-            "▶ Lines 22-28 (+3 -2) • impl Viewer {",
+            "▶ 🗑️   docs/old.md (deleted)",
+            "▼ 📄  src/viewer.rs (+5 -2)",
         ]
     );
+    assert!(screen.contains("  Lines 3-7 (+3 -1) • A tiny pager."), "{screen}");
     insta::assert_snapshot!(screen);
 }
 
 #[test]
 fn pr_diff_hunk_focused_160x48() {
     let mut app = diff_tab();
-    app.press(&["tab", "tab", "tab", "tab", "enter", "tab"]);
-    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
+    app.press(&["tab", "J"]);
+    assert_eq!(stop(&app), DiffStop::Body);
+    assert_eq!(cursor(&app), on_line(README, 0, 0));
     assert!(
         footer(&mut app).starts_with(
             " j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link"
@@ -327,13 +336,9 @@ fn pr_diff_hunk_focused_160x48() {
 #[test]
 fn pr_diff_hunk_focused_100x30() {
     let mut app = diff_tab();
-    app.press(&["tab", "tab", "tab", "tab", "enter", "tab", "j"]);
+    app.press(&["tab", "J", "j"]);
     let screen = app.screen(100, 30);
-    // The longest line is cut by the pane, over the horizontal scrollbar.
-    assert!(
-        screen.contains("│     5 │ Run `viewer FILE`, then press `j` and│"),
-        "{screen}"
-    );
+    assert!(screen.contains("Line: 2/6"), "{screen}");
     insta::assert_snapshot!(screen);
 }
 
@@ -343,28 +348,33 @@ fn the_gutter_numbers_follow_the_old_file_for_removed_lines() {
     app.press(&["tab", "J"]);
     let screen = app.screen(160, 48);
     for row in [
-        "│►    3 │ ## Usage ",
-        "│     4 │  ",
-        "│     5 │ Run `viewer FILE`. ",
-        "│     5 │ Run `viewer FILE`, then press `j` and `k` to move. ",
-        "│     6 │  ",
-        "│     7 │ The current line is marked with `>`. ",
+        "│►    3  │ ## Usage ",
+        "│     4  │  ",
+        "│     5  │ Run `viewer FILE`. ",
+        "│     5  │ Run `viewer FILE`, then press `j` and `k` to move. ",
+        "│     6  │  ",
+        "│     7  │ The current line is marked with `>`. ",
     ] {
         assert!(screen.contains(row), "{row}: {screen}");
     }
 }
 
 #[test]
-fn j_and_k_move_the_line_and_clamp() {
+fn j_and_k_move_the_cursor_across_hunks_and_files() {
     let mut app = diff_tab();
     app.press(&["tab", "J"]);
-    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
-    app.press(&["k"]);
+    assert_eq!(stop(&app), DiffStop::Body);
     assert!(app.screen(160, 48).contains("Line: 1/6"));
     app.press(&["j", "j", "k"]);
     assert!(app.screen(160, 48).contains("Line: 2/6"));
-    app.press(&["j", "j", "j", "j", "j", "j"]);
+    // Past README.md's last line onto the next file's header; k comes back.
+    app.press(&["j", "j", "j", "j", "j"]);
+    assert_eq!(cursor(&app), Some(Cursor::File(CSS)));
+    app.press(&["k"]);
     assert!(app.screen(160, 48).contains("Line: 6/6"));
+    // k from the first line goes up to the file's header, past the hunk separator.
+    app.press(&["K", "k"]);
+    assert_eq!(cursor(&app), Some(Cursor::File(README)));
 }
 
 #[test]
@@ -373,13 +383,13 @@ fn a_rebound_cursor_key_moves_the_line_and_j_no_longer_does() {
     config.bindings.overrides.insert("diff.cursor_down".into(), "n".into());
     let mut app = diff_tab_with(config, gh(), &["enter"]);
     app.press(&["tab", "J", "j"]);
-    assert_eq!(view(&app).pane(README, 0).unwrap().cursor(), 0);
+    assert_eq!(cursor(&app), on_line(README, 0, 0));
     app.press(&["n"]);
-    assert_eq!(view(&app).pane(README, 0).unwrap().cursor(), 1);
-    // An overridden key goes after the link's default ones, as in Textual.
+    assert_eq!(cursor(&app), on_line(README, 0, 1));
+    // An overridden key goes after the link's default ones, as in Textual: the body's link ends with the filter key.
     let footer = footer(&mut app);
     assert!(
-        footer.starts_with(" k Line up  c Add Comment  n Line down  J Next Hunk"),
+        footer.starts_with(" k Line up  c Add Comment  J Next Hunk  K Previous Hunk  / Filter Files  n Line down"),
         "{footer}"
     );
 }
@@ -387,54 +397,97 @@ fn a_rebound_cursor_key_moves_the_line_and_j_no_longer_does() {
 #[test]
 fn the_footer_follows_the_focused_stop() {
     let mut app = diff_tab();
-    // The scroll area: the viewer's keys work but aren't listed, as in Python.
+    // Into the content from the tab strip: the body, its cursor on README.md's header, where Add Comment is hidden.
     app.press(&["tab"]);
-    assert_eq!(
-        (focus(&app), stop(&app)),
-        (FocusTarget::DetailsContent, DiffStop::Scroll)
-    );
-    assert!(footer(&mut app).starts_with(" ^v Paste link"), "{}", footer(&mut app));
-    // A title.
-    app.press(&["tab", "tab"]);
-    assert_eq!(stop(&app), DiffStop::FileTitle(README));
+    assert_eq!((focus(&app), stop(&app)), (FocusTarget::DetailsContent, DiffStop::Body));
+    assert_eq!(cursor(&app), Some(Cursor::File(README)));
     assert!(
-        footer(&mut app).starts_with(" J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link"),
+        footer(&mut app)
+            .starts_with(" j Line down  k Line up  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link"),
         "{}",
         footer(&mut app)
     );
-    // The filter: its key and the palette, as the table's search box.
-    app.press(&["/"]);
+    // On a line, Add Comment shows.
+    app.press(&["j"]);
+    assert!(
+        footer(&mut app).starts_with(" j Line down  k Line up  c Add Comment  J Next Hunk"),
+        "{}",
+        footer(&mut app)
+    );
+    // The filter, before the body: its key and the palette, as the table's search box.
+    app.press(&["shift+tab"]);
     assert_eq!(stop(&app), DiffStop::Filter);
     assert_eq!(footer(&mut app).trim_end(), " / Filter Files  ^p Command Palette");
 }
 
 #[test]
-fn slash_from_a_pane_focuses_the_filter_and_typing_filters() {
+fn c_on_a_header_does_nothing() {
+    let mut app = diff_tab();
+    app.press(&["tab", "c"]);
+    assert!(modals(&app).is_empty(), "{:?}", modals(&app));
+    assert_eq!(stop(&app), DiffStop::Body);
+}
+
+#[test]
+fn a_click_on_a_row_focuses_the_body_and_moves_the_cursor() {
+    let mut app = diff_tab();
+    let (_, row) = find(&app.screen(160, 48), "color: yellow;");
+    app.click(70, row);
+    assert_eq!((focus(&app), stop(&app)), (FocusTarget::DetailsContent, DiffStop::Body));
+    assert_eq!(cursor(&app), on_line(CSS, 0, 1));
+    assert!(app.screen(160, 48).contains("Line: 2/3"));
+}
+
+#[test]
+fn the_wheel_scrolls_the_body_and_brings_the_cursor_back_into_view() {
+    let mut app = diff_tab();
+    app.press(&["tab"]);
+    // At 100x30 the body overflows the view.
+    let screen = app.screen(100, 30);
+    let (_, row) = find(&screen, "README.md (+3 -1)");
+    for _ in 0..2 {
+        app.mouse(MouseEventKind::ScrollDown, 80, row + 5);
+        app.render(100, 30);
+    }
+    // Two notches, six rows down: README.md's header, its hunk's separator and first four lines went by, and the
+    // cursor is on the first row still in view.
+    assert_eq!(view(&app).offset(), 6);
+    assert_eq!(cursor(&app), on_line(README, 0, 4));
+    app.press(&["j"]);
+    assert_eq!(cursor(&app), on_line(README, 0, 5));
+}
+
+#[test]
+fn slash_from_the_body_focuses_the_filter_and_typing_filters() {
     let mut app = diff_tab();
     app.press(&["tab", "J", "/"]);
     assert_eq!(stop(&app), DiffStop::Filter);
     // Letters are typed, `J` and `j` included, not run.
     app.press(&["V", "J", "j", "backspace", "backspace", "I", "e", "w"]);
     assert_eq!(view(&app).filter_text(), "VIew");
+    // The cursor's file is filtered out: the cursor is on the first shown file's header.
+    assert_eq!(cursor(&app), Some(Cursor::File(VIEWER)));
     let screen = app.screen(160, 48);
     // The test screen writes a cell after each wide character.
-    assert!(screen.contains("▼ 📄  viewer.rs (+5 -2)"), "{screen}");
+    assert!(screen.contains("▼ 📄  src/viewer.rs (+5 -2)"), "{screen}");
     assert!(!screen.contains("README.md"), "{screen}");
     insta::assert_snapshot!("pr_diff_filtered", screen);
-    // Escape clears it and leaves it for the scroll area.
+    // Escape clears it and focuses the body, the cursor where it was.
     app.press(&["escape"]);
     assert_eq!(
         (focus(&app), stop(&app), view(&app).filter_text()),
-        (FocusTarget::DetailsContent, DiffStop::Scroll, "")
+        (FocusTarget::DetailsContent, DiffStop::Body, "")
     );
+    assert_eq!(cursor(&app), Some(Cursor::File(VIEWER)));
     assert!(app.screen(160, 48).contains("README.md"));
 }
 
 #[test]
-fn enter_in_the_filter_focuses_the_first_shown_hunk() {
+fn enter_in_the_filter_focuses_the_body_on_the_first_shown_file() {
     let mut app = diff_tab();
     app.press(&["tab", "/", "v", "i", "e", "w", "enter"]);
-    assert_eq!(stop(&app), DiffStop::HunkTitle(VIEWER, 0));
+    assert_eq!(stop(&app), DiffStop::Body);
+    assert_eq!(cursor(&app), Some(Cursor::File(VIEWER)));
     assert_eq!(focus(&app), FocusTarget::DetailsContent);
 }
 
@@ -487,24 +540,15 @@ fn a_drag_from_the_filter_keeps_the_mouse_until_the_release() {
 }
 
 #[test]
-fn enter_and_a_click_toggle_sections() {
+fn a_click_on_the_deleted_file_s_header_takes_the_cursor() {
     let mut app = diff_tab();
-    app.press(&["tab", "tab", "tab"]);
-    assert_eq!(stop(&app), DiffStop::FileTitle(README));
-    app.press(&["enter"]);
-    assert!(!view(&app).is_file_open(README));
-    app.press(&["enter"]);
-    assert!(view(&app).is_file_open(README));
-    // A click on the deleted file's title opens it to its notice.
+    let (column, row) = find(&app.screen(160, 48), "docs/old.md (deleted)");
+    app.click(column, row);
+    assert_eq!(stop(&app), DiffStop::Body);
+    assert_eq!(cursor(&app), Some(Cursor::File(OLD)));
+    // Folded, as deleted files start: its position row has no hunks to count.
     let screen = app.screen(160, 48);
-    let row = screen.lines().position(|line| line.contains("old.md")).unwrap();
-    let line = screen.lines().nth(row).unwrap();
-    let column = line[..line.find('▶').unwrap()].chars().count();
-    app.click(u16::try_from(column).unwrap(), u16::try_from(row).unwrap());
-    assert_eq!(stop(&app), DiffStop::FileTitle(OLD));
-    assert!(view(&app).is_file_open(OLD));
-    let screen = app.screen(160, 48);
-    assert!(screen.contains("file was removed"), "{screen}");
+    assert!(screen.contains(" docs/old.md "), "{screen}");
     insta::assert_snapshot!("pr_diff_deleted_file_open", screen);
 }
 
@@ -513,16 +557,15 @@ fn the_tab_keeps_its_state_across_tabs_and_a_new_pr_resets_it() {
     let mut app = diff_tab();
     app.press(&["tab", "J", "j", "j"]);
     app.press(&["5", "left", "right"]);
-    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
-    assert!(view(&app).is_hunk_open(README, 0));
-    assert_eq!(view(&app).pane(README, 0).unwrap().cursor(), 2);
+    assert_eq!(stop(&app), DiffStop::Body);
+    assert_eq!(cursor(&app), on_line(README, 0, 2));
     assert!(app.screen(160, 48).contains("Line: 3/6"));
     // Selecting the PR again builds the tab afresh.
     app.press(&["2", "enter"]);
     settle(&mut app);
     app.press(&["right"]);
-    assert_eq!(stop(&app), DiffStop::Scroll);
-    assert!(!view(&app).is_hunk_open(README, 0));
+    assert_eq!(stop(&app), DiffStop::Body);
+    assert_eq!(cursor(&app), Some(Cursor::File(README)));
 }
 
 #[test]
@@ -547,7 +590,7 @@ fn the_deleted_file_row_keeps_its_border_on_a_terminal_and_leaves_nothing_behind
     let deleted = rows.iter().find(|row| row.contains("old.md (deleted)")).unwrap();
     assert!(
         deleted.ends_with(
-            "││  ▶ 🗑️  old.md (deleted)                                                                      │"
+            "││▶ 🗑️  docs/old.md (deleted)                                                                   │"
         ),
         "{deleted}"
     );
@@ -563,14 +606,15 @@ fn the_deleted_file_row_keeps_its_border_on_a_terminal_and_leaves_nothing_behind
 
 // Add Comment and the pending comments (#272).
 
-/// PR 5's Diff tab with README.md's hunk open and its pane focused on line `line` (from 1).
-fn readme_pane_at(line: usize) -> TestApp {
+/// PR 5's Diff tab with the body focused and its cursor on README.md's hunk's line `line` (from 1).
+fn readme_line_at(line: usize) -> TestApp {
     let mut app = diff_tab();
-    app.press(&["tab", "tab", "tab", "tab", "enter", "tab"]);
+    app.press(&["tab", "J"]);
     for _ in 1..line {
         app.press(&["j"]);
     }
-    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
+    assert_eq!(stop(&app), DiffStop::Body);
+    assert_eq!(cursor(&app), on_line(README, 0, line - 1));
     app
 }
 
@@ -594,7 +638,7 @@ fn type_text(app: &mut TestApp, text: &str) {
     }
 }
 
-/// Adds a comment `body` on the focused pane's current line with `c`.
+/// Adds a comment `body` on the body's cursor line with `c`.
 fn add(app: &mut TestApp, body: &str) {
     app.press(&["c"]);
     type_text(app, body);
@@ -611,7 +655,7 @@ fn pending(app: &TestApp) -> Vec<(String, u32, String)> {
 
 #[test]
 fn c_opens_add_comment_on_the_current_line() {
-    let mut app = readme_pane_at(4);
+    let mut app = readme_line_at(4);
     app.press(&["c"]);
     assert_eq!(modals(&app), [ModalKind::AddComment]);
     let screen = app.screen(160, 48);
@@ -626,21 +670,21 @@ fn c_opens_add_comment_on_the_current_line() {
 
 #[test]
 fn pr_review_add_comment_160x48() {
-    let mut app = readme_pane_at(4);
+    let mut app = readme_line_at(4);
     app.press(&["c"]);
     insta::assert_snapshot!(app.screen(160, 48));
 }
 
 #[test]
 fn pr_review_add_comment_100x30() {
-    let mut app = readme_pane_at(4);
+    let mut app = readme_line_at(4);
     app.press(&["c"]);
     insta::assert_snapshot!(app.screen(100, 30));
 }
 
 #[test]
 fn an_empty_comment_toasts_and_the_dialog_stays() {
-    let mut app = readme_pane_at(4);
+    let mut app = readme_line_at(4);
     app.press(&["c", "shift+enter"]);
     assert_eq!(modals(&app), [ModalKind::AddComment]);
     assert_eq!(toasts(&app), ["Comment cannot be empty!"]);
@@ -648,15 +692,13 @@ fn an_empty_comment_toasts_and_the_dialog_stays() {
 }
 
 #[test]
-fn an_added_comment_is_pending_with_a_toast_and_focus_goes_back_to_the_pane() {
-    let mut app = readme_pane_at(4);
+fn an_added_comment_is_pending_with_a_toast_and_focus_goes_back_to_the_body() {
+    let mut app = readme_line_at(4);
     add(&mut app, "Mention the arrow keys");
     assert!(modals(&app).is_empty());
     assert_eq!(toasts(&app), ["New comment added"]);
-    assert_eq!(
-        (focus(&app), stop(&app)),
-        (FocusTarget::DetailsContent, DiffStop::Pane(README, 0))
-    );
+    assert_eq!((focus(&app), stop(&app)), (FocusTarget::DetailsContent, DiffStop::Body));
+    assert_eq!(cursor(&app), on_line(README, 0, 3));
     // Line 4 of the hunk is the file's line 5 (B22: Python shows `README.md:3`, the line's index), at diff position 4.
     assert_eq!(
         pending(&app),
@@ -666,7 +708,7 @@ fn an_added_comment_is_pending_with_a_toast_and_focus_goes_back_to_the_pane() {
 
 #[test]
 fn a_closed_dialog_adds_nothing() {
-    let mut app = readme_pane_at(4);
+    let mut app = readme_line_at(4);
     app.press(&["c", "x", "escape"]);
     assert!(modals(&app).is_empty());
     assert!(view(&app).pending().is_empty());
@@ -675,7 +717,7 @@ fn a_closed_dialog_adds_nothing() {
 
 #[test]
 fn comments_stay_in_the_order_they_were_added() {
-    let mut app = readme_pane_at(1);
+    let mut app = readme_line_at(1);
     add(&mut app, "first");
     app.press(&["j", "j"]);
     add(&mut app, "second");
@@ -687,7 +729,7 @@ fn comments_stay_in_the_order_they_were_added() {
 
 #[test]
 fn the_section_shows_with_the_first_comment_and_hides_with_the_last() {
-    let mut app = readme_pane_at(4);
+    let mut app = readme_line_at(4);
     assert!(!app.screen(160, 48).contains("Pending Comments:"));
     add(&mut app, "only");
     // The Remove button is the ring's last stop.
@@ -709,14 +751,14 @@ fn the_section_shows_with_the_first_comment_and_hides_with_the_last() {
     app.press(&["enter"]);
     assert!(view(&app).pending().is_empty());
     assert!(!app.screen(160, 48).contains("Pending Comments:"));
-    // Focus went to the stop before the button: src/viewer.rs's second hunk title. No toast for a removal.
-    assert_eq!(stop(&app), DiffStop::HunkTitle(VIEWER, 1));
+    // Focus went to the stop before the button: the body. No toast for a removal.
+    assert_eq!(stop(&app), DiffStop::Body);
     assert_eq!(toasts(&app), ["New comment added"]);
 }
 
 #[test]
 fn a_reselected_pr_starts_with_no_pending_comments() {
-    let mut app = readme_pane_at(4);
+    let mut app = readme_line_at(4);
     add(&mut app, "gone");
     assert_eq!(view(&app).pending().len(), 1);
     app.press(&["2", "enter"]);
@@ -762,7 +804,7 @@ fn reviewing() -> TestApp {
 fn reviewing_with(config: Config) -> TestApp {
     let mut app = diff_tab_with(config, reviewer_gh(), &["enter"]);
     settle(&mut app);
-    app.press(&["tab", "tab", "tab", "tab", "enter", "tab", "j", "j", "j"]);
+    app.press(&["tab", "J", "j", "j", "j"]);
     add(&mut app, "Mention the arrow keys too.");
     // From the repos table, back to the end of the screen's ring (past the command log, when it's shown).
     app.press(&["1"]);
@@ -1104,142 +1146,77 @@ fn the_screen_s_popup_is_the_open_list_s_cells() {
 
 // M in the Diff tab (#288).
 
-fn section(section: SectionRef) -> MaximizeScope {
-    MaximizeScope::Section(SectionKey(section))
-}
-
-fn maximized_section(app: &TestApp) -> Option<SectionRef> {
-    app.app()
-        .maximized()
-        .and_then(|maximized| maximized.section)
-        .map(|key| key.0)
-}
-
-fn tab_to(app: &mut TestApp, wanted: DiffStop) {
-    for _ in 0..40 {
+#[test]
+fn every_stop_maximizes_the_tab_area() {
+    let mut app = reviewing();
+    let mut seen = Vec::new();
+    app.press(&["5", "tab"]);
+    while focus(&app) == FocusTarget::DetailsContent {
+        seen.push(stop(&app));
+        assert_eq!(
+            pr_diff(&app).maximize_scope(),
+            MaximizeScope::TabArea,
+            "{:?}",
+            stop(&app)
+        );
         app.press(&["tab"]);
-        if stop(app) == wanted {
-            return;
-        }
     }
-    panic!("never reached {wanted:?}");
+    app.press(&["5", "tab", "shift+tab"]);
+    assert_eq!(stop(&app), DiffStop::Filter);
+    assert_eq!(pr_diff(&app).maximize_scope(), MaximizeScope::TabArea);
+    assert_eq!(
+        seen,
+        [
+            DiffStop::Body,
+            DiffStop::RemoveComment(0),
+            DiffStop::ReviewStatus,
+            DiffStop::ReviewSummary,
+            DiffStop::ReviewSubmit
+        ]
+    );
 }
 
 #[test]
-fn maximize_scope_is_the_section_of_each_title_or_pane() {
+fn m_on_the_body_maximizes_the_tab_area_and_escape_restores_it() {
     let mut app = diff_tab();
-    app.press(&["tab"]);
-    assert_eq!(stop(&app), DiffStop::Scroll);
-    assert_eq!(pr_diff(&app).maximize_scope(), MaximizeScope::Nothing);
-    app.press(&["tab"]);
-    assert_eq!(stop(&app), DiffStop::Filter);
-    assert_eq!(pr_diff(&app).maximize_scope(), MaximizeScope::TabArea);
-    app.press(&["tab"]);
-    assert_eq!(stop(&app), DiffStop::FileTitle(README));
-    assert_eq!(pr_diff(&app).maximize_scope(), section(SectionRef::File(README)));
-    app.press(&["tab"]);
-    assert_eq!(stop(&app), DiffStop::HunkTitle(README, 0));
-    assert_eq!(pr_diff(&app).maximize_scope(), section(SectionRef::Hunk(README, 0)));
-    app.press(&["enter", "tab"]);
-    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
-    assert_eq!(pr_diff(&app).maximize_scope(), section(SectionRef::Hunk(README, 0)));
-    // A deleted file's title.
-    tab_to(&mut app, DiffStop::FileTitle(OLD));
-    assert_eq!(pr_diff(&app).maximize_scope(), section(SectionRef::File(OLD)));
+    app.press(&["tab", "J", "j", "M"]);
+    assert_eq!(app.app().maximized(), Some(tab_area()));
+    assert_eq!(maximize_toasts(&app), 1);
+    assert_eq!((stop(&app), cursor(&app)), (DiffStop::Body, on_line(README, 0, 1)));
+    // Keys still move the cursor.
+    app.press(&["j"]);
+    assert_eq!(cursor(&app), on_line(README, 0, 2));
+    app.press(&["escape"]);
+    assert_eq!(app.app().maximized(), None);
+    assert_eq!(
+        (focus(&app), stop(&app), cursor(&app)),
+        (FocusTarget::DetailsContent, DiffStop::Body, on_line(README, 0, 2))
+    );
+}
+
+#[test]
+fn pr_diff_body_maximized_160x48() {
+    let mut app = diff_tab();
+    app.press(&["tab", "J", "J", "J", "J", "j", "M"]);
+    app.advance(std::time::Duration::from_secs(5));
+    let screen = app.screen(160, 48);
+    // The filter, the body and its position row at the screen's full width, under the tab strip.
+    assert!(screen.contains("Overview  Diff  Conversation"), "{screen}");
+    assert!(
+        screen.contains("Filter files (press '/' to focus, ESC to clear)"),
+        "{screen}"
+    );
+    assert!(screen.contains("Line: 2/8"), "{screen}");
+    assert!(!screen.contains("[1] Repositories"), "{screen}");
+    insta::assert_snapshot!(screen);
 }
 
 #[test]
 fn m_in_the_filter_types_it() {
     let mut app = diff_tab();
-    app.press(&["tab", "tab", "M"]);
+    app.press(&["tab", "shift+tab", "M"]);
     assert_eq!(view(&app).filter_text(), "M");
     assert_eq!(app.app().maximized(), None);
-}
-
-#[test]
-fn keys_inside_a_maximized_file_stay_inside_it() {
-    let mut app = diff_tab();
-    app.press(&["tab", "tab", "tab", "M"]);
-    assert_eq!(maximized_section(&app), Some(SectionRef::File(README)));
-    // Its title and its hunk's, wrapping.
-    app.press(&["tab"]);
-    assert_eq!(stop(&app), DiffStop::HunkTitle(README, 0));
-    app.press(&["tab"]);
-    assert_eq!(stop(&app), DiffStop::FileTitle(README));
-    // Enter on the hunk's title opens its pane, which j moves in.
-    app.press(&["tab", "enter"]);
-    assert!(view(&app).is_hunk_open(README, 0));
-    app.press(&["tab", "j"]);
-    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
-    assert_eq!(view(&app).pane(README, 0).unwrap().cursor(), 1);
-    assert!(app.screen(160, 48).contains("Line: 2/6"));
-    app.press(&["tab"]);
-    assert_eq!(stop(&app), DiffStop::FileTitle(README));
-    app.press(&["shift+tab"]);
-    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
-    assert_eq!(maximized_section(&app), Some(SectionRef::File(README)));
-    app.press(&["escape"]);
-    assert_eq!(maximized_section(&app), None);
-    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
-}
-
-#[test]
-fn j_and_k_move_the_line_in_a_maximized_hunk_pane() {
-    let mut app = readme_pane_at(1);
-    app.press(&["M"]);
-    assert_eq!(maximized_section(&app), Some(SectionRef::Hunk(README, 0)));
-    app.press(&["j", "j", "k"]);
-    assert_eq!(view(&app).pane(README, 0).unwrap().cursor(), 1);
-    assert!(app.screen(160, 48).contains("Line: 2/6"));
-    // Its title and its pane, wrapping.
-    app.press(&["tab"]);
-    assert_eq!(stop(&app), DiffStop::HunkTitle(README, 0));
-    app.press(&["tab"]);
-    assert_eq!(stop(&app), DiffStop::Pane(README, 0));
-    // The pane keeps its line once restored.
-    app.press(&["escape"]);
-    assert!(app.screen(160, 48).contains("Line: 2/6"));
-}
-
-#[test]
-fn a_click_on_a_maximized_file_hits_its_own_layout() {
-    let mut app = diff_tab();
-    app.press(&["tab", "tab", "tab", "M"]);
-    let row = u16::try_from(
-        app.screen(160, 48)
-            .lines()
-            .position(|line| line.contains("▶ Lines 3-7"))
-            .unwrap(),
-    )
-    .unwrap();
-    app.click(8, row);
-    assert_eq!(stop(&app), DiffStop::HunkTitle(README, 0));
-    assert!(view(&app).is_hunk_open(README, 0));
-    assert_eq!(maximized_section(&app), Some(SectionRef::File(README)));
-}
-
-#[test]
-fn pr_diff_file_maximized_160x48() {
-    let mut app = diff_tab();
-    app.press(&["tab", "tab", "tab", "M"]);
-    app.advance(std::time::Duration::from_secs(5));
-    let screen = app.screen(160, 48);
-    assert!(screen.contains("  ▼ 📄  README.md (+3 -1)"), "{screen}");
-    assert!(screen.contains("      ▶ Lines 3-7 (+3 -1) • A tiny pager."), "{screen}");
-    assert!(!screen.contains("app.css"), "{screen}");
-    insta::assert_snapshot!(screen);
-}
-
-#[test]
-fn pr_diff_hunk_pane_maximized_160x48() {
-    let mut app = readme_pane_at(1);
-    app.press(&["M"]);
-    app.advance(std::time::Duration::from_secs(5));
-    let screen = app.screen(160, 48);
-    assert!(screen.contains("  ▼ Lines 3-7 (+3 -1) • A tiny pager."), "{screen}");
-    assert!(screen.contains("Line: 1/6"), "{screen}");
-    assert!(!screen.contains("README.md"), "{screen}");
-    insta::assert_snapshot!(screen);
 }
 
 // Maximize from the stops outside any file or hunk (#295).
@@ -1271,7 +1248,7 @@ fn f6_config() -> Config {
 #[test]
 fn a_rebound_maximize_key_on_the_filter_maximizes_the_tab_area_and_m_still_types() {
     let mut app = diff_tab_with(f6_config(), gh(), &["enter"]);
-    app.press(&["tab", "tab", "r", "e"]);
+    app.press(&["tab", "shift+tab", "r", "e"]);
     assert_eq!(stop(&app), DiffStop::Filter);
     app.press(&["f6"]);
     assert_eq!(app.app().maximized(), Some(tab_area()));
@@ -1287,7 +1264,7 @@ fn a_rebound_maximize_key_on_the_filter_maximizes_the_tab_area_and_m_still_types
     assert_eq!(view(&app).filter_text(), "reM");
     app.press(&["escape"]);
     assert_eq!(view(&app).filter_text(), "");
-    assert_eq!(stop(&app), DiffStop::Scroll);
+    assert_eq!(stop(&app), DiffStop::Body);
 }
 
 #[test]
@@ -1334,7 +1311,7 @@ fn m_on_the_review_status_and_submit_maximizes_the_tab_area() {
 #[test]
 fn the_palette_offers_maximize_on_the_filter_and_runs_it_without_the_toast() {
     let mut app = diff_tab();
-    app.press(&["tab", "tab"]);
+    app.press(&["tab", "shift+tab"]);
     assert_eq!(stop(&app), DiffStop::Filter);
     app.press(&["ctrl+p"]);
     let palette = app

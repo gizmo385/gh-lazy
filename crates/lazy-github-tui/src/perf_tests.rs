@@ -311,16 +311,13 @@ fn perf_pr_diff_300_files() {
     // The Diff tab: the diff is parsed and laid out for the first time here.
     frames.press(&mut app, "right");
     shows(&mut app, "generated_000.rs");
+    // Into the body, then `J` through every hunk: the body draws only the rows on screen, so a hunk is highlighted
+    // only once it shows.
     frames.press(&mut app, "tab");
-    for _ in 0..5 {
-        frames.press(&mut app, "tab");
-    }
-    // `J` opens each hunk in turn, so by the end every hunk is open and highlighted.
     for _ in 0..300 {
         frames.press(&mut app, "J");
     }
     shows(&mut app, "generated_299.rs");
-    // The last pane's cursor, with every hunk open.
     for _ in 0..10 {
         frames.press(&mut app, "j");
         frames.press(&mut app, "k");
@@ -331,7 +328,7 @@ fn perf_pr_diff_300_files() {
     frames.finish();
 }
 
-/// The continuous diff body on its own (#387), before the Diff tab shows it (#388): the same 300-file diff, built,
+/// The continuous diff body on its own (#387), outside the Diff tab: the same 300-file diff, built,
 /// then moved through hunk by hunk, line by line and by the page and end keys.
 #[test]
 #[ignore = "timing test: run with `cargo xtask perf`"]

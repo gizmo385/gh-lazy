@@ -8,27 +8,27 @@ expression: screen
 ┌─ [1] Repositories ───────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────┐
 │ ★  Owner       Name        Private   ││ Overview  Diff  Conversation                             │
 │ ☆  parity-bot  pr-details  ✘         ││━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
-│                                      ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  │
-│                                      ││▊  Filter files (press '/' to focus, ESC to clear)     ▎  │
-│                                      ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  │
-│                                      ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
-│                                      ││  ▼ 📄  README.md (+3 -1)                                  │
-│                                      ││                                                          │
-│                                      ││    ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
-│                                      ││      ▼ Lines 3-7 (+3 -1) • A tiny pager.                 │
-│                                      ││                                                          │
-└──────────────────────────────────────┘│                                                        ▂▂│
-┌─ [2] Pull Requests ──────────────────┐│        ┌──────────────────────────────────────────────┐  │
-│ #  Status  Author         Title      ││        │     3 │ ## Usage                             │  │
-│ 5  open    parity-friend  Add a curso││        │►    4 │                                      │  │
-│ 4  closed  parity-bot     Drop the le││        │     5 │ Run `viewer FILE`.                   │  │
-│ 3  closed  parity-bot     Release 0.2││        │     5 │ Run `viewer FILE`, then press `j` and│  │
-│ 2  open    parity-friend  Try a faste││        │     6 │                                      │  │
-│                          ▊           ││        │     7 │ The current line is marked with `>`. │  │
-│                                      ││        │                                   ▉          │  │
-│                                      ││        │                                    Line: 2/6 │  │
-│                                      ││        └──────────────────────────────────────────────┘  │
-│                                      ││                                                          │
-│                                      ││                                                          │
+│                                      ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
+│                                      ││▊  Filter files (press '/' to focus, ESC to clear)       ▎│
+│                                      ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
+│                                      ││▼ 📄  README.md (+3 -1)                                    │
+│                                      ││  Lines 3-7 (+3 -1) • A tiny pager.                       │
+│                                      ││     3  │ ## Usage                                        │
+│                                      ││►    4  │                                                 │
+│                                      ││     5  │ Run `viewer FILE`.                              │
+│                                      ││     5  │ Run `viewer FILE`, then press `j` and `k` to m  │
+└──────────────────────────────────────┘│     6  │                                                 │
+┌─ [2] Pull Requests ──────────────────┐│     7  │ The current line is marked with `>`.            │
+│ #  Status  Author         Title      ││▼ 📄  assets/app.css (+3)                                ▁▁│
+│ 5  open    parity-friend  Add a curso││  Lines 1-3 (+3)                                          │
+│ 4  closed  parity-bot     Drop the le││     1  │ .cursor {                                       │
+│ 3  closed  parity-bot     Release 0.2││     2  │   color: yellow;                                │
+│ 2  open    parity-friend  Try a faste││     3  │ }                                               │
+│                          ▊           ││▼ 📄  build.rs (+1)                                        │
+│                                      ││  Lines 1-4 (+1)                                          │
+│                                      ││     1  │ fn main() {                                     │
+│                                      ││     2  │     println!("cargo:rerun-if-changed=build.rs"  │
+│                                      ││     3  │     println!("cargo:rerun-if-changed=assets");  │
+│                                      ││ README.md                                    Line: 2/6   │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
  j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link

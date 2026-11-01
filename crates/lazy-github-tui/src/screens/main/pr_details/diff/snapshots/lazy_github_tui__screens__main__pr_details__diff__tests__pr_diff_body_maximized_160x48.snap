@@ -1,0 +1,50 @@
+---
+source: crates/lazy-github-tui/src/screens/main/pr_details/diff/tests.rs
+expression: screen
+---
+ Overview  Diff  Conversation
+━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎
+▊  Filter files (press '/' to focus, ESC to clear)                                                                                                             ▎
+▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎
+▼ 📄  README.md (+3 -1)
+  Lines 3-7 (+3 -1) • A tiny pager.
+     3  │ ## Usage
+     4  │
+     5  │ Run `viewer FILE`.
+     5  │ Run `viewer FILE`, then press `j` and `k` to move.
+     6  │
+     7  │ The current line is marked with `>`.
+▼ 📄  assets/app.css (+3)
+  Lines 1-3 (+3)
+     1  │ .cursor {
+     2  │   color: yellow;
+     3  │ }
+▼ 📄  build.rs (+1)
+  Lines 1-4 (+1)
+     1  │ fn main() {
+     2  │     println!("cargo:rerun-if-changed=build.rs");
+     3  │     println!("cargo:rerun-if-changed=assets");
+     4  │ }
+▶ 🗑️   docs/old.md (deleted)
+▼ 📄  src/viewer.rs (+5 -2)
+  Lines 1-8 (+2)
+     1  │ use std::io;
+►    2  │ use std::fmt;
+     3  │
+     4  │ pub struct Viewer {
+     5  │     lines: Vec<String>,
+     6  │     cursor: usize,
+     7  │ }
+     8  │
+  Lines 22-28 (+3 -2) • impl Viewer {
+    22  │     pub fn render(&self) -> io::Result<()> {
+    21  │         for line in &self.lines {
+    22  │             println!("{line}");
+    23  │         for (i, line) in self.lines.iter().enumerate() {
+    24  │             let marker = if i == self.cursor { ">" } else { " " };
+    25  │             println!("{marker} {line}");
+    26  │         }
+    27  │         Ok(())
+    28  │     }
+ src/viewer.rs                                                                                                                                        Line: 2/8

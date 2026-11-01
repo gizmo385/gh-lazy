@@ -177,13 +177,11 @@ pub enum Owner {
     Tree,
     /// A run's Jobs tab (`WorkflowRunJobsTabPane`): view job logs, in front of the content's scroll link.
     RunJobs,
-    /// The diff viewer (`SplitDiffViewer`, #236): next and previous hunk, and the file filter key, while focus is
-    /// anywhere in the PR Diff tab.
+    /// The diff viewer (`SplitDiffViewer`, #236): next and previous hunk, and the file filter key, while focus is on
+    /// the filter, a pending comment's Remove button or the review form.
     DiffViewer,
-    /// A focused hunk pane in the diff viewer (`UnifiedDiffPane`): the line cursor and add comment.
-    HunkPane,
-    /// The continuous diff body with focus (#387): the line cursor, hunk jumps, paging and panning, add comment and
-    /// the filter key.
+    /// The continuous diff body with focus (#387, #388): the line cursor, hunk jumps, paging and panning, add comment
+    /// and the filter key.
     DiffBody,
     /// The diff viewer's focused file filter (`FileFilterInput`, an `Input`).
     DiffFilter,
@@ -231,7 +229,6 @@ impl Owner {
             | Owner::Tree
             | Owner::RunJobs
             | Owner::DiffViewer
-            | Owner::HunkPane
             | Owner::DiffBody
             | Owner::CommandLog
             // Textual's `TextArea` has no group title: its keys are an untitled section.
@@ -269,12 +266,12 @@ impl Owner {
     }
 
     /// The label the footer and help panel give binding `id` at this link, when it isn't the binding's own
-    /// description. The hunk pane labels the line cursor keys as Python's pane labels its own `j` / `k` (Py bug B9),
+    /// description. The diff body labels the line cursor keys as Python's pane labels its own `j` / `k` (Py bug B9),
     /// since `diff.cursor_down` and `diff.cursor_up` have no description.
     pub fn binding_label(self, id: BindingId) -> Option<&'static str> {
         match (self, id) {
-            (Owner::HunkPane | Owner::DiffBody, BindingId::DiffCursorDown) => Some("Line down"),
-            (Owner::HunkPane | Owner::DiffBody, BindingId::DiffCursorUp) => Some("Line up"),
+            (Owner::DiffBody, BindingId::DiffCursorDown) => Some("Line down"),
+            (Owner::DiffBody, BindingId::DiffCursorUp) => Some("Line up"),
             _ => None,
         }
     }

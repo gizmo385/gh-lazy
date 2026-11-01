@@ -1524,7 +1524,6 @@ impl MainScreen {
             | Owner::Tree
             | Owner::RunJobs
             | Owner::DiffViewer
-            | Owner::HunkPane
             | Owner::DiffBody
             | Owner::DiffFilter => self.details.on_binding(owner, id),
             Owner::SearchableTable(section) if id == BindingId::TableSearch => {
@@ -1578,7 +1577,7 @@ impl MainScreen {
     pub fn link_binding_state(&self, owner: Owner, id: BindingId, cx: &Cx<'_>) -> BindingState {
         match owner {
             Owner::Screen(ScreenKind::Main) => self.binding_state(id, cx),
-            Owner::DiffViewer => self.details.binding_state(owner, id),
+            Owner::DiffViewer | Owner::DiffBody => self.details.binding_state(owner, id),
             _ => BindingState::Enabled,
         }
     }

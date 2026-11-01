@@ -8,45 +8,45 @@ expression: "app.screen(160, 48)"
 ┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐
 │ ★  Owner       Name        Private                           ││ Overview  Diff  Conversation                                                                 │
 │ ☆  parity-bot  pr-details  ✘                                 ││━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
-│                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  │
-│                                                              ││▊  Filter files (press '/' to focus, ESC to clear)                                         ▎  │
-│                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  │
-│                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
-│                                                              ││  ▼ 📄  README.md (+3 -1)                                                                      │
-│                                                              ││                                                                                              │
-│                                                              ││    ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
-│                                                              ││      ▼ Lines 3-7 (+3 -1) • A tiny pager.                                                     │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││        ┌──────────────────────────────────────────────────────────────────────────────────┐  │
-│                                                              ││        │►    3 │ ## Usage                                                                 │  │
-│                                                              ││        │     4 │                                                                          │  │
-│                                                              ││        │     5 │ Run `viewer FILE`.                                                       │  │
-│                                                              ││        │     5 │ Run `viewer FILE`, then press `j` and `k` to move.                       │  │
-│                                                              ││        │     6 │                                                                          │  │
-│                                                              ││        │     7 │ The current line is marked with `>`.                                     │  │
-│                                                              ││        │                                                                        Line: 1/6 │  │
-└──────────────────────────────────────────────────────────────┘│        └──────────────────────────────────────────────────────────────────────────────────┘  │
-┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
-│ #  Status  Author         Title                              ││                                                                                              │
-│ 5  open    parity-friend  Add a cursor to the viewer         ││                                                                                              │
-│ 4  closed  parity-bot     Drop the legacy renderer           ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
-│ 3  closed  parity-bot     Release 0.2.0                      ││  ▼ 📄  app.css (+3)                                                                           │
-│ 2  open    parity-friend  Try a faster parser                ││                                                                                              │
-│                                                              ││    ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
-│                                                              ││      ▶ Lines 1-3 (+3)                                                                        │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
-│                                                              ││  ▼ 📄  build.rs (+1)                                                                          │
-│                                                              ││                                                                                              │
-│                                                              ││    ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▂▂│
-│                                                              ││      ▶ Lines 1-4 (+1)                                                                        │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
-│                                                              ││  ▶ 🗑️   old.md (deleted)                                                                      │
-│                                                              ││                                                                                              │
-│                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
+│                                                              ││▊  Filter files (press '/' to focus, ESC to clear)                                           ▎│
+│                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
+│                                                              ││▼ 📄  README.md (+3 -1)                                                                        │
+│                                                              ││  Lines 3-7 (+3 -1) • A tiny pager.                                                           │
+│                                                              ││►    3  │ ## Usage                                                                            │
+│                                                              ││     4  │                                                                                     │
+│                                                              ││     5  │ Run `viewer FILE`.                                                                  │
+│                                                              ││     5  │ Run `viewer FILE`, then press `j` and `k` to move.                                  │
+│                                                              ││     6  │                                                                                     │
+│                                                              ││     7  │ The current line is marked with `>`.                                                │
+│                                                              ││▼ 📄  assets/app.css (+3)                                                                      │
+│                                                              ││  Lines 1-3 (+3)                                                                              │
+│                                                              ││     1  │ .cursor {                                                                           │
+│                                                              ││     2  │   color: yellow;                                                                    │
+│                                                              ││     3  │ }                                                                                   │
+│                                                              ││▼ 📄  build.rs (+1)                                                                            │
+│                                                              ││  Lines 1-4 (+1)                                                                              │
+└──────────────────────────────────────────────────────────────┘│     1  │ fn main() {                                                                         │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│     2  │     println!("cargo:rerun-if-changed=build.rs");                                    │
+│ #  Status  Author         Title                              ││     3  │     println!("cargo:rerun-if-changed=assets");                                      │
+│ 5  open    parity-friend  Add a cursor to the viewer         ││     4  │ }                                                                                   │
+│ 4  closed  parity-bot     Drop the legacy renderer           ││▶ 🗑️   docs/old.md (deleted)                                                                   │
+│ 3  closed  parity-bot     Release 0.2.0                      ││▼ 📄  src/viewer.rs (+5 -2)                                                                    │
+│ 2  open    parity-friend  Try a faster parser                ││  Lines 1-8 (+2)                                                                              │
+│                                                              ││     1  │ use std::io;                                                                        │
+│                                                              ││     2  │ use std::fmt;                                                                       │
+│                                                              ││     3  │                                                                                     │
+│                                                              ││     4  │ pub struct Viewer {                                                                 │
+│                                                              ││     5  │     lines: Vec<String>,                                                             │
+│                                                              ││     6  │     cursor: usize,                                                                  │
+│                                                              ││     7  │ }                                                                                   │
+│                                                              ││     8  │                                                                                     │
+│                                                              ││  Lines 22-28 (+3 -2) • impl Viewer {                                                         │
+│                                                              ││    22  │     pub fn render(&self) -> io::Result<()> {                                        │
+│                                                              ││    21  │         for line in &self.lines {                                                   │
+│                                                              ││    22  │             println!("{line}");                                                   ▄▄│
+│                                                              ││    23  │         for (i, line) in self.lines.iter().enumerate() {                            │
+│                                                              ││    24  │             let marker = if i == self.cursor { ">" } else { " " };                  │
+│                                                              ││ README.md                                                                        Line: 1/6   │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command

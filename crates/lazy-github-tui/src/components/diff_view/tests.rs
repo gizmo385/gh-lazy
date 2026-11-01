@@ -1,5 +1,5 @@
-//! The viewer on its own: its focus ring, the filter, `J` / `K` and the line cursor, against PR 5's diff from the
-//! `pr-details` fixtures.
+//! The viewer on its own: its focus ring, the filter, the body's keys, the shared scroll, the mouse, the pending
+//! comments and the review form, against PR 5's diff from the `pr-details` fixtures.
 
 use std::path::Path;
 
@@ -13,8 +13,8 @@ use crate::keymap::{KeySpec, Keymap};
 use crate::test_util::{buffer_to_string, buffer_to_styled_string};
 use lazy_github_core::github::ReviewEvent;
 
-/// PR 5's diff: README.md (one hunk), assets/app.css (added), build.rs, docs/old.md (deleted) and src/viewer.rs (two
-/// hunks).
+/// PR 5's diff: README.md (one hunk of 6 lines), assets/app.css (added, 3), build.rs (4), docs/old.md (deleted) and
+/// src/viewer.rs (two hunks, of 8 and 9 lines). The body has 40 rows.
 fn diff_text() -> String {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../parity/fixtures/pr-details/repos/parity-bot/pr-details/pulls/5/GET.diff.json");
@@ -28,9 +28,23 @@ fn view() -> DiffView {
 
 const README: usize = 0;
 const CSS: usize = 1;
-const BUILD: usize = 2;
 const OLD: usize = 3;
 const VIEWER: usize = 4;
+
+fn at(file: usize, hunk: usize, line: usize) -> DiffLineRef {
+    DiffLineRef { file, hunk, line }
+}
+
+/// Where the body's cursor is.
+fn cursor(view: &DiffView) -> Option<Cursor> {
+    view.body().cursor()
+}
+
+/// The cursor on a line, as [`cursor`] gives it.
+#[allow(clippy::unnecessary_wraps)]
+fn on_line(file: usize, hunk: usize, line: usize) -> Option<Cursor> {
+    Some(Cursor::Line(at(file, hunk, line)))
+}
 
 /// Presses `keys` on the view as the app would: the filter first, then the chain's links in order.
 fn press(view: &mut DiffView, keys: &[&str]) {
@@ -57,17 +71,21 @@ fn press(view: &mut DiffView, keys: &[&str]) {
     }
 }
 
-fn draw(view: &mut DiffView, width: u16, height: u16) -> String {
+fn draw_buffer(view: &mut DiffView, width: u16, height: u16) -> Buffer {
     let mut terminal = Terminal::new(TestBackend::new(width, height)).unwrap();
     terminal
         .draw(|frame| view.render(frame, frame.area(), &Theme::default(), true))
         .unwrap();
-    buffer_to_string(terminal.backend().buffer())
+    terminal.backend().buffer().clone()
 }
 
-/// Every stop `tab` walks from the scroll area, until focus would leave the viewer.
+fn draw(view: &mut DiffView, width: u16, height: u16) -> String {
+    buffer_to_string(&draw_buffer(view, width, height))
+}
+
+/// Every stop `tab` walks from the first, until focus would leave the viewer.
 fn ring(view: &mut DiffView) -> Vec<DiffStop> {
-    view.focus_first();
+    view.focus(DiffStop::Filter);
     let mut stops = vec![view.stop()];
     while view.focus_step(true) {
         stops.push(view.stop());
@@ -75,205 +93,127 @@ fn ring(view: &mut DiffView) -> Vec<DiffStop> {
     stops
 }
 
-#[test]
-fn files_are_open_but_deleted_ones_and_hunks_are_closed() {
-    let view = view();
-    let open: Vec<bool> = (0..5).map(|f| view.is_file_open(f)).collect();
-    assert_eq!(open, [true, true, true, false, true]);
-    assert!(!view.is_hunk_open(VIEWER, 0));
-    assert!(!view.is_hunk_open(VIEWER, 1));
+/// The screen row `text` is first drawn on.
+fn row_of(screen: &str, text: &str) -> u16 {
+    let row = screen
+        .lines()
+        .position(|line| line.contains(text))
+        .unwrap_or_else(|| panic!("{text:?} isn't on screen:\n{screen}"));
+    u16::try_from(row).unwrap()
 }
 
+// The ring.
+
 #[test]
-fn the_ring_walks_the_shown_titles_and_open_panes() {
-    use DiffStop::{FileTitle, Filter, HunkTitle, Pane, Scroll};
+fn the_ring_is_the_filter_the_body_then_the_comments_and_the_form() {
+    use DiffStop::{Body, Filter, RemoveComment, ReviewStatus, ReviewSubmit, ReviewSummary};
     let mut view = view();
+    assert_eq!(ring(&mut view), [Filter, Body]);
+    let mut view = with_two_comments();
+    view.show_review_form(false);
     assert_eq!(
         ring(&mut view),
         [
-            Scroll,
             Filter,
-            FileTitle(README),
-            HunkTitle(README, 0),
-            FileTitle(CSS),
-            HunkTitle(CSS, 0),
-            FileTitle(BUILD),
-            HunkTitle(BUILD, 0),
-            FileTitle(OLD),
-            FileTitle(VIEWER),
-            HunkTitle(VIEWER, 0),
-            HunkTitle(VIEWER, 1),
+            Body,
+            RemoveComment(0),
+            RemoveComment(1),
+            ReviewStatus,
+            ReviewSummary,
+            ReviewSubmit
         ]
     );
-    // An open hunk adds its pane; a closed file hides its hunks; a filtered-out file is skipped; an open deleted
-    // file has nothing to focus.
-    view.focus(HunkTitle(README, 0));
-    press(&mut view, &["enter"]);
-    view.focus(FileTitle(VIEWER));
-    press(&mut view, &["enter"]);
-    view.focus(FileTitle(OLD));
-    press(&mut view, &["enter"]);
-    assert_eq!(
-        ring(&mut view),
-        [
-            Scroll,
-            Filter,
-            FileTitle(README),
-            HunkTitle(README, 0),
-            Pane(README, 0),
-            FileTitle(CSS),
-            HunkTitle(CSS, 0),
-            FileTitle(BUILD),
-            HunkTitle(BUILD, 0),
-            FileTitle(OLD),
-            FileTitle(VIEWER),
-        ]
-    );
-    view.focus(Filter);
-    press(&mut view, &["r", "s"]);
-    assert_eq!(
-        ring(&mut view),
-        [Scroll, Filter, FileTitle(BUILD), HunkTitle(BUILD, 0), FileTitle(VIEWER)]
-    );
-    // Back from the end, then out past the start.
-    view.focus_last();
-    assert_eq!(view.stop(), FileTitle(VIEWER));
-    assert!(view.focus_step(false));
-    assert_eq!(view.stop(), HunkTitle(BUILD, 0));
+    // From before, focus lands on the body; from after, on the last stop. Past either end it leaves.
     view.focus_first();
+    assert_eq!(view.stop(), Body);
+    assert!(view.focus_step(false));
+    assert_eq!(view.stop(), Filter);
     assert!(!view.focus_step(false));
+    view.focus_last();
+    assert_eq!(view.stop(), ReviewSubmit);
+    assert!(!view.focus_step(true));
 }
 
 #[test]
-fn j_and_k_move_the_current_line_and_stop_at_the_ends() {
-    let mut view = view();
-    press(&mut view, &["J"]);
-    assert_eq!(view.stop(), DiffStop::Pane(README, 0));
-    let cursor = |view: &DiffView| view.pane(README, 0).unwrap().cursor();
-    press(&mut view, &["k"]);
-    assert_eq!(cursor(&view), 0);
-    press(&mut view, &["j", "j", "k"]);
-    assert_eq!(cursor(&view), 1);
-    assert!(draw(&mut view, 96, 40).contains("Line: 2/6"));
-    press(&mut view, &["j", "j", "j", "j", "j", "j"]);
-    assert_eq!(cursor(&view), 5);
-    assert!(draw(&mut view, 96, 40).contains("Line: 6/6"));
+fn without_a_body_the_filter_is_the_first_stop() {
+    let mut view = DiffView::new(diff::parse("").unwrap());
+    view.focus_first();
+    assert_eq!(view.stop(), DiffStop::Filter);
+    assert_eq!(ring(&mut view), [DiffStop::Filter]);
+    view.show_review_form(true);
+    view.focus_first();
+    assert_eq!(view.stop(), DiffStop::Filter);
+    assert_eq!(
+        ring(&mut view),
+        [DiffStop::Filter, DiffStop::ReviewSummary, DiffStop::ReviewSubmit]
+    );
 }
+
+// The body's keys.
 
 #[test]
-fn next_and_previous_hunk_open_what_they_land_on() {
-    use DiffStop::{FileTitle, HunkTitle, Pane, Scroll};
+fn j_and_k_move_the_cursor_across_hunks_and_files() {
     let mut view = view();
-    // From the scroll area: the first hunk, or the last.
-    press(&mut view, &["K"]);
-    assert_eq!(view.stop(), Pane(VIEWER, 1));
-    assert!(view.is_hunk_open(VIEWER, 1));
-    view.focus(Scroll);
-    press(&mut view, &["J"]);
-    assert_eq!(view.stop(), Pane(README, 0));
-    // From a pane, the next across files; the deleted file has none.
-    press(&mut view, &["J", "J", "J"]);
-    assert_eq!(view.stop(), Pane(VIEWER, 0));
-    // A closed file opens.
-    view.focus(FileTitle(VIEWER));
-    press(&mut view, &["enter"]);
-    assert!(!view.is_file_open(VIEWER));
-    view.focus(HunkTitle(BUILD, 0));
-    press(&mut view, &["J"]);
-    assert_eq!(view.stop(), Pane(VIEWER, 0));
-    assert!(view.is_file_open(VIEWER));
-    // At the ends, nothing.
-    press(&mut view, &["J", "J"]);
-    assert_eq!(view.stop(), Pane(VIEWER, 1));
-    view.focus(Pane(README, 0));
-    press(&mut view, &["K"]);
-    assert_eq!(view.stop(), Pane(README, 0));
-    // A title outside any hunk counts as outside: `K` goes to the last.
-    view.focus(FileTitle(CSS));
-    press(&mut view, &["K"]);
-    assert_eq!(view.stop(), Pane(VIEWER, 1));
-}
-
-/// The view laid out `width` wide, its lines with their styles and where everything landed.
-fn laid_out(view: &mut DiffView, width: u16) -> (Vec<String>, String) {
-    let theme = Theme::default();
-    let lines = view
-        .body
-        .layout(width, &theme)
-        .lines
-        .iter()
-        .map(|line| format!("{line:?}"))
-        .collect();
-    (lines, format!("{:?}", view.body.placements(width)))
-}
-
-/// What [`laid_out`] gives with every cached layout dropped first, the view's and each file's.
-fn laid_out_afresh(view: &mut DiffView, width: u16) -> (Vec<String>, String) {
-    view.body.layouts.entries.clear();
-    for file in &mut view.body.files {
-        file.layouts.clear();
-    }
-    laid_out(view, width)
-}
-
-#[test]
-fn a_view_put_together_from_cached_files_is_the_one_laid_out_afresh() {
-    // Each step changes one file, or focus, the filter or the comments, and is drawn (at two widths, as the view
-    // overflows) before the comparison, so the next one starts from cached layouts (#325).
-    let steps: &[&[&str]] = &[
-        &["J"],
-        &["j", "j"],
-        &["J", "J"],
-        &["k"],
-        &["K"],
-        &["shift+tab"],
-        &["enter"],
-        &["tab", "tab"],
-        &["J", "j", "c"],
-        &["/", "v"],
-        &["escape"],
-    ];
-    let mut view = view();
+    view.focus_first();
     draw(&mut view, 100, 30);
-    for keys in steps {
-        for key in *keys {
-            // Focus moves and comments come from outside the view: the app's focus ring and the comment modal.
-            match *key {
-                "tab" => {
-                    view.focus_step(true);
-                }
-                "shift+tab" => {
-                    view.focus_step(false);
-                }
-                "c" => {
-                    let pending = comment(&view, 1, "a comment");
-                    view.add_comment(pending);
-                }
-                key => press(&mut view, &[key]),
-            }
-        }
-        draw(&mut view, 100, 30);
-        for width in [100, 98] {
-            let cached = laid_out(&mut view, width);
-            let viewports: Vec<usize> = view
-                .body
-                .files
-                .iter()
-                .flat_map(|f| &f.hunks)
-                .map(|h| h.pane.viewport())
-                .collect();
-            assert_eq!(cached, laid_out_afresh(&mut view, width), "after {keys:?} at {width}");
-            let fresh: Vec<usize> = view
-                .body
-                .files
-                .iter()
-                .flat_map(|f| &f.hunks)
-                .map(|h| h.pane.viewport())
-                .collect();
-            assert_eq!(viewports, fresh, "after {keys:?} at {width}");
-        }
-    }
+    assert_eq!(cursor(&view), Some(Cursor::File(README)));
+    // The hunk separator can't hold the cursor: one `j` from the header is the hunk's first line.
+    press(&mut view, &["j"]);
+    assert_eq!(cursor(&view), on_line(README, 0, 0));
+    // Past README.md's last line onto assets/app.css's header.
+    press(&mut view, &["j", "j", "j", "j", "j", "j"]);
+    assert_eq!(cursor(&view), Some(Cursor::File(CSS)));
+    press(&mut view, &["k"]);
+    assert_eq!(cursor(&view), on_line(README, 0, 5));
+    assert!(draw(&mut view, 100, 30).contains("Line: 6/6"));
 }
+
+#[test]
+fn big_j_and_k_jump_hunks_from_the_body_and_from_the_form() {
+    let mut view = view();
+    view.show_review_form(false);
+    view.focus_first();
+    press(&mut view, &["J", "J", "J", "J", "J"]);
+    assert_eq!(cursor(&view), on_line(VIEWER, 1, 0));
+    press(&mut view, &["K"]);
+    assert_eq!(cursor(&view), on_line(VIEWER, 0, 0));
+    // From the form, the body takes focus and its cursor jumps.
+    view.focus(DiffStop::ReviewSubmit);
+    press(&mut view, &["J"]);
+    assert_eq!(view.stop(), DiffStop::Body);
+    assert_eq!(cursor(&view), on_line(VIEWER, 1, 0));
+}
+
+#[test]
+fn the_cursor_s_row_stays_in_view() {
+    let mut view = view();
+    view.focus_first();
+    draw(&mut view, 100, 20);
+    press(&mut view, &["end"]);
+    let screen = draw(&mut view, 100, 20);
+    assert!(view.offset() > 0);
+    assert!(screen.contains("►   28  │     }"), "{screen}");
+    press(&mut view, &["home"]);
+    draw(&mut view, 100, 20);
+    assert_eq!(view.offset(), 0);
+}
+
+#[test]
+fn the_position_row_stays_at_the_bottom_while_the_body_fills_the_view() {
+    let mut view = view();
+    view.focus_first();
+    let screen = draw(&mut view, 100, 20);
+    let last = screen.lines().last().unwrap();
+    assert!(
+        last.starts_with(" README.md") && last.trim_end().ends_with("1 hunk"),
+        "{last}"
+    );
+    press(&mut view, &["j"]);
+    let screen = draw(&mut view, 100, 20);
+    assert!(screen.lines().last().unwrap().contains("Line: 1/6"), "{screen}");
+}
+
+// The filter.
 
 #[test]
 fn j_and_k_type_into_the_filter() {
@@ -282,16 +222,20 @@ fn j_and_k_type_into_the_filter() {
     assert_eq!(view.stop(), DiffStop::Filter);
     assert_eq!(view.filter_text(), "JK");
     assert!((0..5).all(|f| !view.is_file_shown(f)));
+    // The body has no rows, so it isn't a stop.
+    assert_eq!(ring(&mut view), [DiffStop::Filter]);
 }
 
 #[test]
-fn typing_filters_by_path_ignoring_case() {
+fn typing_filters_by_path_ignoring_case_and_moves_the_cursor_off_a_hidden_file() {
     let mut view = view();
-    press(&mut view, &["J", "/"]);
-    assert_eq!(view.stop(), DiffStop::Filter);
+    view.focus_first();
+    press(&mut view, &["j", "/"]);
+    assert_eq!(cursor(&view), on_line(README, 0, 0));
     press(&mut view, &["V", "i", "E", "w"]);
     let shown: Vec<bool> = (0..5).map(|f| view.is_file_shown(f)).collect();
     assert_eq!(shown, [false, false, false, false, true]);
+    assert_eq!(cursor(&view), Some(Cursor::File(VIEWER)));
     // The full path counts, not just the name.
     press(&mut view, &["ctrl+u", "d", "o", "c", "s", "/"]);
     let shown: Vec<bool> = (0..5).map(|f| view.is_file_shown(f)).collect();
@@ -302,254 +246,145 @@ fn typing_filters_by_path_ignoring_case() {
 }
 
 #[test]
-fn escape_clears_the_filter_and_leaves_it_for_the_scroll_area() {
+fn enter_leaves_the_filter_for_the_first_shown_file_s_header() {
     let mut view = view();
-    press(&mut view, &["/", "v", "i", "e", "w", "escape"]);
-    assert_eq!(view.stop(), DiffStop::Scroll);
+    view.focus_first();
+    press(&mut view, &["J", "/", "v", "i", "e", "w", "enter"]);
+    assert_eq!(view.stop(), DiffStop::Body);
+    assert_eq!(cursor(&view), Some(Cursor::File(VIEWER)));
+    assert_eq!(view.filter_text(), "view");
+    // With nothing shown, focus stays.
+    press(&mut view, &["/", "z", "z", "enter"]);
+    assert_eq!(view.stop(), DiffStop::Filter);
+}
+
+#[test]
+fn escape_clears_the_filter_and_focuses_the_body_with_the_cursor_kept() {
+    let mut view = view();
+    view.focus_first();
+    press(&mut view, &["J", "J", "j", "/", "c", "s", "s", "escape"]);
+    assert_eq!(view.stop(), DiffStop::Body);
     assert_eq!(view.filter_text(), "");
     assert!((0..5).all(|f| view.is_file_shown(f)));
+    assert_eq!(cursor(&view), on_line(CSS, 0, 1));
 }
 
 #[test]
-fn enter_leaves_the_filter_for_the_first_shown_hunk() {
-    use DiffStop::{HunkTitle, Pane};
+fn a_paste_filters() {
     let mut view = view();
-    // Its title while the hunk is closed (Py bug B59)...
-    press(&mut view, &["/", "v", "i", "e", "w", "enter"]);
-    assert_eq!(view.stop(), HunkTitle(VIEWER, 0));
-    assert_eq!(view.filter_text(), "view");
-    // ...and its pane once it's open.
-    press(&mut view, &["enter", "/", "enter"]);
-    assert_eq!(view.stop(), Pane(VIEWER, 0));
-}
-
-#[test]
-fn the_focused_stop_scrolls_into_view() {
-    let mut view = view();
-    draw(&mut view, 80, 20);
-    assert_eq!(view.offset(), 0);
-    press(&mut view, &["K"]);
-    let screen = draw(&mut view, 80, 20);
-    assert!(view.offset() > 0);
-    assert!(screen.contains("Line: 1/9"), "{screen}");
-    // Back at the filter, the view scrolls back up.
-    press(&mut view, &["/"]);
-    draw(&mut view, 80, 20);
-    assert_eq!(view.offset(), 0);
-}
-
-#[test]
-fn clicks_toggle_titles_and_focus_panes_and_the_filter() {
-    let mut view = view();
-    let screen = draw(&mut view, 96, 60);
-    let at = |screen: &str, needle: &str| -> Position {
-        let row = screen.lines().position(|line| line.contains(needle)).unwrap();
-        let line = screen.lines().nth(row).unwrap();
-        let column = line[..line.find(needle).unwrap()].chars().count();
-        Position::new(u16::try_from(column).unwrap(), u16::try_from(row).unwrap())
-    };
-    view.click(at(&screen, "Lines 3-7"));
-    assert_eq!(view.stop(), DiffStop::HunkTitle(README, 0));
-    assert!(view.is_hunk_open(README, 0));
-    let screen = draw(&mut view, 96, 60);
-    view.click(at(&screen, "## Usage"));
-    assert_eq!(view.stop(), DiffStop::Pane(README, 0));
-    view.click(at(&screen, "README.md"));
-    assert_eq!(view.stop(), DiffStop::FileTitle(README));
-    assert!(!view.is_file_open(README));
-    view.click(at(&screen, "Filter files"));
-    assert_eq!(view.stop(), DiffStop::Filter);
-    // Past a title's end, the scroll area.
-    let mut beyond = at(&screen, "app.css");
-    beyond.x += 40;
-    view.click(beyond);
-    assert_eq!(view.stop(), DiffStop::Scroll);
-    assert!(view.is_file_open(CSS));
+    view.focus(DiffStop::Filter);
+    assert!(view.handle_paste("old\nignored"));
+    assert_eq!(view.filter_text(), "old");
+    assert!(view.is_file_shown(OLD) && !view.is_file_shown(README));
+    view.focus(DiffStop::Body);
+    assert!(!view.handle_paste("x"));
 }
 
 #[test]
 fn an_invalid_diff_shows_the_filter_and_the_reason() {
-    let mut view = DiffView::invalid("unexpected end of the file header of `diff --git a/x b/x`");
-    let screen = draw(&mut view, 120, 8);
+    let mut view = DiffView::invalid("no hunks");
+    let screen = draw(&mut view, 80, 10);
     assert!(
         screen.contains("Filter files (press '/' to focus, ESC to clear)"),
         "{screen}"
     );
     assert!(
-        screen.contains(
-            "error parsing diff - please view on github: unexpected end of the file header of `diff --git a/x b/x`"
-        ),
+        screen.contains("error parsing diff - please view on github: no hunks"),
         "{screen}"
     );
-    assert_eq!(ring(&mut view), [DiffStop::Scroll, DiffStop::Filter]);
+    view.focus_first();
+    assert_eq!(view.stop(), DiffStop::Filter);
 }
 
 #[test]
-fn the_viewer_keys_are_hidden_only_at_the_scroll_area() {
+fn slash_from_anywhere_focuses_the_filter() {
+    let mut view = with_two_comments();
+    view.show_review_form(false);
+    for stop in [
+        DiffStop::Body,
+        DiffStop::RemoveComment(1),
+        DiffStop::ReviewStatus,
+        DiffStop::ReviewSubmit,
+    ] {
+        view.focus(stop);
+        press(&mut view, &["/"]);
+        assert_eq!(view.stop(), DiffStop::Filter, "from {stop:?}");
+    }
+}
+
+// The footer's view of the body.
+
+#[test]
+fn add_comment_is_hidden_off_a_diff_line() {
     let mut view = view();
-    let id = BindingId::DiffNextHunk;
-    assert_eq!(view.binding_state(Owner::DiffViewer, id), BindingState::Hidden);
+    view.focus_first();
+    let state = |view: &DiffView| view.binding_state(Owner::DiffBody, BindingId::DiffAddComment);
+    assert_eq!(state(&view), BindingState::Hidden);
+    press(&mut view, &["J"]);
+    assert_eq!(state(&view), BindingState::Enabled);
+    // The deleted file's `file was removed` row isn't a line either.
+    view.focus(DiffStop::Body);
+    assert_eq!(
+        view.binding_state(Owner::DiffBody, BindingId::DiffNextHunk),
+        BindingState::Enabled
+    );
+}
+
+// The mouse.
+
+fn up(column: u16, row: u16) -> MouseEvent {
+    MouseEvent {
+        kind: MouseEventKind::Up(MouseButton::Left),
+        column,
+        row,
+        modifiers: crossterm::event::KeyModifiers::NONE,
+    }
+}
+
+#[test]
+fn a_click_on_a_row_focuses_the_body_and_moves_the_cursor() {
+    let mut view = view();
     view.focus(DiffStop::Filter);
-    assert_eq!(view.binding_state(Owner::DiffViewer, id), BindingState::Enabled);
-    assert_eq!(view.binding_state(Owner::DiffFilter, id), BindingState::Enabled);
-}
-
-/// Hunk `h` of file `f`'s pane laid out alone, `width` cells wide, its current line `moves` lines down, with its
-/// colors.
-fn pane_screen(f: usize, h: usize, moves: usize, width: u16) -> String {
-    let parsed = diff::parse(&diff_text()).unwrap();
-    let file = &parsed.files[f];
-    let hunk = &file.hunks[h];
-    let mut pane = HunkPane::new(hunk);
-    for _ in 0..moves {
-        pane.cursor_down();
-    }
-    let theme = Theme::default();
-    let layout = pane.layout(file, hunk, width, &theme, true, theme.background());
-    let mut buf = Buffer::empty(Rect::new(0, 0, width, u16::try_from(layout.lines.len()).unwrap()));
-    for (y, line) in layout.lines.iter().enumerate() {
-        buf.set_line(0, u16::try_from(y).unwrap(), line, width);
-    }
-    buffer_to_styled_string(&buf)
-}
-
-#[test]
-fn invalid_utf8_and_controls_in_a_diff_are_drawn_as_replacement_characters() {
-    // A binary file's bytes, as `gh` prints them: the body is decoded lossily (`GhResponse::text`).
-    let bytes = b"diff --git a/logo.bin b/logo.bin\n--- a/logo.bin\n+++ b/logo.bin\n@@ -1 +1 @@\n-\x89PNG\xff\n+\xfe\x1b[0m ok\n";
-    let parsed = diff::parse(&String::from_utf8_lossy(bytes)).unwrap();
-    let (file, hunk) = (&parsed.files[0], &parsed.files[0].hunks[0]);
-    let theme = Theme::default();
-    let layout = HunkPane::new(hunk).layout(file, hunk, 40, &theme, true, theme.background());
-    let rows: Vec<String> = layout.lines.iter().map(ToString::to_string).collect();
-    assert!(
-        rows.iter().any(|row| row.contains("│ \u{fffd}PNG\u{fffd}")),
-        "{rows:#?}"
-    );
-    assert!(
-        rows.iter().any(|row| row.contains("│ \u{fffd}\u{fffd}[0m ok")),
-        "{rows:#?}"
-    );
-    // Every boxed row is the pane's width: each replacement character takes the one cell it's counted as.
-    assert!(
-        layout
-            .lines
-            .iter()
-            .filter(|line| line.width() > 0)
-            .all(|line| line.width() == 40),
-        "{rows:#?}"
-    );
+    let screen = draw(&mut view, 100, 30);
+    let row = row_of(&screen, "color: yellow;");
+    view.click(Position::new(20, row));
+    assert_eq!(view.stop(), DiffStop::Body);
+    assert_eq!(cursor(&view), on_line(CSS, 0, 1));
+    // A hunk separator gives the cursor to the hunk's first line.
+    let row = row_of(&screen, "Lines 1-4 (+1)");
+    view.click(Position::new(4, row));
+    assert_eq!(cursor(&view), on_line(2, 0, 0));
+    // A header takes it.
+    let row = row_of(&screen, "README.md (+3 -1)");
+    view.click(Position::new(8, row));
+    assert_eq!(cursor(&view), Some(Cursor::File(README)));
+    // The click didn't scroll.
+    draw(&mut view, 100, 30);
+    assert_eq!(view.offset(), 0);
+    // The filter takes focus.
+    view.click(Position::new(10, 1));
+    assert_eq!(view.stop(), DiffStop::Filter);
 }
 
 #[test]
-fn pr_diff_hunk_highlighted_rust() {
-    insta::assert_snapshot!(pane_screen(VIEWER, 1, 0, 76));
-}
-
-#[test]
-fn pr_diff_hunk_highlighted_markdown() {
-    insta::assert_snapshot!(pane_screen(README, 0, 1, 64));
-}
-
-#[test]
-fn pr_diff_hunk_current_line_highlighted() {
-    // The current line is the added `let marker = …;`: its tokens on the brighter green.
-    insta::assert_snapshot!(pane_screen(VIEWER, 1, 4, 76));
-}
-
-// Pending comments (#272).
-
-/// A pending comment on line `line` of README.md's hunk.
-fn comment(view: &DiffView, line: usize, body: &str) -> PendingComment {
-    let file = &view.body.files[README].file;
-    let at = DiffLineRef {
-        file: README,
-        hunk: 0,
-        line,
-    };
-    PendingComment {
-        body: body.to_owned(),
-        ..PendingComment::on(&file.path, &file.hunks[0], at).unwrap()
-    }
-}
-
-/// The view with comments on README.md's lines 4 and 1, in that order.
-fn with_two_comments() -> DiffView {
+fn the_wheel_scrolls_and_keeps_the_cursor_on_a_row_in_view() {
     let mut view = view();
-    let first = comment(&view, 3, "Mention the arrow keys too.");
-    let second = comment(&view, 0, "A heading for\nthe usage.");
-    view.add_comment(first);
-    view.add_comment(second);
-    view
-}
-
-fn bodies(view: &DiffView) -> Vec<&str> {
-    view.pending().iter().map(|c| c.body.as_str()).collect()
-}
-
-#[test]
-fn the_comment_target_is_the_focused_pane_s_current_line() {
-    let mut view = view();
-    assert_eq!(view.comment_target(), None);
-    press(&mut view, &["J", "j", "j", "j"]);
-    let target = view.comment_target().unwrap();
-    assert_eq!(
-        (
-            target.path.as_str(),
-            target.line_number,
-            target.position,
-            target.line_text.as_str()
-        ),
-        ("README.md", 5, 4, "+Run `viewer FILE`, then press `j` and `k` to move.")
-    );
-    assert_eq!(target.body, "");
-}
-
-#[test]
-fn each_comment_adds_a_remove_stop_after_the_files() {
-    use DiffStop::{HunkTitle, RemoveComment};
-    let mut view = with_two_comments();
-    let stops = ring(&mut view);
-    assert_eq!(
-        stops[stops.len() - 3..],
-        [HunkTitle(VIEWER, 1), RemoveComment(0), RemoveComment(1)]
-    );
-    view.focus_last();
-    assert_eq!(view.stop(), RemoveComment(1));
-    assert!(!view.focus_step(true));
-}
-
-#[test]
-fn the_section_is_hidden_with_no_comments() {
-    let mut view = view();
-    assert!(!draw(&mut view, 80, 200).contains("Pending Comments:"));
-    let first = comment(&view, 3, "x");
-    view.add_comment(first);
-    let screen = draw(&mut view, 80, 200);
-    assert!(screen.contains("Pending Comments:"), "{screen}");
-    assert!(screen.contains("README.md:5 - +Run `viewer FILE`"), "{screen}");
-}
-
-#[test]
-fn remove_drops_the_first_the_last_and_the_only_comment() {
-    use DiffStop::{HunkTitle, RemoveComment};
-    // The first: focus on the second button follows it, now first.
-    let mut view = with_two_comments();
-    view.focus(RemoveComment(1));
-    view.remove_comment(0);
-    assert_eq!(bodies(&view), ["A heading for\nthe usage."]);
-    assert_eq!(view.stop(), RemoveComment(0));
-    // The last, focused: focus goes to the stop before it.
-    let mut view = with_two_comments();
-    view.focus(RemoveComment(1));
-    press(&mut view, &["enter"]);
-    assert_eq!(bodies(&view), ["Mention the arrow keys too."]);
-    assert_eq!(view.stop(), RemoveComment(0));
-    // The only one: the section hides and focus goes back to the files.
-    press(&mut view, &["enter"]);
-    assert!(view.pending().is_empty());
-    assert_eq!(view.stop(), HunkTitle(VIEWER, 1));
-    assert!(!draw(&mut view, 80, 200).contains("Pending Comments:"));
+    view.focus_first();
+    draw(&mut view, 100, 20);
+    assert_eq!(cursor(&view), Some(Cursor::File(README)));
+    view.wheel(Wheel::Down);
+    assert_eq!(view.offset(), 3);
+    // The header scrolled out of view: the cursor is on the first row still in it, README.md's second line.
+    assert_eq!(cursor(&view), on_line(README, 0, 1));
+    let screen = draw(&mut view, 100, 20);
+    assert_eq!(row_of(&screen, "►    4  │"), 3, "{screen}");
+    // Next `j` continues from there.
+    press(&mut view, &["j"]);
+    assert_eq!(cursor(&view), on_line(README, 0, 2));
+    // Scrolled back up, a cursor still in view stays where it is.
+    view.wheel(Wheel::Up);
+    assert_eq!(view.offset(), 0);
+    assert_eq!(cursor(&view), on_line(README, 0, 2));
 }
 
 #[test]
@@ -568,47 +403,135 @@ fn a_click_on_remove_drops_its_comment() {
     let row = u16::try_from(row).unwrap();
     view.click(Position::new(8, row));
     assert_eq!(view.stop(), DiffStop::RemoveComment(1));
-    let up = |column, row| MouseEvent {
-        kind: MouseEventKind::Up(MouseButton::Left),
-        column,
-        row,
-        modifiers: crossterm::event::KeyModifiers::NONE,
-    };
     assert_eq!(view.mouse(up(8, row)), ViewMouse::Consumed);
     assert_eq!(bodies(&view), ["Mention the arrow keys too."]);
     // A release without a press on a button does nothing.
     assert_eq!(view.mouse(up(8, row)), ViewMouse::Ignored);
 }
 
+// Pending comments (#272).
+
+/// A pending comment on line `line` of README.md's hunk.
+fn comment(view: &DiffView, line: usize, body: &str) -> PendingComment {
+    let file = view.body().file(README).unwrap();
+    PendingComment {
+        body: body.to_owned(),
+        ..PendingComment::on(&file.path, &file.hunks[0], at(README, 0, line)).unwrap()
+    }
+}
+
+/// The view with comments on README.md's lines 4 and 1, in that order.
+fn with_two_comments() -> DiffView {
+    let mut view = view();
+    let first = comment(&view, 3, "Mention the arrow keys too.");
+    let second = comment(&view, 0, "A heading for\nthe usage.");
+    view.add_comment(first);
+    view.add_comment(second);
+    view
+}
+
+fn bodies(view: &DiffView) -> Vec<&str> {
+    view.pending().iter().map(|c| c.body.as_str()).collect()
+}
+
+#[test]
+fn the_comment_target_is_the_body_s_cursor_line() {
+    let mut view = view();
+    view.focus_first();
+    // On a header, nothing.
+    assert_eq!(view.comment_target(), None);
+    press(&mut view, &["J", "j", "j", "j"]);
+    let target = view.comment_target().unwrap();
+    assert_eq!(
+        (
+            target.path.as_str(),
+            target.line,
+            target.line_number,
+            target.position,
+            target.line_text.as_str()
+        ),
+        (
+            "README.md",
+            at(README, 0, 3),
+            5,
+            4,
+            "+Run `viewer FILE`, then press `j` and `k` to move."
+        )
+    );
+    assert_eq!(target.body, "");
+    // Only with the body focused.
+    view.focus(DiffStop::Filter);
+    assert_eq!(view.comment_target(), None);
+}
+
+#[test]
+fn the_section_is_hidden_with_no_comments() {
+    let mut view = view();
+    assert!(!draw(&mut view, 80, 200).contains("Pending Comments:"));
+    let first = comment(&view, 3, "x");
+    view.add_comment(first);
+    let screen = draw(&mut view, 80, 200);
+    assert!(screen.contains("Pending Comments:"), "{screen}");
+    assert!(screen.contains("README.md:5 - +Run `viewer FILE`"), "{screen}");
+    // After the body and its position row.
+    assert!(
+        row_of(&screen, "Pending Comments:") > row_of(&screen, "1 hunk"),
+        "{screen}"
+    );
+}
+
+#[test]
+fn remove_drops_the_first_the_last_and_the_only_comment() {
+    use DiffStop::{Body, RemoveComment};
+    // The first: focus on the second button follows it, now first.
+    let mut view = with_two_comments();
+    view.focus(RemoveComment(1));
+    view.remove_comment(0);
+    assert_eq!(bodies(&view), ["A heading for\nthe usage."]);
+    assert_eq!(view.stop(), RemoveComment(0));
+    // The last, focused: focus goes to the stop before it.
+    let mut view = with_two_comments();
+    view.focus(RemoveComment(1));
+    press(&mut view, &["enter"]);
+    assert_eq!(bodies(&view), ["Mention the arrow keys too."]);
+    assert_eq!(view.stop(), RemoveComment(0));
+    // The only one: the section hides and focus goes back to the body.
+    press(&mut view, &["enter"]);
+    assert!(view.pending().is_empty());
+    assert_eq!(view.stop(), Body);
+    assert!(!draw(&mut view, 80, 200).contains("Pending Comments:"));
+}
+
+#[test]
+fn a_stop_after_the_body_scrolls_into_view_and_the_body_s_cursor_back() {
+    let mut view = with_two_comments();
+    view.show_review_form(false);
+    view.focus_first();
+    draw(&mut view, 80, 30);
+    assert_eq!(view.offset(), 0);
+    view.focus(DiffStop::ReviewSubmit);
+    let screen = draw(&mut view, 80, 30);
+    assert!(screen.contains("Submit Review"), "{screen}");
+    assert!(!screen.contains("README.md (+3 -1)"), "{screen}");
+    // Back on the body, its cursor (on README.md's header) shows again.
+    view.focus(DiffStop::Body);
+    let screen = draw(&mut view, 80, 30);
+    assert!(screen.contains("README.md (+3 -1)"), "{screen}");
+    assert_eq!(view.offset(), 0);
+}
+
 #[test]
 fn pr_review_pending_comments() {
     let mut view = with_two_comments();
     view.focus(DiffStop::RemoveComment(1));
-    let mut terminal = Terminal::new(TestBackend::new(96, 40)).unwrap();
-    terminal
-        .draw(|frame| view.render(frame, frame.area(), &Theme::default(), true))
-        .unwrap();
-    insta::assert_snapshot!(buffer_to_styled_string(terminal.backend().buffer()));
+    insta::assert_snapshot!(buffer_to_styled_string(&draw_buffer(&mut view, 96, 40)));
 }
 
 // The review form (#273).
 
 #[test]
-fn the_form_s_stops_come_last_and_the_author_s_has_no_status() {
-    use DiffStop::{RemoveComment, ReviewStatus, ReviewSubmit, ReviewSummary};
-    let mut view = with_two_comments();
-    view.show_review_form(false);
-    let stops = ring(&mut view);
-    assert_eq!(
-        stops[stops.len() - 5..],
-        [
-            RemoveComment(0),
-            RemoveComment(1),
-            ReviewStatus,
-            ReviewSummary,
-            ReviewSubmit
-        ]
-    );
+fn the_author_s_form_has_no_status() {
+    use DiffStop::{RemoveComment, ReviewSubmit, ReviewSummary};
     let mut view = with_two_comments();
     view.show_review_form(true);
     let stops = ring(&mut view);
@@ -686,50 +609,52 @@ fn the_status_list_opens_over_the_view() {
     }
 }
 
-// Maximize (#288, #295).
+// The window's rows.
 
 #[test]
-fn maximize_scope_is_the_section_or_the_tab_area_for_every_stop() {
-    use DiffStop::{
-        FileTitle, Filter, HunkTitle, Pane, RemoveComment, ReviewStatus, ReviewSubmit, ReviewSummary, Scroll,
+fn the_window_follows_the_body_with_its_position_row_then_the_tail() {
+    let window = Window {
+        body: 40,
+        tail: 10,
+        height: 20,
     };
-    for author in [false, true] {
-        let mut view = with_two_comments();
-        view.show_review_form(author);
-        view.focus(HunkTitle(README, 0));
-        press(&mut view, &["enter"]);
-        let stops = ring(&mut view);
-        assert!(stops.contains(&Pane(README, 0)));
-        assert_eq!(stops.contains(&ReviewStatus), !author);
-        for stop in stops {
-            view.focus(stop);
-            assert_eq!(view.stop(), stop);
-            let expected = match stop {
-                Scroll => DiffMaximize::Nothing,
-                FileTitle(f) => DiffMaximize::Section(DiffSection::File(f)),
-                HunkTitle(f, h) | Pane(f, h) => DiffMaximize::Section(DiffSection::Hunk(f, h)),
-                Filter | RemoveComment(_) | ReviewStatus | ReviewSummary | ReviewSubmit => DiffMaximize::TabArea,
-            };
-            assert_eq!(view.maximize_scope(), expected, "{stop:?} (author: {author})");
+    assert_eq!(window.content(), 51);
+    // The body fills the view: its position row takes the last row.
+    assert_eq!(
+        window.split(0),
+        Split {
+            body: 0..19,
+            position: Some(19),
+            tail: 0..0,
+            tail_top: 20
         }
-    }
-    // Pin a few by hand, so the table above isn't the only statement of the rule.
-    let mut view = with_two_comments();
-    view.show_review_form(true);
-    for (stop, expected) in [
-        (Scroll, DiffMaximize::Nothing),
-        (Filter, DiffMaximize::TabArea),
-        (RemoveComment(1), DiffMaximize::TabArea),
-        (ReviewSummary, DiffMaximize::TabArea),
-        (ReviewSubmit, DiffMaximize::TabArea),
-        (FileTitle(OLD), DiffMaximize::Section(DiffSection::File(OLD))),
-        (
-            HunkTitle(README, 0),
-            DiffMaximize::Section(DiffSection::Hunk(README, 0)),
-        ),
-    ] {
-        view.focus(stop);
-        assert_eq!(view.maximize_scope(), expected, "{stop:?}");
-    }
-    assert_eq!(view.review_button(), Some("Add Comments"));
+    );
+    // The body's end in view: its rows, the position row, then the tail.
+    assert_eq!(
+        window.split(35),
+        Split {
+            body: 35..40,
+            position: Some(5),
+            tail: 0..10,
+            tail_top: 6
+        }
+    );
+    // Past the position row, the tail alone.
+    assert_eq!(
+        window.split(45),
+        Split {
+            body: 45..45,
+            position: None,
+            tail: 4..10,
+            tail_top: 0
+        }
+    );
+    // No body: the tail from the top.
+    let window = Window {
+        body: 0,
+        tail: 10,
+        height: 4,
+    };
+    assert_eq!(window.content(), 10);
+    assert_eq!(window.split(3).tail, 3..7);
 }

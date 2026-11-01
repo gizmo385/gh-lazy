@@ -423,37 +423,46 @@ struct Styles {
 
 impl Styles {
     fn new(theme: &Theme, under: Paint, focused: bool) -> Self {
-        let p = theme.palette;
-        let surface = p.surface.over(under);
+        let roles = theme.roles();
+        let surface = roles.surface.pane.over(under);
         let bg = if focused {
-            theme.tint(surface, p.foreground, 5.0)
+            theme.tint(surface, roles.surface.focus_tint, 100.0)
         } else {
             surface
         };
-        let border = theme.color(if focused { p.border } else { p.border_blurred }, bg);
+        let border = theme.color(
+            if focused {
+                roles.border.field_focused
+            } else {
+                roles.border.field
+            },
+            bg,
+        );
         let highlight = if focused {
-            let highlight_bg = p.block_cursor_background.over(bg);
-            p.block_cursor_text_style.apply(
+            let cursor = roles.cursor.focused;
+            let highlight_bg = cursor.bg.over(bg);
+            cursor.style.apply(
                 Style::new()
-                    .fg(theme.color(p.block_cursor_foreground, highlight_bg))
+                    .fg(theme.color(cursor.fg, highlight_bg))
                     .bg(theme.paint(highlight_bg)),
             )
         } else {
             // The later `& > .option-list--option-highlighted` rule sets the color back to `$foreground`.
-            let highlight_bg = p.block_cursor_blurred_background.over(bg);
-            p.block_cursor_blurred_text_style.apply(
+            let cursor = roles.cursor.blurred;
+            let highlight_bg = cursor.bg.over(bg);
+            cursor.style.apply(
                 Style::new()
-                    .fg(theme.color(p.foreground, highlight_bg))
+                    .fg(theme.color(roles.text.plain, highlight_bg))
                     .bg(theme.paint(highlight_bg)),
             )
         };
-        let panel = p.panel.over(bg);
+        let panel = roles.checkbox.bg.over(bg);
         let button = Style::new().bg(theme.paint(panel)).remove_modifier(Modifier::all());
         Self {
-            option: Style::new().fg(theme.color(p.foreground, bg)).bg(theme.paint(bg)),
+            option: Style::new().fg(theme.color(roles.text.plain, bg)).bg(theme.paint(bg)),
             highlight,
-            button: button.fg(theme.color(p.panel_darken_2, panel)),
-            button_selected: button.fg(theme.color(p.text_success, panel)),
+            button: button.fg(theme.color(roles.checkbox.off, panel)),
+            button_selected: button.fg(theme.color(roles.checkbox.on, panel)),
             left: Style::new()
                 .fg(border)
                 .bg(theme.paint(under))

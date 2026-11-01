@@ -66,9 +66,6 @@ pub const HEIGHT: u16 = 3;
 /// Cells between each side border and the text (`padding: 0 2`).
 const PADDING: u16 = 2;
 
-/// The opacity of an invalid, unfocused input's red border (`tall $error 60%`).
-const INVALID_BLURRED_ALPHA: f64 = 0.6;
-
 /// What a key did to the input.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[must_use]
@@ -725,64 +722,72 @@ struct Styles {
 impl Styles {
     /// `transparent` is a borderless input's `background: transparent; background-tint: 0%`: the text is on `under`.
     fn new(theme: &Theme, under: Paint, focused: bool, invalid: bool, transparent: bool) -> Self {
-        let p = theme.palette;
+        let roles = theme.roles();
+        let input = &roles.input;
         let selection = |bg: Paint| {
-            let selected = p.input_selection_background.over(bg);
+            let selected = input.selection.bg.over(bg);
             Style::new()
-                .fg(theme.color(p.input_selection_foreground, selected))
+                .fg(theme.color(input.selection.fg, selected))
                 .bg(theme.paint(selected))
         };
-        if theme.ansi {
+        let field_border = if focused {
+            roles.border.field_focused
+        } else {
+            roles.border.field
+        };
+        let cursor = |bg: Paint| {
+            let cursor_bg = input.cursor.bg.over(bg);
+            input.cursor.style.apply(
+                Style::new()
+                    .fg(theme.color(input.cursor.fg, cursor_bg))
+                    .bg(theme.paint(cursor_bg)),
+            )
+        };
+        if input.terminal_colors {
             // `&:ansi`: the terminal's own colors.
             let default = theme.paint(Paint::Ansi(AnsiColor::Default));
             let text = Style::new().fg(default).bg(default);
-            // `Input.-invalid:ansi`: `ansi_red`, focused or not.
+            // `Input.-invalid:ansi`: `$error` (`ansi_red`), focused or not.
             let border = if invalid {
-                theme.paint(Paint::Ansi(AnsiColor::Red))
+                theme.color(input.invalid, under)
             } else {
-                theme.color(if focused { p.border } else { p.border_blurred }, under)
+                theme.color(field_border, under)
             };
             return Self {
                 text,
-                placeholder: text.add_modifier(Modifier::DIM),
-                suggestion: text.add_modifier(Modifier::DIM),
-                cursor: Style::new()
-                    .fg(theme.paint(Paint::Ansi(AnsiColor::Black)))
-                    .bg(theme.paint(Paint::Ansi(AnsiColor::White))),
+                placeholder: input.placeholder_style.apply(text),
+                suggestion: input.placeholder_style.apply(text),
+                cursor: cursor(Paint::Ansi(AnsiColor::Default)),
                 selection: selection(Paint::Ansi(AnsiColor::Default)),
                 left: Style::new().fg(border).bg(default).add_modifier(Modifier::REVERSED),
                 inner: Style::new().fg(border).bg(default),
                 right: Style::new().fg(border).bg(default),
             };
         }
-        let surface = p.surface.over(under);
+        let surface = roles.surface.pane.over(under);
         let bg = if transparent {
             under
         } else if focused {
-            theme.tint(surface, p.foreground, 5.0)
+            theme.tint(surface, roles.surface.focus_tint, 100.0)
         } else {
             surface
         };
-        let text = Style::new().fg(theme.color(p.foreground, bg)).bg(theme.paint(bg));
+        let text = Style::new().fg(theme.color(roles.text.plain, bg)).bg(theme.paint(bg));
         let border = match (invalid, focused) {
             // `Input.-invalid { border: tall $error 60% }`, and `$error` while focused. The translucent red is
             // blended over the parent's background, as Textual draws it.
-            (true, true) => theme.color(p.error, under),
-            (true, false) => theme.color(p.error.multiply_alpha(INVALID_BLURRED_ALPHA), under),
-            (false, true) => theme.color(p.border, bg),
-            (false, false) => theme.color(p.border_blurred, bg),
+            (true, true) => theme.color(input.invalid, under),
+            (true, false) => theme.color(input.invalid_blurred, under),
+            (false, _) => theme.color(field_border, bg),
         };
-        let cursor_bg = p.input_cursor_background.over(bg);
-        let cursor = p.input_cursor_text_style.apply(
-            Style::new()
-                .fg(theme.color(p.input_cursor_foreground, cursor_bg))
-                .bg(theme.paint(cursor_bg)),
-        );
+        let placeholder = input
+            .placeholder_style
+            .apply(text.fg(theme.color(input.placeholder, bg)));
         Self {
             text,
-            placeholder: text.fg(theme.color(p.text_disabled, bg)),
-            suggestion: text.fg(theme.color(p.text_disabled, bg)),
-            cursor,
+            placeholder,
+            suggestion: placeholder,
+            cursor: cursor(bg),
             selection: selection(bg),
             left: Style::new()
                 .fg(border)
@@ -1487,7 +1492,7 @@ mod tests {
     fn draw_suggesting(input: &mut TextInput, width: u16, focused: bool) -> String {
         let theme = crate::theme::Theme::default();
         let mut buf = Buffer::empty(Rect::new(0, 0, width, HEIGHT));
-        let under = theme.palette.surface_lighten_3.over(theme.background());
+        let under = theme.roles().surface.dialog.over(theme.background());
         let area = buf.area;
         input.render(&mut buf, area, &theme, under, focused);
         crate::test_util::buffer_to_styled_string(&buf)
@@ -1518,7 +1523,7 @@ mod tests {
     fn text_row(input: &mut TextInput, width: u16, focused: bool) -> String {
         let theme = crate::theme::Theme::default();
         let mut buf = Buffer::empty(Rect::new(0, 0, width, HEIGHT));
-        let under = theme.palette.surface.over(theme.background());
+        let under = theme.roles().surface.pane.over(theme.background());
         let area = buf.area;
         input.render(&mut buf, area, &theme, under, focused);
         (0..width).map(|x| buf[(x, 1)].symbol().to_owned()).collect()

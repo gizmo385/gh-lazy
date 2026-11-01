@@ -14,7 +14,7 @@ use ratatui::text::Span;
 use tokio::time::Instant;
 
 use crate::keymap::BindingId;
-use crate::theme::{AnsiColor, Paint, Theme, ThemeColor};
+use crate::theme::{AnsiColor, Button as ButtonRoles, ButtonColors, Paint, Theme, ThemeColor};
 
 /// A focused button's binding: `enter` presses it (`show=False`, so never in the footer).
 pub const BUTTON_BINDINGS: &[BindingId] = &[BindingId::TextualButtonPress];
@@ -27,9 +27,6 @@ const MIN_WIDTH: u16 = 16;
 
 /// A press within this long of the last counted one is ignored (Textual's `active_effect_duration`).
 const DEBOUNCE: Duration = Duration::from_millis(200);
-
-/// Textual's `text-opacity: 0.6` on a disabled button.
-const DISABLED_OPACITY: f64 = 0.6;
 
 /// A button's color scheme (Textual's `ButtonVariant`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,6 +52,17 @@ impl ButtonVariant {
         ButtonVariant::Warning,
         ButtonVariant::Error,
     ];
+
+    /// This variant's colors in the theme's button roles.
+    fn colors(self, button: &ButtonRoles) -> &ButtonColors {
+        match self {
+            ButtonVariant::Default => &button.default,
+            ButtonVariant::Primary => &button.primary,
+            ButtonVariant::Success => &button.success,
+            ButtonVariant::Warning => &button.warning,
+            ButtonVariant::Error => &button.error,
+        }
+    }
 }
 
 /// What a mouse event did to a button.
@@ -124,7 +132,7 @@ impl Button {
     /// Its width: the label with a cell each side, at least 16, plus the side borders the ANSI themes draw.
     pub fn width(&self, theme: &Theme) -> u16 {
         let label = u16::try_from(Span::raw(self.label.as_ref()).width()).unwrap_or(u16::MAX);
-        let borders = if theme.ansi { 2 } else { 0 };
+        let borders = if theme.roles().button.outlined { 2 } else { 0 };
         label.saturating_add(2 + borders).max(MIN_WIDTH)
     }
 
@@ -181,7 +189,7 @@ impl Button {
             return;
         }
         let styles = Styles::new(self.variant, theme, focused, self.disabled);
-        let sides = u16::from(theme.ansi);
+        let sides = u16::from(theme.roles().button.outlined);
         for dy in 0..area.height {
             let y = area.y + dy;
             for dx in 0..area.width {
@@ -224,29 +232,28 @@ struct Styles {
 
 impl Styles {
     fn new(variant: ButtonVariant, theme: &Theme, focused: bool, disabled: bool) -> Self {
-        let p = theme.palette;
+        let roles = theme.roles();
+        let button = &roles.button;
         let focus_style = |style: Style| {
             if focused {
-                p.button_focus_text_style.apply(style)
+                button.focus_style.apply(style)
             } else {
                 style
             }
         };
-        if theme.ansi {
+        let colors = variant.colors(button);
+        if button.outlined {
             // `Button:ansi`: the terminal's background, the text and a `tall` border in the variant's color.
             let default = theme.paint(Paint::Ansi(AnsiColor::Default));
             let under = Paint::Ansi(AnsiColor::Default);
-            let (color, border) = match variant {
-                ButtonVariant::Default => (p.button_foreground, p.border_blurred),
-                ButtonVariant::Primary => (p.primary, p.primary),
-                ButtonVariant::Success => (p.success, p.success),
-                ButtonVariant::Warning => (p.warning, p.warning),
-                ButtonVariant::Error => (p.error, p.error),
+            let border = if disabled {
+                button.disabled_border
+            } else {
+                colors.border
             };
-            let border = theme.color(if disabled { p.border_blurred } else { border }, under);
-            let border = Style::new().fg(border).bg(default);
+            let border = Style::new().fg(theme.color(border, under)).bg(default);
             let mut label = Style::new()
-                .fg(theme.color(color, under))
+                .fg(theme.color(colors.label, under))
                 .bg(default)
                 .add_modifier(Modifier::BOLD);
             if disabled {
@@ -261,37 +268,11 @@ impl Styles {
                 right: border,
             };
         }
-        let (background, top, bottom, color) = match variant {
-            ButtonVariant::Default => (p.surface, p.surface_lighten_1, p.surface_darken_1, p.button_foreground),
-            ButtonVariant::Primary => (
-                p.primary,
-                p.primary_lighten_3,
-                p.primary_darken_3,
-                p.button_color_foreground,
-            ),
-            ButtonVariant::Success => (
-                p.success,
-                p.success_lighten_2,
-                p.success_darken_3,
-                p.button_color_foreground,
-            ),
-            ButtonVariant::Warning => (
-                p.warning,
-                p.warning_lighten_2,
-                p.warning_darken_3,
-                p.button_color_foreground,
-            ),
-            ButtonVariant::Error => (p.error, p.error_lighten_2, p.error_darken_3, p.button_color_foreground),
-        };
-        let mut bg = background.over(theme.background());
+        let mut bg = colors.bg.over(theme.background());
         if focused {
-            bg = theme.tint(bg, p.foreground, 5.0);
+            bg = theme.tint(bg, roles.surface.focus_tint, 100.0);
         }
-        let color: ThemeColor = if disabled {
-            color.multiply_alpha(DISABLED_OPACITY)
-        } else {
-            color
-        };
+        let color = if disabled { colors.label_disabled } else { colors.label };
         let paint = theme.paint(bg);
         let edge = |c: ThemeColor| Style::new().fg(theme.color(c, bg)).bg(paint);
         let label = Style::new()
@@ -299,12 +280,12 @@ impl Styles {
             .bg(paint)
             .add_modifier(Modifier::BOLD);
         Self {
-            top: edge(top),
-            bottom: edge(bottom),
+            top: edge(colors.light),
+            bottom: edge(colors.dark),
             fill: Style::new().fg(theme.color(color, bg)).bg(paint),
             label: focus_style(label),
-            left: edge(top),
-            right: edge(top),
+            left: edge(colors.light),
+            right: edge(colors.light),
         }
     }
 }

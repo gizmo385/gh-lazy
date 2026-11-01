@@ -54,12 +54,6 @@ const SEARCH_RESET: Duration = Duration::from_millis(700);
 /// The prompt Textual's `Select` shows without one of its own.
 pub const DEFAULT_PROMPT: &str = "Select";
 
-/// Rich's `dim`, as Textual draws it: the text color at this alpha over its background.
-const DIM_ALPHA: f64 = 0.66;
-
-/// The box's `▼` / `▲` and the label's color without a value: `$foreground 50%`.
-const MUTED_ALPHA: f64 = 0.5;
-
 /// What a key, a binding or a click did to a select.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[must_use]
@@ -504,9 +498,13 @@ struct BoxStyles {
 
 impl BoxStyles {
     fn new(theme: &Theme, under: Paint, focused: bool) -> Self {
-        let p = theme.palette;
-        let border_color = if focused { p.border } else { p.border_blurred };
-        if theme.ansi {
+        let roles = theme.roles();
+        let border_color = if focused {
+            roles.border.field_focused
+        } else {
+            roles.border.field
+        };
+        if roles.select.terminal_colors {
             // `&:ansi`: the terminal's own colors.
             let default = theme.paint(Paint::Ansi(AnsiColor::Default));
             let text = Style::new().fg(default).bg(default);
@@ -520,17 +518,17 @@ impl BoxStyles {
                 right: Style::new().fg(border).bg(default),
             };
         }
-        let surface = p.surface.over(under);
+        let surface = roles.surface.pane.over(under);
         let bg = if focused {
-            theme.tint(surface, p.foreground, 5.0)
+            theme.tint(surface, roles.surface.focus_tint, 100.0)
         } else {
             surface
         };
         let border = theme.color(border_color, bg);
-        let text = Style::new().fg(theme.color(p.foreground, bg)).bg(theme.paint(bg));
+        let text = Style::new().fg(theme.color(roles.text.plain, bg)).bg(theme.paint(bg));
         Self {
             text,
-            muted: text.fg(theme.color(p.foreground.multiply_alpha(MUTED_ALPHA), bg)),
+            muted: text.fg(theme.color(roles.select.muted, bg)),
             left: Style::new()
                 .fg(border)
                 .bg(theme.paint(under))
@@ -561,16 +559,17 @@ struct OverlayStyles {
 
 impl OverlayStyles {
     fn new(theme: &Theme, under: Paint) -> Self {
-        let p = theme.palette;
-        let bg = theme.tint(p.surface.over(under), p.foreground, 5.0);
-        let border = theme.color(p.border, bg);
-        let highlight_bg = p.block_cursor_background.over(bg);
-        let back = p.scrollbar_background.over(bg);
+        let roles = theme.roles();
+        let bg = theme.tint(roles.surface.pane.over(under), roles.surface.focus_tint, 100.0);
+        let border = theme.color(roles.border.field_focused, bg);
+        let cursor = roles.cursor.focused;
+        let highlight_bg = cursor.bg.over(bg);
+        let back = roles.scrollbar.track.over(bg);
         Self {
-            option: Style::new().fg(theme.color(p.foreground, bg)).bg(theme.paint(bg)),
-            highlight: p.block_cursor_text_style.apply(
+            option: Style::new().fg(theme.color(roles.text.plain, bg)).bg(theme.paint(bg)),
+            highlight: cursor.style.apply(
                 Style::new()
-                    .fg(theme.color(p.block_cursor_foreground, highlight_bg))
+                    .fg(theme.color(cursor.fg, highlight_bg))
                     .bg(theme.paint(highlight_bg)),
             ),
             left: Style::new()
@@ -582,9 +581,9 @@ impl OverlayStyles {
             option_bg: bg,
             highlight_bg,
             scrollbar: ScrollbarColors {
-                bar: theme.color(p.scrollbar, back),
+                bar: theme.color(roles.scrollbar.thumb, back),
                 back: theme.paint(back),
-                fg: theme.color(p.foreground, bg),
+                fg: theme.color(roles.text.plain, bg),
                 bg: theme.paint(bg),
             },
         }
@@ -592,16 +591,13 @@ impl OverlayStyles {
 
     /// `base` with Rich's `dim` text: the blank row's prompt (`Text(prompt, style="dim")`).
     fn dimmed(&self, base: Style, theme: &Theme) -> Style {
-        if theme.ansi {
-            return base.add_modifier(Modifier::DIM);
-        }
-        let p = theme.palette;
+        let roles = theme.roles();
         let (fg, bg) = if base == self.highlight {
-            (p.block_cursor_foreground, self.highlight_bg)
+            (roles.cursor.focused.fg, self.highlight_bg)
         } else {
-            (p.foreground, self.option_bg)
+            (roles.text.plain, self.option_bg)
         };
-        base.fg(theme.color(fg.multiply_alpha(DIM_ALPHA), bg))
+        theme.rich_dim(base, fg, bg)
     }
 }
 

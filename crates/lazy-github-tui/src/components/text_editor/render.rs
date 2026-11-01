@@ -48,7 +48,7 @@ struct Styles {
 
 impl Styles {
     fn new(editor: &TextEditor, theme: &Theme, under: Paint, focused: bool) -> Self {
-        let p = theme.palette;
+        let roles = theme.roles();
         let rgb = |c: Rgb| theme.paint(Paint::Rgb(c));
         let (bg, base, cursor_line, gutter, cursor_line_gutter, cursor, selection) = match editor.variant {
             EditorVariant::Code => {
@@ -67,39 +67,26 @@ impl Styles {
                 )
             }
             EditorVariant::Plain => {
-                let bg = p.surface.over(under);
-                let base = Style::new().fg(theme.color(p.foreground, bg)).bg(theme.paint(bg));
-                let cursor_bg = p.input_cursor_background.over(bg);
-                let cursor = if theme.ansi {
-                    // `&:ansi .text-area--cursor`.
+                let bg = roles.surface.pane.over(under);
+                let base = Style::new().fg(theme.color(roles.text.plain, bg)).bg(theme.paint(bg));
+                // `.text-area--cursor`, with its `&:ansi` and `&:light` rules.
+                let editor_cursor = roles.input.editor_cursor;
+                let cursor_bg = editor_cursor.bg.over(bg);
+                let cursor = editor_cursor.style.apply(
                     Style::new()
-                        .fg(theme.color(p.input_cursor_foreground, cursor_bg))
-                        .bg(theme.paint(cursor_bg))
-                        .add_modifier(Modifier::REVERSED)
-                } else if theme.dark {
-                    p.input_cursor_text_style.apply(
-                        Style::new()
-                            .fg(theme.color(p.input_cursor_foreground, cursor_bg))
-                            .bg(theme.paint(cursor_bg)),
-                    )
-                } else {
-                    // `&:light .text-area--cursor`: `$text 90%` on `$foreground 70%`.
-                    let light_bg = p.foreground.multiply_alpha(0.7).over(bg);
-                    p.input_cursor_text_style.apply(
-                        Style::new()
-                            .fg(theme.color(p.text.multiply_alpha(0.9), light_bg))
-                            .bg(theme.paint(light_bg)),
-                    )
-                };
+                        .fg(theme.color(editor_cursor.fg, cursor_bg))
+                        .bg(theme.paint(cursor_bg)),
+                );
                 // `.text-area--selection`: `$input-selection-foreground` on `$input-selection-background`.
-                let selection_bg = p.input_selection_background.over(bg);
+                let selection = roles.input.selection;
+                let selection_bg = selection.bg.over(bg);
                 let selection = Style::new()
-                    .fg(theme.color(p.input_selection_foreground, selection_bg))
+                    .fg(theme.color(selection.fg, selection_bg))
                     .bg(theme.paint(selection_bg));
                 (
                     bg,
                     base,
-                    base.bg(theme.color(p.boost, bg)),
+                    base.bg(theme.color(roles.surface.boost, bg)),
                     base,
                     base,
                     cursor,
@@ -107,8 +94,15 @@ impl Styles {
                 )
             }
         };
-        let border = theme.color(if focused { p.border } else { p.border_blurred }, bg);
-        let back = p.scrollbar_background.over(bg);
+        let border = theme.color(
+            if focused {
+                roles.border.field_focused
+            } else {
+                roles.border.field
+            },
+            bg,
+        );
+        let back = roles.scrollbar.track.over(bg);
         Self {
             base,
             padding: Style::new().fg(Color::Reset).bg(theme.paint(bg)),
@@ -128,7 +122,7 @@ impl Styles {
                 fill: base,
             },
             scrollbar: ScrollbarColors {
-                bar: theme.paint(p.scrollbar.over(back)),
+                bar: theme.paint(roles.scrollbar.thumb.over(back)),
                 back: theme.paint(back),
                 fg: base.fg.unwrap_or(Color::Reset),
                 bg: base.bg.unwrap_or(Color::Reset),

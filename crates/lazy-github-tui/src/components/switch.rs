@@ -11,7 +11,7 @@ use ratatui::style::{Modifier, Style};
 
 use crate::components::disabled;
 use crate::keymap::BindingId;
-use crate::theme::{AnsiColor, Paint, Theme, ThemeColor};
+use crate::theme::{Paint, Theme};
 
 /// A focused switch's binding: `enter` or `space` toggles it (`show=False`, so never in the footer).
 pub const SWITCH_BINDINGS: &[BindingId] = &[BindingId::TextualSwitchToggle];
@@ -136,21 +136,28 @@ struct Styles {
 
 impl Styles {
     fn new(theme: &Theme, under: Paint, focused: bool, on: bool) -> Self {
-        let p = theme.palette;
-        let surface = p.surface.over(under);
+        let roles = theme.roles();
+        let surface = roles.surface.pane.over(under);
         let bg = if focused {
-            theme.tint(surface, p.foreground, 5.0)
+            theme.tint(surface, roles.surface.focus_tint, 100.0)
         } else {
             surface
         };
-        let fill = Style::new().fg(theme.color(p.foreground, bg)).bg(theme.paint(bg));
-        let track_bg = p.panel_darken_2.over(bg);
-        let border = theme.color(if focused { p.border } else { p.border_blurred }, bg);
+        let fill = Style::new().fg(theme.color(roles.text.plain, bg)).bg(theme.paint(bg));
+        let track_bg = roles.switch.track.over(bg);
+        let border = theme.color(
+            if focused {
+                roles.border.field_focused
+            } else {
+                roles.border.field
+            },
+            bg,
+        );
         Self {
             fill,
             track: fill.bg(theme.paint(track_bg)),
             thumb: Style::new()
-                .fg(theme.color(slider_color(theme, on), track_bg))
+                .fg(theme.color(if on { roles.switch.on } else { roles.switch.off }, track_bg))
                 .bg(theme.paint(bg))
                 .add_modifier(Modifier::REVERSED),
             left: Style::new()
@@ -160,22 +167,6 @@ impl Styles {
             inner: Style::new().fg(border).bg(theme.paint(bg)),
             right: Style::new().fg(border).bg(theme.paint(under)),
         }
-    }
-}
-
-/// The slider's `color`, by the CSS rules that win: `$success` while on; off, `$primary 15%` on a light theme
-/// (`:light`, the ANSI light theme included, whose rule comes after `:ansi`'s), `ansi_red` on the ANSI dark theme and
-/// `$panel` otherwise.
-fn slider_color(theme: &Theme, on: bool) -> ThemeColor {
-    let p = theme.palette;
-    if on {
-        p.success
-    } else if !theme.dark {
-        p.primary.multiply_alpha(0.15)
-    } else if theme.ansi {
-        ThemeColor::Ansi(AnsiColor::Red)
-    } else {
-        p.panel
     }
 }
 
@@ -221,7 +212,7 @@ mod tests {
         assert!(!switch.handle_mouse(&left_press(4, 1), area));
         assert!(switch.value());
         let theme = Theme::default();
-        let under = theme.palette.surface.over(theme.background());
+        let under = theme.roles().surface.pane.over(theme.background());
         let draw = |switch: &Switch| {
             let mut buf = Buffer::empty(area);
             switch.render(&mut buf, area, &theme, under, true);
@@ -282,7 +273,7 @@ mod tests {
 
     /// The Lookup dialog's background, `$surface-lighten-3` over the screen.
     fn dialog_background(theme: &Theme) -> Paint {
-        theme.palette.surface_lighten_3.over(theme.background())
+        theme.roles().surface.dialog.over(theme.background())
     }
 
     /// The four switches, off and on, unfocused and focused, side by side on the dialog's background.

@@ -291,7 +291,7 @@ fn a_click_on_a_row_picks_it() {
 // Drawing, textual-dark over a dialog's `$surface-lighten-3`.
 
 fn under(theme: &Theme) -> Paint {
-    theme.palette.surface_lighten_3.over(theme.background())
+    theme.roles().surface.dialog.over(theme.background())
 }
 
 fn draw_box(select: &Select<&'static str>, focused: bool) -> String {
@@ -504,7 +504,7 @@ fn a_disabled_select_never_opens_and_draws_faded() {
     );
     assert!(!select.is_open());
     let theme = Theme::default();
-    let under = theme.palette.surface.over(theme.background());
+    let under = theme.roles().surface.pane.over(theme.background());
     let area = Rect::new(0, 0, 20, HEIGHT);
     let draw = |select: &Select<&'static str>| {
         let mut buf = Buffer::empty(area);

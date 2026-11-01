@@ -242,7 +242,7 @@ impl CommentBlock {
         if width <= TEXT_LEFT {
             return out;
         }
-        let palette = theme.palette;
+        let roles = theme.roles();
         let focused = focus.is_some();
         let fill = Style::new().bg(theme.paint(under));
         let frame = Frame {
@@ -251,9 +251,9 @@ impl CommentBlock {
             border: Style::new()
                 .fg(theme.color(
                     if focused {
-                        palette.success
+                        roles.border.pane_focused
                     } else {
-                        palette.secondary_background
+                        roles.border.conversation
                     },
                     under,
                 ))
@@ -278,7 +278,7 @@ impl CommentBlock {
         let author = markdown::wrap_text(
             &[TextRun::new(
                 self.author.as_str(),
-                Style::new().fg(theme.color(palette.text_muted, under)),
+                Style::new().fg(theme.color(roles.text.muted, under)),
             )],
             right - TEXT_LEFT,
         );

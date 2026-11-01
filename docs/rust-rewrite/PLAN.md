@@ -78,6 +78,7 @@ process spawning.
 | Time | `jiff` (or `chrono`) | Relative timestamps in tables. |
 | Tests | `insta` snapshots of `TestBackend` buffers, `rstest`, `assert_cmd` | Unit, snapshot and CLI tests. |
 | PTY harness | `portable-pty` + `vt100` | Drives either app in a real pseudo-terminal for parity capture (see §6). |
+| PTY termios in tests | `nix` (`term` feature), unix dev-dependency only | `exit_paths` reads the terminal's flags from the pty master after exit, through portable-pty's `get_termios()`, which returns a `nix` type. It's the same `nix` that portable-pty already depends on, so no new crate (#373). |
 | Allocator | `mimalloc` on musl targets only; the system allocator elsewhere | The Linux release binaries are static musl builds, and musl's allocator misses the 50 ms frame budget on large bodies and diffs (#357). Only musl builds compile its C code, so `cargo install` on glibc, macOS and Windows needs no C compiler. |
 
 These are recommendations for the M0 design issues to confirm; swapping one is a design-agent decision recorded in the

@@ -11,7 +11,7 @@ use ratatui::widgets::{Paragraph, Widget};
 
 use super::model::{Cell, Column, RowEntry};
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
-use crate::theme::{AnsiColor, Paint, Theme};
+use crate::theme::{Paint, Theme};
 
 /// Textual's `DataTable.cell_padding`: one space each side of every cell.
 const CELL_PADDING: usize = 1;
@@ -148,60 +148,52 @@ pub(crate) struct Styles {
 
 impl Styles {
     pub(crate) fn new(theme: &Theme, focused: bool) -> Self {
-        let p = theme.palette;
-        let surface = p.surface.over(theme.background());
+        let roles = theme.roles();
+        let surface = roles.surface.pane.over(theme.background());
         // `&:focus { background-tint: $foreground 5% }`, on the table and, separately, on its header.
         let tint = |paint: Paint| {
             if focused {
-                theme.tint(paint, p.foreground, 5.0)
+                theme.tint(paint, roles.surface.focus_tint, 100.0)
             } else {
                 paint
             }
         };
         let base_bg = tint(surface);
         let base = Style::new()
-            .fg(theme.color(p.foreground, base_bg))
+            .fg(theme.color(roles.text.plain, base_bg))
             .bg(theme.paint(base_bg));
 
-        let header = if theme.ansi {
-            // `&:ansi > .datatable--header`.
-            Style::new()
-                .fg(theme.paint(Paint::Ansi(AnsiColor::Default)))
-                .bg(theme.paint(Paint::Ansi(AnsiColor::BrightBlue)))
-        } else {
-            let header_bg = tint(p.panel.over(surface));
-            Style::new()
-                .fg(theme.color(p.foreground, header_bg))
-                .bg(theme.paint(header_bg))
-        }
-        .add_modifier(Modifier::BOLD);
+        // The tint leaves the terminal-color themes' header as it is.
+        let header_bg = tint(roles.table.header.bg.over(surface));
+        let header = Style::new()
+            .fg(theme.color(roles.table.header.fg, header_bg))
+            .bg(theme.paint(header_bg))
+            .add_modifier(Modifier::BOLD);
 
         let (cursor_paint, cursor_ink, cursor_text) = if focused {
-            let bg = p.block_cursor_background.over(base_bg);
-            (bg, p.block_cursor_foreground.over(bg), p.block_cursor_text_style)
+            let c = roles.cursor.focused;
+            let bg = c.bg.over(base_bg);
+            (bg, c.fg.over(bg), c.style)
         } else {
-            let bg = p.block_cursor_blurred_background.over(surface);
-            (
-                bg,
-                p.block_cursor_blurred_foreground.over(bg),
-                p.block_cursor_blurred_text_style,
-            )
+            let c = roles.cursor.blurred;
+            let bg = c.bg.over(surface);
+            (bg, c.fg.over(bg), c.style)
         };
         let cursor_text_color = theme.paint(cursor_ink);
         let cursor = cursor_text.apply(Style::new().fg(cursor_text_color).bg(theme.paint(cursor_paint)));
 
-        let hover = base.bg(theme.color(p.block_hover_background, base_bg));
+        let hover = base.bg(theme.color(roles.cursor.hover_bg, base_bg));
 
-        let back = p.scrollbar_background.over(surface);
+        let back = roles.scrollbar.track.over(surface);
         let scrollbar = ScrollbarColors {
-            bar: theme.color(p.scrollbar, back),
+            bar: theme.color(roles.scrollbar.thumb, back),
             back: theme.paint(back),
-            fg: theme.color(p.foreground, base_bg),
+            fg: theme.color(roles.text.plain, base_bg),
             bg: theme.paint(base_bg),
         };
         let corner = Style::new()
             .fg(Color::Reset)
-            .bg(theme.color(p.scrollbar_corner_color, surface));
+            .bg(theme.color(roles.scrollbar.corner, surface));
         Self {
             base,
             header,

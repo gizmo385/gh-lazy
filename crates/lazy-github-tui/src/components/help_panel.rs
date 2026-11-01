@@ -13,7 +13,7 @@ use ratatui::widgets::{Block, Paragraph, StatefulWidget, Widget};
 use crate::components::command_log::{WHEEL_ROWS, Wheel};
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
 use crate::keymap::ActiveBinding;
-use crate::theme::{AnsiColor, Paint, Theme};
+use crate::theme::Theme;
 
 /// The panel's left border glyph (Textual's `vkey` border).
 const BORDER: &str = "▏";
@@ -92,18 +92,18 @@ pub struct HelpStyles {
 impl HelpStyles {
     /// The `KeyPanel` styles for `theme`.
     pub fn new(theme: &Theme) -> Self {
-        let palette = theme.palette;
+        let text = &theme.roles().text;
         let bg = theme.background();
-        let description = Style::new().fg(theme.color(palette.foreground, bg));
-        let tooltip = theme.rich_dim(description, palette.foreground, bg);
+        let description = Style::new().fg(theme.color(text.plain, bg));
+        let tooltip = theme.rich_dim(description, text.plain, bg);
         Self {
             key: Style::new()
-                .fg(theme.color(palette.text_accent, bg))
+                .fg(theme.color(text.accent, bg))
                 .add_modifier(Modifier::BOLD),
             description,
             tooltip,
             title: Style::new()
-                .fg(theme.color(palette.text_primary, bg))
+                .fg(theme.color(text.primary, bg))
                 .add_modifier(Modifier::UNDERLINED),
         }
     }
@@ -255,9 +255,9 @@ impl StatefulWidget for HelpPanel<'_> {
 
     fn render(self, area: Rect, buf: &mut Buffer, scroll: &mut HelpScroll) {
         let theme = self.theme;
-        let palette = theme.palette;
+        let roles = theme.roles();
         let bg = theme.background();
-        let fg = theme.color(palette.foreground, bg);
+        let fg = theme.color(roles.text.plain, bg);
         Block::new()
             .style(Style::new().fg(fg).bg(theme.paint(bg)))
             .render(area, buf);
@@ -265,11 +265,7 @@ impl StatefulWidget for HelpPanel<'_> {
             return;
         }
         // Textual's `border-left: vkey $foreground 30%`, and `ansi_black` under the ANSI themes.
-        let border = if theme.ansi {
-            theme.paint(Paint::Ansi(AnsiColor::Black))
-        } else {
-            theme.color(palette.foreground.multiply_alpha(0.3), bg)
-        };
+        let border = theme.color(roles.border.help, bg);
         for y in area.top()..area.bottom() {
             buf[(area.x, y)].set_symbol(BORDER).set_fg(border);
         }
@@ -293,9 +289,9 @@ impl StatefulWidget for HelpPanel<'_> {
             content.width -= scrollbar::VERTICAL_WIDTH;
             lines = help_lines(self.sections, content.width, &styles);
             scroll.offset = scroll.offset.min(lines.len().saturating_sub(window));
-            let back = palette.scrollbar_background.over(bg);
+            let back = roles.scrollbar.track.over(bg);
             let colors = ScrollbarColors {
-                bar: theme.paint(palette.scrollbar.over(back)),
+                bar: theme.paint(roles.scrollbar.thumb.over(back)),
                 back: theme.paint(back),
                 fg,
                 bg: theme.paint(bg),

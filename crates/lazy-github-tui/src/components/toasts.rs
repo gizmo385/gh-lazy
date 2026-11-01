@@ -157,17 +157,17 @@ impl Toasts {
     pub fn render(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme) {
         self.last_area = Some(area);
         let screen = theme.background();
-        let palette = theme.palette;
-        let panel = palette.panel_lighten_1.over(screen);
+        let roles = theme.roles();
+        let panel = roles.surface.raised.over(screen);
         let box_style = Style::new()
-            .fg(theme.color(palette.foreground, panel))
+            .fg(theme.color(roles.text.plain, panel))
             .bg(theme.paint(panel));
         for placement in self.layout(area, theme) {
             let visible = placement.visible(area);
             let bar = match self.live[placement.index].toast.severity {
-                Severity::Information => palette.success,
-                Severity::Warning => palette.warning,
-                Severity::Error => palette.error,
+                Severity::Information => roles.status.success,
+                Severity::Warning => roles.status.warning,
+                Severity::Error => roles.status.error,
             };
             // The half block's other half is the toast's own background, as in Python's captures.
             let bar_style = Style::new().fg(theme.color(bar, screen)).bg(theme.paint(panel));
@@ -231,19 +231,19 @@ pub fn toast_height(toast: &Toast, width: u16) -> u16 {
 
 /// The title's and the message's lines, wrapped to `content_width` and styled as Textual's `Toast` CSS.
 fn toast_lines(toast: &Toast, content_width: u16, theme: &Theme) -> Vec<Line<'static>> {
-    let palette = theme.palette;
-    let panel = palette.panel_lighten_1.over(theme.background());
+    let roles = theme.roles();
+    let panel = roles.surface.raised.over(theme.background());
     let base = Style::new()
-        .fg(theme.color(palette.foreground, panel))
+        .fg(theme.color(roles.text.plain, panel))
         .bg(theme.paint(panel));
     let width = usize::from(content_width.max(1));
     let mut lines = Vec::new();
     if let Some(title) = &toast.title {
         // `.toast--title { text-style: bold; color: $text-success | $text-warning | $text-error }`.
         let color = match toast.severity {
-            Severity::Information => palette.text_success,
-            Severity::Warning => palette.text_warning,
-            Severity::Error => palette.text_error,
+            Severity::Information => roles.text.success,
+            Severity::Warning => roles.text.warning,
+            Severity::Error => roles.text.error,
         };
         let style = base.fg(theme.color(color, panel)).bold();
         let cells: Vec<(char, Style)> = title.chars().map(|c| (shown(c), style)).collect();
@@ -397,7 +397,6 @@ mod tests {
     use super::*;
     use crate::clock::Clock as _;
     use crate::test_util::{TestApp, buffer_to_string};
-    use crate::theme::Accent;
     use crate::toast::DEFAULT_TIMEOUT;
 
     const SECOND: Duration = Duration::from_secs(1);
@@ -437,7 +436,7 @@ mod tests {
                 let area = frame.area();
                 let screen = theme.background();
                 let style = Style::new()
-                    .fg(theme.color(theme.palette.foreground, screen))
+                    .fg(theme.color(theme.roles().text.plain, screen))
                     .bg(theme.paint(screen));
                 for y in area.top()..area.bottom() {
                     frame
@@ -643,13 +642,10 @@ mod tests {
     #[test]
     fn accent_spans_keep_their_color() {
         let theme = Theme::default();
-        let Rgb { r, g, b } = Accent::Yellow.rgb();
-        let message = Line::from(vec![
-            Span::raw("Removing "),
-            Span::raw("someone").fg(Color::Rgb(r, g, b)),
-        ]);
+        let name = theme.color(theme.roles().marks.warning, theme.background());
+        let message = Line::from(vec![Span::raw("Removing "), Span::raw("someone").fg(name)]);
         let lines = toast_lines(&Toast::info(message), 47, &theme);
-        assert_eq!(lines[0].spans[1].style.fg, Some(theme.accent(Accent::Yellow)));
+        assert_eq!(lines[0].spans[1].style.fg, Some(name));
     }
 
     #[test]

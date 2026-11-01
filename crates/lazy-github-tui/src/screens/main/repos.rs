@@ -14,7 +14,7 @@ use crate::component::{Cx, LocalRepo};
 use crate::components::table::{Cell, CellValue, Column, SearchableTable, SortSpec, TableItem};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::options::AppOptions;
-use crate::theme::{RichAnsi, Theme};
+use crate::theme::Theme;
 
 /// The favorite cell's raw value, which the rows sort by: Python's `IS_FAVORITED` markup. `[` sorts before `☆`, so
 /// favorites come first.
@@ -53,7 +53,7 @@ impl RepoCells {
 }
 
 fn star_color(theme: &Theme) -> Color {
-    theme.rich_ansi(RichAnsi::Green)
+    theme.color(theme.roles().marks.starred, theme.background())
 }
 
 /// The favorite column's header: the star in `theme`'s green.

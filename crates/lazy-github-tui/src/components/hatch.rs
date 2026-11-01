@@ -19,7 +19,7 @@ impl Hatch {
         let under = theme.background();
         Self {
             style: Style::new()
-                .fg(theme.color(theme.palette.panel, under))
+                .fg(theme.color(theme.roles().surface.hatch, under))
                 .bg(theme.paint(under)),
         }
     }

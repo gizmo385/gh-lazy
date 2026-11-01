@@ -25,9 +25,9 @@ pub(super) const EMPTY_SUFFIX: &str = "(empty)";
 /// one string, as Textual cuts the whole border title.
 pub(super) fn titled_box<'a>(title: &str, dim: Option<&str>, width: u16, focused: bool, theme: &Theme) -> Block<'a> {
     let slot = if focused {
-        theme.palette.success
+        theme.roles().border.pane_focused
     } else {
-        theme.palette.primary_lighten_3
+        theme.roles().border.section_title
     };
     let border = Style::new().fg(theme.color(slot, theme.background()));
     let dimmed_style = theme.rich_dim(border, slot, theme.background());

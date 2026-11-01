@@ -1393,7 +1393,7 @@ impl App {
         frame.render_widget(
             Block::new().style(
                 Style::new()
-                    .fg(theme.color(theme.palette.foreground, screen))
+                    .fg(theme.color(theme.roles().text.plain, screen))
                     .bg(theme.paint(screen)),
             ),
             area,
@@ -1685,13 +1685,13 @@ fn with_app_link(mut chain: Vec<ChainLink>) -> Vec<ChainLink> {
 fn screen_scrollbar(buf: &mut ratatui::buffer::Buffer, available: Rect, rect: Rect, theme: &Theme) {
     use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState, VERTICAL_WIDTH};
 
-    let palette = theme.palette;
+    let roles = theme.roles();
     let bg = theme.background();
-    let back = palette.scrollbar_background.over(bg);
+    let back = roles.scrollbar.track.over(bg);
     let colors = ScrollbarColors {
-        bar: theme.paint(palette.scrollbar.over(back)),
+        bar: theme.paint(roles.scrollbar.thumb.over(back)),
         back: theme.paint(back),
-        fg: theme.color(palette.foreground, bg),
+        fg: theme.color(roles.text.plain, bg),
         bg: theme.paint(bg),
     };
     let bar = Rect {

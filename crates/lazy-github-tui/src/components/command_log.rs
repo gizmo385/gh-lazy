@@ -20,8 +20,6 @@ const TAB_SIZE: usize = 8;
 /// Textual's `App.scroll_sensitivity_x` and `scroll_sensitivity_y`: how far one wheel notch scrolls.
 const WHEEL_COLUMNS: usize = 4;
 pub(crate) const WHEEL_ROWS: usize = 2;
-/// `Log:focus { background-tint: $foreground 5% }`.
-const FOCUS_TINT_PERCENT: f64 = 5.0;
 
 /// A mouse wheel notch over the log.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -160,14 +158,15 @@ impl CommandLog {
     /// Draws the log into `area`: the rows on `$surface` (tinted while focused), with both scrollbar tracks always
     /// drawn, as Textual's `overflow: scroll` does, and a thumb only on the axis that overflows.
     pub fn render(&mut self, frame: &mut Frame<'_>, area: Rect, theme: &Theme, focused: bool) {
-        let palette = theme.palette;
-        let surface = palette.surface.over(theme.background());
+        let roles = theme.roles();
+        let surface = roles.surface.pane.over(theme.background());
         let bg = if focused {
-            theme.tint(surface, palette.foreground, FOCUS_TINT_PERCENT)
+            // `Log:focus { background-tint: $foreground 5% }`.
+            theme.tint(surface, roles.surface.focus_tint, 100.0)
         } else {
             surface
         };
-        let fg = theme.color(palette.text, bg);
+        let fg = theme.color(roles.text.normal, bg);
         let style = Style::new().fg(fg).bg(theme.paint(bg));
 
         let bar_width = VERTICAL_WIDTH.min(area.width);
@@ -190,9 +189,9 @@ impl CommandLog {
             .collect();
         frame.render_widget(Paragraph::new(rows).style(style), text);
 
-        let back = palette.scrollbar_background.over(bg);
+        let back = roles.scrollbar.track.over(bg);
         let colors = ScrollbarColors {
-            bar: theme.paint(palette.scrollbar.over(back)),
+            bar: theme.paint(roles.scrollbar.thumb.over(back)),
             back: theme.paint(back),
             fg,
             bg: theme.paint(bg),
@@ -229,7 +228,7 @@ impl CommandLog {
             width: bar_width,
             height: bar_height,
         };
-        let corner_bg = theme.color(palette.scrollbar_corner_color, bg);
+        let corner_bg = theme.color(roles.scrollbar.corner, bg);
         frame.render_widget(Clear, corner);
         frame.render_widget(Block::new().style(Style::new().bg(corner_bg)), corner);
     }

@@ -61,27 +61,20 @@ impl ListView {
         if width == 0 {
             return out;
         }
-        let palette = theme.palette;
-        let mut background = palette.surface.over(under);
+        let roles = theme.roles();
+        let mut background = roles.surface.pane.over(under);
         if focused {
-            background = theme.tint(background, palette.foreground, 5.0);
+            background = theme.tint(background, roles.surface.focus_tint, 100.0);
         }
         let plain = Style::new()
-            .fg(theme.color(palette.foreground, background))
+            .fg(theme.color(roles.text.plain, background))
             .bg(theme.paint(background));
-        let highlighted = if focused {
-            palette.block_cursor_text_style.apply(theme.fg_on(
-                palette.block_cursor_foreground,
-                palette.block_cursor_background,
-                background,
-            ))
+        let cursor = if focused {
+            roles.cursor.focused
         } else {
-            palette.block_cursor_blurred_text_style.apply(theme.fg_on(
-                palette.block_cursor_blurred_foreground,
-                palette.block_cursor_blurred_background,
-                background,
-            ))
+            roles.cursor.blurred
         };
+        let highlighted = cursor.style.apply(theme.fg_on(cursor.fg, cursor.bg, background));
         for (index, runs) in items.iter().enumerate() {
             let base = if self.highlight == Some(index) {
                 highlighted
@@ -182,21 +175,21 @@ mod tests {
     #[test]
     fn the_highlight_takes_the_block_cursor_when_focused() {
         let theme = Theme::default();
-        let palette = theme.palette;
+        let roles = theme.roles();
         let mut list = ListView::default();
         list.set_highlight(Some(1));
         let under = theme.background();
-        let surface = palette.surface.over(under);
+        let surface = roles.surface.pane.over(under);
 
         let blurred = list.layout(&items(&["a", "b"]), 4, &theme, false, under);
         assert_eq!(blurred.rendered.lines[0].spans[0].style.bg, Some(theme.paint(surface)));
-        let cursor = palette.block_cursor_blurred_background.over(surface);
+        let cursor = roles.cursor.blurred.bg.over(surface);
         assert_eq!(blurred.rendered.lines[1].spans[0].style.bg, Some(theme.paint(cursor)));
 
         let focused = list.layout(&items(&["a", "b"]), 4, &theme, true, under);
-        let tinted = theme.tint(surface, palette.foreground, 5.0);
+        let tinted = theme.tint(surface, roles.surface.focus_tint, 100.0);
         assert_eq!(focused.rendered.lines[0].spans[1].style.bg, Some(theme.paint(tinted)));
-        let cursor = palette.block_cursor_background.over(tinted);
+        let cursor = roles.cursor.focused.bg.over(tinted);
         assert_eq!(focused.rendered.lines[1].spans[0].style.bg, Some(theme.paint(cursor)));
     }
 

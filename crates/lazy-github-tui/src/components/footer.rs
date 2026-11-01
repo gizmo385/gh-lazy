@@ -107,24 +107,24 @@ impl Footer<'_> {
 impl Widget for Footer<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let theme = self.theme;
-        let palette = theme.palette;
-        let bar = palette.footer_background.over(theme.background());
+        let footer = &theme.roles().footer;
+        let bar = footer.bar.over(theme.background());
         // Textual's `FooterKey:hover` swaps the item's background, and the key and description backgrounds are
         // drawn over it, so the whole item lights up. Its `color` changes nothing: both parts set their own.
         let styles = |item_bg: Paint| {
-            let key_bg = palette.footer_key_background.over(item_bg);
-            let description_bg = palette.footer_description_background.over(item_bg);
+            let key_bg = footer.key.bg.over(item_bg);
+            let description_bg = footer.description.bg.over(item_bg);
             let key = Style::new()
-                .fg(theme.color(palette.footer_key_foreground, key_bg))
+                .fg(theme.color(footer.key.fg, key_bg))
                 .bg(theme.paint(key_bg))
                 .add_modifier(Modifier::BOLD);
             let description = Style::new()
-                .fg(theme.color(palette.footer_description_foreground, description_bg))
+                .fg(theme.color(footer.description.fg, description_bg))
                 .bg(theme.paint(description_bg));
             (key, description)
         };
-        let plain = styles(palette.footer_item_background.over(bar));
-        let hovered = styles(palette.block_hover_background.over(bar));
+        let plain = styles(footer.item.over(bar));
+        let hovered = styles(footer.hover.over(bar));
         let spans: Vec<Span<'static>> = self
             .items
             .iter()

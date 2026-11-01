@@ -57,8 +57,6 @@ const GUIDE_TERMINATOR: &str = "└── ";
 /// Textual's `App.scroll_sensitivity_y` and `scroll_sensitivity_x`: how far one wheel notch scrolls.
 const WHEEL_ROWS: usize = 2;
 const WHEEL_COLUMNS: usize = 4;
-/// `Tree:focus { background-tint: $foreground 5% }`.
-const FOCUS_TINT_PERCENT: f64 = 5.0;
 
 /// A node of a [`Tree`]: an index into the tree that made it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -672,55 +670,50 @@ struct Styles {
 
 impl Styles {
     fn new(theme: &Theme, focused: bool) -> Self {
-        let p = theme.palette;
-        let surface = p.surface.over(theme.background());
+        let roles = theme.roles();
+        let surface = roles.surface.pane.over(theme.background());
         let bg = if focused {
-            theme.tint(surface, p.foreground, FOCUS_TINT_PERCENT)
+            // `Tree:focus { background-tint: $foreground 5% }`.
+            theme.tint(surface, roles.surface.focus_tint, 100.0)
         } else {
             surface
         };
-        let base = Style::new().fg(theme.color(p.foreground, bg)).bg(theme.paint(bg));
-        // `Tree:ansi` comes last, then `&:light`, then `&:focus`.
-        let guide_color = if theme.ansi {
-            p.ansi_background
-        } else if !theme.dark {
-            p.surface_darken_1
-        } else if focused {
-            p.surface_lighten_3
+        let base = Style::new().fg(theme.color(roles.text.plain, bg)).bg(theme.paint(bg));
+        let guide_color = if focused {
+            roles.tree.guide_focused
         } else {
-            p.surface_lighten_2
+            roles.tree.guide
         };
         let guides = Style::new().fg(theme.color(guide_color, bg));
-        let guides_selected = Style::new().fg(theme.color(p.block_cursor_background, bg));
+        let guides_selected = Style::new().fg(theme.color(roles.tree.guide_selected, bg));
 
         // Focused, the block cursor's colors and text style; blurred, its blurred background and text style under the
         // tree's own `$foreground`, which overrides the label's colors as the focused cursor's does.
         let cursor = if focused {
-            let cursor_bg = p.block_cursor_background.over(bg);
-            p.block_cursor_text_style.apply(
-                Style::new()
-                    .fg(theme.color(p.block_cursor_foreground, cursor_bg))
-                    .bg(theme.paint(cursor_bg)),
-            )
+            let c = roles.cursor.focused;
+            let cursor_bg = c.bg.over(bg);
+            c.style
+                .apply(Style::new().fg(theme.color(c.fg, cursor_bg)).bg(theme.paint(cursor_bg)))
         } else {
-            let cursor_bg = p.block_cursor_blurred_background.over(bg);
-            p.block_cursor_blurred_text_style.apply(
+            let c = roles.cursor.blurred;
+            let cursor_bg = c.bg.over(bg);
+            c.style.apply(
                 Style::new()
-                    .fg(theme.color(p.foreground, cursor_bg))
+                    .fg(theme.color(roles.text.plain, cursor_bg))
                     .bg(theme.paint(cursor_bg)),
             )
         };
 
-        let back = p.scrollbar_background.over(surface);
+        let back = roles.scrollbar.track.over(surface);
         let scrollbar = ScrollbarColors {
-            bar: theme.color(p.scrollbar, back),
+            bar: theme.color(roles.scrollbar.thumb, back),
             back: theme.paint(back),
-            fg: theme.color(p.foreground, bg),
+            fg: theme.color(roles.text.plain, bg),
             bg: theme.paint(bg),
         };
         let corner = Style::new()
             .fg(Color::Reset)
-            .bg(theme.color(p.scrollbar_corner_color, surface));
+            .bg(theme.color(roles.scrollbar.corner, surface));
         Self {
             base,
             guides,

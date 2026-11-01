@@ -127,11 +127,11 @@ impl Collapsible {
         content: impl FnOnce(ContentCx) -> Rendered,
     ) -> Placement {
         let start = out.lines.len();
-        let palette = theme.palette;
+        let roles = theme.roles();
         let under = theme.background();
-        let mut background = palette.surface.over(under);
+        let mut background = roles.surface.pane.over(under);
         if focus.within {
-            background = theme.tint(background, palette.foreground, 5.0);
+            background = theme.tint(background, roles.surface.focus_tint, 100.0);
         }
         let section = Style::new().bg(theme.paint(background));
         let row = |spans: Vec<Span<'static>>| {
@@ -148,19 +148,14 @@ impl Collapsible {
         // `CollapsibleTitle`: blurred, the block cursor's blurred text colors on the section; focused, the block
         // cursor, padding included. Markup colors in the title (a check state) keep theirs.
         let (text, padding) = if focus.title {
-            let text = palette.block_cursor_text_style.apply(theme.fg_on(
-                palette.block_cursor_foreground,
-                palette.block_cursor_background,
-                background,
-            ));
-            (
-                text,
-                Style::new().bg(theme.color(palette.block_cursor_background, background)),
-            )
+            let c = roles.cursor.focused;
+            let text = c.style.apply(theme.fg_on(c.fg, c.bg, background));
+            (text, Style::new().bg(theme.color(c.bg, background)))
         } else {
-            let text = palette
-                .block_cursor_blurred_text_style
-                .apply(Style::new().fg(theme.color(palette.block_cursor_blurred_foreground, background)))
+            let c = roles.cursor.blurred;
+            let text = c
+                .style
+                .apply(Style::new().fg(theme.color(c.fg, background)))
                 .bg(theme.paint(background));
             (text, section)
         };
@@ -387,7 +382,10 @@ mod tests {
         };
         let runs = [
             TextRun::new("Status checks: ", Style::new()),
-            TextRun::new("✘ Failed", Style::new().fg(theme.accent(crate::theme::Accent::Red))),
+            TextRun::new(
+                "✘ Failed",
+                Style::new().fg(theme.color(theme.roles().marks.negative, theme.background())),
+            ),
         ];
         Collapsible::new(true).layout(&mut out, &runs, focus, 32, &theme, |cx| {
             let items = [

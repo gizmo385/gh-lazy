@@ -302,11 +302,11 @@ fn render_scrollbar(buf: &mut Buffer, area: Rect, content: usize, offset: usize,
     if size == 0 || content <= size {
         return;
     }
-    let palette = theme.palette;
+    let roles = theme.roles();
     let under = theme.background();
-    let bar = theme.color(palette.scrollbar, under);
-    let back = theme.color(palette.scrollbar_background, under);
-    let track = Style::new().fg(theme.color(palette.foreground, under)).bg(back);
+    let bar = theme.color(roles.scrollbar.thumb, under);
+    let back = theme.color(roles.scrollbar.track, under);
+    let track = Style::new().fg(theme.color(roles.text.plain, under)).bg(back);
     let thumb = Style::new().fg(bar).add_modifier(Modifier::REVERSED);
     let head = Style::new().fg(bar).bg(back);
     let tail = head.add_modifier(Modifier::REVERSED);

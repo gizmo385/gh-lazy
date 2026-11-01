@@ -26,9 +26,9 @@ const QUALITY: usize = 50;
 /// Paints the overlay over `area`: `$boost` over `$background`, with the indicator centered. `elapsed` is the time
 /// since the overlay first appeared, which sets the animation's phase.
 pub fn render(buf: &mut Buffer, area: Rect, theme: &Theme, animations: bool, elapsed: Duration) {
-    let palette = theme.palette;
-    let background = palette.boost.over(theme.background());
-    let primary = palette.primary.over(background);
+    let roles = theme.roles();
+    let background = roles.surface.boost.over(theme.background());
+    let primary = roles.brand.primary.over(background);
     let base = Style::new().fg(theme.paint(primary)).bg(theme.paint(background));
     for pos in area.intersection(buf.area).positions() {
         buf[pos].reset();
@@ -150,8 +150,8 @@ mod tests {
     fn the_dots_match_textuals_gradient() {
         // Textual 8.2.5 under textual-dark, from `LoadingIndicator.render`'s arithmetic.
         let theme = Theme::default();
-        let background = theme.palette.boost.over(theme.background());
-        let primary = theme.palette.primary.over(background);
+        let background = theme.roles().surface.boost.over(theme.background());
+        let primary = theme.roles().brand.primary.over(background);
         for (t, expected) in [
             (0.0, ["#4091F0", "#172530", "#152B3B", "#13344E", "#0F4168"]),
             (0.3, ["#0468B6", "#117EDB", "#17242D", "#172530", "#152B3C"]),

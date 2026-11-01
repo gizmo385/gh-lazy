@@ -18,9 +18,10 @@ const OPACITY: f64 = 0.7;
 /// parent's, and again as it blends the rendered cells into the parent. Text is blended once. (Its translucent border
 /// colors, composited over the faded background, come out between the two; they're faded once here.)
 pub fn fade(buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint) {
+    let dimmed = theme.roles().disabled.dimmed;
     for position in area.intersection(buf.area).positions() {
         let cell = &mut buf[position];
-        if theme.ansi {
+        if dimmed {
             cell.modifier.insert(Modifier::DIM);
         } else {
             cell.fg = theme.fade(cell.fg, under, OPACITY);

@@ -34,7 +34,7 @@ impl Widget for TooSmall<'_> {
         let theme = self.theme;
         let screen = theme.background();
         let style = Style::new()
-            .fg(theme.color(theme.palette.foreground, screen))
+            .fg(theme.color(theme.roles().text.plain, screen))
             .bg(theme.paint(screen));
         Block::new().style(style).render(area, buf);
         if area.is_empty() {

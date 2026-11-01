@@ -9,7 +9,7 @@ use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Paragraph, Widget};
 
-use crate::theme::{Accent, Theme};
+use crate::theme::Theme;
 
 /// From this count on, the badge reads `N+`.
 ///
@@ -44,7 +44,7 @@ pub fn repo_text(repo: Option<&Repository>, theme: &Theme) -> Line<'static> {
             Span::raw("Current repo: "),
             Span::styled(
                 repo.full_name.clone(),
-                Style::new().fg(theme.accent(Accent::GreenYellow)),
+                Style::new().fg(theme.color(theme.roles().marks.name, theme.background())),
             ),
         ]),
         None => Line::raw("No repository selected"),
@@ -56,24 +56,29 @@ pub fn unread_text(unread: UnreadState, theme: &Theme) -> Option<Line<'static>> 
     let UnreadState::Count(count) = unread else {
         return None;
     };
-    let (text, accent) = match count {
-        0 => ("No unread notifications".to_owned(), Accent::GreenYellow),
-        n if n >= UNREAD_PLUS_FROM => (format!("• Unread Notifications: {n}+"), Accent::Red),
-        n => (format!("• Unread Notifications: {n}"), Accent::Red),
+    let marks = &theme.roles().marks;
+    let (text, mark) = match count {
+        0 => ("No unread notifications".to_owned(), marks.positive),
+        n if n >= UNREAD_PLUS_FROM => (format!("• Unread Notifications: {n}+"), marks.negative),
+        n => (format!("• Unread Notifications: {n}"), marks.negative),
     };
-    Some(Line::styled(text, Style::new().fg(theme.accent(accent))))
+    Some(Line::styled(
+        text,
+        Style::new().fg(theme.color(mark, theme.background())),
+    ))
 }
 
 impl Widget for StatusBar<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let theme = self.theme;
         let under = theme.background();
-        let block = Block::bordered().border_style(Style::new().fg(theme.color(theme.palette.secondary, under)));
+        let block =
+            Block::bordered().border_style(Style::new().fg(theme.color(theme.roles().border.status_bar, under)));
         let inner = block.inner(area);
         block.render(area, buf);
 
         let [left, right] = Layout::horizontal([Constraint::Ratio(1, 2); 2]).areas(inner);
-        let text_style = Style::new().fg(theme.color(theme.palette.foreground, under));
+        let text_style = Style::new().fg(theme.color(theme.roles().text.plain, under));
         // No `wrap`: a long repo name is cut at its half rather than wrapped onto rows the box doesn't have.
         Paragraph::new(repo_text(self.repo, theme))
             .style(text_style)
@@ -200,8 +205,8 @@ mod tests {
         let theme = Theme::default();
         let buf = draw(Some(&repo("o/r")), UnreadState::Count(3));
         let under = theme.background();
-        let secondary = theme.color(theme.palette.secondary, under);
-        let foreground = theme.color(theme.palette.foreground, under);
+        let secondary = theme.color(theme.roles().border.status_bar, under);
+        let foreground = theme.color(theme.roles().text.plain, under);
         assert_eq!(buf[(0, 0)].symbol(), "┌");
         assert_eq!(buf[(0, 0)].fg, secondary);
         assert_eq!(buf[(99, 2)].symbol(), "┘");

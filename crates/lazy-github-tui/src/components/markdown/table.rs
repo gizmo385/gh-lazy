@@ -15,14 +15,6 @@ use crate::theme::{Paint, ThemeColor};
 /// A cell's `padding: 0 1`, both sides.
 const CELL_PADDING: usize = 2;
 
-/// `white 30%`, the table's background on light themes.
-const WHITE_30: ThemeColor = ThemeColor::Rgba {
-    r: 255,
-    g: 255,
-    b: 255,
-    a: 0.3,
-};
-
 /// How a table's parts are styled.
 struct Styles {
     /// The table's own background, if it has one, under everything else.
@@ -41,15 +33,16 @@ impl Painter<'_> {
         width: usize,
         under: Paint,
     ) -> Vec<Row> {
-        let p = self.palette();
-        // `MarkdownTable:light { background: white 30% }`; on dark themes it's drawn on what's under it.
-        let background = (!self.theme.dark).then(|| WHITE_30.over(under));
+        let md = self.markdown();
+        // `MarkdownTable:light { background: white 30% }`; on dark themes it's transparent, and drawn on what's
+        // under it.
+        let background = (md.table_bg != ThemeColor::Transparent).then(|| md.table_bg.over(under));
         let under = background.unwrap_or(under);
         let bg = background.map_or_else(Style::new, |b| Style::new().bg(self.theme.paint(b)));
         let styles = Styles {
             bg,
-            line: bg.patch(self.fg(p.foreground.multiply_alpha(0.2), under)),
-            header: bg.patch(self.fg(p.primary, under)),
+            line: bg.patch(self.fg(md.table_line, under)),
+            header: bg.patch(self.fg(md.table_header, under)),
             body: bg.patch(self.text_style(under)),
         };
 

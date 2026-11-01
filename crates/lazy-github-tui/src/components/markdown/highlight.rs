@@ -13,12 +13,12 @@
 use std::ops::Range;
 use std::sync::LazyLock;
 
-use ratatui::style::{Modifier, Style};
+use ratatui::style::Style;
 use syntect::easy::ScopeRangeIterator;
 use syntect::parsing::{ParseState, ScopeStack, SyntaxReference, SyntaxSet};
 
 use super::layout::Painter;
-use crate::theme::{AnsiColor, Paint, Palette, ThemeColor};
+use crate::theme::{Paint, Syntax, TokenStyle};
 
 /// bat's grammars (`two-face`): syntect's bundled ones and more, such as TOML and Dockerfile. Loaded once, on the
 /// first fence with a language or the first hunk pane opened, and never if nothing needs them: with the first
@@ -264,88 +264,38 @@ impl Tokenizer {
     }
 }
 
-/// A color in a highlight theme.
-#[derive(Debug, Clone, Copy)]
-enum Ink {
-    /// `$text` at an alpha.
-    Text(f64),
-    /// A theme variable at an alpha.
-    Var(fn(&Palette) -> ThemeColor, f64),
-    /// A terminal color, in the ANSI highlight themes.
-    Ansi(AnsiColor),
-}
-
-/// What a token looks like: `HighlightTheme.STYLES`' value for it.
-#[derive(Debug, Clone, Copy, Default)]
-struct Look {
-    fg: Option<Ink>,
-    bg: Option<Ink>,
-    add: Modifier,
-}
-
-const fn look(fg: Option<Ink>, add: Modifier) -> Look {
-    Look { fg, bg: None, add }
-}
-
-const NONE: Modifier = Modifier::empty();
-
-/// `HighlightTheme.STYLES`. `Token.String` and `Token.Literal.String` are one type in Pygments, so the dict's later
-/// `Token.String: "$text-success"` is the one that applies, not `"$text-success 90%"`.
-fn textual(token: Token) -> Look {
-    use Ink::{Text, Var};
-    let var = |f: fn(&Palette) -> ThemeColor| Some(Var(f, 1.0));
-    match token {
-        Token::Comment | Token::StringBacktick => look(Some(Text(0.6)), NONE),
-        Token::Error => Look {
-            fg: var(|p| p.text_error),
-            bg: var(|p| p.error_muted),
-            add: NONE,
-        },
-        Token::GenericStrong | Token::Operator => look(None, Modifier::BOLD),
-        Token::GenericEmph | Token::NameBuiltinPseudo => look(None, Modifier::ITALIC),
-        Token::GenericHeading => look(var(|p| p.text_primary), Modifier::UNDERLINED),
-        Token::GenericSubheading | Token::Name => look(var(|p| p.text_primary), NONE),
-        Token::Keyword | Token::NameBuiltin => look(var(|p| p.text_accent), NONE),
-        Token::KeywordConstant => look(Some(Var(|p| p.text_success, 0.8)), Modifier::BOLD),
-        Token::KeywordNamespace | Token::NameConstant => look(var(|p| p.text_error), NONE),
-        Token::Number | Token::NameAttribute => look(var(|p| p.text_warning), NONE),
-        Token::String => look(var(|p| p.text_success), NONE),
-        Token::StringDoc => look(Some(Var(|p| p.text_success, 0.8)), Modifier::ITALIC),
-        Token::StringDouble => look(Some(Var(|p| p.text_success, 0.9)), NONE),
-        Token::NameClass => look(var(|p| p.text_warning), Modifier::BOLD),
-        Token::NameDecorator | Token::NameTag => look(var(|p| p.text_primary), Modifier::BOLD),
-        Token::NameFunction => look(var(|p| p.text_warning), Modifier::UNDERLINED),
-        Token::NameVariable => look(var(|p| p.text_secondary), NONE),
-        Token::OperatorWord => look(var(|p| p.text_error), Modifier::BOLD),
-        Token::Text => Look::default(),
-    }
-}
-
-/// `ANSIDarkHighlightTheme.STYLES` (`light` false) and `ANSILightHighlightTheme.STYLES`. Their misspelled colors
-/// (`ansi_greenb` for strings, `ansi_yelllow`, `ansi_blow`, and the light theme's `ans_red`) don't parse, so Textual
-/// draws those tokens unstyled, and so do we.
-fn ansi(token: Token, light: bool) -> Look {
-    use AnsiColor::{Blue, BrightBlack, Cyan, Default, Green, Magenta, Red, Yellow};
-    let ink = |c| Some(Ink::Ansi(c));
-    match token {
-        Token::Comment => look(None, Modifier::DIM | Modifier::ITALIC),
-        Token::Error if light => Look::default(),
-        Token::Error | Token::NameConstant => look(ink(Red), NONE),
-        Token::GenericStrong => look(None, Modifier::BOLD),
-        Token::GenericEmph | Token::NameBuiltinPseudo => look(None, Modifier::ITALIC),
-        Token::GenericHeading => look(ink(Blue), Modifier::UNDERLINED),
-        Token::GenericSubheading | Token::NameFunction => look(ink(Blue), NONE),
-        Token::Keyword => look(ink(Magenta), Modifier::BOLD),
-        Token::KeywordConstant | Token::NameBuiltin => look(ink(Cyan), NONE),
-        Token::KeywordNamespace | Token::OperatorWord => look(ink(Magenta), NONE),
-        Token::Number | Token::NameClass if light => look(ink(Blue), Modifier::BOLD),
-        Token::Number | Token::NameClass => look(ink(Yellow), NONE),
-        Token::StringBacktick => look(ink(BrightBlack), NONE),
-        Token::String | Token::NameAttribute | Token::Text => Look::default(),
-        Token::StringDoc => look(ink(Green), Modifier::ITALIC),
-        Token::StringDouble => look(ink(Green), NONE),
-        Token::Name | Token::NameVariable | Token::Operator => look(ink(Default), NONE),
-        Token::NameDecorator | Token::NameTag => look(ink(Blue), Modifier::BOLD),
+impl Token {
+    /// How this token looks in a theme's syntax roles: `HighlightTheme.STYLES`' value for it.
+    fn style(self, syntax: &Syntax) -> &TokenStyle {
+        match self {
+            Token::Comment => &syntax.comment,
+            Token::Error => &syntax.error,
+            Token::GenericStrong => &syntax.generic_strong,
+            Token::GenericEmph => &syntax.generic_emph,
+            Token::GenericHeading => &syntax.generic_heading,
+            Token::GenericSubheading => &syntax.generic_subheading,
+            Token::Keyword => &syntax.keyword,
+            Token::KeywordConstant => &syntax.keyword_constant,
+            Token::KeywordNamespace => &syntax.keyword_namespace,
+            Token::Number => &syntax.number,
+            Token::String => &syntax.string,
+            Token::StringBacktick => &syntax.string_backtick,
+            Token::StringDoc => &syntax.string_doc,
+            Token::StringDouble => &syntax.string_double,
+            Token::Name => &syntax.name,
+            Token::NameAttribute => &syntax.name_attribute,
+            Token::NameBuiltin => &syntax.name_builtin,
+            Token::NameBuiltinPseudo => &syntax.name_builtin_pseudo,
+            Token::NameClass => &syntax.name_class,
+            Token::NameConstant => &syntax.name_constant,
+            Token::NameDecorator => &syntax.name_decorator,
+            Token::NameFunction => &syntax.name_function,
+            Token::NameTag => &syntax.name_tag,
+            Token::NameVariable => &syntax.name_variable,
+            Token::Operator => &syntax.operator,
+            Token::OperatorWord => &syntax.operator_word,
+            Token::Text => &syntax.plain,
+        }
     }
 }
 
@@ -353,36 +303,15 @@ impl Painter<'_> {
     /// `base` (the fence's `$text` on its background) with `token`'s highlight style, its colors drawn over the
     /// fence's `background`.
     pub(super) fn token_style(&self, token: Token, base: Style, background: Paint) -> Style {
-        let look = if self.theme.ansi {
-            ansi(token, !self.theme.dark)
-        } else {
-            textual(token)
-        };
-        let p = self.palette();
-        let color = |ink: Ink| {
-            let c = match ink {
-                Ink::Text(alpha) => full_text(p.text).multiply_alpha(alpha),
-                Ink::Var(var, alpha) => var(p).multiply_alpha(alpha),
-                Ink::Ansi(c) => ThemeColor::Ansi(c),
-            };
-            self.theme.color(c, background)
-        };
-        let mut style = base.add_modifier(look.add);
+        let look = token.style(&self.theme.roles().syntax);
+        let mut style = look.style.apply(base);
         if let Some(fg) = look.fg {
-            style = style.fg(color(fg));
+            style = style.fg(self.theme.color(fg, background));
         }
         if let Some(bg) = look.bg {
-            style = style.bg(color(bg));
+            style = style.bg(self.theme.color(bg, background));
         }
         style
-    }
-}
-
-/// `$text` as the highlighter resolves it: an `auto` color at full strength, whatever the theme's alpha.
-pub(super) fn full_text(text: ThemeColor) -> ThemeColor {
-    match text {
-        ThemeColor::Auto { .. } => ThemeColor::Auto { alpha: 1.0 },
-        other => other,
     }
 }
 

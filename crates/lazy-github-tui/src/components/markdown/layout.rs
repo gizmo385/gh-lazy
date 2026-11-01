@@ -11,7 +11,7 @@ use ratatui::text::{Line, Span};
 use super::highlight;
 use super::wrap::{self, Cell};
 use super::{Block, Inline, LinkSpan, Rendered};
-use crate::theme::{Paint, Theme, ThemeColor};
+use crate::theme::{Markdown, Paint, Theme, ThemeColor};
 
 /// `Markdown { padding: 0 2 }`.
 const PADDING: usize = 2;
@@ -212,7 +212,7 @@ impl Painter<'_> {
             Block::List { .. } => (0, 1),
             Block::Quote(_) => (1, 1),
             // `MarkdownFence { margin: 1 0 }`; `:ansi` has none.
-            Block::Code { .. } if self.theme.ansi => (0, 0),
+            Block::Code { .. } if !self.markdown().fence_inset => (0, 0),
             Block::Code { .. } => (1, 1),
             // `MarkdownHorizontalRule { margin-bottom: 1 }`; its `padding-top` is a row of the block.
             Block::Rule => (0, 1),
@@ -231,7 +231,7 @@ impl Painter<'_> {
                 Row {
                     spans: vec![Span::styled(
                         "─".repeat(width),
-                        self.fg(self.palette().secondary, scope.under),
+                        self.fg(self.theme.roles().border.rule, scope.under),
                     )],
                     links: Vec::new(),
                     table: None,
@@ -242,17 +242,17 @@ impl Painter<'_> {
     }
 
     fn heading(&self, level: u8, text: &[Inline], width: usize, under: Paint) -> Vec<Row> {
-        let p = self.palette();
-        let (color, text_style) = match level {
-            1 => (p.markdown_h1_color, p.markdown_h1_text_style),
-            2 => (p.markdown_h2_color, p.markdown_h2_text_style),
-            3 => (p.markdown_h3_color, p.markdown_h3_text_style),
-            4 => (p.markdown_h4_color, p.markdown_h4_text_style),
-            5 => (p.markdown_h5_color, p.markdown_h5_text_style),
-            _ => (p.markdown_h6_color, p.markdown_h6_text_style),
+        let md = self.markdown();
+        let heading = match level {
+            1 => md.h1,
+            2 => md.h2,
+            3 => md.h3,
+            4 => md.h4,
+            5 => md.h5,
+            _ => md.h6,
         };
         // The `$markdown-hN-background`s are transparent in every built-in theme.
-        let style = text_style.apply(self.fg(color, under));
+        let style = heading.style.apply(self.fg(heading.fg, under));
         let rows = self.inlines(text, width, style, under);
         if level != 1 {
             return rows;
@@ -285,14 +285,7 @@ impl Painter<'_> {
                 numbers.into_iter().map(|n| format!("{n:>0$}", widest + 1)).collect()
             }
         };
-        let bullet_style = self.fg(
-            if self.theme.dark {
-                self.palette().text_primary
-            } else {
-                self.palette().text_secondary
-            },
-            scope.under,
-        );
+        let bullet_style = self.fg(self.markdown().bullet, scope.under);
         let inner = Scope {
             in_list: true,
             bullets: scope.bullets + usize::from(start.is_none()),
@@ -313,16 +306,10 @@ impl Painter<'_> {
     }
 
     fn quote(&self, blocks: &[Block], width: usize, scope: Scope) -> Vec<Row> {
-        let p = self.palette();
-        let background = p.boost.over(scope.under);
+        let md = self.markdown();
+        let background = md.quote_bg.over(scope.under);
         let bg = Style::new().bg(self.theme.paint(background));
-        // `border-left: outer $text-primary 50%`, and `$text-secondary` on light themes.
-        let bar_color = if self.theme.dark {
-            p.text_primary.multiply_alpha(0.5)
-        } else {
-            p.text_secondary
-        };
-        let bar = bg.fg(self.theme.color(bar_color, scope.under));
+        let bar = bg.fg(self.theme.color(md.quote_bar, scope.under));
         let inner_width = width.saturating_sub(QUOTE_INSET).max(1);
         let mut rows = self.blocks(blocks, inner_width, scope.inside(background));
         if rows.is_empty() {
@@ -345,26 +332,25 @@ impl Painter<'_> {
     /// A fenced or indented code block, its tokens in the highlight theme's colors: never wrapped, long lines cut at
     /// the edge.
     fn code(&self, language: Option<&str>, text: &str, width: usize, under: Paint) -> Vec<Row> {
-        let p = self.palette();
-        let ansi = self.theme.ansi;
-        let background = self.theme.markdown_fence_background().over(under);
-        let bg = if ansi {
-            Style::new()
-        } else {
+        let inset = self.markdown().fence_inset;
+        let background = self.markdown().fence_bg.over(under);
+        let bg = if inset {
             Style::new().bg(self.theme.paint(background))
+        } else {
+            Style::new()
         };
         // The highlighter puts `$text` under every token.
-        let style = bg.fg(self.theme.color(highlight::full_text(p.text), background));
-        let padding = if ansi { 0 } else { FENCE_PADDING };
+        let style = bg.fg(self.theme.color(self.theme.roles().syntax.text, background));
+        let padding = if inset { FENCE_PADDING } else { 0 };
         let blank = || {
-            if ansi {
-                Row::default()
-            } else {
+            if inset {
                 Row {
                     spans: vec![Span::styled(" ".repeat(width), bg)],
                     links: Vec::new(),
                     table: None,
                 }
+            } else {
+                Row::default()
             }
         };
 
@@ -387,7 +373,7 @@ impl Painter<'_> {
                     break;
                 }
             }
-            if !ansi && used < width {
+            if inset && used < width {
                 spans.push(Span::styled(" ".repeat(width - used), bg));
             }
             rows.push(Row {
@@ -415,7 +401,7 @@ impl Painter<'_> {
     }
 
     pub(super) fn inline_style(&self, base: Style, under: Paint, run: &Inline) -> Style {
-        let p = self.palette();
+        let md = self.markdown();
         let mut style = base;
         if run.style.strong {
             style = style.add_modifier(Modifier::BOLD);
@@ -427,36 +413,32 @@ impl Painter<'_> {
             style = style.add_modifier(Modifier::CROSSED_OUT);
         }
         if run.style.code {
-            // `&:dark > .code_inline` and `&:light > .code_inline`; `:ansi` keeps the terminal's background.
-            let (color, background) = if self.theme.dark {
-                (p.text_warning, p.warning.multiply_alpha(0.1))
-            } else {
-                (p.text_error, p.error.multiply_alpha(0.05))
-            };
+            // `&:dark > .code_inline` and `&:light > .code_inline`; `:ansi` keeps the terminal's background, so a
+            // transparent `code_bg` sets none.
             let mut behind = under;
-            if !self.theme.ansi {
-                behind = background.component_background().over(under);
+            if md.code_bg != ThemeColor::Transparent {
+                behind = md.code_bg.component_background().over(under);
                 style = style.bg(self.theme.paint(behind));
             }
-            style = style.fg(self.theme.color(color.multiply_alpha(0.95), behind));
+            style = style.fg(self.theme.color(md.code, behind));
         }
         if run.link.is_some() {
             // Over the block's background even on inline code, as Textual resolves the link color there.
-            style = p.link_style.apply(style.fg(self.theme.color(p.link_color, under)));
+            style = md.link.style.apply(style.fg(self.theme.color(md.link.fg, under)));
         }
         style
     }
 
     pub(super) fn text_style(&self, under: Paint) -> Style {
-        self.fg(self.palette().foreground, under)
+        self.fg(self.theme.roles().text.plain, under)
     }
 
     pub(super) fn fg(&self, color: ThemeColor, under: Paint) -> Style {
         Style::new().fg(self.theme.color(color, under))
     }
 
-    pub(super) fn palette(&self) -> &'static crate::theme::Palette {
-        self.theme.palette
+    pub(super) fn markdown(&self) -> &'static Markdown {
+        &self.theme.roles().markdown
     }
 }
 

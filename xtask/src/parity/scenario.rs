@@ -740,9 +740,12 @@ impl Scenario {
 /// The default keys that focus a main-screen section (`[1]` to `[6]`).
 const FOCUS_KEYS: &[&str] = &["1", "2", "3", "4", "5", "6"];
 
+/// The keys that move focus to the next or previous widget.
+const TAB_KEYS: &[&str] = &["tab", "shift+tab"];
+
 /// The steps, and the capture names. Capture names must be unique, and only the last capture may set
-/// `ignore.writes`. With `python`, a focus key must end its step and be followed by a condition wait
-/// ([`check_focus_waits`]).
+/// `ignore.writes`. With `python`, a focus key must end its step, only more `tab` / `shift+tab` may follow a `tab` /
+/// `shift+tab` in its step, and either must be followed by a condition wait ([`check_focus_waits`]).
 fn parse_steps(
     raw: Vec<Spanned<RawStep>>,
     loc: &Locator<'_>,
@@ -789,19 +792,22 @@ fn parse_steps(
     Ok((steps, captures))
 }
 
-/// Python moves focus a tick after a focus key (Py bug B98), so on a loaded machine a key sent right after one, or a
-/// capture, can reach the section that had focus before. A focus key must therefore end its `keys` step, and the next
-/// step must wait on a condition that shows the focus moved: `wait.focused` on the section's title, or its bindings in
-/// the footer. A `stable_ms` wait doesn't count: a busy Python can hold the screen still past it. Where nothing on
-/// screen shows the move (focus moving behind a maximized section), an explicit `sleep_ms` is allowed instead.
-/// `starts` are the steps' offsets.
+/// Python moves focus late after a focus-moving key, so on a loaded machine a key sent right after one, or a capture,
+/// can reach the widget that had focus before. A focus key (`1` to `6`) moves focus a tick late (Py bug B98), so it
+/// must end its `keys` step. `tab` and `shift+tab` move focus only once the key has bubbled back up to the app (Py bug
+/// B121), so only more of them may follow the first in its step: a run of tabs is fine, a key after it isn't. Either
+/// way, the next step must wait on a condition that shows the focus moved: `wait.focused` on the newly focused widget,
+/// or its bindings in the footer. A `stable_ms` wait doesn't count: a busy Python can hold the screen still past it.
+/// Where nothing on screen shows the move (focus moving behind a maximized section), an explicit `sleep_ms` is allowed
+/// instead. `starts` are the steps' offsets.
 fn check_focus_waits(steps: &[Step], starts: &[usize], loc: &Locator<'_>) -> Result<(), ScenarioError> {
+    let is_focus_key = |k: &String| FOCUS_KEYS.contains(&k.as_str());
+    let is_tab = |k: &String| TAB_KEYS.contains(&k.as_str());
     for (i, step) in steps.iter().enumerate() {
         let Step::Keys(keys) = step else { continue };
-        let Some(pos) = keys.iter().position(|k| FOCUS_KEYS.contains(&k.as_str())) else {
-            continue;
-        };
-        if pos + 1 < keys.len() {
+        if let Some(pos) = keys.iter().position(is_focus_key)
+            && pos + 1 < keys.len()
+        {
             return Err(loc.at(
                 starts[i],
                 format!(
@@ -811,6 +817,33 @@ fn check_focus_waits(steps: &[Step], starts: &[usize], loc: &Locator<'_>) -> Res
                 ),
             ));
         }
+        if let Some(pos) = keys.iter().position(is_tab)
+            && !keys[pos..].iter().all(is_tab)
+        {
+            return Err(loc.at(
+                starts[i],
+                format!(
+                    "{:?} must end its `keys` step, with only tab or shift+tab after it: Python moves focus only \
+                     once the key reaches the app (Py bug B121), so send the tabs, wait for the focus to land, then \
+                     send the rest",
+                    keys[pos]
+                ),
+            ));
+        }
+        let Some(last) = keys.last() else { continue };
+        let (what, why) = if is_focus_key(last) {
+            (
+                "focus key",
+                "`focused = \"<section title>\"`: Python moves focus a tick late (Py bug B98)",
+            )
+        } else if is_tab(last) {
+            (
+                "focus-moving key",
+                "`focused = \"<label>\"`: Python moves focus only once the key reaches the app (Py bug B121)",
+            )
+        } else {
+            continue;
+        };
         let waits = match steps.get(i + 1) {
             Some(Step::Wait(w)) => !matches!(w.until, WaitFor::Stable(_)),
             Some(Step::Sleep(_)) => true,
@@ -820,9 +853,8 @@ fn check_focus_waits(steps: &[Step], starts: &[usize], loc: &Locator<'_>) -> Res
             return Err(loc.at(
                 starts[i],
                 format!(
-                    "focus key {:?} must be followed by a `wait` that shows the focus moved (not `stable_ms`), e.g. \
-                     `focused = \"<section title>\"`: Python moves focus a tick late (Py bug B98)",
-                    keys[pos]
+                    "{what} {last:?} must be followed by a `wait` that shows the focus moved (not `stable_ms`), e.g. \
+                     {why}"
                 ),
             ));
         }
@@ -1701,6 +1733,52 @@ move = { at = [100, 1] }
         parse("version = 1\n[[step]]\nkeys = [\"7\", \"j\"]\n").unwrap();
         // Rust focuses at once, so a Rust-only scenario may send a focus key with more keys.
         parse("version = 1\napps = [\"rust\"]\n[[step]]\nkeys = [\"3\", \"enter\"]\n").unwrap();
+    }
+
+    #[test]
+    fn tabs_end_their_step_and_are_followed_by_a_condition_wait() {
+        assert_error(
+            "version = 1\n[[step]]\nkeys = [\"tab\", \"enter\"]\n[[step]]\nwait = { text = \"x\" }\n",
+            2,
+            "\"tab\" must end its `keys` step, with only tab or shift+tab after it",
+        );
+        assert_error(
+            "version = 1\n[[step]]\nkeys = [\"shift+tab\", \"backspace\"]\n[[step]]\nwait = { text = \"x\" }\n",
+            2,
+            "(Py bug B121)",
+        );
+        // A key after a run of tabs is still a key sent before the focus lands.
+        assert_error(
+            "version = 1\n[[step]]\nkeys = [\"tab\", \"shift+tab\", \"j\"]\n",
+            2,
+            "\"tab\" must end its `keys` step",
+        );
+        assert_error(
+            "version = 1\n[[step]]\nkeys = [\"tab\"]\n[[step]]\ncapture = \"x\"\n",
+            2,
+            "focus-moving key \"tab\" must be followed by a `wait`",
+        );
+        assert_error(
+            "version = 1\n[[step]]\nsleep_ms = 1\n[[step]]\nkeys = [\"tab\"]\n[[step]]\nwait = { stable_ms = 500 }\n",
+            4,
+            "must be followed by a `wait` that shows the focus moved (not `stable_ms`)",
+        );
+        assert_error(
+            "version = 1\n[[step]]\nkeys = [\"shift+tab\"]\n",
+            2,
+            "\"shift+tab\" must be followed by a `wait`",
+        );
+
+        for (keys, next) in [
+            ("\"tab\", \"tab\", \"shift+tab\"", "wait = { focused = \"Save\" }"),
+            ("\"escape\", \"tab\"", "wait = { text = \"x\" }"),
+            ("\"tab\"", "sleep_ms = 500"),
+        ] {
+            let source = format!("version = 1\n[[step]]\nkeys = [{keys}]\n[[step]]\n{next}\n");
+            parse(&source).unwrap_or_else(|e| panic!("{keys}: {e}"));
+        }
+        // Rust moves focus at once, so a Rust-only scenario may send a key right after a tab.
+        parse("version = 1\napps = [\"rust\"]\n[[step]]\nkeys = [\"tab\", \"enter\"]\n").unwrap();
     }
 
     #[test]

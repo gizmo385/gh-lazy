@@ -888,6 +888,12 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
     section that had focus before (#314). Wait on the new section's focus border (`focused = "[3] Issues"`,
     `focused = "Details"`, `focused = "Command Log"`), or on its bindings in the footer (`text = "O Lookup Issue"`).
     A `sleep_ms` is for a move nothing shows, such as focus moving behind a maximized section; say why in a comment.
+    `tab` and `shift+tab` follow the same rule, except that a run of them may end the step together
+    (`["tab", "tab", "shift+tab"]`), but no other key may come after the first: Python moves focus only once the key
+    has bubbled back up to the app (Py bug B121), so a key sent in the same step reaches the widget that had focus
+    before. Wait on where focus lands, usually with `wait.focused` (`focused = "Review Status:"`,
+    `focused = "Save"`), before sending anything else. Scenarios with `apps = ["rust"]` are exempt from both rules:
+    Rust moves focus at once.
   - `type`: a string sent verbatim.
   - `paste`: a string. It's sent in bracketed-paste mode (`ESC[200~ … ESC[201~`) if the app has enabled it, else
     verbatim.

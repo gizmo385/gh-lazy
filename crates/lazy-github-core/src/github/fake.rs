@@ -24,7 +24,7 @@ const FAKE_GH_VERSION: &str = "2.89.0 (fake-gh)";
 /// A [`Github`] that returns canned results and records every call.
 ///
 /// By default `check_auth` succeeds, `gh_version` returns fake-gh's `2.89.0 (fake-gh)`, `list_repositories` returns no repositories, `unread_notification_count` returns
-/// 0, `list_notifications` returns an empty page, `mark_notification_read` and `mark_all_notifications_read` fail with a 422, `list_issues`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `pull_requests_for_commit`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, `collaborators` and `requested_reviewers` return none, `request_reviewers` and `update_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
+/// 0, `list_notifications` returns an empty page, `mark_notification_read` and `mark_all_notifications_read` fail with a 422, `list_issues`, `list_pull_requests`, `list_workflows` and `list_workflow_runs` return an empty page, `repo_readme` finds no README, `repository` finds no repository, `pull_request_diff` finds no diff, `pull_request` fails with a 404, `user` finds no user (a 404), `user_repos` returns none, `workflow_run_jobs` returns no jobs, `commit_status`, `check_runs`, `pull_requests_for_commit`, `issue_reactions`, `issue_comments`, `comment_reactions` and `pull_request_reviews` find none, `issue` fails with a 404, `job_logs` finds no logs (a 404), `create_issue`, `update_issue`, `create_issue_comment`, `reply_to_review_comment`, `create_review`, `add_issue_reaction`, `merge_pull_request`, `dispatch_workflow`, `rerun_workflow_run` and `rerun_failed_jobs` fail with a 422, `list_branches` and `list_branches_uncached` return none, `create_pull_request` fails with a 422, `workflow_run` fails with a 404, `collaborators` and `requested_reviewers` return none, `request_reviewers` and `update_pull_request` fail with a 422, and `current_user` fails until [`Self::with_user`] sets one. Clones share the canned results and the call log.
 #[derive(Debug, Clone, Default)]
 pub struct FakeGithub {
     state: Arc<Mutex<State>>,
@@ -51,6 +51,13 @@ pub enum GithubCall {
     MarkAllNotificationsRead,
     /// [`Github::list_issues`].
     ListIssues {
+        /// The repository listed.
+        repo: Repository,
+        /// The filters and page.
+        query: IssueListQuery,
+    },
+    /// [`Github::list_pull_requests`].
+    ListPullRequests {
         /// The repository listed.
         repo: Repository,
         /// The filters and page.
@@ -281,6 +288,8 @@ struct State {
     all_notifications_read: Option<Result<(), GhError>>,
     /// Keyed by `full_name` and page.
     issue_pages: HashMap<(String, u32), Result<Vec<IssueListItem>, GhError>>,
+    /// Keyed by `full_name` and page.
+    pull_request_pages: HashMap<(String, u32), Result<Vec<PartialPullRequest>, GhError>>,
     /// Keyed by `full_name`.
     readmes: HashMap<String, Result<Option<String>, GhError>>,
     /// Keyed by `full_name`.
@@ -429,6 +438,37 @@ impl FakeGithub {
     pub fn with_issue_page(self, full_name: &str, page_number: u32, page: Result<Vec<IssueListItem>, GhError>) -> Self {
         self.lock()
             .issue_pages
+            .insert((full_name.to_owned(), page_number), page);
+        self
+    }
+
+    /// [`Self::with_issue_page`] with `items`, and [`Self::with_pull_request_page`] with their pull requests, in
+    /// order: one page of a repository as the issues endpoint and `/pulls` list it, as the parity fixtures' generated
+    /// `/pulls` pages mirror the issues pages.
+    #[must_use]
+    pub fn with_list_page(self, full_name: &str, page_number: u32, items: Vec<IssueListItem>) -> Self {
+        let pull_requests = items
+            .iter()
+            .filter_map(|item| match item {
+                IssueListItem::PullRequest(pull_request) => Some(pull_request.clone()),
+                IssueListItem::Issue(_) => None,
+            })
+            .collect();
+        self.with_issue_page(full_name, page_number, Ok(items))
+            .with_pull_request_page(full_name, page_number, Ok(pull_requests))
+    }
+
+    /// `list_pull_requests` returns `page` for page `page_number` of the repository named `full_name`, whatever the
+    /// filters. Pages not set are empty.
+    #[must_use]
+    pub fn with_pull_request_page(
+        self,
+        full_name: &str,
+        page_number: u32,
+        page: Result<Vec<PartialPullRequest>, GhError>,
+    ) -> Self {
+        self.lock()
+            .pull_request_pages
             .insert((full_name.to_owned(), page_number), page);
         self
     }
@@ -903,6 +943,24 @@ impl Github for FakeGithub {
             query,
         };
         self.respond(call, |state| match state.issue_pages.get(&key) {
+            Some(Ok(items)) => Ok(items.clone()),
+            Some(Err(error)) => Err(duplicate(error)),
+            None => Ok(Vec::new()),
+        })
+        .await
+    }
+
+    async fn list_pull_requests(
+        &self,
+        repo: &Repository,
+        query: IssueListQuery,
+    ) -> Result<Vec<PartialPullRequest>, GhError> {
+        let key = (repo.full_name.clone(), query.page);
+        let call = GithubCall::ListPullRequests {
+            repo: repo.clone(),
+            query,
+        };
+        self.respond(call, |state| match state.pull_request_pages.get(&key) {
             Some(Ok(items)) => Ok(items.clone()),
             Some(Err(error)) => Err(duplicate(error)),
             None => Ok(Vec::new()),
@@ -1688,6 +1746,55 @@ mod tests {
                     query: first
                 },
                 GithubCall::ListIssues {
+                    repo: repo("a"),
+                    query: second
+                },
+            ]
+        );
+        assert_eq!(github.calls().len(), 4);
+    }
+
+    #[tokio::test]
+    async fn pull_request_pages_by_repo_and_page() {
+        use crate::config::{IssueOwnerFilter, IssueStateFilter};
+
+        let pull_request = |number| match issue_item(number) {
+            IssueListItem::Issue(issue) => PartialPullRequest { issue, draft: false },
+            IssueListItem::PullRequest(pull_request) => pull_request,
+        };
+        let github = FakeGithub::new()
+            .with_pull_request_page("octocat/a", 1, Ok(vec![pull_request(2), pull_request(1)]))
+            .with_pull_request_page(
+                "octocat/a",
+                2,
+                Err(GhError::Http {
+                    status: 422,
+                    message: "Unprocessable Entity".into(),
+                    body: Vec::new(),
+                    headers: Vec::new(),
+                }),
+            );
+        let first = IssueListQuery::first_page(IssueStateFilter::Closed, IssueOwnerFilter::Mine);
+        let second = IssueListQuery { page: 2, ..first };
+
+        let page = github.list_pull_requests(&repo("a"), first).await.unwrap();
+        assert_eq!(page, [pull_request(2), pull_request(1)]);
+        assert!(matches!(
+            github.list_pull_requests(&repo("a"), second).await,
+            Err(GhError::Http { status: 422, .. })
+        ));
+        // Unset pages and repositories are empty, and the issues pages are separate.
+        assert!(github.list_pull_requests(&repo("b"), first).await.unwrap().is_empty());
+        assert!(github.list_issues(&repo("a"), first).await.unwrap().is_empty());
+
+        assert_eq!(
+            github.calls()[..2],
+            [
+                GithubCall::ListPullRequests {
+                    repo: repo("a"),
+                    query: first
+                },
+                GithubCall::ListPullRequests {
                     repo: repo("a"),
                     query: second
                 },

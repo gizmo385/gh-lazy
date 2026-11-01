@@ -205,34 +205,7 @@ mod tests {
         draft_path(Path::new("cache"), "o/r")
     }
 
-    /// What `f` logs at `DEBUG` and above, one trimmed line per event as `LEVEL message`, and its result.
-    fn logs<R>(f: impl FnOnce() -> R) -> (R, String) {
-        #[derive(Clone, Default)]
-        struct Capture(std::sync::Arc<std::sync::Mutex<Vec<u8>>>);
-        impl io::Write for Capture {
-            fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-                self.0.lock().unwrap().extend_from_slice(buf);
-                Ok(buf.len())
-            }
-            fn flush(&mut self) -> io::Result<()> {
-                Ok(())
-            }
-        }
-        crate::test_log::keep_callsites_interested();
-        let capture = Capture::default();
-        let writer = capture.clone();
-        let subscriber = tracing_subscriber::fmt()
-            .with_max_level(tracing::Level::DEBUG)
-            .without_time()
-            .with_target(false)
-            .with_ansi(false)
-            .with_writer(move || writer.clone())
-            .finish();
-        let result = tracing::subscriber::with_default(subscriber, f);
-        let out = String::from_utf8(capture.0.lock().unwrap().clone()).unwrap();
-        let lines: Vec<&str> = out.lines().map(str::trim).collect();
-        (result, lines.join("\n"))
-    }
+    use crate::test_log::logs;
 
     #[test]
     fn drafts_are_named_per_repo_in_their_own_folder() {

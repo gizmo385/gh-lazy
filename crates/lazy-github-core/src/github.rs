@@ -23,6 +23,7 @@ use crate::models::{
 
 #[cfg(any(test, feature = "test-util"))]
 mod fake;
+pub mod search;
 
 #[cfg(any(test, feature = "test-util"))]
 pub use fake::{FakeGithub, GithubCall};
@@ -100,6 +101,22 @@ pub trait Github: Clone + Send + Sync + 'static {
         repo: &Repository,
         query: IssueListQuery,
     ) -> impl Future<Output = Result<Vec<IssueListItem>, GhError>> + Send;
+
+    /// One page of `repo`'s pull requests matching `query` (from `config.pull_requests`), newest first, each carrying
+    /// `repo`. Cached for `cache.default_ttl`.
+    ///
+    /// [`IssueOwnerFilter::All`] lists `GET /repos/{owner}/{repo}/pulls`, where a 404 (a repo with pull requests
+    /// turned off) is an empty page. [`IssueOwnerFilter::Mine`] searches `author:@me`
+    /// ([`search::pull_request_search_q`]) and needs no [`Github::current_user`]; a search result without `draft`
+    /// is dropped.
+    ///
+    /// Fails on any other HTTP error status (a search page past [`search::SEARCH_RESULT_CAP`] is a 422), or with
+    /// [`GhError::Decode`] when the body or any pull request doesn't decode.
+    fn list_pull_requests(
+        &self,
+        repo: &Repository,
+        query: IssueListQuery,
+    ) -> impl Future<Output = Result<Vec<PartialPullRequest>, GhError>> + Send;
 
     /// The README of `full_name` as raw markdown, verbatim, or `None` when the repo has none (404).
     ///
@@ -635,7 +652,7 @@ impl RepoListQuery {
     }
 }
 
-/// The parameters of [`Github::list_issues`]: the filters and which page.
+/// The parameters of [`Github::list_issues`] and [`Github::list_pull_requests`]: the filters and which page.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IssueListQuery {
     /// Which items to list, by state.
@@ -995,6 +1012,31 @@ impl GhCli {
         request
     }
 
+    /// One page of `repo`'s pull requests: `GET /repos/{owner}/{repo}/pulls` for [`IssueOwnerFilter::All`], or
+    /// [`Self::search_issues_request`] for the logged-in user's for [`IssueOwnerFilter::Mine`]. Both newest first and
+    /// cached for the default TTL, as the issues list is.
+    fn list_pull_requests_request(&self, repo: &Repository, query: IssueListQuery) -> GhRequest {
+        match query.owner {
+            IssueOwnerFilter::All => {
+                let mut request = GhRequest::get(format!("/repos/{}/{}/pulls", repo.owner.login, repo.name));
+                // `created` and `desc` are GitHub's defaults, sent so the order doesn't hang on them.
+                request.query = [
+                    ("state", query.state.as_str().to_owned()),
+                    ("sort", "created".to_owned()),
+                    ("direction", "desc".to_owned()),
+                    ("page", query.page.to_string()),
+                    ("per_page", query.per_page.to_string()),
+                ]
+                .into_iter()
+                .map(|(key, value)| (key.to_owned(), value))
+                .collect();
+                request.cache = Some(self.ttls().default);
+                request
+            }
+            IssueOwnerFilter::Mine => self.search_issues_request(&pull_request_search_query(repo, query)),
+        }
+    }
+
     /// `GET /repos/{full_name}/readme` as raw markdown, cached for the default TTL as Python does.
     fn repo_readme_request(&self, full_name: &str) -> GhRequest {
         let mut request = GhRequest::get(format!("/repos/{full_name}/readme"));
@@ -1172,7 +1214,7 @@ impl GhCli {
             format!("/repos/{}/{}/issues", repo.owner.login, repo.name),
         );
         request.body = Some(serde_json::to_value(issue)?);
-        request.stales = vec![list_scope(repo)];
+        request.stales = list_scopes(repo);
         Ok(request)
     }
 
@@ -1243,7 +1285,7 @@ impl GhCli {
     fn create_pull_request_request(repo: &Repository, pr: &NewPullRequest) -> Result<GhRequest, GhError> {
         let mut request = GhRequest::new(Method::Post, format!("/repos/{}/{}/pulls", repo.owner.login, repo.name));
         request.body = Some(serde_json::to_value(pr)?);
-        request.stales = vec![list_scope(repo)];
+        request.stales = list_scopes(repo);
         Ok(request)
     }
 
@@ -1378,16 +1420,23 @@ fn item_scopes(repo: &Repository, number: u64) -> Vec<CacheScope> {
     ]
 }
 
-/// [`item_scopes`] and [`list_scope`]: a write that changes what the list shows of the item (title, state).
+/// [`item_scopes`] and [`list_scopes`]: a write that changes what the lists show of the item (title, state).
 fn item_and_list_scopes(repo: &Repository, number: u64) -> Vec<CacheScope> {
     let mut scopes = item_scopes(repo, number);
-    scopes.push(list_scope(repo));
+    scopes.extend(list_scopes(repo));
     scopes
 }
 
-/// The shared issue and pull request list of `repo`, every page and filter of it.
-fn list_scope(repo: &Repository) -> CacheScope {
-    CacheScope::Path(format!("/repos/{}/{}/issues", repo.owner.login, repo.name))
+/// Every list an issue or pull request of `repo` shows in, every page and filter of each: the issues endpoint's,
+/// the pull requests endpoint's, and search's (the PR table's `mine` filter, #384). A search may be for any repo, so
+/// all of them go.
+fn list_scopes(repo: &Repository) -> Vec<CacheScope> {
+    let base = format!("/repos/{}/{}", repo.owner.login, repo.name);
+    vec![
+        CacheScope::Path(format!("{base}/issues")),
+        CacheScope::Path(format!("{base}/pulls")),
+        CacheScope::Path("/search/issues".to_owned()),
+    ]
 }
 
 /// The number of items in a JSON array body, without decoding the items.
@@ -1414,13 +1463,56 @@ fn issue_list_item(response: &GhResponse, repo: &Repository) -> Result<IssueList
     Ok(IssueListItem::from_api_item(response.json()?, repo)?)
 }
 
-/// The pull requests of a commits-endpoint page, each tagged with `repo`. One bad item fails the page.
+/// The pull requests of a commits-endpoint or `/pulls` page, each tagged with `repo`. One bad item fails the page.
 fn commit_pull_requests(response: &GhResponse, repo: &Repository) -> Result<Vec<PartialPullRequest>, GhError> {
     response
         .json::<Vec<serde_json::Value>>()?
         .into_iter()
         .map(|item| Ok(PartialPullRequest::from_api(item, repo)?))
         .collect()
+}
+
+/// The search for [`Github::list_pull_requests`]' [`IssueOwnerFilter::Mine`] page: the logged-in user's pull
+/// requests in `repo` with `query`'s state, newest first.
+fn pull_request_search_query(repo: &Repository, query: IssueListQuery) -> search::SearchIssuesQuery {
+    search::SearchIssuesQuery {
+        q: search::pull_request_search_q(repo, query.state),
+        sort: Some("created"),
+        order: Some("desc"),
+        page: query.page,
+        per_page: query.per_page,
+    }
+}
+
+/// A `/pulls` page's pull requests, each tagged with `repo`. A 404 is an empty page: the repo has pull requests
+/// turned off. One bad item fails the page.
+fn pulls_page(response: Result<GhResponse, GhError>, repo: &Repository) -> Result<Vec<PartialPullRequest>, GhError> {
+    match response {
+        Ok(response) => commit_pull_requests(&response, repo),
+        Err(GhError::Http { status: 404, .. }) => {
+            tracing::debug!(repo = repo.full_name, "No pull requests: /pulls answered 404");
+            Ok(Vec::new())
+        }
+        Err(error) => Err(error),
+    }
+}
+
+/// The pull requests among a search page's items, each tagged with `repo`. An item without `draft` isn't one (the
+/// issues endpoint's rule) and is dropped; one that doesn't decode fails the page.
+fn searched_pull_requests(
+    page: search::SearchIssuesPage,
+    repo: &Repository,
+) -> Result<Vec<PartialPullRequest>, GhError> {
+    let mut pull_requests = Vec::with_capacity(page.items.len());
+    for item in page.items {
+        match IssueListItem::from_api_item(item, repo)? {
+            IssueListItem::PullRequest(pull_request) => pull_requests.push(pull_request),
+            IssueListItem::Issue(issue) => {
+                tracing::debug!(number = issue.number, "Dropping a search result without `draft`");
+            }
+        }
+    }
+    Ok(pull_requests)
 }
 
 impl Github for GhCli {
@@ -1491,6 +1583,22 @@ impl Github for GhCli {
         let request = self.list_issues_request(repo, query, creator.as_deref());
         let response = self.runner().request(request).await?;
         issue_list_items(&response, repo)
+    }
+
+    async fn list_pull_requests(
+        &self,
+        repo: &Repository,
+        query: IssueListQuery,
+    ) -> Result<Vec<PartialPullRequest>, GhError> {
+        // One page per call, as for `list_issues`.
+        let response = self
+            .runner()
+            .request(self.list_pull_requests_request(repo, query))
+            .await;
+        match query.owner {
+            IssueOwnerFilter::All => pulls_page(response, repo),
+            IssueOwnerFilter::Mine => searched_pull_requests(search::search_issues_page(&response?)?, repo),
+        }
     }
 
     async fn repo_readme(&self, full_name: &str) -> Result<Option<String>, GhError> {
@@ -2442,6 +2550,205 @@ mod tests {
                 "/repos/parity-bot/lazy-fixture/issues?state=closed&page=1&per_page=30"
             ]
         );
+    }
+
+    fn list_pull_requests_argv(config: &Config, query: IssueListQuery) -> Vec<String> {
+        let gh = GhCli::new(GhCliOptions::from(config));
+        let request = gh.list_pull_requests_request(&lazy_fixture(), query);
+        strings(request.argv(gh.runner().hostname(), false))
+    }
+
+    /// The endpoint (and query) `argv` ends with, after the cache flag and the `Accept` header.
+    fn endpoint(argv: &[String]) -> &str {
+        argv.last().unwrap()
+    }
+
+    #[test]
+    fn list_pull_requests_argv_for_all_lists_pulls_newest_first() {
+        let defaults = Config::default();
+        let first = |state| IssueListQuery::first_page(state, IssueOwnerFilter::All);
+        assert_eq!(
+            list_pull_requests_argv(&defaults, first(IssueStateFilter::All)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--cache",
+                "600s",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/repos/parity-bot/lazy-fixture/pulls?state=all&sort=created&direction=desc&page=1&per_page=30"
+            ]
+        );
+        assert_eq!(
+            endpoint(&list_pull_requests_argv(&defaults, first(IssueStateFilter::Open))),
+            "/repos/parity-bot/lazy-fixture/pulls?state=open&sort=created&direction=desc&page=1&per_page=30"
+        );
+        let page_3 = IssueListQuery {
+            page: 3,
+            ..first(IssueStateFilter::Closed)
+        };
+        assert_eq!(
+            endpoint(&list_pull_requests_argv(&defaults, page_3)),
+            "/repos/parity-bot/lazy-fixture/pulls?state=closed&sort=created&direction=desc&page=3&per_page=30"
+        );
+    }
+
+    #[test]
+    fn list_pull_requests_argv_for_enterprise_without_cache() {
+        let mut config = Config::default();
+        config.api.base_url = "https://ghe.example.com/api/v3".into();
+        config.cache.default_ttl = 0;
+        // Only the default TTL applies, as for the issues list.
+        config.cache.list_issues_ttl = 900;
+        for owner in [IssueOwnerFilter::All, IssueOwnerFilter::Mine] {
+            let argv = list_pull_requests_argv(&config, IssueListQuery::first_page(IssueStateFilter::Open, owner));
+            assert_eq!(
+                argv[..7],
+                ["api", "-i", "-X", "GET", "--hostname", "ghe.example.com", "-H"]
+            );
+            assert!(!argv.iter().any(|arg| arg == "--cache"), "{argv:?}");
+        }
+        let mut config = Config::default();
+        config.cache.default_ttl = 45;
+        let argv = list_pull_requests_argv(
+            &config,
+            IssueListQuery::first_page(IssueStateFilter::All, IssueOwnerFilter::Mine),
+        );
+        assert_eq!(argv[4..6], ["--cache", "45s"]);
+    }
+
+    #[test]
+    fn list_pull_requests_argv_for_mine_searches_author_me() {
+        let defaults = Config::default();
+        let mine = |state| IssueListQuery::first_page(state, IssueOwnerFilter::Mine);
+        assert_eq!(
+            list_pull_requests_argv(&defaults, mine(IssueStateFilter::All)),
+            [
+                "api",
+                "-i",
+                "-X",
+                "GET",
+                "--cache",
+                "600s",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Flazy-fixture+author%3A%40me&sort=created&order=desc&page=1&per_page=30"
+            ]
+        );
+        assert_eq!(
+            endpoint(&list_pull_requests_argv(&defaults, mine(IssueStateFilter::Open))),
+            "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Flazy-fixture+author%3A%40me+is%3Aopen&sort=created&order=desc&page=1&per_page=30"
+        );
+        let page_2 = IssueListQuery {
+            page: 2,
+            ..mine(IssueStateFilter::Closed)
+        };
+        assert_eq!(
+            endpoint(&list_pull_requests_argv(&defaults, page_2)),
+            "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Flazy-fixture+author%3A%40me+is%3Aclosed&sort=created&order=desc&page=2&per_page=30"
+        );
+    }
+
+    /// A `/pulls` item: the pull request's own `id`, the issue fields and `draft`, without `closed_by`.
+    fn pulls_item(number: u64, draft: bool) -> serde_json::Value {
+        serde_json::json!({
+            "id": 5_384_000 + number,
+            "number": number,
+            "locked": false,
+            "state": "open",
+            "title": format!("Pull request {number}"),
+            "body": null,
+            "user": {"login": "parity-bot", "id": 1, "html_url": "https://github.com/parity-bot"},
+            "created_at": "2026-01-02T20:00:00Z",
+            "updated_at": "2026-01-02T20:00:00Z",
+            "closed_at": null,
+            "assignee": null,
+            "assignees": [],
+            "comments_url": format!("https://api.github.com/repos/parity-bot/lazy-fixture/issues/{number}/comments"),
+            "html_url": format!("https://github.com/parity-bot/lazy-fixture/pull/{number}"),
+            "draft": draft,
+        })
+    }
+
+    #[test]
+    fn a_pulls_page_decodes_with_the_pull_requests_ids() {
+        let repo = lazy_fixture();
+        let body = serde_json::json!([pulls_item(44, false), pulls_item(43, true)]).to_string();
+        let prs = pulls_page(json_response("200 OK", &body), &repo).unwrap();
+        let numbers: Vec<(u64, u64, bool)> = prs.iter().map(|pr| (pr.issue.number, pr.issue.id, pr.draft)).collect();
+        assert_eq!(numbers, [(44, 5_384_044, false), (43, 5_384_043, true)]);
+        assert!(prs.iter().all(|pr| pr.issue.repo == repo));
+        assert_eq!(prs[0].issue.closed_by, None);
+    }
+
+    #[test]
+    fn a_pulls_404_is_an_empty_page_and_other_errors_fail() {
+        let repo = lazy_fixture();
+        assert_eq!(
+            pulls_page(json_response("404 Not Found", r#"{"message":"Not Found"}"#), &repo).unwrap(),
+            []
+        );
+        assert!(matches!(
+            pulls_page(json_response("500 Internal Server Error", "{}"), &repo),
+            Err(GhError::Http { status: 500, .. })
+        ));
+        assert!(matches!(
+            pulls_page(json_response("200 OK", r#"[{"number": 1}]"#), &repo),
+            Err(GhError::Decode(_))
+        ));
+        assert!(matches!(
+            pulls_page(Err(GhError::NotInstalled), &repo),
+            Err(GhError::NotInstalled)
+        ));
+    }
+
+    /// A search page holding `items`.
+    fn search_page(items: &[serde_json::Value]) -> search::SearchIssuesPage {
+        let body = serde_json::json!({"total_count": items.len(), "incomplete_results": false, "items": items});
+        search::search_issues_page(&json_response("200 OK", &body.to_string()).unwrap()).unwrap()
+    }
+
+    #[test]
+    fn search_results_keep_their_pull_requests_and_drop_the_rest() {
+        let repo = lazy_fixture();
+        let mut issue = pulls_item(9, false);
+        issue.as_object_mut().unwrap().remove("draft");
+        let mut searched = pulls_item(8, true);
+        // Search items carry the issue's id and `pull_request`.
+        searched["id"] = 6_115_963_243_u64.into();
+        searched["pull_request"] = serde_json::json!({"merged_at": null});
+        let prs = searched_pull_requests(search_page(&[issue, searched]), &repo).unwrap();
+        assert_eq!(prs.len(), 1);
+        assert_eq!((prs[0].issue.number, prs[0].issue.id), (8, 6_115_963_243));
+        assert!(prs[0].draft);
+        assert_eq!(prs[0].issue.repo, repo);
+        // An item that doesn't decode fails the page.
+        assert!(matches!(
+            searched_pull_requests(search_page(&[serde_json::json!({"number": 1, "draft": false})]), &repo),
+            Err(GhError::Decode(_))
+        ));
+    }
+
+    #[test]
+    fn a_failed_search_is_an_error() {
+        let decode = |response: Result<GhResponse, GhError>| {
+            response
+                .and_then(|response| searched_pull_requests(search::search_issues_page(&response)?, &lazy_fixture()))
+        };
+        assert!(matches!(
+            decode(json_response(
+                "422 Unprocessable Entity",
+                r#"{"message":"Validation Failed"}"#
+            )),
+            Err(GhError::Http { status: 422, .. })
+        ));
+        assert!(matches!(
+            decode(json_response("404 Not Found", r#"{"message":"Not Found"}"#)),
+            Err(GhError::Http { status: 404, .. })
+        ));
+        assert!(matches!(decode(json_response("200 OK", "[]")), Err(GhError::Decode(_))));
     }
 
     #[test]
@@ -4377,9 +4684,13 @@ mod tests {
         ]
     }
 
-    /// The issue and pull request list of `parity-bot/pr-details`.
-    fn list() -> CacheScope {
-        CacheScope::Path("/repos/parity-bot/pr-details/issues".into())
+    /// The issue and pull request lists of `parity-bot/pr-details`, and every search.
+    fn list() -> Vec<CacheScope> {
+        vec![
+            CacheScope::Path("/repos/parity-bot/pr-details/issues".into()),
+            CacheScope::Path("/repos/parity-bot/pr-details/pulls".into()),
+            CacheScope::Path("/search/issues".into()),
+        ]
     }
 
     #[test]
@@ -4389,7 +4700,7 @@ mod tests {
             body: String::new(),
         };
         let request = GhCli::create_issue_request(&pr_details_repo(), &issue).unwrap();
-        assert_eq!(request.stales, [list()]);
+        assert_eq!(request.stales, list());
     }
 
     #[test]
@@ -4400,7 +4711,7 @@ mod tests {
             state: Some(IssueState::Closed),
         };
         let request = GhCli::update_issue_request(&pr_details_repo(), 12, &update).unwrap();
-        assert_eq!(request.stales, [item(12), vec![list()]].concat());
+        assert_eq!(request.stales, [item(12), list()].concat());
     }
 
     #[test]
@@ -4440,13 +4751,13 @@ mod tests {
             sha: "c0ffee".into(),
         };
         let request = GhCli::merge_pull_request_request(&pr_details_repo(), 5, &merge).unwrap();
-        assert_eq!(request.stales, [item(5), vec![list()]].concat());
+        assert_eq!(request.stales, [item(5), list()].concat());
     }
 
     #[test]
     fn create_pull_request_makes_the_list_stale() {
         let request = GhCli::create_pull_request_request(&pr_details_repo(), &new_pull_request("")).unwrap();
-        assert_eq!(request.stales, [list()]);
+        assert_eq!(request.stales, list());
     }
 
     #[test]
@@ -4457,7 +4768,7 @@ mod tests {
             base: "main".into(),
         };
         let request = GhCli::update_pull_request_request(&pr_details_repo(), 4, &update).unwrap();
-        assert_eq!(request.stales, [item(4), vec![list()]].concat());
+        assert_eq!(request.stales, [item(4), list()].concat());
     }
 
     #[test]
@@ -4489,6 +4800,14 @@ mod tests {
             gh.issue_request(&repo, 5),
             gh.pull_request_reviews_request(&repo, 5),
             gh.list_branches_request(&repo),
+            gh.list_pull_requests_request(
+                &repo,
+                IssueListQuery::first_page(IssueStateFilter::All, IssueOwnerFilter::All),
+            ),
+            gh.list_pull_requests_request(
+                &repo,
+                IssueListQuery::first_page(IssueStateFilter::Open, IssueOwnerFilter::Mine),
+            ),
         ] {
             assert!(request.stales.is_empty() && !request.refresh, "{}", request.path);
         }

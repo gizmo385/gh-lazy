@@ -728,6 +728,14 @@ mod tests {
             std::future::pending().await
         }
 
+        async fn list_pull_requests(
+            &self,
+            _repo: &lazy_github_core::models::Repository,
+            _query: lazy_github_core::github::IssueListQuery,
+        ) -> Result<Vec<lazy_github_core::models::PartialPullRequest>, lazy_github_core::gh::GhError> {
+            std::future::pending().await
+        }
+
         async fn repo_readme(&self, _full_name: &str) -> Result<Option<String>, lazy_github_core::gh::GhError> {
             std::future::pending().await
         }

@@ -89,8 +89,9 @@ fn many() -> Vec<PaletteCommand> {
         .collect()
 }
 
-/// LazyGithub's commands with notifications off, as the opening list ends with them.
-const APP_COMMANDS: [&str; 8] = [
+/// LazyGithub's commands with notifications off, as the opening list ends with them: Python's, then the Rust-only
+/// "Refresh from GitHub" (#407) and search (#394).
+const APP_COMMANDS: [&str; 9] = [
     "Toggle Command Log",
     "Toggle Workflows",
     "Toggle Issues",
@@ -99,6 +100,7 @@ const APP_COMMANDS: [&str; 8] = [
     "Debug Info",
     "Open Bug Report",
     "Refresh from GitHub",
+    "Search issues and pull requests",
 ];
 
 /// The opening list: `system` sorted by name, then [`APP_COMMANDS`] (Py bug B87's answer).
@@ -222,6 +224,7 @@ fn lazygithubs_commands_are_in_their_order_before_the_system_ones() {
             ("Debug Info", CommandSource::App),
             ("Open Bug Report", CommandSource::App),
             ("Refresh from GitHub", CommandSource::App),
+            ("Search issues and pull requests", CommandSource::App),
             ("Theme", CommandSource::System),
             ("Quit", CommandSource::System),
             ("Keys", CommandSource::System),
@@ -281,7 +284,7 @@ fn refresh_notifications_is_listed_only_while_notifications_are_on() {
     futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once");
     app.press(&["ctrl+p"]);
     // Last of Python's among LazyGithub's, after the system commands in the opening list, with "Change Settings",
-    // "Debug Info" and "Open Bug Report" right before, and the Rust-only "Refresh from GitHub" after.
+    // "Debug Info" and "Open Bug Report" right before, and the Rust-only "Refresh from GitHub" and search after.
     assert!(
         hits(&app).ends_with(&[
             "Toggle Pull Requests",
@@ -289,7 +292,8 @@ fn refresh_notifications_is_listed_only_while_notifications_are_on() {
             "Debug Info",
             "Open Bug Report",
             "Refresh notifications",
-            "Refresh from GitHub"
+            "Refresh from GitHub",
+            "Search issues and pull requests"
         ]),
         "{:?}",
         hits(&app)
@@ -502,10 +506,10 @@ fn up_and_down_wrap() {
     let mut app = opened();
     app.press(&["down"]);
     assert_eq!(highlighted(&app), Some("Maximize"));
-    app.press(&["down"; 12]);
+    app.press(&["down"; 13]);
     assert_eq!(highlighted(&app), Some("Keys"));
     app.press(&["up"]);
-    assert_eq!(highlighted(&app), Some("Refresh from GitHub"));
+    assert_eq!(highlighted(&app), Some("Search issues and pull requests"));
 }
 
 #[test]
@@ -654,7 +658,7 @@ fn a_click_on_a_hit_runs_it() {
 #[test]
 fn a_click_outside_the_band_closes_the_palette() {
     // The dimmed screen below the band, the status row above it, and the footer row.
-    for (col, row) in [(40, 36), (5, 1), (3, 47)] {
+    for (col, row) in [(40, 38), (5, 1), (3, 47)] {
         let mut app = opened();
         app.render(160, 48);
         app.click(col, row);

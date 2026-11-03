@@ -13,7 +13,7 @@ use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 
-use super::{Dialog, DialogAction, FieldKind, FocusMove, ModalKind, dialog_bindings};
+use super::{Dialog, DialogAction, FieldKind, FocusMove, ModalKind, SearchOrigin, dialog_bindings};
 use crate::action::Action;
 use crate::component::{ChainLink, Component, Cx, RenderCx};
 use crate::components::command_log::{WHEEL_ROWS, Wheel};
@@ -23,7 +23,7 @@ use crate::components::text_input::{INPUT_BINDINGS, InputOutcome, TextInput};
 use crate::effect::{Effect, TimerId};
 use crate::fuzzy::fuzzy_match;
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::screens::main::Toggle;
+use crate::screens::main::{MainAction, Toggle};
 use crate::theme::{Paint, TextStyle, Theme, ThemeColor};
 
 /// The palette's screen bindings, in Textual's merged order: the modal screen's, then `CommandPalette.BINDINGS`.
@@ -101,6 +101,8 @@ pub enum PaletteRun {
     ChangeSettings,
     /// "Screenshot": save the screen, as it looks once the palette has closed, as an SVG.
     Screenshot,
+    /// "Search issues and pull requests": open the Search modal (#394).
+    OpenSearch,
 }
 
 impl PaletteRun {
@@ -120,6 +122,7 @@ impl PaletteRun {
             PaletteRun::SetTheme(name) => Action::SetTheme(name),
             PaletteRun::ChangeSettings => Action::OpenSettings,
             PaletteRun::Screenshot => Action::Screenshot,
+            PaletteRun::OpenSearch => Action::Main(MainAction::OpenSearch(SearchOrigin::Palette)),
         }
     }
 }

@@ -55,6 +55,7 @@ use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::modal::{
     EditIssueDialog, LookupDialog, NewIssueDialog, NotificationsDialog, PasteLinkDialog, PostedComment, RepoLookup,
+    SearchDialog, SearchOrigin, SearchOutcome, SearchSession,
 };
 use crate::options::AppOptions;
 use crate::theme::Theme;
@@ -121,12 +122,19 @@ impl SectionId {
                 BindingId::RepositoriesLookup,
                 BindingId::UserViewProfile,
             ],
+            // `search.open` is Rust-only (decision search-issues-and-prs), after the lookup.
             SectionId::PullRequests => &[
                 BindingId::PullRequestLookup,
+                BindingId::SearchOpen,
                 BindingId::PullRequestEdit,
                 BindingId::UserViewProfile,
             ],
-            SectionId::Issues => &[BindingId::IssueLookup, BindingId::IssueEdit, BindingId::UserViewProfile],
+            SectionId::Issues => &[
+                BindingId::IssueLookup,
+                BindingId::SearchOpen,
+                BindingId::IssueEdit,
+                BindingId::UserViewProfile,
+            ],
             SectionId::Workflows => &[BindingId::WorkflowsTrigger],
         }
     }
@@ -344,6 +352,8 @@ pub struct MainScreen {
     follows: Vec<(RequestId, Arc<str>)>,
     /// "Refresh from GitHub"'s fetch of the subject the details show, which any newer selection replaces.
     details_refresh: Option<refresh::DetailsRefresh>,
+    /// The Search modal's session, kept between opens (#394). `None` until it first closes, and while it's open.
+    search: Option<SearchSession>,
 }
 
 /// The toasts after a link opens in the app: Python's `_open_link_subject`.
@@ -351,8 +361,9 @@ const OPENING_PULL_REQUEST_FOR_LINK: &str = "Opening pull request for link";
 const OPENING_ISSUE_FOR_LINK: &str = "Opening issue for link";
 const OPENING_REPOSITORY_FOR_LINK: &str = "Opening repository for link";
 
-/// The main screen's own actions.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// The main screen's own actions. Not `Clone`: [`MainAction::SearchClosed`] hands back the Search modal's session,
+/// results and all.
+#[derive(Debug)]
 pub enum MainAction {
     /// Scroll the details content (`textual.scroll.*` while it has focus).
     ScrollDetails(Scroll),
@@ -391,6 +402,11 @@ pub enum MainAction {
     /// Select a repo, then open a pull request or issue in it: the one path a chosen notification and a search hit
     /// open through (#405). A new selection.
     OpenInRepo(Box<OpenInRepo>),
+    /// Open the Search modal (`search.open` on the PR or Issues table, or the palette), restoring the last session.
+    OpenSearch(SearchOrigin),
+    /// The Search modal closed: its session is kept for the next open, and a hit chosen there opens in its repo
+    /// ([`MainAction::OpenInRepo`]).
+    SearchClosed(Box<SearchOutcome>),
     /// [`MainAction::OpenInRepo`]'s second half, once `repo` is selected: the item is fetched from it and shown.
     OpenRepoItem {
         /// The repo just selected.
@@ -519,6 +535,7 @@ impl MainScreen {
             preload: CommitPreload::default(),
             follows: Vec::new(),
             details_refresh: None,
+            search: None,
         }
     }
 
@@ -1482,6 +1499,12 @@ impl MainScreen {
             Owner::Section(SectionId::Issues) if id == BindingId::IssueLookup => {
                 Some(Action::Main(MainAction::LookupIssue))
             }
+            Owner::Section(SectionId::PullRequests) if id == BindingId::SearchOpen => {
+                Some(Action::Main(MainAction::OpenSearch(SearchOrigin::PullRequests)))
+            }
+            Owner::Section(SectionId::Issues) if id == BindingId::SearchOpen => {
+                Some(Action::Main(MainAction::OpenSearch(SearchOrigin::Issues)))
+            }
             Owner::Section(SectionId::Repos) if id == BindingId::UserViewProfile => {
                 Some(Action::Main(MainAction::ViewProfile(ProfileOrigin::Repos)))
             }
@@ -1781,6 +1804,8 @@ impl Component for MainScreen {
             MainAction::OpenNotifications => open_notifications(cx),
             MainAction::NotificationsClosed(chosen) => notifications_closed(chosen, cx),
             MainAction::OpenInRepo(request) => self.open_in_repo(*request, cx),
+            MainAction::OpenSearch(origin) => self.open_search_modal(origin, cx),
+            MainAction::SearchClosed(outcome) => self.search_closed(*outcome, cx),
             MainAction::OpenRepoItem { repo, item, origin } => self.open_repo_item(repo, item, origin, cx),
             MainAction::OpenPasteLink(text) => {
                 let dialog = text.map_or_else(PasteLinkDialog::new, |text| PasteLinkDialog::with_text(&text));
@@ -1893,6 +1918,29 @@ fn new_issue(cx: &mut Cx<'_>) {
         Some(repo) => cx.open_dialog(NewIssueDialog::new(repo.clone(), None), |issue| {
             issue.map_or(Action::Consumed, |issue| Action::Main(MainAction::IssueCreated(issue)))
         }),
+    }
+}
+
+impl MainScreen {
+    /// `MainAction::OpenSearch`: the modal over the last session, or a new one.
+    fn open_search_modal(&mut self, origin: SearchOrigin, cx: &mut Cx<'_>) {
+        let session = self.search.take().unwrap_or_else(|| SearchSession::new(cx.options()));
+        let dialog = SearchDialog::new(session, origin, cx);
+        cx.open_dialog(dialog, |outcome| {
+            Action::Main(MainAction::SearchClosed(Box::new(outcome)))
+        });
+    }
+
+    /// `MainAction::SearchClosed`: the session is kept; a chosen hit selects its repo, even the selected one, and
+    /// opens there (#386 D5 b, through #405's path).
+    fn search_closed(&mut self, outcome: SearchOutcome, cx: &mut Cx<'_>) {
+        let SearchOutcome { session, hit } = outcome;
+        self.search = Some(session);
+        if let Some(hit) = hit {
+            cx.dispatch(Action::Main(MainAction::OpenInRepo(Box::new(OpenInRepo::search_hit(
+                &hit,
+            )))));
+        }
     }
 }
 

@@ -7,6 +7,7 @@
 //! selection, so a newer selection cancels whichever stage is in flight and drops its late answer.
 
 use lazy_github_core::gh::GhError;
+use lazy_github_core::github::{HitKind, SearchHit};
 use lazy_github_core::models::{FullPullRequest, IssueListItem, Notification, RepoName, Repository, SubjectNumber};
 
 use super::{MainAction, MainScreen, pull_request_failed};
@@ -44,6 +45,19 @@ impl OpenInRepo {
             repo: RepoRef::Known(Box::new(notification.repository.clone())),
             item,
             origin: OpenOrigin::Notification,
+        }
+    }
+
+    /// A hit chosen in the Search modal: its repo by name, and its pull request or issue.
+    pub fn search_hit(hit: &SearchHit) -> Self {
+        let item = match hit.kind {
+            HitKind::PullRequest { .. } => RepoItem::PullRequest(hit.number),
+            HitKind::Issue => RepoItem::Issue(hit.number),
+        };
+        Self {
+            repo: RepoRef::Named(hit.repo.clone()),
+            item,
+            origin: OpenOrigin::SearchHit,
         }
     }
 }

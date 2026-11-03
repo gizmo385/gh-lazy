@@ -31,6 +31,8 @@ const RUST_ONLY_IDS: &[&str] = &[
     "diff.first_line",
     "diff.last_line",
     "main.refresh",
+    // Decision search-issues-and-prs.
+    "search.open",
 ];
 
 fn python_bindings() -> Vec<Value> {

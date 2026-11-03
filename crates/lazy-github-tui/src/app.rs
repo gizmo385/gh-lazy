@@ -1109,6 +1109,12 @@ impl App {
             "Fetch everything on screen again, skipping the cache",
             PaletteRun::Refresh,
         ));
+        // Rust-only (#394, decision search-issues-and-prs), last.
+        commands.push(command(
+            "Search issues and pull requests",
+            "Search GitHub's issues and pull requests with its query syntax",
+            PaletteRun::OpenSearch,
+        ));
         commands
     }
 

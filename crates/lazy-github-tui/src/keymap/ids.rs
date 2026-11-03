@@ -225,6 +225,10 @@ registry! {
         .hidden()
         .system()
         .tooltip("Fetch everything on screen again, skipping the cache");
+    // Rust-only, after Python's ids (decision search-issues-and-prs): the Search modal from the PR and Issues tables.
+    // Rebindable like Python's ids, though Python has no search and ignores an override of it.
+    SearchOpen("search.open", "s", "open_search", "Search GitHub")
+        .tooltip("Search GitHub's issues and pull requests with its query syntax");
 
     // Rust-only editor keys, fixed under internal ids (decision settings-key-bindings-list, D3): the Settings Key
     // Bindings list (#381).

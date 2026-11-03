@@ -1,6 +1,5 @@
 ---
 source: crates/lazy-github-tui/src/modal/pull_request/tests.rs
-assertion_line: 950
 expression: "app.screen(48, 16)"
 ---
 ┌──────────────────────────────────────────────┐
@@ -18,4 +17,4 @@ expression: "app.screen(48, 16)"
 ┌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
 │     ▌           ││reactions, comments and    │
 └─────────────────┘└───────────────────────────┘
- / Search  O Lookup Pull Request  E Edit PR  u V
+ / Search  O Lookup Pull Request  s Search GitHu

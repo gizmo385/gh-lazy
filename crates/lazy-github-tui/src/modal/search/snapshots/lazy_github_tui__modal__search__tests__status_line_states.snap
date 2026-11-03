@@ -1,0 +1,11 @@
+---
+source: crates/lazy-github-tui/src/modal/search/tests.rs
+expression: "lines.join(\"\\n\")"
+---
+Type a query and press enter
+Searching…
+3 results
+No issues or pull requests match
+The listed users and repositories cannot be searched.
+Search failed: GitHub API request failed (HTTP 500): Server Error
+Type a query to search

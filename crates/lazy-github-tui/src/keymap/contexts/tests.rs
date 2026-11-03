@@ -69,9 +69,9 @@ fn quit_on_j_meets_the_table_and_diff_cursors() {
 #[test]
 fn a_table_key_on_tab_shadows_the_built_in_focus_next() {
     let found = conflicts(&keymap(&[("common.table.cursor_down", "tab")]));
-    // Every table: the four sections', the profile's and the notifications'. The built-in has no conflict of its
-    // own.
-    let contexts = [&TABLES[..], &["User profile", "Notifications"]].concat();
+    // Every table: the four sections', the profile's, the notifications' and the search results'. The built-in has
+    // no conflict of its own.
+    let contexts = [&TABLES[..], &["User profile", "Notifications", "Search"]].concat();
     assert_eq!(
         of(&found, BindingId::TableCursorDown),
         [(BindingId::TextualFocusNext, ConflictKind::Shadows, "tab", contexts)]
@@ -82,7 +82,7 @@ fn a_table_key_on_tab_shadows_the_built_in_focus_next() {
 #[test]
 fn ctrl_q_away_from_the_app_link_is_taken_by_the_priority_quit() {
     let found = conflicts(&keymap(&[("common.table.cursor_down", "ctrl+q")]));
-    let contexts = [&TABLES[..], &["User profile", "Notifications"]].concat();
+    let contexts = [&TABLES[..], &["User profile", "Notifications", "Search"]].concat();
     assert_eq!(
         of(&found, BindingId::TableCursorDown),
         [(BindingId::TextualQuit, ConflictKind::Priority, "^q", contexts)]

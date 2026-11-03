@@ -36,7 +36,8 @@ fn notifications_on() -> Config {
 const TAIL: &str = "^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  \
                     ? Keybindings";
 
-/// Python's footers from #107, with B14's spelling fixed.
+/// Python's footers from #107, with B14's spelling fixed, and the Rust-only `s Search GitHub` on the PR and Issues
+/// tables (decision search-issues-and-prs).
 #[test]
 fn footers_match_python_for_each_focus() {
     let new = "I New Issue  P New PR";
@@ -47,11 +48,11 @@ fn footers_match_python_for_each_focus() {
         ),
         (
             &["2"][..],
-            format!(" / Search  O Lookup Pull Request  E Edit PR  u View User  {new}  {TAIL}"),
+            format!(" / Search  O Lookup Pull Request  s Search GitHub  E Edit PR  u View User  {new}  {TAIL}"),
         ),
         (
             &["3"][..],
-            format!(" / Search  O Lookup Issue  E Edit Issue  u View User  {new}  {TAIL}"),
+            format!(" / Search  O Lookup Issue  s Search GitHub  E Edit Issue  u View User  {new}  {TAIL}"),
         ),
         (&["4"][..], format!(" / Search  T Trigger Workflow  {new}  {TAIL}")),
         (&["5"][..], format!(" {TAIL}")),

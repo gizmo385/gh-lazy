@@ -23,6 +23,7 @@ mod new_issue;
 mod notifications;
 mod paste_link;
 mod pull_request;
+mod search;
 mod settings;
 mod single_input;
 mod stack;
@@ -69,6 +70,7 @@ pub use pull_request::{
     CreatePrefill, PullRequestAction, PullRequestDialog, PullRequestForm, ReviewersField, ReviewersFocus,
     ReviewersOutcome, removing_toast,
 };
+pub use search::{ScopeChoice, SearchAction, SearchDialog, SearchOrigin, SearchOutcome, SearchSession};
 pub use settings::{SettingsAction, SettingsDialog, SettingsOutcome, key_conflicts_toast};
 pub use stack::ModalEntry;
 pub use trigger_workflow::{TriggerWorkflowAction, TriggerWorkflowDialog};
@@ -86,6 +88,7 @@ pub(crate) use new_issue::NEW_ISSUE_BINDINGS;
 pub(crate) use notifications::{CONTAINER_BINDINGS, NOTIFICATIONS_BINDINGS, UNREAD_BINDINGS};
 pub(crate) use paste_link::PASTE_LINK_BINDINGS;
 pub(crate) use pull_request::PR_BINDINGS;
+pub(crate) use search::SEARCH_BINDINGS;
 pub(crate) use settings::{KEY_LIST_BINDINGS, SETTINGS_BINDINGS};
 pub(crate) use trigger_workflow::TRIGGER_BINDINGS;
 pub(crate) use user_profile::PROFILE_BINDINGS;
@@ -149,6 +152,8 @@ pub enum ModalKind {
     PullRequest,
     /// [`NotificationsDialog`]: the Unread and Read notification tabs.
     Notifications,
+    /// [`SearchDialog`]: "Search issues and pull requests".
+    Search,
     /// [`CommandPaletteDialog`]: the command palette.
     CommandPalette,
     /// [`SettingsDialog`]: "LazyGithub Settings".
@@ -264,6 +269,8 @@ pub enum DialogAction {
     PullRequest(PullRequestAction),
     /// [`NotificationsDialog`]'s.
     Notifications(NotificationsAction),
+    /// [`SearchDialog`]'s.
+    Search(SearchAction),
     /// [`CommandPaletteDialog`]'s.
     CommandPalette(CommandPaletteAction),
     /// [`SettingsDialog`]'s.
@@ -291,6 +298,7 @@ impl DialogAction {
             DialogAction::TriggerWorkflow(_) => ModalKind::TriggerWorkflow,
             DialogAction::PullRequest(_) => ModalKind::PullRequest,
             DialogAction::Notifications(_) => ModalKind::Notifications,
+            DialogAction::Search(_) => ModalKind::Search,
             DialogAction::CommandPalette(_) => ModalKind::CommandPalette,
             DialogAction::Settings(_) => ModalKind::Settings,
             DialogAction::DebugInfo(_) => ModalKind::DebugInfo,

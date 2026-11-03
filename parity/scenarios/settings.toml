@@ -172,7 +172,7 @@ contains = [
     "Appearance  Notifications  Key Bindings  Repositories  Pull Requests  Issues  Cache  Core  Api",
     "Settings focused on altering the appearance of LazyGithub, including hiding or showing",
     "Theme:",
-    "Textual Dark",
+    "Dark",
     "Show Command Log:",
     "Show Workflows:",
     "Show Issues:",

@@ -48,7 +48,7 @@ capture = "scrolled"
 checks = ["footer"]
 
 [expect.open]
-contains = ["LazyGithub Settings", "Theme:", "Textual Dark", "Save", "Cancel"]
+contains = ["LazyGithub Settings", "Theme:", "Dark", "Save", "Cancel"]
 not_contains = ["Show Issues:"]
 footer = ["shift+⏎ Submit", "q Close", "/ Search"]
 

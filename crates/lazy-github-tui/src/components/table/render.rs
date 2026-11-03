@@ -3,6 +3,8 @@
 //! Not ratatui's `Table`, which can't scroll horizontally: every row is one [`Line`] of padded cells, drawn with
 //! `Paragraph::scroll` over the visible rows, under a header drawn the same way.
 
+use std::borrow::Cow;
+
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
@@ -11,13 +13,14 @@ use ratatui::widgets::{Paragraph, Widget};
 
 use super::model::{Cell, Column, RowEntry};
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
+use crate::display;
 use crate::theme::{Paint, Theme};
 
 /// Textual's `DataTable.cell_padding`: one space each side of every cell.
 const CELL_PADDING: usize = 1;
 
-/// Each column's width over `rows`: its widest cell or header, plus the padding. Columns are never truncated or
-/// stretched.
+/// Each column's width over `rows`: its widest cell or header, plus the padding. Columns are never stretched, and only
+/// a [`Column::shrinks`] one is ever cut ([`fit_widths`]).
 pub(crate) fn column_widths<K>(columns: &[Column], rows: &[RowEntry<K>]) -> Vec<usize> {
     columns
         .iter()
@@ -34,6 +37,41 @@ pub(crate) fn column_widths<K>(columns: &[Column], rows: &[RowEntry<K>]) -> Vec<
 /// The width a column needs for `cell`, padding included.
 pub(crate) fn cell_width(cell: &Cell) -> usize {
     cell.display.width() + 2 * CELL_PADDING
+}
+
+/// `widths` fitted to a table of `rows` rows in `area`: when they're wider than the columns left of any vertical
+/// scrollbar, the [`Column::shrinks`] columns give up the difference, one cell at a time from whichever is widest
+/// (the rightmost on a tie), so they end up as even as they can, and none narrower than its header. Without such a
+/// column, or when they fit, they're `widths` as they are; past every floor the rest still overflows and scrolls.
+pub(crate) fn fit_widths<'a>(columns: &[Column], widths: &'a [usize], area: Rect, rows: usize) -> Cow<'a, [usize]> {
+    let floors: Vec<(usize, usize)> = columns
+        .iter()
+        .enumerate()
+        .filter(|(i, column)| column.shrinks && *i < widths.len())
+        .map(|(i, column)| (i, column.header.width() + 2 * CELL_PADDING))
+        .collect();
+    // The rows alone decide the vertical scrollbar here: fitted, the columns only overflow past every floor.
+    let vbar = if 1 + rows > usize::from(area.height) {
+        usize::from(scrollbar::VERTICAL_WIDTH)
+    } else {
+        0
+    };
+    let viewport = usize::from(area.width).saturating_sub(vbar);
+    let mut excess = widths.iter().sum::<usize>().saturating_sub(viewport);
+    if floors.is_empty() || excess == 0 {
+        return Cow::Borrowed(widths);
+    }
+    let mut fitted = widths.to_vec();
+    while excess > 0 {
+        let widest = floors
+            .iter()
+            .filter(|&&(i, floor)| fitted[i] > floor)
+            .max_by_key(|&&(i, _)| fitted[i]);
+        let Some(&(i, _)) = widest else { break };
+        fitted[i] -= 1;
+        excess -= 1;
+    }
+    Cow::Owned(fitted)
 }
 
 /// Where everything goes for a table of `content_width` columns and `rows` rows drawn in an area.
@@ -312,14 +350,29 @@ fn padded<'a>(
     let pad = |n: usize| Span::styled(" ".repeat(n), style);
     for (cell, &width) in cells.zip(widths) {
         spans.push(pad(CELL_PADDING));
-        for span in &cell.spans {
-            let mut span_style = style.patch(cell.style).patch(span.style);
-            if let Some(fg) = fg {
-                span_style = span_style.fg(fg);
+        let room = width.saturating_sub(2 * CELL_PADDING);
+        let cell_style = |span_style: Style| {
+            let span_style = style.patch(cell.style).patch(span_style);
+            fg.map_or(span_style, |fg| span_style.fg(fg))
+        };
+        let mut used = 0;
+        if cell.width() <= room {
+            for span in &cell.spans {
+                spans.push(Span::styled(span.content.clone(), cell_style(span.style)));
             }
-            spans.push(Span::styled(span.content.clone(), span_style));
+            used = cell.width();
+        } else if let Some(kept) = room.checked_sub(1) {
+            // A column fitted narrower than its cells: cut, and end with an ellipsis in the last span's style.
+            let (cut, left) = display::cut_spans(cell.spans.iter().cloned(), kept);
+            let last = cell.spans.last().map_or(Style::new(), |span| span.style);
+            for span in cut {
+                spans.push(Span::styled(span.content, cell_style(span.style)));
+            }
+            spans.push(pad(left));
+            spans.push(Span::styled(display::ELLIPSIS, cell_style(last)));
+            used = room;
         }
-        spans.push(pad(width.saturating_sub(cell.width() + CELL_PADDING)));
+        spans.push(pad(width.saturating_sub(used + CELL_PADDING)));
     }
     Line::from(spans)
 }
@@ -388,6 +441,85 @@ mod tests {
         let layout = Layout::new(Rect::new(1, 26, 38, 2), 60, 0);
         assert_eq!(layout.header(), Rect::new(1, 26, 38, 1));
         assert_eq!(layout.horizontal_bar_rect(), Rect::new(1, 27, 38, 1));
+    }
+
+    fn columns(shrinking: Option<usize>) -> Vec<Column> {
+        ["#", "Title", "Updated"]
+            .into_iter()
+            .enumerate()
+            .map(|(i, header)| {
+                let column = Column::new(header);
+                if shrinking == Some(i) {
+                    column.shrinking()
+                } else {
+                    column
+                }
+            })
+            .collect()
+    }
+
+    #[test]
+    fn fitting_leaves_widths_that_fit_and_tables_without_a_shrinking_column() {
+        let widths = [4, 30, 12];
+        let fits = fit_widths(&columns(Some(1)), &widths, Rect::new(0, 0, 46, 10), 3);
+        assert!(matches!(fits, Cow::Borrowed(_)));
+        let rigid = fit_widths(&columns(None), &widths, Rect::new(0, 0, 20, 10), 3);
+        assert_eq!(&*rigid, widths);
+    }
+
+    #[test]
+    fn the_shrinking_column_gives_up_the_overflow() {
+        let widths = [4, 30, 12];
+        let fitted = fit_widths(&columns(Some(1)), &widths, Rect::new(0, 0, 36, 10), 3);
+        assert_eq!(&*fitted, [4, 20, 12]);
+        assert!(!Layout::new(Rect::new(0, 0, 36, 10), fitted.iter().sum(), 3).horizontal_bar);
+    }
+
+    #[test]
+    fn a_vertical_scrollbar_takes_its_columns_first() {
+        // 12 rows and a header in 10: the scrollbar's two columns come off the title too.
+        let fitted = fit_widths(&columns(Some(1)), &[4, 30, 12], Rect::new(0, 0, 36, 10), 12);
+        assert_eq!(&*fitted, [4, 18, 12]);
+        let layout = Layout::new(Rect::new(0, 0, 36, 10), fitted.iter().sum(), 12);
+        assert!(layout.vertical_bar && !layout.horizontal_bar);
+    }
+
+    #[test]
+    fn the_shrinking_column_stops_at_its_header() {
+        // "Title" and its padding: 7. The rest still overflows, and scrolls.
+        let fitted = fit_widths(&columns(Some(1)), &[4, 30, 12], Rect::new(0, 0, 10, 10), 3);
+        assert_eq!(&*fitted, [4, 7, 12]);
+    }
+
+    #[test]
+    fn several_shrinking_columns_give_from_the_widest_first() {
+        let columns: Vec<Column> = ["Repo", "#", "Title", "Updated"]
+            .into_iter()
+            .map(|header| match header {
+                "Repo" | "Title" => Column::new(header).shrinking(),
+                _ => Column::new(header),
+            })
+            .collect();
+        let widths = [26, 6, 20, 12];
+        // 6 over: all from the repo, the widest, down to the title.
+        let fitted = fit_widths(&columns, &widths, Rect::new(0, 0, 58, 10), 3);
+        assert_eq!(&*fitted, [20, 6, 20, 12]);
+        // 16 over: the repo down to the title's 20, then both alike, the title first on a tie.
+        let fitted = fit_widths(&columns, &widths, Rect::new(0, 0, 48, 10), 3);
+        assert_eq!(&*fitted, [15, 6, 15, 12]);
+        // Past both headers the rest overflows.
+        let fitted = fit_widths(&columns, &widths, Rect::new(0, 0, 20, 10), 3);
+        assert_eq!(&*fitted, [6, 6, 7, 12]);
+    }
+
+    #[test]
+    fn a_cut_cell_ends_with_an_ellipsis_inside_its_padding() {
+        let cells = [Line::from("12"), Line::from("A long title"), Line::from("2026-10-28")];
+        let line = padded(cells.iter(), &[4, 8, 12], Style::new(), None);
+        assert_eq!(line.to_string(), " 12  A lon…  2026-10-28 ");
+        // A wide grapheme that straddles the cut leaves its cell blank before the ellipsis.
+        let wide = [Line::from("日本語")];
+        assert_eq!(padded(wide.iter(), &[6], Style::new(), None).to_string(), " 日 … ");
     }
 
     #[test]

@@ -67,17 +67,31 @@ pub enum CellValue {
     DateTime(jiff::civil::DateTime),
 }
 
-/// A column: its header, already styled.
+/// A column: its header, already styled, and whether it gives up width so the others fit.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Column {
     /// The header text.
     pub header: Line<'static>,
+    /// Whether the column narrows, down to its header, when the columns are wider than the table, its cells cut with
+    /// an ellipsis, so the other columns show without scrolling sideways. Several such columns narrow the widest
+    /// first.
+    pub shrinks: bool,
 }
 
 impl Column {
     /// A column headed `header`.
     pub fn new(header: impl Into<Line<'static>>) -> Self {
-        Self { header: header.into() }
+        Self {
+            header: header.into(),
+            shrinks: false,
+        }
+    }
+
+    /// The column narrows when the columns don't fit ([`Column::shrinks`]).
+    #[must_use]
+    pub fn shrinking(mut self) -> Self {
+        self.shrinks = true;
+        self
     }
 }
 

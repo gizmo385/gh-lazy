@@ -12,6 +12,7 @@ mod py_repr;
 mod render;
 mod search;
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -598,7 +599,7 @@ impl<T: TableItem> SearchableTable<T> {
     /// Textual's `_on_click`: the cursor moves to the clicked cell, and a click on the cell the cursor coordinate
     /// already holds selects the row.
     fn click(&mut self, layout: Layout, row: usize, x: u16) -> Handled<TableEvent<T::Key>> {
-        let column = self.column_at(usize::from(x - layout.table.x) + self.scroll_x);
+        let column = self.column_at(layout, usize::from(x - layout.table.x) + self.scroll_x);
         let same_cell = row == self.pos.cursor && column == self.cursor_column;
         let before = self.pos.cursor;
         self.cursor_column = column;
@@ -618,9 +619,9 @@ impl<T: TableItem> SearchableTable<T> {
     }
 
     /// The column at content offset `x`; past the last column it's column 0, as Textual's out-of-bounds cells say.
-    fn column_at(&self, x: usize) -> usize {
+    fn column_at(&self, layout: Layout, x: usize) -> usize {
         let mut right = 0;
-        for (i, width) in self.widths().iter().enumerate() {
+        for (i, width) in self.widths_in(layout.table).iter().enumerate() {
             right += width;
             if x < right {
                 return i;
@@ -652,7 +653,7 @@ impl<T: TableItem> SearchableTable<T> {
             return Handled::Ignored;
         }
         let horizontal = Horizontal {
-            content: self.widths().iter().sum(),
+            content: self.widths_in(layout.table).iter().sum(),
             viewport: layout.viewport_width,
         };
         let x = horizontal.scroll_by(self.scroll_x, delta);
@@ -808,13 +809,20 @@ impl<T: TableItem> SearchableTable<T> {
 
     // Measuring.
 
-    /// Each column's drawn width, padding included: never narrower than any row added since the table was made.
+    /// Each column's width, padding included: never narrower than any row added since the table was made. A
+    /// shrinking column may be drawn narrower ([`Self::widths_in`]).
+    #[cfg(test)]
     pub(crate) fn widths(&self) -> &[usize] {
         self.rows.widths()
     }
 
+    /// The widths as drawn in `area`: [`Self::widths`], with a shrinking column fitted to it ([`render::fit_widths`]).
+    fn widths_in(&self, area: Rect) -> Cow<'_, [usize]> {
+        render::fit_widths(&self.columns, self.rows.widths(), area, self.rows.len())
+    }
+
     fn layout_in(&self, area: Rect) -> Layout {
-        Layout::new(area, self.widths().iter().sum(), self.rows.len())
+        Layout::new(area, self.widths_in(area).iter().sum(), self.rows.len())
     }
 
     /// Where [`Self::render`] puts the table itself in `area`: below the search box while it's shown, as tall as the
@@ -851,7 +859,7 @@ impl<T: TableItem> SearchableTable<T> {
 
     /// The vertical and horizontal extents, measured against the last rendered area.
     fn extents(&self) -> (Body, Horizontal) {
-        let content = self.widths().iter().sum();
+        let content = self.widths_in(self.table_area()).iter().sum();
         let layout = Layout::new(self.table_area(), content, self.rows.len());
         let body = Body {
             rows: self.rows.len(),
@@ -932,7 +940,8 @@ impl<T: TableItem> SearchableTable<T> {
 
     /// The table laid out in `area`. With `reveal`, the view first scrolls the cursor's row into view.
     fn draw_table(&mut self, buf: &mut Buffer, area: Rect, reveal: bool, cx: &RenderCx<'_>) {
-        let widths = self.rows.widths();
+        // Fields, not `widths_in`, so the borrow leaves `pos` and `scroll_x` free.
+        let widths = render::fit_widths(&self.columns, self.rows.widths(), area, self.rows.len());
         let layout = Layout::new(area, widths.iter().sum(), self.rows.len());
         // Rows may have gone since the last frame; the view never scrolls past the end.
         let body = Body {
@@ -957,7 +966,7 @@ impl<T: TableItem> SearchableTable<T> {
             &render::Frame {
                 columns: &self.columns,
                 rows: &self.rows,
-                widths,
+                widths: &widths,
                 layout,
                 scroll_x: self.scroll_x,
                 scroll_y: self.pos.scroll_y,

@@ -1,0 +1,61 @@
+version = 1
+description = "Notifications: enter on an issue notification from another repo selects that repo, then opens the issue in Details with its tab strip focused and the toast \"Opening issue for notification\" (#405)"
+# Rust-only: Python opens only the repo for an issue subject (decision notification-opens-issue).
+gate = true
+apps = ["rust"]
+parity_rows = ["modals.notifications-open-issue", "toasts.opening-issue-for-notification"]
+sizes = [[160, 48]]
+
+[env]
+# notifications-open-issue has issue 7 of parity-bot/pr-details and its (empty) comments; notifications-modal has the
+# threads (9100002 is issue 7, 9100004 a CheckSuite in parity-bot/dotfiles with no subject URL); pr-details and
+# repo-selected-empty have what selecting each repo loads.
+fixtures = ["notifications-open-issue", "notifications-modal", "pr-details", "repo-selected-empty", "base"]
+
+[env.config_overrides]
+notifications = { enabled = true }
+
+[[step]]
+wait = { text = "• Unread Notifications: 4", timeout_ms = 15000 }
+
+# 9100004 first, so the issue opens from another repo: the third unread row.
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { text = "Thread ID" }
+
+[[step]]
+keys = ["j", "j", "enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/dotfiles" }
+
+# Its toast goes before the issue opens, so the capture shows only the issue's.
+[[step]]
+wait = { gone = "Opening repository for notification", timeout_ms = 15000 }
+
+# 9100002: issue 7 of parity-bot/pr-details, the second unread row (GitHub's all=true page doesn't change).
+[[step]]
+keys = ["ctrl+n"]
+
+[[step]]
+wait = { text = "Thread ID" }
+
+# The Rust app opens on the rows the last open saved (decision notifications-cache); this waits for the live page.
+[[step]]
+wait = { gone = "Showing saved notifications" }
+
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait = { text = "Opening issue for notification" }
+
+[[step]]
+capture = "issue-cross-repo"
+checks = ["titles", "tabs", "focus"]
+
+[expect.issue-cross-repo]
+contains = ["Current repo: parity-bot/pr-details", "Issue #7", "Typo in the install docs", "Opening issue for notification"]
+not_contains = ["Thread ID", "Opening repository for notification", "Traceback"]

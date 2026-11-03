@@ -7,7 +7,7 @@
   leaves only the repo open, with "Opening repository for notification" and the error at debug, as a pull request
   that fails to load does. Python opens only the repo for an issue subject. Pull request subjects, subjects without a
   URL and every other subject type (releases, check suites, discussions) are unchanged.
-- Decided by: pending (proposed by the design agent on #405, 2026-11-02; question D1 there)
+- Decided by: Chris, 2026-11-02 (#405: D1 (a), open the issue; D2 (a), a notification in the selected repo selects it again)
 - Link: #405; #386 (D5 b, Chris 2026-11-01: opening a hit from another repo selects that repo, and notifications
   share the code path); #394 (the Search modal, whose hits open through the same path)
 - Rows: `modals.notifications-open-issue`, `toasts.opening-issue-for-notification`

@@ -34,12 +34,12 @@ cursor 1 4 hidden
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌ Opening pull request for notification                      │
-│                                                              ││                                 ▌                                                            │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
-└──────────────────────────────────────────────────────────────┘│                                 ▌ Opening repository for notification                        │
+└──────────────────────────────────────────────────────────────┘│                                 ▌ Opening pull request for notification                      │
 ┌─ [2] Pull Requests (empty) ──────────────────────────────────┐│                                 ▌                                                            │
 │ #  Status  Author         Title                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘│                                 ▌                                                            │
@@ -83,12 +83,12 @@ e..............................................................ef...............
 e..............................................................ef..............................................................................................f
 e..............................................................ef..............................................................................................f
 e..............................................................ef..............................................................................................f
-e..............................................................ef.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.f
-e..............................................................ef.................................rstttttttttttttttttttttttttttttttttttttsssssssssssssssssssss.f
-e..............................................................ef.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
 e..............................................................ef..............................................................................................f
 e..............................................................ef.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.f
-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.................................rstttttttttttttttttttttttttttttttttttsssssssssssssssssssssss.f
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.................................rstttttttttttttttttttttttttttttttttttttsssssssssssssssssssss.f
 eeeeeeeeeeeeeeeeeeeeeuuuuuuueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.f
 eggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggef..............................................................................................f
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.f

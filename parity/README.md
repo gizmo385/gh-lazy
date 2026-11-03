@@ -325,7 +325,7 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   `per_page=50`) answered with 0, 3 or 50 unread notifications (50 is a full first page) for repos in `base`. Listed
   before `base`, for the `status-bar-unread-*` scenarios. Hand-written.
 - `notifications-modal/`: for the Notifications modal scenarios (`notifications`, `notifications-mark-all`,
-  `notifications-open`; #189, #190). `GET /notifications` `all=true` page 1 (`per_page=50`, as both tabs page): six
+  `notifications-open`, `notifications-open-issue`; #189, #190, #405). `GET /notifications` `all=true` page 1 (`per_page=50`, as both tabs page): six
   notifications in `parity-bot/pr-details` and `parity-bot/dotfiles`, four unread (9100001 PR 5 `review_requested`,
   9100002 issue 7 `mention` with a padded title, 9100004 a `ci_activity` CheckSuite with a `null` subject URL, 9100006
   PR 4 `state_change`) and two read (9100003 a Release, 9100005 PR 2, which 500s in `pr-details`), 9100002 listed
@@ -335,6 +335,10 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   `all=false` page 1 drops it; once the `PUT` was, `all=false` page 1 is empty and `all=true` page 1 has all six read.
   The two `when` variants never both hold in one scenario. Listed before `pr-details`, `repo-selected-empty` and
   `base`. Hand-written.
+- `notifications-open-issue/`: issue 7 of `parity-bot/pr-details` ("Typo in the install docs", open, by
+  `parity-friend`, the subject of `notifications-modal`'s 9100002) from `GET /repos/parity-bot/pr-details/issues/7`,
+  and its comments (`[]`). Listed before `notifications-modal`, for the Rust-only `notifications-open-issue` scenario
+  (#405). Hand-written.
 - `notifications-slow/`: `notifications-modal`'s `all=true` page 1 answered after 1.5 s (`delay_ms = 1500`), for the
   `notifications` scenario's loading capture. Listed before `notifications-modal`. Hand-written.
 - `repo-selected-empty/`: what selecting `parity-bot/dotfiles` loads (issues, workflows, runs, the README), all empty

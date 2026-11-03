@@ -38,12 +38,12 @@ cursor 1 4 hidden
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌ Opening pull request for notification                      │
-│                                                              ││                                 ▌                                                            │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘│                                 ▌                                                            │
-┌─ [3] Issues (empty) ─────────────────────────────────────────┐│                                 ▌ Opening repository for notification                        │
+┌─ [3] Issues (empty) ─────────────────────────────────────────┐│                                 ▌ Opening pull request for notification                      │
 │ #  Status  Author  Title                                     ││                                 ▌                                                            │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                 ▌                                                            │
@@ -87,16 +87,16 @@ e..............................................................ef...............
 e..............................................................ef..............................................................................................f
 e..............................................................ef..............................................................................................f
 e..............................................................ef..............................................................................................f
-e..............................................................ef.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.f
-e..............................................................ef.................................rstttttttttttttttttttttttttttttttttttttsssssssssssssssssssss.f
-e..............................................................ef.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
+e..............................................................ef..............................................................................................f
 e..............................................................ef..............................................................................................f
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.f
-eeeeeeeeeeeeeeuuuuuuueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.................................rstttttttttttttttttttttttttttttttttttsssssssssssssssssssssss.f
+eeeeeeeeeeeeeettttttteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.................................rsuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusssssssssssssssssssss.f
 eggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggef.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.f
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef..............................................................................................f
-eeeeeeeeeeeeeeeeeuuuuuuueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.f
-eggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggef.................................rstttttttttttttttttttttttttttttttttttsssssssssssssssssssssss.f
+eeeeeeeeeeeeeeeeettttttteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef.................................rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssss.f
+eggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggef.................................rsuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusssssssssssssssssssssss.f
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffffffffffffffffffffffffffffffrsssssssssssssssssssssssssssssssssssssssssssssssssssssssssssff
 vvvvwwwwwwwwwwwwwwvvvvwwwwwwwwwwwvvvwwwwwwwwwwwwvvvwwwwwwwwwwwwwwwwwwwwwwvvvwwwwwvvvvwwwwwwwwwwwwwwwwvvvwwwwwwwwwvvvwwwwwwwwwwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 --- legend
@@ -120,8 +120,8 @@ p fg=#e0e0e0 bg=#121212 underline
 q fg=#0178d4 bg=#121212 bold
 r fg=#4ebf71 bg=#343f49
 s bg=#343f49
-t fg=#e0e0e0 bg=#343f49
-u fg=#4e7bae bg=#121212
+t fg=#4e7bae bg=#121212
+u fg=#e0e0e0 bg=#343f49
 v fg=#ffa62b bg=#242f38 bold
 w fg=#e0e0e0 bg=#242f38
 x bg=#242f38

@@ -5,9 +5,10 @@
 use std::time::Duration;
 
 use futures_util::FutureExt as _;
-use lazy_github_core::config::Config;
+use lazy_github_core::config::{ColorDepthSetting, Config};
 use lazy_github_core::github::{FakeGithub, GhCliOptions};
 use lazy_github_core::models::Repository;
+use ratatui::style::Color;
 
 use super::pull_requests::{Kind, item};
 use super::repos::repo;
@@ -18,7 +19,7 @@ use crate::effect::TimerId;
 use crate::modal::SettingsOutcome;
 use crate::notifications::REFRESH_INTERVAL;
 use crate::test_util::TestApp;
-use crate::theme::{ColorDepth, ColorMode, Theme};
+use crate::theme::{ColorDepth, ColorMode, TerminalColors};
 use crate::toast::{Severity, Toast};
 
 const REPOS: FocusTarget = FocusTarget::Table(SectionId::Repos);
@@ -217,13 +218,26 @@ fn cancel_applies_nothing() {
     assert_eq!(app.app().toasts().iter().count(), 0);
 }
 
+/// What a terminal with these variables says about colors.
+fn terminal(vars: &'static [(&'static str, &'static str)]) -> TerminalColors {
+    TerminalColors::detect(&|name| {
+        vars.iter()
+            .find(|(key, _)| *key == name)
+            .map(|(_, value)| (*value).to_owned())
+    })
+}
+
+/// A 256-color terminal, as Rich reads `TERM=xterm-256color` with no `COLORTERM`.
+const XTERM_256: &[(&str, &str)] = &[("TERM", "xterm-256color")];
+
 #[test]
 fn the_theme_follows_keeping_the_color_mode_and_replacing_a_palette_pick() {
     let mode = ColorMode {
         depth: ColorDepth::EightBit,
         no_color: false,
     };
-    let mut app = TestApp::with_theme(Config::default(), Theme::default().with_color_mode(mode));
+    let mut app = TestApp::with_terminal_colors(Config::default(), terminal(XTERM_256));
+    assert_eq!(app.app().theme().color_mode(), mode);
     app.dispatch(Action::SetTheme("dracula"));
     assert_eq!(app.app().theme().name, "dracula");
     let config = edited(&app, |c| "nord".clone_into(&mut c.appearance.theme));
@@ -235,6 +249,54 @@ fn the_theme_follows_keeping_the_color_mode_and_replacing_a_palette_pick() {
     app.dispatch(Action::SetTheme("dracula"));
     save(&mut app, &config);
     assert_eq!(app.app().theme().name, "nord");
+}
+
+/// The setting is applied on Save, without a restart: the theme is reduced to the new depth and the screen repaints
+/// in it. `auto` goes back to what the terminal was detected as.
+#[test]
+fn a_saved_color_depth_repaints_at_once() {
+    let mut app = TestApp::with_terminal_colors(Config::default(), terminal(XTERM_256));
+    let depth = |app: &TestApp| app.app().theme().color_mode().depth;
+    // Whether any cell of a frame is drawn in a color of this kind.
+    let drawn = |app: &mut TestApp, kind: fn(Color) -> bool| {
+        let buffer = app.render(160, 48);
+        buffer.content().iter().any(|cell| kind(cell.fg) || kind(cell.bg))
+    };
+    let rgb = |color| matches!(color, Color::Rgb(..));
+    let indexed = |color| matches!(color, Color::Indexed(_));
+    assert_eq!(depth(&app), ColorDepth::EightBit);
+    assert!(drawn(&mut app, indexed) && !drawn(&mut app, rgb));
+
+    for (setting, want) in [
+        (ColorDepthSetting::TrueColor, ColorDepth::TrueColor),
+        (ColorDepthSetting::Standard, ColorDepth::Standard),
+        (ColorDepthSetting::Auto, ColorDepth::EightBit),
+    ] {
+        let config = edited(&app, |c| c.appearance.color_depth = setting);
+        save(&mut app, &config);
+        assert_eq!(depth(&app), want, "{setting:?}");
+    }
+    let config = edited(&app, |c| c.appearance.color_depth = ColorDepthSetting::TrueColor);
+    save(&mut app, &config);
+    assert!(drawn(&mut app, rgb) && !drawn(&mut app, indexed));
+
+    // `TEXTUAL_COLOR_SYSTEM` still wins over the setting.
+    let mut app = TestApp::with_terminal_colors(
+        Config::default(),
+        terminal(&[("TEXTUAL_COLOR_SYSTEM", "standard"), ("WT_SESSION", "x")]),
+    );
+    let config = edited(&app, |c| c.appearance.color_depth = ColorDepthSetting::TrueColor);
+    save(&mut app, &config);
+    assert_eq!(depth(&app), ColorDepth::Standard);
+}
+
+/// The 256-color terminal with Truecolor saved: the main screen in 24-bit color.
+#[test]
+fn saved_truecolor_in_a_256_color_terminal_160x48() {
+    let mut app = TestApp::with_terminal_colors(Config::default(), terminal(XTERM_256));
+    let config = edited(&app, |c| c.appearance.color_depth = ColorDepthSetting::TrueColor);
+    save(&mut app, &config);
+    insta::assert_snapshot!(crate::test_util::buffer_to_styled_string(&app.render(160, 48)));
 }
 
 #[test]

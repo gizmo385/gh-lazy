@@ -5,11 +5,13 @@ golden = [
   "crates/lazy-github-core/tests/fixtures/config/python-default.json",
   "crates/lazy-github-core/tests/fixtures/config/python-full.json",
   "crates/lazy-github-core/tests/fixtures/config/python-parsing.json",
+  "crates/lazy-github-core/tests/fixtures/config/python-rust-only-keys.json",
 ]
 test = "crates/lazy-github-core/tests/config.rs"
 fresh_test = "config_goldens_are_fresh"
 parity_rows = [
   "config.appearance-theme",
+  "config.appearance-color-depth",
   "config.appearance-show-command-log",
   "config.appearance-show-workflows",
   "config.appearance-show-issues",

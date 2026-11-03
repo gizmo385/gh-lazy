@@ -30,7 +30,7 @@ expression: "crate::test_util::buffer_to_styled_string(&buf)"
 │                             █                                                ▊  Nord                                       ▎   █                             │
 │                             █                                                ▊  Gruvbox                                 ▃▃ ▎   █                             │
 │                             █                                                ▊  Catppuccin Mocha                           ▎   █ting in any activate         │
-└─────────────────────────────█ Show Workflows:                                ▊  Dracula                                    ▎ ▇▇█itself. This means that you  │
+└─────────────────────────────█ Show Workflows:                                ▊  Dracula                                    ▎   █itself. This means that you  │
 ┌─ [3] Issues ────────────────█                                                ▊  Tokyo Night                                ▎   █                             │
 │ #  Status  Author  Title    █                                                ▊  Monokai                                    ▎   █                             │
 │                             █                                                ▊  Flexoki                                    ▎   █                             │
@@ -77,9 +77,9 @@ caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhx
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhqqqqqqqqqqqqqqqqqhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxzCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCBBzmhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzBBzmhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzBBzmhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzDDzmhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzEEzmhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-ccccccccccccccccccccccccccccccfhqqqqqqqqqqqqqqqhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzEEzmhDDfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzDDzmhEEfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzEEzmhEEfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+ccccccccccccccccccccccccccccccfhqqqqqqqqqqqqqqqhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzEEzmhEEfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzEEzmhEEfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 cwwwwwwwwwwwwwwwwwwwwwwwwwwwwwfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzEEzmhEEfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzEEzmhEEfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac

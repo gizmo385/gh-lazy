@@ -295,7 +295,7 @@ fn every_field_gets_the_widget_for_its_kind() {
     assert_eq!(
         kinds,
         [
-            vec!["select", "switch", "switch", "switch", "switch"],
+            vec!["select", "switch", "switch", "switch", "switch", "select"],
             vec!["switch", "switch"],
             vec![],
             vec!["list", "list"],
@@ -386,6 +386,7 @@ fn the_ring_holds_the_active_tabs_fields_and_wraps_both_ways() {
             Field(2),
             Field(3),
             Field(4),
+            Field(5),
             Save,
             Cancel
         ]
@@ -419,6 +420,7 @@ fn the_ring_holds_the_active_tabs_fields_and_wraps_both_ways() {
             Field(2),
             Field(3),
             Field(4),
+            Field(5),
             Save,
             Cancel
         ]
@@ -889,6 +891,43 @@ fn snapshot_appearance() {
     insta::assert_snapshot!("appearance", app.screen(160, 48));
 }
 
+/// Appearance scrolled to its last field, Color Depth (Rust-only, decision `color-depth-detection`), focused and then
+/// with its list open, at both sizes.
+#[test]
+fn snapshot_appearance_color_depth() {
+    // Each size drawn after every tab, as a focused field is scrolled into view in the last frame's layout.
+    let (mut narrow, _) = opened(&config());
+    narrow.render(100, 30);
+    tab_to_at(&mut narrow, SettingsFocus::Field(5), 100, 30);
+    insta::assert_snapshot!("appearance_color_depth_narrow", narrow.screen(100, 30));
+    let (mut app, _) = opened(&config());
+    tab_to(&mut app, SettingsFocus::Field(5));
+    insta::assert_snapshot!("appearance_color_depth", app.screen(160, 48));
+    app.press(&["enter"]);
+    insta::assert_snapshot!("appearance_color_depth_open", app.screen(160, 48));
+    // Down to "256 colors" and Save: the config holds the setting's value.
+    let FieldWidget::Select(select) = widget(&app, APPEARANCE, 5) else {
+        panic!("Color Depth is a select");
+    };
+    assert_eq!(
+        select.labels().collect::<Vec<_>>(),
+        ["Auto", "Truecolor", "256 colors", "16 colors"]
+    );
+    assert_eq!(select.value(), Some(&"auto"));
+}
+
+#[test]
+fn color_depth_saves_the_picked_setting() {
+    let (mut app, outcome) = opened(&config());
+    tab_to(&mut app, SettingsFocus::Field(5));
+    app.press(&["enter", "down", "down", "enter"]);
+    app.press(&["shift+enter"]);
+    assert_eq!(
+        saved(&outcome).appearance.color_depth,
+        lazy_github_core::config::ColorDepthSetting::EightBit
+    );
+}
+
 #[test]
 fn snapshot_pull_requests() {
     let (mut app, _) = opened(&config());
@@ -1174,7 +1213,7 @@ fn nothing_filters_before_enter_and_focus_stays_in_the_box() {
     app.press(&["/"]);
     type_text(&mut app, "filter");
     assert_eq!(shown(&app, PULL_REQUESTS).len(), 6);
-    assert_eq!(shown(&app, APPEARANCE).len(), 5);
+    assert_eq!(shown(&app, APPEARANCE).len(), 6);
     app.press(&["enter"]);
     assert_eq!(focused(&app), Some(SettingsFocus::Search));
     assert_eq!(search_value(&app).as_deref(), Some("filter"));
@@ -1245,6 +1284,7 @@ fn the_ring_puts_the_box_first_and_skips_hidden_fields() {
             Field(2),
             Field(3),
             Field(4),
+            Field(5),
             Save,
             Cancel
         ]

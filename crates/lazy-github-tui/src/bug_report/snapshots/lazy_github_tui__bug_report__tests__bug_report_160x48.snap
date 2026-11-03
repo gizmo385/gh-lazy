@@ -21,7 +21,7 @@ expression: "buffer_to_styled_string(&app.render(160, 48))"
 │                             █▊  2                                                                                           ▎  █                             │
 │                             █▊  3  **To Reproduce**                                                                         ▎  █                             │
 │                             █▊  4                                                                                           ▎  █                             │
-│                             █▊  5  **Expected behavior**                                                                    ▎  █                             │
+│                             █▊  5  **Expected behavior**                                                                 ▁▁ ▎  █                             │
 │                             █▊  6                                                                                           ▎  █                             │
 │                             █▊  7  **Installation Mechanism:** [Github CLI, nix, PyPi, etc]                                 ▎  █                             │
 │                             █▊  8                                                                                           ▎  █                             │
@@ -33,9 +33,9 @@ expression: "buffer_to_styled_string(&app.render(160, 48))"
 │                             █▊ 14  - Gh Version: 2.89.0 (fake-gh)                                                           ▎  █                             │
 │                             █▊ 15  - OS: linux x86_64                                                                       ▎  █                             │
 │                             █▊ 16  - Terminal: WezTerm 20240203-110809 (xterm-256color)                                     ▎  █                             │
-│                             █▊ 17                                                                                           ▎  █                             │
-│                             █▊ 18  # LazyGithub Config                                                                      ▎  █                             │
-│                             █▊ 19                                                                                           ▎▇▇█                             │
+│                             █▊ 17  - Color Depth: truecolor (TERM_PROGRAM=WezTerm)                                          ▎  █                             │
+│                             █▊ 18                                                                                           ▎  █                             │
+│                             █▊ 19  # LazyGithub Config                                                                      ▎▇▇█                             │
 │                             █                                                                                                  █                             │
 │                             █                                                                                                  █                             │
 │                             █                                 ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                 █                             │
@@ -70,21 +70,21 @@ caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglsttttuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxvvsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxvvsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxvvsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxvvsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyysnzzgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnkkgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaaglswwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzsnyygaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaagjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaagjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaagjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjgaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
@@ -125,8 +125,8 @@ u fg=#f8f8f2 bg=#3e3d32
 v fg=#003054 bg=#272822 REVERSED
 w fg=#90908a bg=#272822
 x fg=#f8f8f2 bg=#272822
-y fg=#f8f8f2 bg=#000000
-z fg=#003054 bg=#000000 REVERSED
+y fg=#003054 bg=#000000 REVERSED
+z fg=#f8f8f2 bg=#000000
 A fg=#7ae998 bg=#4ebf71
 B fg=#e76580 bg=#b93c5b
 C fg=#0a180e bg=#4ebf71

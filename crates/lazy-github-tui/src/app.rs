@@ -44,7 +44,7 @@ pub use crate::screens::main::Maximized;
 use crate::screens::main::{MainScreen, Toggle};
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
 use crate::screenshot::{self, ScreenshotRequest};
-use crate::theme::{Catalog, Resolved, Theme};
+use crate::theme::{Catalog, Resolved, TerminalColors, Theme};
 use crate::toast::{Severity, Toast, Toasts};
 
 /// A click on a link drawn in the last frame (`links`): the press and the release on the same link follow it, after the
@@ -164,6 +164,8 @@ pub struct App {
     /// Toasts about startup problems, raised when the first screen after the blank startup one (auth or main) shows,
     /// so they don't time out unseen while the auth check runs.
     first_screen_toasts: Vec<Toast>,
+    /// What the environment said about colors at startup, which a Settings save picks the color depth from again.
+    colors: TerminalColors,
     /// The terminal's size, from the last resize or frame; `None` until the first. Below the minimum, only the
     /// "Terminal too small" message is drawn and only quit keys work.
     size: Option<Size>,
@@ -206,9 +208,17 @@ impl App {
             gh_health: GhHealth::default(),
             main_screen_warnings: Vec::new(),
             first_screen_toasts,
+            colors: TerminalColors::truecolor(),
             size: None,
             should_quit: false,
         }
+    }
+
+    /// Sets what the environment said about colors at startup. Until then the app assumes the truecolor terminal of
+    /// [`TerminalColors::truecolor`]. The theme given to [`Self::new`] should already be reduced to `colors.mode(..)`
+    /// for the config's `appearance.color_depth`; a Settings save reduces the next one, and Debug Info shows it.
+    pub fn set_terminal_colors(&mut self, colors: TerminalColors) {
+        self.colors = colors;
     }
 
     /// Logs `message` as a warning when the main screen first shows. The command log drops lines from before it, as
@@ -972,7 +982,8 @@ impl App {
     /// from it as it runs follows at once. Python's `on_settings_modal_dismissed` and `handle_settings_update`, toast
     /// included, which shows on every Save, changed or not.
     ///
-    /// The theme replaces any the palette picked for the session, keeping the terminal's color mode. The keymap is
+    /// The theme replaces any the palette picked for the session, reduced to the color depth for the saved
+    /// `appearance.color_depth` in the environment read at startup, so a new depth repaints at once. The keymap is
     /// rebuilt, so the footer, the help panel and every key follow; the section titles keep the keys they were built
     /// with, as in Python. Hiding the maximized section restores the layout (Py bug B88's answer). Everything else is
     /// read where it's next used, except the `gh` options, which are baked in at startup and so are rebuilt here when
@@ -988,7 +999,8 @@ impl App {
         out.actions
             .push_back(Action::Notify(Toast::new(Severity::Information, "Settings updated")));
         let config = &self.shared.config;
-        let theme = Theme::from_config(&config.appearance.theme, self.shared.theme.color_mode());
+        let mode = self.colors.mode(config.appearance.color_depth);
+        let theme = Theme::from_config(&config.appearance.theme, mode);
         self.shared.keymap = Keymap::new(&config.bindings.overrides);
         // After "Settings updated", so it reads as what's left to look at.
         if let Some(toast) = key_conflicts_toast(&self.shared.keymap) {
@@ -1056,6 +1068,7 @@ impl App {
         // The terminal was read at startup; nothing here reads the environment.
         Some(DebugEnv {
             terminal: self.shared.options.terminal.to_owned(),
+            color_depth: self.colors.depth(self.shared.config.appearance.color_depth).to_string(),
             ..DebugEnv::detect(|_| None, version.clone())
         })
     }

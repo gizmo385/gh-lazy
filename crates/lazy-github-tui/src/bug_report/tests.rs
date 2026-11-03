@@ -40,6 +40,7 @@ fn fixed_env() -> DebugEnv {
         gh: Some("2.89.0 (fake-gh)".to_owned()),
         os: "linux x86_64".to_owned(),
         terminal: "WezTerm 20240203-110809 (xterm-256color)".to_owned(),
+        color_depth: "truecolor (TERM_PROGRAM=WezTerm)".to_owned(),
     }
 }
 

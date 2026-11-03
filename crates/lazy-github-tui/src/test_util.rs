@@ -33,7 +33,7 @@ use crate::modal::{
     Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, TestDialogAction, dialog_bindings,
 };
 use crate::options::AppOptions;
-use crate::theme::Theme;
+use crate::theme::{TerminalColors, Theme};
 
 /// The options every [`TestApp`] runs with unless it says otherwise: no animations.
 const TEST_OPTIONS: AppOptions = AppOptions {
@@ -151,6 +151,15 @@ impl TestApp {
     /// Like [`Self::loading`], with `options`.
     pub fn loading_with_options(config: Config, gh: FakeGithub, options: AppOptions) -> Self {
         Self::entered(config, Theme::default(), gh, options)
+    }
+
+    /// Like [`Self::new`], in a terminal that `colors` describes: drawn in the depth it gives for the config's
+    /// `appearance.color_depth`, and a Settings save picks the depth from it again.
+    pub fn with_terminal_colors(config: Config, colors: TerminalColors) -> Self {
+        let theme = Theme::from_config(&config.appearance.theme, colors.mode(config.appearance.color_depth));
+        let mut test = Self::with_theme(config, theme);
+        test.app.set_terminal_colors(colors);
+        test
     }
 
     fn entered(config: Config, theme: Theme, gh: FakeGithub, options: AppOptions) -> Self {

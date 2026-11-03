@@ -22,7 +22,7 @@ use ratatui::style::{Color, Modifier, Style};
 
 pub use catalog::{Catalog, Resolved};
 pub use color::{AnsiColor, Paint, Rgb, TextStyle, ThemeColor};
-pub use depth::{ColorDepth, ColorMode, downsample};
+pub use depth::{ColorDepth, ColorMode, DepthReason, DetectedDepth, TerminalColors, downsample};
 pub use file::{Appearance, ThemeFileError};
 pub use roles::{
     Border, Brand, Button, ButtonColors, Checkbox, CommandPalette, Cursor, Diff, Footer, Highlight, Hints, Ink, Input,

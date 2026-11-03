@@ -6,8 +6,9 @@ Run from the repository root with:
 
 `python-default.json` and `python-full.json` are written by the Python app. `python-parsing.json` records, for each
 field and each form its type allows (`PARSING_CASES`), what the Python app loads and saves, or where it rejects the
-file. The other fixtures are written by hand; this script only checks that the Python app loads them, so they stay
-valid Python configs.
+file. `python-rust-only-keys.json` is what the Python app saves after loading `rust-only-keys.json`, a file with the
+keys only the Rust app knows (`appearance.color_depth`): it ignores them. The other fixtures are written by hand; this
+script only checks that the Python app loads them, so they stay valid Python configs.
 
 `--out DIR` writes the generated fixtures to DIR instead of this directory; the hand-written ones are still read from
 here. The `config_goldens_are_fresh` test uses it.
@@ -27,7 +28,7 @@ from lazy_github.lib.constants import IssueOwnerFilter, IssueStateFilter
 from lazy_github.lib.github.backends.protocol import BackendType
 
 HERE = Path(__file__).parent
-HAND_WRITTEN = ["python-partial.json", "unknown-fields.json", "lax-values.json"]
+HAND_WRITTEN = ["python-partial.json", "unknown-fields.json", "lax-values.json", "rust-only-keys.json"]
 
 
 def full_config() -> Config:
@@ -178,6 +179,8 @@ def main() -> None:
     (args.out / "python-default.json").write_text(Config().model_dump_json(indent=4))
     (args.out / "python-full.json").write_text(full_config().model_dump_json(indent=4))
     (args.out / "python-parsing.json").write_text(parsing_golden())
+    rust_only = Config(**json.loads((HERE / "rust-only-keys.json").read_text()))
+    (args.out / "python-rust-only-keys.json").write_text(rust_only.model_dump_json(indent=4))
     for name in HAND_WRITTEN:
         Config(**json.loads((HERE / name).read_text()))
         print(f"{name}: loads in Python")

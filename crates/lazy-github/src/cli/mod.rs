@@ -12,6 +12,7 @@ use std::process::ExitCode;
 
 use lazy_github_core::config::{Config, ConfigError, ConfigPaths};
 use lazy_github_core::debug::{DebugEnv, debug_markdown};
+use lazy_github_tui::theme::ColorDepth;
 use serde_json::Value;
 
 pub use check::check_config;
@@ -109,7 +110,11 @@ pub fn debug(
         Ok(config) => config,
         Err(e) => return error(stderr, e),
     };
-    let env = DebugEnv::detect(env, gh_version());
+    let color_depth = ColorDepth::detect(&env, config.appearance.color_depth).to_string();
+    let env = DebugEnv {
+        color_depth,
+        ..DebugEnv::detect(env, gh_version())
+    };
     let result = writeln!(stdout, "{}", debug_markdown(&env, &config)).map(|()| ExitCode::SUCCESS);
     finish(result, stderr)
 }
@@ -254,12 +259,54 @@ mod tests {
         );
         assert!(out.contains("\n- Gh Version: 2.89.0 (fake-gh)\n- OS: "), "{out}");
         assert!(
-            out.contains("\n- Terminal: xterm-256color\n\n# LazyGithub Config\n\n```json\n{\n"),
+            out.contains(
+                "\n- Terminal: xterm-256color\n- Color Depth: 256 (TERM=xterm-256color)\n\n\
+                 # LazyGithub Config\n\n```json\n{\n"
+            ),
             "{out}"
         );
         assert!(out.ends_with("\n}\n```\n"), "{out}");
         assert_eq!(text(err), "");
         assert!(!paths.dir.exists());
+    }
+
+    /// The depth follows the setting, under the same environment.
+    #[test]
+    fn debug_shows_the_color_depth_and_why() {
+        let tmp = TempDir::new();
+        let paths = tmp.paths();
+        let debug_depth = |config: &str, vars: &'static [(&'static str, &'static str)]| {
+            std::fs::create_dir_all(&paths.dir).unwrap();
+            std::fs::write(&paths.file, config).unwrap();
+            let env = |name: &str| {
+                vars.iter()
+                    .find(|(key, _)| *key == name)
+                    .map(|(_, value)| (*value).to_owned())
+            };
+            let (mut out, mut err) = (Vec::new(), Vec::new());
+            assert_eq!(
+                debug(Ok(paths.clone()), env, || None, &mut out, &mut err),
+                ExitCode::SUCCESS
+            );
+            let out = text(out);
+            out.lines()
+                .find_map(|line| line.strip_prefix("- Color Depth: "))
+                .unwrap_or_else(|| panic!("no Color Depth line in {out}"))
+                .to_owned()
+        };
+        let wsl = &[("TERM", "xterm-256color"), ("WT_SESSION", "0f9a2c1e")];
+        assert_eq!(debug_depth("{}", wsl), "truecolor (WT_SESSION)");
+        assert_eq!(
+            debug_depth(r#"{"appearance": {"color_depth": "16"}}"#, wsl),
+            "16 (appearance.color_depth)"
+        );
+        assert_eq!(
+            debug_depth(
+                r#"{"appearance": {"color_depth": "16"}}"#,
+                &[("TEXTUAL_COLOR_SYSTEM", "256")]
+            ),
+            "256 (TEXTUAL_COLOR_SYSTEM=256)"
+        );
     }
 
     #[test]

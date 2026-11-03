@@ -106,6 +106,7 @@ fn fields_are_in_file_order_with_their_kinds() {
         ("appearance.show_workflows", K::Bool),
         ("appearance.show_issues", K::Bool),
         ("appearance.show_pull_requests", K::Bool),
+        ("appearance.color_depth", K::Choice(COLOR_DEPTH_CHOICES)),
         ("notifications.enabled", K::Bool),
         ("notifications.mark_notification_as_read_when_selected", K::Bool),
         ("repositories.additional_repos_to_track", K::List),
@@ -182,6 +183,7 @@ fn labels_are_python_title_case_with_a_colon() {
             "Show Workflows:",
             "Show Issues:",
             "Show Pull Requests:",
+            "Color Depth:",
             "Enabled:",
             "Mark Notification As Read When Selected:",
             "Additional Repos To Track:",
@@ -350,6 +352,25 @@ fn set_writes_bools_choices_themes_and_lists() {
     assert_eq!(c.pull_requests.preferred_merge_method, MergeMethod::Rebase);
     assert_eq!(c.pull_requests.owner_filter, IssueOwnerFilter::Mine);
     assert_eq!(c.repositories.additional_repos_to_track, items);
+}
+
+/// Every option of `appearance.color_depth` writes its own value, labeled as Settings shows it.
+#[test]
+fn color_depth_choices_write_their_setting() {
+    let depth = field("appearance", "color_depth");
+    let FieldKind::Choice(choices) = depth.kind else {
+        panic!("color_depth is a choice")
+    };
+    let labels: Vec<_> = choices.iter().map(|c| c.label).collect();
+    assert_eq!(labels, ["Auto", "Truecolor", "256 colors", "16 colors"]);
+    let mut c = config();
+    assert_eq!(depth.get(&c), FieldValue::Choice("auto"));
+    for (choice, setting) in choices.iter().zip(ColorDepthSetting::ALL) {
+        depth.set(&mut c, FieldValue::Choice(choice.value)).unwrap();
+        assert_eq!(c.appearance.color_depth, setting);
+        assert_eq!(depth.get(&c), FieldValue::Choice(choice.value));
+    }
+    assert_eq!(depth.set(&mut c, FieldValue::Choice("8")), Err(FieldError::Mismatch));
 }
 
 #[rstest]

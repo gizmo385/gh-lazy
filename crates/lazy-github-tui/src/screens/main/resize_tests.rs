@@ -67,6 +67,7 @@ fn debug_env() -> DebugEnv {
         gh: Some("2.80.0".into()),
         os: "linux x86_64".into(),
         terminal: "xterm-256color".into(),
+        color_depth: "256 (TERM=xterm-256color)".into(),
     }
 }
 

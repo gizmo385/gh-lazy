@@ -41,6 +41,21 @@ fn values_the_loader_accepts_are_not_problems() {
     assert_eq!(report.problems, []);
 }
 
+/// A bad `appearance.color_depth` loads (as `auto`, with a warning), but it's still listed, so `--fix` can write
+/// `auto` into the file.
+#[test]
+fn a_bad_color_depth_is_listed_and_fixed_to_auto() {
+    let text = r#"{"appearance":{"color_depth":"8"}}"#;
+    assert_eq!(
+        lines(text),
+        [r#"appearance.color_depth: found "8", expected one of "auto", "truecolor", "256", "16""#]
+    );
+    let Repaired::Config(config) = repair(text, &paths(), &["appearance.color_depth".to_owned()]).unwrap() else {
+        panic!("the one problem was repaired")
+    };
+    assert_eq!(config.appearance.color_depth, crate::config::ColorDepthSetting::Auto);
+}
+
 #[test]
 fn a_bad_enum_value_is_one_problem() {
     let report = check(r#"{"issues":{"state_filter":"bogus"}}"#, &paths()).unwrap();

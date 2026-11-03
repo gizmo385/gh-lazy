@@ -9,6 +9,7 @@ expression: "debug_markdown(&fixed_env(), &full_config())"
 - Gh Version: 2.89.0 (fake-gh)
 - OS: linux x86_64
 - Terminal: WezTerm 20240203-110809 (xterm-256color)
+- Color Depth: truecolor (TERM_PROGRAM=WezTerm)
 
 # LazyGithub Config
 
@@ -19,7 +20,8 @@ expression: "debug_markdown(&fixed_env(), &full_config())"
         "show_command_log": true,
         "show_workflows": false,
         "show_issues": false,
-        "show_pull_requests": false
+        "show_pull_requests": false,
+        "color_depth": "auto"
     },
     "notifications": {
         "enabled": true,

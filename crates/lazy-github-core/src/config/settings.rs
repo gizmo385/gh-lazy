@@ -9,7 +9,7 @@
 use std::path::PathBuf;
 
 use super::lax::{naive_datetime, parse_int_str};
-use super::{Config, IssueOwnerFilter, IssueStateFilter, MergeMethod};
+use super::{ColorDepthSetting, Config, IssueOwnerFilter, IssueStateFilter, MergeMethod};
 
 /// One tab of the Settings modal: a `config.json` section.
 #[derive(Debug)]
@@ -249,6 +249,7 @@ pub static SECTIONS: &[Section] = &[
             bool_field!(appearance.show_workflows),
             bool_field!(appearance.show_issues),
             bool_field!(appearance.show_pull_requests),
+            choice_field!(appearance.color_depth, ColorDepthSetting, COLOR_DEPTH_CHOICES),
         ],
     },
     Section {
@@ -392,6 +393,26 @@ pub static SECTIONS: &[Section] = &[
 /// `api.client_type`'s value for the `gh` backend.
 const GITHUB_CLI: &str = "GITHUB_CLI";
 
+/// `appearance.color_depth`, which Python doesn't have, so the labels are written out rather than title-cased values.
+const COLOR_DEPTH_CHOICES: &[Choice] = &[
+    Choice {
+        label: "Auto",
+        value: "auto",
+    },
+    Choice {
+        label: "Truecolor",
+        value: "truecolor",
+    },
+    Choice {
+        label: "256 colors",
+        value: "256",
+    },
+    Choice {
+        label: "16 colors",
+        value: "16",
+    },
+];
+
 const STATE_CHOICES: &[Choice] = &[
     Choice {
         label: "All",
@@ -463,6 +484,13 @@ impl ChoiceEnum for IssueStateFilter {
 }
 
 impl ChoiceEnum for IssueOwnerFilter {
+    const ALL: &'static [Self] = &Self::ALL;
+    fn as_str(self) -> &'static str {
+        self.as_str()
+    }
+}
+
+impl ChoiceEnum for ColorDepthSetting {
     const ALL: &'static [Self] = &Self::ALL;
     fn as_str(self) -> &'static str {
         self.as_str()

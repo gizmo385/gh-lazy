@@ -15,14 +15,14 @@ expression: "app.screen(160, 100)"
 │               █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█by selecting   │
 │               █                                                                                                                              █ed a           │
 │               █                                                                                                                              █ and           │
-│               █                                                                                                                              █               │
 │               █                                                       Library Versions                                                       █               │
 │               █                                                                                                                              █               │
 │               █  • LazyGithub Version: 0.1.0                                                                                                 █               │
 │               █  • Rustc Version: 1.97.0 (fixed 2026-01-01)                                                                                  █               │
 │               █  • Gh Version: 2.89.0 (fake-gh)                                                                                              █               │
 │               █  • OS: linux x86_64                                                                                                          █               │
-│               █  • Terminal: WezTerm 20240203-110809 (xterm-256color)                                                                        █articipating   │
+│               █  • Terminal: WezTerm 20240203-110809 (xterm-256color)                                                                        █               │
+│               █  • Color Depth: truecolor (TERM_PROGRAM=WezTerm)                                                                             █articipating   │
 │               █                                                                                                                              █ for the       │
 │               █                                                                                                                              █               │
 │               █                                                      LazyGithub Config                                                       █               │
@@ -34,17 +34,18 @@ expression: "app.screen(160, 100)"
 │               █            "show_command_log": false,                                                                                        █               │
 │               █            "show_workflows": true,                                                                                           █               │
 │               █            "show_issues": true,                                                                                              █               │
-│               █            "show_pull_requests": true                                                                                        █               │
-│               █        },                                                                                                                    █               │
-│               █        "notifications": {                                                                                                    █rts listing    │
-│               █            "enabled": false,                                                                                                 █lected repo,   │
+│               █            "show_pull_requests": true,                                                                                       █               │
+│               █            "color_depth": "auto"                                                                                             █               │
+│               █        },                                                                                                                    █rts listing    │
+│               █        "notifications": {                                                                                                    █lected repo,   │
+│               █            "enabled": false,                                                                                                 █               │
 │               █            "mark_notification_as_read_when_selected": true                                                                   █               │
 │               █        },                                                                                                                    █               │
 │               █        "bindings": {                                                                                                         █               │
-│               █            "overrides": {}                                                                                                   █               │
-└───────────────█        },                                                                                                                    █               │
-┌─ [2] Pull Requ█        "repositories": {                                                                                                     █               │
-│ #  Status  Aut█            "additional_repos_to_track": [],                                                                                  █               │
+└───────────────█            "overrides": {}                                                                                                   █               │
+┌─ [2] Pull Requ█        },                                                                                                                    █               │
+│ #  Status  Aut█        "repositories": {                                                                                                     █               │
+│               █            "additional_repos_to_track": [],                                                                                  █               │
 │               █            "favorites": []                                                                                                   █               │
 │               █        },                                                                                                                    █               │
 │               █        "pull_requests": {                                                                                                    █               │
@@ -60,10 +61,10 @@ expression: "app.screen(160, 100)"
 │               █            "owner_filter": "all"                                                                                             █               │
 │               █        },                                                                                                                    █               │
 │               █        "cache": {                                                                                                            █               │
-│               █            "auth_cache_duration": 86400,                                                                                     █               │
-└───────────────█            "auth_last_checked": null,                                                                                        █               │
-┌─ [3] Issues ──█            "cache_directory": "/home/user/.cache/lazy-github",                                                               █               │
-│ #  Status  Aut█            "default_ttl": 60,                                                                                                █               │
+└───────────────█            "auth_cache_duration": 86400,                                                                                     █               │
+┌─ [3] Issues ──█            "auth_last_checked": null,                                                                                        █               │
+│ #  Status  Aut█            "cache_directory": "/home/user/.cache/lazy-github",                                                               █               │
+│               █            "default_ttl": 60,                                                                                                █               │
 │               █            "list_repos_ttl": 3600,                                                                                           █               │
 │               █            "list_issues_ttl": 60                                                                                             █               │
 │               █        },                                                                                                                    █               │
@@ -79,10 +80,9 @@ expression: "app.screen(160, 100)"
 │               █        }                                                                                                                     █               │
 │               █    }                                                                                                                         █               │
 │               █                                                                                                                              █               │
-│               █                                                                                                                              █               │
 └───────────────█                                                                                                                              █               │
-┌─ [4] Workflows█──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────█               │
-│ Time  Result  █                                                                                                                              █               │
+┌─ [4] Workflows█                                                                                                                              █               │
+│ Time  Result  █──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────█               │
 │               █                                                                                                                              █               │
 │               █                                                                                                                              █               │
 │               █                                                                                                                              █               │

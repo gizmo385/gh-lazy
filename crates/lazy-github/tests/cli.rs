@@ -119,7 +119,13 @@ fn cache_dir(home: &TempHome, config: &Value) -> PathBuf {
 
 /// `debug`'s list lines after the LazyGithub version: Rust lists these where Python lists its libraries (decision
 /// `debug-info-versions`).
-const DEBUG_LIST: [&str; 4] = ["- Rustc Version: ", "- Gh Version: ", "- OS: ", "- Terminal: "];
+const DEBUG_LIST: [&str; 5] = [
+    "- Rustc Version: ",
+    "- Gh Version: ",
+    "- OS: ",
+    "- Terminal: ",
+    "- Color Depth: ",
+];
 
 /// The text from the `# LazyGithub Config` line on, which `debug` prints as Python does.
 fn from_config_heading(stdout: &str) -> String {
@@ -193,6 +199,34 @@ fn with_rust_ttls(expected: &str, config: &Value) -> String {
     out
 }
 
+/// `expected` (Python's output) with the keys only Rust writes: `appearance.color_depth`, at its default, after
+/// `show_pull_requests`, the last key of `appearance` in every golden case (decision `color-depth-detection`).
+/// Handles plain JSON, at either indent, and Rich's JSON with and without colors.
+fn with_rust_only_keys(expected: &str) -> String {
+    let mut out = String::with_capacity(expected.len());
+    for line in expected.split_inclusive('\n') {
+        let Some(last) = line
+            .strip_suffix('\n')
+            .filter(|line| line.contains("\"show_pull_requests\""))
+        else {
+            out.push_str(line);
+            continue;
+        };
+        let indent = &last[..last.len() - last.trim_start().len()];
+        let added = if last.contains("\x1b[1;34m") {
+            "\x1b[1;34m\"color_depth\"\x1b[0m: \x1b[32m\"auto\"\x1b[0m"
+        } else if last.contains("\x1b[1m") {
+            "\x1b[1m\"color_depth\"\x1b[0m: \"auto\""
+        } else {
+            "\"color_depth\": \"auto\""
+        };
+        for part in [last, ",\n", indent, added, "\n"] {
+            out.push_str(part);
+        }
+    }
+    out
+}
+
 /// Runs one golden case and describes every way the result differs from Python's.
 fn check_case(case: &Value) -> Vec<String> {
     let name = case["name"].as_str().unwrap();
@@ -229,7 +263,7 @@ fn check_case(case: &Value) -> Vec<String> {
             .unwrap()
             .replace("<HOME>", home.path())
             .replace("<VERSION>", env!("CARGO_PKG_VERSION"));
-        let expected = with_rust_ttls(&expected, config);
+        let expected = with_rust_only_keys(&with_rust_ttls(&expected, config));
         // Without a file, the default config shows: its theme is Python's `textual-dark`, renamed `dark`
         // (app-owned-themes D2). A file that names `textual-dark` keeps it, so only the default changes.
         if config.is_null() {

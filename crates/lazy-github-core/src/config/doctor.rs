@@ -18,7 +18,8 @@ const KNOWN_EXTRA_KEYS: &[&str] = &["api.client_type"];
 /// What [`check`] found in a config file.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Report {
-    /// The values that stop the file loading, in the order the loader meets them (file order).
+    /// The values that stop the file loading, in the order the loader meets them (file order). A bad
+    /// `appearance.color_depth` is one too, though [`Config::load`] lets it through as `auto`.
     pub problems: Vec<Problem>,
     /// Dotted paths of keys LazyGithub doesn't know. They load, and are kept when the config is saved.
     pub unknown_keys: Vec<String>,

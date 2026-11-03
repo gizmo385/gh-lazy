@@ -20,6 +20,9 @@ pub struct DebugEnv {
     pub os: String,
     /// The terminal, from `TERM_PROGRAM`, `TERM_PROGRAM_VERSION` and `TERM`, or `unknown`.
     pub terminal: String,
+    /// The color depth the app draws with and why, such as `truecolor (WT_SESSION)`. The UI detects it, from the
+    /// environment and `appearance.color_depth`, so [`DebugEnv::detect`] leaves it `unknown` for the caller to fill.
+    pub color_depth: String,
 }
 
 impl DebugEnv {
@@ -31,6 +34,7 @@ impl DebugEnv {
             gh,
             os: format!("{} {}", std::env::consts::OS, std::env::consts::ARCH),
             terminal: terminal(env),
+            color_depth: UNKNOWN.to_owned(),
         }
     }
 }
@@ -69,6 +73,7 @@ pub fn debug_markdown(env: &DebugEnv, config: &Config) -> String {
          - Gh Version: {}\n\
          - OS: {}\n\
          - Terminal: {}\n\
+         - Color Depth: {}\n\
          \n\
          # LazyGithub Config\n\
          \n\
@@ -80,6 +85,7 @@ pub fn debug_markdown(env: &DebugEnv, config: &Config) -> String {
         env.gh.as_deref().unwrap_or(UNKNOWN),
         env.os,
         env.terminal,
+        env.color_depth,
         config.to_json_pretty(),
     )
 }
@@ -122,6 +128,7 @@ mod tests {
             gh: Some("2.89.0 (fake-gh)".to_owned()),
             os: "linux x86_64".to_owned(),
             terminal: "WezTerm 20240203-110809 (xterm-256color)".to_owned(),
+            color_depth: "truecolor (TERM_PROGRAM=WezTerm)".to_owned(),
         }
     }
 

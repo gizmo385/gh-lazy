@@ -1,7 +1,7 @@
 //! The Debug Info dialog: its keys, focus, Copy, scrolling and layout, and how the palette opens it.
 
 use crossterm::event::MouseEventKind;
-use lazy_github_core::config::Config;
+use lazy_github_core::config::{ColorDepthSetting, Config};
 use lazy_github_core::debug::{DebugEnv, debug_markdown};
 use lazy_github_core::gh::GhError;
 use lazy_github_core::github::{FakeGithub, GithubCall};
@@ -10,6 +10,7 @@ use super::*;
 use crate::components::footer::footer_items;
 use crate::effect::{Effect, GithubRequest};
 use crate::test_util::{TestApp, buffer_to_styled_string};
+use crate::theme::TerminalColors;
 use crate::toast::Severity;
 
 fn fixed_env() -> DebugEnv {
@@ -19,6 +20,7 @@ fn fixed_env() -> DebugEnv {
         gh: Some("2.89.0 (fake-gh)".to_owned()),
         os: "linux x86_64".to_owned(),
         terminal: "WezTerm 20240203-110809 (xterm-256color)".to_owned(),
+        color_depth: "truecolor (TERM_PROGRAM=WezTerm)".to_owned(),
     }
 }
 
@@ -316,6 +318,56 @@ async fn the_first_debug_info_asks_gh_once_and_opens_on_the_answer() {
     assert!(is_open(&app));
     assert_eq!(gh_version_requests(&app), 1);
     assert!(dialog(&app).text().contains("\"show_workflows\": false"));
+}
+
+/// The color depth line names the depth in use and why: detected from the startup environment, then the saved
+/// setting once Settings changes it.
+#[tokio::test]
+async fn the_color_depth_line_follows_the_terminal_and_the_setting() {
+    let wsl = TerminalColors::detect(&|name| match name {
+        "TERM" => Some("xterm-256color".to_owned()),
+        "WT_SESSION" => Some("0f9a2c1e".to_owned()),
+        _ => None,
+    });
+    let mut app = TestApp::with_terminal_colors(Config::default(), wsl);
+    run_debug_info(&mut app);
+    app.settle().await;
+    assert!(
+        dialog(&app)
+            .text()
+            .contains("- Terminal: xterm-256color\n- Color Depth: truecolor (WT_SESSION)\n"),
+        "{}",
+        dialog(&app).text()
+    );
+    app.press(&["q"]);
+
+    let mut config = app.app().config().clone();
+    config.appearance.color_depth = ColorDepthSetting::EightBit;
+    app.dispatch(Action::SettingsClosed(crate::modal::SettingsOutcome::Saved(Box::new(
+        config,
+    ))));
+    run_debug_info(&mut app);
+    assert!(
+        dialog(&app)
+            .text()
+            .contains("- Color Depth: 256 (appearance.color_depth)\n"),
+        "{}",
+        dialog(&app).text()
+    );
+    assert!(dialog(&app).text().contains("\"color_depth\": \"256\""));
+}
+
+/// [`TestApp`]'s terminal, the parity harness's: `COLORTERM=truecolor`.
+#[tokio::test]
+async fn the_default_test_terminal_is_truecolor_from_colorterm() {
+    let mut app = TestApp::new(Config::default());
+    run_debug_info(&mut app);
+    app.settle().await;
+    assert!(
+        dialog(&app)
+            .text()
+            .contains("- Color Depth: truecolor (COLORTERM=truecolor)\n")
+    );
 }
 
 #[tokio::test]

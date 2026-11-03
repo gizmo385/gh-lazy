@@ -13,7 +13,7 @@ use lazy_github_core::logging::{self, LoggingOptions};
 use lazy_github_tui::app::App;
 use lazy_github_tui::clock::SystemClock;
 use lazy_github_tui::options::AppOptions;
-use lazy_github_tui::theme::{ColorMode, Theme};
+use lazy_github_tui::theme::{TerminalColors, Theme};
 
 // musl's allocator is slow enough that rendering a large body or diff misses the 50 ms frame budget, and the Linux
 // release binaries are static musl builds (#357). Everywhere else the system allocator is fast enough.
@@ -196,15 +196,20 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
     let logging = logging::init(LoggingOptions::from(&config.core));
     print_log_path_on_panic(config.core.logfile_path.clone());
     tracing::debug!("Starting LazyGithub {}", env!("CARGO_PKG_VERSION"));
-    // Only now, so the lines reach the command log.
-    load_notes.log();
+    // Only now, so the lines reach the command log. The warnings wait for the main screen, which shows them there.
+    load_notes.log_info();
+    let load_warnings = load_notes.warnings();
     if let Some(pwd) = &original_pwd {
         tracing::debug!("Working directory: {}", pwd.display());
     }
 
     // Read once, before the terminal is set up, like Textual and Rich do.
-    let color_mode = ColorMode::from_env();
-    tracing::debug!("Color mode: {color_mode:?}");
+    let colors = TerminalColors::from_env();
+    let color_mode = colors.mode(config.appearance.color_depth);
+    tracing::debug!(
+        "Color depth: {}, mode: {color_mode:?}",
+        colors.depth(config.appearance.color_depth)
+    );
     let options = AppOptions::from_env();
     tracing::debug!("Options: {options:?}");
     let log_file_warning = logging.file_warning().map(str::to_owned);
@@ -218,7 +223,11 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
             let git = GitCli::new(original_pwd);
             let theme = Theme::from_config(&config.appearance.theme, color_mode);
             let mut app = App::new(config, theme, options, SystemClock);
+            app.set_terminal_colors(colors);
             if let Some(warning) = log_file_warning {
+                app.warn_on_main_screen(warning);
+            }
+            for warning in load_warnings {
                 app.warn_on_main_screen(warning);
             }
             runtime.block_on(lazy_github_tui::tui::run(app, gh, git, logging.command_log, paths))

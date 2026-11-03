@@ -5,7 +5,9 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use jiff::civil::DateTime;
-use lazy_github_core::config::{Config, ConfigError, ConfigPaths, IssueOwnerFilter, IssueStateFilter, MergeMethod};
+use lazy_github_core::config::{
+    ColorDepthSetting, Config, ConfigError, ConfigPaths, IssueOwnerFilter, IssueStateFilter, MergeMethod,
+};
 use rstest::rstest;
 use serde_json::Value;
 
@@ -64,11 +66,22 @@ fn dt(s: &str) -> DateTime {
 #[test]
 fn default_matches_python_byte_for_byte() {
     let config = Config::default_in(&ConfigPaths::in_dir("/home/lazy/.config/lazy-github"));
-    // But for the default theme's name, renamed from Textual's (app-owned-themes D2), and the cache TTLs, lowered
-    // (cache-ttl-defaults-and-refresh D1 a).
-    let python =
-        with_rust_ttls(&fixture("python-default.json").replace(r#""theme": "textual-dark""#, r#""theme": "dark""#));
+    // But for the default theme's name, renamed from Textual's (app-owned-themes D2), the cache TTLs, lowered
+    // (cache-ttl-defaults-and-refresh D1 a), and the Rust-only `color_depth` (color-depth-detection).
+    let python = with_rust_only_keys(&with_rust_ttls(
+        &fixture("python-default.json").replace(r#""theme": "textual-dark""#, r#""theme": "dark""#),
+    ));
     assert_eq!(config.to_json_pretty(), python);
+}
+
+/// `text`, a config Python saved, with the keys only Rust writes: `appearance.color_depth`'s default, after
+/// `show_pull_requests`, the section's last key (decision `color-depth-detection`). Every other byte is unchanged.
+fn with_rust_only_keys(text: &str) -> String {
+    let last = text
+        .find("\n        \"show_pull_requests\": ")
+        .expect("the file has show_pull_requests");
+    let end = last + 1 + text[last + 1..].find('\n').expect("it isn't the file's last line");
+    format!("{},\n        \"color_depth\": \"auto\"{}", &text[..end], &text[end..])
 }
 
 /// `text` with Python's default cache TTLs (600 / 86400 / 3600) swapped for Rust's (60 / 3600 / 60), every other
@@ -99,7 +112,7 @@ fn pythons_default_file_round_trips_with_the_new_ttls() {
     // The file names the Python default's paths, so they load and save as written.
     assert_eq!(
         std::fs::read_to_string(&paths.file).unwrap(),
-        with_rust_ttls(&fixture("python-default.json"))
+        with_rust_only_keys(&with_rust_ttls(&fixture("python-default.json")))
     );
 }
 
@@ -133,6 +146,100 @@ fn a_list_or_object_theme_is_a_field_error(#[case] input: &str) {
     );
 }
 
+/// `appearance.color_depth` (decision `color-depth-detection`): each value loads and saves as written.
+#[rstest]
+#[case::auto("auto", ColorDepthSetting::Auto)]
+#[case::truecolor("truecolor", ColorDepthSetting::TrueColor)]
+#[case::eight_bit("256", ColorDepthSetting::EightBit)]
+#[case::standard("16", ColorDepthSetting::Standard)]
+fn color_depths_load_and_save_as_written(#[case] input: &str, #[case] loaded: ColorDepthSetting) {
+    let (_tmp, paths, result) = load_text(&format!(r#"{{"appearance": {{"color_depth": "{input}"}}}}"#));
+    let (c, notes) = Config::load_with_notes(&paths).unwrap();
+    assert_eq!(result.unwrap(), c);
+    assert_eq!(c.appearance.color_depth, loaded);
+    assert_eq!(notes.invalid_color_depth, None);
+    assert!(notes.warnings().is_empty());
+    c.save(&paths).unwrap();
+    let saved: Value = serde_json::from_str(&std::fs::read_to_string(&paths.file).unwrap()).unwrap();
+    assert_eq!(saved["appearance"]["color_depth"], input);
+}
+
+/// A value that isn't one of the four loads as `auto`, with a warning, where every other bad enum stops the load:
+/// a wrong color depth costs only colors. The next save writes `auto`.
+#[rstest]
+#[case::unknown(r#""bogus""#)]
+#[case::wrong_case(r#""Auto""#)]
+#[case::empty(r#""""#)]
+#[case::number("256")]
+#[case::null("null")]
+#[case::list(r#"["16"]"#)]
+fn a_bad_color_depth_loads_as_auto_with_a_warning(#[case] input: &str) {
+    let text = format!(
+        r#"{{"appearance": {{"theme": "nord", "color_depth": {input}}}, "issues": {{"owner_filter": "mine"}}}}"#
+    );
+    let (_tmp, paths, result) = load_text(&text);
+    let c = result.unwrap();
+    assert_eq!(c.appearance.color_depth, ColorDepthSetting::Auto);
+    // The rest of the file loads as usual.
+    assert_eq!(c.appearance.theme, "nord");
+    assert_eq!(c.issues.owner_filter, IssueOwnerFilter::Mine);
+    let (_, notes) = Config::load_with_notes(&paths).unwrap();
+    let found: Value = serde_json::from_str(input).unwrap();
+    assert_eq!(notes.invalid_color_depth.as_ref(), Some(&found));
+    assert_eq!(
+        notes.warnings(),
+        [format!(
+            r#"appearance.color_depth: found {found}, expected one of "auto", "truecolor", "256", "16". Using "auto"."#
+        )]
+    );
+    c.save(&paths).unwrap();
+    let saved: Value = serde_json::from_str(&std::fs::read_to_string(&paths.file).unwrap()).unwrap();
+    assert_eq!(saved["appearance"]["color_depth"], "auto");
+}
+
+/// Only the color depth gets that leniency: another bad value in the same file still stops the load, and names
+/// itself, not the color depth.
+#[test]
+fn a_bad_color_depth_doesnt_hide_another_bad_value() {
+    let (_tmp, _paths, result) =
+        load_text(r#"{"appearance": {"color_depth": "bogus"}, "issues": {"state_filter": "bogus"}}"#);
+    assert!(
+        matches!(&result, Err(ConfigError::Invalid { field, .. }) if field == "issues.state_filter"),
+        "{result:?}"
+    );
+}
+
+/// The Rust-only key round-trips in Rust, and the Python app loads the file and drops the key
+/// (`python-rust-only-keys.json` is what it saves), which Rust then loads as `auto`.
+#[test]
+fn rust_only_keys_round_trip_and_python_drops_them() {
+    let text = fixture("rust-only-keys.json");
+    let (_tmp, paths, c) = load_ok(&text);
+    assert_eq!(c.appearance.color_depth, ColorDepthSetting::EightBit);
+    assert_eq!(c.appearance.theme, "nord");
+    assert!(c.appearance.extra.is_empty());
+    c.save(&paths).unwrap();
+    let saved: Value = serde_json::from_str(&std::fs::read_to_string(&paths.file).unwrap()).unwrap();
+    assert_contains(&saved, &serde_json::from_str(&text).unwrap(), "");
+
+    let python = fixture("python-rust-only-keys.json");
+    let python_json: Value = serde_json::from_str(&python).unwrap();
+    assert_eq!(python_json["appearance"].get("color_depth"), None);
+    assert_eq!(python_json["appearance"]["theme"], "nord");
+    assert_eq!(python_json["appearance"]["show_issues"], false);
+    let (_tmp, _paths, c) = load_ok(&python);
+    assert_eq!(c.appearance.color_depth, ColorDepthSetting::Auto);
+    assert!(!c.appearance.show_issues);
+}
+
+#[test]
+fn the_default_color_depth_is_auto() {
+    let config = Config::default_in(&ConfigPaths::in_dir("lazy-github"));
+    assert_eq!(config.appearance.color_depth, ColorDepthSetting::Auto);
+    let json: Value = serde_json::from_str(&config.to_json_pretty()).unwrap();
+    assert_eq!(json["appearance"]["color_depth"], "auto");
+}
+
 #[test]
 fn the_default_theme_is_dark() {
     let config = Config::default_in(&ConfigPaths::in_dir("lazy-github"));
@@ -153,6 +260,7 @@ fn config_goldens_are_fresh() {
             "crates/lazy-github-core/tests/fixtures/config/python-default.json",
             "crates/lazy-github-core/tests/fixtures/config/python-full.json",
             "crates/lazy-github-core/tests/fixtures/config/python-parsing.json",
+            "crates/lazy-github-core/tests/fixtures/config/python-rust-only-keys.json",
         ],
         Path::new("/home/lazy"),
         "HOME=/home/lazy uv run python crates/lazy-github-core/tests/fixtures/config/generate.py",
@@ -278,7 +386,10 @@ fn full_python_config_loads_every_value_and_saves_identically() {
     assert!(c.extra.is_empty());
 
     c.save(&paths).unwrap();
-    assert_eq!(std::fs::read_to_string(&paths.file).unwrap(), text);
+    assert_eq!(
+        std::fs::read_to_string(&paths.file).unwrap(),
+        with_rust_only_keys(&text)
+    );
 }
 
 #[test]
@@ -358,6 +469,7 @@ fn unknown_fields_survive_a_round_trip_after_known_keys() {
             "show_workflows",
             "show_issues",
             "show_pull_requests",
+            "color_depth",
             "zz_unknown",
             "aa_unknown"
         ]

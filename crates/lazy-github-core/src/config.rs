@@ -192,6 +192,40 @@ impl MergeMethod {
     }
 }
 
+/// How many colors the app draws with: `appearance.color_depth`. LazyGithub-only: the Python app has no such key, and
+/// its loader ignores it (and drops it on save).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum ColorDepthSetting {
+    /// Detect it from the environment.
+    #[default]
+    #[serde(rename = "auto")]
+    Auto,
+    /// 24-bit RGB.
+    #[serde(rename = "truecolor")]
+    TrueColor,
+    /// The xterm-256 palette.
+    #[serde(rename = "256")]
+    EightBit,
+    /// The 16 ANSI colors.
+    #[serde(rename = "16")]
+    Standard,
+}
+
+impl ColorDepthSetting {
+    /// Every setting, in the order Settings lists them.
+    pub const ALL: [Self; 4] = [Self::Auto, Self::TrueColor, Self::EightBit, Self::Standard];
+
+    /// The value as `config.json` stores it: `auto`, `truecolor`, `256` or `16`.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ColorDepthSetting::Auto => "auto",
+            ColorDepthSetting::TrueColor => "truecolor",
+            ColorDepthSetting::EightBit => "256",
+            ColorDepthSetting::Standard => "16",
+        }
+    }
+}
+
 /// The theme of a new config, and what a number, a bool or `null` loads as. Which names exist is the UI's business
 /// (its theme catalog), so a string loads as written, and a name the catalog doesn't know is drawn as its default.
 pub const DEFAULT_THEME: &str = "dark";
@@ -218,6 +252,11 @@ pub struct AppearanceSettings {
     /// Whether pull requests are shown on startup.
     #[serde(deserialize_with = "lax::bool")]
     pub show_pull_requests: bool,
+    /// How many colors to draw with; [`ColorDepthSetting::Auto`] detects them. A value that isn't one of the four
+    /// loads as `auto`, which [`LoadNotes::invalid_color_depth`] reports. Last, after the keys Python shares, so
+    /// Settings lists Python's fields in Python's order.
+    #[serde(deserialize_with = "lax::string_enum")]
+    pub color_depth: ColorDepthSetting,
     /// Unknown keys, written back on save.
     #[serde(flatten)]
     pub extra: ExtraFields,
@@ -231,6 +270,7 @@ impl Default for AppearanceSettings {
             show_workflows: true,
             show_issues: true,
             show_pull_requests: true,
+            color_depth: ColorDepthSetting::Auto,
             extra: ExtraFields::new(),
         }
     }
@@ -560,16 +600,39 @@ impl Config {
                 });
             }
         };
-        let mut config = Self::from_json(&text, &paths.file)?;
+        let (mut config, invalid_color_depth) = Self::from_json(&text, &paths.file)?;
         config.resolve(paths);
         let notes = LoadNotes {
             migrated_legacy_ttls: config.cache.migrate_legacy_ttls(),
+            invalid_color_depth,
         };
         Ok((config, notes))
     }
 
-    fn from_json(text: &str, path: &Path) -> Result<Self, ConfigError> {
-        Self::deserialize_json(text).map_err(|(field, err)| load_error(path, &field, &err))
+    /// The config in `text`, and the value of `appearance.color_depth` if it wasn't one of the four and loaded as
+    /// `auto`. Every other bad value stops the load: that key is LazyGithub's own, and a bad color depth costs only
+    /// colors, so it isn't worth refusing to start over.
+    fn from_json(text: &str, path: &Path) -> Result<(Self, Option<Value>), ConfigError> {
+        let to_error = |(field, err): (Vec<PathSegment>, serde_json::Error)| load_error(path, &field, &err);
+        let (field, err) = match Self::deserialize_json(text) {
+            Ok(config) => return Ok((config, None)),
+            Err(failure) => failure,
+        };
+        let color_depth = [
+            PathSegment::Key("appearance".to_owned()),
+            PathSegment::Key("color_depth".to_owned()),
+        ];
+        if !err.is_data() || field != color_depth {
+            return Err(to_error((field, err)));
+        }
+        // The text parsed, so this can only fail if it couldn't have.
+        let mut value: Value = serde_json::from_str(text).map_err(|err| load_error(path, &[], &err))?;
+        let found = value
+            .get_mut("appearance")
+            .and_then(|appearance| appearance.get_mut("color_depth"))
+            .map(|slot| std::mem::replace(slot, Value::from(ColorDepthSetting::Auto.as_str())));
+        let config = Self::deserialize_json(&value.to_string()).map_err(to_error)?;
+        Ok((config, found))
     }
 
     /// Deserializes `text`, or says where it failed (empty for the whole file or a syntax error) and why.
@@ -608,16 +671,40 @@ impl Config {
 
 /// What [`Config::load_with_notes`] changed in memory while loading. Nothing is saved because of it; the next save
 /// writes the changed values.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 #[must_use = "log the notes once logging is up"]
 pub struct LoadNotes {
     /// The file held Python's old cache TTLs, which loaded as today's defaults.
     pub migrated_legacy_ttls: bool,
+    /// `appearance.color_depth` held this value, which isn't one of the four, and loaded as `auto`.
+    pub invalid_color_depth: Option<Value>,
 }
 
 impl LoadNotes {
-    /// Logs one info line per change, for the command log.
-    pub fn log(self) {
+    /// Logs every note: [`Self::log_info`], then each of [`Self::warnings`] as a warning.
+    pub fn log(&self) {
+        self.log_info();
+        for warning in self.warnings() {
+            tracing::warn!("{warning}");
+        }
+    }
+
+    /// What the user should be told about: a value that loaded as something other than what the file says.
+    pub fn warnings(&self) -> Vec<String> {
+        self.invalid_color_depth
+            .iter()
+            .map(|found| {
+                let expected = ColorDepthSetting::ALL.map(|setting| format!("\"{}\"", setting.as_str()));
+                format!(
+                    "appearance.color_depth: found {found}, expected one of {}. Using \"auto\".",
+                    expected.join(", ")
+                )
+            })
+            .collect()
+    }
+
+    /// Logs one info line per change that needs no attention, for the command log.
+    pub fn log_info(&self) {
         if self.migrated_legacy_ttls {
             let (old, new) = (CacheSettings::LEGACY_TTLS, CacheSettings::DEFAULT_TTLS);
             tracing::info!(

@@ -116,7 +116,7 @@ wait = { gone = "press a key" }
 [[step]]
 capture = "cancelled"
 
-# q is recorded, not Close.
+# q is recorded, not Close. It's Quit's key too, so the binding is marked ! for the conflict (#382) instead of *.
 [[step]]
 keys = ["enter"]
 
@@ -127,7 +127,7 @@ wait = { text = "press a key" }
 keys = ["q"]
 
 [[step]]
-wait = { text = "*  Keybindings                q" }
+wait = { text = "!  Keybindings                q" }
 
 [[step]]
 capture = "q-recorded"
@@ -247,7 +247,7 @@ not_contains = ["press a key"]
 footer = ["⏎ Change key", "a Add key", "r Reset", "shift+⏎ Submit", "q Close", "/ Search"]
 
 [expect.q-recorded]
-contains = ["LazyGithub Settings", "*  Keybindings                q                 app.open_help"]
+contains = ["LazyGithub Settings", "!  Keybindings                q                 app.open_help"]
 footer = ["⏎ Change key", "a Add key", "r Reset", "shift+⏎ Submit", "q Close", "/ Search"]
 
 [expect.saved]

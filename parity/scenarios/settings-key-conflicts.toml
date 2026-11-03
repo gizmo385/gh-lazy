@@ -1,0 +1,117 @@
+version = 1
+description = "Settings Key Bindings conflict warnings (#382): a changed binding that shares a key with another binding active at the same time is marked ! with the other named on the detail line, its group counts it, a reset clears it, and Save still writes and closes, with a Key conflicts warning after Settings updated"
+# Rust only: Python doesn't check keys against each other (decision settings-key-bindings-list, D4). The modal is
+# loose text (see settings.toml). The harness can't send shift+enter, so Save is reached with tab from the list.
+gate = true
+apps = ["rust"]
+parity_rows = ["modals.settings-key-conflicts"]
+sizes = [[160, 48]]
+
+[env]
+fixtures = ["base"]
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+[[step]]
+keys = ["right", "right"]
+
+[[step]]
+wait = { text = "Custom keybinding overrides" }
+
+# The scroll area, then the list, with Quit highlighted.
+[[step]]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { focused = "Quit" }
+
+# Quit onto j, the table and diff cursors' key.
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "press a key" }
+
+[[step]]
+keys = ["j"]
+
+[[step]]
+wait = { text = "!  Quit" }
+
+[[step]]
+capture = "conflict"
+
+[[step]]
+keys = ["r"]
+
+[[step]]
+wait = { gone = "!  Quit" }
+
+[[step]]
+capture = "cleared"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "press a key" }
+
+[[step]]
+keys = ["j"]
+
+[[step]]
+wait = { text = "!  Quit" }
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Save" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Key conflicts" }
+
+[[step]]
+capture = "saved"
+
+[expect.conflict]
+contains = [
+    "General  1 conflict",
+    "Tables  1 conflict",
+    "!  Quit                       j                 app.quit",
+    "app.quit · default q · changed · ! j also Table cursor down",
+]
+
+[expect.cleared]
+contains = ["General", "   Quit                       q                 app.quit", "app.quit · default q"]
+not_contains = ["!  Quit", "conflict", "changed"]
+
+[expect.saved]
+focused = ["[1] Repositories"]
+contains = ["Settings updated", "Key conflicts"]
+not_contains = ["LazyGithub Settings"]

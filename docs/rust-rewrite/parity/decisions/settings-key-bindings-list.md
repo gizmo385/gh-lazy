@@ -18,7 +18,7 @@
   flagged in context, only when one side was changed, inline plus a non-blocking toast on Save), D5 A (compare
   parsed keys, which revisits Py bug B93) and D6 A (`a` adds a key, `enter` replaces).
 - Link: https://github.com/gizmo385/gh-lazy/issues/342, #381, #382
-- Rows: `modals.settings-key-rebinding`
+- Rows: `modals.settings-key-rebinding`, `modals.settings-key-conflicts`
 
 Python's `KeySelectionInput` rows each take the next key as soon as they have focus. So the arrow keys, `j`, `k`,
 `enter` and `q` rebind the row instead of moving or closing, and only `tab` and `shift+tab` move on, through about
@@ -36,3 +36,13 @@ the other. Non-ASCII keys are still saved as the character itself
 One rule changes with it: a binding whose keys parse to its default keys counts as the default, so capturing `?` on
 "Keybindings" removes the override instead of saving `question_mark`. That departs from Py bug B93's "keep parity"
 answer, which was about Python's tab (D5 on #342, answered A).
+
+The conflict check (#382, D4 A) asks which binding a key would fire in each focus state the app has (a section
+table, the details tabs, a PR conversation on a comment, the diff viewer, each dialog with a button, switch, select
+or list focused, ...), with the app's own rules: within one component the changed binding takes the key, the
+component nearest the focus wins, and `ctrl+q` quits before anything else. Two bindings that want one key in one of
+those states, where at least one was changed, are both marked `!`, the detail line names the other binding and
+where they meet, and each group header counts its bindings in a conflict. A built-in on the other side (`tab`,
+`up`, the list's `r`) is named "(built-in)". Focus inside a text input or editor is left out, since it types the
+key first. The defaults' own overlaps (`r` replying to a comment inside a review) never warn. Save still writes
+and closes; a "Key conflicts" warning follows "Settings updated" while any remain.

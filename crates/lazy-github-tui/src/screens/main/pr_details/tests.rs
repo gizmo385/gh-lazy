@@ -1602,7 +1602,7 @@ mod gh_failures {
     use crate::test_util::{assert_gh_failures_surface, gh_failures};
 
     fn nothing_pending(app: &TestApp) -> Result<(), String> {
-        match main(app).pending_pr {
+        match main(app).pending {
             Some(_) => Err("a pull request is still pending".into()),
             None => Ok(()),
         }

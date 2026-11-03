@@ -50,28 +50,44 @@ pub struct NotificationSubject {
     pub kind: String,
 }
 
-/// A pull request API URL: Python's `_PULL_REQUEST_URL_REGEX`, a prefix match of a scheme, slashes and one host
-/// segment, then `/repos/<owner>/<repo>/pulls/<digits>`. Any path may come between the host and `/repos/`, so GitHub
-/// Enterprise's `/api/v3` matches too (Py bug B83's recommendation). `(?s)` and `[^/]` let a newline through as
-/// Python's pattern does; the digits are ASCII only, which is all GitHub sends.
-static PULL_REQUEST_URL: LazyLock<Regex> = LazyLock::new(|| {
-    // A literal pattern, checked by `pull_request_numbers` in the tests.
-    Regex::new(r"(?s)^[^:]+:/+[^/]+(?:/.*)?/repos/[^/]+/[^/]+/pulls/([0-9]+)")
-        .expect("a valid pull request URL pattern")
+/// A pull request or issue API URL: Python's `_PULL_REQUEST_URL_REGEX`, a prefix match of a scheme, slashes and one
+/// host segment, then `/repos/<owner>/<repo>/pulls/<digits>`, widened to `issues` (#405). Any path may come between
+/// the host and `/repos/`, so GitHub Enterprise's `/api/v3` matches too (Py bug B83's recommendation). `(?s)` and
+/// `[^/]` let a newline through as Python's pattern does; the digits are ASCII only, which is all GitHub sends.
+static SUBJECT_URL: LazyLock<Regex> = LazyLock::new(|| {
+    // A literal pattern, checked by `subject_numbers` in the tests.
+    Regex::new(r"(?s)^[^:]+:/+[^/]+(?:/.*)?/repos/[^/]+/[^/]+/(pulls|issues)/([0-9]+)")
+        .expect("a valid subject URL pattern")
 });
 
+/// What a notification's subject URL numbers, in the notification's repository.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SubjectNumber {
+    /// A `.../pulls/<n>` URL.
+    PullRequest(u64),
+    /// A `.../issues/<n>` URL. GitHub numbers pull requests and issues together, so the number may still be a pull
+    /// request's.
+    Issue(u64),
+}
+
 impl NotificationSubject {
-    /// The number of the pull request this subject is, when its URL is a pull request API URL
-    /// (`https://api.github.com/repos/<owner>/<repo>/pulls/5`, or anything after the digits). The URL's owner and repo
-    /// aren't returned: Python fetches the number from the notification's repository.
-    pub fn pull_request_number(&self) -> Option<u64> {
-        pull_request_number(self.url.as_deref()?)
+    /// What this subject's URL numbers, when it's a pull request or issue API URL
+    /// (`https://api.github.com/repos/<owner>/<repo>/pulls/5` or `.../issues/7`, with anything after the digits).
+    /// The URL's owner and repo aren't returned: the number is fetched from the notification's repository, as Python
+    /// does for pull requests.
+    pub fn number(&self) -> Option<SubjectNumber> {
+        subject_number(self.url.as_deref()?)
     }
 }
 
-/// The pull request number in `url`, if it's a pull request API URL (see [`NotificationSubject::pull_request_number`]).
-fn pull_request_number(url: &str) -> Option<u64> {
-    PULL_REQUEST_URL.captures(url)?.get(1)?.as_str().parse().ok()
+/// The pull request or issue number in `url` (see [`NotificationSubject::number`]).
+fn subject_number(url: &str) -> Option<SubjectNumber> {
+    let captures = SUBJECT_URL.captures(url)?;
+    let number = captures.get(2)?.as_str().parse().ok()?;
+    match captures.get(1)?.as_str() {
+        "pulls" => Some(SubjectNumber::PullRequest(number)),
+        _ => Some(SubjectNumber::Issue(number)),
+    }
 }
 
 /// A `u64` sent as a JSON number or as a string of digits.
@@ -189,13 +205,26 @@ mod tests {
         })
     }
 
+    const fn pr(number: u64) -> SubjectNumber {
+        SubjectNumber::PullRequest(number)
+    }
+
+    const fn issue(number: u64) -> SubjectNumber {
+        SubjectNumber::Issue(number)
+    }
+
     #[rstest::rstest]
-    #[case::github_com("https://api.github.com/repos/parity-bot/pr-details/pulls/5", Some(5))]
-    #[case::trailing_path("https://api.github.com/repos/o/r/pulls/5/files", Some(5))]
-    #[case::trailing_non_digits("https://api.github.com/repos/o/r/pulls/5abc", Some(5))]
-    #[case::many_slashes("https:///api.github.com/repos/o/r/pulls/12", Some(12))]
-    #[case::ghe("https://ghe.example.com/api/v3/repos/o/r/pulls/7", Some(7))]
-    #[case::issue("https://api.github.com/repos/o/r/issues/5", None)]
+    #[case::github_com("https://api.github.com/repos/parity-bot/pr-details/pulls/5", Some(pr(5)))]
+    #[case::issue("https://api.github.com/repos/parity-bot/pr-details/issues/7", Some(issue(7)))]
+    #[case::trailing_path("https://api.github.com/repos/o/r/pulls/5/files", Some(pr(5)))]
+    #[case::issue_trailing_path("https://api.github.com/repos/o/r/issues/7/comments", Some(issue(7)))]
+    #[case::trailing_non_digits("https://api.github.com/repos/o/r/pulls/5abc", Some(pr(5)))]
+    #[case::many_slashes("https:///api.github.com/repos/o/r/pulls/12", Some(pr(12)))]
+    #[case::ghe("https://ghe.example.com/api/v3/repos/o/r/pulls/7", Some(pr(7)))]
+    #[case::ghe_issue("https://ghe.example.com/api/v3/repos/o/r/issues/8", Some(issue(8)))]
+    #[case::path_before_repos("https://api.github.com/some/prefix/repos/o/r/issues/4", Some(issue(4)))]
+    #[case::release("https://api.github.com/repos/o/r/releases/1", None)]
+    #[case::issue_comment("https://api.github.com/repos/o/r/issues/comments/5", None)]
     #[case::no_digits("https://api.github.com/repos/o/r/pulls/", None)]
     #[case::not_a_number("https://api.github.com/repos/o/r/pulls/x", None)]
     #[case::empty("", None)]
@@ -203,20 +232,24 @@ mod tests {
     #[case::no_host("https:///repos/o/r/pulls/5", None)]
     #[case::empty_owner("https://api.github.com/repos//r/pulls/5", None)]
     // Python's scheme is anything up to the first colon.
-    #[case::loose_scheme("see https://api.github.com/repos/o/r/pulls/5", Some(5))]
-    #[case::port("https://ghe.example.com:8443/repos/o/r/pulls/3", Some(3))]
+    #[case::loose_scheme("see https://api.github.com/repos/o/r/pulls/5", Some(pr(5)))]
+    #[case::port("https://ghe.example.com:8443/repos/o/r/pulls/3", Some(pr(3)))]
+    #[case::issue_port("https://ghe.example.com:8443/repos/o/r/issues/3", Some(issue(3)))]
     #[case::too_big("https://api.github.com/repos/o/r/pulls/99999999999999999999999", None)]
-    fn pull_request_numbers(#[case] url: &str, #[case] number: Option<u64>) {
-        assert_eq!(pull_request_number(url), number);
+    #[case::issue_too_big("https://api.github.com/repos/o/r/issues/99999999999999999999999", None)]
+    fn subject_numbers(#[case] url: &str, #[case] number: Option<SubjectNumber>) {
+        assert_eq!(subject_number(url), number);
     }
 
     #[test]
-    fn a_subject_without_a_url_is_no_pull_request() {
+    fn a_subject_without_a_url_has_no_number() {
         let mut subject: Notification = serde_json::from_value(notification(&json!(1))).unwrap();
-        assert_eq!(subject.subject.pull_request_number(), None);
+        assert_eq!(subject.subject.number(), None);
         // The owner and repo in the URL aren't the caller's: only the number comes back.
         subject.subject.url = Some("https://api.github.com/repos/someone/else/pulls/9".to_owned());
-        assert_eq!(subject.subject.pull_request_number(), Some(9));
+        assert_eq!(subject.subject.number(), Some(pr(9)));
+        subject.subject.url = Some("https://api.github.com/repos/someone/else/issues/9".to_owned());
+        assert_eq!(subject.subject.number(), Some(issue(9)));
     }
 
     #[test]

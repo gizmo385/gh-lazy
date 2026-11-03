@@ -24,7 +24,7 @@ pub use checks::{
 };
 pub use comment::{CommentRef, IssueComment};
 pub use issue::{Issue, IssueListItem, IssueState, PartialPullRequest};
-pub use notification::{Notification, NotificationSubject};
+pub use notification::{Notification, NotificationSubject, SubjectNumber};
 pub use pull_request::{FullPullRequest, GitRef};
 pub use reaction::{Reaction, ReactionKind, Reactions};
 pub use repo_name::RepoName;

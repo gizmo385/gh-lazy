@@ -9,6 +9,7 @@ mod issues;
 pub mod layout;
 mod list;
 mod new_pull_request;
+mod open_in_repo;
 mod overview_text;
 mod pr_details;
 mod pr_edit;
@@ -63,6 +64,8 @@ pub use details::{MaximizeScope, SectionKey, TabSwitch};
 use issue_lists::IssueLists;
 use issue_lookup::IssueLookup;
 use layout::{LayoutInput, layout};
+pub use open_in_repo::{OpenInRepo, OpenOrigin, RepoItem, RepoRef};
+use open_in_repo::{PendingSelection, PullRequestOrigin};
 pub use pr_details::PullRequestTarget;
 use pr_edit::PrEdit;
 use pr_lookup::{PrLookup, select_repository_first};
@@ -324,8 +327,9 @@ pub struct MainScreen {
     table_areas: [Option<Rect>; 4],
     /// Where each focus target was drawn last, for clicks: the interiors of the boxes, not their borders.
     hits: Vec<(Rect, FocusTarget)>,
-    /// The selected pull request's request, while it's in flight. Only the latest selection is ever shown.
-    pending_pr: Option<PendingPullRequest>,
+    /// The selection still loading (a pull request, or a stage of an [`OpenInRepo`]). Only the latest selection is
+    /// ever shown.
+    pending: Option<PendingSelection>,
     /// The preload of the pull request for the working directory's commit, for the latest repo selection: a
     /// selection that any newer one replaces.
     preload: CommitPreload,
@@ -333,28 +337,6 @@ pub struct MainScreen {
     /// browser when it doesn't.
     follows: Vec<(RequestId, Arc<str>)>,
 }
-
-/// A pull request selection waiting for the full pull request.
-#[derive(Debug, Clone, Copy)]
-struct PendingPullRequest {
-    id: RequestId,
-    /// Whether the tab strip takes focus once it shows.
-    focus: bool,
-    origin: PullRequestOrigin,
-}
-
-/// What asked for a pending pull request, which decides what its answer toasts.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum PullRequestOrigin {
-    /// A table row, or a just-merged pull request: a failure is "Error fetching pull request!".
-    Selection,
-    /// A chosen notification's subject: either way a toast says what opened, and a failure opens only the repo.
-    Notification,
-}
-
-/// The toasts after a chosen notification opens: Python's `action_view_notifications`.
-const OPENING_PULL_REQUEST: &str = "Opening pull request for notification";
-const OPENING_REPOSITORY: &str = "Opening repository for notification";
 
 /// The toasts after a link opens in the app: Python's `_open_link_subject`.
 const OPENING_PULL_REQUEST_FOR_LINK: &str = "Opening pull request for link";
@@ -395,12 +377,21 @@ pub enum MainAction {
     /// Open the Notifications modal (`notifications.open`, only while notifications are on).
     OpenNotifications,
     /// The Notifications modal closed, with the notification chosen there, if any. Either way the unread count
-    /// refreshes, as Python's `action_view_notifications` does once the modal returns; a chosen one's repo is then
-    /// selected and its subject opened.
+    /// refreshes, as Python's `action_view_notifications` does once the modal returns; a chosen one then opens in its
+    /// repo ([`MainAction::OpenInRepo`]).
     NotificationsClosed(Option<Box<Notification>>),
-    /// Open a chosen notification's subject, its repo already selected: a pull request is fetched from that repo and
-    /// shown; anything else just toasts that the repo opened.
-    OpenNotificationSubject(Box<Notification>),
+    /// Select a repo, then open a pull request or issue in it: the one path a chosen notification and a search hit
+    /// open through (#405). A new selection.
+    OpenInRepo(Box<OpenInRepo>),
+    /// [`MainAction::OpenInRepo`]'s second half, once `repo` is selected: the item is fetched from it and shown.
+    OpenRepoItem {
+        /// The repo just selected.
+        repo: Box<Repository>,
+        /// What opens.
+        item: RepoItem,
+        /// What asked.
+        origin: OpenOrigin,
+    },
     /// Open the Paste link dialog (`link.paste`): empty from the key, or holding the text of a bracketed paste on the
     /// screen (decision `paste-opens-link-modal`).
     OpenPasteLink(Option<String>),
@@ -516,7 +507,7 @@ impl MainScreen {
             reruns: RunReruns::default(),
             table_areas: [None; 4],
             hits: Vec::new(),
-            pending_pr: None,
+            pending: None,
             preload: CommitPreload::default(),
             follows: Vec::new(),
         }
@@ -607,53 +598,18 @@ impl MainScreen {
         }
     }
 
-    /// A new selection replaces any still loading: the pending pull request request and the preload's lookup are
-    /// cancelled, and their answers, if they come anyway, are dropped. Every selection calls this first.
-    fn cancel_pending_selection(&mut self, cx: &mut Cx<'_>) {
-        if let Some(pending) = self.pending_pr.take() {
-            cx.effect(Effect::Cancel(pending.id));
-        }
-        self.preload.cancel(cx);
-    }
-
     /// `MainAction::OpenPullRequest`: a table row (or a just-merged pull request) is fetched first, and nothing changes
     /// until it arrives; a full pull request shows at once. Python's `MainViewPane.load_pull_request`.
     fn open_pull_request(&mut self, target: PullRequestTarget, focus: bool, cx: &mut Cx<'_>) {
         self.cancel_pending_selection(cx);
         match target {
             PullRequestTarget::Partial(pr) => {
-                let id = cx.request(GithubRequest::PullRequest {
-                    repo: Box::new(pr.issue.repo),
-                    number: pr.issue.number,
-                });
-                self.pending_pr = Some(PendingPullRequest {
-                    id,
-                    focus,
-                    origin: PullRequestOrigin::Selection,
-                });
+                let number = pr.issue.number;
+                let repo = Box::new(pr.issue.repo);
+                self.request_pull_request(repo, number, focus, PullRequestOrigin::Selection, cx);
             }
             PullRequestTarget::Full(pr) => self.show_pull_request(*pr, focus, cx),
         }
-    }
-
-    /// `MainAction::OpenNotificationSubject`: Python's `extract_notification_subject`. A pull request subject is
-    /// fetched by its number from the notification's repository (not the URL's owner and repo, as in Python), as a
-    /// selection that a newer one replaces.
-    fn open_notification_subject(&mut self, notification: &Notification, cx: &mut Cx<'_>) {
-        let Some(number) = notification.subject.pull_request_number() else {
-            cx.notify(Toast::info(OPENING_REPOSITORY));
-            return;
-        };
-        self.cancel_pending_selection(cx);
-        let id = cx.request(GithubRequest::PullRequest {
-            repo: Box::new(notification.repository.clone()),
-            number,
-        });
-        self.pending_pr = Some(PendingPullRequest {
-            id,
-            focus: true,
-            origin: PullRequestOrigin::Notification,
-        });
     }
 
     fn show_pull_request(&mut self, pr: FullPullRequest, focus: bool, cx: &mut Cx<'_>) {
@@ -791,34 +747,6 @@ impl MainScreen {
         self.details_shown(&label, true, cx);
     }
 
-    /// Takes the answer to the pending pull request selection, and hands back any other response. A failure leaves
-    /// everything as it was, with Python's log line and toast; an answer to a selection since replaced is dropped.
-    fn on_pull_request(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
-        let GithubResponse::PullRequest(result) = response else {
-            return Some(response);
-        };
-        let Some(pending) = self.pending_pr.filter(|pending| pending.id == id) else {
-            tracing::debug!("Dropping the pull request response {id} of a selection no longer current");
-            return None;
-        };
-        self.pending_pr = None;
-        match (result, pending.origin) {
-            (Ok(pr), origin) => {
-                self.show_pull_request(*pr, pending.focus, cx);
-                if origin == PullRequestOrigin::Notification {
-                    cx.notify(Toast::info(OPENING_PULL_REQUEST));
-                }
-            }
-            (Err(error), PullRequestOrigin::Selection) => pull_request_failed(&error, cx),
-            // Python's `extract_notification_subject` swallows the failure: the repo it selected stays.
-            (Err(error), PullRequestOrigin::Notification) => {
-                tracing::debug!("Fetching the notification's pull request failed: {error}");
-                cx.notify(Toast::info(OPENING_REPOSITORY));
-            }
-        }
-        None
-    }
-
     /// Git said what the current-directory repo is: the repos section may select it.
     pub fn on_local_repo(&mut self, cx: &mut Cx<'_>) {
         self.repos.check_current_directory_repo(cx);
@@ -907,7 +835,7 @@ impl MainScreen {
         let response = self.edits.on_response(id, response, cx)?;
         let response = self.reruns.on_response(id, response, cx)?;
         let response = self.preload.on_response(id, response, cx)?;
-        let response = self.on_pull_request(id, response, cx)?;
+        let response = self.on_pending_selection(id, response, cx)?;
         self.details.on_response(id, response, cx)
     }
 
@@ -1841,7 +1769,8 @@ impl Component for MainScreen {
             }
             MainAction::OpenNotifications => open_notifications(cx),
             MainAction::NotificationsClosed(chosen) => notifications_closed(chosen, cx),
-            MainAction::OpenNotificationSubject(notification) => self.open_notification_subject(&notification, cx),
+            MainAction::OpenInRepo(request) => self.open_in_repo(*request, cx),
+            MainAction::OpenRepoItem { repo, item, origin } => self.open_repo_item(repo, item, origin, cx),
             MainAction::OpenPasteLink(text) => {
                 let dialog = text.map_or_else(PasteLinkDialog::new, |text| PasteLinkDialog::with_text(&text));
                 cx.open_dialog(dialog, |subject| {
@@ -1964,13 +1893,13 @@ fn open_notifications(cx: &mut Cx<'_>) {
 }
 
 /// `MainAction::NotificationsClosed`: the rest of Python's `action_view_notifications`. The count refreshes; a
-/// chosen notification's repo is then selected and its subject opened, in that order, so the repo selection cancels
-/// any pending selection before the subject's request exists.
+/// chosen notification then selects its repo, even the one already selected, and opens its pull request or issue
+/// there (decision `notification-opens-issue` for issues, which Python leaves at the repo).
 fn notifications_closed(chosen: Option<Box<Notification>>, cx: &mut Cx<'_>) {
     cx.dispatch(Action::RefreshNotifications);
     if let Some(notification) = chosen {
-        cx.dispatch(Action::SelectRepo(Box::new(notification.repository.clone())));
-        cx.dispatch(Action::Main(MainAction::OpenNotificationSubject(notification)));
+        let request = OpenInRepo::notification(&notification);
+        cx.dispatch(Action::Main(MainAction::OpenInRepo(Box::new(request))));
     }
 }
 
@@ -1982,6 +1911,9 @@ mod new_issue_tests;
 
 #[cfg(test)]
 mod notification_open_tests;
+
+#[cfg(test)]
+mod open_in_repo_tests;
 
 #[cfg(test)]
 mod new_pull_request_tests;

@@ -19,23 +19,23 @@ expression: "crate::test_util::buffer_to_styled_string(&app.render(160, 48))"
 │                             █  Repository-specific settings                                                                    █                             │
 │                             █                                                                                                  █with!                        │
 │                             █                                                                                                  █                             │
-│                             █ Additional Repos To Track:                     ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎   █                             │
-│                             █                                                ▊  Add new item...                            ▎   █                             │
-└─────────────────────────────█                                                ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎   █                             │
+│                             █ Additional Repos To Track:                      ┌──────────────────────────────────────────────┐ █                             │
+│                             █                                                 │ + Add item...                                │ █                             │
+└─────────────────────────────█                                                 └──────────────────────────────────────────────┘ █                             │
 ┌─ [2] Pull Requests ─────────█                                                                                                  █PR diff, and participating   │
-│ #  Status  Author  Title    █                                                ┌─────────────────────────────────────────────┐   █reate a new PR for the       │
-│                             █                                                └─────────────────────────────────────────────┘   █                             │
-│                             █                                                                                                  █                             │
-│                             █                                                                                                  █                             │
-│                             █ Favorites:                                     ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎   █                             │
-│                             █                                                ▊  Add new item...                            ▎   █                             │
-│                             █                                                ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎   █ting in any activate         │
+│ #  Status  Author  Title    █                                                                                                  █reate a new PR for the       │
+│                             █ Favorites:                                      ┌──────────────────────────────────────────────┐ █                             │
+│                             █                                                 │ octo/one                                     │ █                             │
+│                             █                                                 │ octo/two                                     │ █                             │
+│                             █                                                 │ + Add item...                                │ █                             │
+│                             █                                                 └──────────────────────────────────────────────┘ █                             │
+│                             █                                                                                                  █ting in any activate         │
 └─────────────────────────────█                                                                                                  █itself. This means that you  │
-┌─ [3] Issues ────────────────█                                                ┌─────────────────────────────────────────────┐   █                             │
-│ #  Status  Author  Title    █                                                │ ▐X▌ octo/one                                │   █                             │
-│                             █                                                │ ▐X▌ octo/two                                │   █                             │
-│                             █                                                └─────────────────────────────────────────────┘   █                             │
-│                             █                                                                                                ▆▆█                             │
+┌─ [3] Issues ────────────────█                                                                                                  █                             │
+│ #  Status  Author  Title    █                                                                                                  █                             │
+│                             █                                                                                                  █                             │
+│                             █                                                                                                  █                             │
+│                             █                                                                                                  █                             │
 │                             █                                                                                                  █tly only supports listing    │
 │                             █                                                                                                  █e currently selected repo,   │
 │                             █──────────────────────────────────────────────────────────────────────────────────────────────────█.                            │
@@ -49,7 +49,7 @@ expression: "crate::test_util::buffer_to_styled_string(&app.render(160, 48))"
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
- shift+⏎ Submit  q Close  / Search
+ ⏎ Edit  a Add  d Remove  shift+↑ Move up  shift+↓ Move down  shift+⏎ Submit  q Close  / Search
 --- styles
 ................................................................................................................................................................
 .aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
@@ -63,42 +63,42 @@ baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
 baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhkkkkkkkkkkhhkkkkkkkkkkkkkhhkkkkkkkkkkkkhhhhhhhhhhhhhhhhkkkkkkkkkkkkkhhkkkkkkhhkkkkkhhkkkkhhkkkhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 baaaaaaaaaaaaaaaaaaaaaaaaaaaaafllllllllllllllllllllllllllllllllllllllllllmmmmmmmmmmmmllllllllllllllllllllllllllllllllllllllllllllfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhoooooooooooooooooooooooooooohhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfpppppaaaaaaaaaaaaaaaaaaaaaaaac
-baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhqqqqqqqqqqqqqqqqqqqqqqqqqqhhhhhhhhhhhhhhhhhhhhhrsssssssssssssssssssssssssssssssssssssssssssssthnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhruuvvvvvvvvvvvvvvvuuuuuuuuuuuuuuuuuuuuuuuuuuuuthnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhrsssssssssssssssssssssssssssssssssssssssssssssthnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-cwwwwwwwwwwwwwwwwwwwwwwwwwwwwwfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhqqqqqqqqqqhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhrsssssssssssssssssssssssssssssssssssssssssssssthnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhruuvvvvvvvvvvvvvvvuuuuuuuuuuuuuuuuuuuuuuuuuuuuthnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhrsssssssssssssssssssssssssssssssssssssssssssssthnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-cwwwwwwwwwwwwwwwwwwwwwwwwwwwwwfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhyzABACCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCzyhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhyzDEDzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhFFfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhGGfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhnnnnnnnnnnnnnnnnnnnnnnnnnnnnhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfoooooaaaaaaaaaaaaaaaaaaaaaaaac
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhpppppppppppppppppppppppppphhhhhhhhhhhhhhhhhhhhhhqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhqrssssssssssssssssssssssssssssssssssssssssssssrqhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhIIIIIIIIIIIIIIIIJJJJJJJJJJJJJJJJhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-cwwwwwwwwwwwwwwwwwwwwwwwwwwwwwfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhKKKKKLLLLLLKKKKKMMMMNNNNNNNNMMMMhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhOOOOOOOOOOOOOOOOPPPPPPPPPPPPPPPPhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+ctttttttttttttttttttttttttttttfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhpppppppppphhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhuvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvuhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhuvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwvuhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhuvxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxvuhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+ctttttttttttttttttttttttttttttfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+ccccccccccccccccccccccccccccccfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhzzzzzzzzzzzzzzzzAAAAAAAAAAAAAAAAhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+ctttttttttttttttttttttttttttttfhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhBBBBBCCCCCCBBBBBDDDDEEEEEEEEDDDDhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+caaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhFFFFFFFFFFFFFFFFGGGGGGGGGGGGGGGGhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-QQQQQQQQQRRRRRRRQQQRRRRRRQQQRRRRRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+HHHIIIIIHHHIIIIHHHIIIIIIIHHHHHHHHHIIIIIIIIHHHHHHHHHIIIIIIIIIIHHHHHHHHHIIIIIIIHHHIIIIIIHHHIIIIIIIJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
 --- legend
 . fg=#0a263a bg=#121212
 a fg=#646464 bg=#121212
@@ -114,35 +114,26 @@ j fg=#0b3a5f bg=#121212 BOLD
 k fg=#979797 bg=#4f4f4f
 l fg=#5d5d5d bg=#4f4f4f
 m fg=#0178d4 bg=#4f4f4f
-n fg=#003054 bg=#4f4f4f REVERSED
-o fg=#aeaeae bg=#4f4f4f
-p fg=#646464 bg=#121212 BOLD
-q fg=#e0e0e0 bg=#4f4f4f BOLD
-r fg=#191919 bg=#4f4f4f REVERSED
-s fg=#191919 bg=#1e1e1e
-t fg=#191919 bg=#4f4f4f
-u fg=#e0e0e0 bg=#1e1e1e
-v fg=#737373 bg=#1e1e1e
-w fg=#646464 bg=#191d21 BOLD
-x fg=#0178d4 bg=#1e1e1e
-y fg=#0178d4 bg=#272727
-z fg=#e0e0e0 bg=#272727
-A fg=#242f38 bg=#0178d4
-B fg=#000f18 bg=#242f38
-C fg=#ddedf9 bg=#0178d4 BOLD
-D fg=#242f38 bg=#272727
-E fg=#8ad4a1 bg=#242f38
-F fg=#003054 bg=#000000 REVERSED
-G fg=#e0e0e0 bg=#000000
-H fg=#004578 bg=#4f4f4f
-I fg=#7ae998 bg=#4ebf71
-J fg=#e76580 bg=#b93c5b
-K fg=#0a180e bg=#4ebf71
-L fg=#0a180e bg=#4ebf71 BOLD
-M fg=#f5e5e9 bg=#b93c5b
-N fg=#f5e5e9 bg=#b93c5b BOLD
-O fg=#008139 bg=#4ebf71
-P fg=#780028 bg=#b93c5b
-Q fg=#ffa62b bg=#242f38 BOLD
-R fg=#e0e0e0 bg=#242f38
-S fg=Reset bg=#242f38
+n fg=#aeaeae bg=#4f4f4f
+o fg=#646464 bg=#121212 BOLD
+p fg=#e0e0e0 bg=#4f4f4f BOLD
+q fg=#0178d4 bg=#1e1e1e
+r fg=#e0e0e0 bg=#1e1e1e
+s fg=#9e9e9e bg=#1e1e1e
+t fg=#646464 bg=#191d21 BOLD
+u fg=#0178d4 bg=#272727
+v fg=#e0e0e0 bg=#272727
+w fg=#ddedf9 bg=#0178d4 BOLD
+x fg=#a1a1a1 bg=#272727
+y fg=#004578 bg=#4f4f4f
+z fg=#7ae998 bg=#4ebf71
+A fg=#e76580 bg=#b93c5b
+B fg=#0a180e bg=#4ebf71
+C fg=#0a180e bg=#4ebf71 BOLD
+D fg=#f5e5e9 bg=#b93c5b
+E fg=#f5e5e9 bg=#b93c5b BOLD
+F fg=#008139 bg=#4ebf71
+G fg=#780028 bg=#b93c5b
+H fg=#ffa62b bg=#242f38 BOLD
+I fg=#e0e0e0 bg=#242f38
+J fg=Reset bg=#242f38

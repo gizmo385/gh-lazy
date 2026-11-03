@@ -11,10 +11,10 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
 
-use super::SettingsFocus;
 use super::key_list::{self, KeyList};
-use super::list_field::ListField;
+use super::{SettingsFocus, refused_toast};
 use crate::components::command_log::Wheel;
+use crate::components::list_editor::{ListEditor, ListEditorOutcome};
 use crate::components::markdown::wrap;
 use crate::components::scroll_view::ScrollView;
 use crate::components::select::{self, DEFAULT_PROMPT, Select};
@@ -23,6 +23,7 @@ use crate::components::text_input::{self, TextInput};
 use crate::fuzzy::fuzzy_match;
 use crate::modal::form::FormScroll;
 use crate::theme::{Catalog, Paint, Theme};
+use crate::toast::Toast;
 
 /// The section's blank border, each side.
 const BORDER: u16 = 1;
@@ -42,6 +43,10 @@ const MAX_INPUT_WIDTH: u16 = 70;
 /// The template field's placeholder (Python's `PathInput`).
 const PATH_PLACEHOLDER: &str = "Enter file path...";
 
+/// A list field's add input placeholder: what its items are.
+const REPO_PLACEHOLDER: &str = "owner/repo";
+const USER_PLACEHOLDER: &str = "username";
+
 /// A field's widget, by its kind.
 #[derive(Debug, Clone)]
 pub(super) enum FieldWidget {
@@ -51,8 +56,8 @@ pub(super) enum FieldWidget {
     Select(Select<&'static str>),
     /// Text: numbers, timestamps, paths, the base URL and the template.
     Text(TextInput),
-    /// A list of strings.
-    List(ListField),
+    /// A list of strings, in a list editor (#343).
+    List(ListEditor),
 }
 
 /// One field: its descriptor, its label and its widget.
@@ -76,7 +81,14 @@ impl SettingField {
                 unchanged = Catalog::builtin().resolve(&name).theme().map(|theme| theme.name);
                 FieldWidget::Select(theme_select(unchanged))
             }
-            FieldValue::List(items) => FieldWidget::List(ListField::new(items)),
+            FieldValue::List(items) => {
+                let placeholder = if field.name == "additional_suggested_pr_reviewers" {
+                    USER_PLACEHOLDER
+                } else {
+                    REPO_PLACEHOLDER
+                };
+                FieldWidget::List(ListEditor::new(items, placeholder))
+            }
             FieldValue::Text(text) => {
                 let placeholder = if field.kind == FieldKind::OptionalPath {
                     PATH_PLACEHOLDER
@@ -127,7 +139,7 @@ impl SettingField {
             }
             FieldWidget::Select(select) => FieldValue::Choice(select.value().copied()?),
             FieldWidget::Text(input) => FieldValue::Text(input.value().to_owned()),
-            FieldWidget::List(list) => FieldValue::List(list.value()),
+            FieldWidget::List(list) => FieldValue::List(list.items().to_vec()),
         })
     }
 
@@ -135,7 +147,6 @@ impl SettingField {
     pub(super) fn input_mut(&mut self, stop: SettingsFocus) -> Option<&mut TextInput> {
         match (&mut self.widget, stop) {
             (FieldWidget::Text(input), SettingsFocus::Field(_)) => Some(input),
-            (FieldWidget::List(list), SettingsFocus::Field(_)) => Some(&mut list.input),
             _ => None,
         }
     }
@@ -196,7 +207,7 @@ impl PaneLayout {
 /// What a press in the pane's scroll area landed on.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum PaneHit {
-    /// A field's focus stop: a widget, or a list field's input or checklist.
+    /// A field's focus stop: its widget.
     Stop(SettingsFocus),
     /// The area around the fields, which focuses the scroll area itself.
     Area,
@@ -215,6 +226,8 @@ pub(super) struct SettingsPane {
     pub(super) scroll: FormScroll,
     /// The layout at the last draw, for revealing a field and for the mouse.
     layout: PaneLayout,
+    /// A stop to reveal at the next draw, once the layout has caught up with a list field's change.
+    reveal_pending: Option<SettingsFocus>,
 }
 
 impl SettingsPane {
@@ -230,6 +243,7 @@ impl SettingsPane {
             shown: vec![true; section.fields.len()],
             scroll: FormScroll::default(),
             layout: PaneLayout::default(),
+            reveal_pending: None,
         }
     }
 
@@ -259,18 +273,12 @@ impl SettingsPane {
         self.shown.get(index).copied().unwrap_or(false)
     }
 
-    /// The pane's focus stops in order: each shown field's widget, and a list field's checklist after its input.
+    /// The pane's focus stops in order: each shown field's widget, a list field's editor included.
     pub(super) fn stops(&self) -> Vec<SettingsFocus> {
-        let mut stops = Vec::new();
-        for (index, field) in self.fields.iter().enumerate() {
-            if !self.is_shown(index) {
-                continue;
-            }
-            stops.push(SettingsFocus::Field(index));
-            if matches!(field.widget, FieldWidget::List(_)) {
-                stops.push(SettingsFocus::ListItems(index));
-            }
-        }
+        let mut stops: Vec<SettingsFocus> = (0..self.fields.len())
+            .filter(|&index| self.is_shown(index))
+            .map(SettingsFocus::Field)
+            .collect();
         if self.keys.as_ref().is_some_and(KeyList::has_lines) {
             stops.push(SettingsFocus::KeyList);
         }
@@ -310,14 +318,13 @@ impl SettingsPane {
         })
     }
 
-    /// The content rows of focus stop `stop` at the last draw, and the rows with its margin: a list field's input or
-    /// checklist alone (the checklist with its `margin-top`), any other widget whole.
-    fn stop_rows(&self, stop: SettingsFocus) -> Option<(Range<u16>, Range<u16>)> {
-        let (index, items) = match stop {
-            SettingsFocus::Field(index) => (index, false),
-            SettingsFocus::ListItems(index) => (index, true),
+    /// The content rows of focus stop `stop` in `layout`, and the rows with its margin: a list field's highlighted
+    /// line alone (its open input while editing), so a long list stays usable in a short tab; any other widget whole.
+    fn stop_rows(&self, layout: &PaneLayout, stop: SettingsFocus) -> Option<(Range<u16>, Range<u16>)> {
+        let index = match stop {
+            SettingsFocus::Field(index) => index,
             SettingsFocus::KeyList => {
-                let rows = self.layout.keys.clone()?;
+                let rows = layout.keys.clone()?;
                 return Some((rows.clone(), rows));
             }
             _ => return None,
@@ -325,30 +332,55 @@ impl SettingsPane {
         if !self.is_shown(index) {
             return None;
         }
-        let top = *self.layout.tops.get(index)?;
+        let top = *layout.tops.get(index)?;
         let field = self.fields.get(index)?;
-        Some(match &field.widget {
-            FieldWidget::List(list) if items => {
-                let start = top + ListField::list_top();
-                let rows = start..start + list.list_height();
-                (rows.clone(), start - 1..rows.end)
+        let rows = match &field.widget {
+            FieldWidget::List(list) => {
+                let line = list.highlighted_rows();
+                top + line.start..top + line.end
             }
-            FieldWidget::List(_) => {
-                let rows = top..top + text_input::HEIGHT;
-                (rows.clone(), rows)
-            }
-            _ => {
-                let rows = top..top + field.height();
-                (rows.clone(), rows)
-            }
-        })
+            _ => top..top + field.height(),
+        };
+        Some((rows.clone(), rows))
     }
 
     /// Scrolls focus stop `stop` into view as Textual does when focus moves to it.
     pub(super) fn reveal(&mut self, stop: SettingsFocus) {
-        if let Some((rows, with_margin)) = self.stop_rows(stop) {
+        if let Some((rows, with_margin)) = self.stop_rows(&self.layout, stop) {
             self.scroll.center(rows, with_margin);
         }
+    }
+
+    /// [`Self::reveal`] at the next draw: a list field's highlight moved, and the field may have grown or shrunk.
+    pub(super) fn reveal_later(&mut self, stop: SettingsFocus) {
+        self.reveal_pending = Some(stop);
+    }
+
+    /// The list editor of field `index`, if it's a list field.
+    pub(super) fn list_mut(&mut self, index: usize) -> Option<&mut ListEditor> {
+        match &mut self.fields.get_mut(index)?.widget {
+            FieldWidget::List(list) => Some(list),
+            _ => None,
+        }
+    }
+
+    /// Commits field `index`'s open list input, as when focus leaves it: the toast for text it refused.
+    pub(super) fn commit_list(&mut self, index: usize) -> Option<Toast> {
+        let field = self.fields.get_mut(index)?;
+        let FieldWidget::List(list) = &mut field.widget else {
+            return None;
+        };
+        match list.commit() {
+            ListEditorOutcome::Refused { text } => Some(refused_toast(field.name(), &text)),
+            _ => None,
+        }
+    }
+
+    /// Commits every open list input, as Save does first: the toasts for text they refused.
+    pub(super) fn commit_lists(&mut self) -> Vec<Toast> {
+        (0..self.fields.len())
+            .filter_map(|index| self.commit_list(index))
+            .collect()
     }
 
     /// The layout at content width `width` in a scroll area `rows` high. The Key Bindings list fills the area below
@@ -428,12 +460,7 @@ impl SettingsPane {
             if !(area.x..area.right()).contains(&column) || !(area.y..area.bottom()).contains(&form_row) {
                 continue;
             }
-            let stop = match &self.fields[index].widget {
-                FieldWidget::List(_) if form_row >= area.y + ListField::list_top() => SettingsFocus::ListItems(index),
-                FieldWidget::List(_) if form_row >= area.y + text_input::HEIGHT => return Some(PaneHit::Area),
-                _ => SettingsFocus::Field(index),
-            };
-            return Some(PaneHit::Stop(stop));
+            return Some(PaneHit::Stop(SettingsFocus::Field(index)));
         }
         if self
             .keys
@@ -445,35 +472,38 @@ impl SettingsPane {
         Some(PaneHit::Area)
     }
 
-    /// A left press on focus stop `stop`, which the dialog has just focused: a switch toggles, a select opens or
-    /// closes, a text input places its cursor, and a checklist toggles the item under it.
-    pub(super) fn press(&mut self, stop: SettingsFocus, event: MouseEvent) {
+    /// A left press on focus stop `stop`, which the dialog has just focused (`focused` says whether it had focus
+    /// before): a switch toggles, a select opens or closes, a text input places its cursor, and a list editor
+    /// highlights, edits or adds ([`ListEditor::handle_mouse`]). The toast for text a list editor refused, if any.
+    pub(super) fn press(&mut self, stop: SettingsFocus, event: MouseEvent, focused: bool) -> Option<Toast> {
         let moved = self.scroll.to_content(event);
-        let (SettingsFocus::Field(index) | SettingsFocus::ListItems(index)) = stop else {
-            return;
+        let SettingsFocus::Field(index) = stop else {
+            return None;
         };
-        let Some(area) = self.widget_area(index) else { return };
+        let area = self.widget_area(index)?;
         let input_area = Rect {
             width: area.width.min(MAX_INPUT_WIDTH),
             height: text_input::HEIGHT,
             ..area
         };
-        let Some(field) = self.fields.get_mut(index) else {
-            return;
-        };
-        match (&mut field.widget, stop) {
-            (FieldWidget::Switch(switch), _) => {
+        let field = self.fields.get_mut(index)?;
+        match &mut field.widget {
+            FieldWidget::Switch(switch) => {
                 let _ = switch.handle_mouse(&moved, area);
             }
-            (FieldWidget::Select(select), _) => {
+            FieldWidget::Select(select) => {
                 let _ = select.toggle();
             }
-            (FieldWidget::Text(input), _) => input.press(input_area, event.column),
-            (FieldWidget::List(list), SettingsFocus::Field(_)) => list.input.press(input_area, event.column),
-            (FieldWidget::List(list), _) => {
-                let _ = list.list.handle_mouse(&moved);
+            FieldWidget::Text(input) => input.press(input_area, event.column),
+            FieldWidget::List(list) => {
+                let outcome = list.handle_mouse(&moved, focused);
+                self.reveal_later(stop);
+                if let ListEditorOutcome::Refused { text } = outcome {
+                    return Some(refused_toast(self.fields[index].name(), &text));
+                }
             }
         }
+        None
     }
 
     /// A left press on the Key Bindings list, which the dialog has just focused; `focused` says whether it had focus
@@ -485,10 +515,25 @@ impl SettingsPane {
         }
     }
 
-    /// A wheel notch at screen cell `(column, row)` in the scroll area: the Key Bindings list scrolls under it, and
-    /// the tab elsewhere.
+    /// A wheel notch at screen cell `(column, row)` in the scroll area: the Key Bindings list or a list editor scrolls
+    /// under it, and the tab elsewhere.
     pub(super) fn wheel(&mut self, wheel: Wheel, column: u16, row: u16) {
         let form_row = self.scroll.content_row(row);
+        if let Some(form_row) = form_row {
+            let shown = &self.shown;
+            let under = self
+                .fields
+                .iter_mut()
+                .zip(shown)
+                .find_map(|(field, &shown)| match &mut field.widget {
+                    FieldWidget::List(list) if shown && list.contains(column, form_row) => Some(list),
+                    _ => None,
+                });
+            if let Some(list) = under {
+                list.wheel(wheel);
+                return;
+            }
+        }
         match (&mut self.keys, form_row) {
             (Some(keys), Some(form_row)) if self.layout.keys.is_some() && keys.contains(column, form_row) => {
                 keys.wheel(wheel);
@@ -501,7 +546,7 @@ impl SettingsPane {
     pub(super) fn is_selecting(&self) -> bool {
         self.fields.iter().any(|field| match &field.widget {
             FieldWidget::Text(input) => input.is_selecting(),
-            FieldWidget::List(list) => list.input.is_selecting(),
+            FieldWidget::List(list) => list.is_selecting(),
             FieldWidget::Switch(_) | FieldWidget::Select(_) => false,
         })
     }
@@ -511,7 +556,7 @@ impl SettingsPane {
         let moved = self.scroll.to_content(event);
         self.fields.iter_mut().any(|field| match &mut field.widget {
             FieldWidget::Text(input) => input.captured_mouse(moved),
-            FieldWidget::List(list) => list.input.captured_mouse(moved),
+            FieldWidget::List(list) => list.captured_mouse(moved),
             FieldWidget::Switch(_) | FieldWidget::Select(_) => false,
         })
     }
@@ -530,6 +575,11 @@ impl SettingsPane {
         let narrowed = ScrollView::content_width(area, usize::from(layout.height));
         if narrowed != area.width {
             layout = self.layout(narrowed, area.height);
+        }
+        if let Some(stop) = self.reveal_pending.take()
+            && let Some((rows, with_margin)) = self.stop_rows(&layout, stop)
+        {
+            self.scroll.center_at_draw(rows, with_margin);
         }
         let fill = Style::new().fg(theme.color(r.text.plain, under)).bg(theme.paint(under));
         let bold = Style::new()
@@ -573,23 +623,7 @@ impl SettingsPane {
                             select.render_box(content_buf, widget, theme, under, focused);
                         }
                         FieldWidget::Text(text) => text.render(content_buf, input, theme, under, focused),
-                        FieldWidget::List(list) => {
-                            list.input.render(content_buf, input, theme, under, focused);
-                            let checklist = Rect {
-                                y: y + ListField::list_top(),
-                                height: list.list_height(),
-                                ..input
-                            };
-                            let items_focused = focus == Some(SettingsFocus::ListItems(index));
-                            list.list.render_solid(
-                                content_buf,
-                                checklist,
-                                theme,
-                                under,
-                                items_focused,
-                                r.brand.primary,
-                            );
-                        }
+                        FieldWidget::List(list) => list.render(content_buf, widget, theme, under, focused),
                     }
                 }
                 if let (Some(keys), Some(rows)) = (keys, &plan.keys) {

@@ -37,6 +37,7 @@ use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Component, Cx, Owner};
 use crate::components::button::BUTTON_BINDINGS;
 use crate::components::info::INFO_BINDINGS;
+use crate::components::list_editor::{LIST_EDITOR_BINDINGS, LIST_EDITOR_INPUT_BINDINGS};
 use crate::components::select::{SELECT_BINDINGS, SELECT_OVERLAY_BINDINGS};
 use crate::components::selection_list::SELECTION_LIST_BINDINGS;
 use crate::components::switch::SWITCH_BINDINGS;
@@ -179,6 +180,11 @@ pub enum FieldKind {
     KeyList,
     /// The Settings Key Bindings list waiting for a key: it records every key but its cancel key itself.
     KeyCapture,
+    /// A list editor ([`crate::components::list_editor::ListEditor`], #343) with no input open: the `OptionList`
+    /// keys move its highlight, and edit, add, remove and the moves act on the highlighted item.
+    ListEditor,
+    /// A list editor's open input: commit and cancel, then the input's keys. It types text as the input does.
+    ListEditorInput,
 }
 
 /// The containers inside a dialog whose bindings apply around its focused field, for
@@ -210,6 +216,8 @@ impl FieldKind {
             FieldKind::Tabs => TABS_BINDINGS,
             FieldKind::KeyList => settings::KEY_LIST_BINDINGS,
             FieldKind::KeyCapture => settings::KEY_CAPTURE_BINDINGS,
+            FieldKind::ListEditor => LIST_EDITOR_BINDINGS,
+            FieldKind::ListEditorInput => LIST_EDITOR_INPUT_BINDINGS,
         };
         ChainLink::new(Owner::DialogField(kind, self), bindings)
     }

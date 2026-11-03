@@ -91,12 +91,17 @@ fn go_to_tab(app: &mut TestApp, index: usize) {
 
 /// Presses `tab` until `stop` has focus.
 fn tab_to(app: &mut TestApp, stop: SettingsFocus) {
+    tab_to_at(app, stop, 160, 48);
+}
+
+/// [`tab_to`], drawing at `width` x `height` after each press.
+fn tab_to_at(app: &mut TestApp, stop: SettingsFocus, width: u16, height: u16) {
     for _ in 0..30 {
         if focused(app) == Some(stop) {
             return;
         }
         app.press(&["tab"]);
-        app.render(160, 48);
+        app.render(width, height);
     }
     panic!("{stop:?} never got focus");
 }
@@ -392,21 +397,9 @@ fn the_ring_holds_the_active_tabs_fields_and_wraps_both_ways() {
     app.press(&["tab", "tab"]);
     assert_eq!(focused(&app), Some(Tabs));
 
-    // Switching tabs from the strip changes the fields: a list field is two stops.
+    // Switching tabs from the strip changes the fields: a list field is one stop (#343).
     go_to_tab(&mut app, REPOSITORIES);
-    assert_eq!(
-        ring_forward(&mut app),
-        [
-            Tabs,
-            Scroll,
-            Field(0),
-            ListItems(0),
-            Field(1),
-            ListItems(1),
-            Save,
-            Cancel
-        ]
-    );
+    assert_eq!(ring_forward(&mut app), [Tabs, Scroll, Field(0), Field(1), Save, Cancel]);
     // The Key Bindings tab has its list, one stop, instead of fields.
     app.press(&["left"]);
     assert_eq!(ring_forward(&mut app), [Tabs, Scroll, KeyList, Save, Cancel]);
@@ -520,62 +513,210 @@ fn an_open_select_takes_escape_before_the_modal() {
     assert_eq!(app.app().modals(), [ModalKind::Settings]);
 }
 
-#[test]
-fn a_list_fields_checklist_starts_on_its_first_item_and_toggles() {
+// List fields (#343): one list editor per field.
+
+fn list(app: &TestApp, tab: usize, field: usize) -> &ListEditor {
+    match widget(app, tab, field) {
+        FieldWidget::List(list) => list,
+        other => panic!("field {field} of tab {tab} is a list, not {other:?}"),
+    }
+}
+
+fn list_items(app: &TestApp, tab: usize, field: usize) -> Vec<String> {
+    list(app, tab, field).items().to_vec()
+}
+
+fn last_toast(app: &TestApp) -> (Option<String>, String) {
+    let toast = app.app().toasts().iter().last().cloned().expect("a toast");
+    assert_eq!(toast.severity, Severity::Error);
+    (toast.title, toast.message.to_string())
+}
+
+/// The modal on Repositories with Favorites (`a/one`, `a/two`) focused, its first item highlighted.
+fn on_favorites() -> (TestApp, Outcome) {
     let mut config = config();
     config.repositories.favorites = vec!["a/one".into(), "a/two".into()];
-    let (mut app, _) = opened(&config);
+    let (mut app, outcome) = opened(&config);
     go_to_tab(&mut app, REPOSITORIES);
-    tab_to(&mut app, SettingsFocus::ListItems(1));
-    let list = |app: &TestApp| match widget(app, REPOSITORIES, 1) {
-        FieldWidget::List(list) => (list.list.highlighted(), list.value()),
-        other => panic!("Favorites is a list, not {other:?}"),
-    };
-    assert_eq!(list(&app), (Some(0), vec!["a/one".into(), "a/two".into()]));
-    app.press(&["space"]);
-    assert_eq!(list(&app).1, ["a/two"]);
-    app.press(&["down"]);
-    assert_eq!(list(&app).0, Some(1));
-    app.press(&["up"]);
-    assert_eq!(list(&app).0, Some(0));
-    app.press(&["enter"]);
-    assert_eq!(list(&app).1, ["a/two", "a/one"]);
+    tab_to(&mut app, SettingsFocus::Field(1));
+    (app, outcome)
 }
 
 #[test]
-fn a_list_fields_input_adds_items_by_the_rules() {
+fn a_list_field_is_one_stop_with_its_first_line_highlighted_and_remembered() {
+    let (mut app, _) = on_favorites();
+    assert_eq!(list(&app, REPOSITORIES, 1).highlighted(), 0);
+    app.press(&["down", "tab", "shift+tab"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::Field(1)));
+    assert_eq!(list(&app, REPOSITORIES, 1).highlighted(), 1);
+}
+
+#[test]
+fn the_footer_offers_the_editors_keys_and_done_and_cancel_while_editing() {
+    let (mut app, _) = on_favorites();
+    assert_eq!(
+        footer(&mut app),
+        [
+            "⏎ Edit",
+            "a Add",
+            "d Remove",
+            "shift+↑ Move up",
+            "shift+↓ Move down",
+            "shift+⏎ Submit",
+            "q Close",
+            "/ Search"
+        ]
+    );
+    app.press(&["enter"]);
+    // As for any text input, the footer still shows `/` (Textual's footer doesn't drop the keys an input types).
+    assert_eq!(footer(&mut app), ["⏎ Done", "esc Cancel", "shift+⏎ Submit", "/ Search"]);
+}
+
+#[test]
+fn editing_types_q_and_slash_and_escape_cancels_without_closing() {
+    let (mut app, _) = on_favorites();
+    app.press(&["enter"]);
+    app.press(&["q", "/"]);
+    assert_eq!(app.app().modals(), [ModalKind::Settings]);
+    assert_eq!(list(&app, REPOSITORIES, 1).input_value(), Some("q/"));
+    app.press(&["escape"]);
+    assert_eq!(app.app().modals(), [ModalKind::Settings]);
+    assert!(!list(&app, REPOSITORIES, 1).is_editing());
+    assert_eq!(list_items(&app, REPOSITORIES, 1), ["a/one", "a/two"]);
+    // Browsing again, `q` closes.
+    app.press(&["q"]);
+    assert!(app.app().modals().is_empty());
+}
+
+#[test]
+fn enter_edits_adds_and_keeps_adding_until_an_empty_enter() {
+    let (mut app, _) = on_favorites();
+    app.press(&["enter"]);
+    type_text(&mut app, "a/zero");
+    app.press(&["enter"]);
+    assert_eq!(list_items(&app, REPOSITORIES, 1), ["a/zero", "a/two"]);
+    app.press(&["end", "enter"]);
+    type_text(&mut app, "b/1");
+    app.press(&["enter"]);
+    type_text(&mut app, "b/2");
+    app.press(&["enter"]);
+    assert!(list(&app, REPOSITORIES, 1).is_editing());
+    app.press(&["enter"]);
+    assert!(!list(&app, REPOSITORIES, 1).is_editing());
+    assert_eq!(list_items(&app, REPOSITORIES, 1), ["a/zero", "a/two", "b/1", "b/2"]);
+    // `d` removes, `shift+up` moves.
+    app.press(&["up", "d"]);
+    assert_eq!(list_items(&app, REPOSITORIES, 1), ["a/zero", "a/two", "b/1"]);
+    app.press(&["up", "shift+up"]);
+    assert_eq!(list_items(&app, REPOSITORIES, 1), ["a/zero", "b/1", "a/two"]);
+}
+
+#[test]
+fn a_duplicate_is_refused_with_a_toast_and_the_input_stays_open() {
+    let (mut app, _) = on_favorites();
+    app.press(&["a"]);
+    type_text(&mut app, "a/two");
+    app.press(&["enter"]);
+    assert_eq!(
+        last_toast(&app),
+        (Some("Invalid setting".into()), "Favorites already lists a/two".into())
+    );
+    assert_eq!(list(&app, REPOSITORIES, 1).input_value(), Some("a/two"));
+    // `tab` drops it, with the toast again, and focus moves.
+    app.press(&["tab"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::Save));
+    assert!(!list(&app, REPOSITORIES, 1).is_editing());
+    assert_eq!(app.app().toasts().len(), 2);
+    assert_eq!(list_items(&app, REPOSITORIES, 1), ["a/one", "a/two"]);
+}
+
+#[test]
+fn tab_from_an_open_input_commits_it_without_a_fresh_one() {
+    let (mut app, _) = on_favorites();
+    app.press(&["a"]);
+    type_text(&mut app, "a/three");
+    app.press(&["shift+tab"]);
+    assert_eq!(focused(&app), Some(SettingsFocus::Field(0)));
+    assert!(!list(&app, REPOSITORIES, 1).is_editing());
+    assert_eq!(list_items(&app, REPOSITORIES, 1), ["a/one", "a/two", "a/three"]);
+}
+
+#[test]
+fn a_multi_line_paste_adds_its_lines() {
+    let (mut app, _) = on_favorites();
+    app.send(crate::event::Event::Paste("a/two\nb/1\n\nb/2\n".into()));
+    assert_eq!(list_items(&app, REPOSITORIES, 1), ["a/one", "a/two", "b/1", "b/2"]);
+    assert!(!list(&app, REPOSITORIES, 1).is_editing());
+}
+
+#[test]
+fn a_press_highlights_then_edits_and_the_add_line_adds() {
+    let (mut app, _) = on_favorites();
+    let screen = app.screen(160, 48);
+    let (column, row) = cell_of(&screen, "a/two");
+    // From another stop: focus and the highlight only.
+    tab_to(&mut app, SettingsFocus::Save);
+    app.click(column, row);
+    assert_eq!(focused(&app), Some(SettingsFocus::Field(1)));
+    assert_eq!(list(&app, REPOSITORIES, 1).highlighted(), 1);
+    assert!(!list(&app, REPOSITORIES, 1).is_editing());
+    app.render(160, 48);
+    app.click(column, row);
+    assert_eq!(list(&app, REPOSITORIES, 1).input_value(), Some("a/two"));
+    // Favorites' add line, below: a press there while editing commits and highlights it.
+    app.render(160, 48);
+    app.click(column, row + 1);
+    assert_eq!(list(&app, REPOSITORIES, 1).highlighted(), 2);
+    assert!(!list(&app, REPOSITORIES, 1).is_editing());
+    app.render(160, 48);
+    app.click(column, row + 1);
+    assert_eq!(list(&app, REPOSITORIES, 1).input_value(), Some(""));
+}
+
+#[test]
+fn the_tab_follows_the_highlighted_line_of_a_long_list() {
+    let mut config = config();
+    config.repositories.favorites = (0..6).map(|i| format!("a/{i}")).collect();
+    let (mut app, _) = opened(&config);
+    go_to_tab(&mut app, REPOSITORIES);
+    app.render(100, 30);
+    tab_to_at(&mut app, SettingsFocus::Field(1), 100, 30);
+    app.render(100, 30);
+    for _ in 0..6 {
+        app.press(&["down"]);
+        app.render(100, 30);
+    }
+    let screen = app.screen(100, 30);
+    assert!(screen.contains("+ Add item..."), "{screen}");
+    // The add line is centered, not the whole field.
+    let (_, row) = cell_of(&screen, "+ Add item...");
+    let scroll = dialog(&app).panes[REPOSITORIES].scroll.area();
+    let middle = scroll.y + scroll.height / 2;
+    assert!(row.abs_diff(middle) <= 1, "row {row}, middle {middle}\n{screen}");
+}
+
+#[test]
+fn both_repository_fields_are_reachable_at_100x30() {
+    // An empty field takes three rows: Favorites is right below the fold, and `tab` brings it into view.
     let (mut app, _) = opened(&config());
     go_to_tab(&mut app, REPOSITORIES);
-    tab_to(&mut app, SettingsFocus::Field(1));
-    let state = |app: &TestApp| match widget(app, REPOSITORIES, 1) {
-        FieldWidget::List(list) => (
-            list.input.value().to_owned(),
-            list.list.labels().map(str::to_owned).collect(),
-        ),
-        other => panic!("Favorites is a list, not {other:?}"),
-    };
-    // Blank text stays and adds nothing.
-    type_text(&mut app, "  ");
-    app.press(&["enter"]);
-    assert_eq!(state(&app), ("  ".to_owned(), Vec::<String>::new()));
-    app.press(&["ctrl+u"]);
-    type_text(&mut app, " o/r ");
-    app.press(&["enter"]);
-    assert_eq!(state(&app), (String::new(), vec!["o/r".to_owned()]));
-    // A duplicate stays in the input.
-    type_text(&mut app, "o/r");
-    app.press(&["enter"]);
-    assert_eq!(state(&app), ("o/r".to_owned(), vec!["o/r".to_owned()]));
-    // So does one of an unchecked item.
-    app.press(&["tab", "down", "space", "shift+tab"]);
-    assert_eq!(focused(&app), Some(SettingsFocus::Field(1)));
-    match widget(&app, REPOSITORIES, 1) {
-        FieldWidget::List(list) => assert!(list.value().is_empty()),
-        other => panic!("Favorites is a list, not {other:?}"),
-    }
-    type_text(&mut app, "o/r");
-    app.press(&["enter"]);
-    assert_eq!(state(&app), ("o/r".to_owned(), vec!["o/r".to_owned()]));
+    let screen = app.screen(100, 30);
+    assert!(screen.contains("Additional Repos To Track:"), "{screen}");
+    assert_eq!(screen.matches("+ Add item...").count(), 1, "{screen}");
+    tab_to_at(&mut app, SettingsFocus::Field(1), 100, 30);
+    let screen = app.screen(100, 30);
+    assert!(screen.contains("Favorites:"), "{screen}");
+    assert!(screen.contains("+ Add item..."), "{screen}");
+}
+
+#[test]
+fn the_reviewers_list_adds_usernames() {
+    let (mut app, _) = opened(&config());
+    go_to_tab(&mut app, PULL_REQUESTS);
+    tab_to(&mut app, SettingsFocus::Field(3));
+    app.press(&["a"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("username"), "{screen}");
 }
 
 // Save.
@@ -628,6 +769,7 @@ fn save_writes_every_edited_field_through_its_section() {
     type_text(&mut app, "reb");
     app.press(&["enter"]);
     tab_to(&mut app, SettingsFocus::Field(3));
+    app.press(&["a"]);
     type_text(&mut app, "octocat");
     app.press(&["enter"]);
     tab_to(&mut app, SettingsFocus::Save);
@@ -667,18 +809,34 @@ fn a_select_on_its_blank_keeps_the_fields_value() {
 }
 
 #[test]
-fn a_list_saves_its_checked_items_in_the_order_they_were_checked() {
+fn a_list_saves_its_items_in_the_order_shown() {
     let mut config = config();
     config.repositories.favorites = vec!["a/1".into(), "a/2".into(), "a/3".into()];
     let (mut app, outcome) = opened(&config);
     go_to_tab(&mut app, REPOSITORIES);
     tab_to(&mut app, SettingsFocus::Field(1));
+    // Remove "a/1", move "a/3" first, then add "a/4".
+    app.press(&["d", "down", "shift+up", "a"]);
     type_text(&mut app, "a/4");
-    app.press(&["enter", "tab"]);
-    // Uncheck "a/1" and "a/3", then check "a/1" again.
-    app.press(&["space", "down", "down", "space", "up", "up", "space"]);
+    app.press(&["enter", "enter"]);
     app.press(&["shift+enter"]);
-    assert_eq!(saved(&outcome).repositories.favorites, ["a/2", "a/4", "a/1"]);
+    assert_eq!(saved(&outcome).repositories.favorites, ["a/3", "a/2", "a/4"]);
+}
+
+#[test]
+fn save_commits_an_open_list_input_and_drops_refused_text() {
+    let (mut app, outcome) = on_favorites();
+    app.press(&["a"]);
+    type_text(&mut app, "a/three");
+    app.press(&["shift+enter"]);
+    assert_eq!(saved(&outcome).repositories.favorites, ["a/one", "a/two", "a/three"]);
+
+    let (mut app, outcome) = on_favorites();
+    app.press(&["a"]);
+    type_text(&mut app, "a/one");
+    app.press(&["shift+enter"]);
+    assert_eq!(saved(&outcome).repositories.favorites, ["a/one", "a/two"]);
+    assert_eq!(last_toast(&app).1, "Favorites already lists a/one");
 }
 
 #[test]
@@ -822,18 +980,52 @@ fn a_click_on_the_list_over_the_footer_is_the_lists() {
 }
 
 #[test]
-fn snapshot_list_field() {
+fn snapshot_list_editor() {
+    // One empty field and one filled, focused.
     let mut config = config();
     config.repositories.favorites = vec!["octo/one".into(), "octo/two".into()];
     let (mut app, _) = opened(&config);
     go_to_tab(&mut app, REPOSITORIES);
-    tab_to(&mut app, SettingsFocus::ListItems(1));
-    app.press(&["space"]);
-    insta::assert_snapshot!("list_field", app.screen(160, 48));
+    tab_to(&mut app, SettingsFocus::Field(1));
+    app.press(&["down"]);
+    insta::assert_snapshot!("list_editor", app.screen(160, 48));
     insta::assert_snapshot!(
-        "list_field_styled",
+        "list_editor_styled",
         crate::test_util::buffer_to_styled_string(&app.render(160, 48))
     );
+}
+
+#[test]
+fn snapshot_list_editor_editing() {
+    let mut config = config();
+    config.repositories.favorites = vec!["octo/one".into(), "octo/two".into()];
+    let (mut app, _) = opened(&config);
+    go_to_tab(&mut app, REPOSITORIES);
+    tab_to(&mut app, SettingsFocus::Field(1));
+    app.press(&["down", "enter", "end"]);
+    insta::assert_snapshot!("list_editor_editing", app.screen(160, 48));
+}
+
+#[test]
+fn snapshot_list_editor_adding() {
+    let mut config = config();
+    config.repositories.favorites = vec!["octo/one".into()];
+    let (mut app, _) = opened(&config);
+    go_to_tab(&mut app, REPOSITORIES);
+    tab_to(&mut app, SettingsFocus::Field(1));
+    app.press(&["a"]);
+    insta::assert_snapshot!("list_editor_adding", app.screen(160, 48));
+}
+
+#[test]
+fn snapshot_list_editor_narrow() {
+    let mut config = config();
+    config.repositories.favorites = vec!["octo/one".into(), "octo/two".into()];
+    let (mut app, _) = opened(&config);
+    go_to_tab(&mut app, REPOSITORIES);
+    app.render(100, 30);
+    tab_to_at(&mut app, SettingsFocus::Field(1), 100, 30);
+    insta::assert_snapshot!("list_editor_narrow", app.screen(100, 30));
 }
 
 #[test]
@@ -893,13 +1085,13 @@ fn slash_opens_and_focuses_the_box_from_every_stop_but_a_text_input() {
     use SettingsFocus::*;
     let mut config = config();
     config.repositories.favorites = vec!["a/b".into()];
-    // The strip, the scroll area, a switch, a select, a checklist, Save and Cancel.
+    // The strip, the scroll area, a switch, a select, a list editor, Save and Cancel.
     let stops = [
         (APPEARANCE, Tabs),
         (APPEARANCE, Scroll),
         (APPEARANCE, Field(1)),
         (APPEARANCE, Field(0)),
-        (REPOSITORIES, ListItems(1)),
+        (REPOSITORIES, Field(1)),
         (APPEARANCE, Save),
         (APPEARANCE, Cancel),
     ];
@@ -914,17 +1106,18 @@ fn slash_opens_and_focuses_the_box_from_every_stop_but_a_text_input() {
         assert_eq!(app.app().modals(), [ModalKind::Settings]);
     }
 
-    // A text input types it: a plain one and a list field's.
-    for (tab, index) in [(CACHE, 3), (REPOSITORIES, 1)] {
+    // A text input types it: a plain one and a list editor's open one.
+    for (tab, index, open) in [(CACHE, 3, None), (REPOSITORIES, 1, Some("a"))] {
         let (mut app, _) = opened(&config);
         go_to_tab(&mut app, tab);
         tab_to(&mut app, Field(index));
+        app.press(&open.into_iter().collect::<Vec<_>>());
         app.press(&["ctrl+u", "/"]);
         assert_eq!(focused(&app), Some(Field(index)));
         assert!(search_value(&app).is_none());
         let value = match widget(&app, tab, index) {
             FieldWidget::Text(input) => input.value(),
-            FieldWidget::List(list) => list.input.value(),
+            FieldWidget::List(list) => list.input_value().expect("an open input"),
             other => panic!("not a text input: {other:?}"),
         };
         assert_eq!(value, "/");

@@ -5,7 +5,6 @@
 
 mod key_list;
 mod key_row;
-mod list_field;
 mod pane;
 
 use crossterm::event::{KeyEvent, MouseButton, MouseEvent, MouseEventKind};
@@ -24,8 +23,8 @@ use crate::component::{BindingState, ChainLink, Component, Cx, RenderCx};
 use crate::components::button::{ButtonMouse, ButtonRow, Pressed};
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
+use crate::components::list_editor::{ListEditor, ListEditorOutcome};
 use crate::components::select::SelectOutcome;
-use crate::components::selection_list::ListOutcome;
 use crate::components::table::py_strip;
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
 use crate::components::text_input::{self, InputOutcome, TextInput};
@@ -97,10 +96,8 @@ pub(super) enum SettingsFocus {
     Tabs,
     /// The active tab's scroll area, which Textual's `ScrollableContainer` makes focusable.
     Scroll,
-    /// A field's widget; for a list field, its input.
+    /// A field's widget, a list field's editor included (one stop since #343).
     Field(usize),
-    /// A list field's checklist.
-    ListItems(usize),
     /// The Key Bindings list, one stop (#381).
     KeyList,
     Save,
@@ -114,6 +111,24 @@ impl SettingsFocus {
             SettingsFocus::Cancel => Some(Pressed::Cancel),
             _ => None,
         }
+    }
+}
+
+/// The error toast for text a list field's editor won't take because the field lists it already.
+pub(super) fn refused_toast(name: &str, text: &str) -> Toast {
+    Toast::error(format!("{name} already lists {text}")).with_title(INVALID_TITLE)
+}
+
+/// The toast to show, if any, as the action that showed it; otherwise the key or press is simply consumed.
+fn notify_or_consumed(toast: Option<Toast>) -> Action {
+    toast.map_or(Action::Consumed, Action::Notify)
+}
+
+/// The focus move `chord` is bound to on the modal screen, if any.
+fn focus_move(chord: &KeyChord, keymap: &Keymap) -> Option<FocusMove> {
+    match keymap.match_in(&[BindingId::TextualFocusNext, BindingId::TextualFocusPrevious], chord)? {
+        BindingId::TextualFocusNext => Some(FocusMove::Next),
+        _ => Some(FocusMove::Previous),
     }
 }
 
@@ -210,14 +225,17 @@ impl SettingsDialog {
         }
     }
 
-    /// Moves focus with `f`. An open list closes when focus leaves it, and so does a blank search box. A stop that
-    /// gains focus is scrolled into view, and a text input selects its text (Textual's `select_on_focus`, so typing
-    /// replaces it).
-    fn refocus(&mut self, f: impl FnOnce(&mut FocusRing<SettingsFocus>)) {
+    /// Moves focus with `f`. An open list closes when focus leaves it, and so does a blank search box; a list
+    /// editor's open input commits. A stop that gains focus is scrolled into view, and a text input selects its text
+    /// (Textual's `select_on_focus`, so typing replaces it). The toast for text the list editor refused, if any.
+    #[must_use]
+    fn refocus(&mut self, f: impl FnOnce(&mut FocusRing<SettingsFocus>)) -> Option<Toast> {
         let before = self.ring.focused();
         f(&mut self.ring);
-        let Some(stop) = self.ring.focused().filter(|&stop| Some(stop) != before) else {
-            return;
+        let stop = self.ring.focused().filter(|&stop| Some(stop) != before)?;
+        let refused = match before {
+            Some(SettingsFocus::Field(index)) => self.pane_mut().commit_list(index),
+            _ => None,
         };
         if before == Some(SettingsFocus::Search) {
             self.blur_search();
@@ -226,7 +244,7 @@ impl SettingsDialog {
             if let Some(search) = &mut self.search {
                 search.select_all();
             }
-            return;
+            return refused;
         }
         let pane = self.pane_mut();
         pane.close_selects();
@@ -236,22 +254,25 @@ impl SettingsDialog {
             input.select_all();
         }
         pane.reveal(stop);
+        refused
     }
 
-    fn focus(&mut self, stop: SettingsFocus) {
+    #[must_use]
+    fn focus(&mut self, stop: SettingsFocus) -> Option<Toast> {
         self.refocus(|ring| {
             ring.focus(stop);
-        });
+        })
     }
 
     /// `/`: shows the search box if it's hidden, and focuses it. Python's `action_search`.
-    fn open_search(&mut self) {
+    #[must_use]
+    fn open_search(&mut self) -> Option<Toast> {
         if self.search.is_none() {
             self.search = Some(TextInput::new(SEARCH_PLACEHOLDER));
             self.rebuild_ring();
         }
         self.pane_mut().close_selects();
-        self.focus(SettingsFocus::Search);
+        self.focus(SettingsFocus::Search)
     }
 
     /// The search box lost focus: it hides when only whitespace is left in it (`ToggleableSearchInput._on_blur`),
@@ -282,7 +303,7 @@ impl SettingsDialog {
     /// The focused field's widget, with its focus stop.
     fn focused_widget(&self) -> Option<(SettingsFocus, &FieldWidget)> {
         let stop = self.ring.focused()?;
-        let (SettingsFocus::Field(index) | SettingsFocus::ListItems(index)) = stop else {
+        let SettingsFocus::Field(index) = stop else {
             return None;
         };
         Some((stop, &self.pane().fields.get(index)?.widget))
@@ -290,10 +311,52 @@ impl SettingsDialog {
 
     fn focused_widget_mut(&mut self) -> Option<(SettingsFocus, &mut FieldWidget)> {
         let stop = self.ring.focused()?;
-        let (SettingsFocus::Field(index) | SettingsFocus::ListItems(index)) = stop else {
+        let SettingsFocus::Field(index) = stop else {
             return None;
         };
         Some((stop, &mut self.pane_mut().fields.get_mut(index)?.widget))
+    }
+
+    /// The focused field's list editor, if it's a list field.
+    fn focused_list(&self) -> Option<&ListEditor> {
+        match self.focused_widget()? {
+            (_, FieldWidget::List(list)) => Some(list),
+            _ => None,
+        }
+    }
+
+    fn focused_list_mut(&mut self) -> Option<&mut ListEditor> {
+        match self.focused_widget_mut()? {
+            (_, FieldWidget::List(list)) => Some(list),
+            _ => None,
+        }
+    }
+
+    /// Whether the focused field is a list editor with its input open.
+    fn is_editing_list(&self) -> bool {
+        self.focused_list().is_some_and(ListEditor::is_editing)
+    }
+
+    /// What the focused list editor's `outcome` means for the dialog: refused text is an error toast naming the
+    /// field, a copy goes to the clipboard, and anything else but `Ignored` is consumed. The tab follows the
+    /// highlight.
+    fn list_outcome(&mut self, outcome: ListEditorOutcome) -> Option<Action> {
+        let Some(stop @ SettingsFocus::Field(index)) = self.ring.focused() else {
+            return None;
+        };
+        let action = match outcome {
+            ListEditorOutcome::Ignored => return None,
+            ListEditorOutcome::Refused { text } => {
+                Action::Notify(refused_toast(self.pane().fields.get(index)?.name(), &text))
+            }
+            ListEditorOutcome::Copied(text) => Action::Copy(text),
+            ListEditorOutcome::Moved
+            | ListEditorOutcome::Changed
+            | ListEditorOutcome::Editing
+            | ListEditorOutcome::Cancelled => Action::Consumed,
+        };
+        self.pane_mut().reveal_later(stop);
+        Some(action)
     }
 
     /// Every field written into a copy of `base` through its descriptor, tab by tab. A select on its blank option
@@ -319,13 +382,17 @@ impl SettingsDialog {
         Ok(config)
     }
 
-    /// Save: closes with the edited config, or stays open on the first invalid field with an error toast.
+    /// Save: an open list input commits first (text it refuses is dropped, with its toast), then it closes with the
+    /// edited config, or stays open on the first invalid field with an error toast.
     fn save(&mut self, cx: &mut Cx<'_>) {
+        for toast in self.panes.iter_mut().flat_map(SettingsPane::commit_lists) {
+            cx.notify(toast);
+        }
         match self.collect(cx.config()) {
             Ok(config) => self.output = Some(SettingsOutcome::Saved(Box::new(config))),
             Err(invalid) => {
                 self.switch_tab(invalid.tab);
-                self.focus(SettingsFocus::Field(invalid.field));
+                let _ = self.focus(SettingsFocus::Field(invalid.field));
                 cx.notify(Toast::error(invalid.message).with_title(INVALID_TITLE));
             }
         }
@@ -336,8 +403,9 @@ impl SettingsDialog {
         self.pane().is_capturing()
     }
 
-    /// A key for the focused text input: the search box's `enter` filters, a list field's adds its item, and a plain
-    /// field's does nothing.
+    /// A key for the focused text input: the search box's `enter` filters, a plain field's does nothing, and a list
+    /// editor's open input takes what it consumes. `tab` and `shift+tab` from that input move focus here, so the
+    /// toast for text the commit refuses can go out.
     fn input_key(&mut self, chord: &KeyChord, cx: &Cx<'_>) -> Option<Action> {
         if self.ring.focused() == Some(SettingsFocus::Search) {
             let outcome = self.search.as_mut()?.handle_key(chord, cx.keymap(), cx.clipboard());
@@ -346,19 +414,26 @@ impl SettingsDialog {
             }
             return Self::input_outcome(outcome);
         }
-        let (stop, widget) = self.focused_widget_mut()?;
-        let outcome = match (widget, stop) {
-            (FieldWidget::Text(input), _) => input.handle_key(chord, cx.keymap(), cx.clipboard()),
-            (FieldWidget::List(list), SettingsFocus::Field(_)) => {
-                let outcome = list.input.handle_key(chord, cx.keymap(), cx.clipboard());
-                if outcome == InputOutcome::Submitted {
-                    list.submit();
-                }
-                outcome
+        if self.is_editing_list() {
+            if let Some(direction) = focus_move(chord, cx.keymap()) {
+                return Some(notify_or_consumed(self.step_focus(direction)));
             }
-            _ => return None,
+            let outcome = self.focused_list_mut()?.handle_key(chord, cx.keymap(), cx.clipboard());
+            return self.list_outcome(outcome);
+        }
+        let (_, widget) = self.focused_widget_mut()?;
+        let FieldWidget::Text(input) = widget else {
+            return None;
         };
-        Self::input_outcome(outcome)
+        Self::input_outcome(input.handle_key(chord, cx.keymap(), cx.clipboard()))
+    }
+
+    /// `tab` or `shift+tab`: an open list closes (it loses focus), then focus moves on. The toast for text a list
+    /// editor's open input refused as it committed, if any.
+    #[must_use]
+    fn step_focus(&mut self, direction: FocusMove) -> Option<Toast> {
+        self.pane_mut().close_selects();
+        self.refocus(|ring| ring.step(direction))
     }
 
     fn input_outcome(outcome: InputOutcome) -> Option<Action> {
@@ -382,10 +457,7 @@ impl Component for SettingsDialog {
             BindingId::ModalSubmit => Some(Self::action(SettingsAction::Save)),
             BindingId::ModalClose => Some(Self::action(SettingsAction::Cancel)),
             // A focused text input, the box included, consumes `/` before this fires.
-            BindingId::ModalSearch => {
-                self.open_search();
-                Some(Action::Consumed)
-            }
+            BindingId::ModalSearch => Some(notify_or_consumed(self.open_search())),
             _ => None,
         }
     }
@@ -418,7 +490,10 @@ impl Component for SettingsDialog {
         match self.focused_widget() {
             Some((_, FieldWidget::Select(select))) => select.consumes_key(key, keymap),
             Some((_, FieldWidget::Text(input))) => input.consumes_key(key, keymap),
-            Some((SettingsFocus::Field(_), FieldWidget::List(list))) => list.input.consumes_key(key, keymap),
+            // An open list input also takes `tab` and `shift+tab`, to commit before focus moves.
+            Some((_, FieldWidget::List(list))) => {
+                list.consumes_key(key, keymap) || (list.is_editing() && focus_move(key, keymap).is_some())
+            }
             _ => false,
         }
     }
@@ -468,13 +543,10 @@ impl Component for SettingsDialog {
         }
         if let Some((button, outcome)) = self.buttons.handle_mouse(&event, cx.now()) {
             return Some(match outcome {
-                ButtonMouse::Focus => {
-                    self.focus(match button {
-                        Pressed::Submit => SettingsFocus::Save,
-                        Pressed::Cancel => SettingsFocus::Cancel,
-                    });
-                    Action::Consumed
-                }
+                ButtonMouse::Focus => notify_or_consumed(self.focus(match button {
+                    Pressed::Submit => SettingsFocus::Save,
+                    Pressed::Cancel => SettingsFocus::Cancel,
+                })),
                 ButtonMouse::Pressed => Self::pressed(button),
                 ButtonMouse::Missed => Action::Consumed,
             });
@@ -490,34 +562,37 @@ impl Component for SettingsDialog {
         }
         if self.search.is_some() && self.areas.search.contains(at) {
             self.pane_mut().close_selects();
-            self.focus(SettingsFocus::Search);
+            let refused = self.focus(SettingsFocus::Search);
             if let Some(search) = &mut self.search {
                 search.press(self.areas.search, event.column);
             }
-            return Some(Action::Consumed);
+            return Some(notify_or_consumed(refused));
         }
         if self.areas.tabs.contains(at) {
-            self.focus(SettingsFocus::Tabs);
+            let refused = self.focus(SettingsFocus::Tabs);
             if let Some(index) = self.tabs.hit(event.column - self.areas.tabs.x) {
                 self.switch_tab(index);
             }
-            return Some(Action::Consumed);
+            return Some(notify_or_consumed(refused));
         }
-        match hit {
+        let refused = match hit {
             Some(PaneHit::Stop(SettingsFocus::KeyList)) if self.ring.is_enabled(SettingsFocus::KeyList) => {
                 let focused = self.ring.focused() == Some(SettingsFocus::KeyList);
-                self.focus(SettingsFocus::KeyList);
+                let refused = self.focus(SettingsFocus::KeyList);
                 self.pane_mut().press_keys(event, focused);
+                refused
             }
             Some(PaneHit::Stop(stop)) if self.ring.is_enabled(stop) => {
                 // Focus first (an input selects its text), then the press lands.
-                self.focus(stop);
-                self.pane_mut().press(stop, event);
+                let focused = self.ring.focused() == Some(stop);
+                let refused = self.focus(stop);
+                let pressed = self.pane_mut().press(stop, event, focused);
+                refused.or(pressed)
             }
             Some(PaneHit::Stop(_) | PaneHit::Area) => self.focus(SettingsFocus::Scroll),
-            None => {}
-        }
-        Some(Action::Consumed)
+            None => None,
+        };
+        Some(notify_or_consumed(refused))
     }
 
     fn update(&mut self, action: SettingsAction, cx: &mut Cx<'_>) {
@@ -647,10 +722,10 @@ impl Dialog for SettingsDialog {
         }
     }
 
-    /// `tab` or `shift+tab`: an open list closes (it loses focus), then focus moves on.
+    /// `tab` or `shift+tab`: an open list closes (it loses focus), then focus moves on. A list editor's open input
+    /// takes these keys first ([`Self::input_key`]), so there's never a refused commit to tell of here.
     fn move_focus(&mut self, direction: FocusMove) {
-        self.pane_mut().close_selects();
-        self.refocus(|ring| ring.step(direction));
+        let _ = self.step_focus(direction);
     }
 
     /// 100 columns (the whole width when narrower) and 80% of the rows above the footer, rounded down.
@@ -673,8 +748,9 @@ impl Dialog for SettingsDialog {
             (_, Some((_, FieldWidget::Switch(_)))) => FieldKind::Switch,
             (_, Some((_, FieldWidget::Select(select)))) if select.is_open() => FieldKind::SelectOverlay,
             (_, Some((_, FieldWidget::Select(_)))) => FieldKind::Select,
-            (_, Some((SettingsFocus::ListItems(_), FieldWidget::List(_)))) => FieldKind::SelectionList,
-            (_, Some((_, FieldWidget::Text(_) | FieldWidget::List(_)))) => FieldKind::TextInput,
+            (_, Some((_, FieldWidget::List(list)))) if list.is_editing() => FieldKind::ListEditorInput,
+            (_, Some((_, FieldWidget::List(_)))) => FieldKind::ListEditor,
+            (_, Some((_, FieldWidget::Text(_)))) => FieldKind::TextInput,
             (_, None) => return Vec::new(),
         };
         vec![field.link(self.kind())]
@@ -720,19 +796,21 @@ impl Dialog for SettingsDialog {
                 }
                 _ => None,
             },
-            FieldKind::SelectionList => match self.focused_widget_mut() {
-                Some((_, FieldWidget::List(list))) => {
-                    (list.list.on_binding(id) != ListOutcome::Ignored).then_some(Action::Consumed)
+            FieldKind::ListEditor | FieldKind::ListEditorInput => {
+                let outcome = self.focused_list_mut()?.on_binding(id);
+                match (field, outcome) {
+                    // The input's own keys that `consumes_key` left over (copy with nothing selected) go nowhere.
+                    (FieldKind::ListEditorInput, ListEditorOutcome::Ignored) => Some(Action::Consumed),
+                    (_, outcome) => self.list_outcome(outcome),
                 }
-                _ => None,
-            },
+            }
             FieldKind::KeyList => {
                 let keys = self.pane_mut().keys.as_mut()?;
                 (keys.on_binding(id) == KeyListOutcome::Consumed).then_some(Action::Consumed)
             }
             // `consumes_key` already gave the input every key it binds.
             FieldKind::TextInput => Some(Action::Consumed),
-            FieldKind::TextEditor | FieldKind::Table | FieldKind::KeyCapture => None,
+            FieldKind::TextEditor | FieldKind::Table | FieldKind::KeyCapture | FieldKind::SelectionList => None,
         }
     }
 
@@ -753,6 +831,10 @@ impl Dialog for SettingsDialog {
         let SettingsFocus::Field(index) = stop else {
             return None;
         };
+        if let Some(list) = self.pane_mut().list_mut(index) {
+            let outcome = list.handle_paste(text);
+            return self.list_outcome(outcome);
+        }
         let input = self.pane_mut().fields.get_mut(index)?.input_mut(stop)?;
         input.handle_paste(text);
         Some(Action::Consumed)

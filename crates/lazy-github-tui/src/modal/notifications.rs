@@ -1041,7 +1041,9 @@ impl Dialog for NotificationsDialog {
             | FieldKind::SelectOverlay
             | FieldKind::SelectionList
             | FieldKind::KeyList
-            | FieldKind::KeyCapture => None,
+            | FieldKind::KeyCapture
+            | FieldKind::ListEditor
+            | FieldKind::ListEditorInput => None,
         }
     }
 

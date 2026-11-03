@@ -456,7 +456,9 @@ impl Dialog for UserProfileDialog {
             | FieldKind::SelectionList
             | FieldKind::Tabs
             | FieldKind::KeyList
-            | FieldKind::KeyCapture => None,
+            | FieldKind::KeyCapture
+            | FieldKind::ListEditor
+            | FieldKind::ListEditorInput => None,
         }
     }
 }

@@ -199,7 +199,7 @@ contains = [
 ]
 
 [expect.repositories]
-contains = ["Repository-specific settings", "Additional Repos To Track:", "Add new item...", "Favorites:"]
+contains = ["Repository-specific settings", "Additional Repos To Track:", "Favorites:"]
 
 [expect.pull-requests]
 contains = [

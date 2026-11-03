@@ -314,6 +314,12 @@ impl FormScroll {
         }
     }
 
+    /// [`Self::center`] at the next draw, once the form's height there is known: rows a field inside the form
+    /// moved to as it grew or shrank.
+    pub fn center_at_draw(&mut self, rows: Range<u16>, with_margin: Range<u16>) {
+        self.pending_center = Some((rows, with_margin));
+    }
+
     /// A scroll key while the area has focus.
     pub fn scroll(&mut self, scroll: Scroll) {
         self.view.scroll(scroll);

@@ -204,7 +204,7 @@ impl Owner {
             Owner::SearchInput(_)
             | Owner::DiffFilter
             | Owner::DetailsInput
-            | Owner::DialogField(_, FieldKind::TextInput) => Some("Input"),
+            | Owner::DialogField(_, FieldKind::TextInput | FieldKind::ListEditorInput) => Some("Input"),
             Owner::CollapsibleTitle => Some("Collapsible"),
             Owner::App
             | Owner::Screen(_)
@@ -242,6 +242,7 @@ impl Owner {
                 | FieldKind::Tabs
                 | FieldKind::KeyList
                 | FieldKind::KeyCapture
+                | FieldKind::ListEditor
                 | FieldKind::Select
                 | FieldKind::SelectOverlay
                 | FieldKind::SelectionList,
@@ -260,7 +261,10 @@ impl Owner {
                 | Owner::DetailsSelectOverlay
                 | Owner::DialogField(
                     _,
-                    FieldKind::TextInput | FieldKind::TextEditor | FieldKind::SelectOverlay
+                    FieldKind::TextInput
+                        | FieldKind::TextEditor
+                        | FieldKind::SelectOverlay
+                        | FieldKind::ListEditorInput
                 )
         )
     }

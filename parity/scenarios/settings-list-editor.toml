@@ -1,0 +1,246 @@
+version = 1
+description = "Settings list editor (#343): one focus stop per list field; enter adds and keeps adding until an empty enter, shift+up moves an item, enter edits in place, a duplicate is refused with a toast, escape cancels, d removes at once, and Save writes the order shown"
+# Rust only: the editor is an intentional diff from Python's input over a checklist (decision settings-list-editor).
+# The modal is loose text (see settings.toml). The harness can't send shift+enter, so Save is reached with tab from
+# Favorites. The add input's placeholder, "owner/repo", shows only while it's empty, which the waits use.
+gate = true
+apps = ["rust"]
+parity_rows = ["modals.settings-list-field"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["base"]
+
+[env.config_overrides]
+repositories = { favorites = ["parity-bot/dotfiles"] }
+
+[[step]]
+wait = { text = "Repositories", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "dotfiles" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+[[step]]
+keys = ["right", "right", "right"]
+
+[[step]]
+wait = { text = "Repository-specific settings" }
+
+# The scroll area, then Additional Repos To Track, empty: its add line is highlighted.
+[[step]]
+keys = ["tab", "tab"]
+
+[[step]]
+wait = { focused = "+ Add item..." }
+
+[[step]]
+capture = "empty"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "owner/repo" }
+
+[[step]]
+type = "parity-bot/hello-world"
+
+[[step]]
+wait = { gone = "owner/repo" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "owner/repo" }
+
+[[step]]
+type = "octo/one"
+
+[[step]]
+wait = { gone = "owner/repo" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "owner/repo" }
+
+# An empty enter closes the add input.
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "esc Cancel" }
+
+[[step]]
+capture = "added"
+
+[[step]]
+keys = ["up"]
+
+[[step]]
+wait = { stable_ms = 300 }
+
+# shift+up, as xterm sends it: the harness's key specs have no shifted arrows, and adding them would change its
+# `harness` input and every recorded reference with it.
+[[step]]
+type = "\u001b[1;2A"
+
+[[step]]
+wait = { regex = "octo/one[^\\n]*\\n[^\\n]*parity-bot/hello-world" }
+
+[[step]]
+capture = "moved"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "esc Cancel" }
+
+[[step]]
+type = "octo/two"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "esc Cancel" }
+
+[[step]]
+capture = "edited"
+
+# Favorites, with parity-bot/dotfiles listed already.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "parity-bot/dotfiles" }
+
+[[step]]
+keys = ["a"]
+
+[[step]]
+wait = { text = "owner/repo" }
+
+[[step]]
+type = "parity-bot/dotfiles"
+
+[[step]]
+wait = { gone = "owner/repo" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "already lists parity-bot/dotfiles" }
+
+[[step]]
+capture = "duplicate"
+
+# escape puts the highlight back on parity-bot/dotfiles, and d removes it.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { focused = "parity-bot/dotfiles" }
+
+[[step]]
+keys = ["d"]
+
+[[step]]
+wait = { focused = "+ Add item..." }
+
+# The toast names parity-bot/dotfiles until it times out.
+[[step]]
+wait = { gone = "already lists", timeout_ms = 10000 }
+
+[[step]]
+capture = "removed"
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Save" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Settings updated" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "settings"
+
+[[step]]
+wait = { text = "Adjust LazyGithub settings" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "LazyGithub Settings" }
+
+[[step]]
+keys = ["right", "right", "right"]
+
+[[step]]
+wait = { regex = "octo/two[^\\n]*\\n[^\\n]*parity-bot/hello-world" }
+
+[[step]]
+capture = "reopened"
+
+[expect.empty]
+contains = ["Additional Repos To Track:", "+ Add item..."]
+footer = ["⏎ Edit", "a Add", "d Remove", "shift+↑ Move up", "shift+↓ Move down", "shift+⏎ Submit", "q Close", "/ Search"]
+
+[expect.added]
+contains = ["parity-bot/hello-world", "octo/one", "+ Add item..."]
+not_contains = ["owner/repo"]
+footer = ["⏎ Edit", "a Add", "d Remove", "shift+↑ Move up", "shift+↓ Move down", "shift+⏎ Submit", "q Close", "/ Search"]
+
+[expect.moved]
+contains = ["octo/one", "parity-bot/hello-world"]
+
+[expect.edited]
+contains = ["octo/two", "parity-bot/hello-world"]
+not_contains = ["octo/one"]
+
+[expect.duplicate]
+contains = ["Invalid setting", "already lists parity-bot/dotfiles"]
+footer = ["⏎ Done", "esc Cancel", "shift+⏎ Submit", "/ Search"]
+
+[expect.removed]
+contains = ["Favorites:", "+ Add item..."]
+not_contains = ["parity-bot/dotfiles"]
+footer = ["⏎ Edit", "a Add", "d Remove", "shift+↑ Move up", "shift+↓ Move down", "shift+⏎ Submit", "q Close", "/ Search"]
+
+[expect.reopened]
+contains = ["LazyGithub Settings", "octo/two", "parity-bot/hello-world"]
+not_contains = ["parity-bot/dotfiles", "octo/one"]

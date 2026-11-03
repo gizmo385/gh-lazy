@@ -15,7 +15,8 @@
   20 queries persisted, plus saved queries in config as palette commands), D4 a (`s` on the PR and Issues tables,
   `ctrl+s` saves, both rebindable Rust-only ids), D5 b (opening a hit from another repo switches the selected repo,
   sharing the code path with notifications, #405). Proposed by the design agent, 2026-11-01
-- Link: #386 (parent; #393, #394, #395), #44 and #59 (the Python-era requests), #177 (M5 improvements, Chris 2026-10-30)
+- Link: #386 (parent; #393, #394, #395), #44 and #59 (the Python-era requests), #177 (M5 improvements, Chris 2026-10-30),
+  #408 (the modal's keys and layout)
 - Rows: `toasts.rate-limited`, `toasts.search-rate-limited`, `modals.search`, `modals.search-scope`,
   `modals.search-results`, `modals.search-states`, `modals.search-open-hit`, `modals.search-session`,
   `keybindings.search-open`, `command-palette.search`
@@ -53,3 +54,28 @@ What the real API does (checked 2026-11-01 with `gh api search/issues`):
   `X-RateLimit-Remaining: 0` and `X-RateLimit-Reset`.
 - `user:<login>` works for orgs as well as users. `sort:updated-desc` and `sort:created-asc` in `q` are honored. A
   response also carries `search_type: "lexical"`.
+
+## The modal's keys and layout (#408)
+
+Chris, 2026-11-03, after trying the modal: the results table showed its own `/` filter box as a second search bar,
+`/` opened that box instead of going back to the query, and `escape` closed the modal straight from the query
+input. So:
+
+- The results table isn't searchable: there's no filter box and nothing opens one. The query input is the modal's
+  only text box. The focus ring is the input, the scope select (unless the query disables it) and the table.
+- `/` (`modal.search`, footer "Query") focuses the query input with the cursor at the end of the text, from the
+  table or the closed scope select. In the input it types `/`; with the scope list open it searches the list, as any
+  printable key does.
+- `escape` (`modal.close`) in the query input leaves it, for the results table, or for the scope select while there
+  are no results (the table, when the query disables the select). With the scope list open it closes the list. On the
+  table or the closed select it closes the modal, so two presses from the input close it. `q` (`modal.close` too)
+  closes whenever focus isn't in the input, where it types `q`.
+- The footer is `⏎ Search  esc Results` in the input and `⏎ Open  / Query  q Close` on the table (`/ Query  q Close`
+  on the select). The labels are the modal's own for existing ids (`textual.input.submit`, `common.table.select`,
+  `modal.search` and `modal.close`). No id is new, so the Key Bindings tab and the conflict check list them where
+  they already were (`modal.search` and `modal.close` under Dialogs). Rebinding either moves its key here too.
+- The heading sits one blank row below the top border, with one blank row under it. (Notifications keeps Python's
+  `MarkdownH1` margins, two rows above.) The hint line, the status line and the table start one column in, under the
+  input's and the select's left edges, and the table ends one column inside the right edge. The "Title" column gives
+  up width, cut with an ellipsis, when the columns are wider than the table (the shared table's `Column::shrinking`),
+  so "Updated" always shows in full and there's no horizontal scrollbar under the rows.

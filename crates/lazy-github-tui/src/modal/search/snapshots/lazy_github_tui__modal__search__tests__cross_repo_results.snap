@@ -9,44 +9,44 @@ expression: "app.screen(160, 48)"
 │ ★  Owner       Name        Private                           ││ Repo Overview                                                                                │
 │ ☆  parity-bot █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█━━━━━━━━━━━━━━━│
 │               █                                                                                                                              █               │
-│               █                                                                                                                              █               │
 │               █                                               Search issues and pull requests                                                █               │
 │               █                                                                                                                              █               │
-│               █        ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎                                                                             █etails tabs.   │
-│               █ Scope: ▊  All of GitHub                     ▼  ▎                                                                             █               │
-│               █        ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎                                                                             █───────────────│
-│               █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█               │
+│               █        ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎                                                                             █               │
+│               █ Scope: ▊  All of GitHub                     ▼  ▎                                                                             █etails tabs.   │
+│               █        ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎                                                                             █               │
+│               █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█───────────────│
 │               █▊  is:pr author:@me                                                                                                          ▎█               │
 │               █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█               │
-│               █is:pr is:issue is:open is:merged author: assignee: label: review: involves: updated:>YYYY-MM-DD sort:updated-desc · AND OR ( )█               │
-│               █1,234 results · GitHub returns the first 1,000                                                                                █               │
-│               █ Repo                      #     Type  Status  Author      Title             Updated                                          █               │
-│               █ parity-bot/pr-details     2000  PR    open    parity-bot  Search result 1   2026-10-28                                       █               │
-│               █ parity-bot/issue-fixture  1999  PR    open    parity-bot  Search result 2   2026-10-28                                       █               │
-│               █ parity-bot/pr-details     1998  PR    open    parity-bot  Search result 3   2026-10-28                                       █               │
-│               █ parity-bot/issue-fixture  1997  PR    merged  parity-bot  Search result 4   2026-10-28                                       █               │
-│               █ parity-bot/pr-details     1996  PR    draft   parity-bot  Search result 5   2026-10-28                                       █               │
-│               █ parity-bot/issue-fixture  1995  PR    closed  parity-bot  Search result 6   2026-10-28                                       █               │
-│               █ parity-bot/pr-details     1994  PR    open    parity-bot  Search result 7   2026-10-28                                       █               │
-│               █ parity-bot/issue-fixture  1993  PR    open    parity-bot  Search result 8   2026-10-28                                       █               │
-│               █ parity-bot/pr-details     1992  PR    open    parity-bot  Search result 9   2026-10-28                                       █               │
-│               █ parity-bot/issue-fixture  1991  PR    draft   parity-bot  Search result 10  2026-10-28                                     ▅▅█               │
-│               █ parity-bot/pr-details     1990  PR    merged  parity-bot  Search result 11  2026-10-28                                       █               │
-│               █ parity-bot/issue-fixture  1989  PR    open    parity-bot  Search result 12  2026-10-28                                       █               │
-│               █ parity-bot/pr-details     1988  PR    open    parity-bot  Search result 13  2026-10-28                                       █               │
-│               █ parity-bot/issue-fixture  1987  PR    open    parity-bot  Search result 14  2026-10-28                                       █               │
-│               █ parity-bot/pr-details     1986  PR    draft   parity-bot  Search result 15  2026-10-28                                       █               │
-│               █ parity-bot/issue-fixture  1985  PR    open    parity-bot  Search result 16  2026-10-28                                       █               │
-│               █ parity-bot/pr-details     1984  PR    closed  parity-bot  Search result 17  2026-10-28                                       █               │
-│               █ parity-bot/issue-fixture  1983  PR    merged  parity-bot  Search result 18  2026-10-28                                       █               │
-└───────────────█ parity-bot/pr-details     1982  PR    open    parity-bot  Search result 19  2026-10-28                                       █               │
-┌─ [2] Pull Requ█ parity-bot/issue-fixture  1981  PR    draft   parity-bot  Search result 20  2026-10-28                                       █               │
-│ #  Status  Aut█ parity-bot/pr-details     1980  PR    open    parity-bot  Search result 21  2026-10-28                                       █               │
-└───────────────█ parity-bot/issue-fixture  1979  PR    open    parity-bot  Search result 22  2026-10-28                                       █               │
+│               █ is:pr is:issue is:open is:merged author: assignee: label: review: involves: updated:>YYYY-MM-DD sort:updated-desc · AND OR ( █               │
+│               █ 1,234 results · GitHub returns the first 1,000                                                                               █               │
+│               █  Repo                      #     Type  Status  Author      Title             Updated                                         █               │
+│               █  parity-bot/pr-details     2000  PR    open    parity-bot  Search result 1   2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1999  PR    open    parity-bot  Search result 2   2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1998  PR    open    parity-bot  Search result 3   2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1997  PR    merged  parity-bot  Search result 4   2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1996  PR    draft   parity-bot  Search result 5   2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1995  PR    closed  parity-bot  Search result 6   2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1994  PR    open    parity-bot  Search result 7   2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1993  PR    open    parity-bot  Search result 8   2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1992  PR    open    parity-bot  Search result 9   2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1991  PR    draft   parity-bot  Search result 10  2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1990  PR    merged  parity-bot  Search result 11  2026-10-28                                   ▅▅ █               │
+│               █  parity-bot/issue-fixture  1989  PR    open    parity-bot  Search result 12  2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1988  PR    open    parity-bot  Search result 13  2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1987  PR    open    parity-bot  Search result 14  2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1986  PR    draft   parity-bot  Search result 15  2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1985  PR    open    parity-bot  Search result 16  2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1984  PR    closed  parity-bot  Search result 17  2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1983  PR    merged  parity-bot  Search result 18  2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1982  PR    open    parity-bot  Search result 19  2026-10-28                                      █               │
+└───────────────█  parity-bot/issue-fixture  1981  PR    draft   parity-bot  Search result 20  2026-10-28                                      █               │
+┌─ [2] Pull Requ█  parity-bot/pr-details     1980  PR    open    parity-bot  Search result 21  2026-10-28                                      █               │
+│ #  Status  Aut█  parity-bot/issue-fixture  1979  PR    open    parity-bot  Search result 22  2026-10-28                                      █               │
+└───────────────█  parity-bot/pr-details     1978  PR    open    parity-bot  Search result 23  2026-10-28                                      █               │
 ┌─ [3] Issues (e█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█               │
 │ #  Status  Author  Title                                     ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
 │ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
- / Search  q Close
+ ⏎ Open  / Query  q Close

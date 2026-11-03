@@ -210,7 +210,8 @@ async fn later_opens_restore_the_session_and_the_prefill_waits_for_an_empty_quer
     .await;
     // From the palette the query is empty, so the next open from the PR table still takes its text.
     open(&mut app, SearchOrigin::Palette);
-    press(&mut app, &["escape"]).await;
+    // Out of the query, then closed.
+    press(&mut app, &["escape", "escape"]).await;
     open(&mut app, SearchOrigin::PullRequests);
     assert_eq!(dialog(&app).text(), "is:pr is:open ");
     press(&mut app, &["enter"]).await;
@@ -594,7 +595,8 @@ async fn escape_cancels_the_search_in_flight_and_keeps_the_session() {
     open(&mut app, SearchOrigin::PullRequests);
     app.press(&["enter"]);
     let id = last_search_id(&app);
-    app.press(&["escape"]);
+    // Out of the query (to the scope: no results yet), then closed.
+    app.press(&["escape", "escape"]);
     assert!(app.app().modals().is_empty());
     assert!(app.effects().contains(&Effect::Cancel(id)));
     open(&mut app, SearchOrigin::PullRequests);
@@ -739,7 +741,7 @@ async fn s_on_the_pr_and_issues_tables_opens_it_and_the_footer_shows_it() {
     app.press(&["s"]);
     assert_eq!(app.app().modals(), [ModalKind::Search]);
     assert_eq!(dialog(&app).text(), "is:pr is:open ");
-    app.press(&["escape", "3"]);
+    app.press(&["escape", "escape", "3"]);
     let screen = app.screen(160, 48);
     assert!(screen.lines().last().unwrap().contains("s Search GitHub"), "{screen}");
     app.press(&["s"]);
@@ -755,6 +757,167 @@ async fn search_open_is_rebindable() {
     assert!(app.app().modals().is_empty());
     app.press(&["ctrl+g"]);
     assert_eq!(app.app().modals(), [ModalKind::Search]);
+}
+
+/// The modal from the PR table with `parity-bot/pr-details`'s three open PRs listed and the table focused.
+async fn with_results() -> TestApp {
+    let mut app = selected(
+        Config::default(),
+        FakeGithub::new().with_search_page(Ok(pr_details_open())),
+    )
+    .await;
+    open(&mut app, SearchOrigin::PullRequests);
+    press(&mut app, &["enter"]).await;
+    assert!(dialog(&app).table_focused());
+    app
+}
+
+#[tokio::test]
+async fn slash_from_the_table_goes_back_to_the_query_with_the_cursor_at_the_end() {
+    let mut app = with_results().await;
+    press(&mut app, &["/"]).await;
+    let found = dialog(&app);
+    assert_eq!(found.focus, Focus::Input);
+    assert_eq!(found.text(), "is:pr is:open ");
+    assert_eq!(found.session.input.cursor(), "is:pr is:open ".chars().count());
+    assert_eq!(found.session.input.selection(), None);
+    // The table opened no filter box of its own.
+    assert!(!found.session.table.search_visible());
+}
+
+#[tokio::test]
+async fn slash_from_the_closed_scope_select_goes_back_to_the_query() {
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    press(&mut app, &["home", "tab"]).await;
+    assert_eq!(dialog(&app).focus, Focus::Scope);
+    press(&mut app, &["/"]).await;
+    let found = dialog(&app);
+    assert_eq!(found.focus, Focus::Input);
+    assert_eq!(found.session.input.cursor(), "is:pr is:open ".chars().count());
+}
+
+#[tokio::test]
+async fn slash_in_the_query_types_a_slash() {
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    press(&mut app, &["/"]).await;
+    assert_eq!(dialog(&app).text(), "is:pr is:open /");
+    assert_eq!(dialog(&app).focus, Focus::Input);
+}
+
+#[tokio::test]
+async fn escape_in_the_query_goes_to_the_results() {
+    let mut app = with_results().await;
+    press(&mut app, &["/", "escape"]).await;
+    assert!(dialog(&app).table_focused());
+    assert_eq!(app.app().modals(), [ModalKind::Search]);
+}
+
+#[tokio::test]
+async fn escape_in_the_query_with_no_results_goes_to_the_scope() {
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    press(&mut app, &["escape"]).await;
+    assert_eq!(dialog(&app).focus, Focus::Scope);
+    assert_eq!(app.app().modals(), [ModalKind::Search]);
+}
+
+#[tokio::test]
+async fn escape_in_the_query_with_no_results_and_the_scope_disabled_goes_to_the_table() {
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    retype(&mut app, "is:pr repo:octocat/hello");
+    press(&mut app, &["escape"]).await;
+    assert_eq!(dialog(&app).focus, Focus::Table);
+    press(&mut app, &["escape"]).await;
+    assert!(app.app().modals().is_empty());
+}
+
+#[tokio::test]
+async fn escape_on_the_table_closes() {
+    let mut app = with_results().await;
+    press(&mut app, &["escape"]).await;
+    assert!(app.app().modals().is_empty());
+}
+
+#[tokio::test]
+async fn escape_on_the_closed_scope_select_closes() {
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    press(&mut app, &["tab", "escape"]).await;
+    assert!(app.app().modals().is_empty());
+}
+
+#[tokio::test]
+async fn escape_with_the_scope_list_open_closes_the_list() {
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    press(&mut app, &["tab", "enter"]).await;
+    assert!(dialog(&app).select.is_open());
+    press(&mut app, &["escape"]).await;
+    assert_eq!(app.app().modals(), [ModalKind::Search]);
+    assert!(!dialog(&app).select.is_open());
+    assert_eq!(dialog(&app).focus, Focus::Scope);
+}
+
+#[tokio::test]
+async fn q_closes_from_the_table() {
+    let mut app = with_results().await;
+    press(&mut app, &["q"]).await;
+    assert!(app.app().modals().is_empty());
+}
+
+#[tokio::test]
+async fn q_closes_from_the_closed_scope_select() {
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    press(&mut app, &["tab", "q"]).await;
+    assert!(app.app().modals().is_empty());
+}
+
+#[tokio::test]
+async fn q_in_the_query_types_a_q() {
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    press(&mut app, &["q"]).await;
+    assert_eq!(app.app().modals(), [ModalKind::Search]);
+    assert_eq!(dialog(&app).text(), "is:pr is:open q");
+}
+
+#[tokio::test]
+async fn the_query_keys_follow_modal_search_and_modal_close_when_rebound() {
+    let mut config = Config::default();
+    config.bindings.overrides = IndexMap::from([
+        ("modal.search".to_owned(), "f3".to_owned()),
+        ("modal.close".to_owned(), "f2".to_owned()),
+    ]);
+    let mut app = selected(config, FakeGithub::new().with_search_page(Ok(pr_details_open()))).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    press(&mut app, &["enter"]).await;
+    // `/` and `escape` are free again.
+    press(&mut app, &["/", "escape"]).await;
+    assert!(dialog(&app).table_focused());
+    assert!(!dialog(&app).session.table.search_visible());
+    press(&mut app, &["f3"]).await;
+    assert_eq!(dialog(&app).focus, Focus::Input);
+    press(&mut app, &["f2"]).await;
+    assert!(dialog(&app).table_focused());
+    press(&mut app, &["f2"]).await;
+    assert!(app.app().modals().is_empty());
+}
+
+/// The footer row in each focus state: the query, the table, the scope select.
+#[tokio::test]
+async fn footers() {
+    let mut app = with_results().await;
+    let footer = |app: &mut TestApp| app.screen(160, 48).lines().last().unwrap().trim_end().to_owned();
+    let table = footer(&mut app);
+    press(&mut app, &["/"]).await;
+    let query = footer(&mut app);
+    press(&mut app, &["tab"]).await;
+    let scope = footer(&mut app);
+    insta::assert_snapshot!(format!("query: {query}\ntable: {table}\nscope: {scope}"));
 }
 
 // Drawing.
@@ -789,6 +952,39 @@ async fn results(#[case] cols: u16, #[case] rows: u16) {
     insta::assert_snapshot!(format!("results_{cols}x{rows}"), app.screen(cols, rows));
 }
 
+/// Titles wider than the table: the title column gives way with an ellipsis, so every date shows in full, and there's
+/// no horizontal scrollbar under the rows.
+#[rstest]
+#[case::wide(160, 48)]
+#[case::narrow(100, 30)]
+#[tokio::test]
+async fn long_titles(#[case] cols: u16, #[case] rows: u16) {
+    let long = "Make the search modal's results table fit inside the frame at every terminal size ".repeat(2);
+    let page = SearchPage {
+        total_count: 3,
+        incomplete_results: false,
+        items: vec![
+            hit("parity-bot/pr-details", 12, &long),
+            hit("parity-bot/pr-details", 11, "Short"),
+            hit("parity-bot/pr-details", 10, &long),
+        ],
+    };
+    let mut app = selected(Config::default(), FakeGithub::new().with_search_page(Ok(page))).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    press(&mut app, &["enter"]).await;
+    let screen = app.screen(cols, rows);
+    let interior = app.app().top_dialog_interior().unwrap();
+    let dated: Vec<&str> = screen.lines().filter(|line| line.contains("2026-10-28")).collect();
+    assert_eq!(dated.len(), 3, "{screen}");
+    for line in dated {
+        // The date ends inside the table, which ends a column inside the interior.
+        let end = line.find("2026-10-28").unwrap() + "2026-10-28".len();
+        let end = line[..end].chars().count();
+        assert!(end < usize::from(interior.right() - 1), "{screen}");
+    }
+    insta::assert_snapshot!(format!("long_titles_{cols}x{rows}"), screen);
+}
+
 #[tokio::test]
 async fn cross_repo_results() {
     let mut app = selected(Config::default(), FakeGithub::new().with_search_page(Ok(mine_first()))).await;
@@ -796,6 +992,8 @@ async fn cross_repo_results() {
     retype(&mut app, "is:pr author:@me");
     press(&mut app, &["tab", "enter", "end", "enter", "shift+tab", "enter"]).await;
     insta::assert_snapshot!(app.screen(160, 48));
+    // Narrow, the repo and the title share the cut, and the date still shows in full.
+    insta::assert_snapshot!("cross_repo_results_100x30", app.screen(100, 30));
 }
 
 #[tokio::test]

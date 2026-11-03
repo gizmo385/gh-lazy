@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/modal/search/tests.rs
+expression: "app.screen(100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Rep█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█─────────┐
+│ ★  Owner█                                                                              █         │
+│ ☆  parit█                       Search issues and pull requests                        █━━━━━━━━━│
+│         █                                                                              █         │
+│         █        ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎                             █         │
+│         █ Scope: ▊  All of GitHub                     ▼  ▎                             █         │
+│         █        ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎                             █         │
+│         █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█mments   │
+│         █▊  is:pr author:@me                                                          ▎█         │
+│         █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█         │
+│         █ is:pr is:issue is:open is:merged author: assignee: label: review: involves:  █─────────│
+│         █ 1,234 results · GitHub returns the first 1,000                               █         │
+│         █  Repo           #     Type  Status  Author      Title          Updated       █         │
+│         █  parity-bot/p…  2000  PR    open    parity-bot  Search resul…  2026-10-28    █         │
+│         █  parity-bot/i…  1999  PR    open    parity-bot  Search resul…  2026-10-28    █         │
+│         █  parity-bot/p…  1998  PR    open    parity-bot  Search resul…  2026-10-28    █         │
+└─────────█  parity-bot/i…  1997  PR    merged  parity-bot  Search resul…  2026-10-28    █         │
+┌─ [2] Pul█  parity-bot/p…  1996  PR    draft   parity-bot  Search resul…  2026-10-28    █         │
+│ #  Statu█  parity-bot/i…  1995  PR    closed  parity-bot  Search resul…  2026-10-28    █         │
+└─────────█  parity-bot/p…  1994  PR    open    parity-bot  Search resul…  2026-10-28    █         │
+┌─ [3] Iss█  parity-bot/i…  1993  PR    open    parity-bot  Search resul…  2026-10-28    █         │
+│ #  Statu█  parity-bot/p…  1992  PR    open    parity-bot  Search resul…  2026-10-28    █         │
+└─────────█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█         │
+┌─ [4] Workflows (empty) ──────────────┐│                                                          │
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ⏎ Open  / Query  q Close

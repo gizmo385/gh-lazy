@@ -20,13 +20,11 @@ use ratatui::text::Span;
 use tokio::time::Instant;
 
 use super::frame::on_screen;
-use super::{Dialog, DialogAction, DialogPane, FieldKind, FocusMove, ModalKind, dialog_bindings};
+use super::{Dialog, DialogAction, FieldKind, FocusMove, ModalKind, dialog_bindings};
 use crate::action::Action;
-use crate::component::{ChainLink, Component, Cx, Owner, RenderCx};
+use crate::component::{BindingState, ChainLink, Component, Cx, RenderCx};
 use crate::components::select::{self, Select, SelectOutcome};
-use crate::components::table::{
-    Cell, CellValue, Column, Handled, Page, SEARCHABLE_BINDINGS, SearchableTable, TableEvent, TableFocus, TableItem,
-};
+use crate::components::table::{Cell, CellValue, Column, Handled, Page, SearchableTable, TableEvent, TableItem};
 use crate::components::text_input::{self, InputOutcome, TextInput};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
@@ -35,12 +33,16 @@ use crate::options::AppOptions;
 /// The heading, centered as the Notifications modal's.
 const HEADING: &str = "Search issues and pull requests";
 
-/// The rows above the scope: `MarkdownH1`'s two rows of margin above the heading and one below, as Notifications.
-const HEADING_ROWS: u16 = 4;
-const HEADING_MARGIN_TOP: u16 = 2;
+/// The rows above the scope: one blank row above the heading and one below it.
+const HEADING_ROWS: u16 = 3;
+const HEADING_MARGIN_TOP: u16 = 1;
 
 /// The heading's side padding, inside which it's centered.
 const HEADING_PADDING: u16 = 2;
+
+/// The columns the hint, the status line and the table leave each side: the scope label's inset, inside the input's
+/// and the select's outer borders, so the lines start under the boxes and the table ends inside them.
+const INSET: u16 = 1;
 
 /// The label left of the scope select, and the columns it takes with its gap.
 const SCOPE_LABEL: &str = "Scope:";
@@ -65,8 +67,15 @@ const MORE_FAILED: &str = "loading more failed, move down to retry";
 /// What a failed search logs at error; the error goes to debug.
 const SEARCH_FAILED: &str = "Search failed";
 
-/// The modal screen's bindings: only `modal.close` of its own.
-pub(crate) const SEARCH_BINDINGS: &[BindingId] = dialog_bindings![ModalClose];
+/// The modal screen's bindings: `modal.search` back to the query, and `modal.close`, which from the query only leaves
+/// it (the input types `q`, so there it's `escape`).
+pub(crate) const SEARCH_BINDINGS: &[BindingId] = dialog_bindings![ModalSearch, ModalClose];
+
+/// The footer's labels for the bindings the modal gives its own meaning.
+const QUERY_LABEL: &str = "Query";
+const RESULTS_LABEL: &str = "Results";
+const SUBMIT_LABEL: &str = "Search";
+const OPEN_LABEL: &str = "Open";
 
 /// Where the modal was opened from, which picks the text of the first open.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -112,12 +121,15 @@ pub struct Columns {
 
 impl Columns {
     fn headers(self) -> Vec<Column> {
-        let mut headers = Vec::with_capacity(7);
+        // The repo and the title give up width, the wider first, so every other column shows in full.
+        let mut columns = Vec::with_capacity(7);
         if self.repo {
-            headers.push("Repo");
+            columns.push(Column::new("Repo").shrinking());
         }
-        headers.extend(["#", "Type", "Status", "Author", "Title", "Updated"]);
-        headers.into_iter().map(Column::new).collect()
+        columns.extend(["#", "Type", "Status", "Author"].map(Column::new));
+        columns.push(Column::new("Title").shrinking());
+        columns.push(Column::new("Updated"));
+        columns
     }
 }
 
@@ -310,7 +322,7 @@ pub struct SearchOutcome {
 /// The dialog's own actions: the parts that make requests or close it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SearchAction {
-    /// `modal.close`: done, keeping the session.
+    /// `modal.close` outside the query: done, keeping the session.
     Close,
     /// `enter` in the input: search page 1.
     Submit,
@@ -327,21 +339,12 @@ pub enum SearchAction {
     Open((RepoName, u64)),
 }
 
-/// What has focus.
+/// What has focus: one stop of the `tab` / `shift+tab` ring, top to bottom. The results table is never searchable,
+/// so the query is the modal's only text box.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Focus {
     Input,
     Scope,
-    /// The table, or its search box, whose focus the table keeps itself.
-    Table,
-}
-
-/// One stop of the `tab` / `shift+tab` ring, top to bottom.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Stop {
-    Input,
-    Scope,
-    Search,
     Table,
 }
 
@@ -471,14 +474,21 @@ impl Areas {
             ..scope_row
         };
         let input = next(text_input::HEIGHT);
-        let hint = next(1);
-        let status = next(1);
-        let table = Rect {
-            y,
-            height: area.bottom().saturating_sub(y),
-            ..area
-        }
-        .intersection(area);
+        let inset = |rect: Rect| Rect {
+            x: rect.x.saturating_add(INSET.min(rect.width)),
+            width: rect.width.saturating_sub(2 * INSET),
+            ..rect
+        };
+        let hint = inset(next(1));
+        let status = inset(next(1));
+        let table = inset(
+            Rect {
+                y,
+                height: area.bottom().saturating_sub(y),
+                ..area
+            }
+            .intersection(area),
+        );
         Self {
             heading,
             scope_label,
@@ -581,7 +591,7 @@ impl SearchDialog {
         self.session.hit_keys()
     }
 
-    /// Whether the results table (or its search box) has focus.
+    /// Whether the results table has focus.
     pub fn table_focused(&self) -> bool {
         self.focus == Focus::Table
     }
@@ -616,32 +626,30 @@ impl SearchDialog {
         }
     }
 
-    /// The ring's stop with focus now.
-    fn stop(&self) -> Stop {
-        match self.focus {
-            Focus::Input => Stop::Input,
-            Focus::Scope => Stop::Scope,
-            Focus::Table if self.session.table.focus() == TableFocus::Search => Stop::Search,
-            Focus::Table => Stop::Table,
-        }
-    }
-
-    /// Moves focus to `stop`. The select's list closes when it loses focus; the table's search box blurs.
-    fn focus_stop(&mut self, stop: Stop) {
-        if stop != Stop::Scope {
+    /// Moves focus to `focus`. The select's list closes when it loses focus.
+    fn focus_stop(&mut self, focus: Focus) {
+        if focus != Focus::Scope {
             self.select.close();
         }
-        let table = &mut self.session.table;
-        if stop == Stop::Search {
-            table.focus_search();
+        self.focus = focus;
+    }
+
+    /// `modal.search`: back to the query, the cursor at the end of the text.
+    fn focus_query(&mut self) {
+        self.focus_stop(Focus::Input);
+        let end = self.session.input.value().chars().count();
+        self.session.input.set_cursor(end);
+    }
+
+    /// `modal.close` in the query: out of the input, to the results, or to the scope while there are none to go to
+    /// (and the query hasn't disabled it).
+    fn leave_query(&mut self) {
+        let to = if self.session.table.row_count() == 0 && !self.select.is_disabled() {
+            Focus::Scope
         } else {
-            table.focus_table();
-        }
-        self.focus = match stop {
-            Stop::Input => Focus::Input,
-            Stop::Scope => Focus::Scope,
-            Stop::Search | Stop::Table => Focus::Table,
+            Focus::Table
         };
+        self.focus_stop(to);
     }
 
     /// What a table's answer to an input means.
@@ -741,7 +749,7 @@ impl SearchDialog {
                 incomplete: incomplete_results,
                 more_failed: false,
             };
-            self.focus_stop(Stop::Table);
+            self.focus_stop(Focus::Table);
         }
         if let Some(TableEvent::LoadMore { generation, page, .. }) = loaded.event {
             self.request_page(generation, page, cx);
@@ -883,13 +891,26 @@ impl Component for SearchDialog {
 
     fn on_binding(&mut self, id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
         match id {
+            BindingId::ModalClose if self.focus == Focus::Input => {
+                self.leave_query();
+                Some(Action::Consumed)
+            }
             BindingId::ModalClose => Some(Self::action(SearchAction::Close)),
-            BindingId::TableSearch => {
-                self.session.table.open_search();
-                self.focus = Focus::Table;
+            BindingId::ModalSearch => {
+                self.focus_query();
                 Some(Action::Consumed)
             }
             _ => None,
+        }
+    }
+
+    fn binding_state(&self, id: BindingId, _cx: &Cx<'_>) -> BindingState {
+        match id {
+            BindingId::ModalClose if self.focus == Focus::Input => BindingState::Relabeled(RESULTS_LABEL),
+            // Already in the query, where `/` types (the chain keeps `/` behind an input, as Textual does).
+            BindingId::ModalSearch if self.focus == Focus::Input => BindingState::Hidden,
+            BindingId::ModalSearch => BindingState::Relabeled(QUERY_LABEL),
+            _ => BindingState::Enabled,
         }
     }
 
@@ -897,14 +918,14 @@ impl Component for SearchDialog {
         match self.focus {
             Focus::Input => self.session.input.consumes_key(key, keymap),
             Focus::Scope => self.select.consumes_key(key, keymap),
-            Focus::Table => self.session.table.consumes_key(key, keymap),
+            Focus::Table => false,
         }
     }
 
     fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action> {
         let chord = KeyChord::from_event(&key)?;
-        match self.stop() {
-            Stop::Input => {
+        match self.focus {
+            Focus::Input => {
                 let before = self.session.input.value().to_owned();
                 let outcome = self.session.input.handle_key(&chord, cx.keymap(), cx.clipboard());
                 if self.session.input.value() != before {
@@ -917,23 +938,15 @@ impl Component for SearchDialog {
                     InputOutcome::Ignored => None,
                 }
             }
-            Stop::Scope => Self::select_outcome(self.select.handle_key(&chord, cx.keymap(), cx.now())),
-            // Only the search box takes keys outside the chain.
-            Stop::Search => {
-                let handled = self.session.table.handle_key(&chord, cx.keymap(), cx.clipboard());
-                Some(Self::table_outcome(handled).unwrap_or(Action::Consumed))
-            }
-            Stop::Table => None,
+            Focus::Scope => Self::select_outcome(self.select.handle_key(&chord, cx.keymap(), cx.now())),
+            // The table takes its keys through the chain.
+            Focus::Table => None,
         }
     }
 
     fn handle_mouse(&mut self, event: MouseEvent, _area: Rect, _cx: &Cx<'_>) -> Option<Action> {
-        // A drag that started on the input or the table's search box, wherever the pointer is now.
+        // A drag that started on the input, wherever the pointer is now.
         if self.session.input.captured_mouse(event) {
-            return Some(Action::Consumed);
-        }
-        if self.session.table.search_captures_mouse() {
-            self.session.table.search_captured_mouse(event);
             return Some(Action::Consumed);
         }
         let areas = self.areas;
@@ -955,9 +968,8 @@ impl Component for SearchDialog {
         if areas.table.contains(at) {
             let on_rows = self.session.table.drawn_table_rect(areas.table).contains(at);
             let handled = self.session.table.handle_mouse(event, areas.table);
-            if press && (on_rows || self.session.table.focus() == TableFocus::Search) {
-                self.select.close();
-                self.focus = Focus::Table;
+            if press && on_rows {
+                self.focus_stop(Focus::Table);
             }
             return Some(Self::table_outcome(handled).unwrap_or(Action::Consumed));
         }
@@ -965,10 +977,10 @@ impl Component for SearchDialog {
             return Some(Action::Consumed);
         }
         if on_box && !self.select.is_disabled() {
-            self.focus_stop(Stop::Scope);
+            self.focus_stop(Focus::Scope);
             let _ = self.select.toggle();
         } else if areas.input.contains(at) {
-            self.focus_stop(Stop::Input);
+            self.focus_stop(Focus::Input);
             self.session.input.press(areas.input, event.column);
         }
         Some(Action::Consumed)
@@ -1062,19 +1074,15 @@ impl Dialog for SearchDialog {
         }
     }
 
-    /// The ring: the input, the scope select unless a scope in the query disables it, the table's search box while
-    /// it's shown, and the table.
+    /// The ring: the input, the scope select unless a scope in the query disables it, and the table.
     fn move_focus(&mut self, direction: FocusMove) {
-        let mut stops = vec![Stop::Input];
+        let mut stops = vec![Focus::Input];
         if !self.select.is_disabled() {
-            stops.push(Stop::Scope);
+            stops.push(Focus::Scope);
         }
-        if self.session.table.search_visible() {
-            stops.push(Stop::Search);
-        }
-        stops.push(Stop::Table);
+        stops.push(Focus::Table);
         let len = stops.len();
-        let current = stops.iter().position(|&stop| stop == self.stop()).unwrap_or(0);
+        let current = stops.iter().position(|&stop| stop == self.focus).unwrap_or(0);
         let next = match direction {
             FocusMove::Next => (current + 1) % len,
             FocusMove::Previous => (current + len - 1) % len,
@@ -1091,26 +1099,24 @@ impl Dialog for SearchDialog {
         self.output.take()
     }
 
+    /// The focused field's link alone: the table has no searchable pane around it, so `/` reaches the screen's
+    /// `modal.search`.
     fn field_chain(&self) -> Vec<ChainLink> {
         let kind = self.kind();
-        let pane = ChainLink::new(
-            Owner::DialogPane(kind, DialogPane::SearchableTable),
-            SEARCHABLE_BINDINGS,
-        );
-        match self.stop() {
-            Stop::Input => vec![FieldKind::TextInput.link(kind)],
-            Stop::Scope if self.select.is_open() => vec![FieldKind::SelectOverlay.link(kind)],
-            Stop::Scope => vec![FieldKind::Select.link(kind)],
-            Stop::Search => vec![FieldKind::TextInput.link(kind), pane],
-            Stop::Table => vec![FieldKind::Table.link(kind), pane],
-        }
+        let field = match self.focus {
+            Focus::Input => FieldKind::TextInput,
+            Focus::Scope if self.select.is_open() => FieldKind::SelectOverlay,
+            Focus::Scope => FieldKind::Select,
+            Focus::Table => FieldKind::Table,
+        };
+        vec![field.link(kind)]
     }
 
     fn on_field_binding(&mut self, field: FieldKind, id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
         match field {
             FieldKind::Table => Self::table_outcome(self.session.table.on_binding(id)),
             FieldKind::Select | FieldKind::SelectOverlay => Self::select_outcome(self.select.on_binding(id)),
-            // `handle_key` already gave the input and the search box every key they bind.
+            // `handle_key` already gave the input every key it binds.
             FieldKind::TextInput => Some(Action::Consumed),
             FieldKind::TextEditor
             | FieldKind::Button
@@ -1125,8 +1131,17 @@ impl Dialog for SearchDialog {
         }
     }
 
+    /// `enter` in the query searches, and on the table opens the hit.
+    fn field_binding_state(&self, field: FieldKind, id: BindingId, _cx: &Cx<'_>) -> BindingState {
+        match (field, id) {
+            (FieldKind::TextInput, BindingId::TextualInputSubmit) => BindingState::Relabeled(SUBMIT_LABEL),
+            (FieldKind::Table, BindingId::TableSelect) => BindingState::Relabeled(OPEN_LABEL),
+            _ => BindingState::Enabled,
+        }
+    }
+
     fn captures_mouse(&self) -> bool {
-        self.session.input.is_selecting() || self.session.table.search_captures_mouse()
+        self.session.input.is_selecting()
     }
 
     fn popup_contains(&self, column: u16, row: u16) -> bool {
@@ -1140,8 +1155,7 @@ impl Dialog for SearchDialog {
                 self.text_changed();
                 Some(Action::Consumed)
             }
-            Focus::Table => Self::table_outcome(self.session.table.handle_paste(text)),
-            Focus::Scope => None,
+            Focus::Table | Focus::Scope => None,
         }
     }
 

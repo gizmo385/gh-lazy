@@ -1,0 +1,7 @@
+---
+source: crates/lazy-github-tui/src/modal/search/tests.rs
+expression: "format!(\"query: {query}\\ntable: {table}\\nscope: {scope}\")"
+---
+query:  ⏎ Search  esc Results
+table:  ⏎ Open  / Query  q Close
+scope:  / Query  q Close

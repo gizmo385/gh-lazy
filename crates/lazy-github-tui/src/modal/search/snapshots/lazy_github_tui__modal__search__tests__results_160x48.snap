@@ -9,21 +9,21 @@ expression: "app.screen(cols, rows)"
 │ ★  Owner       Name        Private                           ││ Repo Overview                                                                                │
 │ ☆  parity-bot █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█━━━━━━━━━━━━━━━│
 │               █                                                                                                                              █               │
-│               █                                                                                                                              █               │
 │               █                                               Search issues and pull requests                                                █               │
 │               █                                                                                                                              █               │
-│               █        ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎                                                                             █etails tabs.   │
-│               █ Scope: ▊  This repo (parity-bot/pr-details) ▼  ▎                                                                             █               │
-│               █        ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎                                                                             █───────────────│
-│               █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█               │
+│               █        ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎                                                                             █               │
+│               █ Scope: ▊  This repo (parity-bot/pr-details) ▼  ▎                                                                             █etails tabs.   │
+│               █        ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎                                                                             █               │
+│               █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█───────────────│
 │               █▊  is:pr is:open                                                                                                             ▎█               │
 │               █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█               │
-│               █is:pr is:issue is:open is:merged author: assignee: label: review: involves: updated:>YYYY-MM-DD sort:updated-desc · AND OR ( )█               │
-│               █3 results                                                                                                                     █               │
-│               █ #  Type  Status  Author         Title                              Updated                                                   █               │
-│               █ 9  PR    open    parity-friend  Clamp the cursor to the last line  2026-02-05                                                █               │
-│               █ 5  PR    open    parity-friend  Add a cursor to the viewer         2026-02-01                                                █               │
-│               █ 2  PR    draft   parity-friend  Try a faster parser                2026-01-05                                                █               │
+│               █ is:pr is:issue is:open is:merged author: assignee: label: review: involves: updated:>YYYY-MM-DD sort:updated-desc · AND OR ( █               │
+│               █ 3 results                                                                                                                    █               │
+│               █  #  Type  Status  Author         Title                              Updated                                                  █               │
+│               █  9  PR    open    parity-friend  Clamp the cursor to the last line  2026-02-05                                               █               │
+│               █  5  PR    open    parity-friend  Add a cursor to the viewer         2026-02-01                                               █               │
+│               █  2  PR    draft   parity-friend  Try a faster parser                2026-01-05                                               █               │
+│               █                                                                                                                              █               │
 │               █                                                                                                                              █               │
 │               █                                                                                                                              █               │
 │               █                                                                                                                              █               │
@@ -49,4 +49,4 @@ expression: "app.screen(cols, rows)"
 ┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
 │ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
- / Search  q Close
+ ⏎ Open  / Query  q Close

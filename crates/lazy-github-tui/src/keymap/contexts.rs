@@ -215,12 +215,9 @@ pub const KEY_CONTEXTS: &[KeyContext] = &[
             NOTIFICATIONS_BINDINGS,
         ],
     },
-    // The Search modal (#394): its scope select, and its results table inside the searchable pane.
+    // The Search modal (#394): its scope select, and its results table, which isn't searchable (#408).
     dialog!("Search", SELECT_BINDINGS, SEARCH_BINDINGS),
-    KeyContext {
-        name: "Search",
-        links: &[TABLE_BINDINGS, SEARCHABLE_BINDINGS, SEARCH_BINDINGS],
-    },
+    dialog!("Search", TABLE_BINDINGS, SEARCH_BINDINGS),
     dialog!("Settings", TABS_BINDINGS, SETTINGS_BINDINGS),
     dialog!("Settings", INFO_BINDINGS, SETTINGS_BINDINGS),
     dialog!("Settings", BUTTON_BINDINGS, SETTINGS_BINDINGS),

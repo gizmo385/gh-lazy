@@ -501,6 +501,13 @@ page and re-run the generator; an xtask test fails when the committed mirrors di
 - `pr-preload/`: `GET /repos/parity-bot/pr-details/commits/<sha>/pulls` for the harness's git commit (the same SHA on
   every run, see [The isolated environment](#the-isolated-environment)), answering PR 5 alone. Listed before
   `pr-details` and `base`, for the `pr-preload` scenario (#198). Hand-written.
+- `refresh/`: `parity-bot/pr-details` as GitHub has changed it, listed before `pr-details` and `base`, for the
+  Rust-only `refresh` scenario (#407). Each fixture is a `when.after` variant, so a pick still gets `pr-details`' answer
+  and a refresh the new one: `/pulls` page 1 after an earlier fetch of itself renames PR 5 "Cursor v2" and adds PR 6
+  "Wrap lines"; `GET .../pulls/5` (accept `json`) after itself has the new title; `.../issues/5/comments` after itself
+  adds comment 7004 at the end (its reactions, `[]`, are a plain fixture); and `actions/runs` page 1 after comment
+  7004's reactions holds run 5000407, so only a second refresh fills the Workflows section (page 2, empty, ends it).
+  Hand-written from `pr-details`' files by a throwaway script; edit the JSON directly.
 - `workflow-write/`: for `parity-bot/run-fixture`, listed before `run-details` and `base`, for the `workflow-trigger`
   and `workflow-rerun` scenarios (M3, #188). Two workflows on `actions/workflows` page 1 (CI 7000001, Release
   7000002), the branches `main`, `release` and `run-details` (`page=1`, `per_page=30`), `POST

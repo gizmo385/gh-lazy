@@ -1,0 +1,122 @@
+version = 1
+description = "Refresh from GitHub (#407): ctrl+r with PR #5's Conversation shown fetches everything again in place (the PR list gets a new PR and PR 5's new title, the Conversation a new comment) with the tab, focus and footer unchanged; the palette's \"Refresh from GitHub\" does it again"
+gate = true
+# Rust-only: Python has no refresh (decision cache-ttl-defaults-and-refresh).
+apps = ["rust"]
+parity_rows = ["main-layout.refresh", "keybindings.main-refresh", "command-palette.refresh-from-github"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+# refresh answers the second and later fetches of three reads differently (`when.after` the same GET): PR list page 1
+# renames PR 5 to "Cursor v2" and adds PR 6 "Wrap lines" (cut to "Wrap line" at 100x30), PR 5 itself has the new
+# title, and its comments end with a new comment 7004. A pick fetches each once, so only a refresh gets them. Its runs
+# page 1 gains a run once comment 7004's reactions have been asked for, which only the key's refresh leads to, after
+# it has fetched that page itself: so only the palette's refresh fills the Workflows section.
+fixtures = ["refresh", "pr-details", "base"]
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Add a curso", timeout_ms = 15000 }
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "PR Reviews", timeout_ms = 15000 }
+
+# The tab strip has focus: right twice is the Conversation.
+[[step]]
+keys = ["right", "right"]
+
+# The wheel scrolls the content to its end without moving focus off the tab strip; titles are cut to fit at 100x30.
+[[step]]
+wheel = { text = "Review from", direction = "down", count = 50 }
+
+[[step]]
+wait = { text = "Rebased on main.", timeout_ms = 15000 }
+
+[[step]]
+capture = "before"
+
+[[step]]
+keys = ["ctrl+r"]
+
+[[step]]
+wait = { text = "Wrap line", timeout_ms = 15000 }
+
+# The Conversation was rebuilt, so it starts at the top again; the new comment is last.
+[[step]]
+wait = { text = "Review from", timeout_ms = 15000 }
+
+[[step]]
+wheel = { text = "Review from", direction = "down", count = 50 }
+
+[[step]]
+wait = { text = "Refreshed: the cursor line", timeout_ms = 15000 }
+
+[[step]]
+capture = "after-key"
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "refresh from"
+
+[[step]]
+wait = { text = "Fetch everything on screen again, skipping the cache" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "Search for commands" }
+
+# The Workflows section fills only once the palette's refresh has fetched the runs page again. The log has that
+# page's request too, though it can't tell a third fetch from the first two.
+[[step]]
+wait = { gone = "[4] Workflows (empty)", timeout_ms = 15000 }
+
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/actions/runs", query = { page = "1", per_page = "30" } } }
+
+[[step]]
+capture = "after-palette"
+
+[expect.before]
+footer = ["^v Paste link", "f Follow link", "F Follow link (browser)", "q Quit", "^p Command Palette", "M Maximize", "? Keybindings"]
+pane_titles = ["", "[1] Repositories", "[5] PR #5 Details", "[2] Pull Requests", "[3] Issues (empty)", "[4] Workflows (empty)"]
+focused = ["[5] PR #5 Details"]
+tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Conversation" }
+contains = ["Add a curso", "Rebased on main."]
+not_contains = ["Wrap line", "Cursor v2", "Refreshed: the cursor line", "Refresh from GitHub"]
+
+[expect.after-key]
+footer = ["^v Paste link", "f Follow link", "F Follow link (browser)", "q Quit", "^p Command Palette", "M Maximize", "? Keybindings"]
+pane_titles = ["", "[1] Repositories", "[5] PR #5 Details", "[2] Pull Requests", "[3] Issues (empty)", "[4] Workflows (empty)"]
+focused = ["[5] PR #5 Details"]
+tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Conversation" }
+contains = ["Wrap line", "Cursor v2", "Refreshed: the cursor line"]
+not_contains = ["Add a curso", "Refresh from GitHub", "Error", "panicked"]
+
+[expect.after-palette]
+footer = ["^v Paste link", "f Follow link", "F Follow link (browser)", "q Quit", "^p Command Palette", "M Maximize", "? Keybindings"]
+pane_titles = ["", "[1] Repositories", "[5] PR #5 Details", "[2] Pull Requests", "[3] Issues (empty)", "[4] Workflows"]
+focused = ["[5] PR #5 Details"]
+tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Conversation" }
+contains = ["Wrap line", "Cursor v2", "success"]
+not_contains = ["Add a curso", "Search for commands", "Error", "panicked"]

@@ -99,10 +99,11 @@ wait = { text = "Key conflicts" }
 [[step]]
 capture = "saved"
 
+# The Tables header, which counts the other side, is below the list's fold since `main.refresh` (#407) joined General;
+# the unit tests count every group's conflicts.
 [expect.conflict]
 contains = [
     "General  1 conflict",
-    "Tables  1 conflict",
     "!  Quit                       j                 app.quit",
     "app.quit · default q · changed · ! j also Table cursor down",
 ]

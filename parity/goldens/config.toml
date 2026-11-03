@@ -33,6 +33,7 @@ parity_rows = [
   "config.cache-default-ttl",
   "config.cache-list-repos-ttl",
   "config.cache-list-issues-ttl",
+  "config.cache-legacy-ttls",
   "config.core-first-start",
   "config.core-logfile-path",
   "config.core-logfile-max-bytes",

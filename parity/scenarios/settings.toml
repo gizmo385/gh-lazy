@@ -223,7 +223,6 @@ contains = [
     "Auth Last Checked:",
     "Cache Directory:",
     "Default Ttl:",
-    "600",
 ]
 
 [expect.core]

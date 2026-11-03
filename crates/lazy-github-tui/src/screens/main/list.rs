@@ -22,7 +22,7 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 
 use crate::component::Cx;
-use crate::components::table::{Column, Page, SearchableTable, SortSpec, TableEvent, TableItem};
+use crate::components::table::{Column, Handled, Page, SearchableTable, SortSpec, TableEvent, TableItem};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::options::AppOptions;
 
@@ -99,6 +99,9 @@ pub(super) struct ListSection<S: ListSource> {
     /// The later page in flight was asked for to fill an empty table, not by a cursor move: when it lands, the
     /// section asks for another or stops loading.
     ahead: bool,
+    /// The item the cursor was on when a refresh asked for the first page again ([`Self::keep_cursor`]): the cursor
+    /// goes back to it when that page lands, if the page has it.
+    keep: Option<<S::Item as TableItem>::Key>,
     compact: bool,
 }
 
@@ -112,6 +115,7 @@ impl<S: ListSource> std::fmt::Debug for ListSection<S> {
             .field("first", &self.first)
             .field("cache", &self.cache)
             .field("ahead", &self.ahead)
+            .field("keep", &self.keep)
             .field("compact", &self.compact)
             .finish()
     }
@@ -127,6 +131,7 @@ impl<S: ListSource> ListSection<S> {
             first: None,
             cache: None,
             ahead: false,
+            keep: None,
             compact: false,
         }
     }
@@ -171,6 +176,7 @@ impl<S: ListSource> ListSection<S> {
             cx.effect(Effect::Cancel(id));
         }
         self.ahead = false;
+        self.keep = None;
         self.table.clear();
         self.table.set_loading(true);
         self.cache = Some(cx.read_cache(cache_file::<S>(repo, cx.config())));
@@ -181,6 +187,13 @@ impl<S: ListSource> ListSection<S> {
     /// page then replaces the rows.
     pub(super) fn retarget(&mut self, repo: &Repository) {
         self.repo = Some(repo.clone());
+    }
+
+    /// Keeps the cursor on the item under it across the next first page ([`Self::first_page`]): "Refresh from GitHub",
+    /// where the rows stay until that page replaces them. The cursor goes back to the item if the page has it, and
+    /// otherwise stays at the top, where a refill leaves it.
+    pub(super) fn keep_cursor(&mut self) {
+        self.keep = self.table.selected().map(TableItem::key);
     }
 
     /// Requests page 1 for the repo the rows are for, with the config's filters, replacing any first page in flight.
@@ -258,7 +271,14 @@ impl<S: ListSource> ListSection<S> {
             more = !page.last;
             let event = self.table.insert_many(page.items, &());
             self.follow(event.as_ref(), cx);
+            if let Some(key) = self.keep.take()
+                && let Handled::Event(event) = self.table.select_key(&key)
+            {
+                self.follow(Some(&event), cx);
+            }
         } else {
+            // A failed refresh keeps the rows, and the cursor where it is.
+            self.keep = None;
             self.table.enable_lazy_load(PER_PAGE, 1);
         }
         self.save_cache(cx);

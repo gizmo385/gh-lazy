@@ -653,8 +653,8 @@ mod tests {
     #[test]
     fn the_lines_are_every_group_under_its_header_with_the_first_binding_highlighted() {
         let list = list();
-        // Python's 59 ids and the six Rust-only diff ids.
-        assert_eq!(list.lines.len(), 65 + BINDING_GROUPS.len());
+        // Python's 59 ids, the six Rust-only diff ids and `main.refresh`.
+        assert_eq!(list.lines.len(), 66 + BINDING_GROUPS.len());
         assert_eq!(list.lines[0], Line::Header(0));
         assert_eq!(list.lines[1], Line::Binding(0));
         assert_eq!(highlighted(&list), BindingId::AppQuit);
@@ -665,7 +665,7 @@ mod tests {
         let mut list = list();
         let _ = list.on_binding(BindingId::TextualOptionListCursorUp);
         assert_eq!(highlighted(&list), BindingId::AppQuit);
-        for _ in 0..8 {
+        for _ in 0..9 {
             let _ = list.on_binding(BindingId::TextualOptionListCursorDown);
         }
         assert_eq!(highlighted(&list), BindingId::UserViewProfile);
@@ -685,9 +685,9 @@ mod tests {
     #[test]
     fn page_keys_move_by_the_lines_in_view() {
         let mut list = list();
-        // Quit is line 1, so a page of 10 lands on line 11, Focus repos table, past the Focus header.
+        // Quit is line 1, so a page of 10 lands on line 11, the Focus header, and so on View User above it.
         let _ = list.on_binding(BindingId::TextualOptionListPageDown);
-        assert_eq!(highlighted(&list), BindingId::MainReposFocus);
+        assert_eq!(highlighted(&list), BindingId::UserViewProfile);
         assert!(list.scroll > 0);
         let _ = list.on_binding(BindingId::TextualOptionListPageUp);
         assert_eq!(highlighted(&list), BindingId::AppQuit);

@@ -25,6 +25,7 @@ pub const BINDING_GROUPS: &[BindingGroup] = {
                 B::AppOpenHelp,
                 B::NotificationsOpen,
                 B::LinkPaste,
+                B::MainRefresh,
                 B::LinkFollow,
                 B::LinkFollowExternal,
                 B::UserViewProfile,
@@ -143,8 +144,9 @@ mod tests {
             let expected = usize::from(id.config_id().is_some());
             assert_eq!(count, expected, "{} is in {count} groups", id.def().name);
         }
-        // Python's 59, and the six Rust-only diff ids (decision diff-file-navigation).
-        assert_eq!(grouped.len(), 65);
+        // Python's 59, the six Rust-only diff ids (decision diff-file-navigation) and `main.refresh` (decision
+        // cache-ttl-defaults-and-refresh).
+        assert_eq!(grouped.len(), 66);
         assert!(grouped.iter().all(|id| !id.def().name.starts_with("textual.")));
     }
 }

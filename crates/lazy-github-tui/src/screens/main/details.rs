@@ -366,6 +366,11 @@ impl Default for DetailsPane {
     }
 }
 
+/// Whether `a` and `b` are the same issue or pull request: one number in one repo.
+fn same_item(a: &Issue, b: &Issue) -> bool {
+    a.number == b.number && a.repo.full_name.eq_ignore_ascii_case(&b.repo.full_name)
+}
+
 /// The Details box's title for a selection labelled `label` (`parity-bot/dotfiles`, `PR #5`, `Issue #12`), with the
 /// `main.details.focus` key as the other titles have theirs: `[5] PR #5 Details`.
 pub(super) fn details_title(keymap: &Keymap, label: &str) -> String {
@@ -422,6 +427,69 @@ impl DetailsPane {
     pub(super) fn show_run(&mut self, run: WorkflowRun, cx: &mut Cx<'_>) {
         let details = RunDetails::new(run, cx);
         self.show(Body::Run(Box::new(details)), cx);
+    }
+
+    /// "Refresh from GitHub" fetched the repo the Repo Overview shows again: the overview is rebuilt from `repo`, its
+    /// README requested again. Says whether it was rebuilt: not when the pane no longer shows that repo.
+    pub(super) fn refresh_repo(&mut self, repo: &Repository, cx: &mut Cx<'_>) -> bool {
+        if self.repo().is_none_or(|shown| shown.full_name != repo.full_name) {
+            return false;
+        }
+        let overview = RepoOverview::new(repo, cx);
+        self.replace_in_place(Body::Repo(Box::new(overview)), cx);
+        true
+    }
+
+    /// "Refresh from GitHub" fetched the pull request the pane shows again: its tabs load again as on a pick, except a
+    /// Diff tab holding review comments not yet sent, which stays as it was ([`PullRequestDetails::refresh`]). Says
+    /// whether it was shown: not when the pane no longer shows that pull request.
+    pub(super) fn refresh_pull_request(&mut self, pr: FullPullRequest, cx: &mut Cx<'_>) -> bool {
+        let Body::PullRequest(details) = &mut self.body else {
+            return false;
+        };
+        if !same_item(&details.pr().pr.issue, &pr.pr.issue) {
+            return false;
+        }
+        details.refresh(pr, cx);
+        self.tab_reshown(cx);
+        true
+    }
+
+    /// "Refresh from GitHub" fetched the issue the pane shows again: its tabs load again as on a pick. Says whether it
+    /// was shown: not when the pane no longer shows that issue.
+    pub(super) fn refresh_issue(&mut self, issue: Issue, cx: &mut Cx<'_>) -> bool {
+        if self.issue().is_none_or(|shown| !same_item(shown.issue(), &issue)) {
+            return false;
+        }
+        let details = IssueDetails::new(issue, cx);
+        self.replace_in_place(Body::Issue(Box::new(details)), cx);
+        true
+    }
+
+    /// "Refresh from GitHub" fetched the workflow run the pane shows again: its jobs are requested again, which its
+    /// three tabs share. Says whether it was shown: not when the pane no longer shows that run.
+    pub(super) fn refresh_run(&mut self, run: WorkflowRun, cx: &mut Cx<'_>) -> bool {
+        if self.run().is_none_or(|shown| shown.run().id != run.id) {
+            return false;
+        }
+        let details = RunDetails::new(run, cx);
+        self.replace_in_place(Body::Run(Box::new(details)), cx);
+        true
+    }
+
+    /// Replaces the body with `body`, a fresh copy of the same subject, closing the old one: the same tabs, with the
+    /// active one kept, where a pick starts at the first.
+    fn replace_in_place(&mut self, body: Body, cx: &mut Cx<'_>) {
+        self.body.get().close(cx);
+        self.body = body;
+        self.tab_reshown(cx);
+    }
+
+    /// The body was refreshed in place: the active tab is shown to it again, as a pick shows its first tab, so a tab
+    /// that loads once seen (the run's Logs) loads.
+    fn tab_reshown(&mut self, cx: &mut Cx<'_>) {
+        let tab = self.tabs.active();
+        self.body.get_mut().on_tab_shown(tab, cx);
     }
 
     /// Switches tabs, and tells the body about a tab that became active. Says whether the active tab changed: with

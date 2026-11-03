@@ -77,6 +77,10 @@ pub enum Action {
     /// Refresh the unread notification count now: the poll's timer, and in M4 the command palette, a Settings save
     /// and closing the Notifications modal. Skipped while a refresh runs; blanks the count when notifications are off.
     RefreshNotifications,
+    /// "Refresh from GitHub" (`main.refresh`, or the palette command): mark every cached `gh` read stale, then have
+    /// each pane on the main screen fetch what it shows again, in place, and refresh the unread count when
+    /// notifications are on (decision `cache-ttl-defaults-and-refresh`).
+    Refresh,
     /// Make this repo the current one: the status box, the sections and the details follow. Every source of a
     /// selection dispatches it (the repos table, the current-directory default, and later lookups and links), and
     /// selecting the current repo again reloads everything. Boxed: a `Repository` is big.

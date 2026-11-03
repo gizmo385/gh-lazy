@@ -219,6 +219,12 @@ registry! {
     MainCommandLogFocus("main.command_log.focus", "6", "focus_section('LazyGithubCommandLog')", "Focus command log")
         .hidden()
         .tooltip("Focus the command log, where actions taken by LazyGithub are shown");
+    // Rust-only, after Python's main-screen ids (decision cache-ttl-defaults-and-refresh): rebindable, and kept out of
+    // the footer (hidden) and the help panel (system), so every screen shared with Python lists the same keys.
+    MainRefresh("main.refresh", "ctrl+r", "refresh", "Refresh from GitHub")
+        .hidden()
+        .system()
+        .tooltip("Fetch everything on screen again, skipping the cache");
 
     // Rust-only editor keys, fixed under internal ids (decision settings-key-bindings-list, D3): the Settings Key
     // Bindings list (#381).
@@ -484,9 +490,10 @@ mod tests {
     }
 
     #[test]
-    fn only_help_quit_is_system() {
+    fn only_help_quit_and_main_refresh_are_system() {
         let system: Vec<_> = BindingId::ALL.iter().copied().filter(|id| id.def().system).collect();
-        assert_eq!(system, [BindingId::TextualHelpQuit]);
+        // `main.refresh` is system only to stay out of the help panel, as Python has no such key.
+        assert_eq!(system, [BindingId::MainRefresh, BindingId::TextualHelpQuit]);
     }
 
     #[test]

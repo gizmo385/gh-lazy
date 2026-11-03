@@ -81,6 +81,11 @@ impl PrDiff {
         }
     }
 
+    /// Whether the viewer holds review comments that haven't been sent, which a refresh mustn't drop.
+    pub(super) fn has_unsent_comments(&self) -> bool {
+        self.view().is_some_and(|view| !view.pending().is_empty())
+    }
+
     fn view_mut(&mut self) -> Option<&mut DiffView> {
         match &mut self.state {
             DiffState::Loaded(view) => Some(view),

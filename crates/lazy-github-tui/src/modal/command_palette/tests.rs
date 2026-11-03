@@ -90,7 +90,7 @@ fn many() -> Vec<PaletteCommand> {
 }
 
 /// LazyGithub's commands with notifications off, as the opening list ends with them.
-const APP_COMMANDS: [&str; 7] = [
+const APP_COMMANDS: [&str; 8] = [
     "Toggle Command Log",
     "Toggle Workflows",
     "Toggle Issues",
@@ -98,6 +98,7 @@ const APP_COMMANDS: [&str; 7] = [
     "Change Settings",
     "Debug Info",
     "Open Bug Report",
+    "Refresh from GitHub",
 ];
 
 /// The opening list: `system` sorted by name, then [`APP_COMMANDS`] (Py bug B87's answer).
@@ -220,6 +221,7 @@ fn lazygithubs_commands_are_in_their_order_before_the_system_ones() {
             ("Change Settings", CommandSource::App),
             ("Debug Info", CommandSource::App),
             ("Open Bug Report", CommandSource::App),
+            ("Refresh from GitHub", CommandSource::App),
             ("Theme", CommandSource::System),
             ("Quit", CommandSource::System),
             ("Keys", CommandSource::System),
@@ -271,31 +273,38 @@ fn tog_lists_the_four_toggles_and_lazygithubs_win_ties() {
 fn refresh_notifications_is_listed_only_while_notifications_are_on() {
     let mut app = opened();
     type_text(&mut app, "ref");
-    assert!(hits(&app).is_empty());
-    app.advance(Duration::from_secs(1));
-    assert!(palette(&app).is_some_and(CommandPaletteDialog::shows_no_matches));
+    assert_eq!(hits(&app), ["Refresh from GitHub"]);
 
     let mut config = Config::default();
     config.notifications.enabled = true;
     let mut app = TestApp::new(config);
     futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once");
     app.press(&["ctrl+p"]);
-    // Last among LazyGithub's, after the system commands in the opening list, with "Change Settings", "Debug Info"
-    // and "Open Bug Report" right before.
+    // Last of Python's among LazyGithub's, after the system commands in the opening list, with "Change Settings",
+    // "Debug Info" and "Open Bug Report" right before, and the Rust-only "Refresh from GitHub" after.
     assert!(
         hits(&app).ends_with(&[
             "Toggle Pull Requests",
             "Change Settings",
             "Debug Info",
             "Open Bug Report",
-            "Refresh notifications"
+            "Refresh notifications",
+            "Refresh from GitHub"
         ]),
         "{:?}",
         hits(&app)
     );
+    // Equal scores keep the commands' order, so `ref` still runs "Refresh notifications".
     type_text(&mut app, "ref");
-    assert_eq!(hits(&app), ["Refresh notifications"]);
-    assert_eq!(help_texts(&app), ["Refresh the unread notifications count"]);
+    assert_eq!(hits(&app), ["Refresh notifications", "Refresh from GitHub"]);
+    assert_eq!(highlighted(&app), Some("Refresh notifications"));
+    assert_eq!(
+        help_texts(&app),
+        [
+            "Refresh the unread notifications count",
+            "Fetch everything on screen again, skipping the cache"
+        ]
+    );
     let checks = |app: &TestApp| {
         app.effects()
             .iter()
@@ -315,6 +324,28 @@ fn refresh_notifications_is_listed_only_while_notifications_are_on() {
     assert!(app.app().modals().is_empty());
     assert_eq!(checks(&app), before + 1);
     assert!(app.app().notifications_refreshing());
+}
+
+#[test]
+fn refresh_from_github_closes_the_palette_and_refreshes() {
+    for enabled in [false, true] {
+        let mut config = Config::default();
+        config.notifications.enabled = enabled;
+        let mut app = TestApp::new(config);
+        futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once");
+        app.press(&["ctrl+p"]);
+        type_text(&mut app, "refresh from");
+        assert_eq!(highlighted(&app), Some("Refresh from GitHub"));
+        assert_eq!(
+            help_texts(&app),
+            ["Fetch everything on screen again, skipping the cache"]
+        );
+        let before = app.effects().len();
+        app.press(&["enter"]);
+        assert!(app.app().modals().is_empty());
+        assert!(app.effects()[before..].contains(&Effect::RefreshGithubCache));
+    }
+    assert!(matches!(PaletteRun::Refresh.action(), Action::Refresh));
 }
 
 #[test]
@@ -471,10 +502,10 @@ fn up_and_down_wrap() {
     let mut app = opened();
     app.press(&["down"]);
     assert_eq!(highlighted(&app), Some("Maximize"));
-    app.press(&["down"; 11]);
+    app.press(&["down"; 12]);
     assert_eq!(highlighted(&app), Some("Keys"));
     app.press(&["up"]);
-    assert_eq!(highlighted(&app), Some("Open Bug Report"));
+    assert_eq!(highlighted(&app), Some("Refresh from GitHub"));
 }
 
 #[test]
@@ -623,7 +654,7 @@ fn a_click_on_a_hit_runs_it() {
 #[test]
 fn a_click_outside_the_band_closes_the_palette() {
     // The dimmed screen below the band, the status row above it, and the footer row.
-    for (col, row) in [(40, 34), (5, 1), (3, 47)] {
+    for (col, row) in [(40, 36), (5, 1), (3, 47)] {
         let mut app = opened();
         app.render(160, 48);
         app.click(col, row);

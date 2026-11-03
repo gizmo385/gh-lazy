@@ -83,6 +83,8 @@ pub enum PaletteRun {
     OpenBugReport,
     /// "Refresh notifications": the poll's refresh, now.
     RefreshNotifications,
+    /// "Refresh from GitHub": everything on the main screen fetched again, past `gh`'s cache.
+    Refresh,
     /// "Keys": open the help panel, or close it, as `?` does.
     ToggleHelp,
     /// "Maximize": maximize the focused widget as `M` does, without the one-time toast.
@@ -109,6 +111,7 @@ impl PaletteRun {
             PaletteRun::DebugInfo => Action::ShowDebugInfo,
             PaletteRun::OpenBugReport => Action::OpenBugReport,
             PaletteRun::RefreshNotifications => Action::RefreshNotifications,
+            PaletteRun::Refresh => Action::Refresh,
             PaletteRun::ToggleHelp => Action::ToggleHelp,
             PaletteRun::Maximize => Action::Maximize { toast: false },
             PaletteRun::Minimize => Action::Minimize,

@@ -95,6 +95,8 @@ pub struct ReposSection {
     cache_read: Option<(RequestId, PathBuf)>,
     /// The list (with the tracked repos) has filled the rows, so the cached ones are stale.
     listed: bool,
+    /// The load in flight is a refresh's: when it lands, the cursor stays on its repo.
+    refreshing: bool,
 }
 
 /// Where loading the rows is.
@@ -184,6 +186,7 @@ impl std::fmt::Debug for ReposSection {
             .field("load", &self.load)
             .field("cache_read", &self.cache_read)
             .field("listed", &self.listed)
+            .field("refreshing", &self.refreshing)
             .finish_non_exhaustive()
     }
 }
@@ -202,6 +205,7 @@ impl ReposSection {
             load: Load::Idle,
             cache_read: None,
             listed: false,
+            refreshing: false,
         }
     }
 
@@ -212,6 +216,26 @@ impl ReposSection {
         self.load = Load::Listing(cx.request(GithubRequest::ListRepositories(RepoListQuery::all())));
         let path = cache_file(cx);
         self.cache_read = Some((cx.read_cache(path.clone()), path));
+    }
+
+    /// "Refresh from GitHub": the list and then the tracked repos are requested again, as at startup but without
+    /// reading `repos.json` or the overlay, so the rows stay until the new ones replace them and rewrite the file. A
+    /// load still in flight (the startup one, or an earlier refresh) is cancelled and its answers dropped. A failure
+    /// keeps the rows, as at startup.
+    pub fn refresh(&mut self, cx: &mut Cx<'_>) {
+        match std::mem::take(&mut self.load) {
+            Load::Idle => {}
+            Load::Listing(id) => cx.effect(Effect::Cancel(id)),
+            Load::Tracking(fetch) => {
+                for slot in fetch.slots {
+                    if matches!(slot.answer, TrackedAnswer::Waiting) {
+                        cx.effect(Effect::Cancel(slot.id));
+                    }
+                }
+            }
+        }
+        self.refreshing = true;
+        self.load = Load::Listing(cx.request(GithubRequest::ListRepositories(RepoListQuery::all())));
     }
 
     /// Takes the result of the `repos.json` read, and hands back any other.
@@ -273,6 +297,7 @@ impl ReposSection {
                     Err(error) => {
                         tracing::error!("Error fetching repositories from Github API");
                         tracing::debug!("Fetching repositories failed: {error}");
+                        self.refreshing = false;
                         self.table.set_loading(false);
                     }
                 }
@@ -316,7 +341,14 @@ impl ReposSection {
     /// Replaces the rows with `repos`, writes them to `repos.json`, drops the overlay, and offers the
     /// current-directory repo the new rows.
     fn show(&mut self, repos: impl IntoIterator<Item = Repository>, cx: &mut Cx<'_>) {
+        let keep = std::mem::take(&mut self.refreshing)
+            .then(|| self.table.selected().map(TableItem::key))
+            .flatten();
         self.table.replace_all(repos, &RepoCells::from_cx(cx));
+        if let Some(name) = keep {
+            // The repos table isn't lazy, so moving its cursor never asks for a page.
+            let _ = self.table.select_key(&name);
+        }
         self.listed = true;
         self.save_cache(cx);
         self.table.set_loading(false);

@@ -99,6 +99,14 @@ impl IssueLists {
         self.issues.request_first_page(cx);
     }
 
+    /// "Refresh from GitHub" with `repo` selected and the PR or the Issues section shown: [`Self::reload`], with each
+    /// table's cursor kept on its pull request or issue if the new first page has it.
+    pub(super) fn refresh(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
+        self.prs.keep_cursor();
+        self.issues.keep_cursor();
+        self.reload(repo, cx);
+    }
+
     /// Adds a looked-up pull request to the PR table unless it's there: [`ListSection::insert_if_missing`].
     pub(super) fn insert_pr_if_missing(&mut self, pr: PartialPullRequest, cx: &mut Cx<'_>) {
         self.prs.insert_if_missing(pr, cx);

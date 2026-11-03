@@ -121,6 +121,8 @@ impl<G: Github> Runtime<G> {
             }
             Effect::SaveConfig(config) => self.saver.save(config),
             Effect::ReconfigureGithub(options) => self.gh.reconfigure(options),
+            // Synchronous, so the `Effect::Github`s after it in the same batch already see the mark.
+            Effect::RefreshGithubCache => self.gh.refresh_all(),
             Effect::ReadCache { id, path } => self.read_cache(id, path),
             Effect::ParseMarkdown { id, source } => self.parse_markdown(id, source),
             Effect::WriteCache { path, text } => self.cache_writer.write(path, text),

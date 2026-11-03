@@ -18,6 +18,7 @@ mod pr_merge;
 mod preload;
 mod profile;
 mod pull_requests;
+mod refresh;
 mod repo_overview;
 mod repos;
 mod run_details;
@@ -284,6 +285,7 @@ pub const SCREEN_BINDINGS: &[BindingId] = &[
     BindingId::TextualCopyText,
     BindingId::NotificationsOpen,
     BindingId::LinkPaste,
+    BindingId::MainRefresh,
     BindingId::LinkFollow,
     BindingId::LinkFollowExternal,
 ];
@@ -340,6 +342,8 @@ pub struct MainScreen {
     /// Followed links still resolving, by request, with the link: each opens in the app once it resolves, or in the
     /// browser when it doesn't.
     follows: Vec<(RequestId, Arc<str>)>,
+    /// "Refresh from GitHub"'s fetch of the subject the details show, which any newer selection replaces.
+    details_refresh: Option<refresh::DetailsRefresh>,
 }
 
 /// The toasts after a link opens in the app: Python's `_open_link_subject`.
@@ -514,6 +518,7 @@ impl MainScreen {
             pending: None,
             preload: CommitPreload::default(),
             follows: Vec::new(),
+            details_refresh: None,
         }
     }
 
@@ -839,6 +844,7 @@ impl MainScreen {
         let response = self.edits.on_response(id, response, cx)?;
         let response = self.reruns.on_response(id, response, cx)?;
         let response = self.preload.on_response(id, response, cx)?;
+        let response = self.on_details_refresh(id, response, cx)?;
         let response = self.on_pending_selection(id, response, cx)?;
         self.details.on_response(id, response, cx)
     }
@@ -1666,6 +1672,7 @@ impl Component for MainScreen {
                 .enabled
                 .then_some(Action::Main(MainAction::OpenNotifications)),
             BindingId::LinkPaste => Some(Action::Main(MainAction::OpenPasteLink(None))),
+            BindingId::MainRefresh => Some(Action::Refresh),
             BindingId::LinkFollow => Some(Action::ShowLinkHints { external: false }),
             BindingId::LinkFollowExternal => Some(Action::ShowLinkHints { external: true }),
             BindingId::TextualFocusNext => Some(Action::FocusNext),

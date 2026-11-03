@@ -48,6 +48,9 @@ pub enum Effect {
     /// Run every later GitHub request with these options ([`Github::reconfigure`]): Settings saved new cache TTLs
     /// or a new `api.base_url`. Requests already running keep the old ones.
     ReconfigureGithub(GhCliOptions),
+    /// Mark every cached GitHub read stale ([`Github::refresh_all`]), before the runtime starts any request emitted
+    /// after this: "Refresh from GitHub". Requests already running aren't affected.
+    RefreshGithubCache,
     /// Read a table cache file (`lazy_github_core::cache::read`) off the async threads. The text comes back as
     /// `Event::CacheRead` with the same `id`, `None` when there's no file.
     ReadCache {

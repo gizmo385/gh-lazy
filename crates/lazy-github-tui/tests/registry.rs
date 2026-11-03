@@ -21,8 +21,8 @@ const SHOW_DIFFS: &[&str] = &[
     "notifications.open",
 ];
 
-/// Rebindable ids Python doesn't have, for new behavior (PLAN §5, decision `diff-file-navigation`): they sit after
-/// Python's ids of their area and aren't in `bindings.json`.
+/// Rebindable ids Python doesn't have, for new behavior (PLAN §5, decisions `diff-file-navigation` and
+/// `cache-ttl-defaults-and-refresh`): they sit after Python's ids of their area and aren't in `bindings.json`.
 const RUST_ONLY_IDS: &[&str] = &[
     "diff.next_file",
     "diff.previous_file",
@@ -30,6 +30,7 @@ const RUST_ONLY_IDS: &[&str] = &[
     "diff.fold_all",
     "diff.first_line",
     "diff.last_line",
+    "main.refresh",
 ];
 
 fn python_bindings() -> Vec<Value> {

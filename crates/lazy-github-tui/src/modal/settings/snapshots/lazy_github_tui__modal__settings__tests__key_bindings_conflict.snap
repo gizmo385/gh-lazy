@@ -22,20 +22,20 @@ expression: "app.screen(160, 48)"
 │                             █ !  Quit                       j                 app.quit                                         █                             │
 │                             █ !  Command Palette            tab               app.command_palette                              █                             │
 └─────────────────────────────█    Maximize                   M                 app.maximize_widget                              █                             │
-┌─ [2] Pull Requests ─────────█    Keybindings                ?                 app.open_help                                 ▅▅ █PR diff, and participating   │
+┌─ [2] Pull Requests ─────────█    Keybindings                ?                 app.open_help                                 ▆▆ █PR diff, and participating   │
 │ #  Status  Author  Title    █    Notifications              ^n                notifications.open                               █reate a new PR for the       │
 │                             █    Paste link                 ^v                link.paste                                       █                             │
+│                             █    Refresh from GitHub        ^r                main.refresh                                     █                             │
 │                             █    Follow link                f                 link.follow                                      █                             │
 │                             █    Follow link (browser)      F                 link.follow_external                             █                             │
 │                             █    View User                  u                 user.view_profile                                █                             │
-│                             █ Focus                                                                                            █                             │
-│                             █    Focus repos table          1                 main.repos.focus                                 █ting in any activate         │
-└─────────────────────────────█    Focus PRs table            2                 main.pull_requests.focus                         █itself. This means that you  │
-┌─ [3] Issues ────────────────█    Focus issues table         3                 main.issues.focus                                █                             │
-│ #  Status  Author  Title    █    Focus workflows table      4                 main.workflows.focus                             █                             │
+│                             █ Focus                                                                                            █ting in any activate         │
+└─────────────────────────────█    Focus repos table          1                 main.repos.focus                                 █itself. This means that you  │
+┌─ [3] Issues ────────────────█    Focus PRs table            2                 main.pull_requests.focus                         █                             │
+│ #  Status  Author  Title    █    Focus issues table         3                 main.issues.focus                                █                             │
+│                             █    Focus workflows table      4                 main.workflows.focus                             █                             │
 │                             █    Focus details tabs         5                 main.details.focus                               █                             │
 │                             █    Focus command log          6                 main.command_log.focus                           █                             │
-│                             █ Tables  1 conflict                                                                               █                             │
 │                             █ app.quit · default q · changed · ! j also Table cursor down (Repositories table, Pull requests … █tly only supports listing    │
 │                             █                                                                                                  █e currently selected repo,   │
 │                             █──────────────────────────────────────────────────────────────────────────────────────────────────█.                            │

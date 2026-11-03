@@ -67,6 +67,13 @@ const CONTEXT_DIFFS: &[ContextDiff] = &[
         ],
         extra: &[],
     },
+    // "Refresh from GitHub" (decision cache-ttl-defaults-and-refresh): a Rust-only key on the main screen, kept out of
+    // its footer and help panel.
+    ContextDiff {
+        class: "lazy_github.ui.screens.primary.LazyGithubMainScreen",
+        missing: &[],
+        extra: &[BindingId::MainRefresh],
+    },
 ];
 
 /// Classes whose component isn't built yet, with the matrix row or issue it lands with. That change maps the class
@@ -335,7 +342,8 @@ fn mapped_classes_match_their_rust_lists() {
             extra, expected_extra,
             "{class}: Rust ids the Python class doesn't have (update CONTEXT_DIFFS once they're expected or gone)"
         );
-        assert_eq!(order, rust, "{class}: order");
+        let mapped: Vec<BindingId> = rust.iter().copied().filter(|id| !expected_extra.contains(id)).collect();
+        assert_eq!(order, mapped, "{class}: order");
 
         for &id in &order {
             let mut python_keys: Vec<KeySpec> = Vec::new();

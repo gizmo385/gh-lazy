@@ -346,13 +346,15 @@ impl MainScreen {
         }
     }
 
-    /// A new selection replaces any still loading: the pending stage and the preload's lookup are cancelled, and their
-    /// answers, if they come anyway, are dropped. Every selection calls this first.
+    /// A new selection replaces any still loading: the pending stage, the preload's lookup and a refresh's fetch of the
+    /// details' subject are cancelled, and their answers, if they come anyway, are dropped. Every selection calls this
+    /// first.
     pub(super) fn cancel_pending_selection(&mut self, cx: &mut Cx<'_>) {
         if let Some(pending) = self.pending.take() {
             cx.effect(Effect::Cancel(pending.id()));
         }
         self.preload.cancel(cx);
+        self.cancel_details_refresh(cx);
     }
 }
 

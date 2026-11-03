@@ -156,6 +156,29 @@ impl WorkflowsPane {
         self.repo = Some(repo.clone());
         self.runs.begin(repo, cx);
         self.workflows.clear();
+        self.request_both(repo, cx);
+    }
+
+    /// "Refresh from GitHub" with `repo` selected and the section shown: the workflows and the first runs page are
+    /// requested again, as [`Self::load_repo`] does, but the runs and workflows stay until their answers replace them,
+    /// and the cursor goes back to its run if the new page has it. A `T` waiting for its workflows keeps waiting.
+    pub(super) fn refresh(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
+        for id in self
+            .workflows_request
+            .take()
+            .into_iter()
+            .chain(self.runs_request.take())
+        {
+            cx.effect(Effect::Cancel(id));
+        }
+        self.repo = Some(repo.clone());
+        self.runs.retarget(repo);
+        self.runs.keep_cursor();
+        self.request_both(repo, cx);
+    }
+
+    /// Requests the workflows and the first runs page together, as Python's `asyncio.gather`.
+    fn request_both(&mut self, repo: &Repository, cx: &mut Cx<'_>) {
         self.workflows_request = Some(cx.request(GithubRequest::ListWorkflows {
             repo: Box::new(repo.clone()),
             page: PageQuery::default(),

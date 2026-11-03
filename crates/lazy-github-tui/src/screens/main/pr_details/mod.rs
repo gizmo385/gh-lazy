@@ -100,6 +100,24 @@ impl PullRequestDetails {
         }
     }
 
+    /// "Refresh from GitHub" fetched the pull request again as `pr`: the Overview and the Conversation load again as on
+    /// a pick, scrolled to the top, and so does the Diff unless it holds review comments not yet sent. That tab is
+    /// kept as it is, with its diff and the pull request it was built for, which the comments' lines belong to.
+    pub(super) fn refresh(&mut self, pr: FullPullRequest, cx: &mut Cx<'_>) {
+        let pr = Arc::new(pr);
+        self.overview.close(cx);
+        self.overview = PrOverview::new(Arc::clone(&pr), cx);
+        if self.diff.has_unsent_comments() {
+            tracing::debug!("Keeping the Diff tab of PR #{}: it holds unsent comments", pr.number());
+        } else {
+            self.diff.close(cx);
+            self.diff = PrDiff::new(Arc::clone(&pr), cx);
+        }
+        self.conversation.close(cx);
+        self.conversation = PrConversation::new(Arc::clone(&pr), cx);
+        self.pr = pr;
+    }
+
     /// The pull request shown.
     pub(in crate::screens::main) fn pr(&self) -> &FullPullRequest {
         &self.pr

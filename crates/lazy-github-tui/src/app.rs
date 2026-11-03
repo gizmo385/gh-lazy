@@ -809,6 +809,7 @@ impl App {
                 }
             }
             Action::RefreshNotifications => self.notifications.refresh(&mut Cx::new(&mut self.shared, out)),
+            Action::Refresh => self.refresh(out),
             Action::SelectRepo(repo) => self.select_repo(&repo, out),
             // Link hints' `F`: whatever the link is, the browser, with Python's toast even when nothing opens.
             Action::FollowLink { target, external: true } => {
@@ -1101,6 +1102,13 @@ impl App {
                 PaletteRun::RefreshNotifications,
             ));
         }
+        // Rust-only (decision cache-ttl-defaults-and-refresh): always listed, where "Refresh notifications" is or
+        // would be.
+        commands.push(command(
+            "Refresh from GitHub",
+            "Fetch everything on screen again, skipping the cache",
+            PaletteRun::Refresh,
+        ));
         commands
     }
 
@@ -1150,6 +1158,19 @@ impl App {
         let shown = main.toggle(toggle, &mut Cx::new(&mut self.shared, out));
         if !shown && self.maximized.is_some_and(|maximized| toggle.covers(maximized.target)) {
             self.minimize();
+        }
+    }
+
+    /// [`Action::Refresh`]: the cache mark goes first, so every request the panes make below, and any cached read
+    /// after them, skips `gh`'s cache once. Then each pane reloads what it shows, and the unread count follows when
+    /// notifications are on. Only the main screen has it; nothing is toasted, the loading states are the feedback.
+    fn refresh(&mut self, out: &mut Outbox) {
+        let BaseScreen::Main(main) = &mut self.base else { return };
+        tracing::info!("Refreshing from GitHub");
+        out.effects.push(Effect::RefreshGithubCache);
+        main.refresh(&mut Cx::new(&mut self.shared, out));
+        if self.shared.config.notifications.enabled {
+            out.actions.push_back(Action::RefreshNotifications);
         }
     }
 

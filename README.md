@@ -82,6 +82,11 @@ the command palette (`ctrl+p`).
 that stop it loading; `lazy-github check-config --fix` offers to reset each one to its default after saving a backup.
 Run `lazy-github help` for the other commands.
 
+If the themes look washed out or all alike, LazyGithub may think your terminal shows only 256 colors. It recognizes
+most terminals that show 24-bit color, and any that sets `COLORTERM=truecolor`; otherwise (under tmux, for example)
+set `COLORTERM=truecolor` or `appearance.color_depth` (Settings → Appearance → Color Depth) to `"truecolor"`. The debug
+info's "Color Depth" line shows which depth is in use and why.
+
 ![Settings screenshot](https://raw.githubusercontent.com/gizmo385/gh-lazy/main/images/lazy-github-settings-ui.svg)
 
 ## Migrating from the Python Version

@@ -162,7 +162,8 @@ impl TableAction {
 /// A table of `T` items: sorted rows under a header, a row cursor, and two-way scrolling.
 pub struct SearchableTable<T: TableItem> {
     columns: Vec<Column>,
-    sort: SortSpec,
+    /// `None` keeps the rows in insertion order, for a source that already orders them (search results).
+    sort: Option<SortSpec>,
     /// Every item, in insertion order: Python's `self.items` dict, which the M2 cache writes in this order.
     items: IndexMap<T::Key, T>,
     /// The shown rows, sorted.
@@ -207,12 +208,12 @@ enum Drawn {
 }
 
 impl<T: TableItem> SearchableTable<T> {
-    /// An empty table with `columns`, sorted by `sort`, animating its loading overlay.
-    pub fn new(columns: Vec<Column>, sort: SortSpec) -> Self {
+    /// An empty table with `columns`, sorted by `sort` (`None`: in insertion order), animating its loading overlay.
+    pub fn new(columns: Vec<Column>, sort: impl Into<Option<SortSpec>>) -> Self {
         Self {
             rows: Rows::new(&columns),
             columns,
-            sort,
+            sort: sort.into(),
             items: IndexMap::new(),
             hidden: HashMap::new(),
             search: SearchBox::new(),

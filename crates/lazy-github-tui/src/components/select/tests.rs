@@ -525,3 +525,36 @@ fn a_disabled_select_never_opens_and_draws_faded() {
     select.set_disabled(false);
     assert_eq!(select.open(), SelectOutcome::Opened);
 }
+
+#[test]
+fn without_a_blank_the_list_holds_only_the_options() {
+    let keys = Keys::new();
+    let mut select = Select::new(DEFAULT_PROMPT, [("Alpha", 0), ("Beta", 1), ("Release", 2)], Some(&0)).without_blank();
+    // The chosen option is row 0, and the highlight wraps over the three options alone.
+    assert_eq!(select.open(), SelectOutcome::Opened);
+    assert_eq!(select.highlighted(), Some(0));
+    assert_eq!(
+        select.on_binding(BindingId::TextualOptionListCursorUp),
+        SelectOutcome::Consumed
+    );
+    assert_eq!(select.highlighted(), Some(2));
+    assert_eq!(
+        select.on_binding(BindingId::TextualOptionListSelect),
+        SelectOutcome::Changed
+    );
+    assert_eq!(select.value(), Some(&2));
+    // Searching finds options only: "s" is in "Select" (the prompt) and "Release", and the prompt isn't a row.
+    let _ = select.open();
+    let _ = keys.press(&mut select, "s");
+    assert_eq!(select.highlighted(), Some(2));
+    // The first row picks the first option, not none.
+    assert_eq!(
+        select.on_binding(BindingId::TextualOptionListFirst),
+        SelectOutcome::Consumed
+    );
+    assert_eq!(
+        select.on_binding(BindingId::TextualOptionListSelect),
+        SelectOutcome::Changed
+    );
+    assert_eq!(select.value(), Some(&0));
+}

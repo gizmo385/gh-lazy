@@ -172,9 +172,12 @@ impl<K> Rows<K> {
         self.entries.drain(..)
     }
 
-    /// Sorts the rows by `sort`.
-    pub(crate) fn sort(&mut self, sort: SortSpec) {
-        sort_rows(&mut self.entries, sort);
+    /// Sorts the rows by `sort`, or into insertion order without one.
+    pub(crate) fn sort(&mut self, sort: Option<SortSpec>) {
+        match sort {
+            Some(sort) => sort_rows(&mut self.entries, sort),
+            None => self.entries.sort_by_key(|row| row.seq),
+        }
     }
 
     /// Lets `update` change each row's cells, then measures every column whose cells changed again over the rows

@@ -74,7 +74,7 @@ pub enum SelectOutcome {
 /// The open list's state.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Overlay {
-    /// The highlighted row: 0 is the blank, `i + 1` is option `i`.
+    /// The highlighted row: 0 is the blank, `i + 1` is option `i` (option `i` is row `i` without a blank).
     highlight: usize,
     /// The first row in view.
     scroll: usize,
@@ -96,6 +96,8 @@ pub struct Select<T> {
     overlay_area: Rect,
     /// Textual's `disabled`: drawn faded and never focused, and its list never opens.
     disabled: bool,
+    /// Textual's `allow_blank`: the list starts with the prompt as a blank option, which clears the value.
+    allow_blank: bool,
 }
 
 impl<T: PartialEq> Select<T> {
@@ -113,10 +115,19 @@ impl<T: PartialEq> Select<T> {
             overlay: None,
             overlay_area: Rect::default(),
             disabled: false,
+            allow_blank: true,
         };
         select.set_options(options);
         select.set_value(value);
         select
+    }
+
+    /// The select without the blank option (Textual's `allow_blank=False`): the list holds only the options, so once
+    /// one is chosen there's no way back to none.
+    #[must_use]
+    pub fn without_blank(mut self) -> Self {
+        self.allow_blank = false;
+        self
     }
 
     /// The chosen option's value, `None` for the blank.
@@ -170,7 +181,7 @@ impl<T> Select<T> {
         self.overlay.is_some()
     }
 
-    /// The highlighted row while open: 0 is the blank, `i + 1` is option `i`.
+    /// The highlighted row while open: 0 is the blank, `i + 1` is option `i` (row `i` without a blank).
     pub fn highlighted(&self) -> Option<usize> {
         self.overlay.as_ref().map(|overlay| overlay.highlight)
     }
@@ -184,9 +195,14 @@ impl<T> Select<T> {
         }
     }
 
-    /// Rows of the list: the blank and the options.
+    /// Rows of the list: the blank, if there's one, and the options.
     fn rows(&self) -> usize {
-        self.options.len() + 1
+        self.options.len() + self.first_option()
+    }
+
+    /// The list row of option 0: 1 after the blank, else 0.
+    fn first_option(&self) -> usize {
+        usize::from(self.allow_blank)
     }
 
     /// Opens the list with the chosen option highlighted, or the blank without one (`_watch_expanded`, then
@@ -196,7 +212,7 @@ impl<T> Select<T> {
             return SelectOutcome::Ignored;
         }
         if self.overlay.is_none() {
-            let highlight = self.value.map_or(0, |index| index + 1);
+            let highlight = self.value.map_or(0, |index| index + self.first_option());
             self.overlay = Some(Overlay {
                 highlight,
                 scroll: 0,
@@ -291,7 +307,9 @@ impl<T> Select<T> {
 
     /// Picks list row `row`: the value changes (the blank clears it) and the list closes.
     fn pick(&mut self, row: usize) -> SelectOutcome {
-        let value = row.checked_sub(1).filter(|&index| index < self.options.len());
+        let value = row
+            .checked_sub(self.first_option())
+            .filter(|&index| index < self.options.len());
         self.close();
         if value == self.value {
             SelectOutcome::Closed
@@ -308,7 +326,10 @@ impl<T> Select<T> {
             return;
         };
         let query = overlay.query.to_lowercase();
-        let labels = std::iter::once(self.prompt.as_ref()).chain(self.options.iter().map(|(label, _)| label.as_ref()));
+        let blank = self.allow_blank.then_some(self.prompt.as_ref());
+        let labels = blank
+            .into_iter()
+            .chain(self.options.iter().map(|(label, _)| label.as_ref()));
         let best = labels
             .enumerate()
             .filter_map(|(row, label)| label.to_lowercase().find(&query).map(|at| (at, row)))
@@ -468,7 +489,9 @@ impl<T> Select<T> {
             };
             scrollbar::render(buf, bar, Axis::Vertical, state, styles.scrollbar);
         }
-        let labels = std::iter::once((self.prompt.as_ref(), true))
+        let blank = self.allow_blank.then_some((self.prompt.as_ref(), true));
+        let labels = blank
+            .into_iter()
             .chain(self.options.iter().map(|(label, _)| (label.as_ref(), false)));
         for (dy, (row, (label, blank))) in labels.enumerate().skip(overlay.scroll).take(window).enumerate() {
             // Bounded by the list's height.

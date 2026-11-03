@@ -159,6 +159,21 @@ impl<T: TableItem> SearchableTable<T> {
         })
     }
 
+    /// A page the owner fetched for a [`TableEvent::LoadMore`] failed in a way [`Self::page_loaded`]'s `GhError` can't
+    /// carry, or the owner gave up on it (cancelled it): the paging state stays, so the next cursor move asks again.
+    /// True when it was the page in flight; one from an older generation, or not in flight, changes nothing.
+    pub fn page_failed(&mut self, generation: u64, page: u32) -> bool {
+        if generation != self.generation {
+            return false;
+        }
+        let Some(lazy) = self.lazy.as_mut().filter(|lazy| lazy.in_flight == Some(page)) else {
+            return false;
+        };
+        lazy.in_flight = None;
+        lazy.pending_cursor = None;
+        true
+    }
+
     /// A page the owner fetched for a [`TableEvent::LoadMore`] arrived.
     ///
     /// A page from an older [`Self::generation`] (the table was cleared since), or one that isn't the page in

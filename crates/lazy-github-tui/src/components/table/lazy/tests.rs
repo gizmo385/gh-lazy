@@ -421,3 +421,26 @@ fn select_key_runs_the_check_as_a_cursor_move_does() {
     // Selecting the row the cursor is already on is no move, so no second check.
     assert_eq!(table.select_key(&3), Handled::Consumed);
 }
+
+#[test]
+fn a_page_given_up_on_is_asked_for_again_by_the_next_move() {
+    let mut table = thirty();
+    down_to(&mut table, 24);
+    assert_eq!(press(&mut table, "j"), load_more(0, 2, 30));
+    // Not the page in flight, or an older generation's: nothing changes.
+    assert!(!table.page_failed(0, 3));
+    assert!(!table.page_failed(1, 2));
+    assert_eq!(table.lazy_load().and_then(LazyLoad::in_flight), Some(2));
+    assert!(table.page_failed(0, 2));
+    assert_eq!(table.lazy_load().and_then(LazyLoad::in_flight), None);
+    assert_eq!(table.lazy_load().map(LazyLoad::current_batch), Some(1));
+    assert_eq!(press(&mut table, "j"), load_more(0, 2, 30));
+}
+
+#[test]
+fn without_a_sort_rows_keep_insertion_order() {
+    let mut table: SearchableTable<Pr> = SearchableTable::new(vec![Column::new("#"), Column::new("Title")], None);
+    let _ = table.insert_many(prs([5, 9, 2]), &());
+    let _ = table.insert_many(prs([7]), &());
+    assert_eq!(numbers(&table), [5, 9, 2, 7]);
+}

@@ -34,6 +34,7 @@ accept negative values, as pydantic does: they load and save unchanged, and act 
 | `config.cache-default-ttl` | `cache` | `default_ttl` | `600` | `lib/config.py` | M0 | parity | #64, #159 | |
 | `config.cache-list-repos-ttl` | `cache` | `list_repos_ttl` | `86400` | `lib/config.py` | M0 | parity | #64, #159 | |
 | `config.cache-list-issues-ttl` | `cache` | `list_issues_ttl` | `3600` | `lib/config.py` | M0 | parity | #64, #159 | Never read by the Python app. |
+| `config.cache-legacy-ttls` | `cache` | `default_ttl`, `list_repos_ttl`, `list_issues_ttl` together | n/a | `lib/config.py` `CacheSettings`, `Config.save` (Python writes every field, so most files hold the old defaults) | M5 | not started | #404 | A file holding exactly Python's old defaults for all three (600, 86400, 3600, numbers or numeric strings) loads as the new defaults (60, 3600, 60), and the next save writes them; any other combination loads as written. Pending D1 on #404 (recommended option). |
 | `config.core-first-start` | `core` | `first_start` | `true` | `lib/config.py` `CoreConfig` | M0 | parity | #64, #159 | Rust writes `false` after the gh check (no picker). |
 | `config.core-logfile-path` | `core` | `logfile_path` | `~/.config/lazy-github/lazy_github.log` | `lib/config.py` | M0 | parity | #64, #66, #159 | |
 | `config.core-logfile-max-bytes` | `core` | `logfile_max_bytes` | `5000000` | `lib/config.py` | M0 | parity | #64, #66, #159 | |

@@ -27,7 +27,7 @@ const ROW_GUTTER: u16 = 1;
 const COLUMN_GUTTER: u16 = 2;
 
 /// Confirm's screen bindings, which also give the footer's order.
-const CONFIRM_BINDINGS: &[BindingId] = dialog_bindings![ConfirmYes, ConfirmNo, ModalClose];
+pub(crate) const CONFIRM_BINDINGS: &[BindingId] = dialog_bindings![ConfirmYes, ConfirmNo, ModalClose];
 
 /// Confirm's own action.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

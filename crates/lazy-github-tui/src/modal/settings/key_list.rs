@@ -9,12 +9,14 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
 
-use super::key_row::KeyRow;
+use super::key_row::{KeyRow, action_label};
 use crate::components::command_log::{WHEEL_ROWS, Wheel};
 use crate::components::option_nav;
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
 use crate::display;
-use crate::keymap::{BINDING_GROUPS, BindingId, KeyChord, KeySpec, Keymap, textual_name};
+use crate::keymap::{
+    BINDING_GROUPS, BindingId, ConflictKind, KeyChord, KeyConflict, KeySpec, Keymap, conflicts, textual_name,
+};
 use crate::theme::{Paint, Theme, ThemeColor};
 
 /// The list's bindings while it has focus and isn't waiting for a key: `OptionList`'s moves (hidden), then change,
@@ -43,7 +45,7 @@ const KEYS_WIDTH: usize = 16;
 /// The id column shows only when at least this many cells are left for it.
 const MIN_ID_WIDTH: usize = 12;
 
-/// The marker cells in front of the action: `*` for a changed binding, and a cell left for a conflict's `!` (#382).
+/// The marker cells in front of the action: `*` for a changed binding, or `!` for one in a conflict (#382).
 const MARKER_WIDTH: usize = 2;
 
 /// The blank cells between columns.
@@ -90,6 +92,8 @@ pub(super) struct KeyList {
     rows: Vec<KeyRow>,
     /// Each row's group.
     groups: Vec<usize>,
+    /// Each row's conflicts with the bindings active at the same time, as the rows stand now (#382).
+    conflicts: Vec<Vec<KeyConflict>>,
     /// The lines the filter shows.
     lines: Vec<Line>,
     /// The highlighted row. `None` only when the filter shows nothing.
@@ -122,6 +126,7 @@ impl KeyList {
         let mut list = Self {
             rows,
             groups,
+            conflicts: Vec::new(),
             lines: Vec::new(),
             highlighted: None,
             scroll: 0,
@@ -132,7 +137,40 @@ impl KeyList {
             lines_area: Rect::default(),
         };
         list.filter(None);
+        list.check_conflicts();
         list
+    }
+
+    /// Checks every row against the bindings active at the same time, from a keymap of the rows as Save would write
+    /// them. Run on opening and after each change: sixty bindings over a few dozen contexts is quick enough.
+    fn check_conflicts(&mut self) {
+        let mut overrides = IndexMap::new();
+        self.save(&mut overrides);
+        let mut by_row = vec![Vec::new(); self.rows.len()];
+        for conflict in conflicts(&Keymap::new(&overrides)) {
+            if let Some(row) = self.rows.iter().position(|row| row.id == conflict.id) {
+                by_row[row].push(conflict);
+            }
+        }
+        self.conflicts = by_row;
+    }
+
+    /// Whether row `row` is in a conflict.
+    fn in_conflict(&self, row: usize) -> bool {
+        self.conflicts.get(row).is_some_and(|found| !found.is_empty())
+    }
+
+    /// How many bindings with a conflict group `group` has.
+    fn group_conflicts(&self, group: usize) -> usize {
+        (0..self.rows.len())
+            .filter(|&row| self.groups[row] == group && self.in_conflict(row))
+            .count()
+    }
+
+    /// How many bindings have a conflict.
+    #[cfg(test)]
+    pub(super) fn conflict_count(&self) -> usize {
+        (0..self.rows.len()).filter(|&row| self.in_conflict(row)).count()
     }
 
     /// The bindings, in list order.
@@ -276,7 +314,9 @@ impl KeyList {
             B::SettingsKeysChange => self.capture = Some(CaptureMode::Replace),
             B::SettingsKeysAdd => self.capture = Some(CaptureMode::Add),
             B::SettingsKeysReset => {
-                let _ = self.rows[row].reset();
+                if self.rows[row].reset() {
+                    self.check_conflicts();
+                }
             }
             _ => return KeyListOutcome::Ignored,
         }
@@ -306,6 +346,7 @@ impl KeyList {
                 }
             }
         }
+        self.check_conflicts();
         KeyListOutcome::Consumed
     }
 
@@ -371,6 +412,11 @@ impl KeyList {
                 if !row.is_default() {
                     detail.push_str(" · changed");
                 }
+                let found = self.highlighted.and_then(|row| self.conflicts.get(row));
+                if let Some(warning) = found.and_then(|found| conflict_detail(found)) {
+                    detail.push_str(" · ");
+                    detail.push_str(&warning);
+                }
                 detail
             }
         }
@@ -412,13 +458,15 @@ impl KeyList {
             match line {
                 Line::Header(group) => {
                     let title = BINDING_GROUPS.get(group).map_or("", |group| group.title);
-                    buf.set_stringn(
-                        lines_area.x,
-                        y,
-                        title,
-                        usize::from(lines_area.width),
-                        plain.add_modifier(Modifier::BOLD),
-                    );
+                    let width = usize::from(lines_area.width);
+                    let (x, _) = buf.set_stringn(lines_area.x, y, title, width, plain.add_modifier(Modifier::BOLD));
+                    let count = self.group_conflicts(group);
+                    if count > 0 {
+                        let noun = if count == 1 { "conflict" } else { "conflicts" };
+                        let room = width.saturating_sub(usize::from(x - lines_area.x));
+                        let dim = theme.rich_dim(plain, r.text.plain, under);
+                        buf.set_stringn(x, y, format!("  {count} {noun}"), room, dim);
+                    }
                 }
                 Line::Binding(row) => {
                     let (style, fg, bg) = if self.highlighted == Some(row) {
@@ -476,7 +524,11 @@ impl KeyList {
             buf[(x, area.y)].set_symbol(" ").set_style(style);
         }
         let changed = !binding.is_default();
-        if changed {
+        let conflict = self.in_conflict(row);
+        let warning = style.fg(theme.color(r.status.warning, ink.1));
+        if conflict {
+            buf.set_stringn(area.x, area.y, "!", width, warning);
+        } else if changed {
             let accent = style.fg(theme.color(r.brand.accent, ink.1));
             buf.set_stringn(area.x, area.y, "*", width, accent);
         }
@@ -499,10 +551,11 @@ impl KeyList {
                 .add_modifier(Modifier::REVERSED);
             put(buf, x, PRESS_A_KEY, KEYS_WIDTH, prompt);
         } else {
+            let keys = if conflict { warning } else { style };
             let keys = if changed {
-                style.add_modifier(Modifier::BOLD)
+                keys.add_modifier(Modifier::BOLD)
             } else {
-                style
+                keys
             };
             put(buf, x, &binding.keys_display(), KEYS_WIDTH, keys);
         }
@@ -511,6 +564,33 @@ impl KeyList {
             let dim = theme.rich_dim(style, ink.0, ink.1);
             put(buf, x, binding.config_id, width - x, dim);
         }
+    }
+}
+
+/// The detail line's warning for a binding's conflicts, `None` without any: the first one, `! j also Table cursor
+/// down (Repositories table, ...)`, then how many other bindings it meets. A built-in on the other side is named as
+/// one, since its contexts are all of them; a priority binding goes first everywhere.
+fn conflict_detail(found: &[KeyConflict]) -> Option<String> {
+    let first = found.first()?;
+    let text = match first.kind {
+        // `ctrl+q` quitting is the only priority binding (`Keymap::priority_ids`).
+        ConflictKind::Priority => format!("! {} quits first", first.key),
+        _ if first.other.config_id().is_none() => {
+            format!("! {} also {} (built-in)", first.key, action_label(first.other))
+        }
+        _ => format!(
+            "! {} also {} ({})",
+            first.key,
+            action_label(first.other),
+            first.contexts.join(", ")
+        ),
+    };
+    let mut others: Vec<BindingId> = found.iter().map(|conflict| conflict.other).collect();
+    others.sort_unstable();
+    others.dedup();
+    match others.len() {
+        0 | 1 => Some(text),
+        n => Some(format!("{text} +{} more", n - 1)),
     }
 }
 
@@ -738,6 +818,92 @@ mod tests {
         assert_eq!(highlighted(&list), BindingId::AppOpenHelp);
         list.filter(None);
         assert_eq!(highlighted(&list), BindingId::AppOpenHelp);
+    }
+
+    /// The group index of `title`.
+    fn group(title: &str) -> usize {
+        BINDING_GROUPS
+            .iter()
+            .position(|group| group.title == title)
+            .expect("a group")
+    }
+
+    fn detail_of(list: &KeyList, id: BindingId) -> Option<String> {
+        let row = list.rows.iter().position(|row| row.id == id).expect("a row");
+        conflict_detail(&list.conflicts[row])
+    }
+
+    #[test]
+    fn the_default_list_has_no_conflicts() {
+        let list = list();
+        assert_eq!(list.conflict_count(), 0);
+        assert_eq!(list.detail(), "app.quit · default q");
+    }
+
+    #[test]
+    fn a_captured_key_another_binding_has_marks_both_and_reset_clears_them() {
+        let keymap = Keymap::defaults();
+        let mut list = list();
+        let _ = list.on_binding(BindingId::SettingsKeysChange);
+        let _ = list.capture(&chord("j"), &keymap);
+        assert_eq!(
+            list.detail(),
+            "app.quit · default q · changed · ! j also Table cursor down (Repositories table, Pull requests table, \
+             Issues table, Workflows table) +1 more"
+        );
+        // Quit, the table cursor and the diff cursor, one in each group.
+        assert_eq!(list.conflict_count(), 3);
+        for title in ["General", "Tables", "Diff viewer"] {
+            assert_eq!(list.group_conflicts(group(title)), 1, "{title}");
+        }
+        assert_eq!(list.group_conflicts(group("Focus")), 0);
+        assert_eq!(
+            detail_of(&list, BindingId::DiffCursorDown).as_deref(),
+            Some("! j also Quit (Diff viewer)")
+        );
+        let _ = list.on_binding(BindingId::SettingsKeysReset);
+        assert_eq!(list.conflict_count(), 0);
+        assert_eq!(list.detail(), "app.quit · default q");
+    }
+
+    #[test]
+    fn a_free_key_clears_the_conflict() {
+        let keymap = Keymap::defaults();
+        let mut list = list();
+        let _ = list.on_binding(BindingId::SettingsKeysChange);
+        let _ = list.capture(&chord("j"), &keymap);
+        let _ = list.on_binding(BindingId::SettingsKeysChange);
+        let _ = list.capture(&chord("f9"), &keymap);
+        assert_eq!(list.conflict_count(), 0);
+    }
+
+    #[test]
+    fn a_built_in_or_priority_other_side_is_named_as_one() {
+        let with = |pairs: &[(&str, &str)]| {
+            let overrides: IndexMap<String, String> = pairs
+                .iter()
+                .map(|&(id, keys)| (id.to_owned(), keys.to_owned()))
+                .collect();
+            KeyList::new(&overrides)
+        };
+        let list = with(&[("app.command_palette", "tab"), ("notifications.open", "ctrl+q")]);
+        assert_eq!(
+            detail_of(&list, BindingId::AppCommandPalette).as_deref(),
+            Some("! tab also Focus Next (built-in)")
+        );
+        // Off the app link, the priority quit takes `ctrl+q` first.
+        assert_eq!(
+            detail_of(&list, BindingId::NotificationsOpen).as_deref(),
+            Some("! ^q quits first")
+        );
+        assert_eq!(list.conflict_count(), 2);
+        // On it, the clash rule gives Maximize the key and quitting loses it.
+        let list = with(&[("app.maximize_widget", "ctrl+q")]);
+        assert_eq!(
+            detail_of(&list, BindingId::AppMaximizeWidget).as_deref(),
+            Some("! ^q also Quit (built-in)")
+        );
+        assert_eq!(list.conflict_count(), 1);
     }
 
     #[test]

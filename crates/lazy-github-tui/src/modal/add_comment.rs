@@ -26,7 +26,7 @@ use crate::theme::{Roles, ThemeColor};
 use crate::toast::Toast;
 
 /// The dialog's screen bindings: `modal.submit`, then `modal.close`.
-const ADD_COMMENT_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
+pub(crate) const ADD_COMMENT_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
 
 /// `width: 80`, border included.
 const WIDTH: u16 = 80;

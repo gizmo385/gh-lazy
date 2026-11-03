@@ -69,10 +69,26 @@ pub use pull_request::{
     CreatePrefill, PullRequestAction, PullRequestDialog, PullRequestForm, ReviewersField, ReviewersFocus,
     ReviewersOutcome, removing_toast,
 };
-pub use settings::{SettingsAction, SettingsDialog, SettingsOutcome};
+pub use settings::{SettingsAction, SettingsDialog, SettingsOutcome, key_conflicts_toast};
 pub use stack::ModalEntry;
 pub use trigger_workflow::{TriggerWorkflowAction, TriggerWorkflowDialog};
 pub use user_profile::{UserProfileAction, UserProfileDialog};
+
+// Each dialog's screen bindings and inner links, for the Key Bindings conflict contexts (`keymap::KEY_CONTEXTS`).
+pub(crate) use add_comment::ADD_COMMENT_BINDINGS;
+pub(crate) use add_reaction::ADD_REACTION_BINDINGS;
+pub(crate) use confirm::CONFIRM_BINDINGS;
+pub(crate) use debug_info::DEBUG_BINDINGS;
+pub(crate) use edit_issue::EDIT_ISSUE_BINDINGS;
+pub(crate) use lookup::LOOKUP_BINDINGS;
+pub(crate) use new_comment::NEW_COMMENT_BINDINGS;
+pub(crate) use new_issue::NEW_ISSUE_BINDINGS;
+pub(crate) use notifications::{CONTAINER_BINDINGS, NOTIFICATIONS_BINDINGS, UNREAD_BINDINGS};
+pub(crate) use paste_link::PASTE_LINK_BINDINGS;
+pub(crate) use pull_request::PR_BINDINGS;
+pub(crate) use settings::{KEY_LIST_BINDINGS, SETTINGS_BINDINGS};
+pub(crate) use trigger_workflow::TRIGGER_BINDINGS;
+pub(crate) use user_profile::PROFILE_BINDINGS;
 
 /// The terminal color of the mark `pick` chooses, such as a warning's yellow: marks are drawn as is, so this holds in
 /// a toast or a dialog as on the screen.

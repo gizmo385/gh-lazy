@@ -18,7 +18,7 @@ use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::toast::Toast;
 
 /// The dialog's screen bindings, in Python's order: the modal's `modal.close`, then `modal.submit`.
-const EDIT_ISSUE_BINDINGS: &[BindingId] = dialog_bindings![ModalClose, ModalSubmit];
+pub(crate) const EDIT_ISSUE_BINDINGS: &[BindingId] = dialog_bindings![ModalClose, ModalSubmit];
 
 /// `EditIssueModal > EditIssueContainer { width: 100; height: 30 }`, border included.
 const SIZE: (u16, u16) = (100, 30);

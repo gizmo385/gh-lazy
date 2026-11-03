@@ -34,7 +34,7 @@ use crate::hyperlink::Hyperlinks;
 use crate::keymap::{ActiveBinding, BindingId, KeyChord, Keymap, active_bindings};
 use crate::modal::{
     CommandPaletteDialog, CommandSource, DebugInfoDialog, DialogFrame, LinkHintsDialog, ModalEntry, ModalKind,
-    PaletteCommand, PaletteRun, SettingsDialog, SettingsOutcome, dim,
+    PaletteCommand, PaletteRun, SettingsDialog, SettingsOutcome, dim, key_conflicts_toast,
 };
 use crate::notifications::NotificationPoll;
 use crate::options::{AppOptions, TEST_PANIC_ENV, TestPanic};
@@ -989,6 +989,10 @@ impl App {
         let config = &self.shared.config;
         let theme = Theme::from_config(&config.appearance.theme, self.shared.theme.color_mode());
         self.shared.keymap = Keymap::new(&config.bindings.overrides);
+        // After "Settings updated", so it reads as what's left to look at.
+        if let Some(toast) = key_conflicts_toast(&self.shared.keymap) {
+            out.actions.push_back(Action::Notify(toast));
+        }
         self.set_theme(theme, out);
         if let BaseScreen::Main(main) = &mut self.base {
             main.apply_appearance(&mut Cx::new(&mut self.shared, out));

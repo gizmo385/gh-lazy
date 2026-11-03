@@ -113,7 +113,7 @@ impl SectionId {
     }
 
     /// The bindings of the section's container, in Python's `BINDINGS` order.
-    fn bindings(self) -> &'static [BindingId] {
+    pub(crate) const fn bindings(self) -> &'static [BindingId] {
         match self {
             SectionId::Repos => &[
                 BindingId::RepositoriesFavorite,
@@ -289,6 +289,10 @@ pub const SCREEN_BINDINGS: &[BindingId] = &[
 ];
 
 pub use crate::components::tabs::TABS_BINDINGS;
+// The details tabs' links, for the Key Bindings conflict contexts (`keymap::KEY_CONTEXTS`).
+pub(crate) use issue_details::{ISSUE_COMMENTS_BINDINGS, ISSUE_OVERVIEW_BINDINGS};
+pub(crate) use pr_details::{CONVERSATION_BINDINGS, PR_OVERVIEW_BINDINGS, REVIEW_BINDINGS};
+pub(crate) use run_details::JOBS_BINDINGS;
 
 /// Textual's `ScrollableContainer` bindings, which the command log's `Log` has.
 pub const LOG_BINDINGS: &[BindingId] = &[

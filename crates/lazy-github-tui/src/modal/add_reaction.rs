@@ -30,7 +30,7 @@ const HEADING_MARGIN_TOP: u16 = 2;
 const HEADING_PADDING: u16 = 2;
 
 /// The dialog's screen bindings: Python binds only `modal.close`.
-const ADD_REACTION_BINDINGS: &[BindingId] = dialog_bindings![ModalClose];
+pub(crate) const ADD_REACTION_BINDINGS: &[BindingId] = dialog_bindings![ModalClose];
 
 /// The dialog's own actions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

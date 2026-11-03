@@ -52,10 +52,10 @@ use super::super::overview_text::mark;
 use super::overview::PrOverview;
 
 /// `PrConversationTabPane.BINDINGS`: a new comment (#182), in the footer while focus is anywhere in the tab.
-const CONVERSATION_BINDINGS: &[BindingId] = &[BindingId::ConversationCommentNew];
+pub(crate) const CONVERSATION_BINDINGS: &[BindingId] = &[BindingId::ConversationCommentNew];
 
 /// `ReviewContainer.BINDINGS`: reply to the review (#182), while focus is on its title or inside it.
-const REVIEW_BINDINGS: &[BindingId] = &[BindingId::ConversationReviewReply];
+pub(crate) const REVIEW_BINDINGS: &[BindingId] = &[BindingId::ConversationReviewReply];
 
 /// A focused review title's bindings: Textual's `CollapsibleTitle`.
 const TITLE_BINDINGS: &[BindingId] = &[BindingId::TextualCollapsibleToggle];

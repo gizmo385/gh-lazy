@@ -40,7 +40,7 @@ use logs::Next;
 pub(super) use overview::RunOverview;
 
 /// The Jobs tab's own bindings (Python's `WorkflowRunJobsTabPane.BINDINGS`), with focus on its body or its tree.
-const JOBS_BINDINGS: &[BindingId] = &[BindingId::WorkflowsViewJobLogs];
+pub(crate) const JOBS_BINDINGS: &[BindingId] = &[BindingId::WorkflowsViewJobLogs];
 
 /// The three tabs, in strip order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -23,6 +23,7 @@ use crate::theme::Theme;
 
 use super::MainAction;
 use super::details::{BodyRenderCx, DetailsBody, MaximizeScope};
+pub(crate) use comments::ISSUE_COMMENTS_BINDINGS;
 pub(super) use comments::IssueComments;
 pub(super) use overview::IssueOverview;
 

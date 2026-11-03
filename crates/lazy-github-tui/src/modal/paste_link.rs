@@ -17,6 +17,9 @@ use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::toast::Toast;
 
 /// The frame's outer size, border included: `width: 80; max-height: 20` on a container that's `1fr` tall.
+/// The dialog's screen bindings: submit and close.
+pub(crate) const PASTE_LINK_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
+
 const SIZE: (u16, u16) = (80, 20);
 
 const HEADING: &str = "Paste a web GitHub link:";
@@ -172,7 +175,7 @@ impl Component for PasteLinkDialog {
     type Action = PasteLinkAction;
 
     fn bindings(&self) -> &'static [BindingId] {
-        dialog_bindings![ModalSubmit, ModalClose]
+        PASTE_LINK_BINDINGS
     }
 
     fn on_binding(&mut self, id: BindingId, _cx: &Cx<'_>) -> Option<Action> {

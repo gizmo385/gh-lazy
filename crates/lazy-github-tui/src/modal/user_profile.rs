@@ -25,7 +25,7 @@ use crate::keymap::BindingId;
 use crate::theme::{Paint, Roles, Theme, ThemeColor};
 
 /// The dialog's screen bindings: only `modal.close` of its own.
-const PROFILE_BINDINGS: &[BindingId] = dialog_bindings![ModalClose];
+pub(crate) const PROFILE_BINDINGS: &[BindingId] = dialog_bindings![ModalClose];
 
 /// `UserProfileModal > ScrollableContainer { width: 90 }`, border included.
 const WIDTH: u16 = 90;

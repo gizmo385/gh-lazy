@@ -31,10 +31,10 @@ use crate::theme::{Paint, Theme};
 pub const COMMENT_BINDINGS: &[BindingId] = &[BindingId::ConversationCommentReply];
 
 /// A focused reactions title's bindings: Textual's `CollapsibleTitle`.
-const TITLE_BINDINGS: &[BindingId] = &[BindingId::TextualCollapsibleToggle];
+pub const TITLE_BINDINGS: &[BindingId] = &[BindingId::TextualCollapsibleToggle];
 
 /// A focused reactions list's bindings: Textual's `ListView`.
-const LIST_BINDINGS: &[BindingId] = &[
+pub const LIST_BINDINGS: &[BindingId] = &[
     BindingId::TextualListSelect,
     BindingId::TextualListCursorUp,
     BindingId::TextualListCursorDown,

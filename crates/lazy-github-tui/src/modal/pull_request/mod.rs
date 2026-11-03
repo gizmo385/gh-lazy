@@ -62,7 +62,7 @@ const WARNING: &str = "Warning:";
 const NO_UPSTREAM: &str = " Current local branch has no configured upstream";
 
 /// The dialog's screen bindings: the container's `modal.submit`, then the modal's `modal.close`.
-const PR_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
+pub(crate) const PR_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
 
 /// The dialog's own actions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

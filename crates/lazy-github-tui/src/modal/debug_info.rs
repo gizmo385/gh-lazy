@@ -25,7 +25,7 @@ use crate::theme::Theme;
 use crate::toast::Toast;
 
 /// The dialog's screen bindings, which also give the footer's order: `SUBMIT_DIALOG`, `CLOSE_DIALOG`.
-const DEBUG_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
+pub(crate) const DEBUG_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
 
 /// The dialog's own actions.
 #[derive(Debug, Clone, PartialEq, Eq)]

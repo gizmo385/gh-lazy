@@ -26,6 +26,7 @@ use crate::theme::Theme;
 use super::details::{BodyRenderCx, DetailsBody, MaximizeScope, SectionKey, SectionLayout, SectionRef};
 use super::{EditOrigin, MainAction};
 pub(super) use conversation::PrConversation;
+pub(crate) use conversation::{CONVERSATION_BINDINGS, REVIEW_BINDINGS};
 pub(super) use diff::PrDiff;
 #[cfg(test)]
 pub(super) use overview::OverviewStop;

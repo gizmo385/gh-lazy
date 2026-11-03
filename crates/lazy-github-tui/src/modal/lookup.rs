@@ -26,7 +26,7 @@ use crate::toast::Toast;
 const SIZE: (u16, u16) = (60, 25);
 
 /// The lookup dialog's screen bindings.
-const LOOKUP_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
+pub(crate) const LOOKUP_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
 
 /// Which lookup a dialog is, for [`ModalKind::Lookup`] and for routing [`DialogAction::Lookup`].
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]

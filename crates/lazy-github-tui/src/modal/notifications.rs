@@ -76,13 +76,15 @@ const SAVED_REFRESH_FAILED: &str = "Showing saved notifications - refresh failed
 const CACHE_TYPE: &str = "Notification";
 
 /// The modal screen's bindings: only `modal.close` of its own.
-const NOTIFICATIONS_BINDINGS: &[BindingId] = dialog_bindings![ModalClose];
+pub(crate) const NOTIFICATIONS_BINDINGS: &[BindingId] = dialog_bindings![ModalClose];
 
 /// `UnreadNotificationTabPane.BINDINGS`, while the Unread table or its search box has focus.
-const UNREAD_BINDINGS: &[BindingId] = &[BindingId::NotificationsMarkRead, BindingId::NotificationsMarkAllAsRead];
+pub(crate) const UNREAD_BINDINGS: &[BindingId] =
+    &[BindingId::NotificationsMarkRead, BindingId::NotificationsMarkAllAsRead];
 
 /// `NotificationsContainer.BINDINGS`, wherever focus is in the modal.
-const CONTAINER_BINDINGS: &[BindingId] = &[BindingId::NotificationsViewRead, BindingId::NotificationsViewUnread];
+pub(crate) const CONTAINER_BINDINGS: &[BindingId] =
+    &[BindingId::NotificationsViewRead, BindingId::NotificationsViewUnread];
 
 /// The two tabs, in strip order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

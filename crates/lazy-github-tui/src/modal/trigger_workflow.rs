@@ -39,7 +39,7 @@ const PLACEHOLDER: &str = "Choose a branch";
 const FALLBACK_BRANCH: &str = "main";
 
 /// The dialog's screen bindings: `modal.submit`, then `modal.close`.
-const TRIGGER_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
+pub(crate) const TRIGGER_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
 
 /// The Trigger workflow dialog's own action.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

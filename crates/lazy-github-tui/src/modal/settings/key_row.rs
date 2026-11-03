@@ -34,20 +34,9 @@ impl KeyRow {
             .collect()
     }
 
-    /// The action column: the description, or for a binding with none the id's last part humanized
-    /// (`diff.cursor_down` is "Cursor down").
+    /// The action column: [`action_label`].
     pub(super) fn action(&self) -> String {
-        let description = self.id.def().description;
-        if !description.is_empty() {
-            return description.to_owned();
-        }
-        let last = self.config_id.rsplit('.').next().unwrap_or(self.config_id);
-        let mut words = last.replace('_', " ");
-        if let Some(first) = words.get(..1) {
-            let upper = first.to_uppercase();
-            words.replace_range(..1, &upper);
-        }
-        words
+        action_label(self.id)
     }
 
     /// The keys as the footer shows them, comma-separated (`?`, `^p`, `q, esc`). A binding's `key_display` applies
@@ -124,6 +113,22 @@ impl KeyRow {
             overrides.insert(self.config_id.to_owned(), self.value.clone());
         }
     }
+}
+
+/// What the list calls binding `id`: its description, or for a binding with none its id's last part humanized
+/// (`diff.cursor_down` is "Cursor down").
+pub(super) fn action_label(id: BindingId) -> String {
+    let def = id.def();
+    if !def.description.is_empty() {
+        return def.description.to_owned();
+    }
+    let last = def.name.rsplit('.').next().unwrap_or(def.name);
+    let mut words = last.replace('_', " ");
+    if let Some(first) = words.get(..1) {
+        let upper = first.to_uppercase();
+        words.replace_range(..1, &upper);
+    }
+    words
 }
 
 #[cfg(test)]

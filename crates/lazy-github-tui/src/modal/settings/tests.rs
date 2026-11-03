@@ -1669,3 +1669,53 @@ fn snapshot_key_bindings_search() {
     search(&mut app, "issue");
     insta::assert_snapshot!("key_bindings_search", app.screen(160, 48));
 }
+
+// Conflict warnings (#382).
+
+/// The list with Quit on `j` (the table and diff cursors' key) and Command Palette on `tab` (the built-in focus
+/// key), Quit highlighted.
+fn with_conflicts() -> (TestApp, Outcome) {
+    let mut config = config();
+    let overrides = &mut config.bindings.overrides;
+    overrides.insert("app.quit".into(), "j".into());
+    overrides.insert("app.command_palette".into(), "tab".into());
+    on_list(&config)
+}
+
+#[test]
+fn conflicts_are_checked_on_opening() {
+    let (mut app, _) = with_conflicts();
+    // Quit, the table cursor, the diff cursor and Command Palette.
+    assert_eq!(key_list(&app).conflict_count(), 4);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("General  2 conflicts"), "{screen}");
+    assert!(screen.contains("!  Quit                       j "), "{screen}");
+    assert!(screen.contains("!  Command Palette            tab "), "{screen}");
+    assert!(
+        screen.contains("app.quit · default q · changed · ! j also Table cursor down (Repositories table"),
+        "{screen}"
+    );
+}
+
+#[test]
+fn a_capture_onto_a_taken_key_warns_and_save_still_closes() {
+    let (mut app, outcome) = on_list(&config());
+    app.press(&["enter", "j"]);
+    assert_eq!(key_list(&app).conflict_count(), 3);
+    app.press(&["r"]);
+    assert_eq!(key_list(&app).conflict_count(), 0);
+    app.press(&["enter", "j"]);
+    tab_to(&mut app, SettingsFocus::Save);
+    app.press(&["enter"]);
+    assert_eq!(written(&saved(&outcome)), [("app.quit", "j")]);
+}
+
+#[test]
+fn snapshot_key_bindings_conflict() {
+    let (mut app, _) = with_conflicts();
+    insta::assert_snapshot!("key_bindings_conflict", app.screen(160, 48));
+    insta::assert_snapshot!(
+        "key_bindings_conflict_styled",
+        crate::test_util::buffer_to_styled_string(&app.render(160, 48))
+    );
+}

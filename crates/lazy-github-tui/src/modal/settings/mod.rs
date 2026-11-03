@@ -15,7 +15,7 @@ use ratatui::layout::{Position, Rect};
 use ratatui::style::Style;
 
 use self::key_list::KeyListOutcome;
-pub(super) use self::key_list::{KEY_CAPTURE_BINDINGS, KEY_LIST_BINDINGS};
+pub(crate) use self::key_list::{KEY_CAPTURE_BINDINGS, KEY_LIST_BINDINGS};
 use self::pane::{FieldWidget, PaneHit, SettingsPane};
 use super::{Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, dialog_bindings};
 use crate::action::Action;
@@ -66,8 +66,11 @@ const BUTTONS_LEFT: u16 = 35;
 /// The error toast's title when a field won't save (Py bug B90, answered).
 const INVALID_TITLE: &str = "Invalid setting";
 
+/// The title of [`key_conflicts_toast`].
+const KEY_CONFLICTS_TITLE: &str = "Key conflicts";
+
 /// The dialog's screen bindings: submit, close and search, in the footer's order.
-const SETTINGS_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose, ModalSearch];
+pub(crate) const SETTINGS_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose, ModalSearch];
 
 /// How the Settings modal closed.
 #[derive(Debug)]
@@ -117,6 +120,24 @@ impl SettingsFocus {
 /// The error toast for text a list field's editor won't take because the field lists it already.
 pub(super) fn refused_toast(name: &str, text: &str) -> Toast {
     Toast::error(format!("{name} already lists {text}")).with_title(INVALID_TITLE)
+}
+
+/// The warning that follows "Settings updated" when the saved keymap still has bindings in a conflict (#382): Save
+/// isn't blocked, but says so. `None` without any.
+pub fn key_conflicts_toast(keymap: &Keymap) -> Option<Toast> {
+    let mut ids: Vec<BindingId> = crate::keymap::conflicts(keymap)
+        .into_iter()
+        .map(|conflict| conflict.id)
+        .collect();
+    ids.sort_unstable();
+    ids.dedup();
+    let message = match ids.len() {
+        0 => return None,
+        1 => "1 binding shares a key with another binding.".to_owned(),
+        n => format!("{n} bindings share a key with another binding."),
+    };
+    let message = format!("{message} Open Settings → Key Bindings to see them.");
+    Some(Toast::warning(message).with_title(KEY_CONFLICTS_TITLE))
 }
 
 /// The toast to show, if any, as the action that showed it; otherwise the key or press is simply consumed.

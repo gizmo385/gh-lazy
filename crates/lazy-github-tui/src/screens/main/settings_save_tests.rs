@@ -177,6 +177,23 @@ fn a_save_writes_the_edited_config_once_and_toasts() {
 }
 
 #[test]
+fn a_save_with_key_conflicts_still_writes_then_warns() {
+    let mut app = TestApp::new(Config::default());
+    let config = edited(&app, |c| {
+        c.bindings.overrides.insert("app.quit".into(), "j".into());
+    });
+    let from = app.effects().len();
+    save(&mut app, &config);
+    assert_eq!(saves(&app, from), std::slice::from_ref(&config));
+    // Quit, the table cursor and the diff cursor all want `j`.
+    let warning =
+        Toast::warning("3 bindings share a key with another binding. Open Settings → Key Bindings to see them.")
+            .with_title("Key conflicts");
+    let updated = Toast::new(Severity::Information, "Settings updated");
+    assert!(app.app().toasts().iter().eq([&updated, &warning]));
+}
+
+#[test]
 fn an_unchanged_save_still_writes_and_toasts() {
     let mut app = TestApp::new(Config::default());
     let config = app.app().config().clone();

@@ -17,7 +17,7 @@ use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::toast::Toast;
 
 /// The dialog's screen bindings: the container's `modal.submit`, then the modal's `modal.close`.
-const NEW_ISSUE_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
+pub(crate) const NEW_ISSUE_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
 
 /// `NewIssueContainer { width: 100 }`, border included.
 const WIDTH: u16 = 100;

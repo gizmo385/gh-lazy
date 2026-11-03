@@ -35,7 +35,7 @@ use crate::toast::Toast;
 
 /// The dialog's screen bindings: `modal.submit` (Py bug B17's recommendation; Python binds only `modal.close`), then
 /// `modal.close`.
-const NEW_COMMENT_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
+pub(crate) const NEW_COMMENT_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
 
 /// `NewCommentContainer { width: 100; height: 50; margin: 1 }`, border included.
 const SIZE: (u16, u16) = (100, 50);

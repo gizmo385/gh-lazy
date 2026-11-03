@@ -325,7 +325,8 @@ fn pr_diff_hunk_focused_160x48() {
     assert_eq!(cursor(&app), on_line(README, 0, 0));
     assert!(
         footer(&mut app).starts_with(
-            " j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link"
+            " j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  z Fold \
+             Files  / Filter Files  ^v Paste link"
         ),
         "{}",
         footer(&mut app)
@@ -389,7 +390,10 @@ fn a_rebound_cursor_key_moves_the_line_and_j_no_longer_does() {
     // An overridden key goes after the link's default ones, as in Textual: the body's link ends with the filter key.
     let footer = footer(&mut app);
     assert!(
-        footer.starts_with(" k Line up  c Add Comment  J Next Hunk  K Previous Hunk  / Filter Files  n Line down"),
+        footer.starts_with(
+            " k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  z Fold Files  / \
+             Filter Files  n Line down"
+        ),
         "{footer}"
     );
 }
@@ -397,20 +401,33 @@ fn a_rebound_cursor_key_moves_the_line_and_j_no_longer_does() {
 #[test]
 fn the_footer_follows_the_focused_stop() {
     let mut app = diff_tab();
-    // Into the content from the tab strip: the body, its cursor on README.md's header, where Add Comment is hidden.
+    // Into the content from the tab strip: the body, its cursor on README.md's header, where Add Comment is hidden
+    // and Fold shows.
     app.press(&["tab"]);
     assert_eq!((focus(&app), stop(&app)), (FocusTarget::DetailsContent, DiffStop::Body));
     assert_eq!(cursor(&app), Some(Cursor::File(README)));
     assert!(
-        footer(&mut app)
-            .starts_with(" j Line down  k Line up  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link"),
+        footer(&mut app).starts_with(
+            " j Line down  k Line up  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Fold  z Fold Files  \
+              / Filter Files  ^v Paste link"
+        ),
         "{}",
         footer(&mut app)
     );
-    // On a line, Add Comment shows.
+    // On a line, Add Comment shows and Fold doesn't.
     app.press(&["j"]);
     assert!(
-        footer(&mut app).starts_with(" j Line down  k Line up  c Add Comment  J Next Hunk"),
+        footer(&mut app).starts_with(
+            " j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  z Fold \
+             Files  / Filter Files"
+        ),
+        "{}",
+        footer(&mut app)
+    );
+    // Everything folded, `z` unfolds.
+    app.press(&["z"]);
+    assert!(
+        footer(&mut app).contains("  ⏎ Fold  z Unfold Files  / Filter Files"),
         "{}",
         footer(&mut app)
     );
@@ -449,12 +466,41 @@ fn the_wheel_scrolls_the_body_and_brings_the_cursor_back_into_view() {
         app.mouse(MouseEventKind::ScrollDown, 80, row + 5);
         app.render(100, 30);
     }
-    // Two notches, six rows down: README.md's header, its hunk's separator and first four lines went by, and the
-    // cursor is on the first row still in view.
-    assert_eq!(view(&app).offset(), 6);
-    assert_eq!(cursor(&app), on_line(README, 0, 4));
+    // Two notches, two rows each as the app's other scrolls: README.md's header, its hunk's separator and first two
+    // lines went by. README.md's sticky header covers the top row, so the cursor is on the row under it.
+    assert_eq!(view(&app).offset(), 4);
+    assert_eq!(cursor(&app), on_line(README, 0, 3));
     app.press(&["j"]);
-    assert_eq!(cursor(&app), on_line(README, 0, 5));
+    assert_eq!(cursor(&app), on_line(README, 0, 4));
+}
+
+#[test]
+fn down_and_up_move_the_cursor_and_the_view_follows() {
+    let mut app = diff_tab();
+    app.press(&["tab", "down", "down"]);
+    assert_eq!(cursor(&app), on_line(README, 0, 1));
+    app.press(&["up"]);
+    assert_eq!(cursor(&app), on_line(README, 0, 0));
+    // At 100x30 the body overflows: going down past the bottom margin scrolls the view, the cursor kept in it.
+    app.render(100, 30);
+    for _ in 0..30 {
+        app.press(&["down"]);
+    }
+    app.render(100, 30);
+    let row = view(&app).body().cursor_row().unwrap();
+    let offset = view(&app).offset();
+    assert!(offset > 0, "{offset}");
+    assert!((offset..offset + 20).contains(&row), "{row} from {offset}");
+    let screen = app.screen(100, 30);
+    assert!(
+        screen.contains("src/viewer.rs") && screen.contains("Line: "),
+        "{screen}"
+    );
+    for _ in 0..40 {
+        app.press(&["up"]);
+    }
+    app.render(100, 30);
+    assert_eq!((cursor(&app), view(&app).offset()), (Some(Cursor::File(README)), 0));
 }
 
 #[test]
@@ -542,8 +588,9 @@ fn a_drag_from_the_filter_keeps_the_mouse_until_the_release() {
 #[test]
 fn a_click_on_the_deleted_file_s_header_takes_the_cursor() {
     let mut app = diff_tab();
+    // Past the title: a click on it would unfold the file too.
     let (column, row) = find(&app.screen(160, 48), "docs/old.md (deleted)");
-    app.click(column, row);
+    app.click(column + 30, row);
     assert_eq!(stop(&app), DiffStop::Body);
     assert_eq!(cursor(&app), Some(Cursor::File(OLD)));
     // Folded, as deleted files start: its position row has no hunks to count.
@@ -555,17 +602,90 @@ fn a_click_on_the_deleted_file_s_header_takes_the_cursor() {
 #[test]
 fn the_tab_keeps_its_state_across_tabs_and_a_new_pr_resets_it() {
     let mut app = diff_tab();
-    app.press(&["tab", "J", "j", "j"]);
+    // assets/app.css folded.
+    app.press(&["tab", "]", "enter", "[", "J", "j", "j"]);
+    assert!(view(&app).body().is_folded(CSS));
     app.press(&["5", "left", "right"]);
     assert_eq!(stop(&app), DiffStop::Body);
     assert_eq!(cursor(&app), on_line(README, 0, 2));
     assert!(app.screen(160, 48).contains("Line: 3/6"));
-    // Selecting the PR again builds the tab afresh.
+    assert!(view(&app).body().is_folded(CSS));
+    // Selecting the PR again builds the tab afresh: every file unfolded but the deleted one.
     app.press(&["2", "enter"]);
     settle(&mut app);
     app.press(&["right"]);
     assert_eq!(stop(&app), DiffStop::Body);
     assert_eq!(cursor(&app), Some(Cursor::File(README)));
+    assert!(!view(&app).body().is_folded(CSS));
+    assert!(view(&app).body().is_folded(OLD));
+}
+
+#[test]
+fn the_file_keys_jump_fold_and_unfold_in_the_tab() {
+    let mut app = diff_tab();
+    app.press(&["tab", "]", "]"]);
+    assert_eq!(cursor(&app), Some(Cursor::File(2)));
+    app.press(&["["]);
+    assert_eq!(cursor(&app), Some(Cursor::File(CSS)));
+    app.press(&["enter"]);
+    assert!(view(&app).body().is_folded(CSS));
+    assert!(app.screen(160, 48).contains("▶ 📄  assets/app.css (+3)"));
+    app.press(&["enter"]);
+    assert!(!view(&app).body().is_folded(CSS));
+    app.press(&["G"]);
+    assert_eq!(cursor(&app), on_line(VIEWER, 1, 8));
+    app.press(&["g"]);
+    assert_eq!(cursor(&app), Some(Cursor::File(README)));
+}
+
+#[test]
+fn a_rebound_fold_all_key_folds_and_z_no_longer_does() {
+    let mut config = config();
+    config.bindings.overrides.insert("diff.fold_all".into(), "f6".into());
+    let mut app = diff_tab_with(config, gh(), &["enter"]);
+    app.press(&["tab", "z"]);
+    assert!(!view(&app).body().all_folded());
+    app.press(&["f6"]);
+    assert!(view(&app).body().all_folded());
+    assert!(footer(&mut app).contains("f6 Unfold Files"), "{}", footer(&mut app));
+}
+
+#[test]
+fn pr_diff_all_folded_160x48() {
+    let mut app = diff_tab();
+    app.press(&["tab", "J", "z"]);
+    assert_eq!(cursor(&app), Some(Cursor::File(README)));
+    let screen = app.screen(160, 48);
+    // The file list: one header per file.
+    assert_eq!(screen.matches('▶').count(), 5, "{screen}");
+    assert!(!screen.contains('▼'), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn pr_diff_sticky_header_100x30() {
+    let mut app = diff_tab();
+    // Deep into src/viewer.rs: its second hunk's last line.
+    app.press(&["tab", "J", "J", "J", "J", "J"]);
+    app.render(100, 30);
+    for _ in 0..8 {
+        app.press(&["j"]);
+    }
+    assert_eq!(cursor(&app), on_line(VIEWER, 1, 8));
+    let screen = app.screen(100, 30);
+    // The header shows once, as the body's top row, right under the filter.
+    let (_, row) = find(&screen, "src/viewer.rs (+5 -2)");
+    let (_, filter) = find(&screen, "Filter files");
+    assert_eq!(row, filter + 2, "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn pr_diff_footer_on_header() {
+    let mut app = diff_tab();
+    app.press(&["tab"]);
+    let footer = app.screen(240, 48).lines().last().unwrap().trim_end().to_owned();
+    insta::assert_snapshot!(footer);
 }
 
 #[test]

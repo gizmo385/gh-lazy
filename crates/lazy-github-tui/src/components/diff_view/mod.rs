@@ -8,7 +8,8 @@
 //!
 //! The body draws only the rows on screen, so the scroll isn't a laid-out text: [`Window`] maps its rows to the body's
 //! rows, the position row and the lines of the pending comments and the form (the "tail", laid out each frame, as
-//! it's short). While the body's rows fill the view, its position row stays at the view's bottom.
+//! it's short). While the body's rows fill the view, its position row stays at the view's bottom, and the body may
+//! draw its cursor's file header over its top row (the sticky header), which clicks and the wheel account for.
 
 mod body;
 mod highlight;
@@ -48,8 +49,8 @@ use tokio::time::Instant;
 /// The filter's placeholder. It names the default key even with `diff.filter_files` rebound, as Python's does.
 const FILTER_PLACEHOLDER: &str = "Filter files (press '/' to focus, ESC to clear)";
 
-/// How many rows a wheel notch scrolls the view, as `less` and vim scroll (Textual's containers scroll two).
-const WHEEL_ROWS: usize = 3;
+/// How many rows a wheel notch scrolls the view, as Textual's containers and the app's other scrolls do.
+const WHEEL_ROWS: usize = 2;
 
 /// `SplitDiffViewer.BINDINGS`: next and previous hunk, and the filter key, with focus on the filter, a Remove button
 /// or the review form. The body's own link ([`DIFF_BODY_BINDINGS`]) has them too.
@@ -254,8 +255,10 @@ struct Drawn {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Hit {
     Filter,
-    /// A body row, by its row number.
-    Row(usize),
+    /// A body row, by its row number, and the cells from the body's left edge.
+    Row(usize, usize),
+    /// The sticky header over the body's top row: the header of this file, scrolled out above.
+    Sticky(usize),
     /// The body's position row.
     Position,
     /// A stop after the body.
@@ -437,8 +440,8 @@ impl DiffView {
         }
     }
 
-    /// A `textual.scroll.*` binding the focused stop doesn't take: up, down and the page keys scroll the view, and
-    /// left and right pan the body's code.
+    /// A `textual.scroll.*` binding the focused stop doesn't take (the body takes them all, moving its cursor): up,
+    /// down and the page keys scroll the view, and left and right pan the body's code.
     pub fn scroll(&mut self, scroll: Scroll) {
         match scroll {
             Scroll::Left | Scroll::PageLeft => self.pan(BindingId::TextualScrollLeft),
@@ -450,7 +453,7 @@ impl DiffView {
         }
     }
 
-    /// A wheel notch over the viewer: up and down scroll the view three rows, and the cursor stays on a row in view;
+    /// A wheel notch over the viewer: up and down scroll the view two rows, and the cursor stays on a row in view;
     /// sideways pans the body's code.
     pub fn wheel(&mut self, wheel: Wheel) {
         match wheel {
@@ -472,10 +475,14 @@ impl DiffView {
         let _ = self.body.handle(id);
     }
 
-    /// After the view scrolled: a cursor whose row went out of view moves to the nearest row still in it.
+    /// After the view scrolled: a cursor whose row went out of view moves to the nearest row still in it, and off the
+    /// top row when the sticky header covers it.
     fn keep_cursor_in_view(&mut self) {
-        let split = self.drawn.window.split(self.scroll.offset());
-        self.body.keep_cursor_in(split.body);
+        let rows = self.drawn.window.split(self.scroll.offset()).body;
+        self.body.keep_cursor_in(rows.clone());
+        if self.body.sticky_file(rows.clone()).is_some() && self.body.cursor_row() == Some(rows.start) {
+            self.body.keep_cursor_in(rows.start + 1..rows.end);
+        }
     }
 
     /// Runs `f` on the body scrolled to the view's offset, then scrolls the view to wherever the body went.
@@ -598,12 +605,17 @@ impl DiffView {
     }
 
     /// How the footer and help panel show a binding of [`Self::chain`]: Add Comment is hidden while the cursor isn't
-    /// on a diff line.
+    /// on a diff line and Fold while it isn't on a file header, and Fold Files reads Unfold Files once every shown
+    /// file is folded.
     pub fn binding_state(&self, owner: Owner, id: BindingId) -> BindingState {
-        if (owner, id) == (Owner::DiffBody, BindingId::DiffAddComment) && self.body.cursor_line().is_none() {
-            BindingState::Hidden
-        } else {
-            BindingState::Enabled
+        if owner != Owner::DiffBody {
+            return BindingState::Enabled;
+        }
+        match id {
+            BindingId::DiffAddComment if self.body.cursor_line().is_none() => BindingState::Hidden,
+            BindingId::DiffToggle if !matches!(self.body.cursor(), Some(Cursor::File(_))) => BindingState::Hidden,
+            BindingId::DiffFoldAll if self.body.all_folded() => BindingState::Relabeled("Unfold Files"),
+            _ => BindingState::Enabled,
         }
     }
 
@@ -764,12 +776,17 @@ impl DiffView {
                 self.focus(DiffStop::Filter);
                 self.filter.press(input, position.x);
             }
-            Hit::Row(row) => {
-                if self.body.click_row(row) {
+            Hit::Row(row, x) => {
+                if self.body.click_row(row, x) {
                     // The row is in view already: the click doesn't scroll.
                     self.focus(DiffStop::Body);
                     self.reveal = None;
                 }
+            }
+            // The real header is above the view: focusing the body reveals the cursor on it.
+            Hit::Sticky(file) => {
+                self.body.cursor_to_file(file);
+                self.focus(DiffStop::Body);
             }
             Hit::Position => {
                 self.focus(DiffStop::Body);
@@ -859,8 +876,13 @@ impl DiffView {
         }
         let dy = usize::from(position.y - drawn.region.y);
         let split = drawn.window.split(self.scroll.offset());
+        if dy == 0
+            && let Some(file) = self.body.sticky_file(split.body.clone())
+        {
+            return Hit::Sticky(file);
+        }
         if dy < split.body.len() {
-            return Hit::Row(split.body.start + dy);
+            return Hit::Row(split.body.start + dy, usize::from(position.x - drawn.region.x));
         }
         if split.position == Some(dy) {
             return Hit::Position;

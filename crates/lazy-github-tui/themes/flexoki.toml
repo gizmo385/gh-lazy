@@ -385,8 +385,6 @@ removed_current_bg = "#8B0000"
 context_current_bg = "#FD971F"
 stat_added = "#98E024"
 stat_removed = "#F4005F"
-border_focused = "#9B76C8"
-border = "#3C70BA"
 review_body = "#282726"
 review_comment_border = "#24837B"
 

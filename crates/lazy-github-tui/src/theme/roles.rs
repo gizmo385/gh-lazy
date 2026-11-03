@@ -646,10 +646,6 @@ roles! {
         stat_added: ThemeColor,
         /// A file or hunk's removed count (Rich `red`).
         stat_removed: ThemeColor,
-        /// A focused hunk pane's border (`$accent`).
-        border_focused: ThemeColor,
-        /// An unfocused hunk pane's border (`$primary-lighten-1`).
-        border: ThemeColor,
         /// The current-line indicator (`$text` on `$accent`).
         indicator: Pair,
         /// The review panel's header (bold `$text` on `$accent`).

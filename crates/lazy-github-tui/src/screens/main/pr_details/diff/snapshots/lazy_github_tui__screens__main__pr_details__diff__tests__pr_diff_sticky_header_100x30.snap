@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/screens/main/pr_details/diff/tests.rs
+expression: screen
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────┐
+│ ★  Owner       Name        Private   ││ Overview  Diff  Conversation                             │
+│ ☆  parity-bot  pr-details  ✘         ││━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                      ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
+│                                      ││▊  Filter files (press '/' to focus, ESC to clear)       ▎│
+│                                      ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
+│                                      ││▼ 📄  src/viewer.rs (+5 -2)                                │
+│                                      ││     2  │ use std::fmt;                                   │
+│                                      ││     3  │                                                 │
+│                                      ││     4  │ pub struct Viewer {                             │
+│                                      ││     5  │     lines: Vec<String>,                         │
+│                                      ││     6  │     cursor: usize,                              │
+└──────────────────────────────────────┘│     7  │ }                                               │
+┌─ [2] Pull Requests ──────────────────┐│     8  │                                                 │
+│ #  Status  Author         Title      ││  Lines 22-28 (+3 -2) • impl Viewer {                     │
+│ 5  open    parity-friend  Add a curso││    22  │     pub fn render(&self) -> io::Result<()> {    │
+│ 4  closed  parity-bot     Drop the le││    21  │         for line in &self.lines {             ▇▇│
+│ 3  closed  parity-bot     Release 0.2││    22  │             println!("{line}");                 │
+│ 2  open    parity-friend  Try a faste││    23  │         for (i, line) in self.lines.iter().enu  │
+│                          ▊           ││    24  │             let marker = if i == self.cursor {  │
+│                                      ││    25  │             println!("{marker} {line}");        │
+│                                      ││    26  │         }                                       │
+│                                      ││    27  │         Ok(())                                  │
+│                                      ││►   28  │     }                                           │
+│                                      ││ src/viewer.rs                                Line: 9/9   │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File

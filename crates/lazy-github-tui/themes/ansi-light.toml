@@ -385,8 +385,6 @@ removed_current_bg = "#8B0000"
 context_current_bg = "ansi:yellow"
 stat_added = "ansi:green"
 stat_removed = "ansi:red"
-border_focused = "ansi:magenta"
-border = "ansi:blue"
 review_body = "transparent"
 review_comment_border = "ansi:cyan"
 

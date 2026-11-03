@@ -49,4 +49,4 @@ expression: screen
 │                                                              ││    24  │             let marker = if i == self.cursor { ">" } else { " " };                  │
 │                                                              ││ docs/old.md                                                                         1 hunk   │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
- j Line down  k Line up  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maxi
+ j Line down  k Line up  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Fold  z Fold Files  / Filter Files  ^v Paste link  f Follow link  F Follo

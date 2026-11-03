@@ -8,6 +8,10 @@
 //! what it's on ([`Cursor`]), never as a row number, so folding or filtering other files never moves it to another
 //! line. Drawing lays out and colors only the rows on screen.
 //!
+//! Files fold one at a time (`enter` on a header, a click on its title) or all at once (`z`): everything folded is the
+//! file list (decision `diff-file-navigation`). While the cursor's file header is scrolled above the rows shown, a
+//! copy of it sticks over the top row ([`DiffBody::sticky_file`]).
+//!
 //! The Diff tab (`DiffView`) owns it and scrolls it together with the pending comments and the review form below it:
 //! [`DiffBody::fit`], [`DiffBody::set_scroll`] and [`DiffBody::draw`] are for that owner, and [`DiffBody::render`]
 //! draws the body on its own, with its own scrollbar.
@@ -28,16 +32,25 @@ use crate::display;
 use crate::keymap::BindingId;
 use crate::theme::{Paint, Rgb, Theme};
 
-/// The body's chain link, in footer order: `j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  /
-/// Filter Files`, then the hidden scroll keys. Add Comment and Filter Files are the Diff tab's to act on, so
-/// [`DiffBody::handle`] passes on them.
+/// The body's chain link, in footer order: `j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ]
+/// Next File  [ Previous File  enter Fold  z Fold Files  / Filter Files`, then the hidden keys: `g` and `G`, and the
+/// scroll keys, of which `down` and `up` move the cursor as `j` and `k` do. Add Comment and Filter Files are the Diff
+/// tab's to act on, so [`DiffBody::handle`] passes on them.
 pub const DIFF_BODY_BINDINGS: &[BindingId] = &[
     BindingId::DiffCursorDown,
     BindingId::DiffCursorUp,
     BindingId::DiffAddComment,
     BindingId::DiffNextHunk,
     BindingId::DiffPreviousHunk,
+    BindingId::DiffNextFile,
+    BindingId::DiffPreviousFile,
+    BindingId::DiffToggle,
+    BindingId::DiffFoldAll,
     BindingId::DiffFilterFiles,
+    BindingId::DiffFirstLine,
+    BindingId::DiffLastLine,
+    BindingId::TextualScrollDown,
+    BindingId::TextualScrollUp,
     BindingId::TextualScrollPageDown,
     BindingId::TextualScrollPageUp,
     BindingId::TextualScrollHome,
@@ -55,6 +68,9 @@ const SCROLL_MARGIN: usize = 3;
 const PAN_STEP: usize = 8;
 /// What an unfolded deleted file shows in place of its hunks.
 const FILE_REMOVED: &str = "file was removed";
+/// The sticky file header takes one of the body's rows only when more than this many show: on a short body, the row
+/// is worth more than the reminder.
+const STICKY_MIN_ROWS: usize = 8;
 
 /// Where the cursor is, by what it's on.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -442,16 +458,56 @@ impl DiffBody {
         }
     }
 
-    /// A click on row `row`: the cursor moves to it, or from a hunk separator to the hunk's first line, without
-    /// scrolling. Says whether the row was there.
-    pub fn click_row(&mut self, row: usize) -> bool {
+    /// A click on row `row`, `x` cells from the body's left edge: the cursor moves to it, or from a hunk separator to
+    /// the hunk's first line, without scrolling. A click on a file header's title (its glyph, path and counts) also
+    /// folds or unfolds the file, as a collapsible's title does. Says whether the row was there.
+    pub fn click_row(&mut self, row: usize, x: usize) -> bool {
         let Some(target) = self.cursor_from(row, true) else {
             return false;
         };
         if let Some(cursor) = self.row(target).and_then(Row::cursor) {
             self.cursor = Some(cursor);
         }
+        if let Some(Row::FileHeader(f)) = self.row(row)
+            && x < self.header_width(f)
+        {
+            self.set_folded(f, !self.is_folded(f));
+        }
         true
+    }
+
+    /// The cursor goes to file `f`'s header, when the file is shown, scrolled into view.
+    pub fn cursor_to_file(&mut self, f: usize) {
+        if self.is_shown(f) {
+            self.cursor = Some(Cursor::File(f));
+            self.follow();
+        }
+    }
+
+    /// Whether every shown file is folded to its header, so `z` unfolds them: the file list.
+    pub fn all_folded(&self) -> bool {
+        self.files.iter().filter(|state| state.shown).all(|state| state.folded)
+    }
+
+    /// The file whose header sticks to the body's top row while the body's `rows` show: the cursor's file, once its
+    /// header has scrolled above them, when more than [`STICKY_MIN_ROWS`] show.
+    pub fn sticky_file(&self, rows: Range<usize>) -> Option<usize> {
+        if rows.len() <= STICKY_MIN_ROWS {
+            return None;
+        }
+        let f = self.cursor?.file();
+        let header = self.index.row_of(&self.files, Row::FileHeader(f))?;
+        (header < rows.start).then_some(f)
+    }
+
+    /// The cells file `f`'s header title takes: its glyph, path and counts.
+    fn header_width(&self, f: usize) -> usize {
+        self.files.get(f).map_or(0, |state| {
+            header_spans(&state.file, state.folded, Style::new(), Color::Reset, Color::Reset)
+                .iter()
+                .map(|span| display::width(&span.content))
+                .sum()
+        })
     }
 
     /// The first shown file's header takes the cursor, scrolled into view.
@@ -462,21 +518,29 @@ impl DiffBody {
     }
 
     /// A binding of [`DIFF_BODY_BINDINGS`]. Says whether it's the body's to handle: every one but Add Comment and
-    /// Filter Files, whether or not the cursor could move.
+    /// Filter Files, whether or not the cursor could move. `enter` off a header does nothing, but is still the body's.
     pub fn handle(&mut self, id: BindingId) -> bool {
         match id {
-            BindingId::DiffCursorDown => self.step(true),
-            BindingId::DiffCursorUp => self.step(false),
+            BindingId::DiffCursorDown | BindingId::TextualScrollDown => self.step(true),
+            BindingId::DiffCursorUp | BindingId::TextualScrollUp => self.step(false),
             BindingId::DiffNextHunk => self.next_hunk(),
             BindingId::DiffPreviousHunk => self.previous_hunk(),
+            BindingId::DiffNextFile => self.next_file(),
+            BindingId::DiffPreviousFile => self.previous_file(),
+            BindingId::DiffToggle => {
+                if let Some(Cursor::File(f)) = self.cursor {
+                    self.set_folded(f, !self.is_folded(f));
+                }
+            }
+            BindingId::DiffFoldAll => self.fold_all(),
             BindingId::TextualScrollPageDown => self.page(true),
             BindingId::TextualScrollPageUp => self.page(false),
-            BindingId::TextualScrollHome => {
+            BindingId::DiffFirstLine | BindingId::TextualScrollHome => {
                 if let Some(row) = self.cursor_from(0, true) {
                     self.move_to(row);
                 }
             }
-            BindingId::TextualScrollEnd => {
+            BindingId::DiffLastLine | BindingId::TextualScrollEnd => {
                 if let Some(row) = self
                     .index
                     .total
@@ -632,6 +696,41 @@ impl DiffBody {
         }
     }
 
+    /// `]`: the next shown file's header, folded or not.
+    fn next_file(&mut self) {
+        let Some(cursor) = self.cursor else {
+            return;
+        };
+        let next = (cursor.file() + 1..self.files.len()).find(|&f| self.is_shown(f));
+        if let Some(f) = next {
+            self.cursor_to_file(f);
+        }
+    }
+
+    /// `[`: the cursor's file's header when the cursor is below it, else the previous shown file's header.
+    fn previous_file(&mut self) {
+        let target = match self.cursor {
+            None => None,
+            Some(Cursor::File(f)) => (0..f).rev().find(|&g| self.is_shown(g)),
+            Some(cursor) => Some(cursor.file()),
+        };
+        if let Some(f) = target {
+            self.cursor_to_file(f);
+        }
+    }
+
+    /// `z`: folds every shown file while any is unfolded, else unfolds them all; the cursor goes to its file's header.
+    fn fold_all(&mut self) {
+        let fold = !self.all_folded();
+        for state in self.files.iter_mut().filter(|state| state.shown) {
+            state.folded = fold;
+        }
+        if let Some(cursor) = self.cursor {
+            self.cursor = Some(Cursor::File(cursor.file()));
+        }
+        self.reindex();
+    }
+
     /// The cursor on a hunk's first line, unfolding its file.
     fn jump_to(&mut self, (file, hunk): (usize, usize)) {
         self.set_folded(file, false);
@@ -753,6 +852,22 @@ impl DiffBody {
             let (spans, fill) = self.row_spans(row, current, focused, usize::from(area.width), theme, styles);
             put(buf, rect, spans, fill);
         }
+        // Over the top row: the header of the file the cursor is in, scrolled out of view above. It never holds the
+        // cursor, so it's drawn as a header the cursor isn't on. The row under it is cleared first, as a header shorter
+        // than that row would leave its tail showing.
+        if let Some(f) = self.sticky_file(self.scroll..self.scroll + visible) {
+            let rect = Rect::new(area.x, area.y, area.width, 1);
+            Clear.render(rect, buf);
+            let state = &self.files[f];
+            let spans = header_spans(
+                &state.file,
+                state.folded,
+                styles.header,
+                styles.stat_added,
+                styles.stat_removed,
+            );
+            put(buf, rect, spans, styles.header);
+        }
     }
 
     /// The position row, in `area`'s last row.
@@ -786,7 +901,10 @@ impl DiffBody {
                 } else {
                     styles.header
                 };
-                (header_spans(&state.file, state.folded, style, styles), style)
+                (
+                    header_spans(&state.file, state.folded, style, styles.stat_added, styles.stat_removed),
+                    style,
+                )
             }
             Row::HunkSeparator(f, h) => {
                 let label = self.files[f].file.hunks[h].label();
@@ -795,7 +913,12 @@ impl DiffBody {
                     display::sanitize(&label.text).into_owned(),
                     styles.separator,
                 ));
-                spans.extend(count_spans(label.counts, styles.separator, styles));
+                spans.extend(count_spans(
+                    label.counts,
+                    styles.separator,
+                    styles.stat_added,
+                    styles.stat_removed,
+                ));
                 spans.push(Span::styled(
                     display::sanitize(&label.suffix).into_owned(),
                     styles.separator,
@@ -860,32 +983,32 @@ impl DiffBody {
 }
 
 /// A file's header: `▼` or `▶`, then `📄 <path>` and its counts, or `🗑️  <path> (deleted)`.
-fn header_spans(file: &ChangedFile, folded: bool, style: Style, styles: &Styles) -> Vec<Span<'static>> {
+fn header_spans(file: &ChangedFile, folded: bool, style: Style, added: Color, removed: Color) -> Vec<Span<'static>> {
     let glyph = if folded { "▶" } else { "▼" };
     let path = display::sanitize(&file.path);
     if file.deleted {
         return vec![Span::styled(format!("{glyph} 🗑️  {path} (deleted)"), style)];
     }
     let mut spans = vec![Span::styled(format!("{glyph} 📄 {path}"), style)];
-    spans.extend(count_spans(file.counts(), style, styles));
+    spans.extend(count_spans(file.counts(), style, added, removed));
     spans
 }
 
-/// ` (+A -D)` in `style`, the counts green and red; a zero count left out, nothing when both are.
-fn count_spans(counts: Counts, style: Style, styles: &Styles) -> Vec<Span<'static>> {
+/// ` (+A -D)` in `style`, the counts in `added` and `removed`; a zero count left out, nothing when both are.
+fn count_spans(counts: Counts, style: Style, added: Color, removed: Color) -> Vec<Span<'static>> {
     let Counts { additions, deletions } = counts;
     if counts.is_empty() {
         return Vec::new();
     }
     let mut spans = vec![Span::styled(" (", style)];
     if additions > 0 {
-        spans.push(Span::styled(format!("+{additions}"), style.fg(styles.stat_added)));
+        spans.push(Span::styled(format!("+{additions}"), style.fg(added)));
     }
     if additions > 0 && deletions > 0 {
         spans.push(Span::styled(" ", style));
     }
     if deletions > 0 {
-        spans.push(Span::styled(format!("-{deletions}"), style.fg(styles.stat_removed)));
+        spans.push(Span::styled(format!("-{deletions}"), style.fg(removed)));
     }
     spans.push(Span::styled(")", style));
     spans

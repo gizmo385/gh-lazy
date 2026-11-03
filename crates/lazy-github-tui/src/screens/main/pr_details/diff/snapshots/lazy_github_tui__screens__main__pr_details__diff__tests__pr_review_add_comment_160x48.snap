@@ -49,4 +49,4 @@ expression: "app.screen(160, 48)"
 │                                                              ││    24  │             let marker = if i == self.cursor { ">" } else { " " };                  │
 │                                                              ││ README.md                                                                        Line: 4/6   │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
- j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command
+ j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  z Fold Files  / Filter Files  ^v Paste link  f Follow link

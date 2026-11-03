@@ -368,7 +368,289 @@ fn add_comment_and_filter_files_are_the_diff_tab_s() {
     let mut body = body();
     assert!(!body.handle(BindingId::DiffAddComment));
     assert!(!body.handle(BindingId::DiffFilterFiles));
-    assert!(!body.handle(BindingId::TextualScrollUp));
+    assert!(!body.handle(BindingId::TextualFocusNext));
+}
+
+#[test]
+fn down_and_up_move_the_cursor_as_j_and_k_do_and_the_view_follows() {
+    let mut body = body();
+    body.resize(100, 11);
+    press(&mut body, BindingId::TextualScrollDown, 7);
+    // As `j` seven times: README.md's hunk lines 1 to 6, then row 8, assets/app.css's header, two rows past the
+    // margin, so the view scrolled two rows.
+    assert_eq!(body.cursor(), Some(Cursor::File(CSS)));
+    assert_eq!(body.scroll(), 2);
+    press(&mut body, BindingId::TextualScrollUp, 1);
+    assert_eq!(body.cursor(), line(README, 0, 5));
+    press(&mut body, BindingId::TextualScrollUp, 10);
+    assert_eq!(body.cursor(), Some(Cursor::File(README)));
+    assert_eq!(body.scroll(), 0);
+}
+
+fn next_file(body: &mut DiffBody, times: usize) {
+    press(body, BindingId::DiffNextFile, times);
+}
+
+fn previous_file(body: &mut DiffBody, times: usize) {
+    press(body, BindingId::DiffPreviousFile, times);
+}
+
+#[test]
+fn next_file_goes_to_each_shown_file_s_header_and_stops_at_the_last() {
+    let mut body = body();
+    next_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(CSS)));
+    // From a line, the next file's header.
+    down(&mut body, 2);
+    next_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(BUILD)));
+    // The folded deleted file's header too, without unfolding it.
+    next_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(OLD)));
+    assert!(body.is_folded(OLD));
+    next_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(VIEWER)));
+    // At the last file, nothing; nor from its last line.
+    next_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(VIEWER)));
+    press(&mut body, BindingId::DiffLastLine, 1);
+    next_file(&mut body, 1);
+    assert_eq!(body.cursor(), line(VIEWER, 1, 8));
+}
+
+#[test]
+fn previous_file_goes_to_this_file_s_header_then_the_previous_file_s() {
+    let mut body = body();
+    body.cursor = line(VIEWER, 1, 3);
+    previous_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(VIEWER)));
+    previous_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(OLD)));
+    // From a `file was removed` row, its own header.
+    body.set_folded(OLD, false);
+    body.cursor = Some(Cursor::Removed(OLD));
+    previous_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(OLD)));
+    previous_file(&mut body, 3);
+    assert_eq!(body.cursor(), Some(Cursor::File(README)));
+    // At the first file's header, nothing.
+    previous_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(README)));
+}
+
+#[test]
+fn file_jumps_cross_a_folded_file_without_unfolding_it() {
+    let mut body = body();
+    body.set_folded(BUILD, true);
+    body.cursor = line(CSS, 0, 1);
+    next_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(BUILD)));
+    next_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(OLD)));
+    previous_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(BUILD)));
+    assert!(body.is_folded(BUILD));
+}
+
+#[test]
+fn file_jumps_skip_the_files_the_filter_hides() {
+    let mut body = body();
+    // build.rs and src/viewer.rs.
+    body.set_filter(".rs");
+    assert_eq!(body.cursor(), Some(Cursor::File(BUILD)));
+    previous_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(BUILD)));
+    next_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(VIEWER)));
+    next_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(VIEWER)));
+    previous_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(BUILD)));
+}
+
+#[test]
+fn file_jumps_scroll_the_header_into_view() {
+    let mut body = body();
+    body.resize(100, 11);
+    next_file(&mut body, 4);
+    assert_eq!(body.cursor_row(), Some(20));
+    assert_eq!(body.scroll(), 20 + 3 + 1 - 10);
+    previous_file(&mut body, 4);
+    assert_eq!(body.scroll(), 0);
+}
+
+#[test]
+fn enter_folds_and_unfolds_the_header_s_file_and_does_nothing_elsewhere() {
+    let mut body = body();
+    press(&mut body, BindingId::DiffToggle, 1);
+    assert!(body.is_folded(README));
+    assert_eq!(body.row(1), Some(Row::FileHeader(CSS)));
+    // `j` steps over the folded file's header without unfolding it.
+    down(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(CSS)));
+    up(&mut body, 1);
+    press(&mut body, BindingId::DiffToggle, 1);
+    assert!(!body.is_folded(README));
+    assert_eq!(body.row(1), Some(Row::HunkSeparator(README, 0)));
+    // On a line, `enter` is the body's but does nothing.
+    down(&mut body, 2);
+    press(&mut body, BindingId::DiffToggle, 1);
+    assert_eq!(body.cursor(), line(README, 0, 1));
+    assert!(!body.is_folded(README));
+    // A deleted file unfolds to its `file was removed` row.
+    body.cursor = Some(Cursor::File(OLD));
+    press(&mut body, BindingId::DiffToggle, 1);
+    assert_eq!(body.row(body.cursor_row().unwrap() + 1), Some(Row::Removed(OLD)));
+}
+
+#[test]
+fn z_folds_every_file_then_unfolds_them_all_the_cursor_on_its_file_s_header() {
+    let mut body = body();
+    body.resize(100, 11);
+    body.cursor = line(VIEWER, 1, 4);
+    assert!(!body.all_folded());
+    press(&mut body, BindingId::DiffFoldAll, 1);
+    // The file list: one header per file.
+    assert!(body.all_folded());
+    assert_eq!(rows(&body), (0..5).map(Row::FileHeader).collect::<Vec<_>>());
+    assert_eq!(body.cursor(), Some(Cursor::File(VIEWER)));
+    assert_eq!(body.scroll(), 0);
+    // `k` and `[` move between the headers, and `enter` opens one.
+    up(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(OLD)));
+    previous_file(&mut body, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(BUILD)));
+    press(&mut body, BindingId::DiffToggle, 1);
+    assert!(!body.is_folded(BUILD));
+    assert!(!body.all_folded());
+    // With one file unfolded, `z` folds everything again.
+    down(&mut body, 2);
+    press(&mut body, BindingId::DiffFoldAll, 1);
+    assert!(body.all_folded());
+    assert_eq!(body.cursor(), Some(Cursor::File(BUILD)));
+    // Then unfolds every file, the deleted one included.
+    press(&mut body, BindingId::DiffFoldAll, 1);
+    assert!((0..5).all(|f| !body.is_folded(f)));
+    assert!(rows(&body).contains(&Row::Removed(OLD)));
+    assert_eq!(body.cursor(), Some(Cursor::File(BUILD)));
+}
+
+#[test]
+fn z_folds_only_the_shown_files() {
+    let mut body = body();
+    body.set_filter("viewer");
+    press(&mut body, BindingId::DiffFoldAll, 1);
+    assert!(body.is_folded(VIEWER));
+    assert!(!body.is_folded(README));
+    // Every shown file is folded, so the next `z` unfolds.
+    assert!(body.all_folded());
+}
+
+#[test]
+fn big_j_unfolds_a_folded_file_it_lands_in_from_the_file_list() {
+    let mut body = body();
+    press(&mut body, BindingId::DiffFoldAll, 1);
+    press(&mut body, BindingId::DiffNextHunk, 1);
+    assert_eq!(body.cursor(), line(README, 0, 0));
+    assert!(!body.is_folded(README));
+    assert!(body.is_folded(CSS));
+}
+
+#[test]
+fn g_and_big_g_go_to_the_first_and_last_rows() {
+    let mut body = body();
+    body.resize(100, 11);
+    press(&mut body, BindingId::DiffLastLine, 1);
+    assert_eq!(body.cursor(), line(VIEWER, 1, 8));
+    assert_eq!(body.scroll(), body.rows() - 10);
+    press(&mut body, BindingId::DiffFirstLine, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(README)));
+    assert_eq!(body.scroll(), 0);
+}
+
+#[test]
+fn the_sticky_header_is_the_cursor_s_file_once_its_header_is_above_the_rows_shown() {
+    let mut body = body();
+    // src/viewer.rs's header is row 20; its first hunk's lines are rows 22 to 29.
+    body.cursor = line(VIEWER, 0, 5);
+    assert_eq!(body.sticky_file(21..40), Some(VIEWER));
+    // The real header shows: no sticky header.
+    assert_eq!(body.sticky_file(20..40), None);
+    assert_eq!(body.sticky_file(10..30), None);
+    // Nine rows are enough, eight aren't.
+    assert_eq!(body.sticky_file(21..30), Some(VIEWER));
+    assert_eq!(body.sticky_file(21..29), None);
+    // It follows the cursor's file.
+    body.cursor = line(BUILD, 0, 2);
+    assert_eq!(body.sticky_file(16..40), Some(BUILD));
+}
+
+#[test]
+fn the_sticky_header_is_drawn_over_the_top_row() {
+    let mut body = body();
+    // 15 rows of body: the last row's at the bottom, src/viewer.rs's header five rows above the top, and under it
+    // `pub struct Viewer {`, longer than the header.
+    press(&mut body, BindingId::DiffLastLine, 1);
+    let screen = buffer_to_string(&draw(&mut body, 100, 16, true));
+    assert_eq!(body.scroll(), 25);
+    let top = screen.lines().next().unwrap();
+    let header = "▼ 📄  src/viewer.rs (+5 -2)";
+    assert!(top.starts_with(header), "{screen}");
+    // Nothing of the row under it shows past the header, up to the scrollbar.
+    let tail: String = top[header.len()..].chars().take(70).collect();
+    assert_eq!(tail.trim(), "", "{screen}");
+    // At eight rows of body, it's left out.
+    let screen = buffer_to_string(&draw(&mut body, 100, 9, true));
+    assert!(!screen.contains("src/viewer.rs (+5 -2)"), "{screen}");
+}
+
+#[test]
+fn a_click_on_a_header_s_title_folds_its_file_and_one_past_it_doesn_t() {
+    let mut body = body();
+    body.cursor = line(VIEWER, 0, 0);
+    // `▼ 📄 README.md (+3 -1)` is 22 cells wide.
+    assert!(body.click_row(0, 30));
+    assert_eq!(body.cursor(), Some(Cursor::File(README)));
+    assert!(!body.is_folded(README));
+    assert!(body.click_row(0, 21));
+    assert!(body.is_folded(README));
+    assert!(body.click_row(0, 0));
+    assert!(!body.is_folded(README));
+    // A line's click doesn't fold.
+    assert!(body.click_row(2, 0));
+    assert_eq!(body.cursor(), line(README, 0, 0));
+    assert!(!body.is_folded(README));
+    assert!(!body.click_row(body.rows(), 0));
+}
+
+#[test]
+fn each_new_binding_is_rebindable_through_the_overrides() {
+    let cases = [
+        (BindingId::DiffNextFile, "diff.next_file", "]"),
+        (BindingId::DiffPreviousFile, "diff.previous_file", "["),
+        (BindingId::DiffToggle, "diff.toggle", "enter"),
+        (BindingId::DiffFoldAll, "diff.fold_all", "z"),
+        (BindingId::DiffFirstLine, "diff.first_line", "g"),
+        (BindingId::DiffLastLine, "diff.last_line", "G"),
+    ];
+    let chord = |key: &str| match crate::keymap::KeySpec::parse(key) {
+        crate::keymap::KeySpec::Chord(chord) => chord,
+        crate::keymap::KeySpec::Unknown(key) => panic!("{key} isn't a key"),
+    };
+    let defaults = crate::keymap::Keymap::defaults();
+    for (id, name, default) in cases {
+        assert_eq!(id.config_id(), Some(name));
+        assert_eq!(id.def().default_keys, default, "{name}");
+        assert_eq!(
+            defaults.match_in(DIFF_BODY_BINDINGS, &chord(default)),
+            Some(id),
+            "{name}"
+        );
+        let overrides = [(name.to_owned(), "f5".to_owned())].into_iter().collect();
+        let keymap = crate::keymap::Keymap::new(&overrides);
+        assert_eq!(keymap.match_in(DIFF_BODY_BINDINGS, &chord("f5")), Some(id), "{name}");
+        assert_ne!(keymap.match_in(DIFF_BODY_BINDINGS, &chord(default)), Some(id), "{name}");
+    }
 }
 
 #[test]

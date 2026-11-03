@@ -354,10 +354,11 @@ fn a_click_on_a_row_focuses_the_body_and_moves_the_cursor() {
     let row = row_of(&screen, "Lines 1-4 (+1)");
     view.click(Position::new(4, row));
     assert_eq!(cursor(&view), on_line(2, 0, 0));
-    // A header takes it.
+    // A header takes it; past its title, the file stays unfolded.
     let row = row_of(&screen, "README.md (+3 -1)");
-    view.click(Position::new(8, row));
+    view.click(Position::new(60, row));
     assert_eq!(cursor(&view), Some(Cursor::File(README)));
+    assert!(!view.body().is_folded(README));
     // The click didn't scroll.
     draw(&mut view, 100, 30);
     assert_eq!(view.offset(), 0);
@@ -373,11 +374,14 @@ fn the_wheel_scrolls_and_keeps_the_cursor_on_a_row_in_view() {
     draw(&mut view, 100, 20);
     assert_eq!(cursor(&view), Some(Cursor::File(README)));
     view.wheel(Wheel::Down);
-    assert_eq!(view.offset(), 3);
-    // The header scrolled out of view: the cursor is on the first row still in it, README.md's second line.
+    // Two rows a notch, as the app's other scrolls.
+    assert_eq!(view.offset(), 2);
+    // The header and the separator scrolled out of view: the cursor is on the first row still in it that README.md's
+    // sticky header doesn't cover, its second line.
     assert_eq!(cursor(&view), on_line(README, 0, 1));
     let screen = draw(&mut view, 100, 20);
-    assert_eq!(row_of(&screen, "►    4  │"), 3, "{screen}");
+    assert_eq!(row_of(&screen, "README.md (+3 -1)"), 3, "{screen}");
+    assert_eq!(row_of(&screen, "►    4  │"), 4, "{screen}");
     // Next `j` continues from there.
     press(&mut view, &["j"]);
     assert_eq!(cursor(&view), on_line(README, 0, 2));
@@ -385,6 +389,79 @@ fn the_wheel_scrolls_and_keeps_the_cursor_on_a_row_in_view() {
     view.wheel(Wheel::Up);
     assert_eq!(view.offset(), 0);
     assert_eq!(cursor(&view), on_line(README, 0, 2));
+}
+
+#[test]
+fn a_click_on_a_header_s_title_folds_and_unfolds_its_file() {
+    let mut view = view();
+    let screen = draw(&mut view, 100, 30);
+    let row = row_of(&screen, "README.md (+3 -1)");
+    view.click(Position::new(4, row));
+    assert_eq!(view.stop(), DiffStop::Body);
+    assert_eq!(cursor(&view), Some(Cursor::File(README)));
+    assert!(view.body().is_folded(README));
+    let screen = draw(&mut view, 100, 30);
+    assert!(screen.contains("▶ 📄  README.md (+3 -1)"), "{screen}");
+    view.click(Position::new(4, row));
+    assert!(!view.body().is_folded(README));
+}
+
+#[test]
+fn the_sticky_header_shows_the_cursor_s_file_and_a_click_on_it_goes_to_the_header() {
+    let mut view = view();
+    view.focus_first();
+    // 100x20: 16 rows of body under the filter. `G` scrolls src/viewer.rs's header (row 20) above the top (row 24).
+    draw(&mut view, 100, 20);
+    press(&mut view, &["G"]);
+    let screen = draw(&mut view, 100, 20);
+    assert_eq!(view.offset(), 24);
+    let top = screen.lines().nth(3).unwrap();
+    assert!(top.starts_with("▼ 📄  src/viewer.rs (+5 -2)"), "{screen}");
+    // The click goes to the real header, which scrolls into view, and the sticky header goes.
+    view.click(Position::new(40, 3));
+    assert_eq!(cursor(&view), Some(Cursor::File(VIEWER)));
+    let screen = draw(&mut view, 100, 20);
+    assert_eq!(view.offset(), 20 - 3);
+    assert_eq!(row_of(&screen, "src/viewer.rs (+5 -2)"), 3 + 3, "{screen}");
+}
+
+#[test]
+fn the_wheel_keeps_the_cursor_off_the_row_under_the_sticky_header() {
+    let mut view = view();
+    view.focus_first();
+    draw(&mut view, 100, 20);
+    // On src/viewer.rs's first line (row 22), then the view scrolls past it: the top row it lands on is under the
+    // sticky header, so the cursor goes one row lower.
+    press(&mut view, &["J", "J", "J", "J"]);
+    assert_eq!(cursor(&view), on_line(VIEWER, 0, 0));
+    draw(&mut view, 100, 20);
+    for _ in 0..8 {
+        view.wheel(Wheel::Down);
+        draw(&mut view, 100, 20);
+    }
+    let top = view.offset();
+    assert!(top > 22, "{top}");
+    assert_eq!(view.body().cursor_row(), Some(top + 1));
+    assert_eq!(view.body().sticky_file(top..top + 16), Some(VIEWER));
+}
+
+#[test]
+fn fold_shows_on_a_header_and_fold_files_reads_unfold_files_once_everything_is_folded() {
+    let mut view = view();
+    view.focus_first();
+    let state = |view: &DiffView, id| view.binding_state(Owner::DiffBody, id);
+    assert_eq!(state(&view, BindingId::DiffToggle), BindingState::Enabled);
+    assert_eq!(state(&view, BindingId::DiffFoldAll), BindingState::Enabled);
+    press(&mut view, &["j"]);
+    assert_eq!(state(&view, BindingId::DiffToggle), BindingState::Hidden);
+    press(&mut view, &["z"]);
+    assert_eq!(cursor(&view), Some(Cursor::File(README)));
+    assert_eq!(
+        state(&view, BindingId::DiffFoldAll),
+        BindingState::Relabeled("Unfold Files")
+    );
+    press(&mut view, &["enter"]);
+    assert_eq!(state(&view, BindingId::DiffFoldAll), BindingState::Enabled);
 }
 
 #[test]

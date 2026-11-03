@@ -31,4 +31,4 @@ expression: screen
 │                                      ││     3  │     println!("cargo:rerun-if-changed=assets");  │
 │                                      ││ README.md                                    Line: 2/6   │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
- j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link
+ j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File

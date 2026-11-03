@@ -1,0 +1,14 @@
+---
+source: crates/lazy-github-tui/src/components/list_editor/tests.rs
+expression: "buffer_to_string(&draw(&mut list, 40, true))"
+---
+┌──────────────────────────────────────┐
+│ parity-bot/repo-3                    │
+│ parity-bot/repo-4                  ▇▇│
+│ parity-bot/repo-5                    │
+│ parity-bot/repo-6                    │
+│ parity-bot/repo-7                  ▆▆│
+│ parity-bot/repo-8                    │
+│ parity-bot/repo-9                    │
+│ parity-bot/repo-10                   │
+└──────────────────────────────────────┘

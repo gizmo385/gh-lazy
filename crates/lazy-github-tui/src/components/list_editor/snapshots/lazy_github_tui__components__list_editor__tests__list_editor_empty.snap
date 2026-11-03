@@ -1,0 +1,7 @@
+---
+source: crates/lazy-github-tui/src/components/list_editor/tests.rs
+expression: "buffer_to_string(&draw(&mut editor(&[]), 30, true))"
+---
+┌────────────────────────────┐
+│ + Add item...              │
+└────────────────────────────┘

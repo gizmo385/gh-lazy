@@ -216,6 +216,14 @@ registry! {
     SettingsKeysAdd("settings.keys.add", "a", "add_key", "Add key").internal();
     SettingsKeysReset("settings.keys.reset", "r", "reset_key", "Reset").internal();
     SettingsKeysCancel("settings.keys.cancel", "escape", "cancel_capture", "Cancel").internal();
+    // The Settings list fields' editor (#343, decision settings-list-editor): browsing, then its open input.
+    SettingsListEdit("settings.list.edit", "enter", "edit_item", "Edit").internal();
+    SettingsListAdd("settings.list.add", "a", "add_item", "Add").internal();
+    SettingsListRemove("settings.list.remove", "d, delete", "remove_item", "Remove").internal();
+    SettingsListMoveUp("settings.list.move_up", "shift+up", "move_item_up", "Move up").internal();
+    SettingsListMoveDown("settings.list.move_down", "shift+down", "move_item_down", "Move down").internal();
+    SettingsListCommit("settings.list.commit", "enter", "commit_item", "Done").internal();
+    SettingsListCancel("settings.list.cancel", "escape", "cancel_item", "Cancel").internal();
 
     // Textual built-ins. Python has no ids for them, so overrides never reach them. All are hidden but the select
     // overlay's `escape`.
@@ -451,6 +459,13 @@ mod tests {
             BindingId::SettingsKeysAdd,
             BindingId::SettingsKeysReset,
             BindingId::SettingsKeysCancel,
+            BindingId::SettingsListEdit,
+            BindingId::SettingsListAdd,
+            BindingId::SettingsListRemove,
+            BindingId::SettingsListMoveUp,
+            BindingId::SettingsListMoveDown,
+            BindingId::SettingsListCommit,
+            BindingId::SettingsListCancel,
         ] {
             assert!(id.def().internal);
             assert_eq!(id.config_id(), None);

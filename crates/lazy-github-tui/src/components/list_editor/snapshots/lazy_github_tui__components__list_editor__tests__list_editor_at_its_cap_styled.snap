@@ -1,0 +1,32 @@
+---
+source: crates/lazy-github-tui/src/components/list_editor/tests.rs
+expression: "buffer_to_styled_string(&draw(&mut list, 40, true))"
+---
+┌──────────────────────────────────────┐
+│ parity-bot/repo-0                    │
+│ parity-bot/repo-1                    │
+│ parity-bot/repo-2                    │
+│ parity-bot/repo-3                  ▇▇│
+│ parity-bot/repo-4                    │
+│ parity-bot/repo-5                    │
+│ parity-bot/repo-6                    │
+│ parity-bot/repo-7                    │
+└──────────────────────────────────────┘
+--- styles
+........................................
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabb.
+.accccccccccccccccccccccccccccccccccabb.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabb.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaadd.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaee.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaee.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaee.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaee.
+........................................
+--- legend
+. fg=#0178d4 bg=#272727
+a fg=#e0e0e0 bg=#272727
+b fg=#003054 bg=#272727 REVERSED
+c fg=#ddedf9 bg=#0178d4 BOLD
+d fg=#003054 bg=#000000 REVERSED
+e fg=#e0e0e0 bg=#000000

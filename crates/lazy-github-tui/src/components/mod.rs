@@ -11,6 +11,7 @@ pub mod hatch;
 pub mod help_panel;
 pub mod info;
 pub mod link_map;
+pub mod list_editor;
 pub mod list_view;
 pub mod loading;
 pub mod markdown;

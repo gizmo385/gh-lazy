@@ -380,8 +380,8 @@ impl<T: PartialEq> SelectionList<T> {
     }
 }
 
-/// A `solid` border around `area` in `border`, its inside filled with `fill`.
-fn draw_solid_box(buf: &mut Buffer, area: Rect, border: Style, fill: Style) {
+/// A `solid` border around `area` in `border`, its inside filled with `fill`. The list editor's box shares it.
+pub(crate) fn draw_solid_box(buf: &mut Buffer, area: Rect, border: Style, fill: Style) {
     let (left, right, top, bottom) = (area.left(), area.right() - 1, area.top(), area.bottom() - 1);
     for y in top..=bottom {
         for x in left..=right {

@@ -471,6 +471,11 @@ pub trait Github: Clone + Send + Sync + 'static {
     fn reconfigure(&self, options: GhCliOptions) {
         let _ = options;
     }
+
+    /// Refresh from GitHub: every cached read from now on, while this mark is younger than its TTL, goes past gh's
+    /// cache once and replaces the cached copy. A read started before the call doesn't clear the mark, and a failed
+    /// one keeps it. With caching off there's nothing to mark. The default does nothing, for clients with no cache.
+    fn refresh_all(&self) {}
 }
 
 /// Why [`Github::pull_request_diff`] failed. `Display` is the line the Diff tab shows in place of the diff.
@@ -874,6 +879,9 @@ pub struct GhCliOptions {
     pub ttls: CacheTtls,
     /// How long each kind of `gh` call may run before it's killed.
     pub timeouts: GhTimeouts,
+    /// Where `gh` keeps the app's HTTP cache (`XDG_CACHE_HOME`, so entries go in `<cache_dir>/gh/`), or `None` for
+    /// gh's default, shared with other `gh` tools.
+    pub cache_dir: Option<PathBuf>,
 }
 
 impl Default for GhCliOptions {
@@ -884,6 +892,7 @@ impl Default for GhCliOptions {
             hostname: None,
             ttls: CacheTtls::default(),
             timeouts: GhTimeouts::default(),
+            cache_dir: None,
         }
     }
 }
@@ -897,8 +906,16 @@ impl From<&Config> for GhCliOptions {
             hostname: hostname_for_base_url(&config.api.base_url),
             ttls: CacheTtls::from(&config.cache),
             timeouts: GhTimeouts::from_env(),
+            cache_dir: http_cache_dir(&config.cache),
         }
     }
+}
+
+/// `<cache.cache_directory>/http`, where the app's `gh` HTTP cache lives, so `clear-cache` clears it. `None` only for
+/// `CacheSettings::default()`'s empty folder, which a loaded config never has.
+fn http_cache_dir(cache: &CacheSettings) -> Option<PathBuf> {
+    let dir = &cache.cache_directory;
+    (!dir.as_os_str().is_empty()).then(|| dir.join("http"))
 }
 
 /// The `--hostname` for an `api.base_url`: `None` for github.com (so gh keeps its default and `GH_HOST`), otherwise
@@ -947,6 +964,7 @@ impl Configured {
         Self {
             runner: gh::GhCli::new(options.program, options.hostname)
                 .with_timeouts(options.timeouts)
+                .with_cache_dir(options.cache_dir)
                 .with_cache_marks(Arc::clone(&cache_marks), retention),
             ttls,
             current_user,
@@ -1544,6 +1562,11 @@ impl Github for GhCli {
         *configured = Configured::new(options, current_user, cache_marks);
     }
 
+    fn refresh_all(&self) {
+        tracing::debug!("Marking every cached read stale");
+        self.runner().refresh_all();
+    }
+
     async fn check_auth(&self) -> Result<(), GhError> {
         self.runner().auth_status().await
     }
@@ -2029,6 +2052,25 @@ mod tests {
             }
         );
         assert_eq!(options.timeouts, GhTimeouts::default());
+        assert_eq!(options.cache_dir, None);
+    }
+
+    /// The app's `gh` HTTP cache goes in `<cache_directory>/http`, which `clear-cache` deletes
+    /// (`infrastructure.gh-cache-location`).
+    #[test]
+    fn options_from_config_keep_the_http_cache_in_the_cache_directory() {
+        let paths = crate::config::ConfigPaths::in_dir(PathBuf::from("config"));
+        let config = Config::default_in(&paths);
+        assert_eq!(
+            GhCliOptions::from(&config).cache_dir,
+            Some(PathBuf::from("config").join(".cache").join("http"))
+        );
+        let mut moved = config;
+        moved.cache.cache_directory = PathBuf::from("elsewhere");
+        assert_eq!(
+            GhCliOptions::from(&moved).cache_dir,
+            Some(PathBuf::from("elsewhere").join("http"))
+        );
     }
 
     /// A negative TTL, which Python loads and keeps, means no HTTP cache, as a TTL of 0 does.
@@ -2056,7 +2098,7 @@ mod tests {
         let query = IssueListQuery::first_page(IssueStateFilter::All, IssueOwnerFilter::All);
         assert_eq!(
             held.list_issues_request(&lazy_fixture(), query, None).cache,
-            Some(Duration::from_mins(10))
+            Some(Duration::from_mins(1))
         );
         let mut config = Config::default();
         config.cache.default_ttl = 7;
@@ -2115,7 +2157,7 @@ mod tests {
                 "-X",
                 "GET",
                 "--cache",
-                "86400s",
+                "3600s",
                 "--paginate",
                 "-H",
                 "Accept: application/vnd.github+json",
@@ -2519,7 +2561,7 @@ mod tests {
                 "-X",
                 "GET",
                 "--cache",
-                "600s",
+                "60s",
                 "-H",
                 "Accept: application/vnd.github+json",
                 "/repos/parity-bot/lazy-fixture/issues?state=all&page=1&per_page=30"
@@ -2541,7 +2583,7 @@ mod tests {
                 "-X",
                 "GET",
                 "--cache",
-                "600s",
+                "60s",
                 "-H",
                 "Accept: application/vnd.github+json",
                 "/repos/parity-bot/lazy-fixture/issues?state=open&page=2&per_page=30&creator=parity-bot"
@@ -2596,7 +2638,7 @@ mod tests {
                 "-X",
                 "GET",
                 "--cache",
-                "600s",
+                "60s",
                 "-H",
                 "Accept: application/vnd.github+json",
                 "/repos/parity-bot/lazy-fixture/pulls?state=all&sort=created&direction=desc&page=1&per_page=30"
@@ -2652,7 +2694,7 @@ mod tests {
                 "-X",
                 "GET",
                 "--cache",
-                "600s",
+                "60s",
                 "-H",
                 "Accept: application/vnd.github+json",
                 "/search/issues?q=is%3Apr+repo%3Aparity-bot%2Flazy-fixture+author%3A%40me&advanced_search=true&sort=created&order=desc&page=1&per_page=30"
@@ -2854,7 +2896,7 @@ mod tests {
                 "-X",
                 "GET",
                 "--cache",
-                "600s",
+                "60s",
                 "-H",
                 "Accept: application/vnd.github.raw",
                 "/repos/parity-bot/dotfiles/readme"
@@ -3024,7 +3066,7 @@ mod tests {
                 "-X",
                 "GET",
                 "--cache",
-                "600s",
+                "60s",
                 "-H",
                 "Accept: application/vnd.github+json",
                 "/repos/o/r"
@@ -3077,7 +3119,7 @@ mod tests {
                 "-X",
                 "GET",
                 "--cache",
-                "600s",
+                "60s",
                 "-H",
                 "Accept: application/vnd.github.diff",
                 "/repos/parity-bot/pr-details/pulls/5"
@@ -3261,7 +3303,7 @@ mod tests {
                 "-X",
                 "GET",
                 "--cache",
-                "600s",
+                "60s",
                 "-H",
                 "Accept: application/vnd.github+json",
                 "/repos/parity-bot/pr-details/pulls/5"
@@ -3323,7 +3365,7 @@ mod tests {
                 "-X",
                 "GET",
                 "--cache",
-                "600s",
+                "60s",
                 "-H",
                 "Accept: application/vnd.github+json",
                 "/repos/parity-bot/issue-fixture/issues/3"
@@ -3597,7 +3639,7 @@ mod tests {
                 "-X",
                 "GET",
                 "--cache",
-                "600s",
+                "60s",
                 "--paginate",
                 "-H",
                 "Accept: application/vnd.github+json",
@@ -4241,7 +4283,7 @@ mod tests {
                 "-X",
                 "GET",
                 "--cache",
-                "600s",
+                "60s",
                 "-H",
                 "Accept: application/vnd.github+json",
                 "/repos/parity-bot/pr-details/issues/5/reactions"
@@ -4428,7 +4470,7 @@ mod tests {
                     "-X",
                     "GET",
                     "--cache",
-                    "600s",
+                    "60s",
                     "-H",
                     "Accept: application/vnd.github+json",
                     &format!("/repos/parity-bot/pr-details/{path}/reactions?page=1&per_page=100"),

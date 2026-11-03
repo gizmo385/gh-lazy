@@ -365,9 +365,9 @@ impl Default for CacheSettings {
             auth_cache_duration: 24 * 60 * 60,
             auth_last_checked: None,
             cache_directory: PathBuf::new(),
-            default_ttl: 10 * 60,
-            list_repos_ttl: 24 * 60 * 60,
-            list_issues_ttl: 60 * 60,
+            default_ttl: Self::DEFAULT_TTLS.0,
+            list_repos_ttl: Self::DEFAULT_TTLS.1,
+            list_issues_ttl: Self::DEFAULT_TTLS.2,
             extra: ExtraFields::new(),
         }
     }
@@ -379,6 +379,27 @@ fn clamped_secs(secs: i64) -> Duration {
 }
 
 impl CacheSettings {
+    /// The default `(default_ttl, list_repos_ttl, list_issues_ttl)`, in seconds. Lower than Python's
+    /// ([`Self::LEGACY_TTLS`]), since `gh api --cache` honours them where Python's default backend revalidated after
+    /// GitHub's 60 s `max-age` (decision `cache-ttl-defaults-and-refresh`).
+    pub const DEFAULT_TTLS: (i64, i64, i64) = (60, 3_600, 60);
+
+    /// Python's defaults for `(default_ttl, list_repos_ttl, list_issues_ttl)`, which every Python-saved file holds,
+    /// since Python writes every field.
+    pub const LEGACY_TTLS: (i64, i64, i64) = (600, 86_400, 3_600);
+
+    /// Replaces the legacy trio ([`Self::LEGACY_TTLS`], all three fields) with [`Self::DEFAULT_TTLS`]. True when it
+    /// did. Any other combination, including one where only some fields hold a legacy value, is left as it is.
+    ///
+    /// [`Config::load`] runs it; the defaults and Settings edits never do.
+    pub fn migrate_legacy_ttls(&mut self) -> bool {
+        if (self.default_ttl, self.list_repos_ttl, self.list_issues_ttl) != Self::LEGACY_TTLS {
+            return false;
+        }
+        (self.default_ttl, self.list_repos_ttl, self.list_issues_ttl) = Self::DEFAULT_TTLS;
+        true
+    }
+
     /// [`Self::auth_cache_duration`] as a [`Duration`]. A negative value is zero: the auth check always runs.
     pub fn auth_cache_duration(&self) -> Duration {
         clamped_secs(self.auth_cache_duration)
@@ -515,11 +536,23 @@ impl Config {
     }
 
     /// Loads the config. A missing file gives the defaults and is not created; missing sections and fields take
-    /// their defaults.
+    /// their defaults. A file holding Python's old cache TTLs loads with today's
+    /// ([`CacheSettings::migrate_legacy_ttls`]), and the line saying so is logged at once; a caller that starts
+    /// logging only after loading uses [`Self::load_with_notes`] instead.
     pub fn load(paths: &ConfigPaths) -> Result<Self, ConfigError> {
+        let (config, notes) = Self::load_with_notes(paths)?;
+        notes.log();
+        Ok(config)
+    }
+
+    /// [`Self::load`], returning what loading changed in memory instead of logging it, for the caller to log once
+    /// logging is up.
+    pub fn load_with_notes(paths: &ConfigPaths) -> Result<(Self, LoadNotes), ConfigError> {
         let text = match std::fs::read_to_string(&paths.file) {
             Ok(text) => text,
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Self::default_in(paths)),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                return Ok((Self::default_in(paths), LoadNotes::default()));
+            }
             Err(source) => {
                 return Err(ConfigError::Read {
                     path: paths.file.clone(),
@@ -529,7 +562,10 @@ impl Config {
         };
         let mut config = Self::from_json(&text, &paths.file)?;
         config.resolve(paths);
-        Ok(config)
+        let notes = LoadNotes {
+            migrated_legacy_ttls: config.cache.migrate_legacy_ttls(),
+        };
+        Ok((config, notes))
     }
 
     fn from_json(text: &str, path: &Path) -> Result<Self, ConfigError> {
@@ -566,6 +602,33 @@ impl Config {
         }
         if self.core.logfile_path.as_os_str().is_empty() {
             self.core.logfile_path = paths.dir.join("lazy_github.log");
+        }
+    }
+}
+
+/// What [`Config::load_with_notes`] changed in memory while loading. Nothing is saved because of it; the next save
+/// writes the changed values.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[must_use = "log the notes once logging is up"]
+pub struct LoadNotes {
+    /// The file held Python's old cache TTLs, which loaded as today's defaults.
+    pub migrated_legacy_ttls: bool,
+}
+
+impl LoadNotes {
+    /// Logs one info line per change, for the command log.
+    pub fn log(self) {
+        if self.migrated_legacy_ttls {
+            let (old, new) = (CacheSettings::LEGACY_TTLS, CacheSettings::DEFAULT_TTLS);
+            tracing::info!(
+                "Cache TTLs were LazyGithub's old defaults ({}/{}/{} s); using the new defaults ({}/{}/{} s)",
+                old.0,
+                old.1,
+                old.2,
+                new.0,
+                new.1,
+                new.2
+            );
         }
     }
 }
@@ -696,7 +759,130 @@ mod tests {
         assert_eq!(cache.default_ttl(), Duration::ZERO);
         assert_eq!(cache.list_repos_ttl(), Duration::ZERO);
         assert_eq!(cache.list_issues_ttl(), Duration::ZERO);
-        assert_eq!(CacheSettings::default().default_ttl(), Duration::from_mins(10));
+        assert_eq!(CacheSettings::default().default_ttl(), Duration::from_mins(1));
+    }
+
+    /// Decision `cache-ttl-defaults-and-refresh` (D1 a on #404): lower than Python's 600 / 86400 / 3600.
+    #[test]
+    fn the_default_ttls_are_60_3600_and_60() {
+        let cache = CacheSettings::default();
+        assert_eq!(
+            (cache.default_ttl, cache.list_repos_ttl, cache.list_issues_ttl),
+            (60, 3600, 60)
+        );
+        assert_eq!(cache.list_repos_ttl(), Duration::from_hours(1));
+    }
+
+    /// `config.json` with `cache` holding `ttls` as `(default_ttl, list_repos_ttl, list_issues_ttl)` JSON values, and
+    /// one favorite so the file isn't all defaults.
+    fn cache_file(ttls: (&str, &str, &str)) -> String {
+        format!(
+            r#"{{"repositories": {{"favorites": ["o/r"]}}, "cache": {{"default_ttl": {}, "list_repos_ttl": {}, "list_issues_ttl": {}}}}}"#,
+            ttls.0, ttls.1, ttls.2
+        )
+    }
+
+    /// Writes `text` as the config file and loads it, with the notes and what loading logged.
+    fn load_file(text: &str) -> (tempfile::TempDir, ConfigPaths, Config, LoadNotes, String) {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = ConfigPaths::in_dir(dir.path().join("lazy-github"));
+        std::fs::create_dir_all(&paths.dir).unwrap();
+        std::fs::write(&paths.file, text).unwrap();
+        let (config, logged) = crate::test_log::logs(|| Config::load(&paths).unwrap());
+        let (_, notes) = Config::load_with_notes(&paths).unwrap();
+        (dir, paths, config, notes, logged)
+    }
+
+    fn ttls(config: &Config) -> (i64, i64, i64) {
+        (
+            config.cache.default_ttl,
+            config.cache.list_repos_ttl,
+            config.cache.list_issues_ttl,
+        )
+    }
+
+    const MIGRATED_LINE: &str =
+        "INFO Cache TTLs were LazyGithub's old defaults (600/86400/3600 s); using the new defaults (60/3600/60 s)";
+
+    #[test]
+    fn the_exact_legacy_trio_migrates_and_logs_once() {
+        let (_dir, _paths, config, notes, logged) = load_file(&cache_file(("600", "86400", "3600")));
+        assert_eq!(ttls(&config), (60, 3600, 60));
+        assert!(notes.migrated_legacy_ttls);
+        assert_eq!(logged, MIGRATED_LINE);
+    }
+
+    /// Python's Settings modal saved numbers as strings (Py bug B2).
+    #[test]
+    fn the_legacy_trio_as_strings_migrates() {
+        let (_dir, _paths, config, notes, logged) = load_file(&cache_file((r#""600""#, r#""86400""#, r#""3600""#)));
+        assert_eq!(ttls(&config), (60, 3600, 60));
+        assert!(notes.migrated_legacy_ttls);
+        assert_eq!(logged, MIGRATED_LINE);
+    }
+
+    #[test]
+    fn a_combination_one_off_the_legacy_trio_loads_as_written() {
+        for trio in [
+            ("600", "86400", "1800"),
+            ("300", "86400", "3600"),
+            ("600", "43200", "3600"),
+        ] {
+            let (_dir, _paths, config, notes, logged) = load_file(&cache_file(trio));
+            let expected = (
+                trio.0.parse().unwrap(),
+                trio.1.parse().unwrap(),
+                trio.2.parse().unwrap(),
+            );
+            assert_eq!(ttls(&config), expected, "{trio:?}");
+            assert!(!notes.migrated_legacy_ttls, "{trio:?}");
+            assert_eq!(logged, "", "{trio:?}");
+        }
+    }
+
+    #[test]
+    fn missing_ttls_load_as_the_new_defaults_without_a_log_line() {
+        let (_dir, _paths, config, notes, logged) = load_file(r#"{"cache": {"auth_cache_duration": 5}}"#);
+        assert_eq!(ttls(&config), (60, 3600, 60));
+        assert!(!notes.migrated_legacy_ttls);
+        assert_eq!(logged, "");
+    }
+
+    /// Only a load migrates: the trio typed in Settings stays until the next launch.
+    #[test]
+    fn migrate_legacy_ttls_changes_only_the_exact_trio() {
+        let mut cache = CacheSettings::default();
+        assert!(!cache.migrate_legacy_ttls());
+        assert_eq!(cache, CacheSettings::default());
+        (cache.default_ttl, cache.list_repos_ttl, cache.list_issues_ttl) = CacheSettings::LEGACY_TTLS;
+        assert!(cache.migrate_legacy_ttls());
+        assert_eq!(cache, CacheSettings::default());
+    }
+
+    #[test]
+    fn a_loaded_legacy_file_saves_the_new_values_and_loading_saves_nothing() {
+        let text = cache_file(("600", "86400", "3600"));
+        let (_dir, paths, config, ..) = load_file(&text);
+        assert_eq!(std::fs::read_to_string(&paths.file).unwrap(), text);
+        config.save(&paths).unwrap();
+        let saved: Value = serde_json::from_str(&std::fs::read_to_string(&paths.file).unwrap()).unwrap();
+        assert_eq!(saved["cache"]["default_ttl"], 60);
+        assert_eq!(saved["cache"]["list_repos_ttl"], 3600);
+        assert_eq!(saved["cache"]["list_issues_ttl"], 60);
+    }
+
+    #[test]
+    fn a_non_legacy_file_saves_byte_for_byte() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = ConfigPaths::in_dir(dir.path().join("lazy-github"));
+        let mut config = Config::default_in(&paths);
+        config.cache.default_ttl = 600;
+        config.cache.list_repos_ttl = 86_400;
+        config.cache.list_issues_ttl = 1_800;
+        config.save(&paths).unwrap();
+        let before = std::fs::read(&paths.file).unwrap();
+        Config::load(&paths).unwrap().save(&paths).unwrap();
+        assert_eq!(std::fs::read(&paths.file).unwrap(), before);
     }
 
     #[test]

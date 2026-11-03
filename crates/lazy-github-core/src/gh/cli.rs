@@ -108,6 +108,8 @@ struct GhCliInner {
     hostname: Option<String>,
     timeouts: GhTimeouts,
     marks: Arc<Mutex<CacheMarks>>,
+    /// `XDG_CACHE_HOME` for every `gh` run, so `--cache` entries land in the app's own folder.
+    cache_dir: Option<PathBuf>,
 }
 
 impl Default for GhCli {
@@ -126,6 +128,7 @@ impl GhCli {
                 hostname,
                 timeouts: GhTimeouts::default(),
                 marks: Arc::default(),
+                cache_dir: None,
             }),
         }
     }
@@ -135,6 +138,21 @@ impl GhCli {
     pub fn with_timeouts(mut self, timeouts: GhTimeouts) -> Self {
         Arc::make_mut(&mut self.inner).timeouts = timeouts;
         self
+    }
+
+    /// This client with every `gh` it runs keeping its HTTP cache under `dir` (as `XDG_CACHE_HOME`, so in
+    /// `<dir>/gh/`), or in gh's own default, shared with other `gh` tools, when `None`. go-gh reads `XDG_CACHE_HOME`
+    /// first on every OS. Nothing is created here; `gh` makes the folder on its first cached response.
+    #[must_use]
+    pub fn with_cache_dir(mut self, dir: Option<PathBuf>) -> Self {
+        Arc::make_mut(&mut self.inner).cache_dir = dir;
+        self
+    }
+
+    /// Marks every cached read stale, as of now: the next read of each, while the mark is younger than its TTL, goes
+    /// past gh's cache once.
+    pub fn refresh_all(&self) {
+        lock(&self.inner.marks).mark(&[CacheScope::All], Instant::now());
     }
 
     /// This client sharing `marks` with every other client made with them, so a reconfigured runner still refreshes
@@ -296,6 +314,9 @@ impl GhCli {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .kill_on_drop(true);
+        if let Some(dir) = &self.inner.cache_dir {
+            command.env("XDG_CACHE_HOME", dir);
+        }
         command
     }
 
@@ -453,6 +474,22 @@ mod tests {
         assert_eq!(env("GH_FORCE_TTY"), Some(None));
         assert_eq!(command.as_std().get_program(), "gh");
         assert_eq!(command.as_std().get_args().collect::<Vec<_>>(), ["api", "/user"]);
+        // No cache folder set: gh's own default, inherited.
+        assert_eq!(env("XDG_CACHE_HOME"), None);
+    }
+
+    #[test]
+    fn a_cache_dir_becomes_xdg_cache_home() {
+        let dir = PathBuf::from("cache").join("http");
+        let gh = GhCli::default().with_cache_dir(Some(dir.clone()));
+        let command = gh.command(&["api".into(), "/user".into()], false);
+        let xdg: Vec<_> = command
+            .as_std()
+            .get_envs()
+            .filter(|(key, _)| *key == "XDG_CACHE_HOME")
+            .map(|(_, value)| value)
+            .collect();
+        assert_eq!(xdg, [Some(dir.as_os_str())]);
     }
 
     #[test]

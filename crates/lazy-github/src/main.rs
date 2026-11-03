@@ -182,7 +182,9 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
     }
     // A broken config stops here, with the terminal untouched and nothing logged: running on the defaults would
     // overwrite the user's file on the next save.
-    let (paths, config) = match ConfigPaths::discover().and_then(|paths| Config::load(&paths).map(|c| (paths, c))) {
+    let loaded =
+        ConfigPaths::discover().and_then(|paths| Config::load_with_notes(&paths).map(|loaded| (paths, loaded)));
+    let (paths, (config, load_notes)) = match loaded {
         Ok(loaded) => loaded,
         Err(e) => {
             eprintln!("Error: {e}");
@@ -194,6 +196,8 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
     let logging = logging::init(LoggingOptions::from(&config.core));
     print_log_path_on_panic(config.core.logfile_path.clone());
     tracing::debug!("Starting LazyGithub {}", env!("CARGO_PKG_VERSION"));
+    // Only now, so the lines reach the command log.
+    load_notes.log();
     if let Some(pwd) = &original_pwd {
         tracing::debug!("Working directory: {}", pwd.display());
     }

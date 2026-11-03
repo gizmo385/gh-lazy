@@ -2,7 +2,7 @@
 //!
 //! `gh api --cache <ttl>` serves a stored response for as long as the TTL allows, so a read straight after a write
 //! (a new comment, a merge) could show the copy from before it. A write declares the reads it makes stale as
-//! [`CacheScope`]s; [`CacheMarks`] remembers them, and the runner refreshes the next matching read with
+//! [`CacheScope`]s, and Refresh from GitHub marks [`CacheScope::All`]; [`CacheMarks`] remembers them, and the runner refreshes the next matching read with
 //! `--cache 1ns`, which always fetches and overwrites gh's stored copy. Marks live in memory only.
 
 use std::collections::HashMap;
@@ -42,6 +42,7 @@ impl CacheScope {
     fn covers(&self, path: &str) -> bool {
         let path = path.trim_end_matches('/');
         match self {
+            CacheScope::All => true,
             CacheScope::Path(scope) => path.eq_ignore_ascii_case(scope.trim_end_matches('/')),
             CacheScope::Subtree(scope) => {
                 let scope = scope.trim_end_matches('/');
@@ -236,6 +237,50 @@ mod tests {
         assert!(!marks.needs_refresh(&comments, short, t0 + Duration::from_secs(31)));
         // A zero TTL never refreshes: the read isn't cached at all.
         assert!(!marks.needs_refresh(&comments, Duration::ZERO, t0));
+    }
+
+    #[test]
+    fn all_covers_every_path() {
+        let t0 = Instant::now();
+        let marks = marked(&[CacheScope::All], t0);
+        for path in ["/user/repos?page=1", "/repos/o/r/readme", "/notifications", "/", ""] {
+            assert!(marks.needs_refresh(&key(path), TTL, t0), "{path}");
+        }
+    }
+
+    #[test]
+    fn after_an_all_mark_each_key_refreshes_once() {
+        let t0 = Instant::now();
+        let mut marks = marked(&[CacheScope::All], t0);
+        let readme = key("/repos/o/r/readme");
+        let repos = key("/user/repos?page=1");
+        for read in [&readme, &repos] {
+            let t1 = t0 + Duration::from_secs(1);
+            assert!(marks.needs_refresh(read, TTL, t1));
+            marks.refreshed(read.clone(), t1);
+            assert!(!marks.needs_refresh(read, TTL, t1 + Duration::from_secs(1)));
+        }
+    }
+
+    #[test]
+    fn a_read_started_before_an_all_mark_does_not_clear_it() {
+        let t0 = Instant::now();
+        let readme = key("/repos/o/r/readme");
+        let t1 = t0 + Duration::from_secs(1);
+        let mut marks = marked(&[CacheScope::All], t1);
+        marks.refreshed(readme.clone(), t0);
+        assert!(marks.needs_refresh(&readme, TTL, t1 + Duration::from_secs(1)));
+    }
+
+    #[test]
+    fn an_all_mark_is_ignored_past_the_reads_ttl() {
+        let t0 = Instant::now();
+        let marks = marked(&[CacheScope::All], t0);
+        let readme = key("/repos/o/r/readme");
+        let short = Duration::from_mins(1);
+        assert!(marks.needs_refresh(&readme, short, t0 + Duration::from_secs(59)));
+        assert!(!marks.needs_refresh(&readme, short, t0 + short));
+        assert!(!marks.needs_refresh(&readme, Duration::ZERO, t0));
     }
 
     #[test]

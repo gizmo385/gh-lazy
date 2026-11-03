@@ -37,6 +37,8 @@ pub enum GithubCall {
     CheckAuth,
     /// [`Github::gh_version`].
     GhVersion,
+    /// [`Github::refresh_all`].
+    RefreshAll,
     /// [`Github::current_user`].
     CurrentUser,
     /// [`Github::list_repositories`].
@@ -885,6 +887,10 @@ impl FakeGithub {
 }
 
 impl Github for FakeGithub {
+    fn refresh_all(&self) {
+        drop(self.record(GithubCall::RefreshAll));
+    }
+
     async fn check_auth(&self) -> Result<(), GhError> {
         self.respond(GithubCall::CheckAuth, |state| match &state.auth_error {
             Some(error) => Err(duplicate(error)),
@@ -1688,6 +1694,14 @@ mod tests {
         assert_eq!(github.calls(), [GithubCall::GhVersion]);
         let github = FakeGithub::new().with_gh_version(Err(GhError::NotInstalled));
         assert!(matches!(github.gh_version().await, Err(GhError::NotInstalled)));
+    }
+
+    #[test]
+    fn refresh_all_is_recorded() {
+        let github = FakeGithub::new();
+        github.refresh_all();
+        github.clone().refresh_all();
+        assert_eq!(github.calls(), [GithubCall::RefreshAll, GithubCall::RefreshAll]);
     }
 
     #[tokio::test]

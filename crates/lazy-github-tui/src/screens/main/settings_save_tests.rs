@@ -414,13 +414,12 @@ fn turning_notifications_off_blanks_the_count() {
 }
 
 #[test]
-fn the_gh_options_are_rebuilt_only_when_a_ttl_or_the_host_changes() {
+fn the_gh_options_are_rebuilt_only_when_a_ttl_the_host_or_the_cache_directory_changes() {
     let mut app = TestApp::new(Config::default());
     // Fields `gh` doesn't use.
     let config = edited(&app, |c| {
         c.appearance.show_issues = false;
         c.cache.auth_cache_duration = 5;
-        c.cache.cache_directory = "/elsewhere".into();
     });
     let from = app.effects().len();
     save(&mut app, &config);
@@ -431,6 +430,8 @@ fn the_gh_options_are_rebuilt_only_when_a_ttl_or_the_host_changes() {
         |c| c.cache.list_repos_ttl = 7,
         |c| c.cache.list_issues_ttl = 7,
         |c| "https://ghe.example.com/api/v3".clone_into(&mut c.api.base_url),
+        // The app's gh HTTP cache lives in it (`infrastructure.gh-cache-location`).
+        |c| c.cache.cache_directory = "/elsewhere".into(),
     ] {
         let config = edited(&app, change);
         let from = app.effects().len();

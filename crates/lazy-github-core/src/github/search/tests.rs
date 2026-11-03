@@ -165,7 +165,7 @@ fn a_cached_sorted_query_sends_its_ttl_sort_and_order() {
             "--hostname",
             "ghe.example.com",
             "--cache",
-            "600s",
+            "60s",
             "-H",
             "Accept: application/vnd.github+json",
             "/search/issues?q=is%3Apr+repo%3Ao%2Fr+author%3A%40me&advanced_search=true&sort=created&order=desc&page=2&per_page=30"

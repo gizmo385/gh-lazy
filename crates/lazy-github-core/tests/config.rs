@@ -64,9 +64,43 @@ fn dt(s: &str) -> DateTime {
 #[test]
 fn default_matches_python_byte_for_byte() {
     let config = Config::default_in(&ConfigPaths::in_dir("/home/lazy/.config/lazy-github"));
-    // But for the default theme's name, renamed from Textual's (app-owned-themes D2).
-    let python = fixture("python-default.json").replace(r#""theme": "textual-dark""#, r#""theme": "dark""#);
+    // But for the default theme's name, renamed from Textual's (app-owned-themes D2), and the cache TTLs, lowered
+    // (cache-ttl-defaults-and-refresh D1 a).
+    let python =
+        with_rust_ttls(&fixture("python-default.json").replace(r#""theme": "textual-dark""#, r#""theme": "dark""#));
     assert_eq!(config.to_json_pretty(), python);
+}
+
+/// `text` with Python's default cache TTLs (600 / 86400 / 3600) swapped for Rust's (60 / 3600 / 60), every other
+/// byte unchanged (decision `cache-ttl-defaults-and-refresh`).
+fn with_rust_ttls(text: &str) -> String {
+    let swaps = [
+        (r#""default_ttl": 600,"#, r#""default_ttl": 60,"#),
+        (r#""list_repos_ttl": 86400,"#, r#""list_repos_ttl": 3600,"#),
+        (r#""list_issues_ttl": 3600"#, r#""list_issues_ttl": 60"#),
+    ];
+    swaps.into_iter().fold(text.to_owned(), |text, (python, rust)| {
+        assert!(text.contains(python), "{python} not in {text}");
+        text.replacen(python, rust, 1)
+    })
+}
+
+/// Python's default file, as every Python-saved config holds the old TTL trio: it loads as the new defaults, and a
+/// save writes them, every other byte as Python's (decision `cache-ttl-defaults-and-refresh`).
+#[cfg(unix)]
+#[test]
+fn pythons_default_file_round_trips_with_the_new_ttls() {
+    let (_tmp, paths, c) = load_ok(&fixture("python-default.json"));
+    assert_eq!(
+        (c.cache.default_ttl, c.cache.list_repos_ttl, c.cache.list_issues_ttl),
+        (60, 3600, 60)
+    );
+    c.save(&paths).unwrap();
+    // The file names the Python default's paths, so they load and save as written.
+    assert_eq!(
+        std::fs::read_to_string(&paths.file).unwrap(),
+        with_rust_ttls(&fixture("python-default.json"))
+    );
 }
 
 /// Any string loads as written and a save writes it back, so a renamed theme's old name (an alias the UI resolves)
@@ -569,11 +603,12 @@ fn python_settings_modal_output_loads() {
         "core": {"logfile_max_bytes": "5000000", "logfile_count": "5"}
     }"#;
     let (_tmp, paths, c) = load_ok(text);
+    // The old TTL trio, as strings, loads as the new defaults (cache-ttl-defaults-and-refresh D1 a).
     assert_eq!(c, Config::default_in(&paths));
     c.save(&paths).unwrap();
     let output: Value = serde_json::from_str(&std::fs::read_to_string(&paths.file).unwrap()).unwrap();
     assert_eq!(output["cache"]["auth_last_checked"], Value::Null);
-    assert_eq!(output["cache"]["default_ttl"], Value::from(600));
+    assert_eq!(output["cache"]["default_ttl"], Value::from(60));
 }
 
 #[test]

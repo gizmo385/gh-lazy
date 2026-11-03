@@ -155,6 +155,44 @@ fn debug_versions_problems(name: &str, stdout: &str) -> Vec<String> {
     }
 }
 
+/// The cache TTL fields, with Python's defaults and Rust's.
+const TTLS: [(&str, i64, i64); 3] = [
+    ("default_ttl", 600, 60),
+    ("list_repos_ttl", 86_400, 3_600),
+    ("list_issues_ttl", 3_600, 60),
+];
+
+/// `expected` (Python's output) with each TTL a config shows swapped to what Rust shows: a TTL missing from `config`
+/// is Rust's default, and Python's old trio loads as Rust's defaults (decision `cache-ttl-defaults-and-refresh`).
+/// Handles plain JSON and Rich's colored JSON.
+fn with_rust_ttls(expected: &str, config: &Value) -> String {
+    let set = |field: &str| config.pointer(&format!("/cache/{field}")).and_then(Value::as_i64);
+    let python: Vec<i64> = TTLS.iter().map(|&(field, old, _)| set(field).unwrap_or(old)).collect();
+    let legacy = python.iter().zip(TTLS).all(|(value, (_, old, _))| *value == old);
+    let mut out = expected.to_owned();
+    for (&(field, _, new), python) in TTLS.iter().zip(python) {
+        let rust = if legacy { new } else { set(field).unwrap_or(new) };
+        if rust == python {
+            continue;
+        }
+        let mut swaps = vec![
+            (format!("\"{field}\": {python},"), format!("\"{field}\": {rust},")),
+            (format!("\"{field}\": {python}\n"), format!("\"{field}\": {rust}\n")),
+        ];
+        // Rich's number style: bold cyan with colors, bold alone with `NO_COLOR`.
+        for style in ["\x1b[1;36m", "\x1b[1m"] {
+            swaps.push((
+                format!("\"{field}\"\x1b[0m: {style}{python}\x1b[0m"),
+                format!("\"{field}\"\x1b[0m: {style}{rust}\x1b[0m"),
+            ));
+        }
+        for (from, to) in swaps {
+            out = out.replace(&from, &to);
+        }
+    }
+    out
+}
+
 /// Runs one golden case and describes every way the result differs from Python's.
 fn check_case(case: &Value) -> Vec<String> {
     let name = case["name"].as_str().unwrap();
@@ -191,6 +229,7 @@ fn check_case(case: &Value) -> Vec<String> {
             .unwrap()
             .replace("<HOME>", home.path())
             .replace("<VERSION>", env!("CARGO_PKG_VERSION"));
+        let expected = with_rust_ttls(&expected, config);
         // Without a file, the default config shows: its theme is Python's `textual-dark`, renamed `dark`
         // (app-owned-themes D2). A file that names `textual-dark` keeps it, so only the default changes.
         if config.is_null() {
@@ -415,6 +454,28 @@ fn clear_cache_on_a_broken_config_is_one_error_line_and_no_prompt() {
     assert!(stderr.contains("`issues.state_filter`"), "{stderr:?}");
     assert_eq!(stderr.lines().count(), 1, "{stderr:?}");
     assert!(cache.is_dir());
+}
+
+/// The app's `gh` HTTP cache lives in `<cache_directory>/http` (`infrastructure.gh-cache-location`), so
+/// `clear-cache` clears it with the rest, as Python's did with hishel's cache.
+#[test]
+fn clear_cache_removes_the_apps_gh_http_cache() {
+    let home = TempHome::new("clear-cache-http");
+    let entry = home
+        .config_dir()
+        .join(".cache")
+        .join("http")
+        .join("gh")
+        .join("ab")
+        .join("cd")
+        .join("x");
+    std::fs::create_dir_all(entry.parent().unwrap()).unwrap();
+    std::fs::write(&entry, "cached").unwrap();
+    let output = home.run(&["clear-cache", "--no-confirm"]);
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    assert_eq!(text(&output.stdout), "Cache cleared\n");
+    assert!(!entry.exists());
+    assert!(!home.config_dir().join(".cache").exists());
 }
 
 #[test]

@@ -63,9 +63,9 @@ expression: "app.screen(160, 100)"
 │               █            "auth_cache_duration": 86400,                                                                                     █               │
 └───────────────█            "auth_last_checked": null,                                                                                        █               │
 ┌─ [3] Issues ──█            "cache_directory": "/home/user/.cache/lazy-github",                                                               █               │
-│ #  Status  Aut█            "default_ttl": 600,                                                                                               █               │
-│               █            "list_repos_ttl": 86400,                                                                                          █               │
-│               █            "list_issues_ttl": 3600                                                                                           █               │
+│ #  Status  Aut█            "default_ttl": 60,                                                                                                █               │
+│               █            "list_repos_ttl": 3600,                                                                                           █               │
+│               █            "list_issues_ttl": 60                                                                                             █               │
 │               █        },                                                                                                                    █               │
 │               █        "core": {                                                                                                             █               │
 │               █            "first_start": true,                                                                                              █               │

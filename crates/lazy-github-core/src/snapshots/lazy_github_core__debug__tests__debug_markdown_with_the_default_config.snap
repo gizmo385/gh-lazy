@@ -48,9 +48,9 @@ expression: "debug_markdown(&fixed_env(), &config)"
         "auth_cache_duration": 86400,
         "auth_last_checked": null,
         "cache_directory": "/home/lazy/.config/lazy-github/.cache",
-        "default_ttl": 600,
-        "list_repos_ttl": 86400,
-        "list_issues_ttl": 3600
+        "default_ttl": 60,
+        "list_repos_ttl": 3600,
+        "list_issues_ttl": 60
     },
     "core": {
         "first_start": true,

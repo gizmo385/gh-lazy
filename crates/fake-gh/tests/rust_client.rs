@@ -117,7 +117,7 @@ fn logged_in_auth_user_and_two_page_repositories() {
             "-X",
             "GET",
             "--cache",
-            "86400s",
+            "3600s",
             "--paginate",
             "-H",
             "Accept: application/vnd.github+json",
@@ -370,7 +370,7 @@ fn list_issues_fetches_one_page() {
             "-X",
             "GET",
             "--cache",
-            "600s",
+            "60s",
             "-H",
             "Accept: application/vnd.github+json",
             "/repos/parity-bot/lazy-fixture/issues?state=all&page=2&per_page=30"
@@ -417,7 +417,7 @@ fn list_pull_requests_lists_pulls() {
             "-X",
             "GET",
             "--cache",
-            "600s",
+            "60s",
             "-H",
             "Accept: application/vnd.github+json",
             "/repos/parity-bot/issues-first/pulls?state=all&sort=created&direction=desc&page=1&per_page=30"
@@ -555,7 +555,7 @@ fn repo_readmes_are_raw_and_verbatim() {
             "-X",
             "GET",
             "--cache",
-            "600s",
+            "60s",
             "-H",
             "Accept: application/vnd.github.raw",
             "/repos/parity-bot/hello-world/readme"
@@ -609,7 +609,7 @@ fn pull_request_diffs_through_gh_api() {
             "-X",
             "GET",
             "--cache",
-            "600s",
+            "60s",
             "-H",
             "Accept: application/vnd.github.diff",
             "/repos/parity-bot/pr-details/pulls/5"
@@ -677,7 +677,7 @@ fn pull_requests_are_cached_for_the_default_ttl() {
             "-X",
             "GET",
             "--cache",
-            "600s",
+            "60s",
             "-H",
             "Accept: application/vnd.github+json",
             "/repos/parity-bot/pr-details/pulls/5"

@@ -1,12 +1,13 @@
 //! After one of the app's own writes, the next read of each cached request it made stale goes past gh's cache with
-//! `--cache 1ns`, and later reads are cached again (#383, `infrastructure.gh-cache-after-write`).
+//! `--cache 1ns`, and later reads are cached again (#383, `infrastructure.gh-cache-after-write`). After
+//! `Github::refresh_all`, the same goes for every cached read (#406, `infrastructure.gh-cache-refresh-all`).
 //!
 //! Drives the real `GhCli` against fake-gh, which logs each request's `--cache` value but never caches, and reads the
 //! values back from its request log.
 //!
 //! fake-gh takes its fixtures and log from the environment, and the test may not set its own (`unsafe_code` is
-//! forbidden), so [`writes_refresh_what_they_make_stale`] runs [`in_child`] again in a child test process that has
-//! them.
+//! forbidden), so [`writes_refresh_what_they_make_stale`] and [`refresh_all_marks_every_cached_read_stale`] run
+//! [`in_child`] and [`refresh_all_in_child`] again in a child test process that has them.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -35,26 +36,36 @@ fn example(name: &str) -> PathBuf {
     path
 }
 
-fn fixtures() -> std::ffi::OsString {
+fn fixtures(sets: &[&str]) -> std::ffi::OsString {
     let parity = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../parity/fixtures");
-    std::env::join_paths(["pr-write", "pr-details", "base"].map(|set| parity.join(set))).unwrap()
+    std::env::join_paths(sets.iter().map(|set| parity.join(set))).unwrap()
 }
 
-#[test]
-fn writes_refresh_what_they_make_stale() {
-    let dir = std::env::temp_dir().join(format!("lazy-github-cache-refresh-{}", std::process::id()));
+/// Runs the ignored test `name` in a child test process, with fake-gh reading `sets` and logging to a fresh file.
+fn run_child(name: &str, sets: &[&str]) {
+    let dir = std::env::temp_dir().join(format!("lazy-github-cache-refresh-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let log = dir.join("requests.jsonl");
     let status = Command::new(std::env::current_exe().unwrap())
-        .args(["in_child", "--exact", "--ignored", "--nocapture", "--test-threads=1"])
+        .args([name, "--exact", "--ignored", "--nocapture", "--test-threads=1"])
         .env(CHILD, "1")
-        .env("FAKE_GH_FIXTURES", fixtures())
+        .env("FAKE_GH_FIXTURES", fixtures(sets))
         .env("FAKE_GH_LOG", &log)
         .status()
         .unwrap();
     let _ = std::fs::remove_dir_all(&dir);
     assert!(status.success(), "the child test failed: {status}");
+}
+
+#[test]
+fn writes_refresh_what_they_make_stale() {
+    run_child("in_child", &["pr-write", "pr-details", "base"]);
+}
+
+#[test]
+fn refresh_all_marks_every_cached_read_stale() {
+    run_child("refresh_all_in_child", &["pr-details", "base"]);
 }
 
 fn options(default_ttl: u64) -> GhCliOptions {
@@ -68,6 +79,7 @@ fn options(default_ttl: u64) -> GhCliOptions {
             list_issues: ttl,
         },
         timeouts: GhTimeouts::default(),
+        cache_dir: None,
     }
 }
 
@@ -163,4 +175,42 @@ async fn in_child() {
     gh.issue_comments(issue).await.unwrap();
     gh.issue_comments(issue).await.unwrap();
     assert_eq!(caches(start, COMMENTS), ["1ns", "300s"]);
+}
+
+#[tokio::test]
+#[ignore = "run by refresh_all_marks_every_cached_read_stale, with fake-gh's environment"]
+async fn refresh_all_in_child() {
+    if std::env::var_os(CHILD).is_none() {
+        return;
+    }
+    let gh = GhCli::new(options(60));
+    let (repo, _) = setup(&gh).await;
+
+    // 1. Cached as usual.
+    let start = log_lines().len();
+    gh.repo_readme(&repo.full_name).await.unwrap();
+    assert_eq!(caches(start, README), ["60s"]);
+
+    // 2, 3. After the mark, the next read goes past the cache.
+    gh.refresh_all();
+    let start = log_lines().len();
+    gh.repo_readme(&repo.full_name).await.unwrap();
+    assert_eq!(caches(start, README), ["1ns"]);
+
+    // 4. Once.
+    let start = log_lines().len();
+    gh.repo_readme(&repo.full_name).await.unwrap();
+    assert_eq!(caches(start, README), ["60s"]);
+
+    // 5. A read never made before is covered too.
+    let start = log_lines().len();
+    gh.pull_request(&repo, 4).await.unwrap();
+    assert_eq!(caches(start, PR_4), ["1ns"]);
+
+    // 6. With caching off, nothing is cached and nothing refreshes.
+    gh.reconfigure(options(0));
+    gh.refresh_all();
+    let start = log_lines().len();
+    gh.repo_readme(&repo.full_name).await.unwrap();
+    assert_eq!(caches(start, README), ["-"]);
 }

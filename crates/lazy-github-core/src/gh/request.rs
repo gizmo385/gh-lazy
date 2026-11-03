@@ -65,8 +65,8 @@ impl Accept {
     }
 }
 
-/// Cached reads that a write makes stale, declared on the write's [`GhRequest::stales`]. The next read in scope
-/// refreshes `gh`'s cached copy (see [`GhRequest::refresh`]).
+/// Cached reads that a write makes stale, declared on the write's [`GhRequest::stales`], or that Refresh from GitHub
+/// makes stale ([`CacheScope::All`]). The next read in scope refreshes `gh`'s cached copy (see [`GhRequest::refresh`]).
 ///
 /// Paths compare ASCII case-insensitively, since GitHub treats owner and repo names so.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -76,6 +76,8 @@ pub enum CacheScope {
     Subtree(String),
     /// This path with any query, nothing under it: `/repos/o/r/issues`, the shared issue and pull request list.
     Path(String),
+    /// Every path: Refresh from GitHub.
+    All,
 }
 
 /// One GitHub REST API request, run through `gh api`.

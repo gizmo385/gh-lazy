@@ -3,9 +3,10 @@
 - Decision: A "Search issues and pull requests" modal sends a query in GitHub's search syntax to `GET /search/issues`
   (with `advanced_search=true`, so `AND`, `OR` and parentheses work as on github.com), scoped by a select (the
   selected repo by default) unless the query names a scope itself, and lists the hits from every page GitHub returns,
-  up to its 1,000-result cap. `enter` on a hit opens it in Details, selecting its repo first when it's another. It
-  opens with `s` on the Pull Requests and Issues tables (`search.open`, a Rust-only id) and from the command palette. Recent queries are kept, and saved queries
-  live in a new `search.saved_queries` config field. The Python app has no search beyond the `/` box, which only
+  up to its 1,000-result cap. `enter` on a hit opens it in Details after selecting its repo, even when it's the
+  selected one (#405 D2 a), as a chosen notification does. It opens with `s` on the Pull Requests and Issues tables
+  (`search.open`, a Rust-only id) and from the command palette, and keeps its query, scope and results for the
+  session. Recent queries are kept, and saved queries live in a new `search.saved_queries` config field. The Python app has no search beyond the `/` box, which only
   filters the rows already loaded. A rate limit on GitHub's separate search bucket (30 requests a minute) shows its
   own toast, "GitHub search rate limit reached. Try again at <HH:MM>", once per search window, and doesn't pause
   the notifications poll, which uses the core bucket.
@@ -15,7 +16,9 @@
   `ctrl+s` saves, both rebindable Rust-only ids), D5 b (opening a hit from another repo switches the selected repo,
   sharing the code path with notifications, #405). Proposed by the design agent, 2026-11-01
 - Link: #386 (parent; #393, #394, #395), #44 and #59 (the Python-era requests), #177 (M5 improvements, Chris 2026-10-30)
-- Rows: `toasts.rate-limited`, `toasts.search-rate-limited`
+- Rows: `toasts.rate-limited`, `toasts.search-rate-limited`, `modals.search`, `modals.search-scope`,
+  `modals.search-results`, `modals.search-states`, `modals.search-open-hit`, `modals.search-session`,
+  `keybindings.search-open`, `command-palette.search`
 
 New behavior, not tied to the Python app (an M5 improvement). It adds new matrix rows instead of changing
 existing ones, apart from the rate-limit split on `toasts.rate-limited`. The sub-issues add the rows and list them

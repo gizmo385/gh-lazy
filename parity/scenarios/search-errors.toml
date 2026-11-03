@@ -1,0 +1,116 @@
+version = 1
+description = "Search modal errors: an invalid date shows GitHub's 422 message, a 500 says the search failed, a search-bucket 403 says when to try again with its own toast, and an empty query with all of GitHub sends nothing (#394)"
+# Rust-only: Python has no search (decision search-issues-and-prs). The modal is loose text, checked with [expect].
+gate = true
+apps = ["rust"]
+parity_rows = ["modals.search-states", "toasts.search-rate-limited"]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["search", "pr-details", "issue-details", "base"]
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["s"]
+
+[[step]]
+wait = { text = "Type a query and press enter" }
+
+[[step]]
+keys = ["ctrl+u"]
+
+[[step]]
+type = "updated:>notadate"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "The search contains an invalid date", timeout_ms = 15000 }
+
+[[step]]
+capture = "invalid"
+
+[[step]]
+keys = ["ctrl+u"]
+
+[[step]]
+type = "boom"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Search failed:", timeout_ms = 15000 }
+
+[[step]]
+capture = "failed"
+
+[[step]]
+keys = ["ctrl+u"]
+
+[[step]]
+type = "rate limited"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Search rate limit reached", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "GitHub search rate limit" }
+
+[[step]]
+capture = "rate-limited"
+
+# An empty query: with the repo scope it would search the repo, so pick all of GitHub first. A search was sent, but
+# the text is empty, so the pick sends nothing.
+[[step]]
+keys = ["ctrl+u", "tab", "enter"]
+
+[[step]]
+wait = { text = "All of GitHub" }
+
+[[step]]
+keys = ["end", "enter", "shift+tab", "enter"]
+
+[[step]]
+wait = { text = "Type a query to search" }
+
+[[step]]
+capture = "empty"
+
+[expect.invalid]
+contains = ["The search contains an invalid date"]
+not_contains = ["Search failed"]
+
+[expect.failed]
+contains = ["Search failed: GitHub API request failed (HTTP 500)"]
+
+[expect.rate-limited]
+# TZ is UTC in the parity environment, and the limit lifts at 2100-01-01 00:00.
+contains = [
+    "Search rate limit reached. Try again at 00:00",
+    # The toast wraps at 100x30.
+    "GitHub search rate limit",
+]
+# The core bucket's toast, which would pause the notifications poll, isn't shown.
+not_contains = ["GitHub API rate limit reached"]
+
+[expect.empty]
+contains = ["Type a query to search", "All of GitHub"]

@@ -1,0 +1,436 @@
+version = 1
+description = "Search modal: s on the PR table opens it prefilled with is:pr is:open and the repo scope; enter lists the hits; enter on a hit opens it in Details; s restores the session; the palette opens it too, and a cross-repo search with all of GitHub pages to the 1,000-result cap (#394)"
+# Rust-only: Python has no search beyond the tables' / box (decision search-issues-and-prs). The modal's tall frame
+# isn't a box to the extractor, so its content is loose text, checked with [expect].
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "modals.search",
+    "modals.search-scope",
+    "modals.search-results",
+    "modals.search-open-hit",
+    "modals.search-session",
+    "keybindings.search-open",
+    "command-palette.search",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+# search has the hits; pr-details lists parity-bot/pr-details first and has PR 5; issue-details and base the rest.
+fixtures = ["search", "pr-details", "issue-details", "base"]
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/pr-details", timeout_ms = 15000 }
+
+[[step]]
+# Cut at 100x30.
+wait = { text = "Add a curso", timeout_ms = 15000 }
+
+[[step]]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+capture = "issues-footer"
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+capture = "prs-footer"
+
+[[step]]
+keys = ["s"]
+
+[[step]]
+wait = { text = "Type a query and press enter" }
+
+[[step]]
+capture = "opened"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "3 results", timeout_ms = 15000 }
+
+[[step]]
+capture = "results"
+
+# PR 5 is the second hit.
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait = { gone = "3 results" }
+
+[[step]]
+wait = { text = "PR #5", timeout_ms = 15000 }
+
+[[step]]
+capture = "opened-pr"
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["s"]
+
+[[step]]
+wait = { text = "3 results" }
+
+[[step]]
+capture = "restored"
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Search issues and pull requests" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "search issues"
+
+[[step]]
+wait = { text = "Search GitHub's issues and pull requests" }
+
+[[step]]
+keys = ["enter"]
+
+# The palette restores the session, with the table focused: back to the input, replace the text, then pick all of
+# GitHub, which searches again at once since a search was sent.
+[[step]]
+wait = { text = "3 results" }
+
+[[step]]
+keys = ["shift+tab", "shift+tab", "ctrl+u"]
+
+[[step]]
+type = "is:pr author:@me"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait = { text = "All of GitHub" }
+
+[[step]]
+keys = ["end", "enter"]
+
+[[step]]
+wait = { text = "1,234 results", timeout_ms = 15000 }
+
+[[step]]
+capture = "cross-repo"
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 50" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "2", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 100" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "3", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 150" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "4", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 200" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "5", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 250" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "6", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 300" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "7", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 350" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "8", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 400" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "9", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 450" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "10", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 500" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "11", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 550" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "12", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 600" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "13", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 650" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "14", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 700" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "15", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 750" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "16", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 800" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "17", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 850" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "18", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 900" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "19", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+wait = { text = "Search result 950" }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "20", per_page = "50", q = "is:pr author:@me" } }, timeout_ms = 15000 }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+keys = ["G"]
+
+[[step]]
+# Result 1000 is number 1001; its title is cut at 100x30.
+wait = { text = " 1001  PR" }
+
+[[step]]
+capture = "paged"
+
+[expect.issues-footer]
+contains = ["s Search GitHub"]
+
+[expect.prs-footer]
+contains = ["s Search GitHub"]
+
+[expect.opened]
+contains = [
+    "Search issues and pull requests",
+    "Scope:",
+    "This repo (parity-bot/pr-details)",
+    "is:pr is:open",
+    "is:pr is:issue is:open is:merged",
+    "Type a query and press enter",
+]
+footer = ["esc Close"]
+
+[expect.results]
+contains = [
+    "3 results",
+    "#  Type  Status  Author",
+    "Clamp the cursor to the last line",
+    "Add a cursor to the viewer",
+    "Try a faster parser",
+]
+# No Repo column for the repo scope.
+not_contains = ["Repo   ", "Searching"]
+footer = ["/ Search", "q Close"]
+
+[expect.opened-pr]
+# The tab strip has focus.
+focused = ["[5] PR #5 Details"]
+contains = ["Current repo: parity-bot/pr-details", "PR #5", "Overview"]
+not_contains = ["Search issues and pull requests", "Could not open"]
+
+[expect.restored]
+contains = ["3 results", "Add a cursor to the viewer", "is:pr is:open"]
+footer = ["/ Search", "q Close"]
+
+[expect.cross-repo]
+contains = [
+    "All of GitHub",
+    "is:pr author:@me",
+    "1,234 results · GitHub returns the first 1,000",
+    "Repo",
+    "parity-bot/issue-fixture",
+    "Search result 1 ",
+]
+footer = ["/ Search", "q Close"]
+
+[expect.paged]
+contains = ["1,234 results · GitHub returns the first 1,000", " 1001  PR"]
+not_contains = ["loading more failed"]

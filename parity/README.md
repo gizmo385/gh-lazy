@@ -514,14 +514,17 @@ page and re-run the generator; an xtask test fails when the committed mirrors di
   .../workflows/7000002/dispatches` for `release` (204) and `.../workflows/7000001/dispatches` for `main` (422),
   `POST .../runs/5000042/rerun` and `.../rerun-failed-jobs` (201), and `GET .../runs/5000042` (for Rust's refetch;
   Python never asks). Hand-written.
-- `search/`: `GET /search/issues` pages (`advanced_search=true`, `per_page=50`), for the Rust-only `search-*`
-  scenarios (#386; the first entries from #393, #394 adds the rest). `q=repo:parity-bot/pr-details (is:pr is:open)`
-  page 1: pr-details' open PRs 9, 5 and 2 (a draft), `total_count` 3. `q=is:pr author:@me`: page 1 with 50 hits
-  across `parity-bot/pr-details` and `parity-bot/issue-fixture` (`total_count` 1234, a `Link` with `rel="next"`),
-  page 20 with 7, and page 21 the 422 "Only the first 1000 search results are available".
-  `q=repo:parity-bot/pr-details (rate limited)` page 1: a 403 on the search bucket (`X-RateLimit-Resource: search`,
-  exhausted until 2100). Items as GitHub sends them (`search_type`, `score`, `draft`, `pull_request.merged_at`).
-  Hand-written: nothing is recorded, so user-scoped search can't leak a real account's data.
+- `search/`: `GET /search/issues` pages (`advanced_search=true`, `per_page=50`), for the Rust-only `search-modal`
+  and `search-errors` scenarios (#386; the first entries from #393, the rest from #394). Listed before `pr-details`,
+  `issue-details` and `base`. `q=repo:parity-bot/pr-details (is:pr is:open)` page 1: pr-details' open PRs 9, 5 and 2
+  (a draft), `total_count` 3. `q=is:pr author:@me`: pages 1 to 20 with 50 hits each, "Search result 1" to "Search
+  result 1000", numbered 2000 down, odd ones in `parity-bot/pr-details` and even ones in `parity-bot/issue-fixture`
+  (`total_count` 1234, a `Link` on each), so paging ends at the 1,000-result cap; page 21 is the 422 "Only the first
+  1000 search results are available". Errors, each page 1 of `q=repo:parity-bot/pr-details (<text>)`:
+  `(updated:>notadate)` a 422 "Validation Failed" with GitHub's invalid-date message, `(boom)` a 500 "Server Error",
+  and `(rate limited)` a 403 on the search bucket (`X-RateLimit-Resource: search`, exhausted until 2100). Items as
+  GitHub sends them (`search_type`, `score`, `draft`, `pull_request.merged_at`). Hand-written: nothing is recorded,
+  so user-scoped search can't leak a real account's data.
 
 ## Seeds
 

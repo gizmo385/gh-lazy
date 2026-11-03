@@ -956,7 +956,7 @@ async fn child_search_issues() {
         })
         .await
         .unwrap();
-    assert_eq!(last.items.len(), 7);
+    assert_eq!(last.items.len(), 50);
     assert!(last.is_last(20, mine.per_page));
     assert!(matches!(
         gh.search_issues(&SearchQuery {

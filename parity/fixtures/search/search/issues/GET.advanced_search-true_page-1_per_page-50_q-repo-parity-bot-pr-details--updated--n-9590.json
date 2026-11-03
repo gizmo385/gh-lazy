@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/search/issues",
+    "query": {
+      "advanced_search": "true",
+      "page": "1",
+      "per_page": "50",
+      "q": "repo:parity-bot/pr-details (updated:>notadate)"
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "message": "Validation Failed",
+      "errors": [
+        {
+          "message": "The search contains an invalid date: \"notadate\". Dates must be formatted as YYYY-MM-DD.",
+          "resource": "Search",
+          "field": "q",
+          "code": "invalid"
+        }
+      ],
+      "documentation_url": "https://docs.github.com/v3/search/",
+      "status": "422"
+    }
+  },
+  "note": "hand-written for search: a query with an invalid date, which GitHub answers 422 Validation Failed"
+}

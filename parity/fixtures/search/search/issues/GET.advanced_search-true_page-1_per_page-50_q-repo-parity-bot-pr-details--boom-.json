@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/search/issues",
+    "query": {
+      "advanced_search": "true",
+      "page": "1",
+      "per_page": "50",
+      "q": "repo:parity-bot/pr-details (boom)"
+    }
+  },
+  "response": {
+    "status": 500,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "message": "Server Error"
+    }
+  },
+  "note": "hand-written for search: a query GitHub fails with a 500"
+}

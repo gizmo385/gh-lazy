@@ -1,7 +1,8 @@
 //! Binding ids and the registry of their defaults.
 //!
-//! The registry is `LazyGithubBindings.all()` from `lazy_github/lib/bindings.py`, in that order, followed by the
-//! Textual built-ins the app relies on. `tests/registry.rs` checks it against a dump of the Python registry.
+//! The registry is `LazyGithubBindings.all()` from `lazy_github/lib/bindings.py`, in that order, with the Rust-only
+//! rebindable ids for new behavior after Python's ids of their area (PLAN §5), followed by the internal editor keys
+//! and the Textual built-ins the app relies on. `tests/registry.rs` checks it against a dump of the Python registry.
 
 /// What a binding is: its default keys and how the footer and help panel show it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -166,6 +167,15 @@ registry! {
     DiffNextHunk("diff.next_hunk", "J", "next_hunk", "Next Hunk");
     DiffPreviousHunk("diff.previous_hunk", "K", "previous_hunk", "Previous Hunk");
     DiffFilterFiles("diff.filter_files", "/", "focus_file_filter", "Filter Files");
+    // Rust-only, after Python's diff ids (decision diff-file-navigation): rebindable like them, though Python has no
+    // such keys and ignores an override of them. `diff.toggle` and `diff.fold_all` are relabeled by the body
+    // ("Unfold Files" once every shown file is folded).
+    DiffNextFile("diff.next_file", "]", "next_file", "Next File");
+    DiffPreviousFile("diff.previous_file", "[", "previous_file", "Previous File");
+    DiffToggle("diff.toggle", "enter", "toggle_fold", "Fold");
+    DiffFoldAll("diff.fold_all", "z", "fold_all", "Fold Files");
+    DiffFirstLine("diff.first_line", "g", "first_line", "First line").hidden();
+    DiffLastLine("diff.last_line", "G", "last_line", "Last line").hidden();
     // Shown, and active only while `notifications.enabled` (Py bug B7: Python decides `show` once at import). The
     // component that declares it hides it through `Component::binding_state`.
     NotificationsOpen("notifications.open", "ctrl+n", "view_notifications", "Notifications")

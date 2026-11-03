@@ -94,6 +94,12 @@ pub const BINDING_GROUPS: &[BindingGroup] = {
                 B::DiffNextHunk,
                 B::DiffPreviousHunk,
                 B::DiffFilterFiles,
+                B::DiffNextFile,
+                B::DiffPreviousFile,
+                B::DiffToggle,
+                B::DiffFoldAll,
+                B::DiffFirstLine,
+                B::DiffLastLine,
             ],
         },
         BindingGroup {
@@ -137,7 +143,8 @@ mod tests {
             let expected = usize::from(id.config_id().is_some());
             assert_eq!(count, expected, "{} is in {count} groups", id.def().name);
         }
-        assert_eq!(grouped.len(), 59);
+        // Python's 59, and the six Rust-only diff ids (decision diff-file-navigation).
+        assert_eq!(grouped.len(), 65);
         assert!(grouped.iter().all(|id| !id.def().name.starts_with("textual.")));
     }
 }

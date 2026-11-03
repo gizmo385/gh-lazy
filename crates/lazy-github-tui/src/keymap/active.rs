@@ -15,6 +15,8 @@ pub struct ActiveBinding {
     pub key: String,
     /// False for a binding shown dimmed ([`BindingState::Disabled`]).
     pub enabled: bool,
+    /// The label its owner gives it for now ([`BindingState::Relabeled`]).
+    pub relabel: Option<&'static str>,
 }
 
 impl ActiveBinding {
@@ -23,14 +25,17 @@ impl ActiveBinding {
         self.id.def()
     }
 
-    /// What the footer and help panel call it: the link's label for it, else its description.
+    /// What the footer and help panel call it: the owner's label for now, else the link's label for it, else its
+    /// description.
     pub fn label(&self) -> &'static str {
-        self.owner.binding_label(self.id).unwrap_or(self.def().description)
+        self.relabel
+            .or_else(|| self.owner.binding_label(self.id))
+            .unwrap_or(self.def().description)
     }
 
-    /// Whether the footer lists it: a binding with a description, or one its link labels.
+    /// Whether the footer lists it: a binding with a description, or one its link or owner labels.
     pub fn shown(&self) -> bool {
-        self.def().show || self.owner.binding_label(self.id).is_some()
+        self.def().show || self.relabel.is_some() || self.owner.binding_label(self.id).is_some()
     }
 }
 
@@ -61,7 +66,11 @@ pub fn active_bindings(
                 owner: link.owner,
                 id,
                 key: keymap.key_display(id, token),
-                enabled: binding_state == BindingState::Enabled,
+                enabled: binding_state != BindingState::Disabled,
+                relabel: match binding_state {
+                    BindingState::Relabeled(label) => Some(label),
+                    BindingState::Enabled | BindingState::Disabled | BindingState::Hidden => None,
+                },
             };
             match claimed.iter().position(|&taken| taken == spec) {
                 Some(i) if id.is_priority() && !active[i].id.is_priority() => active[i] = binding,
@@ -206,6 +215,24 @@ mod tests {
         assert_eq!(active[1].owner, Owner::App);
         assert!(!active[0].enabled);
         assert!(active[1].enabled);
+    }
+
+    #[test]
+    fn relabeled_is_active_and_shown_under_its_label() {
+        let chain = [link(
+            Owner::DiffBody,
+            &[BindingId::DiffFoldAll, BindingId::DiffCursorDown],
+        )];
+        let state = |_: Owner, id: BindingId| match id {
+            BindingId::DiffFoldAll => BindingState::Relabeled("Unfold Files"),
+            _ => BindingState::Enabled,
+        };
+        let active = active_bindings(&chain, &Keymap::defaults(), state);
+        assert_eq!(active[0].label(), "Unfold Files");
+        assert!(active[0].enabled && active[0].shown());
+        // Without a relabel, the link's label still applies.
+        assert_eq!(active[1].label(), "Line down");
+        assert_eq!(active[1].relabel, None);
     }
 
     #[test]

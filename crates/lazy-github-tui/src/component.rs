@@ -87,6 +87,9 @@ pub enum BindingState {
     Disabled,
     /// Not shown.
     Hidden,
+    /// Shown and active under this label instead of its usual one, for a key whose effect flips with the state (the
+    /// diff body's `z`: "Fold Files", or "Unfold Files" once every file is folded).
+    Relabeled(&'static str),
 }
 
 /// One link in the binding chain: a component and the bindings it declares. Chains are innermost first.

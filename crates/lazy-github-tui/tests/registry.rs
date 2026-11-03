@@ -21,6 +21,17 @@ const SHOW_DIFFS: &[&str] = &[
     "notifications.open",
 ];
 
+/// Rebindable ids Python doesn't have, for new behavior (PLAN §5, decision `diff-file-navigation`): they sit after
+/// Python's ids of their area and aren't in `bindings.json`.
+const RUST_ONLY_IDS: &[&str] = &[
+    "diff.next_file",
+    "diff.previous_file",
+    "diff.toggle",
+    "diff.fold_all",
+    "diff.first_line",
+    "diff.last_line",
+];
+
 fn python_bindings() -> Vec<Value> {
     let json = include_str!("fixtures/bindings.json");
     serde_json::from_str(json).expect("bindings.json is a JSON array")
@@ -73,7 +84,7 @@ fn there_are_no_extra_ids() {
         let def = id.def();
         let name = def.name;
         assert!(
-            name.starts_with("textual.") || def.internal || python.contains(name),
+            name.starts_with("textual.") || def.internal || python.contains(name) || RUST_ONLY_IDS.contains(&name),
             "{name} isn't a Python binding id"
         );
     }
@@ -85,8 +96,28 @@ fn the_registry_keeps_python_order() {
         .iter()
         .map(|binding| text(binding, "id").to_owned())
         .collect();
-    let rust: Vec<&str> = BindingId::ALL.iter().filter_map(|id| id.config_id()).collect();
+    let rust: Vec<&str> = BindingId::ALL
+        .iter()
+        .filter_map(|id| id.config_id())
+        .filter(|id| !RUST_ONLY_IDS.contains(id))
+        .collect();
     assert_eq!(rust, python);
+}
+
+#[test]
+fn rust_only_ids_are_rebindable_and_unknown_to_python() {
+    let python: HashSet<String> = python_bindings()
+        .iter()
+        .map(|binding| text(binding, "id").to_owned())
+        .collect();
+    for &name in RUST_ONLY_IDS {
+        assert!(
+            !python.contains(name),
+            "{name} is a Python id: drop it from RUST_ONLY_IDS"
+        );
+        let id = BindingId::from_config_id(name).unwrap_or_else(|| panic!("{name} isn't rebindable"));
+        assert!(!id.def().internal, "{name}");
+    }
 }
 
 /// Regenerates `bindings.json`, `contexts.json` and `keys.json` with the Python app and checks the committed copies

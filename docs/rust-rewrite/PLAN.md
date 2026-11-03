@@ -99,7 +99,11 @@ modal is a component with `handle_key`, `update` and `render`. Modals live on a 
 
 **Keymap.** Every binding is a `BindingId` (e.g. `app.quit`, `pull_request.merge`) with the same string ids and default
 keys as `lazy_github/lib/bindings.py`, so existing `bindings.overrides` in config keep working. The footer and help panel
-render from the same table.
+render from the same table. New behavior may add Rust-only ids, in the same `<area>.<name>` form and placed after
+Python's ids of their area, each with an intentional-diff matrix row (`tests/registry.rs` lists them in
+`RUST_ONLY_IDS`). Across the app, navigation keys users may want to change get such rebindable ids (the diff's
+`diff.next_file`, `diff.fold_all`, ...), while editor-internal keys stay fixed under internal ids that
+`bindings.overrides` can't name (`BindingDef::internal()`, as the Settings Key Bindings editor's keys).
 
 **GitHub access.** `core` defines a `Github` trait (async methods such as `list_pull_requests`, `merge_pull_request`).
 The real impl, `GhCli`, shells out to `gh api` with `-i` for status and headers, `--cache` for TTLs, `--paginate` where

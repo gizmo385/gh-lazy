@@ -141,7 +141,8 @@ mod tests {
     #[test]
     fn rows_come_in_group_order() {
         let rows = KeyRow::all(&IndexMap::new());
-        assert_eq!(rows.len(), 59);
+        // Python's 59 ids and the six Rust-only diff ids.
+        assert_eq!(rows.len(), 65);
         assert_eq!(rows[0], (0, row(BindingId::AppQuit, "q")));
         assert_eq!(rows[3].1.id, BindingId::AppOpenHelp);
         assert_eq!(

@@ -22,7 +22,7 @@ expression: "app.screen(160, 48)"
 │                             █    Quit                       q                 app.quit                                         █                             │
 │                             █    Command Palette            ^p                app.command_palette                              █                             │
 └─────────────────────────────█    Maximize                   M                 app.maximize_widget                              █                             │
-┌─ [2] Pull Requests ─────────█    Keybindings                press a key…      app.open_help                                 ▂▂ █PR diff, and participating   │
+┌─ [2] Pull Requests ─────────█    Keybindings                press a key…      app.open_help                                 ▅▅ █PR diff, and participating   │
 │ #  Status  Author  Title    █    Notifications              ^n                notifications.open                               █reate a new PR for the       │
 │                             █    Paste link                 ^v                link.paste                                       █                             │
 │                             █    Follow link                f                 link.follow                                      █                             │

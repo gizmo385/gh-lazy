@@ -113,6 +113,7 @@ fn press_button_is_never_in_the_footer() {
         id: BindingId::TextualButtonPress,
         key: "enter".into(),
         enabled: true,
+        relabel: None,
     }];
     assert!(footer_items(&active).is_empty());
 }

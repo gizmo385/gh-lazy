@@ -22,7 +22,7 @@ expression: "crate::test_util::buffer_to_styled_string(&app.render(160, 48))"
 │                             █    Quit                       q                 app.quit                                         █                             │
 │                             █    Command Palette            ^p                app.command_palette                              █                             │
 └─────────────────────────────█ *  Maximize                   f2                app.maximize_widget                              █                             │
-┌─ [2] Pull Requests ─────────█ *  Keybindings                ?, !              app.open_help                                 ▂▂ █PR diff, and participating   │
+┌─ [2] Pull Requests ─────────█ *  Keybindings                ?, !              app.open_help                                 ▅▅ █PR diff, and participating   │
 │ #  Status  Author  Title    █    Notifications              ^n                notifications.open                               █reate a new PR for the       │
 │                             █    Paste link                 ^v                link.paste                                       █                             │
 │                             █    Follow link                f                 link.follow                                      █                             │

@@ -1,5 +1,5 @@
 version = 1
-description = "PR Diff tab as one continuous diff (#388): tab lands on the body, j crosses from a hunk's last line to the next file's header, J jumps hunks across files, / filters and enter puts the cursor on the first shown file, escape clears, a click moves the cursor, M maximizes the tab area, and the palette's Maximize from the filter"
+description = "PR Diff tab as one continuous diff (#388): tab lands on the body, j crosses from a hunk's last line to the next file's header, J jumps hunks across files, / filters and enter puts the cursor on the first shown file, escape clears, a click moves the cursor, M maximizes the tab area, and the palette's Maximize from the filter; then (#389) ] and [ jump between file headers, z folds every file into the file list, enter unfolds one, and at 100x30 the cursor's file header sticks to the top"
 # Rust-only: the Diff tab is one continuous diff with a line cursor (decision diff-continuous-view), which Python's
 # keys can't follow. The captures check the cursor through the position row under the body (`<path>  Line: n/m`, or
 # `N hunks` on a header), waited on with a regex since the path also shows in its file's header.
@@ -18,11 +18,20 @@ parity_rows = [
     "diff-viewer.maximize",
     "diff-viewer.position-line",
     "diff-viewer.body-mouse",
+    "diff-viewer.file-navigation",
+    "diff-viewer.file-folding",
+    "diff-viewer.sticky-file-header",
     "keybindings.diff-cursor-down",
     "keybindings.diff-cursor-up",
     "keybindings.diff-next-hunk",
     "keybindings.diff-previous-hunk",
     "keybindings.diff-filter-files",
+    "keybindings.diff-next-file",
+    "keybindings.diff-previous-file",
+    "keybindings.diff-toggle",
+    "keybindings.diff-fold-all",
+    "keybindings.diff-first-line",
+    "keybindings.diff-last-line",
 ]
 sizes = [[160, 48], [100, 30]]
 
@@ -199,6 +208,80 @@ wait = { text = "[5] PR #5 Details" }
 [[step]]
 capture = "filter-restored"
 
+# Back to the body, and g to its first row, README.md's header. Two ] go to build.rs's header, past assets/app.css's.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { text = "j Line down" }
+
+[[step]]
+keys = ["g"]
+
+[[step]]
+wait = { regex = "README\\.md +1 hunk" }
+
+[[step]]
+keys = ["]", "]"]
+
+[[step]]
+wait = { regex = "build\\.rs +1 hunk" }
+
+[[step]]
+capture = "next-file"
+
+# [ from a header: the previous file's header.
+[[step]]
+keys = ["["]
+
+[[step]]
+wait = { regex = "assets/app\\.css +1 hunk" }
+
+[[step]]
+capture = "previous-file"
+
+# z folds every file: the file list, one header per file, and z now unfolds (the footer says so, past the cut at
+# 100x30).
+[[step]]
+keys = ["z"]
+
+[[step]]
+wait = { text = "▶ 📄 src/viewer.rs" }
+
+[[step]]
+capture = "all-folded"
+
+# ] to build.rs's header, enter unfolds it alone.
+[[step]]
+keys = ["]", "enter"]
+
+[[step]]
+wait = { text = "Lines 1-4 (+1)" }
+
+[[step]]
+capture = "unfold-one"
+
+# At 100x30, z unfolds everything (the cursor stays on build.rs's header), then J into build.rs's hunk, src/viewer.rs's
+# first and its second, and G to its last line: src/viewer.rs's header has scrolled above the body and sticks to its
+# top row.
+[[step]]
+resize = [100, 30]
+
+[[step]]
+keys = ["z"]
+
+[[step]]
+wait = { text = "src/viewer.rs (+5 -2)" }
+
+[[step]]
+keys = ["J", "J", "J", "G"]
+
+[[step]]
+wait = { regex = "src/viewer\\.rs +Line: 9/9" }
+
+[[step]]
+capture = "sticky"
+
 [expect.body-top]
 focused = ["[5] PR #5 Details"]
 tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Diff" }
@@ -207,7 +290,7 @@ contains = [
     "README.md (+3 -1)",
     "Lines 3-7 (+3 -1) • A tiny pager.",
     "assets/app.css (+3)",
-    "j Line down  k Line up  J Next Hunk  K Previous Hunk  / Filter Files",
+    "j Line down  k Line up  J Next Hunk  K Previous Hunk  ] Next File  [ Previous",
 ]
 not_contains = ["Traceback", "c Add Comment"]
 
@@ -247,3 +330,34 @@ not_contains = ["[1] Repositories", "[2] Pull Requests"]
 [expect.filter-restored]
 focused = ["[5] PR #5 Details"]
 contains = ["Filter files (press '/' to focus, ESC to clear)", "/ Filter Files  ^p Command Pal"]
+
+[expect.next-file]
+focused = ["[5] PR #5 Details"]
+contains = ["build.rs (+1)", "⏎ Fold"]
+not_contains = ["c Add Comment"]
+
+[expect.previous-file]
+focused = ["[5] PR #5 Details"]
+contains = ["assets/app.css (+3)", "⏎ Fold"]
+
+[expect.all-folded]
+focused = ["[5] PR #5 Details"]
+contains = [
+    "▶ 📄 README.md (+3 -1)",
+    "▶ 📄 assets/app.css (+3)",
+    "▶ 📄 build.rs (+1)",
+    "▶ 📄 src/viewer.rs (+5 -2)",
+    "⏎ Fold  z Unfol",
+]
+not_contains = ["▼ 📄", "Lines 3-7 (+3 -1)", "Lines 1-4 (+1)"]
+
+[expect.unfold-one]
+focused = ["[5] PR #5 Details"]
+contains = ["▼ 📄 build.rs (+1)", "▶ 📄 README.md (+3 -1)", "▶ 📄 src/viewer.rs (+5 -2)"]
+not_contains = ["Lines 3-7 (+3 -1)"]
+
+[expect.sticky]
+focused = ["[5] PR #5 Details"]
+# The header row above the lines is the sticky one: src/viewer.rs's real header is above the view, with its first hunk.
+contains = ["▼ 📄 src/viewer.rs (+5 -2)", "Lines 22-28 (+3 -2) • impl Viewer {"]
+not_contains = ["build.rs (+1)"]

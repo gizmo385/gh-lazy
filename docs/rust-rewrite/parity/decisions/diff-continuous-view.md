@@ -17,8 +17,8 @@ Status: decided; being built. #387 built the continuous body as a component on i
 tab (the focus ring, the filter, `c` on the cursor's line, the mouse, `M` maximizing the tab area), added the rows
 `diff-viewer.maximize`, `diff-viewer.position-line` and `diff-viewer.body-mouse`, and moved the rows above to
 `intentional diff`; the Diff tab's scenarios are Rust-only (`diff-navigation`, `diff-review`, `diff-unicode`), and
-`pr-diff`, `pr-review` and `pr-maximize-diff-form` keep what both apps share (the tab, the review form). #389 adds
-folding, file jumps and the sticky header.
+`pr-diff`, `pr-review` and `pr-maximize-diff-form` keep what both apps share (the tab, the review form). #389 added
+folding, file jumps and the sticky header ([diff-file-navigation](diff-file-navigation.md)).
 
 Why: reading a pull request in the Python layout takes a focus change per hunk, every hunk opens in its own box with
 its own scroll (at most 22 lines), `j` stops dead at the end of a hunk, and nothing moves between files. Two scroll

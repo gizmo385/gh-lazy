@@ -1,5 +1,5 @@
 version = 1
-description = "Main screen with an unknown appearance.theme: both apps fall back to textual-dark"
+description = "Main screen with an unknown appearance.theme: both apps fall back to the default theme (Python's textual-dark, Rust's dark, which draws the same)"
 gate = true
 parity_rows = ["main-layout.themes"]
 sizes = [[160, 48]]
@@ -14,7 +14,8 @@ appearance = { theme = "no-such-theme" }
 wait = { text = "No repository selected", timeout_ms = 15000 }
 
 # parity/themes.toml gives no-such-theme textual-dark's success color, so the focus check fails unless the app falls
-# back to textual-dark.
+# back to the default theme. Rust also raises an "Unknown theme" toast (theme-unknown-warning), which covers none of
+# the boxes checked here.
 [[step]]
 capture = "start"
 checks = ["titles", "tabs", "focus"]

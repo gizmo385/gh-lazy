@@ -39,8 +39,10 @@ keys = ["enter"]
 [[step]]
 wait = { text = "LazyGithub Settings" }
 
-# The scroll area, then the Theme select: open its list and pick Nord (two below Textual Dark). Python moves focus a
-# tick after a tab (Py bug B121), so each key for the new focus waits for it to show.
+# The scroll area, then the Theme select: open its list and pick Nord (two below the default theme). Python moves
+# focus a tick after a tab (Py bug B121), so each key for the new focus waits for it to show. Textual's own two themes
+# are "Textual Dark" and "Textual Light" in Python and "Dark" and "Light" in Rust (decision app-owned-themes), so the
+# list is waited on, and checked, by the names both apps share.
 [[step]]
 keys = ["tab", "tab"]
 
@@ -51,7 +53,7 @@ wait = { focused = "Theme:" }
 keys = ["enter"]
 
 [[step]]
-wait = { text = "Textual Light" }
+wait = { text = "Gruvbox" }
 
 [[step]]
 capture = "theme-list"
@@ -61,7 +63,7 @@ checks = ["footer"]
 keys = ["down", "down", "enter"]
 
 [[step]]
-wait = { gone = "Textual Light" }
+wait = { gone = "Gruvbox" }
 
 # Python hands focus back to the select a moment after its list closes, and keys sent before that reopen the list
 # (#352): wait for the modal's footer to replace the list's, then for the select's focus outline.
@@ -154,7 +156,7 @@ capture = "reopened"
 checks = ["footer"]
 
 # Show Workflows off, then escape: nothing is saved and the section stays. The modal is in Nord now, so the switch's
-# focus outline is in Nord's $border, which wait.focused (reading the config's textual-dark colors) can't see, and
+# focus outline is in Nord's $border, which wait.focused (reading the default theme's colors) can't see, and
 # nothing else on screen shows the move: give Python's late focus (Py bug B121) a moment instead.
 [[step]]
 keys = ["tab", "tab", "tab", "tab"]
@@ -173,7 +175,7 @@ capture = "cancelled"
 checks = ["titles"]
 
 [expect.theme-list]
-contains = ["Textual Dark", "Textual Light", "Nord", "Gruvbox"]
+contains = ["Dark", "Light", "Nord", "Gruvbox"]
 
 [expect.saved]
 pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[4] Workflows"]
@@ -182,7 +184,7 @@ not_contains = ["LazyGithub Settings"]
 
 [expect.reopened]
 contains = ["LazyGithub Settings", "Theme:", "Nord"]
-not_contains = ["Textual Dark"]
+not_contains = ["Dark"]
 
 [expect.cancelled]
 pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[4] Workflows"]

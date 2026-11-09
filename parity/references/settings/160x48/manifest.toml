@@ -4,11 +4,11 @@ size = "160x48"
 captures = ["palette-query", "appearance", "notifications", "key-bindings", "repositories", "pull-requests", "issues", "cache", "core", "api", "wrapped", "closed"]
 
 [inputs]
-scenario = "4dd9462338f7c7cee5f2c3a606a9c489fb5a423d"
+scenario = "393dadd0431605db7adf0574c1c358cc0fab7693"
 fixtures = "152ce9bbfa49430b36bca9ef5e2ae1189ea76b00"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"
 
 [recorded_with]
-python = "3.14.7"
+python = "3.13.18"
 os = "linux"

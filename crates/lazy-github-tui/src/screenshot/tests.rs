@@ -13,14 +13,14 @@ use crate::test_util::TestApp;
 use crate::toast::Severity;
 
 /// The palette's hits after typing `query`.
-fn search(app: &mut TestApp, query: &str) -> Vec<&'static str> {
+fn search(app: &mut TestApp, query: &str) -> Vec<String> {
     app.press(&["ctrl+p"]);
     let keys: Vec<String> = query.chars().map(|c| c.to_string()).collect();
     let keys: Vec<&str> = keys.iter().map(String::as_str).collect();
     app.press(&keys);
     app.app()
         .top_dialog::<CommandPaletteDialog>()
-        .map(CommandPaletteDialog::hit_names)
+        .map(|palette| palette.hit_names().into_iter().map(str::to_owned).collect())
         .unwrap_or_default()
 }
 

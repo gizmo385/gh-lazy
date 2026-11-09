@@ -591,7 +591,8 @@ impl Component for SettingsDialog {
         }
         if self.areas.tabs.contains(at) {
             let refused = self.focus(SettingsFocus::Tabs);
-            if let Some(index) = self.tabs.hit(event.column - self.areas.tabs.x) {
+            let scroll = self.tabs.scroll(self.areas.tabs.width);
+            if let Some(index) = self.tabs.hit(event.column - self.areas.tabs.x + scroll) {
                 self.switch_tab(index);
             }
             return Some(notify_or_consumed(refused));

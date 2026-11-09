@@ -141,12 +141,13 @@ wait = { text = "Base Url" }
 capture = "api"
 checks = ["footer"]
 
-# right wraps to the first tab.
+# right past Api: Python wraps to the first tab, while Rust shows its own last tab, Search (decision
+# search-issues-and-prs), from which it wraps (unit-tested in modal/settings/tests.rs).
 [[step]]
 keys = ["right"]
 
 [[step]]
-wait = { text = "Show Command Log" }
+wait = { regex = 'Show Command Log|Searches you saved' }
 
 [[step]]
 capture = "wrapped"

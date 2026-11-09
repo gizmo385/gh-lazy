@@ -4,11 +4,11 @@ size = "160x48"
 captures = ["pull-request", "pr-fails", "no-url"]
 
 [inputs]
-scenario = "69664680955e6037393d4dbae18fd1b333380188"
+scenario = "7c78334fa2754329fda7c7525ada38dc78dda1de"
 fixtures = "da1be0da318503d938515fff82d996039f95a129"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "f06b852ef48102c8239fe5fe6a4e2255f4ad7e67"
 
 [recorded_with]
-python = "3.14.7"
+python = "3.13.18"
 os = "linux"

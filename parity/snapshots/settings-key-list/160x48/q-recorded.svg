@@ -23,15 +23,14 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 .s18 { fill: #fea62b; font-weight: bold; }
 .s19 { fill: #ddedf9; font-weight: bold; }
 .s20 { fill: #92c5ec; font-weight: bold; }
-.s21 { fill: #000000; }
-.s22 { fill: #004578; }
-.s23 { fill: #7ae998; }
-.s24 { fill: #e76580; }
-.s25 { fill: #0a180e; font-weight: bold; }
-.s26 { fill: #f5e5e9; font-weight: bold; }
-.s27 { fill: #008139; }
-.s28 { fill: #780028; }
-.s29 { fill: #ffa62b; font-weight: bold; }
+.s21 { fill: #004578; }
+.s22 { fill: #7ae998; }
+.s23 { fill: #e76580; }
+.s24 { fill: #0a180e; font-weight: bold; }
+.s25 { fill: #f5e5e9; font-weight: bold; }
+.s26 { fill: #008139; }
+.s27 { fill: #780028; }
+.s28 { fill: #ffa62b; font-weight: bold; }
 </style>
 <rect width="1600" height="960" fill="#1e1e1e"/>
 <g shape-rendering="crispEdges">
@@ -101,7 +100,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="0" y="400" width="300" height="20" fill="#121212"/>
 <rect x="300" y="400" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="400" width="940" height="20" fill="#0178d4"/>
-<rect x="1260" y="400" width="20" height="20" fill="#003054"/>
+<rect x="1260" y="400" width="20" height="20" fill="#000000"/>
 <rect x="1280" y="400" width="20" height="20" fill="#4f4f4f"/>
 <rect x="1300" y="400" width="300" height="20" fill="#121212"/>
 <rect x="0" y="420" width="10" height="20" fill="#121212"/>
@@ -324,7 +323,6 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s19" x="330" y="415" textLength="290" lengthAdjust="spacingAndGlyphs">  Keybindings                </text>
 <text class="s18" x="620" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">q</text>
 <text class="s20" x="800" y="415" textLength="130" lengthAdjust="spacingAndGlyphs">app.open_help</text>
-<text class="s21" x="1260" y="415" textLength="20" lengthAdjust="spacingAndGlyphs">▇▇</text>
 <text class="s7" x="1290" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s1" x="1300" y="415" textLength="290" lengthAdjust="spacingAndGlyphs">PR diff, and participating   </text>
 <text class="s3" x="1590" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
@@ -423,7 +421,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s3" x="1590" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s7" x="300" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
-<text class="s22" x="310" y="735" textLength="980" lengthAdjust="spacingAndGlyphs">──────────────────────────────────────────────────────────────────────────────────────────────────</text>
+<text class="s21" x="310" y="735" textLength="980" lengthAdjust="spacingAndGlyphs">──────────────────────────────────────────────────────────────────────────────────────────────────</text>
 <text class="s7" x="1290" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s1" x="1300" y="735" textLength="290" lengthAdjust="spacingAndGlyphs">.                            </text>
 <text class="s3" x="1590" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
@@ -433,21 +431,21 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s3" x="1590" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="775" textLength="300" lengthAdjust="spacingAndGlyphs">┌─ [4] Workflows ─────────────</text>
 <text class="s7" x="300" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
-<text class="s23" x="660" y="775" textLength="160" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</text>
-<text class="s24" x="820" y="775" textLength="160" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</text>
+<text class="s22" x="660" y="775" textLength="160" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</text>
+<text class="s23" x="820" y="775" textLength="160" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</text>
 <text class="s7" x="1290" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s3" x="1590" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s5" x="10" y="795" textLength="290" lengthAdjust="spacingAndGlyphs"> Time  Result  Job Name  Run </text>
 <text class="s7" x="300" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
-<text class="s25" x="710" y="795" textLength="60" lengthAdjust="spacingAndGlyphs"> Save </text>
-<text class="s26" x="860" y="795" textLength="80" lengthAdjust="spacingAndGlyphs"> Cancel </text>
+<text class="s24" x="710" y="795" textLength="60" lengthAdjust="spacingAndGlyphs"> Save </text>
+<text class="s25" x="860" y="795" textLength="80" lengthAdjust="spacingAndGlyphs"> Cancel </text>
 <text class="s7" x="1290" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s3" x="1590" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s7" x="300" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
-<text class="s27" x="660" y="815" textLength="160" lengthAdjust="spacingAndGlyphs">▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁</text>
-<text class="s28" x="820" y="815" textLength="160" lengthAdjust="spacingAndGlyphs">▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁</text>
+<text class="s26" x="660" y="815" textLength="160" lengthAdjust="spacingAndGlyphs">▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁</text>
+<text class="s27" x="820" y="815" textLength="160" lengthAdjust="spacingAndGlyphs">▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁</text>
 <text class="s7" x="1290" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s3" x="1590" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
@@ -466,16 +464,16 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s3" x="630" y="915" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
 <text class="s3" x="1590" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="935" textLength="1600" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘</text>
-<text class="s29" x="0" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ⏎ </text>
+<text class="s28" x="0" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ⏎ </text>
 <text class="s12" x="30" y="955" textLength="110" lengthAdjust="spacingAndGlyphs">Change key </text>
-<text class="s29" x="140" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> a </text>
+<text class="s28" x="140" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> a </text>
 <text class="s12" x="170" y="955" textLength="80" lengthAdjust="spacingAndGlyphs">Add key </text>
-<text class="s29" x="250" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> r </text>
+<text class="s28" x="250" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> r </text>
 <text class="s12" x="280" y="955" textLength="60" lengthAdjust="spacingAndGlyphs">Reset </text>
-<text class="s29" x="340" y="955" textLength="90" lengthAdjust="spacingAndGlyphs"> shift+⏎ </text>
+<text class="s28" x="340" y="955" textLength="90" lengthAdjust="spacingAndGlyphs"> shift+⏎ </text>
 <text class="s12" x="430" y="955" textLength="70" lengthAdjust="spacingAndGlyphs">Submit </text>
-<text class="s29" x="500" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
+<text class="s28" x="500" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
 <text class="s12" x="530" y="955" textLength="60" lengthAdjust="spacingAndGlyphs">Close </text>
-<text class="s29" x="590" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>
+<text class="s28" x="590" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>
 <text class="s12" x="620" y="955" textLength="70" lengthAdjust="spacingAndGlyphs">Search </text>
 </svg>

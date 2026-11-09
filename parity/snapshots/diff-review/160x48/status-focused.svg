@@ -131,7 +131,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="1590" y="540" width="10" height="20" fill="#121212"/>
 <rect x="0" y="560" width="10" height="20" fill="#121212"/>
 <rect x="630" y="560" width="940" height="20" fill="#121212"/>
-<rect x="1570" y="560" width="20" height="20" fill="#003054"/>
+<rect x="1570" y="560" width="20" height="20" fill="#000000"/>
 <rect x="1590" y="560" width="10" height="20" fill="#121212"/>
 <rect x="0" y="580" width="10" height="20" fill="#121212"/>
 <rect x="630" y="580" width="940" height="20" fill="#121212"/>
@@ -391,7 +391,6 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s18" x="690" y="555" textLength="160" lengthAdjust="spacingAndGlyphs">▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁</text>
 <text class="s0" x="1540" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s14" x="1560" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s19" x="1570" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">▁▁</text>
 <text class="s4" x="1590" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="575" textLength="620" lengthAdjust="spacingAndGlyphs"> 4  closed  parity-bot     Drop the legacy renderer           </text>
@@ -401,6 +400,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s0" x="670" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s0" x="1540" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s14" x="1560" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s19" x="1570" y="575" textLength="20" lengthAdjust="spacingAndGlyphs">▅▅</text>
 <text class="s4" x="1590" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="595" textLength="620" lengthAdjust="spacingAndGlyphs"> 3  closed  parity-bot     Release 0.2.0                      </text>
@@ -497,7 +497,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s4" x="640" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s22" x="660" y="895" textLength="150" lengthAdjust="spacingAndGlyphs"> Submit Review </text>
 <text class="s4" x="980" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
-<text class="s23" x="1580" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">▃</text>
+<text class="s23" x="1580" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">▂</text>
 <text class="s4" x="1590" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>

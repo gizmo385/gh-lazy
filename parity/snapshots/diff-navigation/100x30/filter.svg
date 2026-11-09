@@ -20,8 +20,11 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 .s15 { fill: #f4005f; font-weight: bold; }
 .s16 { fill: #4ebf71; }
 .s17 { fill: #8ad4a1; font-weight: bold; }
-.s18 { fill: #e0e0e0; font-weight: bold; }
-.s19 { fill: #211505; }
+.s18 { fill: #fea62b; }
+.s19 { fill: #e0e0e0; font-weight: bold; }
+.s20 { fill: #e2e3e5; }
+.s21 { fill: #e2e3e5; font-weight: bold; }
+.s22 { fill: #211505; }
 </style>
 <rect width="1000" height="600" fill="#1e1e1e"/>
 <g shape-rendering="crispEdges">
@@ -82,7 +85,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="100" y="520" width="390" height="20" fill="#0a3a0a"/>
 <rect x="490" y="520" width="490" height="20" fill="#343f49"/>
 <rect x="980" y="520" width="20" height="20" fill="#000000"/>
-<rect x="100" y="540" width="390" height="20" fill="#272822"/>
+<rect x="100" y="540" width="390" height="20" fill="#242f38"/>
 <rect x="490" y="540" width="490" height="20" fill="#343f49"/>
 <rect x="980" y="540" width="20" height="20" fill="#000000"/>
 <rect x="100" y="560" width="390" height="20" fill="#272822"/>
@@ -115,7 +118,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s7" x="40" y="155" textLength="170" lengthAdjust="spacingAndGlyphs"> assets/app.css (</text>
 <text class="s8" x="210" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">+3</text>
 <text class="s7" x="230" y="155" textLength="750" lengthAdjust="spacingAndGlyphs">)                                                                          </text>
-<text class="s9" x="980" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">▃▃</text>
+<text class="s9" x="980" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">▄▄</text>
 <text class="s10" x="0" y="175" textLength="130" lengthAdjust="spacingAndGlyphs">  Lines 1-3 (</text>
 <text class="s11" x="130" y="175" textLength="20" lengthAdjust="spacingAndGlyphs">+3</text>
 <text class="s10" x="150" y="175" textLength="830" lengthAdjust="spacingAndGlyphs">)                                                                                  </text>
@@ -154,13 +157,13 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s7" x="0" y="375" textLength="20" lengthAdjust="spacingAndGlyphs">▶ </text>
 <text class="s7" x="20" y="375" textLength="20" lengthAdjust="spacingAndGlyphs">🗑️</text>
 <text class="s7" x="40" y="375" textLength="940" lengthAdjust="spacingAndGlyphs">  docs/old.md (deleted)                                                                       </text>
-<text class="s14" x="980" y="375" textLength="20" lengthAdjust="spacingAndGlyphs">▃▃</text>
+<text class="s14" x="980" y="375" textLength="20" lengthAdjust="spacingAndGlyphs">▇▇</text>
 <text class="s7" x="0" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">▼ </text>
 <text class="s7" x="20" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">📄</text>
 <text class="s7" x="40" y="395" textLength="160" lengthAdjust="spacingAndGlyphs"> src/viewer.rs (</text>
 <text class="s8" x="200" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">+5</text>
 <text class="s15" x="230" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">-2</text>
-<text class="s7" x="250" y="395" textLength="730" lengthAdjust="spacingAndGlyphs">)                                                                        </text>
+<text class="s7" x="250" y="395" textLength="730" lengthAdjust="spacingAndGlyphs">) · 2 comments                                                           </text>
 <text class="s10" x="0" y="415" textLength="130" lengthAdjust="spacingAndGlyphs">  Lines 1-8 (</text>
 <text class="s11" x="130" y="415" textLength="20" lengthAdjust="spacingAndGlyphs">+2</text>
 <text class="s10" x="150" y="415" textLength="830" lengthAdjust="spacingAndGlyphs">)                                                                                  </text>
@@ -181,19 +184,23 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s5" x="100" y="515" textLength="230" lengthAdjust="spacingAndGlyphs">    lines: Vec&lt;String&gt;,</text>
 <text class="s16" x="490" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s17" x="510" y="515" textLength="140" lengthAdjust="spacingAndGlyphs">View Maximized</text>
-<text class="s1" x="0" y="535" textLength="100" lengthAdjust="spacingAndGlyphs">     6  │ </text>
+<text class="s1" x="0" y="535" textLength="60" lengthAdjust="spacingAndGlyphs">     6</text>
+<text class="s18" x="60" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">●</text>
+<text class="s1" x="70" y="535" textLength="30" lengthAdjust="spacingAndGlyphs"> │ </text>
 <text class="s5" x="100" y="535" textLength="120" lengthAdjust="spacingAndGlyphs">    cursor: </text>
 <text class="s13" x="220" y="535" textLength="50" lengthAdjust="spacingAndGlyphs">usize</text>
 <text class="s5" x="270" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">,</text>
 <text class="s16" x="490" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s1" x="500" y="535" textLength="310" lengthAdjust="spacingAndGlyphs"> Current view maximized. Press </text>
-<text class="s18" x="810" y="535" textLength="60" lengthAdjust="spacingAndGlyphs">escape</text>
+<text class="s19" x="810" y="535" textLength="60" lengthAdjust="spacingAndGlyphs">escape</text>
 <text class="s1" x="870" y="535" textLength="130" lengthAdjust="spacingAndGlyphs"> to          </text>
-<text class="s1" x="0" y="555" textLength="100" lengthAdjust="spacingAndGlyphs">     7  │ </text>
-<text class="s5" x="100" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">}</text>
+<text class="s20" x="100" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">▶ </text>
+<text class="s21" x="120" y="555" textLength="100" lengthAdjust="spacingAndGlyphs">parity-bot</text>
+<text class="s20" x="220" y="555" textLength="270" lengthAdjust="spacingAndGlyphs">: Should the cursor wrap at</text>
 <text class="s16" x="490" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s1" x="500" y="555" textLength="500" lengthAdjust="spacingAndGlyphs"> return.                                          </text>
-<text class="s1" x="0" y="575" textLength="490" lengthAdjust="spacingAndGlyphs">     8  │                                        </text>
+<text class="s1" x="0" y="575" textLength="100" lengthAdjust="spacingAndGlyphs">     7  │ </text>
+<text class="s5" x="100" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">}</text>
 <text class="s16" x="490" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
-<text class="s19" x="0" y="595" textLength="980" lengthAdjust="spacingAndGlyphs"> assets/app.css                                                                         Line: 2/3 </text>
+<text class="s22" x="0" y="595" textLength="980" lengthAdjust="spacingAndGlyphs"> assets/app.css                                                                         Line: 2/3 </text>
 </svg>

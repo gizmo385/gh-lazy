@@ -216,7 +216,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s13" x="690" y="275" textLength="160" lengthAdjust="spacingAndGlyphs"> src/viewer.rs (</text>
 <text class="s5" x="850" y="275" textLength="20" lengthAdjust="spacingAndGlyphs">+5</text>
 <text class="s14" x="880" y="275" textLength="20" lengthAdjust="spacingAndGlyphs">-2</text>
-<text class="s13" x="900" y="275" textLength="690" lengthAdjust="spacingAndGlyphs">)                                                                    </text>
+<text class="s13" x="900" y="275" textLength="690" lengthAdjust="spacingAndGlyphs">) · 2 comments                                                       </text>
 <text class="s4" x="1590" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
@@ -387,12 +387,10 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s1" x="870" y="955" textLength="50" lengthAdjust="spacingAndGlyphs">Fold </text>
 <text class="s21" x="920" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> z </text>
 <text class="s1" x="950" y="955" textLength="130" lengthAdjust="spacingAndGlyphs">Unfold Files </text>
-<text class="s21" x="1080" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>
-<text class="s1" x="1110" y="955" textLength="130" lengthAdjust="spacingAndGlyphs">Filter Files </text>
-<text class="s21" x="1240" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^v </text>
-<text class="s1" x="1280" y="955" textLength="110" lengthAdjust="spacingAndGlyphs">Paste link </text>
-<text class="s21" x="1390" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> f </text>
-<text class="s1" x="1420" y="955" textLength="120" lengthAdjust="spacingAndGlyphs">Follow link </text>
-<text class="s21" x="1540" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> F </text>
-<text class="s1" x="1570" y="955" textLength="30" lengthAdjust="spacingAndGlyphs">Fol</text>
+<text class="s21" x="1080" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> n </text>
+<text class="s1" x="1110" y="955" textLength="130" lengthAdjust="spacingAndGlyphs">Next Comment </text>
+<text class="s21" x="1240" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> N </text>
+<text class="s1" x="1270" y="955" textLength="170" lengthAdjust="spacingAndGlyphs">Previous Comment </text>
+<text class="s21" x="1440" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>
+<text class="s1" x="1470" y="955" textLength="130" lengthAdjust="spacingAndGlyphs">Filter Files </text>
 </svg>

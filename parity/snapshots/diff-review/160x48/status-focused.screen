@@ -29,8 +29,8 @@ cursor 0 0 hidden
 └──────────────────────────────────────────────────────────────┘││ │                                                                                      │ │  │
 ┌─ [2] Pull Requests ──────────────────────────────────────────┐││ │ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                                                     │ │  │
 │ #  Status  Author         Title                              │││ │      Remove                                                                          │ │  │
-│ 5  open    parity-friend  Add a cursor to the viewer         │││ │ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                                                     │ │▁▁│
-│ 4  closed  parity-bot     Drop the legacy renderer           │││ │                                                                                      │ │  │
+│ 5  open    parity-friend  Add a cursor to the viewer         │││ │ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                                                     │ │  │
+│ 4  closed  parity-bot     Drop the legacy renderer           │││ │                                                                                      │ │▅▅│
 │ 3  closed  parity-bot     Release 0.2.0                      │││ └──────────────────────────────────────────────────────────────────────────────────────┘ │  │
 │ 2  open    parity-friend  Try a faster parser                │││                                                                                          │  │
 │                                                              │││                                                                                          │  │
@@ -46,7 +46,7 @@ cursor 0 0 hidden
 │                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▌ Comment cannot be empty!                                   │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                                                             │
-│                                                              ││  Submit Review                  ▌                                                           ▃│
+│                                                              ││  Submit Review                  ▌                                                           ▂│
 │                                                              ││ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                ▌ New comment added                                          │
 └──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  ? Keybindings
@@ -78,8 +78,8 @@ c..............................................................cds.a.uuuuuuuuuuu
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccds.a......................................................................................a.sppd
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccds.a.vvvvvvvvvvvvvvvv.....................................................................a.sppd
 ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecds.a.wwwwrrrrrrrrwwww.....................................................................a.sppd
-chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcds.a.xxxxxxxxxxxxxxxx.....................................................................a.syyd
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcds.a......................................................................................a.szzd
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcds.a.xxxxxxxxxxxxxxxx.....................................................................a.sppd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcds.a......................................................................................a.syyd
 ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcds.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.szzd
 ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcds..........................................................................................szzd
 c..............................................................cds..........................................................................................szzd

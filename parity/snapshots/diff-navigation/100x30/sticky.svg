@@ -17,18 +17,22 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 .s12 { fill: #737373; }
 .s13 { fill: #e2e2e2; font-weight: bold; }
 .s14 { fill: #f4005f; font-weight: bold; }
-.s15 { fill: #f8f8f2; }
-.s16 { fill: #66d9ef; }
-.s17 { fill: #a5a5a5; }
-.s18 { fill: #98e024; }
-.s19 { fill: #f4005f; }
-.s20 { fill: #003054; }
-.s21 { fill: #a6e22e; }
-.s22 { fill: #ff4689; }
-.s23 { fill: #e6db74; }
-.s24 { fill: #000000; }
-.s25 { fill: #211505; }
-.s26 { fill: #ffa62b; font-weight: bold; }
+.s15 { fill: #e2e3e5; }
+.s16 { fill: #e2e3e5; font-weight: bold; }
+.s17 { fill: #a7abaf; }
+.s18 { fill: #f8f8f2; }
+.s19 { fill: #a5a5a5; }
+.s20 { fill: #98e024; }
+.s21 { fill: #f4005f; }
+.s22 { fill: #66d9ef; }
+.s23 { fill: #a6e22e; }
+.s24 { fill: #ff4689; }
+.s25 { fill: #003054; }
+.s26 { fill: #fea62b; }
+.s27 { fill: #e6db74; }
+.s28 { fill: #000000; }
+.s29 { fill: #211505; }
+.s30 { fill: #ffa62b; font-weight: bold; }
 </style>
 <rect width="1000" height="600" fill="#1e1e1e"/>
 <g shape-rendering="crispEdges">
@@ -59,11 +63,11 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="970" y="180" width="20" height="20" fill="#000000"/>
 <rect x="990" y="180" width="10" height="20" fill="#121212"/>
 <rect x="0" y="200" width="410" height="20" fill="#121212"/>
-<rect x="510" y="200" width="460" height="20" fill="#272822"/>
+<rect x="510" y="200" width="460" height="20" fill="#242f38"/>
 <rect x="970" y="200" width="20" height="20" fill="#000000"/>
 <rect x="990" y="200" width="10" height="20" fill="#121212"/>
 <rect x="0" y="220" width="410" height="20" fill="#121212"/>
-<rect x="510" y="220" width="460" height="20" fill="#0a3a0a"/>
+<rect x="510" y="220" width="460" height="20" fill="#272822"/>
 <rect x="970" y="220" width="20" height="20" fill="#000000"/>
 <rect x="990" y="220" width="10" height="20" fill="#121212"/>
 <rect x="0" y="240" width="410" height="20" fill="#121212"/>
@@ -71,15 +75,15 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="970" y="240" width="20" height="20" fill="#000000"/>
 <rect x="990" y="240" width="10" height="20" fill="#121212"/>
 <rect x="0" y="260" width="410" height="20" fill="#121212"/>
-<rect x="510" y="260" width="460" height="20" fill="#272822"/>
 <rect x="970" y="260" width="20" height="20" fill="#000000"/>
 <rect x="990" y="260" width="10" height="20" fill="#121212"/>
 <rect x="0" y="280" width="410" height="20" fill="#121212"/>
+<rect x="510" y="280" width="460" height="20" fill="#272822"/>
 <rect x="970" y="280" width="20" height="20" fill="#000000"/>
 <rect x="990" y="280" width="10" height="20" fill="#121212"/>
 <rect x="0" y="300" width="410" height="20" fill="#121212"/>
-<rect x="510" y="300" width="460" height="20" fill="#272822"/>
-<rect x="970" y="300" width="20" height="20" fill="#003054"/>
+<rect x="510" y="300" width="460" height="20" fill="#3a0a0a"/>
+<rect x="970" y="300" width="20" height="20" fill="#000000"/>
 <rect x="990" y="300" width="10" height="20" fill="#121212"/>
 <rect x="0" y="320" width="410" height="20" fill="#121212"/>
 <rect x="510" y="320" width="460" height="20" fill="#3a0a0a"/>
@@ -88,7 +92,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="0" y="340" width="10" height="20" fill="#121212"/>
 <rect x="10" y="340" width="380" height="20" fill="#242f38"/>
 <rect x="390" y="340" width="20" height="20" fill="#121212"/>
-<rect x="510" y="340" width="460" height="20" fill="#3a0a0a"/>
+<rect x="510" y="340" width="460" height="20" fill="#242f38"/>
 <rect x="970" y="340" width="20" height="20" fill="#003054"/>
 <rect x="990" y="340" width="10" height="20" fill="#121212"/>
 <rect x="0" y="360" width="10" height="20" fill="#121212"/>
@@ -194,132 +198,135 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s13" x="450" y="195" textLength="160" lengthAdjust="spacingAndGlyphs"> src/viewer.rs (</text>
 <text class="s5" x="610" y="195" textLength="20" lengthAdjust="spacingAndGlyphs">+5</text>
 <text class="s14" x="640" y="195" textLength="20" lengthAdjust="spacingAndGlyphs">-2</text>
-<text class="s13" x="660" y="195" textLength="310" lengthAdjust="spacingAndGlyphs">)                              </text>
+<text class="s13" x="660" y="195" textLength="310" lengthAdjust="spacingAndGlyphs">) · 2 comments                 </text>
 <text class="s4" x="990" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="390" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s1" x="410" y="215" textLength="100" lengthAdjust="spacingAndGlyphs">     5  │ </text>
-<text class="s15" x="510" y="215" textLength="230" lengthAdjust="spacingAndGlyphs">    lines: Vec&lt;String&gt;,</text>
+<text class="s15" x="510" y="215" textLength="20" lengthAdjust="spacingAndGlyphs">▶ </text>
+<text class="s16" x="530" y="215" textLength="100" lengthAdjust="spacingAndGlyphs">parity-bot</text>
+<text class="s15" x="630" y="215" textLength="230" lengthAdjust="spacingAndGlyphs">: Should the cursor wr…</text>
+<text class="s17" x="860" y="215" textLength="110" lengthAdjust="spacingAndGlyphs">  · 1 reply</text>
 <text class="s4" x="990" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="390" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s1" x="410" y="235" textLength="100" lengthAdjust="spacingAndGlyphs">     6  │ </text>
-<text class="s15" x="510" y="235" textLength="120" lengthAdjust="spacingAndGlyphs">    cursor: </text>
-<text class="s16" x="630" y="235" textLength="50" lengthAdjust="spacingAndGlyphs">usize</text>
-<text class="s15" x="680" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">,</text>
+<text class="s1" x="410" y="235" textLength="100" lengthAdjust="spacingAndGlyphs">     7  │ </text>
+<text class="s18" x="510" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">}</text>
 <text class="s4" x="990" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="390" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s1" x="410" y="255" textLength="100" lengthAdjust="spacingAndGlyphs">     7  │ </text>
-<text class="s15" x="510" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">}</text>
+<text class="s1" x="410" y="255" textLength="580" lengthAdjust="spacingAndGlyphs">     8  │                                                 </text>
 <text class="s4" x="990" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="390" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s1" x="410" y="275" textLength="580" lengthAdjust="spacingAndGlyphs">     8  │                                                 </text>
+<text class="s19" x="410" y="275" textLength="150" lengthAdjust="spacingAndGlyphs">  Lines 22-28 (</text>
+<text class="s20" x="560" y="275" textLength="20" lengthAdjust="spacingAndGlyphs">+3</text>
+<text class="s21" x="590" y="275" textLength="20" lengthAdjust="spacingAndGlyphs">-2</text>
+<text class="s19" x="610" y="275" textLength="360" lengthAdjust="spacingAndGlyphs">) • impl Viewer {                   </text>
 <text class="s4" x="990" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="390" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s17" x="410" y="295" textLength="150" lengthAdjust="spacingAndGlyphs">  Lines 22-28 (</text>
-<text class="s18" x="560" y="295" textLength="20" lengthAdjust="spacingAndGlyphs">+3</text>
-<text class="s19" x="590" y="295" textLength="20" lengthAdjust="spacingAndGlyphs">-2</text>
-<text class="s17" x="610" y="295" textLength="360" lengthAdjust="spacingAndGlyphs">) • impl Viewer {                   </text>
-<text class="s20" x="970" y="295" textLength="20" lengthAdjust="spacingAndGlyphs">▂▂</text>
+<text class="s1" x="410" y="295" textLength="100" lengthAdjust="spacingAndGlyphs">    22  │ </text>
+<text class="s22" x="550" y="295" textLength="30" lengthAdjust="spacingAndGlyphs">pub</text>
+<text class="s22" x="590" y="295" textLength="20" lengthAdjust="spacingAndGlyphs">fn</text>
+<text class="s23" x="620" y="295" textLength="60" lengthAdjust="spacingAndGlyphs">render</text>
+<text class="s18" x="680" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">(</text>
+<text class="s24" x="690" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">&amp;</text>
+<text class="s18" x="700" y="295" textLength="250" lengthAdjust="spacingAndGlyphs">self) -&gt; io::Result&lt;()&gt; {</text>
 <text class="s4" x="990" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="315" textLength="400" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────┘</text>
 <text class="s4" x="400" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s1" x="410" y="315" textLength="100" lengthAdjust="spacingAndGlyphs">    22  │ </text>
-<text class="s16" x="550" y="315" textLength="30" lengthAdjust="spacingAndGlyphs">pub</text>
-<text class="s16" x="590" y="315" textLength="20" lengthAdjust="spacingAndGlyphs">fn</text>
-<text class="s21" x="620" y="315" textLength="60" lengthAdjust="spacingAndGlyphs">render</text>
-<text class="s15" x="680" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">(</text>
-<text class="s22" x="690" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">&amp;</text>
-<text class="s15" x="700" y="315" textLength="250" lengthAdjust="spacingAndGlyphs">self) -&gt; io::Result&lt;()&gt; {</text>
+<text class="s1" x="410" y="315" textLength="100" lengthAdjust="spacingAndGlyphs">    21  │ </text>
+<text class="s22" x="590" y="315" textLength="30" lengthAdjust="spacingAndGlyphs">for</text>
+<text class="s18" x="620" y="315" textLength="60" lengthAdjust="spacingAndGlyphs"> line </text>
+<text class="s24" x="680" y="315" textLength="20" lengthAdjust="spacingAndGlyphs">in</text>
+<text class="s24" x="710" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">&amp;</text>
+<text class="s18" x="720" y="315" textLength="120" lengthAdjust="spacingAndGlyphs">self.lines {</text>
+<text class="s25" x="970" y="315" textLength="20" lengthAdjust="spacingAndGlyphs">▆▆</text>
 <text class="s4" x="990" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="335" textLength="400" lengthAdjust="spacingAndGlyphs">┌─ [2] Pull Requests ──────────────────┐</text>
 <text class="s4" x="400" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s1" x="410" y="335" textLength="100" lengthAdjust="spacingAndGlyphs">    21  │ </text>
-<text class="s16" x="590" y="335" textLength="30" lengthAdjust="spacingAndGlyphs">for</text>
-<text class="s15" x="620" y="335" textLength="60" lengthAdjust="spacingAndGlyphs"> line </text>
-<text class="s22" x="680" y="335" textLength="20" lengthAdjust="spacingAndGlyphs">in</text>
-<text class="s22" x="710" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">&amp;</text>
-<text class="s15" x="720" y="335" textLength="120" lengthAdjust="spacingAndGlyphs">self.lines {</text>
+<text class="s1" x="410" y="335" textLength="60" lengthAdjust="spacingAndGlyphs">    22</text>
+<text class="s26" x="470" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">●</text>
+<text class="s1" x="480" y="335" textLength="30" lengthAdjust="spacingAndGlyphs"> │ </text>
+<text class="s18" x="510" y="335" textLength="210" lengthAdjust="spacingAndGlyphs">            println!(</text>
+<text class="s27" x="720" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">&quot;</text>
+<text class="s22" x="730" y="335" textLength="60" lengthAdjust="spacingAndGlyphs">{line}</text>
+<text class="s27" x="790" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">&quot;</text>
+<text class="s18" x="800" y="335" textLength="20" lengthAdjust="spacingAndGlyphs">);</text>
 <text class="s4" x="990" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s6" x="10" y="355" textLength="380" lengthAdjust="spacingAndGlyphs"> #  Status  Author         Title      </text>
 <text class="s3" x="390" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s1" x="410" y="355" textLength="100" lengthAdjust="spacingAndGlyphs">    22  │ </text>
-<text class="s15" x="510" y="355" textLength="210" lengthAdjust="spacingAndGlyphs">            println!(</text>
-<text class="s23" x="720" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">&quot;</text>
-<text class="s16" x="730" y="355" textLength="60" lengthAdjust="spacingAndGlyphs">{line}</text>
-<text class="s23" x="790" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">&quot;</text>
-<text class="s15" x="800" y="355" textLength="20" lengthAdjust="spacingAndGlyphs">);</text>
+<text class="s15" x="510" y="355" textLength="20" lengthAdjust="spacingAndGlyphs">▶ </text>
+<text class="s16" x="530" y="355" textLength="100" lengthAdjust="spacingAndGlyphs">parity-bot</text>
+<text class="s15" x="630" y="355" textLength="340" lengthAdjust="spacingAndGlyphs">: This needs a test.              </text>
 <text class="s4" x="990" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="375" textLength="380" lengthAdjust="spacingAndGlyphs"> 5  open    parity-friend  Add a curso</text>
 <text class="s3" x="390" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="410" y="375" textLength="100" lengthAdjust="spacingAndGlyphs">    23  │ </text>
-<text class="s16" x="590" y="375" textLength="30" lengthAdjust="spacingAndGlyphs">for</text>
-<text class="s15" x="620" y="375" textLength="110" lengthAdjust="spacingAndGlyphs"> (i, line) </text>
-<text class="s22" x="730" y="375" textLength="20" lengthAdjust="spacingAndGlyphs">in</text>
-<text class="s15" x="750" y="375" textLength="220" lengthAdjust="spacingAndGlyphs"> self.lines.iter().enu</text>
+<text class="s22" x="590" y="375" textLength="30" lengthAdjust="spacingAndGlyphs">for</text>
+<text class="s18" x="620" y="375" textLength="110" lengthAdjust="spacingAndGlyphs"> (i, line) </text>
+<text class="s24" x="730" y="375" textLength="20" lengthAdjust="spacingAndGlyphs">in</text>
+<text class="s18" x="750" y="375" textLength="220" lengthAdjust="spacingAndGlyphs"> self.lines.iter().enu</text>
 <text class="s4" x="990" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="395" textLength="380" lengthAdjust="spacingAndGlyphs"> 4  closed  parity-bot     Drop the le</text>
 <text class="s3" x="390" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="410" y="395" textLength="100" lengthAdjust="spacingAndGlyphs">    24  │ </text>
-<text class="s16" x="630" y="395" textLength="30" lengthAdjust="spacingAndGlyphs">let</text>
-<text class="s15" x="660" y="395" textLength="80" lengthAdjust="spacingAndGlyphs"> marker </text>
-<text class="s22" x="740" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">=</text>
-<text class="s16" x="760" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">if</text>
-<text class="s15" x="780" y="395" textLength="30" lengthAdjust="spacingAndGlyphs"> i </text>
-<text class="s22" x="810" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">==</text>
-<text class="s15" x="830" y="395" textLength="140" lengthAdjust="spacingAndGlyphs"> self.cursor {</text>
+<text class="s22" x="630" y="395" textLength="30" lengthAdjust="spacingAndGlyphs">let</text>
+<text class="s18" x="660" y="395" textLength="80" lengthAdjust="spacingAndGlyphs"> marker </text>
+<text class="s24" x="740" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">=</text>
+<text class="s22" x="760" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">if</text>
+<text class="s18" x="780" y="395" textLength="30" lengthAdjust="spacingAndGlyphs"> i </text>
+<text class="s24" x="810" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">==</text>
+<text class="s18" x="830" y="395" textLength="140" lengthAdjust="spacingAndGlyphs"> self.cursor {</text>
 <text class="s4" x="990" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="415" textLength="380" lengthAdjust="spacingAndGlyphs"> 3  closed  parity-bot     Release 0.2</text>
 <text class="s3" x="390" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="410" y="415" textLength="100" lengthAdjust="spacingAndGlyphs">    25  │ </text>
-<text class="s15" x="510" y="415" textLength="210" lengthAdjust="spacingAndGlyphs">            println!(</text>
-<text class="s23" x="720" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">&quot;</text>
-<text class="s16" x="730" y="415" textLength="80" lengthAdjust="spacingAndGlyphs">{marker}</text>
-<text class="s16" x="820" y="415" textLength="60" lengthAdjust="spacingAndGlyphs">{line}</text>
-<text class="s23" x="880" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">&quot;</text>
-<text class="s15" x="890" y="415" textLength="20" lengthAdjust="spacingAndGlyphs">);</text>
+<text class="s18" x="510" y="415" textLength="210" lengthAdjust="spacingAndGlyphs">            println!(</text>
+<text class="s27" x="720" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">&quot;</text>
+<text class="s22" x="730" y="415" textLength="80" lengthAdjust="spacingAndGlyphs">{marker}</text>
+<text class="s22" x="820" y="415" textLength="60" lengthAdjust="spacingAndGlyphs">{line}</text>
+<text class="s27" x="880" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">&quot;</text>
+<text class="s18" x="890" y="415" textLength="20" lengthAdjust="spacingAndGlyphs">);</text>
 <text class="s4" x="990" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="435" textLength="380" lengthAdjust="spacingAndGlyphs"> 2  open    parity-friend  Try a faste</text>
 <text class="s3" x="390" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="410" y="435" textLength="100" lengthAdjust="spacingAndGlyphs">    26  │ </text>
-<text class="s15" x="510" y="435" textLength="90" lengthAdjust="spacingAndGlyphs">        }</text>
+<text class="s18" x="510" y="435" textLength="90" lengthAdjust="spacingAndGlyphs">        }</text>
 <text class="s4" x="990" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s20" x="270" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
+<text class="s25" x="270" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
 <text class="s3" x="390" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="410" y="455" textLength="100" lengthAdjust="spacingAndGlyphs">    27  │ </text>
-<text class="s15" x="510" y="455" textLength="140" lengthAdjust="spacingAndGlyphs">        Ok(())</text>
-<text class="s24" x="970" y="455" textLength="20" lengthAdjust="spacingAndGlyphs">▃▃</text>
+<text class="s18" x="510" y="455" textLength="140" lengthAdjust="spacingAndGlyphs">        Ok(())</text>
+<text class="s28" x="970" y="455" textLength="20" lengthAdjust="spacingAndGlyphs">▁▁</text>
 <text class="s4" x="990" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="390" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="410" y="475" textLength="100" lengthAdjust="spacingAndGlyphs">►   28  │ </text>
-<text class="s15" x="510" y="475" textLength="50" lengthAdjust="spacingAndGlyphs">    }</text>
+<text class="s18" x="510" y="475" textLength="50" lengthAdjust="spacingAndGlyphs">    }</text>
 <text class="s4" x="990" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="390" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s25" x="410" y="495" textLength="560" lengthAdjust="spacingAndGlyphs"> src/viewer.rs                                Line: 9/9 </text>
+<text class="s29" x="410" y="495" textLength="560" lengthAdjust="spacingAndGlyphs"> src/viewer.rs                                Line: 9/9 </text>
 <text class="s4" x="990" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="390" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
@@ -336,18 +343,18 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s4" x="990" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="575" textLength="400" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────┘</text>
 <text class="s4" x="400" y="575" textLength="600" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────┘</text>
-<text class="s26" x="0" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> j </text>
+<text class="s30" x="0" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> j </text>
 <text class="s1" x="30" y="595" textLength="100" lengthAdjust="spacingAndGlyphs">Line down </text>
-<text class="s26" x="130" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> k </text>
+<text class="s30" x="130" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> k </text>
 <text class="s1" x="160" y="595" textLength="80" lengthAdjust="spacingAndGlyphs">Line up </text>
-<text class="s26" x="240" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> c </text>
+<text class="s30" x="240" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> c </text>
 <text class="s1" x="270" y="595" textLength="120" lengthAdjust="spacingAndGlyphs">Add Comment </text>
-<text class="s26" x="390" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> J </text>
+<text class="s30" x="390" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> J </text>
 <text class="s1" x="420" y="595" textLength="100" lengthAdjust="spacingAndGlyphs">Next Hunk </text>
-<text class="s26" x="520" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> K </text>
+<text class="s30" x="520" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> K </text>
 <text class="s1" x="550" y="595" textLength="140" lengthAdjust="spacingAndGlyphs">Previous Hunk </text>
-<text class="s26" x="690" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> ] </text>
+<text class="s30" x="690" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> ] </text>
 <text class="s1" x="720" y="595" textLength="100" lengthAdjust="spacingAndGlyphs">Next File </text>
-<text class="s26" x="820" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> [ </text>
+<text class="s30" x="820" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> [ </text>
 <text class="s1" x="850" y="595" textLength="140" lengthAdjust="spacingAndGlyphs">Previous File </text>
 </svg>

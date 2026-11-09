@@ -11,24 +11,24 @@ cursor 0 0 hidden
 │ ☆  parity-bot  dotfiles     ✘        ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
 │ ☆  parity-bot  hello-world  ✘        ││▊  Filter files (press '/' to focus, ESC to clear)       ▎│
 │ ☆  parity-bot  lazy-demo    ✘        ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
-│                                      ││     3  │     println!("cargo:rerun-if-changed=assets");  │
 │                                      ││     4  │ }                                               │
 │                                      ││▶ 🗑️  docs/old.md (deleted)                               │
-│                                      ││▼ 📄 src/viewer.rs (+5 -2)                                │
+│                                      ││▼ 📄 src/viewer.rs (+5 -2) · 2 comments                   │
 │                                      ││  Lines 1-8 (+2)                                          │
-│                                      ││     1  │ use std::io;                                  ▃▃│
-└──────────────────────────────────────┘│     2  │ use std::fmt;                                   │
-┌─ [2] Pull Requests ──────────────────┐│     3  │                                                 │
-│ #  Status  Author         Title      ││     4  │ pub struct Viewer {                             │
-│ 5  open    parity-friend  Add a curso││     5  │     lines: Vec<String>,                         │
-│ 4  closed  parity-bot     Drop the le││     6  │     cursor: usize,                              │
-│ 3  closed  parity-bot     Release 0.2││     7  │ }                                               │
+│                                      ││     1  │ use std::io;                                    │
+│                                      ││     2  │ use std::fmt;                                 ▂▂│
+└──────────────────────────────────────┘│     3  │                                                 │
+┌─ [2] Pull Requests ──────────────────┐│     4  │ pub struct Viewer {                             │
+│ #  Status  Author         Title      ││     5  │     lines: Vec<String>,                         │
+│ 5  open    parity-friend  Add a curso││     6● │     cursor: usize,                              │
+│ 4  closed  parity-bot     Drop the le││          ▶ parity-bot: Should the cursor wr…  · 1 reply  │
+│ 3  closed  parity-bot     Release 0.2││     7  │ }                                             ▁▁│
 │ 2  open    parity-friend  Try a faste││     8  │                                                 │
 │                          ▊           ││  Lines 22-28 (+3 -2) • impl Viewer {                     │
 │                                      ││►   22  │     pub fn render(&self) -> io::Result<()> {    │
 │                                      ││    21  │         for line in &self.lines {               │
-│                                      ││    22  │             println!("{line}");                 │
-│                                      ││    23  │         for (i, line) in self.lines.iter().enu  │
+│                                      ││    22● │             println!("{line}");                 │
+│                                      ││          ▶ parity-bot: This needs a test.                │
 │                                      ││ src/viewer.rs                                Line: 1/9   │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
  j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File
@@ -42,27 +42,27 @@ chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdiiiiiiiiiiijjjjiiiiiiiiiiiiiiiiiiiiiiii
 ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnd
 ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlkkoooooooooooooooooooooooooooooooooooooooooooooookkkkkkknd
 ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnd
-c......................................cdkkkkkkkkkkpppppppppppppqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpprrd
-c......................................cdkkkkkkkkkkstttttttttttttttttttttttttttttttttttttttttttttrrd
-c......................................cduuuvuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuurrd
-c......................................cduuuvuuuuuuuuuuuuuuuuwwuxxuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuurrd
-c......................................cdyyyyyyyyyyyyyzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyrrd
-c......................................cdkkkkkkkkkkAAAsssssssssttttttttttttttttttttttttttttttttttBBd
-ccccccccccccccccccccccccccccccccccccccccdkkkkkkkkkkCCCppppppppppDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDEEd
-ccccccccccccccccccccccccccccccccccccccccdkkkkkkkkkkttttttttttttttttttttttttttttttttttttttttttttttEEd
-ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecdkkkkkkkkkkAAAsAAAAAAsFFFFFFsstttttttttttttttttttttttttttEEd
-chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdkkkkkkkkkkssssssssssssssssssssssstttttttttttttttttttttttEEd
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkppppppppppppCCCCCpDDDDDDDDDDDDDDDDDDDDDDDDDDDDEEd
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkstttttttttttttttttttttttttttttttttttttttttttttEEd
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkttttttttttttttttttttttttttttttttttttttttttttttrrd
-cEEEEEEEEEEEEEEEEEEEEEEEEEEBrrrrrrrrrrrcdyyyyyyyyyyyyyyyzzyGGyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyrrd
-c......................................cdkkkkkkkkkkHHHHIIIHIIHJJJJJJHKHHHHHHHHHHHHHHHHHHHHHHHHHLLrrd
-c......................................cdkkkkkkkkkkMMMMMMMMNNNMMMMMMOOMOMMMMMMMMMMMMPPPPPPPPPPPPPrrd
-c......................................cdkkkkkkkkkkMMMMMMMMMMMMMMMMMMMMMQNNNNNNQMMPPPPPPPPPPPPPPPrrd
-c......................................cdkkkkkkkkkkppppppppCCCpppppppppppRRpppppppppppppppppppppprrd
-c......................................cdSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSrrd
+c......................................cdkkkkkkkkkkpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrd
+c......................................cdssstssssssssssssssssssssssssssssssssssssssssssssssssssssrrd
+c......................................cdssstssssssssssssssssuusvvsssssssssssssssssssssssssssssssrrd
+c......................................cdwwwwwwwwwwwwwxxwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwrrd
+c......................................cdkkkkkkkkkkyyypppppppppqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrd
+c......................................cdkkkkkkkkkkzzzAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCd
+ccccccccccccccccccccccccccccccccccccccccdkkkkkkkkkkqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqDDd
+ccccccccccccccccccccccccccccccccccccccccdkkkkkkkkkkyyypyyyyyypEEEEEEppqqqqqqqqqqqqqqqqqqqqqqqqqqqDDd
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecdkkkkkkkkkkpppppppppppppppppppppppqqqqqqqqqqqqqqqqqqqqqqqDDd
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdkkkkkkFkkkAAAAAAAAAAAAzzzzzABBBBBBBBBBBBBBBBBBBBBBBBBBBBDDd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkGGHHHHHHHHHHGGGGGGGGGGGGGGGGGGGGGGGIIIIIIIIIIIDDd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqJJd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrd
+cDDDDDDDDDDDDDDDDDDDDDDDDDDCrrrrrrrrrrrcdwwwwwwwwwwwwwwwxxwKKwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwrrd
+c......................................cdkkkkkkkkkkLLLLMMMLMMLNNNNNNLOLLLLLLLLLLLLLLLLLLLLLLLLLPPrrd
+c......................................cdkkkkkkkkkkQQQQQQQQRRRQQQQQQSSQSQQQQQQQQQQQQTTTTTTTTTTTTTrrd
+c......................................cdkkkkkkFkkkQQQQQQQQQQQQQQQQQQQQQURRRRRRUQQTTTTTTTTTTTTTTTrrd
+c......................................cdkkkkkkkkkkGGHHHHHHHHHHGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGrrd
+c......................................cdVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVrrd
 ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-TTTUUUUUUUUUUTTTUUUUUUUUTTTUUUUUUUUUUUUTTTUUUUUUUUUUTTTUUUUUUUUUUUUUUTTTUUUUUUUUUUTTTUUUUUUUUUUUUUUT
+WWWXXXXXXXXXXWWWXXXXXXXXWWWXXXXXXXXXXXXWWWXXXXXXXXXXWWWXXXXXXXXXXXXXXWWWXXXXXXXXXXWWWXXXXXXXXXXXXXXW
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212
@@ -80,38 +80,41 @@ l fg=#191919 bg=#121212 inverse
 m fg=#191919 bg=#1e1e1e
 n fg=#191919 bg=#121212
 o fg=#737373 bg=#1e1e1e
-p fg=#f8f8f2 bg=#0a3a0a
-q fg=#e6db74 bg=#0a3a0a
+p fg=#f8f8f2 bg=#272822
+q fg=#e0e0e0 bg=#272822
 r fg=#e0e0e0 bg=#000000
-s fg=#f8f8f2 bg=#272822
-t fg=#e0e0e0 bg=#272822
-u fg=#e2e2e2 bg=#262626 bold
-v default
-w fg=#98e024 bg=#262626 bold
-x fg=#f4005f bg=#262626 bold
-y fg=#a5a5a5 bg=#1e1e1e
-z fg=#98e024 bg=#1e1e1e
-A fg=#66d9ef bg=#272822
-B fg=#003054 bg=#000000
-C fg=#66d9ef bg=#0a3a0a
-D fg=#e0e0e0 bg=#0a3a0a
-E fg=#003054 bg=#1e1e1e inverse
-F fg=#a6e22e bg=#272822
-G fg=#f4005f bg=#1e1e1e
-H fg=#f8f8f2 bg=#fd971f
-I fg=#66d9ef bg=#fd971f
-J fg=#a6e22e bg=#fd971f
-K fg=#ff4689 bg=#fd971f
-L fg=#e0e0e0 bg=#fd971f
-M fg=#f8f8f2 bg=#3a0a0a
-N fg=#66d9ef bg=#3a0a0a
-O fg=#ff4689 bg=#3a0a0a
-P fg=#e0e0e0 bg=#3a0a0a
-Q fg=#e6db74 bg=#3a0a0a
-R fg=#ff4689 bg=#0a3a0a
-S fg=#211505 bg=#fea62b
-T fg=#ffa62b bg=#242f38 bold
-U fg=#e0e0e0 bg=#242f38
+s fg=#e2e2e2 bg=#262626 bold
+t default
+u fg=#98e024 bg=#262626 bold
+v fg=#f4005f bg=#262626 bold
+w fg=#a5a5a5 bg=#1e1e1e
+x fg=#98e024 bg=#1e1e1e
+y fg=#66d9ef bg=#272822
+z fg=#66d9ef bg=#0a3a0a
+A fg=#f8f8f2 bg=#0a3a0a
+B fg=#e0e0e0 bg=#0a3a0a
+C fg=#003054 bg=#000000
+D fg=#003054 bg=#1e1e1e inverse
+E fg=#a6e22e bg=#272822
+F fg=#fea62b bg=#1e1e1e
+G fg=#e2e3e5 bg=#242f38
+H fg=#e2e3e5 bg=#242f38 bold
+I fg=#a7abaf bg=#242f38
+J fg=#003054 bg=#000000 inverse
+K fg=#f4005f bg=#1e1e1e
+L fg=#f8f8f2 bg=#fd971f
+M fg=#66d9ef bg=#fd971f
+N fg=#a6e22e bg=#fd971f
+O fg=#ff4689 bg=#fd971f
+P fg=#e0e0e0 bg=#fd971f
+Q fg=#f8f8f2 bg=#3a0a0a
+R fg=#66d9ef bg=#3a0a0a
+S fg=#ff4689 bg=#3a0a0a
+T fg=#e0e0e0 bg=#3a0a0a
+U fg=#e6db74 bg=#3a0a0a
+V fg=#211505 bg=#fea62b
+W fg=#ffa62b bg=#242f38 bold
+X fg=#e0e0e0 bg=#242f38
 --- cells
-11 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▶"," ","🗑️",""," "," ","d","o","c","s","/","o","l","d",".","m","d"," ","(","d","e","l","e","t","e","d",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
-12 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▼"," ","📄",""," ","s","r","c","/","v","i","e","w","e","r",".","r","s"," ","(","+","5"," ","-","2",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+10 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▶"," ","🗑️",""," "," ","d","o","c","s","/","o","l","d",".","m","d"," ","(","d","e","l","e","t","e","d",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+11 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▼"," ","📄",""," ","s","r","c","/","v","i","e","w","e","r",".","r","s"," ","(","+","5"," ","-","2",")"," ","·"," ","2"," ","c","o","m","m","e","n","t","s"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

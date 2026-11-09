@@ -270,7 +270,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s13" x="450" y="375" textLength="160" lengthAdjust="spacingAndGlyphs"> src/viewer.rs (</text>
 <text class="s5" x="610" y="375" textLength="20" lengthAdjust="spacingAndGlyphs">+5</text>
 <text class="s14" x="640" y="375" textLength="20" lengthAdjust="spacingAndGlyphs">-2</text>
-<text class="s13" x="660" y="375" textLength="310" lengthAdjust="spacingAndGlyphs">)                              </text>
+<text class="s13" x="660" y="375" textLength="310" lengthAdjust="spacingAndGlyphs">) · 2 comments                 </text>
 <text class="s4" x="990" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="395" textLength="380" lengthAdjust="spacingAndGlyphs"> 4  closed  parity-bot     Drop the le</text>

@@ -11,20 +11,20 @@ cursor 0 0 hidden
 │ ☆  parity-bot  dotfiles     ✘        ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
 │ ☆  parity-bot  hello-world  ✘        ││▊  Filter files (press '/' to focus, ESC to clear)       ▎│
 │ ☆  parity-bot  lazy-demo    ✘        ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
-│                                      ││▼ 📄 src/viewer.rs (+5 -2)                                │
-│                                      ││     5  │     lines: Vec<String>,                         │
-│                                      ││     6  │     cursor: usize,                              │
+│                                      ││▼ 📄 src/viewer.rs (+5 -2) · 2 comments                   │
+│                                      ││          ▶ parity-bot: Should the cursor wr…  · 1 reply  │
 │                                      ││     7  │ }                                               │
 │                                      ││     8  │                                                 │
-│                                      ││  Lines 22-28 (+3 -2) • impl Viewer {                   ▂▂│
-└──────────────────────────────────────┘│    22  │     pub fn render(&self) -> io::Result<()> {    │
-┌─ [2] Pull Requests ──────────────────┐│    21  │         for line in &self.lines {               │
-│ #  Status  Author         Title      ││    22  │             println!("{line}");                 │
+│                                      ││  Lines 22-28 (+3 -2) • impl Viewer {                     │
+│                                      ││    22  │     pub fn render(&self) -> io::Result<()> {    │
+└──────────────────────────────────────┘│    21  │         for line in &self.lines {             ▆▆│
+┌─ [2] Pull Requests ──────────────────┐│    22● │             println!("{line}");                 │
+│ #  Status  Author         Title      ││          ▶ parity-bot: This needs a test.                │
 │ 5  open    parity-friend  Add a curso││    23  │         for (i, line) in self.lines.iter().enu  │
 │ 4  closed  parity-bot     Drop the le││    24  │             let marker = if i == self.cursor {  │
 │ 3  closed  parity-bot     Release 0.2││    25  │             println!("{marker} {line}");        │
 │ 2  open    parity-friend  Try a faste││    26  │         }                                       │
-│                          ▊           ││    27  │         Ok(())                                ▃▃│
+│                          ▊           ││    27  │         Ok(())                                ▁▁│
 │                                      ││►   28  │     }                                           │
 │                                      ││ src/viewer.rs                                Line: 9/9   │
 │                                      ││                                                          │
@@ -43,26 +43,26 @@ ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
 ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlkkoooooooooooooooooooooooooooooooooooooooooooooookkkkkkknd
 ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnd
 c......................................cdpppqpppppppppppppppprrpsspppppppppppppppppppppppppppppppttd
-c......................................cdkkkkkkkkkkuuuuuuuuuuuuuuuuuuuuuuuvvvvvvvvvvvvvvvvvvvvvvvttd
-c......................................cdkkkkkkkkkkwwwwwwwwwwwwxxxxxwyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
-c......................................cdkkkkkkkkkkuvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvttd
-c......................................cdkkkkkkkkkkvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvttd
-c......................................cdzzzzzzzzzzzzzzzAAzBBzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzCCd
-ccccccccccccccccccccccccccccccccccccccccdkkkkkkkkkkuuuuDDDuDDuEEEEEEuFuuuuuuuuuuuuuuuuuuuuuuuuuvvGGd
-ccccccccccccccccccccccccccccccccccccccccdkkkkkkkkkkHHHHHHHHIIIHHHHHHJJHJHHHHHHHHHHHHKKKKKKKKKKKKKGGd
-ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecdkkkkkkkkkkHHHHHHHHHHHHHHHHHHHHHLIIIIIILHHKKKKKKKKKKKKKKKGGd
-chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdkkkkkkkkkkwwwwwwwwxxxwwwwwwwwwwwMMwwwwwwwwwwwwwwwwwwwwwwGGd
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkwwwwwwwwwwwwxxxwwwwwwwwMwxxwwwMMwwwwwwwwwwwwwwGGd
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkwwwwwwwwwwwwwwwwwwwwwNxxxxxxxxNxxxxxxNwwyyyyyyGGd
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkuuuuuuuuuvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvGGd
-cGGGGGGGGGGGGGGGGGGGGGGGGGGCtttttttttttcdkkkkkkkkkkuuuuuuuuuuuuuuvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvOOd
-c......................................cdkkkkkkkkkkPPPPPQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQttd
-c......................................cdRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRttd
+c......................................cdkkkkkkkkkkuuvvvvvvvvvvuuuuuuuuuuuuuuuuuuuuuuuwwwwwwwwwwwttd
+c......................................cdkkkkkkkkkkxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
+c......................................cdkkkkkkkkkkyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
+c......................................cdzzzzzzzzzzzzzzzAAzBBzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzttd
+c......................................cdkkkkkkkkkkxxxxCCCxCCxDDDDDDxExxxxxxxxxxxxxxxxxxxxxxxxxyyttd
+ccccccccccccccccccccccccccccccccccccccccdkkkkkkkkkkFFFFFFFFGGGFFFFFFHHFHFFFFFFFFFFFFIIIIIIIIIIIIIJJd
+ccccccccccccccccccccccccccccccccccccccccdkkkkkkKkkkFFFFFFFFFFFFFFFFFFFFFLGGGGGGLFFIIIIIIIIIIIIIIIMMd
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecdkkkkkkkkkkuuvvvvvvvvvvuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuMMd
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdkkkkkkkkkkNNNNNNNNOOONNNNNNNNNNNPPNNNNNNNNNNNNNNNNNNNNNNMMd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkNNNNNNNNNNNNOOONNNNNNNNPNOONNNPPNNNNNNNNNNNNNNMMd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkNNNNNNNNNNNNNNNNNNNNNQOOOOOOOOQOOOOOOQNNRRRRRRMMd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyMMd
+cMMMMMMMMMMMMMMMMMMMMMMMMMMJtttttttttttcdkkkkkkkkkkxxxxxxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyySSd
+c......................................cdkkkkkkkkkkTTTTTUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUttd
+c......................................cdVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVttd
 c......................................cd........................................................ttd
 c......................................cd........................................................ttd
 c......................................cd........................................................ttd
 ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-SSSTTTTTTTTTTSSSTTTTTTTTSSSTTTTTTTTTTTTSSSTTTTTTTTTTSSSTTTTTTTTTTTTTTSSSTTTTTTTTTTSSSTTTTTTTTTTTTTTS
+WWWXXXXXXXXXXWWWXXXXXXXXWWWXXXXXXXXXXXXWWWXXXXXXXXXXWWWXXXXXXXXXXXXXXWWWXXXXXXXXXXWWWXXXXXXXXXXXXXXW
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212
@@ -85,31 +85,35 @@ q default
 r fg=#98e024 bg=#262626 bold
 s fg=#f4005f bg=#262626 bold
 t fg=#e0e0e0 bg=#000000
-u fg=#f8f8f2 bg=#272822
-v fg=#e0e0e0 bg=#272822
-w fg=#f8f8f2 bg=#0a3a0a
-x fg=#66d9ef bg=#0a3a0a
-y fg=#e0e0e0 bg=#0a3a0a
+u fg=#e2e3e5 bg=#242f38
+v fg=#e2e3e5 bg=#242f38 bold
+w fg=#a7abaf bg=#242f38
+x fg=#f8f8f2 bg=#272822
+y fg=#e0e0e0 bg=#272822
 z fg=#a5a5a5 bg=#1e1e1e
 A fg=#98e024 bg=#1e1e1e
 B fg=#f4005f bg=#1e1e1e
-C fg=#003054 bg=#000000
-D fg=#66d9ef bg=#272822
-E fg=#a6e22e bg=#272822
-F fg=#ff4689 bg=#272822
-G fg=#003054 bg=#1e1e1e inverse
-H fg=#f8f8f2 bg=#3a0a0a
-I fg=#66d9ef bg=#3a0a0a
-J fg=#ff4689 bg=#3a0a0a
-K fg=#e0e0e0 bg=#3a0a0a
+C fg=#66d9ef bg=#272822
+D fg=#a6e22e bg=#272822
+E fg=#ff4689 bg=#272822
+F fg=#f8f8f2 bg=#3a0a0a
+G fg=#66d9ef bg=#3a0a0a
+H fg=#ff4689 bg=#3a0a0a
+I fg=#e0e0e0 bg=#3a0a0a
+J fg=#003054 bg=#000000
+K fg=#fea62b bg=#1e1e1e
 L fg=#e6db74 bg=#3a0a0a
-M fg=#ff4689 bg=#0a3a0a
-N fg=#e6db74 bg=#0a3a0a
-O fg=#003054 bg=#000000 inverse
-P fg=#f8f8f2 bg=#fd971f
-Q fg=#e0e0e0 bg=#fd971f
-R fg=#211505 bg=#fea62b
-S fg=#ffa62b bg=#242f38 bold
-T fg=#e0e0e0 bg=#242f38
+M fg=#003054 bg=#1e1e1e inverse
+N fg=#f8f8f2 bg=#0a3a0a
+O fg=#66d9ef bg=#0a3a0a
+P fg=#ff4689 bg=#0a3a0a
+Q fg=#e6db74 bg=#0a3a0a
+R fg=#e0e0e0 bg=#0a3a0a
+S fg=#003054 bg=#000000 inverse
+T fg=#f8f8f2 bg=#fd971f
+U fg=#e0e0e0 bg=#fd971f
+V fg=#211505 bg=#fea62b
+W fg=#ffa62b bg=#242f38 bold
+X fg=#e0e0e0 bg=#242f38
 --- cells
-9 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▼"," ","📄",""," ","s","r","c","/","v","i","e","w","e","r",".","r","s"," ","(","+","5"," ","-","2",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+9 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▼"," ","📄",""," ","s","r","c","/","v","i","e","w","e","r",".","r","s"," ","(","+","5"," ","-","2",")"," ","·"," ","2"," ","c","o","m","m","e","n","t","s"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

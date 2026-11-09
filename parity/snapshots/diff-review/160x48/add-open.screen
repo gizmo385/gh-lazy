@@ -34,22 +34,22 @@ cursor 0 0 hidden
 │ 3  closed  parity-bot     Release 0.2.█ ▊                                                                          ▎ █                                       │
 │ 2  open    parity-friend  Try a faster█ ▊                                                                          ▎ █                                       │
 │                                       █ ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎ █                                       │
-│                                       █                                                                              █                                       │
-│                                       █                      ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                       █                                     ▇▇│
+│                                       █                                                                              █                                     ▆▆│
+│                                       █                      ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                       █                                       │
 │                                       █                        Add Comment         Cancel                            █                                       │
 │                                       █                      ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                       █                                       │
 │                                       █                                                                              █                                       │
-│                                       █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                                       │
+│                                       █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█nd?  · 1 reply                         │
+│                                                              ││     7  │ }                                                                                   │
 │                                                              ││     8  │                                                                                     │
 │                                                              ││  Lines 22-28 (+3 -2) • impl Viewer {                                                         │
 │                                                              ││    22  │     pub fn render(&self) -> io::Result<()> {                                        │
 │                                                              ││    21  │         for line in &self.lines {                                                   │
-│                                                              ││    22  │             println!("{line}");                                                     │
-│                                                              ││    23  │         for (i, line) in self.lines.iter().enumerate() {                            │
-│                                                              ││    24  │             let marker = if i == self.cursor { ">" } else { " " };                  │
+│                                                              ││    22● │             println!("{line}");                                                     │
+│                                                              ││          ▶ parity-bot: This needs a test.                                                    │
 │                                                              ││ README.md                                                                        Line: 4/6   │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
- j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  z Fold Files  / Filter Files  ^v Paste link  f Follow link
+ j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  z Fold Files  n Next Comment  N Previous Comment  / Filter F
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
@@ -83,22 +83,22 @@ dlllllllllllllllllllllllllllllllllllllllq.CE....................................
 dlllllllllllllllllllllllllllllllllllllllq.CE........................................................................ED.qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsse
 dlllllllllllllllllllllllllllllllllllllllq.CE........................................................................ED.qtttttttttttttttttttttttttttttttttttttsse
 dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq.CDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD.quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusse
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq..............................................................................qzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzsse
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq......................KKKKKKKKKKKKKKKK.LLLLLLLLLLLLLLLL.......................quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuMMe
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq......................NOOOOOOOOOOOOONN.....PPPPPPPP...........................quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuQQe
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq......................RRRRRRRRRRRRRRRR.SSSSSSSSSSSSSSSS.......................quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuQQe
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq..............................................................................qzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzQQe
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqquuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuQQe
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdelllllllllluuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuQQe
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdetttttttttttttttTTtUUttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttQQe
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllIIIIVVVIVVIWWWWWWIXIIIIIIIIIIIIIIIIIIIIIIIIIuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuQQe
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllYYYYYYYYZZZYYYYYY00Y0YYYYYYYYYYYYwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwQQe
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllYYYYYYYYYYYYYYYYYYYYY1ZZZZZZ1YYwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwQQe
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllJJJJJJJJ222JJJJJJJJJJJ33JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJzzzzzzzzzzzzzzzzzzzzzzzzzzQQe
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllJJJJJJJJJJJJ222JJJJJJJJ3J22JJJ33JJJJJJJJJJJJJJJ444JJJ2222JJJ444JJJzzzzzzzzzzzzzzzzQQe
-dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555QQe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq..............................................................................qzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzKKe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq......................LLLLLLLLLLLLLLLL.MMMMMMMMMMMMMMMM.......................quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuNNe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq......................OPPPPPPPPPPPPPOO.....QQQQQQQQ...........................quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuNNe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq......................RRRRRRRRRRRRRRRR.SSSSSSSSSSSSSSSS.......................quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuNNe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq..............................................................................qzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzNNe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqTTTUUUUUUUUUUUTTTTTTTTTTTTTTTTTTTTTTTNNe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllIuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuNNe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdelllllllllluuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuNNe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdetttttttttttttttVVtWWttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttNNe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllIIIIXXXIXXIYYYYYYIZIIIIIIIIIIIIIIIIIIIIIIIIIuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuNNe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllll000000001110000002202000000000000wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwNNe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllll3lll0000000000000000000004111111400wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwNNe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllTT5555555555TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTNNe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666NNe
 ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-6667777777777666777777776667777777777776667777777777666777777777777776667777777777666777777777777776667777777777766677777777777776666777777777776667777777777776
+7778888888888777888888887778888888888887778888888888777888888888888887778888888888777888888888888887778888888888877788888888888887778888888888888888877788888888
 --- legend
 . fg=#e0e0e0 bg=#1e1e1e
 a fg=#0a263a bg=#121212
@@ -137,27 +137,28 @@ G fg=#e0e0e0 bg=#262626
 H fg=#666239 bg=#1a1a18
 I fg=#6e6e6b bg=#1a1a18
 J fg=#6e6e6b bg=#0e220e
-K fg=#7ae998 bg=#4ebf71
-L fg=#2d2d2d bg=#1e1e1e
-M fg=#0a1e2c bg=#0a0a0a inverse
-N fg=#0a180e bg=#4ebf71
-O fg=#0a180e bg=#4ebf71 bold
-P fg=#e0e0e0 bg=#1e1e1e bold
-Q fg=#646464 bg=#0a0a0a
+K fg=#0a1e2c bg=#0a0a0a inverse
+L fg=#7ae998 bg=#4ebf71
+M fg=#2d2d2d bg=#1e1e1e
+N fg=#646464 bg=#0a0a0a
+O fg=#0a180e bg=#4ebf71
+P fg=#0a180e bg=#4ebf71 bold
+Q fg=#e0e0e0 bg=#1e1e1e bold
 R fg=#008139 bg=#4ebf71
 S fg=#0d0d0d bg=#1e1e1e
-T fg=#476419 bg=#161616
-U fg=#6c0a30 bg=#161616
-V fg=#33616a bg=#1a1a18
-W fg=#4d651d bg=#1a1a18
-X fg=#702641 bg=#1a1a18
-Y fg=#6e6e6b bg=#220e0e
-Z fg=#33616a bg=#220e0e
-0 fg=#702641 bg=#220e0e
-1 fg=#666239 bg=#220e0e
-2 fg=#33616a bg=#0e220e
-3 fg=#702641 bg=#0e220e
-4 fg=#666239 bg=#0e220e
-5 fg=#18130c bg=#704d1c
-6 fg=#704d1c bg=#191d21 bold
-7 fg=#646464 bg=#191d21
+T fg=#656566 bg=#191d21
+U fg=#4d4f50 bg=#191d21
+V fg=#476419 bg=#161616
+W fg=#6c0a30 bg=#161616
+X fg=#33616a bg=#1a1a18
+Y fg=#4d651d bg=#1a1a18
+Z fg=#702641 bg=#1a1a18
+0 fg=#6e6e6b bg=#220e0e
+1 fg=#33616a bg=#220e0e
+2 fg=#702641 bg=#220e0e
+3 fg=#704d1c bg=#161616
+4 fg=#666239 bg=#220e0e
+5 fg=#656566 bg=#191d21 bold
+6 fg=#18130c bg=#704d1c
+7 fg=#704d1c bg=#191d21 bold
+8 fg=#646464 bg=#191d21

@@ -240,7 +240,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s3" x="0" y="315" textLength="400" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────┘</text>
 <text class="s4" x="400" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="410" y="315" textLength="560" lengthAdjust="spacingAndGlyphs">     6  │                                               </text>
-<text class="s21" x="970" y="315" textLength="20" lengthAdjust="spacingAndGlyphs">▅▅</text>
+<text class="s21" x="970" y="315" textLength="20" lengthAdjust="spacingAndGlyphs">▇▇</text>
 <text class="s4" x="990" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="335" textLength="400" lengthAdjust="spacingAndGlyphs">┌─ [2] Pull Requests ──────────────────┐</text>
 <text class="s4" x="400" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>

@@ -18,7 +18,9 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 .s13 { fill: #121212; }
 .s14 { fill: #57a5e2; }
 .s15 { fill: #f4bb6e; }
-.s16 { fill: #ffa62b; font-weight: bold; }
+.s16 { fill: #b93c5b; }
+.s17 { fill: #ffff00; }
+.s18 { fill: #ffa62b; font-weight: bold; }
 </style>
 <rect width="1600" height="960" fill="#1e1e1e"/>
 <g shape-rendering="crispEdges">
@@ -77,17 +79,31 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="630" y="520" width="970" height="20" fill="#121212"/>
 <rect x="0" y="540" width="10" height="20" fill="#121212"/>
 <rect x="10" y="540" width="620" height="20" fill="#153854"/>
-<rect x="630" y="540" width="970" height="20" fill="#121212"/>
+<rect x="630" y="540" width="350" height="20" fill="#121212"/>
+<rect x="980" y="540" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="540" width="20" height="20" fill="#121212"/>
 <rect x="0" y="560" width="10" height="20" fill="#121212"/>
-<rect x="630" y="560" width="970" height="20" fill="#121212"/>
+<rect x="630" y="560" width="350" height="20" fill="#121212"/>
+<rect x="980" y="560" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="560" width="20" height="20" fill="#121212"/>
 <rect x="0" y="580" width="10" height="20" fill="#121212"/>
-<rect x="630" y="580" width="970" height="20" fill="#121212"/>
+<rect x="630" y="580" width="350" height="20" fill="#121212"/>
+<rect x="980" y="580" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="580" width="20" height="20" fill="#121212"/>
 <rect x="0" y="600" width="10" height="20" fill="#121212"/>
 <rect x="630" y="600" width="970" height="20" fill="#121212"/>
-<rect x="0" y="620" width="1600" height="20" fill="#121212"/>
-<rect x="0" y="640" width="1600" height="20" fill="#121212"/>
-<rect x="0" y="660" width="1600" height="20" fill="#121212"/>
-<rect x="0" y="680" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="620" width="980" height="20" fill="#121212"/>
+<rect x="980" y="620" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="620" width="20" height="20" fill="#121212"/>
+<rect x="0" y="640" width="980" height="20" fill="#121212"/>
+<rect x="980" y="640" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="640" width="20" height="20" fill="#121212"/>
+<rect x="0" y="660" width="980" height="20" fill="#121212"/>
+<rect x="980" y="660" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="660" width="20" height="20" fill="#121212"/>
+<rect x="0" y="680" width="980" height="20" fill="#121212"/>
+<rect x="980" y="680" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="680" width="20" height="20" fill="#121212"/>
 <rect x="0" y="700" width="1600" height="20" fill="#121212"/>
 <rect x="0" y="720" width="980" height="20" fill="#121212"/>
 <rect x="980" y="720" width="600" height="20" fill="#343f49"/>
@@ -277,17 +293,21 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s4" x="640" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="650" y="555" textLength="90" lengthAdjust="spacingAndGlyphs">  Thanks </text>
 <text class="s11" x="740" y="555" textLength="110" lengthAdjust="spacingAndGlyphs">@parity-bot</text>
-<text class="s1" x="850" y="555" textLength="740" lengthAdjust="spacingAndGlyphs"> for the first review!                                                    </text>
+<text class="s1" x="850" y="555" textLength="130" lengthAdjust="spacingAndGlyphs"> for the firs</text>
+<text class="s16" x="980" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="575" textLength="620" lengthAdjust="spacingAndGlyphs"> 4  closed  parity-bot     Drop the legacy renderer           </text>
 <text class="s3" x="630" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s16" x="980" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s1" x="990" y="575" textLength="600" lengthAdjust="spacingAndGlyphs"> Already a reviewer!                                        </text>
 <text class="s4" x="1590" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="595" textLength="620" lengthAdjust="spacingAndGlyphs"> 3  closed  parity-bot     Release 0.2.0                      </text>
 <text class="s3" x="630" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s16" x="980" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="615" textLength="620" lengthAdjust="spacingAndGlyphs"> 2  open    parity-friend  Try a faster parser                </text>
@@ -297,18 +317,26 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s3" x="0" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s16" x="980" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s16" x="980" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s1" x="990" y="655" textLength="210" lengthAdjust="spacingAndGlyphs"> Could not find user </text>
+<text class="s17" x="1200" y="655" textLength="110" lengthAdjust="spacingAndGlyphs">nobody-here</text>
+<text class="s1" x="1310" y="655" textLength="280" lengthAdjust="spacingAndGlyphs"> - are you sure they        </text>
 <text class="s4" x="1590" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s16" x="980" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s1" x="990" y="675" textLength="600" lengthAdjust="spacingAndGlyphs"> exist?                                                     </text>
 <text class="s4" x="1590" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s16" x="980" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
@@ -368,18 +396,18 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s3" x="0" y="935" textLength="640" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘</text>
 <text class="s4" x="640" y="935" textLength="350" lengthAdjust="spacingAndGlyphs">└─────────────────────────────────▌</text>
 <text class="s4" x="1580" y="935" textLength="20" lengthAdjust="spacingAndGlyphs">─┘</text>
-<text class="s16" x="0" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^v </text>
+<text class="s18" x="0" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^v </text>
 <text class="s1" x="40" y="955" textLength="110" lengthAdjust="spacingAndGlyphs">Paste link </text>
-<text class="s16" x="150" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> f </text>
+<text class="s18" x="150" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> f </text>
 <text class="s1" x="180" y="955" textLength="120" lengthAdjust="spacingAndGlyphs">Follow link </text>
-<text class="s16" x="300" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> F </text>
+<text class="s18" x="300" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> F </text>
 <text class="s1" x="330" y="955" textLength="220" lengthAdjust="spacingAndGlyphs">Follow link (browser) </text>
-<text class="s16" x="550" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
+<text class="s18" x="550" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
 <text class="s1" x="580" y="955" textLength="50" lengthAdjust="spacingAndGlyphs">Quit </text>
-<text class="s16" x="630" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^p </text>
+<text class="s18" x="630" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^p </text>
 <text class="s1" x="670" y="955" textLength="160" lengthAdjust="spacingAndGlyphs">Command Palette </text>
-<text class="s16" x="830" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> M </text>
+<text class="s18" x="830" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> M </text>
 <text class="s1" x="860" y="955" textLength="90" lengthAdjust="spacingAndGlyphs">Maximize </text>
-<text class="s16" x="950" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ? </text>
+<text class="s18" x="950" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ? </text>
 <text class="s1" x="980" y="955" textLength="620" lengthAdjust="spacingAndGlyphs">Keybindings                                                   </text>
 </svg>

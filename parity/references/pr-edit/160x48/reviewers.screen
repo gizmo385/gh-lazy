@@ -45,10 +45,10 @@ cursor 43 36 hidden
 │                             █                                                                                                  █                             │
 │                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
 │                                                              ││                                                                                              │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌ Error updating pull request                                │
-│                                                              ││                                 ▌ Unexpected error while attempting to update PR             │
-└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  / Search  O Lookup Pull Request  E Edit PR  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palle
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -90,15 +90,15 @@ v.............................klllllllllllllllllllllllllllllllllllllllllllllllll
 v.............................klllllllllllllllllllllllllllllllOOOOOOOOOOOOOOOOlPPPPPPPPPPPPPPPPllllllllllllllllllllllllllllllluulk.............................d
 v.............................klllllllllllllllllllllllllllllllQQQQRRRRRRRRQQQQlSSSSTTTTTTTTSSSSllllllllllllllllllllllllllllllluulk.............................d
 v.............................klllllllllllllllllllllllllllllllUUUUUUUUUUUUUUUUlVVVVVVVVVVVVVVVVllllllllllllllllllllllllllllllluulk.............................d
-v.............................kllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllluulkWWWWWWWWWWWWWWWWWWWWWWWWWWWW.d
-v.............................kllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllkWWWWWWWWWWWWWWWWWWWWWWWWWWWW.d
-v.............................kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkWWWWWWWWWWWWWWWWWWWWWWWWWWWW.d
+v.............................kllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllluulk.............................d
+v.............................kllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllk.............................d
+v.............................kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.............................d
 v..............................................................vd..............................................................................................d
-v..............................................................vd.................................XYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY.d
-v..............................................................vd.................................XYZZZZZZZZZZZZZZZZZZZZZZZZZZZYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY.d
-v..............................................................vd.................................XY0000000000000000000000000000000000000000000000YYYYYYYYYYYY.d
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvddddddddddddddddddddddddddddddddddXYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYdd
-1112222222111222222222222222222221112222222211122222222221112222222222111222222211112222222222211122222222222211122222222222222222222221112222211112222222222222
+v..............................................................vd..............................................................................................d
+v..............................................................vd..............................................................................................d
+v..............................................................vd..............................................................................................d
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+WWWXXXXXXXWWWXXXXXXXXXXXXXXXXXXXXWWWXXXXXXXXWWWXXXXXXXXXXWWWXXXXXXXXXXWWWXXXXXXXWWWWXXXXXXXXXXXWWWXXXXXXXXXXXXWWWXXXXXXXXXXXXXXXXXXXXXXWWWXXXXXWWWWXXXXXXXXXXXXX
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#0a263a bg=#121212
@@ -149,10 +149,5 @@ S bg=#b93c5b
 T fg=#f5e5e9 bg=#b93c5b bold
 U fg=#008139 bg=#4ebf71
 V fg=#780028 bg=#b93c5b
-W fg=#e0e0e0 bg=#1f2428
-X fg=#b93c5b bg=#343f49
-Y bg=#343f49
-Z fg=#d17e92 bg=#343f49 bold
-0 fg=#e0e0e0 bg=#343f49
-1 fg=#704d1c bg=#191d21 bold
-2 fg=#646464 bg=#191d21
+W fg=#704d1c bg=#191d21 bold
+X fg=#646464 bg=#191d21

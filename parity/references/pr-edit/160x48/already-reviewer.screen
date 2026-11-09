@@ -41,11 +41,11 @@ cursor 29 51 hidden
 │                             █                               ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                  █                             │
 │                             █                                    Update           Cancel                                       █                             │
 │                             █                               ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                  █                             │
-│                             █                                                                   ▌                                                            │
-│                             █                                                                   ▌ Error updating pull request                                │
-│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌ Unexpected error while attempting to update PR             │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌                                                            │
+│                             █                                                                                                  █                             │
+│                             █                                                                                                  █                             │
+│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                 ▌ Already a reviewer!                                        │
 └──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
@@ -90,15 +90,15 @@ v.............................klllllllllllllllllllllllllllllllllllllllllllllllll
 v.............................klllllllllllllllllllllllllllllllNNNNNNNNNNNNNNNNlOOOOOOOOOOOOOOOOllllllllllllllllllllllllllllllluulk.............................d
 v.............................klllllllllllllllllllllllllllllllPPPPQQQQQQQQPPPPlRRRRSSSSSSSSRRRRllllllllllllllllllllllllllllllluulk.............................d
 v.............................klllllllllllllllllllllllllllllllTTTTTTTTTTTTTTTTlUUUUUUUUUUUUUUUUllllllllllllllllllllllllllllllluulk.............................d
-v.............................klllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllVWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.d
-v.............................klllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllVWXXXXXXXXXXXXXXXXXXXXXXXXXXXWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.d
-v.............................kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkVWYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYWWWWWWWWWWWW.d
+v.............................kllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllluulk.............................d
+v.............................kllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllk.............................d
+v.............................kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.............................d
+v..............................................................vd..............................................................................................d
+v..............................................................vd..............................................................................................d
 v..............................................................vd.................................VWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.d
-v..............................................................vd.................................Z00000000000000000000000000000000000000000000000000000000000.d
-v..............................................................vd.................................VWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.d
-v..............................................................vd.................................VWYYYYYYYYYYYYYYYYYYYWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.d
+v..............................................................vd.................................VWXXXXXXXXXXXXXXXXXXXWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.d
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvddddddddddddddddddddddddddddddddddVWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWdd
-1112222222111222222222222222222221112222222211122222222221112222222222111222222211112222222222211122222222222211122222222222222222222221112222211112222222222222
+YYYZZZZZZZYYYZZZZZZZZZZZZZZZZZZZZYYYZZZZZZZZYYYZZZZZZZZZZYYYZZZZZZZZZZYYYZZZZZZZYYYYZZZZZZZZZZZYYYZZZZZZZZZZZZYYYZZZZZZZZZZZZZZZZZZZZZZYYYZZZZZYYYYZZZZZZZZZZZZZ
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#0a263a bg=#121212
@@ -150,9 +150,6 @@ T fg=#008139 bg=#4ebf71
 U fg=#780028 bg=#b93c5b
 V fg=#b93c5b bg=#343f49
 W bg=#343f49
-X fg=#d17e92 bg=#343f49 bold
-Y fg=#e0e0e0 bg=#343f49
-Z fg=#54222f bg=#1f2428
-0 fg=#e0e0e0 bg=#1f2428
-1 fg=#704d1c bg=#191d21 bold
-2 fg=#646464 bg=#191d21
+X fg=#e0e0e0 bg=#343f49
+Y fg=#704d1c bg=#191d21 bold
+Z fg=#646464 bg=#191d21

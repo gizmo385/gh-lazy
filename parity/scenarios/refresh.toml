@@ -40,8 +40,18 @@ wait = { text = "PR Reviews", timeout_ms = 15000 }
 keys = ["right", "right"]
 
 # The wheel scrolls the content to its end without moving focus off the tab strip; titles are cut to fit at 100x30.
+# As after the refresh below, both reaction sections must show first, or the scroll stops short of the end.
+[[step]]
+wait = { text = "👀 1", timeout_ms = 15000 }
+
 [[step]]
 wheel = { text = "Review from", direction = "down", count = 50 }
+
+[[step]]
+wait = { text = "👍 1 | 🚀 1" }
+
+[[step]]
+wheel = { text = "PR #5 Details", offset = [0, 6], direction = "down", count = 50 }
 
 [[step]]
 wait = { text = "Rebased on main.", timeout_ms = 15000 }
@@ -55,12 +65,25 @@ keys = ["ctrl+r"]
 [[step]]
 wait = { text = "Wrap line", timeout_ms = 15000 }
 
-# The Conversation was rebuilt, so it starts at the top again; the new comment is last.
+# The Conversation was rebuilt, so it starts at the top again; the new comment is last. Its comments' reactions
+# arrive after it's drawn, and the two that aren't empty each add a section, so a scroll to the end taken before both
+# showed stops short of the final end. The first is near the top, in view now; the second shows at the end, after which
+# a second scroll reaches the real end. These wheels point into the content under the pane's title, since the text
+# they'd follow may have scrolled away.
 [[step]]
 wait = { text = "Review from", timeout_ms = 15000 }
 
 [[step]]
-wheel = { text = "Review from", direction = "down", count = 50 }
+wait = { text = "👀 1" }
+
+[[step]]
+wheel = { text = "PR #5 Details", offset = [0, 6], direction = "down", count = 50 }
+
+[[step]]
+wait = { text = "👍 1 | 🚀 1" }
+
+[[step]]
+wheel = { text = "PR #5 Details", offset = [0, 6], direction = "down", count = 50 }
 
 [[step]]
 wait = { text = "Refreshed: the cursor line", timeout_ms = 15000 }
@@ -93,6 +116,26 @@ wait = { gone = "[4] Workflows (empty)", timeout_ms = 15000 }
 
 [[step]]
 wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/actions/runs", query = { page = "1", per_page = "30" } } }
+
+# The Conversation was rebuilt again, and where its scroll ends up depends on when its reactions arrived, as above:
+# back to the top for the first, then to the end once the second shows.
+[[step]]
+wheel = { text = "PR #5 Details", offset = [0, 6], direction = "up", count = 50 }
+
+[[step]]
+wait = { text = "👀 1" }
+
+[[step]]
+wheel = { text = "PR #5 Details", offset = [0, 6], direction = "down", count = 50 }
+
+[[step]]
+wait = { text = "👍 1 | 🚀 1" }
+
+[[step]]
+wheel = { text = "PR #5 Details", offset = [0, 6], direction = "down", count = 50 }
+
+[[step]]
+wait = { text = "Refreshed: the cursor line" }
 
 [[step]]
 capture = "after-palette"

@@ -29,14 +29,14 @@ cursor 0 0 hidden
 └──────────────────────────────────────────────────────────────┘│  • j and k move it                                                                           │
 ┌─ [2] Pull Requests ──────────────────────────────────────────┐│  • the current line is marked with >                                                         │
 │ #  Status  Author         Title                              ││                                                                                              │
-│ 5  open    parity-friend  Add a cursor to the diff viewer    ││  Thanks @parity-bot for the first review!                                                    │
-│ 4  closed  parity-bot     Drop the legacy renderer           ││                                                                                              │
-│ 3  closed  parity-bot     Release 0.2.0                      ││                                                                                              │
+│ 5  open    parity-friend  Add a cursor to the diff viewer    ││  Thanks @parity-bot for the firs▌                                                            │
+│ 4  closed  parity-bot     Drop the legacy renderer           ││                                 ▌ Already a reviewer!                                        │
+│ 3  closed  parity-bot     Release 0.2.0                      ││                                 ▌                                                            │
 │ 2  open    parity-friend  Try a faster parser                ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Could not find user nobody-here - are you sure they        │
+│                                                              ││                                 ▌ exist?                                                     │
+│                                                              ││                                 ▌                                                            │
 │                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                 ▌ Removing parity-reviewer                                   │
@@ -78,27 +78,27 @@ c..............................................................cd...............
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..ttu.....u...................................................................................d
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..tt................................u.........................................................d
 ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd..............................................................................................d
-cjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjcd.........ooooooooooo..........................................................................d
+cjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjcd.........ooooooooooo.............vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
 cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd..............................................................................................d
-cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd..............................................................................................d
-cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
 c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwxxxxxxxxxxxwwwwwwwwwwwwwwwwwwwwwwwwwww.d
 c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
 c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
 c..............................................................cd..............................................................................................d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
 c..............................................................cd..............................................................................................d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddddddddddddddddddddddddddddddvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwdd
-xxxxyyyyyyyyyyyxxxyyyyyyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyyyxxxyyyyyxxxxyyyyyyyyyyyyyyyyxxxyyyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+c..............................................................cd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd..............................................................................................d
+c..............................................................cd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddddddddddddddddddddddddddddddywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwdd
+zzzzAAAAAAAAAAAzzzAAAAAAAAAAAAzzzAAAAAAAAAAAAAAAAAAAAAAzzzAAAAAzzzzAAAAAAAAAAAAAAAAzzzAAAAAAAAAzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212
@@ -122,9 +122,11 @@ r default
 s fg=#ff0000 bg=#1e1e1e
 t fg=#57a5e2 bg=#121212
 u fg=#f4bb6e bg=#241d13
-v fg=#4ebf71 bg=#343f49
+v fg=#b93c5b bg=#343f49
 w fg=#e0e0e0 bg=#343f49
-x fg=#ffa62b bg=#242f38 bold
-y fg=#e0e0e0 bg=#242f38
+x fg=#ffff00 bg=#343f49
+y fg=#4ebf71 bg=#343f49
+z fg=#ffa62b bg=#242f38 bold
+A fg=#e0e0e0 bg=#242f38
 --- cells
 11 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│"," "," ","▶"," ","👍",""," ","2"," ","|"," ","🎉",""," ","1"," ","|"," ","👀",""," ","4"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

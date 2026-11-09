@@ -1,10 +1,11 @@
 version = 1
-description = "Edit PR (E): a merged PR from the table (warning, no dialog), a refused update of PR 4, then PR 5: a new title, the Reviewers input (already a reviewer, an unknown user, a suggestion accepted and added), the existing reviewer removed, Update (PATCH, then only the new reviewer requested), and E again from the PR Overview with nothing changed"
+description = "Edit PR (E) on PR 5: a new title, the Reviewers input (already a reviewer, an unknown user, a suggestion accepted and added), the existing reviewer removed, Update (PATCH, then only the new reviewer requested), and E again from the PR Overview with nothing changed"
 # shift+enter is sent in the kitty keyboard protocol's encoding (CSI 13;2 u), which both apps read
 # (terminal-caveats.shift-enter). Python moves focus a tick after a focus key (Py bug B98), so each waits for it.
 # The dialog captures leave the footer out of `checks`: the main screen's footer shows under the dialog, cut inside
 # `^p Command Pallete` (Py bug B14), which Rust spells right, so the cut footers differ. Their `[expect]`s check
 # that it's the PR table's footer instead.
+# The merged PR's warning and the refused update are pr-edit-refused, so their toasts don't cover these dialogs.
 gate = true
 parity_rows = [
     "modals.edit-pr",
@@ -15,16 +16,18 @@ parity_rows = [
     "pull-requests.edit-from-table",
     "pull-requests.overview-edit",
     "keybindings.pull-request-edit",
-    "toasts.edit-pr-already-merged",
 ]
 sizes = [[160, 48]]
 timeout_ms = 90000
 
 [env]
-# pr-edit over pr-details: requested reviewers of PRs 4 and 5, collaborators, two users, the branches Python lists,
-# PATCH .../pulls/4 refused (403 after 1 s), PATCH .../pulls/5 for the new title (after 1.5 s), and POST
-# .../pulls/5/requested_reviewers for ["parity-friend"] and for [].
+# pr-edit over pr-details: requested reviewers of PR 5, collaborators, two users, the branches Python lists,
+# PATCH .../pulls/5 for the new title (after 1.5 s), and POST .../pulls/5/requested_reviewers for ["parity-friend"]
+# and for [].
 fixtures = ["pr-edit", "pr-details", "base"]
+# Keeps the Rust app's toasts up to the end: they last 5 s and outlive the dialog that raised them, so which earlier
+# toasts a capture showed depended on how fast the run got there.
+toast_timeout_ms = 60000
 config_overrides.appearance.show_issues = false
 config_overrides.appearance.show_workflows = false
 config_overrides.pull_requests.additional_suggested_pr_reviewers = ["octo-reviewer"]
@@ -40,7 +43,6 @@ keys = ["enter"]
 wait.text = "Add a cursor to the viewer"
 wait.timeout_ms = 15000
 
-# PR 3 is merged: a warning, and no dialog.
 [[step]]
 keys = ["2"]
 
@@ -50,65 +52,9 @@ wait = { text = "O Lookup Pull Request" }
 [[step]]
 wait.stable_ms = 500
 
+# PR 5, the first row: the dialog opens once the pull request and its requested reviewers are fetched.
 [[step]]
-keys = ["j", "j", "E"]
-
-[[step]]
-wait.text = "This PR has already been merged!"
-
-[[step]]
-capture = "already-merged"
-checks = ["titles", "focus"]
-
-# PR 4: a new title, refused by GitHub.
-[[step]]
-keys = ["k", "E"]
-
-[[step]]
-wait.text = "Editing PR 4"
-
-[[step]]
-wait.stable_ms = 500
-
-[[step]]
-capture = "open-pr4"
-checks = ["titles", "focus"]
-
-[[step]]
-type = "Drop the old renderer"
-
-[[step]]
-type = "\u001b[13;2u"
-
-[[step]]
-wait.text = "Updating PR..."
-
-[[step]]
-wait.log.method = "PATCH"
-wait.log.path = "/repos/parity-bot/pr-details/pulls/4"
-wait.log.body.title = "Drop the old renderer"
-wait.log.body.body = "Superseded by the new renderer."
-wait.log.body.base = "main"
-
-[[step]]
-wait.text = "Unexpected error while attempting to update PR"
-
-[[step]]
-capture = "update-failed"
-checks = ["titles", "focus"]
-
-[[step]]
-keys = ["escape"]
-
-[[step]]
-wait.gone = "Editing PR 4"
-
-[[step]]
-wait.stable_ms = 500
-
-# PR 5: the dialog opens once the pull request and its requested reviewers are fetched.
-[[step]]
-keys = ["k", "E"]
+keys = ["E"]
 
 [[step]]
 wait.text = "Editing PR 5"
@@ -250,9 +196,6 @@ wait.gone = "Editing PR 5"
 wait.text = "PR #5 Details"
 
 [[step]]
-wait.gone = "Could not find user"
-
-[[step]]
 wait.text = "Add a cursor to the diff viewer    "
 
 [[step]]
@@ -318,17 +261,6 @@ wait.gone = "Editing PR 5"
 [[step]]
 capture = "overview-updated"
 checks = ["titles"]
-
-[expect.already-merged]
-focused = ["[2] Pull Requests"]
-contains = ["This PR has already been merged!"]
-not_contains = ["Editing PR"]
-
-[expect.open-pr4]
-contains = [" E Edit PR  u View User ", "Editing PR 4", "Base", "Compare", "Draft", "Title", "Drop the legacy renderer", "Description", "Superseded by the new renderer."]
-
-[expect.update-failed]
-contains = ["Editing PR 4", "Error updating pull request", "Unexpected error while attempting to update PR"]
 
 [expect.open]
 contains = [" E Edit PR  u View User ", "Editing PR 5", "Title", "Add a cursor to the viewer", "Description", "Adds a cursor to the viewer, as discussed in #3."]

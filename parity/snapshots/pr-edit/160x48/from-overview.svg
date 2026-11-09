@@ -25,8 +25,10 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 .s20 { fill: #c2c2bf; }
 .s21 { fill: #f8f8f2; }
 .s22 { fill: #90908a; }
-.s23 { fill: #4ebf71; }
-.s24 { fill: #704d1c; font-weight: bold; }
+.s23 { fill: #b93c5b; }
+.s24 { fill: #ffff00; }
+.s25 { fill: #4ebf71; }
+.s26 { fill: #704d1c; font-weight: bold; }
 </style>
 <rect width="1600" height="960" fill="#1e1e1e"/>
 <g shape-rendering="crispEdges">
@@ -208,29 +210,23 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="10" y="540" width="290" height="20" fill="#13212c"/>
 <rect x="300" y="540" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="540" width="10" height="20" fill="#191919"/>
-<rect x="330" y="540" width="920" height="20" fill="#272822"/>
-<rect x="1250" y="540" width="10" height="20" fill="#4f4f4f"/>
-<rect x="1260" y="540" width="20" height="20" fill="#000000"/>
-<rect x="1280" y="540" width="20" height="20" fill="#4f4f4f"/>
-<rect x="1300" y="540" width="300" height="20" fill="#121212"/>
+<rect x="330" y="540" width="650" height="20" fill="#272822"/>
+<rect x="980" y="540" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="540" width="20" height="20" fill="#121212"/>
 <rect x="0" y="560" width="10" height="20" fill="#121212"/>
 <rect x="10" y="560" width="290" height="20" fill="#161616"/>
 <rect x="300" y="560" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="560" width="10" height="20" fill="#191919"/>
-<rect x="330" y="560" width="920" height="20" fill="#272822"/>
-<rect x="1250" y="560" width="10" height="20" fill="#4f4f4f"/>
-<rect x="1260" y="560" width="20" height="20" fill="#000000"/>
-<rect x="1280" y="560" width="20" height="20" fill="#4f4f4f"/>
-<rect x="1300" y="560" width="300" height="20" fill="#121212"/>
+<rect x="330" y="560" width="650" height="20" fill="#272822"/>
+<rect x="980" y="560" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="560" width="20" height="20" fill="#121212"/>
 <rect x="0" y="580" width="10" height="20" fill="#121212"/>
 <rect x="10" y="580" width="290" height="20" fill="#161616"/>
 <rect x="300" y="580" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="580" width="10" height="20" fill="#191919"/>
-<rect x="330" y="580" width="920" height="20" fill="#272822"/>
-<rect x="1250" y="580" width="10" height="20" fill="#4f4f4f"/>
-<rect x="1260" y="580" width="20" height="20" fill="#000000"/>
-<rect x="1280" y="580" width="20" height="20" fill="#4f4f4f"/>
-<rect x="1300" y="580" width="300" height="20" fill="#121212"/>
+<rect x="330" y="580" width="650" height="20" fill="#272822"/>
+<rect x="980" y="580" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="580" width="20" height="20" fill="#121212"/>
 <rect x="0" y="600" width="10" height="20" fill="#121212"/>
 <rect x="10" y="600" width="290" height="20" fill="#161616"/>
 <rect x="300" y="600" width="20" height="20" fill="#4f4f4f"/>
@@ -243,35 +239,27 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="0" y="620" width="300" height="20" fill="#121212"/>
 <rect x="300" y="620" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="620" width="10" height="20" fill="#191919"/>
-<rect x="330" y="620" width="920" height="20" fill="#272822"/>
-<rect x="1250" y="620" width="10" height="20" fill="#4f4f4f"/>
-<rect x="1260" y="620" width="20" height="20" fill="#000000"/>
-<rect x="1280" y="620" width="20" height="20" fill="#4f4f4f"/>
-<rect x="1300" y="620" width="300" height="20" fill="#121212"/>
+<rect x="330" y="620" width="650" height="20" fill="#272822"/>
+<rect x="980" y="620" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="620" width="20" height="20" fill="#121212"/>
 <rect x="0" y="640" width="300" height="20" fill="#121212"/>
 <rect x="300" y="640" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="640" width="10" height="20" fill="#191919"/>
-<rect x="330" y="640" width="920" height="20" fill="#272822"/>
-<rect x="1250" y="640" width="10" height="20" fill="#4f4f4f"/>
-<rect x="1260" y="640" width="20" height="20" fill="#000000"/>
-<rect x="1280" y="640" width="20" height="20" fill="#4f4f4f"/>
-<rect x="1300" y="640" width="300" height="20" fill="#121212"/>
+<rect x="330" y="640" width="650" height="20" fill="#272822"/>
+<rect x="980" y="640" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="640" width="20" height="20" fill="#121212"/>
 <rect x="0" y="660" width="300" height="20" fill="#121212"/>
 <rect x="300" y="660" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="660" width="10" height="20" fill="#191919"/>
-<rect x="330" y="660" width="920" height="20" fill="#272822"/>
-<rect x="1250" y="660" width="10" height="20" fill="#4f4f4f"/>
-<rect x="1260" y="660" width="20" height="20" fill="#000000"/>
-<rect x="1280" y="660" width="20" height="20" fill="#4f4f4f"/>
-<rect x="1300" y="660" width="300" height="20" fill="#121212"/>
+<rect x="330" y="660" width="650" height="20" fill="#272822"/>
+<rect x="980" y="660" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="660" width="20" height="20" fill="#121212"/>
 <rect x="0" y="680" width="300" height="20" fill="#121212"/>
 <rect x="300" y="680" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="680" width="10" height="20" fill="#191919"/>
-<rect x="330" y="680" width="920" height="20" fill="#272822"/>
-<rect x="1250" y="680" width="10" height="20" fill="#4f4f4f"/>
-<rect x="1260" y="680" width="20" height="20" fill="#000000"/>
-<rect x="1280" y="680" width="20" height="20" fill="#4f4f4f"/>
-<rect x="1300" y="680" width="300" height="20" fill="#121212"/>
+<rect x="330" y="680" width="650" height="20" fill="#272822"/>
+<rect x="980" y="680" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="680" width="20" height="20" fill="#121212"/>
 <rect x="0" y="700" width="300" height="20" fill="#121212"/>
 <rect x="300" y="700" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="700" width="10" height="20" fill="#191919"/>
@@ -283,27 +271,21 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="0" y="720" width="300" height="20" fill="#121212"/>
 <rect x="300" y="720" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="720" width="10" height="20" fill="#191919"/>
-<rect x="330" y="720" width="920" height="20" fill="#272822"/>
-<rect x="1250" y="720" width="10" height="20" fill="#4f4f4f"/>
-<rect x="1260" y="720" width="20" height="20" fill="#000000"/>
-<rect x="1280" y="720" width="20" height="20" fill="#4f4f4f"/>
-<rect x="1300" y="720" width="300" height="20" fill="#121212"/>
+<rect x="330" y="720" width="650" height="20" fill="#272822"/>
+<rect x="980" y="720" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="720" width="20" height="20" fill="#121212"/>
 <rect x="0" y="740" width="300" height="20" fill="#121212"/>
 <rect x="300" y="740" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="740" width="10" height="20" fill="#191919"/>
-<rect x="330" y="740" width="920" height="20" fill="#272822"/>
-<rect x="1250" y="740" width="10" height="20" fill="#4f4f4f"/>
-<rect x="1260" y="740" width="20" height="20" fill="#000000"/>
-<rect x="1280" y="740" width="20" height="20" fill="#4f4f4f"/>
-<rect x="1300" y="740" width="300" height="20" fill="#121212"/>
+<rect x="330" y="740" width="650" height="20" fill="#272822"/>
+<rect x="980" y="740" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="740" width="20" height="20" fill="#121212"/>
 <rect x="0" y="760" width="300" height="20" fill="#121212"/>
 <rect x="300" y="760" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="760" width="10" height="20" fill="#191919"/>
-<rect x="330" y="760" width="920" height="20" fill="#272822"/>
-<rect x="1250" y="760" width="10" height="20" fill="#4f4f4f"/>
-<rect x="1260" y="760" width="20" height="20" fill="#000000"/>
-<rect x="1280" y="760" width="20" height="20" fill="#4f4f4f"/>
-<rect x="1300" y="760" width="300" height="20" fill="#121212"/>
+<rect x="330" y="760" width="650" height="20" fill="#272822"/>
+<rect x="980" y="760" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="760" width="20" height="20" fill="#121212"/>
 <rect x="0" y="780" width="300" height="20" fill="#121212"/>
 <rect x="300" y="780" width="20" height="20" fill="#4f4f4f"/>
 <rect x="320" y="780" width="10" height="20" fill="#191919"/>
@@ -313,12 +295,16 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="1280" y="780" width="20" height="20" fill="#4f4f4f"/>
 <rect x="1300" y="780" width="300" height="20" fill="#121212"/>
 <rect x="0" y="800" width="300" height="20" fill="#121212"/>
-<rect x="300" y="800" width="1000" height="20" fill="#4f4f4f"/>
-<rect x="1300" y="800" width="300" height="20" fill="#121212"/>
+<rect x="300" y="800" width="680" height="20" fill="#4f4f4f"/>
+<rect x="980" y="800" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="800" width="20" height="20" fill="#121212"/>
 <rect x="0" y="820" width="300" height="20" fill="#121212"/>
-<rect x="300" y="820" width="1000" height="20" fill="#4f4f4f"/>
-<rect x="1300" y="820" width="300" height="20" fill="#121212"/>
-<rect x="0" y="840" width="1600" height="20" fill="#121212"/>
+<rect x="300" y="820" width="680" height="20" fill="#4f4f4f"/>
+<rect x="980" y="820" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="820" width="20" height="20" fill="#121212"/>
+<rect x="0" y="840" width="980" height="20" fill="#121212"/>
+<rect x="980" y="840" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="840" width="20" height="20" fill="#121212"/>
 <rect x="0" y="860" width="1600" height="20" fill="#121212"/>
 <rect x="0" y="880" width="980" height="20" fill="#121212"/>
 <rect x="980" y="880" width="600" height="20" fill="#343f49"/>
@@ -491,26 +477,24 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s10" x="300" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s12" x="320" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
 <text class="s22" x="340" y="555" textLength="30" lengthAdjust="spacingAndGlyphs">2  </text>
-<text class="s19" x="1250" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">▎</text>
-<text class="s10" x="1290" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s23" x="980" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="575" textLength="290" lengthAdjust="spacingAndGlyphs"> 4  closed  parity-bot     Dr</text>
 <text class="s10" x="300" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s12" x="320" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
 <text class="s22" x="340" y="575" textLength="30" lengthAdjust="spacingAndGlyphs">3  </text>
-<text class="s21" x="370" y="575" textLength="870" lengthAdjust="spacingAndGlyphs">- `j` and `k` move it                                                                  </text>
-<text class="s19" x="1250" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">▎</text>
-<text class="s10" x="1290" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s21" x="370" y="575" textLength="610" lengthAdjust="spacingAndGlyphs">- `j` and `k` move it                                        </text>
+<text class="s23" x="980" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s16" x="990" y="575" textLength="590" lengthAdjust="spacingAndGlyphs"> Already a reviewer!                                       </text>
 <text class="s4" x="1590" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="595" textLength="290" lengthAdjust="spacingAndGlyphs"> 3  closed  parity-bot     Re</text>
 <text class="s10" x="300" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s12" x="320" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
 <text class="s22" x="340" y="595" textLength="30" lengthAdjust="spacingAndGlyphs">4  </text>
-<text class="s21" x="370" y="595" textLength="870" lengthAdjust="spacingAndGlyphs">- the current line is marked with `&gt;`                                                  </text>
-<text class="s19" x="1250" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">▎</text>
-<text class="s10" x="1290" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s21" x="370" y="595" textLength="610" lengthAdjust="spacingAndGlyphs">- the current line is marked with `&gt;`                        </text>
+<text class="s23" x="980" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="615" textLength="290" lengthAdjust="spacingAndGlyphs"> 2  open    parity-friend  Tr</text>
@@ -524,28 +508,28 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s10" x="300" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s12" x="320" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
 <text class="s22" x="340" y="635" textLength="30" lengthAdjust="spacingAndGlyphs">6  </text>
-<text class="s21" x="370" y="635" textLength="870" lengthAdjust="spacingAndGlyphs">Thanks @parity-bot for the first review!                                               </text>
-<text class="s19" x="1250" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">▎</text>
-<text class="s10" x="1290" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s21" x="370" y="635" textLength="610" lengthAdjust="spacingAndGlyphs">Thanks @parity-bot for the first review!                     </text>
+<text class="s23" x="980" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s10" x="300" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s12" x="320" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
 <text class="s22" x="340" y="655" textLength="30" lengthAdjust="spacingAndGlyphs">7  </text>
-<text class="s19" x="1250" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">▎</text>
-<text class="s10" x="1290" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s23" x="980" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s16" x="990" y="655" textLength="210" lengthAdjust="spacingAndGlyphs"> Could not find user </text>
+<text class="s24" x="1200" y="655" textLength="110" lengthAdjust="spacingAndGlyphs">nobody-here</text>
+<text class="s16" x="1310" y="655" textLength="270" lengthAdjust="spacingAndGlyphs"> - are you sure they       </text>
 <text class="s4" x="1590" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s10" x="300" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s12" x="320" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
-<text class="s19" x="1250" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">▎</text>
-<text class="s10" x="1290" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s23" x="980" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s16" x="990" y="675" textLength="590" lengthAdjust="spacingAndGlyphs"> exist?                                                    </text>
 <text class="s4" x="1590" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s10" x="300" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s12" x="320" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
-<text class="s19" x="1250" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">▎</text>
-<text class="s10" x="1290" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s23" x="980" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s10" x="300" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
@@ -556,20 +540,18 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s3" x="0" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s10" x="300" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s12" x="320" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
-<text class="s19" x="1250" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">▎</text>
-<text class="s10" x="1290" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s25" x="980" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s10" x="300" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s12" x="320" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
-<text class="s19" x="1250" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">▎</text>
-<text class="s10" x="1290" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s25" x="980" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s16" x="990" y="755" textLength="590" lengthAdjust="spacingAndGlyphs"> Removing parity-reviewer                                  </text>
 <text class="s4" x="1590" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s10" x="300" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s12" x="320" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
-<text class="s19" x="1250" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">▎</text>
-<text class="s10" x="1290" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s25" x="980" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s10" x="300" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
@@ -579,14 +561,17 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s4" x="1590" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s10" x="300" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
-<text class="s10" x="1290" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s25" x="980" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s10" x="300" y="835" textLength="1000" lengthAdjust="spacingAndGlyphs">█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█</text>
+<text class="s10" x="300" y="835" textLength="680" lengthAdjust="spacingAndGlyphs">█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄</text>
+<text class="s25" x="980" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s16" x="990" y="835" textLength="590" lengthAdjust="spacingAndGlyphs"> Updating PR...                                            </text>
 <text class="s4" x="1590" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s25" x="980" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
@@ -595,36 +580,36 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s3" x="0" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s23" x="980" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s25" x="980" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s23" x="980" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s25" x="980" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s16" x="990" y="915" textLength="590" lengthAdjust="spacingAndGlyphs"> Successfully updated PR!                                  </text>
 <text class="s4" x="1590" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="935" textLength="640" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘</text>
 <text class="s4" x="640" y="935" textLength="340" lengthAdjust="spacingAndGlyphs">└─────────────────────────────────</text>
-<text class="s23" x="980" y="935" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s25" x="980" y="935" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1580" y="935" textLength="20" lengthAdjust="spacingAndGlyphs">─┘</text>
-<text class="s24" x="0" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^m </text>
+<text class="s26" x="0" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^m </text>
 <text class="s1" x="40" y="955" textLength="90" lengthAdjust="spacingAndGlyphs">Merge PR </text>
-<text class="s24" x="130" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> E </text>
+<text class="s26" x="130" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> E </text>
 <text class="s1" x="160" y="955" textLength="80" lengthAdjust="spacingAndGlyphs">Edit PR </text>
-<text class="s24" x="240" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> R </text>
+<text class="s26" x="240" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> R </text>
 <text class="s1" x="270" y="955" textLength="130" lengthAdjust="spacingAndGlyphs">Add reaction </text>
-<text class="s24" x="400" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^v </text>
+<text class="s26" x="400" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^v </text>
 <text class="s1" x="440" y="955" textLength="110" lengthAdjust="spacingAndGlyphs">Paste link </text>
-<text class="s24" x="550" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> f </text>
+<text class="s26" x="550" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> f </text>
 <text class="s1" x="580" y="955" textLength="120" lengthAdjust="spacingAndGlyphs">Follow link </text>
-<text class="s24" x="700" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> F </text>
+<text class="s26" x="700" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> F </text>
 <text class="s1" x="730" y="955" textLength="220" lengthAdjust="spacingAndGlyphs">Follow link (browser) </text>
-<text class="s24" x="950" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
+<text class="s26" x="950" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
 <text class="s1" x="980" y="955" textLength="50" lengthAdjust="spacingAndGlyphs">Quit </text>
-<text class="s24" x="1030" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^p </text>
+<text class="s26" x="1030" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^p </text>
 <text class="s1" x="1070" y="955" textLength="160" lengthAdjust="spacingAndGlyphs">Command Palette </text>
-<text class="s24" x="1230" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> M </text>
+<text class="s26" x="1230" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> M </text>
 <text class="s1" x="1260" y="955" textLength="90" lengthAdjust="spacingAndGlyphs">Maximize </text>
-<text class="s24" x="1350" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ? </text>
+<text class="s26" x="1350" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ? </text>
 <text class="s1" x="1380" y="955" textLength="220" lengthAdjust="spacingAndGlyphs">Keybindings           </text>
 </svg>

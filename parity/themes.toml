@@ -30,3 +30,8 @@ focus = "idx:2"
 focus = "#4ebf71"
 border = "#0178d4"
 block_cursor = "#0178d4"
+
+# A user theme from the user-theme seed (theme-user-file): nord with its focused-pane border overridden. The unit test
+# parity_theme_colors.rs reads the seeds' theme files, so this is checked against the file.
+[my-theme]
+focus = "#ff8800"

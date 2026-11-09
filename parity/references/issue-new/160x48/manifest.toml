@@ -7,7 +7,7 @@ captures = ["no-repo", "open", "empty-title", "typed", "created", "cancelled"]
 scenario = "17cf1aacc1359f8c7ea18bc7ca121471546629fc"
 fixtures = "fccbe25943780daae4f05f91b1daaf8db3e2e70e"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"
+harness = "f06b852ef48102c8239fe5fe6a4e2255f4ad7e67"
 
 [recorded_with]
 python = "3.14.7"

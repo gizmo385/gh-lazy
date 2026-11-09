@@ -1,0 +1,61 @@
+---
+source: crates/lazy-github-tui/src/app.rs
+expression: "crate::test_util::buffer_to_styled_string(&buf)"
+---
+┌──────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────┐┌─ [5] Details ────────────────────────────────┐
+│ ★  Owner  Name  Private      ││ Introduction                                 │
+│                              ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                              ││                                              │
+│                              ││                                              │
+└──────────────────────────────┘│    LazyGithub: A Terminal UI For GitHub      │
+┌─ [2] Pull Requests ──────────┐│                  (0.1.0)                     │
+│ #  Status  Author  Title     ││                                              │
+└──────────────────────────────┘│  LazyGithub is a terminal UI for             │
+┌─ [3] Issues ─────────────────┐│  interacting with GitHub. You can get        │
+│ #  Status  Author  Title     ││  started by selecting one of the             │
+└──────────────────────────────┘│  repositories listed in the table on the     │
+┌─ [4] Workflows ──────────────┐│  left. Once you have selected a              │
+│ Time  Result  Job Name  Run N││  repository, any issues, pull requests,      │
+│                              ││  and action workflows will be retrieved      │
+└──────────────────────────────┘└──────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P
+--- styles
+................................................................................
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+................................................................................
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccccccccccccccccccccccccccccccccccccccccc
+bdeddddddddddddddddddddddddddddbcaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcfggggggggggggfffffffffffffffffffffffffffffffffc
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaahhc
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaahhc
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcaaiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiaahhc
+cccccccccccccccccccccccccccccccccaaiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiaajjc
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajjc
+cccccccccccccccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajjc
+cccccccccccccccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajjc
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajjc
+cccccccccccccccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajjc
+cccccccccccccccccccccccccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajjc
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajjc
+clllllllllllllllllllllljjjjjjjjccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajjc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+mmmnnnnnnnmmmmnnnnnnnnnnnnnnnnmmmnnnnnnnnnnnnnnnnnnmmmnnnnnnnnnnmmmnnnnnnnnnnmmm
+--- legend
+. fg=#81a1c1 bg=#101820
+a fg=#d8dee9 bg=#101820
+b fg=#ff8800 bg=#101820
+c fg=#c6ffff bg=#101820
+d fg=#d8dee9 bg=#4a5364 BOLD
+e fg=#98e024 bg=#4a5364 BOLD
+f fg=#242b34 bg=#101820
+g fg=#88c0d0 bg=#101820
+h fg=#48626f bg=#101820 REVERSED
+i fg=#88c0d0 bg=#101820 BOLD
+j fg=#d8dee9 bg=#1e242f
+k fg=#d8dee9 bg=#434c5e BOLD
+l fg=#48626f bg=#3b4252 REVERSED
+m fg=#88c0d0 bg=#434c5e BOLD
+n fg=#d8dee9 bg=#434c5e

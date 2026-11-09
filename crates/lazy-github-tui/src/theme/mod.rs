@@ -13,6 +13,8 @@ mod composites_tests;
 mod depth;
 mod file;
 mod roles;
+#[cfg(test)]
+mod user_tests;
 
 use std::fmt;
 
@@ -86,10 +88,7 @@ impl Theme {
     /// an unknown name as the default theme (the app warns about that once, at startup). To switch themes at
     /// runtime, pass the current theme's [`Theme::color_mode`].
     pub fn from_config(name: &str, mode: ColorMode) -> Theme {
-        Catalog::builtin()
-            .resolve(name)
-            .theme_or_default()
-            .with_color_mode(mode)
+        Catalog::builtin().theme_for_config(name, mode)
     }
 
     /// Every built-in theme, in Textual's order.

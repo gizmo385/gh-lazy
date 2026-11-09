@@ -20,7 +20,7 @@ use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::modal::{Dialog, DialogPane, FieldKind, ModalEntry, ModalKind};
 use crate::options::AppOptions;
 use crate::screens::main::SectionId;
-use crate::theme::Theme;
+use crate::theme::{Catalog, Theme};
 use crate::toast::Toast;
 
 /// A piece of UI with its own state, actions, bindings and rendering.
@@ -360,6 +360,8 @@ pub(crate) struct Shared {
     pub(crate) config: Config,
     pub(crate) keymap: Keymap,
     pub(crate) theme: Theme,
+    /// Every theme the app can draw: the built-in ones and the user's, read once at startup.
+    pub(crate) themes: &'static Catalog,
     pub(crate) options: AppOptions,
     pub(crate) clock: Arc<dyn Clock>,
     /// The selected repo. Only `App` writes it, when it applies `Action::SelectRepo`.
@@ -398,6 +400,7 @@ impl Shared {
             config,
             keymap,
             theme,
+            themes: Catalog::builtin(),
             options,
             clock,
             current_repo: None,

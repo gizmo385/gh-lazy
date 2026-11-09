@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/app.rs
+expression: "app.screen(100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Details ────────────────────────────────────────────┐
+│                                      ││ Introduction                                             │
+│                                      ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                      ││                                                          │
+│              Loading...              ││                                                          │
+│                                      ││      LazyGithub: A Terminal UI For GitHub (0.1.0)        │
+│                                      ││                                                          │
+│                                      ││  LazyGithub is a terminal UI for interacting with        │
+│                                      ││  GitHub. You can get started by selecting one of the     │
+└──────────────────────────────────────┘│  repositories listed in the table on the left. Once      │
+┌─ [2] Pull Requests ──────────────────┐│  you ha▌                                                 │
+│ #  Status  Author  Title             ││  reques▌ Theme file skipped                              │
+│                                      ││  displa▌ broken.toml: line 2: unclosed table, expected   │
+│                                      ││        ▌ `]`                                             │
+└──────────────────────────────────────┘│  Issues▌                                                ▁│
+┌─ [3] Issues ─────────────────────────┐│  interacted with!                                        │
+│ #  Status  Author  Title             ││        ▌                                                 │
+│                                      ││        ▌ Theme file skipped                              │
+│                                      ││  Pull R▌ nordic.toml: line 1: extends: no built-in       │
+└──────────────────────────────────────┘│        ▌ theme is called "nordish"                       │
+┌─ [4] Workflows ──────────────────────┐│  You ca▌                                                 │
+│ Time  Result  Job Name  Run Name  Run││  viewing the PR diff, and participating in any active    │
+│                                   ▎  ││  conver▌                                                 │
+│                                      ││  create▌ Unknown theme                                   │
+│                                      ││        ▌ No theme is called "broken". Using "dark".      │
+└──────────────────────────────────────┘└────────▌                                                ─┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste lin

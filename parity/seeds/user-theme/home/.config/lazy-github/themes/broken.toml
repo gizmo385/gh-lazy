@@ -1,0 +1,5 @@
+# Skipped with a "Theme file skipped" toast: `shiny` isn't a role.
+extends = "nord"
+
+[border]
+shiny = "#FFFFFF"

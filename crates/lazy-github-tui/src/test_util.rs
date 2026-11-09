@@ -33,7 +33,7 @@ use crate::modal::{
     Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, TestDialogAction, dialog_bindings,
 };
 use crate::options::AppOptions;
-use crate::theme::{TerminalColors, Theme};
+use crate::theme::{Catalog, ColorMode, TerminalColors, Theme, ThemeFileError};
 
 /// The options every [`TestApp`] runs with unless it says otherwise: no animations.
 const TEST_OPTIONS: AppOptions = AppOptions {
@@ -168,6 +168,22 @@ impl TestApp {
         let effects = test.app.skip_startup();
         test.perform(effects);
         test.hold_setup_cache();
+        test
+    }
+
+    /// Like [`Self::on_startup`], knowing `themes` and the user theme files it `skipped` (from [`user_themes`]), as
+    /// the binary sets them before the first frame, and drawn with the configured theme out of `themes`.
+    pub fn on_startup_with_themes(
+        config: Config,
+        gh: FakeGithub,
+        themes: &'static Catalog,
+        skipped: &[ThemeFileError],
+    ) -> Self {
+        let theme = themes.theme_for_config(&config.appearance.theme, ColorMode::default());
+        let mut test = Self::build(config, theme, gh, TEST_OPTIONS);
+        test.app.set_themes(themes, skipped);
+        let init = test.app.init();
+        test.perform(init);
         test
     }
 
@@ -1322,6 +1338,18 @@ impl Dialog for TestDialog {
             _ => None,
         }
     }
+}
+
+/// The built-in themes and the user theme files `files`, `(file name, contents)`, read as the binary reads the config
+/// directory's `themes/` at startup, with the files that were skipped. The catalog is leaked, as the binary's is.
+#[cfg(test)]
+pub fn user_themes(files: &[(&str, &str)]) -> (&'static Catalog, Vec<ThemeFileError>) {
+    let dir = tempfile::tempdir().expect("a temporary directory");
+    for (name, text) in files {
+        std::fs::write(dir.path().join(name), text).expect("a theme file written");
+    }
+    let (catalog, skipped) = Catalog::with_user_themes(dir.path());
+    (Box::leak(Box::new(catalog)), skipped)
 }
 
 /// The characters of `buffer` as [`buffer_to_string`] gives them, then each cell's style as a letter, then what each

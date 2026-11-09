@@ -725,7 +725,6 @@ impl RolesPatch {
     }
 
     /// `base`, with the roles this file writes replaced.
-    #[allow(dead_code, reason = "user theme files (#380) extend a built-in with it")]
     pub(crate) fn apply(self, base: &Roles) -> Roles {
         Roles::apply(Some(self), base)
     }

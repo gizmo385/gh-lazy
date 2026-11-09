@@ -13,7 +13,7 @@ use lazy_github_core::logging::{self, LoggingOptions};
 use lazy_github_tui::app::App;
 use lazy_github_tui::clock::WallClock;
 use lazy_github_tui::options::AppOptions;
-use lazy_github_tui::theme::{TerminalColors, Theme};
+use lazy_github_tui::theme::{Catalog, TerminalColors};
 
 // musl's allocator is slow enough that rendering a large body or diff misses the 50 ms frame budget, and the Linux
 // release binaries are static musl builds (#357). Everywhere else the system allocator is fast enough.
@@ -217,6 +217,11 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
     );
     let options = AppOptions::from_env();
     tracing::debug!("Options: {options:?}");
+    // Read once, before the first frame: editing a theme file takes effect on the next launch. After logging starts,
+    // so skipped files reach the log too; the app toasts them once the first screen is up.
+    let (themes, skipped_themes) = Catalog::with_user_themes(&paths.themes_dir());
+    // Lives for the whole process, like the themes in it.
+    let themes: &'static Catalog = Box::leak(Box::new(themes));
     let log_file_warning = logging.file_warning().map(str::to_owned);
 
     let result = tokio::runtime::Builder::new_multi_thread()
@@ -226,8 +231,9 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
         .and_then(|runtime| {
             let gh = GhCli::new(GhCliOptions::from(&config));
             let git = GitCli::new(original_pwd);
-            let theme = Theme::from_config(&config.appearance.theme, color_mode);
+            let theme = themes.theme_for_config(&config.appearance.theme, color_mode);
             let mut app = App::new(config, theme, options, clock);
+            app.set_themes(themes, &skipped_themes);
             app.set_terminal_colors(colors);
             if let Some(warning) = log_file_warning {
                 app.warn_on_main_screen(warning);

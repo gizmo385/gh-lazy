@@ -1,10 +1,15 @@
-//! The themes the app knows by name: the built-in ones, each a TOML file in `crates/lazy-github-tui/themes/`.
+//! The themes the app knows by name: the built-in ones, each a TOML file in `crates/lazy-github-tui/themes/`, and
+//! the user's own, each a TOML file in the config directory's `themes/` that extends a built-in one (#380).
 
+use std::collections::BTreeSet;
+use std::fs;
+use std::io;
+use std::path::Path;
 use std::sync::LazyLock;
 
 use super::Theme;
 use super::depth::ColorMode;
-use super::file::{ThemeFile, ThemeFileError};
+use super::file::{ThemeFile, ThemeFileError, UserThemeFile};
 
 /// The built-in themes, by name, with their files' text, in Textual's order, which is the order Settings lists them
 /// in. Python users' configs name these, so the names stay as Textual has them, except for Textual's own two, which
@@ -41,10 +46,16 @@ const BUILTIN: [(&str, &str); 21] = [
 /// in Settings, so the Python app reading the same file still finds a name it knows.
 const ALIASES: &[(&str, &str)] = &[("textual-dark", "dark"), ("textual-light", "light")];
 
+/// What a user theme extends when its file doesn't say.
+pub(super) const DEFAULT_BASE: &str = "dark";
+
 /// A set of themes, each with a unique name.
+#[derive(Clone)]
 pub struct Catalog {
-    /// In the order they're listed.
+    /// In the order they're listed: the built-in ones, then any user themes by name.
     themes: Vec<Theme>,
+    /// How many of `themes`, at the end, are user themes.
+    user_themes: usize,
     /// `(alias, name)`: each alias names one of `themes`.
     aliases: Vec<(&'static str, &'static str)>,
 }
@@ -84,8 +95,125 @@ impl Catalog {
             .collect::<Result<Vec<_>, ThemeFileError>>()?;
         Ok(Catalog {
             themes,
+            user_themes: 0,
             aliases: aliases.to_vec(),
         })
+    }
+
+    /// The built-in themes, then the user themes in `dir` (the config directory's `themes/`), with an error for
+    /// each `*.toml` file there that was skipped. Reads the directory synchronously: it's done once, at startup,
+    /// before the event loop starts.
+    ///
+    /// Every `*.toml` file directly in `dir` is a theme named after its file stem; other files and subdirectories
+    /// are ignored. A missing directory has no themes, and one that can't be read is treated as missing, with a
+    /// logged warning. Files are read in name order, so the errors come out in a stable order. Each theme's strings
+    /// and roles are leaked, as the built-ins' are, so [`Theme`] stays `Copy`: call this once per process.
+    pub fn with_user_themes(dir: &Path) -> (Catalog, Vec<ThemeFileError>) {
+        let builtin = Catalog::builtin();
+        let entries = match fs::read_dir(dir) {
+            Ok(entries) => entries,
+            Err(err) => {
+                if err.kind() != io::ErrorKind::NotFound {
+                    tracing::warn!("Can't read the themes directory {}: {err}", dir.display());
+                }
+                return (builtin.clone(), Vec::new());
+            }
+        };
+        let mut files: Vec<(String, std::path::PathBuf)> = entries
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| path.extension().is_some_and(|ext| ext == "toml"))
+            // A directory called `x.toml` isn't a theme. One whose metadata can't be read (a dangling link) is
+            // kept, so reading it reports why.
+            .filter(|path| fs::metadata(path).map_or(true, |meta| meta.is_file()))
+            .filter_map(|path| Some((path.file_name()?.to_string_lossy().into_owned(), path)))
+            .collect();
+        files.sort();
+        let stems: BTreeSet<&str> = files
+            .iter()
+            .filter_map(|(name, _)| name.strip_suffix(".toml"))
+            .collect();
+        let mut themes = Vec::new();
+        let mut errors = Vec::new();
+        for (file, path) in &files {
+            let result = fs::read_to_string(path)
+                .map_err(|err| ThemeFileError::whole_file(file, format!("can't be read: {err}")))
+                .and_then(|source| builtin.user_theme(file, &source, &stems));
+            match result {
+                Ok(theme) => themes.push(theme),
+                Err(err) => {
+                    tracing::warn!("Skipped the theme file {}: {err}", path.display());
+                    errors.push(err);
+                }
+            }
+        }
+        themes.sort_by_key(|theme| theme.name);
+        let mut catalog = builtin.clone();
+        catalog.user_themes = themes.len();
+        catalog.themes.extend(themes);
+        (catalog, errors)
+    }
+
+    /// The user theme in the file called `file` with contents `source`, extending one of this catalog's themes.
+    /// `stems` are the names of every theme file in its directory, to say why `extends` can't name one of them.
+    fn user_theme(&self, file: &str, source: &str, stems: &BTreeSet<&str>) -> Result<Theme, ThemeFileError> {
+        let stem = file.strip_suffix(".toml").unwrap_or(file);
+        if stem.is_empty()
+            || !stem
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+        {
+            return Err(ThemeFileError::whole_file(
+                file,
+                format!("\"{stem}\" isn't a theme name: use lowercase letters, digits and -"),
+            ));
+        }
+        if self.get(stem).is_some() {
+            return Err(ThemeFileError::whole_file(
+                file,
+                format!("\"{stem}\" is a built-in theme's name"),
+            ));
+        }
+        let UserThemeFile { header, roles } = UserThemeFile::parse(file, source)?;
+        let base = match &header.extends {
+            None => self.get(DEFAULT_BASE),
+            Some(extends) => {
+                let name = extends.get_ref();
+                let base = self.get(name);
+                if base.is_none() {
+                    let message = if stems.contains(name.as_str()) {
+                        format!("\"{name}\" is a user theme; a user theme can only extend a built-in one")
+                    } else {
+                        format!("no built-in theme is called \"{name}\"")
+                    };
+                    return Err(ThemeFileError::at_key(file, source, extends.span(), "extends", message));
+                }
+                base
+            }
+        };
+        // `DEFAULT_BASE` is a built-in theme, which a unit test checks.
+        let base = base.unwrap_or_default();
+        let display_name = header.display_name.unwrap_or_else(|| title_case(stem));
+        Ok(Theme {
+            // Leaked once per process, as the built-ins are, so `Theme` stays a `Copy` handle.
+            name: String::leak(stem.to_owned()),
+            display_name: String::leak(display_name),
+            appearance: header.appearance.unwrap_or(base.appearance),
+            terminal_colors: base.terminal_colors,
+            roles: Box::leak(Box::new(roles.apply(base.roles()))),
+            mode: ColorMode::default(),
+        })
+    }
+
+    /// How many of its themes are user themes.
+    pub fn user_theme_count(&self) -> usize {
+        self.user_themes
+    }
+
+    /// The theme for a config's `appearance.theme`, reduced to the terminal's color `mode`: an alias draws as its
+    /// theme, and an unknown name as the default theme (the app warns about that once, at startup).
+    pub fn theme_for_config(&self, name: &str, mode: ColorMode) -> Theme {
+        self.resolve(name).theme_or_default().with_color_mode(mode)
     }
 
     /// The theme called `name`, or that `name` is an alias of. Exact and case-sensitive, as in Python.

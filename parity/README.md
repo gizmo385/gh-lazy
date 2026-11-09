@@ -556,6 +556,10 @@ the seeds' cache directories.
 - `screenshot-downloads/`: an empty `home/Downloads/.keep`, so the isolated `HOME` has the Downloads directory the
   palette's "Screenshot" saves into (neither app creates it). For the `command-palette-screenshot` scenario; its
   `-error` twin runs without it.
+- `user-theme/`: two user theme files in `home/.config/lazy-github/themes/` (#380): `my-theme.toml`, which extends
+  `nord` and overrides `surface.screen` and `border.pane_focused` (`parity/themes.toml`'s `[my-theme]` entry), and
+  `broken.toml`, which writes an unknown role and is skipped with a toast. For the `theme-user-file` scenario
+  (Rust only).
 
 ## Recording fixtures
 

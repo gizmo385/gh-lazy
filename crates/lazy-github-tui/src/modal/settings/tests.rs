@@ -59,7 +59,7 @@ fn opened(config: &Config) -> (TestApp, Outcome) {
     let outcome: Outcome = Arc::default();
     let slot = Arc::clone(&outcome);
     app.with_cx(|cx| {
-        cx.open_dialog(SettingsDialog::new(config), move |closed| {
+        cx.open_dialog(SettingsDialog::new(config, Catalog::builtin()), move |closed| {
             *slot.lock().expect("not poisoned") = Some(closed);
             Action::Consumed
         });
@@ -270,6 +270,58 @@ fn an_unknown_theme_shows_the_blank_and_survives_save() {
     assert!(row.contains("Select"), "{row}");
     app.press(&["shift+enter"]);
     assert_eq!(saved(&outcome).appearance.theme, "no-such-theme");
+}
+
+/// User themes (#380) come after the built-in ones, by name, labeled by their display names.
+#[test]
+fn user_themes_follow_the_builtins_and_save_writes_their_name() {
+    let (themes, skipped) = crate::test_util::user_themes(&[
+        ("zeta.toml", "extends = \"nord\"\n"),
+        ("alpha.toml", "display_name = \"The First\"\n"),
+    ]);
+    assert_eq!(skipped, []);
+    let mut app = TestApp::new(config());
+    app.app_mut().set_themes(themes, &[]);
+    app.press(&["ctrl+p"]);
+    type_text(&mut app, "change settings");
+    app.press(&["enter"]);
+    let FieldWidget::Select(select) = widget(&app, APPEARANCE, 0) else {
+        panic!("Theme is a select");
+    };
+    let labels: Vec<&str> = select.labels().collect();
+    assert_eq!(labels.len(), 23);
+    assert_eq!(labels[..3], ["Dark", "Light", "Nord"]);
+    assert_eq!(labels[21..], ["The First", "Zeta"]);
+    open_theme_list(&mut app);
+    type_text(&mut app, "zeta");
+    app.press(&["enter"]);
+    assert_eq!(theme_value(&app), Some("zeta"));
+    app.press(&["shift+enter"]);
+    assert!(app.app().modals().is_empty());
+    assert_eq!(app.app().config().appearance.theme, "zeta");
+    assert_eq!(app.app().theme().name, "zeta");
+}
+
+/// A configured user theme is selected, and an untouched select leaves it.
+#[test]
+fn a_configured_user_theme_is_selected() {
+    let (themes, _) = crate::test_util::user_themes(&[("mine.toml", "")]);
+    let mut config = config();
+    config.appearance.theme = "mine".into();
+    let mut app = TestApp::with_theme(config.clone(), themes.get("mine").unwrap());
+    app.app_mut().set_themes(themes, &[]);
+    let outcome: Outcome = Arc::default();
+    let slot = Arc::clone(&outcome);
+    app.with_cx(|cx| {
+        cx.open_dialog(SettingsDialog::new(&config, themes), move |closed| {
+            *slot.lock().expect("not poisoned") = Some(closed);
+            Action::Consumed
+        });
+    });
+    assert_eq!(theme_value(&app), Some("mine"));
+    assert!(theme_box(&mut app).contains("Mine"));
+    app.press(&["shift+enter"]);
+    assert_eq!(saved(&outcome).appearance.theme, "mine");
 }
 
 // Widgets.
@@ -883,7 +935,7 @@ fn cancel_q_and_escape_close_without_saving() {
 #[test]
 fn collect_skips_nothing_but_blank_selects() {
     let config = config();
-    let dialog = SettingsDialog::new(&config);
+    let dialog = SettingsDialog::new(&config, Catalog::builtin());
     assert_eq!(dialog.collect(&config), Ok(config));
 }
 

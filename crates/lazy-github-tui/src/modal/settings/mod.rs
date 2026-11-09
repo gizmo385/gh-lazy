@@ -29,6 +29,7 @@ use crate::components::table::py_strip;
 use crate::components::tabs::{TAB_STRIP_HEIGHT, TabStrip};
 use crate::components::text_input::{self, InputOutcome, TextInput};
 use crate::keymap::{BindingId, KeyChord, Keymap};
+use crate::theme::Catalog;
 use crate::toast::Toast;
 
 /// The frame's widest: `width: 100`.
@@ -183,11 +184,12 @@ pub struct SettingsDialog {
 }
 
 impl SettingsDialog {
-    /// The modal showing `config`'s values, on the first tab with the strip focused.
-    pub fn new(config: &Config) -> Self {
+    /// The modal showing `config`'s values, on the first tab with the strip focused. The theme select offers
+    /// `themes`.
+    pub fn new(config: &Config, themes: &'static Catalog) -> Self {
         let panes: Vec<SettingsPane> = SECTIONS
             .iter()
-            .map(|section| SettingsPane::new(section, config))
+            .map(|section| SettingsPane::new(section, config, themes))
             .collect();
         let mut dialog = Self {
             tabs: TabStrip::new(panes.iter().map(SettingsPane::title)),

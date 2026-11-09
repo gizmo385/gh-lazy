@@ -16,6 +16,7 @@ pub mod links;
 pub mod logging;
 pub mod models;
 pub mod references;
+pub mod review_anchor;
 pub mod screen;
 #[cfg(test)]
 mod test_fs;

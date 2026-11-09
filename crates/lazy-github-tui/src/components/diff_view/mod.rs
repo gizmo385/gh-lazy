@@ -14,12 +14,14 @@
 mod body;
 mod highlight;
 mod review;
+mod threads;
 
 use std::ops::Range;
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use lazy_github_core::diff::Diff;
 use lazy_github_core::github::{NewReview, ReviewEvent};
+use lazy_github_core::review_anchor::DiffThread;
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Position, Rect};
@@ -35,6 +37,7 @@ use review::{ButtonPlaced, FormFocus, FormPlaced, ReviewForm};
 use super::button::BUTTON_BINDINGS;
 use super::command_log::Wheel;
 use super::info::Scroll;
+use super::link_map::ScreenLink;
 use super::markdown::{self, Rendered, TextRun};
 use super::scroll_view::ScrollView;
 use super::scrollbar::{self, Axis, ScrollbarState};
@@ -350,6 +353,17 @@ impl DiffView {
         self.body.is_shown(file)
     }
 
+    /// Shows the pull request's review `threads` under their lines ([`DiffBody::set_threads`]), keeping the cursor on
+    /// its row. `repo_full_name` is where the bodies' `#N` references point.
+    pub fn set_threads(&mut self, threads: Vec<DiffThread>, repo_full_name: &str) {
+        self.with_body(|body| body.set_threads(threads, repo_full_name));
+    }
+
+    /// The links the last draw put on screen, in the body's expanded threads.
+    pub fn links(&self) -> &[ScreenLink] {
+        self.body.links()
+    }
+
     /// The pending comments, in the order they were added.
     pub fn pending(&self) -> &[PendingComment] {
         &self.pending
@@ -605,15 +619,24 @@ impl DiffView {
     }
 
     /// How the footer and help panel show a binding of [`Self::chain`]: Add Comment is hidden while the cursor isn't
-    /// on a diff line and Fold while it isn't on a file header, and Fold Files reads Unfold Files once every shown
-    /// file is folded.
+    /// on a diff line; `enter` reads Fold on a file header, Expand or Collapse on a review thread or a line with
+    /// threads, and is hidden elsewhere; Next and Previous Comment are hidden without threads; and Fold Files reads
+    /// Unfold Files once every shown file is folded.
     pub fn binding_state(&self, owner: Owner, id: BindingId) -> BindingState {
         if owner != Owner::DiffBody {
             return BindingState::Enabled;
         }
+        let on_header = matches!(self.body.cursor(), Some(Cursor::File(_)));
         match id {
             BindingId::DiffAddComment if self.body.cursor_line().is_none() => BindingState::Hidden,
-            BindingId::DiffToggle if !matches!(self.body.cursor(), Some(Cursor::File(_))) => BindingState::Hidden,
+            BindingId::DiffToggle if !on_header => match self.body.toggle_expands() {
+                Some(true) => BindingState::Relabeled("Expand"),
+                Some(false) => BindingState::Relabeled("Collapse"),
+                None => BindingState::Hidden,
+            },
+            BindingId::DiffNextComment | BindingId::DiffPreviousComment if self.body.thread_count() == 0 => {
+                BindingState::Hidden
+            }
             BindingId::DiffFoldAll if self.body.all_folded() => BindingState::Relabeled("Unfold Files"),
             _ => BindingState::Enabled,
         }

@@ -1,0 +1,52 @@
+---
+source: crates/lazy-github-tui/src/screens/main/pr_details/diff/tests.rs
+expression: screen
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                                                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name        Private                           ││ Overview  Diff  Conversation                                                                 │
+│ ☆  parity-bot  pr-details  ✘                                 ││━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
+│                                                              ││▊  Filter files (press '/' to focus, ESC to clear)                                           ▎│
+│                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
+│                                                              ││▼ 📄  README.md (+3 -1) · 1 comment                                                            │
+│                                                              ││          ▶ File comment · parity-bot: Mention `q` to quit too. See [the keys](https://gith…  │
+│                                                              ││  Lines 3-7 (+3 -1) • A tiny pager.                                                           │
+│                                                              ││     3  │ ## Usage                                                                            │
+│                                                              ││     4  │                                                                                     │
+│                                                              ││     5  │ Run `viewer FILE`.                                                                  │
+│                                                              ││     5  │ Run `viewer FILE`, then press `j` and `k` to move.                                  │
+│                                                              ││     6  │                                                                                     │
+│                                                              ││     7  │ The current line is marked with `>`.                                                │
+│                                                              ││▼ 📄  assets/app.css (+3)                                                                      │
+│                                                              ││  Lines 1-3 (+3)                                                                              │
+│                                                              ││     1  │ .cursor {                                                                           │
+│                                                              ││     2  │   color: yellow;                                                                    │
+│                                                              ││     3  │ }                                                                                   │
+│                                                              ││▼ 📄  build.rs (+1)                                                                            │
+└──────────────────────────────────────────────────────────────┘│  Lines 1-4 (+1)                                                                              │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│     1  │ fn main() {                                                                         │
+│ #  Status  Author         Title                              ││     2  │     println!("cargo:rerun-if-changed=build.rs");                                    │
+│ 5  open    parity-friend  Add a cursor to the viewer         ││     3  │     println!("cargo:rerun-if-changed=assets");                                      │
+│ 4  closed  parity-bot     Drop the legacy renderer           ││     4  │ }                                                                                   │
+│ 3  closed  parity-bot     Release 0.2.0                      ││▶ 🗑️   docs/old.md (deleted)                                                                   │
+│ 2  open    parity-friend  Try a faster parser                ││▼ 📄  src/viewer.rs (+5 -2) · 3 comments                                                       │
+│                                                              ││  Lines 1-8 (+2)                                                                              │
+│                                                              ││►    1  │ use std::io;                                                                        │
+│                                                              ││     2  │ use std::fmt;                                                                       │
+│                                                              ││     3  │                                                                                     │
+│                                                              ││     4  │ pub struct Viewer {                                                                 │
+│                                                              ││     5  │     lines: Vec<String>,                                                             │
+│                                                              ││     6● │     cursor: usize,                                                                  │
+│                                                              ││          ▶ parity-bot: Should the cursor wrap at the end?  · 1 reply                       ▁▁│
+│                                                              ││     7  │ }                                                                                   │
+│                                                              ││     8  │                                                                                     │
+│                                                              ││  Lines 22-28 (+3 -2) • impl Viewer {                                                         │
+│                                                              ││    22  │     pub fn render(&self) -> io::Result<()> {                                        │
+│                                                              ││    21  │         for line in &self.lines {                                                   │
+│                                                              ││    22● │             println!("{line}");                                                     │
+│                                                              ││ src/viewer.rs                                                                    Line: 1/8   │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  z Fold Files  n Next Comment  N Previous Comment  / Filter F

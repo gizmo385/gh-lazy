@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/5/reviews/505/comments"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/comments/9003",
+        "pull_request_review_id": 505,
+        "id": 9003,
+        "node_id": "PRRC_kwDO9003",
+        "diff_hunk": "@@ -20,6 +22,7 @@ impl Viewer {\n     pub fn render(&self) -> io::Result<()> {\n-        for line in &self.lines {\n-            println!(\"{line}\");",
+        "path": "src/viewer.rs",
+        "position": 12,
+        "original_position": 12,
+        "commit_id": "c0ffee5555555555555555555555555555555555",
+        "original_commit_id": "c0ffee5555555555555555555555555555555555",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "body": "This needs a test.",
+        "created_at": "2026-02-03T09:00:00Z",
+        "updated_at": "2026-02-03T09:00:00Z",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#discussion_r9003",
+        "pull_request_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+        "author_association": "OWNER"
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/comments/9004",
+        "pull_request_review_id": 505,
+        "id": 9004,
+        "node_id": "PRRC_kwDO9004",
+        "diff_hunk": "@@ -9,4 +9,4 @@ impl Viewer {\n     pub fn new(lines: Vec<String>) -> Self {\n         Self { lines }\n     }\n-    pub fn len(&self) -> usize {",
+        "path": "src/viewer.rs",
+        "position": null,
+        "original_position": 4,
+        "commit_id": "c0ffee5555555555555555555555555555555555",
+        "original_commit_id": "c0ffee4444444444444444444444444444444444",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "body": "Rename this to `line_count`.",
+        "created_at": "2026-02-03T09:30:00Z",
+        "updated_at": "2026-02-03T09:30:00Z",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#discussion_r9004",
+        "pull_request_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+        "author_association": "OWNER"
+      },
+      {
+        "url": "https://api.github.com/repos/parity-bot/pr-details/pulls/comments/9005",
+        "pull_request_review_id": 505,
+        "id": 9005,
+        "node_id": "PRRC_kwDO9005",
+        "diff_hunk": "",
+        "path": "README.md",
+        "position": null,
+        "original_position": null,
+        "commit_id": "c0ffee5555555555555555555555555555555555",
+        "original_commit_id": "c0ffee5555555555555555555555555555555555",
+        "user": {
+          "login": "parity-bot",
+          "id": 1000001,
+          "node_id": "U_kgDO1000001",
+          "avatar_url": "https://avatars.githubusercontent.com/u/0?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/parity-bot",
+          "html_url": "https://github.com/parity-bot",
+          "type": "User",
+          "site_admin": false
+        },
+        "body": "Mention `q` to quit too. See [the keys](https://github.com/parity-bot/pr-details#keys).",
+        "created_at": "2026-02-03T09:45:00Z",
+        "updated_at": "2026-02-03T09:45:00Z",
+        "html_url": "https://github.com/parity-bot/pr-details/pull/5#discussion_r9005",
+        "pull_request_url": "https://api.github.com/repos/parity-bot/pr-details/pulls/5",
+        "author_association": "OWNER"
+      }
+    ]
+  },
+  "note": "Hand-written for #390: PR 5's review threads in the Diff tab (diff-threads). Overrides pr-details' review comments of PR 5 with diff hunks that end at the commented line, plus an outdated and a file-level comment."
+}

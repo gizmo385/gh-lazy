@@ -1,0 +1,52 @@
+---
+source: crates/lazy-github-tui/src/screens/main/pr_details/diff/tests.rs
+expression: screen
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                                                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name        Private                           ││ Overview  Diff  Conversation                                                                 │
+│ ☆  parity-bot  pr-details  ✘                                 ││━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
+│                                                              ││▊  Filter files (press '/' to focus, ESC to clear)                                           ▎│
+│                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
+│                                                              ││     2  │   color: yellow;                                                                    │
+│                                                              ││     3  │ }                                                                                   │
+│                                                              ││▼ 📄  build.rs (+1)                                                                            │
+│                                                              ││  Lines 1-4 (+1)                                                                              │
+│                                                              ││     1  │ fn main() {                                                                         │
+│                                                              ││     2  │     println!("cargo:rerun-if-changed=build.rs");                                    │
+│                                                              ││     3  │     println!("cargo:rerun-if-changed=assets");                                      │
+│                                                              ││     4  │ }                                                                                   │
+│                                                              ││▶ 🗑️   docs/old.md (deleted)                                                                   │
+│                                                              ││▼ 📄  src/viewer.rs (+5 -2) · 3 comments                                                       │
+│                                                              ││  Lines 1-8 (+2)                                                                              │
+│                                                              ││     1  │ use std::io;                                                                        │
+│                                                              ││     2  │ use std::fmt;                                                                       │
+│                                                              ││     3  │                                                                                     │
+│                                                              ││     4  │ pub struct Viewer {                                                                 │
+└──────────────────────────────────────────────────────────────┘│     5  │     lines: Vec<String>,                                                             │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│     6● │     cursor: usize,                                                                  │
+│ #  Status  Author         Title                              ││          ▶ parity-bot: Should the cursor wrap at the end?  · 1 reply                         │
+│ 5  open    parity-friend  Add a cursor to the viewer         ││     7  │ }                                                                                   │
+│ 4  closed  parity-bot     Drop the legacy renderer           ││     8  │                                                                                     │
+│ 3  closed  parity-bot     Release 0.2.0                      ││  Lines 22-28 (+3 -2) • impl Viewer {                                                         │
+│ 2  open    parity-friend  Try a faster parser                ││    22  │     pub fn render(&self) -> io::Result<()> {                                        │
+│                                                              ││    21  │         for line in &self.lines {                                                   │
+│                                                              ││    22● │             println!("{line}");                                                     │
+│                                                              ││          ▶ parity-bot: This needs a test.                                                    │
+│                                                              ││    23  │         for (i, line) in self.lines.iter().enumerate() {                            │
+│                                                              ││    24  │             let marker = if i == self.cursor { ">" } else { " " };                  │
+│                                                              ││    25  │             println!("{marker} {line}");                                            │
+│                                                              ││    26  │         }                                                                           │
+│                                                              ││    27  │         Ok(())                                                                      │
+│                                                              ││    28  │     }                                                                               │
+│                                                              ││  Outdated comments (1)                                                                       │
+│                                                              ││►         ▼ Line 12 (outdated) · parity-bot: Rename this to `line_count`.                     │
+│                                                              ││    12● │     pub fn len(&self) -> usize {                                                    │
+│                                                              ││          ▎ parity-bot • Tue Feb  3 09:30:00 2026                                             │
+│                                                              ││          ▎ Rename this to line_count.                                                        │
+│                                                              ││ src/viewer.rs                                                                  Comment 3/3   │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ j Line down  k Line up  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Collapse  z Fold Files  n Next Comment  N Previous Comment  / Filter File

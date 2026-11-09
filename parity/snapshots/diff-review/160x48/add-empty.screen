@@ -1,0 +1,164 @@
+lazy-github-screen 1
+size 160x48
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                                                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Overview  Diff  Conversation                                                                 │
+│ ☆  parity-bot  pr-details   ✘                                ││━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     ✘                                ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
+│ ☆  parity-bot  hello-world  ✘                                ││▊  Filter files (press '/' to focus, ESC to clear)                                           ▎│
+│ ☆  parity-bot  lazy-demo    ✘                                ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
+│                                       █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                                       │
+│                                       █                                                                              █                                       │
+│                                       █                                                                              █                                       │
+│                                       █ Add Comment                                                                  █                                       │
+│                                       █                                                                              █                                       │
+│                                       █ Commenting on:                                                               █move.                                  │
+│                                       █                                                                              █                                       │
+│                                       █ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎ █                                       │
+│                                       █ ▊  +Run `viewer FILE`, then press `j` and `k` to move.                     ▎ █                                       │
+│                                       █ ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎ █                                       │
+│                                       █                                                                              █                                       │
+│                                       █ Comment:                                                                     █                                       │
+│                                       █                                                                              █                                       │
+│                                       █ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎ █                                       │
+│                                       █ ▊                                                                          ▎ █                                       │
+└───────────────────────────────────────█ ▊                                                                          ▎ █                                       │
+┌─ [2] Pull Requests ───────────────────█ ▊                                                                          ▎ █");                                    │
+│ #  Status  Author         Title       █ ▊                                                                          ▎ █;                                      │
+│ 5  open    parity-friend  Add a cursor█ ▊                                                                          ▎ █                                       │
+│ 4  closed  parity-bot     Drop the leg█ ▊                                                                          ▎ █                                       │
+│ 3  closed  parity-bot     Release 0.2.█ ▊                                                                          ▎ █                                       │
+│ 2  open    parity-friend  Try a faster█ ▊                                                                          ▎ █                                       │
+│                                       █ ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎ █                                       │
+│                                       █                                                                              █                                       │
+│                                       █                      ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                       █                                     ▇▇│
+│                                       █                        Add Comment         Cancel                            █                                       │
+│                                       █                      ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                       █                                       │
+│                                       █                                                                              █                                       │
+│                                       █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                                       │
+│                                                              ││     8  │                                                                                     │
+│                                                              ││  Lines 22-28 (+3 -2) • impl Viewer {                                                         │
+│                                                              ││    22  │     pub fn render(&self) -> io::Result<()> {                                        │
+│                                                              ││    21  │         for line in &self.lines {                                                   │
+│                                                              ││    22  │             println!("{line}");                                                     │
+│                                                              ││    23  │         for (i, line) in self.lines.iter().enumerate() {                            │
+│                                                              ││    24  │             let marker ▌                                                            │
+│                                                              ││ README.md                       ▌ Comment cannot be empty!                                   │
+└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+ j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  z Fold Files  / Filter Files  ^v Paste link  f Follow link
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+dfgffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdebhhhhhhhhbbbbbbbbhhhhhhhhhhhhbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbe
+diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiidejjjjjjjjjjjkkkkjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjje
+dlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldemnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnoe
+dlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldemllpppppppppppppppppppppppppppppppppppppppppppppppllllllllllllllllllllllllllllllllllllllllllloe
+dlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldemnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnoe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq..............................................................................qtttttttttttttttttttttttttttttttttttttsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq..............................................................................quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq.vvvvvvvvvvv..................................................................quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq..............................................................................qwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq.vvvvvvvvvvvvvv...............................................................qxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyysse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq..............................................................................qzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq.ABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.qzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq.A..........................................................................B.qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq.ABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.qtttttttttttttttttttttttttttttttttttttsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq..............................................................................qzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq.vvvvvvvv.....................................................................qzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq..............................................................................qzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq.CDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD.qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq.CEFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGED.qtttttttttttttttttttttttttttttttttttttsse
+ddddddddddddddddddddddddddddddddddddddddq.CE........................................................................ED.quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusse
+ddddddddddddddddddddddddddddddddddddddddq.CE........................................................................ED.qHIIuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusse
+dfffffffffffffffffffffffffffffffffffffffq.CE........................................................................ED.qJzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzsse
+diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiq.CE........................................................................ED.quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusse
+dlllllllllllllllllllllllllllllllllllllllq.CE........................................................................ED.qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsse
+dlllllllllllllllllllllllllllllllllllllllq.CE........................................................................ED.qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsse
+dlllllllllllllllllllllllllllllllllllllllq.CE........................................................................ED.qtttttttttttttttttttttttttttttttttttttsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq.CDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD.quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq..............................................................................qzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzsse
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq......................KKKKKKKKKKKKKKKK.LLLLLLLLLLLLLLLL.......................quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuMMe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq......................NOOOOOOOOOOOOONN.....PPPPPPPP...........................quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuQQe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq......................RRRRRRRRRRRRRRRR.SSSSSSSSSSSSSSSS.......................quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuQQe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbq..............................................................................qzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzQQe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqquuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuQQe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdelllllllllluuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuQQe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdetttttttttttttttTTtUUttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttQQe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllIIIIVVVIVVIWWWWWWIXIIIIIIIIIIIIIIIIIIIIIIIIIuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuQQe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllYYYYYYYYZZZYYYYYY00Y0YYYYYYYYYYYYwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwQQe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllYYYYYYYYYYYYYYYYYYYYY1ZZZZZZ1YYwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwQQe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllJJJJJJJJ222JJJJJJJJJJJ33JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJzzzzzzzzzzzzzzzzzzzzzzzzzzQQe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdellllllllllJJJJJJJJJJJJ222JJJJJJJJ455555555555555555555555555555555555555555555555555555555555Qe
+dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde666666666666666666666666666666666455555555555555555555555555555555555555555555555555555555555Qe
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee455555555555555555555555555555555555555555555555555555555555ee
+7778888888888777888888887778888888888887778888888888777888888888888887778888888888777888888888888887778888888888877788888888888887777888888888887778888888888887
+--- legend
+. fg=#e0e0e0 bg=#1e1e1e
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#50701d bg=#121212
+d fg=#365270 bg=#121212
+e fg=#2a5738 bg=#121212
+f fg=#646464 bg=#191d21 bold
+g fg=#476419 bg=#191d21 bold
+h fg=#3b3b3b bg=#121212
+i fg=#646464 bg=#13212c
+j fg=#1a1a1a bg=#121212
+k fg=#0b3a5f bg=#121212
+l fg=#646464 bg=#161616
+m fg=#141414 bg=#121212 inverse
+n fg=#141414 bg=#161616
+o fg=#141414 bg=#121212
+p fg=#383838 bg=#161616
+q fg=#fea62b bg=#1e1e1e
+r fg=#656565 bg=#1a1a1a bold
+s fg=#0a1e2c bg=#161616 inverse
+t fg=#4c4c4c bg=#161616
+u fg=#646464 bg=#1a1a18
+v fg=#e1e1e1 bg=#1e1e1e bold
+w fg=#646464 bg=#220e0e
+x fg=#6e6e6b bg=#0a320a
+y fg=#646464 bg=#0a320a
+z fg=#646464 bg=#0e220e
+A fg=#191919 bg=#1e1e1e inverse
+B fg=#191919 bg=#1e1e1e
+C fg=#0178d4 bg=#1e1e1e inverse
+D fg=#0178d4 bg=#1e1e1e
+E bg=#1e1e1e
+F fg=#121212 bg=#e0e0e0
+G fg=#e0e0e0 bg=#262626
+H fg=#666239 bg=#1a1a18
+I fg=#6e6e6b bg=#1a1a18
+J fg=#6e6e6b bg=#0e220e
+K fg=#7ae998 bg=#4ebf71
+L fg=#2d2d2d bg=#1e1e1e
+M fg=#0a1e2c bg=#0a0a0a inverse
+N fg=#0a180e bg=#4ebf71
+O fg=#0a180e bg=#4ebf71 bold
+P fg=#e0e0e0 bg=#1e1e1e bold
+Q fg=#646464 bg=#0a0a0a
+R fg=#008139 bg=#4ebf71
+S fg=#0d0d0d bg=#1e1e1e
+T fg=#476419 bg=#161616
+U fg=#6c0a30 bg=#161616
+V fg=#33616a bg=#1a1a18
+W fg=#4d651d bg=#1a1a18
+X fg=#702641 bg=#1a1a18
+Y fg=#6e6e6b bg=#220e0e
+Z fg=#33616a bg=#220e0e
+0 fg=#702641 bg=#220e0e
+1 fg=#666239 bg=#220e0e
+2 fg=#33616a bg=#0e220e
+3 fg=#702641 bg=#0e220e
+4 fg=#fea62b bg=#343f49
+5 fg=#e0e0e0 bg=#343f49
+6 fg=#18130c bg=#704d1c
+7 fg=#704d1c bg=#191d21 bold
+8 fg=#646464 bg=#191d21

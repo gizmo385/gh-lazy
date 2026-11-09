@@ -1,0 +1,18 @@
+GET /repos/parity-bot/pr-details/branches?page=1&per_page=30
+GET /repos/parity-bot/pr-details/collaborators
+GET /repos/parity-bot/pr-details/commits/c0ffeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/check-runs?page=1&per_page=100
+GET /repos/parity-bot/pr-details/commits/c0ffeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/status?page=1&per_page=100
+GET /repos/parity-bot/pr-details/issues/10/comments
+GET /repos/parity-bot/pr-details/issues/10/reactions
+GET /repos/parity-bot/pr-details/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/pr-details/issues?page=2&per_page=30&state=all
+GET /repos/parity-bot/pr-details/pulls/10 accept=diff
+GET /repos/parity-bot/pr-details/pulls/10/reviews
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=2&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/readme accept=raw
+GET /user
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all
+POST /repos/parity-bot/pr-details/pulls {"base":"main","draft":false,"head":"parity-bot:new-feature","title":"Parity PR"}
+ssh git-receive-pack parity-bot/pr-details.git
+ssh git-upload-pack parity-bot/pr-details.git

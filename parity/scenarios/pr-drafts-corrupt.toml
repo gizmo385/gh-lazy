@@ -39,6 +39,9 @@ wait.text = "Template text from pr_template.md"
 capture = "ignored"
 checks = ["footer"]
 ignore = { boxes = ["Command Log"] }
+# The modal covers the Command Log's border, so the box isn't found; the end of the run's temp path still shows past
+# the modal's edge.
+mask = ['[A-Za-z0-9]{6}/home/\.config']
 
 # Closed, the Command Log shows the warning. The line names the run's temp path, so only its start is matched, and
 # the Command Log box is ignored.

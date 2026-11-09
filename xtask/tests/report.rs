@@ -219,7 +219,8 @@ fn check_writer(out: &Path) -> (BTreeMap<App, AppRunStatus>, Vec<CaptureSummary>
         write(&app_dir.join("fake-gh.log"), &log);
     }
     let statuses = BTreeMap::from([(App::Python, status(RunState::Ok)), (App::Rust, status(RunState::Ok))]);
-    let (captures, findings) = check::check_size(&scenario, &dir, &statuses, &ThemeColors::default(), &[]).unwrap();
+    let (captures, findings) =
+        check::check_size(&scenario, &dir, &statuses, &ThemeColors::default(), &[], None).unwrap();
     (statuses, captures, findings)
 }
 

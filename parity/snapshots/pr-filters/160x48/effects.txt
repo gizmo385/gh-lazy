@@ -1,0 +1,6 @@
+GET /repos/parity-bot/browse-fixture/issues?creator=parity-bot&page=1&per_page=30&state=open
+GET /repos/parity-bot/browse-fixture/readme accept=raw
+GET /search/issues?advanced_search=true&order=desc&page=1&per_page=30&q=is:pr repo:parity-bot/browse-fixture author:@me is:open&sort=created
+GET /search/issues?advanced_search=true&order=desc&page=2&per_page=30&q=is:pr repo:parity-bot/browse-fixture author:@me is:open&sort=created
+GET /user
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

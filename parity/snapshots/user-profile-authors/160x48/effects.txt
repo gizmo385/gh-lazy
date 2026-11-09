@@ -1,0 +1,20 @@
+GET /repos/parity-bot/browse-fixture/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/browse-fixture/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/browse-fixture/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/browse-fixture/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/browse-fixture/readme accept=raw
+GET /repos/parity-bot/dotfiles/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/dotfiles/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/dotfiles/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/dotfiles/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/dotfiles/readme accept=raw
+GET /repos/parity-friend/friend-tools/actions/runs?page=1&per_page=30
+GET /repos/parity-friend/friend-tools/actions/workflows?page=1&per_page=30
+GET /repos/parity-friend/friend-tools/issues?page=1&per_page=30&state=all
+GET /repos/parity-friend/friend-tools/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-friend/friend-tools/readme accept=raw
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all
+GET /users/parity-bot
+GET /users/parity-bot/repos?direction=desc&page=1&per_page=30&sort=updated
+GET /users/parity-friend
+GET /users/parity-friend/repos?direction=desc&page=1&per_page=30&sort=updated

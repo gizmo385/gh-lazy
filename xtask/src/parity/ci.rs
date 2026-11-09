@@ -21,6 +21,8 @@ pub enum Source {
     Cross,
     /// A live Python run against its fresh reference.
     Drift,
+    /// A Rust run against its committed snapshot.
+    Snapshot,
 }
 
 /// A structural mismatch from one capture at one size, and the app it counts against.
@@ -49,6 +51,11 @@ impl Finding {
         Self::new(size, capture, Source::Drift, App::Python, mismatch)
     }
 
+    /// A Rust run that differs from its committed snapshot, which counts against Rust.
+    pub fn snapshot(size: &str, capture: &str, mismatch: &Mismatch) -> Self {
+        Self::new(size, capture, Source::Snapshot, App::Rust, mismatch)
+    }
+
     fn new(size: &str, capture: &str, source: Source, against: App, mismatch: &Mismatch) -> Self {
         Self {
             size: size.to_owned(),
@@ -67,6 +74,7 @@ impl Finding {
             Source::Expect => format!("{} expect", self.against),
             Source::Cross => "cross".to_owned(),
             Source::Drift => "drift".to_owned(),
+            Source::Snapshot => "rust".to_owned(),
         };
         match &m.in_box {
             Some(b) => format!("{source} {} {b}", m.check.as_str()),
@@ -307,6 +315,24 @@ mod tests {
                 "startup/160x48/main: python expect titles [5] Details: expected \"Overview\", got \"Details\"",
                 "startup/160x48/main: cross titles [5] Details: expected \"Overview\", got \"Details\"",
                 "startup/160x48/main: cross titles: expected \"Overview\", got \"Details\"",
+            ]
+        );
+    }
+
+    #[test]
+    fn snapshot_mismatches_are_rust_errors() {
+        let s = summary(true, RunState::Ok, ScenarioResult::Fail);
+        let m = Mismatch::snapshot(
+            Kind::Snapshot,
+            "rows 12-14 differ; run cargo xtask parity --accept startup and review the diff".into(),
+        );
+        let f = Finding::snapshot("160x48", "main", &m);
+        assert_eq!((f.source, f.against), (Source::Snapshot, App::Rust));
+        assert_eq!(
+            lines(&annotations(FILE, &s, &[f])),
+            [
+                "::error file=parity/scenarios/startup.toml::startup/160x48/main: rust snapshot: rows 12-14 differ; \
+                 run cargo xtask parity --accept startup and review the diff"
             ]
         );
     }

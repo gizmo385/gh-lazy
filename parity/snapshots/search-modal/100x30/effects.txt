@@ -1,0 +1,47 @@
+GET /repos/parity-bot/pr-details/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/pr-details/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/pr-details/commits/c0ffee5555555555555555555555555555555555/check-runs?page=1&per_page=100
+GET /repos/parity-bot/pr-details/commits/c0ffee5555555555555555555555555555555555/status?page=1&per_page=100
+GET /repos/parity-bot/pr-details/issues/5/comments
+GET /repos/parity-bot/pr-details/issues/5/reactions
+GET /repos/parity-bot/pr-details/issues/comments/7001/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/issues/comments/7002/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/pr-details/issues?page=2&per_page=30&state=all
+GET /repos/parity-bot/pr-details/pulls/5
+GET /repos/parity-bot/pr-details/pulls/5 accept=diff
+GET /repos/parity-bot/pr-details/pulls/5/reviews
+GET /repos/parity-bot/pr-details/pulls/5/reviews/501/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/502/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/503/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/504/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/505/comments
+GET /repos/parity-bot/pr-details/pulls/comments/9001/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/pulls/comments/9002/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/pulls/comments/9003/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=2&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/readme accept=raw
+GET /search/issues?advanced_search=true&page=1&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=1&per_page=50&q=repo:parity-bot/pr-details (is:pr is:open)
+GET /search/issues?advanced_search=true&page=10&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=11&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=12&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=13&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=14&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=15&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=16&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=17&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=18&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=19&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=2&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=20&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=3&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=4&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=5&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=6&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=7&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=8&per_page=50&q=is:pr author:@me
+GET /search/issues?advanced_search=true&page=9&per_page=50&q=is:pr author:@me
+GET /user
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

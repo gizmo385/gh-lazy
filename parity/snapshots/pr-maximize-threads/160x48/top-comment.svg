@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960" xml:space="preserve">
+<title>pr-maximize-threads · top-comment · 160x48</title>
+<style>
+text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono', monospace; font-size: 16.67px; white-space: pre; }
+.s0 { fill: #797979; }
+.s1 { fill: #e0e0e0; }
+.s2 { fill: #262626; }
+.s3 { fill: #0178d4; }
+.s4 { fill: #333b42; }
+.s5 { fill: #a5a5a5; }
+.s6 { fill: #121212; }
+.s7 { fill: #adff2f; }
+.s8 { fill: #ff0000; }
+.s9 { fill: #e0e0e0; text-decoration: underline; }
+.s10 { fill: #a0a0a0; }
+.s11 { fill: #4ebf71; }
+.s12 { fill: #8ad4a1; font-weight: bold; }
+.s13 { fill: #e0e0e0; font-weight: bold; }
+</style>
+<rect width="1600" height="960" fill="#1e1e1e"/>
+<g shape-rendering="crispEdges">
+<rect x="0" y="0" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="20" width="1600" height="20" fill="#121212"/>
+<rect x="1580" y="40" width="20" height="20" fill="#000000"/>
+<rect x="1580" y="60" width="20" height="20" fill="#000000"/>
+<rect x="1580" y="80" width="20" height="20" fill="#000000"/>
+<rect x="1580" y="100" width="20" height="20" fill="#000000"/>
+<rect x="1580" y="120" width="20" height="20" fill="#000000"/>
+<rect x="1580" y="140" width="20" height="20" fill="#000000"/>
+<rect x="1580" y="160" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="180" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="200" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="220" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="240" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="260" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="280" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="300" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="320" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="340" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="360" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="380" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="400" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="420" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="440" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="460" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="480" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="500" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="520" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="540" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="560" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="580" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="600" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="620" width="20" height="20" fill="#003054"/>
+<rect x="1580" y="640" width="20" height="20" fill="#003054"/>
+<rect x="0" y="660" width="1580" height="20" fill="#121212"/>
+<rect x="1580" y="660" width="20" height="20" fill="#003054"/>
+<rect x="0" y="680" width="1580" height="20" fill="#121212"/>
+<rect x="1580" y="680" width="20" height="20" fill="#003054"/>
+<rect x="0" y="700" width="1580" height="20" fill="#121212"/>
+<rect x="1580" y="700" width="20" height="20" fill="#003054"/>
+<rect x="0" y="720" width="1580" height="20" fill="#121212"/>
+<rect x="1580" y="720" width="20" height="20" fill="#003054"/>
+<rect x="0" y="740" width="20" height="20" fill="#121212"/>
+<rect x="1580" y="740" width="20" height="20" fill="#003054"/>
+<rect x="0" y="760" width="20" height="20" fill="#121212"/>
+<rect x="1580" y="760" width="20" height="20" fill="#003054"/>
+<rect x="0" y="780" width="20" height="20" fill="#121212"/>
+<rect x="1580" y="780" width="20" height="20" fill="#003054"/>
+<rect x="0" y="800" width="1580" height="20" fill="#121212"/>
+<rect x="1580" y="800" width="20" height="20" fill="#003054"/>
+<rect x="0" y="820" width="1580" height="20" fill="#121212"/>
+<rect x="1580" y="820" width="20" height="20" fill="#003054"/>
+<rect x="0" y="840" width="1580" height="20" fill="#121212"/>
+<rect x="1580" y="840" width="20" height="20" fill="#003054"/>
+<rect x="0" y="860" width="980" height="20" fill="#121212"/>
+<rect x="980" y="860" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="860" width="20" height="20" fill="#003054"/>
+<rect x="0" y="880" width="980" height="20" fill="#121212"/>
+<rect x="980" y="880" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="880" width="20" height="20" fill="#003054"/>
+<rect x="0" y="900" width="980" height="20" fill="#121212"/>
+<rect x="980" y="900" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="900" width="20" height="20" fill="#003054"/>
+<rect x="0" y="920" width="980" height="20" fill="#121212"/>
+<rect x="980" y="920" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="920" width="20" height="20" fill="#003054"/>
+<rect x="0" y="940" width="1580" height="20" fill="#121212"/>
+<rect x="1580" y="940" width="20" height="20" fill="#003054"/>
+</g>
+<text class="s0" x="10" y="15" textLength="80" lengthAdjust="spacingAndGlyphs">Overview</text>
+<text class="s0" x="110" y="15" textLength="40" lengthAdjust="spacingAndGlyphs">Diff</text>
+<text class="s1" x="170" y="15" textLength="120" lengthAdjust="spacingAndGlyphs">Conversation</text>
+<text class="s2" x="0" y="35" textLength="170" lengthAdjust="spacingAndGlyphs">━━━━━━━━━━━━━━━━╸</text>
+<text class="s3" x="170" y="35" textLength="120" lengthAdjust="spacingAndGlyphs">━━━━━━━━━━━━</text>
+<text class="s2" x="290" y="35" textLength="1310" lengthAdjust="spacingAndGlyphs">╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</text>
+<text class="s4" x="40" y="55" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="55" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s5" x="80" y="55" textLength="370" lengthAdjust="spacingAndGlyphs">parity-bot • Mon Feb  2 10:00:00 2026</text>
+<text class="s4" x="40" y="75" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="75" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="40" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="70" y="95" textLength="1510" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</text>
+<text class="s4" x="40" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="90" y="115" textLength="20" lengthAdjust="spacingAndGlyphs">▶ </text>
+<text class="s1" x="110" y="115" textLength="20" lengthAdjust="spacingAndGlyphs">👀</text>
+<text class="s1" x="130" y="115" textLength="20" lengthAdjust="spacingAndGlyphs"> 1</text>
+<text class="s4" x="40" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="40" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="40" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="80" y="175" textLength="300" lengthAdjust="spacingAndGlyphs">No, it stops at the last line.</text>
+<text class="s4" x="40" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="40" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s5" x="80" y="215" textLength="400" lengthAdjust="spacingAndGlyphs">parity-friend • Mon Feb  2 11:00:00 2026</text>
+<text class="s4" x="40" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="40" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="0" y="315" textLength="1600" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  </text>
+<text class="s1" x="20" y="335" textLength="310" lengthAdjust="spacingAndGlyphs">▶ Review from parity-reviewer (</text>
+<text class="s7" x="330" y="335" textLength="80" lengthAdjust="spacingAndGlyphs">Approved</text>
+<text class="s1" x="410" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">)</text>
+<text class="s6" x="0" y="375" textLength="1600" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  </text>
+<text class="s1" x="20" y="395" textLength="380" lengthAdjust="spacingAndGlyphs">▶ Review from parity-carol (Dismissed)</text>
+<text class="s6" x="0" y="435" textLength="1600" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  </text>
+<text class="s1" x="20" y="455" textLength="260" lengthAdjust="spacingAndGlyphs">▼ Review from parity-bot (</text>
+<text class="s8" x="280" y="455" textLength="170" lengthAdjust="spacingAndGlyphs">Changes Requested</text>
+<text class="s1" x="450" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">)</text>
+<text class="s1" x="60" y="495" textLength="330" lengthAdjust="spacingAndGlyphs">Please add a test for the cursor.</text>
+<text class="s4" x="40" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="80" y="535" textLength="180" lengthAdjust="spacingAndGlyphs">This needs a test.</text>
+<text class="s4" x="40" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="40" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s5" x="80" y="575" textLength="370" lengthAdjust="spacingAndGlyphs">parity-bot • Tue Feb  3 09:00:00 2026</text>
+<text class="s4" x="40" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="60" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="40" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="10" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="30" y="675" textLength="170" lengthAdjust="spacingAndGlyphs">Rebased on main. </text>
+<text class="s9" x="200" y="675" textLength="110" lengthAdjust="spacingAndGlyphs">@parity-bot</text>
+<text class="s1" x="310" y="675" textLength="240" lengthAdjust="spacingAndGlyphs"> ready for another look.</text>
+<text class="s4" x="10" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="10" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s10" x="30" y="715" textLength="400" lengthAdjust="spacingAndGlyphs">parity-friend • Tue Feb  3 12:00:00 2026</text>
+<text class="s4" x="10" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="10" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="20" y="755" textLength="1580" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  </text>
+<text class="s4" x="10" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="40" y="775" textLength="20" lengthAdjust="spacingAndGlyphs">▶ </text>
+<text class="s1" x="60" y="775" textLength="20" lengthAdjust="spacingAndGlyphs">👍</text>
+<text class="s1" x="80" y="775" textLength="50" lengthAdjust="spacingAndGlyphs"> 1 | </text>
+<text class="s1" x="130" y="775" textLength="20" lengthAdjust="spacingAndGlyphs">🚀</text>
+<text class="s1" x="150" y="775" textLength="20" lengthAdjust="spacingAndGlyphs"> 1</text>
+<text class="s4" x="10" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="10" y="835" textLength="1570" lengthAdjust="spacingAndGlyphs">┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍┓</text>
+<text class="s11" x="10" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">╏</text>
+<text class="s1" x="30" y="855" textLength="190" lengthAdjust="spacingAndGlyphs">Is this related to </text>
+<text class="s9" x="220" y="855" textLength="20" lengthAdjust="spacingAndGlyphs">#4</text>
+<text class="s1" x="240" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">?</text>
+<text class="s11" x="1570" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">╏</text>
+<text class="s11" x="10" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">╏</text>
+<text class="s11" x="980" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s11" x="10" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">╏</text>
+<text class="s10" x="30" y="895" textLength="340" lengthAdjust="spacingAndGlyphs">Unknown • Tue Feb  3 13:30:00 2026</text>
+<text class="s11" x="980" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s12" x="1000" y="895" textLength="140" lengthAdjust="spacingAndGlyphs">View Maximized</text>
+<text class="s11" x="10" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">╏</text>
+<text class="s11" x="980" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s1" x="990" y="915" textLength="310" lengthAdjust="spacingAndGlyphs"> Current view maximized. Press </text>
+<text class="s13" x="1300" y="915" textLength="60" lengthAdjust="spacingAndGlyphs">escape</text>
+<text class="s1" x="1360" y="915" textLength="220" lengthAdjust="spacingAndGlyphs"> to return.           </text>
+<text class="s11" x="10" y="935" textLength="980" lengthAdjust="spacingAndGlyphs">┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍▌</text>
+</svg>

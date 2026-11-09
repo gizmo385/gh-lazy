@@ -1,0 +1,440 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960" xml:space="preserve">
+<title>pr-maximize-threads · conversation-noop · 160x48</title>
+<style>
+text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono', monospace; font-size: 16.67px; white-space: pre; }
+.s0 { fill: #004578; }
+.s1 { fill: #e0e0e0; }
+.s2 { fill: #adff2f; }
+.s3 { fill: #6db2ff; }
+.s4 { fill: #4ebf71; }
+.s5 { fill: #98e024; font-weight: bold; }
+.s6 { fill: #e0e0e0; font-weight: bold; }
+.s7 { fill: #797979; }
+.s8 { fill: #262626; }
+.s9 { fill: #0178d4; }
+.s10 { fill: #121212; }
+.s11 { fill: #333b42; }
+.s12 { fill: #a5a5a5; }
+.s13 { fill: #ff0000; }
+.s14 { fill: #000000; }
+.s15 { fill: #e0e0e0; text-decoration: underline; }
+.s16 { fill: #ffa62b; font-weight: bold; }
+</style>
+<rect width="1600" height="960" fill="#1e1e1e"/>
+<g shape-rendering="crispEdges">
+<rect x="0" y="0" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="20" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="40" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="60" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="80" width="10" height="20" fill="#121212"/>
+<rect x="10" y="80" width="620" height="20" fill="#242f38"/>
+<rect x="630" y="80" width="970" height="20" fill="#121212"/>
+<rect x="0" y="100" width="10" height="20" fill="#121212"/>
+<rect x="10" y="100" width="620" height="20" fill="#153854"/>
+<rect x="630" y="100" width="970" height="20" fill="#121212"/>
+<rect x="0" y="120" width="10" height="20" fill="#121212"/>
+<rect x="630" y="120" width="20" height="20" fill="#121212"/>
+<rect x="1570" y="120" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="120" width="10" height="20" fill="#121212"/>
+<rect x="0" y="140" width="10" height="20" fill="#121212"/>
+<rect x="630" y="140" width="20" height="20" fill="#121212"/>
+<rect x="1570" y="140" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="140" width="10" height="20" fill="#121212"/>
+<rect x="0" y="160" width="10" height="20" fill="#121212"/>
+<rect x="630" y="160" width="20" height="20" fill="#121212"/>
+<rect x="1570" y="160" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="160" width="10" height="20" fill="#121212"/>
+<rect x="0" y="180" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="180" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="180" width="10" height="20" fill="#121212"/>
+<rect x="0" y="200" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="200" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="200" width="10" height="20" fill="#121212"/>
+<rect x="0" y="220" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="220" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="220" width="10" height="20" fill="#121212"/>
+<rect x="0" y="240" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="240" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="240" width="10" height="20" fill="#121212"/>
+<rect x="0" y="260" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="260" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="260" width="10" height="20" fill="#121212"/>
+<rect x="0" y="280" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="280" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="280" width="10" height="20" fill="#121212"/>
+<rect x="0" y="300" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="300" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="300" width="10" height="20" fill="#121212"/>
+<rect x="0" y="320" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="320" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="320" width="10" height="20" fill="#121212"/>
+<rect x="0" y="340" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="340" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="340" width="10" height="20" fill="#121212"/>
+<rect x="0" y="360" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="360" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="360" width="10" height="20" fill="#121212"/>
+<rect x="0" y="380" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="380" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="380" width="10" height="20" fill="#121212"/>
+<rect x="0" y="400" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="400" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="400" width="10" height="20" fill="#121212"/>
+<rect x="0" y="420" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="420" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="420" width="10" height="20" fill="#121212"/>
+<rect x="0" y="440" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="440" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="440" width="10" height="20" fill="#121212"/>
+<rect x="0" y="460" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="460" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="460" width="10" height="20" fill="#121212"/>
+<rect x="0" y="480" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="480" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="480" width="10" height="20" fill="#121212"/>
+<rect x="0" y="500" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="500" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="500" width="10" height="20" fill="#121212"/>
+<rect x="0" y="520" width="10" height="20" fill="#121212"/>
+<rect x="10" y="520" width="620" height="20" fill="#242f38"/>
+<rect x="630" y="520" width="20" height="20" fill="#121212"/>
+<rect x="1570" y="520" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="520" width="10" height="20" fill="#121212"/>
+<rect x="0" y="540" width="10" height="20" fill="#121212"/>
+<rect x="10" y="540" width="620" height="20" fill="#153854"/>
+<rect x="630" y="540" width="20" height="20" fill="#121212"/>
+<rect x="1570" y="540" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="540" width="10" height="20" fill="#121212"/>
+<rect x="0" y="560" width="10" height="20" fill="#121212"/>
+<rect x="630" y="560" width="20" height="20" fill="#121212"/>
+<rect x="1570" y="560" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="560" width="10" height="20" fill="#121212"/>
+<rect x="0" y="580" width="10" height="20" fill="#121212"/>
+<rect x="630" y="580" width="20" height="20" fill="#121212"/>
+<rect x="1570" y="580" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="580" width="10" height="20" fill="#121212"/>
+<rect x="0" y="600" width="10" height="20" fill="#121212"/>
+<rect x="630" y="600" width="20" height="20" fill="#121212"/>
+<rect x="1570" y="600" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="600" width="10" height="20" fill="#121212"/>
+<rect x="0" y="620" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="620" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="620" width="10" height="20" fill="#121212"/>
+<rect x="0" y="640" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="640" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="640" width="10" height="20" fill="#121212"/>
+<rect x="0" y="660" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="660" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="660" width="10" height="20" fill="#121212"/>
+<rect x="0" y="680" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="680" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="680" width="10" height="20" fill="#121212"/>
+<rect x="0" y="700" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="700" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="700" width="10" height="20" fill="#121212"/>
+<rect x="0" y="720" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="720" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="720" width="10" height="20" fill="#121212"/>
+<rect x="0" y="740" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="740" width="20" height="20" fill="#003054"/>
+<rect x="1590" y="740" width="10" height="20" fill="#121212"/>
+<rect x="0" y="760" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="760" width="20" height="20" fill="#000000"/>
+<rect x="1590" y="760" width="10" height="20" fill="#121212"/>
+<rect x="0" y="780" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="780" width="20" height="20" fill="#000000"/>
+<rect x="1590" y="780" width="10" height="20" fill="#121212"/>
+<rect x="0" y="800" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="800" width="20" height="20" fill="#000000"/>
+<rect x="1590" y="800" width="10" height="20" fill="#121212"/>
+<rect x="0" y="820" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="820" width="20" height="20" fill="#000000"/>
+<rect x="1590" y="820" width="10" height="20" fill="#121212"/>
+<rect x="0" y="840" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="840" width="20" height="20" fill="#000000"/>
+<rect x="1590" y="840" width="10" height="20" fill="#121212"/>
+<rect x="0" y="860" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="860" width="20" height="20" fill="#000000"/>
+<rect x="1590" y="860" width="10" height="20" fill="#121212"/>
+<rect x="0" y="880" width="1570" height="20" fill="#121212"/>
+<rect x="1570" y="880" width="20" height="20" fill="#000000"/>
+<rect x="1590" y="880" width="10" height="20" fill="#121212"/>
+<rect x="0" y="900" width="1570" height="20" fill="#121212"/>
+<rect x="1570" y="900" width="20" height="20" fill="#000000"/>
+<rect x="1590" y="900" width="10" height="20" fill="#121212"/>
+<rect x="0" y="920" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="940" width="1600" height="20" fill="#242f38"/>
+</g>
+<text class="s0" x="0" y="15" textLength="1600" lengthAdjust="spacingAndGlyphs">┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐</text>
+<text class="s0" x="0" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="35" textLength="140" lengthAdjust="spacingAndGlyphs">Current repo: </text>
+<text class="s2" x="150" y="35" textLength="210" lengthAdjust="spacingAndGlyphs">parity-bot/pr-details</text>
+<text class="s0" x="1590" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s0" x="0" y="55" textLength="1600" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+<text class="s3" x="0" y="75" textLength="640" lengthAdjust="spacingAndGlyphs">┌─ [1] Repositories ───────────────────────────────────────────┐</text>
+<text class="s4" x="640" y="75" textLength="960" lengthAdjust="spacingAndGlyphs">┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐</text>
+<text class="s3" x="0" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s5" x="20" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">★</text>
+<text class="s6" x="30" y="95" textLength="600" lengthAdjust="spacingAndGlyphs">  Owner       Name         Private                          </text>
+<text class="s3" x="630" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s7" x="660" y="95" textLength="80" lengthAdjust="spacingAndGlyphs">Overview</text>
+<text class="s7" x="760" y="95" textLength="40" lengthAdjust="spacingAndGlyphs">Diff</text>
+<text class="s1" x="800" y="95" textLength="790" lengthAdjust="spacingAndGlyphs">  Conversation                                                                 </text>
+<text class="s4" x="1590" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="115" textLength="620" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  pr-details   ✘                                </text>
+<text class="s3" x="630" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s8" x="650" y="115" textLength="170" lengthAdjust="spacingAndGlyphs">━━━━━━━━━━━━━━━━╸</text>
+<text class="s9" x="820" y="115" textLength="120" lengthAdjust="spacingAndGlyphs">━━━━━━━━━━━━</text>
+<text class="s8" x="940" y="115" textLength="650" lengthAdjust="spacingAndGlyphs">╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</text>
+<text class="s4" x="1590" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="135" textLength="620" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  dotfiles     ✘                                </text>
+<text class="s3" x="630" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s10" x="650" y="135" textLength="940" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  </text>
+<text class="s4" x="1590" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="155" textLength="620" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  hello-world  ✘                                </text>
+<text class="s3" x="630" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="650" y="155" textLength="920" lengthAdjust="spacingAndGlyphs">  ▼ Review from parity-bot (Commented)                                                      </text>
+<text class="s4" x="1590" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="175" textLength="620" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  lazy-demo    ✘                                </text>
+<text class="s3" x="630" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="650" y="195" textLength="920" lengthAdjust="spacingAndGlyphs">      Looks close. One question inline.                                                     </text>
+<text class="s4" x="1590" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="720" y="235" textLength="850" lengthAdjust="spacingAndGlyphs"> Should the cursor wrap at the end?                                                  </text>
+<text class="s4" x="1590" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s12" x="730" y="275" textLength="370" lengthAdjust="spacingAndGlyphs">parity-bot • Mon Feb  2 10:00:00 2026</text>
+<text class="s4" x="1590" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s10" x="720" y="315" textLength="870" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  </text>
+<text class="s4" x="1590" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="720" y="335" textLength="40" lengthAdjust="spacingAndGlyphs">  ▶ </text>
+<text class="s1" x="760" y="335" textLength="20" lengthAdjust="spacingAndGlyphs">👀</text>
+<text class="s1" x="780" y="335" textLength="790" lengthAdjust="spacingAndGlyphs"> 1                                                                             </text>
+<text class="s4" x="1590" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="720" y="395" textLength="850" lengthAdjust="spacingAndGlyphs"> No, it stops at the last line.                                                      </text>
+<text class="s4" x="1590" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s12" x="730" y="435" textLength="400" lengthAdjust="spacingAndGlyphs">parity-friend • Mon Feb  2 11:00:00 2026</text>
+<text class="s4" x="1590" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="495" textLength="640" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘</text>
+<text class="s4" x="640" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="515" textLength="640" lengthAdjust="spacingAndGlyphs">┌─ [2] Pull Requests ──────────────────────────────────────────┐</text>
+<text class="s4" x="640" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="10" y="535" textLength="620" lengthAdjust="spacingAndGlyphs"> #  Status  Author         Title                              </text>
+<text class="s3" x="630" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s10" x="650" y="535" textLength="940" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  </text>
+<text class="s4" x="1590" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="555" textLength="620" lengthAdjust="spacingAndGlyphs"> 5  open    parity-friend  Add a cursor to the viewer         </text>
+<text class="s3" x="630" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="650" y="555" textLength="330" lengthAdjust="spacingAndGlyphs">  ▶ Review from parity-reviewer (</text>
+<text class="s2" x="980" y="555" textLength="80" lengthAdjust="spacingAndGlyphs">Approved</text>
+<text class="s1" x="1060" y="555" textLength="510" lengthAdjust="spacingAndGlyphs">)                                                  </text>
+<text class="s4" x="1590" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="575" textLength="620" lengthAdjust="spacingAndGlyphs"> 4  closed  parity-bot     Drop the legacy renderer           </text>
+<text class="s3" x="630" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="595" textLength="620" lengthAdjust="spacingAndGlyphs"> 3  closed  parity-bot     Release 0.2.0                      </text>
+<text class="s3" x="630" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s10" x="650" y="595" textLength="940" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  </text>
+<text class="s4" x="1590" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="615" textLength="620" lengthAdjust="spacingAndGlyphs"> 2  open    parity-friend  Try a faster parser                </text>
+<text class="s3" x="630" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="650" y="615" textLength="920" lengthAdjust="spacingAndGlyphs">  ▶ Review from parity-carol (Dismissed)                                                    </text>
+<text class="s4" x="1590" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s10" x="650" y="655" textLength="940" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  </text>
+<text class="s4" x="1590" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="650" y="675" textLength="280" lengthAdjust="spacingAndGlyphs">  ▼ Review from parity-bot (</text>
+<text class="s13" x="930" y="675" textLength="170" lengthAdjust="spacingAndGlyphs">Changes Requested</text>
+<text class="s1" x="1100" y="675" textLength="470" lengthAdjust="spacingAndGlyphs">)                                              </text>
+<text class="s4" x="1590" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="650" y="715" textLength="920" lengthAdjust="spacingAndGlyphs">      Please add a test for the cursor.                                                     </text>
+<text class="s4" x="1590" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="720" y="755" textLength="850" lengthAdjust="spacingAndGlyphs"> This needs a test.                                                                  </text>
+<text class="s14" x="1570" y="755" textLength="20" lengthAdjust="spacingAndGlyphs">▅▅</text>
+<text class="s4" x="1590" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s12" x="730" y="795" textLength="370" lengthAdjust="spacingAndGlyphs">parity-bot • Tue Feb  3 09:00:00 2026</text>
+<text class="s4" x="1590" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="710" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="660" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="670" y="895" textLength="180" lengthAdjust="spacingAndGlyphs"> Rebased on main. </text>
+<text class="s15" x="850" y="895" textLength="110" lengthAdjust="spacingAndGlyphs">@parity-bot</text>
+<text class="s1" x="960" y="895" textLength="630" lengthAdjust="spacingAndGlyphs"> ready for another look.                                       </text>
+<text class="s4" x="1590" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="660" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="935" textLength="640" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘</text>
+<text class="s4" x="640" y="935" textLength="960" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+<text class="s16" x="0" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> n </text>
+<text class="s1" x="30" y="955" textLength="120" lengthAdjust="spacingAndGlyphs">New Comment </text>
+<text class="s16" x="150" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^v </text>
+<text class="s1" x="190" y="955" textLength="110" lengthAdjust="spacingAndGlyphs">Paste link </text>
+<text class="s16" x="300" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> f </text>
+<text class="s1" x="330" y="955" textLength="120" lengthAdjust="spacingAndGlyphs">Follow link </text>
+<text class="s16" x="450" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> F </text>
+<text class="s1" x="480" y="955" textLength="220" lengthAdjust="spacingAndGlyphs">Follow link (browser) </text>
+<text class="s16" x="700" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
+<text class="s1" x="730" y="955" textLength="50" lengthAdjust="spacingAndGlyphs">Quit </text>
+<text class="s16" x="780" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^p </text>
+<text class="s1" x="820" y="955" textLength="160" lengthAdjust="spacingAndGlyphs">Command Palette </text>
+<text class="s16" x="980" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> M </text>
+<text class="s1" x="1010" y="955" textLength="90" lengthAdjust="spacingAndGlyphs">Maximize </text>
+<text class="s16" x="1100" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ? </text>
+<text class="s1" x="1130" y="955" textLength="470" lengthAdjust="spacingAndGlyphs">Keybindings                                    </text>
+</svg>

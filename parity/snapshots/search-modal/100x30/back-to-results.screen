@@ -1,0 +1,102 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Rep█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█─────────┐
+│ ★  Owner█                                                                              █         │
+│ ☆  parit█                       Search issues and pull requests                        █━━━━━━━━━│
+│ ☆  parit█                                                                              █         │
+│ ☆  parit█        ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎                             █         │
+│ ☆  parit█ Scope: ▊  This repo (parity-bot/pr-details) ▼  ▎                             █         │
+│         █        ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎                             █         │
+│         █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█mments   │
+└─────────█▊  is:pr is:open                                                             ▎█         │
+┌─ [2] Pul█▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█         │
+│ #  Statu█ is:pr is:issue is:open is:merged author: assignee: label: review: involves:  █─────────│
+│ 5  open █ 3 results                                                                    █         │
+│ 4  close█  #  Type  Status  Author         Title                           Updated     █         │
+│ 3  close█  9  PR    open    parity-friend  Clamp the cursor to the last …  2026-02-05  █         │
+│ 2  open █  5  PR    open    parity-friend  Add a cursor to the viewer      2026-02-01  █         │
+│         █  2  PR    draft   parity-friend  Try a faster parser             2026-01-05  █         │
+│         █                                                                              █         │
+│         █                                                                              █         │
+│         █                                                                              █         │
+└─────────█                                                                              █         │
+┌─ [3] Iss█                                                                              █         │
+│ #  Statu█                                                                              █         │
+└─────────█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█         │
+┌─ [4] Workflows (empty) ──────────────┐│                                                          │
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ⏎ Open  / Query  q Close
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedddddddddd
+dfgfffffffe..............................................................................ebbbbbbbbbd
+dhhhhhhhhhe..iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii..ejjjjjjjjjd
+dkkkkkkkkke..............................................................................ebbbbbbbbbd
+dkkkkkkkkke........lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmn.............................ebbbbbbbbbd
+dkkkkkkkkke.oooooo.lppppppppppppppppppppppppppppppppppppqppn.............................ebbbbbbbbbd
+dbbbbbbbbbe........lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmn.............................ebbbbbbbbbd
+dbbbbbbbbbelmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnebbbbbbbbbd
+ddddddddddelppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppnebbbbbbbbbd
+rrrrrrrrrrelmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnebbbbbbbbbd
+rssssssssse.tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt.eaaaaaaaaad
+ruuuuuuuuue.ttttttttt....................................................................ebbbbbbbbbd
+rvvvvvvvvve.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.ebbbbbbbbbd
+rvvvvvvvvve.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.ebbbbbbbbbd
+rvvvvvvvvve.yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.ezzzzzzzbbd
+rAAAAAAAAAe.yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.ebbbbbbbbbd
+rbbbbbbbbbe..............................................................................ebbbbbbbbbd
+rbbbbbbbbbe..............................................................................ebbbbbbbbbd
+rbbbbbbbbbe..............................................................................ebbbbbbbbbd
+rrrrrrrrrre..............................................................................ebbbbbbbbbd
+dddddddddde..............................................................................ebbbbbbbbbd
+dfffffffffe..............................................................................ebbbbbbbbbd
+ddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeebbbbbbbbbd
+dddddddddddddddddBBBBBBBdddddddddddddddddbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd
+dCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCDEEEEFFddbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+GGGHHHHHGGGHHHHHHGGGHHHHHHIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+--- legend
+. fg=#e0e0e0 bg=#4f4f4f
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#50701d bg=#121212
+d fg=#365270 bg=#121212
+e fg=#121212 bg=#4f4f4f
+f fg=#646464 bg=#191d21 bold
+g fg=#476419 bg=#191d21 bold
+h fg=#646464 bg=#13212c
+i fg=#0178d4 bg=#4f4f4f bold
+j fg=#1a1a1a bg=#121212
+k fg=#646464 bg=#161616
+l fg=#191919 bg=#4f4f4f inverse
+m fg=#191919 bg=#1e1e1e
+n fg=#191919 bg=#4f4f4f
+o fg=#e0e0e0 bg=#4f4f4f bold
+p fg=#e0e0e0 bg=#1e1e1e
+q fg=#7f7f7f bg=#1e1e1e
+r fg=#2a5738 bg=#121212
+s fg=#646464 bg=#1c2024 bold
+t fg=#b8b8b8 bg=#4f4f4f
+u fg=#63696e bg=#0b3a5f bold
+v fg=#646464 bg=#1a1a1a
+w fg=#e0e0e0 bg=#2d3740 bold
+x fg=#ddedf9 bg=#0178d4 bold
+y fg=#e0e0e0 bg=#272727
+z fg=#0b3a5f bg=#121212 bold
+A fg=#0a1e2c bg=#1a1a1a inverse
+B fg=#2a3c50 bg=#121212
+C fg=#0a1e2c bg=#161616 inverse
+D fg=#0a1e2c bg=#0a0a0a
+E fg=#646464 bg=#0a0a0a
+F bg=#0a0a0a
+G fg=#ffa62b bg=#242f38 bold
+H fg=#e0e0e0 bg=#242f38
+I bg=#242f38

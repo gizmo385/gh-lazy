@@ -1,0 +1,8 @@
+GET /repos/parity-bot/issues-first/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/issues-first/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/issues-first/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/issues-first/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/issues-first/pulls?direction=desc&page=2&per_page=30&sort=created&state=all
+GET /repos/parity-bot/issues-first/pulls?direction=desc&page=3&per_page=30&sort=created&state=all
+GET /repos/parity-bot/issues-first/readme accept=raw
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

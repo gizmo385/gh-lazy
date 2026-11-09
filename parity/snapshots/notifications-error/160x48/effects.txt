@@ -1,0 +1,4 @@
+GET /notifications?all=false&page=1&per_page=50
+GET /notifications?all=false&page=2&per_page=50
+GET /notifications?all=true&page=1&per_page=50
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

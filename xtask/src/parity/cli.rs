@@ -18,6 +18,7 @@ use super::reference::{self, Freshness};
 use super::report;
 use super::runner::{self, AppRunStatus};
 use super::scenario::{App, Roots, Scenario, Size};
+use super::snapshot;
 use super::structure::Themes;
 use super::summary::{SUMMARY_VERSION, ScenarioResult, ScenarioSummary, SizeSummary, Summary};
 use super::{Context, HarnessError, Result};
@@ -127,6 +128,17 @@ pub struct ParityArgs {
     /// With --record: re-record fresh references too.
     #[arg(long, requires = "record")]
     pub force: bool,
+    /// Accept the Rust snapshots in parity/snapshots/ (all, or the named scenarios'): run Rust twice per size, with no
+    /// retries, and write a snapshot only when both runs pass and agree. Builds lazy-github and fake-gh. Run dumps go
+    /// to --out [default: parity/reports/accept, wiped first].
+    #[arg(
+        long,
+        conflicts_with_all = [
+            "record", "python_only", "live_python", "live_python_since", "check_references", "sizes", "retries", "ci",
+            "validate",
+        ]
+    )]
+    pub accept: bool,
     /// Read fixture sets from this directory instead of parity/fixtures/. For tests that need a modified set.
     #[arg(long, value_name = "DIR", hide = true)]
     pub fixtures_dir: Option<PathBuf>,
@@ -199,6 +211,9 @@ fn run_inner(args: &ParityArgs) -> Result<u8> {
     }
     if args.record {
         return record_references(&repo, &scenarios, roots, args);
+    }
+    if args.accept {
+        return accept_snapshots(&repo, &scenarios, roots, args);
     }
     if let Some(rev) = args.live_python_since.as_deref().filter(|_| args.plan) {
         println!("{}", reference::plan(&repo, rev, &scenarios)?);
@@ -504,6 +519,27 @@ fn record_references(repo: &Path, scenarios: &[Scenario], roots: Roots, args: &P
     } else {
         EXIT_FAILED
     })
+}
+
+/// `--accept`: builds the app and fake-gh, accepts, deletes orphans and prints a count. Exit 0 when every selected
+/// snapshot was written or unchanged, 1 when some weren't.
+fn accept_snapshots(repo: &Path, scenarios: &[Scenario], roots: Roots, args: &ParityArgs) -> Result<u8> {
+    let themes = Themes::load(&repo.join("parity/themes.toml"))?;
+    check_focus_colors(scenarios, &themes, &roots)?;
+    build_and_sync(repo, args, &["lazy-github", "fake-gh"], false)?;
+    let paths = paths(repo, args, roots)?;
+    let out = report_dir(repo, args, "accept")?;
+    let options = snapshot::AcceptOptions {
+        all: args.all || args.scenarios.is_empty(),
+        jobs: jobs(args.jobs),
+        keep_home: args.keep_home,
+        themes: &themes,
+    };
+    let report = snapshot::accept(repo, scenarios, &paths, &out, &options)?;
+    println!();
+    println!("parity: {}", report.counts());
+    println!("run dumps: {}", out.display());
+    Ok(if report.all_accepted() { EXIT_OK } else { EXIT_FAILED })
 }
 
 /// Fails, before anything is built or started, when a scenario uses `wait.focused` and its theme lacks the colors it
@@ -842,12 +878,18 @@ fn run_scenario(scenario: &Scenario, python: Option<PythonSource>, context: &Run
         for &size in sizes {
             let mut statuses = BTreeMap::new();
             let mut drift = Vec::new();
+            let mut rust_run_dirs = Vec::new();
             for &app in &apps {
                 let app_out = dir.join(size.to_string()).join(app.name());
                 let reference_dir = record::reference_dir(repo, scenario, size);
-                let status = match (app, python) {
-                    (App::Python, Some(PythonSource::Recorded)) => reference::materialize(&reference_dir, &app_out)?,
-                    _ => run_app(scenario, app, size, paths, &app_out, options)?,
+                let status = if (app, python) == (App::Python, Some(PythonSource::Recorded)) {
+                    reference::materialize(&reference_dir, &app_out)?
+                } else {
+                    let run = run_app(scenario, app, size, paths, &app_out, options)?;
+                    if app == App::Rust {
+                        rust_run_dirs = run.run_dirs;
+                    }
+                    run.status
                 };
                 println!("{} {size} {app}: {}", scenario.name, status.describe());
                 if app == App::Python && python == Some(PythonSource::Live) {
@@ -881,8 +923,15 @@ fn run_scenario(scenario: &Scenario, python: Option<PythonSource>, context: &Run
                 }
                 statuses.insert(app, status);
             }
-            let (captures, found) =
-                check::check_size(scenario, &dir.join(size.to_string()), &statuses, &theme, &drift)?;
+            let snapshot = check_snapshot(repo, scenario, size, &dir, &statuses, &theme, &rust_run_dirs)?;
+            let (captures, found) = check::check_size(
+                scenario,
+                &dir.join(size.to_string()),
+                &statuses,
+                &theme,
+                &drift,
+                snapshot.as_deref(),
+            )?;
             findings.extend(found);
             summary.sizes.push(SizeSummary {
                 size: size.to_string(),
@@ -902,14 +951,55 @@ fn run_scenario(scenario: &Scenario, python: Option<PythonSource>, context: &Run
     (summary, findings)
 }
 
+/// Compares the Rust run at `size` with its committed snapshot, when there's one to compare: the Rust side ran and
+/// passed on its own (status and `[expect]`), and `size` is one of the scenario's. A run that failed reports that
+/// failure, not snapshot mismatches for captures it never reached; a size the scenario doesn't list (`--size`) has
+/// no snapshot. `None` when nothing was compared.
+fn check_snapshot(
+    repo: &Path,
+    scenario: &Scenario,
+    size: Size,
+    dir: &Path,
+    statuses: &BTreeMap<App, AppRunStatus>,
+    theme: &super::structure::ThemeColors,
+    run_dirs: &[String],
+) -> Result<Option<Vec<snapshot::SnapshotMismatch>>> {
+    let Some(status) = statuses.get(&App::Rust) else {
+        return Ok(None);
+    };
+    if !status.passed() {
+        return Ok(None);
+    }
+    if !scenario.sizes.contains(&size) {
+        println!(
+            "{} {size}: not a size of the scenario, snapshot not checked",
+            scenario.name
+        );
+        return Ok(None);
+    }
+    let out = dir.join(size.to_string()).join(App::Rust.name());
+    if snapshot::expect_failure(scenario, &out, theme)?.is_some() {
+        return Ok(None);
+    }
+    let captured = snapshot::capture_run(scenario, &out, theme, run_dirs)?;
+    snapshot::check_run(repo, scenario, size, &captured, &out).map(Some)
+}
+
 /// The most a condition wait may take in a run that can't fail the gate, under `--ci`. Such a run is usually a Rust
 /// side that can't draw what it waits for yet, so waiting out the scenario's `timeout_ms` (15 s or more) only costs
 /// CI time. The app is up within a second, so a ready step finishes well inside this.
 const UNGATED_WAIT_CAP: Duration = Duration::from_secs(3);
 
 /// The variable a debug build of the Rust app reads its test `gh` time limit from, in milliseconds: the same name as
-/// `lazy_github_core::gh::GH_TIMEOUT_ENV`, which xtask doesn't depend on.
+/// `lazy_github_core::gh::GH_TIMEOUT_ENV`, repeated here so the harness reads as one list of what it sets.
 const GH_TIMEOUT_ENV: &str = "LAZY_GITHUB_GH_TIMEOUT_MS";
+
+/// The variable that freezes a debug build of the Rust app's wall clock: the same name as
+/// `lazy_github_core::time::FIXED_TIME_ENV`.
+const FIXED_TIME_ENV: &str = "LAZY_GITHUB_FIXED_TIME";
+
+/// The wall-clock instant every Rust run shows (`parity/README.md`, "Rust snapshots").
+pub const FIXED_TIME: &str = "2026-01-01T00:00:00Z";
 
 /// `--jobs`, or the CPU count up to [`DEFAULT_MAX_JOBS`].
 fn jobs(arg: Option<u16>) -> usize {
@@ -922,6 +1012,13 @@ fn jobs(arg: Option<u16>) -> usize {
 /// More parallel runs than this start to slow each app enough to risk timeouts; 4 is what CI runners have.
 const DEFAULT_MAX_JOBS: usize = 4;
 
+/// One finished app run.
+pub(super) struct AppRun {
+    pub(super) status: AppRunStatus,
+    /// The last attempt's run directory, as made and in canonical form ([`snapshot::run_dir_forms`]), for masking.
+    pub(super) run_dirs: Vec<String>,
+}
+
 /// Runs one app at one size, retrying a failure up to `options.retries` times. A run whose failure can't fail the
 /// gate (Rust in an ungated scenario) isn't retried: the retry would only cost time.
 pub(super) fn run_app(
@@ -931,7 +1028,7 @@ pub(super) fn run_app(
     paths: &Paths,
     out: &Path,
     options: &RunOptions<'_>,
-) -> Result<AppRunStatus> {
+) -> Result<AppRun> {
     let gates = ci::gates(scenario.gate, app);
     let retries = if gates { options.retries } else { 0 };
     let mut attempt = 0;
@@ -946,6 +1043,15 @@ pub(super) fn run_app(
         if let (App::Rust, Some(ms)) = (app, scenario.env.gh_timeout_ms) {
             env.command.env(GH_TIMEOUT_ENV, ms.to_string());
         }
+        // Likewise; Python's screens show only fixture timestamps.
+        if app == App::Rust {
+            env.command.env(FIXED_TIME_ENV, FIXED_TIME);
+        }
+        let run_dirs = env
+            .run_dir
+            .as_ref()
+            .map(|dir| snapshot::run_dir_forms(dir.path()))
+            .unwrap_or_default();
         if options.cap_ungated_waits && !gates {
             env.timing.wait_cap = Some(UNGATED_WAIT_CAP);
         }
@@ -963,7 +1069,7 @@ pub(super) fn run_app(
                 status.flaky = true;
                 runner::write_status(&status, out)?;
             }
-            return Ok(status);
+            return Ok(AppRun { status, run_dirs });
         }
         attempt += 1;
         println!(
@@ -1103,6 +1209,44 @@ mod tests {
         }
         let err = parse(&["--force"]).map(|_| ()).expect_err("--force alone");
         assert_eq!(err.kind(), clap::error::ErrorKind::MissingRequiredArgument, "{err}");
+    }
+
+    #[test]
+    fn accept_takes_its_flags_but_no_run_flags() {
+        let args = parse(&[
+            "startup",
+            "--accept",
+            "--jobs",
+            "2",
+            "--no-build",
+            "--out",
+            "x",
+            "--keep-home",
+        ])
+        .unwrap();
+        assert!(args.accept && args.no_build && args.keep_home);
+        assert_eq!(args.scenarios, ["startup"]);
+        assert!(parse(&["--accept", "--all"]).unwrap().all);
+        for flag in [
+            &["--record"][..],
+            &["--python-only"],
+            &["--live-python"],
+            &["--live-python=startup"],
+            &["--live-python-since", "HEAD"],
+            &["--check-references"],
+            &["--size", "100x30"],
+            &["--retries", "1"],
+            &["--ci"],
+            &["--validate"],
+        ] {
+            let command = [&["--accept"][..], flag].concat();
+            let err = parse(&command).map(|_| ()).expect_err(&command.join(" "));
+            assert_eq!(
+                err.kind(),
+                clap::error::ErrorKind::ArgumentConflict,
+                "{command:?}: {err}"
+            );
+        }
     }
 
     /// Scenarios `a`, `b` and `c` that run both apps, and `r` that runs only Rust.

@@ -1787,6 +1787,11 @@ contains = ["Hi"]
             ("timeout_ms = 1000", "timeout_ms = 9000"),
             ("timeout_ms = 20000", "timeout_ms = 5"),
             ("apps = [\"python\", \"rust\"]", "apps = [\"python\"]"),
+            // `mask` only masks the Rust snapshot; Python's run doesn't depend on it.
+            (
+                "ignore = { boxes = [\"Log\"] }",
+                "ignore = { boxes = [\"Log\"] }\nmask = [\"/tmp/\\\\S+\"]",
+            ),
         ] {
             assert_eq!(key_of(&variant(from, to), SIZE, &roots), base, "{from} -> {to}");
         }

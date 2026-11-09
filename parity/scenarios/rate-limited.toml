@@ -37,8 +37,11 @@ wait = { text = "(HTTP 429)", timeout_ms = 15000 }
 [[step]]
 sleep_ms = 500
 
+# The rate-limited requests fail at once, all at the fixed clock's time, so their Command Log lines come in any
+# order: the snapshot masks them. [expect.both] checks the lines.
 [[step]]
 capture = "both"
+mask = ['(?:ERROR|WARNING|INFO) 2026-01-01 00:00:00 - [^▌│]*']
 
 [expect.limited]
 # TZ is UTC in the parity environment, so the reset shows as 00:00.

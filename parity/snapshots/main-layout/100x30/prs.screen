@@ -1,0 +1,87 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Details ────────────────────────────────────────────┐
+│ ★  Owner       Name         Private  ││ Introduction                                             │
+│ ☆  parity-bot  dotfiles     ✘        ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                   ▏  ││                                                          │
+└──────────────────────────────────────┘│                                                          │
+┌─ [2] Pull Requests ──────────────────┐│      LazyGithub: A Terminal UI For GitHub (0.1.0)        │
+│ #  Status  Author  Title             ││                                                          │
+│                                      ││  LazyGithub is a terminal UI for interacting with        │
+│                                      ││  GitHub. You can get started by selecting one of the     │
+│                                      ││  repositories listed in the table on the left. Once      │
+│                                      ││  you have selected a repository, any issues, pull        │
+│                                      ││  requests, and action workflows will be retrieved and    │
+│                                      ││  displayed below it.                                     │
+│                                      ││                                                          │
+└──────────────────────────────────────┘│  Issues, pull requests, and action lists can also be   ▁▁│
+┌─ [3] Issues ─────────────────────────┐│  interacted with!                                        │
+│ #  Status  Author  Title             ││                                                          │
+│                                      ││                                                          │
+│                                      ││  Pull Requests                                           │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows ──────────────────────┐│  You can interact with a PR by viewing its details,      │
+│ Time  Result  Job Name  Run Name  Run││  viewing the PR diff, and participating in any active    │
+│                                   ▎  ││  conversations happening on the PR. You can also         │
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ / Search  O Lookup Pull Request  s Search GitHub  E Edit PR  u View User  I New Issue  P New PR  ^v
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..................................................................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bcdcccccccccccccccccccccccccccccccccceebb..........................................................b
+bffffffffffffffffffffffffffffffffffffggbbhiiiiiiiiiiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhb
+beeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeejkkbb........................................................llb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb........................................................llb
+mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmb..nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn..llb
+moooooooooooooooooooooooooooooooooooooomb........................................................llb
+m......................................mb........................................................llb
+m......................................mb........................................................llb
+m......................................mb........................................................llb
+m......................................mb........................................................llb
+m......................................mb........................................................llb
+m......................................mb........................................................llb
+m......................................mb........................................................llb
+mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmb..ppppppppppppppppppppppppppppppppppppppppppppppppppp...qqb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..pppppppppppppppp......................................ggb
+bccccccccccccccccccccccccccccccccccccccbb........................................................ggb
+b......................................bb........................................................ggb
+b......................................bb..rrrrrrrrrrrrr.........................................ggb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb........................................................ggb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb........................................................ggb
+bccccccccccccccccccccccccccccccccccccccbb........................................................ggb
+beeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeejggbb........................................................ggb
+b......................................bb........................................................ggb
+b......................................bb........................................................ggb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+ssstttttttsssttttttttttttttttttttsssttttttttttttttsssttttttttsssttttttttttsssttttttttttssstttttttsss
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#6db2ff bg=#121212
+c fg=#e0e0e0 bg=#242f38 bold
+d fg=#98e024 bg=#242f38 bold
+e fg=#003054 bg=#1e1e1e inverse
+f fg=#e0e0e0 bg=#153854
+g fg=#e0e0e0 bg=#000000
+h fg=#262626 bg=#121212
+i fg=#0178d4 bg=#121212
+j fg=#003054 bg=#000000
+k bg=#000000
+l fg=#003054 bg=#121212 inverse
+m fg=#4ebf71 bg=#121212
+n fg=#0178d4 bg=#121212 bold
+o fg=#e0e0e0 bg=#2d3740 bold
+p fg=#e0e0e0 bg=#121212 bold
+q fg=#003054 bg=#000000 inverse
+r fg=#0178d4 bg=#121212 underline
+s fg=#ffa62b bg=#242f38 bold
+t fg=#e0e0e0 bg=#242f38

@@ -1,0 +1,124 @@
+lazy-github-screen 1
+size 160x48
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-org/lookup-me                                                                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-org/lookup-me Details ───────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Repo Overview                                                                                │
+│ ☆  parity-bot  dotfiles     ✘                                ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  ✘                                ││parity-org/lookup-me • Public                                                                 │
+│ ☆  parity-bot  lazy-demo    ✘                                ││Owned by parity-org                                                                           │
+│ ☆  parity-org  lookup-me    ✘                                ││Default branch: main                                                                          │
+│                                                              ││                                                                                              │
+│                                                              ││Found through the lookup modal.                                                               │
+│                                                              ││                                                                                              │
+│                                                              ││──────────────────────────────────────────────────────────────────────────────────────────────│
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                          lookup-me                                           │
+│                                                              ││                                                                                              │
+│                                                              ││  Found by name.                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Validation Error                                           │
+│                                                              ││                                 ▌ You must enter a repo name!                                │
+│                                                              ││                                 ▌                                                            │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [2] Pull Requests (empty) ──────────────────────────────────┐│                                 ▌                                                            │
+│ #  Status  Author  Title                                     ││                                 ▌ Validation Error                                           │
+└──────────────────────────────────────────────────────────────┘│                                 ▌ You must enter a repo name!                                │
+┌─ [3] Issues (empty) ─────────────────────────────────────────┐│                                 ▌                                                            │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                 ▌                                                            │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                 ▌ Validation Error                                           │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                 ▌ Could not find repo!                                       │
+└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Comman
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..............bbbbbbbbbbbbbbbbbbbb............................................................................................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+cefeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd..............................................................................................d
+cggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggcdhiiiiiiiiiiiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhd
+cjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjcdkkkkkkkkkkkkkkkkkkkk...bbbbbb.................................................................d
+cjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjcd.........llllllllll...........................................................................d
+cjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjcd................mmmm..........................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn..d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd.................................oppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp.d
+c..............................................................cd.................................opqqqqqqqqqqqqqqqqpppppppppppppppppppppppppppppppppppppppppp.d
+c..............................................................cd.................................oppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp.d
+c..............................................................cd.................................oppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp.d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..............................................................................................d
+dddddddddddddddddddddrrrrrrrddddddddddddddddddddddddddddddddddddd.................................oppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp.d
+dssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssdd.................................opqqqqqqqqqqqqqqqqpppppppppppppppppppppppppppppppppppppppppp.d
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd.................................oppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp.d
+ddddddddddddddrrrrrrrdddddddddddddddddddddddddddddddddddddddddddd.................................oppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp.d
+dssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssdd..............................................................................................d
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd.................................oppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp.d
+dddddddddddddddddrrrrrrrddddddddddddddddddddddddddddddddddddddddd.................................opqqqqqqqqqqqqqqqqpppppppppppppppppppppppppppppppppppppppppp.d
+dssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssdd.................................oppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp.d
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddopppppppppppppppppppppppppppppppppppppppppppppppppppppppppppdd
+tttuuuuuuuttttuuuuuuuuuuuuuuuutttuuuuuuuuuuuuuuuuuutttuuuuuuuuuutttuuuuuuuuuutttuuuuuuuttttuuuuuuuuuuutttuuuuuuuuuuuutttuuuuuuuuuuuuuuuuuuuuuutttuuuuuttttuuuuuu
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#adff2f bg=#121212
+c fg=#4ebf71 bg=#121212
+d fg=#6db2ff bg=#121212
+e fg=#e0e0e0 bg=#2d3740 bold
+f fg=#98e024 bg=#2d3740 bold
+g fg=#ddedf9 bg=#0178d4 bold
+h fg=#262626 bg=#121212
+i fg=#0178d4 bg=#121212
+j fg=#e0e0e0 bg=#272727
+k fg=#e0e0e0 bg=#121212 bold underline
+l fg=#e0e0e0 bg=#121212 underline
+m fg=#e0e0e0 bg=#121212 bold
+n fg=#0178d4 bg=#121212 bold
+o fg=#b93c5b bg=#343f49
+p fg=#e0e0e0 bg=#343f49
+q fg=#d17e92 bg=#343f49 bold
+r fg=#4e7bae bg=#121212
+s fg=#e0e0e0 bg=#242f38 bold
+t fg=#ffa62b bg=#242f38 bold
+u fg=#e0e0e0 bg=#242f38

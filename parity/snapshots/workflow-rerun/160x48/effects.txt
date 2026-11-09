@@ -1,0 +1,11 @@
+GET /repos/parity-bot/run-fixture/actions/runs/5000042
+GET /repos/parity-bot/run-fixture/actions/runs/5000042/jobs
+GET /repos/parity-bot/run-fixture/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/run-fixture/actions/runs?page=2&per_page=30
+GET /repos/parity-bot/run-fixture/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/run-fixture/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/run-fixture/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/run-fixture/readme accept=raw
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all
+POST /repos/parity-bot/run-fixture/actions/runs/5000042/rerun
+POST /repos/parity-bot/run-fixture/actions/runs/5000042/rerun-failed-jobs

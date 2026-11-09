@@ -1,0 +1,9 @@
+GET /repos/parity-bot/browse-fixture/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/browse-fixture/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/browse-fixture/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/browse-fixture/issues?page=2&per_page=30&state=all
+GET /repos/parity-bot/browse-fixture/issues?page=3&per_page=30&state=all
+GET /repos/parity-bot/browse-fixture/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/browse-fixture/pulls?direction=desc&page=2&per_page=30&sort=created&state=all
+GET /repos/parity-bot/browse-fixture/readme accept=raw
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

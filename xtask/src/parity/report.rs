@@ -201,26 +201,42 @@ struct Mismatch {
     message: String,
 }
 
-/// `<capture>.check.json`: `expect` mismatches are per app, `cross` ones are Python vs Rust, and `drift` ones are a
-/// live Python run against its reference.
+/// `<capture>.check.json`: `expect` mismatches are per app, `cross` ones are Python vs Rust, `drift` ones are a
+/// live Python run against its reference, and `snapshot` ones the Rust run against its committed snapshot.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(default)]
 struct CheckFile {
     expect: Vec<Mismatch>,
     cross: Vec<Mismatch>,
     drift: Vec<Mismatch>,
+    snapshot: Vec<Mismatch>,
 }
 
 impl CheckFile {
     fn mismatches(&self) -> impl Iterator<Item = (&'static str, &Mismatch)> {
         let expect = self.expect.iter().map(|m| ("expect", m));
         let cross = self.cross.iter().map(|m| ("cross", m));
-        expect.chain(cross).chain(self.drift.iter().map(|m| ("drift", m)))
+        let drift = self.drift.iter().map(|m| ("drift", m));
+        expect
+            .chain(cross)
+            .chain(drift)
+            .chain(self.snapshot.iter().map(|m| ("snapshot", m)))
     }
 
     fn len(&self) -> usize {
-        self.expect.len() + self.cross.len() + self.drift.len()
+        self.expect.len() + self.cross.len() + self.drift.len() + self.snapshot.len()
     }
+}
+
+/// The diff a snapshot mismatch links to, relative to the scenario's `report.html`: the capture's
+/// `<capture>.snapshot.diff.txt`, or `effects.diff.txt`, in the Rust run's directory.
+fn snapshot_diff_link(size: &str, capture: &str, m: &Mismatch) -> String {
+    let file = if m.check == "effects" {
+        "effects.diff.txt".to_owned()
+    } else {
+        format!("{capture}.snapshot.diff.txt")
+    };
+    format!("{size}/{}/{file}", App::Rust.name())
 }
 
 #[derive(Debug, Clone)]
@@ -836,8 +852,8 @@ fn status_cells(status: &AppRunStatus) -> String {
     )
 }
 
-/// The structural mismatch table of one capture, or why there isn't one.
-fn render_mismatches(check: &CheckState) -> String {
+/// The structural mismatch table of one capture at `size`, or why there isn't one.
+fn render_mismatches(check: &CheckState, size: &str, capture: &str) -> String {
     let mut out = String::new();
     match check {
         CheckState::Absent => out.push_str("<p class=\"muted\">not checked</p>\n"),
@@ -858,10 +874,18 @@ fn render_mismatches(check: &CheckState) -> String {
                 } else {
                     format!("<code>{}</code>", escape(&value_text(&m.expected)))
                 };
+                let link = if kind == "snapshot" {
+                    format!(
+                        " <a href=\"{}\">diff</a>",
+                        escape(&snapshot_diff_link(size, capture, m))
+                    )
+                } else {
+                    String::new()
+                };
                 w!(
                     out,
                     "<tr><td>{} <span class=\"muted\">({kind})</span></td><td>{}</td><td><code>{}</code></td>\
-                     <td><code>{}</code></td><td>{expected}</td><td>{}</td></tr>\n",
+                     <td><code>{}</code></td><td>{expected}</td><td>{}{link}</td></tr>\n",
                     escape(&m.check),
                     escape(&value_text(&m.box_title)),
                     escape(&mismatch_value(&m.python)),
@@ -936,7 +960,7 @@ fn render_capture(size: &SizeData<'_>, capture: &CaptureData, meta: &RunMeta, sh
     html.push_str(&panels);
 
     html.push_str("<h4>Structural mismatches</h4>\n");
-    html.push_str(&render_mismatches(&capture.check));
+    html.push_str(&render_mismatches(&capture.check, &size.summary.size, &capture.name));
 
     let diff = match &capture.diff {
         Some(d) if d.is_empty() => "<p class=\"muted\">The two captures' text is identical.</p>".to_owned(),
@@ -1133,11 +1157,12 @@ fn render_summary_md(scenarios: &[ScenarioData<'_>], meta: &RunMeta) -> String {
                     check.into_iter().flat_map(CheckFile::mismatches).map(move |(kind, m)| {
                         let at = format!("{}/{}/{}", data.summary.name, size.summary.size, capture.name);
                         let box_title = value_text(&m.box_title);
-                        // Drift is a Python problem, unlike the other mismatches here: say so.
-                        let check = if kind == "drift" {
-                            format!("drift {}", m.check)
-                        } else {
-                            m.check.clone()
+                        // Drift is a Python problem, unlike the other mismatches here, and a snapshot one is the Rust
+                        // run against itself: say so.
+                        let check = match kind {
+                            "drift" => format!("drift {}", m.check),
+                            "snapshot" => format!("rust {}", m.check),
+                            _ => m.check.clone(),
                         };
                         let target = if box_title.is_empty() {
                             check
@@ -1367,6 +1392,7 @@ mod tests {
                 serde_json::json!(["parity-bot", "alpha"]),
                 serde_json::json!(["parity-bot", "beta"]),
             )],
+            snapshot: vec![mismatch("snapshot", "", Value::Null, Value::Null)],
         });
         let clean = || CheckState::Loaded(CheckFile::default());
         let scenarios = [
@@ -1413,6 +1439,7 @@ mod tests {
                     })
                     .collect(),
                 drift: Vec::new(),
+                snapshot: Vec::new(),
             })
         };
         // Two scenarios' worth of mismatches is already more than the list shows.
@@ -1574,6 +1601,10 @@ mod tests {
                 expect: vec![mismatch("titles", "Repos", Value::Null, Value::Null)],
                 cross: Vec::new(),
                 drift: Vec::new(),
+                snapshot: vec![
+                    mismatch("snapshot", "", Value::Null, Value::Null),
+                    mismatch("effects", "", Value::Null, Value::Null),
+                ],
             })],
         );
         let screen = grid(&["┌─ [1] Repositories ─┐", "└────────────────────┘"], &[]);
@@ -1595,6 +1626,9 @@ mod tests {
             pages[0]
         );
         assert!(pages[0].contains("The screen when the run failed"));
+        // Snapshot mismatches link to their diffs, next to the Rust run's dumps.
+        assert!(pages[0].contains("<a href=\"160x48/rust/main.snapshot.diff.txt\">diff</a>"));
+        assert!(pages[0].contains("<a href=\"160x48/rust/effects.diff.txt\">diff</a>"));
     }
 
     #[test]

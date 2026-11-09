@@ -19,7 +19,9 @@
   #408 (the modal's keys and layout)
 - Rows: `toasts.rate-limited`, `toasts.search-rate-limited`, `modals.search`, `modals.search-scope`,
   `modals.search-results`, `modals.search-states`, `modals.search-open-hit`, `modals.search-session`,
-  `keybindings.search-open`, `command-palette.search`
+  `keybindings.search-open`, `command-palette.search`, `modals.search-history`, `modals.search-saved-queries`,
+  `keybindings.search-save-query`, `config.search-saved-queries`, `caches-drafts.search-history`,
+  `command-palette.search-saved-query`
 
 New behavior, not tied to the Python app (an M5 improvement). It adds new matrix rows instead of changing
 existing ones, apart from the rate-limit split on `toasts.rate-limited`. The sub-issues add the rows and list them
@@ -79,3 +81,14 @@ input. So:
   input's and the select's left edges, and the table ends one column inside the right edge. The "Title" column gives
   up width, cut with an ellipsis, when the columns are wider than the table (the shared table's `Column::shrinking`),
   so "Updated" always shows in full and there's no horizontal scrollbar under the rows.
+
+## Recent and saved queries (#395)
+
+Each search GitHub answers without a query error is recorded in `search_history.json` in the cache directory (the
+newest 20, newest first), read on the first open of a session. In the query input, `up` and `down` step through them
+as a shell's history (fixed editor keys, internal ids), and the input suggests saved queries first, then recent ones.
+`search.save_query` (`ctrl+s`, a Rust-only id) adds the query to `search.saved_queries`, a new config section that's
+the file's last, after `api`, so Settings lists it as the last tab, "Search", and the tab strip starts as Python's.
+Each saved query is a palette command "Search: <query>" ("Run a saved search") after "Search issues and pull
+requests", which opens the modal on it and searches at once in the session's scope (or the query's own). Saved
+queries have no names, carry no scope, and are removed in Settings. Python's loader drops the `search` section on save.

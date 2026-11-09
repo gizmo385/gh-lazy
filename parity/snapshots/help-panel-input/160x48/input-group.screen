@@ -1,0 +1,126 @@
+lazy-github-screen 1
+size 160x48
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────┐▏
+│No repository selected                                                                                    │▏             Input
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────┘▏           ↑ Scroll Up
+┌─ [1] Repositories ──────────────────────┐┌─ [5] Details ─────────────────────────────────────────────────┐▏           ↓ Scroll Down
+│▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎││ Introduction                                                  │▏           ← Move cursor left
+│▊  Search...                            ▎││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│▏           → Move cursor right or accept the
+│▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎││                                                               │▏             completion suggestion
+│                                         ││                                                               │▏     home ^a Go to start
+│ ★  Owner       Name         Private     ││         LazyGithub: A Terminal UI For GitHub (0.1.0)          │▏      end ^e Go to end
+│ ☆  parity-bot  dotfiles     ✘           ││                                                               │▏        pgup Page Up
+│ ☆  parity-bot  hello-world  ✘           ││  LazyGithub is a terminal UI for interacting with GitHub.     │▏        pgdn Page Down
+│ ☆  parity-bot  lazy-demo    ✘           ││  You can get started by selecting one of the repositories     │▏       ^pgup Page Left
+│                                         ││  listed in the table on the left. Once you have selected a    │▏       ^pgdn Page Right
+│                                         ││  repository, any issues, pull requests, and action workflows  │▏     shift+← Move cursor left and select
+│                                         ││  will be retrieved and displayed below it.                    │▏          ^← Move cursor left a word
+│                                         ││                                                               │▏    shift+^← Move cursor left a word and select
+│                                         ││  Issues, pull requests, and action lists can also be          │▏     shift+→ Move cursor right and select
+│                                         ││  interacted with!                                             │▏          ^→ Move cursor right a word
+│                                         ││                                                               │▏    shift+^→ Move cursor right a word and select
+└─────────────────────────────────────────┘│                                                               │▏           ⌫ Delete character left
+┌─ [2] Pull Requests ─────────────────────┐│  Pull Requests                                                │▏    shift+^a Select all
+│ #  Status  Author  Title                ││                                                               │▏  shift+home Select line start
+│                                         ││  You can interact with a PR by viewing its details, viewing   │▏   shift+end Select line end
+│                                         ││  the PR diff, and participating in any active conversations   │▏      del ^d Delete character right
+│                                         ││  happening on the PR. You can also create a new PR for the    │▏           ⏎ Submit
+│                                         ││  currently selected repo.                                     │▏          ^w Delete left to start of word
+│                                         ││                                                               │▏          ^u Delete all to the left
+│                                         ││                                                               │▏          ^f Delete right to start of word
+└─────────────────────────────────────────┘│  Issues                                                       │▏          ^k Delete all to the right
+┌─ [3] Issues ────────────────────────────┐│                                                               │▏          ^x Cut selected text
+│ #  Status  Author  Title                ││  You can interact with an issue by viewing its details,       │▏  ^c super+c Copy selected text
+│                                         ││  partipcating in any activate conversations happening on the  │▏          ^v Paste text from the clipboard
+│                                         ││  issue, and by editing the issue itself. This means that you  │▏
+│                                         ││  can close an issue from within LazyGithub.                   │▏           / Search Search in the table
+│                                         ││                                                               │▏
+│                                         ││                                                               │▏         tab Focus Next
+│                                         ││  Actions                                                      │▏   shift+tab Focus Previous
+└─────────────────────────────────────────┘│                                                               │▏
+┌─ [4] Workflows ─────────────────────────┐│  Github action and workflow support is pretty limited. It     │▏          ^q Quit Quit the app and return to the
+│ Time  Result  Job Name  Run Name  Run # ││  currently only supports listing the workflows and the most   │▏             command prompt.
+│                                         ││  recent runs across all actions on the currently selected     │▏          ^p Command Palette
+│                                         ││  repo, as well as kicking off a workflow that supports        │▏
+│                                         ││  manual triggers.                                             │▏
+│                                         ││                                                               │▏
+│                                         ││                                                               │▏
+│                                         ││                                                               │▏
+└─────────────────────────────────────────┘└───────────────────────────────────────────────────────────────┘▏
+ / Search  ^p Command Palette                                                                               ▏
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab
+a..........................................................................................................ab.............ccccc
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab..dddddddddd
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb..dddddddddd
+eghhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhief...............................................................fb..dddddddddd
+egjjklllllllljjjjjjjjjjjjjjjjjjjjjjjjjjjjiefmiiiiiiiiiiiimmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmfb..dddddddddd
+eghhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhief...............................................................fb
+e.........................................ef...............................................................fb..dddddddddd
+enonnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnef..ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp..fb..dddddddddd
+eqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqef...............................................................fb..dddddddddd
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrref...............................................................fb..dddddddddd
+errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrref...............................................................fb..dddddddddd
+e.........................................ef...............................................................fb..dddddddddd
+e.........................................ef...............................................................fb..dddddddddd
+e.........................................ef...............................................................fb..dddddddddd
+e.........................................ef...............................................................fb..dddddddddd
+e.........................................ef..sssssssssssssssssssssssssssssssssssssssssssssssssss..........fb..dddddddddd
+e.........................................ef..ssssssssssssssss.............................................fb..dddddddddd
+e.........................................ef...............................................................fb..dddddddddd
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef...............................................................fb..dddddddddd
+ffffffffffffffffffffffffffffffffffffffffffff..ttttttttttttt................................................fb..dddddddddd
+fnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnff...............................................................fb..dddddddddd
+f.........................................ff...............................................................fb..dddddddddd
+f.........................................ff...............................................................fb..dddddddddd
+f.........................................ff...............................................................fb..dddddddddd
+f.........................................ff...............................................................fb..dddddddddd
+f.........................................ff...............................................................fb..dddddddddd
+f.........................................ff...............................................................fb..dddddddddd
+ffffffffffffffffffffffffffffffffffffffffffff..tttttt.......................................................fb..dddddddddd
+ffffffffffffffffffffffffffffffffffffffffffff...............................................................fb..dddddddddd
+fnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnff...............................................................fb..dddddddddd
+f.........................................ff...............................................................fb..dddddddddd
+f.........................................ff...............................................................fb
+f.........................................ff...............................................................fb..dddddddddd........uuuuuuuuuuuuuuuuuuu
+f.........................................ff...............................................................fb
+f.........................................ff...............................................................fb..dddddddddd
+f.........................................ff..ttttttt......................................................fb..dddddddddd
+ffffffffffffffffffffffffffffffffffffffffffff...............................................................fb
+ffffffffffffffffffffffffffffffffffffffffffff...............................................................fb..dddddddddd......uuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
+fnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnff...............................................................fb.............uuuuuuuuuuuuuuu
+f.........................................ff...............................................................fb..dddddddddd
+f.........................................ff...............................................................fb
+f.........................................ff...............................................................fb
+f.........................................ff...............................................................fb
+f.........................................ff...............................................................fb
+f.........................................ff...............................................................fb
+ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
+vvvwwwwwwwvvvvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwb
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#4f4f4f bg=#121212
+c fg=#57a5e2 bg=#121212 underline
+d fg=#ffc473 bg=#121212 bold
+e fg=#4ebf71 bg=#121212
+f fg=#6db2ff bg=#121212
+g fg=#0178d4 bg=#121212 inverse
+h fg=#0178d4 bg=#272727
+i fg=#0178d4 bg=#121212
+j fg=#e0e0e0 bg=#272727
+k fg=#121212 bg=#e0e0e0
+l fg=#797979 bg=#272727
+m fg=#262626 bg=#121212
+n fg=#e0e0e0 bg=#242f38 bold
+o fg=#98e024 bg=#242f38 bold
+p fg=#0178d4 bg=#121212 bold
+q fg=#e0e0e0 bg=#153854
+r fg=#e0e0e0 bg=#1e1e1e
+s fg=#e0e0e0 bg=#121212 bold
+t fg=#0178d4 bg=#121212 underline
+u fg=#999999 bg=#121212
+v fg=#ffa62b bg=#242f38 bold
+w fg=#e0e0e0 bg=#242f38

@@ -21,7 +21,7 @@ expression: "buffer_to_styled_string(&app.render(160, 48))"
 │                             █▊  2                                                                                           ▎  █                             │
 │                             █▊  3  **To Reproduce**                                                                         ▎  █                             │
 │                             █▊  4                                                                                           ▎  █                             │
-│                             █▊  5  **Expected behavior**                                                                 ▁▁ ▎  █                             │
+│                             █▊  5  **Expected behavior**                                                                 ▂▂ ▎  █                             │
 │                             █▊  6                                                                                           ▎  █                             │
 │                             █▊  7  **Installation Mechanism:** [Github CLI, nix, PyPi, etc]                                 ▎  █                             │
 │                             █▊  8                                                                                           ▎  █                             │

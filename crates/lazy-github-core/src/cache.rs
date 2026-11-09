@@ -205,7 +205,7 @@ pub fn remove(path: &Path) -> io::Result<()> {
     }
 }
 
-fn kind(value: &Value) -> &'static str {
+pub(crate) fn kind(value: &Value) -> &'static str {
     match value {
         Value::Null => "null",
         Value::Bool(_) => "a boolean",

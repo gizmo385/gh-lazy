@@ -4,3 +4,8 @@
 parity/references/** text eol=lf
 parity/references/**/manifest.toml linguist-generated
 parity/references/**/requests.jsonl linguist-generated
+# Rust scenario snapshots (parity/README.md, "Rust snapshots"): LF everywhere too. The .screen files and effects.txt
+# collapse in PR diffs, so the file list shows the .svg pictures; the text diff is a click away.
+parity/snapshots/** text eol=lf
+parity/snapshots/**/*.screen linguist-generated
+parity/snapshots/**/effects.txt linguist-generated

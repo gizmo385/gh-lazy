@@ -1,0 +1,116 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────┐
+│ ★  Owner       Name         Private  ││ Overview  Diff  Conversation                             │
+│ ☆  parity-bot  pr-details   ✘        ││━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     ✘        ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
+│ ☆  parity-bot  hello-world  ✘        ││▊  Filter files (press '/' to focus, ESC to clear)       ▎│
+│ ☆  parity-bot  lazy-demo    ✘        ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
+│                                      ││     6  │                                                 │
+│                                      ││     7  │ The current line is marked with `>`.          ▁▁│
+│                                      ││▼ 📄 assets/app.css (+3)                                  │
+│                                      ││  Lines 1-3 (+3)                                          │
+│                                      ││     1  │ .cursor {                                       │
+│                                      ││     2  │   color: yellow;                                │
+└──────────────────────────────────────┘│     3  │ }                                               │
+┌─ [2] Pull Requests ──────────────────┐│▼ 📄 build.rs (+1)                                        │
+│ #  Status  Author         Title      ││  Lines 1-4 (+1)                                          │
+│ 5  open    parity-friend  Add a curso││     1  │ fn main() {                                     │
+│ 4  closed  parity-bot     Drop the le││     2  │     println!("cargo:rerun-if-changed=build.rs"  │
+│ 3  closed  parity-bot     Release 0.2││     3  │     println!("cargo:rerun-if-changed=assets");  │
+│ 2  open    parity-friend  Try a faste││     4  │ }                                               │
+│                          ▊           ││▶ 🗑️  docs/old.md (deleted)                               │
+│                                      ││▼ 📄 src/viewer.rs (+5 -2) · 2 comments                   │
+│                                      ││  Lines ▌                                                 │
+│                                      ││     1  ▌ View Maximized                                  │
+│                                      ││     2  ▌ Current view maximized. Press escape to         │
+│                                      ││ assets/▌ return.                                         │
+└──────────────────────────────────────┘└────────▌                                                ─┘
+ / Filter Files  ^p Command Palette
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..............bbbbbbbbbbbbbbbbbbbbb...............................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+cefeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd.gggggggg........gggggggggggg.............................d
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdiiiiiiiiiiijjjjiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiid
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmjd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlnnoppppppppppppppppppppppppppppppppppppppppppppppnnnnnnnjd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmjd
+c......................................cdkkkkkkkkkkqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrrd
+c......................................cdkkkkkkkkkksssssssssssssssssssssssssssssssstttsqqqqqqqqqquud
+c......................................cdvvvwvvvvvvvvvvvvvvvvvxxvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvyyd
+c......................................cdzzzzzzzzzzzzzAAzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyd
+c......................................cdkkkkkkkkkkBBBBBBBssqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqyyd
+c......................................cdkkkkkkkkkkCCDDDDDCCDDDDDDCEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEyyd
+ccccccccccccccccccccccccccccccccccccccccdkkkkkkkkkksqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqyyd
+ccccccccccccccccccccccccccccccccccccccccdvvvwvvvvvvvvvvvxxvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvyyd
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecdzzzzzzzzzzzzzAAzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzrrd
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdkkkkkkkkkkFFGHHHHGGGGIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIrrd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkGGGGGGGGGGGGGJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJrrd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkssssssssssssstttttttttttttttttttttttttttttttssrrd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkGIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIrrd
+cyyyyyyyyyyyyyyyyyyyyyyyyyyurrrrrrrrrrrcdvvvwvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvrrd
+c......................................cdvvvwvvvvvvvvvvvvvvvvxxvKKvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvrrd
+c......................................cdzzzzzzzzLMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMrd
+c......................................cdkkkkkkkkLMNNNNNNNNNNNNNNMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMrd
+c......................................cdkkkkkkkkLMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMOOOOOOMMMMMMMMMMMrd
+c......................................cdPPPPPPPPLMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMrd
+ccccccccccccccccccccccccccccccccccccccccdddddddddLMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMdd
+QQQRRRRRRRRRRRRRQQQQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#adff2f bg=#121212
+c fg=#6db2ff bg=#121212
+d fg=#4ebf71 bg=#121212
+e fg=#e0e0e0 bg=#242f38 bold
+f fg=#98e024 bg=#242f38 bold
+g fg=#797979 bg=#121212
+h fg=#e0e0e0 bg=#153854
+i fg=#262626 bg=#121212
+j fg=#0178d4 bg=#121212
+k fg=#e0e0e0 bg=#1e1e1e
+l fg=#0178d4 bg=#121212 inverse
+m fg=#0178d4 bg=#272727
+n fg=#e0e0e0 bg=#272727
+o fg=#121212 bg=#e0e0e0
+p fg=#797979 bg=#272727
+q fg=#e0e0e0 bg=#0a3a0a
+r fg=#e0e0e0 bg=#000000
+s fg=#f8f8f2 bg=#0a3a0a
+t fg=#e6db74 bg=#0a3a0a
+u fg=#003054 bg=#000000
+v fg=#e2e2e2 bg=#262626 bold
+w default
+x fg=#98e024 bg=#262626 bold
+y fg=#003054 bg=#1e1e1e inverse
+z fg=#a5a5a5 bg=#1e1e1e
+A fg=#98e024 bg=#1e1e1e
+B fg=#a6e22e bg=#0a3a0a
+C fg=#f8f8f2 bg=#006400
+D fg=#66d9ef bg=#006400
+E fg=#e0e0e0 bg=#006400
+F fg=#66d9ef bg=#272822
+G fg=#f8f8f2 bg=#272822
+H fg=#a6e22e bg=#272822
+I fg=#e0e0e0 bg=#272822
+J fg=#e6db74 bg=#272822
+K fg=#f4005f bg=#262626 bold
+L fg=#4ebf71 bg=#343f49
+M fg=#e0e0e0 bg=#343f49
+N fg=#8ad4a1 bg=#343f49 bold
+O fg=#e0e0e0 bg=#343f49 bold
+P fg=#211505 bg=#fea62b
+Q fg=#ffa62b bg=#242f38 bold
+R fg=#e0e0e0 bg=#242f38
+--- cells
+11 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▼"," ","📄",""," ","a","s","s","e","t","s","/","a","p","p",".","c","s","s"," ","(","+","3",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+16 ["┌","─"," ","[","2","]"," ","P","u","l","l"," ","R","e","q","u","e","s","t","s"," ","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","┐","│","▼"," ","📄",""," ","b","u","i","l","d",".","r","s"," ","(","+","1",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+22 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","▊"," "," "," "," "," "," "," "," "," "," "," ","│","│","▶"," ","🗑️",""," "," ","d","o","c","s","/","o","l","d",".","m","d"," ","(","d","e","l","e","t","e","d",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+23 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▼"," ","📄",""," ","s","r","c","/","v","i","e","w","e","r",".","r","s"," ","(","+","5"," ","-","2",")"," ","·"," ","2"," ","c","o","m","m","e","n","t","s"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

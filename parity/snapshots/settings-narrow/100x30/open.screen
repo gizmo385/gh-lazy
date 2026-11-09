@@ -1,0 +1,100 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+█                                                                                                  █
+█                                                                                                  █
+█                                       LazyGithub Settings                                        █
+█                                                                                                  █
+█ Appearance  Notifications  Key Bindings  Repositories  Pull Requests  Issues  Cache  Core  Api  S█
+█╸━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█
+█                                                                                                  █
+█                                                                                                  █
+█  Settings focused on altering the appearance of LazyGithub, including hiding or showing        ▆▆█
+█  different sections.                                                                             █
+█                                                                                                  █
+█                                                                                                  █
+█ Theme:                                         ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎   █
+█                                                ▊  Dark                                    ▼  ▎   █
+█                                                ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎   █
+█                                                                                                  █
+█──────────────────────────────────────────────────────────────────────────────────────────────────█
+█                                                                                                  █
+█                                   ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                               █
+█                                         Save           Cancel                                    █
+█                                   ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                               █
+█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ shift+⏎ Submit  q Close  / Search
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+c..................................................................................................c
+c..................................................................................................c
+c..dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd..c
+c..................................................................................................c
+ceffffffffffe.ggggggggggggg..gggggggggggg..gggggggggggg..ggggggggggggg..gggggg..ggggg..gggg..ggg..gc
+chiiiiiiiiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhc
+c................................................................................................jjc
+c................................................................................................jjc
+c..kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk........llc
+c..kkkkkkkkkkkkkkkkkkk...........................................................................mmc
+c................................................................................................mmc
+c................................................................................................mmc
+c.nnnnnn.........................................opppppppppppppppppppppppppppppppppppppppppppppq.mmc
+c................................................orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsrrq.mmc
+c................................................opppppppppppppppppppppppppppppppppppppppppppppq.mmc
+c..................................................................................................c
+cttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttc
+c..................................................................................................c
+c...................................uuuuuuuuuuuuuuuuvvvvvvvvvvvvvvvv...............................c
+c...................................wwwwwxxxxxxwwwwwyyyyzzzzzzzzyyyy...............................c
+c...................................AAAAAAAAAAAAAAAABBBBBBBBBBBBBBBB...............................c
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+CbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbCCbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbDDC
+CbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbCCbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbDDC
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+EEEEEEEEEFFFFFFFEEEFFFFFFEEEFFFFFFFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+--- legend
+. fg=#e0e0e0 bg=#4f4f4f
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#121212 bg=#4f4f4f
+d fg=#0178d4 bg=#4f4f4f bold
+e fg=#e0e0e0 bg=#0178d4
+f fg=#ddedf9 bg=#0178d4 bold
+g fg=#979797 bg=#4f4f4f
+h fg=#7a7a7a bg=#4f4f4f
+i fg=#0178d4 bg=#4f4f4f
+j fg=#003054 bg=#4f4f4f inverse
+k fg=#aeaeae bg=#4f4f4f
+l fg=#003054 bg=#000000 inverse
+m fg=#e0e0e0 bg=#000000
+n fg=#e0e0e0 bg=#4f4f4f bold
+o fg=#191919 bg=#4f4f4f inverse
+p fg=#191919 bg=#1e1e1e
+q fg=#191919 bg=#4f4f4f
+r fg=#e0e0e0 bg=#1e1e1e
+s fg=#7f7f7f bg=#1e1e1e
+t fg=#004578 bg=#4f4f4f
+u fg=#7ae998 bg=#4ebf71
+v fg=#e76580 bg=#b93c5b
+w fg=#0a180e bg=#4ebf71
+x fg=#0a180e bg=#4ebf71 bold
+y fg=#f5e5e9 bg=#b93c5b
+z fg=#f5e5e9 bg=#b93c5b bold
+A fg=#008139 bg=#4ebf71
+B fg=#780028 bg=#b93c5b
+C fg=#365270 bg=#121212
+D fg=#646464 bg=#0a0a0a
+E fg=#ffa62b bg=#242f38 bold
+F fg=#e0e0e0 bg=#242f38
+G bg=#242f38

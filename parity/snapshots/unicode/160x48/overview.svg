@@ -1,0 +1,525 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960" xml:space="preserve">
+<title>unicode · overview · 160x48</title>
+<style>
+text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono', monospace; font-size: 16.67px; white-space: pre; }
+.s0 { fill: #004578; }
+.s1 { fill: #e0e0e0; }
+.s2 { fill: #adff2f; }
+.s3 { fill: #6db2ff; }
+.s4 { fill: #4ebf71; }
+.s5 { fill: #98e024; font-weight: bold; }
+.s6 { fill: #e0e0e0; font-weight: bold; }
+.s7 { fill: #ddedf9; font-weight: bold; }
+.s8 { fill: #797979; }
+.s9 { fill: #4f4f4f; }
+.s10 { fill: #0178d4; }
+.s11 { fill: #e0e0e0; text-decoration: underline; }
+.s12 { fill: #ff0000; }
+.s13 { fill: #121212; }
+.s14 { fill: #0178d4; text-decoration: underline; }
+.s15 { fill: #f4bb6e; }
+.s16 { fill: #57a5e2; }
+.s17 { fill: #3b3b3b; }
+.s18 { fill: #ffa62b; font-weight: bold; }
+</style>
+<rect width="1600" height="960" fill="#1e1e1e"/>
+<g shape-rendering="crispEdges">
+<rect x="0" y="0" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="20" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="40" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="60" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="80" width="10" height="20" fill="#121212"/>
+<rect x="10" y="80" width="620" height="20" fill="#242f38"/>
+<rect x="630" y="80" width="20" height="20" fill="#121212"/>
+<rect x="650" y="80" width="100" height="20" fill="#0178d4"/>
+<rect x="750" y="80" width="850" height="20" fill="#121212"/>
+<rect x="0" y="100" width="10" height="20" fill="#121212"/>
+<rect x="10" y="100" width="620" height="20" fill="#153854"/>
+<rect x="630" y="100" width="970" height="20" fill="#121212"/>
+<rect x="0" y="120" width="10" height="20" fill="#121212"/>
+<rect x="630" y="120" width="970" height="20" fill="#121212"/>
+<rect x="0" y="140" width="10" height="20" fill="#121212"/>
+<rect x="630" y="140" width="970" height="20" fill="#121212"/>
+<rect x="0" y="160" width="10" height="20" fill="#121212"/>
+<rect x="630" y="160" width="970" height="20" fill="#121212"/>
+<rect x="0" y="180" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="200" width="650" height="20" fill="#121212"/>
+<rect x="1590" y="200" width="10" height="20" fill="#121212"/>
+<rect x="0" y="220" width="650" height="20" fill="#121212"/>
+<rect x="1590" y="220" width="10" height="20" fill="#121212"/>
+<rect x="0" y="240" width="650" height="20" fill="#121212"/>
+<rect x="1590" y="240" width="10" height="20" fill="#121212"/>
+<rect x="0" y="260" width="650" height="20" fill="#121212"/>
+<rect x="1590" y="260" width="10" height="20" fill="#121212"/>
+<rect x="0" y="280" width="650" height="20" fill="#121212"/>
+<rect x="1590" y="280" width="10" height="20" fill="#121212"/>
+<rect x="0" y="300" width="650" height="20" fill="#121212"/>
+<rect x="1590" y="300" width="10" height="20" fill="#121212"/>
+<rect x="0" y="320" width="650" height="20" fill="#121212"/>
+<rect x="1590" y="320" width="10" height="20" fill="#121212"/>
+<rect x="0" y="340" width="650" height="20" fill="#121212"/>
+<rect x="1590" y="340" width="10" height="20" fill="#121212"/>
+<rect x="0" y="360" width="650" height="20" fill="#121212"/>
+<rect x="1590" y="360" width="10" height="20" fill="#121212"/>
+<rect x="0" y="380" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="400" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="420" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="440" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="460" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="480" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="500" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="520" width="10" height="20" fill="#121212"/>
+<rect x="10" y="520" width="620" height="20" fill="#242f38"/>
+<rect x="630" y="520" width="380" height="20" fill="#121212"/>
+<rect x="1010" y="520" width="10" height="20" fill="#241d13"/>
+<rect x="1020" y="520" width="40" height="20" fill="#121212"/>
+<rect x="1060" y="520" width="10" height="20" fill="#241d13"/>
+<rect x="1070" y="520" width="220" height="20" fill="#121212"/>
+<rect x="1290" y="520" width="10" height="20" fill="#241d13"/>
+<rect x="1300" y="520" width="300" height="20" fill="#121212"/>
+<rect x="0" y="540" width="10" height="20" fill="#121212"/>
+<rect x="10" y="540" width="620" height="20" fill="#153854"/>
+<rect x="630" y="540" width="970" height="20" fill="#121212"/>
+<rect x="0" y="560" width="10" height="20" fill="#121212"/>
+<rect x="630" y="560" width="970" height="20" fill="#121212"/>
+<rect x="0" y="580" width="10" height="20" fill="#121212"/>
+<rect x="630" y="580" width="970" height="20" fill="#121212"/>
+<rect x="0" y="600" width="10" height="20" fill="#121212"/>
+<rect x="630" y="600" width="970" height="20" fill="#121212"/>
+<rect x="0" y="620" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="640" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="660" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="680" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="700" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="720" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="740" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="760" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="780" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="800" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="820" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="840" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="860" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="880" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="900" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="920" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="940" width="1600" height="20" fill="#242f38"/>
+</g>
+<text class="s0" x="0" y="15" textLength="1600" lengthAdjust="spacingAndGlyphs">┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐</text>
+<text class="s0" x="0" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="35" textLength="140" lengthAdjust="spacingAndGlyphs">Current repo: </text>
+<text class="s2" x="150" y="35" textLength="210" lengthAdjust="spacingAndGlyphs">parity-bot/pr-details</text>
+<text class="s0" x="1590" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s0" x="0" y="55" textLength="1600" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+<text class="s3" x="0" y="75" textLength="640" lengthAdjust="spacingAndGlyphs">┌─ [1] Repositories ───────────────────────────────────────────┐</text>
+<text class="s4" x="640" y="75" textLength="960" lengthAdjust="spacingAndGlyphs">┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐</text>
+<text class="s3" x="0" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s5" x="20" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">★</text>
+<text class="s6" x="30" y="95" textLength="600" lengthAdjust="spacingAndGlyphs">  Owner       Name         Private                          </text>
+<text class="s3" x="630" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s7" x="660" y="95" textLength="80" lengthAdjust="spacingAndGlyphs">Overview</text>
+<text class="s8" x="760" y="95" textLength="40" lengthAdjust="spacingAndGlyphs">Diff</text>
+<text class="s8" x="820" y="95" textLength="120" lengthAdjust="spacingAndGlyphs">Conversation</text>
+<text class="s4" x="1590" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="115" textLength="620" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  pr-details   ✘                                </text>
+<text class="s3" x="630" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s9" x="650" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">╸</text>
+<text class="s10" x="660" y="115" textLength="80" lengthAdjust="spacingAndGlyphs">━━━━━━━━</text>
+<text class="s9" x="740" y="115" textLength="850" lengthAdjust="spacingAndGlyphs">╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</text>
+<text class="s4" x="1590" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="135" textLength="620" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  dotfiles     ✘                                </text>
+<text class="s3" x="630" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s2" x="650" y="135" textLength="40" lengthAdjust="spacingAndGlyphs">Open</text>
+<text class="s6" x="700" y="135" textLength="20" lengthAdjust="spacingAndGlyphs">視</text>
+<text class="s6" x="720" y="135" textLength="20" lengthAdjust="spacingAndGlyphs">覚</text>
+<text class="s6" x="740" y="135" textLength="20" lengthAdjust="spacingAndGlyphs">カ</text>
+<text class="s6" x="760" y="135" textLength="20" lengthAdjust="spacingAndGlyphs">ー</text>
+<text class="s6" x="780" y="135" textLength="20" lengthAdjust="spacingAndGlyphs">ソ</text>
+<text class="s6" x="800" y="135" textLength="20" lengthAdjust="spacingAndGlyphs">ル</text>
+<text class="s6" x="820" y="135" textLength="20" lengthAdjust="spacingAndGlyphs">を</text>
+<text class="s6" x="840" y="135" textLength="20" lengthAdjust="spacingAndGlyphs">追</text>
+<text class="s6" x="860" y="135" textLength="20" lengthAdjust="spacingAndGlyphs">加</text>
+<text class="s6" x="890" y="135" textLength="20" lengthAdjust="spacingAndGlyphs">🚀</text>
+<text class="s6" x="910" y="135" textLength="70" lengthAdjust="spacingAndGlyphs"> viewer</text>
+<text class="s11" x="990" y="135" textLength="40" lengthAdjust="spacingAndGlyphs">(#5)</text>
+<text class="s1" x="1030" y="135" textLength="40" lengthAdjust="spacingAndGlyphs"> by </text>
+<text class="s11" x="1070" y="135" textLength="130" lengthAdjust="spacingAndGlyphs">parity-friend</text>
+<text class="s4" x="1590" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="155" textLength="620" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  hello-world  ✘                                </text>
+<text class="s3" x="630" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="650" y="155" textLength="300" lengthAdjust="spacingAndGlyphs">3 commits • 5 files changed • </text>
+<text class="s2" x="950" y="155" textLength="30" lengthAdjust="spacingAndGlyphs">+12</text>
+<text class="s1" x="980" y="155" textLength="30" lengthAdjust="spacingAndGlyphs"> • </text>
+<text class="s12" x="1010" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">-6</text>
+<text class="s1" x="1030" y="155" textLength="30" lengthAdjust="spacingAndGlyphs"> • </text>
+<text class="s6" x="1060" y="155" textLength="140" lengthAdjust="spacingAndGlyphs">parity-friend:</text>
+<text class="s6" x="1200" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">機</text>
+<text class="s6" x="1220" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">能</text>
+<text class="s6" x="1240" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">/</text>
+<text class="s6" x="1250" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">カ</text>
+<text class="s6" x="1270" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">ー</text>
+<text class="s6" x="1290" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">ソ</text>
+<text class="s6" x="1310" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">ル</text>
+<text class="s1" x="1330" y="155" textLength="30" lengthAdjust="spacingAndGlyphs"> → </text>
+<text class="s6" x="1360" y="155" textLength="150" lengthAdjust="spacingAndGlyphs">parity-bot:main</text>
+<text class="s4" x="1590" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="175" textLength="620" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  lazy-demo    ✘                                </text>
+<text class="s3" x="630" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="650" y="195" textLength="940" lengthAdjust="spacingAndGlyphs">Opened on Sun Feb  1 08:30:00 2026                                                            </text>
+<text class="s4" x="1590" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s13" x="650" y="215" textLength="940" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</text>
+<text class="s4" x="1590" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="650" y="235" textLength="40" lengthAdjust="spacingAndGlyphs">  ▶ </text>
+<text class="s1" x="690" y="235" textLength="20" lengthAdjust="spacingAndGlyphs">👍</text>
+<text class="s1" x="710" y="235" textLength="50" lengthAdjust="spacingAndGlyphs"> 2 | </text>
+<text class="s1" x="760" y="235" textLength="20" lengthAdjust="spacingAndGlyphs">🎉</text>
+<text class="s1" x="780" y="235" textLength="50" lengthAdjust="spacingAndGlyphs"> 1 | </text>
+<text class="s1" x="830" y="235" textLength="20" lengthAdjust="spacingAndGlyphs">👀</text>
+<text class="s1" x="850" y="235" textLength="740" lengthAdjust="spacingAndGlyphs"> 4                                                                        </text>
+<text class="s4" x="1590" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s13" x="650" y="275" textLength="940" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</text>
+<text class="s4" x="1590" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="650" y="295" textLength="190" lengthAdjust="spacingAndGlyphs">  ▶ Status checks: </text>
+<text class="s12" x="840" y="295" textLength="80" lengthAdjust="spacingAndGlyphs">✘ Failed</text>
+<text class="s4" x="1590" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s13" x="650" y="335" textLength="940" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</text>
+<text class="s4" x="1590" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="650" y="355" textLength="160" lengthAdjust="spacingAndGlyphs">  ▶ PR Reviews: </text>
+<text class="s12" x="810" y="355" textLength="190" lengthAdjust="spacingAndGlyphs">✘ Changes Requested</text>
+<text class="s4" x="1590" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s0" x="650" y="415" textLength="940" lengthAdjust="spacingAndGlyphs">──────────────────────────────────────────────────────────────────────────────────────────────</text>
+<text class="s4" x="1590" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="495" textLength="640" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘</text>
+<text class="s4" x="640" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s14" x="670" y="495" textLength="20" lengthAdjust="spacingAndGlyphs">概</text>
+<text class="s14" x="690" y="495" textLength="20" lengthAdjust="spacingAndGlyphs">要</text>
+<text class="s4" x="1590" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="515" textLength="640" lengthAdjust="spacingAndGlyphs">┌─ [2] Pull Requests ──────────────────────────────────────────┐</text>
+<text class="s4" x="640" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="10" y="535" textLength="620" lengthAdjust="spacingAndGlyphs"> #  Status  Author         Title                              </text>
+<text class="s3" x="630" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="670" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">ビ</text>
+<text class="s1" x="690" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">ュ</text>
+<text class="s1" x="710" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">ー</text>
+<text class="s1" x="730" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">ア</text>
+<text class="s1" x="750" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">ー</text>
+<text class="s1" x="770" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">に</text>
+<text class="s1" x="790" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">カ</text>
+<text class="s1" x="810" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">ー</text>
+<text class="s1" x="830" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">ソ</text>
+<text class="s1" x="850" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">ル</text>
+<text class="s1" x="870" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">を</text>
+<text class="s1" x="890" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">追</text>
+<text class="s1" x="910" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">加</text>
+<text class="s1" x="930" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">し</text>
+<text class="s1" x="950" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">ま</text>
+<text class="s1" x="970" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">す</text>
+<text class="s1" x="990" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">。</text>
+<text class="s15" x="1010" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">j</text>
+<text class="s1" x="1030" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">と</text>
+<text class="s15" x="1060" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">k</text>
+<text class="s1" x="1080" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">で</text>
+<text class="s1" x="1100" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">移</text>
+<text class="s1" x="1120" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">動</text>
+<text class="s1" x="1140" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">し</text>
+<text class="s1" x="1160" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">、</text>
+<text class="s1" x="1180" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">現</text>
+<text class="s1" x="1200" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">在</text>
+<text class="s1" x="1220" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">の</text>
+<text class="s1" x="1240" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">行</text>
+<text class="s1" x="1260" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">は</text>
+<text class="s15" x="1290" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">&gt;</text>
+<text class="s4" x="1590" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="555" textLength="270" lengthAdjust="spacingAndGlyphs"> 5  open    parity-friend  </text>
+<text class="s1" x="280" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">視</text>
+<text class="s1" x="300" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">覚</text>
+<text class="s1" x="320" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">カ</text>
+<text class="s1" x="340" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">ー</text>
+<text class="s1" x="360" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">ソ</text>
+<text class="s1" x="380" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">ル</text>
+<text class="s1" x="400" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">を</text>
+<text class="s1" x="420" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">追</text>
+<text class="s1" x="440" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">加</text>
+<text class="s1" x="470" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">🚀</text>
+<text class="s1" x="490" y="555" textLength="140" lengthAdjust="spacingAndGlyphs"> viewer       </text>
+<text class="s3" x="630" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="670" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">で</text>
+<text class="s1" x="690" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">示</text>
+<text class="s1" x="710" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">さ</text>
+<text class="s1" x="730" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">れ</text>
+<text class="s1" x="750" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">ま</text>
+<text class="s1" x="770" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">す</text>
+<text class="s1" x="790" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">。</text>
+<text class="s1" x="810" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">長</text>
+<text class="s1" x="830" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">い</text>
+<text class="s1" x="850" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">日</text>
+<text class="s1" x="870" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">本</text>
+<text class="s1" x="890" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">語</text>
+<text class="s1" x="910" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">の</text>
+<text class="s1" x="930" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">段</text>
+<text class="s1" x="950" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">落</text>
+<text class="s1" x="970" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">は</text>
+<text class="s1" x="990" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">単</text>
+<text class="s1" x="1010" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">語</text>
+<text class="s1" x="1030" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">の</text>
+<text class="s1" x="1050" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">区</text>
+<text class="s1" x="1070" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">切</text>
+<text class="s1" x="1090" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">り</text>
+<text class="s1" x="1110" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">な</text>
+<text class="s1" x="1130" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">し</text>
+<text class="s1" x="1150" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">で</text>
+<text class="s1" x="1170" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">折</text>
+<text class="s1" x="1190" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">り</text>
+<text class="s1" x="1210" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">返</text>
+<text class="s1" x="1230" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">さ</text>
+<text class="s1" x="1250" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">れ</text>
+<text class="s1" x="1270" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">る</text>
+<text class="s1" x="1290" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">必</text>
+<text class="s1" x="1310" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">要</text>
+<text class="s1" x="1330" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">が</text>
+<text class="s1" x="1350" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">あ</text>
+<text class="s1" x="1370" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">り</text>
+<text class="s1" x="1390" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">ま</text>
+<text class="s1" x="1410" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">す</text>
+<text class="s1" x="1430" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">。</text>
+<text class="s4" x="1590" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="575" textLength="300" lengthAdjust="spacingAndGlyphs"> 4  closed  parity-bot     Caf</text>
+<text class="s1" x="310" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">é</text>
+<text class="s1" x="320" y="575" textLength="30" lengthAdjust="spacingAndGlyphs"> cr</text>
+<text class="s1" x="350" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">è</text>
+<text class="s1" x="360" y="575" textLength="50" lengthAdjust="spacingAndGlyphs">me: r</text>
+<text class="s1" x="410" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">é</text>
+<text class="s1" x="420" y="575" textLength="30" lengthAdjust="spacingAndGlyphs">sum</text>
+<text class="s1" x="450" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">é</text>
+<text class="s1" x="470" y="575" textLength="20" lengthAdjust="spacingAndGlyphs">📄</text>
+<text class="s3" x="630" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="595" textLength="410" lengthAdjust="spacingAndGlyphs"> 3  closed  parity-bot     Release 0.2.0 </text>
+<text class="s1" x="420" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">🇯</text>
+<text class="s1" x="430" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">🇵</text>
+<text class="s1" x="450" y="595" textLength="20" lengthAdjust="spacingAndGlyphs">한</text>
+<text class="s1" x="470" y="595" textLength="20" lengthAdjust="spacingAndGlyphs">국</text>
+<text class="s1" x="490" y="595" textLength="20" lengthAdjust="spacingAndGlyphs">어</text>
+<text class="s1" x="520" y="595" textLength="20" lengthAdjust="spacingAndGlyphs">지</text>
+<text class="s1" x="540" y="595" textLength="20" lengthAdjust="spacingAndGlyphs">원</text>
+<text class="s3" x="630" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s16" x="670" y="595" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s1" x="690" y="595" textLength="20" lengthAdjust="spacingAndGlyphs">🚀</text>
+<text class="s1" x="720" y="595" textLength="20" lengthAdjust="spacingAndGlyphs">速</text>
+<text class="s1" x="740" y="595" textLength="20" lengthAdjust="spacingAndGlyphs">い</text>
+<text class="s4" x="1590" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="615" textLength="620" lengthAdjust="spacingAndGlyphs"> 2  open    parity-friend  תמיכה בעברית and Ελληνικά          </text>
+<text class="s3" x="630" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s16" x="670" y="615" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s1" x="690" y="615" textLength="30" lengthAdjust="spacingAndGlyphs">Caf</text>
+<text class="s1" x="720" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">é</text>
+<text class="s1" x="730" y="615" textLength="30" lengthAdjust="spacingAndGlyphs"> cr</text>
+<text class="s1" x="760" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">è</text>
+<text class="s1" x="770" y="615" textLength="60" lengthAdjust="spacingAndGlyphs">me, na</text>
+<text class="s1" x="830" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">ı̈</text>
+<text class="s1" x="840" y="615" textLength="80" lengthAdjust="spacingAndGlyphs">ve and r</text>
+<text class="s1" x="920" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">é</text>
+<text class="s1" x="930" y="615" textLength="30" lengthAdjust="spacingAndGlyphs">sum</text>
+<text class="s1" x="960" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">é</text>
+<text class="s4" x="1590" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s16" x="670" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s1" x="690" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">한</text>
+<text class="s1" x="710" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">국</text>
+<text class="s1" x="730" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">어</text>
+<text class="s1" x="750" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">: </text>
+<text class="s1" x="770" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">커</text>
+<text class="s1" x="790" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">서</text>
+<text class="s1" x="810" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">를</text>
+<text class="s1" x="840" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">추</text>
+<text class="s1" x="860" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">가</text>
+<text class="s1" x="880" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">합</text>
+<text class="s1" x="900" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">니</text>
+<text class="s1" x="920" y="635" textLength="20" lengthAdjust="spacingAndGlyphs">다</text>
+<text class="s4" x="1590" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s16" x="670" y="655" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s1" x="690" y="655" textLength="900" lengthAdjust="spacingAndGlyphs">עברית: שלום עולם                                                                          </text>
+<text class="s4" x="1590" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s16" x="670" y="675" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s1" x="690" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">🇯</text>
+<text class="s1" x="700" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">🇵</text>
+<text class="s1" x="720" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">🇫</text>
+<text class="s1" x="730" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">🇷</text>
+<text class="s1" x="740" y="675" textLength="850" lengthAdjust="spacingAndGlyphs"> flags                                                                               </text>
+<text class="s4" x="1590" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s17" x="670" y="715" textLength="900" lengthAdjust="spacingAndGlyphs">┌────────────────────────────────────┬───────────────────────────────────────────────────┐</text>
+<text class="s4" x="1590" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s17" x="670" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s10" x="690" y="735" textLength="20" lengthAdjust="spacingAndGlyphs">名</text>
+<text class="s10" x="710" y="735" textLength="20" lengthAdjust="spacingAndGlyphs">前</text>
+<text class="s17" x="1040" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s10" x="1060" y="735" textLength="20" lengthAdjust="spacingAndGlyphs">状</text>
+<text class="s10" x="1080" y="735" textLength="20" lengthAdjust="spacingAndGlyphs">態</text>
+<text class="s17" x="1560" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s17" x="670" y="755" textLength="900" lengthAdjust="spacingAndGlyphs">├────────────────────────────────────┼───────────────────────────────────────────────────┤</text>
+<text class="s4" x="1590" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s17" x="670" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="690" y="775" textLength="20" lengthAdjust="spacingAndGlyphs">ビ</text>
+<text class="s1" x="710" y="775" textLength="20" lengthAdjust="spacingAndGlyphs">ル</text>
+<text class="s1" x="730" y="775" textLength="20" lengthAdjust="spacingAndGlyphs">ド</text>
+<text class="s17" x="1040" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="1060" y="775" textLength="20" lengthAdjust="spacingAndGlyphs">✅</text>
+<text class="s1" x="1090" y="775" textLength="20" lengthAdjust="spacingAndGlyphs">成</text>
+<text class="s1" x="1110" y="775" textLength="20" lengthAdjust="spacingAndGlyphs">功</text>
+<text class="s17" x="1560" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s17" x="670" y="795" textLength="900" lengthAdjust="spacingAndGlyphs">├────────────────────────────────────┼───────────────────────────────────────────────────┤</text>
+<text class="s4" x="1590" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s17" x="670" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="680" y="815" textLength="20" lengthAdjust="spacingAndGlyphs"> r</text>
+<text class="s1" x="700" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">é</text>
+<text class="s1" x="710" y="815" textLength="30" lengthAdjust="spacingAndGlyphs">sum</text>
+<text class="s1" x="740" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">é</text>
+<text class="s17" x="1040" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="1060" y="815" textLength="20" lengthAdjust="spacingAndGlyphs">🚧</text>
+<text class="s1" x="1090" y="815" textLength="20" lengthAdjust="spacingAndGlyphs">作</text>
+<text class="s1" x="1110" y="815" textLength="20" lengthAdjust="spacingAndGlyphs">業</text>
+<text class="s1" x="1130" y="815" textLength="20" lengthAdjust="spacingAndGlyphs">中</text>
+<text class="s17" x="1560" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s17" x="670" y="835" textLength="900" lengthAdjust="spacingAndGlyphs">└────────────────────────────────────┴───────────────────────────────────────────────────┘</text>
+<text class="s4" x="1590" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="935" textLength="640" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘</text>
+<text class="s4" x="640" y="935" textLength="960" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+<text class="s18" x="0" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^v </text>
+<text class="s1" x="40" y="955" textLength="110" lengthAdjust="spacingAndGlyphs">Paste link </text>
+<text class="s18" x="150" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> f </text>
+<text class="s1" x="180" y="955" textLength="120" lengthAdjust="spacingAndGlyphs">Follow link </text>
+<text class="s18" x="300" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> F </text>
+<text class="s1" x="330" y="955" textLength="220" lengthAdjust="spacingAndGlyphs">Follow link (browser) </text>
+<text class="s18" x="550" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
+<text class="s1" x="580" y="955" textLength="50" lengthAdjust="spacingAndGlyphs">Quit </text>
+<text class="s18" x="630" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^p </text>
+<text class="s1" x="670" y="955" textLength="160" lengthAdjust="spacingAndGlyphs">Command Palette </text>
+<text class="s18" x="830" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> M </text>
+<text class="s1" x="860" y="955" textLength="90" lengthAdjust="spacingAndGlyphs">Maximize </text>
+<text class="s18" x="950" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ? </text>
+<text class="s1" x="980" y="955" textLength="620" lengthAdjust="spacingAndGlyphs">Keybindings                                                   </text>
+</svg>

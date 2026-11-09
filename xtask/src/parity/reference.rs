@@ -1787,6 +1787,11 @@ contains = ["Hi"]
             ("timeout_ms = 1000", "timeout_ms = 9000"),
             ("timeout_ms = 20000", "timeout_ms = 5"),
             ("apps = [\"python\", \"rust\"]", "apps = [\"python\"]"),
+            // `mask` only masks the Rust snapshot; Python's run doesn't depend on it.
+            (
+                "ignore = { boxes = [\"Log\"] }",
+                "ignore = { boxes = [\"Log\"] }\nmask = [\"/tmp/\\\\S+\"]",
+            ),
         ] {
             assert_eq!(key_of(&variant(from, to), SIZE, &roots), base, "{from} -> {to}");
         }
@@ -1858,6 +1863,13 @@ contains = ["Hi"]
         let limited = variant("[env]\n", "[env]\ngh_timeout_ms = 2000\n");
         let key: Value = serde_json::from_str(&key_of(&limited, SIZE, &roots)).unwrap();
         assert_eq!(key["gh_timeout_ms"], Value::from(2000));
+    }
+
+    #[test]
+    fn the_toast_lifetime_is_not_in_the_capture_key() {
+        let (_dir, roots) = key_roots();
+        let lasting = variant("[env]\n", "[env]\ntoast_timeout_ms = 60000\n");
+        assert_eq!(key_of(&lasting, SIZE, &roots), key_of(KEYED, SIZE, &roots));
     }
 
     #[test]

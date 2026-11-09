@@ -118,6 +118,24 @@ impl TabStrip {
         None
     }
 
+    /// How many columns the labels are scrolled left in a strip `width` wide: none while the active tab fits, else
+    /// just enough to show it at the right edge, as Textual's `Tabs` scrolls the active tab into view, but never past
+    /// its start, so a tab wider than the strip shows its beginning.
+    pub fn scroll(&self, width: u16) -> u16 {
+        let label_width = |name: &String| u16::try_from(Span::raw(name.as_str()).width() + 2).unwrap_or(u16::MAX);
+        let start = self
+            .names
+            .iter()
+            .take(self.active)
+            .map(label_width)
+            .fold(0u16, u16::saturating_add);
+        let end = self
+            .names
+            .get(self.active)
+            .map_or(start, |name| start.saturating_add(label_width(name)));
+        end.saturating_sub(width).min(start)
+    }
+
     /// Whether there are no tabs, so the strip can't take focus.
     pub fn is_empty(&self) -> bool {
         self.names.is_empty()
@@ -176,7 +194,9 @@ impl TabStrip {
             height: area.height.min(1),
             ..area
         };
-        frame.render_widget(Paragraph::new(Line::from(spans)), labels);
+        let scroll = self.scroll(area.width);
+        let highlight = (highlight.0.saturating_sub(scroll), highlight.1.saturating_sub(scroll));
+        frame.render_widget(Paragraph::new(Line::from(spans)).scroll((0, scroll)), labels);
 
         if area.height >= TAB_STRIP_HEIGHT {
             // Textual's `Underline`: `$block-cursor-background` on a `$foreground 10%` bar, `30%` when focused. On ANSI
@@ -370,6 +390,18 @@ mod tests {
         let strip = TabStrip::new(["Overview", "Diff", "Conversation"]);
         let hits: Vec<Option<usize>> = [0, 9, 10, 15, 16, 29, 30].into_iter().map(|x| strip.hit(x)).collect();
         assert_eq!(hits, [Some(0), Some(0), Some(1), Some(1), Some(2), Some(2), None]);
+    }
+
+    #[test]
+    fn an_active_tab_past_the_edge_scrolls_into_view() {
+        let mut strip = TabStrip::new(["Overview", "Diff", "Checks"]);
+        assert_eq!(strip.scroll(20), 0);
+        strip.select(2);
+        // The labels are 10 + 6 + 8 = 24 wide.
+        assert_eq!(strip.scroll(20), 4);
+        assert_eq!(strip.scroll(24), 0);
+        let row = buffer_to_string(&draw(&strip, 20));
+        assert!(row.lines().next().unwrap().trim_end().ends_with("Checks"), "{row}");
     }
 
     #[test]

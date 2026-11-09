@@ -211,6 +211,17 @@ impl ChangedFile {
             .fold(Counts::default(), |a, b| a + b)
     }
 
+    /// The line at diff position `position`, as `(hunk, line)` indices, or `None` when no line of the file has it (a
+    /// hunk header's position, or one past the file's last line).
+    pub fn line_at(&self, position: u32) -> Option<(usize, usize)> {
+        self.hunks.iter().enumerate().find_map(|(h, hunk)| {
+            // A hunk's lines have increasing positions, one apart.
+            let first = hunk.lines.first()?.position;
+            let line = usize::try_from(position.checked_sub(first)?).ok()?;
+            (hunk.lines.get(line)?.position == position).then_some((h, line))
+        })
+    }
+
     /// The last component of [`Self::path`].
     pub fn basename(&self) -> &str {
         // Diff paths always use `/`, whatever the platform.
@@ -404,7 +415,7 @@ impl Hunk {
 }
 
 /// The ranges and trimmed context of `@@ -a[,b] +c[,d] @@ <context>`, or `None` when it isn't one.
-fn parse_hunk_header(header: &str) -> Option<(HunkRange, &str)> {
+pub(crate) fn parse_hunk_header(header: &str) -> Option<(HunkRange, &str)> {
     let rest = header.strip_prefix("@@ -")?;
     let (old_start, old_count, rest) = parse_side(rest)?;
     let rest = rest.strip_prefix(" +")?;
@@ -437,7 +448,7 @@ fn parse_number(text: &str) -> Option<(u32, &str)> {
 }
 
 /// A hunk line's kind and its text without the marker.
-fn classify(line: &str) -> (LineKind, &str) {
+pub(crate) fn classify(line: &str) -> (LineKind, &str) {
     match line.as_bytes().first() {
         Some(b'+') => (LineKind::Added, &line[1..]),
         Some(b'-') => (LineKind::Removed, &line[1..]),

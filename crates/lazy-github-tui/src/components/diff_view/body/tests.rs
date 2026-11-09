@@ -829,3 +829,185 @@ fn diff_body_deleted_unfolded() {
     body.cursor = Some(Cursor::Removed(OLD));
     insta::assert_snapshot!(buffer_to_styled_string(&draw(&mut body, 100, 30, true)));
 }
+
+// Review threads (#390).
+
+fn thread(id: u64, path: &str, position: Option<u64>, original: Option<u64>, replies: usize) -> DiffThread {
+    use lazy_github_core::models::{IssueComment, Review, ReviewComment, ReviewState, User};
+    let comment = |id: u64, reply_to: Option<u64>| ReviewComment {
+        comment: IssueComment {
+            id,
+            body: format!("Comment {id}\nsecond line"),
+            user: Some(User {
+                login: "parity-bot".to_owned(),
+                id: 1,
+                name: None,
+                html_url: "https://github.com/parity-bot".to_owned(),
+            }),
+            created_at: jiff::Timestamp::from_second(id.cast_signed()).unwrap(),
+            updated_at: jiff::Timestamp::from_second(id.cast_signed()).unwrap(),
+            author_association: String::new(),
+        },
+        pull_request_review_id: 1,
+        path: path.to_owned(),
+        position,
+        original_position: original,
+        in_reply_to_id: reply_to,
+        diff_hunk: "@@ -1,2 +1,2 @@\n a\n-gone".to_owned(),
+    };
+    let mut comments = vec![comment(id, None)];
+    comments.extend((1..=replies as u64).map(|r| comment(id + r, Some(id))));
+    let review = Review {
+        id: 1,
+        user: comments[0].comment.user.clone().unwrap(),
+        body: String::new(),
+        state: ReviewState::Commented,
+        submitted_at: None,
+        comments,
+    };
+    lazy_github_core::review_anchor::diff_threads(&[review]).remove(0)
+}
+
+/// src/viewer.rs's threads: 100 under its 6th line (with a reply), 200 at a position past the file, 300 on the file.
+fn threaded() -> DiffBody {
+    let mut body = body();
+    body.set_threads(
+        vec![
+            thread(100, "src/viewer.rs", Some(6), Some(6), 1),
+            thread(200, "src/viewer.rs", Some(99), Some(3), 0),
+            thread(300, "src/viewer.rs", None, None, 0),
+            thread(400, "gone.rs", Some(1), Some(1), 0),
+        ],
+        "parity-bot/pr-details",
+    );
+    body
+}
+
+#[test]
+fn threads_take_rows_under_their_lines_and_after_the_file() {
+    let body = threaded();
+    let viewer: Vec<Row> = rows(&body).into_iter().filter(|row| row.file() == VIEWER).collect();
+    let th = |thread, row| Row::Thread {
+        file: VIEWER,
+        thread,
+        row,
+    };
+    let mut expected = vec![Row::FileHeader(VIEWER), th(2, 0), Row::HunkSeparator(VIEWER, 0)];
+    expected.extend((0..6).map(|l| Row::Line(at(VIEWER, 0, l))));
+    expected.push(th(0, 0));
+    expected.extend((6..8).map(|l| Row::Line(at(VIEWER, 0, l))));
+    expected.push(Row::HunkSeparator(VIEWER, 1));
+    expected.extend((0..9).map(|l| Row::Line(at(VIEWER, 1, l))));
+    // A position past the file: outdated.
+    expected.extend([Row::OutdatedSeparator(VIEWER), th(1, 0)]);
+    assert_eq!(viewer, expected);
+    // The thread on a file the diff doesn't have is left out.
+    assert_eq!(body.thread_count(), 3);
+    // Every row maps back to its number.
+    for (number, row) in rows(&body).into_iter().enumerate() {
+        assert_eq!(body.index.row_of(&body.files, row), Some(number), "{row:?}");
+    }
+}
+
+#[test]
+fn expanding_adds_the_comment_rows_and_a_reload_keeps_it_and_the_cursor() {
+    let mut body = threaded();
+    let _ = draw(&mut body, 100, 40, true);
+    let before = body.rows();
+    press(&mut body, BindingId::DiffNextComment, 1);
+    assert_eq!(
+        body.cursor(),
+        Some(Cursor::Thread {
+            file: VIEWER,
+            thread: 2,
+            row: 0
+        })
+    );
+    press(&mut body, BindingId::DiffNextComment, 1);
+    assert_eq!(
+        body.cursor(),
+        Some(Cursor::Thread {
+            file: VIEWER,
+            thread: 0,
+            row: 0
+        })
+    );
+    press(&mut body, BindingId::DiffToggle, 1);
+    assert!(body.is_expanded(0));
+    // Two comments, each an author line and its body (one paragraph: markdown joins the soft break).
+    assert_eq!(body.rows(), before + 4);
+    down(&mut body, 4);
+    assert_eq!(
+        body.cursor(),
+        Some(Cursor::Thread {
+            file: VIEWER,
+            thread: 0,
+            row: 4
+        })
+    );
+    // The same threads again, in another order: thread 100 is now index 1, still expanded, the cursor on it.
+    body.set_threads(
+        vec![
+            thread(300, "src/viewer.rs", None, None, 0),
+            thread(100, "src/viewer.rs", Some(6), Some(6), 1),
+        ],
+        "parity-bot/pr-details",
+    );
+    assert!(body.is_expanded(1));
+    assert_eq!(
+        body.cursor(),
+        Some(Cursor::Thread {
+            file: VIEWER,
+            thread: 1,
+            row: 4
+        })
+    );
+    // Without it, the cursor goes to the file's header.
+    body.set_threads(Vec::new(), "parity-bot/pr-details");
+    assert_eq!(body.cursor(), Some(Cursor::File(VIEWER)));
+    assert_eq!(body.rows(), rows(&body).len());
+}
+
+#[test]
+fn a_narrower_body_wraps_expanded_threads_onto_more_rows() {
+    let mut body = threaded();
+    let _ = draw(&mut body, 100, 40, true);
+    press(&mut body, BindingId::DiffNextComment, 2);
+    press(&mut body, BindingId::DiffToggle, 1);
+    let wide = body.rows();
+    let _ = draw(&mut body, 24, 40, true);
+    assert!(body.rows() > wide, "{} rows, {wide} wide", body.rows());
+    for (number, row) in rows(&body).into_iter().enumerate() {
+        assert_eq!(body.index.row_of(&body.files, row), Some(number), "{row:?}");
+    }
+}
+
+#[test]
+fn hunk_keys_from_a_thread_go_by_its_place() {
+    let mut body = threaded();
+    press(&mut body, BindingId::DiffNextComment, 2);
+    assert_eq!(
+        body.cursor(),
+        Some(Cursor::Thread {
+            file: VIEWER,
+            thread: 0,
+            row: 0
+        })
+    );
+    press(&mut body, BindingId::DiffNextHunk, 1);
+    assert_eq!(body.cursor(), line(VIEWER, 1, 0));
+    press(&mut body, BindingId::DiffNextComment, 1);
+    press(&mut body, BindingId::DiffPreviousHunk, 1);
+    assert_eq!(body.cursor(), line(VIEWER, 1, 0));
+    press(&mut body, BindingId::DiffNextComment, 1);
+    assert_eq!(
+        body.cursor(),
+        Some(Cursor::Thread {
+            file: VIEWER,
+            thread: 1,
+            row: 0
+        })
+    );
+    press(&mut body, BindingId::DiffPreviousFile, 1);
+    assert_eq!(body.cursor(), Some(Cursor::File(VIEWER)));
+}

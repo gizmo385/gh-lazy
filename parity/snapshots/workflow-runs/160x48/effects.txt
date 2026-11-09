@@ -1,0 +1,8 @@
+GET /repos/parity-bot/ci-fixture/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/ci-fixture/actions/runs?page=2&per_page=30
+GET /repos/parity-bot/ci-fixture/actions/runs?page=3&per_page=30
+GET /repos/parity-bot/ci-fixture/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/ci-fixture/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/ci-fixture/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/ci-fixture/readme accept=raw
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

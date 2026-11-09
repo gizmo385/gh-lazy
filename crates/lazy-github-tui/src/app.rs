@@ -186,7 +186,7 @@ impl App {
             base: BaseScreen::Startup(StartupScreen::default()),
             modals: Vec::new(),
             shared: Shared::new(config, keymap, theme, options, Arc::new(clock)),
-            toasts: Toasts::default(),
+            toasts: Toasts::with_timeout(options.toast_timeout),
             maximized: None,
             has_shown_maximize_toast: false,
             help_open: false,
@@ -1076,8 +1076,8 @@ impl App {
     /// LazyGithub's own commands as they apply now, in `MainScreenCommandProvider.commands` order. They come before
     /// the system commands, which keeps them first among equal scores (Py bug B86's answer).
     fn app_commands(&self) -> Vec<PaletteCommand> {
-        let command = |name, help, run| PaletteCommand {
-            name,
+        let command = |name: &'static str, help, run| PaletteCommand {
+            name: name.into(),
             help: Some(help),
             source: CommandSource::App,
             run,
@@ -1128,13 +1128,28 @@ impl App {
             "Search GitHub's issues and pull requests with its query syntax",
             PaletteRun::OpenSearch,
         ));
+        // Each saved query (#395), after it, in the order saved.
+        commands.extend(
+            self.shared
+                .config
+                .search
+                .saved_queries
+                .iter()
+                .enumerate()
+                .map(|(index, query)| PaletteCommand {
+                    name: format!("Search: {query}").into(),
+                    help: Some("Run a saved search"),
+                    source: CommandSource::App,
+                    run: PaletteRun::RunSavedSearch(index),
+                }),
+        );
         commands
     }
 
     /// Textual's system commands as they apply on `main` now, in `App.get_system_commands` order.
     fn system_commands(&self, main: &MainScreen) -> Vec<PaletteCommand> {
-        let command = |name, help, run| PaletteCommand {
-            name,
+        let command = |name: &'static str, help, run| PaletteCommand {
+            name: name.into(),
             help: Some(help),
             source: CommandSource::System,
             run,

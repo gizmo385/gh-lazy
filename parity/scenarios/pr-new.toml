@@ -26,6 +26,9 @@ sizes = [[160, 48]]
 # pr-create over pr-details: the branches main, new-feature and next-release; the collaborators; POST .../pulls
 # answering 422 for the head missing-branch and draft PR 10 (after 1 s) for the head new-feature; PR 10 details.
 fixtures = ["pr-create", "pr-details", "base"]
+# Keeps the Rust app's toasts up, so `created` shows the refused submit's toast however long the run took to get
+# there; with Rust's own 5 s it was there on some runs and not others.
+toast_timeout_ms = 60000
 config_overrides.appearance.show_issues = false
 config_overrides.appearance.show_workflows = false
 

@@ -14,6 +14,7 @@ use serde_json::{Value, json};
 
 use super::*;
 use crate::event::Event;
+use crate::modal::PaletteRun;
 use crate::screens::main::MainAction;
 use crate::test_util::{LogCapture, TestApp};
 use crate::toast::Severity;
@@ -1060,4 +1061,324 @@ async fn status_line_states() {
     .await;
     lines.push(row(&mut app));
     insta::assert_snapshot!(lines.join("\n"));
+}
+
+// Recent and saved queries (#395).
+
+/// The fake history file a default config's empty cache directory names.
+fn history_file() -> std::path::PathBuf {
+    search_history::path(Path::new(""))
+}
+
+fn recent(app: &TestApp) -> Vec<String> {
+    let dialog = dialog(app);
+    dialog.session.recent().to_vec()
+}
+
+/// The config each save among the app's effects carried, oldest first.
+fn saved_queries(app: &TestApp) -> Vec<Vec<String>> {
+    app.effects()
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::SaveConfig(config) => Some(config.search.saved_queries.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+#[tokio::test]
+async fn the_first_open_reads_the_history_and_later_opens_dont() {
+    let app = selected(Config::default(), FakeGithub::new()).await;
+    let mut app = app.with_cache_file(history_file(), r#"["label:bug","is:open"]"#);
+    open(&mut app, SearchOrigin::Palette);
+    app.settle().await;
+    assert_eq!(recent(&app), ["label:bug", "is:open"]);
+    press(&mut app, &["escape", "escape"]).await;
+    let reads = |app: &TestApp| {
+        app.effects()
+            .iter()
+            .filter(|effect| matches!(effect, Effect::ReadCache { path, .. } if *path == history_file()))
+            .count()
+    };
+    let before = reads(&app);
+    assert_eq!(before, 1);
+    open(&mut app, SearchOrigin::Palette);
+    assert_eq!(reads(&app), before);
+    assert_eq!(recent(&app), ["label:bug", "is:open"]);
+}
+
+#[tokio::test]
+async fn a_bad_history_file_is_an_empty_history() {
+    let app = selected(Config::default(), FakeGithub::new()).await;
+    let mut app = app.with_cache_file(history_file(), "{not json");
+    open(&mut app, SearchOrigin::Palette);
+    app.settle().await;
+    assert!(recent(&app).is_empty());
+}
+
+#[tokio::test]
+async fn an_answered_search_is_recorded_and_written() {
+    let app = selected(
+        Config::default(),
+        FakeGithub::new().with_search_page(Ok(pr_details_open())),
+    )
+    .await;
+    let mut app = app.with_cache_file(history_file(), r#"["is:open"]"#);
+    open(&mut app, SearchOrigin::PullRequests);
+    app.settle().await;
+    press(&mut app, &["enter"]).await;
+    assert_eq!(recent(&app), ["is:pr is:open", "is:open"]);
+    assert_eq!(app.cache_file(&history_file()), Some(r#"["is:pr is:open","is:open"]"#));
+}
+
+#[tokio::test]
+async fn a_failure_other_than_an_invalid_query_is_recorded_too() {
+    let gh = FakeGithub::new().with_search_page(Err(SearchError::Gh(server_error())));
+    let mut app = selected(Config::default(), gh).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    app.settle().await;
+    press(&mut app, &["enter"]).await;
+    assert_eq!(recent(&app), ["is:pr is:open"]);
+}
+
+#[tokio::test]
+async fn an_invalid_query_is_not_recorded() {
+    let invalid = SearchError::Invalid {
+        messages: vec!["The listed users and repositories cannot be searched.".into()],
+    };
+    let mut app = selected(Config::default(), FakeGithub::new().with_search_page(Err(invalid))).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    app.settle().await;
+    press(&mut app, &["enter"]).await;
+    assert!(recent(&app).is_empty());
+    assert_eq!(app.cache_file(&history_file()), None);
+}
+
+#[tokio::test]
+async fn up_and_down_step_through_the_recent_queries_and_restore_the_typed_text() {
+    let app = selected(Config::default(), FakeGithub::new()).await;
+    let mut app = app.with_cache_file(history_file(), r#"["c","b","a"]"#);
+    open(&mut app, SearchOrigin::Palette);
+    app.settle().await;
+    app.press(&["x", "y"]);
+    app.press(&["up"]);
+    assert_eq!(dialog(&app).text(), "c");
+    app.press(&["up", "up"]);
+    assert_eq!(dialog(&app).text(), "a");
+    // The oldest stays.
+    app.press(&["up"]);
+    assert_eq!(dialog(&app).text(), "a");
+    app.press(&["down"]);
+    assert_eq!(dialog(&app).text(), "b");
+    app.press(&["down", "down"]);
+    assert_eq!(dialog(&app).text(), "xy");
+    // Past the typed text, nothing more.
+    app.press(&["down"]);
+    assert_eq!(dialog(&app).text(), "xy");
+    // Typing after a step starts over from the new text.
+    app.press(&["up", "z", "up", "down"]);
+    assert_eq!(dialog(&app).text(), "cz");
+}
+
+#[tokio::test]
+async fn up_does_nothing_with_no_history_and_only_in_the_input() {
+    let mut app = with_results().await;
+    // On the table `up` moves the cursor, as before.
+    press(&mut app, &["j", "up"]).await;
+    assert_eq!(dialog(&app).session.cursor(), 0);
+    assert_eq!(dialog(&app).text(), "is:pr is:open ");
+    to_input(&mut app);
+    // The one recent query is this one, trimmed.
+    app.press(&["ctrl+u", "up"]);
+    assert_eq!(dialog(&app).text(), "is:pr is:open");
+
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::Palette);
+    app.settle().await;
+    app.press(&["a", "up"]);
+    assert_eq!(dialog(&app).text(), "a");
+}
+
+#[tokio::test]
+async fn the_input_suggests_saved_queries_then_recent_ones() {
+    let mut config = Config::default();
+    config.search.saved_queries = vec!["is:issue label:bug".into()];
+    let app = selected(config, FakeGithub::new()).await;
+    let mut app = app.with_cache_file(history_file(), r#"["is:issue is:open","is:pr"]"#);
+    open(&mut app, SearchOrigin::Palette);
+    app.settle().await;
+    app.press(&["i", "s"]);
+    assert_eq!(dialog(&app).session.input.suggestion(), Some("is:issue label:bug"));
+    app.send(Event::Paste(":p".into()));
+    assert_eq!(dialog(&app).session.input.suggestion(), Some("is:pr"));
+    // `right` at the end accepts it.
+    app.press(&["ctrl+u"]);
+    app.send(Event::Paste("is:issue i".into()));
+    app.press(&["right"]);
+    assert_eq!(dialog(&app).text(), "is:issue is:open");
+}
+
+#[tokio::test]
+async fn the_input_with_a_suggestion() {
+    let mut config = Config::default();
+    config.search.saved_queries = vec!["is:pr is:open".into()];
+    let mut app = selected(config, FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::Palette);
+    app.settle().await;
+    app.press(&["i", "s"]);
+    let screen = app.screen(160, 48);
+    // The input's three rows, under the scope's.
+    let scope = screen.lines().position(|line| line.contains("Scope:")).unwrap();
+    let input: Vec<&str> = screen.lines().skip(scope + 2).take(3).collect();
+    insta::assert_snapshot!(input.join("\n"));
+}
+
+#[tokio::test]
+async fn ctrl_s_saves_the_trimmed_query_and_toasts() {
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    app.press(&["ctrl+s"]);
+    assert_eq!(app.app().config().search.saved_queries, ["is:pr is:open"]);
+    assert_eq!(saved_queries(&app), [vec!["is:pr is:open".to_owned()]]);
+    assert_eq!(toasts(&app), [(Severity::Information, "Saved search query".to_owned())]);
+    // The saved query is suggested at once.
+    app.press(&["ctrl+u", "i"]);
+    assert_eq!(dialog(&app).session.input.suggestion(), Some("is:pr is:open"));
+}
+
+#[tokio::test]
+async fn ctrl_s_works_from_the_table_too() {
+    let mut app = with_results().await;
+    app.press(&["ctrl+s"]);
+    assert_eq!(app.app().config().search.saved_queries, ["is:pr is:open"]);
+}
+
+#[tokio::test]
+async fn ctrl_s_on_a_saved_query_says_so_and_writes_nothing() {
+    let mut config = Config::default();
+    config.search.saved_queries = vec!["is:pr is:open".into()];
+    let mut app = selected(config, FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    app.press(&["ctrl+s"]);
+    assert_eq!(app.app().config().search.saved_queries, ["is:pr is:open"]);
+    assert!(saved_queries(&app).is_empty());
+    assert_eq!(toasts(&app), [(Severity::Information, "Already saved".to_owned())]);
+}
+
+#[tokio::test]
+async fn ctrl_s_with_no_text_warns_and_writes_nothing() {
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::Palette);
+    app.send(Event::Paste("  ".into()));
+    app.press(&["ctrl+s"]);
+    assert!(app.app().config().search.saved_queries.is_empty());
+    assert!(saved_queries(&app).is_empty());
+    assert_eq!(toasts(&app), [(Severity::Warning, "Type a query to save".to_owned())]);
+}
+
+#[tokio::test]
+async fn a_failed_save_shows_the_settings_save_toast() {
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    app.press(&["ctrl+s"]);
+    app.send(Event::ConfigSaved(Err("disk full".into())));
+    assert!(
+        toasts(&app).contains(&(Severity::Error, "Failed to save settings: disk full".to_owned())),
+        "{:?}",
+        toasts(&app)
+    );
+}
+
+#[tokio::test]
+async fn search_save_query_is_rebindable() {
+    let mut config = Config::default();
+    config.bindings.overrides = IndexMap::from([("search.save_query".to_owned(), "ctrl+g".to_owned())]);
+    let mut app = selected(config, FakeGithub::new()).await;
+    open(&mut app, SearchOrigin::PullRequests);
+    app.press(&["ctrl+s"]);
+    assert!(app.app().config().search.saved_queries.is_empty());
+    app.press(&["ctrl+g"]);
+    assert_eq!(app.app().config().search.saved_queries, ["is:pr is:open"]);
+    let footer = app.screen(160, 48).lines().last().unwrap().to_owned();
+    assert!(footer.contains("^g Save query"), "{footer}");
+}
+
+#[tokio::test]
+async fn each_saved_query_is_a_palette_command_after_search() {
+    let mut config = Config::default();
+    config.search.saved_queries = vec!["is:pr is:open".into(), "label:bug".into()];
+    let mut app = selected(config, FakeGithub::new()).await;
+    app.press(&["ctrl+p"]);
+    let palette = app
+        .app()
+        .top_dialog::<crate::modal::CommandPaletteDialog>()
+        .expect("the palette is open");
+    let names: Vec<(&str, Option<&str>, PaletteRun)> = palette
+        .commands()
+        .iter()
+        .filter(|command| command.source == crate::modal::CommandSource::App)
+        .skip_while(|command| command.name != "Search issues and pull requests")
+        .map(|command| (&*command.name, command.help, command.run))
+        .collect();
+    assert_eq!(
+        names,
+        [
+            (
+                "Search issues and pull requests",
+                Some("Search GitHub's issues and pull requests with its query syntax"),
+                PaletteRun::OpenSearch
+            ),
+            (
+                "Search: is:pr is:open",
+                Some("Run a saved search"),
+                PaletteRun::RunSavedSearch(0)
+            ),
+            (
+                "Search: label:bug",
+                Some("Run a saved search"),
+                PaletteRun::RunSavedSearch(1)
+            ),
+        ]
+    );
+    app.send(Event::Paste("search:".into()));
+    insta::assert_snapshot!("saved_search_palette", app.screen(160, 48));
+}
+
+#[tokio::test]
+async fn running_a_saved_query_opens_the_modal_and_searches_it() {
+    let mut config = Config::default();
+    config.search.saved_queries = vec!["label:bug".into(), "is:pr is:open".into()];
+    let mut app = selected(config, FakeGithub::new().with_search_page(Ok(pr_details_open()))).await;
+    app.dispatch(PaletteRun::RunSavedSearch(1).action());
+    assert_eq!(app.app().modals(), [ModalKind::Search]);
+    app.settle().await;
+    app.render(160, 48);
+    let dialog = dialog(&app);
+    assert_eq!(dialog.text(), "is:pr is:open");
+    // The first open's scope.
+    assert_eq!(dialog.scope(), Some(ScopeChoice::Repo));
+    assert_eq!(
+        searches(&app),
+        [("repo:parity-bot/pr-details (is:pr is:open)".to_owned(), 1)]
+    );
+    assert_eq!(dialog.hit_keys(), pr_keys(&[9, 5, 2]));
+    assert!(dialog.table_focused());
+}
+
+#[tokio::test]
+async fn a_saved_query_with_its_own_scope_ignores_the_select() {
+    let mut config = Config::default();
+    config.search.saved_queries = vec!["org:parity-bot is:open".into()];
+    let mut app = selected(config, FakeGithub::new()).await;
+    app.dispatch(PaletteRun::RunSavedSearch(0).action());
+    app.settle().await;
+    assert_eq!(searches(&app), [("org:parity-bot is:open".to_owned(), 1)]);
+    assert!(dialog(&app).scope_disabled());
+}
+
+#[tokio::test]
+async fn a_saved_query_index_the_config_no_longer_has_does_nothing() {
+    let mut app = selected(Config::default(), FakeGithub::new()).await;
+    app.dispatch(PaletteRun::RunSavedSearch(3).action());
+    assert!(app.app().modals().is_empty());
 }

@@ -1,5 +1,7 @@
 //! Process-wide switches and facts read once at startup from the environment. They're not settings.
 
+use std::time::Duration;
+
 use lazy_github_core::debug::DebugEnv;
 
 /// The environment variable Textual reads its animation level from.
@@ -8,6 +10,11 @@ pub const TEXTUAL_ANIMATIONS_ENV: &str = "TEXTUAL_ANIMATIONS";
 /// The environment variable that makes a debug build panic while a dialog is open: `update` on the next key, `render`
 /// on the next draw. For the tests of how a panic leaves the terminal; release builds ignore it.
 pub const TEST_PANIC_ENV: &str = "LAZY_GITHUB_TEST_PANIC";
+
+/// The environment variable that, in a debug build, makes every toast last this many milliseconds instead of its own
+/// timeout. The parity harness sets it for scenarios whose captures show toasts raised several steps earlier, so a
+/// slow machine doesn't time them out first. Release builds ignore it.
+pub const TOAST_TIMEOUT_ENV: &str = "LAZY_GITHUB_TOAST_TIMEOUT_MS";
 
 /// Where [`TEST_PANIC_ENV`] makes the app panic, once a dialog is open.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -40,6 +47,9 @@ pub struct AppOptions {
     pub terminal: &'static str,
     /// A deliberate panic for tests, from [`TEST_PANIC_ENV`]. Always `None` in release builds.
     pub test_panic: Option<TestPanic>,
+    /// How long every toast lasts, from [`TOAST_TIMEOUT_ENV`]; `None` keeps each toast's own timeout. Always `None`
+    /// in release builds.
+    pub toast_timeout: Option<Duration>,
 }
 
 impl AppOptions {
@@ -52,6 +62,11 @@ impl AppOptions {
             terminal: Box::leak(terminal.into_boxed_str()),
             test_panic: if cfg!(debug_assertions) {
                 TestPanic::from_var(env(TEST_PANIC_ENV).as_deref())
+            } else {
+                None
+            },
+            toast_timeout: if cfg!(debug_assertions) {
+                toast_timeout_from_var(env(TOAST_TIMEOUT_ENV).as_deref())
             } else {
                 None
             },
@@ -75,13 +90,33 @@ impl Default for AppOptions {
             animations: true,
             terminal: "unknown",
             test_panic: None,
+            toast_timeout: None,
         }
     }
+}
+
+/// The toast lifetime a [`TOAST_TIMEOUT_ENV`] value asks for: a positive whole number of milliseconds.
+fn toast_timeout_from_var(value: Option<&str>) -> Option<Duration> {
+    value?
+        .trim()
+        .parse::<u64>()
+        .ok()
+        .filter(|&ms| ms > 0)
+        .map(Duration::from_millis)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_toast_timeout_is_a_positive_number_of_milliseconds() {
+        assert_eq!(toast_timeout_from_var(Some("60000")), Some(Duration::from_mins(1)));
+        assert_eq!(toast_timeout_from_var(Some(" 250 ")), Some(Duration::from_millis(250)));
+        for value in [None, Some("0"), Some("-1"), Some("soon"), Some("")] {
+            assert_eq!(toast_timeout_from_var(value), None, "{value:?}");
+        }
+    }
 
     #[test]
     fn only_none_turns_animations_off() {

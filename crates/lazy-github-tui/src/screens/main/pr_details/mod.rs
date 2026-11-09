@@ -150,7 +150,8 @@ impl DetailsBody for PullRequestDetails {
     fn on_response(&mut self, id: RequestId, response: GithubResponse, cx: &mut Cx<'_>) -> Option<GithubResponse> {
         let response = self.overview.on_response(id, response, cx)?;
         let response = self.diff.on_response(id, response, cx)?;
-        self.conversation.on_response(id, response, &mut self.overview, cx)
+        self.conversation
+            .on_response(id, response, &mut self.overview, &mut self.diff, cx)
     }
 
     fn close(&self, cx: &mut Cx<'_>) {

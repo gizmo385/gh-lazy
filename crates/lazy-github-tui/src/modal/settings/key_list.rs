@@ -653,8 +653,8 @@ mod tests {
     #[test]
     fn the_lines_are_every_group_under_its_header_with_the_first_binding_highlighted() {
         let list = list();
-        // Python's 59 ids, the six Rust-only diff ids, `main.refresh` and `search.open`.
-        assert_eq!(list.lines.len(), 67 + BINDING_GROUPS.len());
+        // Python's 59 ids, the eight Rust-only diff ids, `main.refresh`, `search.open` and `search.save_query`.
+        assert_eq!(list.lines.len(), 70 + BINDING_GROUPS.len());
         assert_eq!(list.lines[0], Line::Header(0));
         assert_eq!(list.lines[1], Line::Binding(0));
         assert_eq!(highlighted(&list), BindingId::AppQuit);

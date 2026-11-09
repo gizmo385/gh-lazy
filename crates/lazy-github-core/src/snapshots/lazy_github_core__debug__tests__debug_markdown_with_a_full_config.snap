@@ -75,6 +75,9 @@ expression: "debug_markdown(&fixed_env(), &full_config())"
     "api": {
         "base_url": "https://github.example.com/api/v3",
         "client_type": "GITHUB_CLI"
+    },
+    "search": {
+        "saved_queries": []
     }
 }
 ```

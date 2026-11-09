@@ -11,7 +11,7 @@ use lazy_github_core::git::GitCli;
 use lazy_github_core::github::{GhCli, GhCliOptions, Github as _};
 use lazy_github_core::logging::{self, LoggingOptions};
 use lazy_github_tui::app::App;
-use lazy_github_tui::clock::SystemClock;
+use lazy_github_tui::clock::WallClock;
 use lazy_github_tui::options::AppOptions;
 use lazy_github_tui::theme::{TerminalColors, Theme};
 
@@ -192,8 +192,13 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
         }
     };
 
+    // Real, or frozen for parity runs (a debug build with `LAZY_GITHUB_FIXED_TIME`); the log shares its wall clock.
+    let clock = WallClock::from_env();
     // Held until the end of this function, after the terminal is restored, so the last lines reach the file.
-    let logging = logging::init(LoggingOptions::from(&config.core));
+    let logging = logging::init(LoggingOptions {
+        clock: clock.log_clock(),
+        ..LoggingOptions::from(&config.core)
+    });
     print_log_path_on_panic(config.core.logfile_path.clone());
     tracing::debug!("Starting LazyGithub {}", env!("CARGO_PKG_VERSION"));
     // Only now, so the lines reach the command log. The warnings wait for the main screen, which shows them there.
@@ -222,7 +227,7 @@ fn run(original_pwd: Option<PathBuf>) -> ExitCode {
             let gh = GhCli::new(GhCliOptions::from(&config));
             let git = GitCli::new(original_pwd);
             let theme = Theme::from_config(&config.appearance.theme, color_mode);
-            let mut app = App::new(config, theme, options, SystemClock);
+            let mut app = App::new(config, theme, options, clock);
             app.set_terminal_colors(colors);
             if let Some(warning) = log_file_warning {
                 app.warn_on_main_screen(warning);

@@ -1,0 +1,137 @@
+lazy-github-screen 1
+size 160x48
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                                                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Overview  Diff  Conversation                                                                 │
+│ ☆  parity-bot █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█━━━━━━━━━━━━━━━│
+│ ☆  parity-bot █                                                                                                                              █               │
+│ ☆  parity-bot █                                               Search issues and pull requests                                                █               │
+│ ☆  parity-bot █                                                                                                                              █               │
+│               █        ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎                                                                             █               │
+│               █ Scope: ▊  All of GitHub                     ▼  ▎                                                                             █▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
+│               █        ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎                                                                             █               │
+│               █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█               │
+│               █▊  is:pr author:@me                                                                                                          ▎█▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
+│               █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█               │
+│               █ is:pr is:issue is:open is:merged author: assignee: label: review: involves: updated:>YYYY-MM-DD sort:updated-desc · AND OR ( █               │
+│               █ 1,234 results · GitHub returns the first 1,000                                                                               █▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
+│               █  Repo                      #     Type  Status  Author      Title             Updated                                         █               │
+│               █  parity-bot/pr-details     2000  PR    open    parity-bot  Search result 1   2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1999  PR    open    parity-bot  Search result 2   2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1998  PR    open    parity-bot  Search result 3   2026-10-28                                      █───────────────│
+└───────────────█  parity-bot/issue-fixture  1997  PR    merged  parity-bot  Search result 4   2026-10-28                                      █               │
+┌─ [2] Pull Requ█  parity-bot/pr-details     1996  PR    draft   parity-bot  Search result 5   2026-10-28                                      █               │
+│ #  Status  Aut█  parity-bot/issue-fixture  1995  PR    closed  parity-bot  Search result 6   2026-10-28                                      █               │
+│ 5  open    par█  parity-bot/pr-details     1994  PR    open    parity-bot  Search result 7   2026-10-28                                      █               │
+│ 4  closed  par█  parity-bot/issue-fixture  1993  PR    open    parity-bot  Search result 8   2026-10-28                                      █               │
+│ 3  closed  par█  parity-bot/pr-details     1992  PR    open    parity-bot  Search result 9   2026-10-28                                      █               │
+│ 2  open    par█  parity-bot/issue-fixture  1991  PR    draft   parity-bot  Search result 10  2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1990  PR    merged  parity-bot  Search result 11  2026-10-28                                   ▅▅ █               │
+│               █  parity-bot/issue-fixture  1989  PR    open    parity-bot  Search result 12  2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1988  PR    open    parity-bot  Search result 13  2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1987  PR    open    parity-bot  Search result 14  2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1986  PR    draft   parity-bot  Search result 15  2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1985  PR    open    parity-bot  Search result 16  2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1984  PR    closed  parity-bot  Search result 17  2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1983  PR    merged  parity-bot  Search result 18  2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1982  PR    open    parity-bot  Search result 19  2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1981  PR    draft   parity-bot  Search result 20  2026-10-28                                      █               │
+│               █  parity-bot/pr-details     1980  PR    open    parity-bot  Search result 21  2026-10-28                                      █               │
+│               █  parity-bot/issue-fixture  1979  PR    open    parity-bot  Search result 22  2026-10-28                                      █               │
+└───────────────█  parity-bot/pr-details     1978  PR    open    parity-bot  Search result 23  2026-10-28                                      █               │
+┌─ [3] Issues (e█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█               │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ ⏎ Open  / Query  q Close  ^s Save query
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+defeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeddbbbbbbbbbbbggggbbggggggggggggbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd
+dhhhhhhhhhhhhhhhiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiijjjjjjjjjjjjjjjd
+dkkkkkkkkkkkkkkkillllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllibbbbbbbbbbbbbbbd
+dkkkkkkkkkkkkkkkillmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmllibbbbbbbbbbbbbbbd
+dkkkkkkkkkkkkkkkillllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllibbbbbbbbbbbbbbbd
+dbbbbbbbbbbbbbbbillllllllnoooooooooooooooooooooooooooooooooooooooplllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllibbbbbbbbbbbbbbbd
+dbbbbbbbbbbbbbbbilqqqqqqlnrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsrrplllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllitttttttttttttttd
+dbbbbbbbbbbbbbbbillllllllnoooooooooooooooooooooooooooooooooooooooplllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllikkkkkkkkkkkkkkkd
+dbbbbbbbbbbbbbbbinoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooopikkkkkkkkkkkkkkkd
+dbbbbbbbbbbbbbbbinrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrpitttttttttttttttd
+dbbbbbbbbbbbbbbbinoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooopikkkkkkkkkkkkkkkd
+dbbbbbbbbbbbbbbbiluuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuulikkkkkkkkkkkkkkkd
+dbbbbbbbbbbbbbbbiluuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuulllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllitttttttttttttttd
+dbbbbbbbbbbbbbbbilvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvwwlikkkkkkkkkkkkkkkd
+dbbbbbbbbbbbbbbbilxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxwwlikkkkkkkkkkkkkkkd
+dbbbbbbbbbbbbbbbil..........................................................................................................................wwlibbbbbbbbbbbbbbbd
+dbbbbbbbbbbbbbbbil..........................................................................................................................wwliaaaaaaaaaaaaaaad
+ddddddddddddddddil..........................................................................................................................wwlibbbbbbbbbbbbbbbd
+yyyyyyyyyyyyyyyyil..........................................................................................................................wwlibbbbbbbbbbbbbbbd
+yzzzzzzzzzzzzzzzil..........................................................................................................................wwlibbbbbbbbbbbbbbbd
+yAAAAAAAAAAAAAAAil..........................................................................................................................wwlibbbbbbbbbbbbbbbd
+yBBBBBBBBBBBBBBBil..........................................................................................................................wwlibbbbbbbbbbbbbbbd
+yBBBBBBBBBBBBBBBil..........................................................................................................................wwlibbbbbbbbbbbbbbbd
+yBBBBBBBBBBBBBBBil..........................................................................................................................wwlibbbbbbbbbbbbbbbd
+ybbbbbbbbbbbbbbbil..........................................................................................................................CClibbbbbbbbbbbbbbbd
+ybbbbbbbbbbbbbbbil..........................................................................................................................DDlibbbbbbbbbbbbbbbd
+ybbbbbbbbbbbbbbbil..........................................................................................................................DDlibbbbbbbbbbbbbbbd
+ybbbbbbbbbbbbbbbil..........................................................................................................................DDlibbbbbbbbbbbbbbbd
+ybbbbbbbbbbbbbbbil..........................................................................................................................DDlibbbbbbbbbbbbbbbd
+ybbbbbbbbbbbbbbbil..........................................................................................................................DDlibbbbbbbbbbbbbbbd
+ybbbbbbbbbbbbbbbil..........................................................................................................................DDlibbbbbbbbbbbbbbbd
+ybbbbbbbbbbbbbbbil..........................................................................................................................DDlibbbbbbbbbbbbbbbd
+ybbbbbbbbbbbbbbbil..........................................................................................................................DDlibbbbbbbbbbbbbbbd
+ybbbbbbbbbbbbbbbil..........................................................................................................................DDlibbbbbbbbbbbbbbbd
+ybbbbbbbbbbbbbbbil..........................................................................................................................DDlibbbbbbbbbbbbbbbd
+ybbbbbbbbbbbbbbbil..........................................................................................................................DDlibbbbbbbbbbbbbbbd
+yyyyyyyyyyyyyyyyil..........................................................................................................................DDlibbbbbbbbbbbbbbbd
+ddddddddddddddEEiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiibbbbbbbbbbbbbbbd
+deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeddbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd
+dddddddddddddddddEEEEEEEdddddddddddddddddddddddddddddddddddddddddbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd
+deeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeddbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+FFFGGGGGFFFGGGGGGFFFGGGGGGFFFFGGGGGGGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+--- legend
+. fg=#e0e0e0 bg=#272727
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#50701d bg=#121212
+d fg=#365270 bg=#121212
+e fg=#646464 bg=#191d21 bold
+f fg=#476419 bg=#191d21 bold
+g fg=#3b3b3b bg=#121212
+h fg=#646464 bg=#13212c
+i fg=#121212 bg=#4f4f4f
+j fg=#1a1a1a bg=#121212
+k fg=#646464 bg=#161616
+l fg=#e0e0e0 bg=#4f4f4f
+m fg=#0178d4 bg=#4f4f4f bold
+n fg=#191919 bg=#4f4f4f inverse
+o fg=#191919 bg=#1e1e1e
+p fg=#191919 bg=#4f4f4f
+q fg=#e0e0e0 bg=#4f4f4f bold
+r fg=#e0e0e0 bg=#1e1e1e
+s fg=#7f7f7f bg=#1e1e1e
+t fg=#121212 bg=#161616
+u fg=#b8b8b8 bg=#4f4f4f
+v fg=#e0e0e0 bg=#2d3740 bold
+w fg=#003054 bg=#272727 inverse
+x fg=#ddedf9 bg=#0178d4 bold
+y fg=#2a5738 bg=#121212
+z fg=#646464 bg=#1c2024 bold
+A fg=#63696e bg=#0b3a5f bold
+B fg=#646464 bg=#1a1a1a
+C fg=#003054 bg=#000000 inverse
+D fg=#e0e0e0 bg=#000000
+E fg=#2a3c50 bg=#121212
+F fg=#ffa62b bg=#242f38 bold
+G fg=#e0e0e0 bg=#242f38
+H bg=#242f38

@@ -1,0 +1,134 @@
+lazy-github-screen 1
+size 160x48
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/run-fixture                                                                                                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] Workflow Run #42 Details ───────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Overview  Jobs  Logs                                                                         │
+│ ☆  parity-bot  run-fixture  ✘                                ││╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     ✘                                ││✗ Failure Fix the flaky test (#42)                                                            │
+│ ☆  parity-bot  hello-world  ✘                                ││  Run Number: 42                                                                              │
+│ ☆  parity-bot  lazy-demo    ✘                                ││  Event: push                                                                                 │
+│                                                              ││  Branch: main                                                                                │
+│                                                              ││  Status: completed                                                                           │
+│                                                              ││  Conclusion: failure                                                                         │
+│                                                              ││  Attempt: 2                                                                                  │
+│                                                              ││  Created: 2026-03-04 05:06:07                                                                │
+│                                                              ││  Updated: 2026-03-04 07:20:00                                                                │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││──────────────────────────────────────────────────────────────────────────────────────────────│
+│                                                              ││                                                                                              │
+│                                                              ││Commit Information                                                                            │
+│                                                              ││  SHA: 0123456 (0123456789abcdef0123456789abcdef01234567)                                     │
+└──────────────────────────────────────────────────────────────┘│  Triggered by: parity-friend                                                                 │
+┌─ [2] Pull Requests (empty) ──────────────────────────────────┐│  Actor: parity-bot                                                                           │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [3] Issues (empty) ─────────────────────────────────────────┐│──────────────────────────────────────────────────────────────────────────────────────────────│
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│Jobs Summary                                                                                  │
+┌─ [4] Workflows ──────────────────────────────────────────────┐│✓ build (1m 5s)                                                                               │
+│ Time              Result       Job Name  Run Name            ││✗ test (2h 3m)                                                                                │
+│ 2026-03-04 05:06  failure      CI        Fix the flaky test  ││− lint (0s)                                                                                   │
+│ 2026-03-03 10:00  in_progress  CI        Add the run details ││○ deploy (9s)                                                                                 │
+│ 2026-03-02 08:00  success      CI        Nothing to run      ││                                                                                              │
+│                                                       ▊      ││──────────────────────────────────────────────────────────────────────────────────────────────│
+│                                                              ││                                                                                              │
+│                                                              ││Actions                                                                                       │
+│                                                              ││                                                                                              │
+│                                                              ││  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                                                           │
+│                                                              ││   Re-run Workflow               ▌                                                            │
+│                                                              ││  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁              ▌ Error                                                      │
+│                                                              ││                                 ▌ Failed to re-run failed jobs                               │
+│                                                              ││  ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔           ▌                                                            │
+│                                                              ││   Re-run Failed Jobs                                                                         │
+│                                                              ││  ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁           ▌                                                            │
+│                                                              ││                                 ▌ Error                                                      │
+│                                                              ││                                 ▌ Failed to re-run workflow                                  │
+└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+ ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  ? Keybindings
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..............bbbbbbbbbbbbbbbbbbbbbb..........................................................................................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+cefeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd...........gggg..gggg.........................................................................d
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdijjjjjjjjiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiid
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlllllllll.mmmmmmmmmmmmmmmmmm..................................................................d
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcd..mmmmmmmmmmm.................................................................................d
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcd..mmmmmm......................................................................................d
+c..............................................................cd..mmmmmmm.....................................................................................d
+c..............................................................cd..mmmmmmm.....................................................................................d
+c..............................................................cd..mmmmmmmmmmm.................................................................................d
+c..............................................................cd..mmmmmmmm....................................................................................d
+c..............................................................cd..mmmmmmmm....................................................................................d
+c..............................................................cd..mmmmmmmm....................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+c..............................................................cd..............................................................................................d
+c..............................................................cdmmmmmmmmmmmmmmmmmm............................................................................d
+c..............................................................cd..mmmm.nnnnnnn................................................................................d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..mmmmmmmmmmmmm...............................................................................d
+cccccccccccccccccccccoooooooccccccccccccccccccccccccccccccccccccd..mmmmmm......................................................................................d
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd..............................................................................................d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..............................................................................................d
+ccccccccccccccooooooocccccccccccccccccccccccccccccccccccccccccccdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd..............................................................................................d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdmmmmmmmmmmmm..................................................................................d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdb.............................................................................................d
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecdl.............................................................................................d
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdp.............................................................................................d
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdq.............................................................................................d
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcd..............................................................................................d
+crrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsttttttcdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+c..............................................................cd..............................................................................................d
+c..............................................................cdmmmmmmm.......................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..uuuuuuuuuuuuuuuuu...........................................................................d
+c..............................................................cd..vvvvvvvvvvvvvvvvv..............wxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.d
+c..............................................................cd..yyyyyyyyyyyyyyyyy..............wxzzzzzxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.d
+c..............................................................cd.................................wxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.d
+c..............................................................cd..AAAAAAAAAAAAAAAAAAAA...........wxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.d
+c..............................................................cd..BBBBBBBBBBBBBBBBBBBB........................................................................d
+c..............................................................cd..CCCCCCCCCCCCCCCCCCCC...........wxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.d
+c..............................................................cd.................................wxzzzzzxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.d
+c..............................................................cd.................................wxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddddddddddddddddddddddddddddddwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxdd
+DDDDEEEEEEEEEEEDDDEEEEEEEEEEEEDDDEEEEEEEEEEEEEEEEEEEEEEDDDEEEEEDDDDEEEEEEEEEEEEEEEEDDDEEEEEEEEEDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#adff2f bg=#121212
+c fg=#6db2ff bg=#121212
+d fg=#4ebf71 bg=#121212
+e fg=#e0e0e0 bg=#242f38 bold
+f fg=#98e024 bg=#242f38 bold
+g fg=#797979 bg=#121212
+h fg=#e0e0e0 bg=#153854
+i fg=#262626 bg=#121212
+j fg=#0178d4 bg=#121212
+k fg=#e0e0e0 bg=#1e1e1e
+l fg=#ff0000 bg=#121212
+m fg=#e0e0e0 bg=#121212 bold
+n fg=#f4bb6e bg=#241d13
+o fg=#4e7bae bg=#121212
+p fg=#999999 bg=#121212
+q fg=#ffff00 bg=#121212
+r fg=#003054 bg=#1e1e1e inverse
+s fg=#003054 bg=#000000
+t fg=#e0e0e0 bg=#000000
+u fg=#6db2ff bg=#0c7dd4
+v fg=#dfeef9 bg=#0c7dd4 bold inverse
+w fg=#b93c5b bg=#343f49
+x fg=#e0e0e0 bg=#343f49
+y fg=#004295 bg=#0c7dd4
+z fg=#d17e92 bg=#343f49 bold
+A fg=#2d2d2d bg=#1e1e1e
+B fg=#e0e0e0 bg=#1e1e1e bold
+C fg=#0d0d0d bg=#1e1e1e
+D fg=#ffa62b bg=#242f38 bold
+E fg=#e0e0e0 bg=#242f38

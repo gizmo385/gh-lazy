@@ -57,6 +57,10 @@ pub struct ReviewComment {
     /// The comment it answers, `None` for the first comment of a thread.
     #[serde(default)]
     pub in_reply_to_id: Option<u64>,
+    /// The hunk of the diff it was written on, from the hunk's `@@` header down to the line commented on: `""` for a
+    /// comment on the whole file.
+    #[serde(default)]
+    pub diff_hunk: String,
 }
 
 /// A submitted review of a pull request, with its inline comments.
@@ -224,6 +228,7 @@ mod tests {
             position: None,
             original_position: None,
             in_reply_to_id: reply_to,
+            diff_hunk: String::new(),
         }
     }
 
@@ -401,6 +406,7 @@ mod tests {
             (comment.position, comment.original_position, comment.in_reply_to_id),
             (None, Some(3), Some(8))
         );
+        assert_eq!(comment.diff_hunk, "", "a missing hunk is empty");
         assert!(
             serde_json::from_value::<ReviewState>(json!("LGTM")).is_err(),
             "an unknown state fails"

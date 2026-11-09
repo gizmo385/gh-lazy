@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "request": {
+    "method": "GET",
+    "path": "/repos/parity-bot/pr-details/pulls/comments/9005/reactions",
+    "query": {
+      "page": "1",
+      "per_page": "100"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": []
+  },
+  "note": "Hand-written for #390: PR 5's review threads in the Diff tab (diff-threads). Overrides pr-details' review comments of PR 5 with diff hunks that end at the commented line, plus an outdated and a file-level comment."
+}

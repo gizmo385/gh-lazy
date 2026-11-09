@@ -369,6 +369,12 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   missing 8999). Plus each new comment's reactions (`[]` on `/pulls/comments/<id>/reactions`, and the 404 on
   `/issues/comments/<id>/reactions`, Py bug B54). Listed before `pr-details` and `base`, for the Rust-only
   `pr-conversation-bodyless` scenario. Hand-written.
+- `pr-diff-comments/`: PR 5's review comments with `diff_hunk`s that end at the commented line (#390): 9001 and its
+  reply 9002 on `+    cursor: usize,` (position 6) and 9003 on the removed `println!("{line}");` (position 12), plus in
+  review 505 the outdated 9004 on src/viewer.rs (`position: null`, `original_position: 4`, its hunk ending at the
+  removed `    pub fn len(&self) -> usize {`, old line 12, no longer in the diff) and the file-level 9005 on README.md
+  (both positions `null`, `diff_hunk: ""`, with a link). Plus 9004's and 9005's reactions (`[]`). Listed before
+  `pr-details` and `base`, for the Rust-only `diff-threads` scenario. Hand-written.
 - `prs-70/`: the repo `parity-bot/lazy-fixture`, added to base's `GET /user/repos` page, with 70 pull requests over
   `GET /repos/parity-bot/lazy-fixture/issues` pages of 30 (`state=all`, as `list_issues` sends them: 30, 30, 10, then
   an empty page 4), plus its README and empty workflows and runs. Listed before `base`, for the `table-lazy-load`

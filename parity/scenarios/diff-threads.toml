@@ -1,0 +1,155 @@
+version = 1
+description = "PR Diff tab review threads (#390): PR 5's threads collapsed under their lines with a flag in the gutter and a comment count on each file header, n to the next thread and enter to expand it, n onto the thread on a removed line, n into src/viewer.rs's outdated group and enter to show the line it was written on, and z folding every file with the counts kept"
+# Rust-only: Python shows no review comment in the Diff tab (decision diff-inline-comments). The captures check the
+# cursor through the position row under the body (`<path>  Comment n/m` on a thread), waited on with a regex.
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "diff-viewer.review-threads",
+    "diff-viewer.outdated-threads",
+    "diff-viewer.comment-navigation",
+    "keybindings.diff-next-comment",
+    "keybindings.diff-previous-comment",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+# PR 5's diff, with pr-details' threads given diff hunks: 9001 (with its reply 9002) under src/viewer.rs's
+# `+    cursor: usize,`, 9003 under its removed `println!("{line}");`, the outdated 9004 on src/viewer.rs and the
+# file-level 9005 on README.md.
+fixtures = ["pr-diff-comments", "pr-details", "base"]
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "parity-friend", timeout_ms = 15000 }
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Opened on", timeout_ms = 15000 }
+
+[[step]]
+keys = ["right"]
+
+# The threads come with the Conversation's reviews, after the diff.
+[[step]]
+wait = { text = "README.md (+3 -1) · 1 comment", timeout_ms = 15000 }
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { text = "j Line down" }
+
+# J four times: README.md's hunk, assets/app.css's, build.rs's, then src/viewer.rs's first.
+[[step]]
+keys = ["J", "J", "J", "J"]
+
+[[step]]
+wait = { regex = "src/viewer\\.rs +Line: 1/8" }
+
+[[step]]
+capture = "threads-collapsed"
+
+# n: the thread under `+    cursor: usize,`; enter expands it, its reply under it.
+[[step]]
+keys = ["n"]
+
+[[step]]
+wait = { regex = "src/viewer\\.rs +Comment 1/3" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "No, it stops at the last line." }
+
+[[step]]
+capture = "thread-expanded"
+
+# n: the thread under the removed `println!("{line}");`.
+[[step]]
+keys = ["n"]
+
+[[step]]
+wait = { regex = "src/viewer\\.rs +Comment 2/3" }
+
+[[step]]
+capture = "next-comment"
+
+# n into the outdated group, enter: the line it was written on, then the comment.
+[[step]]
+keys = ["n"]
+
+[[step]]
+wait = { regex = "src/viewer\\.rs +Comment 3/3" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "pub fn len(&self) -> usize {" }
+
+[[step]]
+capture = "outdated"
+
+# z: every file folded, each header keeping its count.
+[[step]]
+keys = ["z"]
+
+[[step]]
+wait = { text = "▶ 📄 src/viewer.rs (+5 -2) · 3 comments" }
+
+[[step]]
+capture = "file-list-counts"
+
+# The expectations hold at both sizes: at 100x30 the summary rows are cut at the pane's edge, and the footer at
+# `⏎ Expand` / `⏎ Collapse`, before `n Next Comment` (which the unit tests check at 160x48).
+[expect.threads-collapsed]
+focused = ["[5] PR #5 Details"]
+contains = ["src/viewer.rs (+5 -2) · 3 comments", "Line: 1/8"]
+not_contains = ["No, it stops at the last line."]
+
+[expect.thread-expanded]
+focused = ["[5] PR #5 Details"]
+contains = [
+    "▼ parity-bot: Should the cursor wr",
+    "▎ parity-bot • ",
+    "▎ Should the cursor wrap at the end?",
+    "▎   parity-friend • ",
+    "▎   No, it stops at the last line.",
+    "⏎ Collapse",
+]
+
+[expect.next-comment]
+focused = ["[5] PR #5 Details"]
+contains = ["22● │             println!(\"{line}\");", "▶ parity-bot: This needs a test.", "⏎ Expand"]
+not_contains = ["c Add Comment"]
+
+[expect.outdated]
+focused = ["[5] PR #5 Details"]
+contains = [
+    "Outdated comments (1)",
+    "▼ Line 12 (outdated) · parity-bot: Rename thi",
+    "12● │     pub fn len(&self) -> usize {",
+    "▎ Rename this to line_count.",
+    "⏎ Collapse",
+]
+
+[expect.file-list-counts]
+focused = ["[5] PR #5 Details"]
+contains = ["▶ 📄 assets/app.css (+3)", "▶ 📄 build.rs (+1)", "▶ 📄 src/viewer.rs (+5 -2) · 3 comments"]
+not_contains = ["Outdated comments", "▶ parity-bot:"]

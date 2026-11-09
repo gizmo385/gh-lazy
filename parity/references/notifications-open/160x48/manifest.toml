@@ -7,7 +7,7 @@ captures = ["pull-request", "pr-fails", "no-url"]
 scenario = "69664680955e6037393d4dbae18fd1b333380188"
 fixtures = "da1be0da318503d938515fff82d996039f95a129"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"
+harness = "f06b852ef48102c8239fe5fe6a4e2255f4ad7e67"
 
 [recorded_with]
 python = "3.14.7"

@@ -7,7 +7,7 @@ captures = ["loading", "readme", "content-focused", "scrolled", "no-readme", "py
 scenario = "85a7b57be0c0c519bf1578f1c0d3e1f1bca359d4"
 fixtures = "3436a8e257932d165c6448dd9c5e89ccddd3d9b6"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
-harness = "9bcb08b50087f6ebf238cfaa2578edcc4e4d464e"
+harness = "f06b852ef48102c8239fe5fe6a4e2255f4ad7e67"
 
 [recorded_with]
 python = "3.14.7"

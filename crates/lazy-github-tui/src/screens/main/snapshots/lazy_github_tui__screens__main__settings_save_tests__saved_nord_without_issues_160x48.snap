@@ -98,7 +98,7 @@ caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaa
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmac
 caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmac
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccclmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcc
-nnnooooooonnnnoooooooooooooooonnnoooooooooooooooooonnnoooooooooonnnoooooooooonnnooooooonnnnooooooooooonnnoooooooooooonnnoooooooooooooooooooooonnnooooonnnnoooooo
+nnnmmmmmmmnnnnmmmmmmmmmmmmmmmmnnnmmmmmmmmmmmmmmmmmmnnnmmmmmmmmmmnnnmmmmmmmmmmnnnmmmmmmmnnnnmmmmmmmmmmmnnnmmmmmmmmmmmmnnnmmmmmmmmmmmmmmmmmmmmmmnnnmmmmmnnnnmmmmmm
 --- legend
 . fg=#81a1c1 bg=#2e3440
 a fg=#d8dee9 bg=#2e3440
@@ -112,7 +112,6 @@ h fg=#88c0d0 bg=#2e3440 BOLD
 i fg=#d8dee9 bg=#2e3440 BOLD
 j fg=#88c0d0 bg=#2e3440 UNDERLINED
 k fg=#d8dee9 bg=#434c5e BOLD
-l fg=#a3be8c bg=#545d70
-m fg=#d8dee9 bg=#545d70
+l fg=#a3be8c bg=#434c5e
+m fg=#d8dee9 bg=#434c5e
 n fg=#88c0d0 bg=#434c5e BOLD
-o fg=#d8dee9 bg=#434c5e

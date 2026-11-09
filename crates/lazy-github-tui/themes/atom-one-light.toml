@@ -1,54 +1,66 @@
-# Atom One Light: Textual 8.2.5's built-in theme, frozen as data (#378). Every role is required; what each one is
-# for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax in src/theme/file.rs.
+# Atom One Light, from its upstream palette (#392): https://github.com/atom/atom
+# (packages/one-light-syntax/styles/colors.less) and https://github.com/atom/one-light-ui
+# (styles/ui-variables-custom.less).
+# Surfaces: screen level-3, pane level-2, header border, card level-1, raised level-1, dialog level-1.
+# Text: normal and plain mono-1, muted mono-2, disabled mono-3.
+# Seeds (brand, status and text colors): primary blue, secondary purple, accent cyan, success green, warning orange-2,
+# error red-1.
+# Syntax: keyword purple, string green, number orange-1, constant orange-1, function blue, type orange-2, variable
+# red-1, name mono-1, builtin cyan, attribute orange-1, decorator blue, tag red-1, namespace purple, operator word
+# purple, comment mono-3.
+# Diff lines: success and error at 15% over the pane, 25% for the current line. The other shades (buttons, scrollbars,
+# guides) are Textual 8.2.5's, derived from these seeds. The marks and diff stats are the app's own colors.
+# Every role is required; what each one is for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax
+# in src/theme/file.rs.
 display_name = "Atom One Light"
 appearance = "light"
 terminal_colors = false
 
 [surface]
-screen = "#FAFAFA"
-pane = "#E0E0E0"
-header = "#CCCCCC"
-raised = "#E1E1E1"
+screen = "#EAEAEB"
+pane = "#FAFAFA"
+header = "#DBDBDC"
+raised = "#FFFFFF"
 dialog = "#FFFFFF"
-card = "#F5F5F5"
+card = "#FFFFFF"
 boost = "#000000 0%"
-scrim = "#FAFAFA 60%"
+scrim = "#EAEAEB 60%"
 focus_tint = "#383A42 5%"
-hatch = "#CCCCCC"
+hatch = "#DBDBDC"
 
 [text]
-normal = "auto 87%"
+normal = "#383A42"
 plain = "#383A42"
-muted = "auto 60%"
-disabled = "auto 38%"
-primary = "#2A4F9F"
-secondary = "#6D196C"
-accent = "#7E6021"
-success = "#479F29"
-warning = "#8E8F24"
-error = "#9F2929"
+muted = "#696C77"
+disabled = "#A0A1A7"
+primary = "#4078F2"
+secondary = "#A626A4"
+accent = "#0184BC"
+success = "#50A14F"
+warning = "#CB7701"
+error = "#E45649"
 
 [brand]
 primary = "#4078F2"
 secondary = "#A626A4"
-accent = "#BE9232"
+accent = "#0184BC"
 
 [status]
-success = "#6BF23F"
-warning = "#D7D938"
-error = "#F13F3F"
+success = "#50A14F"
+warning = "#CB7701"
+error = "#E45649"
 
 [border]
-pane_focused = "#6BF23F"
+pane_focused = "#50A14F"
 section_title = "#8DB2FF"
 field_focused = "#4078F2"
-field = "#D8D8D8"
+field = "#F2F2F2"
 rule = "#A626A4"
 status_bar = "#A626A4"
-dialog = "#FAFAFA 80%"
-emphasis = "#BE9232"
+dialog = "#EAEAEB 80%"
+emphasis = "#0184BC"
 conversation = "#A626A4"
-review = "#B2FF80"
+review = "#8DDF88"
 help = "#383A42 30%"
 
 [cursor]
@@ -65,19 +77,19 @@ bg = "#4078F24C"
 style = "none"
 
 [scrollbar]
-thumb = "#A2B8E9"
-track = "#E4E4E4"
-corner = "#E4E4E4"
+thumb = "#98AFE0"
+track = "#D4D4D5"
+corner = "#D4D4D5"
 
 [input]
-placeholder = "auto 38%"
+placeholder = "#A0A1A7"
 placeholder_style = "none"
-invalid = "#F13F3F"
-invalid_blurred = "#F13F3F 60%"
+invalid = "#E45649"
+invalid_blurred = "#E45649 60%"
 terminal_colors = false
 
 [input.cursor]
-fg = "#FAFAFA"
+fg = "#EAEAEB"
 bg = "#383A42"
 style = "none"
 
@@ -88,15 +100,15 @@ style = "none"
 
 [input.selection]
 fg = "#383A42"
-bg = "#5C8AFF 40%"
+bg = "#E5E5E6"
 
 [footer]
-bar = "#CCCCCC"
+bar = "#DBDBDC"
 item = "transparent"
 hover = "#00000019"
 
 [footer.key]
-fg = "#BF9232"
+fg = "#0184BC"
 bg = "transparent"
 
 [footer.description]
@@ -106,13 +118,13 @@ bg = "transparent"
 [button]
 outlined = false
 focus_style = "bold reverse"
-disabled_border = "#D8D8D8"
+disabled_border = "#F2F2F2"
 
 [button.default]
-bg = "#E0E0E0"
-light = "#F5F5F5"
-dark = "#CACACA"
-border = "#D8D8D8"
+bg = "#FAFAFA"
+light = "#FFFFFF"
+dark = "#E4E4E4"
+border = "#F2F2F2"
 label = "#383A42"
 label_disabled = "#383A42 60%"
 
@@ -125,32 +137,32 @@ label = "auto 87%"
 label_disabled = "auto 52.2%"
 
 [button.success]
-bg = "#6BF23F"
-light = "#9BFF6B"
-dark = "#05B100"
-border = "#6BF23F"
+bg = "#50A14F"
+light = "#79CA74"
+dark = "#046618"
+border = "#50A14F"
 label = "auto 87%"
 label_disabled = "auto 52.2%"
 
 [button.warning]
-bg = "#D7D938"
-light = "#FFFF64"
-dark = "#969B00"
-border = "#D7D938"
+bg = "#CB7701"
+light = "#F99E36"
+dark = "#873F00"
+border = "#CB7701"
 label = "auto 87%"
 label_disabled = "auto 52.2%"
 
 [button.error]
-bg = "#F13F3F"
-light = "#FF6C62"
-dark = "#A9000D"
-border = "#F13F3F"
+bg = "#E45649"
+light = "#FF7F6D"
+dark = "#9D0E16"
+border = "#E45649"
 label = "auto 87%"
 label_disabled = "auto 52.2%"
 
 [switch]
-track = "#A3A3A3"
-on = "#6BF23F"
+track = "#B1B1B2"
+on = "#50A14F"
 off = "#4078F2 15%"
 
 [select]
@@ -158,13 +170,13 @@ muted = "#383A42 50%"
 terminal_colors = false
 
 [checkbox]
-bg = "#CCCCCC"
-off = "#A3A3A3"
-on = "#479F29"
+bg = "#DBDBDC"
+off = "#B1B1B2"
+on = "#50A14F"
 
 [tree]
-guide = "#CACACA"
-guide_focused = "#CACACA"
+guide = "#E4E4E4"
+guide_focused = "#E4E4E4"
 guide_selected = "#4078F2"
 
 [tabs]
@@ -179,11 +191,11 @@ bar_active = "#4078F2"
 [markdown]
 fence_bg = "#FFFFFF 30%"
 fence_inset = true
-code = "#9F2929 95%"
-code_bg = "#F13F3F 5%"
+code = "#E45649 95%"
+code_bg = "#E45649 5%"
 quote_bg = "#000000 0%"
-quote_bar = "#6D196C"
-bullet = "#6D196C"
+quote_bar = "#A626A4"
+bullet = "#A626A4"
 table_bg = "#FFFFFF 30%"
 table_header = "#4078F2"
 table_line = "#383A42 20%"
@@ -219,20 +231,20 @@ bg = "transparent"
 style = "bold"
 
 [markdown.link]
-fg = "auto 87%"
+fg = "#383A42"
 style = "underline"
 
 [syntax]
-text = "auto"
+text = "#383A42"
 
 [syntax.comment]
-fg = "auto 60%"
+fg = "#A0A1A7"
 bg = "none"
 style = "none"
 
 [syntax.error]
-fg = "#9F2929"
-bg = "#F7C1C1"
+fg = "#E45649"
+bg = "#E8BDBA"
 style = "none"
 
 [syntax.generic_strong]
@@ -246,67 +258,67 @@ bg = "none"
 style = "italic"
 
 [syntax.generic_heading]
-fg = "#2A4F9F"
+fg = "#4078F2"
 bg = "none"
 style = "underline"
 
 [syntax.generic_subheading]
-fg = "#2A4F9F"
+fg = "#4078F2"
 bg = "none"
 style = "none"
 
 [syntax.keyword]
-fg = "#7E6021"
+fg = "#A626A4"
 bg = "none"
 style = "none"
 
 [syntax.keyword_constant]
-fg = "#479F29 80%"
+fg = "#B76B01"
 bg = "none"
 style = "bold"
 
 [syntax.keyword_namespace]
-fg = "#9F2929"
+fg = "#A626A4"
 bg = "none"
 style = "none"
 
 [syntax.number]
-fg = "#8E8F24"
+fg = "#B76B01"
 bg = "none"
 style = "none"
 
 [syntax.string]
-fg = "#479F29"
+fg = "#50A14F"
 bg = "none"
 style = "none"
 
 [syntax.string_backtick]
-fg = "auto 60%"
+fg = "#A0A1A7"
 bg = "none"
 style = "none"
 
 [syntax.string_doc]
-fg = "#479F29 80%"
+fg = "#50A14F"
 bg = "none"
 style = "italic"
 
 [syntax.string_double]
-fg = "#479F29 90%"
+fg = "#50A14F"
 bg = "none"
 style = "none"
 
 [syntax.name]
-fg = "#2A4F9F"
+fg = "#383A42"
 bg = "none"
 style = "none"
 
 [syntax.name_attribute]
-fg = "#8E8F24"
+fg = "#B76B01"
 bg = "none"
 style = "none"
 
 [syntax.name_builtin]
-fg = "#7E6021"
+fg = "#0184BC"
 bg = "none"
 style = "none"
 
@@ -316,32 +328,32 @@ bg = "none"
 style = "italic"
 
 [syntax.name_class]
-fg = "#8E8F24"
+fg = "#CB7701"
 bg = "none"
 style = "bold"
 
 [syntax.name_constant]
-fg = "#9F2929"
+fg = "#B76B01"
 bg = "none"
 style = "none"
 
 [syntax.name_decorator]
-fg = "#2A4F9F"
+fg = "#4078F2"
 bg = "none"
 style = "bold"
 
 [syntax.name_function]
-fg = "#8E8F24"
+fg = "#4078F2"
 bg = "none"
 style = "underline"
 
 [syntax.name_tag]
-fg = "#2A4F9F"
+fg = "#E45649"
 bg = "none"
 style = "bold"
 
 [syntax.name_variable]
-fg = "#6D196C"
+fg = "#E45649"
 bg = "none"
 style = "none"
 
@@ -351,7 +363,7 @@ bg = "none"
 style = "bold"
 
 [syntax.operator_word]
-fg = "#9F2929"
+fg = "#A626A4"
 bg = "none"
 style = "bold"
 
@@ -378,27 +390,27 @@ job_pending = "#CB9000"
 job_running = "#0083B2"
 
 [diff]
-added_bg = "#0A3A0A"
-removed_bg = "#3A0A0A"
-added_current_bg = "#006400"
-removed_current_bg = "#8B0000"
+added_bg = "#E0EDE0"
+removed_bg = "#F7E1DF"
+added_current_bg = "#D0E4CF"
+removed_current_bg = "#F4D1CE"
 context_current_bg = "#CB9000"
 stat_added = "#448C27"
 stat_removed = "#AA3731"
-review_body = "#CCCCCC"
+review_body = "#DBDBDC"
 review_comment_border = "#A626A4"
 
 [diff.indicator]
 fg = "auto 87%"
-bg = "#BE9232"
+bg = "#0184BC"
 
 [diff.review_header]
 fg = "auto 87%"
-bg = "#BE9232"
+bg = "#0184BC"
 style = "bold"
 
 [command_palette]
-band = "#E0E0E0"
+band = "#FAFAFA"
 input_rule = "#000000 50%"
 list_rule = "#000000"
 icon = "#000000"
@@ -410,12 +422,12 @@ style = "none"
 
 [hints.label]
 fg = "#000000"
-bg = "#D7D938"
+bg = "#CB7701"
 style = "bold"
 
 [table.header]
 fg = "#383A42"
-bg = "#CCCCCC"
+bg = "#DBDBDC"
 
 [disabled]
 dimmed = false

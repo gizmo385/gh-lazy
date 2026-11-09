@@ -1,5 +1,15 @@
-# Nord: Textual 8.2.5's built-in theme, frozen as data (#378). Every role is required; what each one is
-# for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax in src/theme/file.rs.
+# Nord, from its upstream palette (#392): https://www.nordtheme.com/docs/colors-and-palettes (nord0-nord15).
+# Surfaces: screen nord0, pane nord1, header nord2, card nord2, raised nord2, dialog nord1.
+# Text: normal and plain nord4, muted nord4 60%, disabled nord4 38%.
+# Seeds (brand, status and text colors): primary nord8, secondary nord9, accent nord15, success nord14, warning
+# nord13, error nord11.
+# Syntax: keyword nord9, string nord14, number nord15, constant nord9, function nord8, type nord7, variable nord4,
+# name nord4, builtin nord9, attribute nord7, decorator nord12, tag nord9, namespace nord9, operator word nord9,
+# comment nord3-bright.
+# Diff lines: success and error at 15% over the pane, 25% for the current line. The other shades (buttons, scrollbars,
+# guides) are Textual 8.2.5's, derived from these seeds. The marks and diff stats are the app's own colors.
+# Every role is required; what each one is for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax
+# in src/theme/file.rs.
 display_name = "Nord"
 appearance = "dark"
 terminal_colors = false
@@ -8,25 +18,25 @@ terminal_colors = false
 screen = "#2E3440"
 pane = "#3B4252"
 header = "#434C5E"
-raised = "#545D70"
-dialog = "#707889"
-card = "#4C5364"
+raised = "#434C5E"
+dialog = "#3B4252"
+card = "#434C5E"
 boost = "#000000 0%"
 scrim = "#2E3440 60%"
 focus_tint = "#D8DEE9 5%"
 hatch = "#434C5E"
 
 [text]
-normal = "auto 87%"
+normal = "#D8DEE9"
 plain = "#D8DEE9"
-muted = "auto 60%"
-disabled = "auto 38%"
-primary = "#B0D5DF"
-secondary = "#ABC0D6"
-accent = "#CDB4C8"
-success = "#C2D4B3"
-warning = "#F1DCB2"
-error = "#D4969C"
+muted = "#D8DEE9 60%"
+disabled = "#D8DEE9 38%"
+primary = "#88C0D0"
+secondary = "#81A1C1"
+accent = "#B48EAD"
+success = "#A3BE8C"
+warning = "#EBCB8B"
+error = "#BF616A"
 
 [brand]
 primary = "#88C0D0"
@@ -35,8 +45,8 @@ accent = "#B48EAD"
 
 [status]
 success = "#A3BE8C"
-warning = "#EACB8B"
-error = "#BE616A"
+warning = "#EBCB8B"
+error = "#BF616A"
 
 [border]
 pane_focused = "#A3BE8C"
@@ -70,10 +80,10 @@ track = "#1E242F"
 corner = "#1E242F"
 
 [input]
-placeholder = "auto 38%"
+placeholder = "#D8DEE9 38%"
 placeholder_style = "none"
-invalid = "#BE616A"
-invalid_blurred = "#BE616A 60%"
+invalid = "#BF616A"
+invalid_blurred = "#BF616A 60%"
 terminal_colors = false
 
 [input.cursor]
@@ -133,18 +143,18 @@ label = "#2E3440"
 label_disabled = "#2E3440 60%"
 
 [button.warning]
-bg = "#EACB8B"
+bg = "#EBCB8B"
 light = "#FFF5B3"
 dark = "#AA8E51"
-border = "#EACB8B"
+border = "#EBCB8B"
 label = "#2E3440"
 label_disabled = "#2E3440 60%"
 
 [button.error]
-bg = "#BE616A"
+bg = "#BF616A"
 light = "#EB8890"
 dark = "#7E2735"
-border = "#BE616A"
+border = "#BF616A"
 label = "#2E3440"
 label_disabled = "#2E3440 60%"
 
@@ -160,7 +170,7 @@ terminal_colors = false
 [checkbox]
 bg = "#434C5E"
 off = "#212A3A"
-on = "#C2D4B3"
+on = "#A3BE8C"
 
 [tree]
 guide = "#5E6576"
@@ -179,11 +189,11 @@ bar_active = "#88C0D0"
 [markdown]
 fence_bg = "#000000 10%"
 fence_inset = true
-code = "#F1DCB2 95%"
-code_bg = "#EACB8B 10%"
+code = "#EBCB8B 95%"
+code_bg = "#EBCB8B 10%"
 quote_bg = "#000000 0%"
-quote_bar = "#B0D5DF 50%"
-bullet = "#B0D5DF"
+quote_bar = "#88C0D0 50%"
+bullet = "#88C0D0"
 table_bg = "transparent"
 table_header = "#88C0D0"
 table_line = "#D8DEE9 20%"
@@ -219,19 +229,19 @@ bg = "transparent"
 style = "bold"
 
 [markdown.link]
-fg = "auto 87%"
+fg = "#D8DEE9"
 style = "underline"
 
 [syntax]
-text = "auto"
+text = "#D8DEE9"
 
 [syntax.comment]
-fg = "auto 60%"
+fg = "#616E88"
 bg = "none"
 style = "none"
 
 [syntax.error]
-fg = "#D4969C"
+fg = "#BF616A"
 bg = "#59414C"
 style = "none"
 
@@ -246,67 +256,67 @@ bg = "none"
 style = "italic"
 
 [syntax.generic_heading]
-fg = "#B0D5DF"
+fg = "#88C0D0"
 bg = "none"
 style = "underline"
 
 [syntax.generic_subheading]
-fg = "#B0D5DF"
+fg = "#88C0D0"
 bg = "none"
 style = "none"
 
 [syntax.keyword]
-fg = "#CDB4C8"
+fg = "#81A1C1"
 bg = "none"
 style = "none"
 
 [syntax.keyword_constant]
-fg = "#C2D4B3 80%"
+fg = "#81A1C1"
 bg = "none"
 style = "bold"
 
 [syntax.keyword_namespace]
-fg = "#D4969C"
+fg = "#81A1C1"
 bg = "none"
 style = "none"
 
 [syntax.number]
-fg = "#F1DCB2"
+fg = "#B48EAD"
 bg = "none"
 style = "none"
 
 [syntax.string]
-fg = "#C2D4B3"
+fg = "#A3BE8C"
 bg = "none"
 style = "none"
 
 [syntax.string_backtick]
-fg = "auto 60%"
+fg = "#616E88"
 bg = "none"
 style = "none"
 
 [syntax.string_doc]
-fg = "#C2D4B3 80%"
+fg = "#A3BE8C"
 bg = "none"
 style = "italic"
 
 [syntax.string_double]
-fg = "#C2D4B3 90%"
+fg = "#A3BE8C"
 bg = "none"
 style = "none"
 
 [syntax.name]
-fg = "#B0D5DF"
+fg = "#D8DEE9"
 bg = "none"
 style = "none"
 
 [syntax.name_attribute]
-fg = "#F1DCB2"
+fg = "#8FBCBB"
 bg = "none"
 style = "none"
 
 [syntax.name_builtin]
-fg = "#CDB4C8"
+fg = "#81A1C1"
 bg = "none"
 style = "none"
 
@@ -316,32 +326,32 @@ bg = "none"
 style = "italic"
 
 [syntax.name_class]
-fg = "#F1DCB2"
+fg = "#8FBCBB"
 bg = "none"
 style = "bold"
 
 [syntax.name_constant]
-fg = "#D4969C"
+fg = "#81A1C1"
 bg = "none"
 style = "none"
 
 [syntax.name_decorator]
-fg = "#B0D5DF"
+fg = "#D08770"
 bg = "none"
 style = "bold"
 
 [syntax.name_function]
-fg = "#F1DCB2"
+fg = "#88C0D0"
 bg = "none"
 style = "underline"
 
 [syntax.name_tag]
-fg = "#B0D5DF"
+fg = "#81A1C1"
 bg = "none"
 style = "bold"
 
 [syntax.name_variable]
-fg = "#ABC0D6"
+fg = "#D8DEE9"
 bg = "none"
 style = "none"
 
@@ -351,7 +361,7 @@ bg = "none"
 style = "bold"
 
 [syntax.operator_word]
-fg = "#D4969C"
+fg = "#81A1C1"
 bg = "none"
 style = "bold"
 
@@ -378,10 +388,10 @@ job_pending = "#FD971F"
 job_running = "#58D1EB"
 
 [diff]
-added_bg = "#0A3A0A"
-removed_bg = "#3A0A0A"
-added_current_bg = "#006400"
-removed_current_bg = "#8B0000"
+added_bg = "#4B555B"
+removed_bg = "#4F4756"
+added_current_bg = "#556160"
+removed_current_bg = "#5C4A58"
 context_current_bg = "#FD971F"
 stat_added = "#98E024"
 stat_removed = "#F4005F"
@@ -410,7 +420,7 @@ style = "none"
 
 [hints.label]
 fg = "#000000"
-bg = "#EACB8B"
+bg = "#EBCB8B"
 style = "bold"
 
 [table.header]

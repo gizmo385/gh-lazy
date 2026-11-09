@@ -1,8 +1,11 @@
 # Themes are the app's own data: Textual's two themes are renamed, and an unknown name is kept and warned about
 
 - Decision: The app ships its themes as data instead of taking them from Textual, and owns their names.
-  - D1: all 21 of Textual 8.2.5's built-in themes ship, frozen as data files (#378). A color audit against each
-    theme's namesake follows separately (#392).
+  - D1: all 21 of Textual 8.2.5's built-in themes ship, frozen as data files (#378). The 17 that port a named color
+    scheme (everything but `dark`, `light`, `ansi-dark` and `ansi-light`) were then audited against their upstream
+    palettes (#392): exact seed colors, body and muted text, surfaces, syntax and diff lines from the scheme itself,
+    with each file's header citing its source and saying which upstream color each role takes. Those 17 no longer
+    match Python's colors; `dark`, `light` and the ANSI pair still do.
   - D2 (b): `textual-dark` is renamed `dark` ("Dark") and `textual-light` is renamed `light` ("Light"). `dark` is the
     default for a new config and what an unknown name draws as. The old names stay valid aliases forever: they load
     and draw exactly as `dark` and `light`, the command palette's theme list and the Settings select don't list them,

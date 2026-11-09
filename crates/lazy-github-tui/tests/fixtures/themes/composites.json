@@ -99,27 +99,27 @@
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#E3E4E6"
+        "result": "#D8DEE9"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#E5E6E8"
+        "result": "#D8DEE9"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#E6E7EA"
+        "result": "#D8DEE9"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#E8E9EC"
+        "result": "#D8DEE9"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#B0B3B9"
+        "result": "#999FAC"
       },
       {
         "fg": "cursor.focused.fg",
@@ -146,27 +146,27 @@
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#E3E3E3"
+        "result": "#EBDBB2"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#E5E5E4"
+        "result": "#EBDBB2"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#E8E7E6"
+        "result": "#EBDBB2"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#EAE9E9"
+        "result": "#EBDBB2"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#B1AFAE"
+        "result": "#A89984"
       },
       {
         "fg": "cursor.focused.fg",
@@ -186,44 +186,44 @@
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#45413D"
+        "result": "#44403C"
       }
     ],
     "catppuccin-mocha": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#E0E0E2"
+        "result": "#CDD6F4"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#E4E4E6"
+        "result": "#CDD6F4"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#E6E7E9"
+        "result": "#CDD6F4"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#E9E9EB"
+        "result": "#CDD6F4"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#ACADB4"
+        "result": "#A6ADC8"
       },
       {
         "fg": "cursor.focused.fg",
         "bg": "cursor.focused.bg",
-        "result": "#1E1E2E"
+        "result": "#11111B"
       },
       {
         "fg": "cursor.blurred.bg",
         "bg": "surface.pane",
-        "result": "#6B5C74"
+        "result": "#514669"
       },
       {
         "fg": "surface.boost",
@@ -233,34 +233,34 @@
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#383A4C"
+        "result": "#262737"
       }
     ],
     "dracula": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#E3E3E4"
+        "result": "#F8F8F2"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#E3E3E5"
+        "result": "#F8F8F2"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#E4E4E6"
+        "result": "#F8F8F2"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#E6E6E8"
+        "result": "#F8F8F2"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#AAABB0"
+        "result": "#6272A4"
       },
       {
         "fg": "cursor.focused.fg",
@@ -270,44 +270,44 @@
       {
         "fg": "cursor.blurred.bg",
         "bg": "surface.pane",
-        "result": "#564C73"
+        "result": "#544970"
       },
       {
         "fg": "surface.boost",
         "bg": "surface.screen",
-        "result": "#282A36"
+        "result": "#21222C"
       },
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#353844"
+        "result": "#32343F"
       }
     ],
     "tokyo-night": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#E1E1E2"
+        "result": "#C0CAF5"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#E2E3E5"
+        "result": "#C0CAF5"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#E6E7EB"
+        "result": "#C0CAF5"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#E8E9ED"
+        "result": "#C0CAF5"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#A7A9B0"
+        "result": "#A9B1D6"
       },
       {
         "fg": "cursor.focused.fg",
@@ -317,44 +317,44 @@
       {
         "fg": "cursor.blurred.bg",
         "bg": "surface.pane",
-        "result": "#514973"
+        "result": "#494064"
       },
       {
         "fg": "surface.boost",
         "bg": "surface.screen",
-        "result": "#1A1B26"
+        "result": "#16161E"
       },
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#2A2E42"
+        "result": "#222330"
       }
     ],
     "monokai": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#E2E3E2"
+        "result": "#F8F8F2"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#E3E3E3"
+        "result": "#F8F8F2"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#E5E5E4"
+        "result": "#F8F8F2"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#E8E7E6"
+        "result": "#F8F8F2"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#ABABAB"
+        "result": "#90908A"
       },
       {
         "fg": "cursor.focused.fg",
@@ -364,7 +364,7 @@
       {
         "fg": "cursor.blurred.bg",
         "bg": "surface.pane",
-        "result": "#54466C"
+        "result": "#4F4263"
       },
       {
         "fg": "surface.boost",
@@ -374,44 +374,44 @@
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#363636"
+        "result": "#31322C"
       }
     ],
     "flexoki": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#DFDFDF"
+        "result": "#CECDC3"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#E1E1E1"
+        "result": "#CECDC3"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#E3E2E2"
+        "result": "#CECDC3"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#E5E5E4"
+        "result": "#CECDC3"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#A4A3A3"
+        "result": "#878580"
       },
       {
         "fg": "cursor.focused.fg",
         "bg": "cursor.focused.bg",
-        "result": "#E2EAF3"
+        "result": "#E6EFF6"
       },
       {
         "fg": "cursor.blurred.bg",
         "bg": "surface.pane",
-        "result": "#1D2E43"
+        "result": "#273A4A"
       },
       {
         "fg": "surface.boost",
@@ -421,175 +421,175 @@
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#272624"
+        "result": "#242322"
       }
     ],
     "catppuccin-latte": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#1F1F1F"
+        "result": "#4C4F69"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#1D1E1F"
+        "result": "#4C4F69"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#1A1B1C"
+        "result": "#4C4F69"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#1D1D1F"
+        "result": "#4C4F69"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#5C5D5F"
+        "result": "#6C6F85"
       },
       {
         "fg": "cursor.focused.fg",
         "bg": "cursor.focused.bg",
-        "result": "#EFE5FC"
+        "result": "#EFF1F5"
       },
       {
         "fg": "cursor.blurred.bg",
         "bg": "surface.pane",
-        "result": "#C9B4EF"
+        "result": "#D0BAF3"
       },
       {
         "fg": "surface.boost",
         "bg": "surface.screen",
-        "result": "#EFF1F5"
+        "result": "#E6E9EF"
       },
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#DEE1E8"
+        "result": "#E6E8EE"
       }
     ],
     "catppuccin-frappe": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#E4E4E6"
+        "result": "#C6D0F5"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#E6E6E9"
+        "result": "#C6D0F5"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#E8E9EC"
+        "result": "#C6D0F5"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#EAEBEE"
+        "result": "#C6D0F5"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#B3B4BC"
+        "result": "#A5ADCE"
       },
       {
         "fg": "cursor.focused.fg",
         "bg": "cursor.focused.bg",
-        "result": "#292C3C"
+        "result": "#232634"
       },
       {
         "fg": "cursor.blurred.bg",
         "bg": "surface.pane",
-        "result": "#695F83"
+        "result": "#5D5375"
       },
       {
         "fg": "surface.boost",
         "bg": "surface.screen",
-        "result": "#303446"
+        "result": "#292C3C"
       },
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#474B60"
+        "result": "#373B4E"
       }
     ],
     "catppuccin-macchiato": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#E2E2E5"
+        "result": "#CAD3F5"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#E4E5E8"
+        "result": "#CAD3F5"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#E7E7EA"
+        "result": "#CAD3F5"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#E9EAED"
+        "result": "#CAD3F5"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#AEB0B8"
+        "result": "#A5ADCB"
       },
       {
         "fg": "cursor.focused.fg",
         "bg": "cursor.focused.bg",
-        "result": "#1E2030"
+        "result": "#181926"
       },
       {
         "fg": "cursor.blurred.bg",
         "bg": "surface.pane",
-        "result": "#605880"
+        "result": "#544B72"
       },
       {
         "fg": "surface.boost",
         "bg": "surface.screen",
-        "result": "#24273A"
+        "result": "#1E2030"
       },
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#3D4157"
+        "result": "#2C2F43"
       }
     ],
     "solarized-light": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#201F1D"
+        "result": "#586E75"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#1E1E1B"
+        "result": "#586E75"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#1E1E1B"
+        "result": "#586E75"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#21201E"
+        "result": "#586E75"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#5F5C55"
+        "result": "#657B83"
       },
       {
         "fg": "cursor.focused.fg",
@@ -599,7 +599,7 @@
       {
         "fg": "cursor.blurred.bg",
         "bg": "surface.pane",
-        "result": "#B2CCD4"
+        "result": "#BCD6DD"
       },
       {
         "fg": "surface.boost",
@@ -609,34 +609,34 @@
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#E6E1D0"
+        "result": "#F4EFDD"
       }
     ],
     "solarized-dark": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#DDE3E4"
+        "result": "#839496"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#DEE4E6"
+        "result": "#839496"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#DEE4E6"
+        "result": "#839496"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#E1E6E8"
+        "result": "#839496"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#9BAEB3"
+        "result": "#586E75"
       },
       {
         "fg": "cursor.focused.fg",
@@ -646,7 +646,7 @@
       {
         "fg": "cursor.blurred.bg",
         "bg": "surface.pane",
-        "result": "#104F6C"
+        "result": "#0B4764"
       },
       {
         "fg": "surface.boost",
@@ -656,34 +656,34 @@
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#0D3A46"
+        "result": "#06303A"
       }
     ],
     "rose-pine": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#E1E0E2"
+        "result": "#E0DEF4"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#E1E1E3"
+        "result": "#E0DEF4"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#E2E2E5"
+        "result": "#E0DEF4"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#E4E4E7"
+        "result": "#E0DEF4"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#A5A4AB"
+        "result": "#908CAA"
       },
       {
         "fg": "cursor.focused.fg",
@@ -710,27 +710,27 @@
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#E2E2E4"
+        "result": "#E0DEF4"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#E3E2E6"
+        "result": "#E0DEF4"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#E5E4E8"
+        "result": "#E0DEF4"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#E7E6EA"
+        "result": "#E0DEF4"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#A9A8B2"
+        "result": "#908CAA"
       },
       {
         "fg": "cursor.focused.fg",
@@ -757,27 +757,27 @@
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#201F1E"
+        "result": "#464261"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#21201F"
+        "result": "#464261"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#1F1E1D"
+        "result": "#464261"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#21211F"
+        "result": "#464261"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#666461"
+        "result": "#797593"
       },
       {
         "fg": "cursor.focused.fg",
@@ -797,34 +797,34 @@
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#F6F1EC"
+        "result": "#F5F0EB"
       }
     ],
     "atom-one-dark": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#E3E3E4"
+        "result": "#ABB2BF"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#E5E6E7"
+        "result": "#ABB2BF"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#E8E9EB"
+        "result": "#ABB2BF"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#EAEBED"
+        "result": "#ABB2BF"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#B0B3B7"
+        "result": "#828997"
       },
       {
         "fg": "cursor.focused.fg",
@@ -834,44 +834,44 @@
       {
         "fg": "cursor.blurred.bg",
         "bg": "surface.pane",
-        "result": "#46617D"
+        "result": "#38536B"
       },
       {
         "fg": "surface.boost",
         "bg": "surface.screen",
-        "result": "#282C34"
+        "result": "#21252B"
       },
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#404652"
+        "result": "#2E323A"
       }
     ],
     "atom-one-light": [
       {
         "fg": "text.normal",
         "bg": "surface.screen",
-        "result": "#202020"
+        "result": "#383A42"
       },
       {
         "fg": "text.normal",
         "bg": "surface.pane",
-        "result": "#1D1D1D"
+        "result": "#383A42"
       },
       {
         "fg": "text.normal",
         "bg": "surface.header",
-        "result": "#1A1A1A"
+        "result": "#383A42"
       },
       {
         "fg": "text.normal",
         "bg": "surface.raised",
-        "result": "#1D1D1D"
+        "result": "#383A42"
       },
       {
         "fg": "text.muted",
         "bg": "surface.pane",
-        "result": "#595959"
+        "result": "#696C77"
       },
       {
         "fg": "cursor.focused.fg",
@@ -881,17 +881,17 @@
       {
         "fg": "cursor.blurred.bg",
         "bg": "surface.pane",
-        "result": "#B0C1E5"
+        "result": "#C2D3F7"
       },
       {
         "fg": "surface.boost",
         "bg": "surface.screen",
-        "result": "#FAFAFA"
+        "result": "#EAEAEB"
       },
       {
         "fg": "surface.focus_tint",
         "bg": "surface.pane",
-        "result": "#D7D7D8"
+        "result": "#F0F0F0"
       }
     ],
     "ansi-dark": [

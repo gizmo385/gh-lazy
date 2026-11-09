@@ -112,6 +112,12 @@ wait.log.body.body = "It stops, yes."
 [[step]]
 wait.gone = "Replying to comment"
 
+# Rust reloads the conversation once the reply is posted, and the capture's stability wait could pass before the
+# reload drew the reply. Python doesn't reload, so the second branch, its footer's spelling (Py bug B14), passes at
+# once there and never on Rust's screen.
+[[step]]
+wait.regex = 'It stops, yes\.|\^p Command Pallete'
+
 [[step]]
 capture = "replied"
 checks = ["titles", "tabs", "focus"]

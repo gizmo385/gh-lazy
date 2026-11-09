@@ -53,6 +53,11 @@ wait = { gone = "Showing saved notifications" }
 [[step]]
 keys = ["j", "enter"]
 
+# Selecting the repo requests its README, which the issue's arrival cancels; the issue fixture answers after 0.5 s so
+# the request is always made, and this waits for it, so effects.txt doesn't depend on the race.
+[[step]]
+wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/readme", accept = "raw" } }
+
 [[step]]
 wait = { text = "Opening issue for notification" }
 

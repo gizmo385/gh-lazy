@@ -41,14 +41,14 @@ cursor 21 62 hidden
 │                             █ ▊                                                                                            ▎   █                             │
 │                             █ ▊                                                                                            ▎   █                             │
 │                             █ ▊                                                                                            ▎   █                             │
-│                             █ ▊                                                                 ▌                                                            │
-│                             █                                                                   ▌ Updating PR...                                             │
-│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌                                                            │
+│                             █ ▊                                                                                            ▎   █                             │
+│                             █                                                                                                  █                             │
+│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
 │                                                              ││                                                                                              │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌ Error updating pull request                                │
-│                                                              ││                                 ▌ Unexpected error while attempting to update PR             │
-└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  / Search  O Lookup Pull Request  E Edit PR  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palle
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -72,33 +72,33 @@ d.............................klyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
 d.............................klllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllmmlk.............................d
 d.............................klrrrrrlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllmmlk.............................d
 d.............................klzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmmlk.............................d
-d.............................klzCCDDDDDDDDDDDDDDDDDDDDDDDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECCBmmlk.............................d
+d.............................klzCCDDDDDDDDDDDDDDDDDDDDDDDDDDEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFCCBmmlk.............................d
 d.............................klzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmmlk.............................d
 d.............................klllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllmmlk.............................d
-ddddddddddddddddddddddddddddddklrrrrrrrrrrrlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllFFlk.............................d
-GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGklHIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIJKKlk.............................d
-GLLLLLLLLLLLLLLLLLLLLLLLLLLLLLklHMNNNOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOMJKKlk.............................d
-GPPPPPPPPPPPPPPPPPPPPPPPPPPPPPklHMQQQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRMJKKlk.............................d
-GSSSSSSSSSSSSSSSSSSSSSSSSSSSSSklHMQQQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRMJKKlk.............................d
-GSSSSSSSSSSSSSSSSSSSSSSSSSSSSSklHMQQQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRMJKKlk.............................d
-GSSSSSSSSSSSSSSSSSSSSSSSSSSSSSklHMQQQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRMJKKlk.............................d
-G.............................klHMQQQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRMJKKlk.............................d
-G.............................klHMQQQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRMJKKlk.............................d
-G.............................klHMRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRMJKKlk.............................d
-G.............................klHMRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRMJKKlk.............................d
-G.............................klHMRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRMJKKlk.............................d
-G.............................klHMRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRMJKKlk.............................d
-G.............................klHMRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRMJKKlk.............................d
-G.............................klHMRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRMJKKlk.............................d
-G.............................klHMRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRTUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU.d
-G.............................klllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllTUVVVVVVVVVVVVVVUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU.d
-G.............................kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkTUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU.d
-G..............................................................Gd..............................................................................................d
-G..............................................................Gd.................................WUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU.d
-G..............................................................Gd.................................WUXXXXXXXXXXXXXXXXXXXXXXXXXXXUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU.d
-G..............................................................Gd.................................WUVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVUUUUUUUUUUUU.d
-GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGddddddddddddddddddddddddddddddddddWUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUdd
-YYYZZZZZZZYYYZZZZZZZZZZZZZZZZZZZZYYYZZZZZZZZYYYZZZZZZZZZZYYYZZZZZZZZZZYYYZZZZZZZYYYYZZZZZZZZZZZYYYZZZZZZZZZZZZYYYZZZZZZZZZZZZZZZZZZZZZZYYYZZZZZYYYYZZZZZZZZZZZZZ
+ddddddddddddddddddddddddddddddklrrrrrrrrrrrlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllGGlk.............................d
+HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHklIJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJKLLlk.............................d
+HMMMMMMMMMMMMMMMMMMMMMMMMMMMMMklINOOOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPNKLLlk.............................d
+HQQQQQQQQQQQQQQQQQQQQQQQQQQQQQklINRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+HTTTTTTTTTTTTTTTTTTTTTTTTTTTTTklINRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+HTTTTTTTTTTTTTTTTTTTTTTTTTTTTTklINRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+HTTTTTTTTTTTTTTTTTTTTTTTTTTTTTklINRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+H.............................klINRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+H.............................klINRRRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+H.............................klINSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+H.............................klINSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+H.............................klINSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+H.............................klINSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+H.............................klINSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+H.............................klINSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+H.............................klINSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNKLLlk.............................d
+H.............................kllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllk.............................d
+H.............................kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.............................d
+H..............................................................Hd..............................................................................................d
+H..............................................................Hd..............................................................................................d
+H..............................................................Hd..............................................................................................d
+H..............................................................Hd..............................................................................................d
+HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+UUUVVVVVVVUUUVVVVVVVVVVVVVVVVVVVVUUUVVVVVVVVUUUVVVVVVVVVVUUUVVVVVVVVVVUUUVVVVVVVUUUUVVVVVVVVVVVUUUVVVVVVVVVVVVUUUVVVVVVVVVVVVVVVVVVVVVVUUUVVVVVUUUUVVVVVVVVVVVVV
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#0a263a bg=#121212
@@ -131,25 +131,21 @@ A fg=#0178d4 bg=#272727
 B fg=#0178d4 bg=#4f4f4f
 C bg=#272727
 D fg=#e0e0e0 bg=#2d4e74
-E fg=#e0e0e0 bg=#272727
-F fg=#003054 bg=#000000 inverse
-G fg=#2a5738 bg=#121212
-H fg=#191919 bg=#4f4f4f inverse
-I fg=#191919 bg=#272822
-J fg=#191919 bg=#4f4f4f
-K fg=#e0e0e0 bg=#000000
-L fg=#646464 bg=#1c2024 bold
-M bg=#272822
-N fg=#c2c2bf bg=#3e3d32
-O fg=#f8f8f2 bg=#3e3d32
-P fg=#63696e bg=#0b3a5f bold
-Q fg=#90908a bg=#272822
-R fg=#f8f8f2 bg=#272822
-S fg=#646464 bg=#1a1a1a
-T fg=#4ebf71 bg=#343f49
-U bg=#343f49
-V fg=#e0e0e0 bg=#343f49
-W fg=#b93c5b bg=#343f49
-X fg=#d17e92 bg=#343f49 bold
-Y fg=#704d1c bg=#191d21 bold
-Z fg=#646464 bg=#191d21
+E fg=#121212 bg=#e0e0e0
+F fg=#e0e0e0 bg=#272727
+G fg=#003054 bg=#000000 inverse
+H fg=#2a5738 bg=#121212
+I fg=#191919 bg=#4f4f4f inverse
+J fg=#191919 bg=#272822
+K fg=#191919 bg=#4f4f4f
+L fg=#e0e0e0 bg=#000000
+M fg=#646464 bg=#1c2024 bold
+N bg=#272822
+O fg=#c2c2bf bg=#3e3d32
+P fg=#f8f8f2 bg=#3e3d32
+Q fg=#63696e bg=#0b3a5f bold
+R fg=#90908a bg=#272822
+S fg=#f8f8f2 bg=#272822
+T fg=#646464 bg=#1a1a1a
+U fg=#704d1c bg=#191d21 bold
+V fg=#646464 bg=#191d21

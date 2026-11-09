@@ -37,14 +37,14 @@ cursor 0 0 hidden
 │                             █ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎   █                             │
 │                             █ ▊ ▐X▌ parity-reviewer                                                                        ▎   █                             │
 │                             █ ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎   █                             │
-│                             █                                                                   ▌                                                            │
-│                             █                               ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔   ▌ Updating PR...                                             │
-│                             █                                    Update           Cancel        ▌                                                            │
+│                             █                                                                                                  █                             │
+│                             █                               ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                  █                             │
+│                             █                                    Update           Cancel                                       █                             │
 │                             █                               ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                  █                             │
-│                             █                                                                   ▌                                                            │
-│                             █                                                                   ▌ Error updating pull request                                │
-│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌ Unexpected error while attempting to update PR             │
-│                                                              ││                                 ▌                                                            │
+│                             █                                                                                                  █                             │
+│                             █                                                                                                  █                             │
+│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
+│                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                 ▌ Already a reviewer!                                        │
@@ -86,19 +86,19 @@ u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 u.............................jklFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFottkj.............................c
 u.............................jklGHIHGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGottkj.............................c
 u.............................jklFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFottkj.............................c
-u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkJKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.c
-u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkLLLLLLLLLLLLLLLLkMMMMMMMMMMMMMMMMkkkJKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.c
-u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkNNNNOOOOOOOONNNNkPPPPQQQQQQQQPPPPkkkJKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.c
-u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkRRRRRRRRRRRRRRRRkSSSSSSSSSSSSSSSSkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkttkj.............................c
-u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkTKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.c
-u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkTKUUUUUUUUUUUUUUUUUUUUUUUUUUUKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.c
-u.............................jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjTKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.c
-u..............................................................uc.................................TKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.c
+u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkttkj.............................c
+u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkJJJJJJJJJJJJJJJJkKKKKKKKKKKKKKKKKkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkttkj.............................c
+u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkLLLLMMMMMMMMLLLLkNNNNOOOOOOOONNNNkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkttkj.............................c
+u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkPPPPPPPPPPPPPPPPkQQQQQQQQQQQQQQQQkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkttkj.............................c
+u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkttkj.............................c
+u.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkj.............................c
+u.............................jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj.............................c
 u..............................................................uc..............................................................................................c
-u..............................................................uc.................................TKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.c
-u..............................................................uc.................................TKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.c
-uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuccccccccccccccccccccccccccccccccccTKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKcc
-VVVWWWWWWWVVVWWWWWWWWWWWWWWWWWWWWVVVWWWWWWWWWWWWWWVVVWWWWWWWWVVVWWWWWWWWWWVVVWWWWWWWWWWVVVWWWWWWWVVVVWWWWWWWWWWWVVVWWWWWWWWWWWWVVVWWWWWWWWWWWWWWWWWWWWWWVVVWWWWW
+u..............................................................uc..............................................................................................c
+u..............................................................uc.................................RSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS.c
+u..............................................................uc.................................RSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS.c
+uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuccccccccccccccccccccccccccccccccccRSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSScc
+TTTUUUUUUUTTTUUUUUUUUUUUUUUUUUUUUTTTUUUUUUUUUUUUUUTTTUUUUUUUUTTTUUUUUUUUUUTTTUUUUUUUUUUTTTUUUUUUUTTTTUUUUUUUUUUUTTTUUUUUUUUUUUUTTTUUUUUUUUUUUUUUUUUUUUUUTTTUUUUU
 --- legend
 . fg=#646464 bg=#121212
 a fg=#0a263a bg=#121212
@@ -136,17 +136,15 @@ F fg=#191919 bg=#1e1e1e
 G fg=#e0e0e0 bg=#1e1e1e
 H fg=#242f38 bg=#1e1e1e
 I fg=#8ad4a1 bg=#242f38
-J fg=#4ebf71 bg=#343f49
-K fg=#e0e0e0 bg=#343f49
-L fg=#7ae998 bg=#4ebf71
-M fg=#e76580 bg=#b93c5b
-N fg=#0a180e bg=#4ebf71
-O fg=#0a180e bg=#4ebf71 bold
-P fg=#f5e5e9 bg=#b93c5b
-Q fg=#f5e5e9 bg=#b93c5b bold
-R fg=#008139 bg=#4ebf71
-S fg=#780028 bg=#b93c5b
-T fg=#b93c5b bg=#343f49
-U fg=#d17e92 bg=#343f49 bold
-V fg=#704d1c bg=#191d21 bold
-W fg=#646464 bg=#191d21
+J fg=#7ae998 bg=#4ebf71
+K fg=#e76580 bg=#b93c5b
+L fg=#0a180e bg=#4ebf71
+M fg=#0a180e bg=#4ebf71 bold
+N fg=#f5e5e9 bg=#b93c5b
+O fg=#f5e5e9 bg=#b93c5b bold
+P fg=#008139 bg=#4ebf71
+Q fg=#780028 bg=#b93c5b
+R fg=#b93c5b bg=#343f49
+S fg=#e0e0e0 bg=#343f49
+T fg=#704d1c bg=#191d21 bold
+U fg=#646464 bg=#191d21

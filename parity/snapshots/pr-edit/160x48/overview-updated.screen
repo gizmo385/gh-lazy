@@ -21,22 +21,22 @@ cursor 0 0 hidden
 │                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
 │                                                              ││  ▶ PR Reviews: ✘ Changes Requested                                                           │
 │                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││──────────────────────────────────────────────────────────────────────────────────────────────│
-│                                                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││─────────────────────────────────▌ Already a reviewer!                                       ─│
+│                                                              ││                                 ▌                                                            │
 │                                                              ││  Adds a cursor to the viewer, as discussed in #3.                                            │
-│                                                              ││                                                                                              │
-└──────────────────────────────────────────────────────────────┘│  • j and k move it                                                                           │
-┌─ [2] Pull Requests ──────────────────────────────────────────┐│  • the current line is marked with >                                                         │
-│ #  Status  Author         Title                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+└──────────────────────────────────────────────────────────────┘│  • j and k move it              ▌ Could not find user nobody-here - are you sure they        │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│  • the current line is marked wi▌ exist?                                                     │
+│ #  Status  Author         Title                              ││                                 ▌                                                            │
 │ 5  open    parity-friend  Add a cursor to the diff viewer    ││  Thanks @parity-bot for the first review!                                                    │
-│ 4  closed  parity-bot     Drop the legacy renderer           ││                                                                                              │
-│ 3  closed  parity-bot     Release 0.2.0                      ││                                                                                              │
-│ 2  open    parity-friend  Try a faster parser                ││                                                                                              │
+│ 4  closed  parity-bot     Drop the legacy renderer           ││                                 ▌                                                            │
+│ 3  closed  parity-bot     Release 0.2.0                      ││                                 ▌ Removing parity-reviewer                                   │
+│ 2  open    parity-friend  Try a faster parser                ││                                 ▌                                                            │
 │                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Updating PR...                                             │
+│                                                              ││                                 ▌                                                            │
 │                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                 ▌ Successfully updated PR!                                   │
@@ -70,35 +70,35 @@ c..............................................................cdmmmmmmmmmmmmmmm
 c..............................................................cdqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqd
 c..............................................................cdmmmmmmmmmmmmmmmmsssssssssssssssssssmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmd
 c..............................................................cdmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmd
-c..............................................................cd..............................................................................................d
-c..............................................................cdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-c..............................................................cd..............................................................................................d
+c..............................................................cd.................................tuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+c..............................................................cdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaatuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuad
+c..............................................................cd.................................tuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
 c..............................................................cd...............................................oo.............................................d
-c..............................................................cd..............................................................................................d
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..ttu.....u...................................................................................d
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..tt................................u.........................................................d
-ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd..............................................................................................d
+c..............................................................cd.................................tuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..vvw.....w......................tuuuuuuuuuuuuuuuuuuuuuxxxxxxxxxxxuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..vv.............................tuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd.................................tuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
 cjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjcd.........ooooooooooo..........................................................................d
-cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd..............................................................................................d
-cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd..............................................................................................d
-cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd..............................................................................................d
+cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
 c..............................................................cd..............................................................................................d
+c..............................................................cd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+c..............................................................cd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+c..............................................................cd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
 c..............................................................cd..............................................................................................d
+c..............................................................cd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+c..............................................................cd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+c..............................................................cd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
 c..............................................................cd..............................................................................................d
+c..............................................................cd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+c..............................................................cd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+c..............................................................cd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
 c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd..............................................................................................d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd..............................................................................................d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddddddddddddddddddddddddddddddvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwdd
-xxxxyyyyyyyyyyyxxxyyyyyyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyyyxxxyyyyyxxxxyyyyyyyyyyyyyyyyxxxyyyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+c..............................................................cd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+c..............................................................cd.................................yuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddddddddddddddddddddddddddddddyuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuudd
+zzzzAAAAAAAAAAAzzzAAAAAAAAAAAAzzzAAAAAAAAAAAAAAAAAAAAAAzzzAAAAAzzzzAAAAAAAAAAAAAAAAzzzAAAAAAAAAzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212
@@ -120,11 +120,13 @@ p fg=#ff0000 bg=#121212
 q fg=#121212 bg=#1e1e1e
 r default
 s fg=#ff0000 bg=#1e1e1e
-t fg=#57a5e2 bg=#121212
-u fg=#f4bb6e bg=#241d13
-v fg=#4ebf71 bg=#343f49
-w fg=#e0e0e0 bg=#343f49
-x fg=#ffa62b bg=#242f38 bold
-y fg=#e0e0e0 bg=#242f38
+t fg=#b93c5b bg=#343f49
+u fg=#e0e0e0 bg=#343f49
+v fg=#57a5e2 bg=#121212
+w fg=#f4bb6e bg=#241d13
+x fg=#ffff00 bg=#343f49
+y fg=#4ebf71 bg=#343f49
+z fg=#ffa62b bg=#242f38 bold
+A fg=#e0e0e0 bg=#242f38
 --- cells
 11 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│"," "," ","▶"," ","👍",""," ","2"," ","|"," ","🎉",""," ","1"," ","|"," ","👀",""," ","4"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

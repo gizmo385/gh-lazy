@@ -342,4 +342,6 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s13" x="110" y="595" textLength="60" lengthAdjust="spacingAndGlyphs">Query </text>
 <text class="s24" x="170" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
 <text class="s13" x="200" y="595" textLength="60" lengthAdjust="spacingAndGlyphs">Close </text>
+<text class="s24" x="260" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^s </text>
+<text class="s13" x="300" y="595" textLength="110" lengthAdjust="spacingAndGlyphs">Save query </text>
 </svg>

@@ -18,15 +18,15 @@ cursor 0 0 hidden
 │                                                              ││  First line Second line                                                                      │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Cannot open new pull request                               │
+│                                                              ││                                 ▌ Please select a repository first!                          │
+│                                                              ││                                 ▌                                                            │
 │                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-└──────────────────────────────────────────────────────────────┘│                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Invalid PR!                                                │
+│                                                              ││                                 ▌ Missing required fields!                                   │
+└──────────────────────────────────────────────────────────────┘│                                 ▌                                                            │
 ┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
 │ #   Status  Author         Title                             ││                                 ▌                                                            │
 │ 10  open    parity-bot     Parity PR                         ││                                 ▌ Creating PR...                                             │
@@ -67,37 +67,37 @@ c..............................................................cd...............
 c..............................................................cd..............................................................................................d
 c..............................................................cd..............................................................................................d
 c..............................................................cd..............................................................................................d
+c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd.................................qrssssssssssssssssssssssssssssrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
+c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd.................................qrsssssssssssrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..............................................................................................d
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..............................................................................................d
-ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
-cjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjcd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
-cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd.................................trrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+cjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjcd.................................trrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.................................trrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd..............................................................................................d
-cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.................................srrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
-cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.................................srtttttttttttttttttttttttttttrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
-c..............................................................cd.................................srrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
-c..............................................................cd.................................srrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
-c..............................................................cd.................................srrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
-c..............................................................cd..............................................................................................d
-c..............................................................cd.................................srrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
-c..............................................................cd.................................srrrrrrrrrrrrrrrrrrrrrrrrrrrruuuuuuuuuuuuuurrrrrrrrrrrrrrrrr.d
-c..............................................................cd.................................srrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
-c..............................................................cd..............................................................................................d
+cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.................................qrsssssssssssssssssssssssssssrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 c..............................................................cd..............................................................................................d
 c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrruuuuuuuuuuuuuurrrrrrrrrrrrrrrrr.d
 c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddddddddddddddddddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrdd
+c..............................................................cd..............................................................................................d
+c..............................................................cd.................................trrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd.................................trrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd.................................trrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd..............................................................................................d
+c..............................................................cd.................................trrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd.................................trrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddddddddddddddddddddddddddddddtrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrdd
 vvvvwwwwwwwwwwwvvvwwwwwwwwwwwwvvvwwwwwwwwwwwwwwwwwwwwwwvvvwwwwwvvvvwwwwwwwwwwwwwwwwvvvwwwwwwwwwvvvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 --- legend
 . fg=#e0e0e0 bg=#121212
@@ -117,10 +117,10 @@ m fg=#e0e0e0 bg=#1e1e1e
 n fg=#e0e0e0 bg=#121212 bold
 o fg=#e0e0e0 bg=#121212 underline
 p fg=#ff0000 bg=#121212
-q fg=#4ebf71 bg=#343f49
+q fg=#b93c5b bg=#343f49
 r fg=#e0e0e0 bg=#343f49
-s fg=#b93c5b bg=#343f49
-t fg=#d17e92 bg=#343f49 bold
+s fg=#d17e92 bg=#343f49 bold
+t fg=#4ebf71 bg=#343f49
 u fg=#ff0000 bg=#343f49
 v fg=#ffa62b bg=#242f38 bold
 w fg=#e0e0e0 bg=#242f38

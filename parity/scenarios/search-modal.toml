@@ -97,12 +97,16 @@ wait = { gone = "3 results" }
 [[step]]
 wait = { text = "PR #5", timeout_ms = 15000 }
 
-# Its reactions and checks load after the header; the snapshot needs them drawn.
+# Its reactions, checks and reviews load after the header, each in its own time; the snapshot needs them drawn, and
+# `restored` shows the edge of the Details pane behind the modal.
 [[step]]
 wait = { text = "Status checks:", timeout_ms = 15000 }
 
 [[step]]
 wait = { text = "👍 2", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "PR Reviews:", timeout_ms = 15000 }
 
 [[step]]
 capture = "opened-pr"
@@ -118,6 +122,9 @@ keys = ["s"]
 
 [[step]]
 wait = { text = "3 results" }
+
+[[step]]
+wait = { stable_ms = 500 }
 
 [[step]]
 capture = "restored"

@@ -9,7 +9,7 @@ cursor 0 0 hidden
 │ ★  Owner█                                                                              █         │
 │ ☆  parit█                                                                              █━━━━━━━━━│
 │ ☆  parit█                              Library Versions                                █         │
-│ ☆  parit█                                                                            ▃▃█         │
+│ ☆  parit█                                                                            ▄▄█         │
 │         █  • LazyGithub Version: 0.1.0                                                 █)        │
 │         █  • Rustc Version: 1.97.0 (2d8144b78 2026-07-07)                              █         │
 │         █  • Gh Version: 2.89.0 (fake-gh)                                              █h        │

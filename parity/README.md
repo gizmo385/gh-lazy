@@ -824,6 +824,11 @@ report first.
 - With `gh_timeout_ms = <n>`, the Rust app runs with `LAZY_GITHUB_GH_TIMEOUT_MS=<n>`, which a debug build reads as
   the time limit of every `gh` call (release builds ignore it), so a hung `gh` times out in seconds. It's set outside
   `env.rs` and only for the Rust app; Python has no time limit. Such scenarios are Rust-only (`apps = ["rust"]`).
+- With `toast_timeout_ms = <n>`, the Rust app runs with `LAZY_GITHUB_TOAST_TIMEOUT_MS=<n>`, which a debug build
+  reads as the lifetime of every toast (release builds ignore it). Python's toasts don't time out under the harness,
+  so a scenario whose later captures show toasts raised steps earlier sets it (`paste-link`), and its Rust snapshots
+  then don't depend on how fast the machine is. Set outside `env.rs`, only for the Rust app, and not in the capture
+  key, so it needs no re-record.
 - `work/` is the app's working directory. When the scenario sets `git_remote = "owner/name"`, it's made a git repo:
   - `git init -q -b <git_branch, default main>`
   - `git remote add origin https://github.com/owner/name.git`, or `git@github.com:owner/name.git` with
@@ -892,6 +897,7 @@ git_remote_branches = ["main"]   # optional: a local remote for origin with thes
 seed = "repos-cache"             # optional: parity/seeds/<name>/, copied into home/ and work/ (see Seeds)
 config_dir_read_only = false     # optional: make home/.config/lazy-github read-only (see The isolated environment)
 gh_timeout_ms = 2000             # optional: the Rust app's time limit for every gh call (see The isolated environment)
+toast_timeout_ms = 60000         # optional: how long the Rust app's toasts last (see The isolated environment)
 
 [env.config_overrides]           # optional, deep-merged over the config file
 appearance = { show_command_log = true }

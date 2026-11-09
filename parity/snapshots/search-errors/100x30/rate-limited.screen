@@ -31,7 +31,7 @@ cursor 0 0 hidden
 ┌─ [4] Workflows (empty) ──────────────┐│        ▌ GitHub search rate limit reached. Try again at  │
 │                               ▋      ││        ▌ 00:00                                           │
 └──────────────────────────────────────┘└────────▌                                                ─┘
- ⏎ Search  esc Results
+ ⏎ Search  esc Results  ^s Save query
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
@@ -62,7 +62,7 @@ ddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeFGHHHHHHHHHHHHGGGGGGGGGGGGGGGGG
 dddddddddddddddddIIIIIIIdddddddddddddddddbbbbbbbbFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGbd
 dJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJKLLLLMMddbbbbbbbbFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGbd
 dddddddddddddddddddddddddddddddddddddddddddddddddFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGdd
-NNNOOOOOOONNNNNOOOOOOOOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+NNNOOOOOOONNNNNOOOOOOOONNNNOOOOOOOOOOOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 --- legend
 . fg=#e0e0e0 bg=#4f4f4f
 a fg=#0a263a bg=#121212

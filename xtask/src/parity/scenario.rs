@@ -243,6 +243,10 @@ pub struct EnvSpec {
     /// `gh_timeout_ms`: the Rust app (a debug build) runs every `gh` call with this time limit instead of its
     /// defaults, so a scenario can show a timeout in seconds. Python has no limit and ignores it.
     pub gh_timeout_ms: Option<u64>,
+    /// `toast_timeout_ms`: the Rust app (a debug build) keeps every toast up this long instead of its own timeout, so
+    /// a capture that shows toasts raised several steps earlier doesn't depend on how fast the machine is. Python's
+    /// toasts don't time out under the harness, so it ignores this, and it's not part of the capture key.
+    pub toast_timeout_ms: Option<u64>,
 }
 
 /// What a `wait` step waits for.
@@ -539,6 +543,7 @@ struct RawEnv {
     #[serde(default)]
     config_dir_read_only: bool,
     gh_timeout_ms: Option<Spanned<u64>>,
+    toast_timeout_ms: Option<Spanned<u64>>,
 }
 
 #[derive(Deserialize)]
@@ -949,6 +954,10 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
         Some(ms) if *ms.get_ref() == 0 => return Err(loc.at_span(&ms, "`env.gh_timeout_ms` must be at least 1")),
         other => other.map(Spanned::into_inner),
     };
+    let toast_timeout_ms = match raw.toast_timeout_ms {
+        Some(ms) if *ms.get_ref() == 0 => return Err(loc.at_span(&ms, "`env.toast_timeout_ms` must be at least 1")),
+        other => other.map(Spanned::into_inner),
+    };
 
     Ok(EnvSpec {
         fixtures,
@@ -962,6 +971,7 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
         seed,
         config_dir_read_only: raw.config_dir_read_only,
         gh_timeout_ms,
+        toast_timeout_ms,
     })
 }
 
@@ -1427,6 +1437,15 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
         assert_eq!(s.env.seed, None);
         assert!(!s.env.config_dir_read_only);
         assert_eq!(s.env.gh_timeout_ms, None);
+        assert_eq!(s.env.toast_timeout_ms, None);
+    }
+
+    #[test]
+    fn parses_a_toast_lifetime() {
+        let s = parse("version = 1\n[env]\ntoast_timeout_ms = 60000\n").unwrap();
+        assert_eq!(s.env.toast_timeout_ms, Some(60000));
+        let error = parse("version = 1\n[env]\ntoast_timeout_ms = 0\n").unwrap_err();
+        assert!(error.message.contains("toast_timeout_ms"), "{error:?}");
     }
 
     #[test]

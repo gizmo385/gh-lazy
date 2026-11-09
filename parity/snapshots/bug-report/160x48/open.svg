@@ -550,7 +550,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s11" x="310" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
 <text class="s17" x="330" y="395" textLength="40" lengthAdjust="spacingAndGlyphs"> 5  </text>
 <text class="s16" x="370" y="395" textLength="860" lengthAdjust="spacingAndGlyphs">**Expected behavior**                                                                 </text>
-<text class="s18" x="1230" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">▂▂</text>
+<text class="s18" x="1230" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">▃▃</text>
 <text class="s12" x="1260" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">▎</text>
 <text class="s8" x="1290" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s4" x="1590" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>

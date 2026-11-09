@@ -8,6 +8,7 @@
 //! the screen, the oldest toasts are clipped off the top.
 
 use std::collections::VecDeque;
+use std::time::Duration;
 
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use ratatui::Frame;
@@ -38,6 +39,8 @@ pub struct Toasts {
     live: VecDeque<Live>,
     /// The area of the last draw, which clicks are hit-tested against.
     last_area: Option<Rect>,
+    /// Every toast's lifetime in place of its own ([`crate::options::AppOptions::toast_timeout`]).
+    timeout: Option<Duration>,
 }
 
 #[derive(Debug)]
@@ -77,6 +80,14 @@ impl Placement {
 }
 
 impl Toasts {
+    /// No toasts, each lasting `timeout` when given instead of its own timeout.
+    pub fn with_timeout(timeout: Option<Duration>) -> Self {
+        Self {
+            timeout,
+            ..Self::default()
+        }
+    }
+
     /// Raises `toast`. Its timeout starts at the next [`Self::stamp`], which `App` calls at the end of the update that
     /// raised it, so the clock reads the same as it would have here. Crate-private, since a toast that is never
     /// stamped never expires; [`Self::push_at`] is the public way in.
@@ -93,7 +104,7 @@ impl Toasts {
     /// Starts the timeout of every toast raised since the last call, at `now`.
     pub fn stamp(&mut self, now: Instant) {
         for live in self.live.iter_mut().filter(|live| live.expires.is_none()) {
-            live.expires = Some(now + live.toast.timeout);
+            live.expires = Some(now + self.timeout.unwrap_or(live.toast.timeout));
         }
     }
 
@@ -386,8 +397,6 @@ fn to_line(cells: &[(char, Style)]) -> Line<'static> {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
-
     use lazy_github_core::config::Config;
     use ratatui::Terminal;
     use ratatui::backend::TestBackend;
@@ -479,6 +488,18 @@ mod tests {
         toasts.push_at(Toast::info("Updating issue #1...").with_timeout(SECOND), now);
         assert_eq!(toasts.next_deadline(), Some(now + SECOND));
         assert!(toasts.expire(now + SECOND));
+        assert!(toasts.is_empty());
+    }
+
+    #[test]
+    fn a_stack_timeout_overrides_each_toasts_own() {
+        let now = Instant::now();
+        let mut toasts = Toasts::with_timeout(Some(60 * SECOND));
+        toasts.push_at(Toast::info("short").with_timeout(SECOND), now);
+        toasts.push_at(Toast::info("default"), now);
+        assert_eq!(toasts.next_deadline(), Some(now + 60 * SECOND));
+        assert!(!toasts.expire(now + 59 * SECOND));
+        assert!(toasts.expire(now + 60 * SECOND));
         assert!(toasts.is_empty());
     }
 

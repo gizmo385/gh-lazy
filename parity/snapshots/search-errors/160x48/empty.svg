@@ -413,4 +413,6 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s12" x="30" y="955" textLength="70" lengthAdjust="spacingAndGlyphs">Search </text>
 <text class="s23" x="100" y="955" textLength="50" lengthAdjust="spacingAndGlyphs"> esc </text>
 <text class="s12" x="150" y="955" textLength="80" lengthAdjust="spacingAndGlyphs">Results </text>
+<text class="s23" x="230" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^s </text>
+<text class="s12" x="270" y="955" textLength="110" lengthAdjust="spacingAndGlyphs">Save query </text>
 </svg>

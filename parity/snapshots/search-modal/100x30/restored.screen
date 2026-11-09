@@ -31,7 +31,7 @@ cursor 0 0 hidden
 ┌─ [4] Workflows (empty) ──────────────┐│  • the current line is marked with >                   ▆▆│
 │                               ▋      ││                                                          │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
- ⏎ Open  / Query  q Close
+ ⏎ Open  / Query  q Close  ^s Save query
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
@@ -62,7 +62,7 @@ ddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 dddddddddddddddddDDDDDDDdddddddddddddddddbbEEbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbFbbbbbbbbbbbbbbbbbbbGGd
 dHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHIJJJJKKddbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbJJd
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-LLLMMMMMLLLMMMMMMLLLMMMMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+LLLMMMMMLLLMMMMMMLLLMMMMMMLLLLMMMMMMMMMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
 --- legend
 . fg=#e0e0e0 bg=#4f4f4f
 a fg=#0a263a bg=#121212

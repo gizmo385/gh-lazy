@@ -19,8 +19,8 @@ cursor 0 0 hidden
 │ #  Status  Author         Title      ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
 │ 5  open    parity-friend  Add a curso││  ▶ Status checks: ✘ Failed                               │
 │ 4  closed  parity-bot     Drop the le││                                                          │
-│ 3  closed  parity-bot     Release 0.2││                                                          │
-│ 2  open    parity-friend  Try a faste││                       Loading...                         │
+│ 3  closed  parity-bot     Release 0.2││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│ 2  open    parity-friend  Try a faste││  ▶ PR Reviews: ✘ Changes Requested                       │
 │                          ▊           ││                                                          │
 │                                      ││                                                          │
 │                                      ││────────────────────────────────────────────────────────  │
@@ -50,19 +50,19 @@ ccccccccccccccccccccccccccccccccccccccccdmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
 ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecdrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrppd
 cjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjcdmmmmmmmmmmmmmmmmmmmttttttttmmmmmmmmmmmmmmmmmmmmmmmmmmmmmppd
 cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcdmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmppd
-cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcduuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuppd
-cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcduuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuppd
-cvvvvvvvvvvvvvvvvvvvvvvvvvvwxxxxxxxxxxxcduuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuppd
+cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcdrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrppd
+cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcdmmmmmmmmmmmmmmmmtttttttttttttttttttmmmmmmmmmmmmmmmmmmmmmppd
+cuuuuuuuuuuuuuuuuuuuuuuuuuuvwwwwwwwwwwwcdmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmppd
 c......................................cd........................................................ppd
 c......................................cdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaappd
 ccccccccccccccccccccccccccccccccccccccccd........................................................ppd
-ccccccccccccccyyyyyyycccccccccccccccccccd...............................................oo.......ppd
+ccccccccccccccxxxxxxxcccccccccccccccccccd...............................................oo.......ppd
 ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd........................................................ppd
-ccccccccccccccccccccccccccccccccccccccccd..zzA.....A.............................................ppd
-cccccccccccccccccyyyyyyyccccccccccccccccd..zz................................A...................BBd
-cvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvwxxxxCCcd........................................................xxd
+ccccccccccccccccccccccccccccccccccccccccd..yyz.....z.............................................ppd
+cccccccccccccccccxxxxxxxccccccccccccccccd..yy................................z...................AAd
+cuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuvwwwwBBcd........................................................wwd
 ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-DDDDEEEEEEEEEEEDDDEEEEEEEEEEEEDDDEEEEEEEEEEEEEEEEEEEEEEDDDEEEEEDDDDEEEEEEEEEEEEEEEEDDDEEEEEEEEEDDDEE
+CCCCDDDDDDDDDDDCCCDDDDDDDDDDDDCCCDDDDDDDDDDDDDDDDDDDDDDCCCDDDDDCCCCDDDDDDDDDDDDDDDDCCCDDDDDDDDDCCCDD
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212
@@ -85,16 +85,15 @@ q fg=#ff0000 bg=#121212
 r fg=#121212 bg=#1e1e1e
 s default
 t fg=#ff0000 bg=#1e1e1e
-u fg=#0178d4 bg=#1b1b1b
-v fg=#003054 bg=#1e1e1e inverse
-w fg=#003054 bg=#000000
-x fg=#e0e0e0 bg=#000000
-y fg=#4e7bae bg=#121212
-z fg=#57a5e2 bg=#121212
-A fg=#f4bb6e bg=#241d13
-B fg=#003054 bg=#000000 inverse
-C bg=#000000
-D fg=#ffa62b bg=#242f38 bold
-E fg=#e0e0e0 bg=#242f38
+u fg=#003054 bg=#1e1e1e inverse
+v fg=#003054 bg=#000000
+w fg=#e0e0e0 bg=#000000
+x fg=#4e7bae bg=#121212
+y fg=#57a5e2 bg=#121212
+z fg=#f4bb6e bg=#241d13
+A fg=#003054 bg=#000000 inverse
+B bg=#000000
+C fg=#ffa62b bg=#242f38 bold
+D fg=#e0e0e0 bg=#242f38
 --- cells
 12 ["└","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","─","┘","│"," "," ","▶"," ","👍",""," ","2"," ","|"," ","🎉",""," ","1"," ","|"," ","👀",""," ","4"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

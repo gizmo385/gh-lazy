@@ -80,19 +80,16 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="990" y="320" width="10" height="20" fill="#121212"/>
 <rect x="0" y="340" width="10" height="20" fill="#121212"/>
 <rect x="390" y="340" width="20" height="20" fill="#121212"/>
-<rect x="410" y="340" width="560" height="20" fill="#1b1b1b"/>
 <rect x="970" y="340" width="20" height="20" fill="#003054"/>
 <rect x="990" y="340" width="10" height="20" fill="#121212"/>
 <rect x="0" y="360" width="10" height="20" fill="#121212"/>
 <rect x="390" y="360" width="20" height="20" fill="#121212"/>
-<rect x="410" y="360" width="560" height="20" fill="#1b1b1b"/>
 <rect x="970" y="360" width="20" height="20" fill="#003054"/>
 <rect x="990" y="360" width="10" height="20" fill="#121212"/>
 <rect x="0" y="380" width="10" height="20" fill="#121212"/>
 <rect x="10" y="380" width="260" height="20" fill="#003054"/>
 <rect x="270" y="380" width="120" height="20" fill="#000000"/>
 <rect x="390" y="380" width="20" height="20" fill="#121212"/>
-<rect x="410" y="380" width="560" height="20" fill="#1b1b1b"/>
 <rect x="970" y="380" width="20" height="20" fill="#003054"/>
 <rect x="990" y="380" width="10" height="20" fill="#121212"/>
 <rect x="0" y="400" width="970" height="20" fill="#121212"/>
@@ -235,12 +232,14 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s1" x="10" y="355" textLength="380" lengthAdjust="spacingAndGlyphs"> 3  closed  parity-bot     Release 0.2</text>
 <text class="s3" x="390" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s13" x="410" y="355" textLength="580" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  </text>
 <text class="s4" x="990" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="375" textLength="380" lengthAdjust="spacingAndGlyphs"> 2  open    parity-friend  Try a faste</text>
 <text class="s3" x="390" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="400" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s10" x="410" y="375" textLength="560" lengthAdjust="spacingAndGlyphs">                       Loading...                       </text>
+<text class="s1" x="410" y="375" textLength="160" lengthAdjust="spacingAndGlyphs">  ▶ PR Reviews: </text>
+<text class="s12" x="570" y="375" textLength="190" lengthAdjust="spacingAndGlyphs">✘ Changes Requested</text>
 <text class="s4" x="990" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s14" x="270" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>

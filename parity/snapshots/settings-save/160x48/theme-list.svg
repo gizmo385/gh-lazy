@@ -341,6 +341,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s12" x="1100" y="215" textLength="50" lengthAdjust="spacingAndGlyphs">Cache</text>
 <text class="s12" x="1170" y="215" textLength="40" lengthAdjust="spacingAndGlyphs">Core</text>
 <text class="s12" x="1230" y="215" textLength="30" lengthAdjust="spacingAndGlyphs">Api</text>
+<text class="s12" x="1280" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">S</text>
 <text class="s7" x="1290" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s1" x="1300" y="215" textLength="290" lengthAdjust="spacingAndGlyphs">n get started by selecting   </text>
 <text class="s3" x="1590" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>

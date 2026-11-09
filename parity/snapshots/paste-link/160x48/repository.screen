@@ -25,14 +25,14 @@ cursor 0 0 hidden
 │                                                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
-│ #  Status  Author         Title                              ││                                                                                              │
-│ 5  open    parity-friend  Add a cursor to the viewer         ││                                                                                              │
-│ 4  closed  parity-bot     Drop the legacy renderer           ││                                                                                              │
+│ #  Status  Author         Title                              ││                                 ▌                                                            │
+│ 5  open    parity-friend  Add a cursor to the viewer         ││                                 ▌ Unknown link                                               │
+│ 4  closed  parity-bot     Drop the legacy renderer           ││                                 ▌                                                            │
 │ 3  closed  parity-bot     Release 0.2.0                      ││                                                                                              │
-│ 2  open    parity-friend  Try a faster parser                ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
+│ 2  open    parity-friend  Try a faster parser                ││                                 ▌                                                            │
+│                                                              ││                                 ▌ GitHub lookup failed                                       │
+│                                                              ││                                 ▌ Could not resolve link!                                    │
+│                                                              ││                                 ▌                                                            │
 │                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                 ▌ Opening pull request for link                              │
@@ -74,14 +74,14 @@ c..............................................................cd...............
 c..............................................................cd..............................................................................................d
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..............................................................................................d
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..............................................................................................d
-ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd..............................................................................................d
-ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicd..............................................................................................d
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+cllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllcd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 cllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllcd..............................................................................................d
-cllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllcd..............................................................................................d
-cllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllcd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
+cllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllcd.................................srrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd.................................srttttttttttttttttttttrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd.................................srrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+c..............................................................cd.................................srrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 c..............................................................cd..............................................................................................d
 c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
@@ -92,13 +92,13 @@ c..............................................................cd...............
 c..............................................................cd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 c..............................................................cd..............................................................................................d
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
-ccccccccccccccssssssscccccccccccccccccccccccccccccccccccccccccccd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
-cttttttttttttttttttttttttttttttttttttttttttttttttttttttttuvvvwwcd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+ccccccccccccccuuuuuuucccccccccccccccccccccccccccccccccccccccccccd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+cvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvwxxxyycd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..............................................................................................d
-cccccccccccccccccsssssssccccccccccccccccccccccccccccccccccccccccd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
+cccccccccccccccccuuuuuuuccccccccccccccccccccccccccccccccccccccccd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd.................................qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.d
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddddddddddddddddddddddddddddddqrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrdd
-xxxxyyyyyyyyyyyxxxyyyyyyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyyyxxxyyyyyxxxxyyyyyyyyyyyyyyyyxxxyyyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+zzzzAAAAAAAAAAAzzzAAAAAAAAAAAAzzzAAAAAAAAAAAAAAAAAAAAAAzzzAAAAAzzzzAAAAAAAAAAAAAAAAzzzAAAAAAAAAzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212
@@ -119,10 +119,12 @@ o fg=#e0e0e0 bg=#121212 bold
 p fg=#0178d4 bg=#121212 bold
 q fg=#4ebf71 bg=#343f49
 r fg=#e0e0e0 bg=#343f49
-s fg=#4e7bae bg=#121212
-t fg=#003054 bg=#1e1e1e inverse
-u fg=#003054 bg=#000000
-v fg=#e0e0e0 bg=#000000
-w bg=#000000
-x fg=#ffa62b bg=#242f38 bold
-y fg=#e0e0e0 bg=#242f38
+s fg=#b93c5b bg=#343f49
+t fg=#d17e92 bg=#343f49 bold
+u fg=#4e7bae bg=#121212
+v fg=#003054 bg=#1e1e1e inverse
+w fg=#003054 bg=#000000
+x fg=#e0e0e0 bg=#000000
+y bg=#000000
+z fg=#ffa62b bg=#242f38 bold
+A fg=#e0e0e0 bg=#242f38

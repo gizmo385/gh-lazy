@@ -21,7 +21,7 @@ cursor 0 0 hidden
 │                             █▊  2                                                                                           ▎  █ It draws heavy              │
 │                             █▊  3  **To Reproduce**                                                                         ▎  █the terminal UI              │
 │                             █▊  4                                                                                           ▎  █                             │
-└─────────────────────────────█▊  5  **Expected behavior**                                                                 ▂▂ ▎  █                             │
+└─────────────────────────────█▊  5  **Expected behavior**                                                                 ▃▃ ▎  █                             │
 ┌─ [2] Pull Requests ─────────█▊  6                                                                                           ▎  █                             │
 │ #    Status  Author    Title█▊  7  **Installation Mechanism:** [Github CLI, nix, PyPi, etc]                                 ▎  █                             │
 │ 112  open    gizmo385  Parit█▊  8                                                                                           ▎  █                             │

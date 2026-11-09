@@ -993,6 +993,8 @@ const UNGATED_WAIT_CAP: Duration = Duration::from_secs(3);
 /// The variable a debug build of the Rust app reads its test `gh` time limit from, in milliseconds: the same name as
 /// `lazy_github_core::gh::GH_TIMEOUT_ENV`, repeated here so the harness reads as one list of what it sets.
 const GH_TIMEOUT_ENV: &str = "LAZY_GITHUB_GH_TIMEOUT_MS";
+/// `lazy_github_tui::options::TOAST_TIMEOUT_ENV`, likewise.
+const TOAST_TIMEOUT_ENV: &str = "LAZY_GITHUB_TOAST_TIMEOUT_MS";
 
 /// The variable that freezes a debug build of the Rust app's wall clock: the same name as
 /// `lazy_github_core::time::FIXED_TIME_ENV`.
@@ -1042,6 +1044,9 @@ pub(super) fn run_app(
         // build of the Rust app reads it (`lazy_github_core::gh::GH_TIMEOUT_ENV`).
         if let (App::Rust, Some(ms)) = (app, scenario.env.gh_timeout_ms) {
             env.command.env(GH_TIMEOUT_ENV, ms.to_string());
+        }
+        if let (App::Rust, Some(ms)) = (app, scenario.env.toast_timeout_ms) {
+            env.command.env(TOAST_TIMEOUT_ENV, ms.to_string());
         }
         // Likewise; Python's screens show only fixture timestamps.
         if app == App::Rust {

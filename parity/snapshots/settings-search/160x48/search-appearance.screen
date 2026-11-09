@@ -17,7 +17,7 @@ cursor 0 0 hidden
 │                             █▊  filter                                                                                        ▎█l be retrieved and           │
 │                             █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█                             │
 │                             █                                                                                                  █                             │
-│                             █ Appearance  Notifications  Key Bindings  Repositories  Pull Requests  Issues  Cache  Core  Api   █with!                        │
+│                             █ Appearance  Notifications  Key Bindings  Repositories  Pull Requests  Issues  Cache  Core  Api  S█with!                        │
 │                             █╸━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█                             │
 │                             █                                                                                                  █                             │
 │                             █                                                                                                  █                             │
@@ -66,7 +66,7 @@ cbbbbbbbbbbbbbbbbbbbbbbbbbbbbbhmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
 cbbbbbbbbbbbbbbbbbbbbbbbbbbbbbhmppppppppqpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppohbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd
 cbbbbbbbbbbbbbbbbbbbbbbbbbbbbbhmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnohbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd
 cbbbbbbbbbbbbbbbbbbbbbbbbbbbbbh..................................................................................................hbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd
-cbbbbbbbbbbbbbbbbbbbbbbbbbbbbbh.............rrrrrrrrrrrrr..rrrrrrrrrrrr..rrrrrrrrrrrr..rrrrrrrrrrrrr..rrrrrr..rrrrr..rrrr..rrr...hsssssbbbbbbbbbbbbbbbbbbbbbbbbd
+cbbbbbbbbbbbbbbbbbbbbbbbbbbbbbh.............rrrrrrrrrrrrr..rrrrrrrrrrrr..rrrrrrrrrrrr..rrrrrrrrrrrrr..rrrrrr..rrrrr..rrrr..rrr..rhsssssbbbbbbbbbbbbbbbbbbbbbbbbd
 cbbbbbbbbbbbbbbbbbbbbbbbbbbbbbhtoooooooooottttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttthbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd
 cbbbbbbbbbbbbbbbbbbbbbbbbbbbbbh..................................................................................................hbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd
 cbbbbbbbbbbbbbbbbbbbbbbbbbbbbbh..................................................................................................hbbbbbbbbbbbbbbbbbbbbbbbbbbbbbd

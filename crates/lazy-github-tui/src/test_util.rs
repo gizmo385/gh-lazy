@@ -40,6 +40,7 @@ const TEST_OPTIONS: AppOptions = AppOptions {
     animations: false,
     terminal: "xterm-256color",
     test_panic: None,
+    toast_timeout: None,
 };
 
 /// An [`App`] under test.

@@ -234,7 +234,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s2" x="0" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="10" y="155" textLength="90" lengthAdjust="spacingAndGlyphs"> ☆  parit</text>
 <text class="s3" x="100" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
-<text class="s10" x="870" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">▃▃</text>
+<text class="s10" x="870" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">▄▄</text>
 <text class="s3" x="890" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s4" x="990" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="0" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>

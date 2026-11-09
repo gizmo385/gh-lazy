@@ -29,9 +29,9 @@ cursor 0 0 hidden
 │ 5  open    parity-friend  Add a cursor to the viewer         ││  • j and k move it                                                                           │
 │ 4  closed  parity-bot     Drop the legacy renderer           ││  • the current line is marked with >                                                         │
 │ 3  closed  parity-bot     Release 0.2.0                      ││                                                                                              │
-│ 2  open    parity-friend  Try a faster parser                ││  Thanks @parity-bot for the first review!                                                    │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
+│ 2  open    parity-friend  Try a faster parser                ││  Thanks @parity-bot for the firs▌                                                            │
+│                                                              ││                                 ▌ Unknown link                                               │
+│                                                              ││                                 ▌                                                            │
 │                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                 ▌ GitHub lookup failed                                       │
@@ -78,26 +78,26 @@ ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd...............
 cjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjcd..ttu.....u...................................................................................d
 cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd..tt................................u.........................................................d
 cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd..............................................................................................d
-cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.........ooooooooooo..........................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd..............................................................................................d
-c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd.................................vwxxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd.........ooooooooooo.............vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
 c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
 c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
 c..............................................................cd..............................................................................................d
-c..............................................................cd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-c..............................................................cd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................xwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................xwyyyyyyyyyyyyyyyyyyyywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................xwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................xwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
 c..............................................................cd..............................................................................................d
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-cccccccccccccczzzzzzzcccccccccccccccccccccccccccccccccccccccccccd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-cAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABCCCDDcd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+c..............................................................cd..............................................................................................d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+cccccccccccccczzzzzzzcccccccccccccccccccccccccccccccccccccccccccd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+cAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABCCCDDcd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..............................................................................................d
-ccccccccccccccccczzzzzzzccccccccccccccccccccccccccccccccccccccccd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd.................................ywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddddddddddddddddddddddddddddddywwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwdd
+ccccccccccccccccczzzzzzzccccccccccccccccccccccccccccccccccccccccd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd.................................vwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddddddddddddddddddddddddddddddvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwdd
 EEEEFFFFFFFFFFFEEEFFFFFFFFFFFFEEEFFFFFFFFFFFFFFFFFFFFFFEEEFFFFFEEEEFFFFFFFFFFFFFFFFEEEFFFFFFFFFEEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 --- legend
 . fg=#e0e0e0 bg=#121212
@@ -122,10 +122,10 @@ r default
 s fg=#ff0000 bg=#1e1e1e
 t fg=#57a5e2 bg=#121212
 u fg=#f4bb6e bg=#241d13
-v fg=#b93c5b bg=#343f49
+v fg=#4ebf71 bg=#343f49
 w fg=#e0e0e0 bg=#343f49
-x fg=#d17e92 bg=#343f49 bold
-y fg=#4ebf71 bg=#343f49
+x fg=#b93c5b bg=#343f49
+y fg=#d17e92 bg=#343f49 bold
 z fg=#4e7bae bg=#121212
 A fg=#003054 bg=#1e1e1e inverse
 B fg=#003054 bg=#000000

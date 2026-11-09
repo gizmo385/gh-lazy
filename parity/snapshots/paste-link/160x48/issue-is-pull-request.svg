@@ -84,9 +84,15 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="0" y="520" width="10" height="20" fill="#121212"/>
 <rect x="630" y="520" width="970" height="20" fill="#121212"/>
 <rect x="0" y="540" width="10" height="20" fill="#121212"/>
-<rect x="630" y="540" width="970" height="20" fill="#121212"/>
-<rect x="0" y="560" width="1600" height="20" fill="#121212"/>
-<rect x="0" y="580" width="1600" height="20" fill="#121212"/>
+<rect x="630" y="540" width="350" height="20" fill="#121212"/>
+<rect x="980" y="540" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="540" width="20" height="20" fill="#121212"/>
+<rect x="0" y="560" width="980" height="20" fill="#121212"/>
+<rect x="980" y="560" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="560" width="20" height="20" fill="#121212"/>
+<rect x="0" y="580" width="980" height="20" fill="#121212"/>
+<rect x="980" y="580" width="600" height="20" fill="#343f49"/>
+<rect x="1580" y="580" width="20" height="20" fill="#121212"/>
 <rect x="0" y="600" width="1600" height="20" fill="#121212"/>
 <rect x="0" y="620" width="980" height="20" fill="#121212"/>
 <rect x="980" y="620" width="600" height="20" fill="#343f49"/>
@@ -297,15 +303,19 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s4" x="640" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s1" x="650" y="555" textLength="90" lengthAdjust="spacingAndGlyphs">  Thanks </text>
 <text class="s11" x="740" y="555" textLength="110" lengthAdjust="spacingAndGlyphs">@parity-bot</text>
-<text class="s1" x="850" y="555" textLength="740" lengthAdjust="spacingAndGlyphs"> for the first review!                                                    </text>
+<text class="s1" x="850" y="555" textLength="130" lengthAdjust="spacingAndGlyphs"> for the firs</text>
+<text class="s4" x="980" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="980" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s1" x="990" y="575" textLength="600" lengthAdjust="spacingAndGlyphs"> Unknown link                                               </text>
 <text class="s4" x="1590" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="980" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s4" x="1590" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>

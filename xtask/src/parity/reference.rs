@@ -1866,6 +1866,13 @@ contains = ["Hi"]
     }
 
     #[test]
+    fn the_toast_lifetime_is_not_in_the_capture_key() {
+        let (_dir, roots) = key_roots();
+        let lasting = variant("[env]\n", "[env]\ntoast_timeout_ms = 60000\n");
+        assert_eq!(key_of(&lasting, SIZE, &roots), key_of(KEYED, SIZE, &roots));
+    }
+
+    #[test]
     fn the_capture_key_has_the_seed_only_when_set() {
         let (dir, roots) = key_roots();
         let unseeded = key_of(KEYED, SIZE, &roots);

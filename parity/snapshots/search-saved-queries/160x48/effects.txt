@@ -1,0 +1,9 @@
+GET /repos/parity-bot/pr-details/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/pr-details/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/pr-details/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/pr-details/issues?page=2&per_page=30&state=all
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=2&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/readme accept=raw
+GET /search/issues?advanced_search=true&page=1&per_page=50&q=repo:parity-bot/pr-details (is:pr is:open)
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

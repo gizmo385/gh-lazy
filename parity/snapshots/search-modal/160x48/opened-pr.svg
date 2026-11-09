@@ -55,13 +55,10 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="0" y="300" width="650" height="20" fill="#121212"/>
 <rect x="1590" y="300" width="10" height="20" fill="#121212"/>
 <rect x="0" y="320" width="650" height="20" fill="#121212"/>
-<rect x="650" y="320" width="940" height="20" fill="#1b1b1b"/>
 <rect x="1590" y="320" width="10" height="20" fill="#121212"/>
 <rect x="0" y="340" width="650" height="20" fill="#121212"/>
-<rect x="650" y="340" width="940" height="20" fill="#1b1b1b"/>
 <rect x="1590" y="340" width="10" height="20" fill="#121212"/>
 <rect x="0" y="360" width="650" height="20" fill="#121212"/>
-<rect x="650" y="360" width="940" height="20" fill="#1b1b1b"/>
 <rect x="1590" y="360" width="10" height="20" fill="#121212"/>
 <rect x="0" y="380" width="1600" height="20" fill="#121212"/>
 <rect x="0" y="400" width="1600" height="20" fill="#121212"/>
@@ -206,11 +203,13 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s3" x="0" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s13" x="650" y="335" textLength="940" lengthAdjust="spacingAndGlyphs">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</text>
 <text class="s4" x="1590" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s10" x="650" y="355" textLength="940" lengthAdjust="spacingAndGlyphs">                                          Loading...                                          </text>
+<text class="s1" x="650" y="355" textLength="160" lengthAdjust="spacingAndGlyphs">  ▶ PR Reviews: </text>
+<text class="s12" x="810" y="355" textLength="190" lengthAdjust="spacingAndGlyphs">✘ Changes Requested</text>
 <text class="s4" x="1590" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>

@@ -7,7 +7,7 @@ Run from the repository root with:
 `python-default.json` and `python-full.json` are written by the Python app. `python-parsing.json` records, for each
 field and each form its type allows (`PARSING_CASES`), what the Python app loads and saves, or where it rejects the
 file. `python-rust-only-keys.json` is what the Python app saves after loading `rust-only-keys.json`, a file with the
-keys only the Rust app knows (`appearance.color_depth`): it ignores them. The other fixtures are written by hand; this
+keys only the Rust app knows (`appearance.color_depth`, the `search` section): it ignores them. The other fixtures are written by hand; this
 script only checks that the Python app loads them, so they stay valid Python configs.
 
 `--out DIR` writes the generated fixtures to DIR instead of this directory; the hand-written ones are still read from

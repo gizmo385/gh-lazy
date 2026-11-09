@@ -7,12 +7,20 @@
 //! What outlives one open is a [`SearchSession`]: the text, the scope, the results with their cursor and paging, and
 //! the status line. The main screen keeps it, the dialog takes it on open and hands it back when it closes, so going
 //! back to the results after opening one is moving a struct, not searching again.
+//!
+//! The session also holds the recent queries (`search_history.json`, read on the first open), which `up` and `down`
+//! step through in the query input, as a shell's history. The input suggests saved queries (`search.saved_queries`,
+//! added with `search.save_query`), then recent ones (#395).
+
+use std::path::PathBuf;
 
 use crossterm::event::{KeyEvent, MouseButton, MouseEvent, MouseEventKind};
+use lazy_github_core::config::Config;
 use lazy_github_core::github::{
     HitKind, SEARCH_MAX_REPOS, SEARCH_PER_PAGE, SearchError, SearchHit, SearchPage, SearchQuery, SearchScope,
 };
 use lazy_github_core::models::{IssueState, RepoName};
+use lazy_github_core::search_history;
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
 use ratatui::style::{Modifier, Style};
@@ -29,6 +37,7 @@ use crate::components::text_input::{self, InputOutcome, TextInput};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::options::AppOptions;
+use crate::toast::Toast;
 
 /// The heading, centered as the Notifications modal's.
 const HEADING: &str = "Search issues and pull requests";
@@ -69,7 +78,15 @@ const SEARCH_FAILED: &str = "Search failed";
 
 /// The modal screen's bindings: `modal.search` back to the query, and `modal.close`, which from the query only leaves
 /// it (the input types `q`, so there it's `escape`).
-pub(crate) const SEARCH_BINDINGS: &[BindingId] = dialog_bindings![ModalSearch, ModalClose];
+pub(crate) const SEARCH_BINDINGS: &[BindingId] = dialog_bindings![ModalSearch, ModalClose, SearchSaveQuery];
+
+/// The query input's history keys, fixed (editor-internal, so `bindings.overrides` can't name them).
+const HISTORY_KEYS: &[BindingId] = &[BindingId::SearchHistoryPrevious, BindingId::SearchHistoryNext];
+
+/// `search.save_query`'s toasts.
+const SAVED: &str = "Saved search query";
+const ALREADY_SAVED: &str = "Already saved";
+const NOTHING_TO_SAVE: &str = "Type a query to save";
 
 /// The footer's labels for the bindings the modal gives its own meaning.
 const QUERY_LABEL: &str = "Query";
@@ -247,8 +264,27 @@ enum Remembered {
     Table,
 }
 
-/// The Search modal's state that outlives one open: the main screen keeps it for the session, nothing across
-/// restarts.
+/// Stepping through the recent queries with `up` and `down`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Browse {
+    /// The recent query shown, newest first.
+    index: usize,
+    /// What was typed before the first step, which `down` past the newest puts back.
+    draft: String,
+}
+
+/// The recent queries, newest first.
+#[derive(Debug, Default)]
+struct History {
+    recent: Vec<String>,
+    /// Whether `search_history.json` was read. Until then `recent` holds only this session's searches, which the
+    /// file's entries join once it's read.
+    loaded: bool,
+    browse: Option<Browse>,
+}
+
+/// The Search modal's state that outlives one open: the main screen keeps it for the session. Only the recent
+/// queries outlive a restart.
 pub struct SearchSession {
     input: TextInput,
     scope: Option<ScopeChoice>,
@@ -260,6 +296,7 @@ pub struct SearchSession {
     /// A search was sent this session, so a scope change searches again.
     submitted: bool,
     focus: Remembered,
+    history: History,
 }
 
 impl SearchSession {
@@ -275,7 +312,13 @@ impl SearchSession {
             query: None,
             submitted: false,
             focus: Remembered::Input,
+            history: History::default(),
         }
+    }
+
+    /// The recent queries, newest first.
+    pub fn recent(&self) -> &[String] {
+        &self.history.recent
     }
 
     /// The query text, as typed.
@@ -337,6 +380,8 @@ pub enum SearchAction {
     },
     /// `common.table.select` (or a click on the cursor's row) on this hit: open it.
     Open((RepoName, u64)),
+    /// `search.save_query`: add the text to the saved queries.
+    SaveQuery,
 }
 
 /// What has focus: one stop of the `tab` / `shift+tab` ring, top to bottom. The results table is never searchable,
@@ -418,6 +463,8 @@ impl Offered {
 struct FirstPage {
     id: RequestId,
     query: SearchQuery,
+    /// The text searched, as typed, for the recent queries.
+    text: String,
     columns: Columns,
     /// The status before, put back if the request is cancelled.
     before: Status,
@@ -512,6 +559,10 @@ pub struct SearchDialog {
     areas: Areas,
     options: AppOptions,
     output: Option<SearchOutcome>,
+    /// `search_history.json`.
+    history_path: PathBuf,
+    /// Its read, while it's out.
+    history_read: Option<RequestId>,
 }
 
 impl std::fmt::Debug for SearchDialog {
@@ -528,9 +579,12 @@ impl std::fmt::Debug for SearchDialog {
 impl SearchDialog {
     /// The modal over `session`, opened from `origin`: an empty query takes the origin's text, the scope is the
     /// session's if it's still on offer, and focus goes to the table when the session left it there with results,
-    /// else the input. Nothing is searched until `enter`.
-    pub fn new(mut session: SearchSession, origin: SearchOrigin, cx: &Cx<'_>) -> Self {
+    /// else the input. Nothing is searched until `enter`. The first open of a session reads the recent queries.
+    pub fn new(mut session: SearchSession, origin: SearchOrigin, cx: &mut Cx<'_>) -> Self {
         let offered = Offered::new(cx);
+        let history_path = search_history::path(&cx.config().cache.cache_directory);
+        let history_read = (!session.history.loaded).then(|| cx.read_cache(history_path.clone()));
+        session.history.browse = None;
         if session.input.value().is_empty() {
             session.input.set_value(origin.prefill());
         }
@@ -552,9 +606,120 @@ impl SearchDialog {
             areas: Areas::default(),
             options: cx.options(),
             output: None,
+            history_path,
+            history_read,
         };
         dialog.text_changed();
+        dialog.refresh_suggestions(cx.config());
         dialog
+    }
+
+    /// The palette's "Search: <query>": `query` replaces the text and is searched at once.
+    pub fn run_query(&mut self, query: &str, cx: &mut Cx<'_>) {
+        self.session.input.set_value(query);
+        self.session.history.browse = None;
+        self.text_changed();
+        self.focus_stop(Focus::Input);
+        self.submit(cx);
+    }
+
+    /// The input suggests the saved queries, then the recent ones.
+    fn refresh_suggestions(&mut self, config: &Config) {
+        let suggestions: Vec<String> = config
+            .search
+            .saved_queries
+            .iter()
+            .chain(&self.session.history.recent)
+            .cloned()
+            .collect();
+        self.session.input.set_suggestions(suggestions);
+    }
+
+    /// The recent queries file was read: its entries follow the searches made while it was out, which are written
+    /// back if there were any.
+    fn history_loaded(&mut self, result: Result<Option<String>, String>, cx: &mut Cx<'_>) {
+        let mut recent = search_history::load(&self.history_path, result);
+        let made = std::mem::take(&mut self.session.history.recent);
+        for query in made.iter().rev() {
+            search_history::record(&mut recent, query);
+        }
+        self.session.history.recent = recent;
+        self.session.history.loaded = true;
+        self.session.history.browse = None;
+        if !made.is_empty() {
+            self.write_history(cx);
+        }
+        self.refresh_suggestions(cx.config());
+    }
+
+    /// A search GitHub answered: `text` becomes the newest recent query.
+    fn record(&mut self, text: &str, cx: &mut Cx<'_>) {
+        if search_history::record(&mut self.session.history.recent, text) && self.session.history.loaded {
+            self.write_history(cx);
+        }
+        self.refresh_suggestions(cx.config());
+    }
+
+    fn write_history(&self, cx: &mut Cx<'_>) {
+        cx.effect(Effect::WriteCache {
+            path: self.history_path.clone(),
+            text: search_history::to_json(&self.session.history.recent),
+        });
+    }
+
+    /// `up` in the input: the next older recent query replaces the text, the first step keeping what was typed.
+    fn history_back(&mut self) {
+        let history = &mut self.session.history;
+        let Some(last) = history.recent.len().checked_sub(1) else {
+            return;
+        };
+        let index = if let Some(browse) = &mut history.browse {
+            browse.index = (browse.index + 1).min(last);
+            browse.index
+        } else {
+            history.browse = Some(Browse {
+                index: 0,
+                draft: self.session.input.value().to_owned(),
+            });
+            0
+        };
+        let text = history.recent[index].clone();
+        self.session.input.set_value(text);
+        self.text_changed();
+    }
+
+    /// `down` in the input: the next newer recent query, or past the newest, what was typed before stepping back.
+    fn history_forward(&mut self) {
+        let history = &mut self.session.history;
+        let Some(browse) = &mut history.browse else {
+            return;
+        };
+        let text = if let Some(index) = browse.index.checked_sub(1) {
+            browse.index = index;
+            history.recent.get(index).cloned().unwrap_or_default()
+        } else {
+            let draft = std::mem::take(&mut browse.draft);
+            history.browse = None;
+            draft
+        };
+        self.session.input.set_value(text);
+        self.text_changed();
+    }
+
+    /// `search.save_query`: the trimmed text joins `search.saved_queries`, which the config save writes.
+    fn save_query(&mut self, cx: &mut Cx<'_>) {
+        let text = self.session.input.value().trim().to_owned();
+        if text.is_empty() {
+            cx.notify(Toast::warning(NOTHING_TO_SAVE));
+            return;
+        }
+        if cx.config().search.saved_queries.contains(&text) {
+            cx.notify(Toast::info(ALREADY_SAVED));
+            return;
+        }
+        cx.config_mut().search.saved_queries.push(text);
+        cx.notify(Toast::info(SAVED));
+        self.refresh_suggestions(cx.config());
     }
 
     fn action(action: SearchAction) -> Action {
@@ -689,9 +854,11 @@ impl SearchDialog {
         let before = self.cancel_first(cx).unwrap_or_else(|| self.session.status.clone());
         self.cancel_page(cx);
         let id = cx.request(GithubRequest::SearchIssues(query.clone()));
+        self.session.history.browse = None;
         self.first = Some(FirstPage {
             id,
             query,
+            text: self.session.input.value().to_owned(),
             columns,
             before,
         });
@@ -859,6 +1026,10 @@ impl SearchDialog {
             self.session.status = before;
         }
         self.cancel_page(cx);
+        // The next open reads the file again.
+        if let Some(id) = self.history_read.take() {
+            cx.effect(Effect::Cancel(id));
+        }
         self.select.close();
         self.session.scope = self.scope();
         self.session.focus = if self.focus == Focus::Table {
@@ -900,6 +1071,7 @@ impl Component for SearchDialog {
                 self.focus_query();
                 Some(Action::Consumed)
             }
+            BindingId::SearchSaveQuery => Some(Self::action(SearchAction::SaveQuery)),
             _ => None,
         }
     }
@@ -916,7 +1088,9 @@ impl Component for SearchDialog {
 
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
         match self.focus {
-            Focus::Input => self.session.input.consumes_key(key, keymap),
+            Focus::Input => {
+                self.session.input.consumes_key(key, keymap) || keymap.match_in(HISTORY_KEYS, key).is_some()
+            }
             Focus::Scope => self.select.consumes_key(key, keymap),
             Focus::Table => false,
         }
@@ -926,9 +1100,21 @@ impl Component for SearchDialog {
         let chord = KeyChord::from_event(&key)?;
         match self.focus {
             Focus::Input => {
+                match cx.keymap().match_in(HISTORY_KEYS, &chord) {
+                    Some(BindingId::SearchHistoryPrevious) => {
+                        self.history_back();
+                        return Some(Action::Consumed);
+                    }
+                    Some(_) => {
+                        self.history_forward();
+                        return Some(Action::Consumed);
+                    }
+                    None => {}
+                }
                 let before = self.session.input.value().to_owned();
                 let outcome = self.session.input.handle_key(&chord, cx.keymap(), cx.clipboard());
                 if self.session.input.value() != before {
+                    self.session.history.browse = None;
                     self.text_changed();
                 }
                 match outcome {
@@ -996,6 +1182,7 @@ impl Component for SearchDialog {
                 }
             }
             SearchAction::LoadMore { generation, page } => self.request_page(generation, page, cx),
+            SearchAction::SaveQuery => self.save_query(cx),
             SearchAction::Open(key) => {
                 if let Some(hit) = self.session.table.get(&key).cloned() {
                     self.close(Some(Box::new(hit)), cx);
@@ -1152,11 +1339,25 @@ impl Dialog for SearchDialog {
         match self.focus {
             Focus::Input => {
                 self.session.input.handle_paste(text);
+                self.session.history.browse = None;
                 self.text_changed();
                 Some(Action::Consumed)
             }
             Focus::Table | Focus::Scope => None,
         }
+    }
+
+    fn on_cache_read(
+        &mut self,
+        id: RequestId,
+        result: Result<Option<String>, String>,
+        cx: &mut Cx<'_>,
+    ) -> Option<Result<Option<String>, String>> {
+        if self.history_read.take_if(|pending| *pending == id).is_none() {
+            return Some(result);
+        }
+        self.history_loaded(result, cx);
+        None
     }
 
     fn next_deadline(&self, now: Instant) -> Option<Instant> {
@@ -1168,6 +1369,10 @@ impl Dialog for SearchDialog {
             return Some(response);
         };
         if let Some(first) = self.first.take_if(|first| first.id == id) {
+            // A query GitHub couldn't read isn't worth keeping; anything else it answered is.
+            if !matches!(result, Err(SearchError::Invalid { .. })) {
+                self.record(&first.text, cx);
+            }
             self.first_loaded(first, result, cx);
             return None;
         }

@@ -3,5 +3,9 @@
         "theme": "nord",
         "color_depth": "256",
         "show_issues": false
+    },
+    "search": {
+        "saved_queries": ["is:pr is:open", "label:bug"],
+        "zz_unknown": 1
     }
 }

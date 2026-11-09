@@ -33,6 +33,7 @@ const RUST_ONLY_IDS: &[&str] = &[
     "main.refresh",
     // Decision search-issues-and-prs.
     "search.open",
+    "search.save_query",
 ];
 
 fn python_bindings() -> Vec<Value> {

@@ -21,6 +21,7 @@ const ISSUES: usize = 5;
 const CACHE: usize = 6;
 const CORE: usize = 7;
 const API: usize = 8;
+const SEARCH: usize = 9;
 
 /// The default config as loading gives it: with its paths, which Save won't take blank.
 fn config() -> Config {
@@ -304,6 +305,7 @@ fn every_field_gets_the_widget_for_its_kind() {
             vec!["text", "text", "text", "text", "text", "text"],
             vec!["switch", "text", "text", "text"],
             vec!["text", "disabled select"],
+            vec!["list"],
         ]
     );
 }
@@ -344,8 +346,10 @@ fn the_template_input_has_its_placeholder() {
 fn left_and_right_switch_tabs_and_wrap() {
     let (mut app, _) = opened(&config());
     app.press(&["left"]);
+    assert_eq!(active_tab(&app), SEARCH);
+    app.press(&["left"]);
     assert_eq!(active_tab(&app), API);
-    app.press(&["right"]);
+    app.press(&["right", "right"]);
     assert_eq!(active_tab(&app), APPEARANCE);
     app.press(&["right", "right"]);
     assert_eq!(active_tab(&app), 2);
@@ -405,11 +409,11 @@ fn the_ring_holds_the_active_tabs_fields_and_wraps_both_ways() {
     app.press(&["left"]);
     assert_eq!(ring_forward(&mut app), [Tabs, Scroll, KeyList, Save, Cancel]);
     // Api's disabled select is skipped.
-    app.press(&["left", "left", "left"]);
+    app.press(&["left", "left", "left", "left"]);
     assert_eq!(active_tab(&app), API);
     assert_eq!(ring_forward(&mut app), [Tabs, Scroll, Field(0), Save, Cancel]);
-    // And Field(1) isn't disabled on another tab.
-    app.press(&["right"]);
+    // And Field(1) isn't disabled on another tab (past Search, Appearance).
+    app.press(&["right", "right"]);
     assert_eq!(
         ring_forward(&mut app),
         [
@@ -1034,6 +1038,16 @@ fn snapshot_list_editor() {
     );
 }
 
+/// The Rust-only Search tab, last, with two saved queries (#395).
+#[test]
+fn snapshot_search_saved_queries() {
+    let mut config = config();
+    config.search.saved_queries = vec!["is:pr is:open".into(), "label:bug sort:updated-desc".into()];
+    let (mut app, _) = opened(&config);
+    go_to_tab(&mut app, SEARCH);
+    insta::assert_snapshot!("search_saved_queries", app.screen(160, 48));
+}
+
 #[test]
 fn snapshot_list_editor_editing() {
     let mut config = config();
@@ -1235,6 +1249,7 @@ fn the_filter_spans_every_tab_and_matches_the_snake_case_name() {
             vec![],
             vec!["state_filter", "owner_filter"],
             vec!["state_filter", "owner_filter"],
+            vec![],
             vec![],
             vec![],
             vec![],
@@ -1460,8 +1475,8 @@ fn written(config: &Config) -> Vec<(&str, &str)> {
 fn the_list_is_every_rebindable_binding_in_group_order_with_the_first_highlighted() {
     let (app, _) = on_list(&config());
     let ids: Vec<&str> = key_list(&app).rows().iter().map(|row| row.config_id).collect();
-    // Python's 59 ids, the six Rust-only diff ids, `main.refresh` and `search.open`.
-    assert_eq!(ids.len(), 67);
+    // Python's 59 ids, the six Rust-only diff ids, `main.refresh`, `search.open` and `search.save_query`.
+    assert_eq!(ids.len(), 68);
     assert_eq!(
         &ids[..4],
         [

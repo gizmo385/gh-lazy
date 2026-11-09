@@ -4,6 +4,7 @@
 //! The commands are data ([`PaletteCommand`]) built by `App` when the palette opens, from the state at that moment.
 //! Picking one closes the palette and hands its [`PaletteRun`] to the opener, which runs it on the main screen.
 
+use std::borrow::Cow;
 use std::time::Duration;
 
 use crossterm::event::{KeyEvent, MouseButton, MouseEvent, MouseEventKind};
@@ -103,6 +104,8 @@ pub enum PaletteRun {
     Screenshot,
     /// "Search issues and pull requests": open the Search modal (#394).
     OpenSearch,
+    /// "Search: <query>": open the Search modal on `search.saved_queries[index]` and search it (#395).
+    RunSavedSearch(usize),
 }
 
 impl PaletteRun {
@@ -123,6 +126,7 @@ impl PaletteRun {
             PaletteRun::ChangeSettings => Action::OpenSettings,
             PaletteRun::Screenshot => Action::Screenshot,
             PaletteRun::OpenSearch => Action::Main(MainAction::OpenSearch(SearchOrigin::Palette)),
+            PaletteRun::RunSavedSearch(index) => Action::Main(MainAction::RunSavedSearch(index)),
         }
     }
 }
@@ -137,10 +141,10 @@ pub enum CommandSource {
 }
 
 /// One command the palette offers.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PaletteCommand {
-    /// What the search matches and the hit shows in bold: "Keys".
-    pub name: &'static str,
+    /// What the search matches and the hit shows in bold: "Keys". Owned for a saved search's "Search: <query>".
+    pub name: Cow<'static, str>,
     /// The dimmed line under the name, if it has one. A palette whose commands have none draws one row per hit.
     pub help: Option<&'static str>,
     /// Where it comes from.
@@ -262,13 +266,13 @@ impl CommandPaletteDialog {
     pub fn themes() -> Self {
         let mut commands: Vec<PaletteCommand> = Theme::all()
             .map(|theme| PaletteCommand {
-                name: theme.name,
+                name: Cow::Borrowed(theme.name),
                 help: None,
                 source: CommandSource::System,
                 run: PaletteRun::SetTheme(theme.name),
             })
             .collect();
-        commands.sort_by_key(|command| command.name);
+        commands.sort_by(|a, b| a.name.cmp(&b.name));
         Self::with_placeholder(commands, THEMES_PLACEHOLDER)
     }
 
@@ -293,14 +297,22 @@ impl CommandPaletteDialog {
         palette
     }
 
+    /// Every command offered, in the order given.
+    #[cfg(test)]
+    pub(crate) fn commands(&self) -> &[PaletteCommand] {
+        &self.commands
+    }
+
     /// The listed commands' names, in order.
-    pub fn hit_names(&self) -> Vec<&'static str> {
-        self.hits.iter().map(|hit| self.commands[hit.command].name).collect()
+    pub fn hit_names(&self) -> Vec<&str> {
+        self.hits.iter().map(|hit| &*self.commands[hit.command].name).collect()
     }
 
     /// The highlighted command's name, when anything is listed.
-    pub fn highlighted(&self) -> Option<&'static str> {
-        self.hits.get(self.highlight).map(|hit| self.commands[hit.command].name)
+    pub fn highlighted(&self) -> Option<&str> {
+        self.hits
+            .get(self.highlight)
+            .map(|hit| &*self.commands[hit.command].name)
     }
 
     /// Whether "No matches found" shows.
@@ -323,7 +335,7 @@ impl CommandPaletteDialog {
         let query = self.query();
         self.hits = if query.is_empty() {
             let mut system: Vec<usize> = self.indices(CommandSource::System).collect();
-            system.sort_by_key(|&index| self.commands[index].name);
+            system.sort_by(|&a, &b| self.commands[a].name.cmp(&self.commands[b].name));
             system
                 .into_iter()
                 .chain(self.indices(CommandSource::App))
@@ -338,8 +350,8 @@ impl CommandPaletteDialog {
                 .iter()
                 .enumerate()
                 .filter_map(|(command, c)| {
-                    let found = fuzzy_match(query, c.name)?;
-                    let matched = found.highlights(c.name);
+                    let found = fuzzy_match(query, &c.name)?;
+                    let matched = found.highlights(&c.name);
                     Some((found.score, Hit { command, matched }))
                 })
                 .collect();

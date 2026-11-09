@@ -17,6 +17,7 @@ pub mod logging;
 pub mod models;
 pub mod references;
 pub mod screen;
+pub mod search_history;
 #[cfg(test)]
 mod test_fs;
 #[cfg(any(test, feature = "test-util"))]

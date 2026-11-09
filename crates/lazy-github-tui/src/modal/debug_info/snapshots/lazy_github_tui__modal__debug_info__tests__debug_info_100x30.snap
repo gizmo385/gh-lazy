@@ -9,7 +9,7 @@ expression: "styled(&mut app(), 100, 30)"
 │ ★  Owner█                                                                              █         │
 │         █                                                                              █━━━━━━━━━│
 │         █                              Library Versions                                █         │
-│         █                                                                            ▃▃█         │
+│         █                                                                            ▄▄█         │
 │         █  • LazyGithub Version: 0.1.0                                                 █)        │
 │         █  • Rustc Version: 1.97.0 (fixed 2026-01-01)                                  █         │
 │         █  • Gh Version: 2.89.0 (fake-gh)                                              █h        │

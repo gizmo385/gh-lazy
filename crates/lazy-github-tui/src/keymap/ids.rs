@@ -229,6 +229,9 @@ registry! {
     // Rebindable like Python's ids, though Python has no search and ignores an override of it.
     SearchOpen("search.open", "s", "open_search", "Search GitHub")
         .tooltip("Search GitHub's issues and pull requests with its query syntax");
+    // Rust-only (decision search-issues-and-prs): saves the Search modal's query to `search.saved_queries`.
+    SearchSaveQuery("search.save_query", "ctrl+s", "save_query", "Save query")
+        .tooltip("Save the query, which the command palette then lists");
 
     // Rust-only editor keys, fixed under internal ids (decision settings-key-bindings-list, D3): the Settings Key
     // Bindings list (#381).
@@ -244,6 +247,10 @@ registry! {
     SettingsListMoveDown("settings.list.move_down", "shift+down", "move_item_down", "Move down").internal();
     SettingsListCommit("settings.list.commit", "enter", "commit_item", "Done").internal();
     SettingsListCancel("settings.list.cancel", "escape", "cancel_item", "Cancel").internal();
+    // The Search modal's query input (decision search-issues-and-prs): back and forward through the recent queries,
+    // as a shell's history.
+    SearchHistoryPrevious("search.history.previous", "up", "history_previous", "").internal();
+    SearchHistoryNext("search.history.next", "down", "history_next", "").internal();
 
     // Textual built-ins. Python has no ids for them, so overrides never reach them. All are hidden but the select
     // overlay's `escape`.

@@ -20,7 +20,7 @@ expression: "styled(&mut app(), 160, 48)"
 │               █  • Color Depth: truecolor (TERM_PROGRAM=WezTerm)                                                                             █               │
 │               █                                                                                                                              █               │
 │               █                                                                                                                              █               │
-│               █                                                     LazyGithub Config                                                      ▂▂█               │
+│               █                                                     LazyGithub Config                                                      ▆▆█               │
 └───────────────█                                                                                                                              █               │
 ┌─ [2] Pull Requ█                                                                                                                              █articipating   │
 │ #  Status  Aut█    {                                                                                                                         █ for the       │

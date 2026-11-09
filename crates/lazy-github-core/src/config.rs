@@ -375,6 +375,18 @@ pub struct IssueSettings {
     pub extra: ExtraFields,
 }
 
+/// The Search modal's settings. LazyGithub-only: the Python app has no such section, and its loader ignores it
+/// (and drops it on save). Decision `search-issues-and-prs`.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct SearchSettings {
+    /// Queries saved with `search.save_query`, in the order saved. Each is a command-palette command.
+    pub saved_queries: Vec<String>,
+    /// Unknown keys, written back on save.
+    #[serde(flatten)]
+    pub extra: ExtraFields,
+}
+
 /// How long data from the GitHub API is cached. Durations are whole seconds, as in the file. A negative value loads
 /// and saves unchanged, as in Python, and the accessors treat it as zero.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -567,6 +579,9 @@ pub struct Config {
     pub core: CoreConfig,
     /// How the GitHub API is reached.
     pub api: ApiConfig,
+    /// Search settings. LazyGithub-only, so the Python app drops the section when it saves; last, after Python's
+    /// sections, so Settings lists Python's tabs in Python's order.
+    pub search: SearchSettings,
     /// Unknown top-level keys, written back on save.
     #[serde(flatten)]
     pub extra: ExtraFields,

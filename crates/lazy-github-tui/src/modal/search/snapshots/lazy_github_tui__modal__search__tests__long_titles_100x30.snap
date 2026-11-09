@@ -31,4 +31,4 @@ expression: screen
 ┌─ [4] Workflows (empty) ──────────────┐│                                                          │
 │                               ▋      ││                                                          │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
- ⏎ Open  / Query  q Close
+ ⏎ Open  / Query  q Close  ^s Save query

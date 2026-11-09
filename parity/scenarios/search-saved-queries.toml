@@ -1,0 +1,155 @@
+version = 1
+description = "Search recent and saved queries: ctrl+s saves the query with a toast, the palette lists it as Search: <query> and running it searches at once, the input suggests it, and up steps back through the recent queries (#395)"
+# Rust-only: Python has no search history or saved filters (decision search-issues-and-prs). The modal is loose text,
+# checked with [expect]. The harness's isolated HOME starts with no history and no saved queries.
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "modals.search-history",
+    "modals.search-saved-queries",
+    "keybindings.search-save-query",
+    "config.search-saved-queries",
+    "caches-drafts.search-history",
+    "command-palette.search-saved-query",
+]
+sizes = [[160, 48]]
+
+[env]
+# search has the hits for repo:parity-bot/pr-details (is:pr is:open); pr-details lists that repo first.
+fixtures = ["search", "pr-details", "base"]
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Current repo: parity-bot/pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["s"]
+
+[[step]]
+wait = { text = "Type a query and press enter" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "3 results", timeout_ms = 15000 }
+
+[[step]]
+keys = ["ctrl+s"]
+
+[[step]]
+wait = { text = "Saved search query" }
+
+[[step]]
+capture = "saved"
+
+# Out of the modal (focus is on the results), then the palette.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Search issues and pull requests" }
+
+[[step]]
+keys = ["ctrl+p"]
+
+[[step]]
+wait = { text = "Search for commands" }
+
+[[step]]
+type = "search:"
+
+[[step]]
+wait = { text = "Run a saved search" }
+
+[[step]]
+capture = "palette"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "3 results", timeout_ms = 15000 }
+
+[[step]]
+capture = "ran"
+
+# Back to the query, cleared, then `is`: the saved query is suggested.
+[[step]]
+keys = ["/", "ctrl+u"]
+
+# The empty input shows its placeholder.
+[[step]]
+wait = { text = "author:@me label:bug" }
+
+[[step]]
+type = "is"
+
+[[step]]
+wait = { gone = "author:@me label:bug" }
+
+[[step]]
+wait = { text = "is:pr is:open" }
+
+[[step]]
+wait = { stable_ms = 300 }
+
+[[step]]
+capture = "suggested"
+
+# Typing on past the suggestion drops it; `up` then brings back the newest recent query, the one just run.
+[[step]]
+type = "x"
+
+[[step]]
+wait = { gone = "is:pr is:open" }
+
+[[step]]
+keys = ["up"]
+
+[[step]]
+wait = { text = "is:pr is:open" }
+
+[[step]]
+capture = "history"
+
+[expect.saved]
+contains = ["Saved search query", "3 results", "is:pr is:open"]
+footer = ["⏎ Open", "/ Query", "q Close", "^s Save query"]
+
+[expect.palette]
+contains = ["search:", "Search: is:pr is:open", "Run a saved search"]
+
+[expect.ran]
+contains = [
+    "Search issues and pull requests",
+    "This repo (parity-bot/pr-details)",
+    "is:pr is:open",
+    "3 results",
+    "Add a cursor to the viewer",
+]
+not_contains = ["Run a saved search"]
+footer = ["⏎ Open", "/ Query", "q Close", "^s Save query"]
+
+[expect.suggested]
+# The suggestion's rest is drawn dimmed after the typed `is`.
+contains = ["is:pr is:open", "3 results"]
+# Not the placeholder, which also starts with is:pr is:open.
+not_contains = ["author:@me label:bug"]
+footer = ["⏎ Search", "esc Results", "^s Save query"]
+
+[expect.history]
+contains = ["is:pr is:open", "3 results"]
+not_contains = ["author:@me label:bug", "isx"]
+footer = ["⏎ Search", "esc Results", "^s Save query"]

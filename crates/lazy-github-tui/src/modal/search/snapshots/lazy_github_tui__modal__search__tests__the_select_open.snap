@@ -49,4 +49,4 @@ expression: "app.screen(160, 48)"
 ┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
 │ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
- esc Dismiss menu  / Query
+ esc Dismiss menu  / Query  ^s Save query

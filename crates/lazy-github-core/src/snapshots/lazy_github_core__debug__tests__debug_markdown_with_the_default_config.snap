@@ -63,6 +63,9 @@ expression: "debug_markdown(&fixed_env(), &config)"
     "api": {
         "base_url": "https://api.github.com",
         "client_type": "RAW_HTTP"
+    },
+    "search": {
+        "saved_queries": []
     }
 }
 ```

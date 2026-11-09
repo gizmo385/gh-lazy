@@ -388,6 +388,14 @@ pub static SECTIONS: &[Section] = &[
             },
         ],
     },
+    // LazyGithub-only (decision search-issues-and-prs): the Search modal's saved queries, removed here. Last, after
+    // Python's sections, so the tab strip starts as Python's.
+    Section {
+        key: "search",
+        title: "Search",
+        doc: Some("Searches you saved with ctrl+s in the Search dialog"),
+        fields: &[list_field!(search.saved_queries)],
+    },
 ];
 
 /// `api.client_type`'s value for the `gh` backend.

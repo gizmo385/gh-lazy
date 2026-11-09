@@ -15,7 +15,7 @@ expression: "app.screen(160, 100)"
 │               █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█by selecting   │
 │               █                                                                                                                              █ed a           │
 │               █                                                                                                                              █ and           │
-│               █                                                       Library Versions                                                       █               │
+│               █                                                      Library Versions                                                        █               │
 │               █                                                                                                                              █               │
 │               █  • LazyGithub Version: 0.1.0                                                                                                 █               │
 │               █  • Rustc Version: 1.97.0 (fixed 2026-01-01)                                                                                  █               │
@@ -25,7 +25,7 @@ expression: "app.screen(160, 100)"
 │               █  • Color Depth: truecolor (TERM_PROGRAM=WezTerm)                                                                             █articipating   │
 │               █                                                                                                                              █ for the       │
 │               █                                                                                                                              █               │
-│               █                                                      LazyGithub Config                                                       █               │
+│               █                                                     LazyGithub Config                                                        █               │
 │               █                                                                                                                              █               │
 │               █                                                                                                                              █               │
 │               █    {                                                                                                                         █               │
@@ -77,13 +77,13 @@ expression: "app.screen(160, 100)"
 │               █        "api": {                                                                                                              █               │
 │               █            "base_url": "https://api.github.com",                                                                             █               │
 │               █            "client_type": "RAW_HTTP"                                                                                         █               │
-│               █        }                                                                                                                     █               │
-│               █    }                                                                                                                         █               │
-│               █                                                                                                                              █               │
-└───────────────█                                                                                                                              █               │
-┌─ [4] Workflows█                                                                                                                              █               │
-│ Time  Result  █──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────█               │
-│               █                                                                                                                              █               │
+│               █        },                                                                                                                    █               │
+│               █        "search": {                                                                                                           █               │
+│               █            "saved_queries": []                                                                                               █               │
+└───────────────█        }                                                                                                                     █               │
+┌─ [4] Workflows█    }                                                                                                                         █               │
+│ Time  Result  █                                                                                                                              █               │
+│               █                                                                                                                            ▇▇█               │
 │               █                                                                                                                              █               │
 │               █                                                                                                                              █               │
 │               █                                             ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                             █               │

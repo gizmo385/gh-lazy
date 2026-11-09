@@ -404,6 +404,9 @@ pub enum MainAction {
     OpenInRepo(Box<OpenInRepo>),
     /// Open the Search modal (`search.open` on the PR or Issues table, or the palette), restoring the last session.
     OpenSearch(SearchOrigin),
+    /// The palette's "Search: <query>": the Search modal over the last session with `search.saved_queries[index]` as
+    /// its text, searched at once (#395).
+    RunSavedSearch(usize),
     /// The Search modal closed: its session is kept for the next open, and a hit chosen there opens in its repo
     /// ([`MainAction::OpenInRepo`]).
     SearchClosed(Box<SearchOutcome>),
@@ -1805,6 +1808,7 @@ impl Component for MainScreen {
             MainAction::NotificationsClosed(chosen) => notifications_closed(chosen, cx),
             MainAction::OpenInRepo(request) => self.open_in_repo(*request, cx),
             MainAction::OpenSearch(origin) => self.open_search_modal(origin, cx),
+            MainAction::RunSavedSearch(index) => self.run_saved_search(index, cx),
             MainAction::SearchClosed(outcome) => self.search_closed(*outcome, cx),
             MainAction::OpenRepoItem { repo, item, origin } => self.open_repo_item(repo, item, origin, cx),
             MainAction::OpenPasteLink(text) => {
@@ -1926,6 +1930,23 @@ impl MainScreen {
     fn open_search_modal(&mut self, origin: SearchOrigin, cx: &mut Cx<'_>) {
         let session = self.search.take().unwrap_or_else(|| SearchSession::new(cx.options()));
         let dialog = SearchDialog::new(session, origin, cx);
+        Self::show_search(dialog, cx);
+    }
+
+    /// `MainAction::RunSavedSearch`: the modal over the last session, its text the saved query, searching it in the
+    /// session's scope (or the query's own). An index the config no longer has does nothing.
+    fn run_saved_search(&mut self, index: usize, cx: &mut Cx<'_>) {
+        let Some(query) = cx.config().search.saved_queries.get(index).cloned() else {
+            tracing::debug!(index, "No saved search query at this index");
+            return;
+        };
+        let session = self.search.take().unwrap_or_else(|| SearchSession::new(cx.options()));
+        let mut dialog = SearchDialog::new(session, SearchOrigin::Palette, cx);
+        dialog.run_query(&query, cx);
+        Self::show_search(dialog, cx);
+    }
+
+    fn show_search(dialog: SearchDialog, cx: &mut Cx<'_>) {
         cx.open_dialog(dialog, |outcome| {
             Action::Main(MainAction::SearchClosed(Box::new(outcome)))
         });

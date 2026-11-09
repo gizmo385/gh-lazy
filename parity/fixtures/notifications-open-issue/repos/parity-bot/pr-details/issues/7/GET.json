@@ -41,7 +41,8 @@
       "author_association": "CONTRIBUTOR",
       "body": "The install section says `cargo instal`; it should be `cargo install`.",
       "closed_by": null
-    }
+    },
+    "delay_ms": 500
   },
-  "note": "hand-written: the single-issue endpoint, for the notifications-open-issue scenario (#405)"
+  "note": "hand-written: the single-issue endpoint, for the notifications-open-issue scenario (#405). Answered after 0.5 s: the issue replacing the repo overview cancels its README request, so the delay makes sure that request was made first."
 }

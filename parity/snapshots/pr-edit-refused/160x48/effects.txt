@@ -1,0 +1,11 @@
+GET /repos/parity-bot/pr-details/collaborators
+GET /repos/parity-bot/pr-details/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/pr-details/issues?page=2&per_page=30&state=all
+GET /repos/parity-bot/pr-details/pulls/3
+GET /repos/parity-bot/pr-details/pulls/4
+GET /repos/parity-bot/pr-details/pulls/4/requested_reviewers
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=2&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/readme accept=raw
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all
+PATCH /repos/parity-bot/pr-details/pulls/4 {"base":"main","body":"Superseded by the new renderer.","title":"Drop the old renderer"}

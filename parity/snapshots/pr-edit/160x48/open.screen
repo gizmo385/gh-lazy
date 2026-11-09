@@ -41,14 +41,14 @@ cursor 0 0 hidden
 │                             █ ▊                                                                                            ▎   █                             │
 │                             █ ▊                                                                                            ▎   █                             │
 │                             █ ▊                                                                                            ▎   █                             │
-│                             █ ▊                                                                 ▌                                                            │
-│                             █                                                                   ▌ Updating PR...                                             │
-│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌                                                            │
+│                             █ ▊                                                                                            ▎   █                             │
+│                             █                                                                                                  █                             │
+│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
 │                                                              ││                                                                                              │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌ Error updating pull request                                │
-│                                                              ││                                 ▌ Unexpected error while attempting to update PR             │
-└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  / Search  O Lookup Pull Request  s Search GitHub  E Edit PR  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -90,15 +90,15 @@ D.............................jkEJOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 D.............................jkEJOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOJGHHkj.............................c
 D.............................jkEJOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOJGHHkj.............................c
 D.............................jkEJOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOJGHHkj.............................c
-D.............................jkEJOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.c
-D.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.c
-D.............................jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.c
+D.............................jkEJOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOJGHHkj.............................c
+D.............................jkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkj.............................c
+D.............................jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj.............................c
 D..............................................................Dc..............................................................................................c
-D..............................................................Dc.................................SRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.c
-D..............................................................Dc.................................SRTTTTTTTTTTTTTTTTTTTTTTTTTTTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.c
-D..............................................................Dc.................................SRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.c
-DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDccccccccccccccccccccccccccccccccccSRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRcc
-UUUVVVVVVVUUUVVVVVVVVVVVVVVVVVVVVUUUVVVVVVVVVVVVVVUUUVVVVVVVVUUUVVVVVVVVVVUUUVVVVVVVVVVUUUVVVVVVVUUUUVVVVVVVVVVVUUUVVVVVVVVVVVVUUUVVVVVVVVVVVVVVVVVVVVVVUUUVVVVV
+D..............................................................Dc..............................................................................................c
+D..............................................................Dc..............................................................................................c
+D..............................................................Dc..............................................................................................c
+DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+QQQRRRRRRRQQQRRRRRRRRRRRRRRRRRRRRQQQRRRRRRRRRRRRRRQQQRRRRRRRRQQQRRRRRRRRRRQQQRRRRRRRRRRQQQRRRRRRRQQQQRRRRRRRRRRRQQQRRRRRRRRRRRRQQQRRRRRRRRRRRRRRRRRRRRRRQQQRRRRR
 --- legend
 . fg=#646464 bg=#121212
 a fg=#0a263a bg=#121212
@@ -143,9 +143,5 @@ M fg=#63696e bg=#0b3a5f bold
 N fg=#90908a bg=#272822
 O fg=#f8f8f2 bg=#272822
 P fg=#646464 bg=#1a1a1a
-Q fg=#4ebf71 bg=#343f49
-R fg=#e0e0e0 bg=#343f49
-S fg=#b93c5b bg=#343f49
-T fg=#d17e92 bg=#343f49 bold
-U fg=#704d1c bg=#191d21 bold
-V fg=#646464 bg=#191d21
+Q fg=#704d1c bg=#191d21 bold
+R fg=#646464 bg=#191d21

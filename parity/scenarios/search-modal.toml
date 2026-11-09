@@ -38,6 +38,17 @@ keys = ["3"]
 [[step]]
 wait = { text = "O Lookup Issue" }
 
+# The panes behind keep loading: the capture waits for the issues, the workflows and the README, or the layout can
+# still change under it.
+[[step]]
+wait = { text = "[3] Issues (empty)" }
+
+[[step]]
+wait = { text = "[4] Workflows (empty)" }
+
+[[step]]
+wait = { text = "Pull requests for the PR details tabs." }
+
 [[step]]
 capture = "issues-footer"
 

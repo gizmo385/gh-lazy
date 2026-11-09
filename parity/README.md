@@ -337,8 +337,9 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   `base`. Hand-written.
 - `notifications-open-issue/`: issue 7 of `parity-bot/pr-details` ("Typo in the install docs", open, by
   `parity-friend`, the subject of `notifications-modal`'s 9100002) from `GET /repos/parity-bot/pr-details/issues/7`,
-  and its comments (`[]`). Listed before `notifications-modal`, for the Rust-only `notifications-open-issue` scenario
-  (#405). Hand-written.
+  and its comments (`[]`). The issue is answered after 0.5 s (`delay_ms = 500`): the issue replacing the repo
+  overview cancels the overview's README request, and the delay makes sure that request was made first. Listed before
+  `notifications-modal`, for the Rust-only `notifications-open-issue` scenario (#405). Hand-written.
 - `notifications-slow/`: `notifications-modal`'s `all=true` page 1 answered after 1.5 s (`delay_ms = 1500`), for the
   `notifications` scenario's loading capture. Listed before `notifications-modal`. Hand-written.
 - `repo-selected-empty/`: what selecting `parity-bot/dotfiles` loads (issues, workflows, runs, the README), all empty

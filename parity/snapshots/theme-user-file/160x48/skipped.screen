@@ -98,7 +98,7 @@ c..............................................................cc...............
 c..............................................................cc.................................noppppppppppppppppppoooooooooooooooooooooooooooooooooooooooo.c
 c..............................................................cc.................................nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo.c
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccnooooooooooooooooooooooooooooooooooooooooooooooooooooooooooocc
-qqqrrrrrrrqqqqrrrrrrrrrrrrrrrrqqqrrrrrrrrrrrrrrrrrrqqqrrrrrrrrrrqqqrrrrrrrrrrqqqrrrrrrrqqqqrrrrrrrrrrrqqqrrrrrrrrrrrrqqqrrrrrrrrrrrrrrrrrrrrrrqqqrrrrrqqqqrrrrrr
+qqqoooooooqqqqooooooooooooooooqqqooooooooooooooooooqqqooooooooooqqqooooooooooqqqoooooooqqqqoooooooooooqqqooooooooooooqqqooooooooooooooooooooooqqqoooooqqqqoooooo
 --- legend
 . fg=#d8dee9 bg=#101820
 a fg=#81a1c1 bg=#101820
@@ -114,8 +114,7 @@ j fg=#88c0d0 bg=#101820 bold
 k fg=#d8dee9 bg=#101820 bold
 l fg=#88c0d0 bg=#101820 underline
 m fg=#d8dee9 bg=#434c5e bold
-n fg=#eacb8b bg=#545d70
-o fg=#d8dee9 bg=#545d70
-p fg=#f1dcb2 bg=#545d70 bold
+n fg=#ebcb8b bg=#434c5e
+o fg=#d8dee9 bg=#434c5e
+p fg=#ebcb8b bg=#434c5e bold
 q fg=#88c0d0 bg=#434c5e bold
-r fg=#d8dee9 bg=#434c5e

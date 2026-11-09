@@ -1,5 +1,15 @@
-# Rose Pine Dawn: Textual 8.2.5's built-in theme, frozen as data (#378). Every role is required; what each one is
-# for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax in src/theme/file.rs.
+# Rose Pine Dawn, from its upstream palette (#392): https://rosepinetheme.com/palette and
+# https://github.com/rose-pine/palette.
+# Surfaces: screen base, pane surface, header overlay, card overlay, raised overlay, dialog overlay.
+# Text: normal and plain text, muted subtle, disabled muted.
+# Seeds (brand, status and text colors): primary iris, secondary pine, accent rose, success foam, warning gold, error
+# love.
+# Syntax: keyword pine, string gold, number gold, constant gold, function rose, type foam, variable text, name text,
+# builtin love, attribute iris, decorator iris, tag foam, namespace iris, operator word pine, comment muted.
+# Diff lines: success and error at 15% over the pane, 25% for the current line. The other shades (buttons, scrollbars,
+# guides) are Textual 8.2.5's, derived from these seeds. The marks and diff stats are the app's own colors.
+# Every role is required; what each one is for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax
+# in src/theme/file.rs.
 display_name = "Rose Pine Dawn"
 appearance = "light"
 terminal_colors = false
@@ -8,34 +18,34 @@ terminal_colors = false
 screen = "#FAF4ED"
 pane = "#FFFAF3"
 header = "#F2E9E1"
-raised = "#FFFEF6"
-dialog = "#FFFFFF"
-card = "#FFFFFF"
+raised = "#F2E9E1"
+dialog = "#F2E9E1"
+card = "#F2E9E1"
 boost = "#000000 0%"
 scrim = "#FAF4ED 60%"
-focus_tint = "#575279 5%"
+focus_tint = "#464261 5%"
 hatch = "#F2E9E1"
 
 [text]
-normal = "auto 87%"
-plain = "#575279"
-muted = "auto 60%"
-disabled = "auto 38%"
-primary = "#5F506F"
-secondary = "#1A4556"
-accent = "#8D5553"
-success = "#386168"
-warning = "#9A6722"
-error = "#764150"
+normal = "#464261"
+plain = "#464261"
+muted = "#797593"
+disabled = "#9893A5"
+primary = "#907AA9"
+secondary = "#286983"
+accent = "#D7827E"
+success = "#56949F"
+warning = "#EA9D34"
+error = "#B4637A"
 
 [brand]
 primary = "#907AA9"
 secondary = "#286983"
-accent = "#D6827E"
+accent = "#D7827E"
 
 [status]
 success = "#56949F"
-warning = "#E99D34"
+warning = "#EA9D34"
 error = "#B4637A"
 
 [border]
@@ -46,21 +56,21 @@ field = "#9893A5"
 rule = "#286983"
 status_bar = "#286983"
 dialog = "#FAF4ED 80%"
-emphasis = "#D6827E"
+emphasis = "#D7827E"
 conversation = "#286983"
 review = "#92D1DC"
-help = "#575279 30%"
+help = "#464261 30%"
 
 [cursor]
 hover_bg = "#00000019"
 
 [cursor.focused]
 fg = "#FAF4ED"
-bg = "#575279"
+bg = "#464261"
 style = "none"
 
 [cursor.blurred]
-fg = "#575279"
+fg = "#464261"
 bg = "#907AA94C"
 style = "none"
 
@@ -70,7 +80,7 @@ track = "#E4DED7"
 corner = "#E4DED7"
 
 [input]
-placeholder = "auto 38%"
+placeholder = "#9893A5"
 placeholder_style = "none"
 invalid = "#B4637A"
 invalid_blurred = "#B4637A 60%"
@@ -78,16 +88,16 @@ terminal_colors = false
 
 [input.cursor]
 fg = "#FAF4ED"
-bg = "#575279"
+bg = "#464261"
 style = "none"
 
 [input.editor_cursor]
 fg = "auto 78.3%"
-bg = "#575279 70%"
+bg = "#464261 70%"
 style = "none"
 
 [input.selection]
-fg = "#575279"
+fg = "#464261"
 bg = "#DFDAD9"
 
 [footer]
@@ -100,7 +110,7 @@ fg = "#D7827E"
 bg = "transparent"
 
 [footer.description]
-fg = "#575279"
+fg = "#464261"
 bg = "transparent"
 
 [button]
@@ -113,8 +123,8 @@ bg = "#FFFAF3"
 light = "#FFFFFF"
 dark = "#E9E4DD"
 border = "#9893A5"
-label = "#575279"
-label_disabled = "#575279 60%"
+label = "#464261"
+label_disabled = "#464261 60%"
 
 [button.primary]
 bg = "#907AA9"
@@ -133,10 +143,10 @@ label = "auto 87%"
 label_disabled = "auto 52.2%"
 
 [button.warning]
-bg = "#E99D34"
+bg = "#EA9D34"
 light = "#FFC55C"
 dark = "#A56300"
-border = "#E99D34"
+border = "#EA9D34"
 label = "auto 87%"
 label_disabled = "auto 52.2%"
 
@@ -154,39 +164,39 @@ on = "#56949F"
 off = "#907AA9 15%"
 
 [select]
-muted = "#575279 50%"
+muted = "#464261 50%"
 terminal_colors = false
 
 [checkbox]
 bg = "#F2E9E1"
 off = "#C7BFB7"
-on = "#386168"
+on = "#56949F"
 
 [tree]
 guide = "#E9E4DD"
 guide_focused = "#E9E4DD"
-guide_selected = "#575279"
+guide_selected = "#464261"
 
 [tabs]
-label = "#575279 50%"
+label = "#464261 50%"
 label_style = "none"
-label_active = "#575279"
+label_active = "#464261"
 label_active_style = "none"
-bar = "#575279 10%"
-bar_focused = "#575279 30%"
-bar_active = "#575279"
+bar = "#464261 10%"
+bar_focused = "#464261 30%"
+bar_active = "#464261"
 
 [markdown]
 fence_bg = "#FFFFFF 30%"
 fence_inset = true
-code = "#764150 95%"
+code = "#B4637A 95%"
 code_bg = "#B4637A 5%"
 quote_bg = "#000000 0%"
-quote_bar = "#1A4556"
-bullet = "#1A4556"
+quote_bar = "#286983"
+bullet = "#286983"
 table_bg = "#FFFFFF 30%"
 table_header = "#907AA9"
-table_line = "#575279 20%"
+table_line = "#464261 20%"
 
 [markdown.h1]
 fg = "#907AA9"
@@ -204,34 +214,34 @@ bg = "transparent"
 style = "bold"
 
 [markdown.h4]
-fg = "#575279"
+fg = "#464261"
 bg = "transparent"
 style = "bold underline"
 
 [markdown.h5]
-fg = "#575279"
+fg = "#464261"
 bg = "transparent"
 style = "bold"
 
 [markdown.h6]
-fg = "#575279 60%"
+fg = "#464261 60%"
 bg = "transparent"
 style = "bold"
 
 [markdown.link]
-fg = "auto 87%"
+fg = "#464261"
 style = "underline"
 
 [syntax]
-text = "auto"
+text = "#464261"
 
 [syntax.comment]
-fg = "auto 60%"
+fg = "#9893A5"
 bg = "none"
 style = "none"
 
 [syntax.error]
-fg = "#764150"
+fg = "#B4637A"
 bg = "#E5C8CA"
 style = "none"
 
@@ -246,67 +256,67 @@ bg = "none"
 style = "italic"
 
 [syntax.generic_heading]
-fg = "#5F506F"
+fg = "#907AA9"
 bg = "none"
 style = "underline"
 
 [syntax.generic_subheading]
-fg = "#5F506F"
+fg = "#907AA9"
 bg = "none"
 style = "none"
 
 [syntax.keyword]
-fg = "#8D5553"
+fg = "#286983"
 bg = "none"
 style = "none"
 
 [syntax.keyword_constant]
-fg = "#386168 80%"
+fg = "#EA9D34"
 bg = "none"
 style = "bold"
 
 [syntax.keyword_namespace]
-fg = "#764150"
+fg = "#907AA9"
 bg = "none"
 style = "none"
 
 [syntax.number]
-fg = "#9A6722"
+fg = "#EA9D34"
 bg = "none"
 style = "none"
 
 [syntax.string]
-fg = "#386168"
+fg = "#EA9D34"
 bg = "none"
 style = "none"
 
 [syntax.string_backtick]
-fg = "auto 60%"
+fg = "#9893A5"
 bg = "none"
 style = "none"
 
 [syntax.string_doc]
-fg = "#386168 80%"
+fg = "#EA9D34"
 bg = "none"
 style = "italic"
 
 [syntax.string_double]
-fg = "#386168 90%"
+fg = "#EA9D34"
 bg = "none"
 style = "none"
 
 [syntax.name]
-fg = "#5F506F"
+fg = "#464261"
 bg = "none"
 style = "none"
 
 [syntax.name_attribute]
-fg = "#9A6722"
+fg = "#907AA9"
 bg = "none"
 style = "none"
 
 [syntax.name_builtin]
-fg = "#8D5553"
+fg = "#B4637A"
 bg = "none"
 style = "none"
 
@@ -316,32 +326,32 @@ bg = "none"
 style = "italic"
 
 [syntax.name_class]
-fg = "#9A6722"
+fg = "#56949F"
 bg = "none"
 style = "bold"
 
 [syntax.name_constant]
-fg = "#764150"
+fg = "#EA9D34"
 bg = "none"
 style = "none"
 
 [syntax.name_decorator]
-fg = "#5F506F"
+fg = "#907AA9"
 bg = "none"
 style = "bold"
 
 [syntax.name_function]
-fg = "#9A6722"
+fg = "#D7827E"
 bg = "none"
 style = "underline"
 
 [syntax.name_tag]
-fg = "#5F506F"
+fg = "#56949F"
 bg = "none"
 style = "bold"
 
 [syntax.name_variable]
-fg = "#1A4556"
+fg = "#464261"
 bg = "none"
 style = "none"
 
@@ -351,7 +361,7 @@ bg = "none"
 style = "bold"
 
 [syntax.operator_word]
-fg = "#764150"
+fg = "#286983"
 bg = "none"
 style = "bold"
 
@@ -378,10 +388,10 @@ job_pending = "#CB9000"
 job_running = "#0083B2"
 
 [diff]
-added_bg = "#0A3A0A"
-removed_bg = "#3A0A0A"
-added_current_bg = "#006400"
-removed_current_bg = "#8B0000"
+added_bg = "#E6EBE6"
+removed_bg = "#F4E3E1"
+added_current_bg = "#D5E0DE"
+removed_current_bg = "#ECD4D5"
 context_current_bg = "#CB9000"
 stat_added = "#448C27"
 stat_removed = "#AA3731"
@@ -390,11 +400,11 @@ review_comment_border = "#286983"
 
 [diff.indicator]
 fg = "auto 87%"
-bg = "#D6827E"
+bg = "#D7827E"
 
 [diff.review_header]
 fg = "auto 87%"
-bg = "#D6827E"
+bg = "#D7827E"
 style = "bold"
 
 [command_palette]
@@ -404,17 +414,17 @@ list_rule = "#000000"
 icon = "#000000"
 
 [command_palette.highlight]
-fg = "#575279"
+fg = "#464261"
 bg = "#907AA94C"
 style = "none"
 
 [hints.label]
 fg = "#000000"
-bg = "#E99D34"
+bg = "#EA9D34"
 style = "bold"
 
 [table.header]
-fg = "#575279"
+fg = "#464261"
 bg = "#F2E9E1"
 
 [disabled]

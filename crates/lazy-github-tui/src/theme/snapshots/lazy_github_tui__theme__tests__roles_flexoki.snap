@@ -5,69 +5,69 @@ expression: roles_listing(&theme)
 surface.screen                         #100F0F  (#100F0F)
 surface.pane                           #1C1B1A  (#1C1B1A)
 surface.header                         #282726  (#282726)
-surface.raised                         #383736  (#383736)
-surface.dialog                         #4D4B4A  (#4D4B4A)
-surface.card                           #2B2A29  (#2B2A29)
+surface.raised                         #343331  (#343331)
+surface.dialog                         #282726  (#282726)
+surface.card                           #282726  (#282726)
 surface.boost                          #100F0F  (#000000 a=0)
 surface.scrim                          #100F0F  (#100F0F a=0.6)
-surface.focus_tint                     #1B1A1A  (#FFFCF0 a=0.05)
+surface.focus_tint                     #191818  (#CECDC3 a=0.05)
 surface.hatch                          #282726  (#282726)
-text.normal                            #DFDFDF  (auto a=0.87)
-text.plain                             #FFFCF0  (#FFFCF0)
-text.muted                             #9F9F9F  (auto a=0.6)
-text.disabled                          #6A6A6A  (auto a=0.38)
-text.primary                           #6B94C4  (#6B94C4)
-text.secondary                         #6EADA7  (#6EADA7)
-text.accent                            #BDA4DA  (#BDA4DA)
-text.success                           #9AAB5D  (#9AAB5D)
-text.warning                           #C8AD57  (#C8AD57)
-text.error                             #CA7671  (#CA7671)
-brand.primary                          #205EA6  (#205EA6)
-brand.secondary                        #24837B  (#24837B)
-brand.accent                           #9B76C8  (#9B76C8)
-status.success                         #65800B  (#65800B)
-status.warning                         #AC8301  (#AC8301)
-status.error                           #AE3029  (#AE3029)
-border.pane_focused                    #65800B  (#65800B)
-border.section_title                   #6996E4  (#6996E4)
-border.field_focused                   #205EA6  (#205EA6)
+text.normal                            #CECDC3  (#CECDC3)
+text.plain                             #CECDC3  (#CECDC3)
+text.muted                             #878580  (#878580)
+text.disabled                          #575653  (#575653)
+text.primary                           #4385BE  (#4385BE)
+text.secondary                         #3AA99F  (#3AA99F)
+text.accent                            #8B7EC8  (#8B7EC8)
+text.success                           #879A39  (#879A39)
+text.warning                           #D0A215  (#D0A215)
+text.error                             #D14D41  (#D14D41)
+brand.primary                          #4385BE  (#4385BE)
+brand.secondary                        #3AA99F  (#3AA99F)
+brand.accent                           #8B7EC8  (#8B7EC8)
+status.success                         #879A39  (#879A39)
+status.warning                         #D0A215  (#D0A215)
+status.error                           #D14D41  (#D14D41)
+border.pane_focused                    #879A39  (#879A39)
+border.section_title                   #85C0FD  (#85C0FD)
+border.field_focused                   #4385BE  (#4385BE)
 border.field                           #171614  (#171614)
-border.rule                            #24837B  (#24837B)
-border.status_bar                      #24837B  (#24837B)
+border.rule                            #3AA99F  (#3AA99F)
+border.status_bar                      #3AA99F  (#3AA99F)
 border.dialog                          #100F0F  (#100F0F a=0.8)
-border.emphasis                        #9B76C8  (#9B76C8)
-border.conversation                    #364140  (#364140)
-border.review                          #A3BB4C  (#A3BB4C)
-border.help                            #575652  (#FFFCF0 a=0.3)
+border.emphasis                        #8B7EC8  (#8B7EC8)
+border.conversation                    #384644  (#384644)
+border.review                          #C5D772  (#C5D772)
+border.help                            #494845  (#CECDC3 a=0.3)
 cursor.focused.fg                      #DFDFDF  (auto a=0.87)
-cursor.focused.bg                      #205EA6  (#205EA6)
+cursor.focused.bg                      #4385BE  (#4385BE)
 cursor.focused.style                   add BOLD
-cursor.blurred.fg                      #FFFCF0  (#FFFCF0)
-cursor.blurred.bg                      #14263C  (#205EA6 a=0.2980392156862745)
+cursor.blurred.fg                      #CECDC3  (#CECDC3)
+cursor.blurred.bg                      #1F3243  (#4385BE a=0.2980392156862745)
 cursor.blurred.style                   none
 cursor.hover_bg                        #0E0D0D  (#000000 a=0.09803921568627451)
-scrollbar.thumb                        #0C2542  (#0C2542)
+scrollbar.thumb                        #1A354C  (#1A354C)
 scrollbar.track                        #000000  (#000000)
 scrollbar.corner                       #000000  (#000000)
-input.cursor.fg                        #5E409D  (#5E409D)
-input.cursor.bg                        #FFFCF0  (#FFFCF0)
+input.cursor.fg                        #100F0F  (#100F0F)
+input.cursor.bg                        #CECDC3  (#CECDC3)
 input.cursor.style                     none
 input.editor_cursor.fg                 #5E409D  (#5E409D)
-input.editor_cursor.bg                 #FFFCF0  (#FFFCF0)
+input.editor_cursor.bg                 #CECDC3  (#CECDC3)
 input.editor_cursor.style              none
-input.selection.fg                     #FFFCF0  (#FFFCF0)
-input.selection.bg                     #31302E  (#6F6E69 a=0.35)
-input.placeholder                      #6A6A6A  (auto a=0.38)
+input.selection.fg                     #CECDC3  (#CECDC3)
+input.selection.bg                     #403E3C  (#403E3C)
+input.placeholder                      #575653  (#575653)
 input.placeholder_style                none
-input.invalid                          #AE3029  (#AE3029)
-input.invalid_blurred                  #6E221E  (#AE3029 a=0.6)
+input.invalid                          #D14D41  (#D14D41)
+input.invalid_blurred                  #83342D  (#D14D41 a=0.6)
 input.terminal_colors                  false
 footer.bar                             #282726  (#282726)
 footer.item                            #100F0F  (transparent)
 footer.hover                           #0E0D0D  (#000000 a=0.09803921568627451)
-footer.key.fg                          #9B76C8  (#9B76C8)
+footer.key.fg                          #8B7EC8  (#8B7EC8)
 footer.key.bg                          #100F0F  (transparent)
-footer.description.fg                  #FFFCF0  (#FFFCF0)
+footer.description.fg                  #CECDC3  (#CECDC3)
 footer.description.bg                  #100F0F  (transparent)
 button.outlined                        false
 button.focus_style                     add BOLD | REVERSED
@@ -76,86 +76,86 @@ button.default.bg                      #1C1B1A  (#1C1B1A)
 button.default.light                   #2B2A29  (#2B2A29)
 button.default.dark                    #0A0806  (#0A0806)
 button.default.border                  #171614  (#171614)
-button.default.label                   #FFFCF0  (#FFFCF0)
-button.default.label_disabled          #9F9D96  (#FFFCF0 a=0.6)
-button.primary.bg                      #205EA6  (#205EA6)
-button.primary.light                   #6996E4  (#6996E4)
-button.primary.dark                    #002B6B  (#002B6B)
-button.primary.border                  #205EA6  (#205EA6)
-button.primary.label                   #FFFCF0  (#FFFCF0)
-button.primary.label_disabled          #9F9D96  (#FFFCF0 a=0.6)
-button.success.bg                      #65800B  (#65800B)
-button.success.light                   #8EA738  (#8EA738)
-button.success.dark                    #2D4800  (#2D4800)
-button.success.border                  #65800B  (#65800B)
-button.success.label                   #FFFCF0  (#FFFCF0)
-button.success.label_disabled          #9F9D96  (#FFFCF0 a=0.6)
-button.warning.bg                      #AC8301  (#AC8301)
-button.warning.light                   #D9AA37  (#D9AA37)
-button.warning.dark                    #6C4C00  (#6C4C00)
-button.warning.border                  #AC8301  (#AC8301)
-button.warning.label                   #FFFCF0  (#FFFCF0)
-button.warning.label_disabled          #9F9D96  (#FFFCF0 a=0.6)
-button.error.bg                        #AE3029  (#AE3029)
-button.error.light                     #DD594B  (#DD594B)
-button.error.dark                      #6B0000  (#6B0000)
-button.error.border                    #AE3029  (#AE3029)
-button.error.label                     #FFFCF0  (#FFFCF0)
-button.error.label_disabled            #9F9D96  (#FFFCF0 a=0.6)
+button.default.label                   #CECDC3  (#CECDC3)
+button.default.label_disabled          #82817B  (#CECDC3 a=0.6)
+button.primary.bg                      #4385BE  (#4385BE)
+button.primary.light                   #85C0FD  (#85C0FD)
+button.primary.dark                    #004D81  (#004D81)
+button.primary.border                  #4385BE  (#4385BE)
+button.primary.label                   #100F0F  (#100F0F)
+button.primary.label_disabled          #100F0F  (#100F0F a=0.6)
+button.success.bg                      #879A39  (#879A39)
+button.success.light                   #B0C25F  (#B0C25F)
+button.success.dark                    #4B6000  (#4B6000)
+button.success.border                  #879A39  (#879A39)
+button.success.label                   #100F0F  (#100F0F)
+button.success.label_disabled          #100F0F  (#100F0F a=0.6)
+button.warning.bg                      #D0A215  (#D0A215)
+button.warning.light                   #FDCA46  (#FDCA46)
+button.warning.dark                    #8D6800  (#8D6800)
+button.warning.border                  #D0A215  (#D0A215)
+button.warning.label                   #100F0F  (#100F0F)
+button.warning.label_disabled          #100F0F  (#100F0F a=0.6)
+button.error.bg                        #D14D41  (#D14D41)
+button.error.light                     #FF7564  (#FF7564)
+button.error.dark                      #8C000F  (#8C000F)
+button.error.border                    #D14D41  (#D14D41)
+button.error.label                     #100F0F  (#100F0F)
+button.error.label_disabled            #100F0F  (#100F0F a=0.6)
 switch.track                           #040200  (#040200)
-switch.on                              #65800B  (#65800B)
+switch.on                              #879A39  (#879A39)
 switch.off                             #282726  (#282726)
-select.muted                           #87857F  (#FFFCF0 a=0.5)
+select.muted                           #6F6E69  (#CECDC3 a=0.5)
 select.terminal_colors                 false
 checkbox.bg                            #282726  (#282726)
 checkbox.off                           #040200  (#040200)
-checkbox.on                            #9AAB5D  (#9AAB5D)
+checkbox.on                            #879A39  (#879A39)
 tree.guide                             #3B3A39  (#3B3A39)
 tree.guide_focused                     #4D4B4A  (#4D4B4A)
-tree.guide_selected                    #205EA6  (#205EA6)
-tabs.label                             #87857F  (#FFFCF0 a=0.5)
+tree.guide_selected                    #4385BE  (#4385BE)
+tabs.label                             #6F6E69  (#CECDC3 a=0.5)
 tabs.label_style                       none
-tabs.label_active                      #FFFCF0  (#FFFCF0)
+tabs.label_active                      #CECDC3  (#CECDC3)
 tabs.label_active_style                none
-tabs.bar                               #272625  (#FFFCF0 a=0.1)
-tabs.bar_focused                       #575652  (#FFFCF0 a=0.3)
-tabs.bar_active                        #205EA6  (#205EA6)
-markdown.h1.fg                         #205EA6  (#205EA6)
+tabs.bar                               #232221  (#CECDC3 a=0.1)
+tabs.bar_focused                       #494845  (#CECDC3 a=0.3)
+tabs.bar_active                        #4385BE  (#4385BE)
+markdown.h1.fg                         #4385BE  (#4385BE)
 markdown.h1.bg                         #100F0F  (transparent)
 markdown.h1.style                      add BOLD
-markdown.h2.fg                         #205EA6  (#205EA6)
+markdown.h2.fg                         #4385BE  (#4385BE)
 markdown.h2.bg                         #100F0F  (transparent)
 markdown.h2.style                      add UNDERLINED
-markdown.h3.fg                         #205EA6  (#205EA6)
+markdown.h3.fg                         #4385BE  (#4385BE)
 markdown.h3.bg                         #100F0F  (transparent)
 markdown.h3.style                      add BOLD
-markdown.h4.fg                         #FFFCF0  (#FFFCF0)
+markdown.h4.fg                         #CECDC3  (#CECDC3)
 markdown.h4.bg                         #100F0F  (transparent)
 markdown.h4.style                      add BOLD | UNDERLINED
-markdown.h5.fg                         #FFFCF0  (#FFFCF0)
+markdown.h5.fg                         #CECDC3  (#CECDC3)
 markdown.h5.bg                         #100F0F  (transparent)
 markdown.h5.style                      add BOLD
-markdown.h6.fg                         #9F9D96  (#FFFCF0 a=0.6)
+markdown.h6.fg                         #82817B  (#CECDC3 a=0.6)
 markdown.h6.bg                         #100F0F  (transparent)
 markdown.h6.style                      add BOLD
-markdown.link.fg                       #DFDFDF  (auto a=0.87)
+markdown.link.fg                       #CECDC3  (#CECDC3)
 markdown.link.style                    add UNDERLINED
 markdown.fence_bg                      #0E0D0D  (#000000 a=0.1)
 markdown.fence_inset                   true
-markdown.code                          #BEA553  (#C8AD57 a=0.95)
-markdown.code_bg                       #1F1A0D  (#AC8301 a=0.1)
+markdown.code                          #C69A14  (#D0A215 a=0.95)
+markdown.code_bg                       #231D0F  (#D0A215 a=0.1)
 markdown.quote_bg                      #100F0F  (#000000 a=0)
-markdown.quote_bar                     #3D5169  (#6B94C4 a=0.5)
-markdown.bullet                        #6B94C4  (#6B94C4)
+markdown.quote_bar                     #294A66  (#4385BE a=0.5)
+markdown.bullet                        #4385BE  (#4385BE)
 markdown.table_bg                      #100F0F  (transparent)
-markdown.table_header                  #205EA6  (#205EA6)
-markdown.table_line                    #3F3E3C  (#FFFCF0 a=0.2)
-syntax.text                            #FFFFFF  (auto a=1)
-syntax.comment.fg                      #9F9F9F  (auto a=0.6)
+markdown.table_header                  #4385BE  (#4385BE)
+markdown.table_line                    #363533  (#CECDC3 a=0.2)
+syntax.text                            #CECDC3  (#CECDC3)
+syntax.comment.fg                      #575653  (#575653)
 syntax.comment.bg                      none
 syntax.comment.style                   none
-syntax.error.fg                        #CA7671  (#CA7671)
-syntax.error.bg                        #3F1816  (#3F1816)
+syntax.error.fg                        #D14D41  (#D14D41)
+syntax.error.bg                        #49211E  (#49211E)
 syntax.error.style                     none
 syntax.generic_strong.fg               none
 syntax.generic_strong.bg               none
@@ -163,70 +163,70 @@ syntax.generic_strong.style            add BOLD
 syntax.generic_emph.fg                 none
 syntax.generic_emph.bg                 none
 syntax.generic_emph.style              add ITALIC
-syntax.generic_heading.fg              #6B94C4  (#6B94C4)
+syntax.generic_heading.fg              #4385BE  (#4385BE)
 syntax.generic_heading.bg              none
 syntax.generic_heading.style           add UNDERLINED
-syntax.generic_subheading.fg           #6B94C4  (#6B94C4)
+syntax.generic_subheading.fg           #4385BE  (#4385BE)
 syntax.generic_subheading.bg           none
 syntax.generic_subheading.style        none
-syntax.keyword.fg                      #BDA4DA  (#BDA4DA)
+syntax.keyword.fg                      #879A39  (#879A39)
 syntax.keyword.bg                      none
 syntax.keyword.style                   none
-syntax.keyword_constant.fg             #7E8B4D  (#9AAB5D a=0.8)
+syntax.keyword_constant.fg             #DA702C  (#DA702C)
 syntax.keyword_constant.bg             none
 syntax.keyword_constant.style          add BOLD
-syntax.keyword_namespace.fg            #CA7671  (#CA7671)
+syntax.keyword_namespace.fg            #D0A215  (#D0A215)
 syntax.keyword_namespace.bg            none
 syntax.keyword_namespace.style         none
-syntax.number.fg                       #C8AD57  (#C8AD57)
+syntax.number.fg                       #DA702C  (#DA702C)
 syntax.number.bg                       none
 syntax.number.style                    none
-syntax.string.fg                       #9AAB5D  (#9AAB5D)
+syntax.string.fg                       #3AA99F  (#3AA99F)
 syntax.string.bg                       none
 syntax.string.style                    none
-syntax.string_backtick.fg              #9F9F9F  (auto a=0.6)
+syntax.string_backtick.fg              #575653  (#575653)
 syntax.string_backtick.bg              none
 syntax.string_backtick.style           none
-syntax.string_doc.fg                   #7E8B4D  (#9AAB5D a=0.8)
+syntax.string_doc.fg                   #3AA99F  (#3AA99F)
 syntax.string_doc.bg                   none
 syntax.string_doc.style                add ITALIC
-syntax.string_double.fg                #8C9B55  (#9AAB5D a=0.9)
+syntax.string_double.fg                #3AA99F  (#3AA99F)
 syntax.string_double.bg                none
 syntax.string_double.style             none
-syntax.name.fg                         #6B94C4  (#6B94C4)
+syntax.name.fg                         #CECDC3  (#CECDC3)
 syntax.name.bg                         none
 syntax.name.style                      none
-syntax.name_attribute.fg               #C8AD57  (#C8AD57)
+syntax.name_attribute.fg               #4385BE  (#4385BE)
 syntax.name_attribute.bg               none
 syntax.name_attribute.style            none
-syntax.name_builtin.fg                 #BDA4DA  (#BDA4DA)
+syntax.name_builtin.fg                 #D14D41  (#D14D41)
 syntax.name_builtin.bg                 none
 syntax.name_builtin.style              none
 syntax.name_builtin_pseudo.fg          none
 syntax.name_builtin_pseudo.bg          none
 syntax.name_builtin_pseudo.style       add ITALIC
-syntax.name_class.fg                   #C8AD57  (#C8AD57)
+syntax.name_class.fg                   #D0A215  (#D0A215)
 syntax.name_class.bg                   none
 syntax.name_class.style                add BOLD
-syntax.name_constant.fg                #CA7671  (#CA7671)
+syntax.name_constant.fg                #DA702C  (#DA702C)
 syntax.name_constant.bg                none
 syntax.name_constant.style             none
-syntax.name_decorator.fg               #6B94C4  (#6B94C4)
+syntax.name_decorator.fg               #4385BE  (#4385BE)
 syntax.name_decorator.bg               none
 syntax.name_decorator.style            add BOLD
-syntax.name_function.fg                #C8AD57  (#C8AD57)
+syntax.name_function.fg                #DA702C  (#DA702C)
 syntax.name_function.bg                none
 syntax.name_function.style             add UNDERLINED
-syntax.name_tag.fg                     #6B94C4  (#6B94C4)
+syntax.name_tag.fg                     #4385BE  (#4385BE)
 syntax.name_tag.bg                     none
 syntax.name_tag.style                  add BOLD
-syntax.name_variable.fg                #6EADA7  (#6EADA7)
+syntax.name_variable.fg                #CECDC3  (#CECDC3)
 syntax.name_variable.bg                none
 syntax.name_variable.style             none
 syntax.operator.fg                     none
 syntax.operator.bg                     none
 syntax.operator.style                  add BOLD
-syntax.operator_word.fg                #CA7671  (#CA7671)
+syntax.operator_word.fg                #879A39  (#879A39)
 syntax.operator_word.bg                none
 syntax.operator_word.style             add BOLD
 syntax.plain.fg                        none
@@ -247,31 +247,31 @@ marks.starred                          #98E024  (#98E024)
 marks.job_failed                       #F4005F  (#F4005F)
 marks.job_pending                      #FD971F  (#FD971F)
 marks.job_running                      #58D1EB  (#58D1EB)
-diff.added_bg                          #0A3A0A  (#0A3A0A)
-diff.removed_bg                        #3A0A0A  (#3A0A0A)
-diff.added_current_bg                  #006400  (#006400)
-diff.removed_current_bg                #8B0000  (#8B0000)
+diff.added_bg                          #2C2E1F  (#2C2E1F)
+diff.removed_bg                        #372220  (#372220)
+diff.added_current_bg                  #373B22  (#373B22)
+diff.removed_current_bg                #492824  (#492824)
 diff.context_current_bg                #FD971F  (#FD971F)
 diff.stat_added                        #98E024  (#98E024)
 diff.stat_removed                      #F4005F  (#F4005F)
 diff.indicator.fg                      #DFDFDF  (auto a=0.87)
-diff.indicator.bg                      #9B76C8  (#9B76C8)
+diff.indicator.bg                      #8B7EC8  (#8B7EC8)
 diff.review_header.fg                  #DFDFDF  (auto a=0.87)
-diff.review_header.bg                  #9B76C8  (#9B76C8)
+diff.review_header.bg                  #8B7EC8  (#8B7EC8)
 diff.review_header.style               add BOLD
 diff.review_body                       #282726  (#282726)
-diff.review_comment_border             #24837B  (#24837B)
+diff.review_comment_border             #3AA99F  (#3AA99F)
 command_palette.band                   #181716  (#181716)
 command_palette.input_rule             #080707  (#000000 a=0.5)
 command_palette.list_rule              #000000  (#000000)
 command_palette.icon                   #000000  (#000000)
-command_palette.highlight.fg           #FFFCF0  (#FFFCF0)
-command_palette.highlight.bg           #14263C  (#205EA6 a=0.2980392156862745)
+command_palette.highlight.fg           #CECDC3  (#CECDC3)
+command_palette.highlight.bg           #1F3243  (#4385BE a=0.2980392156862745)
 command_palette.highlight.style        none
 hints.label.fg                         #000000  (#000000)
-hints.label.bg                         #AC8301  (#AC8301)
+hints.label.bg                         #D0A215  (#D0A215)
 hints.label.style                      add BOLD
-table.header.fg                        #FFFCF0  (#FFFCF0)
+table.header.fg                        #CECDC3  (#CECDC3)
 table.header.bg                        #282726  (#282726)
 disabled.dimmed                        false
 screenshot.default_fg                  #D4D4D4  (#D4D4D4)

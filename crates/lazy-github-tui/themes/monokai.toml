@@ -1,55 +1,65 @@
-# Monokai: Textual 8.2.5's built-in theme, frozen as data (#378). Every role is required; what each one is
-# for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax in src/theme/file.rs.
+# Monokai, from its upstream palette (#392): Monokai by Wimer Hazenberg, as in https://github.com/sickill/vim-monokai
+# (colors/monokai.vim).
+# Surfaces: screen bg, pane bg, header cursor-line, card cursor-line, raised selection, dialog cursor-line.
+# Text: normal and plain fg, muted line-number, disabled comment.
+# Seeds (brand, status and text colors): primary purple, secondary red, accent blue, success green, warning orange,
+# error red.
+# Syntax: keyword red, string yellow, number purple, constant purple, function green, type blue, variable fg, name fg,
+# builtin blue, attribute green, decorator green, tag red, namespace red, operator word red, comment comment.
+# Diff lines: success and error at 15% over the pane, 25% for the current line. The other shades (buttons, scrollbars,
+# guides) are Textual 8.2.5's, derived from these seeds. The marks and diff stats are the app's own colors.
+# Every role is required; what each one is for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax
+# in src/theme/file.rs.
 display_name = "Monokai"
 appearance = "dark"
 terminal_colors = false
 
 [surface]
 screen = "#272822"
-pane = "#2E2E2E"
-header = "#3E3D32"
-raised = "#4F4E42"
-dialog = "#616161"
-card = "#3E3E3E"
+pane = "#272822"
+header = "#3C3D37"
+raised = "#49483E"
+dialog = "#3C3D37"
+card = "#3C3D37"
 boost = "#000000 0%"
 scrim = "#272822 60%"
-focus_tint = "#D6D6D6 5%"
-hatch = "#3E3D32"
+focus_tint = "#F8F8F2 5%"
+hatch = "#3C3D37"
 
 [text]
-normal = "auto 87%"
-plain = "#D6D6D6"
-muted = "auto 60%"
-disabled = "auto 38%"
-primary = "#C9ABFF"
-secondary = "#FB6FA1"
-accent = "#9AE5F4"
-success = "#C4EB75"
-warning = "#FDBA6B"
-error = "#FB6FA1"
+normal = "#F8F8F2"
+plain = "#F8F8F2"
+muted = "#90908A"
+disabled = "#75715E"
+primary = "#AE81FF"
+secondary = "#F92672"
+accent = "#66D9EF"
+success = "#A6E22E"
+warning = "#FD971F"
+error = "#F92672"
 
 [brand]
 primary = "#AE81FF"
-secondary = "#F82672"
+secondary = "#F92672"
 accent = "#66D9EF"
 
 [status]
-success = "#A5E22E"
-warning = "#FC971F"
-error = "#F82672"
+success = "#A6E22E"
+warning = "#FD971F"
+error = "#F92672"
 
 [border]
-pane_focused = "#A5E22E"
+pane_focused = "#A6E22E"
 section_title = "#EFBDFF"
 field_focused = "#AE81FF"
-field = "#282828"
-rule = "#F82672"
-status_bar = "#F82672"
+field = "#21221C"
+rule = "#F92672"
+status_bar = "#F92672"
 dialog = "#272822 80%"
 emphasis = "#66D9EF"
 conversation = "#61474D"
 review = "#E8FF72"
-help = "#D6D6D6 30%"
+help = "#F8F8F2 30%"
 
 [cursor]
 hover_bg = "#00000019"
@@ -60,7 +70,7 @@ bg = "#AE81FF"
 style = "bold"
 
 [cursor.blurred]
-fg = "#D6D6D6"
+fg = "#F8F8F2"
 bg = "#AE81FF4C"
 style = "none"
 
@@ -70,28 +80,28 @@ track = "#171812"
 corner = "#171812"
 
 [input]
-placeholder = "auto 38%"
+placeholder = "#75715E"
 placeholder_style = "none"
-invalid = "#F82672"
-invalid_blurred = "#F82672 60%"
+invalid = "#F92672"
+invalid_blurred = "#F92672 60%"
 terminal_colors = false
 
 [input.cursor]
 fg = "#272822"
-bg = "#D6D6D6"
+bg = "#F8F8F2"
 style = "none"
 
 [input.editor_cursor]
 fg = "#272822"
-bg = "#D6D6D6"
+bg = "#F8F8F2"
 style = "none"
 
 [input.selection]
-fg = "#D6D6D6"
-bg = "#575B6190"
+fg = "#F8F8F2"
+bg = "#49483E"
 
 [footer]
-bar = "#3E3D32"
+bar = "#3C3D37"
 item = "transparent"
 hover = "#00000019"
 
@@ -100,21 +110,21 @@ fg = "#66D9EF"
 bg = "transparent"
 
 [footer.description]
-fg = "#D6D6D6"
+fg = "#F8F8F2"
 bg = "transparent"
 
 [button]
 outlined = false
 focus_style = "bold reverse"
-disabled_border = "#282828"
+disabled_border = "#21221C"
 
 [button.default]
-bg = "#2E2E2E"
-light = "#3E3E3E"
-dark = "#1E1E1E"
-border = "#282828"
-label = "#D6D6D6"
-label_disabled = "#D6D6D6 60%"
+bg = "#272822"
+light = "#373831"
+dark = "#171812"
+border = "#21221C"
+label = "#F8F8F2"
+label_disabled = "#F8F8F2 60%"
 
 [button.primary]
 bg = "#AE81FF"
@@ -125,68 +135,68 @@ label = "#272822"
 label_disabled = "#272822 60%"
 
 [button.success]
-bg = "#A5E22E"
+bg = "#A6E22E"
 light = "#D2FF5D"
 dark = "#64A300"
-border = "#A5E22E"
+border = "#A6E22E"
 label = "#272822"
 label_disabled = "#272822 60%"
 
 [button.warning]
-bg = "#FC971F"
+bg = "#FD971F"
 light = "#FFBF4C"
 dark = "#B65D00"
-border = "#FC971F"
+border = "#FD971F"
 label = "#272822"
 label_disabled = "#272822 60%"
 
 [button.error]
-bg = "#F82672"
+bg = "#F92672"
 light = "#FF5D98"
 dark = "#B1003D"
-border = "#F82672"
+border = "#F92672"
 label = "#272822"
 label_disabled = "#272822 60%"
 
 [switch]
-track = "#1D1C12"
-on = "#A5E22E"
-off = "#3E3D32"
+track = "#1C1C17"
+on = "#A6E22E"
+off = "#3C3D37"
 
 [select]
-muted = "#D6D6D6 50%"
+muted = "#F8F8F2 50%"
 terminal_colors = false
 
 [checkbox]
-bg = "#3E3D32"
-off = "#1D1C12"
-on = "#C4EB75"
+bg = "#3C3D37"
+off = "#1C1C17"
+on = "#A6E22E"
 
 [tree]
-guide = "#4F4F4F"
-guide_focused = "#616161"
+guide = "#484942"
+guide_focused = "#595A54"
 guide_selected = "#AE81FF"
 
 [tabs]
-label = "#D6D6D6 50%"
+label = "#F8F8F2 50%"
 label_style = "none"
-label_active = "#D6D6D6"
+label_active = "#F8F8F2"
 label_active_style = "none"
-bar = "#D6D6D6 10%"
-bar_focused = "#D6D6D6 30%"
+bar = "#F8F8F2 10%"
+bar_focused = "#F8F8F2 30%"
 bar_active = "#AE81FF"
 
 [markdown]
 fence_bg = "#000000 10%"
 fence_inset = true
-code = "#FDBA6B 95%"
-code_bg = "#FC971F 10%"
+code = "#FD971F 95%"
+code_bg = "#FD971F 10%"
 quote_bg = "#000000 0%"
-quote_bar = "#C9ABFF 50%"
-bullet = "#C9ABFF"
+quote_bar = "#AE81FF 50%"
+bullet = "#AE81FF"
 table_bg = "transparent"
 table_header = "#AE81FF"
-table_line = "#D6D6D6 20%"
+table_line = "#F8F8F2 20%"
 
 [markdown.h1]
 fg = "#AE81FF"
@@ -204,34 +214,34 @@ bg = "transparent"
 style = "bold"
 
 [markdown.h4]
-fg = "#D6D6D6"
+fg = "#F8F8F2"
 bg = "transparent"
 style = "bold underline"
 
 [markdown.h5]
-fg = "#D6D6D6"
+fg = "#F8F8F2"
 bg = "transparent"
 style = "bold"
 
 [markdown.h6]
-fg = "#797979"
+fg = "#F8F8F2 60%"
 bg = "transparent"
 style = "bold"
 
 [markdown.link]
-fg = "auto 87%"
+fg = "#F8F8F2"
 style = "underline"
 
 [syntax]
-text = "auto"
+text = "#F8F8F2"
 
 [syntax.comment]
-fg = "auto 60%"
+fg = "#75715E"
 bg = "none"
 style = "none"
 
 [syntax.error]
-fg = "#FB6FA1"
+fg = "#F92672"
 bg = "#66273A"
 style = "none"
 
@@ -246,67 +256,67 @@ bg = "none"
 style = "italic"
 
 [syntax.generic_heading]
-fg = "#C9ABFF"
+fg = "#AE81FF"
 bg = "none"
 style = "underline"
 
 [syntax.generic_subheading]
-fg = "#C9ABFF"
+fg = "#AE81FF"
 bg = "none"
 style = "none"
 
 [syntax.keyword]
-fg = "#9AE5F4"
+fg = "#F92672"
 bg = "none"
 style = "none"
 
 [syntax.keyword_constant]
-fg = "#C4EB75 80%"
+fg = "#AE81FF"
 bg = "none"
 style = "bold"
 
 [syntax.keyword_namespace]
-fg = "#FB6FA1"
+fg = "#F92672"
 bg = "none"
 style = "none"
 
 [syntax.number]
-fg = "#FDBA6B"
+fg = "#AE81FF"
 bg = "none"
 style = "none"
 
 [syntax.string]
-fg = "#C4EB75"
+fg = "#E6DB74"
 bg = "none"
 style = "none"
 
 [syntax.string_backtick]
-fg = "auto 60%"
+fg = "#75715E"
 bg = "none"
 style = "none"
 
 [syntax.string_doc]
-fg = "#C4EB75 80%"
+fg = "#E6DB74"
 bg = "none"
 style = "italic"
 
 [syntax.string_double]
-fg = "#C4EB75 90%"
+fg = "#E6DB74"
 bg = "none"
 style = "none"
 
 [syntax.name]
-fg = "#C9ABFF"
+fg = "#F8F8F2"
 bg = "none"
 style = "none"
 
 [syntax.name_attribute]
-fg = "#FDBA6B"
+fg = "#A6E22E"
 bg = "none"
 style = "none"
 
 [syntax.name_builtin]
-fg = "#9AE5F4"
+fg = "#66D9EF"
 bg = "none"
 style = "none"
 
@@ -316,32 +326,32 @@ bg = "none"
 style = "italic"
 
 [syntax.name_class]
-fg = "#FDBA6B"
+fg = "#66D9EF"
 bg = "none"
 style = "bold"
 
 [syntax.name_constant]
-fg = "#FB6FA1"
+fg = "#AE81FF"
 bg = "none"
 style = "none"
 
 [syntax.name_decorator]
-fg = "#C9ABFF"
+fg = "#A6E22E"
 bg = "none"
 style = "bold"
 
 [syntax.name_function]
-fg = "#FDBA6B"
+fg = "#A6E22E"
 bg = "none"
 style = "underline"
 
 [syntax.name_tag]
-fg = "#C9ABFF"
+fg = "#F92672"
 bg = "none"
 style = "bold"
 
 [syntax.name_variable]
-fg = "#FB6FA1"
+fg = "#F8F8F2"
 bg = "none"
 style = "none"
 
@@ -351,7 +361,7 @@ bg = "none"
 style = "bold"
 
 [syntax.operator_word]
-fg = "#FB6FA1"
+fg = "#F92672"
 bg = "none"
 style = "bold"
 
@@ -378,15 +388,15 @@ job_pending = "#FD971F"
 job_running = "#58D1EB"
 
 [diff]
-added_bg = "#0A3A0A"
-removed_bg = "#3A0A0A"
-added_current_bg = "#006400"
-removed_current_bg = "#8B0000"
+added_bg = "#3A4424"
+removed_bg = "#46282E"
+added_current_bg = "#475625"
+removed_current_bg = "#5C2836"
 context_current_bg = "#FD971F"
 stat_added = "#98E024"
 stat_removed = "#F4005F"
-review_body = "#3E3D32"
-review_comment_border = "#F82672"
+review_body = "#3C3D37"
+review_comment_border = "#F92672"
 
 [diff.indicator]
 fg = "auto 87%"
@@ -398,24 +408,24 @@ bg = "#66D9EF"
 style = "bold"
 
 [command_palette]
-band = "#2D2C22"
+band = "#2B2C26"
 input_rule = "#000000 50%"
 list_rule = "#000000"
 icon = "#000000"
 
 [command_palette.highlight]
-fg = "#D6D6D6"
+fg = "#F8F8F2"
 bg = "#AE81FF4C"
 style = "none"
 
 [hints.label]
 fg = "#000000"
-bg = "#FC971F"
+bg = "#FD971F"
 style = "bold"
 
 [table.header]
-fg = "#D6D6D6"
-bg = "#3E3D32"
+fg = "#F8F8F2"
+bg = "#3C3D37"
 
 [disabled]
 dimmed = false

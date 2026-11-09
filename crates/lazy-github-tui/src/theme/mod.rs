@@ -701,7 +701,6 @@ mod tests {
             assert_eq!(r.marks.negative, first.marks.negative, "{}", t.name);
             assert_eq!(r.marks.merged, first.marks.merged, "{}", t.name);
             assert_eq!(r.marks.pending, first.marks.pending, "{}", t.name);
-            assert_eq!(r.diff.added_bg, first.diff.added_bg, "{}", t.name);
         }
     }
 }

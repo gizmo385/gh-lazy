@@ -1,55 +1,65 @@
-# Tokyo Night: Textual 8.2.5's built-in theme, frozen as data (#378). Every role is required; what each one is
-# for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax in src/theme/file.rs.
+# Tokyo Night, from its upstream palette (#392): https://github.com/folke/tokyonight.nvim (lua/tokyonight/colors, the
+# night style).
+# Surfaces: screen bg-dark, pane bg, header bg-highlight, card bg-highlight, raised bg-highlight, dialog bg-highlight.
+# Text: normal and plain fg, muted fg-dark, disabled dark5.
+# Seeds (brand, status and text colors): primary magenta, secondary blue, accent orange, success green, warning
+# yellow, error red.
+# Syntax: keyword purple, string green, number orange, constant orange, function blue, type blue1, variable fg, name
+# fg, builtin red, attribute green1, decorator cyan, tag red, namespace cyan, operator word purple, comment comment.
+# Diff lines: success and error at 15% over the pane, 25% for the current line. The other shades (buttons, scrollbars,
+# guides) are Textual 8.2.5's, derived from these seeds. The marks and diff stats are the app's own colors.
+# Every role is required; what each one is for is in crates/lazy-github-tui/src/theme/roles.rs, and the value syntax
+# in src/theme/file.rs.
 display_name = "Tokyo Night"
 appearance = "dark"
 terminal_colors = false
 
 [surface]
-screen = "#1A1B26"
-pane = "#24283B"
-header = "#414868"
-raised = "#53597A"
-dialog = "#575A70"
-card = "#34384C"
+screen = "#16161E"
+pane = "#1A1B26"
+header = "#292E42"
+raised = "#292E42"
+dialog = "#292E42"
+card = "#292E42"
 boost = "#000000 0%"
-scrim = "#1A1B26 60%"
-focus_tint = "#A9B1D6 5%"
-hatch = "#414868"
+scrim = "#16161E 60%"
+focus_tint = "#C0CAF5 5%"
+hatch = "#292E42"
 
 [text]
-normal = "auto 87%"
-plain = "#A9B1D6"
-muted = "auto 60%"
-disabled = "auto 38%"
-primary = "#D2BCF9"
-secondary = "#A7C1F9"
-accent = "#FFBE98"
-success = "#BEDE9C"
-warning = "#EACA9B"
-error = "#F9A4B4"
+normal = "#C0CAF5"
+plain = "#C0CAF5"
+muted = "#A9B1D6"
+disabled = "#737AA2"
+primary = "#BB9AF7"
+secondary = "#7AA2F7"
+accent = "#FF9E64"
+success = "#9ECE6A"
+warning = "#E0AF68"
+error = "#F7768E"
 
 [brand]
 primary = "#BB9AF7"
 secondary = "#7AA2F7"
-accent = "#FE9E64"
+accent = "#FF9E64"
 
 [status]
 success = "#9ECE6A"
-warning = "#DFAF68"
-error = "#F6768E"
+warning = "#E0AF68"
+error = "#F7768E"
 
 [border]
 pane_focused = "#9ECE6A"
 section_title = "#FBD7FF"
 field_focused = "#BB9AF7"
-field = "#1E2235"
+field = "#151620"
 rule = "#7AA2F7"
 status_bar = "#7AA2F7"
-dialog = "#1A1B26 80%"
-emphasis = "#FE9E64"
-conversation = "#484E60"
+dialog = "#16161E 80%"
+emphasis = "#FF9E64"
+conversation = "#454A5A"
 review = "#DDFFA6"
-help = "#A9B1D6 30%"
+help = "#C0CAF5 30%"
 
 [cursor]
 hover_bg = "#00000019"
@@ -60,38 +70,38 @@ bg = "#BB9AF7"
 style = "bold"
 
 [cursor.blurred]
-fg = "#A9B1D6"
+fg = "#C0CAF5"
 bg = "#BB9AF74C"
 style = "none"
 
 [scrollbar]
-thumb = "#4F4270"
-track = "#070817"
-corner = "#070817"
+thumb = "#4A3D6A"
+track = "#00000D"
+corner = "#00000D"
 
 [input]
-placeholder = "auto 38%"
+placeholder = "#737AA2"
 placeholder_style = "none"
-invalid = "#F6768E"
-invalid_blurred = "#F6768E 60%"
+invalid = "#F7768E"
+invalid_blurred = "#F7768E 60%"
 terminal_colors = false
 
 [input.cursor]
-fg = "#1A1B26"
-bg = "#A9B1D6"
+fg = "#16161E"
+bg = "#C0CAF5"
 style = "none"
 
 [input.editor_cursor]
 fg = "#1A1B26"
-bg = "#A9B1D6"
+bg = "#C0CAF5"
 style = "none"
 
 [input.selection]
-fg = "#A9B1D6"
+fg = "#C0CAF5"
 bg = "#D0AEFF 40%"
 
 [footer]
-bar = "#414868"
+bar = "#292E42"
 item = "transparent"
 hover = "#00000019"
 
@@ -100,93 +110,93 @@ fg = "#FF9E64"
 bg = "transparent"
 
 [footer.description]
-fg = "#A9B1D6"
+fg = "#C0CAF5"
 bg = "transparent"
 
 [button]
 outlined = false
 focus_style = "bold reverse"
-disabled_border = "#1E2235"
+disabled_border = "#151620"
 
 [button.default]
-bg = "#24283B"
-light = "#34384C"
-dark = "#14182A"
-border = "#1E2235"
-label = "#A9B1D6"
-label_disabled = "#A9B1D6 60%"
+bg = "#1A1B26"
+light = "#292A36"
+dark = "#070817"
+border = "#151620"
+label = "#C0CAF5"
+label_disabled = "#C0CAF5 60%"
 
 [button.primary]
 bg = "#BB9AF7"
 light = "#FBD7FF"
 dark = "#7D60B7"
 border = "#BB9AF7"
-label = "#24283B"
-label_disabled = "#24283B 60%"
+label = "#1A1B26"
+label_disabled = "#1A1B26 60%"
 
 [button.success]
 bg = "#9ECE6A"
 light = "#C8F891"
 dark = "#619030"
 border = "#9ECE6A"
-label = "#24283B"
-label_disabled = "#24283B 60%"
+label = "#1A1B26"
+label_disabled = "#1A1B26 60%"
 
 [button.warning]
-bg = "#DFAF68"
+bg = "#E0AF68"
 light = "#FFD88F"
 dark = "#9E7430"
-border = "#DFAF68"
-label = "#24283B"
-label_disabled = "#24283B 60%"
+border = "#E0AF68"
+label = "#1A1B26"
+label_disabled = "#1A1B26 60%"
 
 [button.error]
-bg = "#F6768E"
+bg = "#F7768E"
 light = "#FF9FB5"
 dark = "#B33856"
-border = "#F6768E"
-label = "#24283B"
-label_disabled = "#24283B 60%"
+border = "#F7768E"
+label = "#1A1B26"
+label_disabled = "#1A1B26 60%"
 
 [switch]
-track = "#1E2744"
+track = "#080D21"
 on = "#9ECE6A"
-off = "#414868"
+off = "#292E42"
 
 [select]
-muted = "#A9B1D6 50%"
+muted = "#C0CAF5 50%"
 terminal_colors = false
 
 [checkbox]
-bg = "#414868"
-off = "#1E2744"
-on = "#BEDE9C"
+bg = "#292E42"
+off = "#080D21"
+on = "#9ECE6A"
 
 [tree]
-guide = "#45495E"
-guide_focused = "#575A70"
+guide = "#3A3A47"
+guide_focused = "#4B4B58"
 guide_selected = "#BB9AF7"
 
 [tabs]
-label = "#A9B1D6 50%"
+label = "#C0CAF5 50%"
 label_style = "none"
-label_active = "#A9B1D6"
+label_active = "#C0CAF5"
 label_active_style = "none"
-bar = "#A9B1D6 10%"
-bar_focused = "#A9B1D6 30%"
+bar = "#C0CAF5 10%"
+bar_focused = "#C0CAF5 30%"
 bar_active = "#BB9AF7"
 
 [markdown]
 fence_bg = "#000000 10%"
 fence_inset = true
-code = "#EACA9B 95%"
-code_bg = "#DFAF68 10%"
+code = "#E0AF68 95%"
+code_bg = "#E0AF68 10%"
 quote_bg = "#000000 0%"
-quote_bar = "#D2BCF9 50%"
-bullet = "#D2BCF9"
+quote_bar = "#BB9AF7 50%"
+bullet = "#BB9AF7"
 table_bg = "transparent"
 table_header = "#BB9AF7"
-table_line = "#A9B1D6 20%"
+table_line = "#C0CAF5 20%"
 
 [markdown.h1]
 fg = "#BB9AF7"
@@ -204,35 +214,35 @@ bg = "transparent"
 style = "bold"
 
 [markdown.h4]
-fg = "#A9B1D6"
+fg = "#C0CAF5"
 bg = "transparent"
 style = "bold underline"
 
 [markdown.h5]
-fg = "#A9B1D6"
+fg = "#C0CAF5"
 bg = "transparent"
 style = "bold"
 
 [markdown.h6]
-fg = "#A9B1D6 60%"
+fg = "#C0CAF5 60%"
 bg = "transparent"
 style = "bold"
 
 [markdown.link]
-fg = "auto 87%"
+fg = "#C0CAF5"
 style = "underline"
 
 [syntax]
-text = "auto"
+text = "#C0CAF5"
 
 [syntax.comment]
-fg = "auto 60%"
+fg = "#565F89"
 bg = "none"
 style = "none"
 
 [syntax.error]
-fg = "#F9A4B4"
-bg = "#5C3645"
+fg = "#F7768E"
+bg = "#59323F"
 style = "none"
 
 [syntax.generic_strong]
@@ -246,67 +256,67 @@ bg = "none"
 style = "italic"
 
 [syntax.generic_heading]
-fg = "#D2BCF9"
+fg = "#BB9AF7"
 bg = "none"
 style = "underline"
 
 [syntax.generic_subheading]
-fg = "#D2BCF9"
+fg = "#BB9AF7"
 bg = "none"
 style = "none"
 
 [syntax.keyword]
-fg = "#FFBE98"
+fg = "#9D7CD8"
 bg = "none"
 style = "none"
 
 [syntax.keyword_constant]
-fg = "#BEDE9C 80%"
+fg = "#FF9E64"
 bg = "none"
 style = "bold"
 
 [syntax.keyword_namespace]
-fg = "#F9A4B4"
+fg = "#7DCFFF"
 bg = "none"
 style = "none"
 
 [syntax.number]
-fg = "#EACA9B"
+fg = "#FF9E64"
 bg = "none"
 style = "none"
 
 [syntax.string]
-fg = "#BEDE9C"
+fg = "#9ECE6A"
 bg = "none"
 style = "none"
 
 [syntax.string_backtick]
-fg = "auto 60%"
+fg = "#565F89"
 bg = "none"
 style = "none"
 
 [syntax.string_doc]
-fg = "#BEDE9C 80%"
+fg = "#9ECE6A"
 bg = "none"
 style = "italic"
 
 [syntax.string_double]
-fg = "#BEDE9C 90%"
+fg = "#9ECE6A"
 bg = "none"
 style = "none"
 
 [syntax.name]
-fg = "#D2BCF9"
+fg = "#C0CAF5"
 bg = "none"
 style = "none"
 
 [syntax.name_attribute]
-fg = "#EACA9B"
+fg = "#73DACA"
 bg = "none"
 style = "none"
 
 [syntax.name_builtin]
-fg = "#FFBE98"
+fg = "#F7768E"
 bg = "none"
 style = "none"
 
@@ -316,32 +326,32 @@ bg = "none"
 style = "italic"
 
 [syntax.name_class]
-fg = "#EACA9B"
+fg = "#2AC3DE"
 bg = "none"
 style = "bold"
 
 [syntax.name_constant]
-fg = "#F9A4B4"
+fg = "#FF9E64"
 bg = "none"
 style = "none"
 
 [syntax.name_decorator]
-fg = "#D2BCF9"
+fg = "#7DCFFF"
 bg = "none"
 style = "bold"
 
 [syntax.name_function]
-fg = "#EACA9B"
+fg = "#7AA2F7"
 bg = "none"
 style = "underline"
 
 [syntax.name_tag]
-fg = "#D2BCF9"
+fg = "#F7768E"
 bg = "none"
 style = "bold"
 
 [syntax.name_variable]
-fg = "#A7C1F9"
+fg = "#C0CAF5"
 bg = "none"
 style = "none"
 
@@ -351,7 +361,7 @@ bg = "none"
 style = "bold"
 
 [syntax.operator_word]
-fg = "#F9A4B4"
+fg = "#9D7CD8"
 bg = "none"
 style = "bold"
 
@@ -378,44 +388,44 @@ job_pending = "#FD971F"
 job_running = "#58D1EB"
 
 [diff]
-added_bg = "#0A3A0A"
-removed_bg = "#3A0A0A"
-added_current_bg = "#006400"
-removed_current_bg = "#8B0000"
+added_bg = "#2E3630"
+removed_bg = "#3B2936"
+added_current_bg = "#3B4837"
+removed_current_bg = "#513240"
 context_current_bg = "#FD971F"
 stat_added = "#98E024"
 stat_removed = "#F4005F"
-review_body = "#414868"
+review_body = "#292E42"
 review_comment_border = "#7AA2F7"
 
 [diff.indicator]
 fg = "auto 87%"
-bg = "#FE9E64"
+bg = "#FF9E64"
 
 [diff.review_header]
 fg = "auto 87%"
-bg = "#FE9E64"
+bg = "#FF9E64"
 style = "bold"
 
 [command_palette]
-band = "#2F3755"
+band = "#181E31"
 input_rule = "#000000 50%"
 list_rule = "#000000"
 icon = "#000000"
 
 [command_palette.highlight]
-fg = "#A9B1D6"
+fg = "#C0CAF5"
 bg = "#BB9AF74C"
 style = "none"
 
 [hints.label]
 fg = "#000000"
-bg = "#DFAF68"
+bg = "#E0AF68"
 style = "bold"
 
 [table.header]
-fg = "#A9B1D6"
-bg = "#414868"
+fg = "#C0CAF5"
+bg = "#292E42"
 
 [disabled]
 dimmed = false

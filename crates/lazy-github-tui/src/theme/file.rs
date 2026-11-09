@@ -584,9 +584,10 @@ mod tests {
 
     #[test]
     fn header_errors_name_the_key() {
-        let err = error(&nord().replace("appearance = \"dark\"", "appearance = \"dusk\""));
+        let source = nord().replace("appearance = \"dark\"", "appearance = \"dusk\"");
+        let err = error(&source);
         assert_eq!(err.role.as_deref(), Some("appearance"));
-        assert_eq!(err.line, Some(4));
+        assert_eq!(err.line, Some(line_of(&source, "appearance = \"dusk\"")));
         let err = error(&nord().replace("appearance = \"dark\"\n", ""));
         assert!(err.message.contains("missing field `appearance`"), "{err}");
         let err = error("appearance = \"dark\"\nname = 3\n");

@@ -16,7 +16,7 @@ Buffer {
     ],
     styles: [
         x: 0, y: 0, fg: Rgb(163, 190, 140), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
-        x: 1, y: 1, fg: Rgb(230, 231, 234), bg: Rgb(67, 76, 94), underline: Reset, modifier: NONE,
+        x: 1, y: 1, fg: Rgb(216, 222, 233), bg: Rgb(67, 76, 94), underline: Reset, modifier: NONE,
         x: 14, y: 1, fg: Rgb(216, 222, 233), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
         x: 19, y: 1, fg: Rgb(163, 190, 140), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,
         x: 1, y: 2, fg: Rgb(216, 222, 233), bg: Rgb(59, 66, 82), underline: Reset, modifier: NONE,

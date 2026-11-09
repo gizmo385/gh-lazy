@@ -7,7 +7,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 .s2 { fill: #181d26; }
 .s3 { fill: #000000; }
 .s4 { fill: #2e3440; }
-.s5 { fill: #7f8490; }
+.s5 { fill: #707887; }
 .s6 { fill: #d8dee9; font-weight: bold; }
 .s7 { fill: #587479; }
 .s8 { fill: #405b66; text-decoration: underline; }

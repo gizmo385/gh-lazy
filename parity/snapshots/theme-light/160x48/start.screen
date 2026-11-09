@@ -100,19 +100,19 @@ c..............................................................cc...............
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 nnnooooooonnnnoooooooooooooooonnnoooooooooooooooooonnnoooooooooonnnoooooooooonnnooooooonnnnooooooooooonnnoooooooooooonnnoooooooooooooooooooooonnnooooonnnnoooooo
 --- legend
-. fg=#4c4f69 bg=#eff1f5
-a fg=#db8a78 bg=#eff1f5
-b fg=#40a02b bg=#eff1f5
-c fg=#cc76ff bg=#eff1f5
+. fg=#4c4f69 bg=#e6e9ef
+a fg=#fe640b bg=#e6e9ef
+b fg=#40a02b bg=#e6e9ef
+c fg=#cc76ff bg=#e6e9ef
 d fg=#4c4f69 bg=#c5c9d4 bold
 e fg=#448c27 bg=#c5c9d4 bold
-f fg=#efe5fc bg=#8839ef bold
-g fg=#dee0e7 bg=#eff1f5
-h fg=#8839ef bg=#eff1f5
-i fg=#4c4f69 bg=#dee1e8
-j fg=#8839ef bg=#eff1f5 bold
-k fg=#4c4f69 bg=#eff1f5 bold
-l fg=#8839ef bg=#eff1f5 underline
+f fg=#eff1f5 bg=#8839ef bold
+g fg=#d6d9e1 bg=#e6e9ef
+h fg=#8839ef bg=#e6e9ef
+i fg=#4c4f69 bg=#e6e8ee
+j fg=#8839ef bg=#e6e9ef bold
+k fg=#4c4f69 bg=#e6e9ef bold
+l fg=#8839ef bg=#e6e9ef underline
 m fg=#4c4f69 bg=#ccd0da bold
-n fg=#fe640b bg=#ccd0da bold
+n fg=#ea76cb bg=#ccd0da bold
 o fg=#4c4f69 bg=#ccd0da

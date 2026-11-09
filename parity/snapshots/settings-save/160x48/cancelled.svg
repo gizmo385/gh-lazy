@@ -74,13 +74,13 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="0" y="840" width="1600" height="20" fill="#2e3440"/>
 <rect x="0" y="860" width="1600" height="20" fill="#2e3440"/>
 <rect x="0" y="880" width="980" height="20" fill="#2e3440"/>
-<rect x="980" y="880" width="600" height="20" fill="#545d70"/>
+<rect x="980" y="880" width="600" height="20" fill="#434c5e"/>
 <rect x="1580" y="880" width="20" height="20" fill="#2e3440"/>
 <rect x="0" y="900" width="980" height="20" fill="#2e3440"/>
-<rect x="980" y="900" width="600" height="20" fill="#545d70"/>
+<rect x="980" y="900" width="600" height="20" fill="#434c5e"/>
 <rect x="1580" y="900" width="20" height="20" fill="#2e3440"/>
 <rect x="0" y="920" width="980" height="20" fill="#2e3440"/>
-<rect x="980" y="920" width="600" height="20" fill="#545d70"/>
+<rect x="980" y="920" width="600" height="20" fill="#434c5e"/>
 <rect x="1580" y="920" width="20" height="20" fill="#2e3440"/>
 <rect x="0" y="940" width="1600" height="20" fill="#434c5e"/>
 </g>

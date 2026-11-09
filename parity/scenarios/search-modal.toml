@@ -423,7 +423,7 @@ contains = [
     "is:pr is:issue is:open is:merged",
     "Type a query and press enter",
 ]
-footer = ["⏎ Search", "esc Results"]
+footer = ["⏎ Search", "esc Results", "^s Save query"]
 
 [expect.results]
 contains = [
@@ -439,18 +439,18 @@ contains = [
 ]
 # No Repo column for the repo scope.
 not_contains = ["Repo   ", "Searching"]
-footer = ["⏎ Open", "/ Query", "q Close"]
+footer = ["⏎ Open", "/ Query", "q Close", "^s Save query"]
 
 [expect.query-again]
 contains = ["3 results", "is:pr is:open", "Add a cursor to the viewer"]
 # The table's own filter box never shows.
 not_contains = ["Search..."]
-footer = ["⏎ Search", "esc Results"]
+footer = ["⏎ Search", "esc Results", "^s Save query"]
 
 [expect.back-to-results]
 contains = ["3 results", "Add a cursor to the viewer"]
 not_contains = ["Search..."]
-footer = ["⏎ Open", "/ Query", "q Close"]
+footer = ["⏎ Open", "/ Query", "q Close", "^s Save query"]
 
 [expect.opened-pr]
 # The tab strip has focus.
@@ -460,7 +460,7 @@ not_contains = ["Search issues and pull requests", "Could not open"]
 
 [expect.restored]
 contains = ["3 results", "Add a cursor to the viewer", "is:pr is:open"]
-footer = ["⏎ Open", "/ Query", "q Close"]
+footer = ["⏎ Open", "/ Query", "q Close", "^s Save query"]
 
 [expect.cross-repo]
 contains = [
@@ -475,7 +475,7 @@ contains = [
     " 2000  PR    open",
     "2026-10-28",
 ]
-footer = ["⏎ Open", "/ Query", "q Close"]
+footer = ["⏎ Open", "/ Query", "q Close", "^s Save query"]
 
 [expect.paged]
 contains = ["1,234 results · GitHub returns the first 1,000", " 1001  PR"]

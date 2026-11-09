@@ -12,7 +12,7 @@ expression: "crate::test_util::buffer_to_styled_string(&buf)"
 │                             █                                                                                                  █                             │
 │                             █                                       LazyGithub Settings                                        █1.0)                         │
 │                             █                                                                                                  █                             │
-│                             █ Appearance  Notifications  Key Bindings  Repositories  Pull Requests  Issues  Cache  Core  Api   █n get started by selecting   │
+│                             █ Appearance  Notifications  Key Bindings  Repositories  Pull Requests  Issues  Cache  Core  Api  S█n get started by selecting   │
 │                             █╸━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█ou have selected a           │
 │                             █                                                                                                  █l be retrieved and           │
 │                             █                                                                                                  █                             │
@@ -61,7 +61,7 @@ baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
 baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiihhfjjjjjjjjjjjjjjjjjjjjjjjjjjjaac
 baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhkkkkkkkkkkkkkhhkkkkkkkkkkkkhhkkkkkkkkkkkkhhkkkkkkkkkkkkkhhkkkkkkhhkkkkkhhkkkkhhkkkhhhfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhkkkkkkkkkkkkkhhkkkkkkkkkkkkhhkkkkkkkkkkkkhhkkkkkkkkkkkkkhhkkkkkkhhkkkkkhhkkkkhhkkkhhkfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 baaaaaaaaaaaaaaaaaaaaaaaaaaaaaflmmmmmmmmmmlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
 baaaaaaaaaaaaaaaaaaaaaaaaaaaaafhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhnnfaaaaaaaaaaaaaaaaaaaaaaaaaaaaac

@@ -224,6 +224,67 @@ fn with_rust_only_keys(expected: &str) -> String {
             out.push_str(part);
         }
     }
+    with_search_section(&out)
+}
+
+/// `expected` with the default `search` section, Rust-only, after the `api` section, the last of Python's (decision
+/// `search-issues-and-prs`), in the same format: plain JSON at either indent, or Rich's with and without colors.
+fn with_search_section(expected: &str) -> String {
+    let mut out = String::with_capacity(expected.len() + 64);
+    let mut api: Option<(String, &str)> = None;
+    let mut done = false;
+    for line in expected.split_inclusive('\n') {
+        let body = line.strip_suffix('\n').unwrap_or(line);
+        if done {
+            out.push_str(line);
+            continue;
+        }
+        if api.is_none() && body.contains("\"api\"") && (body.ends_with('{') || body.ends_with("{\x1b[0m")) {
+            let indent = body[..body.len() - body.trim_start().len()].to_owned();
+            let style = if body.contains("\x1b[1;34m") {
+                "color"
+            } else if body.contains("\x1b[1m") {
+                "bold"
+            } else {
+                "plain"
+            };
+            api = Some((indent, style));
+            out.push_str(line);
+            continue;
+        }
+        let Some((indent, style)) = &api else {
+            out.push_str(line);
+            continue;
+        };
+        let close = match *style {
+            "plain" => "}".to_owned(),
+            _ => "\x1b[1m}\x1b[0m".to_owned(),
+        };
+        let trimmed = body.strip_prefix(indent.as_str()).unwrap_or("");
+        if trimmed != close && trimmed != format!("{close},") {
+            out.push_str(line);
+            continue;
+        }
+        let comma = if trimmed.ends_with(',') { "," } else { "" };
+        let (key, list, open) = match *style {
+            "color" => (
+                "\x1b[1;34m\"search\"\x1b[0m",
+                "\x1b[1;34m\"saved_queries\"\x1b[0m: \x1b[1m[\x1b[0m\x1b[1m]\x1b[0m",
+                "\x1b[1m{\x1b[0m",
+            ),
+            "bold" => (
+                "\x1b[1m\"search\"\x1b[0m",
+                "\x1b[1m\"saved_queries\"\x1b[0m: \x1b[1m[\x1b[0m\x1b[1m]\x1b[0m",
+                "\x1b[1m{\x1b[0m",
+            ),
+            _ => ("\"search\"", "\"saved_queries\": []", "{"),
+        };
+        let newline = if line.ends_with('\n') { "\n" } else { "" };
+        let block =
+            format!("{indent}{close},\n{indent}{key}: {open}\n{indent}{indent}{list}\n{indent}{close}{comma}{newline}");
+        out.push_str(&block);
+        done = true;
+    }
     out
 }
 
@@ -442,10 +503,10 @@ fn dump_config_shows_unknown_keys_after_the_known_ones() {
         ),
         "{stdout}"
     );
-    // An `api` section without `client_type` stays without it, as saved.
+    // An `api` section without `client_type` stays without it, as saved; the Rust-only `search` section follows.
     assert!(
         stdout.ends_with(
-            "  \"api\": {\n    \"base_url\": \"https://api.github.com\"\n  },\n  \"zzz_new\": {\n    \"on\": true\n  }\n}\n"
+            "  \"api\": {\n    \"base_url\": \"https://api.github.com\"\n  },\n  \"search\": {\n    \"saved_queries\": []\n  },\n  \"zzz_new\": {\n    \"on\": true\n  }\n}\n"
         ),
         "{stdout}"
     );

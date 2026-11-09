@@ -14,11 +14,11 @@ fn palette(app: &TestApp) -> Option<&CommandPaletteDialog> {
     app.app().top_dialog::<CommandPaletteDialog>()
 }
 
-fn hits(app: &TestApp) -> Vec<&'static str> {
+fn hits(app: &TestApp) -> Vec<&str> {
     palette(app).map(CommandPaletteDialog::hit_names).unwrap_or_default()
 }
 
-fn highlighted(app: &TestApp) -> Option<&'static str> {
+fn highlighted(app: &TestApp) -> Option<&str> {
     palette(app).and_then(CommandPaletteDialog::highlighted)
 }
 
@@ -55,7 +55,7 @@ fn opened() -> TestApp {
 
 fn command(name: &'static str, source: CommandSource) -> PaletteCommand {
     PaletteCommand {
-        name,
+        name: name.into(),
         help: Some("Help"),
         source,
         run: PaletteRun::Quit,
@@ -212,7 +212,7 @@ fn screenshot_is_always_the_last_system_command() {
 fn lazygithubs_commands_are_in_their_order_before_the_system_ones() {
     let app = opened();
     let palette = palette(&app).expect("the palette is open");
-    let names: Vec<_> = palette.commands.iter().map(|c| (c.name, c.source)).collect();
+    let names: Vec<_> = palette.commands.iter().map(|c| (&*c.name, c.source)).collect();
     assert_eq!(
         names,
         [
@@ -259,7 +259,7 @@ fn tog_lists_the_four_toggles_and_lazygithubs_win_ties() {
             .iter()
             .map(|hit| {
                 let command = &palette.commands[hit.command];
-                let score = fuzzy_match(query, command.name).expect("a hit matches").score;
+                let score = fuzzy_match(query, &command.name).expect("a hit matches").score;
                 (score, command.source == CommandSource::System)
             })
             .collect();

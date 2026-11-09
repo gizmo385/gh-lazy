@@ -7,6 +7,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use jiff::civil::DateTime;
 use lazy_github_core::config::{
     ColorDepthSetting, Config, ConfigError, ConfigPaths, IssueOwnerFilter, IssueStateFilter, MergeMethod,
+    SearchSettings,
 };
 use rstest::rstest;
 use serde_json::Value;
@@ -75,13 +76,20 @@ fn default_matches_python_byte_for_byte() {
 }
 
 /// `text`, a config Python saved, with the keys only Rust writes: `appearance.color_depth`'s default, after
-/// `show_pull_requests`, the section's last key (decision `color-depth-detection`). Every other byte is unchanged.
+/// `show_pull_requests`, the section's last key (decision `color-depth-detection`), and the default `search` section
+/// after `api`, the last section (decision `search-issues-and-prs`). Every other byte is unchanged.
 fn with_rust_only_keys(text: &str) -> String {
     let last = text
         .find("\n        \"show_pull_requests\": ")
         .expect("the file has show_pull_requests");
     let end = last + 1 + text[last + 1..].find('\n').expect("it isn't the file's last line");
-    format!("{},\n        \"color_depth\": \"auto\"{}", &text[..end], &text[end..])
+    let text = format!("{},\n        \"color_depth\": \"auto\"{}", &text[..end], &text[end..]);
+    let close = text.rfind("\n    }").expect("the file has a last section");
+    format!(
+        "{}\n    }},\n    \"search\": {{\n        \"saved_queries\": []{}",
+        &text[..close],
+        &text[close..]
+    )
 }
 
 /// `text` with Python's default cache TTLs (600 / 86400 / 3600) swapped for Rust's (60 / 3600 / 60), every other
@@ -227,9 +235,42 @@ fn rust_only_keys_round_trip_and_python_drops_them() {
     assert_eq!(python_json["appearance"].get("color_depth"), None);
     assert_eq!(python_json["appearance"]["theme"], "nord");
     assert_eq!(python_json["appearance"]["show_issues"], false);
+    assert_eq!(python_json.get("search"), None);
     let (_tmp, _paths, c) = load_ok(&python);
     assert_eq!(c.appearance.color_depth, ColorDepthSetting::Auto);
     assert!(!c.appearance.show_issues);
+    assert_eq!(c.search, SearchSettings::default());
+}
+
+/// `search.saved_queries` (decision `search-issues-and-prs`) loads and saves in order, and unknown keys in the
+/// section are written back.
+#[test]
+fn saved_search_queries_round_trip_with_unknown_keys() {
+    let (_tmp, paths, c) = load_ok(&fixture("rust-only-keys.json"));
+    assert_eq!(c.search.saved_queries, ["is:pr is:open", "label:bug"]);
+    assert_eq!(c.search.extra.get("zz_unknown"), Some(&Value::from(1)));
+    c.save(&paths).unwrap();
+    let saved: Value = serde_json::from_str(&std::fs::read_to_string(&paths.file).unwrap()).unwrap();
+    assert_eq!(
+        saved["search"],
+        serde_json::json!({"saved_queries": ["is:pr is:open", "label:bug"], "zz_unknown": 1})
+    );
+    let (_tmp, _paths, again) = load_ok(&saved.to_string());
+    assert_eq!(again.search, c.search);
+}
+
+/// A config without a `search` section, as every Python-saved file is, loads with no saved queries, and a save
+/// writes the default section.
+#[test]
+fn a_config_without_a_search_section_loads_with_no_saved_queries() {
+    let (_tmp, paths, c) = load_ok(r#"{"appearance": {"theme": "nord"}}"#);
+    assert_eq!(c.search, SearchSettings::default());
+    assert!(c.search.saved_queries.is_empty());
+    c.save(&paths).unwrap();
+    let saved: Value = serde_json::from_str(&std::fs::read_to_string(&paths.file).unwrap()).unwrap();
+    assert_eq!(saved["search"], serde_json::json!({"saved_queries": []}));
+    let (_tmp, _paths, c) = load_ok(r#"{"search": {}}"#);
+    assert!(c.search.saved_queries.is_empty());
 }
 
 #[test]
@@ -457,6 +498,7 @@ fn unknown_fields_survive_a_round_trip_after_known_keys() {
             "cache",
             "core",
             "api",
+            "search",
             "future_section",
             "another_unknown"
         ]

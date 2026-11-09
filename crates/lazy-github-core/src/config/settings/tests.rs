@@ -74,6 +74,12 @@ fn sections_are_in_config_order_with_python_titles_and_docstrings() {
                 "Api",
                 Some("Controlling how the GitHub API is accessed in LazyGithub")
             ),
+            // LazyGithub-only (decision search-issues-and-prs).
+            (
+                "search",
+                "Search",
+                Some("Searches you saved with ctrl+s in the Search dialog")
+            ),
         ]
     );
 }
@@ -131,6 +137,7 @@ fn fields_are_in_file_order_with_their_kinds() {
         ("core.logfile_count", K::Text(T::Integer)),
         ("api.base_url", K::Text(T::Plain)),
         ("api.client_type", K::ReadOnlyChoice(CLIENT_TYPE_CHOICES)),
+        ("search.saved_queries", K::List),
     ];
     let expected: Vec<_> = expected.into_iter().map(|(key, kind)| (key.to_owned(), kind)).collect();
     assert_eq!(fields, expected);
@@ -208,6 +215,7 @@ fn labels_are_python_title_case_with_a_colon() {
             "Logfile Count:",
             "Base Url:",
             "Client Type:",
+            "Saved Queries:",
         ]
     );
 }

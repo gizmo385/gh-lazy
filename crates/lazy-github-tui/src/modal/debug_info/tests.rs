@@ -231,10 +231,10 @@ fn the_wheel_scrolls_the_text() {
 #[test]
 fn text_that_fits_does_not_scroll() {
     let mut app = app();
-    app.render(160, 100);
+    app.render(160, 110);
     app.press(&["tab", "tab", "down", "end"]);
     app.mouse(MouseEventKind::ScrollDown, 80, 40);
-    app.render(160, 100);
+    app.render(160, 110);
     assert_eq!(dialog(&app).scroll_offset(), 0);
 }
 

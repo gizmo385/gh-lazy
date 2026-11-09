@@ -565,3 +565,24 @@ mod never_panics {
         }
     }
 }
+
+#[test]
+fn line_at_finds_a_line_by_its_position() {
+    let diff = pr_5();
+    let viewer = &diff.files[4];
+    // The first hunk's lines are positions 1 to 8; the second hunk's header is 9, its lines 10 to 18.
+    assert_eq!(viewer.line_at(1), Some((0, 0)));
+    assert_eq!(viewer.line_at(6), Some((0, 5)));
+    assert_eq!(viewer.line_at(9), None, "a hunk header");
+    assert_eq!(viewer.line_at(12), Some((1, 2)));
+    assert_eq!(
+        viewer.line_at(12).map(|(h, l)| viewer.hunks[h].lines[l].kind),
+        Some(LineKind::Removed)
+    );
+    assert_eq!(viewer.line_at(18), Some((1, 8)));
+    assert_eq!(viewer.line_at(19), None, "past the file");
+    assert_eq!(viewer.line_at(0), None);
+    // A file without hunks has no lines.
+    let binary = parse("diff --git a/x.png b/x.png\nindex 1..2 100644\nBinary files differ\n").unwrap();
+    assert_eq!(binary.files[0].line_at(1), None);
+}

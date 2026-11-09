@@ -49,6 +49,7 @@ use crate::theme::{Paint, Theme};
 use super::super::MainAction;
 use super::super::details::{BodyRenderCx, MaximizeScope, SectionKey, SectionLayout, SectionRef};
 use super::super::overview_text::mark;
+use super::diff::PrDiff;
 use super::overview::PrOverview;
 
 /// `PrConversationTabPane.BINDINGS`: a new comment (#182), in the footer while focus is anywhere in the tab.
@@ -341,12 +342,13 @@ impl PrConversation {
     // Requests.
 
     /// Takes a response to one of the tab's requests, and hands back any other. Once the reviews and the comments
-    /// are both in, the Overview gets the reviews too.
+    /// are both in, the Overview and the Diff tab get the reviews too.
     pub(super) fn on_response(
         &mut self,
         id: RequestId,
         response: GithubResponse,
         overview: &mut PrOverview,
+        diff: &mut PrDiff,
         cx: &mut Cx<'_>,
     ) -> Option<GithubResponse> {
         if let GithubResponse::CommentReactions(result) = response {
@@ -382,6 +384,7 @@ impl PrConversation {
         };
         if let Some(error) = failed {
             self.fail(&error, overview, cx);
+            diff.reviews_failed();
             return None;
         }
         // The tab loads once both have answered.
@@ -390,6 +393,7 @@ impl PrConversation {
         };
         let (reviews, comments) = (std::mem::take(reviews), std::mem::take(comments));
         overview.set_reviews(&reviews);
+        diff.set_reviews(&reviews);
         let kept = self
             .reloading
             .take()

@@ -31,7 +31,11 @@ keys = ["j", "j", "enter"]
 [[step]]
 wait = { text = "Current repo: parity-bot/dotfiles" }
 
-# Its toast goes before the issue opens, so the capture shows only the issue's.
+# Its toast goes before the issue opens, so the capture shows only the issue's. The toast can be raised after the
+# repo name shows, so wait for it to appear before waiting for it to go; otherwise the gone wait can pass first.
+[[step]]
+wait = { text = "Opening repository for notification" }
+
 [[step]]
 wait = { gone = "Opening repository for notification", timeout_ms = 15000 }
 

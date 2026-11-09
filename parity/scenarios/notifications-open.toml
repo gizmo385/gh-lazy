@@ -55,7 +55,14 @@ wait = { text = "Thread ID" }
 wait = { gone = "Showing saved notifications" }
 
 [[step]]
-keys = ["r", "j", "enter"]
+keys = ["r"]
+
+# The Read tab's own pages land after the switch and can move its rows; j and enter wait for them to settle.
+[[step]]
+wait = { stable_ms = 500 }
+
+[[step]]
+keys = ["j", "enter"]
 
 [[step]]
 wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/pulls/2" } }

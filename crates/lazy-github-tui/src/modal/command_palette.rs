@@ -24,7 +24,7 @@ use crate::effect::{Effect, TimerId};
 use crate::fuzzy::fuzzy_match;
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::screens::main::{MainAction, Toggle};
-use crate::theme::{Paint, TextStyle, Theme, ThemeColor};
+use crate::theme::{Catalog, Paint, TextStyle, Theme, ThemeColor};
 
 /// The palette's screen bindings, in Textual's merged order: the modal screen's, then `CommandPalette.BINDINGS`.
 pub const COMMAND_PALETTE_BINDINGS: &[BindingId] = dialog_bindings![
@@ -255,12 +255,13 @@ impl CommandPaletteDialog {
         Self::with_placeholder(commands, PLACEHOLDER)
     }
 
-    /// Textual's theme palette (`search_themes`): every built-in theme by its own name (aliases such as
-    /// `textual-dark` aren't listed), sorted, with no help lines. The
+    /// Textual's theme palette (`search_themes`): every theme in `themes` by its own name (aliases such as
+    /// `textual-dark` aren't listed), built-in and user themes sorted together, with no help lines. The
     /// empty query lists them in that order, the first highlighted rather than the current theme, and equal scores
     /// keep it. Picking one hands back [`PaletteRun::SetTheme`].
-    pub fn themes() -> Self {
-        let mut commands: Vec<PaletteCommand> = Theme::all()
+    pub fn themes(themes: &Catalog) -> Self {
+        let mut commands: Vec<PaletteCommand> = themes
+            .themes()
             .map(|theme| PaletteCommand {
                 name: theme.name,
                 help: None,

@@ -865,6 +865,28 @@ fn picking_a_theme_switches_it_for_the_session_keeping_the_color_mode() {
     assert!(repos_focused(&app));
 }
 
+/// User themes (#380) sort in among the built-in ones by name, and switch like them.
+#[test]
+fn the_theme_palette_sorts_user_themes_with_the_builtins() {
+    let (themes, _) = crate::test_util::user_themes(&[("zzz.toml", ""), ("my-theme.toml", "extends = \"nord\"\n")]);
+    let mut app = TestApp::with_theme(Config::default(), Theme::default());
+    app.app_mut().set_themes(themes, &[]);
+    app.press(&["ctrl+p"]);
+    type_text(&mut app, "theme");
+    app.press(&["enter"]);
+    let mut expected = theme_names();
+    expected.extend(["my-theme", "zzz"]);
+    expected.sort_unstable();
+    assert_eq!(hits(&app), expected);
+    let at = |name: &str| expected.iter().position(|n| *n == name).unwrap();
+    assert!(at("monokai") < at("my-theme") && at("my-theme") < at("nord"));
+    type_text(&mut app, "my-th");
+    assert_eq!(hits(&app), ["my-theme"]);
+    app.press(&["enter"]);
+    assert_eq!(app.app().theme().name, "my-theme");
+    assert_eq!(app.app().config().appearance.theme, "dark");
+}
+
 #[test]
 fn moving_the_highlight_previews_nothing_and_escape_keeps_the_theme() {
     let mut app = themes_opened(Theme::default());

@@ -72,14 +72,14 @@ pub(super) struct SettingField {
 }
 
 impl SettingField {
-    fn new(field: &'static Field, config: &Config) -> Self {
+    fn new(field: &'static Field, config: &Config, themes: &'static Catalog) -> Self {
         let mut unchanged = None;
         let widget = match field.get(config) {
             FieldValue::Bool(on) => FieldWidget::Switch(Switch::new(on)),
             FieldValue::Choice(value) => FieldWidget::Select(choice_select(field.kind, value)),
             FieldValue::Name(name) => {
-                unchanged = Catalog::builtin().resolve(&name).theme().map(|theme| theme.name);
-                FieldWidget::Select(theme_select(unchanged))
+                unchanged = themes.resolve(&name).theme().map(|theme| theme.name);
+                FieldWidget::Select(theme_select(themes, unchanged))
             }
             FieldValue::List(items) => {
                 let placeholder = if field.name == "additional_suggested_pr_reviewers" {
@@ -171,10 +171,10 @@ fn choice_select(kind: FieldKind, value: &'static str) -> Select<&'static str> {
     select
 }
 
-/// The theme select: every theme in catalog order, labeled by its display name, on `selected` (a theme's own name),
-/// or on the blank option for a name no theme has.
-fn theme_select(selected: Option<&'static str>) -> Select<&'static str> {
-    let options = Catalog::builtin()
+/// The theme select: every theme in catalog order (the built-in ones, then the user's by name), labeled by its display
+/// name, on `selected` (a theme's own name), or on the blank option for a name no theme has.
+fn theme_select(themes: &'static Catalog, selected: Option<&'static str>) -> Select<&'static str> {
+    let options = themes
         .themes()
         .map(|theme| (theme.display_name(), theme.name))
         .collect::<Vec<_>>();
@@ -231,14 +231,14 @@ pub(super) struct SettingsPane {
 }
 
 impl SettingsPane {
-    pub(super) fn new(section: &'static Section, config: &Config) -> Self {
+    pub(super) fn new(section: &'static Section, config: &Config, themes: &'static Catalog) -> Self {
         Self {
             keys: (section.key == "bindings").then(|| KeyList::new(&config.bindings.overrides)),
             section,
             fields: section
                 .fields
                 .iter()
-                .map(|field| SettingField::new(field, config))
+                .map(|field| SettingField::new(field, config, themes))
                 .collect(),
             shown: vec![true; section.fields.len()],
             scroll: FormScroll::default(),

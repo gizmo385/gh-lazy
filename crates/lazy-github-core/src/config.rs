@@ -60,6 +60,11 @@ impl ConfigPaths {
         let file = dir.join(CONFIG_FILE_NAME);
         Self { dir, file }
     }
+
+    /// The folder of user theme files, `<dir>/themes`: each `*.toml` file in it is a theme (#380).
+    pub fn themes_dir(&self) -> PathBuf {
+        self.dir.join("themes")
+    }
 }
 
 /// Why the config couldn't be loaded or saved.
@@ -831,6 +836,7 @@ mod tests {
         let paths = ConfigPaths::for_home(Path::new("/home/lazy"));
         assert_eq!(paths.dir, Path::new("/home/lazy/.config/lazy-github"));
         assert_eq!(paths.file, Path::new("/home/lazy/.config/lazy-github/config.json"));
+        assert_eq!(paths.themes_dir(), Path::new("/home/lazy/.config/lazy-github/themes"));
     }
 
     #[test]

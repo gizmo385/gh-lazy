@@ -19,8 +19,8 @@
     B39).
 - Decided by: Chris, 2026-11-01 (#347)
 - Link: https://github.com/gizmo385/gh-lazy/issues/347#issuecomment-6554309331
-- Rows: `main-layout.themes`, `main-layout.theme-unknown-warning`, `config.appearance-theme`, `command-palette.theme`,
-  `modals.settings-widgets`
+- Rows: `main-layout.themes`, `main-layout.theme-unknown-warning`, `main-layout.theme-user-files`,
+  `config.appearance-theme`, `command-palette.theme`, `modals.settings-widgets`
 
 Python takes its themes from Textual's `BUILTIN_THEMES`: a name outside them, or any non-string scalar, loads as
 `textual-dark`, silently, and the next save writes `textual-dark` back (`lib/config.py`
@@ -34,3 +34,9 @@ and `textual-light` stay aliases and are never rewritten unasked.
 `ansi-dark` and `ansi-light` keep their names: Textual calls them that, with no Textual branding. The config doctor
 (`check-config`) doesn't report an unknown theme name, as it can't know the user's theme files; the startup toast
 covers it.
+
+User themes (D3, #380) are read once at startup from `<config dir>/themes/*.toml`, each named after its file and
+extending a built-in theme (or an alias) with the roles it overrides; [`docs/themes.md`](../../../themes.md) has the
+format. Settings lists them after the built-ins, by name, and the command palette sorts them in with the built-ins. A
+file that can't be used is skipped with a "Theme file skipped" warning toast naming the file and the reason; a config
+naming a skipped theme then gets D5's "Unknown theme" warning as well.

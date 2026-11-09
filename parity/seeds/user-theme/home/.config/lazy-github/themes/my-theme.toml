@@ -1,0 +1,9 @@
+# A user theme for the theme-user-file scenario (#380): nord with a different focused-pane border and screen.
+extends = "nord"
+display_name = "My Theme"
+
+[surface]
+screen = "#101820"
+
+[border]
+pane_focused = "#FF8800"

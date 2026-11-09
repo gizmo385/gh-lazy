@@ -44,7 +44,7 @@ pub use crate::screens::main::Maximized;
 use crate::screens::main::{MainScreen, Toggle};
 use crate::screens::startup::{StartupDecision, StartupScreen, naive_now};
 use crate::screenshot::{self, ScreenshotRequest};
-use crate::theme::{Catalog, Resolved, TerminalColors, Theme};
+use crate::theme::{Catalog, Resolved, TerminalColors, Theme, ThemeFileError};
 use crate::toast::{Severity, Toast, Toasts};
 
 /// A click on a link drawn in the last frame (`links`): the press and the release on the same link follow it, after the
@@ -178,10 +178,7 @@ impl App {
     /// components. [`Self::init`] decides where it goes next.
     pub fn new(config: Config, theme: Theme, options: AppOptions, clock: impl Clock + 'static) -> Self {
         let keymap = Keymap::new(&config.bindings.overrides);
-        let first_screen_toasts = match Catalog::builtin().resolve(&config.appearance.theme) {
-            Resolved::Unknown { written } => vec![unknown_theme_toast(&written)],
-            Resolved::Exact(_) | Resolved::Alias { .. } => Vec::new(),
-        };
+        let first_screen_toasts = theme_toasts(Catalog::builtin(), &[], &config.appearance.theme);
         Self {
             base: BaseScreen::Startup(StartupScreen::default()),
             modals: Vec::new(),
@@ -219,6 +216,16 @@ impl App {
     /// for the config's `appearance.color_depth`; a Settings save reduces the next one, and Debug Info shows it.
     pub fn set_terminal_colors(&mut self, colors: TerminalColors) {
         self.colors = colors;
+    }
+
+    /// Sets the themes the app knows, the built-in ones and the user's, read at startup with
+    /// [`Catalog::with_user_themes`], and the user theme files it `skipped`. Each skipped file gets a "Theme file
+    /// skipped" toast when the first screen after the startup one shows, before an "Unknown theme" one. Until this
+    /// is called the app knows only the built-in themes. The theme given to [`Self::new`] should already come from
+    /// `themes`.
+    pub fn set_themes(&mut self, themes: &'static Catalog, skipped: &[ThemeFileError]) {
+        self.shared.themes = themes;
+        self.first_screen_toasts = theme_toasts(themes, skipped, &self.shared.config.appearance.theme);
     }
 
     /// Logs `message` as a warning when the main screen first shows. The command log drops lines from before it, as
@@ -763,7 +770,10 @@ impl App {
             Action::OpenCommandPalette => self.open_command_palette(out),
             Action::OpenThemePalette => self.open_theme_palette(out),
             Action::SetTheme(name) => {
-                let theme = Theme::from_config(name, self.shared.theme.color_mode());
+                let theme = self
+                    .shared
+                    .themes
+                    .theme_for_config(name, self.shared.theme.color_mode());
                 self.set_theme(theme, out);
             }
             Action::OpenSettings => self.open_settings(out),
@@ -943,9 +953,8 @@ impl App {
         if !self.modals.is_empty() || !matches!(self.base, BaseScreen::Main(_)) {
             return;
         }
-        Cx::new(&mut self.shared, out).open_dialog(CommandPaletteDialog::themes(), |run| {
-            run.map_or(Action::Consumed, PaletteRun::action)
-        });
+        let palette = CommandPaletteDialog::themes(self.shared.themes);
+        Cx::new(&mut self.shared, out).open_dialog(palette, |run| run.map_or(Action::Consumed, PaletteRun::action));
     }
 
     /// [`Action::ShowLinkHints`]: labels over the links the main screen drew in the last frame, or the toast "No links
@@ -974,7 +983,7 @@ impl App {
         if !self.modals.is_empty() || !matches!(self.base, BaseScreen::Main(_)) {
             return;
         }
-        let dialog = SettingsDialog::new(&self.shared.config);
+        let dialog = SettingsDialog::new(&self.shared.config, self.shared.themes);
         Cx::new(&mut self.shared, out).open_dialog(dialog, Action::SettingsClosed);
     }
 
@@ -1000,7 +1009,7 @@ impl App {
             .push_back(Action::Notify(Toast::new(Severity::Information, "Settings updated")));
         let config = &self.shared.config;
         let mode = self.colors.mode(config.appearance.color_depth);
-        let theme = Theme::from_config(&config.appearance.theme, mode);
+        let theme = self.shared.themes.theme_for_config(&config.appearance.theme, mode);
         self.shared.keymap = Keymap::new(&config.bindings.overrides);
         // After "Settings updated", so it reads as what's left to look at.
         if let Some(toast) = key_conflicts_toast(&self.shared.keymap) {
@@ -1805,6 +1814,21 @@ fn quit_hint() -> Toast {
     Toast::new(Severity::Information, message).with_title("Do you want to quit?")
 }
 
+/// The toasts about themes for the first screen: one per user theme file that was `skipped`, then the warning for a
+/// `configured` theme name that `themes` doesn't have.
+fn theme_toasts(themes: &Catalog, skipped: &[ThemeFileError], configured: &str) -> Vec<Toast> {
+    let mut toasts: Vec<Toast> = skipped.iter().map(skipped_theme_toast).collect();
+    if let Resolved::Unknown { written } = themes.resolve(configured) {
+        toasts.push(unknown_theme_toast(&written));
+    }
+    toasts
+}
+
+/// The warning for a user theme file that couldn't be used (#380): the other themes still load.
+fn skipped_theme_toast(error: &ThemeFileError) -> Toast {
+    Toast::warning(format!("{}: {}", error.file, error.reason())).with_title("Theme file skipped")
+}
+
 /// The warning for an `appearance.theme` no theme has: the app draws the default theme and leaves the name in the
 /// config, where Python silently rewrites it (app-owned-themes D5).
 fn unknown_theme_toast(name: &str) -> Toast {
@@ -2176,6 +2200,62 @@ mod tests {
         futures_util::FutureExt::now_or_never(app.settle()).unwrap();
         assert_eq!(app.app().screen(), Some(ScreenKind::Auth));
         assert!(app.app().toasts().iter().eq([&unknown_theme_warning()]));
+    }
+
+    /// A user theme (#380) overriding the two roles the main screen shows most.
+    const MY_THEME: &str =
+        "extends = \"nord\"\n\n[surface]\nscreen = \"#101820\"\n\n[border]\npane_focused = \"#FF8800\"\n";
+
+    /// The configured user theme draws: its overridden screen and focused box, and the base's everything else.
+    #[test]
+    fn the_main_screen_under_a_user_theme() {
+        let (themes, skipped) = crate::test_util::user_themes(&[("my-theme.toml", MY_THEME)]);
+        assert_eq!(skipped, []);
+        let mut app = TestApp::on_startup_with_themes(
+            with_theme("my-theme"),
+            lazy_github_core::github::FakeGithub::new(),
+            themes,
+            &skipped,
+        );
+        futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+        assert_eq!(app.app().screen(), Some(ScreenKind::Main));
+        assert!(app.app().toasts().is_empty());
+        assert_eq!(app.app().theme().name, "my-theme");
+        let buf = app.render(80, 20);
+        insta::assert_snapshot!(crate::test_util::buffer_to_styled_string(&buf));
+    }
+
+    /// One "Theme file skipped" toast per bad file, in file name order, then "Unknown theme" for a configured theme
+    /// that was skipped; the good file still loads.
+    #[test]
+    fn skipped_theme_files_warn_once_the_main_screen_is_up() {
+        let (themes, skipped) = crate::test_util::user_themes(&[
+            ("my-theme.toml", MY_THEME),
+            ("broken.toml", "extends = \"nord\"\n[border\n"),
+            ("nordic.toml", "extends = \"nordish\"\n"),
+        ]);
+        let mut app = TestApp::on_startup_with_themes(
+            with_theme("broken"),
+            lazy_github_core::github::FakeGithub::new(),
+            themes,
+            &skipped,
+        );
+        assert!(app.app().toasts().is_empty());
+        futures_util::FutureExt::now_or_never(app.settle()).unwrap();
+        assert_eq!(app.app().screen(), Some(ScreenKind::Main));
+        let skipped_toast = |message: &str| Toast::warning(message.to_owned()).with_title("Theme file skipped");
+        let expected = [
+            skipped_toast("broken.toml: line 2: unclosed table, expected `]`"),
+            skipped_toast("nordic.toml: line 1: extends: no built-in theme is called \"nordish\""),
+            Toast::warning(r#"No theme is called "broken". Using "dark"."#).with_title("Unknown theme"),
+        ];
+        assert_eq!(app.app().toasts().iter().cloned().collect::<Vec<_>>(), expected);
+        assert_eq!(app.app().theme().name, "dark");
+        assert!(themes.get("my-theme").is_some());
+        // Only the first time.
+        app.app_mut().update(Action::EnterMain);
+        assert_eq!(app.app().toasts().len(), 3);
+        insta::assert_snapshot!("theme_file_skipped_toast", app.screen(100, 30));
     }
 
     #[test]

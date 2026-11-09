@@ -62,23 +62,7 @@ pub(crate) struct ThemeFile {
 impl ThemeFile {
     /// Parses `source`, the contents of the theme file called `file` (named in errors).
     pub(crate) fn parse(file: &str, source: &str) -> Result<ThemeFile, ThemeFileError> {
-        let error = |err: toml::de::Error, role: Option<String>| ThemeFileError::from_toml(file, source, &err, role);
-        let document = DeTable::parse(source).map_err(|err| error(err, None))?;
-        let span = document.span();
-        // The header keys and the role tables share the top level; each half is read on its own, so both keep
-        // rejecting keys they don't know.
-        let (mut header, mut roles) = (DeTable::new(), DeTable::new());
-        for (key, value) in document.into_inner() {
-            if HEADER_KEYS.contains(&key.get_ref().as_ref()) {
-                header.insert(key, value);
-            } else {
-                roles.insert(key, value);
-            }
-        }
-        let header: Header = serde_path_to_error::deserialize(reader(span.clone(), header))
-            .map_err(|err| error(err.inner().clone(), role_path(err.path())))?;
-        let roles: RolesPatch = serde_path_to_error::deserialize(reader(span, roles))
-            .map_err(|err| error(err.inner().clone(), role_path(err.path())))?;
+        let (header, roles) = parse_parts(file, source, &HEADER_KEYS)?;
         Ok(ThemeFile {
             header,
             roles,
@@ -116,6 +100,65 @@ impl ThemeFile {
     }
 }
 
+/// What a user theme file (#380) says about the theme, besides its roles. `terminal_colors` isn't one of its keys:
+/// it comes from the base theme, since a terminal-palette theme draws differently.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct UserHeader {
+    /// The built-in theme (or alias) it starts from; `dark` when left out.
+    pub(crate) extends: Option<Spanned<String>>,
+    /// The name Settings shows; the title case of the file's name when left out.
+    pub(crate) display_name: Option<String>,
+    /// The base theme's when left out.
+    pub(crate) appearance: Option<Appearance>,
+}
+
+/// [`UserHeader`]'s keys, plus `terminal_colors`, so that a user file writing it is told it's not a key here
+/// rather than that it's not a role.
+const USER_HEADER_KEYS: [&str; 4] = ["extends", "display_name", "appearance", "terminal_colors"];
+
+/// A parsed user theme file: a header and the roles it overrides.
+#[derive(Debug)]
+pub(crate) struct UserThemeFile {
+    pub(crate) header: UserHeader,
+    /// The roles it writes, which replace the base theme's.
+    pub(crate) roles: RolesPatch,
+}
+
+impl UserThemeFile {
+    /// Parses `source`, the contents of the user theme file called `file` (named in errors).
+    pub(crate) fn parse(file: &str, source: &str) -> Result<UserThemeFile, ThemeFileError> {
+        let (header, roles) = parse_parts(file, source, &USER_HEADER_KEYS)?;
+        Ok(UserThemeFile { header, roles })
+    }
+}
+
+/// `source`'s header (the top-level `header_keys`) and its role tables, each read on its own.
+fn parse_parts<H: de::DeserializeOwned>(
+    file: &str,
+    source: &str,
+    header_keys: &[&str],
+) -> Result<(H, RolesPatch), ThemeFileError> {
+    let error = |err: toml::de::Error, role: Option<String>| ThemeFileError::from_toml(file, source, &err, role);
+    let document = DeTable::parse(source).map_err(|err| error(err, None))?;
+    let span = document.span();
+    // The header keys and the role tables share the top level; each half is read on its own, so both keep
+    // rejecting keys they don't know.
+    let (mut header, mut roles) = (DeTable::new(), DeTable::new());
+    for (key, value) in document.into_inner() {
+        if header_keys.contains(&key.get_ref().as_ref()) {
+            header.insert(key, value);
+        } else {
+            roles.insert(key, value);
+        }
+    }
+    let header: H = serde_path_to_error::deserialize(reader(span.clone(), header))
+        .map_err(|err| error(err.inner().clone(), role_path(err.path())))?;
+    let roles: RolesPatch = serde_path_to_error::deserialize(reader(span, roles))
+        .map_err(|err| error(err.inner().clone(), role_path(err.path())))?;
+    Ok((header, roles))
+}
+
 /// A deserializer for one half of a file's top level, which spans the whole file.
 fn reader(span: Range<usize>, table: DeTable<'_>) -> toml::Deserializer<'_> {
     toml::Deserializer::from(Spanned::new(span, table))
@@ -149,6 +192,44 @@ impl ThemeFileError {
             column,
             role,
             message: err.message().trim_end().to_owned(),
+        }
+    }
+
+    /// An error about the whole file `file`, at no line.
+    pub(crate) fn whole_file(file: &str, message: impl Into<String>) -> Self {
+        ThemeFileError {
+            file: file.to_owned(),
+            line: None,
+            column: None,
+            role: None,
+            message: message.into(),
+        }
+    }
+
+    /// An error about the header key `key`, written at `span` of `source`.
+    pub(crate) fn at_key(file: &str, source: &str, span: Range<usize>, key: &str, message: String) -> Self {
+        let (line, column) = line_column(source, span);
+        ThemeFileError {
+            file: file.to_owned(),
+            line: Some(line),
+            column: Some(column),
+            role: Some(key.to_owned()),
+            message,
+        }
+    }
+
+    /// What's wrong, without the file's name, as the "Theme file skipped" toast says it after the name: `line 3:
+    /// surface.screen: …`. An unknown key's message leaves out the list of every key it could have been, which
+    /// would fill the screen; `docs/themes.md` and the log have it.
+    pub fn reason(&self) -> String {
+        let message = self
+            .message
+            .split_once(", expected one of ")
+            .map_or(self.message.as_str(), |(short, _)| short);
+        let line = self.line.map(|line| format!("line {line}: ")).unwrap_or_default();
+        match &self.role {
+            Some(role) if !message.contains(role.as_str()) => format!("{line}{role}: {message}"),
+            _ => format!("{line}{message}"),
         }
     }
 }

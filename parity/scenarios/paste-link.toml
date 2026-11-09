@@ -18,6 +18,9 @@ parity_rows = [
 # issue-fixture first and has issue 12; pr-details has PR 5 (its README is slowed down in links); user-profile has
 # parity-bot's profile and the profile-only repo.
 fixtures = ["paste-link", "links", "issue-details", "pr-details", "user-profile", "base"]
+# Python's toasts don't time out under the harness, so the later captures show every "Opening ... for link" toast.
+# Rust's last 5 s, which a slow machine can pass between a toast and a capture; this keeps them up.
+toast_timeout_ms = 60000
 
 [[step]]
 wait = { text = "issue-fixture", timeout_ms = 15000 }

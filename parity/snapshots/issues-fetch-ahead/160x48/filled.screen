@@ -1,0 +1,126 @@
+lazy-github-screen 1
+size 160x48
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/prs-then-issues                                                                                                                      │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-bot/prs-then-issues Details ─────────────────────────────────────────────────────┐
+│ ★  Owner       Name             Private                      ││ Repo Overview                                                                                │
+│ ☆  parity-bot  dotfiles         ✘                            ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world      ✘                            ││parity-bot/prs-then-issues • Public                                                           │
+│ ☆  parity-bot  lazy-demo        ✘                            ││Owned by parity-bot                                                                           │
+│ ☆  parity-bot  prs-only         ✘                            ││Default branch: main                                                                          │
+│ ☆  parity-bot  prs-then-issues  ✘                            ││                                                                                              │
+│                                                              ││Issues-endpoint pages 1 and 2 are all pull requests; page 3 is all issues.                    │
+│                                                              ││                                                                                              │
+│                                                              ││──────────────────────────────────────────────────────────────────────────────────────────────│
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                       prs-then-issues                                        │
+│                                                              ││                                                                                              │
+│                                                              ││  Issues-endpoint pages 1 and 2 are all pull requests; page 3 is all issues.                  │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│                                                                                              │
+│ #   Status  Author      Title                                ││                                                                                              │
+│ 90  open    parity-bot  Prs then issues pull request 90      ││                                                                                              │
+│ 89  open    parity-bot  Prs then issues pull request 89      ││                                                                                              │
+│ 88  open    parity-bot  Prs then issues pull request 88    ▆▆││                                                                                              │
+│ 87  open    parity-bot  Prs then issues pull request 87      ││                                                                                              │
+│ 86  open    parity-bot  Prs then issues pull request 86      ││                                                                                              │
+│ 85  open    parity-bot  Prs then issues pull request 85      ││                                                                                              │
+│ 84  open    parity-bot  Prs then issues pull request 84      ││                                                                                              │
+│ 83  open    parity-bot  Prs then issues pull request 83      ││                                                                                              │
+│ 82  open    parity-bot  Prs then issues pull request 82      ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [3] Issues ─────────────────────────────────────────────────┐│                                                                                              │
+│ #   Status  Author      Title                                ││                                                                                              │
+│ 30  open    parity-bot  Prs then issues issue 30             ││                                                                                              │
+│ 29  open    parity-bot  Prs then issues issue 29             ││                                                                                              │
+│ 28  open    parity-bot  Prs then issues issue 28           ▆▆││                                                                                              │
+│ 27  open    parity-bot  Prs then issues issue 27             ││                                                                                              │
+│ 26  open    parity-bot  Prs then issues issue 26             ││                                                                                              │
+│ 25  open    parity-bot  Prs then issues issue 25             ││                                                                                              │
+│ 24  open    parity-bot  Prs then issues issue 24             ││                                                                                              │
+│ 23  open    parity-bot  Prs then issues issue 23             ││                                                                                              │
+│ 22  open    parity-bot  Prs then issues issue 22             ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Comman
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..............bbbbbbbbbbbbbbbbbbbbbbbbbb......................................................................................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+cefeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd..............................................................................................d
+cggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggcdhiiiiiiiiiiiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhd
+cggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggcdjjjjjjjjjjjjjjjjjjjjjjjjjj...bbbbbb...........................................................d
+cggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggcd.........kkkkkkkkkk...........................................................................d
+cggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggcd................llll..........................................................................d
+cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmcd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn..d
+c..............................................................cd..............................................................................................d
+c..............................................................cd..............................................................................................d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd..............................................................................................d
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
+dooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooppdd..............................................................................................d
+dqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqppdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrppdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrssdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttdd..............................................................................................d
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
+dooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooppdd..............................................................................................d
+dqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqppdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrppdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrssdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttdd..............................................................................................d
+drrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrttdd..............................................................................................d
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
+ddddddddddddddddduuuuuuuddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
+doooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooodd..............................................................................................d
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+vvvwwwwwwwvvvvwwwwwwwwwwwwwwwwvvvwwwwwwwwwwwwwwwwwwvvvwwwwwwwwwwvvvwwwwwwwwwwvvvwwwwwwwvvvvwwwwwwwwwwwvvvwwwwwwwwwwwwvvvwwwwwwwwwwwwwwwwwwwwwwvvvwwwwwvvvvwwwwww
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#adff2f bg=#121212
+c fg=#4ebf71 bg=#121212
+d fg=#6db2ff bg=#121212
+e fg=#e0e0e0 bg=#2d3740 bold
+f fg=#98e024 bg=#2d3740 bold
+g fg=#e0e0e0 bg=#272727
+h fg=#262626 bg=#121212
+i fg=#0178d4 bg=#121212
+j fg=#e0e0e0 bg=#121212 bold underline
+k fg=#e0e0e0 bg=#121212 underline
+l fg=#e0e0e0 bg=#121212 bold
+m fg=#ddedf9 bg=#0178d4 bold
+n fg=#0178d4 bg=#121212 bold
+o fg=#e0e0e0 bg=#242f38 bold
+p fg=#003054 bg=#1e1e1e inverse
+q fg=#e0e0e0 bg=#153854
+r fg=#e0e0e0 bg=#1e1e1e
+s fg=#003054 bg=#000000 inverse
+t fg=#e0e0e0 bg=#000000
+u fg=#4e7bae bg=#121212
+v fg=#ffa62b bg=#242f38 bold
+w fg=#e0e0e0 bg=#242f38

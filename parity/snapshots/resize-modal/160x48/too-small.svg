@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200" xml:space="preserve">
+<title>resize-modal · too-small · 30x10</title>
+<style>
+text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono', monospace; font-size: 16.67px; white-space: pre; }
+.s0 { fill: #e0e0e0; }
+</style>
+<rect width="300" height="200" fill="#1e1e1e"/>
+<g shape-rendering="crispEdges">
+<rect x="0" y="0" width="300" height="20" fill="#121212"/>
+<rect x="0" y="20" width="300" height="20" fill="#121212"/>
+<rect x="0" y="40" width="300" height="20" fill="#121212"/>
+<rect x="0" y="60" width="300" height="20" fill="#121212"/>
+<rect x="0" y="80" width="300" height="20" fill="#121212"/>
+<rect x="0" y="100" width="300" height="20" fill="#121212"/>
+<rect x="0" y="120" width="300" height="20" fill="#121212"/>
+<rect x="0" y="140" width="300" height="20" fill="#121212"/>
+<rect x="0" y="160" width="300" height="20" fill="#121212"/>
+<rect x="0" y="180" width="300" height="20" fill="#121212"/>
+</g>
+<text class="s0" x="0" y="95" textLength="300" lengthAdjust="spacingAndGlyphs">  Terminal too small (30×10)  </text>
+</svg>

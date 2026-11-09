@@ -2971,6 +2971,7 @@ dependencies = [
  "form_urlencoded",
  "insta",
  "jiff",
+ "lazy-github-core",
  "portable-pty",
  "regex",
  "serde",

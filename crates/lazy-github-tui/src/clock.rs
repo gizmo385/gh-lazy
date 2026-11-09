@@ -3,6 +3,7 @@
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::Duration;
 
+use lazy_github_core::logging::{LogClock, system_clock};
 use tokio::time::Instant;
 
 /// Where `App` and components get the time. Nothing else calls `Instant::now()` or `Zoned::now()`.
@@ -24,6 +25,49 @@ impl Clock for SystemClock {
 
     fn local_now(&self) -> jiff::Zoned {
         jiff::Zoned::now()
+    }
+}
+
+/// The clocks the binary runs the app with: the real monotonic clock, and the wall clock either real or, in a debug
+/// build with `lazy_github_core::time::FIXED_TIME_ENV` set, frozen at that instant, so parity runs show the same
+/// timestamps every time. [`WallClock::log_clock`] gives the log file and the command log the same wall clock.
+#[derive(Debug, Clone, Default)]
+pub struct WallClock {
+    frozen: Option<jiff::Zoned>,
+}
+
+impl WallClock {
+    /// Frozen when the environment asks for it ([`lazy_github_core::time::fixed_time_from_env`]), real otherwise.
+    pub fn from_env() -> Self {
+        Self::frozen_at(lazy_github_core::time::fixed_time_from_env())
+    }
+
+    /// The wall clock frozen at `instant` in the local zone, or real with `None`.
+    pub fn frozen_at(instant: Option<jiff::Timestamp>) -> Self {
+        Self {
+            frozen: instant.map(|ts| ts.to_zoned(jiff::tz::TimeZone::system())),
+        }
+    }
+
+    /// The same wall clock for log timestamps.
+    pub fn log_clock(&self) -> LogClock {
+        match &self.frozen {
+            Some(local) => {
+                let at = local.datetime();
+                Arc::new(move || at)
+            }
+            None => system_clock(),
+        }
+    }
+}
+
+impl Clock for WallClock {
+    fn now(&self) -> Instant {
+        Instant::now()
+    }
+
+    fn local_now(&self) -> jiff::Zoned {
+        self.frozen.clone().unwrap_or_else(jiff::Zoned::now)
     }
 }
 
@@ -92,6 +136,23 @@ impl Clock for FakeClock {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_frozen_wall_clock_and_its_log_clock_read_the_fixed_instant() {
+        let instant: jiff::Timestamp = "2026-01-01T00:00:00Z".parse().unwrap();
+        let clock = WallClock::frozen_at(Some(instant));
+        let start = clock.now();
+        std::thread::sleep(Duration::from_millis(5));
+        assert_eq!(clock.local_now().timestamp(), instant);
+        assert!(clock.now() > start, "the monotonic clock still moves");
+        let local = instant.to_zoned(jiff::tz::TimeZone::system()).datetime();
+        assert_eq!((clock.log_clock())(), local);
+
+        // Real without a fixed instant.
+        let real = WallClock::frozen_at(None);
+        assert!(real.local_now().timestamp() > instant);
+        assert!((real.log_clock())() > local);
+    }
 
     #[test]
     fn fake_clock_moves_only_when_advanced() {

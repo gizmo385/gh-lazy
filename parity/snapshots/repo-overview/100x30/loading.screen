@@ -1,0 +1,88 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/hello-world                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] parity-bot/hello-world Details ─────────────────────┐
+│ ★  Owner       Name         Private  ││ Repo Overview                                            │
+│ ☆  parity-bot  dotfiles     ✘        ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  ✘        ││parity-bot/hello-world • Public                           │
+│ ☆  parity-bot  lazy-demo    ✘        ││Owned by parity-bot                                       │
+│                                      ││Default branch: main                                      │
+│                                      ││                                                          │
+│                                      ││A first repository for trying things out.                 │
+│                                      ││                                                          │
+│                                      ││──────────────────────────────────────────────────────────│
+│                                      ││                                                          │
+│                                      ││                                                          │
+│                                      ││                                                          │
+│                                      ││                                                          │
+│                                      ││                                                          │
+│                                      ││                                                          │
+└──────────────────────────────────────┘│                                                          │
+┌─ [2] Pull Requests (empty) ──────────┐│                                                          │
+│ #  Status  Author  Title             ││                                                          │
+└──────────────────────────────────────┘│                                                          │
+┌─ [3] Issues (empty) ─────────────────┐│                                                          │
+│ #  Status  Author  Title             ││                                                          │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows (empty) ──────────────┐│                                                          │
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste lin
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..............bbbbbbbbbbbbbbbbbbbbbb..............................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+cefeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd..........................................................d
+cggggggggggggggggggggggggggggggggggggggcdhiiiiiiiiiiiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhd
+cjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjcdkkkkkkkkkkkkkkkkkkkkkk...bbbbbb...........................d
+cggggggggggggggggggggggggggggggggggggggcd.........llllllllll.......................................d
+c......................................cd................mmmm......................................d
+c......................................cd..........................................................d
+c......................................cd..........................................................d
+c......................................cd..........................................................d
+c......................................cdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+c......................................cd..........................................................d
+c......................................cd..........................................................d
+c......................................cd..........................................................d
+c......................................cd..........................................................d
+c......................................cd..........................................................d
+c......................................cd..........................................................d
+ccccccccccccccccccccccccccccccccccccccccd..........................................................d
+dddddddddddddddddddddnnnnnnnddddddddddddd..........................................................d
+doooooooooooooooooooooooooooooooooooooodd..........................................................d
+ddddddddddddddddddddddddddddddddddddddddd..........................................................d
+ddddddddddddddnnnnnnndddddddddddddddddddd..........................................................d
+doooooooooooooooooooooooooooooooooooooodd..........................................................d
+ddddddddddddddddddddddddddddddddddddddddd..........................................................d
+dddddddddddddddddnnnnnnnddddddddddddddddd..........................................................d
+dpppppppppppppppppppppppppppppppqrrrrssdd..........................................................d
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+tttuuuuuuuttttuuuuuuuuuuuuuuuutttuuuuuuuuuuuuuuuuuutttuuuuuuuuuutttuuuuuuuuuutttuuuuuuuttttuuuuuuuuu
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#adff2f bg=#121212
+c fg=#4ebf71 bg=#121212
+d fg=#6db2ff bg=#121212
+e fg=#e0e0e0 bg=#2d3740 bold
+f fg=#98e024 bg=#2d3740 bold
+g fg=#e0e0e0 bg=#272727
+h fg=#262626 bg=#121212
+i fg=#0178d4 bg=#121212
+j fg=#ddedf9 bg=#0178d4 bold
+k fg=#e0e0e0 bg=#121212 bold underline
+l fg=#e0e0e0 bg=#121212 underline
+m fg=#e0e0e0 bg=#121212 bold
+n fg=#4e7bae bg=#121212
+o fg=#e0e0e0 bg=#242f38 bold
+p fg=#003054 bg=#1e1e1e inverse
+q fg=#003054 bg=#000000
+r fg=#e0e0e0 bg=#000000
+s bg=#000000
+t fg=#ffa62b bg=#242f38 bold
+u fg=#e0e0e0 bg=#242f38

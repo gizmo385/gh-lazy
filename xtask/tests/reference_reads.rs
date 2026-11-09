@@ -11,6 +11,7 @@ use xtask::parity::env::Paths;
 use xtask::parity::record::{self, Options, Outcome};
 use xtask::parity::reference;
 use xtask::parity::scenario::{Roots, Scenario};
+use xtask::parity::snapshot::{self, AcceptOptions, AcceptOutcome};
 use xtask::parity::structure::Themes;
 
 /// `cargo test` builds examples next to the test binaries.
@@ -46,7 +47,7 @@ fn read_json(path: &Path) -> serde_json::Value {
 }
 
 /// A git repo with what the hashes need and a scenario `steady` that both apps run, with its reference recorded
-/// from `echo_tui`.
+/// and its Rust snapshot accepted from `echo_tui`.
 struct Repo {
     dir: tempfile::TempDir,
 }
@@ -106,6 +107,22 @@ impl Repo {
             matches!(report.outcomes[0].outcome, Outcome::Recorded { .. }),
             "{report:?}"
         );
+        let themes = Themes::default();
+        let accept = AcceptOptions {
+            all: true,
+            jobs: 1,
+            keep_home: false,
+            themes: &themes,
+        };
+        let accepted = snapshot::accept(
+            repo.path(),
+            &repo.scenarios(),
+            &repo.paths(echo_tui()),
+            &repo.path().join("accept"),
+            &accept,
+        )
+        .unwrap();
+        assert_eq!(accepted.outcomes[0].outcome, AcceptOutcome::Accepted, "{accepted:?}");
         repo
     }
 
@@ -354,7 +371,7 @@ impl Repo {
 fn live_python_since_runs_python_only_where_its_reference_changed() {
     let repo = Repo::recorded();
     // Out of the diff, like the report directory in a real checkout.
-    repo.write(".gitignore", "/out/\n/record/\n");
+    repo.write(".gitignore", "/out/\n/record/\n/accept/\n");
     repo.git(&["add", "-A"]);
     repo.git(&["commit", "-qm", "recorded"]);
     let (code, out) = repo.run(&["--live-python-since", "HEAD"], PathBuf::from("/nonexistent/python"));

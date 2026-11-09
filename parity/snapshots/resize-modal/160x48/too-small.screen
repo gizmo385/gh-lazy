@@ -1,0 +1,17 @@
+lazy-github-screen 1
+size 30x10
+cursor 0 0 hidden
+--- text
+
+
+
+
+  Terminal too small (30×10)
+
+
+
+
+
+--- styles
+--- legend
+. fg=#e0e0e0 bg=#121212

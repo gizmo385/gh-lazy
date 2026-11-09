@@ -1,0 +1,20 @@
+GET /notifications?all=false&page=1&per_page=50
+GET /notifications?all=false&page=2&per_page=50
+GET /notifications?all=true&page=1&per_page=50
+GET /repos/parity-bot/dotfiles/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/dotfiles/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/dotfiles/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/dotfiles/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/dotfiles/readme accept=raw
+GET /repos/parity-bot/pr-details/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/pr-details/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/pr-details/issues/7
+GET /repos/parity-bot/pr-details/issues/7/comments
+GET /repos/parity-bot/pr-details/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/pr-details/issues?page=2&per_page=30&state=all
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=2&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/readme accept=raw
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all
+PATCH /notifications/threads/9100002
+PATCH /notifications/threads/9100004

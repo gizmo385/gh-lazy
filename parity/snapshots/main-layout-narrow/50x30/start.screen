@@ -1,0 +1,87 @@
+lazy-github-screen 1
+size 50x30
+cursor 0 0 hidden
+--- text
+┌────────────────────────────────────────────────┐
+│No repository selected                          │
+└────────────────────────────────────────────────┘
+┌─ [1] Repositor… ─┐┌─ [5] Details ──────────────┐
+│ ★  Owner       Na││ Introduction               │
+│ ☆  parity-bot  do││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━│
+│ ☆  parity-bot  he││                            │
+│ ☆  parity-bot  la││                            │
+│        ▉         ││  LazyGithub: A Terminal    │
+│                  ││  UI For GitHub (0.1.0)     │
+│                  ││                            │
+│                  ││  LazyGithub is a           │
+└──────────────────┘│  terminal UI for         ▂▂│
+┌─ [2] Pull Requ… ─┐│  interacting with          │
+│ #  Status  Author││  GitHub. You can get       │
+│            ▌     ││  started by selecting      │
+│                  ││  one of the                │
+└──────────────────┘│  repositories listed in    │
+┌─ [3] Issues ─────┐│  the table on the left.    │
+│ #  Status  Author││  Once you have selected    │
+│            ▌     ││  a repository, any         │
+│                  ││  issues, pull requests,    │
+└──────────────────┘│  and action workflows      │
+┌─ [4] Workflows ──┐│  will be retrieved and     │
+│ Time  Result  Job││  displayed below it.       │
+│                  ││                            │
+│                  ││  Issues, pull requests,    │
+│                  ││  and action lists can      │
+└──────────────────┘└────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+bbbbbbbbbbbbbbbbbbbbcccccccccccccccccccccccccccccc
+bdeddddddddddddddddbc............................c
+bffffffffffffffffffbcghhhhhhhhhhhhgggggggggggggggc
+biiiiiiiiiiiiiiiiiibc..........................jjc
+biiiiiiiiiiiiiiiiiibc..........................jjc
+bkkkkkkkklmmmmmmmmmbc..nnnnnnnnnnnnnnnnnnnnnn..jjc
+b..................bc..nnnnnnnnnnnnnnnnnnnnnn..jjc
+b..................bc..........................jjc
+b..................bc..........................jjc
+bbbbbbbbbbbbbbbbbbbbc..........................ooc
+ccccccccccccccccccccc..........................mmc
+cppppppppppppppppppcc..........................mmc
+cqqqqqqqqqqqqlmmmmmcc..........................mmc
+c..................cc..........................mmc
+ccccccccccccccccccccc..........................mmc
+ccccccccccccccccccccc..........................mmc
+cppppppppppppppppppcc..........................mmc
+cqqqqqqqqqqqqlmmmmmcc..........................mmc
+c..................cc..........................mmc
+ccccccccccccccccccccc..........................mmc
+ccccccccccccccccccccc..........................mmc
+cppppppppppppppppppcc..........................mmc
+cqqqqqqqqmmmmmmmmmmcc..........................mmc
+c..................cc..rrrrrrrrrrrrrrrrrrrrrr..mmc
+c..................cc..rrrrrrrrrrrrrrrrrrrr....mmc
+cccccccccccccccccccccccccccccccccccccccccccccccccc
+ssstttttttssssttttttttttttttttsssttttttttttttttttt
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#4ebf71 bg=#121212
+c fg=#6db2ff bg=#121212
+d fg=#e0e0e0 bg=#2d3740 bold
+e fg=#98e024 bg=#2d3740 bold
+f fg=#ddedf9 bg=#0178d4 bold
+g fg=#262626 bg=#121212
+h fg=#0178d4 bg=#121212
+i fg=#e0e0e0 bg=#272727
+j fg=#003054 bg=#121212 inverse
+k fg=#003054 bg=#272727 inverse
+l fg=#003054 bg=#000000
+m fg=#e0e0e0 bg=#000000
+n fg=#0178d4 bg=#121212 bold
+o fg=#003054 bg=#000000 inverse
+p fg=#e0e0e0 bg=#242f38 bold
+q fg=#003054 bg=#1e1e1e inverse
+r fg=#e0e0e0 bg=#121212 bold
+s fg=#ffa62b bg=#242f38 bold
+t fg=#e0e0e0 bg=#242f38

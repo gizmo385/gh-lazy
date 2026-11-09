@@ -17,6 +17,7 @@ pub mod report;
 pub mod runner;
 pub mod scenario;
 pub mod screen;
+pub mod snapshot;
 pub mod structure;
 pub mod summary;
 #[cfg(test)]

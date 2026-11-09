@@ -1,0 +1,91 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No r█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█    │
+└────█                                                                                        █────┘
+┌─ [1█  Parity Bot (@parity-bot) — user                                                       █────┐
+│ ★  █                                                                                        █    │
+│ ☆  █  ──────────────────────────────────────────────────────────────────────────────────    █━━━━│
+│ ☆  █                                                                                        █    │
+│ ☆  █    Fictional account for LazyGithub parity fixtures.                                   █    │
+│ ☆  █                                                                                        █    │
+│ ☆  █    Keeps dotfiles and a few demos.                                                     █    │
+│    █                                                                                        █    │
+│    █                                                                                        █    │
+└────█  ──────────────────────────────────────────────────────────────────────────────────    █    │
+┌─ [2█                                                                                        █    │
+│ #  █  Company: @parity-org                                                                  █    │
+│    █                                                                                        █    │
+│    █  Location: Testville                                                                 ▁▁█    │
+└────█                                                                                        █  ▁▁│
+┌─ [3█  Email: user@example.com                                                               █    │
+│ #  █                                                                                        █    │
+│    █  Blog: https://example.com/parity-bot                                                  █    │
+│    █                                                                                        █    │
+└────█  Twitter: @paritybot                                                                   █    │
+┌─ [4█                                                                                        █    │
+│ Tim█  ──────────────────────────────────────────────────────────────────────────────────    █    │
+│    █                                                                                        █    │
+│    █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█    │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ q Close
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbbbba
+aaaaac......................................................................................ddcaaaaa
+eeeeec..ffffffffff..........................................................................ddcggggg
+ehihhc......................................................................................ddcbbbbg
+ejjjjc..kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk..ddcllllg
+emmmmc......................................................................................ddcbbnng
+emmmmc..........................ffffffffff..................................................ddcbbnng
+emmmmc......................................................................................ddcbbnng
+emmmmc..........oooooooo....................................................................ddcbbnng
+ebbbbc......................................................................................ddcbbnng
+ebbbbc......................................................................................ddcbbnng
+eeeeec..kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk..ddcbbnng
+gggggc......................................................................................ddcbbnng
+gppppc..ffffffff............................................................................ddcbbnng
+gbbbbc......................................................................................ddcbbnng
+gbbbbc..fffffffff...........................................................................qqcbbnng
+gggggc......................................................................................rrcbbssg
+gggggc..ffffff..............................................................................rrcbbttg
+gppppc......................................................................................rrcbbttg
+gbbbbc..fffff...............................................................................rrcbbttg
+gbbbbc......................................................................................rrcbbttg
+gggggc..ffffffff............................................................................rrcbbttg
+gggggc......................................................................................rrcbbttg
+gppppc..kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk..rrcbbttg
+guuuuc......................................................................................rrcbbttg
+gbbbbccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbbttg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbggbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbttg
+gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
+vvvwwwwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+--- legend
+. fg=#e0e0e0 bg=#2d2d2d
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#121212 bg=#2d2d2d
+d fg=#003054 bg=#2d2d2d inverse
+e fg=#2a5738 bg=#121212
+f fg=#e0e0e0 bg=#2d2d2d bold
+g fg=#365270 bg=#121212
+h fg=#646464 bg=#1c2024 bold
+i fg=#476419 bg=#1c2024 bold
+j fg=#63696e bg=#0b3a5f bold
+k fg=#004578 bg=#2d2d2d
+l fg=#1a1a1a bg=#121212
+m fg=#646464 bg=#1a1a1a
+n fg=#0a1e2c bg=#121212 inverse
+o fg=#f5bc6f bg=#3d362c
+p fg=#646464 bg=#191d21 bold
+q fg=#003054 bg=#000000 inverse
+r fg=#e0e0e0 bg=#000000
+s fg=#0a1e2c bg=#0a0a0a inverse
+t fg=#646464 bg=#0a0a0a
+u fg=#0a1e2c bg=#161616 inverse
+v fg=#ffa62b bg=#242f38 bold
+w fg=#e0e0e0 bg=#242f38
+x bg=#242f38

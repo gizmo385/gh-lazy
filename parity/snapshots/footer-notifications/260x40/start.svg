@@ -1,0 +1,247 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2600" height="800" viewBox="0 0 2600 800" xml:space="preserve">
+<title>footer-notifications · start · 260x40</title>
+<style>
+text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono', monospace; font-size: 16.67px; white-space: pre; }
+.s0 { fill: #004578; }
+.s1 { fill: #e0e0e0; }
+.s2 { fill: #adff2f; }
+.s3 { fill: #4ebf71; }
+.s4 { fill: #6db2ff; }
+.s5 { fill: #98e024; font-weight: bold; }
+.s6 { fill: #e0e0e0; font-weight: bold; }
+.s7 { fill: #ddedf9; font-weight: bold; }
+.s8 { fill: #262626; }
+.s9 { fill: #0178d4; }
+.s10 { fill: #0178d4; font-weight: bold; }
+.s11 { fill: #0178d4; text-decoration: underline; }
+.s12 { fill: #ffa62b; font-weight: bold; }
+</style>
+<rect width="2600" height="800" fill="#1e1e1e"/>
+<g shape-rendering="crispEdges">
+<rect x="0" y="0" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="20" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="40" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="60" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="80" width="10" height="20" fill="#121212"/>
+<rect x="10" y="80" width="1020" height="20" fill="#2d3740"/>
+<rect x="1030" y="80" width="1570" height="20" fill="#121212"/>
+<rect x="0" y="100" width="10" height="20" fill="#121212"/>
+<rect x="10" y="100" width="1020" height="20" fill="#0178d4"/>
+<rect x="1030" y="100" width="1570" height="20" fill="#121212"/>
+<rect x="0" y="120" width="10" height="20" fill="#121212"/>
+<rect x="10" y="120" width="1020" height="20" fill="#272727"/>
+<rect x="1030" y="120" width="1570" height="20" fill="#121212"/>
+<rect x="0" y="140" width="10" height="20" fill="#121212"/>
+<rect x="10" y="140" width="1020" height="20" fill="#272727"/>
+<rect x="1030" y="140" width="1570" height="20" fill="#121212"/>
+<rect x="0" y="160" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="180" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="200" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="220" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="240" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="260" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="280" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="300" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="320" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="340" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="360" width="10" height="20" fill="#121212"/>
+<rect x="10" y="360" width="1020" height="20" fill="#242f38"/>
+<rect x="1030" y="360" width="1570" height="20" fill="#121212"/>
+<rect x="0" y="380" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="400" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="420" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="440" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="460" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="480" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="500" width="10" height="20" fill="#121212"/>
+<rect x="10" y="500" width="1020" height="20" fill="#242f38"/>
+<rect x="1030" y="500" width="1570" height="20" fill="#121212"/>
+<rect x="0" y="520" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="540" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="560" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="580" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="600" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="620" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="640" width="10" height="20" fill="#121212"/>
+<rect x="10" y="640" width="1020" height="20" fill="#242f38"/>
+<rect x="1030" y="640" width="1570" height="20" fill="#121212"/>
+<rect x="0" y="660" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="680" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="700" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="720" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="740" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="760" width="2600" height="20" fill="#121212"/>
+<rect x="0" y="780" width="2600" height="20" fill="#242f38"/>
+</g>
+<text class="s0" x="0" y="15" textLength="2600" lengthAdjust="spacingAndGlyphs">┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐</text>
+<text class="s0" x="0" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="35" textLength="2350" lengthAdjust="spacingAndGlyphs">No repository selected                                                                                                                                                                                                                     </text>
+<text class="s2" x="2360" y="35" textLength="230" lengthAdjust="spacingAndGlyphs">No unread notifications</text>
+<text class="s0" x="2590" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s0" x="0" y="55" textLength="2600" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+<text class="s3" x="0" y="75" textLength="1040" lengthAdjust="spacingAndGlyphs">┌─ [1] Repositories ───────────────────────────────────────────────────────────────────────────────────┐</text>
+<text class="s4" x="1040" y="75" textLength="1560" lengthAdjust="spacingAndGlyphs">┌─ [5] Details ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐</text>
+<text class="s3" x="0" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s5" x="20" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">★</text>
+<text class="s6" x="30" y="95" textLength="1000" lengthAdjust="spacingAndGlyphs">  Owner       Name         Private                                                                  </text>
+<text class="s3" x="1030" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1040" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="1050" y="95" textLength="1540" lengthAdjust="spacingAndGlyphs"> Introduction                                                                                                                                             </text>
+<text class="s4" x="2590" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s7" x="10" y="115" textLength="1020" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  dotfiles     ✘                                                                        </text>
+<text class="s3" x="1030" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1040" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s8" x="1050" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">╸</text>
+<text class="s9" x="1060" y="115" textLength="120" lengthAdjust="spacingAndGlyphs">━━━━━━━━━━━━</text>
+<text class="s8" x="1180" y="115" textLength="1410" lengthAdjust="spacingAndGlyphs">╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</text>
+<text class="s4" x="2590" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="135" textLength="1020" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  hello-world  ✘                                                                        </text>
+<text class="s3" x="1030" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1040" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="2590" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="155" textLength="1020" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  lazy-demo    ✘                                                                        </text>
+<text class="s3" x="1030" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1040" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="2590" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="1030" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1040" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s10" x="1070" y="175" textLength="1500" lengthAdjust="spacingAndGlyphs">                                                     LazyGithub: A Terminal UI For GitHub (0.1.0)                                                     </text>
+<text class="s4" x="2590" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="1030" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1040" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="2590" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="1030" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1040" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="1050" y="215" textLength="1540" lengthAdjust="spacingAndGlyphs">  LazyGithub is a terminal UI for interacting with GitHub. You can get started by selecting one of the repositories listed in the table on the left.      </text>
+<text class="s4" x="2590" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="1030" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1040" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="1050" y="235" textLength="1540" lengthAdjust="spacingAndGlyphs">  Once you have selected a repository, any issues, pull requests, and action workflows will be retrieved and displayed below it.                          </text>
+<text class="s4" x="2590" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="1030" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1040" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="2590" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="1030" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1040" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="1070" y="275" textLength="680" lengthAdjust="spacingAndGlyphs">Issues, pull requests, and action lists can also be interacted with!</text>
+<text class="s4" x="2590" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="1030" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1040" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="2590" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="1030" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1040" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="2590" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="335" textLength="1040" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+<text class="s4" x="1040" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="1070" y="335" textLength="130" lengthAdjust="spacingAndGlyphs">Pull Requests</text>
+<text class="s4" x="2590" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="355" textLength="1050" lengthAdjust="spacingAndGlyphs">┌─ [2] Pull Requests ──────────────────────────────────────────────────────────────────────────────────┐│</text>
+<text class="s4" x="2590" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="10" y="375" textLength="1020" lengthAdjust="spacingAndGlyphs"> #  Status  Author  Title                                                                             </text>
+<text class="s4" x="1030" y="375" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s1" x="1050" y="375" textLength="1540" lengthAdjust="spacingAndGlyphs">  You can interact with a PR by viewing its details, viewing the PR diff, and participating in any active conversations happening on the PR. You can      </text>
+<text class="s4" x="2590" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s1" x="1050" y="395" textLength="1540" lengthAdjust="spacingAndGlyphs">  also create a new PR for the currently selected repo.                                                                                                   </text>
+<text class="s4" x="2590" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="415" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s4" x="2590" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="435" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s4" x="2590" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="455" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s11" x="1070" y="455" textLength="60" lengthAdjust="spacingAndGlyphs">Issues</text>
+<text class="s4" x="2590" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="475" textLength="1050" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────────────┘│</text>
+<text class="s4" x="2590" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="495" textLength="1050" lengthAdjust="spacingAndGlyphs">┌─ [3] Issues ─────────────────────────────────────────────────────────────────────────────────────────┐│</text>
+<text class="s1" x="1050" y="495" textLength="1540" lengthAdjust="spacingAndGlyphs">  You can interact with an issue by viewing its details, partipcating in any activate conversations happening on the issue, and by editing the issue      </text>
+<text class="s4" x="2590" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="10" y="515" textLength="1020" lengthAdjust="spacingAndGlyphs"> #  Status  Author  Title                                                                             </text>
+<text class="s4" x="1030" y="515" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s1" x="1050" y="515" textLength="1540" lengthAdjust="spacingAndGlyphs">  itself. This means that you can close an issue from within LazyGithub.                                                                                  </text>
+<text class="s4" x="2590" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="535" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s4" x="2590" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s4" x="2590" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="575" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s11" x="1070" y="575" textLength="70" lengthAdjust="spacingAndGlyphs">Actions</text>
+<text class="s4" x="2590" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="595" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s4" x="2590" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="615" textLength="1050" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────────────┘│</text>
+<text class="s1" x="1050" y="615" textLength="1540" lengthAdjust="spacingAndGlyphs">  Github action and workflow support is pretty limited. It currently only supports listing the workflows and the most recent runs across all actions on   </text>
+<text class="s4" x="2590" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="635" textLength="1050" lengthAdjust="spacingAndGlyphs">┌─ [4] Workflows ──────────────────────────────────────────────────────────────────────────────────────┐│</text>
+<text class="s1" x="1050" y="635" textLength="1540" lengthAdjust="spacingAndGlyphs">  the currently selected repo, as well as kicking off a workflow that supports manual triggers.                                                           </text>
+<text class="s4" x="2590" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="10" y="655" textLength="1020" lengthAdjust="spacingAndGlyphs"> Time  Result  Job Name  Run Name  Run #                                                              </text>
+<text class="s4" x="1030" y="655" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s4" x="2590" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="675" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s4" x="2590" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="695" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s4" x="2590" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="715" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s4" x="2590" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="735" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s4" x="2590" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1030" y="755" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
+<text class="s4" x="2590" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="0" y="775" textLength="2600" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+<text class="s12" x="0" y="795" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>
+<text class="s1" x="30" y="795" textLength="70" lengthAdjust="spacingAndGlyphs">Search </text>
+<text class="s12" x="100" y="795" textLength="40" lengthAdjust="spacingAndGlyphs"> ^f </text>
+<text class="s1" x="140" y="795" textLength="160" lengthAdjust="spacingAndGlyphs">Toggle Favorite </text>
+<text class="s12" x="300" y="795" textLength="30" lengthAdjust="spacingAndGlyphs"> O </text>
+<text class="s1" x="330" y="795" textLength="180" lengthAdjust="spacingAndGlyphs">Lookup Repository </text>
+<text class="s12" x="510" y="795" textLength="30" lengthAdjust="spacingAndGlyphs"> u </text>
+<text class="s1" x="540" y="795" textLength="100" lengthAdjust="spacingAndGlyphs">View User </text>
+<text class="s12" x="640" y="795" textLength="30" lengthAdjust="spacingAndGlyphs"> I </text>
+<text class="s1" x="670" y="795" textLength="100" lengthAdjust="spacingAndGlyphs">New Issue </text>
+<text class="s12" x="770" y="795" textLength="30" lengthAdjust="spacingAndGlyphs"> P </text>
+<text class="s1" x="800" y="795" textLength="70" lengthAdjust="spacingAndGlyphs">New PR </text>
+<text class="s12" x="870" y="795" textLength="40" lengthAdjust="spacingAndGlyphs"> ^n </text>
+<text class="s1" x="910" y="795" textLength="140" lengthAdjust="spacingAndGlyphs">Notifications </text>
+<text class="s12" x="1050" y="795" textLength="40" lengthAdjust="spacingAndGlyphs"> ^v </text>
+<text class="s1" x="1090" y="795" textLength="110" lengthAdjust="spacingAndGlyphs">Paste link </text>
+<text class="s12" x="1200" y="795" textLength="30" lengthAdjust="spacingAndGlyphs"> f </text>
+<text class="s1" x="1230" y="795" textLength="120" lengthAdjust="spacingAndGlyphs">Follow link </text>
+<text class="s12" x="1350" y="795" textLength="30" lengthAdjust="spacingAndGlyphs"> F </text>
+<text class="s1" x="1380" y="795" textLength="220" lengthAdjust="spacingAndGlyphs">Follow link (browser) </text>
+<text class="s12" x="1600" y="795" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
+<text class="s1" x="1630" y="795" textLength="50" lengthAdjust="spacingAndGlyphs">Quit </text>
+<text class="s12" x="1680" y="795" textLength="40" lengthAdjust="spacingAndGlyphs"> ^p </text>
+<text class="s1" x="1720" y="795" textLength="160" lengthAdjust="spacingAndGlyphs">Command Palette </text>
+<text class="s12" x="1880" y="795" textLength="30" lengthAdjust="spacingAndGlyphs"> M </text>
+<text class="s1" x="1910" y="795" textLength="90" lengthAdjust="spacingAndGlyphs">Maximize </text>
+<text class="s12" x="2000" y="795" textLength="30" lengthAdjust="spacingAndGlyphs"> ? </text>
+<text class="s1" x="2030" y="795" textLength="570" lengthAdjust="spacingAndGlyphs">Keybindings                                              </text>
+</svg>

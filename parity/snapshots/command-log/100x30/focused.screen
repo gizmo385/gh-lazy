@@ -1,0 +1,88 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Details ────────────────────────────────────────────┐
+│ ★  Owner       Name         Private  ││ Introduction                                             │
+│ ☆  parity-bot  dotfiles     ✘        ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  hello-world  ✘        ││                                                          │
+│ ☆  parity-bot  lazy-demo    ✘        ││                                                          │
+└──────────────────────────────────────┘│      LazyGithub: A Terminal UI For GitHub (0.1.0)        │
+┌─ [2] Pull Requests ──────────────────┐│                                                        ▃▃│
+│ #  Status  Author  Title             ││  LazyGithub is a terminal UI for interacting with        │
+│                                      ││  GitHub. You can get started by selecting one of the     │
+│                                      ││  repositories listed in the table on the left. Once      │
+│                                      ││  you have selected a repository, any issues, pull        │
+│                                      ││  requests, and action workflows will be retrieved and    │
+└──────────────────────────────────────┘│  displayed below it.                                     │
+┌─ [3] Issues ─────────────────────────┐│                                                          │
+│ #  Status  Author  Title             ││  Issues, pull requests, and action lists can also be     │
+│                                      │└──────────────────────────────────────────────────────────┘
+│                                      │┌─ [6] Command Log ────────────────────────────────────────┐
+│                                      ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+└──────────────────────────────────────┘│░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+┌─ [4] Workflows ──────────────────────┐│░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│ Time  Result  Job Name  Run Name  Run││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                   ▎  ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                      ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                      ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                      ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+└──────────────────────────────────────┘└────────▌                                                ─┘
+ ^n Notifications  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..................................................................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bcdccccccccccccccccccccccccccccccccccccbb..........................................................b
+beeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeebbfggggggggggggfffffffffffffffffffffffffffffffffffffffffffffb
+bhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbb........................................................iib
+bhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbb........................................................iib
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj..iib
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb........................................................kkb
+bccccccccccccccccccccccccccccccccccccccbb........................................................llb
+b......................................bb........................................................llb
+b......................................bb........................................................llb
+b......................................bb........................................................llb
+b......................................bb........................................................llb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb........................................................llb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb........................................................llb
+bccccccccccccccccccccccccccccccccccccccbb..mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm...llb
+b......................................bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+b......................................bnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+b......................................bnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
+bccccccccccccccccccccccccccccccccccccccbnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
+bpppppppppppppppppppppppppppppppppppqllbnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
+b......................................bnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
+b......................................bnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
+b......................................bnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbnnnnnnnnnrssssssssssssssssssssssssssssssssssssssssssssssssnn
+ttttuuuuuuuuuuuuuuttttuuuuuuuuuuutttuuuuuuuuuuuutttuuuuuuuuuuuuuuuuuuuuuutttuuuuuttttuuuuuuuuuuuuuuu
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#6db2ff bg=#121212
+c fg=#e0e0e0 bg=#242f38 bold
+d fg=#98e024 bg=#242f38 bold
+e fg=#e0e0e0 bg=#153854
+f fg=#262626 bg=#121212
+g fg=#0178d4 bg=#121212
+h fg=#e0e0e0 bg=#1e1e1e
+i fg=#003054 bg=#121212 inverse
+j fg=#0178d4 bg=#121212 bold
+k fg=#003054 bg=#000000 inverse
+l fg=#e0e0e0 bg=#000000
+m fg=#e0e0e0 bg=#121212 bold
+n fg=#4ebf71 bg=#121212
+o default
+p fg=#003054 bg=#1e1e1e inverse
+q fg=#003054 bg=#000000
+r fg=#b93c5b bg=#343f49
+s fg=#e0e0e0 bg=#343f49
+t fg=#ffa62b bg=#242f38 bold
+u fg=#e0e0e0 bg=#242f38

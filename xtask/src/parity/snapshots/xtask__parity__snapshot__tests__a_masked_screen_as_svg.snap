@@ -1,0 +1,24 @@
+---
+source: xtask/src/parity/snapshot.rs
+expression: "svg(\"demo\", \"main\", &masked)"
+---
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="60" viewBox="0 0 120 60" xml:space="preserve">
+<title>demo · main · 12x3</title>
+<style>
+text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono', monospace; font-size: 16.67px; white-space: pre; }
+.s0 { fill: #4ebf71; }
+.s1 { fill: #d4d4d4; }
+</style>
+<rect width="120" height="60" fill="#1e1e1e"/>
+<g shape-rendering="crispEdges">
+<rect x="0" y="0" width="120" height="20" fill="#121212"/>
+<rect x="0" y="20" width="10" height="20" fill="#121212"/>
+<rect x="110" y="20" width="10" height="20" fill="#121212"/>
+<rect x="0" y="40" width="120" height="20" fill="#121212"/>
+</g>
+<text class="s0" x="0" y="15" textLength="120" lengthAdjust="spacingAndGlyphs">┌─ Log ────┐</text>
+<text class="s0" x="0" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="35" textLength="100" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░</text>
+<text class="s0" x="110" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s0" x="0" y="55" textLength="120" lengthAdjust="spacingAndGlyphs">└──────────┘</text>
+</svg>

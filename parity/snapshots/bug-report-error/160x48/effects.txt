@@ -1,0 +1,2 @@
+GET /repos/gizmo385/gh-lazy
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

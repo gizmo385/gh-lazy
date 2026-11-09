@@ -1,0 +1,4 @@
+GET /repos/parity-bot/hello-world
+GET /repos/parity-org/gone
+GET /repos/parity-org/tracked-tool
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

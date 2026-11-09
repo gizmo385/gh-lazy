@@ -1,0 +1,14 @@
+GET /repos/parity-bot/cache-fixture/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/cache-fixture/actions/runs?page=2&per_page=30
+GET /repos/parity-bot/cache-fixture/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/cache-fixture/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/cache-fixture/issues?page=2&per_page=30&state=all
+GET /repos/parity-bot/cache-fixture/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/cache-fixture/pulls?direction=desc&page=2&per_page=30&sort=created&state=all
+GET /repos/parity-bot/cache-fixture/readme accept=raw
+GET /repos/parity-bot/dotfiles/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/dotfiles/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/dotfiles/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/dotfiles/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/dotfiles/readme accept=raw
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

@@ -183,7 +183,7 @@ impl App {
             base: BaseScreen::Startup(StartupScreen::default()),
             modals: Vec::new(),
             shared: Shared::new(config, keymap, theme, options, Arc::new(clock)),
-            toasts: Toasts::default(),
+            toasts: Toasts::with_timeout(options.toast_timeout),
             maximized: None,
             has_shown_maximize_toast: false,
             help_open: false,

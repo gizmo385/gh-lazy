@@ -14,6 +14,8 @@ clap = { workspace = true }
 # its `install` and request-log types.
 fake-gh = { workspace = true }
 form_urlencoded = { workspace = true }
+# The renderer of the Rust scenario snapshots' SVGs (`lazy_github_core::screen`). Core has no UI dependencies.
+lazy-github-core = { workspace = true }
 # The run timestamp at the top of the parity report's index.html.
 jiff = { workspace = true }
 portable-pty = { workspace = true }

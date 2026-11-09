@@ -1,0 +1,113 @@
+lazy-github-screen 1
+size 160x48
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/dotfiles                                                                                                                             │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-bot/dotfiles Details ────────────────────────────────────────────────────────────┐
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                          Loading...                          ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+└──────────────────────────────────────────────────────────────┘│░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+┌─ [2] Pull Requests (empty) ──────────────────────────────────┐└──────────────────────────────────────────────────────────────────────────────────────────────┘
+│ #  Status  Author  Title                                     │┌─ [6] Command Log ────────────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────┘│░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+┌─ [3] Issues (empty) ─────────────────────────────────────────┐│░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│ #  Status  Author  Title                                     ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+└──────────────────────────────────────────────────────────────┘│░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│ Time  Result  Job Name  Run Name  Run #                      ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Comman
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffde..............................................................................................e
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde..............................................................................................e
+eeeeeeeeeeeeeeeeeeeeegggggggeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..............................................................................................e
+eeeeeeeeeeeeeegggggggeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..............................................................................................e
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhee..............................................................................................e
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..............................................................................................e
+eeeeeeeeeeeeeeeeegggggggeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..............................................................................................e
+ehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhee..............................................................................................e
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+iiijjjjjjjiiiijjjjjjjjjjjjjjjjiiijjjjjjjjjjjjjjjjjjiiijjjjjjjjjjiiijjjjjjjjjjiiijjjjjjjiiiijjjjjjjjjjjiiijjjjjjjjjjjjiiijjjjjjjjjjjjjjjjjjjjjjiiijjjjjiiiijjjjjj
+--- legend
+. default
+a fg=#004578 bg=#121212
+b fg=#e0e0e0 bg=#121212
+c fg=#adff2f bg=#121212
+d fg=#4ebf71 bg=#121212
+e fg=#6db2ff bg=#121212
+f fg=#0178d4 bg=#1b1b1b
+g fg=#4e7bae bg=#121212
+h fg=#e0e0e0 bg=#242f38 bold
+i fg=#ffa62b bg=#242f38 bold
+j fg=#e0e0e0 bg=#242f38

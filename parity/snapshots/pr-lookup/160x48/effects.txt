@@ -1,0 +1,15 @@
+GET /repos/parity-bot/pr-details/commits/c0ffee9999999999999999999999999999999999/check-runs?page=1&per_page=100
+GET /repos/parity-bot/pr-details/commits/c0ffee9999999999999999999999999999999999/status?page=1&per_page=100
+GET /repos/parity-bot/pr-details/issues/9/comments
+GET /repos/parity-bot/pr-details/issues/9/reactions
+GET /repos/parity-bot/pr-details/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/pr-details/issues?page=2&per_page=30&state=all
+GET /repos/parity-bot/pr-details/pulls/42
+GET /repos/parity-bot/pr-details/pulls/9
+GET /repos/parity-bot/pr-details/pulls/9 accept=diff
+GET /repos/parity-bot/pr-details/pulls/9/reviews
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=2&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/readme accept=raw
+GET /user
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

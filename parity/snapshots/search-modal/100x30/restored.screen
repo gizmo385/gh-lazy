@@ -1,0 +1,107 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Rep█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█─────────┐
+│ ★  Owner█                                                                              █         │
+│ ☆  parit█                       Search issues and pull requests                        █━━━━━━━━━│
+│ ☆  parit█                                                                              █iend     │
+│ ☆  parit█        ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎                             █         │
+│ ☆  parit█ Scope: ▊  This repo (parity-bot/pr-details) ▼  ▎                             █         │
+│         █        ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎                             █         │
+│         █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█         │
+└─────────█▊  is:pr is:open                                                             ▎█▔▔▔▔▔▔▔  │
+┌─ [2] Pul█▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█         │
+│ #  Statu█ is:pr is:issue is:open is:merged author: assignee: label: review: involves:  █         │
+│ 5  open █ 3 results                                                                    █▔▔▔▔▔▔▔  │
+│ 4  close█  #  Type  Status  Author         Title                           Updated     █         │
+│ 3  close█  9  PR    open    parity-friend  Clamp the cursor to the last …  2026-02-05  █         │
+│ 2  open █  5  PR    open    parity-friend  Add a cursor to the viewer      2026-02-01  █▔▔▔▔▔▔▔  │
+│         █  2  PR    draft   parity-friend  Try a faster parser             2026-01-05  █         │
+│         █                                                                              █         │
+│         █                                                                              █         │
+│         █                                                                              █───────  │
+└─────────█                                                                              █         │
+┌─ [3] Iss█                                                                              █.        │
+│ #  Statu█                                                                              █         │
+└─────────█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█         │
+┌─ [4] Workflows (empty) ──────────────┐│  • the current line is marked with >                   ▆▆│
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ⏎ Open  / Query  q Close  ^s Save query
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedddddddddd
+dfgfffffffe..............................................................................ebbbbbbbbbd
+dhhhhhhhhhe..iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii..ejjjjjjjjjd
+dkkkkkkkkke..............................................................................ellllbbbmmd
+dkkkkkkkkke........nooooooooooooooooooooooooooooooooooooooop.............................ebbbbbbbmmd
+dkkkkkkkkke.qqqqqq.nrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsrrp.............................ebbbbbbbmmd
+dbbbbbbbbbe........nooooooooooooooooooooooooooooooooooooooop.............................ebbbbbbbmmd
+dbbbbbbbbbenoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooopebbbbbbbmmd
+ddddddddddenrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrpetttttttmmd
+uuuuuuuuuuenoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooopekkkkkkkmmd
+uvvvvvvvvve.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.ekkkkkkkmmd
+uxxxxxxxxxe.wwwwwwwww....................................................................etttttttmmd
+uyyyyyyyyye.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.ekkkkkkkmmd
+uyyyyyyyyye.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.ekkkkkkkmmd
+uyyyyyyyyye.BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.etttttttmmd
+uCCCCCCCCCe.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.ekkkkkkkmmd
+ubbbbbbbbbe..............................................................................ekkkkkkkmmd
+ubbbbbbbbbe..............................................................................ebbbbbbbmmd
+ubbbbbbbbbe..............................................................................eaaaaaaammd
+uuuuuuuuuue..............................................................................ebbbbbbbmmd
+dddddddddde..............................................................................ebbbbbbbmmd
+dfffffffffe..............................................................................ebbbbbbbmmd
+ddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeebbbbbbbmmd
+dddddddddddddddddDDDDDDDdddddddddddddddddbbEEbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbFbbbbbbbbbbbbbbbbbbbGGd
+dHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHIJJJJKKddbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbJJd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+LLLMMMMMLLLMMMMMMLLLMMMMMMLLLLMMMMMMMMMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+--- legend
+. fg=#e0e0e0 bg=#4f4f4f
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#50701d bg=#121212
+d fg=#365270 bg=#121212
+e fg=#121212 bg=#4f4f4f
+f fg=#646464 bg=#191d21 bold
+g fg=#476419 bg=#191d21 bold
+h fg=#646464 bg=#13212c
+i fg=#0178d4 bg=#4f4f4f bold
+j fg=#1a1a1a bg=#121212
+k fg=#646464 bg=#161616
+l fg=#646464 bg=#121212 underline
+m fg=#0a1e2c bg=#121212 inverse
+n fg=#191919 bg=#4f4f4f inverse
+o fg=#191919 bg=#1e1e1e
+p fg=#191919 bg=#4f4f4f
+q fg=#e0e0e0 bg=#4f4f4f bold
+r fg=#e0e0e0 bg=#1e1e1e
+s fg=#7f7f7f bg=#1e1e1e
+t fg=#121212 bg=#161616
+u fg=#2a5738 bg=#121212
+v fg=#646464 bg=#1c2024 bold
+w fg=#b8b8b8 bg=#4f4f4f
+x fg=#63696e bg=#0b3a5f bold
+y fg=#646464 bg=#1a1a1a
+z fg=#e0e0e0 bg=#2d3740 bold
+A fg=#e0e0e0 bg=#272727
+B fg=#ddedf9 bg=#0178d4 bold
+C fg=#0a1e2c bg=#1a1a1a inverse
+D fg=#2a3c50 bg=#121212
+E fg=#2d4c65 bg=#121212
+F fg=#6c5536 bg=#191612
+G fg=#0a1e2c bg=#0a0a0a inverse
+H fg=#0a1e2c bg=#161616 inverse
+I fg=#0a1e2c bg=#0a0a0a
+J fg=#646464 bg=#0a0a0a
+K bg=#0a0a0a
+L fg=#ffa62b bg=#242f38 bold
+M fg=#e0e0e0 bg=#242f38
+N bg=#242f38

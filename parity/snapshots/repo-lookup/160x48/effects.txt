@@ -1,0 +1,8 @@
+GET /repos/parity-org/lookup-me
+GET /repos/parity-org/lookup-me/actions/runs?page=1&per_page=30
+GET /repos/parity-org/lookup-me/actions/workflows?page=1&per_page=30
+GET /repos/parity-org/lookup-me/issues?page=1&per_page=30&state=all
+GET /repos/parity-org/lookup-me/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-org/lookup-me/readme accept=raw
+GET /repos/parity-org/missing
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

@@ -1,0 +1,38 @@
+GET /notifications?all=false&page=1&per_page=50
+GET /notifications?all=false&page=2&per_page=50
+GET /notifications?all=true&page=1&per_page=50
+GET /notifications?all=true&page=2&per_page=50
+GET /repos/parity-bot/dotfiles/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/dotfiles/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/dotfiles/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/dotfiles/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/dotfiles/readme accept=raw
+GET /repos/parity-bot/pr-details/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/pr-details/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/pr-details/commits/c0ffee5555555555555555555555555555555555/check-runs?page=1&per_page=100
+GET /repos/parity-bot/pr-details/commits/c0ffee5555555555555555555555555555555555/status?page=1&per_page=100
+GET /repos/parity-bot/pr-details/issues/5/comments
+GET /repos/parity-bot/pr-details/issues/5/reactions
+GET /repos/parity-bot/pr-details/issues/comments/7001/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/issues/comments/7002/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/pr-details/issues?page=2&per_page=30&state=all
+GET /repos/parity-bot/pr-details/pulls/2
+GET /repos/parity-bot/pr-details/pulls/5
+GET /repos/parity-bot/pr-details/pulls/5 accept=diff
+GET /repos/parity-bot/pr-details/pulls/5/reviews
+GET /repos/parity-bot/pr-details/pulls/5/reviews/501/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/502/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/503/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/504/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/505/comments
+GET /repos/parity-bot/pr-details/pulls/comments/9001/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/pulls/comments/9002/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/pulls/comments/9003/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=2&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/readme accept=raw
+GET /user
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all
+PATCH /notifications/threads/9100001
+PATCH /notifications/threads/9100004

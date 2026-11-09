@@ -243,6 +243,10 @@ pub struct EnvSpec {
     /// `gh_timeout_ms`: the Rust app (a debug build) runs every `gh` call with this time limit instead of its
     /// defaults, so a scenario can show a timeout in seconds. Python has no limit and ignores it.
     pub gh_timeout_ms: Option<u64>,
+    /// `toast_timeout_ms`: the Rust app (a debug build) keeps every toast up this long instead of its own timeout, so
+    /// a capture that shows toasts raised several steps earlier doesn't depend on how fast the machine is. Python's
+    /// toasts don't time out under the harness, so it ignores this, and it's not part of the capture key.
+    pub toast_timeout_ms: Option<u64>,
 }
 
 /// What a `wait` step waits for.
@@ -277,6 +281,9 @@ pub struct Capture {
     pub name: String,
     pub checks: Vec<Check>,
     pub ignore: Ignore,
+    /// `mask`: patterns whose matches on a row are masked in the Rust snapshot (`parity/README.md`, "Rust
+    /// snapshots"). Not part of a reference's capture key: Python's run doesn't depend on them.
+    pub mask: Vec<Regex>,
 }
 
 /// Where a mouse step points. Cells are the grid's 0-based `[col, row]`.
@@ -536,6 +543,7 @@ struct RawEnv {
     #[serde(default)]
     config_dir_read_only: bool,
     gh_timeout_ms: Option<Spanned<u64>>,
+    toast_timeout_ms: Option<Spanned<u64>>,
 }
 
 #[derive(Deserialize)]
@@ -549,6 +557,7 @@ struct RawStep {
     capture: Option<Spanned<String>>,
     checks: Option<Vec<Check>>,
     ignore: Option<Ignore>,
+    mask: Option<Vec<Spanned<String>>>,
     sleep_ms: Option<u64>,
     resize: Option<Spanned<[u16; 2]>>,
     click: Option<Spanned<RawTarget>>,
@@ -945,6 +954,10 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
         Some(ms) if *ms.get_ref() == 0 => return Err(loc.at_span(&ms, "`env.gh_timeout_ms` must be at least 1")),
         other => other.map(Spanned::into_inner),
     };
+    let toast_timeout_ms = match raw.toast_timeout_ms {
+        Some(ms) if *ms.get_ref() == 0 => return Err(loc.at_span(&ms, "`env.toast_timeout_ms` must be at least 1")),
+        other => other.map(Spanned::into_inner),
+    };
 
     Ok(EnvSpec {
         fixtures,
@@ -958,6 +971,7 @@ fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, S
         seed,
         config_dir_read_only: raw.config_dir_read_only,
         gh_timeout_ms,
+        toast_timeout_ms,
     })
 }
 
@@ -1026,8 +1040,11 @@ fn is_capture_name(s: &str) -> bool {
 
 /// `has_remote`: the scenario sets `git_remote_branches`, which `wait.remote_branch` needs.
 fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>, has_remote: bool) -> Result<Step, ScenarioError> {
-    if raw.capture.is_none() && (raw.checks.is_some() || raw.ignore.is_some()) {
-        return Err(loc.at(start, "`checks` and `ignore` are only allowed in a capture step"));
+    if raw.capture.is_none() && (raw.checks.is_some() || raw.ignore.is_some() || raw.mask.is_some()) {
+        return Err(loc.at(
+            start,
+            "`checks`, `ignore` and `mask` are only allowed in a capture step",
+        ));
     }
 
     let present: Vec<&str> = [
@@ -1090,10 +1107,17 @@ fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>, has_remote: bool) -
                 format!("`ignore.writes` entry {bad:?} must be \"METHOD /path\", with a method other than GET"),
             ));
         }
+        let mut mask = Vec::new();
+        for pattern in raw.mask.unwrap_or_default() {
+            let re = Regex::new(pattern.get_ref())
+                .map_err(|e| loc.at_span(&pattern, format!("invalid `mask` regex: {e}")))?;
+            mask.push(re);
+        }
         return Ok(Step::Capture(Capture {
             name: name.into_inner(),
             checks: raw.checks.unwrap_or_else(|| Check::ALL.to_vec()),
             ignore,
+            mask,
         }));
     }
     if let Some(ms) = raw.sleep_ms {
@@ -1413,6 +1437,15 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
         assert_eq!(s.env.seed, None);
         assert!(!s.env.config_dir_read_only);
         assert_eq!(s.env.gh_timeout_ms, None);
+        assert_eq!(s.env.toast_timeout_ms, None);
+    }
+
+    #[test]
+    fn parses_a_toast_lifetime() {
+        let s = parse("version = 1\n[env]\ntoast_timeout_ms = 60000\n").unwrap();
+        assert_eq!(s.env.toast_timeout_ms, Some(60000));
+        let error = parse("version = 1\n[env]\ntoast_timeout_ms = 0\n").unwrap_err();
+        assert!(error.message.contains("toast_timeout_ms"), "{error:?}");
     }
 
     #[test]
@@ -1824,6 +1857,27 @@ move = { at = [100, 1] }
         );
         assert_error(
             "version = 1\n[[step]]\nchecks = [\"titles\"]\n",
+            2,
+            "only allowed in a capture step",
+        );
+    }
+
+    #[test]
+    fn parses_mask_patterns_only_in_a_capture_step() {
+        let s = parse("version = 1\n[[step]]\ncapture = \"a\"\nmask = [\"/tmp/\\\\S+\", \"v\\\\d+\"]\n").unwrap();
+        let Step::Capture(c) = &s.steps[0] else {
+            panic!("not a capture")
+        };
+        let patterns: Vec<&str> = c.mask.iter().map(Regex::as_str).collect();
+        assert_eq!(patterns, ["/tmp/\\S+", "v\\d+"]);
+
+        assert_error(
+            "version = 1\n[[step]]\ncapture = \"a\"\nmask = [\"ok\",\n  \"(unclosed\"]\n",
+            5,
+            "invalid `mask` regex",
+        );
+        assert_error(
+            "version = 1\n[[step]]\nsleep_ms = 1\nmask = [\"x\"]\n",
             2,
             "only allowed in a capture step",
         );

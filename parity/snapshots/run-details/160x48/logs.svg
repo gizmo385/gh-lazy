@@ -1,0 +1,401 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960" xml:space="preserve">
+<title>run-details · logs · 160x48</title>
+<style>
+text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono', monospace; font-size: 16.67px; white-space: pre; }
+.s0 { fill: #004578; }
+.s1 { fill: #e0e0e0; }
+.s2 { fill: #adff2f; }
+.s3 { fill: #6db2ff; }
+.s4 { fill: #4ebf71; }
+.s5 { fill: #98e024; font-weight: bold; }
+.s6 { fill: #e0e0e0; font-weight: bold; }
+.s7 { fill: #797979; }
+.s8 { fill: #ddedf9; font-weight: bold; }
+.s9 { fill: #4f4f4f; }
+.s10 { fill: #0178d4; }
+.s11 { fill: #ffffff; }
+.s12 { fill: #4e7bae; }
+.s13 { fill: #003054; }
+.s14 { fill: #ffa62b; font-weight: bold; }
+</style>
+<rect width="1600" height="960" fill="#1e1e1e"/>
+<g shape-rendering="crispEdges">
+<rect x="0" y="0" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="20" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="40" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="60" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="80" width="10" height="20" fill="#121212"/>
+<rect x="10" y="80" width="620" height="20" fill="#242f38"/>
+<rect x="630" y="80" width="180" height="20" fill="#121212"/>
+<rect x="810" y="80" width="60" height="20" fill="#0178d4"/>
+<rect x="870" y="80" width="730" height="20" fill="#121212"/>
+<rect x="0" y="100" width="10" height="20" fill="#121212"/>
+<rect x="10" y="100" width="620" height="20" fill="#153854"/>
+<rect x="630" y="100" width="970" height="20" fill="#121212"/>
+<rect x="0" y="120" width="10" height="20" fill="#121212"/>
+<rect x="630" y="120" width="970" height="20" fill="#121212"/>
+<rect x="0" y="140" width="10" height="20" fill="#121212"/>
+<rect x="630" y="140" width="970" height="20" fill="#121212"/>
+<rect x="0" y="160" width="10" height="20" fill="#121212"/>
+<rect x="630" y="160" width="40" height="20" fill="#121212"/>
+<rect x="670" y="160" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="160" width="30" height="20" fill="#121212"/>
+<rect x="0" y="180" width="670" height="20" fill="#121212"/>
+<rect x="670" y="180" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="180" width="30" height="20" fill="#121212"/>
+<rect x="0" y="200" width="670" height="20" fill="#121212"/>
+<rect x="670" y="200" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="200" width="30" height="20" fill="#121212"/>
+<rect x="0" y="220" width="670" height="20" fill="#121212"/>
+<rect x="670" y="220" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="220" width="30" height="20" fill="#121212"/>
+<rect x="0" y="240" width="670" height="20" fill="#121212"/>
+<rect x="670" y="240" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="240" width="30" height="20" fill="#121212"/>
+<rect x="0" y="260" width="670" height="20" fill="#121212"/>
+<rect x="670" y="260" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="260" width="30" height="20" fill="#121212"/>
+<rect x="0" y="280" width="670" height="20" fill="#121212"/>
+<rect x="670" y="280" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="280" width="30" height="20" fill="#121212"/>
+<rect x="0" y="300" width="670" height="20" fill="#121212"/>
+<rect x="670" y="300" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="300" width="30" height="20" fill="#121212"/>
+<rect x="0" y="320" width="670" height="20" fill="#121212"/>
+<rect x="670" y="320" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="320" width="30" height="20" fill="#121212"/>
+<rect x="0" y="340" width="670" height="20" fill="#121212"/>
+<rect x="670" y="340" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="340" width="30" height="20" fill="#121212"/>
+<rect x="0" y="360" width="670" height="20" fill="#121212"/>
+<rect x="670" y="360" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="360" width="30" height="20" fill="#121212"/>
+<rect x="0" y="380" width="670" height="20" fill="#121212"/>
+<rect x="670" y="380" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="380" width="30" height="20" fill="#121212"/>
+<rect x="0" y="400" width="670" height="20" fill="#121212"/>
+<rect x="670" y="400" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="400" width="30" height="20" fill="#121212"/>
+<rect x="0" y="420" width="670" height="20" fill="#121212"/>
+<rect x="670" y="420" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="420" width="30" height="20" fill="#121212"/>
+<rect x="0" y="440" width="670" height="20" fill="#121212"/>
+<rect x="670" y="440" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="440" width="30" height="20" fill="#121212"/>
+<rect x="0" y="460" width="10" height="20" fill="#121212"/>
+<rect x="10" y="460" width="620" height="20" fill="#242f38"/>
+<rect x="630" y="460" width="40" height="20" fill="#121212"/>
+<rect x="670" y="460" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="460" width="30" height="20" fill="#121212"/>
+<rect x="0" y="480" width="670" height="20" fill="#121212"/>
+<rect x="670" y="480" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="480" width="30" height="20" fill="#121212"/>
+<rect x="0" y="500" width="670" height="20" fill="#121212"/>
+<rect x="670" y="500" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="500" width="30" height="20" fill="#121212"/>
+<rect x="0" y="520" width="10" height="20" fill="#121212"/>
+<rect x="10" y="520" width="620" height="20" fill="#242f38"/>
+<rect x="630" y="520" width="40" height="20" fill="#121212"/>
+<rect x="670" y="520" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="520" width="30" height="20" fill="#121212"/>
+<rect x="0" y="540" width="670" height="20" fill="#121212"/>
+<rect x="670" y="540" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="540" width="30" height="20" fill="#121212"/>
+<rect x="0" y="560" width="670" height="20" fill="#121212"/>
+<rect x="670" y="560" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="560" width="30" height="20" fill="#121212"/>
+<rect x="0" y="580" width="10" height="20" fill="#121212"/>
+<rect x="10" y="580" width="620" height="20" fill="#242f38"/>
+<rect x="630" y="580" width="40" height="20" fill="#121212"/>
+<rect x="670" y="580" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="580" width="30" height="20" fill="#121212"/>
+<rect x="0" y="600" width="10" height="20" fill="#121212"/>
+<rect x="10" y="600" width="620" height="20" fill="#153854"/>
+<rect x="630" y="600" width="40" height="20" fill="#121212"/>
+<rect x="670" y="600" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="600" width="30" height="20" fill="#121212"/>
+<rect x="0" y="620" width="10" height="20" fill="#121212"/>
+<rect x="630" y="620" width="40" height="20" fill="#121212"/>
+<rect x="670" y="620" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="620" width="30" height="20" fill="#121212"/>
+<rect x="0" y="640" width="10" height="20" fill="#121212"/>
+<rect x="630" y="640" width="40" height="20" fill="#121212"/>
+<rect x="670" y="640" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="640" width="30" height="20" fill="#121212"/>
+<rect x="0" y="660" width="10" height="20" fill="#121212"/>
+<rect x="10" y="660" width="550" height="20" fill="#003054"/>
+<rect x="560" y="660" width="70" height="20" fill="#000000"/>
+<rect x="630" y="660" width="40" height="20" fill="#121212"/>
+<rect x="670" y="660" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="660" width="30" height="20" fill="#121212"/>
+<rect x="0" y="680" width="670" height="20" fill="#121212"/>
+<rect x="670" y="680" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="680" width="30" height="20" fill="#121212"/>
+<rect x="0" y="700" width="670" height="20" fill="#121212"/>
+<rect x="670" y="700" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="700" width="30" height="20" fill="#121212"/>
+<rect x="0" y="720" width="670" height="20" fill="#121212"/>
+<rect x="670" y="720" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="720" width="30" height="20" fill="#121212"/>
+<rect x="0" y="740" width="670" height="20" fill="#121212"/>
+<rect x="670" y="740" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="740" width="30" height="20" fill="#121212"/>
+<rect x="0" y="760" width="670" height="20" fill="#121212"/>
+<rect x="670" y="760" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="760" width="30" height="20" fill="#121212"/>
+<rect x="0" y="780" width="670" height="20" fill="#121212"/>
+<rect x="670" y="780" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="780" width="30" height="20" fill="#121212"/>
+<rect x="0" y="800" width="670" height="20" fill="#121212"/>
+<rect x="670" y="800" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="800" width="30" height="20" fill="#121212"/>
+<rect x="0" y="820" width="670" height="20" fill="#121212"/>
+<rect x="670" y="820" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="820" width="30" height="20" fill="#121212"/>
+<rect x="0" y="840" width="670" height="20" fill="#121212"/>
+<rect x="670" y="840" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="840" width="30" height="20" fill="#121212"/>
+<rect x="0" y="860" width="670" height="20" fill="#121212"/>
+<rect x="670" y="860" width="900" height="20" fill="#101010"/>
+<rect x="1570" y="860" width="30" height="20" fill="#121212"/>
+<rect x="0" y="880" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="900" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="920" width="1600" height="20" fill="#121212"/>
+<rect x="0" y="940" width="1600" height="20" fill="#242f38"/>
+</g>
+<text class="s0" x="0" y="15" textLength="1600" lengthAdjust="spacingAndGlyphs">┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐</text>
+<text class="s0" x="0" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="35" textLength="140" lengthAdjust="spacingAndGlyphs">Current repo: </text>
+<text class="s2" x="150" y="35" textLength="220" lengthAdjust="spacingAndGlyphs">parity-bot/run-fixture</text>
+<text class="s0" x="1590" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s0" x="0" y="55" textLength="1600" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+<text class="s3" x="0" y="75" textLength="640" lengthAdjust="spacingAndGlyphs">┌─ [1] Repositories ───────────────────────────────────────────┐</text>
+<text class="s4" x="640" y="75" textLength="960" lengthAdjust="spacingAndGlyphs">┌─ [5] Workflow Run #42 Details ───────────────────────────────────────────────────────────────┐</text>
+<text class="s3" x="0" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s5" x="20" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">★</text>
+<text class="s6" x="30" y="95" textLength="600" lengthAdjust="spacingAndGlyphs">  Owner       Name         Private                          </text>
+<text class="s3" x="630" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s7" x="660" y="95" textLength="80" lengthAdjust="spacingAndGlyphs">Overview</text>
+<text class="s7" x="760" y="95" textLength="40" lengthAdjust="spacingAndGlyphs">Jobs</text>
+<text class="s8" x="820" y="95" textLength="40" lengthAdjust="spacingAndGlyphs">Logs</text>
+<text class="s4" x="1590" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="115" textLength="620" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  run-fixture  ✘                                </text>
+<text class="s3" x="630" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s9" x="650" y="115" textLength="170" lengthAdjust="spacingAndGlyphs">━━━━━━━━━━━━━━━━╸</text>
+<text class="s10" x="820" y="115" textLength="40" lengthAdjust="spacingAndGlyphs">━━━━</text>
+<text class="s9" x="860" y="115" textLength="730" lengthAdjust="spacingAndGlyphs">╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</text>
+<text class="s4" x="1590" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="135" textLength="620" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  dotfiles     ✘                                </text>
+<text class="s3" x="630" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="650" y="135" textLength="210" lengthAdjust="spacingAndGlyphs">Full Logs for Run #42</text>
+<text class="s4" x="1590" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="155" textLength="620" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  hello-world  ✘                                </text>
+<text class="s3" x="630" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="175" textLength="620" lengthAdjust="spacingAndGlyphs"> ☆  parity-bot  lazy-demo    ✘                                </text>
+<text class="s3" x="630" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="215" textLength="800" lengthAdjust="spacingAndGlyphs">================================================================================</text>
+<text class="s4" x="1590" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="235" textLength="510" lengthAdjust="spacingAndGlyphs">Job: build (Status: completed, Conclusion: success)</text>
+<text class="s4" x="1590" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="255" textLength="800" lengthAdjust="spacingAndGlyphs">================================================================================</text>
+<text class="s4" x="1590" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="295" textLength="530" lengthAdjust="spacingAndGlyphs">2026-03-04T05:06:10.0000000Z ##[group]Run cargo build</text>
+<text class="s4" x="1590" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="315" textLength="520" lengthAdjust="spacingAndGlyphs">2026-03-04T05:06:11.0000000Z cargo build --workspace</text>
+<text class="s4" x="1590" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="335" textLength="410" lengthAdjust="spacingAndGlyphs">2026-03-04T05:06:12.0000000Z ##[endgroup]</text>
+<text class="s4" x="1590" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="355" textLength="600" lengthAdjust="spacingAndGlyphs">2026-03-04T05:06:13.0000000Z    Compiling lazy-github v0.1.0</text>
+<text class="s4" x="1590" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="375" textLength="620" lengthAdjust="spacingAndGlyphs">2026-03-04T05:06:14.0000000Z     Finished dev profile in 61.2s</text>
+<text class="s4" x="1590" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="415" textLength="800" lengthAdjust="spacingAndGlyphs">================================================================================</text>
+<text class="s4" x="1590" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="435" textLength="640" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘</text>
+<text class="s4" x="640" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="435" textLength="500" lengthAdjust="spacingAndGlyphs">Job: test (Status: completed, Conclusion: failure)</text>
+<text class="s4" x="1590" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="455" textLength="210" lengthAdjust="spacingAndGlyphs">┌─ [2] Pull Requests </text>
+<text class="s12" x="210" y="455" textLength="70" lengthAdjust="spacingAndGlyphs">(empty)</text>
+<text class="s3" x="280" y="455" textLength="360" lengthAdjust="spacingAndGlyphs"> ──────────────────────────────────┐</text>
+<text class="s4" x="640" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="455" textLength="800" lengthAdjust="spacingAndGlyphs">================================================================================</text>
+<text class="s4" x="1590" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="10" y="475" textLength="620" lengthAdjust="spacingAndGlyphs"> #  Status  Author  Title                                     </text>
+<text class="s3" x="630" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="495" textLength="640" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘</text>
+<text class="s4" x="640" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="495" textLength="520" lengthAdjust="spacingAndGlyphs">2026-03-04T05:07:22.0000000Z ##[group]Run cargo test</text>
+<text class="s4" x="1590" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="515" textLength="140" lengthAdjust="spacingAndGlyphs">┌─ [3] Issues </text>
+<text class="s12" x="140" y="515" textLength="70" lengthAdjust="spacingAndGlyphs">(empty)</text>
+<text class="s3" x="210" y="515" textLength="430" lengthAdjust="spacingAndGlyphs"> ─────────────────────────────────────────┐</text>
+<text class="s4" x="640" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="515" textLength="510" lengthAdjust="spacingAndGlyphs">2026-03-04T05:07:23.0000000Z cargo test --workspace</text>
+<text class="s4" x="1590" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="10" y="535" textLength="620" lengthAdjust="spacingAndGlyphs"> #  Status  Author  Title                                     </text>
+<text class="s3" x="630" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="535" textLength="410" lengthAdjust="spacingAndGlyphs">2026-03-04T05:07:24.0000000Z ##[endgroup]</text>
+<text class="s4" x="1590" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="555" textLength="640" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘</text>
+<text class="s4" x="640" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="555" textLength="580" lengthAdjust="spacingAndGlyphs">2026-03-04T05:07:25.0000000Z test parity::flaky ... FAILED</text>
+<text class="s4" x="1590" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="575" textLength="640" lengthAdjust="spacingAndGlyphs">┌─ [4] Workflows ──────────────────────────────────────────────┐</text>
+<text class="s4" x="640" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="575" textLength="690" lengthAdjust="spacingAndGlyphs">2026-03-04T05:07:26.0000000Z test result: FAILED. 41 passed; 1 failed</text>
+<text class="s4" x="1590" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s6" x="10" y="595" textLength="620" lengthAdjust="spacingAndGlyphs"> Time              Result       Job Name  Run Name            </text>
+<text class="s3" x="630" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="595" textLength="750" lengthAdjust="spacingAndGlyphs">2026-03-04T05:07:27.0000000Z ##[error]Process completed with exit code 101.</text>
+<text class="s4" x="1590" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="615" textLength="620" lengthAdjust="spacingAndGlyphs"> 2026-03-04 05:06  failure      CI        Fix the flaky test  </text>
+<text class="s3" x="630" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="635" textLength="620" lengthAdjust="spacingAndGlyphs"> 2026-03-03 10:00  in_progress  CI        Add the run details </text>
+<text class="s3" x="630" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="635" textLength="800" lengthAdjust="spacingAndGlyphs">================================================================================</text>
+<text class="s4" x="1590" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s1" x="10" y="655" textLength="620" lengthAdjust="spacingAndGlyphs"> 2026-03-02 08:00  success      CI        Nothing to run      </text>
+<text class="s3" x="630" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="655" textLength="500" lengthAdjust="spacingAndGlyphs">Job: lint (Status: completed, Conclusion: skipped)</text>
+<text class="s4" x="1590" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s13" x="560" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">▊</text>
+<text class="s3" x="630" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="675" textLength="800" lengthAdjust="spacingAndGlyphs">================================================================================</text>
+<text class="s4" x="1590" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="715" textLength="320" lengthAdjust="spacingAndGlyphs">(No logs available for this job)</text>
+<text class="s4" x="1590" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="775" textLength="800" lengthAdjust="spacingAndGlyphs">================================================================================</text>
+<text class="s4" x="1590" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="795" textLength="540" lengthAdjust="spacingAndGlyphs">Job: deploy (Status: completed, Conclusion: cancelled)</text>
+<text class="s4" x="1590" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="815" textLength="800" lengthAdjust="spacingAndGlyphs">================================================================================</text>
+<text class="s4" x="1590" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s11" x="690" y="855" textLength="650" lengthAdjust="spacingAndGlyphs">2026-03-04T07:10:50.0000000Z ##[error]The operation was canceled.</text>
+<text class="s4" x="1590" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="630" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="640" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s4" x="1590" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
+<text class="s3" x="0" y="935" textLength="640" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘</text>
+<text class="s4" x="640" y="935" textLength="960" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+<text class="s14" x="0" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^v </text>
+<text class="s1" x="40" y="955" textLength="110" lengthAdjust="spacingAndGlyphs">Paste link </text>
+<text class="s14" x="150" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> f </text>
+<text class="s1" x="180" y="955" textLength="120" lengthAdjust="spacingAndGlyphs">Follow link </text>
+<text class="s14" x="300" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> F </text>
+<text class="s1" x="330" y="955" textLength="220" lengthAdjust="spacingAndGlyphs">Follow link (browser) </text>
+<text class="s14" x="550" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
+<text class="s1" x="580" y="955" textLength="50" lengthAdjust="spacingAndGlyphs">Quit </text>
+<text class="s14" x="630" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^p </text>
+<text class="s1" x="670" y="955" textLength="160" lengthAdjust="spacingAndGlyphs">Command Palette </text>
+<text class="s14" x="830" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> M </text>
+<text class="s1" x="860" y="955" textLength="90" lengthAdjust="spacingAndGlyphs">Maximize </text>
+<text class="s14" x="950" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ? </text>
+<text class="s1" x="980" y="955" textLength="620" lengthAdjust="spacingAndGlyphs">Keybindings                                                   </text>
+</svg>

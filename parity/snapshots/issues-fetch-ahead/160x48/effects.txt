@@ -1,0 +1,17 @@
+GET /repos/parity-bot/prs-only/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/prs-only/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/prs-only/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/prs-only/issues?page=2&per_page=30&state=all
+GET /repos/parity-bot/prs-only/issues?page=3&per_page=30&state=all
+GET /repos/parity-bot/prs-only/issues?page=4&per_page=30&state=all
+GET /repos/parity-bot/prs-only/issues?page=5&per_page=30&state=all
+GET /repos/parity-bot/prs-only/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/prs-only/readme accept=raw
+GET /repos/parity-bot/prs-then-issues/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/prs-then-issues/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/prs-then-issues/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/prs-then-issues/issues?page=2&per_page=30&state=all
+GET /repos/parity-bot/prs-then-issues/issues?page=3&per_page=30&state=all
+GET /repos/parity-bot/prs-then-issues/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/prs-then-issues/readme accept=raw
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

@@ -1,0 +1,16 @@
+GET /repos/parity-bot/dotfiles/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/dotfiles/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/dotfiles/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/dotfiles/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/dotfiles/readme accept=raw
+GET /repos/parity-bot/hello-world/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/hello-world/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/hello-world/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/hello-world/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/hello-world/readme accept=raw
+GET /repos/parity-bot/lazy-demo/actions/runs?page=1&per_page=30
+GET /repos/parity-bot/lazy-demo/actions/workflows?page=1&per_page=30
+GET /repos/parity-bot/lazy-demo/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/lazy-demo/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/lazy-demo/readme accept=raw
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all

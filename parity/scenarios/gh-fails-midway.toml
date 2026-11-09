@@ -26,8 +26,11 @@ wait = { text = "To proceed, please log into the Github CLI", timeout_ms = 15000
 [[step]]
 wait = { text = "gh did not respond within 2 seconds", timeout_ms = 15000 }
 
+# The four lists fail at once, all at the fixed clock's time, so their Command Log lines come in any order: the
+# snapshot masks them. [expect.log] checks each line is there.
 [[step]]
 capture = "toasts"
+mask = ['(?:ERROR|WARNING) 2026-01-01 00:00:00 - [^▌│]*']
 
 # Both toasts time out after 5 s, uncovering the command log (whose lines also say "API Error").
 [[step]]
@@ -35,6 +38,7 @@ wait = { gone = "▌ API Error", timeout_ms = 15000 }
 
 [[step]]
 capture = "log"
+mask = ['(?:ERROR|WARNING) 2026-01-01 00:00:00 - [^▌│]*']
 
 [expect.toasts]
 contains = [

@@ -1,0 +1,109 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Rep█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█─────────┐
+│ ★  Owner█                                                                              █         │
+│ ☆  parit█                       Search issues and pull requests                        █━━━━━━━━━│
+│ ☆  parit█                                                                              █iend     │
+│ ☆  parit█        ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎                             █         │
+│ ☆  parit█ Scope: ▊  All of GitHub                     ▼  ▎                             █         │
+│         █        ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎                             █         │
+│         █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎█         │
+└─────────█▊  is:pr author:@me                                                          ▎█▔▔▔▔▔▔▔  │
+┌─ [2] Pul█▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎█         │
+│ #  Statu█ is:pr is:issue is:open is:merged author: assignee: label: review: involves:  █         │
+│ 5  open █ 1,234 results · GitHub returns the first 1,000                               █▔▔▔▔▔▔▔  │
+│ 4  close█  Repo           #     Type  Status  Author      Title          Updated       █         │
+│ 3  close█  parity-bot/i…  1009  PR    open    parity-bot  Search resul…  2026-09-17    █         │
+│ 2  open █  parity-bot/p…  1008  PR    open    parity-bot  Search resul…  2026-09-17    █▔▔▔▔▔▔▔  │
+│         █  parity-bot/i…  1007  PR    merged  parity-bot  Search resul…  2026-09-17    █         │
+│         █  parity-bot/p…  1006  PR    draft   parity-bot  Search resul…  2026-09-17    █         │
+│         █  parity-bot/i…  1005  PR    closed  parity-bot  Search resul…  2026-09-17    █         │
+│         █  parity-bot/p…  1004  PR    open    parity-bot  Search resul…  2026-09-17    █───────  │
+└─────────█  parity-bot/i…  1003  PR    open    parity-bot  Search resul…  2026-09-17    █         │
+┌─ [3] Iss█  parity-bot/p…  1002  PR    open    parity-bot  Search resul…  2026-09-17    █.        │
+│ #  Statu█  parity-bot/i…  1001  PR    draft   parity-bot  Search resul…  2026-09-17    █         │
+└─────────█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█         │
+┌─ [4] Workflows (empty) ──────────────┐│  • the current line is marked with >                   ▆▆│
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ⏎ Open  / Query  q Close  ^s Save query
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedddddddddd
+dfgfffffffehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhebbbbbbbbbd
+diiiiiiiiiehhjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjhhekkkkkkkkkd
+dlllllllllehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhemmmmbbbnnd
+dlllllllllehhhhhhhhopppppppppppppppppppppppppppppppppppppppqhhhhhhhhhhhhhhhhhhhhhhhhhhhhhebbbbbbbnnd
+dlllllllllehrrrrrrhosssssssssssssssssssssssssssssssssssstssqhhhhhhhhhhhhhhhhhhhhhhhhhhhhhebbbbbbbnnd
+dbbbbbbbbbehhhhhhhhopppppppppppppppppppppppppppppppppppppppqhhhhhhhhhhhhhhhhhhhhhhhhhhhhhebbbbbbbnnd
+dbbbbbbbbbeoppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqebbbbbbbnnd
+ddddddddddeossssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssqeuuuuuuunnd
+vvvvvvvvvveoppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqelllllllnnd
+vwwwwwwwwwehxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxhelllllllnnd
+vyyyyyyyyyehxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheuuuuuuunnd
+vzzzzzzzzzehAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBhelllllllnnd
+vzzzzzzzzzeh..........................................................................BBhelllllllnnd
+vzzzzzzzzzeh..........................................................................BBheuuuuuuunnd
+vCCCCCCCCCeh..........................................................................BBhelllllllnnd
+vbbbbbbbbbeh..........................................................................BBhelllllllnnd
+vbbbbbbbbbeh..........................................................................BBhebbbbbbbnnd
+vbbbbbbbbbeh..........................................................................BBheaaaaaaannd
+vvvvvvvvvveh..........................................................................BBhebbbbbbbnnd
+ddddddddddeh..........................................................................BBhebbbbbbbnnd
+dfffffffffehDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDEEhebbbbbbbnnd
+ddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeebbbbbbbnnd
+dddddddddddddddddFFFFFFFdddddddddddddddddbbGGbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbHbbbbbbbbbbbbbbbbbbbIId
+dJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJKLLLLMMddbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbLLd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+NNNOOOOONNNOOOOOONNNOOOOOONNNNOOOOOOOOOOOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+--- legend
+. fg=#e0e0e0 bg=#272727
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#50701d bg=#121212
+d fg=#365270 bg=#121212
+e fg=#121212 bg=#4f4f4f
+f fg=#646464 bg=#191d21 bold
+g fg=#476419 bg=#191d21 bold
+h fg=#e0e0e0 bg=#4f4f4f
+i fg=#646464 bg=#13212c
+j fg=#0178d4 bg=#4f4f4f bold
+k fg=#1a1a1a bg=#121212
+l fg=#646464 bg=#161616
+m fg=#646464 bg=#121212 underline
+n fg=#0a1e2c bg=#121212 inverse
+o fg=#191919 bg=#4f4f4f inverse
+p fg=#191919 bg=#1e1e1e
+q fg=#191919 bg=#4f4f4f
+r fg=#e0e0e0 bg=#4f4f4f bold
+s fg=#e0e0e0 bg=#1e1e1e
+t fg=#7f7f7f bg=#1e1e1e
+u fg=#121212 bg=#161616
+v fg=#2a5738 bg=#121212
+w fg=#646464 bg=#1c2024 bold
+x fg=#b8b8b8 bg=#4f4f4f
+y fg=#63696e bg=#0b3a5f bold
+z fg=#646464 bg=#1a1a1a
+A fg=#e0e0e0 bg=#2d3740 bold
+B fg=#e0e0e0 bg=#000000
+C fg=#0a1e2c bg=#1a1a1a inverse
+D fg=#ddedf9 bg=#0178d4 bold
+E fg=#003054 bg=#272727 inverse
+F fg=#2a3c50 bg=#121212
+G fg=#2d4c65 bg=#121212
+H fg=#6c5536 bg=#191612
+I fg=#0a1e2c bg=#0a0a0a inverse
+J fg=#0a1e2c bg=#161616 inverse
+K fg=#0a1e2c bg=#0a0a0a
+L fg=#646464 bg=#0a0a0a
+M bg=#0a0a0a
+N fg=#ffa62b bg=#242f38 bold
+O fg=#e0e0e0 bg=#242f38
+P bg=#242f38

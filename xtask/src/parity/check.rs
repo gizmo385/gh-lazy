@@ -18,6 +18,7 @@ use super::reference;
 use super::runner::AppRunStatus;
 use super::scenario::{App, Check, Expect, ExpectTabs, Ignore, Roots, Scenario, Step};
 use super::screen;
+use super::snapshot::SnapshotMismatch;
 use super::structure::{self, Binding, DEFAULT_THEME, Pane, Structure, Table, ThemeColors, Themes};
 use super::summary::{CaptureSummary, CheckOutcome};
 use super::{Context, HarnessError, Result};
@@ -41,6 +42,10 @@ pub enum Kind {
     Writes,
     /// The URLs an app had opened in the browser by a capture (`[expect] opened`).
     Opened,
+    /// A Rust capture's masked screen against its committed snapshot (`parity/snapshots/`).
+    Snapshot,
+    /// What a Rust run did outside the screen against its snapshot's `effects.txt` (on the last capture).
+    Effects,
 }
 
 impl From<Check> for Kind {
@@ -72,6 +77,8 @@ impl Kind {
             Kind::Requests => "requests",
             Kind::Writes => "writes",
             Kind::Opened => "opened",
+            Kind::Snapshot => "snapshot",
+            Kind::Effects => "effects",
         }
     }
 }
@@ -118,6 +125,11 @@ impl Mismatch {
         }
     }
 
+    /// A Rust run against its snapshot ([`Kind::Snapshot`] or [`Kind::Effects`]): the message says what differs.
+    pub fn snapshot(check: Kind, message: String) -> Self {
+        Self::cross(check, None, Value::Null, Value::Null, message)
+    }
+
     /// The one-line console form.
     pub fn describe(&self) -> String {
         match &self.in_box {
@@ -139,6 +151,9 @@ pub struct CheckFile {
     /// reference's. Left out when empty.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub drift: Vec<Mismatch>,
+    /// Where the Rust run differs from its committed snapshot (`snapshot` and `effects`). Left out when empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub snapshot: Vec<Mismatch>,
 }
 
 /// One disagreement between a live Python run and its fresh reference, on one capture
@@ -773,17 +788,45 @@ fn capture_drift(
     (lines, mismatches)
 }
 
+/// The snapshot mismatches on capture `name` of `scenario` at `size`: their console lines and the mismatches. Their
+/// findings for `--ci` go to `findings`.
+fn capture_snapshot(
+    scenario: &str,
+    size: &str,
+    name: &str,
+    snapshot: &[SnapshotMismatch],
+    findings: &mut Vec<Finding>,
+) -> (Vec<String>, Vec<Mismatch>) {
+    let mut lines = Vec::new();
+    let mut mismatches = Vec::new();
+    for m in snapshot.iter().filter(|m| m.capture == name) {
+        lines.push(match m.mismatch.check {
+            Kind::Effects => format!("{scenario} {size}: {}", m.mismatch.describe()),
+            _ => format!("{scenario} {size} {name}: {}", m.mismatch.describe()),
+        });
+        findings.push(Finding::snapshot(size, name, &m.mismatch));
+        mismatches.push(m.mismatch.clone());
+    }
+    (lines, mismatches)
+}
+
 /// Runs the structural check for every capture of one scenario at one size. `dir` is
 /// `<out>/<scenario>/<COLSxROWS>`, holding one directory per app that ran. Writes `<app>/<capture>.structure.json`
 /// for each dump found and `<capture>.check.json`, and prints one line per mismatch. `drift` goes into each
-/// capture's `check.json` and counts against Python. Returns each capture's summary and every mismatch with the app
-/// it counts against.
+/// capture's `check.json` and counts against Python. `snapshot` holds the Rust run's snapshot mismatches when its
+/// snapshot was compared (`None` when it wasn't); they go into `check.json` too and count against Rust. Returns each
+/// capture's summary and every mismatch with the app it counts against.
+#[allow(
+    clippy::too_many_lines,
+    reason = "one pass over the captures, each source of mismatches in its own helper"
+)]
 pub fn check_size(
     scenario: &Scenario,
     dir: &Path,
     statuses: &BTreeMap<App, AppRunStatus>,
     theme: &ThemeColors,
     drift: &[Drift],
+    snapshot: Option<&[SnapshotMismatch]>,
 ) -> Result<(Vec<CaptureSummary>, Vec<Finding>)> {
     let size = dir
         .file_name()
@@ -840,9 +883,19 @@ pub fn check_size(
             against.push(App::Python);
         }
 
-        let checked =
-            cross_ran || !cross.is_empty() || (expectation.is_some() && !structures.is_empty()) || !drifted.is_empty();
-        let mismatches = expect.len() + cross.len() + drifted.len();
+        let (snapshot_lines, snapshotted) =
+            capture_snapshot(&scenario.name, &size, name, snapshot.unwrap_or_default(), &mut findings);
+        if !snapshotted.is_empty() && !against.contains(&App::Rust) {
+            against.push(App::Rust);
+        }
+        // A Rust capture compared with its snapshot was checked, whatever else ran.
+        let snapshot_ran = snapshot.is_some() && structures.contains_key(&App::Rust);
+        let checked = cross_ran
+            || !cross.is_empty()
+            || (expectation.is_some() && !structures.is_empty())
+            || !drifted.is_empty()
+            || snapshot_ran;
+        let mismatches = expect.len() + cross.len() + drifted.len() + snapshotted.len();
         let check = match (checked, mismatches) {
             (false, _) => CheckOutcome::NotApplicable,
             (true, 0) => CheckOutcome::Pass,
@@ -859,6 +912,7 @@ pub fn check_size(
                     expect,
                     cross,
                     drift: drifted,
+                    snapshot: snapshotted,
                 },
             )?;
         }
@@ -871,7 +925,7 @@ pub fn check_size(
             for line in &lines {
                 println!("  {line}");
             }
-            for line in &drift_lines {
+            for line in drift_lines.iter().chain(&snapshot_lines) {
                 println!("{line}");
             }
         }
@@ -1086,6 +1140,9 @@ mod tests {
             NotContains,
             Requests,
             Writes,
+            Opened,
+            Snapshot,
+            Effects,
         ] {
             assert_eq!(serde_json::to_value(kind).unwrap(), kind.as_str(), "{kind:?}");
         }
@@ -1427,7 +1484,7 @@ mod tests {
         }))
         .unwrap();
         let statuses = BTreeMap::from([(App::Python, ok.clone()), (App::Rust, ok)]);
-        let (captures, findings) = check_size(&scenario, &dir, &statuses, &theme, &drift).unwrap();
+        let (captures, findings) = check_size(&scenario, &dir, &statuses, &theme, &drift, None).unwrap();
 
         let check: CheckFile =
             serde_json::from_str(&std::fs::read_to_string(dir.join("main.check.json")).unwrap()).unwrap();

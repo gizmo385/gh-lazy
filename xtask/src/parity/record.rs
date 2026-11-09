@@ -264,7 +264,7 @@ fn run_python(
     options: &RunOptions<'_>,
     n: u32,
 ) -> Result<Run> {
-    let status = cli::run_app(scenario, App::Python, size, paths, out, options)?;
+    let status = cli::run_app(scenario, App::Python, size, paths, out, options)?.status;
     Ok(Run {
         side: reference::read_run(scenario, &status, out, &format!("run {n}"))?,
         duration: Duration::from_millis(status.duration_ms),
@@ -362,9 +362,9 @@ fn write_reference(
 }
 
 /// Moves `from` to `to`, replacing `to`. A directory can't be renamed over a non-empty one, so the old one is moved
-/// aside first; an interrupted replace leaves `<size>.old/` or `<size>.tmp/`, which the next `--record` deletes as
-/// orphans.
-fn replace_dir(from: &Path, to: &Path) -> Result<()> {
+/// aside first; an interrupted replace leaves `<size>.old/` or `<size>.tmp/`, which the next `--record` (or
+/// `--accept`, for a snapshot) deletes as orphans.
+pub(super) fn replace_dir(from: &Path, to: &Path) -> Result<()> {
     if to.exists() {
         let aside = to.with_extension("old");
         if aside.exists() {
@@ -382,13 +382,13 @@ fn replace_dir(from: &Path, to: &Path) -> Result<()> {
 }
 
 /// A repo-relative, `/`-separated path (directories end in `/`) on disk.
-fn repo_path(repo: &Path, path: &str) -> PathBuf {
+pub(super) fn repo_path(repo: &Path, path: &str) -> PathBuf {
     path.split('/')
         .filter(|p| !p.is_empty())
         .fold(repo.to_owned(), |acc, p| acc.join(p))
 }
 
-fn remove(path: &Path) -> Result<()> {
+pub(super) fn remove(path: &Path) -> Result<()> {
     let result = if path.is_dir() {
         std::fs::remove_dir_all(path)
     } else {

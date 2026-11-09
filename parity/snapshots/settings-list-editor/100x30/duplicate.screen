@@ -1,0 +1,99 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+█                                                                                                  █
+█                                                                                                  █
+█                                       LazyGithub Settings                                        █
+█                                                                                                  █
+█ Appearance  Notifications  Key Bindings  Repositories  Pull Requests  Issues  Cache  Core  Api  S█
+█━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█
+█                                                └─────────────────────────────────────────────┘   █
+█                                                                                                  █
+█                                                                                                  █
+█ Favorites:                                     ┌─────────────────────────────────────────────┐   █
+█                                                │ parity-bot/dotfiles                         │   █
+█                                                │ parity-bot/dotfiles                         │   █
+█                                                └─────────────────────────────────────────────┘   █
+█                                                                                                  █
+█                                                                                                ▇▇█
+█                                                                                                  █
+█──────────────────────────────────────────────────────────────────────────────────────────────────█
+█                                                                                                  █
+█                                   ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                               █
+█                                         Save           Cancel                                    █
+█                                   ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                               █
+█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌                                                ▄█
+│                                      ││  create▌ Invalid setting                                 │
+│                                      ││        ▌ Favorites already lists parity-bot/dotfiles     │
+└──────────────────────────────────────┘└────────▌                                                ─┘
+ ⏎ Done  esc Cancel  shift+⏎ Submit  / Search
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+c..................................................................................................c
+c..................................................................................................c
+c..dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd..c
+c..................................................................................................c
+c.eeeeeeeeee..eeeeeeeeeeeee..eeeeeeeeeeee................eeeeeeeeeeeee..eeeeee..eeeee..eeee..eee..ec
+cffffffffffffffffffffffffffffffffffffffffffggggggggggggffffffffffffffffffffffffffffffffffffffffffffc
+c................................................hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh.iic
+c................................................................................................iic
+c................................................................................................iic
+c.jjjjjjjjjj.....................................kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.iic
+c................................................klllllllllllllllllllllllllllllllllllllllllllllk.mmc
+c................................................kllllllllllllllllllllnllllllllllllllllllllllllk.mmc
+c................................................kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.mmc
+c................................................................................................mmc
+c................................................................................................ooc
+c..................................................................................................c
+cppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppc
+c..................................................................................................c
+c...................................qqqqqqqqqqqqqqqqrrrrrrrrrrrrrrrr...............................c
+c...................................sssssttttttsssssuuuuvvvvvvvvuuuu...............................c
+c...................................wwwwwwwwwwwwwwwwxxxxxxxxxxxxxxxx...............................c
+cccccccccccccccccccccccccccccccccccccccccccccccccyzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzcc
+AbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbAAbbbbbbbbyzBBBBBBBBBBBBBBBzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzCA
+AbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbAAbbbbbbbbyzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzCA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAyzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzAA
+DDDEEEEEDDDDDEEEEEEEDDDDDDDDDEEEEEEEDDDEEEEEEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+--- legend
+. fg=#e0e0e0 bg=#4f4f4f
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#121212 bg=#4f4f4f
+d fg=#0178d4 bg=#4f4f4f bold
+e fg=#979797 bg=#4f4f4f
+f fg=#5d5d5d bg=#4f4f4f
+g fg=#0178d4 bg=#4f4f4f
+h fg=#0178d4 bg=#1e1e1e
+i fg=#e0e0e0 bg=#000000
+j fg=#e0e0e0 bg=#4f4f4f bold
+k fg=#0178d4 bg=#272727
+l fg=#e0e0e0 bg=#272727
+m fg=#003054 bg=#4f4f4f inverse
+n fg=#121212 bg=#e0e0e0
+o fg=#003054 bg=#000000 inverse
+p fg=#004578 bg=#4f4f4f
+q fg=#7ae998 bg=#4ebf71
+r fg=#e76580 bg=#b93c5b
+s fg=#0a180e bg=#4ebf71
+t fg=#0a180e bg=#4ebf71 bold
+u fg=#f5e5e9 bg=#b93c5b
+v fg=#f5e5e9 bg=#b93c5b bold
+w fg=#008139 bg=#4ebf71
+x fg=#780028 bg=#b93c5b
+y fg=#b93c5b bg=#343f49
+z fg=#e0e0e0 bg=#343f49
+A fg=#365270 bg=#121212
+B fg=#d17e92 bg=#343f49 bold
+C fg=#646464 bg=#0a0a0a
+D fg=#ffa62b bg=#242f38 bold
+E fg=#e0e0e0 bg=#242f38
+F bg=#242f38

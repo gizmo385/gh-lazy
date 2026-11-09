@@ -176,6 +176,10 @@ registry! {
     DiffFoldAll("diff.fold_all", "z", "fold_all", "Fold Files");
     DiffFirstLine("diff.first_line", "g", "first_line", "First line").hidden();
     DiffLastLine("diff.last_line", "G", "last_line", "Last line").hidden();
+    // Rust-only (decision diff-inline-comments): the review threads under the diff's lines. Hidden by the body when
+    // the diff has none.
+    DiffNextComment("diff.next_comment", "n", "next_comment", "Next Comment");
+    DiffPreviousComment("diff.previous_comment", "N", "previous_comment", "Previous Comment");
     // Shown, and active only while `notifications.enabled` (Py bug B7: Python decides `show` once at import). The
     // component that declares it hides it through `Component::binding_state`.
     NotificationsOpen("notifications.open", "ctrl+n", "view_notifications", "Notifications")

@@ -4,6 +4,9 @@
 //!
 //! Once the diff is in, the tab asks for the current user, to show the Submit review form the viewer may use (the
 //! author's, or a reviewer's), and submits the review from it.
+//!
+//! The review threads under the diff's lines (#390) come from the reviews the Conversation loads, handed over with
+//! [`PrDiff::set_reviews`] whenever it loads them, before or after the diff is in.
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -13,6 +16,7 @@ use lazy_github_core::diff;
 use lazy_github_core::gh::GhError;
 use lazy_github_core::github::DiffFetchError;
 use lazy_github_core::models::{FullPullRequest, Review, User};
+use lazy_github_core::review_anchor::{DiffThread, diff_threads};
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
 use ratatui::style::Style;
@@ -45,6 +49,8 @@ pub(in crate::screens::main) struct PrDiff {
     user: Option<RequestId>,
     /// The submitted review, while it's in flight.
     review: Option<RequestId>,
+    /// The review threads, once the Conversation has loaded the reviews: the viewer gets them when the diff is in.
+    threads: Option<Vec<DiffThread>>,
 }
 
 /// Where the diff is.
@@ -70,6 +76,26 @@ impl PrDiff {
             state: DiffState::Loading { id, since: None },
             user: None,
             review: None,
+            threads: None,
+        }
+    }
+
+    /// The Conversation loaded `reviews`: their threads show under their lines, now or once the diff is in. A reload
+    /// keeps the expanded threads expanded.
+    pub(super) fn set_reviews(&mut self, reviews: &[Review]) {
+        let threads = diff_threads(reviews);
+        self.threads = Some(threads.clone());
+        let repo = self.pr.pr.issue.repo.full_name.clone();
+        if let Some(view) = self.view_mut() {
+            view.set_threads(threads, &repo);
+        }
+    }
+
+    /// The Conversation couldn't load the reviews: no threads show, and nothing says so here (the Conversation does).
+    pub(super) fn reviews_failed(&mut self) {
+        self.threads = None;
+        if let Some(view) = self.view_mut() {
+            view.set_threads(Vec::new(), "");
         }
     }
 
@@ -107,6 +133,12 @@ impl PrDiff {
                 self.state = DiffState::from_result(result);
                 if self.view().is_some() {
                     self.user = Some(cx.request(GithubRequest::CurrentUser));
+                }
+                if let Some(threads) = self.threads.clone() {
+                    let repo = self.pr.pr.issue.repo.full_name.clone();
+                    if let Some(view) = self.view_mut() {
+                        view.set_threads(threads, &repo);
+                    }
                 }
                 None
             }
@@ -196,7 +228,15 @@ impl PrDiff {
                 let style = Style::new().fg(theme.color(theme.roles().text.plain, theme.background()));
                 frame.render_widget(Paragraph::new(Line::styled(message.as_str(), style)), area);
             }
-            DiffState::Loaded(view) => view.render(frame, area, cx.theme, cx.focused),
+            DiffState::Loaded(view) => {
+                view.render(frame, area, cx.theme, cx.focused);
+                if let Some(links) = cx.links {
+                    let mut links = links.borrow_mut();
+                    for link in view.links() {
+                        links.push(link.clone());
+                    }
+                }
+            }
         }
     }
 

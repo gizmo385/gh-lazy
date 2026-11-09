@@ -30,6 +30,8 @@ const RUST_ONLY_IDS: &[&str] = &[
     "diff.fold_all",
     "diff.first_line",
     "diff.last_line",
+    "diff.next_comment",
+    "diff.previous_comment",
     "main.refresh",
     // Decision search-issues-and-prs.
     "search.open",

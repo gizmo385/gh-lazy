@@ -1545,3 +1545,398 @@ mod gh_failures {
         );
     }
 }
+
+// Review threads under their lines (#390).
+
+/// The `pr-diff-comments` overlay's file at `path`, if it has one.
+fn overlay(path: &str) -> Option<Value> {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../parity/fixtures/pr-diff-comments")
+        .join(path);
+    let text = std::fs::read_to_string(&path).ok()?;
+    Some(serde_json::from_str(&text).unwrap())
+}
+
+/// PR 5's reviews with the overlay's comments: 9001 (and its reply 9002) under src/viewer.rs's `+    cursor: usize,`,
+/// 9003 under its removed `println!("{line}");`, the outdated 9004 on src/viewer.rs and the file-level 9005 on
+/// README.md.
+fn thread_reviews() -> Vec<Review> {
+    let mut reviews = crate::screens::main::pr_details::tests::reviews(5);
+    for review in &mut reviews {
+        let path = format!(
+            "repos/parity-bot/pr-details/pulls/5/reviews/{}/comments/GET.json",
+            review.id
+        );
+        if let Some(fixture) = overlay(&path) {
+            review.comments = serde_json::from_value(fixture["response"]["body"].clone()).unwrap();
+        }
+    }
+    reviews
+}
+
+fn threads_gh() -> FakeGithub {
+    gh().with_pull_request_reviews(NAME, 5, Ok(thread_reviews()))
+}
+
+/// PR 5's Diff tab with its threads, the tab strip focused.
+fn threads_tab() -> TestApp {
+    diff_tab_with(config(), threads_gh(), &["enter"])
+}
+
+// The body's threads, in creation order.
+const T_9001: usize = 0;
+const T_9003: usize = 1;
+const T_9004: usize = 2;
+const T_9005: usize = 3;
+
+#[allow(clippy::unnecessary_wraps)]
+fn on_thread(file: usize, thread: usize, row: usize) -> Option<Cursor> {
+    Some(Cursor::Thread { file, thread, row })
+}
+
+/// The id of the first request emitted that `pick` matches.
+fn request_id(app: &TestApp, pick: impl Fn(&GithubRequest) -> bool) -> crate::effect::RequestId {
+    app.effects()
+        .iter()
+        .find_map(|effect| match effect {
+            Effect::Github { id, request } if pick(request) => Some(*id),
+            _ => None,
+        })
+        .expect("the request was made")
+}
+
+/// PR 5 picked with its requests left unanswered but the pull request's own, the Diff tab active.
+fn unanswered() -> TestApp {
+    let mut app = TestApp::with_github(config(), threads_gh());
+    app.press(&["enter"]);
+    settle(&mut app);
+    app.press(&["2", "enter"]);
+    let id = request_id(&app, |request| matches!(request, GithubRequest::PullRequest { .. }));
+    app.send(Event::Github {
+        id,
+        response: GithubResponse::PullRequest(Ok(Box::new(fixture_pr(5)))),
+    });
+    app.press(&["right"]);
+    app
+}
+
+fn send_diff(app: &mut TestApp) {
+    let id = request_id(app, |request| matches!(request, GithubRequest::PullRequestDiff { .. }));
+    app.send(Event::Github {
+        id,
+        response: GithubResponse::PullRequestDiff(Ok(diff_text(5))),
+    });
+}
+
+fn send_conversation(app: &mut TestApp, reviews: Result<Vec<Review>, GhError>) {
+    let id = request_id(app, |request| matches!(request, GithubRequest::IssueComments { .. }));
+    app.send(Event::Github {
+        id,
+        response: GithubResponse::IssueComments(Ok(Vec::new())),
+    });
+    let id = request_id(app, |request| {
+        matches!(request, GithubRequest::PullRequestReviews { .. })
+    });
+    app.send(Event::Github {
+        id,
+        response: GithubResponse::PullRequestReviews(reviews),
+    });
+}
+
+#[test]
+fn threads_appear_when_the_reviews_land_after_the_diff_and_the_cursor_stays() {
+    let mut app = unanswered();
+    send_diff(&mut app);
+    let screen = app.screen(160, 48);
+    assert!(
+        screen.contains("src/viewer.rs (+5 -2)") && !screen.contains("comments"),
+        "{screen}"
+    );
+    // The cursor on src/viewer.rs's last line of its first hunk, below where a thread will go.
+    app.press(&["tab", "J", "J", "J", "J", "j", "j", "j", "j", "j", "j", "j"]);
+    assert_eq!(cursor(&app), on_line(VIEWER, 0, 7));
+    send_conversation(&mut app, Ok(thread_reviews()));
+    assert_eq!(cursor(&app), on_line(VIEWER, 0, 7));
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("src/viewer.rs (+5 -2) · 3 comments"), "{screen}");
+    assert!(screen.contains("Line: 8/8"), "{screen}");
+    assert!(
+        screen.contains("▶ parity-bot: Should the cursor wrap at the end?  · 1 reply"),
+        "{screen}"
+    );
+}
+
+#[test]
+fn threads_appear_when_the_reviews_land_before_the_diff() {
+    let mut app = unanswered();
+    send_conversation(&mut app, Ok(thread_reviews()));
+    assert!(pr_diff(&app).view().is_none());
+    send_diff(&mut app);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("README.md (+3 -1) · 1 comment"), "{screen}");
+    assert!(
+        screen.contains("▶ File comment · parity-bot: Mention `q` to quit too."),
+        "{screen}"
+    );
+    assert_eq!(view(&app).body().thread_count(), 4);
+}
+
+#[test]
+fn failed_reviews_show_no_threads() {
+    let mut app = unanswered();
+    send_diff(&mut app);
+    send_conversation(&mut app, Err(GhError::NotInstalled));
+    let screen = app.screen(160, 48);
+    assert!(!screen.contains("comment"), "{screen}");
+    assert!(
+        !screen.contains("Failed to load"),
+        "the Diff tab says nothing: {screen}"
+    );
+    app.press(&["tab"]);
+    assert!(!footer(&mut app).contains("Next Comment"), "{}", footer(&mut app));
+}
+
+#[test]
+fn pr_diff_threads_collapsed_160x48() {
+    let mut app = threads_tab();
+    app.press(&["tab", "J", "J", "J", "J"]);
+    assert_eq!(cursor(&app), on_line(VIEWER, 0, 0));
+    let screen = app.screen(160, 48);
+    for text in [
+        "▶ parity-bot: Should the cursor wrap at the end?  · 1 reply",
+        "▶ File comment · parity-bot: Mention `q` to quit too.",
+        "README.md (+3 -1) · 1 comment",
+        "src/viewer.rs (+5 -2) · 3 comments",
+        "   6● │     cursor: usize,",
+        "    22● │             println!(\"{line}\");",
+    ] {
+        assert!(screen.contains(text), "{text}: {screen}");
+    }
+    assert!(
+        footer(&mut app).contains("n Next Comment  N Previous Comment"),
+        "{}",
+        footer(&mut app)
+    );
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn n_and_previous_cross_files_and_stop_at_the_ends() {
+    let mut app = threads_tab();
+    app.press(&["tab"]);
+    assert_eq!(cursor(&app), Some(Cursor::File(README)));
+    let mut seen = Vec::new();
+    for _ in 0..5 {
+        app.press(&["n"]);
+        seen.push(cursor(&app));
+    }
+    assert_eq!(
+        seen,
+        [
+            on_thread(README, T_9005, 0),
+            on_thread(VIEWER, T_9001, 0),
+            on_thread(VIEWER, T_9003, 0),
+            on_thread(VIEWER, T_9004, 0),
+            on_thread(VIEWER, T_9004, 0),
+        ]
+    );
+    assert!(app.screen(160, 48).contains("Comment 3/3"));
+    seen.clear();
+    for _ in 0..4 {
+        app.press(&["N"]);
+        seen.push(cursor(&app));
+    }
+    assert_eq!(
+        seen,
+        [
+            on_thread(VIEWER, T_9003, 0),
+            on_thread(VIEWER, T_9001, 0),
+            on_thread(README, T_9005, 0),
+            on_thread(README, T_9005, 0),
+        ]
+    );
+}
+
+#[test]
+fn previous_from_inside_a_thread_goes_to_its_summary() {
+    let mut app = threads_tab();
+    app.press(&["tab", "n", "n", "enter", "j", "j"]);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 2));
+    app.press(&["N"]);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 0));
+}
+
+#[test]
+fn n_unfolds_a_folded_file() {
+    let mut app = threads_tab();
+    app.press(&["tab", "z"]);
+    assert!(view(&app).body().all_folded());
+    app.press(&["n"]);
+    assert_eq!(cursor(&app), on_thread(README, T_9005, 0));
+    assert!(!view(&app).body().is_folded(README));
+    // Over the folded files between, into src/viewer.rs.
+    app.press(&["n"]);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 0));
+    assert!(!view(&app).body().is_folded(VIEWER));
+    assert!(view(&app).body().is_folded(CSS));
+}
+
+#[test]
+fn pr_diff_all_folded_with_counts() {
+    let mut app = threads_tab();
+    app.press(&["tab", "z"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("▶ 📄  README.md (+3 -1) · 1 comment"), "{screen}");
+    assert!(screen.contains("▶ 📄  src/viewer.rs (+5 -2) · 3 comments"), "{screen}");
+    assert!(screen.contains("▶ 📄  build.rs (+1) "), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn enter_on_a_summary_expands_and_on_an_inner_row_collapses_to_the_summary() {
+    let mut app = threads_tab();
+    app.press(&["tab", "n", "n"]);
+    assert!(footer(&mut app).contains("⏎ Expand"), "{}", footer(&mut app));
+    app.press(&["enter"]);
+    assert!(view(&app).body().is_expanded(T_9001));
+    assert!(footer(&mut app).contains("⏎ Collapse"), "{}", footer(&mut app));
+    let screen = app.screen(160, 48);
+    assert!(
+        screen.contains("▼ parity-bot: Should the cursor wrap at the end?  · 1 reply"),
+        "{screen}"
+    );
+    assert!(screen.contains("No, it stops at the last line."), "{screen}");
+    // j reads through the thread a row at a time.
+    app.press(&["j", "j", "j"]);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 3));
+    app.press(&["enter"]);
+    assert!(!view(&app).body().is_expanded(T_9001));
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 0));
+    assert!(!app.screen(160, 48).contains("No, it stops"));
+}
+
+#[test]
+fn enter_on_a_line_with_threads_expands_them_then_collapses_them() {
+    let mut app = threads_tab();
+    // src/viewer.rs's `+    cursor: usize,`.
+    app.press(&["tab", "J", "J", "J", "J", "j", "j", "j", "j", "j"]);
+    assert_eq!(cursor(&app), on_line(VIEWER, 0, 5));
+    assert!(footer(&mut app).contains("⏎ Expand"), "{}", footer(&mut app));
+    app.press(&["enter"]);
+    assert!(view(&app).body().is_expanded(T_9001));
+    assert_eq!(cursor(&app), on_line(VIEWER, 0, 5));
+    assert!(footer(&mut app).contains("⏎ Collapse"), "{}", footer(&mut app));
+    app.press(&["enter"]);
+    assert!(!view(&app).body().is_expanded(T_9001));
+    // A line without threads: enter is hidden and does nothing.
+    app.press(&["k"]);
+    assert!(!footer(&mut app).contains('⏎'), "{}", footer(&mut app));
+}
+
+#[test]
+fn c_is_hidden_on_thread_rows_and_does_nothing() {
+    let mut app = threads_tab();
+    app.press(&["tab", "n", "n"]);
+    assert!(!footer(&mut app).contains("c Add Comment"), "{}", footer(&mut app));
+    app.press(&["c"]);
+    assert!(modals(&app).is_empty(), "{:?}", modals(&app));
+}
+
+#[test]
+fn a_filtered_out_file_hides_its_threads() {
+    let mut app = threads_tab();
+    app.press(&["tab", "/"]);
+    type_text(&mut app, "viewer");
+    app.press(&["enter"]);
+    let screen = app.screen(160, 48);
+    assert!(!screen.contains("File comment"), "{screen}");
+    assert_eq!(view(&app).body().thread_count(), 3);
+    app.press(&["n"]);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 0));
+}
+
+#[test]
+fn pr_diff_file_comment() {
+    let mut app = threads_tab();
+    app.press(&["tab", "n", "enter"]);
+    let screen = app.screen(160, 48);
+    assert!(
+        screen.contains("▼ File comment · parity-bot: Mention `q` to quit too."),
+        "{screen}"
+    );
+    assert!(screen.contains("parity-bot • "), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn f_hints_a_link_in_an_expanded_thread() {
+    let mut app = threads_tab();
+    app.press(&["tab", "n"]);
+    app.render(160, 48);
+    let target = "https://github.com/parity-bot/pr-details#keys";
+    assert!(!app.app().links().iter().any(|link| &*link.target == target));
+    app.press(&["enter"]);
+    app.render(160, 48);
+    let screen = app.screen(160, 48);
+    let link = app
+        .app()
+        .links()
+        .iter()
+        .find(|link| &*link.target == target)
+        .cloned()
+        .unwrap_or_else(|| panic!("no link drawn: {screen}"));
+    let row = screen.lines().nth(usize::from(link.y)).unwrap();
+    assert!(row.contains("the keys"), "{row}");
+    app.press(&["f"]);
+    assert_eq!(modals(&app), [ModalKind::LinkHints]);
+}
+
+#[test]
+fn pr_diff_outdated_threads() {
+    let mut app = threads_tab();
+    app.press(&["tab", "n", "n", "n", "n", "enter"]);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9004, 0));
+    let screen = app.screen(160, 48);
+    assert!(
+        screen.contains("▼ Line 12 (outdated) · parity-bot: Rename this to `line_count`."),
+        "{screen}"
+    );
+    assert!(screen.contains("  12● │     pub fn len(&self) -> usize {"), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn pr_diff_thread_expanded_100x30() {
+    let mut app = threads_tab();
+    app.press(&["tab", "J", "J", "J", "J", "n", "enter"]);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 0));
+    let screen = app.screen(100, 30);
+    // As much of the thread as fits under its summary, the cursor keeping its margin.
+    assert!(screen.contains("▎   parity-friend • "), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn a_click_on_a_summary_moves_the_cursor_and_toggles_the_thread() {
+    let mut app = threads_tab();
+    let (_, row) = find(&app.screen(160, 48), "▶ File comment");
+    app.click(100, row);
+    assert_eq!((focus(&app), stop(&app)), (FocusTarget::DetailsContent, DiffStop::Body));
+    assert_eq!(cursor(&app), on_thread(README, T_9005, 0));
+    assert!(view(&app).body().is_expanded(T_9005));
+    app.click(100, row);
+    assert!(!view(&app).body().is_expanded(T_9005));
+}
+
+#[test]
+fn a_new_selection_starts_collapsed() {
+    let mut app = threads_tab();
+    app.press(&["tab", "n", "enter"]);
+    assert!(view(&app).body().is_expanded(T_9005));
+    // Away to PR 4 and back to PR 5: a new Diff tab.
+    app.press(&["2", "j", "enter"]);
+    settle(&mut app);
+    app.press(&["2", "k", "enter"]);
+    settle(&mut app);
+    assert!(!view(&app).body().is_expanded(T_9005));
+}

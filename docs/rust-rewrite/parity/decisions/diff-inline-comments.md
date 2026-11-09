@@ -1,19 +1,22 @@
 # Review comments show inline on their diff lines
 
-- Decision: Proposed, waiting on Chris (#345, D4 to D6). The Diff tab shows the pull request's review threads under
+- Decision: The Diff tab shows the pull request's review threads under
   the lines they're on, collapsed to one summary row each, with a mark in the gutter; outdated threads are listed at
   the end of their file; pending comments (added with `c`, not yet submitted) show under their line too and are
   removed there with a key, in place of Python's "Pending Comments:" section after the files. Python shows no
   existing review comment in the Diff tab, and lists pending comments in a separate section with a Remove button
   each.
-- Decided by: pending: Chris, on #345 (proposed by the design agent, 2026-10-31)
+- Decided by: Chris, 2026-11-01, on #344 (D4 a, D5 a, D6 a, for #345; proposed by the design agent, 2026-10-31)
 - Link: #345, #177 (M5 improvements, Chris 2026-10-30)
-- Rows: `diff-viewer.pending-comments`, `diff-viewer.add-comment`
+- Rows: `diff-viewer.pending-comments`, `diff-viewer.add-comment`, `diff-viewer.review-threads`,
+  `diff-viewer.outdated-threads`, `diff-viewer.comment-navigation`, `keybindings.diff-next-comment`,
+  `keybindings.diff-previous-comment`
 
-Status: proposed. When Chris answers on #345, the implementers set `Decided by`, add the new row ids
-(`diff-viewer.review-threads`, `diff-viewer.outdated-threads`, `diff-viewer.comment-navigation`,
-`keybindings.diff-next-comment`, `keybindings.diff-previous-comment`, `keybindings.diff-remove-comment`) to `Rows`,
-and move `diff-viewer.pending-comments` to `intentional diff`. `diff-viewer.add-comment` stays `parity` (the dialog
+Status: decided; being built. #390 shows the review threads (anchored, file-level and outdated) and added the rows
+`diff-viewer.review-threads`, `diff-viewer.outdated-threads`, `diff-viewer.comment-navigation`,
+`keybindings.diff-next-comment` and `keybindings.diff-previous-comment` (scenario `diff-threads`). #391 shows the
+pending comments under their lines, adds `keybindings.diff-remove-comment` to `Rows`, and moves
+`diff-viewer.pending-comments` to `intentional diff`. `diff-viewer.add-comment` stays `parity` (the dialog
 doesn't change) and is listed for its Notes.
 
 Why: in Python it's hard to tell which line a pending comment belongs to ("<file>:<line> - <line text>" in a list

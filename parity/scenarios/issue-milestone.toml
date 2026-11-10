@@ -1,0 +1,155 @@
+version = 1
+description = "Issue milestone: a milestoned issue's Overview shows the milestone line under its header; with the content focused, m opens the Search modal on is:issue milestone:\"<title>\" repo:<owner>/<name> and runs it; escape returns to the Overview; an issue without a milestone shows no line and no m; a closed milestone without a due date (#410)"
+# Rust-only: Python has no milestone support (decision issue-milestone). The Details box's text and the modal's loose
+# text are checked with [expect].
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "issues.overview-milestone",
+    "issues.overview-milestone-search",
+    "keybindings.issue-milestone",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+# issue-milestone: issue-details' issues page with issue 12 (and 9) in the open milestone v0.7 (due 2026-03-01, 1 of
+# 3 closed), 10 in the closed v0.6 (no due date, 4 of 4 closed) and 11 in none; the search for v0.7's issues answers
+# 12, 9 and 3. issue-details and base the rest.
+fixtures = ["issue-milestone", "issue-details", "base"]
+
+[[step]]
+wait = { text = "issue-fixture", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+# The Issues table has filled, and the README has arrived, so nothing redraws under the next keys.
+[[step]]
+wait = { text = "12  open    parity-friend", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Issues with bodies and comments.", timeout_ms = 15000 }
+
+[[step]]
+keys = ["3"]
+
+[[step]]
+wait = { focused = "[3] Issues" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Steps to reproduce", timeout_ms = 15000 }
+
+[[step]]
+capture = "overview"
+
+# The Overview's content: `m Milestone` follows `E Edit Issue` in the footer.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { regex = '(?m)^ E Edit Issue  m Milestone  ' }
+
+[[step]]
+capture = "overview-content"
+
+# `m` opens the Search modal on the milestone's query and searches it at once; the results table takes focus.
+[[step]]
+keys = ["m"]
+
+[[step]]
+wait = { text = "3 results", timeout_ms = 15000 }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "1", per_page = "50", q = 'is:issue milestone:"v0.7" repo:parity-bot/issue-fixture' } } }
+
+[[step]]
+capture = "results"
+
+# Escape from the results closes the modal, and focus is back on the Overview's content.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Search issues and pull requests" }
+
+[[step]]
+capture = "closed"
+
+# Issue 11 has no milestone: no line, and no `m` with its content focused.
+[[step]]
+keys = ["3"]
+
+[[step]]
+wait = { focused = "[3] Issues" }
+
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait = { text = "Closed Closed without a body (#11)", timeout_ms = 15000 }
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { regex = '(?m)^ E Edit Issue  ' }
+
+[[step]]
+capture = "no-milestone"
+
+# Issue 10 is in a closed milestone with no due date.
+[[step]]
+keys = ["3"]
+
+[[step]]
+wait = { focused = "[3] Issues" }
+
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait = { text = "Milestone: v0.6", timeout_ms = 15000 }
+
+[[step]]
+capture = "closed-milestone"
+
+[expect.overview]
+contains = [
+    "Open Crash when the config file is empty (#12) by",
+    "Milestone: v0.7 • open • due 2026-03-01 • 1 of 3 closed",
+    "Steps to reproduce",
+]
+not_contains = ["m Milestone"]
+
+[expect.overview-content]
+contains = ["Milestone: v0.7 • open • due 2026-03-01 • 1 of 3 closed", " E Edit Issue  m Milestone "]
+
+[expect.results]
+contains = [
+    "Search issues and pull requests",
+    'is:issue milestone:"v0.7" repo:parity-bot/issue-fixture',
+    "3 results · Scope from the query",
+    # The Repo column shows for a query-scoped search; the titles give way at 100x30.
+    " Repo ",
+    "#   Type   Status  Author",
+    "12  Issue  open    parity-friend  Crash when t",
+    "9   Issue  open    parity-friend  Comments tha",
+    "3   Issue  closed  parity-friend  An old issue",
+]
+footer = ["⏎ Open", "/ Query", "q Close", "^s Save query"]
+
+[expect.closed]
+focused = ["[5] Issue #12 Details"]
+contains = ["Milestone: v0.7 • open • due 2026-03-01 • 1 of 3 closed", " E Edit Issue  m Milestone "]
+not_contains = ["Search issues and pull requests"]
+
+[expect.no-milestone]
+contains = ["Closed Closed without a body (#11) by parity-bot", " E Edit Issue  ^v Paste link"]
+not_contains = ["Milestone:", "m Milestone"]
+
+[expect.closed-milestone]
+contains = ["Milestone: v0.6 • closed • 4 of 4 closed"]
+not_contains = ["due "]

@@ -4,6 +4,7 @@ pub mod button;
 pub mod collapsible;
 pub mod command_log;
 pub mod comment;
+pub mod compose;
 pub mod diff_view;
 pub mod disabled;
 pub mod footer;

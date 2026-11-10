@@ -14,6 +14,7 @@ use super::{BindingId, KeyChord, KeySpec, Keymap};
 use crate::app::APP_BINDINGS;
 use crate::components::button::BUTTON_BINDINGS;
 use crate::components::comment::{COMMENT_BINDINGS, LIST_BINDINGS, TITLE_BINDINGS};
+use crate::components::compose::COMPOSE_BINDINGS;
 use crate::components::diff_view::{DIFF_BODY_BINDINGS, DIFF_VIEWER_BINDINGS};
 use crate::components::info::INFO_BINDINGS;
 use crate::components::list_editor::LIST_EDITOR_BINDINGS;
@@ -25,9 +26,9 @@ use crate::components::tabs::TABS_BINDINGS;
 use crate::components::tree::TREE_BINDINGS;
 use crate::modal::{
     ADD_COMMENT_BINDINGS, ADD_REACTION_BINDINGS, CONFIRM_BINDINGS, CONTAINER_BINDINGS, DEBUG_BINDINGS,
-    EDIT_ISSUE_BINDINGS, KEY_LIST_BINDINGS, LOOKUP_BINDINGS, NEW_COMMENT_BINDINGS, NEW_ISSUE_BINDINGS,
-    NOTIFICATIONS_BINDINGS, PASTE_LINK_BINDINGS, PR_BINDINGS, PROFILE_BINDINGS, SEARCH_BINDINGS, SETTINGS_BINDINGS,
-    TRIGGER_BINDINGS, UNREAD_BINDINGS,
+    EDIT_ISSUE_BINDINGS, KEY_LIST_BINDINGS, LOOKUP_BINDINGS, NEW_ISSUE_BINDINGS, NOTIFICATIONS_BINDINGS,
+    PASTE_LINK_BINDINGS, PR_BINDINGS, PROFILE_BINDINGS, SEARCH_BINDINGS, SETTINGS_BINDINGS, TRIGGER_BINDINGS,
+    UNREAD_BINDINGS,
 };
 use crate::screens::main::{
     CONVERSATION_BINDINGS, ISSUE_COMMENTS_BINDINGS, ISSUE_OVERVIEW_BINDINGS, JOBS_BINDINGS, LOG_BINDINGS,
@@ -177,7 +178,11 @@ pub const KEY_CONTEXTS: &[KeyContext] = &[
     dialog!("Pull request dialog", SWITCH_BINDINGS, PR_BINDINGS),
     dialog!("Pull request dialog", SELECTION_LIST_BINDINGS, PR_BINDINGS),
     dialog!("Pull request dialog", BUTTON_BINDINGS, PR_BINDINGS),
-    dialog!("New comment dialog", BUTTON_BINDINGS, NEW_COMMENT_BINDINGS),
+    // A compose sheet with its body left (`escape`): the body itself types, so it isn't a context.
+    KeyContext {
+        name: "New comment dialog",
+        links: &[COMPOSE_BINDINGS],
+    },
     dialog!("Add comment dialog", BUTTON_BINDINGS, ADD_COMMENT_BINDINGS),
     dialog!("Add reaction dialog", SELECTION_LIST_BINDINGS, ADD_REACTION_BINDINGS),
     dialog!("Add reaction dialog", BUTTON_BINDINGS, ADD_REACTION_BINDINGS),

@@ -83,7 +83,6 @@ pub(crate) use confirm::CONFIRM_BINDINGS;
 pub(crate) use debug_info::DEBUG_BINDINGS;
 pub(crate) use edit_issue::EDIT_ISSUE_BINDINGS;
 pub(crate) use lookup::LOOKUP_BINDINGS;
-pub(crate) use new_comment::NEW_COMMENT_BINDINGS;
 pub(crate) use new_issue::NEW_ISSUE_BINDINGS;
 pub(crate) use notifications::{CONTAINER_BINDINGS, NOTIFICATIONS_BINDINGS, UNREAD_BINDINGS};
 pub(crate) use paste_link::PASTE_LINK_BINDINGS;

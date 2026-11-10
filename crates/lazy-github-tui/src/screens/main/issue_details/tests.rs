@@ -585,7 +585,8 @@ fn n_and_r_open_the_new_comment_dialog_and_focus_comes_back() {
     ));
     app.press(&["n"]);
     assert_eq!(app.app().modals(), [crate::modal::ModalKind::NewComment]);
-    app.press(&["escape"]);
+    // The first escape leaves the body (decision compose-dialogs), the second closes.
+    app.press(&["escape", "escape"]);
     assert_eq!(
         (focus(&app), comments(&app).stop()),
         (FocusTarget::DetailsContent, None)
@@ -593,7 +594,7 @@ fn n_and_r_open_the_new_comment_dialog_and_focus_comes_back() {
     app.press(&["tab", "r"]);
     assert_eq!(app.app().modals(), [crate::modal::ModalKind::NewComment]);
     assert!(app.screen(160, 48).contains("Replying to comment from"));
-    app.press(&["escape"]);
+    app.press(&["escape", "escape"]);
     assert_eq!(
         (focus(&app), comments(&app).stop()),
         (FocusTarget::DetailsContent, Some(0))

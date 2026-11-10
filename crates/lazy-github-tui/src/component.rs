@@ -274,11 +274,16 @@ impl Owner {
 
     /// The label the footer and help panel give binding `id` at this link, when it isn't the binding's own
     /// description. The diff body labels the line cursor keys as Python's pane labels its own `j` / `k` (Py bug B9),
-    /// since `diff.cursor_down` and `diff.cursor_up` have no description.
+    /// since `diff.cursor_down` and `diff.cursor_up` have no description. A compose dialog names its two submit keys
+    /// after what it does, enabled or not (decision compose-dialogs).
     pub fn binding_label(self, id: BindingId) -> Option<&'static str> {
         match (self, id) {
             (Owner::DiffBody, BindingId::DiffCursorDown) => Some("Line down"),
             (Owner::DiffBody, BindingId::DiffCursorUp) => Some("Line up"),
+            (
+                Owner::Screen(ScreenKind::Modal(ModalKind::NewComment)),
+                BindingId::ComposeSubmit | BindingId::ModalSubmit,
+            ) => Some("Post"),
             _ => None,
         }
     }

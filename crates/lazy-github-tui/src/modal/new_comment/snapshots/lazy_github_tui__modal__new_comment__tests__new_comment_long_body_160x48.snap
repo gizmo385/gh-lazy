@@ -1,0 +1,52 @@
+---
+source: crates/lazy-github-tui/src/modal/new_comment/tests.rs
+expression: "app.screen(160, 48)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/issu█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                             │
+└─────────────────────────────█ New comment                                                                                      █─────────────────────────────┘
+┌─ [1] Repositories ──────────█  Write   Preview  ────────────────────────────────────────────────────────────────────────────── █─────────────────────────────┐
+│ ★  Owner       Name         █  - `G` jumps to the last line and `g` to the first.                                              █                             │
+│ ☆  parity-bot  issue-fixture█  - `J` / `K` move by hunk, and stop at the first and the last hunk.                              █━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                             █                                                                                                  █                             │
+│                             █  I also checked the three cases you listed against the current build. All three behave as        █                             │
+│                             █  described, so I don't think we need a code change here, just the docs.                          █                             │
+│                             █                                                                                                  █                             │
+│                             █  One more thing: the help panel lists `j` as "Line down" but the footer says "Down". We          █                             │
+│                             █  should pick one.                                                                                █                             │
+│                             █                                                                                                  █                             │
+│                             █  Finally, the screenshot in the README is from 0.5 and still shows the old title bar. I'll       █                             │
+│                             █  refresh it in the same PR.                                                                      █                             │
+└─────────────────────────────█                                                                                                  █                             │
+┌─ [2] Pull Requests ─────────█  Agreed, and I think the README should say so explicitly. Here's what I'd add under Keys:    ▄▄  █he defaults when it is empty,│
+│ #  Status  Author      Title█                                                                                                  █lse changes for people who   │
+│ 8  open    parity-bot  A pul█  - `j` / `k` move one line and stop at either end of the file; they never wrap around.           █                             │
+│                             █  - `G` jumps to the last line and `g` to the first.                                              █                             │
+│                             █  - `J` / `K` move by hunk, and stop at the first and the last hunk.                              █                             │
+│                             █                                                                                                  █                             │
+│                             █  I also checked the three cases you listed against the current build. All three behave as        █                             │
+│                             █  described, so I don't think we need a code change here, just the docs.                          █                             │
+│                             █                                                                                                  █                             │
+│                             █  One more thing: the help panel lists `j` as "Line down" but the footer says "Down". We          █                             │
+│                             █  should pick one.                                                                                █                             │
+│                             █                                                                                                  █                             │
+│                             █  Finally, the screenshot in the README is from 0.5 and still shows the old title bar. I'll       █                             │
+└─────────────────────────────█  refresh it in the same PR.                                                                      █                             │
+┌─ [3] Issues ────────────────█                                                                                                  █                             │
+│ #   Status  Author         T█  Agreed, and I think the README should say so explicitly. Here's what I'd add under Keys:        █                             │
+│ 12  open    parity-friend  C█                                                                                                  █                             │
+│ 11  closed  parity-bot     C█  - `j` / `k` move one line and stop at either end of the file; they never wrap around.           █                             │
+│ 10  open    parity-bot     C█  - `G` jumps to the last line and `g` to the first.                                              █                             │
+│ 9   open    parity-friend  C█  - `J` / `K` move by hunk, and stop at the first and the last hunk.                              █                             │
+│                             █                                                                                                  █                             │
+│                             █  I also checked the three cases you listed against the current build. All three behave as        █                             │
+│                             █  described, so I don't think we need a code change here, just the docs.                          █                             │
+│                             █                                                                                                  █                             │
+│                             █  One more thing: the help panel lists `j` as "Line down" but the footer says "Down". We          █                             │
+│                             █  should pick one.                                                                                █                             │
+│                             █                                                                                                  █                             │
+└─────────────────────────────█  Finally, the screenshot in the README is from 0.5 and still shows the old title bar. I'll       █                             │
+┌─ [4] Workflows (empty) ─────█  refresh it in the same PR.                                                                      █                             │
+│ Time  Result  Job Name  Run █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ ^s Post  shift+⏎ Post  ^t Preview  ^o Expand  esc Leave

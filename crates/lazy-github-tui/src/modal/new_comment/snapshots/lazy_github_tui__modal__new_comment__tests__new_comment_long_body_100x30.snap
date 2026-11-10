@@ -1,0 +1,34 @@
+---
+source: crates/lazy-github-tui/src/modal/new_comment/tests.rs
+expression: "app.screen(100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│C█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█ │
+└─█ New comment                                                                                  █─┘
+┌─█  Write   Preview  ────────────────────────────────────────────────────────────────────────── █─┐
+│ █  as described, so I don't think we need a code change here, just the docs.                   █ │
+│ █                                                                                              █━│
+│ █  One more thing: the help panel lists `j` as "Line down" but the footer says "Down". We      █ │
+│ █  should pick one.                                                                            █ │
+│ █                                                                                              █ │
+└─█  Finally, the screenshot in the README is from 0.5 and still shows the old title bar.        █ │
+┌─█  I'll refresh it in the same PR.                                                             █ │
+│ █                                                                                              █ │
+│ █  Agreed, and I think the README should say so explicitly. Here's what I'd add under          █ │
+│ █  Keys:                                                                                       █ │
+│ █                                                                                              █ │
+│ █  - `j` / `k` move one line and stop at either end of the file; they never wrap around.       █ │
+│ █  - `G` jumps to the last line and `g` to the first.                                          █ │
+└─█  - `J` / `K` move by hunk, and stop at the first and the last hunk.                          █ │
+┌─█                                                                                          ▄▄  █ │
+│ █  I also checked the three cases you listed against the current build. All three behave       █ │
+│ █  as described, so I don't think we need a code change here, just the docs.                   █ │
+│ █                                                                                              █ │
+│ █  One more thing: the help panel lists `j` as "Line down" but the footer says "Down". We      █ │
+│ █  should pick one.                                                                            █ │
+│ █                                                                                              █ │
+└─█  Finally, the screenshot in the README is from 0.5 and still shows the old title bar.        █ │
+┌─█  I'll refresh it in the same PR.                                                             █ │
+│ █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^s Post  shift+⏎ Post  ^t Preview  ^o Expand  esc Leave

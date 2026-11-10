@@ -11,6 +11,8 @@ mod nav;
 mod render;
 mod wrap;
 
+use std::cell::Cell;
+
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
@@ -109,8 +111,20 @@ pub enum EditorVariant {
 pub enum EditorBorder {
     /// `TextArea`'s own `tall` border, `$border-blurred` or `$border` while focused.
     Tall,
-    /// `border: blank`: New comment's editor keeps the border's cells but draws nothing in them.
+    /// `border: blank`: the border's cells are kept but nothing is drawn in them.
     Blank,
+    /// No border cells at all: the compose sheet's body, whose text starts right inside its padding.
+    None,
+}
+
+impl EditorBorder {
+    /// The cells the border takes on each side.
+    fn width(self) -> u16 {
+        match self {
+            EditorBorder::Tall | EditorBorder::Blank => 1,
+            EditorBorder::None => 0,
+        }
+    }
 }
 
 /// What a key or a paste did to the editor.
@@ -167,6 +181,10 @@ pub struct TextEditor {
     /// The first wrapped row shown.
     scroll_y: usize,
     view: View,
+    /// Bumped by every change to the text, for [`Self::content_rows`]'s cache.
+    revision: u64,
+    /// [`Self::content_rows`]'s last answer: `(revision, width, rows)`.
+    rows_cache: Cell<Option<(u64, u16, usize)>>,
 }
 
 impl TextEditor {
@@ -184,6 +202,8 @@ impl TextEditor {
             last_x_offset: 0,
             scroll_y: 0,
             view: View::default(),
+            revision: 0,
+            rows_cache: Cell::new(None),
         };
         editor.set_text(text);
         editor
@@ -221,6 +241,7 @@ impl TextEditor {
         let mut buffer = TextArea::new(insert_lines(text));
         buffer.set_max_histories(0);
         self.buffer = buffer;
+        self.revision += 1;
         self.anchor = (0, 0);
         self.history.clear();
         self.selecting = false;
@@ -246,6 +267,11 @@ impl TextEditor {
     pub fn set_cursor(&mut self, location: Location) {
         let location = self.nav().clamp(location);
         self.move_cursor(location, false, true);
+    }
+
+    /// Whether the last draw showed the vertical scrollbar: the wrapped text was taller than the view.
+    pub fn shows_scrollbar(&self) -> bool {
+        self.view.scrollbar
     }
 
     /// The first wrapped row shown.
@@ -572,6 +598,7 @@ impl TextEditor {
     fn apply(&mut self, top: Location, bottom: Location, text: &str) -> (Location, String) {
         let replaced = self.text_between(top, bottom);
         let removed = self.chars_between(top, bottom);
+        self.revision += 1;
         let inserted = insert_lines(text);
         self.buffer.move_cursor(CursorMove::Jump(
             u16::try_from(top.0).unwrap_or(u16::MAX),
@@ -656,11 +683,12 @@ impl TextEditor {
     /// last row.
     fn location_at(&self, column: u16, row: u16) -> Location {
         let area = self.view.area;
-        let text_x = i64::from(area.x) + 1 + i64::from(self.padding.horizontal);
+        let border = i64::from(self.border.width());
+        let text_x = i64::from(area.x) + border + i64::from(self.padding.horizontal);
         let gutter = i64::try_from(self.gutter_width()).unwrap_or(0);
         let scroll = i64::try_from(self.scroll_y).unwrap_or(0);
         let x = i64::from(column) - text_x - gutter;
-        let y = i64::from(row) - i64::from(area.y) - 1 - i64::from(self.padding.top) + scroll;
+        let y = i64::from(row) - i64::from(area.y) - border - i64::from(self.padding.top) + scroll;
         let clamp = |n: i64| isize::try_from(n).unwrap_or(0);
         self.layout.offset_to_location(self.lines(), clamp(x), clamp(y))
     }
@@ -747,7 +775,52 @@ impl TextEditor {
 
     /// The text area's width inside the border and the padding, scrollbar included.
     fn inner_width(&self) -> usize {
-        usize::from(self.view.area.width.saturating_sub(2 + 2 * self.padding.horizontal))
+        self.inner_width_of(self.view.area.width)
+    }
+
+    /// [`Self::inner_width`] for an editor `width` cells wide.
+    fn inner_width_of(&self, width: u16) -> usize {
+        usize::from(width.saturating_sub(2 * (self.border.width() + self.padding.horizontal)))
+    }
+
+    /// Whether the editor holds no text at all: one empty line.
+    pub fn is_empty(&self) -> bool {
+        matches!(self.lines(), [only] if only.is_empty())
+    }
+
+    /// How many rows the text takes once wrapped in an editor `width` cells wide (border, padding and gutter
+    /// included), without a scrollbar: the height at which it shows whole, as [`Self::render`] wraps it. At least 1.
+    /// A sheet that grows with its body asks this; the answer is kept until the text or the width changes.
+    pub fn content_rows(&self, width: u16) -> usize {
+        if let Some((revision, cached_width, rows)) = self.rows_cache.get()
+            && revision == self.revision
+            && cached_width == width
+        {
+            return rows;
+        }
+        let wrap_width = self
+            .inner_width_of(width)
+            .saturating_sub(self.gutter_width() + CURSOR_WIDTH);
+        // A width of 0 leaves lines unwrapped: a text area too narrow for one char still takes a row per line.
+        let rows = WrapLayout::new(self.lines(), wrap_width).height().max(1);
+        self.rows_cache.set(Some((self.revision, width, rows)));
+        rows
+    }
+
+    /// The screen cell of the text's first char at the last draw, past the border, the padding and the gutter.
+    /// `None` before the first draw.
+    pub fn text_origin(&self) -> Option<(u16, u16)> {
+        let area = self.view.area;
+        if area.is_empty() {
+            return None;
+        }
+        let gutter = u16::try_from(self.gutter_width()).unwrap_or(u16::MAX);
+        Some((
+            area.x
+                .saturating_add(self.border.width() + self.padding.horizontal)
+                .saturating_add(gutter),
+            area.y.saturating_add(self.border.width() + self.padding.top),
+        ))
     }
 
     /// Rewraps the text for the last draw's size: Textual's `wrap_width`, which leaves out the gutter, a column for
@@ -794,7 +867,7 @@ impl TextEditor {
     pub fn render(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focused: bool) {
         if area != self.view.area {
             self.view.area = area;
-            self.view.height = usize::from(area.height.saturating_sub(2 + self.padding.top));
+            self.view.height = usize::from(area.height.saturating_sub(2 * self.border.width() + self.padding.top));
             self.relayout();
             self.scroll_cursor_visible();
         }

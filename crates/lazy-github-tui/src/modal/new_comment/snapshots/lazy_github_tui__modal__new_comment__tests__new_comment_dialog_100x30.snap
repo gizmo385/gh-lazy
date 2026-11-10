@@ -1,35 +1,34 @@
 ---
 source: crates/lazy-github-tui/src/modal/new_comment/tests.rs
-assertion_line: 405
 expression: "app.screen(100, 30)"
 ---
-┌─────────────────────────────────────────────────────────────────────────────────────────────────
-│█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-└█New comment
-┌█
-│█
-│█
-│█
-│█
-│█
-└█
-┌█
-│█
-│█
-│█
-│█
-│█
-│█
-└█
-┌█
-│█
-│█
-│█
-│█Preview
-│█
-│█
-└█
-┌█
-│█
-└█
- shift+⏎ Submit  esc Close
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/issue-fixture                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Issue #12 Details ──────────────────────────────────┐
+│ ★  Owner       Name           Private││ Overview  Comments                                       │
+│ ☆  parity-bot  issue-fixture  ✘      ││━━━━━━━━━━╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                     ▏││ │ Thanks @parity-friend, I can reproduce it on main.     │
+│                                      ││ │                                                        │
+│                                      ││ │ parity-bot • Tue Feb  3 10:15:30 2026                  │
+└──────────────────────────────────────┘│ │                                                        │
+┌─ [2] Pull Requests ──────────────────┐│                                                          │
+│ █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█ │
+│ █ New comment                                                                                  █ │
+│ █  Write   Preview  ────────────────────────────────────────────────────────────────────────── █ │
+│ █  Write a comment (markdown)                                                                  █ │
+│ █                                                                                              █ │
+│ █                                                                                              █ │
+└─█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ │
+┌─ [3] Issues ─────────────────────────┐│ │ the documentation already promised, so nothing else    │
+│ #   Status  Author         Title     ││ │ changes for people who never had the problem.          │
+│ 12  open    parity-friend  Crash when││ │                                                        │
+│ 11  closed  parity-bot     Closed wit││ │ The second paragraph.                                  │
+│ 10  open    parity-bot     Comments t││ │                                                        │
+│ 9   open    parity-friend  Comments t││ │ parity-friend • Tue Feb 10 08:45:00 2026               │
+│                      ▋               ││ │                                                        │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows (empty) ──────────────┐│                                                          │
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^s Post  shift+⏎ Post  ^t Preview  ^o Expand  esc Leave

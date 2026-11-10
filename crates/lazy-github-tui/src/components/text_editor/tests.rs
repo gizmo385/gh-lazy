@@ -54,6 +54,10 @@ fn draw(editor: &mut TextEditor, width: u16, height: u16, focused: bool) -> Buff
 #[case::select("shift+left", true)]
 #[case::cut("ctrl+x", true)]
 #[case::paste("ctrl+v", true)]
+// The compose sheet's keys (`compose.submit`, `compose.toggle_preview`, `compose.expand`) reach the dialog.
+#[case::ctrl_s("ctrl+s", false)]
+#[case::ctrl_t("ctrl+t", false)]
+#[case::ctrl_o("ctrl+o", false)]
 // Copy with nothing selected falls through.
 #[case::copy("ctrl+c", false)]
 #[case::super_copy("super+c", false)]
@@ -396,4 +400,94 @@ fn a_selected_empty_line_shows_a_marker() {
     let mut editor = TextEditor::new(EditorVariant::Code, "one\n\nthree");
     let _ = press(&mut editor, "f7");
     insta::assert_debug_snapshot!(draw(&mut editor, 20, 5, true));
+}
+
+// `content_rows`: what a sheet that grows with its body measures.
+
+/// A plain editor with no border and a column of padding each side, as the compose sheet's body has it.
+fn borderless(variant: EditorVariant, text: &str) -> TextEditor {
+    TextEditor::new(variant, text)
+        .with_border(EditorBorder::None)
+        .with_padding(EditorPadding { top: 0, horizontal: 1 })
+}
+
+#[test]
+fn content_rows_of_an_empty_text_is_one_row() {
+    assert_eq!(borderless(EditorVariant::Plain, "").content_rows(40), 1);
+}
+
+#[test]
+fn content_rows_counts_lines_and_wrapped_rows() {
+    assert_eq!(borderless(EditorVariant::Plain, "short").content_rows(40), 1);
+    assert_eq!(borderless(EditorVariant::Plain, "one\ntwo\n").content_rows(40), 3);
+    // 40 wide: 38 inside the padding, 37 once the cursor's column is left out.
+    let fits = "x".repeat(37);
+    assert_eq!(borderless(EditorVariant::Plain, &fits).content_rows(40), 1);
+    let wraps = "x".repeat(38);
+    assert_eq!(borderless(EditorVariant::Plain, &wraps).content_rows(40), 2);
+    let words = "lorem ipsum ".repeat(10);
+    assert_eq!(borderless(EditorVariant::Plain, &words).content_rows(40), 4);
+}
+
+#[test]
+fn content_rows_measures_tabs_and_wide_chars_in_cells() {
+    // A tab is up to four cells: nine tabs are 36 cells, a tenth goes past 37.
+    assert_eq!(borderless(EditorVariant::Plain, &"\t".repeat(9)).content_rows(40), 1);
+    assert_eq!(borderless(EditorVariant::Plain, &"\t".repeat(10)).content_rows(40), 2);
+    // A CJK char is two cells: 18 fit in 37, 19 don't.
+    assert_eq!(borderless(EditorVariant::Plain, &"字".repeat(18)).content_rows(40), 1);
+    assert_eq!(borderless(EditorVariant::Plain, &"字".repeat(19)).content_rows(40), 2);
+}
+
+#[test]
+fn content_rows_leaves_out_the_code_editor_s_gutter() {
+    // One line: a one-digit number and the gutter's two-cell margin, so 34 cells of text.
+    let line = "x".repeat(34);
+    assert_eq!(borderless(EditorVariant::Code, &line).content_rows(40), 1);
+    assert_eq!(
+        borderless(EditorVariant::Plain, &format!("{line}xxx")).content_rows(40),
+        1
+    );
+    assert_eq!(borderless(EditorVariant::Code, &format!("{line}x")).content_rows(40), 2);
+}
+
+#[test]
+fn content_rows_follows_edits_and_matches_the_drawn_rows() {
+    let mut editor = borderless(EditorVariant::Plain, "");
+    assert_eq!(editor.content_rows(40), 1);
+    let _ = editor.handle_paste(&"word ".repeat(20), Instant::now());
+    let rows = editor.content_rows(40);
+    assert_eq!(rows, 3);
+    // Drawn exactly that tall, the text shows whole: no scrollbar, nothing scrolled.
+    let buffer = draw(&mut editor, 40, u16::try_from(rows).unwrap(), true);
+    assert!(!editor.view.scrollbar);
+    assert_eq!(editor.scroll_offset(), 0);
+    assert!(
+        row_text(&buffer, 0).starts_with(" word word"),
+        "{:?}",
+        row_text(&buffer, 0)
+    );
+    // A row shorter, it scrolls with its scrollbar.
+    let _ = draw(&mut editor, 40, 2, true);
+    assert!(editor.view.scrollbar);
+    editor.set_text("");
+    assert_eq!(editor.content_rows(40), 1);
+}
+
+#[test]
+fn a_borderless_editor_draws_its_text_inside_its_padding() {
+    let mut editor = borderless(EditorVariant::Plain, "Hello");
+    let buffer = draw(&mut editor, 20, 3, false);
+    assert_eq!(row_text(&buffer, 0), " Hello              ");
+    assert_eq!(editor.text_origin(), Some((1, 0)));
+    // A click on the first row's padding lands on its start, one inside the text on its char.
+    editor.press(0, 0);
+    assert_eq!(editor.cursor(), (0, 0));
+    editor.release();
+    editor.press(4, 0);
+    assert_eq!(editor.cursor(), (0, 3));
+}
+
+fn row_text(buffer: &Buffer, y: u16) -> String {
+    (0..buffer.area.width).map(|x| buffer[(x, y)].symbol()).collect()
 }

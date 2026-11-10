@@ -631,11 +631,12 @@ fn a_cancelled_reply_doesnt_reload_but_n_does() {
     let mut app = conversation_on(writing_gh());
     tab_to(&mut app, ConversationStop::Review(0));
     let before = review_requests(&app);
-    app.press(&["r", "escape"]);
+    // The first escape leaves the body (decision compose-dialogs), the second closes.
+    app.press(&["r", "escape", "escape"]);
     settle(&mut app);
     assert_eq!(review_requests(&app), before);
     // `n`, cancelled: Python's `action_new_comment` reloads either way, and focus goes back to the scroll area.
-    app.press(&["n", "escape"]);
+    app.press(&["n", "escape", "escape"]);
     settle(&mut app);
     assert_eq!(review_requests(&app), before + 1);
     assert_eq!(stop(&app), ConversationStop::Scroll);
@@ -651,7 +652,7 @@ fn a_cancelled_reply_doesnt_reload_but_n_does() {
 #[test]
 fn the_content_stays_up_while_it_reloads() {
     let mut app = conversation_on(writing_gh());
-    app.press(&["tab", "n", "escape"]);
+    app.press(&["tab", "n", "escape", "escape"]);
     // The reload's requests are out, unanswered: the conversation still shows.
     let screen = app.screen(160, 48);
     assert!(screen.contains("Review from parity-bot"), "{screen}");

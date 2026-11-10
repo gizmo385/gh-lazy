@@ -128,6 +128,9 @@ pub const BINDING_GROUPS: &[BindingGroup] = {
             ids: &[
                 B::ModalSubmit,
                 B::ModalClose,
+                B::ComposeSubmit,
+                B::ComposeTogglePreview,
+                B::ComposeExpand,
                 B::ModalSearch,
                 B::ConfirmYes,
                 B::ConfirmNo,
@@ -152,9 +155,9 @@ mod tests {
             assert_eq!(count, expected, "{} is in {count} groups", id.def().name);
         }
         // Python's 59, the nine Rust-only diff ids (decisions diff-file-navigation and diff-inline-comments), `main.refresh` (decision
-        // cache-ttl-defaults-and-refresh), `search.open` and `search.save_query` (decision search-issues-and-prs), and
-        // `issue.milestone` (decision issue-milestone).
-        assert_eq!(grouped.len(), 72);
+        // cache-ttl-defaults-and-refresh), `search.open` and `search.save_query` (decision search-issues-and-prs),
+        // `issue.milestone` (decision issue-milestone), and the three compose keys (decision compose-dialogs).
+        assert_eq!(grouped.len(), 75);
         assert!(grouped.iter().all(|id| !id.def().name.starts_with("textual.")));
     }
 }

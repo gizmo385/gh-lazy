@@ -203,6 +203,15 @@ registry! {
     ModalSubmit("modal.submit", "shift+enter", "submit", "Submit")
         .tooltip("Submit whatever is being created in the current dialog");
     ModalClose("modal.close", "q, escape", "close", "Close").tooltip("Close the current dialog");
+    // Rust-only, after `modal.close` (decision compose-dialogs): the compose sheet's keys, rebindable like Python's
+    // ids. `compose.submit` has its own action so the footer lists it beside `modal.submit`; the dialog labels both
+    // with its verb ("Post"), and relabels the toggles ("Write", "Collapse").
+    ComposeSubmit("compose.submit", "ctrl+s", "compose_submit", "Submit")
+        .tooltip("Submit whatever is being written in the current dialog");
+    ComposeTogglePreview("compose.toggle_preview", "ctrl+t", "toggle_preview", "Preview")
+        .tooltip("Switch the body between writing and its markdown preview");
+    ComposeExpand("compose.expand", "ctrl+o", "expand", "Expand")
+        .tooltip("Make the dialog fill the screen, or bring it back to its size");
     ModalSearch("modal.search", "/", "search", "Search").tooltip("Search within a dialog window");
     ConfirmYes("confirm.yes", "y", "confirm_yes", "Yes");
     ConfirmNo("confirm.no", "n", "confirm_no", "No");

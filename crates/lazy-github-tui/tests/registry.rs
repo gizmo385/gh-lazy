@@ -39,6 +39,10 @@ const RUST_ONLY_IDS: &[&str] = &[
     // Decision search-issues-and-prs.
     "search.open",
     "search.save_query",
+    // Decision compose-dialogs.
+    "compose.submit",
+    "compose.toggle_preview",
+    "compose.expand",
 ];
 
 fn python_bindings() -> Vec<Value> {
